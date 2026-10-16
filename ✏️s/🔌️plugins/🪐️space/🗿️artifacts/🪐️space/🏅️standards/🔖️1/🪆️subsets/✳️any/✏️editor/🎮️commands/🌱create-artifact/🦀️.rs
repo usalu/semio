@@ -30,7 +30,4 @@ pub fn handle(payload: &CreateArtifact, _doc: &ArtifactView<'_, SSpaceSnapshot>,
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

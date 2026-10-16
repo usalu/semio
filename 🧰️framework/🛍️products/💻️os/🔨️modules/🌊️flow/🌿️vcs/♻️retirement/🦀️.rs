@@ -22,7 +22,7 @@ pub(super) fn owner_demands(owner:&FlowVcsRetirement,copy:usize)->Result<FlowVcs
  Ok(FlowVcsCloseDemands{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or(FlowVcsFault::Depth)?})
 }
 
-pub(super) fn admit_turn(grant:RetainedCloneGrant,demands:FlowVcsCloseDemands)->Result<bool,FlowVcsCloseFailure>{
+pub fn admit_turn(grant:RetainedCloneGrant,demands:FlowVcsCloseDemands)->Result<bool,FlowVcsCloseFailure>{
  if !<FlowVcsClosingOwner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original VCS owner lacks declared controlled retirement authority").into())}
  if grant.maximum_items==0{return Ok(false)}
  if grant.maximum_depth<demands.depth{return Err(FlowVcsFault::Depth.into())}

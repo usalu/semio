@@ -3,6 +3,7 @@
 //! window binds these to its own pane; nothing here is pane-specific.
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
+use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
 use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
@@ -219,6 +220,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
             json!({ "width": width, "height": height }).to_string()
         }),
         domain_id: Some(crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN.into()),
+        placement_naming: Some(PUZZLE_2D_BOARD_NAMING.placement_naming().to_json()),
         suggestion_menu_json,
         tool_run_trace: None,
         lanes: Vec::new(),
@@ -237,7 +239,7 @@ pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) 
 //#region 🔖️Engagement
 /// 🤝️ The engagement HUD for one pane: a text command line plus a node/edge/LOD status readout.
 pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
-    let overlay: Value = semio_framework_pack_json::from_json_str(&host.overlay_paint_state_json(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
+    let overlay: Value = semio_framework_pack_json::from_json_str(&overlay_paint_state_json(&host.scene, &host.style),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or(Value::Null);
     let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
     let node_count = board_snapshot_nodes(&envelope.board_snapshot).len();

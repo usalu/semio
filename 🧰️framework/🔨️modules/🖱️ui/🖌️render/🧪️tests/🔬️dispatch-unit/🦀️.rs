@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::element::ReconciliationKey;
+use crate::identity::ReconciliationKey;
 
 fn leaf(tree: &mut DispatchTree, parent: Option<FrameNodeId>, key: &str, flags: DispatchFlags, listeners: ListenerSet, rect: (f32, f32, f32, f32)) -> FrameNodeId {
     let parent_element = parent.and_then(|id| tree.node(id)).map(|node| node.element);

@@ -1,8 +1,9 @@
 use super::*;
-use crate::registry::{Launch, LaunchProcess, Stop};
-use ipc::{ClientMsg, Ready, ServerMsg, SessionInfo, SessionStatus, SpawnGroup, TaskLabel};
+use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
+use ipc::{ClientMsg, ServerMsg, SessionInfo, SessionStatus, SpawnGroup};
 use serde_json::Value;
 use std::collections::{BTreeSet, HashMap};
+use std::path::PathBuf;
 
 fn control_plane() -> Value {
     serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌀️control-plane/🔣️.json")).unwrap()
@@ -26,12 +27,6 @@ fn temporary(name: &str) -> PathBuf {
     let directory = std::env::temp_dir().join(format!("semio-daemon-{name}-{}-{nonce}", std::process::id()));
     std::fs::create_dir_all(&directory).unwrap();
     directory
-}
-
-#[test]
-fn unknown_subcommand_returns_usage_without_side_effects() {
-    let parsed = ParsedArgs { verb: "daemon".into(), segments: vec!["unknown".into()], flags: HashMap::new() };
-    assert_eq!(run(Path::new("."), &parsed), 1);
 }
 
 // #region 🔖️Protocol
@@ -554,7 +549,7 @@ fn skew_between_client_and_daemon_is_described() {
 #[test]
 fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
     let sources = [include_str!("🦀️.rs"), include_str!("../🧊️integration/🦀️.rs")];
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/✉️ipc/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/✉️ipc/🥒️.feature"), &sources, &[
         ("Every valid protocol vector survives the codec unchanged", &["every_valid_protocol_vector_survives_the_rust_codec_unchanged"]),
         ("Every invalid protocol vector is refused", &["every_invalid_protocol_vector_is_refused_by_the_rust_codec"]),
         ("The vectors cover the whole schema", &["the_vectors_cover_every_message_status_and_error_code_of_the_schema", "the_error_codes_of_the_rust_wire_are_the_codes_of_the_schema"]),
@@ -562,17 +557,17 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
         ("A missing greeting, a foreign protocol and an unreadable message are refused loudly", &["a_start_without_hello_and_a_foreign_protocol_are_refused_loudly"]),
         ("A difference between client and daemon is described", &["skew_between_client_and_daemon_is_described"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🚚️transport/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🚚️transport/🥒️.feature"), &sources, &[
         ("The endpoint name derives from the workspace path", &["endpoint_names_are_stable_across_runs_and_toolchains"]),
         ("A second daemon cannot take over a running workspace", &["a_second_daemon_cannot_take_over_a_running_workspace"]),
         ("A connection wakes its owner", &["a_connection_calls_its_notifier_when_a_message_arrives_and_when_its_sends_drain"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/📜️journal/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/📜️journal/🥒️.feature"), &sources, &[
         ("The journal projects sessions, survives a torn line and compacts", &["the_journal_projects_sessions_survives_a_torn_line_and_compacts"]),
         ("The journal retains a bounded number of sessions", &["the_journal_retains_a_bounded_number_of_sessions_and_drops_the_longest_ended_first"]),
         ("Sessions that were alive when no daemon ran come back interrupted", &["sessions_alive_when_no_daemon_runs_were_interrupted", "sessions_that_were_alive_when_the_daemon_vanished_come_back_interrupted"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🧠️supervisor/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🧠️supervisor/🥒️.feature"), &sources, &[
         ("A task runs to its exit code and later views and a restarted daemon replay its output", &["a_task_runs_to_its_exit_code_and_later_views_and_a_restarted_daemon_replay_its_output"]),
         ("A restart runs the task again into the same log", &["a_restart_runs_the_task_again_into_the_same_log"]),
         ("A child title and a full-screen program reach every view", &["a_child_title_and_a_full_screen_program_reach_every_view", "child_titles_are_read_from_both_title_sequences"]),
@@ -580,13 +575,13 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
         ("Stopping escalates and killing reports the signal death", &["stopping_escalates_and_killing_reports_the_signal_death"]),
         ("Terminal input is queued and delivered in full", &["terminal_input_is_queued_and_delivered_in_full"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🕹️control/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🕹️control/🥒️.feature"), &sources, &[
         ("A launch starts services first and returns its ready address", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),
         ("A member that ends before it is ready fails the run", &["a_member_that_ends_before_it_is_ready_fails_the_launch_and_the_members_after_it"]),
         ("A cancelled run starts nothing more", &["a_cancelled_launch_never_starts_the_members_still_waiting"]),
         ("The log files are read without a daemon", &["a_task_runs_to_its_exit_code_and_later_views_and_a_restarted_daemon_replay_its_output"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/📼️replay/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/📼️replay/🥒️.feature"), &sources, &[
         ("Replay starts at a line and ends at the present", &["a_replay_starts_at_a_line_and_ends_at_the_present"]),
         ("Replay restores the terminal modes", &["a_replay_reproduces_the_terminal_modes_of_the_whole_stream", "a_replay_restores_the_input_modes_the_child_is_in"]),
         ("Rebuild a full-screen program from its first frame", &["a_full_screen_program_is_replayed_from_the_moment_it_took_the_screen", "a_child_title_and_a_full_screen_program_reach_every_view"]),
@@ -595,14 +590,14 @@ fn every_scenario_of_the_daemon_features_is_proved_by_a_test() {
         ("List many sessions to a fresh view", &["a_hundred_retained_sessions_are_listed_to_a_fresh_view_beside_a_stalled_one"]),
         ("Restart appends to the log from clean terminal modes", &["a_second_run_of_a_session_continues_its_log_from_clean_terminal_modes"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🟢️ready/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🟢️ready/🥒️.feature"), &sources, &[
         ("Decide every case of the shared table", &["the_ready_table_decides_every_case"]),
         ("Decide the same way however the output is cut", &["the_ready_table_decides_every_case"]),
         ("Wait for the byte that completes the port", &["an_address_that_ends_the_output_waits_for_the_byte_that_decides_it"]),
         ("Announce an address once per run", &["a_restarted_task_announces_its_address_again"]),
         ("Report the ready address on the session", &["a_launch_starts_services_first_members_in_order_and_stops_together"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🧩️groups/🥒️.feature"), &sources, &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🧩️groups/🥒️.feature"), &sources, &[
         ("Start the services a command requires first", &["a_launch_becomes_one_session_per_process_with_services_first", "a_launch_starts_services_first_members_in_order_and_stops_together"]),
         ("Reuse a running service", &["a_service_needed_twice_is_started_once"]),
         ("Start the members of a compound in order", &["a_launch_starts_services_first_members_in_order_and_stops_together", "the_waiting_line_is_written_only_for_members_that_actually_wait"]),

@@ -1394,7 +1394,7 @@ impl DocumentPlanSocketGrantIntentV1 {
 }
 
 //#region 🪪️ExecutionTargetLease
-/// 🧯️ Exact maximum accepted bytes for one verified execution-target component: the shipped `wasm-release` cap, because only
+/// 🧯️ Exact maximum accepted bytes for one verified execution-target component: the shipped `release` cap, because only
 /// shipped bytes execute and every shipped component's receipt is held to it.
 pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = semio_framework_plugin_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
 /// 🧯️ Exact maximum accepted bytes for one verified raw package descriptor.

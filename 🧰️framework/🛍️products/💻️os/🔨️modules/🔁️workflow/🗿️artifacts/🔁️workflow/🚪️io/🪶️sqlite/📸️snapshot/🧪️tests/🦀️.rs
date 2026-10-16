@@ -1,8 +1,8 @@
 #[path="../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/🦀️.rs"]mod native_caller;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use native_caller::*;
-use crate::{WorkflowSnapshot,WorkflowMutation,S_WORKFLOW_SCHEMA};
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+use crate::{WorkflowSnapshot,WorkflowMutation,S_WORKFLOW_SCHEMA,read_node};
+fn laws()->serde_json::Value{serde_json::from_str(read_node("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn sqlite_snapshot_workflow_bare_native_codec_requires_the_complete_semantic_owner(){assert!(store::bare_artifact_codec::<WorkflowSnapshot,WorkflowMutation>(S_WORKFLOW_SCHEMA).snapshot_sqlite.is_some(),"Workflow requires its own semantic provider");}
 #[test]
@@ -66,7 +66,7 @@ async fn sqlite_snapshot_workflow_imperative_registration_routes_actual_queryabl
 
 #[test]
 fn sqlite_snapshot_workflow_intrinsic_contract_full_native_and_sqlite_branches(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎞️wire/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(read_node("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎞️wire/🔣️.json")).unwrap();
  for schema in cases["schemas"].as_array().unwrap(){
   let mut expected=source();expected.graph.edges[1].contract.wire=crate::MediaWireFormat::Intrinsic{schema:schema.as_str().unwrap().to_owned()};
   assert_eq!(restore(&database(&expected)),expected);
@@ -81,7 +81,7 @@ fn sqlite_snapshot_workflow_intrinsic_contract_full_native_and_sqlite_branches()
  }
 }
 
-fn cell_laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/📏️semantic-cells/🔣️.json")).unwrap()}
+fn cell_laws()->serde_json::Value{serde_json::from_str(read_node("🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️semantic-cells/🔣️.json")).unwrap()}
 #[test]
 fn sqlite_snapshot_workflow_complete_semantic_cells_are_exact_for_every_ieee_branch(){
  let law=cell_laws();for case in law["cases"].as_array().unwrap(){let mut expected=source();if case["name"]!="base"{let bits=u64::from_str_radix(case["name"].as_str().unwrap(),16).unwrap();let number=f64::from_bits(bits);for node in&mut expected.graph.nodes{node.x=number;node.y=number;node.width=number;node.height=number;}for parameter in&mut expected.parameters{if let crate::WorkflowParameter::Numeric{value,min,max,step,..}=parameter{*value=number;*min=Some(number);*max=Some(number);*step=Some(number)}}}

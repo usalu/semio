@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Environment": {
+      "type": "object",
+      "required": [
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH",
+        "NODE_DISABLE_COMPILE_CACHE"
+      ],
+      "properties": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": {
+          "const": "0"
+        },
+        "NODE_DISABLE_COMPILE_CACHE": {
+          "const": "1"
+        }
+      },
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "catalogs": [
+          ".vscode/launch.json",
+          ".vscode/🧩️launch.seed.jsonc"
+        ],
+        "type": "node-terminal",
+        "request": "launch",
+        "environment": {
+          "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+          "NODE_DISABLE_COMPILE_CACHE": "1"
+        }
+      }
+    }
+  }
+}

@@ -13,5 +13,11 @@
       ]
     },
     "defaultProfileId": "developer"
-  }
+  },
+  "browserSessionFactories": [
+    {
+      "module": "@semio-tech/puzzle-2d",
+      "engine": "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+    }
+  ]
 }

@@ -6,15 +6,15 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use directory::{DslValue, FromValue, ToValue};
 use futures::StreamExt;
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::directory::error::DirectoryError;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_directory_contract::error::DirectoryError;
 use serde::Deserialize;
 use std::time::{SystemTime, UNIX_EPOCH};
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 /// 📦️ Axum JSON boundary for first-party `ToValue`/`FromValue` directory contracts.
-pub(crate) struct DirectoryJson<T>(pub(crate) T);
+pub struct DirectoryJson<T>(pub T);
 
 impl<'de, T: FromValue> Deserialize<'de> for DirectoryJson<T> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
@@ -29,16 +29,16 @@ impl<T: ToValue> IntoResponse for DirectoryJson<T> {
     }
 }
 
-pub(crate) fn now_ms() -> i64 {
+pub fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
 //#region 🔖️State
-pub(crate) fn bearer(headers: &HeaderMap) -> Option<String> {
+pub fn bearer(headers: &HeaderMap) -> Option<String> {
     headers.get(axum::http::header::AUTHORIZATION).and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer ")).map(|value| value.to_string())
 }
 
-pub(crate) fn db_error_status(error: &db::DbError) -> StatusCode {
+pub fn db_error_status(error: &db::DbError) -> StatusCode {
     match error {
         db::DbError::NotFound(_) => StatusCode::NOT_FOUND,
         db::DbError::AlreadyExists(_) | db::DbError::Conflict(_) => StatusCode::CONFLICT,
@@ -52,7 +52,7 @@ pub(crate) fn db_error_status(error: &db::DbError) -> StatusCode {
 /// #⃣ Decodes a 64-hex-char blob URL path segment into a `db::ContentHash` — the inverse of
 /// `ContentHash`'s `Display` (see `pack_core::ContentHash`), never trusted as-is (a malformed path
 /// is `BAD_REQUEST`, not a panic).
-pub(crate) fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
+pub fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
     if hex.len() != 64 {
         return None;
     }
@@ -67,7 +67,7 @@ pub(crate) fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 //#endregion 🔖️State
 
 //#region 🔖️Directory
-pub(crate) fn directory_error_status(error: DirectoryError) -> StatusCode {
+pub fn directory_error_status(error: DirectoryError) -> StatusCode {
     match error {
         DirectoryError::NotFound(_) => StatusCode::NOT_FOUND,
         DirectoryError::Conflict(_) => StatusCode::CONFLICT,

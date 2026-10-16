@@ -1,0 +1,957 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://surface.tiled-map/MapPolicyDescriptorV1",
+  "title": "Tiled Map Policy Descriptor v1",
+  "description": "🎛️ Domain-neutral policy a tiled-map host renders by: level-of-detail bands, tile pyramid, source-layer roles, class tables, label rules, line scaling, layer toggles, overlay layers and vector style presets. Shipped as the `policy` member of the map descriptor JSON; Rust twin `../📋️descriptor/🦀️.rs`.",
+  "x-semio": {
+    "owner": "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🎛️map-policy",
+    "schemaVersion": 1
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "bands",
+    "coarseBandCount",
+    "rasterTileZMax",
+    "vectorTileZMax",
+    "vectorZoomSteps",
+    "boundaryAdminMin",
+    "layers",
+    "defaultDrawRank",
+    "featureKeys",
+    "roadSpans",
+    "roadWidths",
+    "boundaryWidths",
+    "coastlineWidth",
+    "lineScale",
+    "labels",
+    "layerToggles",
+    "overlays",
+    "stylePresets"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "bands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/MapLodBand"
+      }
+    },
+    "coarseBandCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rasterTileZMax": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vectorTileZMax": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "vectorZoomSteps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MapSpanZoom"
+      }
+    },
+    "boundaryAdminMin": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MapSourceLayer"
+      }
+    },
+    "defaultDrawRank": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "featureKeys": {
+      "$ref": "#/definitions/MapFeatureKeys"
+    },
+    "roadSpans": {
+      "$ref": "#/definitions/MapClassSpans"
+    },
+    "roadWidths": {
+      "$ref": "#/definitions/MapClassWidths"
+    },
+    "boundaryWidths": {
+      "$ref": "#/definitions/MapLevelWidths"
+    },
+    "coastlineWidth": {
+      "$ref": "#/definitions/MapWidth"
+    },
+    "lineScale": {
+      "$ref": "#/definitions/MapLineScale"
+    },
+    "labels": {
+      "$ref": "#/definitions/MapLabelRules"
+    },
+    "layerToggles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MapLayerToggle"
+      }
+    },
+    "overlays": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MapOverlayLayer"
+      }
+    },
+    "stylePresets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/MapStylePreset"
+      }
+    }
+  },
+  "definitions": {
+    "MapLayerGates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "water",
+        "landBackdrop",
+        "landCover",
+        "roads",
+        "buildings",
+        "boundaries",
+        "coastline",
+        "maxAdminLevel"
+      ],
+      "properties": {
+        "water": {
+          "type": "boolean"
+        },
+        "landBackdrop": {
+          "type": "boolean"
+        },
+        "landCover": {
+          "type": "boolean"
+        },
+        "roads": {
+          "type": "boolean"
+        },
+        "buildings": {
+          "type": "boolean"
+        },
+        "boundaries": {
+          "type": "boolean"
+        },
+        "coastline": {
+          "type": "boolean"
+        },
+        "maxAdminLevel": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "description": "🚦️ Per-band vector paint gates."
+    },
+    "MapLayerRole": {
+      "enum": [
+        "waterArea",
+        "landCover",
+        "greenArea",
+        "building",
+        "road",
+        "boundary",
+        "coastline",
+        "waterway",
+        "adminArea",
+        "roadLabel",
+        "pointLabel",
+        "placeLabel"
+      ],
+      "description": "🎭️ Paint or label role of a vector-tile source layer."
+    },
+    "MapClassSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classes",
+        "belowSpanDeg"
+      ],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "belowSpanDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "MapClassSpans": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "fallbackBelowSpanDeg"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapClassSpan"
+          }
+        },
+        "fallbackBelowSpanDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "description": "🛣️ A class shows while the span stays below its row's limit; null shows always."
+    },
+    "MapLodBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "maxZoom",
+        "maxSpanDeg",
+        "rasterTileZ",
+        "representativeSpanDeg",
+        "labelPx",
+        "gates",
+        "buildingsMaxSpanDeg",
+        "buildingsMinTileZ",
+        "roadSpans",
+        "roadStrokeScale",
+        "waterAreaClasses",
+        "waterways",
+        "adminAreaHoles",
+        "landWash",
+        "landCoverOverAdminAreas"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "maxZoom": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "maxSpanDeg": {
+          "type": "number"
+        },
+        "rasterTileZ": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "representativeSpanDeg": {
+          "type": "number"
+        },
+        "labelPx": {
+          "type": "number"
+        },
+        "gates": {
+          "$ref": "#/definitions/MapLayerGates"
+        },
+        "buildingsMaxSpanDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "buildingsMinTileZ": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "roadSpans": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/MapClassSpans"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "roadStrokeScale": {
+          "type": "number"
+        },
+        "waterAreaClasses": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "waterways": {
+          "type": "boolean"
+        },
+        "adminAreaHoles": {
+          "type": "boolean"
+        },
+        "landWash": {
+          "type": "boolean"
+        },
+        "landCoverOverAdminAreas": {
+          "type": "boolean"
+        }
+      },
+      "description": "📶️ One level-of-detail band, coarse to fine."
+    },
+    "MapSpanZoom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aboveSpanDeg",
+        "tileZ"
+      ],
+      "properties": {
+        "aboveSpanDeg": {
+          "type": "number"
+        },
+        "tileZ": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "MapSourceLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role",
+        "drawRank",
+        "labelRank"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/MapLayerRole"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drawRank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "labelRank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "MapFeatureKeys": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "adminLevel",
+        "maritime",
+        "label"
+      ],
+      "properties": {
+        "class": {
+          "type": "string"
+        },
+        "adminLevel": {
+          "type": "string"
+        },
+        "maritime": {
+          "type": "string"
+        },
+        "label": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MapClassWidth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classes",
+        "width"
+      ],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "width": {
+          "type": "number"
+        }
+      }
+    },
+    "MapClassWidths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "fallback",
+        "min",
+        "max"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapClassWidth"
+          }
+        },
+        "fallback": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "MapLevelWidth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minLevel",
+        "maxLevel",
+        "width"
+      ],
+      "properties": {
+        "minLevel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxLevel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number"
+        }
+      }
+    },
+    "MapLevelWidths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "fallback",
+        "min",
+        "max"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapLevelWidth"
+          }
+        },
+        "fallback": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "MapWidth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "min",
+        "max"
+      ],
+      "properties": {
+        "width": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "MapLineDamping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "upToSpanDeg",
+        "fromSpanDeg",
+        "base",
+        "slope",
+        "curve"
+      ],
+      "properties": {
+        "upToSpanDeg": {
+          "type": "number"
+        },
+        "fromSpanDeg": {
+          "type": "number"
+        },
+        "base": {
+          "type": "number"
+        },
+        "slope": {
+          "type": "number"
+        },
+        "curve": {
+          "enum": [
+            "linear",
+            "squareRoot"
+          ]
+        }
+      }
+    },
+    "MapLineScale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coefficient",
+        "minSpanDeg",
+        "coefficientMinSpanDeg",
+        "min",
+        "max",
+        "segments",
+        "beyond"
+      ],
+      "properties": {
+        "coefficient": {
+          "type": "number"
+        },
+        "minSpanDeg": {
+          "type": "number"
+        },
+        "coefficientMinSpanDeg": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapLineDamping"
+          }
+        },
+        "beyond": {
+          "type": "number"
+        }
+      }
+    },
+    "MapClassRank": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classes",
+        "rank"
+      ],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "MapClassRanks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "fallback"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapClassRank"
+          }
+        },
+        "fallback": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "MapClassSpanRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classes",
+        "maxSpanDeg",
+        "minSpanDeg"
+      ],
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxSpanDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "minSpanDeg": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "MapLabelRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spanFloorDeg",
+        "minSpanDeg",
+        "roadLabelSpans",
+        "roadLabelRanks",
+        "placeLabelSpans",
+        "placeLabelRanks",
+        "pointLabelMaxSpanDeg"
+      ],
+      "properties": {
+        "spanFloorDeg": {
+          "type": "number"
+        },
+        "minSpanDeg": {
+          "type": "number"
+        },
+        "roadLabelSpans": {
+          "$ref": "#/definitions/MapClassSpans"
+        },
+        "roadLabelRanks": {
+          "$ref": "#/definitions/MapClassRanks"
+        },
+        "placeLabelSpans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapClassSpanRange"
+          }
+        },
+        "placeLabelRanks": {
+          "$ref": "#/definitions/MapClassRanks"
+        },
+        "pointLabelMaxSpanDeg": {
+          "type": "number"
+        }
+      }
+    },
+    "MapPaletteSlot": {
+      "enum": [
+        "surfaceClear",
+        "landFill",
+        "landStroke",
+        "labelFill",
+        "labelHalo",
+        "regionFill",
+        "regionStroke",
+        "routeStroke",
+        "positionFill",
+        "positionStroke",
+        "selectionStroke",
+        "hoverStroke"
+      ],
+      "description": "🎨️ One colour slot of the host's map palette."
+    },
+    "MapLayerTarget": {
+      "description": "🎯️ What a layer toggle switches and weights.",
+      "oneOf": [
+        {
+          "const": "raster"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role"
+          ],
+          "properties": {
+            "role": {
+              "$ref": "#/definitions/MapLayerRole"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "overlay"
+          ],
+          "properties": {
+            "overlay": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "overlayLabels"
+          ],
+          "properties": {
+            "overlayLabels": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "MapLayerToggle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "targets"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapLayerTarget"
+          }
+        }
+      },
+      "description": "🎚️ One user-facing layer switch and every paint target it controls."
+    },
+    "MapOverlayStyleFill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "style",
+        "fill"
+      ],
+      "properties": {
+        "style": {
+          "type": "string"
+        },
+        "fill": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        }
+      }
+    },
+    "MapOverlayLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "geometry",
+        "granularity",
+        "hitRadiusPx",
+        "lineWidth",
+        "pointRadius",
+        "pointStroke",
+        "labelOffsetPx",
+        "fill",
+        "stroke",
+        "styleFills"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "geometry": {
+          "enum": [
+            "point",
+            "line",
+            "area"
+          ]
+        },
+        "granularity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hitRadiusPx": {
+          "type": "number"
+        },
+        "lineWidth": {
+          "type": "number"
+        },
+        "pointRadius": {
+          "type": "number"
+        },
+        "pointStroke": {
+          "type": "number"
+        },
+        "labelOffsetPx": {
+          "type": "number"
+        },
+        "fill": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        },
+        "stroke": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        },
+        "styleFills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MapOverlayStyleFill"
+          }
+        }
+      },
+      "description": "📍️ One overlay layer the map descriptor fills with features; pickable when it has a granularity."
+    },
+    "MapStylePreset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "technique",
+        "ink",
+        "paper",
+        "labelFill",
+        "labelHalo"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "technique": {
+          "enum": [
+            "colored",
+            "figureGround"
+          ]
+        },
+        "ink": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        },
+        "paper": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        },
+        "labelFill": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        },
+        "labelHalo": {
+          "$ref": "#/definitions/MapPaletteSlot"
+        }
+      },
+      "description": "🌈️ One selectable vector style preset."
+    },
+    "MapSyncJson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "overlays": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/MapOverlayFeature"
+            }
+          }
+        },
+        "policy": {
+          "$ref": "#/definitions/MapPolicyDescriptor"
+        }
+      },
+      "description": "📨️ The map descriptor JSON a host syncs: overlay features per overlay layer id plus an optional policy."
+    },
+    "MapOverlayFeature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "coordinates"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "label": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        }
+      },
+      "description": "📍️ One overlay feature: id, lon/lat coordinates and optional caption, style key, width, icon and link."
+    },
+    "MapPolicyDescriptor": {
+      "$ref": "#"
+    }
+  }
+}

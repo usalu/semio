@@ -1,41 +1,5 @@
 
-const VECTOR_TILE_FIXTURES: &[(&str, &[u8])] = &[
-    ("0-0-0", include_bytes!("../🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
-    ("1-1-0", include_bytes!("../🧫️fixtures/🗺️vector-tiles/1-1-0/🛰️.pbf")),
-    ("2-2-1", include_bytes!("../🧫️fixtures/🗺️vector-tiles/2-2-1/🛰️.pbf")),
-    ("3-4-2", include_bytes!("../🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
-    ("4-8-5", include_bytes!("../🧫️fixtures/🗺️vector-tiles/4-8-5/🛰️.pbf")),
-    ("5-17-11", include_bytes!("../🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
-];
-
-fn vector_tile_fixture(key: &str) -> &'static [u8] {
-    VECTOR_TILE_FIXTURES.iter().find(|(name, _)| *name == key).expect("owned vector tile fixture").1
-}
-
-#[test]
-fn owned_vector_tile_inventory_agrees_with_independent_protobuf_corpus() {
-    use super::vector_tiles::GeomType;
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗺️vector-tiles/🔣️.json")).expect("vector tile corpus");
-    let rows = corpus["tiles"].as_array().expect("tile roster");
-    assert_eq!(rows.len(), VECTOR_TILE_FIXTURES.len());
-    for row in rows {
-        let key = row["key"].as_str().expect("tile key");
-        let bytes = vector_tile_fixture(key);
-        assert_eq!(bytes.len() as u64, row["bytes"].as_u64().expect("byte count"));
-        let tile = super::vector_tiles::decode_mvt(bytes).expect("owned vector tile");
-        let layers: Vec<_> = tile.layers.iter().map(|layer| {
-            let mut geometry_types = [0usize; 4];
-            for feature in &layer.features {
-                let kind = match feature.geom_type {GeomType::Unknown => 0, GeomType::Point => 1, GeomType::LineString => 2, GeomType::Polygon => 3};
-                geometry_types[kind] += 1;
-            }
-            serde_json::json!({"name": layer.name, "extent": layer.extent, "features": layer.features.len(), "geometryTypes": geometry_types})
-        }).collect();
-        assert_eq!(serde_json::Value::Array(layers), row["layers"], "tile {key}");
-    }
-    println!("[DEBUG] Owned vector tile layer/feature/geometry inventory matches the independent Protobuf.js corpus for all six original tiles");
-}
-
+use super::MapPolicy;
 use super::MAX_VISIBLE_TILE_REQUESTS;
 use super::canvas::camera::{Camera, Viewport};
 use super::projection::{WORLD_HALF, default_world_camera, lonlat_to_world, tile_world_rect, world_to_lonlat};
@@ -50,8 +14,8 @@ fn test_png_1x1() -> Vec<u8> {
     buf
 }
 
-/// 🧪️ A one-feature "landcover" vector tile — drawn unconditionally at world/continent LOD, so
-/// it exercises the real `tile_local_to_screen` → `world_to_screen` path the cache must translate.
+/// 🧪️ A one-feature "landcover" vector tile — painted by [`land_cover_extension`], so it exercises the
+/// real `tile_local_to_screen` → `world_to_screen` path the cache must translate.
 fn synthetic_land_tile() -> super::vector_tiles::VectorTile {
     use super::vector_tiles::{GeomType, VectorFeature, VectorLayer, VectorTile};
     VectorTile {
@@ -63,49 +27,48 @@ fn synthetic_land_tile() -> super::vector_tiles::VectorTile {
     }
 }
 
-#[test]
-fn lonlat_world_round_trip() {
-    let w = lonlat_to_world(8.5, 47.4);
-    let (lon, lat) = world_to_lonlat(w.x, w.y);
-    assert!((lon - 8.5).abs() < 0.01);
-    assert!((lat - 47.4).abs() < 0.5);
+/// 🌱️ The neutral policy plus one source-layer role (`landcover` paints as land cover) and two style presets: `plain` (colored) and `silhouette` (figure-ground).
+fn land_cover_extension() -> super::Arc<dyn super::MapExtension> {
+    use super::{MapPaintTechnique, MapPaletteSlot, MapStylePreset};
+    let layers = vec![super::MapSourceLayer { name: "landcover".into(), role: Some(super::MapLayerRole::LandCover), draw_rank: 0, label_rank: None }];
+    let preset = |id: &str, technique| MapStylePreset { id: id.into(), technique, ink: MapPaletteSlot::LabelFill, paper: MapPaletteSlot::SurfaceClear, label_fill: MapPaletteSlot::LabelFill, label_halo: MapPaletteSlot::LabelHalo };
+    let style_presets = vec![preset("plain", MapPaintTechnique::Colored), preset("silhouette", MapPaintTechnique::FigureGround)];
+    super::Arc::new(super::DefaultMapExtension::with_policy(super::DescribedMapPolicy::new(super::MapPolicyDescriptor { layers, style_presets, ..super::MapPolicyDescriptor::neutral() })))
 }
 
-#[test]
-fn default_world_camera_fits_extent() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let cam = default_world_camera(&viewport);
-    assert!(cam.zoom > 0.0);
-    assert_eq!(cam.x, 0.0);
-    assert_eq!(cam.y, 0.0);
+/// 📍️ A test policy with three overlay layers drawn in this order — `zones` (areas), `paths` (pickable lines, granularity `path`) and `pins` (pickable points, granularity `pin`, `accent` style filled from another slot) — each behind its own toggle, plus a `pinLabels` toggle for the pin captions.
+fn overlay_extension() -> super::Arc<dyn super::MapExtension> {
+    use super::{MapLayerTarget, MapLayerToggle, MapOverlayGeometry, MapOverlayLayer, MapOverlayStyleFill, MapPaletteSlot};
+    let layer = |id: &str, geometry: MapOverlayGeometry, granularity: Option<&str>| MapOverlayLayer {
+        id: id.into(),
+        geometry,
+        granularity: granularity.map(str::to_string),
+        hit_radius_px: 14.0,
+        line_width: 2.0,
+        point_radius: 8.0,
+        point_stroke: 2.0,
+        label_offset_px: 6.0,
+        fill: MapPaletteSlot::PositionFill,
+        stroke: MapPaletteSlot::PositionStroke,
+        style_fills: vec![MapOverlayStyleFill { style: "accent".into(), fill: MapPaletteSlot::RouteStroke }],
+    };
+    let toggle = |key: &str, target: MapLayerTarget| MapLayerToggle { key: key.into(), targets: vec![target] };
+    let descriptor = super::MapPolicyDescriptor {
+        overlays: vec![layer("zones", MapOverlayGeometry::Area, None), layer("paths", MapOverlayGeometry::Line, Some("path")), layer("pins", MapOverlayGeometry::Point, Some("pin"))],
+        layer_toggles: vec![toggle("zones", MapLayerTarget::Overlay("zones".into())), toggle("paths", MapLayerTarget::Overlay("paths".into())), toggle("pins", MapLayerTarget::Overlay("pins".into())), toggle("pinLabels", MapLayerTarget::OverlayLabels("pins".into()))],
+        ..super::MapPolicyDescriptor::neutral()
+    };
+    super::Arc::new(super::DefaultMapExtension::with_policy(super::DescribedMapPolicy::new(descriptor)))
 }
 
-#[test]
-fn visible_tiles_at_world_view() {
-    let camera = Camera { x: 0.0, y: 0.0, zoom: 200.0 };
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let tiles = visible_tiles(&camera, &viewport, 2);
-    assert!(!tiles.is_empty());
-    assert!(tiles.len() < 256, "world view must not enumerate excessive tiles");
-    let _ = WORLD_HALF;
+fn overlay_host() -> super::MapHost {
+    let mut host = super::MapHost::with_extension(overlay_extension());
+    host.set_size(800, 600, 1.0);
+    host
 }
 
-#[test]
-fn typed_visible_tile_cursor_matches_legacy_order_and_resumes_one_item_at_a_time() {
-    let camera = Camera { x: 0.0, y: 0.0, zoom: 200.0 };
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let legacy = visible_tiles(&camera, &viewport, 3);
-    let mut cursor = tiles::visible_tile_cursor(&camera, &viewport, 3);
-    assert_eq!(cursor.remaining(), legacy.len());
-    let mut typed = Vec::new();
-    while let Some(tile) = cursor.peek() {
-        typed.push((tile.z, tile.x, tile.y));
-        assert!(cursor.advance());
-    }
-    assert_eq!(typed, legacy);
-    assert_eq!(cursor.remaining(), 0);
-    assert!(!cursor.advance());
-}
+const ZURICH_PIN: &str = r#"{"overlays":{"pins":[{"id":"zurich","coordinates":[[8.54,47.37]],"label":"Zürich"}]}}"#;
+const ZURICH_PIN_AND_PATH: &str = r#"{"overlays":{"pins":[{"id":"zurich","coordinates":[[8.54,47.37]],"label":"Zürich"}],"paths":[{"id":"path-a","coordinates":[[8.54,47.37],[8.55,47.38]],"width":2.0}]}}"#;
 
 #[test]
 fn map_set_size_reclamps_cover_zoom_when_viewport_grows() {
@@ -155,25 +118,6 @@ fn map_camera_zoom_not_clamped_to_puzzle_scale() {
 }
 
 #[test]
-fn map_camera_max_zoom_reaches_street_longitude_span() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let camera = Camera { x: 0.0, y: 0.0, zoom: super::MAP_CAMERA_ZOOM_MAX };
-    let span = super::viewport_lon_span_degrees(&camera, &viewport);
-    assert!(span < 0.01, "max camera zoom must reach sub-city scale (span={span:.6}°)");
-    assert!(span < super::GIS_MAP_LOD_MAX_SPAN_DEG[6], "max zoom should enter street LOD band (span={span:.6}°)");
-}
-
-#[test]
-fn map_lod_picks_bounded_tile_zoom_at_world_fit() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let camera = default_world_camera(&viewport);
-    let z = tiles::pick_zoom(&camera, &viewport, None);
-    assert_eq!(z, 0, "world-fit automatic LOD must use world-band raster tiles (got {z})");
-    let tiles = visible_tiles(&camera, &viewport, z);
-    assert!(tiles.len() < MAX_VISIBLE_TILE_REQUESTS);
-}
-
-#[test]
 fn visible_tiles_json_bounded_for_default_host() {
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
@@ -184,11 +128,11 @@ fn visible_tiles_json_bounded_for_default_host() {
 }
 
 #[test]
-fn pick_vector_tile_zoom_clamped_to_openfreemap_max() {
+fn pick_vector_tile_zoom_clamped_to_the_policy_vector_pyramid() {
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_camera(0.0, 0.0, super::MAP_CAMERA_ZOOM_MAX);
-    assert!(host.pick_vector_tile_zoom() <= super::vector_tiles::MAP_VECTOR_TILE_MAX_Z);
+    assert!(host.pick_vector_tile_zoom() <= host.policy().descriptor().vector_tile_z_max);
 }
 
 #[test]
@@ -199,183 +143,31 @@ fn visible_vector_tiles_overzoom_at_max_camera_zoom() {
     assert!(super::vector_tiles_available_at_camera_zoom(super::MAP_CAMERA_ZOOM_MAX));
     let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
     let z = host.pick_vector_tile_zoom();
-    assert!(z <= super::vector_tiles::MAP_VECTOR_TILE_MAX_Z);
-    assert!(z <= super::vector_tiles::max_tile_z_for_span(span));
+    assert!(z <= host.policy().descriptor().vector_tile_z_max);
+    assert!(z <= host.policy().vector_zoom_cap(span));
     assert!(z <= host.pick_raster_tile_zoom());
     let raw: Vec<serde_json::Value> = serde_json::from_str(&host.visible_vector_tiles_json()).expect("json");
     assert!(!raw.is_empty());
 }
 
 #[test]
-fn map_lod_resolves_from_visible_longitude_span() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let camera = default_world_camera(&viewport);
-    assert_eq!(super::resolve_map_lod_index_from_span(super::viewport_lon_span_degrees(&camera, &viewport)), 0, "default world fit should be world LOD");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_camera(0.0, 0.0, 6000.0);
-    let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
-    let idx = super::resolve_map_lod_index_from_span(span);
-    assert!(idx >= 2, "zoomed europe view should reach at least country LOD (span={span:.1}°, idx={idx})");
-}
-
-#[test]
-fn ideal_tile_z_rises_when_viewport_span_shrinks() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let world = default_world_camera(&viewport);
-    let zoomed = Camera { x: 0.0, y: 0.0, zoom: 1800.0 };
-    assert!(super::ideal_tile_z_for_viewport(&zoomed, &viewport) > super::ideal_tile_z_for_viewport(&world, &viewport));
-}
-
-#[test]
-fn region_and_city_road_strokes_stay_thin() {
-    let region_scale = super::vector_tiles::vector_line_scale(8.0);
-    let city_scale = super::vector_tiles::vector_line_scale(2.5);
-    let district_scale = super::vector_tiles::vector_line_scale(0.2);
-    assert!(region_scale <= 1.38, "region band line_scale should not exceed cap (got {region_scale})");
-    assert!(city_scale <= 1.38, "city band line_scale should not exceed cap (got {city_scale})");
-    let region_lod = super::vector_tiles::transportation_stroke_lod_scale(8.0, None);
-    let city_lod = super::vector_tiles::transportation_stroke_lod_scale(2.5, None);
-    assert!((region_lod - 0.4).abs() < f64::EPSILON);
-    assert!((city_lod - 0.3).abs() < f64::EPSILON);
-    let primary_region = super::vector_tiles::transportation_stroke_width("primary", region_scale) * region_lod;
-    let tertiary_city = super::vector_tiles::transportation_stroke_width("tertiary", city_scale) * city_lod;
-    let residential_city = super::vector_tiles::transportation_stroke_width("residential", city_scale) * city_lod;
-    let minor_district = super::vector_tiles::transportation_stroke_width("minor", district_scale);
-    assert!(primary_region < 1.05, "primary roads at region zoom should stay under 1.05px (got {primary_region})");
-    assert!(tertiary_city < 0.55, "tertiary roads at city zoom should stay under 0.55px (got {tertiary_city})");
-    assert!(residential_city < 0.4, "residential roads at city zoom should stay under 0.4px (got {residential_city})");
-    assert!(minor_district < 1.35, "minor roads at district zoom should stay under 1.35px (got {minor_district})");
-}
-
-#[test]
-fn continental_span_hides_roads_and_caps_tile_z() {
-    assert!(!super::vector_tiles::transportation_visible("motorway", 42.0, 4, None));
-    assert!(super::vector_tiles::vector_detail_profile(42.0, 4, None).draw_landcover);
-    assert_eq!(super::vector_tiles::max_tile_z_for_span(42.0), 5);
-    let profile = super::vector_tiles::vector_detail_profile(42.0, 2, None);
-    assert!(!profile.draw_boundary);
-    assert!(profile.draw_coastline);
-    assert!(!profile.draw_land_backdrop);
-    assert!(profile.draw_landcover);
-    assert!(!super::vector_tiles::boundary_visible(2, 42.0, 2, None));
-    assert!(super::vector_tiles::boundary_visible(2, 20.0, 5, None));
-    assert!(!super::vector_tiles::boundary_visible(4, 20.0, 5, None));
-    assert!(profile.draw_water);
-    assert!(!profile.draw_transportation);
-}
-
-#[test]
-fn country_lod_hides_regional_boundaries() {
-    let span = 20.0;
-    assert_eq!(super::resolve_map_lod_index_from_span(span), 2);
-    let profile = super::vector_tiles::vector_detail_profile(span, 7, None);
-    assert!(profile.draw_boundary);
-    assert!(profile.draw_land_backdrop);
-    assert!(!profile.draw_landcover);
-    assert_eq!(profile.max_admin_level, 2);
-    assert!(super::vector_tiles::boundary_visible(2, span, 7, None));
-    assert!(!super::vector_tiles::boundary_visible(4, span, 7, None));
-    assert!(!super::vector_tiles::boundary_visible(6, span, 7, None));
-    let forced = super::vector_tiles::vector_detail_profile(8.0, 10, Some("country"));
-    assert_eq!(forced.max_admin_level, 2);
-    assert!(super::vector_tiles::boundary_visible(2, 8.0, 10, Some("country")));
-    assert!(!super::vector_tiles::boundary_visible(4, 8.0, 10, Some("country")));
-    assert!(!super::vector_tiles::boundary_visible(6, 8.0, 10, Some("country")));
-}
-
-#[test]
-fn region_lod_includes_country_and_state_boundaries() {
-    let span = 8.0;
-    assert_eq!(super::resolve_map_lod_index_from_span(span), 3);
-    let profile = super::vector_tiles::vector_detail_profile(span, 10, None);
-    assert!(profile.draw_landcover);
-    assert!(profile.draw_transportation);
-    assert_eq!(profile.max_admin_level, 6);
-    assert!(super::vector_tiles::boundary_visible(2, span, 10, None));
-    assert!(super::vector_tiles::boundary_visible(4, span, 10, None));
-    assert!(super::vector_tiles::boundary_visible(6, span, 10, None));
-    assert_eq!(super::vector_tiles::max_tile_z_for_span(span), 6);
-    assert!(super::vector_tiles::transportation_visible("primary", span, 6, None));
-    assert!(!super::vector_tiles::transportation_visible("secondary", span, 6, None));
-    assert!(!super::vector_tiles::transportation_visible("tertiary", span, 6, None));
-}
-
-#[test]
-fn city_lod_fills_tile_backdrop_to_hide_seams() {
-    let span = 2.0;
-    assert_eq!(super::resolve_map_lod_index_from_span(span), 4);
-    let profile = super::vector_tiles::vector_detail_profile(span, 10, None);
-    assert!(profile.draw_land_backdrop);
-    assert!(profile.draw_landcover);
-    assert!(profile.draw_transportation);
-}
-
-#[test]
-fn region_lod_exceeds_country_detail() {
-    let span = 8.0;
-    let country = super::vector_tiles::vector_detail_profile(span, 10, Some("country"));
-    let region = super::vector_tiles::vector_detail_profile(span, 10, Some("region"));
-    assert!(!country.draw_landcover);
-    assert!(region.draw_landcover);
-    assert!(country.draw_land_backdrop);
-    assert!(region.draw_land_backdrop);
-    assert!(!country.draw_transportation);
-    assert!(region.draw_transportation);
-    assert_eq!(country.max_admin_level, 2);
-    assert_eq!(region.max_admin_level, 6);
-    assert!(super::vector_tiles::boundary_visible(2, span, 10, Some("region")));
-    assert!(super::vector_tiles::boundary_visible(4, span, 10, Some("region")));
-    assert!(!super::vector_tiles::boundary_visible(4, span, 10, Some("country")));
-}
-
-#[test]
-fn country_span_vector_profile_matches_lod_band() {
-    let span = 20.0;
-    assert_eq!(super::resolve_map_lod_index_from_span(span), 2);
-    let profile = super::vector_tiles::vector_detail_profile(span, 2, None);
-    assert!(profile.draw_boundary);
-    assert_eq!(super::vector_tiles::max_tile_z_for_span(span), 7);
-    let coarse_tile = super::vector_tiles::vector_detail_profile(span, 1, None);
-    assert_eq!(profile.draw_boundary, coarse_tile.draw_boundary);
-}
-
-#[test]
 fn layer_visibility_json_round_trip() {
-    let mut host = super::MapHost::new();
-    assert!(host.layer_visibility.positions);
-    host.set_layer_visibility_from_json(r#"{"positions":false,"routes":true}"#).expect("parse");
-    assert!(!host.layer_visibility.positions);
-    assert!(host.layer_visibility.routes);
-    let parsed: super::MapLayerVisibility = serde_json::from_str(&host.layer_visibility_json()).expect("serialize");
-    assert!(!parsed.positions);
-}
-
-#[test]
-fn weight_slider_keys_follow_lod_and_render_mode() {
-    let world_combined = super::map_layer_weight_slider_keys_at_lod("world", "combined");
-    assert!(world_combined.contains(&"raster"));
-    assert!(world_combined.contains(&"water"));
-    assert!(!world_combined.contains(&"roads"));
-    assert!(!world_combined.contains(&"buildings"));
-    let street_vector = super::map_layer_weight_slider_keys_at_lod("street", "vector");
-    assert!(!street_vector.contains(&"raster"));
-    assert!(street_vector.contains(&"roads"));
-    assert!(!street_vector.contains(&"buildings"));
-    let building_combined = super::map_layer_weight_slider_keys_at_lod("building", "combined");
-    assert!(building_combined.contains(&"buildings"));
-    assert!(building_combined.contains(&"raster"));
-    let image_only = super::map_layer_weight_slider_keys_at_lod("city", "image");
-    assert!(image_only.contains(&"raster"));
-    assert!(!image_only.contains(&"roads"));
+    let mut host = overlay_host();
+    let pins = super::MapLayerTarget::Overlay("pins".into());
+    assert!(host.layer_visible(&pins));
+    host.set_layer_visibility_from_json(r#"{"pins":false,"paths":true}"#).expect("parse");
+    assert!(!host.layer_visible(&pins));
+    assert!(host.layer_visible(&super::MapLayerTarget::Overlay("paths".into())));
+    let parsed: std::collections::BTreeMap<String, bool> = serde_json::from_str(&host.layer_visibility_json()).expect("serialize");
+    assert_eq!(parsed.get("pins"), Some(&false));
 }
 
 #[test]
 fn layer_stroke_scale_json_clamps_weights() {
-    let mut host = super::MapHost::new();
-    host.set_layer_stroke_scale_from_json(r#"{"roads":9,"water":0.1}"#).expect("parse");
-    assert!((host.layer_stroke_scale.roads - super::MAP_LAYER_WEIGHT_MAX).abs() < f64::EPSILON);
-    assert!((host.layer_stroke_scale.water - super::MAP_LAYER_WEIGHT_MIN).abs() < f64::EPSILON);
+    let mut host = overlay_host();
+    host.set_layer_stroke_scale_from_json(r#"{"pins":9,"paths":0.1}"#).expect("parse");
+    assert!((host.layer_weight(&super::MapLayerTarget::Overlay("pins".into())) - super::MAP_LAYER_WEIGHT_MAX).abs() < f64::EPSILON);
+    assert!((host.layer_weight(&super::MapLayerTarget::Overlay("paths".into())) - super::MAP_LAYER_WEIGHT_MIN).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -390,40 +182,6 @@ fn pick_vector_tile_zoom_tracks_viewport_not_camera_lod_steps() {
 }
 
 #[test]
-fn pick_vector_tile_zoom_uses_span_cap_at_world_lod_while_raster_stays_coarse() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.fit_world_camera();
-    assert_eq!(host.pick_raster_tile_zoom(), 0, "world raster stays at z0");
-    assert_eq!(host.pick_vector_tile_zoom(), super::vector_tiles::max_tile_z_for_span(super::viewport_lon_span_degrees(&host.camera, &host.viewport,)), "world vector tiles must be finer than raster so countries/coastlines paint");
-}
-
-#[test]
-fn forced_building_lod_bounds_tile_requests_at_world_zoom() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.fit_world_camera();
-    host.set_lod_mode("building");
-    let z = host.pick_raster_tile_zoom();
-    assert!(z < super::GIS_MAP_LOD_TILE_Z[7], "forced building at world view must clamp tile z (got {z})");
-    let raw: Vec<serde_json::Value> = serde_json::from_str(&host.visible_tiles_json()).expect("json");
-    assert!(raw.len() <= MAX_VISIBLE_TILE_REQUESTS);
-}
-
-#[test]
-fn forced_country_lod_allows_finer_tiles_when_zoomed_in() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_lod_mode("country");
-    host.set_camera(0.0, 0.0, 6000.0);
-    let z = host.pick_raster_tile_zoom();
-    assert!(z > super::GIS_MAP_LOD_TILE_Z[2], "pinned country LOD must not cap tile z when zoomed in (got {z})");
-    let lod: serde_json::Value = serde_json::from_str(&host.current_lod_json()).expect("json");
-    assert_eq!(lod["id"], "country");
-    assert_eq!(lod["mode"], "country");
-}
-
-#[test]
 fn visible_vector_tiles_at_world_zoom() {
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
@@ -431,21 +189,6 @@ fn visible_vector_tiles_at_world_zoom() {
     assert!(super::vector_tiles_available_at_camera_zoom(host.camera.zoom));
     let raw: Vec<serde_json::Value> = serde_json::from_str(&host.visible_vector_tiles_json()).expect("json");
     assert!(!raw.is_empty());
-}
-
-#[test]
-fn map_wheel_screen_keeps_world_under_cursor_with_flipped_y() {
-    use super::canvas::camera::{Camera, Viewport};
-    let mut camera = Camera { x: 0.15, y: -0.25, zoom: 320.0 };
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let sx = 220.0;
-    let sy = 140.0;
-    let before = super::map_viewport::screen_to_world(&camera, &viewport, super::Point::new(sx, sy));
-    super::map_wheel_screen(&mut camera, &viewport, sx, sy, -80.0);
-    let after = super::map_viewport::screen_to_world(&camera, &viewport, super::Point::new(sx, sy));
-    assert!(camera.zoom > 320.0);
-    assert!((after.x - before.x).abs() < 1e-9, "world x should stay under cursor");
-    assert!((after.y - before.y).abs() < 1e-9, "world y should stay under cursor");
 }
 
 #[test]
@@ -464,92 +207,74 @@ fn tile_raster_affine_maps_image_north_up() {
 }
 
 #[test]
-fn map_render_mode_parse() {
-    assert_eq!(super::MapTileMode::parse("image"), super::MapTileMode::Image);
-    assert_eq!(super::MapTileMode::parse("vector"), super::MapTileMode::Vector);
-    assert_eq!(super::MapTileMode::parse("combined"), super::MapTileMode::Combined);
+fn sync_map_json_keeps_overlay_captions() {
+    let mut host = overlay_host();
+    host.sync_map_json(ZURICH_PIN).expect("descriptor");
+    assert_eq!(host.overlay_feature("pins", "zurich").and_then(|feature| feature.label.as_deref()), Some("Zürich"));
 }
 
 #[test]
-fn map_vector_style_parse() {
-    assert_eq!(super::MapVectorStyle::parse("colored"), super::MapVectorStyle::Colored);
-    assert_eq!(super::MapVectorStyle::parse("figureGround"), super::MapVectorStyle::FigureGround);
-    assert_eq!(super::MapVectorStyle::parse("invertedFigure"), super::MapVectorStyle::InvertedFigure);
-    assert_eq!(super::MapVectorStyle::parse("unknown"), super::MapVectorStyle::Colored);
+fn sync_map_json_parses_rich_overlay_metadata() {
+    let mut host = overlay_host();
+    host.sync_map_json(r#"{"overlays":{"pins":[{"id":"site-1","coordinates":[[8.54,47.37]],"label":"Site","style":"accent","icon":"package","link":"https://example.test/site"}]}}"#).expect("descriptor");
+    let feature = host.overlay_feature("pins", "site-1").expect("feature");
+    assert_eq!(feature.style.as_deref(), Some("accent"));
+    assert_eq!(feature.icon.as_deref(), Some("package"));
+    assert_eq!(feature.link.as_deref(), Some("https://example.test/site"));
+    host.sync_map_json(r#"{"overlays":{}}"#).expect("empty descriptor");
+    assert!(host.overlay_feature("pins", "site-1").is_none(), "a sync replaces the overlay tables wholesale");
 }
 
 #[test]
-fn sync_map_json_keeps_position_labels() {
-    let mut host = super::MapHost::new();
-    let json = r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#;
-    host.sync_map_json(json).expect("descriptor");
-    let pos = host.features.positions.get("zurich").expect("position");
-    assert_eq!(pos.label.as_deref(), Some("Zürich"));
-}
-
-#[test]
-fn sync_map_json_parses_rich_position_metadata() {
-    let mut host = super::MapHost::new();
-    let json = r#"{"positions":[{"id":"donor-1","lon":8.54,"lat":47.37,"name":"Donor site","kind":"donor","icon":"package","sourceUrl":"https://example.test/donor"}],"routes":[],"regions":[]}"#;
-    host.sync_map_json(json).expect("descriptor");
-    let pos = host.features.positions.get("donor-1").expect("position");
-    assert_eq!(pos.name.as_deref(), Some("Donor site"));
-    assert_eq!(pos.kind.as_deref(), Some("donor"));
-    assert_eq!(pos.icon.as_deref(), Some("package"));
-    assert_eq!(pos.source_url.as_deref(), Some("https://example.test/donor"));
-}
-
-#[test]
-fn position_screen_json_projects_known_position() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
+fn feature_screen_json_projects_a_known_point() {
+    let mut host = overlay_host();
     host.fit_world_camera();
-    host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#).expect("descriptor");
-    let raw: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
+    host.sync_map_json(ZURICH_PIN).expect("descriptor");
+    let raw: serde_json::Value = serde_json::from_str(&host.feature_screen_json("pin", "zurich")).expect("json");
     assert!(raw.get("x").and_then(|v| v.as_f64()).is_some());
     assert!(raw.get("y").and_then(|v| v.as_f64()).is_some());
-    assert_eq!(host.position_screen_json("missing"), "null");
+    assert_eq!(host.feature_screen_json("pin", "missing"), "null");
 }
 
 #[test]
-fn hit_test_feature_prefers_closest_target() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
+fn hit_test_feature_prefers_the_topmost_closest_target() {
+    let mut host = overlay_host();
     host.fit_world_camera();
-    host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#).expect("descriptor");
-    let screen: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
+    host.sync_map_json(ZURICH_PIN_AND_PATH).expect("descriptor");
+    let screen: serde_json::Value = serde_json::from_str(&host.feature_screen_json("pin", "zurich")).expect("json");
     let sx = screen["x"].as_f64().expect("x");
     let sy = screen["y"].as_f64().expect("y");
     let hit: serde_json::Value = serde_json::from_str(&host.hit_test_feature_json(sx, sy)).expect("hit");
-    assert!(hit.get("kind").is_some());
-    assert!(hit.get("id").is_some());
+    assert_eq!(hit["kind"], "pin", "the path starts under the pin too; the later-declared layer wins the tie");
+    assert_eq!(hit["id"], "zurich");
+    assert_eq!(host.hit_test_feature_json(-1_000.0, -1_000.0), "null");
 }
 
 #[test]
-fn features_in_rect_crossing_includes_intersecting_route() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
+fn features_in_rect_crossing_includes_intersecting_lines() {
+    let mut host = overlay_host();
     host.fit_world_camera();
-    host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#).expect("descriptor");
+    host.sync_map_json(ZURICH_PIN_AND_PATH).expect("descriptor");
     let raw: serde_json::Value = serde_json::from_str(&host.features_in_rect_json(0.0, 0.0, 800.0, 600.0, true)).expect("json");
-    assert!(raw["positions"].as_array().is_some_and(|rows| !rows.is_empty()));
-    assert!(raw["routes"].as_array().is_some_and(|rows| !rows.is_empty()));
+    assert!(raw["pins"].as_array().is_some_and(|rows| !rows.is_empty()));
+    assert!(raw["paths"].as_array().is_some_and(|rows| !rows.is_empty()));
+    assert!(raw.get("zones").is_none(), "a layer without a granularity is not pickable");
 }
 
 #[test]
 fn sync_interaction_updates_host_state_scoped_to_active_granularity() {
-    let mut host = super::MapHost::new();
-    host.sync_interaction("position", &["a".to_string()], Some("a"));
-    assert!(host.selected_positions.contains("a"));
-    assert!(host.selected_routes.is_empty());
-    assert_eq!(host.hovered_kind.as_deref(), Some("position"));
-    assert_eq!(host.hovered_id.as_deref(), Some("a"));
+    let mut host = overlay_host();
+    host.sync_interaction("pin", &["a".to_string()], Some("a"));
+    assert_eq!(host.selected_ids("pin").collect::<Vec<_>>(), ["a"]);
+    assert_eq!(host.selected_ids("path").count(), 0);
+    assert_eq!(host.hovered_kind(), Some("pin"));
+    assert_eq!(host.hovered_id(), Some("a"));
 
-    host.sync_interaction("route", &["b".to_string()], None);
-    assert!(host.selected_positions.is_empty(), "switching granularity clears the other kind's ids");
-    assert!(host.selected_routes.contains("b"));
-    assert!(host.hovered_kind.is_none());
-    assert!(host.hovered_id.is_none());
+    host.sync_interaction("path", &["b".to_string()], None);
+    assert_eq!(host.selected_ids("pin").count(), 0, "switching granularity clears the other kind's ids");
+    assert_eq!(host.selected_ids("path").collect::<Vec<_>>(), ["b"]);
+    assert!(host.hovered_kind().is_none());
+    assert!(host.hovered_id().is_none());
 }
 
 #[test]
@@ -565,13 +290,22 @@ fn pointer_up_emits_camera_after_middle_button_pan() {
 }
 
 #[test]
-fn position_labels_build_non_empty_scene() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
+fn overlay_layers_paint_behind_their_toggles() {
+    let mut host = overlay_host();
     host.fit_world_camera();
-    host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[],"regions":[]}"#).expect("descriptor");
-    let scene = host.build_vector_scene();
-    assert!(!scene.is_empty());
+    host.sync_map_json(ZURICH_PIN_AND_PATH).expect("descriptor");
+    let all = host.build_vector_scene().path_count();
+    assert!(all > 0);
+    host.set_layer_visibility_from_json(r#"{"pinLabels":false}"#).expect("captions off");
+    let without_captions = host.build_vector_scene().path_count();
+    assert!(without_captions < all, "the pin caption is its own toggle target");
+    host.set_layer_visibility_from_json(r#"{"pins":false,"paths":false}"#).expect("overlays off");
+    assert_eq!(host.build_vector_scene().path_count(), 0);
+    let mut neutral = super::MapHost::new();
+    neutral.set_size(800, 600, 1.0);
+    neutral.fit_world_camera();
+    neutral.sync_map_json(ZURICH_PIN_AND_PATH).expect("descriptor");
+    assert_eq!(neutral.build_vector_scene().path_count(), 0, "the neutral policy declares no overlay layer");
 }
 
 #[test]
@@ -610,15 +344,16 @@ fn build_vector_scene_respects_render_mode() {
 }
 
 #[test]
-fn build_vector_scene_respects_vector_style() {
-    let mut host = super::MapHost::new();
+fn vector_style_resolves_to_a_policy_preset() {
+    let mut host = super::MapHost::with_extension(land_cover_extension());
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");
-    host.set_vector_style("figureGround");
+    host.set_vector_style("silhouette");
     let _ = host.build_vector_scene();
-    host.set_vector_style("invertedFigure");
-    let _ = host.build_vector_scene();
-    assert_eq!(host.vector_style_str(), "invertedFigure");
+    assert_eq!(host.vector_style_str(), "silhouette");
+    host.set_vector_style("unknown");
+    assert_eq!(host.vector_style_str(), "plain", "an undeclared preset paints the first one");
+    assert_eq!(super::MapHost::new().vector_style_str(), super::MAP_STYLE_PRESET_NEUTRAL_ID);
 }
 
 /// 🎣️ Seeds a vector host whose camera sits *off* a tile boundary. Straight from
@@ -627,7 +362,7 @@ fn build_vector_scene_respects_vector_style() {
 /// whole extra row in (measured live: 48 → 56 tiles for a 0.2 px pan) and legitimately invalidates
 /// the cache. A sub-tile pan only stays within one visible set away from that boundary.
 fn vector_cache_host_off_tile_boundary() -> super::MapHost {
-    let mut host = super::MapHost::new();
+    let mut host = super::MapHost::with_extension(land_cover_extension());
     host.set_size(800, 600, 1.0);
     host.fit_world_camera();
     host.set_render_mode("vector");
@@ -718,7 +453,7 @@ fn vector_scene_cache_invalidates_on_new_tile_upload() {
 
 #[test]
 fn vector_scene_cache_invalidates_on_vector_style_change() {
-    let mut host = super::MapHost::new();
+    let mut host = super::MapHost::with_extension(land_cover_extension());
     host.set_size(800, 600, 1.0);
     host.fit_world_camera();
     host.set_render_mode("vector");
@@ -726,13 +461,25 @@ fn vector_scene_cache_invalidates_on_vector_style_change() {
     let _ = host.build_vector_scene();
     assert_eq!(host.vector_scene_rebuild_count.get(), 1);
 
-    host.set_vector_style("figureGround");
+    host.set_vector_style("silhouette");
     let _ = host.build_vector_scene();
     assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a vector-style change must invalidate the cache");
 }
 
+#[test]
+fn vector_scene_cache_invalidates_on_policy_change() {
+    let mut host = vector_cache_host_off_tile_boundary();
+    let styled = host.build_vector_scene();
+    assert!(!styled.is_empty(), "the land-cover role paints the synthetic tile");
+    assert_eq!(host.vector_scene_rebuild_count.get(), 1);
+    host.set_extension(super::Arc::new(super::DefaultMapExtension::default()));
+    let neutral = host.build_vector_scene();
+    assert_eq!(host.vector_scene_rebuild_count.get(), 2, "a replaced policy must never reuse a scene built by the previous one");
+    assert!(neutral.path_count() < styled.path_count(), "the neutral policy gives the landcover layer no role");
+}
+
 /// 🚫️ The vector-tile layer must NOT key on interaction. Selection and hover are painted by the
-/// regions/routes/positions layers, which are rebuilt every frame outside this cache, so keying on
+/// overlay layers, which are rebuilt every frame outside this cache, so keying on
 /// `interaction_revision` bought nothing — and because `pointer_move_screen`/`set_camera` bump that
 /// revision on every frame of a pan, it silently invalidated the cache once per frame and pinned a
 /// drag at the uncached cost (measured live: 35 ms/frame with it, 2.7 ms without).
@@ -742,7 +489,7 @@ fn vector_scene_cache_survives_interaction_change_because_selection_draws_outsid
     let _ = host.build_vector_scene();
     assert_eq!(host.vector_scene_rebuild_count.get(), 1);
 
-    host.sync_interaction("position", &["a".to_string()], Some("a"));
+    host.sync_interaction("pin", &["a".to_string()], Some("a"));
     let _ = host.build_vector_scene();
     assert_eq!(host.vector_scene_rebuild_count.get(), 1, "selection/hover must not rebuild the vector-tile cache");
 }
@@ -765,14 +512,6 @@ fn vector_scene_cache_survives_a_drag_that_stays_within_one_tile_set() {
 
     assert_eq!(host.visible_vector_tiles_revision(), revision, "this drag must stay inside one tile set for the test to mean anything");
     assert_eq!(host.vector_scene_rebuild_count.get(), 1, "a drag within one tile set must never rebuild the vector scene");
-}
-
-#[test]
-fn parse_tile_key_round_trips_tile_key() {
-    let key = tiles::tile_key(3, 5, 7);
-    assert_eq!(tiles::parse_tile_key(&key), Some((3, 5, 7)));
-    assert_eq!(tiles::parse_tile_key("bad"), None);
-    assert_eq!(tiles::parse_tile_key("1/2"), None);
 }
 
 #[test]
@@ -816,250 +555,6 @@ fn tile_retention_keeps_vector_ancestor_after_zoom_in() {
     assert!(vz >= 1, "zoomed camera should request finer vector tiles (got {vz})");
     host.prepare_visible_tiles();
     assert!(host.tiles.vector_tiles.contains_key("0/0/0"), "ancestor vector tile must survive zoom-level change for pyramid fallback");
-}
-
-#[test]
-fn decode_mvt_empty_bytes_yields_empty_tile() {
-    let tile = super::vector_tiles::decode_mvt(&[]).expect("empty pbf");
-    assert!(tile.layers.is_empty());
-}
-
-#[test]
-fn decode_demotile_fixture_has_named_layers() {
-    let bytes = vector_tile_fixture("2-2-1");
-    let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
-    assert!(!tile.layers.is_empty());
-    assert!(tile.layers.iter().any(|l| !l.features.is_empty()));
-    let names: Vec<&str> = tile.layers.iter().map(|l| l.name.as_str()).collect();
-    assert!(names.contains(&"countries"));
-    assert!(names.contains(&"centroids"));
-}
-
-#[test]
-fn demotile_fixture_countries_use_multi_ring_polygons() {
-    let bytes = vector_tile_fixture("2-2-1");
-    let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
-    let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries layer");
-    let multi = countries.features.iter().filter(|f| f.rings.len() > 1).count();
-    assert!(multi > 0, "fixture should include multi-ring countries");
-}
-
-#[test]
-fn fixture_linestrings_split_at_moveto() {
-    let mut found = false;
-    for (_, bytes) in VECTOR_TILE_FIXTURES {
-        let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
-        for layer in &tile.layers {
-            if layer.features.iter().any(|f| f.lines.len() > 1) {
-                found = true;
-                break;
-            }
-        }
-        if found {
-            break;
-        }
-    }
-    assert!(found, "at least one fixture tile must decode multi-part line features");
-}
-
-#[test]
-fn demotile_z5_has_countries_and_centroids() {
-    let bytes = vector_tile_fixture("5-17-11");
-    let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
-    let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
-    let centroids = tile.layers.iter().find(|l| l.name == "centroids").expect("centroids");
-    assert!(countries.features.len() >= 10);
-    assert!(centroids.features.len() >= 5);
-    assert!(centroids.features.iter().any(|f| super::vector_tiles::feature_label(&f.properties).is_some()));
-}
-
-#[test]
-fn demotile_z0_has_many_country_features() {
-    let bytes = vector_tile_fixture("0-0-0");
-    let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
-    let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
-    assert!(countries.features.len() >= 50, "world tile should include many countries");
-}
-
-#[test]
-fn figure_world_tile_paints_many_countries() {
-    let bytes = vector_tile_fixture("0-0-0");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    host.set_vector_style("figureGround");
-    host.set_lod_mode("world");
-    host.fit_world_camera();
-    host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
-    let scene = host.build_vector_scene();
-    assert!(!scene.is_empty());
-}
-
-#[test]
-fn colored_world_tile_paints_land_over_water_backdrop() {
-    let bytes = vector_tile_fixture("0-0-0");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    host.set_vector_style("colored");
-    host.fit_world_camera();
-    host.upload_vector_tile(0, 0, 0, &bytes).expect("vector tile");
-    let scene = host.build_vector_scene();
-    assert!(scene.path_count() > 4, "colored world LOD must paint country landmasses, not only the water backdrop");
-}
-
-#[test]
-fn figure_country_lod_uses_land_mass_backdrop() {
-    let bytes = vector_tile_fixture("3-4-2");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    host.set_vector_style("figureGround");
-    host.set_lod_mode("country");
-    host.fit_world_camera();
-    host.upload_vector_tile(3, 4, 2, &bytes).expect("vector tile");
-    let scene = host.build_vector_scene();
-    assert!(!scene.is_empty());
-}
-
-fn zoom_host_to_representative_lod(host: &mut super::MapHost, lod_id: &str) {
-    let idx = super::GIS_MAP_LOD_SCALE.index_of(lod_id).expect("lod id");
-    let target = super::representative_viewport_span_for_lod(idx);
-    host.fit_world_camera();
-    let mut lo = host.camera.zoom;
-    let mut hi = super::MAP_CAMERA_ZOOM_MAX;
-    for _ in 0..48 {
-        let mid = (lo + hi) * 0.5;
-        host.set_camera(0.0, 0.0, mid);
-        let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
-        if span > target {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
-    }
-    host.set_camera(0.0, 0.0, hi);
-}
-
-fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
-    zoom_host_to_representative_lod(host, lod_id);
-    let rect = tile_world_rect(tz, tx, ty);
-    let cx = (rect.x0() + rect.x1()) * 0.5;
-    let cy = (rect.y0() + rect.y1()) * 0.5;
-    host.set_camera(cx, -cy, host.camera.zoom);
-}
-
-#[test]
-fn vector_label_anchor_uses_line_midpoint_for_transportation_names() {
-    use super::vector_tiles::{feature_label_anchor, GeomType, VectorFeature};
-    use std::collections::BTreeMap;
-    let feature = VectorFeature {
-        id: None,
-        geom_type: GeomType::LineString,
-        rings: Vec::new(),
-        lines: vec![vec![(100.0, 100.0), (200.0, 200.0), (300.0, 300.0)]],
-        points: Vec::new(),
-        properties: BTreeMap::from([("ref".into(), "A81".into())]),
-    };
-    let anchor = feature_label_anchor(&feature, 4096);
-    assert_eq!(anchor, (200.0, 200.0), "line labels must not fall back to the tile center");
-    let center = feature_label_anchor(
-        &VectorFeature { lines: Vec::new(), points: Vec::new(), rings: Vec::new(), geom_type: GeomType::Unknown, id: None, properties: BTreeMap::new() },
-        4096,
-    );
-    assert_eq!(center, (2048.0, 2048.0));
-}
-
-#[test]
-fn transportation_name_visible_is_stricter_than_road_geometry_at_city_span() {
-    let v = super::vector_tiles::transportation_name_visible;
-    assert!(v("primary", 2.0));
-    assert!(!v("secondary", 2.0));
-    assert!(!v("street", 2.0));
-    assert!(v("secondary", 0.8));
-}
-
-#[test]
-fn vector_label_px_scales_with_span_inside_city_band() {
-    let wide = super::vector_tiles::vector_label_px(2.0, 1.0);
-    let narrow = super::vector_tiles::vector_label_px(1.3, 1.0);
-    assert!(narrow > wide, "labels should grow when zooming in (span shrinks): {wide} vs {narrow}");
-    assert!((wide - 12.5 * 4.0 / 2.0).abs() < 1e-6);
-}
-
-#[test]
-fn poi_labels_hidden_until_district_span() {
-    let v = super::vector_tiles::poi_label_visible;
-    assert!(!v(2.0));
-    assert!(v(0.3));
-}
-
-#[test]
-fn place_label_visible_covers_admin_document() {
-    let v = super::vector_tiles::place_label_visible;
-    assert!(v("", 20.0));
-    assert!(!v("", 8.0));
-    assert!(v("continent", 50.0));
-    assert!(!v("continent", 20.0));
-    assert!(v("country", 20.0));
-    assert!(!v("country", 8.0));
-    assert!(v("state", 8.0));
-    assert!(v("province", 8.0));
-    assert!(v("city", 2.0));
-    assert!(v("town", 0.8));
-    assert!(v("village", 0.2));
-    assert!(v("suburb", 0.2));
-    assert!(v("quarter", 0.05));
-    assert!(v("neighbourhood", 0.05));
-}
-
-#[test]
-fn label_camera_setup_intersects_fixture_tile() {
-    let bytes = vector_tile_fixture("5-17-11");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_lod_mode("country");
-    zoom_host_over_tile(&mut host, "country", 5, 17, 11);
-    host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
-    let rect = tile_world_rect(5, 17, 11);
-    let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
-    assert!(host.tile_rect_intersects_viewport(rect), "tile must intersect (span={span})");
-    let scene = host.build_vector_scene();
-    assert!(!scene.is_empty(), "fixture tile should paint geometry (span={span})");
-}
-
-#[test]
-fn figure_ground_labels_increase_scene_when_enabled() {
-    let bytes = vector_tile_fixture("5-17-11");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    host.set_vector_style("figureGround");
-    host.set_lod_mode("country");
-    zoom_host_over_tile(&mut host, "country", 5, 17, 11);
-    host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
-    host.set_layer_visibility_from_json(r#"{"labels":false}"#).expect("labels off");
-    let without = host.build_vector_scene().path_count();
-    host.set_layer_visibility_from_json(r#"{"labels":true}"#).expect("labels on");
-    let with_labels = host.build_vector_scene().path_count();
-    assert!(with_labels > without, "figure-ground labels should add glyph paths (with={with_labels}, without={without})");
-}
-
-#[test]
-fn colored_vector_labels_increase_scene_when_enabled() {
-    let bytes = vector_tile_fixture("5-17-11");
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.set_render_mode("vector");
-    host.set_vector_style("colored");
-    host.set_lod_mode("country");
-    zoom_host_over_tile(&mut host, "country", 5, 17, 11);
-    host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
-    host.set_layer_visibility_from_json(r#"{"labels":false}"#).expect("labels off");
-    let without = host.build_vector_scene().path_count();
-    host.set_layer_visibility_from_json(r#"{"labels":true}"#).expect("labels on");
-    let with_labels = host.build_vector_scene().path_count();
-    assert!(with_labels > without, "colored vector labels should add glyph paths (with={with_labels}, without={without})");
 }
 
 #[test]
@@ -1125,91 +620,103 @@ fn map_polyline_intersects_polygon_detects_crossing_edge() {
 
 #[test]
 fn features_in_polygon_json_invalid_json_returns_empty() {
-    let host = super::MapHost::new();
+    let host = overlay_host();
     let out = host.features_in_polygon_json("not json", true);
     let v: serde_json::Value = serde_json::from_str(&out).expect("json");
-    assert!(v["positions"].as_array().unwrap().is_empty());
-    assert!(v["routes"].as_array().unwrap().is_empty());
+    assert!(v["pins"].as_array().unwrap().is_empty());
+    assert!(v["paths"].as_array().unwrap().is_empty());
 }
 
 #[test]
 fn features_in_polygon_json_requires_at_least_a_triangle() {
-    let host = super::MapHost::new();
+    let host = overlay_host();
     let out = host.features_in_polygon_json("[[0.0,0.0],[1.0,1.0]]", true);
     let v: serde_json::Value = serde_json::from_str(&out).expect("json");
-    assert!(v["positions"].as_array().unwrap().is_empty());
+    assert!(v["pins"].as_array().unwrap().is_empty());
 }
 
 #[test]
-fn features_in_polygon_json_finds_enclosed_position() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.sync_map_json(r#"{"positions":[{"id":"p1","lon":0.0,"lat":0.0}]}"#).expect("sync");
-    let s = host.position_screen_json("p1");
-    let sv: serde_json::Value = serde_json::from_str(&s).expect("json");
+fn features_in_polygon_json_finds_an_enclosed_point() {
+    let mut host = overlay_host();
+    host.sync_map_json(r#"{"overlays":{"pins":[{"id":"p1","coordinates":[[0.0,0.0]]}]}}"#).expect("sync");
+    let sv: serde_json::Value = serde_json::from_str(&host.feature_screen_json("pin", "p1")).expect("json");
     let (sx, sy) = (sv["x"].as_f64().unwrap(), sv["y"].as_f64().unwrap());
     let polygon = format!("[[{},{}],[{},{}],[{},{}]]", sx - 20.0, sy - 20.0, sx + 20.0, sy - 20.0, sx, sy + 20.0);
     let out = host.features_in_polygon_json(&polygon, true);
     let v: serde_json::Value = serde_json::from_str(&out).expect("json");
-    assert_eq!(v["positions"].as_array().unwrap().first().and_then(|x| x.as_str()), Some("p1"));
+    assert_eq!(v["pins"].as_array().unwrap().first().and_then(|x| x.as_str()), Some("p1"));
 }
 
 #[test]
-fn feature_screen_json_covers_route_missing_and_unknown_kind() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.sync_map_json(r#"{"routes":[{"id":"r1","points":[[0.0,0.0],[1.0,1.0]]}]}"#).expect("sync");
-    let route_json = host.feature_screen_json("route", "r1");
-    assert_ne!(route_json, "null");
-    assert_eq!(host.feature_screen_json("route", "missing"), "null");
+fn feature_screen_json_covers_lines_missing_and_unknown_kind() {
+    let mut host = overlay_host();
+    host.sync_map_json(r#"{"overlays":{"paths":[{"id":"r1","coordinates":[[0.0,0.0],[1.0,1.0]]}]}}"#).expect("sync");
+    let line_json = host.feature_screen_json("path", "r1");
+    assert_ne!(line_json, "null");
+    assert!(serde_json::from_str::<serde_json::Value>(&line_json).expect("json")["polyline"].as_array().is_some_and(|rows| rows.len() == 2));
+    assert_eq!(host.feature_screen_json("path", "missing"), "null");
     assert_eq!(host.feature_screen_json("bogus", "r1"), "null");
-    host.sync_map_json(r#"{"routes":[{"id":"empty","points":[]}]}"#).expect("sync");
-    assert_eq!(host.feature_screen_json("route", "empty"), "null");
+    host.sync_map_json(r#"{"overlays":{"paths":[{"id":"empty","coordinates":[]}]}}"#).expect("sync");
+    assert_eq!(host.feature_screen_json("path", "empty"), "null");
 }
 
 #[test]
 fn sync_interaction_replaces_previous_selection_within_active_granularity() {
-    let mut host = super::MapHost::new();
-    host.sync_interaction("position", &["p1".to_string(), "p2".to_string()], None);
-    assert_eq!(host.selected_positions_json().len(), 2);
-    host.sync_interaction("route", &["r1".to_string()], None);
-    assert!(host.selected_positions_json().is_empty(), "switching to route clears positions");
-    assert_eq!(host.selected_routes_json(), vec!["r1".to_string()]);
-    host.sync_interaction("route", &[], None);
-    assert!(host.selected_routes_json().is_empty());
+    let mut host = overlay_host();
+    host.sync_interaction("pin", &["p1".to_string(), "p2".to_string()], None);
+    assert_eq!(host.selected_ids("pin").count(), 2);
+    host.sync_interaction("path", &["r1".to_string()], None);
+    assert_eq!(host.selected_ids("pin").count(), 0, "switching to path clears pins");
+    assert_eq!(host.selected_ids("path").collect::<Vec<_>>(), ["r1"]);
+    host.sync_interaction("path", &[], None);
+    assert_eq!(host.selected_ids("path").count(), 0);
 }
 
 #[test]
 fn sync_interaction_none_clears_hover_and_some_sets_kind_and_id() {
-    let mut host = super::MapHost::new();
-    host.sync_interaction("position", &[], Some("p1"));
-    assert_eq!(host.hovered_kind(), Some("position"));
+    let mut host = overlay_host();
+    host.sync_interaction("pin", &[], Some("p1"));
+    assert_eq!(host.hovered_kind(), Some("pin"));
     assert_eq!(host.hovered_id(), Some("p1"));
-    host.sync_interaction("position", &[], None);
+    host.sync_interaction("pin", &[], None);
     assert_eq!(host.hovered_kind(), None);
     assert_eq!(host.hovered_id(), None);
 }
 
 #[test]
-fn focus_feature_position_moves_camera_and_missing_id_returns_false() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.sync_map_json(r#"{"positions":[{"id":"p1","lon":10.0,"lat":20.0}]}"#).expect("sync");
-    assert!(!host.focus_feature("position", "missing"));
-    assert!(host.focus_feature("position", "p1"));
+fn sync_interaction_json_resolves_the_declared_granularity_like_the_react_twin() {
+    let mut host = overlay_host();
+    host.sync_interaction_json(r#"{"pins":["pin-1"],"paths":[]}"#, "null");
+    assert_eq!(host.selected_ids("pin").collect::<Vec<_>>(), ["pin-1"]);
+    host.sync_interaction_json(r#"{"pins":["pin-1"],"paths":["path-2"]}"#, r#"{"kind":"path","id":"path-2"}"#);
+    assert_eq!((host.selected_ids("path").collect::<Vec<_>>(), host.selected_ids("pin").count()), (vec!["path-2"], 0), "the first declared pickable layer wins");
+    assert_eq!((host.hovered_kind(), host.hovered_id()), (Some("path"), Some("path-2")));
+    host.sync_interaction_json(r#"{"pins":[],"paths":[]}"#, r#"{"kind":"pin","id":"pin-1"}"#);
+    assert_eq!((host.hovered_kind(), host.hovered_id(), host.selected_ids("pin").count()), (Some("pin"), Some("pin-1"), 0));
+    host.sync_interaction_json(r#"{"zones":["zone-1"],"pins":["pin-1"]}"#, r#"{"kind":"path","id":"path-2"}"#);
+    assert_eq!((host.selected_ids("pin").collect::<Vec<_>>(), host.hovered_id()), (vec!["pin-1"], None), "a non-pickable layer never selects and a foreign hover never lands");
+    host.sync_interaction_json("not json", "null");
+    assert_eq!((host.selected_ids("pin").count(), host.hovered_id()), (0, None));
+}
+
+#[test]
+fn focus_feature_point_moves_camera_and_missing_id_returns_false() {
+    let mut host = overlay_host();
+    host.sync_map_json(r#"{"overlays":{"pins":[{"id":"p1","coordinates":[[10.0,20.0]]}]}}"#).expect("sync");
+    assert!(!host.focus_feature("pin", "missing"));
+    assert!(host.focus_feature("pin", "p1"));
     let expected = lonlat_to_world(10.0, 20.0);
     assert!((host.camera.x - expected.x).abs() < 1e-9);
     assert!((host.camera.y - expected.y).abs() < 1e-9);
 }
 
 #[test]
-fn focus_feature_route_requires_at_least_two_points_and_fits_bounds() {
-    let mut host = super::MapHost::new();
-    host.set_size(800, 600, 1.0);
-    host.sync_map_json(r#"{"routes":[{"id":"short","points":[[0.0,0.0]]},{"id":"r1","points":[[0.0,0.0],[5.0,5.0]]}]}"#).expect("sync");
-    assert!(!host.focus_feature("route", "short"));
-    assert!(host.focus_feature("route", "r1"));
-    assert!(!host.focus_feature("route", "missing"));
+fn focus_feature_line_requires_at_least_two_points_and_fits_bounds() {
+    let mut host = overlay_host();
+    host.sync_map_json(r#"{"overlays":{"paths":[{"id":"short","coordinates":[[0.0,0.0]]},{"id":"r1","coordinates":[[0.0,0.0],[5.0,5.0]]}]}}"#).expect("sync");
+    assert!(!host.focus_feature("path", "short"));
+    assert!(host.focus_feature("path", "r1"));
+    assert!(!host.focus_feature("path", "missing"));
 }
 
 #[test]
@@ -1395,69 +902,26 @@ fn set_layer_stroke_scale_from_json_sanitizes_out_of_range_weights() {
 }
 
 #[test]
-fn clamp_map_layer_weight_handles_bounds_and_non_finite_values() {
-    assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MIN - 1.0), super::MAP_LAYER_WEIGHT_MIN);
-    assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MAX + 1.0), super::MAP_LAYER_WEIGHT_MAX);
-    assert_eq!(super::clamp_map_layer_weight(f64::NAN), 1.0);
-    assert_eq!(super::clamp_map_layer_weight(f64::INFINITY), 1.0);
+fn map_lod_scale_json_lists_the_neutral_band() {
+    let host = super::MapHost::new();
+    let v: Vec<serde_json::Value> = serde_json::from_str(&super::map_lod_scale_json(host.policy())).expect("json");
+    assert_eq!(v.len(), 1);
+    assert_eq!(v[0]["id"], "all");
+    assert!(v[0]["maxZoom"].is_null(), "the neutral band covers every zoom");
 }
 
 #[test]
-fn map_layer_stroke_scale_sanitized_clamps_every_field() {
-    let scale = super::MapLayerStrokeScale { raster: 100.0, water: -1.0, land: 100.0, roads: 100.0, buildings: 100.0, borders: 100.0, labels: 100.0, positions: 100.0, position_labels: 100.0, routes: 100.0, regions: -1.0 };
-    let s = scale.sanitized();
-    assert_eq!(s.raster, super::MAP_LAYER_WEIGHT_MAX);
-    assert_eq!(s.water, super::MAP_LAYER_WEIGHT_MIN);
-    assert_eq!(s.regions, super::MAP_LAYER_WEIGHT_MIN);
-}
-
-#[test]
-fn gis_map_lod_scale_json_lists_all_lod_bands() {
-    let v: Vec<serde_json::Value> = serde_json::from_str(&super::gis_map_lod_scale_json()).expect("json");
-    assert_eq!(v.len(), 8);
-    assert_eq!(v[0]["id"], "world");
-    assert!(v[0]["maxZoom"].as_f64().unwrap() > 0.0);
-}
-
-#[test]
-fn gis_map_camera_limits_json_min_never_exceeds_max() {
-    let v: serde_json::Value = serde_json::from_str(&super::gis_map_camera_limits_json()).expect("json");
-    assert!(v["min"].as_f64().unwrap() <= v["max"].as_f64().unwrap());
-}
-
-#[test]
-fn map_layer_weight_slider_keys_respect_render_mode() {
-    let image_keys = super::map_layer_weight_slider_keys_at_lod("city", "image");
-    assert!(image_keys.contains(&"raster"));
-    assert!(!image_keys.contains(&"water"));
-    let vector_keys = super::map_layer_weight_slider_keys_at_lod("city", "vector");
-    assert!(!vector_keys.contains(&"raster"));
-    let combined_keys = super::map_layer_weight_slider_keys_at_lod("city", "bogus-mode");
-    assert!(combined_keys.contains(&"raster"));
-    assert!(combined_keys.contains(&"positions"));
-}
-
-#[test]
-fn resolve_detail_lod_index_falls_back_when_forced_lod_unknown() {
+fn band_for_span_falls_back_to_the_span_when_the_pinned_band_is_unknown() {
+    let policy = fixture_band_policy();
     let span = 50.0;
-    assert_eq!(super::resolve_detail_lod_index(span, Some("bogus-lod")), super::resolve_map_lod_index_from_span(span));
-    assert_eq!(super::resolve_detail_lod_index(span, Some("city")), super::GIS_MAP_LOD_SCALE.index_of("city").unwrap());
+    assert_eq!(policy.band_for_span(span, Some("bogus-lod")), policy.band_for_span(span, None));
+    assert_eq!(policy.band_for_span(span, Some("band-4")), 4);
 }
 
 #[test]
-fn parse_tile_key_rejects_malformed_keys() {
-    assert_eq!(tiles::parse_tile_key("1/2/3"), Some((1, 2, 3)));
-    assert_eq!(tiles::parse_tile_key("1/2"), None);
-    assert_eq!(tiles::parse_tile_key("1/2/3/4"), None);
-    assert_eq!(tiles::parse_tile_key("a/b/c"), None);
-}
-
-#[test]
-fn map_vector_style_as_str_round_trips_all_variants() {
-    for style in [super::MapVectorStyle::Colored, super::MapVectorStyle::FigureGround, super::MapVectorStyle::InvertedFigure] {
-        assert_eq!(super::MapVectorStyle::parse(style.as_str()), style);
-    }
-    assert_eq!(super::MapVectorStyle::parse("bogus"), super::MapVectorStyle::Colored);
+fn weighted_opaque_fill_keeps_alpha_solid() {
+    let c = super::weighted_opaque_fill(super::Color::from_rgba8(40, 50, 60, 128), 1.0);
+    assert_eq!(c.to_rgba8().a, 255);
 }
 
 #[test]
@@ -1470,49 +934,57 @@ fn label_declutter_rejects_when_over_capacity_or_offscreen() {
     assert!(!roomy.try_place("offscreen", super::Point::new(10_000.0, 10_000.0), 12.0));
 }
 
-#[test]
-fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
-    assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MIN - 5.0), super::MAP_CAMERA_ZOOM_MIN);
-    assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MAX + 5.0), super::MAP_CAMERA_ZOOM_MAX);
-    let viewport = Viewport { width: 4000, height: 4000, dpr: 1.0 };
-    let cover = super::projection::cover_zoom_for_viewport(&viewport);
-    assert!(super::clamp_map_zoom_for_viewport(0.0, &viewport) >= cover);
-}
-
 // #region 🔖️MercatorOracleFixture
-/// 🌐️ `lodBands` are specification vectors — no third party defines this repository's own
-/// `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` banding. The `projection`/`tileNumbering`/
-/// `tileBounds` groups of the same fixture ARE cross-checked against the `mercantile` library by
-/// `../📦️packages/🦀️rust/tests/🗺️tiled_map_mercator_oracle.rs` and by
-/// `🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py`; all three read this one fixture so oracle and subject
-/// compare identical inputs.
+/// 🌐️ `lodBands` are specification vectors of the sample band table in `lodConstants` (`maxSpanDeg`, `tileZ`), fed to a
+/// [`super::DescribedMapPolicy`] — no third party defines a band scheme. The `projection`/`tileNumbering`/`tileBounds`
+/// groups of the same fixture ARE cross-checked against the `mercantile` library by
+/// `../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs` and by `🧪️tests/🕸️web-mercator-tile-oracle/🐍️.py`; all three read this
+/// one fixture so oracle and subject compare identical inputs.
 ///
 /// @see 🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
 const MERCATOR_ORACLE_FIXTURE: &str = include_str!("../🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json");
 
-#[test]
-fn lod_band_selection_matches_frozen_specification_vectors() {
+/// 📶️ A policy whose band table is the fixture's `lodConstants`, band ids `band-<index>`.
+fn fixture_band_policy() -> super::DescribedMapPolicy {
     let fixture: serde_json::Value = serde_json::from_str(MERCATOR_ORACLE_FIXTURE).expect("fixture json");
+    let constants = &fixture["lodConstants"];
+    let template = super::MapPolicyDescriptor::neutral().bands.remove(0);
+    let bands = constants["maxSpanDeg"]
+        .as_array()
+        .expect("maxSpanDeg")
+        .iter()
+        .zip(constants["tileZ"].as_array().expect("tileZ"))
+        .enumerate()
+        .map(|(index, (span, tile_z))| super::MapLodBand { id: format!("band-{index}"), max_span_deg: span.as_f64().expect("span"), raster_tile_z: tile_z.as_u64().expect("tile z") as u32, ..template.clone() })
+        .collect();
+    super::DescribedMapPolicy::new(super::MapPolicyDescriptor { bands, ..super::MapPolicyDescriptor::neutral() })
+}
+
+#[test]
+fn band_selection_of_a_described_policy_matches_frozen_specification_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(MERCATOR_ORACLE_FIXTURE).expect("fixture json");
+    let policy = fixture_band_policy();
     for entry in fixture["lodBands"].as_array().expect("lodBands array") {
         let span = entry["spanDeg"].as_f64().expect("spanDeg");
         let expected_idx = entry["lodIndex"].as_u64().expect("lodIndex") as usize;
         let expected_tile_z = entry["tileZ"].as_u64().expect("tileZ") as u32;
-        let idx = super::resolve_map_lod_index_from_span(span);
-        assert_eq!(idx, expected_idx, "lod index for span={span}");
-        assert_eq!(super::GIS_MAP_LOD_TILE_Z[idx], expected_tile_z, "tile z for span={span}");
+        let idx = policy.band_for_span(span, None);
+        assert_eq!(idx, expected_idx, "band index for span={span}");
+        assert_eq!(policy.band(idx).raster_tile_z, expected_tile_z, "tile z for span={span}");
     }
 }
 
 #[test]
-fn active_map_lod_tracks_the_same_bands_as_the_span_resolver() {
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
+fn a_host_reports_the_band_its_installed_policy_resolves() {
+    let mut host = super::MapHost::with_extension(super::Arc::new(super::DefaultMapExtension::with_policy(fixture_band_policy())));
+    host.set_size(800, 600, 1.0);
+    host.fit_world_camera();
+    let fit = host.camera.zoom;
     for &span_probe in &[180.0, 50.0, 20.0, 8.0, 2.0, 0.6, 0.2, 0.05] {
-        let cam = default_world_camera(&viewport);
-        let scaled = Camera { x: cam.x, y: cam.y, zoom: cam.zoom * (180.0 / f64::max(span_probe, 1e-6)) };
-        let span = super::viewport_lon_span_degrees(&scaled, &viewport);
-        let expected_idx = super::resolve_map_lod_index_from_span(span);
-        let lod = super::active_map_lod(None, &scaled, &viewport);
-        assert_eq!(lod.id, super::GIS_MAP_LODS[expected_idx].id, "active_map_lod band for span={span}");
+        host.set_camera(0.0, 0.0, fit * (180.0 / f64::max(span_probe, 1e-6)));
+        let expected = format!("band-{}", host.policy().band_for_span(host.viewport_span_degrees(), None));
+        let lod: serde_json::Value = serde_json::from_str(&host.current_lod_json()).expect("current lod json");
+        assert_eq!(lod["id"], expected.as_str(), "current band for span probe {span_probe}");
     }
 }
 

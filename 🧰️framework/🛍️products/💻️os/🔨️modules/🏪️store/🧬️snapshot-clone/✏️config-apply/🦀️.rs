@@ -1,6 +1,10 @@
 //! ✏️ Field-set apply edit for small config records (window configs and document config lanes): clones the mutation payload under grants, exchanges it into the post record by move and keeps the displaced content as the inverse row, all through original custody.
 use super::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory,custody::RetainedEditCustody};
-use crate::os_store::{one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,ArtifactCanonicalJsonTree,ArtifactOwnedValueRetirementFactory,one_item::ArtifactStoreOneItemFootprint,one_item_publication::ArtifactStoreOneItemPreparationFactory,store_schema::HistoryLane,SnapshotRetirementFactory};
+use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemFootprint};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, SnapshotRetirementFactory};
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_framework_os_store_command::HistoryLane;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBirthDemand,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,admit_retained_clone_close,admit_retained_clone_progress}};
 use std::{marker::PhantomData,mem::{ManuallyDrop,size_of},sync::Arc};
 
@@ -27,11 +31,11 @@ enum ApplyStage { Clone, Take, CloseClone, Reserve, Exchange, Done }
 
 /// 🪜️ Bounded turns: clone the mutation payload, take it into custody, close the clone cursor, reserve the inverse row, exchange payload and displaced content.
 pub struct ConfigApplyCursor<S, M: ConfigApplyMutation<S>> {
-    stage: ApplyStage,
-    cancelled: bool,
-    clone: ManuallyDrop<Option<CloneCursor<M>>>,
-    custody: RetainedEditCustody<(Option<M>, Option<Vec<M>>)>,
-    marker: PhantomData<fn() -> S>,
+    pub stage: ApplyStage,
+    pub cancelled: bool,
+    pub clone: ManuallyDrop<Option<CloneCursor<M>>>,
+    pub custody: RetainedEditCustody<(Option<M>, Option<Vec<M>>)>,
+    pub marker: PhantomData<fn() -> S>,
 }
 
 impl<S, M> RetainedCloneEdit<S, M> for ConfigApplyEdit<S, M>
@@ -63,7 +67,7 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
             ..Default::default()
         })
     }
-    fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         match self.clone.as_ref() {
             Some(cursor) => Self::clone_close_demand(cursor, body),
             None => self.custody.demands(body),

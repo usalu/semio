@@ -1,0 +1,105 @@
+{
+ "parent": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+ "sha1": "84f70809295df31cccc4af1ba0302671d6a97f74",
+ "near_scan": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧵️dag-input/*.rs"
+ ],
+ "children": [
+  {
+   "folder": "🧩️domain-adapter",
+   "mod": "domain_adapter",
+   "doc": "🧩️ The Flow domain adapter: surface and host custody, argument preflight, program state and the program feature.",
+   "lo": 26,
+   "hi": 789,
+   "chk_lo": "#[derive(Clone, Copy, Debug, PartialEq, Eq)]",
+   "chk_hi": "}",
+   "mod_attrs": [
+    "#[macro_use]"
+   ]
+  },
+  {
+   "folder": "🌉️domain-impl",
+   "mod": "domain_impl",
+   "doc": "🌉️ The protocol `FlowDomain` implementation of the Flow domain adapter: feature start, close ladder and terminal emptiness.",
+   "lo": 789,
+   "hi": 873,
+   "chk_lo": "impl FlowDomain for FlowDomainAdapter {",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🌿️vcs-feature",
+   "mod": "vcs_feature",
+   "doc": "🌿️ The Flow VCS feature: admission, polling, close failures and the fault-to-code mapping.",
+   "lo": 873,
+   "hi": 1149,
+   "chk_lo": "fn flow_close_failure",
+   "chk_hi": "fn flow_vcs_failure"
+  },
+  {
+   "folder": "🎬️actions-a",
+   "mod": "actions_a",
+   "doc": "🎬️ Flow program actions 2504 to 2560: one retained step machine per operation.",
+   "lo": 1149,
+   "hi": 3180,
+   "chk_lo": "struct FlowAction2504 {",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🎞️actions-b",
+   "mod": "actions_b",
+   "doc": "🎞️ Flow program actions 2561 to 2610: one retained step machine per operation.",
+   "lo": 3180,
+   "hi": 5186,
+   "chk_lo": "struct FlowAction2561 {",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🧭️dispatch",
+   "mod": "dispatch",
+   "doc": "🧭️ Operation number to action dispatch for the Flow program.",
+   "lo": 5187,
+   "hi": 5297,
+   "chk_lo": "fn flow_action(",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🛠️adapter-ops",
+   "mod": "adapter_ops",
+   "doc": "🛠️ Surface and frame operations of the Flow domain adapter.",
+   "lo": 5298,
+   "hi": 5423,
+   "chk_lo": "impl FlowDomainAdapter {",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🔤️argument-helpers",
+   "mod": "argument_helpers",
+   "doc": "🔤️ Typed accessors over preflighted Flow arguments and the shared failure constructors.",
+   "lo": 5424,
+   "hi": 5534,
+   "chk_lo": "fn text<",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🖼️surface-presentation",
+   "mod": "surface_presentation",
+   "doc": "🖼️ Per-surface WebGPU presentation of the browser Flow session and its host font channel.",
+   "lo": 5538,
+   "hi": 5655,
+   "chk_lo": "//#region 🖼️SurfacePresentation",
+   "chk_hi": "//#endregion 🖼️SurfacePresentation",
+   "reexport": "private"
+  },
+  {
+   "folder": "🔗️linear-memory",
+   "mod": "linear_memory",
+   "doc": "🔗️ The primitive linear-memory exports of the Flow bridge.",
+   "lo": 5656,
+   "hi": 5755,
+   "chk_lo": "//#region 🌉️LinearMemory",
+   "chk_hi": "//#endregion 🌉️LinearMemory"
+  }
+ ]
+}

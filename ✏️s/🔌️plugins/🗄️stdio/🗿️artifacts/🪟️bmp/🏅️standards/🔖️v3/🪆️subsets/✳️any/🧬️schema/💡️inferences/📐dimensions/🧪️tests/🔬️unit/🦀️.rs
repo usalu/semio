@@ -1,4 +1,5 @@
-use super::*;
+use crate::BmpSnapshot;
+use crate::standards::v_v3::subsets::any::schema::inferences::dimensions::*;
 
 #[test]
 fn derives_dimensions_from_owned_fields() {

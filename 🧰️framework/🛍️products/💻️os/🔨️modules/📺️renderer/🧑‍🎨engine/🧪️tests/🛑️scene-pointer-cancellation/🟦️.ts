@@ -7,7 +7,6 @@ import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🧭️wasm-
 import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?raw";
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
 import tiledMapSource from "../../🧱️elements/🧭️TiledMapHost/🟦️.tsx?raw";
-import winitSource from "../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs?raw";
 import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
@@ -95,7 +94,7 @@ describe("scene pointer cancellation contract", () => {
   });
 
   it("preserves the physical pointer and surface generation through the native cancellation owner", () => {
-    expect(winitSource).toContain("DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer)");
+    expect(rendererSource).toContain("DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer)");
     expect(rendererSource).toContain("handle_pointer_cancel(&mut self, pointer: ui_render::PointerInfo)");
     expect(rendererSource).toContain("claim_scene_pointer_owner(target.clone(), pointer.id)");
     const physicalCancel = rendererSource.slice(rendererSource.indexOf("fn handle_pointer_cancel("), rendererSource.indexOf("fn handle_pointer_wheel("));
@@ -112,7 +111,7 @@ describe("scene pointer cancellation contract", () => {
     expect(cancelRoute).not.toContain("tiled_map_pointer_up_into");
     expect(scenesSource).toContain("tiled_map_pointer_leave_into");
     expect(engineCanvasSource).toContain("node_graph_pointer_cancel_into");
-    expect(engineCanvasSource).toContain("puzzle_board_pointer_cancel_into");
+    expect(engineCanvasSource).toContain("board2d_pointer_cancel_into");
     expect(engineCanvasSource).toContain("paint2d_pointer_cancel_into");
     expect(engineCanvasSource).toContain("text_editor_pointer_cancel_into");
   });

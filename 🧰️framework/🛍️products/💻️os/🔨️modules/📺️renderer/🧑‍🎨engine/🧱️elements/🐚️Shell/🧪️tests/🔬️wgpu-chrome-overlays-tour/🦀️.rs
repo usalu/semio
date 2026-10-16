@@ -128,13 +128,13 @@ fn tooltip_closes_immediately_on_hover_out() {
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::light();
-    shell.chrome_build.register_tooltip("nav.help", "Help");
+    shell.chrome.chrome_build.register_tooltip("nav.help", "Help");
     input.hovered_id = Some("nav.help".into());
-    shell.render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
-    assert!(shell.chrome_build.tooltip_hover.is_some(), "hover should arm on first hovered frame");
+    OverlaysViewCtx::of(&mut shell).render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+    assert!(shell.chrome.chrome_build.tooltip_hover.is_some(), "hover should arm on first hovered frame");
     input.hovered_id = None;
-    shell.render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
-    assert!(shell.chrome_build.tooltip_hover.is_none(), "hover-out must clear the armed tooltip");
+    OverlaysViewCtx::of(&mut shell).render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+    assert!(shell.chrome.chrome_build.tooltip_hover.is_none(), "hover-out must clear the armed tooltip");
 }
 //#endregion Tooltip
 
@@ -172,13 +172,13 @@ fn dialog_scrim_click_dismisses_without_confirm_action() {
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::light();
-    shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
+    shell.chrome.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     input.pointer_x = 4.0;
     input.pointer_y = 4.0;
-    shell.chrome_build.compute_click_edge(false);
-    shell.chrome_build.compute_click_edge(true);
-    shell.render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
-    assert!(!shell.chrome_build.dialog_open(), "scrim click must dismiss the dialog");
+    shell.chrome.chrome_build.compute_click_edge(false);
+    shell.chrome.chrome_build.compute_click_edge(true);
+    OverlaysViewCtx::of(&mut shell).render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+    assert!(!shell.chrome.chrome_build.dialog_open(), "scrim click must dismiss the dialog");
 }
 
 /// 🧪️ Focus-trap-equivalent modality: while a dialog is open, the chrome-owned tour trigger and the
@@ -242,7 +242,7 @@ fn dialog_choices_fixture_lays_out_gates_and_dispatches_like_every_renderer() {
             let mut request = request.clone();
             stage_dialog_case(&mut request, case);
             let mut atlas = FontAtlas::builtin();
-            let ops = ShellState::chrome_dialog_paint_ops(&request, width, 900.0, &theme, &mut atlas);
+            let ops = chrome_dialog_paint_ops(&request, width, 900.0, &theme, &mut atlas);
             let button = |entry: &serde_json::Value| {
                 ops.iter()
                     .find_map(|op| match op {
@@ -294,29 +294,29 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
     let draft = request.fields[0].draft.clone();
-    shell.chrome_build.open_dialog(request);
+    shell.chrome.chrome_build.open_dialog(request);
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers::default();
     for _ in draft.chars() {
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
     }
     for _ in 0..3 {
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
     }
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
-    assert!(shell.chrome_build.dialog_open() && shell.deferred_actions.is_empty(), "the gated submit takes no Enter");
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
-    assert!(!shell.chrome_build.dialog_open());
-    let taken = shell.deferred_actions.pop().expect("the choice dispatched");
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    assert!(shell.chrome.chrome_build.dialog_open() && shell.settle.deferred_actions.is_empty(), "the gated submit takes no Enter");
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    assert!(!shell.chrome.chrome_build.dialog_open());
+    let taken = shell.settle.deferred_actions.pop().expect("the choice dispatched");
     let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
     assert_eq!(taken.action, cleared["dispatches"][0]["action"].as_str().expect("action"));
     assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), cleared["dispatches"][0]["args"]);
     let (_, request) = dialog_choices_request(Locale::En);
-    shell.chrome_build.open_dialog(request);
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut input);
-    assert!(!shell.chrome_build.dialog_open());
-    assert_eq!(shell.deferred_actions.pop().map(|event| event.action), Some("historyEditBack".to_string()));
+    shell.chrome.chrome_build.open_dialog(request);
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut input);
+    assert!(!shell.chrome.chrome_build.dialog_open());
+    assert_eq!(shell.settle.deferred_actions.pop().map(|event| event.action), Some("historyEditBack".to_string()));
 }
 
 /// ♿️ The open dialog is published as a modal accessibility tree, as React's `UIDialog` is: one `dialog` node named
@@ -331,11 +331,11 @@ fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_c
         let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
         stage_dialog_case(&mut request, cleared);
         request.focus_stop(ChromeDialogStop::Choice(0));
-        shell.chrome_build.open_dialog(request);
+        shell.chrome.chrome_build.open_dialog(request);
         let (mut draw, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
-        shell.render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 1440.0, 900.0);
+        OverlaysViewCtx::of(&mut shell).render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 1440.0, 900.0);
         let hits = input.staged_hits().to_vec();
-        let nodes = shell.chrome_accessibility_nodes(&hits);
+        let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
         let key = if locale == Locale::De { "de" } else { "en" };
         let text = |label: &serde_json::Value| label["native"][key].as_str().expect("localized text").to_string();
         let dialog = &nodes[0];
@@ -352,7 +352,7 @@ fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_c
         assert_eq!(overwrite.description, Some(text(&fixture["dialog"]["choices"][0]["description"])));
         assert_eq!(nodes.iter().filter(|node| node.focused).count(), 1);
         assert_eq!(node("cancel").label, Some(text(&fixture["dialog"]["cancelLabel"])));
-        assert!(shell.chrome_surface_census().iter().any(|(id, level, _)| id == "shell.dialog.finalizeHistoryEdit" && *level == "dialog"), "the census reports the dialog level");
+        assert!(shell.input.chrome_surface_census(&shell.chrome, &shell.dock).iter().any(|(id, level, _)| id == "shell.dialog.finalizeHistoryEdit" && *level == "dialog"), "the census reports the dialog level");
     }
 }
 
@@ -362,17 +362,17 @@ fn the_open_dialog_publishes_a_modal_accessibility_tree_with_gated_and_focused_c
 fn the_dialog_accessibility_tree_is_operable_like_its_keyboard() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let (fixture, request) = dialog_choices_request(Locale::En);
-    shell.chrome_build.open_dialog(request);
+    shell.chrome.chrome_build.open_dialog(request);
     let key = |suffix: &str| format!("shell.dialog.finalizeHistoryEdit.{suffix}");
-    assert!(shell.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Focus));
-    assert_eq!(shell.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Choice(0)));
-    assert!(shell.handle_chrome_dialog_accessibility_event(&key("field.name"), &ui_render::AccessibilityEvent::Value(String::new())));
-    assert!(shell.handle_chrome_dialog_accessibility_event(&key("confirm"), &ui_render::AccessibilityEvent::Activate));
-    assert!(shell.chrome_build.dialog_open() && shell.deferred_actions.is_empty(), "a gated submit ignores activation");
-    assert!(!shell.handle_chrome_dialog_accessibility_event("ui.search.toggle", &ui_render::AccessibilityEvent::Activate), "a key outside the dialog is not the dialog's");
-    assert!(shell.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Activate));
-    assert!(!shell.chrome_build.dialog_open());
-    let taken = shell.deferred_actions.pop().expect("the choice dispatched");
+    assert!(shell.input.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Focus, &mut shell.chrome, &mut shell.settle));
+    assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Choice(0)));
+    assert!(shell.input.handle_chrome_dialog_accessibility_event(&key("field.name"), &ui_render::AccessibilityEvent::Value(String::new()), &mut shell.chrome, &mut shell.settle));
+    assert!(shell.input.handle_chrome_dialog_accessibility_event(&key("confirm"), &ui_render::AccessibilityEvent::Activate, &mut shell.chrome, &mut shell.settle));
+    assert!(shell.chrome.chrome_build.dialog_open() && shell.settle.deferred_actions.is_empty(), "a gated submit ignores activation");
+    assert!(!shell.input.handle_chrome_dialog_accessibility_event("ui.search.toggle", &ui_render::AccessibilityEvent::Activate, &mut shell.chrome, &mut shell.settle), "a key outside the dialog is not the dialog's");
+    assert!(shell.input.handle_chrome_dialog_accessibility_event(&key("choice.overwrite"), &ui_render::AccessibilityEvent::Activate, &mut shell.chrome, &mut shell.settle));
+    assert!(!shell.chrome.chrome_build.dialog_open());
+    let taken = shell.settle.deferred_actions.pop().expect("the choice dispatched");
     assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), fixture["cases"][1]["dispatches"][0]["args"]);
 }
 /// 🎨️ A colour arg and a vector arg of a declared dialog.
@@ -398,7 +398,7 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
         assert_eq!(request.fields.iter().map(|field| field.label.as_str()).take(2).collect::<Vec<_>>(), [if locale == Locale::En { "Fill" } else { "Füllung" }, opacity]);
         assert_eq!(request.fields[0].draft, "#ff000080");
         let theme = Theme::light();
-        let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
+        let ops = chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
         assert!(ops.iter().any(|op| matches!(op, ChromeDialogPaintOp::Fill { color, .. } if *color == Rgba::from_srgb8(255, 0, 0, 128))), "the swatch paints the staged colour");
         let alpha = ops.iter().find_map(|op| match op {
             ChromeDialogPaintOp::Hit { control_id, semantics, label, .. } if control_id == "shell.dialog.paint.field.fill.alpha" => Some((label.clone(), semantics.clone())),
@@ -406,19 +406,19 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
         });
         let (label, semantics) = alpha.expect("the opacity slider paints a hit");
         assert_eq!((label.as_str(), semantics.role, semantics.value_range), (opacity, Some("slider"), Some([0.0, 1.0, 0.5])));
-        shell.chrome_build.open_dialog(request);
+        shell.chrome.chrome_build.open_dialog(request);
         let mut input = InputState::<ActionDescriptor>::default();
         let modifiers = PointerModifiers::default();
         for _ in 0.."#ff000080".len() {
-            shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+            PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
         }
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
-        let staged = |shell: &ShellState| shell.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("fill").map(dsl_value_as_json));
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
+        let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("fill").map(dsl_value_as_json));
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.5])), "a typed hex without alpha keeps the opacity");
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::ArrowRight, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::ArrowRight, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.51])));
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Home, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Home, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.0])));
     }
 }
@@ -433,21 +433,21 @@ fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
     let axes: Vec<&str> = request.fields.iter().filter(|field| field.id == "turn").map(|field| field.draft.as_str()).collect();
     assert_eq!(axes, ["0.3", "1.0"], "each axis shows the vector's precision");
     let x = request.fields.iter().position(|field| field.id == "turn").expect("the x axis");
-    shell.chrome_build.open_dialog(request);
+    shell.chrome.chrome_build.open_dialog(request);
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers::default();
-    shell.chrome_build.dialog_stack.last_mut().expect("dialog").focus_stop(ChromeDialogStop::Field(x));
-    let staged = |shell: &ShellState| shell.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("turn").map(dsl_value_as_json));
+    shell.chrome.chrome_build.dialog_stack.last_mut().expect("dialog").focus_stop(ChromeDialogStop::Field(x));
+    let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("turn").map(dsl_value_as_json));
     let mut walk = Vec::new();
     for action in [ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::ArrowDown, ui_wgpu::wgpu::KeyAction::PageDown] {
-        shell.handle_keyboard(action, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
         walk.push(staged(&shell).and_then(|tuple| tuple[0].as_f64()).unwrap_or(f64::NAN));
     }
     assert_eq!(walk, [1.5, 2.5, 2.4, 1.5], "detent, ten rungs of the precision's step, one rung, detent");
     for _ in 0..3 {
-        shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
     }
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("9".into()), &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("9".into()), &modifiers, &mut input);
     assert_eq!(staged(&shell).and_then(|tuple| tuple[0].as_f64()), Some(3.0), "a typed value is clamped to the vector's bounds");
 }
 
@@ -539,17 +539,17 @@ fn tour_advance_and_back_reset_completed_interactions() {
 #[test]
 fn chrome_tour_complete_interaction_respects_order_and_dedups() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.chrome_build.start_introduction();
-    let step = semio_framework::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
-        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::IntroductionInteraction::pan("main", "Pan"))]);
-    shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
-    assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
-    shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
-    assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
-    shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Zoom(id) if id == "main"));
-    assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
-    shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
-    assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0, 1]);
+    shell.chrome.chrome_build.start_introduction();
+    let step = semio_framework::onboarding::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
+        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::pan("main", "Pan"))]);
+    shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Pan(id) if id == "main"), &mut shell.chrome);
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
+    shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Zoom(id) if id == "main"), &mut shell.chrome);
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
+    shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Zoom(id) if id == "main"), &mut shell.chrome);
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0]);
+    shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Pan(id) if id == "main"), &mut shell.chrome);
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, vec![0, 1]);
 }
 //#endregion Tour
 
@@ -647,14 +647,14 @@ fn window_silhouette_border_emits_notched_outline_segments() {
 //#region Placement
 #[test]
 fn placement_centers_when_no_anchor() {
-    let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Auto, None, (320.0, 168.0), (800.0, 600.0));
+    let (x, y) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Auto, None, (320.0, 168.0), (800.0, 600.0));
     assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
 }
 
 #[test]
 fn placement_center_variant_ignores_the_anchor() {
     let anchor = Rect::new(10.0, 10.0, 50.0, 20.0);
-    let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Center, Some(anchor), (320.0, 168.0), (800.0, 600.0));
+    let (x, y) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Center, Some(anchor), (320.0, 168.0), (800.0, 600.0));
     assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
 }
 
@@ -663,7 +663,7 @@ fn placement_center_variant_ignores_the_anchor() {
 #[test]
 fn placement_auto_picks_the_side_with_the_most_free_space() {
     let anchor = Rect::new(0.0, 0.0, 50.0, 20.0);
-    let (x, y) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+    let (x, y) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
     assert_eq!(x, anchor.x + anchor.w + INTRODUCTION_INFO_BOX_GAP);
     assert!(y >= INTRODUCTION_INFO_BOX_GAP);
 }
@@ -671,7 +671,7 @@ fn placement_auto_picks_the_side_with_the_most_free_space() {
 #[test]
 fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
     let anchor = Rect::new(780.0, 10.0, 15.0, 15.0);
-    let (x, _) = resolve_introduction_placement(semio_framework::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+    let (x, _) = resolve_introduction_placement(semio_framework::onboarding::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
     assert!(x <= 800.0 - 100.0 - INTRODUCTION_INFO_BOX_GAP + 0.001);
 }
 //#endregion Placement

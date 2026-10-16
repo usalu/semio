@@ -1,0 +1,10 @@
+{
+  "purpose": "awaited-binding",
+  "field": "SEMIO_NX_IMPLEMENTATION_IDENTITY",
+  "reason": "Original bounded Nx namespace changed",
+  "expectedStatus": 1,
+  "waitPublished": true,
+  "waitCompleted": true,
+  "waitEntered": false,
+  "safetyExpired": false
+}

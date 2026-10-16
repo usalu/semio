@@ -44,6 +44,7 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
 semio-s-artifact-remodel-remodeling-cmd-ingest = { workspace = true }

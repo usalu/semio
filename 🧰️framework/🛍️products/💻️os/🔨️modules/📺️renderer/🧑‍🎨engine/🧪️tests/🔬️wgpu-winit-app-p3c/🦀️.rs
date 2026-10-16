@@ -114,8 +114,8 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     assert!(!crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
     semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
-    assert!(interaction.shell.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
-    assert!(interaction.shell.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
+    assert!(interaction.shell.chrome.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
+    assert!(interaction.shell.settle.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
     crate::set_host_platform_uses_meta(cfg!(target_os = "macos"));
     crate::set_host_platform_kind(if cfg!(target_os = "macos") {

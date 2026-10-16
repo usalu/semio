@@ -138,6 +138,3 @@ pub fn bundle() -> semio_framework_plugin::ExtensionBundle {
 
 //#endregion 🔖️Bundle
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

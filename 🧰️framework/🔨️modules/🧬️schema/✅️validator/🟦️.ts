@@ -32,6 +32,20 @@ export function requireExactKeys(value: UnknownRecord, keys: readonly string[], 
   if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) throw new Error(`${name} must contain exactly ${expected.join(", ")}`);
 }
 
+/** 🔐️ Compiles only a detached immutable expected-key image, reenumerating each actual object. */
+export function compileExactKeysV1(keys: readonly string[]): (value: UnknownRecord, name: string) => void {
+  const expected = Object.freeze([...keys].sort()), membership = new Set(expected);
+  return (value, name) => {
+    const actual = Object.keys(value);
+    if (actual.length === expected.length) {
+      let valid = true;
+      for (const key of actual) if (!membership.has(key)) { valid = false; break; }
+      if (valid) return;
+    }
+    throw new Error(`${name} must contain exactly ${expected.join(", ")}`);
+  };
+}
+
 //#region 🔣️JsonSchemaSubset
 function jsonSchemaSubsetObject(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;

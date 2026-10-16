@@ -1,5 +1,16 @@
-//! 🪶️ Held real Hub authority law; include only from the owning binary test module.
-use super::*;
+
+use std::sync::Arc;
+use semio_hub_artifact_creation::ArtifactCreationActorV1;
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::SessionCapability;
+use semio_framework_hash::Sha256;
+use semio_hub_artifact_authority::ValidatingCanonicalArtifactAuthority;
+use semio_hub_route_testkit::{artifact_document_id_for_test, create_space_for_test, issue_test_session, publish_genesis_checkpoint_for_test, spawn_restartable_server, test_state, upsert_member_for_test};
+#[cfg(test)]
+use directory::os_directory::{DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor};
+#[cfg(test)]
+use directory::os_directory;
+
 fn independent_count_file(root:&std::path::Path,bytes:&[u8],count:i32,encoding:&str){
  let path=root.join(format!("count-{count}-{encoding}.sqlite"));std::fs::write(&path,bytes).unwrap();
  let source=r#"import{Database}from"bun:sqlite";import assert from"node:assert/strict";const[path,count,encoding]=process.argv.slice(1);const d=new Database(path,{readonly:true});try{assert.deepEqual(d.query("SELECT id,count,typeof(count) AS storage FROM fixture_counter").all(),[{id:1,count:Number(count),storage:"integer"}]);assert.deepEqual(d.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),[{name:"fixture_counter"},{name:"semio_snapshot"}]);assert.deepEqual(d.query("PRAGMA table_info(fixture_counter)").all().map(x=>x.name),["id","count"]);assert.deepEqual(d.query("SELECT artifact_kind,standard,subset,schema_version,native_encoding FROM semio_snapshot").all(),[{artifact_kind:"fixture.neutral-host-fixture.counter",standard:"1",subset:"*",schema_version:1,native_encoding:encoding}]);assert.deepEqual(d.query("PRAGMA integrity_check").get(),{integrity_check:"ok"});assert.deepEqual(d.query("PRAGMA foreign_key_check").all(),[])}finally{d.close()}"#;
@@ -7,7 +18,7 @@ fn independent_count_file(root:&std::path::Path,bytes:&[u8],count:i32,encoding:&
 }
 #[tokio::test(flavor="multi_thread",worker_threads=4)]
 async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_sqlite_io(){
- use semio_hub::artifact_authority::trusted_catalog::count_trusted_catalog_fixture;
+ use semio_hub_trusted_catalog_fixtures::count_trusted_catalog_fixture;
  use semio_framework_os_mcp::HeadlessWorkspace;
  use directory::os_directory::client::LocalHubCredential;
  use std::path::PathBuf;
@@ -15,7 +26,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
  use directory::io::io_mechanism::{io_route,io_run_with_snapshot_control};
  use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase,SqliteValue};
  use semio_framework_value::ValueRefusalKind;
- let output=crate::test_artifact_root::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
+ let output=semio_hub_testing::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
  let mut repo=PathBuf::from(env!("CARGO_MANIFEST_DIR"));while !repo.join("nx.json").is_file(){assert!(repo.pop())}
  let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_framework_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
  let document_id=artifact_document_id_for_test("real-count-workspace-lease");

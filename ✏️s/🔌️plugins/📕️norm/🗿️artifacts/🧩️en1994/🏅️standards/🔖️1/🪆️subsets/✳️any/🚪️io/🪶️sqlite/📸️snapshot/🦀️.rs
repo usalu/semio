@@ -80,7 +80,7 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
   let snapshot=Self{annex:read_annex(d.text(1)?)?,structure_kind:reconstruct_text(control,d.text(2)?)?,steel_f_y_pa:d.real(3)?,fire_rating:reconstruct_text(control,d.text(4)?)?,insulation_thickness_m:d.real(5)?,fatigue_detail:reconstruct_text(control,d.text(6)?)?,beams,columns,slabs};control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
  }
 }
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1994Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1994Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
 pub(crate)mod admission;

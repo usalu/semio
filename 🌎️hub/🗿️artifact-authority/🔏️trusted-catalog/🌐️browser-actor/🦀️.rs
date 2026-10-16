@@ -1,6 +1,8 @@
 //! 🌐️ Private catalog actor locations and source-bound generation framing.
 
-use super::{append_document_open_catalog_field, catalog, decode_digest, AuthorityError, TrustedBundleFileV1, TRUSTED_RELATIVE_PATH_MAX_BYTES};
+use super::{append_document_open_catalog_field, catalog, decode_digest, TRUSTED_RELATIVE_PATH_MAX_BYTES};
+use semio_hub_artifact_authority::AuthorityError;
+use crate::schema::TrustedBundleFileV1;
 use directory::os_directory::schema::{DocumentBrowserActorByteLengthV1, DocumentBrowserActorSourceV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES};
 use serde::Deserialize;
 
@@ -28,7 +30,7 @@ fn actor_byte_length<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Resul
 }
 
 impl TrustedBundleBrowserActorV1 {
-    pub(super) fn identity(&self) -> DocumentOpenBrowserActorV1 {
+    pub fn identity(&self) -> DocumentOpenBrowserActorV1 {
         match self {
             Self::None {} => DocumentOpenBrowserActorV1::None,
             Self::ClosedBrowserActor { schema, codegen_policy, sha256, source_component_sha256, source_descriptor_byte_sha256, policy_sha256, import_interfaces, .. } => DocumentOpenBrowserActorV1::ClosedBrowserActor {
@@ -43,14 +45,14 @@ impl TrustedBundleBrowserActorV1 {
         }
     }
 
-    pub(super) fn file(&self) -> Option<TrustedBundleFileV1> {
+    pub fn file(&self) -> Option<TrustedBundleFileV1> {
         match self {
             Self::None {} => None,
             Self::ClosedBrowserActor { path, byte_length, sha256, .. } => Some(TrustedBundleFileV1 { path: path.clone(), byte_length: *byte_length, sha256: sha256.clone() }),
         }
     }
 
-    pub(super) fn validate(&self, source: DocumentBrowserActorSourceV1<'_>, renderer: &str) -> Result<(), AuthorityError> {
+    pub fn validate(&self, source: DocumentBrowserActorSourceV1<'_>, renderer: &str) -> Result<(), AuthorityError> {
         self.identity().validate(source, renderer).map_err(|_| catalog("trusted browser actor identity differs from its package or renderer"))?;
         if let Some(file) = self.file() {
             if file.path.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES
@@ -64,7 +66,7 @@ impl TrustedBundleBrowserActorV1 {
         Ok(())
     }
 
-    pub(super) fn append_generation(&self, output: &mut Vec<u8>) -> Result<(), AuthorityError> {
+    pub fn append_generation(&self, output: &mut Vec<u8>) -> Result<(), AuthorityError> {
         match self {
             Self::None {} => append_document_open_catalog_field(output, b"none"),
             Self::ClosedBrowserActor { schema, codegen_policy, path, byte_length, sha256, source_component_sha256, source_descriptor_byte_sha256, policy_sha256, import_interfaces } => {
@@ -85,6 +87,3 @@ impl TrustedBundleBrowserActorV1 {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

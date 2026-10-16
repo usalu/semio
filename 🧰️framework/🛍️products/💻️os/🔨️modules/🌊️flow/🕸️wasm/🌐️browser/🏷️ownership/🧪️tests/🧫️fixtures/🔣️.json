@@ -50,9 +50,10 @@
       "exports": [
         "bootstrapFlowCorePackage",
         "bundleFlowBrowserModule",
+        "flowBrowserPackageManifestV1",
         "previewFlowBrowserPackage",
-        "publishFlowBrowserDeclarations",
-        "publishFlowBrowserPackage"
+        "publishFlowBrowserPackage",
+        "withFlowBrowserPackageV1"
       ]
     }
   ],
@@ -71,16 +72,6 @@
       "sourceOwner": "declaration-projection",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts",
       "kind": "authored-declaration"
-    },
-    {
-      "sourceOwner": "browser-publication",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
-      "kind": "published-browser"
-    },
-    {
-      "sourceOwner": "browser-publication",
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️host/🟨️.js",
-      "kind": "published-host"
     }
   ],
   "predecessors": [

@@ -5,6 +5,10 @@
 //! `BoundedDemand` backpressure primitive. No `unsafe`, no hard `tokio` dependency — concurrency
 //! is built on `std::sync` primitives plus the repository-owned async combinators.
 
+// 🔓️ R7: `async fn` in a public trait is our deliberate crate-wide shape (R3 answers the lint's underlying `Send` concern structurally).
+// Never take rustc's suggested `-> impl Future<...> + Send` fix; it re-imposes `Send` R3 forbids.
+#![allow(async_fn_in_trait)]
+
 //#region 🔖️AsyncSource
 use std::cmp::Ordering as CmpOrdering;
 use std::collections::BinaryHeap;
@@ -14,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use crate::ByteRange;
+use semio_framework_replication_codec::ByteRange;
 use semio_framework_pack_error::PackError;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 

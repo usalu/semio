@@ -66,11 +66,11 @@ The boundary and full regression cohorts are terminal in both modes. Source is h
 
 ## Root-Authorized Live Historical Execution
 
-Root explicitly authorized this lane to run the real private prototype historical preview, then bounded retirement if the actual plan and physical guards admit. Preview17235 ended exit0. Real RC6013/codeSH, prototype original charge and enclosing Rust imageEX authenticated; the complete process inventory observed one ambient compiler as diagnostics. The actual census found1139units/3607448804logical bytes and selected8units/8803685bytes, with zero unmet bytes. Actual physical availability was4291768320bytes; preview deleted nothing. Authorized retire11205 then launched through the identical qualified API and unchanged finite120s Original. The terminal retirement result and its concrete capacity evidence are recorded below.
+Root explicitly authorized this lane to run the real private prototype historical preview, then bounded retirement if the actual plan and physical guards admit. Preview17235 ended exit0. Real RC6013/codeSH, prototype original charge and enclosing Rust image EX authenticated; the complete process inventory observed one ambient compiler as diagnostics. The actual census found1139units/3607448804logical bytes and selected8units/8803685bytes, with zero unmet bytes. Actual physical availability was4291768320bytes; preview deleted nothing. Authorized retire11205 then launched through the identical qualified API and unchanged finite120s Original. The terminal retirement result and its concrete capacity evidence are recorded below.
 
 Preview transcript SHA256`a55a01c17c29503627392737382d6dea0cdfda9f8700b0130bdb7a513bc67c53`.
 
-Authorized retire11205 ended exit0 after actual physical locks, complete rooted descriptors and unchanged recensus. Exactly8units/8803685logical bytes retired; physical availability4291768320→4303548416bytes, exact surplus8581120bytes above4GiB. Retained historical logical bytes3598645119; zero unmet plan bytes. No unknown or protected working unit was selected. Transcript SHA256`083f5cdd07d7b49d6286cdbd0113df46947938eac00a7f09ddb56c3b0af87138`. This concrete above4GiB checkpoint admits one final-workspace successor, which redoes only puzzle3d resolution then its locked fetch.
+Authorized retire11205 ended exit0 after actual physical locks, complete rooted descriptors and unchanged recensus. Exactly8units/8803685logical bytes retired; physical availability4291768320→4303548416bytes, exact surplus8581120bytes above 4 GiB. Retained historical logical bytes3598645119; zero unmet plan bytes. No unknown or protected working unit was selected. Transcript SHA256`083f5cdd07d7b49d6286cdbd0113df46947938eac00a7f09ddb56c3b0af87138`. This concrete above 4 GiB checkpoint admits one final-workspace successor, which redoes only puzzle3d resolution then its locked fetch.
 
 ## Bounded Recensus Refusal Diagnostics
 
@@ -91,3 +91,16 @@ A new attempt to execute historical boundary auth honestly refused `Original his
 `rust-recensus-types.log` SHA256`b902d25ff85e92c3aa97a911ef236c1cadd2ea61e7b4e044b11b7fdb069b8b03`.
 
 Final owner/caller strict54509 includes the isolated recensus entry and shared helper and ended exit0 with actual completion DEBUG output. Transcript SHA256`b902d25ff85e92c3aa97a911ef236c1cadd2ea61e7b4e044b11b7fdb069b8b03`. All own handles terminal after this check.
+
+
+## Current Opaque Kernel Writer Epoch
+
+The current renewed protocol, actual immutable old-CLI interleavings, request-getter defect, private writer proof, Native custody union and both-mode scope/drain evidence are recorded in [Rust Headroom Inventory And Custody Frontier](rust-headroom-inventory-current.md#immutable-historical-protocol-and-current-writer-proof-epoch). The immutable RC6013 Source/binary witness is preserved. All own handles are closed. Current qualification is Core BOTH1/50, Native contract BOTH4/184, unchanged old-CLI/fresh-image BOTH4/17, historical scope BOTH2/52, expanded canonical and expanded history/Native ES2022/noUnchecked strict exit0. No canonical historical deletion occurred in this epoch; prior authorized executions above remain their own defining snapshots.
+
+
+Current canonical READ-ONLY prototype preview 53749 is collected exit0: actual availability4293222400; census1131 units/3598655060 bytes; selected1/4556726 bytes; zero unmet. Exact rows, same-inode observations and qualified scope limits are appended to rust-headroom-inventory-current.md. No deletion or Actor run.
+
+
+## Actual Current Kernel-Proof Retirement
+
+Current qualified kernel-proof epoch was used in one explicitly Root-authorized canonical prototype retire 83670, terminal exit 0. Fresh plan+physical profile/full-rooted FD+fresh unchanged recensus admitted exactly 6 finalized units / 30586885 bytes. Available 4268638208→4302499840; no working unit, guard inode or historical witness was changed. All scopes closed. Complete current Source/results are retained in rust-historical-retirement-timing-current.md; prior historical results above remain separate defining observations.

@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PrintCompilationIntent",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "namespace",
+        "id",
+        "sourceRoot",
+        "texPath",
+        "sources",
+        "dark"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "document"
+        },
+        "namespace": {
+          "enum": [
+            "print",
+            "report",
+            "probe"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 80
+        },
+        "sourceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 224,
+          "pattern": "^[^\\\\\\u0000-\\u001f]+$"
+        },
+        "texPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 224,
+          "pattern": "^[^\\\\\\u0000-\\u001f]+$"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 224,
+            "pattern": "^[^\\\\\\u0000-\\u001f]+$"
+          }
+        },
+        "dark": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "name",
+        "source"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "probe"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*\\.tex$",
+          "maxLength": 96
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2097152
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "name"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 224
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "name",
+        "source",
+        "namespace",
+        "id",
+        "dark"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "generated-document"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*\\.tex$",
+          "maxLength": 96
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2097152
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "name"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 224
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            }
+          }
+        },
+        "namespace": {
+          "enum": [
+            "print",
+            "report",
+            "probe"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+          "maxLength": 80
+        },
+        "dark": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumProbeBytes": 2097152,
+        "maximumPdfBytes": 67108864,
+        "maximumProbeOutputBytes": 16777216,
+        "maximumPdfPages": 512,
+        "maximumPanels": 256,
+        "maximumPagePixels": 16777216,
+        "maximumRenderedPixels": 134217728,
+        "maximumRenderedBytes": 67108864,
+        "maximumPngBytes": 16777216,
+        "maximumPanelManifestBytes": 65536,
+        "maximumWorkers": 1,
+        "renderDpi": 200,
+        "maximumResourceBytes": 134217728,
+        "maximumResourceFileBytes": 33554432,
+        "maximumResources": 64,
+        "maximumDataDepth": 4,
+        "maximumDataNodes": 8192,
+        "maximumDataFields": 8,
+        "maximumDataArray": 4096,
+        "maximumDataBytes": 4194304
+      }
+    }
+  }
+}

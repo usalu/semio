@@ -1,3 +1,4 @@
+import {nxTaskArgumentsSourceIdentityV1} from "./🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {readFileSync,existsSync,lstatSync} from "node:fs";
 import {join,resolve,relative,dirname,isAbsolute} from "node:path";
 import {createHash} from "node:crypto";
@@ -10,7 +11,7 @@ const privateTaskSources=["./🔌️nx-plugin/📤️arguments/🟨️.mjs","./�
 const dependencySourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([createHash("sha256").update(readFileSync(new URL(import.meta.url))).digest("hex"),createHash("sha256").update(captured?publicationSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url))).digest("hex"),createHash("sha256").update(captured?engineSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url))).digest("hex"),ownerArgumentsSourceIdentityV1(),...privateTaskSources.map((path,index)=>createHash("sha256").update(captured?privateTaskBytes[index]:readFileSync(new URL(path,import.meta.url))).digest("hex"))])).digest("hex"),loadedDependencySourceIdentity=dependencySourceIdentity(true);
 
 /** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
-export function nxBuildDependencyImplementationV1(){if(dependencySourceIdentity()!==loadedDependencySourceIdentity)throw Error("Loaded private Nx dependency Source changed");return loadedDependencySourceIdentity;}
+export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();if(dependencySourceIdentity()!==loadedDependencySourceIdentity)throw Error("Loaded private Nx dependency Source changed");return loadedDependencySourceIdentity;}
 
 
 /** 🔎️ Classifies exact literal module and URL references as portable source facts. */
@@ -61,6 +62,9 @@ function graphPublication(workspaceRoot){
  const graph=JSON.parse(source);if(graph.version!==1||!graph.projects||!Array.isArray(graph.dependencies))throw Error("Prepared portable build graph required");
  return {graph,digest};
 }
+
+/** 🔏️ Exposes only the digest-checked immutable private backend input. */
+export function readPrivateNxBuildGraphV1(workspaceRoot,environment){if(environment.SEMIO_BUILD_GRAPH_PATH!==process.env.SEMIO_BUILD_GRAPH_PATH||environment.SEMIO_BUILD_GRAPH_DIGEST!==process.env.SEMIO_BUILD_GRAPH_DIGEST)throw Error("Original private Nx graph binding changed");return graphPublication(workspaceRoot).graph;}
 
 /** 🔌️ Projects only portable process execution onto Nx's internal executor contract. */
 export function projectBuildTargetForNxV1(target){

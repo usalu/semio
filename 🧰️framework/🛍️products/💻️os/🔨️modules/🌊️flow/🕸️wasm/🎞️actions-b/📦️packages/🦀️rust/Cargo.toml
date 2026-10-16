@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-flow-wasm-actions-b"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow wasm session actions 2561 to 2610"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-wasm-actions-b"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-wasm-domain = { path = "../../../🧩️domain-adapter/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
+semio-framework-os-flow-drawing = { path = "../../../../🖍️drawing/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }

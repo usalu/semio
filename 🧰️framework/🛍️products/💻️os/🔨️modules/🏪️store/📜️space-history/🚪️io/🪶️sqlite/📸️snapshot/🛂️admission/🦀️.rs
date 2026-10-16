@@ -1,6 +1,7 @@
 //! 🛂️ Complete borrowed history cells are admitted before typed owner construction.
 use super::*;
-use crate::sqlite_snapshot::{SqliteDatabaseLimits,artifact::RowWriter};
+use semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits;
+use semio_framework_io_sqlite_snapshot::artifact::RowWriter;
 use semio_framework_value::{DslValue,NativeDecodeControl,Number};
 fn required<'a>(value:&'a DslValue,key:&str)->Result<&'a DslValue,ValueError>{
  let DslValue::Object(fields)=value else{return Err(fields::invalid("history semantic object is required"))};
@@ -38,14 +39,14 @@ fn write(value:&DslValue,total:usize,p:&mut RowWriter<'_, '_>)->Result<(),ValueE
   }
  }Ok(())
 }
-pub(crate) fn intrinsic(value:&DslValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+pub fn intrinsic(value:&DslValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  let mut total=1usize;
  for row in children(value,"checkpoints")?{total=fields::add(total,fields::add(2,fields::add(children(row,"authors")?.len(),children(row,"members")?.len())?)?)?;}
  for row in children(value,"alternatives")?{total=fields::add(total,fields::add(1,children(row,"checkpointIds")?.len())?)?;}
  if total>limits.max_rows{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"space history native row ownership exceeds caller limit"))}
  native.scoped_stage(|native|{
   native.begin_stage(0)?;let mut completed=0;
-  let mut callback=|event:crate::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};
+  let mut callback=|event:semio_framework_io_sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};
   let mut control=SqliteSnapshotControl::new(&mut callback,limits);schema(&mut control)?;
   let mut writer=RowWriter::borrowed(&mut control,SqliteSnapshotPhase::DecodeNative)?;
   write(value,total,&mut writer)?;writer.finish_borrowed()

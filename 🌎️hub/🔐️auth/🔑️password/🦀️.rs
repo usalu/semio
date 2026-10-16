@@ -8,7 +8,7 @@
 //! and salt out of the stored string, so raising [`DEFAULT_ITERATIONS`] never invalidates a
 //! credential minted under the old cost.
 
-use crate::directory::constant_time_digest_eq;
+use semio_hub_directory_contract::constant_time_digest_eq;
 use semio_framework_hash::pbkdf2_sha256;
 
 /// 🏷️ The only credential scheme this hub mints or verifies.
@@ -50,7 +50,7 @@ impl std::error::Error for PasswordCredentialError {}
 pub struct PasswordCredentialV1 {
     iterations: u32,
     salt: [u8; SALT_BYTES],
-    digest: [u8; DIGEST_BYTES],
+    pub digest: [u8; DIGEST_BYTES],
 }
 
 impl std::fmt::Debug for PasswordCredentialV1 {

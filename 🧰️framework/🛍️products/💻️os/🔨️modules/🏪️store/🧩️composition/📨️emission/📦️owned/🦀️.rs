@@ -2,27 +2,16 @@
 
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use std::{any::Any, mem::{ManuallyDrop, size_of}};
+pub use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::{BatchRetirement, SourceRetirementIssuer};
+use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::{BatchAdmission};
 
-pub(crate) trait BatchRetirement: Send {
-    fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
-    fn terminal_is_empty(&self) -> bool;
-    fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
-}
-impl<T: RetireOwned> BatchRetirement for ControlledRetirement<T> {
-    fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.step(grant) }
-    fn terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
-    fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? }) }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_copy_byte_demand(self) }
-}
-type BatchAdmission<T> = Result<(Box<dyn BatchRetirement>, RetainedCloneProgress), (ValueError, T)>;
+
+
+
 fn admit_batch_retirement<T: RetireOwned>(values: T, grant: RetainedCloneGrant) -> BatchAdmission<T> {
     semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(values, grant).map(|(owner, progress)| (owner as Box<dyn BatchRetirement>, progress))
 }
-pub(crate) struct SourceRetirementIssuer<M: Send + 'static> {
-    pub(crate) birth_bytes: usize,
-    pub(crate) begin: fn(std::collections::VecDeque<M>, RetainedCloneGrant) -> BatchAdmission<std::collections::VecDeque<M>>,
-}
+
 trait BatchOwner: Send {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -32,13 +21,13 @@ trait BatchOwner: Send {
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
 }
 struct TypedBatch<M: Send + 'static> {
-    values: ManuallyDrop<Option<Vec<M>>>,
-    retirement: ManuallyDrop<Option<Box<dyn BatchRetirement>>>,
-    birth_bytes: usize,
-    retire: fn(Vec<M>, RetainedCloneGrant) -> BatchAdmission<Vec<M>>,
+    pub values: ManuallyDrop<Option<Vec<M>>>,
+    pub retirement: ManuallyDrop<Option<Box<dyn BatchRetirement>>>,
+    pub birth_bytes: usize,
+    pub retire: fn(Vec<M>, RetainedCloneGrant) -> BatchAdmission<Vec<M>>,
     retire_source: fn(std::collections::VecDeque<M>, RetainedCloneGrant) -> BatchAdmission<std::collections::VecDeque<M>>,
     source_birth_bytes: usize,
-    closing: bool,
+    pub closing: bool,
 }
 impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
     fn as_any(&self) -> &dyn Any { self }
@@ -88,7 +77,7 @@ impl<M: Send + 'static> Drop for TypedBatch<M> {
 }
 
 /// 📦️ First-party erased owner whose exact mutation type survives every refused admission.
-pub struct MemberStoreOwnedBatch { owner: Option<Box<dyn BatchOwner>>, owner_bytes: usize }
+pub struct MemberStoreOwnedBatch { pub owner: Option<Box<dyn BatchOwner>>, owner_bytes: usize }
 impl MemberStoreOwnedBatch {
     /// 📐️ Names the exact erased typed scaffold allocation before ownership is transferred.
     pub fn scaffold_byte_demand<M: RetireOwned>() -> usize { size_of::<TypedBatch<M>>() }
@@ -114,16 +103,16 @@ impl MemberStoreOwnedBatch {
     }
     /// 🔎️ Borrows the original typed source without cloning or removing any owner.
     pub fn mutations<M: Send + 'static>(&self) -> Option<&[M]> { self.owner.as_ref()?.as_any().downcast_ref::<TypedBatch<M>>()?.values.as_deref() }
-    pub(crate) fn source_retirement_issuer<M: Send + 'static>(&self) -> Option<SourceRetirementIssuer<M>> {
+    pub fn source_retirement_issuer<M: Send + 'static>(&self) -> Option<SourceRetirementIssuer<M>> {
         let owner = self.owner.as_ref()?.as_any().downcast_ref::<TypedBatch<M>>()?;
         Some(SourceRetirementIssuer { birth_bytes: owner.source_birth_bytes, begin: owner.retire_source })
     }
-    pub(crate) fn take_mutations<M: Send + 'static>(&mut self) -> Option<Vec<M>> {
+    pub fn take_mutations<M: Send + 'static>(&mut self) -> Option<Vec<M>> {
         let owner = self.owner.as_mut()?.as_any_mut().downcast_mut::<TypedBatch<M>>()?;
         if owner.closing { return None; }
         owner.values.take()
     }
-    pub(crate) fn restore_mutations<M: Send + 'static>(&mut self, values: Vec<M>) {
+    pub fn restore_mutations<M: Send + 'static>(&mut self, values: Vec<M>) {
         let owner = self.owner.as_mut().unwrap().as_any_mut().downcast_mut::<TypedBatch<M>>().expect("restoration uses the exact admitted mutation owner");
         assert!(owner.values.is_none() && owner.retirement.is_none() && !owner.closing);
         *owner.values = Some(values);
@@ -162,7 +151,7 @@ pub struct MemberStoreOwnedBatchRequest {
     pub expected_revision: [u8; 32],
     pub actor: semio_framework_value::SharedUtf8,
     pub group_id: Option<String>,
-    pub transaction: Option<crate::os_spr::TransactionRef>,
+    pub transaction: Option<semio_framework_os_spr::TransactionRef>,
     pub mutations: MemberStoreOwnedBatch,
 }
 

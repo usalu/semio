@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {verifyProducedWasmPackageV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -41,15 +42,15 @@ class MediaProjectionScript extends BundleScript {
         denied++;
       }
     }
-    const source = readFileSync(join(this.root, "../../🦀️.rs"), "utf8");
+    const source = readFileSync(join(this.root, "../../🔀️workflow/🦀️.rs"), "utf8");
     assert(!source.includes("edge.contract.to_value()"), "presentation must not invent a persistence codec");
     assert(source.includes('"contract": workflow_media_contract_payload(&edge.contract)'), "the live window payload uses the explicit projection");
     const projectionLaw = readFileSync(join(this.root, "../../🧪️tests/🔬️workflow-standalone/🦀️.rs"), "utf8");
     assert(projectionLaw.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
     console.log(`media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases", "owned_artifact_kind_formats_survive_host_registry_projection"] }] });
-    console.log(`media contract presentation native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-host-workflow", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }, { package: "semio-framework-os-host-registry", target: { kind: "lib" }, laws: ["owned_artifact_kind_formats_survive_host_registry_projection"] }] });
+    console.log(`media contract presentation native assertions=${receipts.reduce((total, receipt) => total + receipt.assertions, 0)}; executables=${receipts.map((receipt) => receipt.sha256).join(",")}`);
   }
 }
 
@@ -1134,7 +1135,7 @@ class TestScript extends BundleScript {
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({ control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
+    await buildRepositoryWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/os/host/rs",

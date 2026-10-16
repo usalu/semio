@@ -16,7 +16,7 @@ struct TutorialSurfaceGeometry {
     domain: Option<(f64, f64, bool)>,
 }
 
-pub(crate) fn tutorial_polyline_point(points: &[[f32; 2]], t: f64) -> Option<[f32; 2]> {
+pub fn tutorial_polyline_point(points: &[[f32; 2]], t: f64) -> Option<[f32; 2]> {
     let first = *points.first()?;
     if points.len() == 1 {
         return Some(first);
@@ -62,7 +62,7 @@ fn tutorial_geometry_from_json(raw: &str, requires_visible: bool) -> Option<Tuto
     Some(TutorialSurfaceGeometry { point: [x, y], rect, polyline, domain: None })
 }
 
-pub(super) fn tutorial_graph_world_to_screen(engine: &NodeGraphEngine, x: f64, y: f64) -> [f32; 2] {
+pub fn tutorial_graph_world_to_screen(engine: &NodeGraphEngine, x: f64, y: f64) -> [f32; 2] {
     let point = match engine {
         NodeGraphEngine::Dag(host) => dag_world_to_screen(&host.dag, x, y),
         NodeGraphEngine::Flow(host) => dag_world_to_screen(&host.dag, x, y),
@@ -95,7 +95,7 @@ fn tutorial_graph_geometry(engine: &NodeGraphEngine, domain: &str, entity: &str)
     tutorial_geometry_from_json(&raw, true)
 }
 
-fn tutorial_surface_geometry(surface: &EngineSurface, domain: &str, entity: &str) -> Option<TutorialSurfaceGeometry> {
+pub fn tutorial_surface_geometry(surface: &EngineSurface, domain: &str, entity: &str) -> Option<TutorialSurfaceGeometry> {
     if let Some(engine) = surface.node_graph.as_ref() {
         if let Some(geometry) = tutorial_graph_geometry(engine, domain, entity) {
             return Some(geometry);
@@ -110,8 +110,8 @@ fn tutorial_surface_geometry(surface: &EngineSurface, domain: &str, entity: &str
 }
 
 /// 👻️ Resolves typed tutorial points through the attached engine surface that owns their live camera and geometry.
-pub fn resolve_tutorial_surface_point(host_id: &str, point: &semio_framework::IntroductionPoint) -> Option<(f32, f32)> {
-    use semio_framework::IntroductionPoint as P;
+pub fn resolve_tutorial_surface_point(host_id: &str, point: &semio_framework::onboarding::IntroductionPoint) -> Option<(f32, f32)> {
+    use semio_framework::onboarding::IntroductionPoint as P;
     let point_surface_id = match point {
         P::Scene { id, .. } | P::Canvas { id, .. } | P::Entity { id, .. } | P::Curve { id, .. } | P::Domain { id, .. } => id,
         _ => return None,

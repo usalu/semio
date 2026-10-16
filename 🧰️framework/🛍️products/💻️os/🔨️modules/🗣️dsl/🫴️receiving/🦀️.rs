@@ -4,27 +4,27 @@ use semio_framework_dsl_record::{FieldValue,receiving::{DslOwnedReceivingVariant
 pub use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError};
 pub use protocol::OpBinaryReceiving;
 use semio_framework_value::{NativeDecodeControl,RetainedCloneStep,RetirementDemand,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
-use crate::os_pack::record::RetainedRecordReceiving;
+use semio_framework_os_pack::record::RetainedRecordReceiving;
 use std::mem::{ManuallyDrop,size_of};
 /// 🎞️ Implements an authored ordinal operation only through its actual owned receiving capability.
 #[macro_export]
 macro_rules! original_ordinal_operation_receiving{
- ($operation:ty)=>{impl $crate::os_dsl::original_receiving::OpBinaryReceiving for $operation{
-  type Receiving=$crate::os_dsl::original_receiving::OriginalOperationReceiving<Self>;
-  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::os_dsl::original_receiving::RetainedCloneGrant)->Result<Option<(Self::Receiving,$crate::os_dsl::original_receiving::RetainedCloneProgress)>,$crate::os_dsl::original_receiving::ValueError>{$crate::os_dsl::original_receiving::OriginalOperationReceiving::admit(source,range,grant)}
+ ($operation:ty)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
+  type Receiving=$crate::original_receiving::OriginalOperationReceiving<Self>;
+  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->Result<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>,$crate::original_receiving::ValueError>{$crate::original_receiving::OriginalOperationReceiving::admit(source,range,grant)}
  }};
 }
 /// 🏷️ Resolves authored protocol tags at compile time and retains one-tag runtime selection.
 #[macro_export]
 macro_rules! original_tagged_operation_receiving{
- ($operation:ty,$protocol:expr)=>{impl $crate::os_dsl::original_receiving::OpBinaryReceiving for $operation{
-  type Receiving=$crate::os_dsl::original_receiving::OriginalOperationReceiving<Self>;
-  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::os_dsl::original_receiving::RetainedCloneGrant)->Result<Option<(Self::Receiving,$crate::os_dsl::original_receiving::RetainedCloneProgress)>,$crate::os_dsl::original_receiving::ValueError>{
-   const TAGS:[u64;<$operation as $crate::os_dsl::original_receiving::BorrowedDslVariants>::VARIANTS.len()]={
-    let variants=<$operation as $crate::os_dsl::original_receiving::BorrowedDslVariants>::VARIANTS;let mut tags=[0;<$operation as $crate::os_dsl::original_receiving::BorrowedDslVariants>::VARIANTS.len()];let mut index=0;
-    while index<variants.len(){tags[index]=$crate::os_dsl::protocol_record::tag($protocol,variants[index].0);let mut previous=0;while previous<index{assert!(tags[previous]!=tags[index],"authored operation tags must be unique");previous+=1;}index+=1;}tags
+ ($operation:ty,$protocol:expr)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
+  type Receiving=$crate::original_receiving::OriginalOperationReceiving<Self>;
+  fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->Result<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>,$crate::original_receiving::ValueError>{
+   const TAGS:[u64;<$operation as $crate::original_receiving::BorrowedDslVariants>::VARIANTS.len()]={
+    let variants=<$operation as $crate::original_receiving::BorrowedDslVariants>::VARIANTS;let mut tags=[0;<$operation as $crate::original_receiving::BorrowedDslVariants>::VARIANTS.len()];let mut index=0;
+    while index<variants.len(){tags[index]=$crate::protocol_record::tag($protocol,variants[index].0);let mut previous=0;while previous<index{assert!(tags[previous]!=tags[index],"authored operation tags must be unique");previous+=1;}index+=1;}tags
    };
-   $crate::os_dsl::original_receiving::OriginalOperationReceiving::admit_tagged(source,range,&TAGS,grant)
+   $crate::original_receiving::OriginalOperationReceiving::admit_tagged(source,range,&TAGS,grant)
   }
  }};
 }
@@ -67,7 +67,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
    0=>{if source.get(self.position)!=Some(&1)||self.position>=self.range.1{return Err(invalid("original operation binary format is invalid"))}self.position+=1;self.phase=1},
    1=>{let byte=source.get(self.position).copied().filter(|_|self.position<self.range.1).ok_or_else(||invalid("original operation ordinal is truncated"))?;if self.shift==63&&byte>1{return Err(invalid("original operation ordinal overflows u64"))}self.tag|=u64::from(byte&127)<<self.shift;self.position+=1;if byte&128==0{if self.shift>0&&byte==0{return Err(invalid("original operation ordinal is not minimal"))}self.phase=2}else{self.shift=self.shift.checked_add(7).filter(|value|*value<=63).ok_or_else(||invalid("original operation ordinal overflows u64"))?;}},
    2=>{if let Some(tags)=self.tags{let tag=tags.get(self.ordinal).ok_or_else(||invalid("original operation tag is not declared"))?;if *tag!=self.tag{self.ordinal+=1;return Ok(receipt(demand))}}else{self.ordinal=usize::try_from(self.tag).map_err(|_|invalid("original operation ordinal exceeds address space"))?;}let(keyword,_)=self.spec()?;self.binding=Some(M::receiving_cursor(keyword)?);self.phase=3},
-   3=>{let(_,spec)=self.spec()?;let Some((record,progress))=RetainedRecordReceiving::admit(source,(self.position,self.range.1),spec,crate::os_pack::PackLimits::default(),grant_child(grant))?else{return Ok(Default::default())};self.record=Some(record);self.phase=4;return Ok(progress)},
+   3=>{let(_,spec)=self.spec()?;let Some((record,progress))=RetainedRecordReceiving::admit(source,(self.position,self.range.1),spec,semio_framework_os_pack::PackLimits::default(),grant_child(grant))?else{return Ok(Default::default())};self.record=Some(record);self.phase=4;return Ok(progress)},
    4=>{let mut original=None;let progress=self.record.as_mut().unwrap().take_into(&mut original,grant_child(grant))?;if original.is_some(){*self.generic.value=Some(FieldValue::Record(original.take().unwrap()));self.phase=5;}return Ok(progress)},
    5=>{let progress=self.binding.as_mut().unwrap().take_into(&mut self.output.value,grant_child(grant))?;if self.output.value.is_some(){self.phase=6;}return Ok(progress)},
    _=>return Err(invalid("original operation phase is invalid")),
@@ -115,6 +115,3 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> RetirementCursor for Opera
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> Drop for OperationRetirement<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.0.closed,"original operation retirement lost its retained fields");if self.0.closed{unsafe{ManuallyDrop::drop(&mut self.0)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

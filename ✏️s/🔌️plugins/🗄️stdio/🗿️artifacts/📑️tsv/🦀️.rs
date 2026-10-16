@@ -11,134 +11,29 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use standards::iana::subsets::any::schema::diff::TsvDiff;
 pub use standards::iana::subsets::any::schema::mutations::TsvMutation;
 pub use standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
 pub use standards::iana::subsets::any::schema::TsvArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
+pub use semio_s_artifact_stdio_tsv_mutations::{STDIO_TSV_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const TSV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.tsv";
+pub use semio_s_artifact_stdio_tsv_snapshot::{TSV_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_tsv_mutations::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_tsv_mutations::{artifact_kind, assembly, declaration, definition, native_codecs};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_tsv_mutations::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::artifact_codec::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA);
-    codec.extension = "tsv";
-    codec.pack_schema_hash = pack::record::schema_hash(&TsvSnapshot::__dsl_spec());
-    codec
-}
+pub use semio_s_artifact_stdio_tsv_mutations::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.tsv.v1", artifact: "tsv", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_tsv_mutations::{contribution};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "tsv", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("tsv", definition()?, declaration)
-}
-
-/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
-/// and the `stdio.tsv` document codec the linked `stdio.native.tsv.v1` receipt instantiates.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.tsv".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Tsv", "Tsv"),
-        source_format: STDIO_TSV_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_TSV_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
-
-//#region 🔖️Register
-/// 🗂️ Registers this artifact's IO composer + the handcrafted grammar/protocol `LanguageSpec` —
-/// dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
-/// MACHINES). `tsv` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
-/// converted to the `ArtifactDeclaration` builder pattern; this package's contribution invokes it
-/// directly with the established call order and behavior).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn register() {
-    standards::iana::subsets::any::io::register();
-    register_pilot_languages();
-}
-
-/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn register_pilot_languages() {
-    use crate::standards::iana::subsets::any::io;
-    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
-        id: "stdio.tsv",
-        extension: Some("tsv"),
-        role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-        hooks: semio_framework_dsl::passthrough_hooks("stdio.tsv"),
-    });
-}
-//#endregion 🔖️Register
+pub use semio_s_artifact_stdio_tsv_io_registry::{register, register_pilot_languages};
 
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::iana::subsets::any::io::io_registry as std_composer;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TsvComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(std_composer::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_tsv_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -156,89 +51,41 @@ pub mod standards {
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                pub mod io;
+                pub mod io {
+    pub use semio_s_artifact_stdio_tsv_io_registry::standards::iana::subsets::any::io::*;
+    pub use semio_s_artifact_stdio_tsv_snapshot::standards::iana::subsets::any::io::sqlite;
+}
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_tsv_schema::standards::iana::subsets::any::schema::*;
+                    
+                    pub use semio_s_artifact_stdio_tsv_snapshot::standards::iana::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_tsv_mutations::standards::iana::subsets::any::schema::mutations;
                 }
             }
         }
     }
 }
-#[path = "."]
-pub mod examples {
-    #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod demo;
-}
+pub use semio_s_artifact_stdio_tsv_inferences::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod tsv {
-        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tsv_mutations::editor::tsv::*;
+        
+        pub use semio_s_artifact_stdio_tsv_inferences::editor::tsv::edit_rules;
+        pub use semio_s_artifact_stdio_tsv_inferences::editor::tsv::presence;
+        pub use semio_s_artifact_stdio_tsv_inferences::editor::tsv::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tsv_schema::editor::tsv::modes::edit::*;
+                
+                pub use semio_s_artifact_stdio_tsv_schema::editor::tsv::modes::edit::windows;
             }
         }
     }
@@ -248,38 +95,24 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod tsv {
-        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_tsv_mutations::viewer::tsv::*;
+        
+        pub use semio_s_artifact_stdio_tsv_inferences::viewer::tsv::presence;
+        pub use semio_s_artifact_stdio_tsv_inferences::viewer::tsv::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_tsv_mutations::viewer::tsv::modes::view::*;
+                
+                pub use semio_s_artifact_stdio_tsv_schema::viewer::tsv::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::iana::subsets::any::io::{TsvBuilderConstruction, TsvParts, TsvAnalyzerAnalysis, TsvBuilderFacets, TsvBuilder, TsvAnalyzer, TsvComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

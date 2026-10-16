@@ -4,7 +4,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Product scene payloads (World3dScene/TableScene/...) and their pack-encoded SurfaceDoc bridge, plus generic 3D scene math — wasm-safe, uses ui-contract, serde and first-party value/JSON codecs"
+description = "Thin facade over the ui-scene producer crates: product scene payloads (World3dScene/TableScene/...), their pack-encoded SurfaceDoc bridge and the generic 3D scene math, re-exported name for name — wasm-safe"
 
 [package.metadata.semio]
 role = "framework"
@@ -17,27 +17,19 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-mesh-engine = { path = "../../../../🏗️mesh-engine/📦️packages/🦀️rust" }
-serde = { version = "1.0.219", features = ["derive"] }
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-# 🚧️ `protocol` (not `os-kernel`) deliberately: this crate's own "wasm-safe, minimal deps" boundary
-# (see the module docstring) forbids the OS kernel, but `ToValue`/`FromValue` are natively owned by
-# `semio-framework-replication` ("depends on neither" — its own description) and `os-kernel` only
-# re-exports them. `#[derive(ToValue, FromValue)]` hardcodes its expansion at `::semio_framework_os_kernel::…`
-# (see the fan-out playbook), which is wrong for a crate that must never depend on the OS kernel, so
-# the `NodeGraph*Record` impls below are hand-written against `protocol::value::` directly instead of
-# derived. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
-protocol = { path = "../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
-semio-framework-ui-viewport = { path = "../../../🪟️viewport/📦️packages/🦀️rust" }
-semio-framework-value = { workspace = true }
-
-[dependencies.semio-framework-geometry]
-path = "../../../../📐️geometry/📦️packages/🦀️rust"
-package = "semio-framework-geometry"
-
-[dependencies.semio-framework-pack-json]
-path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust"
+semio-framework-ui-scene-algebra = { path = "../../📐️math/🧮️algebra/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-framework-ui-scene-doc = { path = "../../🎬️scenes/📜️doc/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-ui-scene-modelling = { path = "../../📏️world3d-modelling/📦️packages/🦀️rust" }
+semio-framework-ui-scene-node-graph = { path = "../../🎬️scenes/🕸️node-graph/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pack = { path = "../../📦️pack/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pass = { path = "../../📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-framework-ui-scene-picking = { path = "../../📐️math/🎯️picking/📦️packages/🦀️rust" }
+semio-framework-ui-scene-plane = { path = "../../🎬️scenes/🖼️plane/📦️packages/🦀️rust" }
+semio-framework-ui-scene-surface = { path = "../../🌉️surface/📦️packages/🦀️rust" }
+semio-framework-ui-scene-views = { path = "../../🎬️scenes/📄️views/📦️packages/🦀️rust" }
+semio-framework-ui-scene-world3d = { path = "../../🎬️scenes/🌍️world3d/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-fnv = "1.0.7"
 serde_json = { version = "1.0.140" }

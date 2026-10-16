@@ -177,7 +177,8 @@
         "temporaryDirectoryNameUnits": 20,
         "maximumReceiptBytes": 8192,
         "observationEntryInterval": 64,
-        "maximumTomlOutputBytes": 8388608
+        "maximumTomlOutputBytes": 8388608,
+        "maximumGenerationOperations": 32
       }
     },
     "BootstrapReceipt": {

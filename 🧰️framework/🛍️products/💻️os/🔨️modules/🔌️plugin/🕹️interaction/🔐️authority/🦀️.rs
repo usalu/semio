@@ -5,14 +5,16 @@ pub(crate) mod inputs;
 
 //#region 🔐️InputAuthority
 #[derive(Default)]
-pub(crate) struct LocalInteractionTopologyAuthority {
+#[doc(hidden)]
+pub struct LocalInteractionTopologyAuthority {
     ui_generation: u64,
     closed: bool,
 }
 
 impl LocalInteractionTopologyAuthority {
     /// 🔢️ Must succeed before any live UI topology insertion, removal, reset, or replacement.
-    pub(crate) fn before_cache_mutation(&mut self) -> Result<(), &'static str> {
+    #[doc(hidden)]
+    pub fn before_cache_mutation(&mut self) -> Result<(), &'static str> {
         if self.closed {
             return Err("local-interaction.authority-closed");
         }
@@ -22,7 +24,8 @@ impl LocalInteractionTopologyAuthority {
     }
 
     /// 🔐️ Hashes only fixed input identities; callers retain their exact immutable document/config roots.
-    pub(crate) fn revision(&self, document: [u8; 32], config: [u8; 32]) -> Result<[u8; 32], &'static str> {
+    #[doc(hidden)]
+    pub fn revision(&self, document: [u8; 32], config: [u8; 32]) -> Result<[u8; 32], &'static str> {
         if self.closed {
             return Err("local-interaction.authority-closed");
         }
@@ -35,7 +38,8 @@ impl LocalInteractionTopologyAuthority {
     }
 
     /// 🔌️ Invalidates live publication before cache ownership moves into final retirement.
-    pub(crate) fn close(&mut self) {
+    #[doc(hidden)]
+    pub fn close(&mut self) {
         self.closed = true;
     }
 }

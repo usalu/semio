@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::inferences::topicstats::*;
 use crate::standards::v2_1::subsets::any::schema::snapshot::{BcfComment, BcfTopic, BcfViewpoint};
 use crate::STDIO_BCF_DOCUMENT_SCHEMA;
 

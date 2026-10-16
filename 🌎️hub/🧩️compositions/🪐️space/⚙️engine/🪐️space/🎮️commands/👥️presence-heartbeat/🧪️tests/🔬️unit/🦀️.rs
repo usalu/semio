@@ -1,20 +1,22 @@
 
-use super::*;
+use semio_framework_plugin::{ArtifactView, ConfigView};
+use semio_hub_space_commands_media::presence_heartbeat::{PresenceHeartbeat, handle, handle_with_identity};
+use semio_hub_space_foundation::config::SpaceConfig;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    use crate::engine::space::SpaceCommand;
+    use semio_hub_space_app::SpaceCommand;
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PresenceHeartbeat(PresenceHeartbeat {}));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn presence_heartbeat_declares_none_ui_scope() {
     use crate::demo_space_projection;
-    use crate::engine::space::SpaceCommand;
+    use semio_hub_space_app::SpaceCommand;
     use semio_framework::kernel::UiDirtyScope;
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
-    let history = crate::engine::space::unit_tests::context::empty_history();
+    let history = semio_hub_space_app::unit_tests::context::empty_history();
     let doc = ArtifactView::new(&projection, &history);
     let cfg = ConfigView { snapshot: &config, window: None };
     assert!(handle(&PresenceHeartbeat {}, &doc, &cfg).is_err());

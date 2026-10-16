@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-tool-run-actions"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-run-actions"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-manifest-actions = { path = "../../../../🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
+semio-framework-manifest-app-surface = { path = "../../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
+semio-framework-manifest-arg-schema = { path = "../../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-manifest-app-surface = { path = "../../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -1527,5 +1527,9 @@
       ],
       "accepted": false
     }
+  ],
+  "compilerPorts": [
+    "invocation",
+    "phaseControl"
   ]
 }

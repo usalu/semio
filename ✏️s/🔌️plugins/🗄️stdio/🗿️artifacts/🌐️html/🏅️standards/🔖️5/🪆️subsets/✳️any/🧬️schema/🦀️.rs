@@ -79,3 +79,10 @@ pub fn html_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const HTML_ARTIFACT_SCHEMA_ID: &str = "s.stdio.html";
+}
+//#endregion 🧩️ArtifactItems2

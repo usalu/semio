@@ -1,7 +1,7 @@
 //! 🧩️ The reserved refresh-section identities, pinned against the language-neutral fixture the
 //! TypeScript mirror (`UI_REFRESH_SECTIONS` in `🛂️manifest/🟦️.ts`) reads from the same file.
 
-use super::{UiRefreshSection, UI_REFRESH_SECTION_BODY_KEYS, UI_REFRESH_SECTION_KEYS};
+use crate::{UI_REFRESH_SECTION_BODY_KEYS, UI_REFRESH_SECTION_KEYS, UiRefreshSection};
 
 #[semio_framework_async_macros::async_test]
 async fn reserved_section_identities_match_the_neutral_fixture() {

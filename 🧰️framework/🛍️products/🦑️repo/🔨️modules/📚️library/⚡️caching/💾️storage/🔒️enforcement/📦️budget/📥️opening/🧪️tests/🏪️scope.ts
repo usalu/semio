@@ -1,3 +1,4 @@
+import "../📂️parents/🧪️tests/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";

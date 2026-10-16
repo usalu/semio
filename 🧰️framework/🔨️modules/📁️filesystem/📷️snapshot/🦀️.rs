@@ -1,6 +1,10 @@
-//! 🗂️ Projects owned source transitions using only the standard library.
+//! 📷️ Source projection snapshot over a path-keyed text tree.
+
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fmt;
+use std::fmt::Display;
+use std::fmt::Formatter;
 
 /// 📄️ An exact source transition; None represents absence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,9 +36,11 @@ pub struct SourceProjectionError { pub code: SourceProjectionCode, pub path: Str
 impl SourceProjectionError {
     fn new(code: SourceProjectionCode, path: &str) -> Self { Self { code, path: path.to_owned() } }
 }
+
 impl fmt::Display for SourceProjectionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}: {}", self.code.as_str(), self.path) }
 }
+
 impl std::error::Error for SourceProjectionError {}
 
 fn validate_path(path: &str) -> Result<(), SourceProjectionError> {

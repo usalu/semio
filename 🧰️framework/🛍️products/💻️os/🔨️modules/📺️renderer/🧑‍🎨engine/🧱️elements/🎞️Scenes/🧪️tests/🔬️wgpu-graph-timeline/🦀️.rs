@@ -1,6 +1,6 @@
 use super::*;
 
-fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
+pub fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
     HistoryColumnJson { checkpoint_id: id.to_string(), labels: Vec::new(), authors: Vec::new(), parent_checkpoint_id: parent.map(str::to_string), description: None, mutation_level: None, lane }
 }
 
@@ -67,7 +67,7 @@ fn layout_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🌳️GraphTimelineHost/🧪️tests/🧫️fixtures/🎨️layout/🔣️.json")).expect("shared GraphTimeline layout fixture")
 }
 
-fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     crate::collect_fixture_actions(input)
 }
 

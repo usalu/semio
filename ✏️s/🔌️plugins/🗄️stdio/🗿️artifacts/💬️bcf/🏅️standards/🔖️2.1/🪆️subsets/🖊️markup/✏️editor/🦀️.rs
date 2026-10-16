@@ -103,7 +103,7 @@ const BCF_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "set-cell", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
-fn bcf_example_snapshot(example_id: &str) -> BcfSnapshot {
+pub fn bcf_example_snapshot(example_id: &str) -> BcfSnapshot {
     if example_id == crate::examples::demo::ID {
         <BcfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -119,7 +119,7 @@ fn bcf_command_id(command: &BcfAnyEditCommand) -> &'static str {
     }
 }
 
-fn bcf_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BcfAnyEditCommand, Fault> {
+pub fn bcf_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BcfAnyEditCommand, Fault> {
     if let Some(event) = editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(BcfAnyEditCommand::EditSnapshot { event });
     }
@@ -137,7 +137,7 @@ fn bcf_retained_extent(command: &BcfAnyEditCommand, _snapshot: &BcfSnapshot, _in
     (!matches!(command, BcfAnyEditCommand::EditSnapshot { .. })).then_some(1)
 }
 
-fn bcf_emit(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot) -> Result<Emit<BcfMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn bcf_emit(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot) -> Result<Emit<BcfMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     bcf_emit_at_revision(command, snapshot, None)
 }
 
@@ -416,3 +416,130 @@ pub fn create_bcf_any_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_BCF_DOCUMENT_SCHEMA};
+use crate::{artifact_kind};
+pub use crate::schema::mutations::BcfMutation;
+pub use crate::schema::snapshot::BcfSnapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
+/// replaces the old side-effecting `register()` (dissolved out of the former `⚙️engine`, ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — the codec now lives in `🚪️io`). Mirrors
+/// `🔋️energy`'s `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so
+/// `.document_codec_bare` stands in for the old `store::os_store::codec_registry::register_document_codec(store::
+/// bare_artifact_codec::<BcfSnapshot, BcfMutation>(...))` call. `.composers(...)` reaches the
+/// subset io's own `io_registry` directly (fully qualified, not through the `io` shim), whose
+/// `entries()` returns `&'static [ComposerEntry]` (owned rows) — NOT this file's own shadowing
+/// `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`
+/// (references) and would silently rebind under a bare call (this ticket's "SILENT REBIND"
+/// hazard).
+///
+/// **NOT covered by any field**: nothing — bcf's `register()` never called `register_schema_spec`
+/// (`BcfSnapshot`/`BcfDiff`/`BcfMutation` are all hand-rolled, no derivable `RecordSpec` — see the
+/// deleted `register_pilot_languages`' own doc comment), so this artifact converts cleanly with
+/// zero residual `.setup()` calls.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("bcf", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::schema::bcf_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::v2_1::subsets::any::schema::inferences::bcf_artifact_inference_descriptor()])
+        .composers(crate::standards::v2_1::subsets::any::io::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.bcf", standard: semio_framework_artifact_reference::StandardId("2.1"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .try_build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
+/// `LanguageSpec` rows) from the former `⚙️engine::register_pilot_languages`'s own
+/// `dsl::register_language(...)` call bodies (dissolved, ticket 26/08/12/ENGINELESS-ARTIFACTS-
+/// AND-APP-STATE-MACHINES).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.bcf",
+                    extension: Some("bcf"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v2_1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v2_1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.bcf.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v2_1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v2_1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.bcf.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v2_1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v2_1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.bcf.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v2_1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.bcf.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v2_1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v2_1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems9
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "bcf", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems10

@@ -837,3 +837,30 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
         outcome.unwrap_or_else(|error| panic!("{kind}: {error}"));
     }
 }
+
+//#region 🔤️PackageFonts
+mod package_fonts {
+    use crate::LayoutPlayApp;
+    use semio_s_artifact_layout_layout_engine::scene::{LayoutEngine, text_font_asset_declarations};
+    use semio_framework_plugin::reactor::{admit_package_assets_for_testing, package_asset};
+
+    fn catalog() -> std::path::PathBuf {
+        let relative = std::path::Path::new(semio_s_artifact_layout_layout_engine::scene::TEXT_FONT_ASSET_ROOT);
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find_map(|ancestor| ancestor.join(relative).is_dir().then(|| ancestor.to_path_buf())).expect("the repository root sits above the editor package")
+    }
+
+    #[test]
+    fn the_plugin_declares_assets_whose_bytes_the_open_event_delivers_to_the_app_and_the_engine_shapes_with_them() {
+        let root = catalog();
+        let delivered: Vec<(String, Vec<u8>)> = text_font_asset_declarations().into_iter().map(|declaration| (declaration.name.clone(), std::fs::read(root.join(&declaration.name)).expect("declared font file"))).collect();
+        assert_eq!(delivered.len(), 15);
+        admit_package_assets_for_testing(delivered);
+        assert!(text_font_asset_declarations().iter().all(|declaration| package_asset(&declaration.name).is_some_and(|bytes| bytes.len() as u64 == declaration.size_bytes)), "every declared font must read back through the SDK accessor");
+        let _app = LayoutPlayApp::default();
+        let mut engine = LayoutEngine::new();
+        let shaped = engine.layout_story(&semio_s_artifact_layout_layout_model::TextStory { id: "story".into(), content: "Hello".into(), style_runs: Vec::new() }, &semio_s_artifact_layout_layout_model::ParagraphStyle { id: "p".into(), name: "p".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() }, 200.0, 100.0);
+        assert_eq!(shaped.0.glyphs.len(), 5);
+        assert!(shaped.0.glyphs.iter().all(|glyph| glyph.glyph_id != 0), "the layout font and the delivered built-in families shape real glyphs");
+    }
+}
+//#endregion 🔤️PackageFonts

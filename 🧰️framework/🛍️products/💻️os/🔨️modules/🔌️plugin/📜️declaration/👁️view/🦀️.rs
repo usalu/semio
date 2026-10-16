@@ -1,9 +1,43 @@
 //! 👁️ The read views an app receives, its operation contexts and the empty state lanes.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "../🪆️child/🦀️.rs"]
+pub mod child_view;
+#[doc(hidden)]
+#[path = "../🛠️tool-machine/🦀️.rs"]
+pub mod gesture_contract;
+#[doc(hidden)]
+#[path = "../🎮️command/🦀️.rs"]
+pub mod history_view;
+#[doc(hidden)]
+#[path = "../🎞️media/🦀️.rs"]
+pub mod media_contract;
+#[doc(hidden)]
+#[path = "../⏯️tool-run/🦀️.rs"]
+pub mod tool_run_contract;
+#[doc(hidden)]
+#[path = "../../👥️presence/♻️retirement/🦀️.rs"]
+pub mod presence_retirement;
+#[doc(hidden)]
+#[path = "../../🎚️config/🚫️none/♻️retirement/🦀️.rs"]
+pub mod no_config_retirement;
+#[doc(hidden)]
+#[path = "../../📝️draft/🚫️none/♻️retirement/🦀️.rs"]
+pub mod no_draft_retirement;
+#[doc(hidden)]
+#[path = "../../🫧️transient/♻️retirement/🦀️.rs"]
+pub mod transient_retirement;
+#[doc(hidden)]
+#[path = "🛬️lifted/👷️job/🦀️.rs"]
+pub mod tool_contract;
 use semio_framework::ActionKind;
 use semio_framework::ActionDefinition;
 use semio_framework::FaultCode;
 use semio_framework::FaultOrigin;
-use super::window_config::{WindowConfigOwner, WindowConfigSnapshot};
+use semio_framework_plugin_window_config::WindowConfigOwner;
+use semio_framework_plugin_window_config::WindowConfigSnapshot;
 use semio_framework::Fault;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
@@ -24,15 +58,15 @@ use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, Ret
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
-use crate::interaction_topology::empty_domain_hover;
-use crate::interaction_topology::empty_domain_selection;
-use crate::interaction_topology::leftover_selected_ids_of;
+use semio_framework_plugin_interaction::interaction_topology::empty_domain_hover;
+use semio_framework_plugin_interaction::interaction_topology::empty_domain_selection;
+use semio_framework_plugin_interaction::interaction_topology::leftover_selected_ids_of;
 
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
 
 use crate::tool_run_contract::ToolRunView;
-use crate::window_surface::UiAssemblyResult;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 /// 🧾️ Read-only view of an app's document handed to `ArtifactApp::handle_action`/`render`:
 /// the materialized snapshot plus the history metadata (checkpoints/alternatives/undo state)
@@ -78,7 +112,7 @@ pub struct AppRenderOperationContext {
     pub base_revision: semio_framework_job::RevisionId,
     pub generation: semio_framework_job::Generation,
     pub canonical_base_revision: [u8; 32],
-    pub mounted_policy: crate::MountedOwnerPolicyV1,
+    pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
 }
 
 /// 🧾️ Projects the exact render-pinned store revision onto the decimal-u64 completion lane.
@@ -149,7 +183,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// `context_menu`, `interaction_topology`, `export_media`, `media_fingerprint` — goes through
     /// here, so [`ArtifactView::render_operation`] is total on the host and an app that leases a
     /// per-instance session off it (puzzle 3d's `puzzle3d_view_session_key`) never runs cold.
-    pub(crate) async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: String, snapshot_read: Option<store::os_store::snapshot_read::SnapshotRead<P>>) -> Self {
+    pub async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, parent_document_id: String, snapshot_read: Option<store::os_store::snapshot_read::SnapshotRead<P>>) -> Self {
         Self {
             snapshot,
             history,
@@ -177,7 +211,7 @@ impl<'a, P> ArtifactView<'a, P> {
     }
 
     /// ⏯️ Binds the tool run this document instance shows; `snapshot` is then committed ⊕ provisional.
-    pub(crate) fn with_tool_run(mut self, tool_run: Option<ToolRunView>) -> Self {
+    pub fn with_tool_run(mut self, tool_run: Option<ToolRunView>) -> Self {
         self.tool_run = tool_run;
         self
     }
@@ -190,7 +224,7 @@ impl<'a, P> ArtifactView<'a, P> {
 
     /// 🔢️ Binds the instance's continuous-tool overlay generation, which moves on every tick, release and zero-trace
     /// abort of an open press or typing run.
-    pub(crate) fn with_provisional_generation(mut self, generation: u64) -> Self {
+    pub fn with_provisional_generation(mut self, generation: u64) -> Self {
         self.provisional_generation = generation;
         self
     }
@@ -207,7 +241,7 @@ impl<'a, P> ArtifactView<'a, P> {
         self.operations
     }
 
-    pub(crate) fn with_operations(mut self, operations: &'a [ArtifactOperationProgress]) -> Self {
+    pub fn with_operations(mut self, operations: &'a [ArtifactOperationProgress]) -> Self {
         self.operations = operations;
         self
     }
@@ -269,7 +303,7 @@ pub struct DraftView<'a, D> {
 /// 👥️ Read-only view of the PRESENCE lane: this actor's own live shared state plus every
 /// peer's, as last broadcast. Ephemeral and shared — never persisted, never undoable.
 pub struct PresencePeersView<'a, P> {
-    pub(crate) root: &'a store::os_store::presence::PresencePeersRoot<P>,
+    pub root: &'a store::os_store::presence::PresencePeersRoot<P>,
 }
 
 impl<'a, P> PresencePeersView<'a, P> {
@@ -303,15 +337,15 @@ pub struct PresenceView<'a, P> {
 /// never persisted — see that field's own doc comment). Both are combined once per dispatch by
 /// `VcsArtifactApp::interaction_view`, never mutated through this read-only handle.
 pub struct InteractionView<'a> {
-    pub(crate) state: &'a protocol::InteractionState,
-    pub(crate) hover: &'a InteractionHoverState,
+    pub state: &'a protocol::InteractionState,
+    pub hover: &'a InteractionHoverState,
     /// 👥️ Every OTHER peer's last-adopted presence, keyed by actor — see
     /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
     /// order, which is already sorted by actor.
-    pub(crate) peers: &'a PeerPresenceRoot,
+    pub peers: &'a PeerPresenceRoot,
     /// ⏪️ What the open time-travel draft references, per selection domain
     /// ([`crate::time_travel::TimeTravelLedger::draft_references`]) — empty while no draft editor is open.
-    pub(crate) draft_references: &'a BTreeMap<String, Vec<String>>,
+    pub draft_references: &'a BTreeMap<String, Vec<String>>,
 }
 
 impl<'a> InteractionView<'a> {
@@ -489,7 +523,6 @@ impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
 pub enum NoConfigMutation {}
 semio_framework_os_kernel::original_ordinal_operation_receiving!(NoConfigMutation);
 
-
 impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
     type Diff = NoStateDiff;
     const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
@@ -553,7 +586,7 @@ pub type NoDraftMutation = NoConfigMutation;
 pub struct NoPresence {}
 
 impl store::ArtifactPresenceSnapshot for NoPresence {
-    fn decode_presence_native(bytes: &[u8], owner: &mut crate::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
+    fn decode_presence_native(bytes: &[u8], owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -563,7 +596,7 @@ impl store::ArtifactPresenceSnapshot for NoPresence {
         Ok(Self {})
     }
 
-    fn encode_presence_native(&self, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
+    fn encode_presence_native(&self, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
         let grant = owner.remaining_grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "empty presence needs original work admission")); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "empty presence needs original depth admission")); }
@@ -766,15 +799,6 @@ impl ::protocol::OpBinary for NoTransientMutation {
 /// machinery `TransientStore` requires would be unused ceremony.
 pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
 
-#[derive(Clone, Debug)]
-pub struct ArtifactOperationProgress {
-    pub operation_id: u64,
-    pub generation: u64,
-    pub label: LocalizedLabel,
-    pub completed_units: u64,
-    pub cancelling: bool,
-}
-
 /// 👥️ One OTHER peer's last-adopted artifact/app-scope presence slice — the plugin-side
 /// twin of `PresencePeer`'s `color`/`surface`/`interaction` fields, keyed by actor in
 /// `VcsArtifactApp::peer_presence` (contract-freeze §C7.6). `presence_pack`'s decoded app-typed
@@ -787,32 +811,32 @@ pub struct PeerPresence {
     pub interaction: Option<protocol::PresenceInteraction>,
 }
 
-pub(crate) const PEER_PRESENCE_SLOTS: usize = 64;
+pub const PEER_PRESENCE_SLOTS: usize = 64;
 
 const PEER_PRESENCE_ID_BYTES: usize = 256;
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) struct PeerPresenceEntry {
+pub struct PeerPresenceEntry {
     actor: String,
     presence: PeerPresence,
 }
 
-pub(crate) struct PeerPresenceRoot {
-    pub(crate) entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS],
-    pub(crate) len: usize,
+pub struct PeerPresenceRoot {
+    pub entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS],
+    pub len: usize,
 }
 
 impl PeerPresenceRoot {
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { entries: std::array::from_fn(|_| None), len: 0 }
     }
 
-    pub(crate) fn empty_shared() -> std::sync::Arc<Self> {
+    pub fn empty_shared() -> std::sync::Arc<Self> {
         static EMPTY: std::sync::OnceLock<std::sync::Arc<PeerPresenceRoot>> = std::sync::OnceLock::new();
         EMPTY.get_or_init(|| std::sync::Arc::new(Self::empty())).clone()
     }
 
-    pub(crate) fn insert(&mut self, actor: String, presence: PeerPresence) -> Result<(), Fault> {
+    pub fn insert(&mut self, actor: String, presence: PeerPresence) -> Result<(), Fault> {
         if actor.is_empty() || actor.len() > PEER_PRESENCE_ID_BYTES {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-actor"), "peer actor identity is empty or exceeds its fixed byte authority"));
         }
@@ -834,7 +858,7 @@ impl PeerPresenceRoot {
         Ok(())
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&str, &PeerPresence)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &PeerPresence)> {
         self.entries[..self.len].iter().filter_map(|entry| entry.as_deref().map(|entry| (entry.actor.as_str(), &entry.presence)))
     }
 
@@ -842,16 +866,16 @@ impl PeerPresenceRoot {
         self.iter().find_map(|(candidate, presence)| (candidate == actor).then_some(presence))
     }
 
-    pub(crate) fn contains_key(&self, actor: &str) -> bool {
+    pub fn contains_key(&self, actor: &str) -> bool {
         self.get(actor).is_some()
     }
 
     #[cfg(test)]
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 }
@@ -863,8 +887,6 @@ pub struct PeerMark<'a> {
     pub actor: &'a str,
     pub color: Option<u8>,
 }
-
-pub const CANCEL_TYPED_OPERATION_ACTION_ID: &str = "cancelTypedOperation";
 
 pub fn cancellation_action_definition() -> ActionDefinition {
     ActionDefinition::resumable_framework(CANCEL_TYPED_OPERATION_ACTION_ID, LocalizedLabel::native("Cancel Operation", "Vorgang abbrechen"), ActionKind::View, "square").with_in_palette(false)

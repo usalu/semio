@@ -1,7 +1,7 @@
 //! ✏️ ✏️ S Studio app command — `node-graph-edit`: the one verb both node-graph hosts dispatch for workflow graph edits.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
-use crate::engine::space::S_PLAY_APP_ID;
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::S_PLAY_APP_ID;
 use semio_framework_artifact_workflow_workflow::MoveNodes;
 use semio_framework_os::workflow::{DisconnectEdge, RemoveNode};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
@@ -21,7 +21,7 @@ pub struct NodeGraphEdit {
 
 /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
 /// `insertPort` rows a studio workflow has no widget for are refused by name, so the whole batch is refused.
-pub(crate) fn space_node_graph_row(row: &semio_framework_pack_json::Value) -> Result<NodeGraphEditRow, Fault> {
+pub fn space_node_graph_row(row: &semio_framework_pack_json::Value) -> Result<NodeGraphEditRow, Fault> {
     match NodeGraphEditRow::from_row(&semio_framework_pack_json::to_dsl_value(row)).map_err(|reason| Fault::from(format!("space nodeGraphEdit refusal: {reason}")))? {
         NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(Fault::from("space nodeGraphEdit refusal: a studio workflow has no sliders and no variadic ports")),
         row => Ok(row),
@@ -33,7 +33,7 @@ pub(crate) fn space_node_graph_row(row: &semio_framework_pack_json::Value) -> Re
 ///   machine as ONE tool transaction (design §13.3);
 /// - `connect` — the negotiated edge between two ports; `disconnect` — one edge;
 /// - `delete` — the named edges, then the named app instances (each with the edges it holds).
-pub(crate) async fn edit(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+pub async fn edit(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
     let rows: Vec<NodeGraphEditRow> = match semio_framework_pack_json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().and_then(|value| value.as_array().cloned()) {
         Some(rows) => rows.iter().map(space_node_graph_row).collect::<Result<_, _>>()?,
@@ -52,8 +52,8 @@ pub(crate) async fn edit(payload: &NodeGraphEdit, doc: &ArtifactView<'_, Workflo
                     artifact_mutations.push(WorkflowMutation::MoveNodes(MoveNodes { node_ids: record.node_ids, dx: record.dx, dy: record.dy }));
                 }
             }
-            NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => match crate::engine::space::negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id).await {
-                Ok(contract) => artifact_mutations.push(crate::engine::space::connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract).await),
+            NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => match semio_hub_space_operations::negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id).await {
+                Ok(contract) => artifact_mutations.push(semio_hub_space_operations::connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract).await),
                 Err(effect) => effects.push(effect),
             },
             NodeGraphEditRow::Disconnect { synapse_id } => {
@@ -84,11 +84,6 @@ pub(crate) fn space_node_drag_emit(doc: &ArtifactView<'_, WorkflowSnapshot>, ver
 
 /// 🕹️ The command body, through the engine's future resolver.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    crate::engine::space::engine::resolve_future(edit(payload, doc))
+    semio_hub_space_operations::resolve_future(edit(payload, doc))
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -15,8 +15,6 @@ use protocol::value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use serde::{Deserialize, Serialize};
 
-use crate::World3dScene;
-
 pub const WORLD3D_ANNOTATIONS_MAX: usize = 512;
 pub const WORLD3D_SCALAR_VALUES_MAX: usize = 4_000_000;
 pub const WORLD3D_LEGEND_TICKS_DEFAULT: u8 = 5;
@@ -1273,50 +1271,6 @@ pub fn world3d_modelling_from_lane_text<T: FromValue>(text: &str) -> Result<T, V
     from_json_str(text, JsonMemberPolicy::Reject)
 }
 
-impl World3dScene {
-    /// 📏️ Sets the annotation layer lane; refuses an invalid layer.
-    pub fn with_annotations(mut self, layer: World3dAnnotationLayer) -> Result<Self, ValueError> {
-        layer.validate()?;
-        self.annotations = Some(layer);
-        Ok(self)
-    }
-
-    /// 🌡️ Sets the scalar field lane; refuses an invalid field.
-    pub fn with_scalar_field(mut self, field: World3dScalarField) -> Result<Self, ValueError> {
-        field.validate()?;
-        self.scalar_field = Some(field);
-        Ok(self)
-    }
-
-    /// ⚙️ Replaces the modelling options lane; refuses invalid options.
-    pub fn with_modelling_options(mut self, options: World3dModellingOptions) -> Result<Self, ValueError> {
-        options.validate()?;
-        self.modelling_options = Some(options);
-        Ok(self)
-    }
-
-    /// 🎯️ Restricts hover and selection to one granularity.
-    pub fn with_pick_filter(mut self, filter: World3dPickGranularity) -> Self {
-        self.modelling_options.get_or_insert_with(Default::default).pick_filter = Some(filter);
-        self
-    }
-
-    /// ✂️ Sets the section plane; refuses a degenerate plane.
-    pub fn with_section(mut self, section: World3dSection) -> Result<Self, ValueError> {
-        section.validate()?;
-        self.modelling_options.get_or_insert_with(Default::default).section = Some(section);
-        Ok(self)
-    }
-
-    /// 🖍️ Sets the sub-element highlight tokens; refuses an out-of-range width.
-    pub fn with_highlight(mut self, highlight: World3dHighlight) -> Result<Self, ValueError> {
-        for style in [highlight.face, highlight.edge, highlight.vertex].into_iter().flatten() {
-            style.validate()?;
-        }
-        self.modelling_options.get_or_insert_with(Default::default).highlight = Some(highlight);
-        Ok(self)
-    }
-}
 //#endregion 🔖️Lanes
 
 #[cfg(test)]

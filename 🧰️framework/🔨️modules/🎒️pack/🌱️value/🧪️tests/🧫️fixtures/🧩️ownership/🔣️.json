@@ -1,29 +1,31 @@
 {
   "format": 1,
-  "package": "semio-framework-pack",
+  "package": "semio-framework-pack-record",
+  "facade": "semio-framework-pack",
   "module": "record",
-  "manifest": "../📦️packages/🦀️rust/Cargo.toml",
+  "manifest": "📦️packages/🦀️rust/Cargo.toml",
   "library": {
-    "name": "pack",
-    "path": "🦀️.rs"
+    "path": "../../🦀️.rs"
   },
-  "mount": "../../🌱️value/🦀️.rs",
+  "facadeLibrary": "../../../📦️packages/🦀️rust/🦀️.rs",
   "dependencies": [
     "semio-framework-async",
     "semio-framework-diagnostic",
     "semio-framework-dsl-record",
-    "semio-framework-hash",
     "semio-framework-pack-error",
-    "semio-framework-pack-json",
-    "semio-framework-replication",
-    "semio-framework-value",
-    "ureq"
+    "semio-framework-pack-format",
+    "semio-framework-pack-record-encode",
+    "semio-framework-pack-record-schema",
+    "semio-framework-replication-codec",
+    "semio-framework-value"
   ],
   "publicEntries": [
     "encode_document",
     "decode_document",
     "encode_record_body",
-    "decode_record_body_exact",
+    "decode_record_body_exact"
+  ],
+  "schemaEntries": [
     "schema_hash"
   ],
   "forbiddenProviders": [

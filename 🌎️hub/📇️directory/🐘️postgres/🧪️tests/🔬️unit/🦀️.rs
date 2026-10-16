@@ -1,34 +1,13 @@
-use super::*;
+
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-
-//#region 🔖️PostgresFixture
-static NEXT_DATABASE: AtomicU64 = AtomicU64::new(1);
-
-/// 🐘️ One lane's own database on the ONE claimed shared PostgreSQL (`os-hub-ts backend run postgres -- …`), dropped with
-/// the guard — the lanes never start a server of their own (preamble rule 22).
-pub(super) struct PostgresFixture {
-    database: db::db_storage::claimed_backend::FreshPostgresDatabase,
-}
-
-impl PostgresFixture {
-    pub(super) fn url(&self) -> &str {
-        &self.database.url
-    }
-
-    pub(super) async fn connect(&self) -> PostgresDirectory {
-        PostgresDirectory::connect(self.url()).await.expect("connect second postgres directory")
-    }
-}
-
-/// 🐘️ A fresh database of this lane's own on the claimed shared PostgreSQL and the directory over it.
-pub(super) async fn test_directory() -> (PostgresDirectory, PostgresFixture) {
-    let sequence = NEXT_DATABASE.fetch_add(1, Ordering::Relaxed);
-    let database = db::db_storage::claimed_backend::FreshPostgresDatabase::create(&format!("hub_{}_{sequence}", std::process::id()));
-    let directory = PostgresDirectory::connect(&database.url).await.expect("connect postgres directory on the claimed server");
-    (directory, PostgresFixture { database })
-}
-//#endregion 🔖️PostgresFixture
+use semio_hub_directory_contract::model::{CredentialAuditFactV1, InviteRedemptionCommit, NewAdminOperationAuditRecord, SpaceRole};
+use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
+use semio_hub_directory_postgres::{PostgresDirectory, now_ms};
+use semio_hub_directory_postgres::testkit::test_directory;
+use directory::os_identity::time_ordered_id;
 
 fn actor(id: &str) -> DirectoryActor {
     DirectoryActor { kind: DirectoryActorKind::User, id: id.to_string() }
@@ -312,7 +291,7 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
 async fn share_scope_corpus_v1_holds_on_postgres() {
     let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
 }
 
 // 🧵️ ticket 26/09/18 slice DB3 — the D4 regression, on the SAME live PostgreSQL the directory lanes
@@ -341,7 +320,7 @@ async fn document_storage_opens_over_real_postgres_off_the_pool_workers() {
 async fn space_administration_read_surface_v1_holds_on_postgres() {
     let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
 }
 
 // 🔬️ ticket 26/09/18 slice DB2 — the directory format stamp is written on creation and a database
@@ -352,17 +331,17 @@ async fn space_administration_read_surface_v1_holds_on_postgres() {
 async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_postgres() {
     let (directory, fixture) = test_directory().await;
     let (schema, version): (String, i64) = sqlx_core::query_as::query_as("SELECT schema, version FROM hub_directory_format WHERE singleton").fetch_one(&directory.pool).await.expect("stamp written on creation");
-    assert_eq!(schema, crate::directory::DIRECTORY_FORMAT_SCHEMA);
-    assert_eq!(version, crate::directory::DIRECTORY_FORMAT_VERSION);
+    assert_eq!(schema, semio_hub_directory_contract::DIRECTORY_FORMAT_SCHEMA);
+    assert_eq!(version, semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION);
 
-    sqlx_core::query::query("UPDATE hub_directory_format SET version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION + 1).execute(&directory.pool).await.expect("forge a newer format");
+    sqlx_core::query::query("UPDATE hub_directory_format SET version = $1 WHERE singleton").bind(semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION + 1).execute(&directory.pool).await.expect("forge a newer format");
     let refused = PostgresDirectory::connect(fixture.url()).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
 
-    sqlx_core::query::query("UPDATE hub_directory_format SET schema = 'semio/hub/directory-format/v9' , version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("forge an unknown schema");
+    sqlx_core::query::query("UPDATE hub_directory_format SET schema = 'semio/hub/directory-format/v9' , version = $1 WHERE singleton").bind(semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("forge an unknown schema");
     let unknown = PostgresDirectory::connect(fixture.url()).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
 
-    sqlx_core::query::query("UPDATE hub_directory_format SET schema = $1, version = $2 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_SCHEMA).bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("restore the stamp");
+    sqlx_core::query::query("UPDATE hub_directory_format SET schema = $1, version = $2 WHERE singleton").bind(semio_hub_directory_contract::DIRECTORY_FORMAT_SCHEMA).bind(semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("restore the stamp");
     fixture.connect().await;
 }

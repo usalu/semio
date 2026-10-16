@@ -24,8 +24,11 @@
         "type": "string",
         "minLength": 1,
         "pattern": "^[^/\\\\:*?\\u0000][^\\\\:*?\\u0000]*$",
-        "not": {"const":"."}
-      }
+        "not": {
+          "const": "."
+        }
+      },
+      "maxItems": 4095
     },
     "generation": {
       "type": "string",

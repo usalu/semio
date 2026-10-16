@@ -1,7 +1,7 @@
 //! 🎨️ Checked TIFF tiled-region authoring with retained progress and cancellation.
 
 use super::{TiffAnyEditCommand, TiffAnyEditor};
-use crate::editor::tiff_any::component::config::selected_ifd;
+use crate::editor::tiff_any::config::selected_ifd;
 use crate::schema::mutations::paint_region::samples::{tiff_revision,validate_tiff_region_paint,TiffRegion,TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS};
 use crate::schema::mutations::{PaintRegionMutation, TiffMutation};
 use semio_framework_job::InteractiveJobCloseStep;

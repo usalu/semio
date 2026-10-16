@@ -2,7 +2,10 @@
 
 use semio_framework_plugin_ownership::transient_publication::transient_store_disposer;
 use crate::store::TransientStore;
-use crate::{store, ArtifactOwnedDisposer, NoTransient, NoTransientMutation};
+use crate::store;
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use crate::NoTransient;
+use crate::NoTransientMutation;
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use std::sync::Arc;
 

@@ -98,14 +98,15 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::io::text::mutations;
+}
+
+
 
 pub mod derived_construction {
     use crate::standards::v5::subsets::any::schema::diff::HtmlDiff;

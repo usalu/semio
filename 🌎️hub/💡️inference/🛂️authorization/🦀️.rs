@@ -1,13 +1,13 @@
 //! 🛂️ Rechecks durable Author membership; a successful read is not a retained submission grant.
 
-use super::{schema::InferenceIdentityV1, InferenceErrorV1, InferenceOperationControlV1};
-use crate::directory::{
-    model::{SocketSessionBindingStatus, SpaceRole},
-    HubDirectories, HubDirectory,
-};
+use semio_hub_inference::schema::InferenceIdentityV1;
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1};
+use semio_hub_directory_contract::model::{SocketSessionBindingStatus, SpaceRole};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::HubDirectory;
 use directory::os_directory::DocumentScope;
 
-pub(crate) async fn check_live_inference_author(directory: &HubDirectories, identity: &InferenceIdentityV1, scope: &DocumentScope, now: impl Fn() -> i64, control: &InferenceOperationControlV1) -> Result<(), InferenceErrorV1> {
+pub async fn check_live_inference_author(directory: &HubDirectories, identity: &InferenceIdentityV1, scope: &DocumentScope, now: impl Fn() -> i64, control: &InferenceOperationControlV1) -> Result<(), InferenceErrorV1> {
     identity.validate()?;
     if identity.space_id != scope.space_id || identity.document_id != scope.document_id {
         return Err(InferenceErrorV1::Denied);
@@ -16,7 +16,7 @@ pub(crate) async fn check_live_inference_author(directory: &HubDirectories, iden
 }
 
 /// 🛡️ Rechecks the current authenticated reader without requiring a previously accepted job.
-pub(crate) async fn check_live_inference_session_author(
+pub async fn check_live_inference_session_author(
     directory: &HubDirectories,
     session_id: &str,
     user_id: &str,

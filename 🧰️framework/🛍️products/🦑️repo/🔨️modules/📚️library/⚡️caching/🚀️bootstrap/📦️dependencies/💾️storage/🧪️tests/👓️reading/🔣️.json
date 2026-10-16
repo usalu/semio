@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "order": [
+    "authenticate-phase",
+    "open-funded-store",
+    "acquire-shared-bindings",
+    "inspect-expected-locked-generation",
+    "verify-exact-ready-receipt-and-links",
+    "consume-and-drain",
+    "recheck-source-receipt-links",
+    "release-shared-bindings"
+  ],
+  "expected": {
+    "version": 1,
+    "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bindings": [
+      {
+        "sourceDirectory": "/workspace/node_modules",
+        "targetDirectory": "/bounded/j/aaaaaaaaaaaaaaaaaaaa/node_modules"
+      }
+    ]
+  },
+  "mutations": [
+    {
+      "name": "generation",
+      "field": "generation",
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "name": "target",
+      "field": "targetDirectory",
+      "value": "/foreign/node_modules"
+    },
+    {
+      "name": "source",
+      "field": "sourceDirectory",
+      "value": "/foreign/source/node_modules"
+    },
+    {
+      "name": "extra",
+      "field": "extra",
+      "value": true
+    }
+  ],
+  "capacity": {
+    "packageLimit": 4096,
+    "fileLimit": 8388608,
+    "aggregateLimit": 67108864
+  }
+}

@@ -1,5 +1,5 @@
 //#region 🧪️ContentFraming
-use super::return_content::{ReturnContentHeader, ReturnContentHeaderReader};
+use crate::return_content::{ReturnContentHeader, ReturnContentHeaderReader};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()

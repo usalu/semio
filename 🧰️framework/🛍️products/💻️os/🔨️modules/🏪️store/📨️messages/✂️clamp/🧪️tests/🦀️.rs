@@ -67,7 +67,7 @@ fn edit_replay_checks_deadline_during_message_settlement() {
     assert!(asked > 0, "the edit settlement asks its deadline before completing");
     assert!(matches!(step, ReplayStep::Pending(_)), "settlement returns control before scanning the complete edit");
     replay.cancel();
-    super::raw_replay_retirement::tests::close(&mut replay);
+    super::raw_replay_retirement_tests::close(&mut replay);
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
     assert!(result.report().outcomes.iter().all(|outcome| outcome.worst == Some(semio_framework_diagnostic::Severity::Fatal)));
     assert!(result.report().outcomes.iter().any(|outcome| outcome.messages.is_empty()));
     result.begin_retirement();
-    super::raw_replay_retirement::tests::close(&mut result);
+    super::raw_replay_retirement_tests::close(&mut result);
     eprintln!("[DEBUG] all {count} fatal mutation statuses preserved after cooperative message settlement");
 }
 /// 🧾️ Each original owner pays its complete advertised physical release.

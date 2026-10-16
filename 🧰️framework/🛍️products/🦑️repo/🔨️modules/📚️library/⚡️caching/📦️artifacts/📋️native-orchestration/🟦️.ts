@@ -1,4 +1,6 @@
-import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1,repositoryCargoConsumptionV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {cargoInvocationManifestV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "./📥️invocation/🛠️preparation/🟦️.ts";
 import {readExactCargoLawPreparationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -41,7 +43,7 @@ export class CargoRelayScript extends BundleScript {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cargo:relay",scriptInvocationBudget(this.invocation,budgetMs));
-      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,store=>withRepositoryCargoInputsV1({workspace:this.repoRoot,cwd:process.cwd(),manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},environment=>cargoStreamingStatus(args,process.cwd(),environment,{invocation:this.invocation,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
+      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,(store,control)=>withRepositoryCargoInputsV1({invocation:this.invocation,consumption:repositoryCargoConsumptionV1(args,"artifact"),workspace:this.repoRoot,cwd:process.cwd(),manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},input=>cargoStreamingStatus([...input.selections[0]!.arguments],process.cwd(),input.environment,{invocation:this.invocation,control:input.control,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;
@@ -95,7 +97,7 @@ export class NativeScript extends BundleScript {
     if (tool !== "cargo" || (operation !== "build" && operation !== "check" && operation !== "test") || !manifest) throw new Error("native cargo build|check|test --manifest <Cargo.toml> [quick|long|exhaustive] [cargo argument…]");
     const { cargoArgs: extra, testLevel } = artifactRustCargoArguments(operation, args.slice(index + 2));
     if (operation === "build") {
-      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
       return;
     }
     const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot, ...(testLevel ? { env: { ...process.env, SEMIO_TEST_LEVEL: testLevel } } : {}) });

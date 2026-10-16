@@ -10,9 +10,10 @@ export type BunWorkspaceProgress = Readonly<{ operation: "state" | "list" | "rea
 export interface BunWorkspaceControl { readonly signal: AbortSignal; advance(progress: BunWorkspaceProgress): Promise<void> }
 /** 🧾️ Publishes current native patterns and independently owned source packages after manifest revalidation. */
 export type BunWorkspaceOwnershipReport = Readonly<{ version: 1; scopes: readonly Readonly<{ manifest: string; beforeSha256: string; patterns: readonly string[]; packages: readonly string[] }>[]; packages: readonly string[] }>;
-/** 🪢️ Retains the original publisher's fresh observations throughout one installation callback. */
+/** 🪢️ Retains original fresh Source observations throughout one controlled callback. */
 export type BunWorkspaceInstallationCustodyV1 = Readonly<{scopes:readonly Readonly<{manifest:string;packages:readonly string[]}>[];recheck:()=>Promise<void>}>;
 const physical: {
+  readonly withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>;
   readonly withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>;
   readonly discoverCurrentBunWorkspaceScopesV1:(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl)=>Promise<readonly BunWorkspaceScope[]>;
   readonly publishBunWorkspaceOwnership: (root: string, selection: BunWorkspaceSelection, control: BunWorkspaceControl) => Promise<BunWorkspaceOwnershipReport>;
@@ -49,3 +50,6 @@ export const discoverCurrentBunWorkspaceScopesV1:(root:string,selection:BunWorks
 
 /** 🪢️ Keeps original Source and topology guards alive through installation and receiving publication. */
 export const withPublishedBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>=physical.withPublishedBunWorkspaceOwnershipV1;
+
+/** 👓️ Retains original current membership through a read-only callback without publishing Source. */
+export const withCurrentBunWorkspaceOwnershipV1:<T>(root:string,selection:BunWorkspaceSelection,control:BunWorkspaceControl,body:(custody:BunWorkspaceInstallationCustodyV1)=>Promise<T>)=>Promise<T>=physical.withCurrentBunWorkspaceOwnershipV1;

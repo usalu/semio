@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ space-space Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-space",{snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-space-space",{ packages: ["semio-s-artifact-space-space", "semio-s-artifact-space-space-diff", "semio-s-artifact-space-space-editor", "semio-s-artifact-space-space-mutations", "semio-s-artifact-space-space-schema"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

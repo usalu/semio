@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "name": "exact request",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/repo/cache/snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reuse": "true"
+      },
+      "expected": true
+    },
+    {
+      "name": "wrong reuse",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/repo/cache/snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reuse": "false"
+      },
+      "expected": false
+    },
+    {
+      "name": "uppercase digest",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/repo/cache/snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "digest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "reuse": "true"
+      },
+      "expected": false
+    },
+    {
+      "name": "overlong path",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reuse": "true"
+      },
+      "expected": false
+    },
+    {
+      "name": "extra authority",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/repo/cache/snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reuse": "true",
+        "capabilities": {}
+      },
+      "expected": false
+    },
+    {
+      "name": "missing digest",
+      "input": {
+        "version": 1,
+        "root": "/repo",
+        "artifacts": "/repo/ticket/generated",
+        "path": "/repo/cache/snapshots/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json",
+        "reuse": "true"
+      },
+      "expected": false
+    }
+  ]
+}

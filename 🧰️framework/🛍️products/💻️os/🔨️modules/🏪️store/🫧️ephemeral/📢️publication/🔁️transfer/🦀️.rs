@@ -1,9 +1,8 @@
 //! 🔁️ Ownership-only ephemeral replacement with domain admission and bounded retirement.
 
-use super::{
-    ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint,
-    ArtifactStoreOneItemGrant,
-};
+use semio_framework_os_store_ephemeral::{ArtifactEphemeralOneItemPreparation, ArtifactEphemeralOneItemPreparationFactory, ArtifactEphemeralOneItemPreparationRequest};
+use semio_framework_value::ArtifactOwnedValueRetirementFactory;
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant};
 use std::sync::Arc;
 
 /// 📏️ Maximum inline owner metadata moved by one transfer turn; heap payload remains owned.
@@ -48,29 +47,29 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
         if self.preflight(&request.mutation).is_err() {
             return Err(request);
         }
-        Ok(Box::new(super::ephemeral_preparation::ArtifactEphemeralTaskPreparation::new(request, Box::new(TransferTask { transfer: self.transfer }), self.state_retirement.clone(), self.mutation_retirement.clone())))
+        Ok(Box::new(crate::ephemeral_preparation::ArtifactEphemeralTaskPreparation::new(request, Box::new(TransferTask { transfer: self.transfer }), self.state_retirement.clone(), self.mutation_retirement.clone())))
     }
 }
 
-pub(super) struct TransferTask<P, M> {
-    pub(super) transfer: fn(M) -> P,
+pub struct TransferTask<P, M> {
+    pub transfer: fn(M) -> P,
 }
 
-impl<P, M> super::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
-    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<super::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
+impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
+    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
         let copy=size_of::<P>()+size_of::<M>();
         if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < copy {
-            return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked);
+            return Ok(crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep::Blocked);
         }
-        let Some(mutation) = mutation.take() else { return Ok(super::ArtifactEphemeralPreparationTaskStep::Blocked) };
+        let Some(mutation) = mutation.take() else { return Ok(crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep::Blocked) };
         let root = Arc::new((self.transfer)(mutation));
         let ownership=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes: capacity,released_bytes:0};
-        Ok(super::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1,completed_bytes:copy as u64, ..Default::default() },ownership })
+        Ok(crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep::Prepared { root, checkpoint: ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1,completed_bytes:copy as u64, ..Default::default() },ownership })
     }
     fn begin_close(&mut self) {}
  }
-impl<P, M> crate::os_store::ErasedSnapshotRetirement for TransferTask<P, M> {
+impl<P, M> semio_framework_value::ErasedSnapshotRetirement for TransferTask<P, M> {
     fn close_step(&mut self, _: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
     fn terminal_is_empty(&self) -> bool { true }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
@@ -81,7 +80,10 @@ impl<P, M> crate::os_store::ErasedSnapshotRetirement for TransferTask<P, M> {
 }
 
 #[cfg(test)]
-use super::{ArtifactEphemeralBaseRead, ArtifactStoreOneItemPreparationStep, ErasedSnapshotRetirement, ReturnedSnapshotReadRetirement};
+use semio_framework_os_store_ephemeral::ArtifactEphemeralBaseRead;
+#[cfg(test)] use semio_framework_os_store_one_item::ArtifactStoreOneItemPreparationStep;
+#[cfg(test)] use semio_framework_value::ErasedSnapshotRetirement;
+#[cfg(test)] use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

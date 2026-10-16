@@ -1,9 +1,16 @@
+//! 🧱️ Context_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
-use super::*;
-use crate::catalog::compile;
-use crate::source_builders;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
+use std::sync::Arc;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_mcp_capabilities::source_builders;
+use crate::context::{WorkspaceResourceRegistry, capability_resource_contents};
+use semio_framework_os_mcp_catalog::catalog::{Catalog, compile};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_shell_channel::context_resolve::{DEFAULT_MAX_TOKENS, estimate_tokens, mint_session_id, resolve_context, truncate_to_budget};
+use semio_framework_os_mcp_wire::protocol::ResourceRegistry;
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 fn test_catalog() -> Catalog {
     compile(&source_builders::note_and_cad_source(), Locale::En, Terminology::Native).expect("compiles")

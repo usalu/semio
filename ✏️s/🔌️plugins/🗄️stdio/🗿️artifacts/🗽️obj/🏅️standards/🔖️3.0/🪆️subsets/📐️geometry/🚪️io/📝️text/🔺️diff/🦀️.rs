@@ -239,6 +239,13 @@ pub(crate) fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
     Ok(ObjUnknownStatement { line_index: idx.parse::<u64>().map_err(|error| error.to_string())?, raw: hex_decode_str(raw)? })
 }
 
+#[cfg(test)]
+#[test]
+fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_text_diff_twin() {
+    let value = ObjUnknownStatement { line_index: u64::MAX, raw: "# Quelle 🎨".into() };
+    assert_eq!(dec_unknown(&enc_unknown(&value)).unwrap(), value);
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
     let mut parts = Vec::new();

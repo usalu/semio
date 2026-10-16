@@ -9,134 +9,9 @@ use super::PluginLifecycleStep;
 
 type Mounted = store::mounted_pack_rt::RetainedValueToken;
 
-#[cfg(test)]
-mod physical_ownership_tests {
-    use super::*;
-    use super::super::pack_identity_tests::IdentityWindowOwner;
 
-    #[test]
-    fn window_config_paged_registry_actual_authored_root_metadata_producer() {
-        use super::super::retained_pack_load_tests::RetainedLoadCameraConfig;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-        let law = &fixture["rootMetadata"];
-        let ((producer, absent), getter) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (
-            <RetainedLoadCameraConfig as pack::snapshot::ArtifactPack>::record_spec_producer(),
-            <semio_framework_value::DslValue as pack::snapshot::ArtifactPack>::record_spec_producer(),
-        ));
-        assert_eq!(producer.is_some(), law["ownedProducer"].as_bool().unwrap());
-        assert_eq!(absent.is_some(), law["schemaLessProducer"].as_bool().unwrap());
-        assert_eq!((getter.requested_bytes, getter.released_bytes), (law["getterAllocationBytes"].as_u64().unwrap() as usize, law["getterReleaseBytes"].as_u64().unwrap() as usize));
-        assert_eq!(<RetainedLoadCameraConfig as pack::snapshot::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
-        let mut accepted = |_| true;
-        let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
-        native.admit_turn_capacity(law["maximumCapacityBytes"].as_u64().unwrap() as usize).unwrap();
-        let (spec, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| producer.unwrap().decode(&mut native).unwrap());
-        assert_eq!(birth.requested_bytes, native.owned_bytes());
-        assert_eq!(birth.released_bytes, 0);
-        assert_eq!(spec.fields.iter().map(|field| field.key.as_str()).collect::<Vec<_>>(), law["fields"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect::<Vec<_>>());
-        let mut owner = ControlledRetirement::new(spec).map_err(|(error, _)| error).unwrap();
-        let mut allocated = birth.requested_bytes;
-        let mut released = 0;
-        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
-        while !owner.terminal_is_empty() {
-            let demand = controlled_demands(&owner, body).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant));
-            let progress = result.unwrap().progress();
-            assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-            allocated += heap.requested_bytes;
-            released += heap.released_bytes;
-        }
-        assert_eq!(allocated, released);
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original Window authored root metadata nativeBirth={} controlledRelease={released} optionalGetter0 terminalDrop0", birth.requested_bytes);
-    }
-
-    #[test]
-    fn window_config_paged_registry_retained_source_reservation_uses_capacity_authority() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
-        let mut decoder = RetainedWindowConfigStateDecode::<IdentityWindowOwner>::new();
-        decoder.phase = RetainedStatePhase::Ingress;
-        *decoder.source = Some(store::mounted_pack_rt::RetainedPackSourceCursor::try_new(1, 1, 65_536).unwrap());
-        let capacity = decoder.source.as_ref().unwrap().next_allocation_bytes().unwrap();
-        let refused_law = &fixture["sourceReservation"][0];
-        let admitted_law = &fixture["sourceReservation"][1];
-        let refused = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: refused_law["copyBytes"].as_u64().unwrap() as usize, maximum_depth: 64, ..Default::default() };
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.advance(&[7], refused));
-        assert_eq!(result.unwrap(), refused_law["reserved"].as_bool().unwrap());
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert!(!decoder.source.as_ref().unwrap().has_reserved_page());
-        let admitted = RetainedCloneGrant { maximum_copy_bytes: admitted_law["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: capacity, ..refused };
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.advance(&[7], admitted));
-        assert_eq!(result.unwrap(), admitted_law["reserved"].as_bool().unwrap());
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
-        assert_eq!(decoder.admitted, admitted_law["copiedBytes"].as_u64().unwrap() as usize);
-        let mut released = 0;
-        while !decoder.terminal_is_empty() {
-            let demand = decoder.retirement_demands(body).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.close_step(grant));
-            let progress = result.unwrap().progress();
-            assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-            released += heap.released_bytes;
-        }
-        assert_eq!(released, capacity);
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(decoder));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original retained window source capacity={capacity} release={released} copy0 reservation admitted terminalDrop0");
-    }
-
-    #[test]
-    fn window_config_paged_registry_actual_inline_parser_retains_original_backing() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
-        let mut accepted = |_| true;
-        let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
-        let (mut parser, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-            let mut parser = RetainedWindowConfigTypedState::<IdentityWindowOwner>::new(&mut native).unwrap();
-            let original_fields = parser.spec.fields.as_ptr();
-            parser.begin_container(store::mounted_pack_rt::RetainedValueContainer::Record, 0).unwrap();
-            assert_eq!(parser.spec.fields.as_ptr(), original_fields);
-            assert!(matches!(parser.stack.last(), Some(ValueFrame::Record { root: true, spec: None, .. })));
-            parser
-        });
-        let mut allocated = birth.requested_bytes;
-        let mut released = birth.released_bytes;
-        let mut turns = 0;
-        while !parser.terminal_is_empty() {
-            let demand = parser.retirement_demands(body).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let mut refused = vec![RetainedCloneGrant { maximum_items: 0, ..grant }];
-            if demand.copy_bytes > 0 { refused.push(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }); }
-            if demand.capacity_bytes > 0 { refused.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
-            if demand.release_bytes > 0 { refused.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
-            if demand.depth > 0 { refused.push(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }); }
-            for refused in refused {
-                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parser.close_step(refused));
-                assert_eq!(result.unwrap().progress(), RetainedCloneProgress::default());
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            }
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parser.close_step(grant));
-            let progress = result.unwrap().progress();
-            assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-            allocated += heap.requested_bytes;
-            released += heap.released_bytes;
-            turns += 1;
-            assert!(turns < 65_536);
-        }
-        assert_eq!(allocated, released);
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(parser));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        eprintln!("[DEBUG] original inline window parser allocated={allocated} release={released} turns={turns} terminalDrop0");
-    }
-}
-
-fn controlled_demands<T: RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
+#[doc(hidden)]
+pub fn controlled_demands<T: RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
     Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
 }
 fn pack_close_receipt(step: store::mounted_pack_rt::RetainedPackCloseStep, demand: RetirementDemand) -> RetainedCloneStep {
@@ -211,7 +86,8 @@ pub struct WindowConfigPackLoad {
 }
 impl WindowConfigPackLoad {
     #[cfg(test)]
-    pub(super) fn candidate_actor_for_test<O:WindowConfigOwner>(&mut self)->Option<protocol::ActorId>{let typed=self.inner.as_mut()?.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;typed.candidate.as_ref().map(|candidate|candidate.store.local_actor_id().clone())}
+    #[doc(hidden)]
+    pub fn candidate_actor_for_test<O:WindowConfigOwner>(&mut self)->Option<protocol::ActorId>{let typed=self.inner.as_mut()?.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;typed.candidate.as_ref().map(|candidate|candidate.store.local_actor_id().clone())}
     pub fn phase(&self)->WindowConfigPackLoadPhase{self.inner.as_ref().map_or(WindowConfigPackLoadPhase::Complete,|inner|inner.phase())}
     pub fn progress(&self)->WindowConfigPackLoadProgress{self.inner.as_ref().map_or(self.closed_progress,|inner|inner.progress())}
     pub fn diagnostic(&self)->Option<WindowConfigPackLoadDiagnostic>{self.inner.as_ref().map_or(self.closed_diagnostic,|inner|inner.diagnostic())}
@@ -272,7 +148,8 @@ enum BuiltValue {
     Dsl(semio_framework_value::DslValue),
 }
 
-enum ValueFrame {
+#[doc(hidden)]
+pub enum ValueFrame {
     Record { kind: store::mounted_pack_rt::RetainedValueContainer, root: bool, spec: Option<semio_framework_dsl_record::BorrowedRecordSpec>, fields: semio_framework_dsl_record::RecordFields, field: Option<u16> },
     Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
     Map { dsl: bool, element: ExpectedValue, values: Vec<(String, BuiltValue)>, key: Option<String> },
@@ -301,13 +178,17 @@ struct RetainedString {
     symbol: Option<(u64, usize, usize)>,
 }
 
-struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
-    spec: semio_framework_dsl_record::BorrowedRecordSpec,
-    stack: Vec<ValueFrame>,
+#[doc(hidden)]
+pub struct RetainedWindowConfigTypedState<O: WindowConfigOwner> {
+    #[doc(hidden)]
+    pub spec: semio_framework_dsl_record::BorrowedRecordSpec,
+    #[doc(hidden)]
+    pub stack: Vec<ValueFrame>,
     wrappers: Vec<(ValueWrapper, usize)>,
     string: Option<RetainedString>,
     tag: Option<u8>,
-    root: Option<O::State>,
+    #[doc(hidden)]
+    pub root: Option<O::State>,
     complete: bool,
     handed_back: bool,
     retirement_original: ManuallyDrop<Option<RetainedTypedOwners<O>>>,
@@ -351,7 +232,8 @@ struct RetainedTypedOwners<O: WindowConfigOwner> {
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
-    fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
+    #[doc(hidden)]
+    pub fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
         let producer = <O::State as pack::snapshot::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let spec = producer.decode(native).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
         let stack = Vec::new();
@@ -538,7 +420,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         Ok(())
     }
 
-    fn begin_container(&mut self, kind: store::mounted_pack_rt::RetainedValueContainer, count: u64) -> Result<(), WindowConfigPackLoadDiagnostic> {
+    #[doc(hidden)]
+    pub fn begin_container(&mut self, kind: store::mounted_pack_rt::RetainedValueContainer, count: u64) -> Result<(), WindowConfigPackLoadDiagnostic> {
         let expected = self.expected()?;
         let count = usize::try_from(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
         match kind {
@@ -733,7 +616,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         Ok(())
     }
 
-    fn take(&mut self) -> Option<O::State> {
+    #[doc(hidden)]
+    pub fn take(&mut self) -> Option<O::State> {
         if !self.complete || self.handed_back {
             return None;
         }
@@ -741,10 +625,12 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         self.root.take()
     }
 
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<RetainedTypedOwners<O>>(), depth: 1, ..Default::default() }), |owner| Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
     }
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if !super::registry::fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -759,7 +645,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.handed_back && self.root.is_none() && self.stack.capacity() == 0 && self.wrappers.capacity() == 0 && self.string.is_none() && self.retirement_original.is_none() && self.retirement.as_ref().is_some_and(ControlledRetirement::terminal_is_empty)
     }
 }
@@ -779,7 +666,8 @@ impl<O: WindowConfigOwner> Drop for RetainedWindowConfigTypedState<O> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedStatePhase {
+#[doc(hidden)]
+pub enum RetainedStatePhase {
     Envelope,
     Ingress,
     Replay,
@@ -788,13 +676,17 @@ enum RetainedStatePhase {
     Closed,
 }
 
-struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
+#[doc(hidden)]
+pub struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
     active:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    phase: RetainedStatePhase,
+    #[doc(hidden)]
+    pub phase: RetainedStatePhase,
     inner_start: usize,
-    admitted: usize,
+    #[doc(hidden)]
+    pub admitted: usize,
     document_byte: Option<(u64, u8)>,
-    source: ManuallyDrop<Option<store::mounted_pack_rt::RetainedPackSourceCursor>>,
+    #[doc(hidden)]
+    pub source: ManuallyDrop<Option<store::mounted_pack_rt::RetainedPackSourceCursor>>,
     anchor: ManuallyDrop<Option<store::mounted_pack_rt::RetainedPackAnchorCursor>>,
     segment: ManuallyDrop<Option<store::mounted_pack_rt::RetainedPackSegmentCursor>>,
     catalog: ManuallyDrop<Option<store::mounted_pack_rt::RetainedPackCatalogCursor>>,
@@ -815,7 +707,8 @@ struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
-    pub(crate) fn new() -> Self {
+    #[doc(hidden)]
+    pub fn new() -> Self {
         Self {
             active:ManuallyDrop::new(None),
             phase: RetainedStatePhase::Envelope,
@@ -1048,7 +941,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         Ok(false)
     }
 
-    fn advance(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
+    #[doc(hidden)]
+    pub fn advance(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         if grant.maximum_items == 0 {
             return Ok(false);
         }
@@ -1075,7 +969,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         self.phase = RetainedStatePhase::Closing;
     }
 
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if self.document_byte.is_some() { return frame(size_of::<(u64, u8)>()); }
@@ -1091,7 +986,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         frame(0)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, String> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_message)?;
         if !super::registry::fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -1159,7 +1055,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         if let Some(source)=self.source.as_mut(){let step=source.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window source retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !source.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window source false terminal"));}self.source.take();}return Ok(convert(step));}
         self.phase=RetainedStatePhase::Closed;Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.phase == RetainedStatePhase::Closed
             && self.active.is_none()
             && self.document_byte.is_none()
@@ -1282,7 +1179,8 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         WindowConfigPackLoadProgress { phase: self.phase, completed_bytes: self.completed_bytes.min(self.total_bytes), total_bytes: self.total_bytes }
     }
 
-    fn pending(&self) -> WindowConfigPackLoadStep {
+    #[doc(hidden)]
+    pub fn pending(&self) -> WindowConfigPackLoadStep {
         WindowConfigPackLoadStep::Pending(self.progress_now())
     }
 
@@ -1528,7 +1426,8 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
         if self.terminal { return Ok(Default::default()); }
         if self.original.is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained original window input has no controlled authority")); }

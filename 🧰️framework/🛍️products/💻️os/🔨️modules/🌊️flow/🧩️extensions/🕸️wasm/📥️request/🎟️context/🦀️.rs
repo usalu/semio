@@ -21,7 +21,7 @@ impl JsonWriteSource for DependencySource<'_>{
   let path=if self.dependencies.is_empty(){path}else{&path[1..]};self.value.ok_or_else(invalid)?.object_key_at_path(path,index)
  }
 }
-fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original geometry dependency source differs from its declared shape")}
+pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original geometry dependency source differs from its declared shape")}
 fn structural()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 
 pub(super) struct EvaluationRequestContext{

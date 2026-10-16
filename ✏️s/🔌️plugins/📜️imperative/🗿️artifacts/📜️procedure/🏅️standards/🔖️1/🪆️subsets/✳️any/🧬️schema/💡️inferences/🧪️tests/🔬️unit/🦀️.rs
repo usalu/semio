@@ -1,4 +1,5 @@
-use super::*;
+use crate::ProcedureSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::{Path, Step};
 use protocol::Inference;
 use std::collections::BTreeMap;

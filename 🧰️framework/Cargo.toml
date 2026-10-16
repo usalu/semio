@@ -3,12 +3,25 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🖱️ui/🧬️contract/🧪️conformance/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
+    "🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust",
     "🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust",
     "🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust",
     "🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+    "🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust",
     "🔨️modules/⏱️trace/📦️packages/🦀️rust",
+    "🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust",
     "🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust",
     "🔨️modules/⏳️async/📦️packages/🦀️rust",
     "🔨️modules/◻️2d/⚙️engine/📦️packages/🦀️rust",
@@ -32,6 +45,7 @@ members = [
     "🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "🔨️modules/✍️editor/📦️packages/🦀️rust",
     "🔨️modules/✍️editor/🧩️component/📦️packages/🦀️rust",
+    "🔨️modules/🌉️abi/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust",
@@ -54,12 +68,30 @@ members = [
     "🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/⏳️async/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌐️http/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️intrinsic/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️value/🧬️schema/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/📐️format/🎮️retained/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/📐️format/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/📦️packages/🦀️rust",
+    "🔨️modules/🎒️pack/🔌️io/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust",
     "🔨️modules/🎒️pack/🧬️schema/📡️record-token/📦️packages/🦀️rust",
+    "🔨️modules/🎓️onboarding/📦️packages/🦀️rust",
+    "🔨️modules/🎠️kernel/🎞️media-jobs/📦️packages/🦀️rust",
+    "🔨️modules/🎠️kernel/📜️history/📦️packages/🦀️rust",
+    "🔨️modules/🎠️kernel/📦️packages/🦀️rust",
+    "🔨️modules/🎠️kernel/🖼️ui/📦️packages/🦀️rust",
+    "🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/🎟️retained-turn/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/💼️job/📨️publication/📦️packages/🦀️rust",
@@ -67,7 +99,10 @@ members = [
     "🔨️modules/🎭️actor/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/🧩️component/📦️packages/🦀️rust",
     "🔨️modules/🎭️actor/🧵️pack/📦️packages/🦀️rust",
+    "🔨️modules/🎯️action-bus/📦️packages/🦀️rust",
     "🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust",
+    "🔨️modules/🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust",
+    "🔨️modules/📁️filesystem/📷️snapshot/📦️packages/🦀️rust",
     "🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust",
     "🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust",
     "🔨️modules/📐️geometry/➗️vector/📦️packages/🦀️rust",
@@ -76,10 +111,26 @@ members = [
     "🔨️modules/📐️geometry/🕸️mesh/📦️packages/🦀️rust",
     "🔨️modules/📐️geometry/🦴️skeleton/📦️packages/🦀️rust",
     "🔨️modules/📚️compiler/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/⚔️conflict/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/⚙️codec/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🆔️ids/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🎮️mutation/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🎮️mutation/📨️messages/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/⚠️error/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📐️format/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📡️wire/👥️presence/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📡️wire/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/📡️wire/🕹️interaction/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🔐️crypto/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🔗️causal/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🔗️causal/🔀️transition/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust",
     "🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
     "🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
     "🔨️modules/🔄️machine/📦️packages/🦀️rust",
@@ -93,6 +144,7 @@ members = [
     "🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust",
     "🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust",
     "🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust",
+    "🔨️modules/🕹️interaction/📦️packages/🦀️rust",
     "🔨️modules/🖌️raster/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust",
@@ -100,10 +152,31 @@ members = [
     "🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📜️doc/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🕸️node-graph/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📐️math/🎯️picking/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/📦️pack/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🔌️device/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🖌️render/🔌️device/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/📦️packages/🦀️rust",
@@ -113,9 +186,18 @@ members = [
     "🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🖌️render/📮️packet/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🖌️render/🕹️interaction/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🖌️render/🖋️text/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🖌️render/✨️shader-contract/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧠️runtime/⏭️cursor/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧠️runtime/📡️exchange/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧠️runtime/🧱️primitives/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
@@ -144,8 +226,12 @@ members = [
     "🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/📦️packages/🦀️rust",
     "🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust",
     "🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/📦️packages/🦀️rust",
+    "🔨️modules/🖼️canvas/🎬️scene/📦️packages/🦀️rust",
     "🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+    "🔨️modules/🖼️canvas/📷️camera/📦️packages/🦀️rust",
+    "🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust",
     "🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+    "🔨️modules/🖼️canvas/🪪️icon-codec/📦️packages/🦀️rust",
     "🔨️modules/🗜️deflate/📦️packages/🦀️rust",
     "🔨️modules/🗣️dsl/📦️packages/🦀️rust",
     "🔨️modules/🗣️dsl/🔍️lexer/📦️packages/🦀️rust",
@@ -155,7 +241,13 @@ members = [
     "🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🗣️dsl/🧬️schema/🖋️notation/📦️packages/🦀️rust",
     "🔨️modules/🗣️dsl/🧬️schema/🖨️printing/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🎨️paint/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🏔️terrain/📦️packages/🦀️rust",
     "🔨️modules/🗺️surface/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🕸️node-graph/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🗺️tiled-map/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🗺️tiled-map/🧮️model/📦️packages/🦀️rust",
+    "🔨️modules/🗺️surface/🗺️tiled-map/🧱️vector-tiles/📦️mvt-decoder/📦️packages/🦀️rust",
     "🔨️modules/🗺️surface/🧩️component/📦️packages/🦀️rust",
     "🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust",
@@ -165,6 +257,15 @@ members = [
     "🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🔡️mutation-inputs/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🕹️actions/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🖼️view-model/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🧩️contribution/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🧭️address/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🧱️app-surface/📦️packages/🦀️rust",
+    "🔨️modules/🛂️manifest/🧾️plugin-manifest/📦️packages/🦀️rust",
     "🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/📦️packages/🦀️rust",
@@ -423,138 +524,29 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
-[profile.dev]
-debug = false
-incremental = false
+[workspace.dependencies.semio-framework-ui-contract-values]
+path = "🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust"
 
-  [profile.dev.build-override]
-  opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-actions]
+path = "🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-presentation]
+path = "🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-environ]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-components]
+path = "🔨️modules/🖱️ui/🧬️contract/🧩️component/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-internal-core]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-operations]
+path = "🔨️modules/🖱️ui/🧬️contract/⚙️operations/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-internal-cranelift]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-builder]
+path = "🔨️modules/🖱️ui/🧬️contract/🏗️builder/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-internal-fiber]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-validation]
+path = "🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-internal-unwinder]
-opt-level = 3
+[workspace.dependencies.semio-framework-ui-contract-text-edit]
+path = "🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust"
 
-[profile.dev.package.wasmtime-internal-cache]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-component-util]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-jit-debug]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-jit-icache-coherence]
-opt-level = 3
-
-[profile.dev.package.wasmtime-wasi]
-opt-level = 3
-
-[profile.dev.package.wasmtime-wasi-io]
-opt-level = 3
-
-[profile.dev.package.cranelift-codegen]
-opt-level = 3
-
-[profile.dev.package.cranelift-frontend]
-opt-level = 3
-
-[profile.dev.package.cranelift-entity]
-opt-level = 3
-
-[profile.dev.package.cranelift-bforest]
-opt-level = 3
-
-[profile.dev.package.cranelift-bitset]
-opt-level = 3
-
-[profile.dev.package.cranelift-control]
-opt-level = 3
-
-[profile.dev.package.cranelift-native]
-opt-level = 3
-
-[profile.dev.package.cranelift-codegen-shared]
-opt-level = 3
-
-[profile.dev.package.cranelift-assembler-x64]
-opt-level = 3
-
-[profile.dev.package.regalloc2]
-opt-level = 3
-
-[profile.dev.package.wasmparser]
-opt-level = 3
-
-[profile.dev.package.pulley-interpreter]
-opt-level = 3
-
-[profile.dev.package.gimli]
-opt-level = 3
-
-[profile.dev.package.object]
-opt-level = 3
-
-[profile.dev.package.wit-parser]
-opt-level = 3
-
-[profile.dev.package.semio-framework-hash]
-opt-level = 3
-
-# 🎚️ Shared native optimizer policy lives in .cargo/config.toml; this owner opts into path trimming.
-[profile.release]
-trim-paths = "object"
-
-[profile.wasm-release]
-inherits = "release"
-opt-level = "s"
-lto = "thin"
-codegen-units = 16
-strip = "symbols"
-incremental = false
-trim-paths = "object"
-
-# 🔁️ The single-plugin browser iteration loop only (`bun nx run workspace:components iterate <plugin-id>`): never in a
-# release graph, never described for commit, never shipped. Inherits the shipped profile's target settings and trades
-# size and speed for compile latency — incremental, no LTO, 256 codegen units, assertions on, symbols kept. Its bytes
-# reach no receipt but a local `wasm-prototype` one and stay under the local-only `ITERATE_COMPONENT_MAX_BYTES` (512 MiB).
-[profile.wasm-prototype]
-inherits = "wasm-release"
-debug = 1
-opt-level = 1
-lto = false
-codegen-units = 256
-incremental = true
-debug-assertions = true
-overflow-checks = true
-strip = "none"
-
-# 🎚️ An iterated plugin still meets the framework's 8 ms interactive-step contract: below `opt-level = 2` a lowpoly
-# render turn tessellates its seeded mesh in 10-11.5 ms and the runtime traps it with `plugin.internal.interactive-ceiling`.
-[profile.wasm-prototype.package.semio-framework-os-flow]
-opt-level = 2
-
-# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
-[profile.wasm-prototype.package.semio-framework-os-kernel-neural-engine]
-opt-level = 2
-
-# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
-[profile.wasm-prototype.package.semio-framework-replication]
-opt-level = 2
-
-# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
-[profile.wasm-prototype.package.semio-framework-pack]
-opt-level = 2
+[workspace.dependencies.semio-framework-ui-contract-typegen]
+path = "🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust"

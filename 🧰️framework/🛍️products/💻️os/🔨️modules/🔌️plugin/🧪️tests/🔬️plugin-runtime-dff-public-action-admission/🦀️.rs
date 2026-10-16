@@ -132,7 +132,7 @@ mod dff_public_action_admission_tests {
 
     #[test]
     fn action_entry_points_drive_spawn_admit_instead_of_awaiting_the_retained_job() {
-        let source = include_str!("../../⚛️reactor/🏃️runtime/🦀️.rs");
+        let source = semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../⚛️reactor/🏃️runtime/🦀️.rs")).expect("the runtime module tree reads");
         let exchange_start = source.find("protocol::AppCommand::Command { seq, command, view_state }").expect("reactor command exchange");
         let exchange_end = source[exchange_start..].find("protocol::AppCommand::CommandText").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
         let exchange = &source[exchange_start..exchange_end];

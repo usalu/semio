@@ -4,7 +4,7 @@ use crate::standards::v_utf_8::subsets::any::schema::snapshot::{LineEnding, TxtS
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::{native_decoding::{NativeDecodeControl, NativeDecodeProgress},NativeEncodeControl};
 #[path="🛫️encoding/🦀️.rs"]
-mod original_encoding;
+pub mod original_encoding;
 #[path="🫴️receiving/🦀️.rs"]
 mod receiving;
 
@@ -132,6 +132,3 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

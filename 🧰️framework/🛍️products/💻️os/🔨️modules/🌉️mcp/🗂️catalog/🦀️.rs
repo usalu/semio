@@ -7,15 +7,19 @@
 //! (`📓️terra-P1a-report.md` §5, D8) so the peer ticket's mid-flight plugin-host rewrite can never
 //! break this crate's own build.
 
-use crate::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, ui_dialog_open_input_schema};
-use semio_framework::manifest;
 use semio_framework::manifest::kernel;
+use semio_framework::manifest;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
 use std::collections::BTreeMap;
+use semio_framework_os_mcp_schema::schema::{artifact_create_template_input_schema, capability_action_input_schema, capability_generic_input_schema, capability_generic_output_schema, compile_validator, ui_dialog_open_input_schema, validate, with_artifact_create_templates};
 
 //#region 🔖️CapabilityRef
+
 /// 🪪️ A capability's full identity string — `<plugin_id>.<app_id>.<action_id>`, `framework.*`,
 /// `os.*`, `ui.*`, or a bare gateway verb (`context.resolve`, `capabilities.search`, …). Never a
 /// bare action id (D3).
@@ -35,9 +39,11 @@ impl std::fmt::Display for CapabilityRef {
         f.write_str(&self.0)
     }
 }
+
 //#endregion 🔖️CapabilityRef
 
 //#region 🔖️CapabilityOwner
+
 /// 📍️ Who declared a capability — `app_id`/`window_kind_id`/`mode_id` are `None` for a plugin-scope
 /// (not app-scope) command, matching `PluginManifest.commands` (a real, populated field with no
 /// owning app) — a deliberate widening of `📋️master.md` §3.1's literal `Plugin{plugin_id, app_id,
@@ -169,9 +175,11 @@ impl CapabilityOwner {
         }
     }
 }
+
 //#endregion 🔖️CapabilityOwner
 
 //#region 🔖️CapabilityKind
+
 /// 🏷️ What kind of operation a capability is — the six `manifest::ActionKind` variants plus the
 /// three gateway-only kinds `📋️master.md` §3.1 names (`Query`/`Job`/`Ui`) and `Meta` (the gateway's
 /// own discovery/context verbs, which are neither an artifact operation nor a UI command).
@@ -203,9 +211,11 @@ impl From<manifest::ActionKind> for CapabilityKind {
         }
     }
 }
+
 //#endregion 🔖️CapabilityKind
 
 //#region 🔖️CapabilityAudience
+
 /// 🎯️ WHO a compiled capability is addressed to — the gateway's own projection of
 /// `manifest::CapabilityAudience`, mirroring how [`CapabilityKind`] projects `manifest::ActionKind`
 /// (D5: the gateway's wire vocabulary lives HERE, the declaration vocabulary lives in `🛂️manifest`).
@@ -239,9 +249,11 @@ pub const AGENT_AUDIENCES: &[CapabilityAudience] = &[CapabilityAudience::Agent];
 /// 🎯️ Every audience, for the callers that want the complete compiled surface (a shell's own
 /// command registry, `🧪️conformance`'s duplicate/label checks) rather than the agent projection.
 pub const ALL_AUDIENCES: &[CapabilityAudience] = &[CapabilityAudience::Agent, CapabilityAudience::Input, CapabilityAudience::Chrome];
+
 //#endregion 🔖️CapabilityAudience
 
 //#region 🔖️ToolExposure
+
 /// 🔌️ Whether a capability is invocable only through `action.invoke`/the deterministic catalog
 /// (`CatalogOnly`, the common case) or ALSO published as its own named `tools/list` entry
 /// (`Direct` — the small stable core set P2 registers, plus whatever a later packet promotes).
@@ -252,9 +264,11 @@ pub enum ToolExposure {
     CatalogOnly,
     Direct { tool_name: String },
 }
+
 //#endregion 🔖️ToolExposure
 
 //#region 🔖️CapabilityPresentation
+
 /// 📝️ One argument's search/display-facing summary — on the wire deliberately not the full `manifest::ActionArgDef`
 /// (whose `schema`/`presentation` already live in `input_schema` below; repeating them there would be
 /// duplicate state).
@@ -286,9 +300,11 @@ pub struct CapabilityPresentation {
     pub in_palette: bool,
     pub args: Vec<CapabilityArgSummary>,
 }
+
 //#endregion 🔖️CapabilityPresentation
 
 //#region 🔖️CapabilityExample
+
 /// 📖️ One natural-language usage example paired with the concrete input it would dispatch —
 /// `input: Null` means only the phrase is known yet (the common case pre-enrichment; P13/P14 fill
 /// in real inputs per `📋️master.md` §4.2's DAG).
@@ -311,9 +327,11 @@ pub struct CapabilityExample {
     #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub input: serde_json::Value,
 }
+
 //#endregion 🔖️CapabilityExample
 
 //#region 🔖️CapabilitySource
+
 /// 🧵️ Where a compiled capability came from — lets a debugging tool or `catalog lint` walk back to
 /// the exact manifest declaration without re-deriving it from the id string.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, FromValue)]
@@ -327,9 +345,11 @@ pub enum CapabilitySource {
     Descriptor { category: String, id: String },
     Gateway,
 }
+
 //#endregion 🔖️CapabilitySource
 
 //#region 🔖️CapabilityDefinition
+
 /// 🎯️ The gateway's compiled, tool-and-search-ready projection of one invocable operation — see this
 /// module's header doc (D5). `title`/`description` are already resolved to the `locale`×`terminology`
 /// `compile()` was called with (never both languages at once — `conformance::check_bilingual_labels`
@@ -360,9 +380,11 @@ pub struct CapabilityDefinition {
     pub examples: Vec<CapabilityExample>,
     pub source: CapabilitySource,
 }
+
 //#endregion 🔖️CapabilityDefinition
 
 //#region 🔖️SchemaBuilders
+
 /// 📐️ `📋️master.md` §3.2 step 1's input envelope, folding one action/command's declared args in as
 /// `properties`. Leaf schemas come from `ActionArgDef::json_schema()` (P3, `🛂️manifest/🦀️.rs`
 /// `🔖️ActionArgs`), their descriptions resolved to the catalog's `locale`×`terminology`; the envelope itself is
@@ -378,9 +400,11 @@ fn action_input_schema(capability_id: &str, args: &[manifest::ActionArgDef], loc
     }
     capability_action_input_schema(capability_id, properties, required)
 }
+
 //#endregion 🔖️SchemaBuilders
 
 //#region 🔖️FrameworkDedup
+
 /// 🕹️ The 7 framework-injected action ids that carry `ActionKind::View`/`🐚️Shell` (not
 /// `History`/`Clipboard`/`Interaction`, which are already unambiguous by kind) — see
 /// `🛂️manifest/🦀️.rs` `history_action_definitions`/`clipboard_action_definitions`/
@@ -439,13 +463,15 @@ fn app_action_verbs(app: &manifest::AppDefinition) -> Result<Vec<(&manifest::Act
     Ok(verbs)
 }
 
-/// 🧰️ The framework-injected actions one app receives — the framework's own definitions, never the
-/// copies a descriptor serialized, so a gateway built from this tree publishes this tree's text.
+/// 🧰️ The framework-injected actions one app receives — the framework's own definitions and the actions of every
+/// framework reserved contribution, never the copies a descriptor serialized, so a gateway built from this tree
+/// publishes this tree's text.
 fn framework_action_definitions(app: &manifest::AppDefinition) -> Vec<manifest::ActionDefinition> {
     let mut actions = manifest::history_action_definitions();
+    actions.extend(manifest::reserved_app_actions(&semio_framework::FRAMEWORK_RESERVED_CONTRIBUTIONS));
     actions.extend(manifest::clipboard_action_definitions());
     actions.extend(manifest::interaction_action_definitions(app));
-    actions.extend(manifest::tool_run_action_definitions(app));
+    actions.extend(manifest::reserved_window_actions(&semio_framework::FRAMEWORK_RESERVED_CONTRIBUTIONS, app));
     actions.push(manifest::set_history_command_filter_action_definition());
     actions.push(manifest::note_shell_command_action_definition());
     actions.extend(manifest::document_transfer_action_definitions());
@@ -456,7 +482,7 @@ fn framework_action_definitions(app: &manifest::AppDefinition) -> Vec<manifest::
         actions.push(manifest::set_active_tool_action_definition());
     }
     if app.introduction.is_some() {
-        actions.push(manifest::start_introduction_action_definition());
+        actions.push(semio_framework::onboarding::start_introduction_action_definition());
     }
     actions
 }
@@ -485,9 +511,11 @@ fn framework_capabilities(apps: &[&manifest::AppDefinition], locale: Locale, ter
     }
     map
 }
+
 //#endregion 🔖️FrameworkDedup
 
 //#region 🔖️CapabilityBuilders
+
 /// 🏭️ Shared action→capability projection used by both the per-plugin walk and the framework dedup
 /// pass — `owner`/`artifact_kind`/`source` differ by caller, everything else (`title`/`description`/
 /// `input_schema`/`effects`/`policy`/`execution`/`presentation`/`examples`) is derived from `action`
@@ -714,13 +742,15 @@ fn humanize(id: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+
 //#endregion 🔖️CapabilityBuilders
 
 //#region 🔖️UiDialogAndArtifactCreate
+
 /// 🗨️ `📋️master.md` §3.2: "`dialogs` → `ui.dialog.open`" — every app's declared `DialogDefinition`s
 /// fold into ONE gateway-owned `ui.dialog.open` capability (never one capability per dialog), whose
 /// `dialogId` argument enumerates every dialog id collected across every walked app.
-fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
+pub fn ui_dialog_open_capability(dialog_ids: &[String]) -> CapabilityDefinition {
     let input_schema = ui_dialog_open_input_schema(dialog_ids);
     CapabilityDefinition {
         id: CapabilityRef("ui.dialog.open".to_string()),
@@ -770,9 +800,11 @@ fn artifact_create_capability(template_ids: &[String]) -> CapabilityDefinition {
         source: CapabilitySource::Gateway,
     }
 }
+
 //#endregion 🔖️UiDialogAndArtifactCreate
 
 //#region 🔖️CatalogSource
+
 /// 📥️ Everything `compile()` walks — `📋️master.md` §3.2's `CatalogSource{descriptors, os_commands,
 /// shell, gateway}` verbatim. `shell`/`gateway` are pre-built `CapabilityDefinition`s (P9's
 /// `os_shell::shell_capabilities()` and this crate's own core-tool set respectively) — everything
@@ -784,9 +816,11 @@ pub struct CatalogSource {
     pub shell: Vec<CapabilityDefinition>,
     pub gateway: Vec<CapabilityDefinition>,
 }
+
 //#endregion 🔖️CatalogSource
 
 //#region 🔖️CatalogError
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum CatalogError {
     DuplicateCapabilityId(String),
@@ -801,9 +835,11 @@ impl std::fmt::Display for CatalogError {
 }
 
 impl std::error::Error for CatalogError {}
+
 //#endregion 🔖️CatalogError
 
 //#region 🔖️Catalog
+
 /// 📚️ The compiled, sorted, content-addressed capability catalog — `hash` changes if and only if
 /// `entries` changes (blake3 over the canonical JSON serialization of the sorted entry vector, so
 /// compiling the SAME `CatalogSource` twice is byte-identical, proven in `🧪️Tests` below).
@@ -830,9 +866,11 @@ fn compute_catalog_entries_hash(entries: &[CapabilityDefinition]) -> String {
     let bytes = serde_json::to_vec(entries).expect("capability catalog entries always serialize");
     framework_hash::hash_bytes(&bytes)
 }
+
 //#endregion 🔖️Catalog
 
 //#region 🔖️Compile
+
 fn insert_capability(entries: &mut BTreeMap<String, CapabilityDefinition>, capability: CapabilityDefinition) -> Result<(), CatalogError> {
     let id = capability.id.0.clone();
     if entries.contains_key(&id) {
@@ -960,7 +998,7 @@ pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminolog
         template_ids.sort();
         template_ids.dedup();
         match entries.get_mut("artifact.create") {
-            Some(capability) => capability.input_schema = crate::schema::with_artifact_create_templates(capability.input_schema.clone(), &template_ids),
+            Some(capability) => capability.input_schema = with_artifact_create_templates(capability.input_schema.clone(), &template_ids),
             None => insert_capability(&mut entries, artifact_create_capability(&template_ids))?,
         }
     }
@@ -969,9 +1007,11 @@ pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminolog
     let hash = compute_catalog_entries_hash(&sorted);
     Ok(Catalog { hash, entries: sorted })
 }
+
 //#endregion 🔖️Compile
 
 //#region 🔖️Audit
+
 /// 🖱️ Verb-id word runs that NAME a raw live-surface gesture route. A route whose id reads like one
 /// of these is dispatched by a cursor, a key or an engagement draft — never by an agent choosing a
 /// tool — but `manifest::derive_audience` cannot see that: a pointer handler that commits a real
@@ -1194,9 +1234,11 @@ pub fn audit_source(source: &CatalogSource) -> Vec<CatalogAuditFinding> {
     findings.sort_by(|left, right| left.capability_id().cmp(right.capability_id()));
     findings
 }
+
 //#endregion 🔖️Audit
 
 //#region 🔖️DescriptionLaw
+
 /// 📜️ The manifest's schema document — `CapabilityDescription` is declared there, beside the
 /// `ActionSemantics.description` field it constrains.
 const MANIFEST_SCHEMA: &str = include_str!("../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json");
@@ -1282,7 +1324,7 @@ fn description_validator() -> semio_framework_schema::OwnedJsonSchemaValidator {
     let manifest: serde_json::Value = serde_json::from_str(MANIFEST_SCHEMA).expect("the manifest schema is JSON");
     let family: serde_json::Map<String, serde_json::Value> = manifest["$defs"].as_object().expect("the manifest schema declares $defs").iter().filter(|(id, _)| id.starts_with("CapabilityDescription")).map(|(id, def)| (id.clone(), def.clone())).collect();
     let root = serde_json::json!({ "$schema": manifest["$schema"], "$id": manifest["$id"], "$defs": family, "$ref": "#/$defs/CapabilityDescription" });
-    crate::schema::compile_validator(&root).expect("CapabilityDescription compiles")
+    compile_validator(&root).expect("CapabilityDescription compiles")
 }
 
 fn description_cell<'value>(description: &'value serde_json::Value, terminology: &str, locale: &str) -> &'value str {
@@ -1312,7 +1354,7 @@ pub fn description_problems(verbs: &[DescribedVerb]) -> Vec<(String, Description
             problems.push((verb.id.clone(), DescriptionProblem::Missing));
             continue;
         };
-        if crate::schema::validate(&validator, description).is_err() {
+        if validate(&validator, description).is_err() {
             problems.push((verb.id.clone(), DescriptionProblem::Schema));
         }
         if ["native", "reuse"].iter().any(|terminology| {
@@ -1381,10 +1423,8 @@ pub fn description_findings(source: &CatalogSource) -> Vec<DescriptionFinding> {
     findings.sort_by(|left, right| left.capability_id.cmp(&right.capability_id).then(left.problem.cmp(&right.problem)));
     findings
 }
+
 //#endregion 🔖️DescriptionLaw
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

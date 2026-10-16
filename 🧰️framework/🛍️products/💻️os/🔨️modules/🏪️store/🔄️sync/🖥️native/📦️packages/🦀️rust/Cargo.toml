@@ -1,0 +1,48 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-sync-native"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The native Store sync actor and the folder event log storage"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-sync-native"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
+semio-framework-os-store-codec-registry = { path = "../../../../📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-space-member = { path = "../../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os-store-sync = { path = "../../../📦️packages/🦀️rust" }
+tokio = { version = "1", default-features = false, features = ["sync", "macros"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+futures = "0.3"
+semio-framework-os-services = { workspace = true }
+tokio = { version = "1", default-features = false, features = ["net"] }
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
+
+[dev-dependencies]

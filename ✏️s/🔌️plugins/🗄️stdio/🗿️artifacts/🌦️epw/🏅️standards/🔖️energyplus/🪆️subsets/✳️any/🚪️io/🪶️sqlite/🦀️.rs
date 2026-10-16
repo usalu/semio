@@ -1,4 +1,3 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::sqlite::snapshot;

@@ -1,0 +1,17 @@
+{
+  "$id": "semio:nx-graph-law-operation:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "law"
+    }
+  }
+}

@@ -1,12 +1,10 @@
-import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import {defineOwnedBuildConfig,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
 import { semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, playgroundStaticSiteBuildOptions, semioServeCloseVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -14,9 +12,9 @@ const dir = dirname(fileURLToPath(import.meta.url));
 const bundleRoot = resolve(dir, "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(bundleRoot, "../../../../..");
 
-export default defineConfig({
+export default defineOwnedBuildConfig({
   root: bundleRoot,
-  cacheDir: viteCacheDirectory(resolve(repoRoot, ".🧬semio/🦑️repo/⚡️cache/vite/projektetage"), process.env, import.meta.url),
+  cacheDir: viteCacheDirectory(repoRoot, process.env),
   base: "./",
   publicDir: resolve(bundleRoot, "../../🌐️public"),
   plugins: [
@@ -29,8 +27,8 @@ export default defineConfig({
     }),
     semioEmojiIndexHtmlVitePlugin(bundleRoot),
     ...semioAssetsVitePlugin(repoRoot),
-    tailwindcss(),
-    react(),
+    ...uiTailwindBuildPlugins(),
+    uiReactBuildPlugin(),
   ],
   build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
   define: { "import.meta.vitest": "undefined" },

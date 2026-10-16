@@ -7,10 +7,10 @@ use protocol::causal::transition::HistoryFoldIndexInsert;
 use std::{cmp::Ordering,mem::{ManuallyDrop,size_of}};
 const KEYS:[&str;11]=["done","cancellable","phase","unitsDone","unitsTotal","nodeHash","windowId","windowKindId","handle","tolerance","mesh"];
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
-fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
-fn object(source:&DslValue)->Result<&[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original completed preview requires an object"))}}
+pub fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
+pub fn object(source:&DslValue)->Result<&[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original completed preview requires an object"))}}
 fn object_mut(source:&mut DslValue)->Result<&mut[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original completed preview requires an object"))}}
-fn text(source:&DslValue)->Result<&str,ValueError>{match source{DslValue::String(value)=>Ok(value),_=>Err(invalid("original completed preview requires text"))}}
+pub fn text(source:&DslValue)->Result<&str,ValueError>{match source{DslValue::String(value)=>Ok(value),_=>Err(invalid("original completed preview requires text"))}}
 fn uint(source:&DslValue)->Result<u64,ValueError>{match source{DslValue::Number(value)=>value.as_u64().ok_or_else(||invalid("original completed preview requires UInt64")),_=>Err(invalid("original completed preview requires UInt64"))}}
 fn compare_demand(left:&String,right:&String,offset:usize,body:usize)->Result<RetirementDemand,ValueError>{let remaining=left.len().min(right.len()).saturating_sub(offset);Ok(RetirementDemand{copy_bytes:if remaining==0{0}else{remaining.min((body/2).max(1))*2},depth:1,..Default::default()})}
 fn compare_step(left:&String,right:&String,offset:usize,grant:RetainedCloneGrant)->Result<(Option<Ordering>,usize,RetainedCloneProgress),ValueError>{let demand=compare_demand(left,right,offset,grant.maximum_copy_bytes)?;if !admitted(demand,grant){return Ok((None,offset,Default::default()))}let end=offset+demand.copy_bytes/2;let order=left.as_bytes()[offset..end].cmp(&right.as_bytes()[offset..end]);Ok(((order!=Ordering::Equal||end==left.len().min(right.len())).then(||if order==Ordering::Equal{left.len().cmp(&right.len())}else{order}),end,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
@@ -118,6 +118,3 @@ impl FlowPreviewLedgerFold{
 }
 impl Drop for FlowPreviewLedgerFold{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original preview ledger requires full paid close");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -1,5 +1,19 @@
+//! 🧱️ Root_quick of the runtime crate: Gateway runtime, entrypoint and facade.
 
-use super::*;
+use crate::root::{GATEWAY_TOOL_NAMES, GatewayRuntime, HUB_OPEN_RETRY_ATTEMPTS, HttpOptions, StdioOptions, build_server_from_catalog, hub_open_retry_backoff_ms};
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, ShellToGateway};
+use semio_framework_os_mcp_catalog::catalog::{Catalog, compile};
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, SUPPORTED_PROTOCOL_VERSIONS, ToolRegistry, is_valid_tool_name};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_mcp_capabilities::source_builders::note_and_cad_source;
+#[cfg(test)]
+use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
 
 /// 🧫️ The compiled note+cad fixture catalog — every test below asserting a KNOWN capability
 /// census injects THIS, never `build_catalog()`, whose whole job since ticket
@@ -129,6 +143,7 @@ fn the_tool_census_matches_the_registry_exactly() {
 }
 
 //#region 🔖️MutationProtocolToolWiring
+
 /// 🎬️ The exact scenario the brief's §5 live transcript demonstrates, proven deterministically:
 /// a principal WITH `artifact.write` can `action_prepare` the cad demo capability and gets back a
 /// real `PreparedActionReport`.
@@ -168,9 +183,11 @@ fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
     assert_eq!(structured["status"], "SUCCEEDED");
     assert!(structured["undoToken"].as_str().unwrap().starts_with("undo_"));
 }
+
 //#endregion 🔖️MutationProtocolToolWiring
 
 //#region 🔖️HubOpenRetry
+
 /// ⏳️ A hub whose descriptor index is mid-refresh answers a RETRYABLE `PLUGIN_UNAVAILABLE`, and
 /// until ticket 26/09/18 slice M9 nothing retried it: the gateway process exited before
 /// `initialize` (measured live 2026-09-21, M8 §5.4(2)). The law pins the three things that make the
@@ -180,16 +197,17 @@ fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
 fn a_hub_open_retries_only_what_the_hub_marks_retryable_and_always_terminates() {
     let refreshing = GatewayError::new(GatewayErrorCode::PluginUnavailable, "authenticated hub descriptor index is refreshing; retry after authority refresh").retryable();
     let denied = GatewayError::new(GatewayErrorCode::PermissionDenied, "this agent credential is scoped to another space");
-    assert_eq!(crate::root::hub_open_retry_backoff_ms(&denied, 0), None, "a non-retryable failure is returned on its first occurrence");
+    assert_eq!(hub_open_retry_backoff_ms(&denied, 0), None, "a non-retryable failure is returned on its first occurrence");
     let mut total = 0;
     let mut previous = 0;
-    for attempts_made in 0..crate::root::HUB_OPEN_RETRY_ATTEMPTS {
-        let backoff = crate::root::hub_open_retry_backoff_ms(&refreshing, attempts_made).expect("a retryable failure inside the bound is re-attempted");
+    for attempts_made in 0..HUB_OPEN_RETRY_ATTEMPTS {
+        let backoff = hub_open_retry_backoff_ms(&refreshing, attempts_made).expect("a retryable failure inside the bound is re-attempted");
         assert!(backoff > previous, "the backoff grows with every attempt");
         previous = backoff;
         total += backoff;
     }
-    assert_eq!(crate::root::hub_open_retry_backoff_ms(&refreshing, crate::root::HUB_OPEN_RETRY_ATTEMPTS), None, "the bound ends the retry even while the hub still says retry");
+    assert_eq!(hub_open_retry_backoff_ms(&refreshing, HUB_OPEN_RETRY_ATTEMPTS), None, "the bound ends the retry even while the hub still says retry");
     assert!(total <= 15_000, "a client's initialize is never held for longer than the bound, found {total} ms");
 }
+
 //#endregion 🔖️HubOpenRetry

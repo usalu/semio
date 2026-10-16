@@ -1,28 +1,14 @@
-use super::*;
+
 use std::sync::Arc;
-
-/// 🕸️ The ONE claimed shared Neo4j (`os-hub-ts backend run neo4j -- …`, an exclusive lease): Community edition serves one
-/// graph, so each lane starts from an emptied graph and the lanes run one at a time (`directory-live-lanes neo4j` passes
-/// `--test-threads=1`) — the lanes never start a server of their own (preamble rule 22).
-pub(super) struct Neo4jFixture {
-    pub(super) uri: String,
-    user: String,
-    password: String,
-}
-
-impl Neo4jFixture {
-    pub(super) async fn connect(&self) -> Neo4jDirectory {
-        Neo4jDirectory::connect(&self.uri, &self.user, &self.password).await.expect("connect second neo4j directory")
-    }
-}
-
-/// 🕸️ The claimed shared Neo4j with an emptied graph, and the directory over it.
-pub(super) async fn test_directory() -> (Neo4jDirectory, Neo4jFixture) {
-    db::db_storage::claimed_backend::client("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS");
-    let fixture = Neo4jFixture { uri: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_URI"), user: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_USER"), password: db::db_storage::claimed_backend::env("OS_HUB_NEO4J_PASSWORD") };
-    let directory = fixture.connect().await;
-    (directory, fixture)
-}
+use semio_hub_directory_contract::model::{CredentialAuditFactV1, InviteRedemptionCommit, SpaceRole};
+use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceRole, Hlc};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_neo4j::Neo4jDirectory;
+use semio_hub_directory_contract::NewDirectoryEvent;
+use semio_hub_directory_neo4j_rows::now_ms;
+use neo4rs::query;
+use semio_hub_directory_neo4j::testkit::test_directory;
+use directory::os_identity::time_ordered_id;
 
 fn claim_actor(id: &str) -> DirectoryActor {
     DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{id}#neo4j-invite") }
@@ -173,7 +159,7 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
 async fn share_scope_corpus_v1_holds_on_neo4j() {
     let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
 }
 
 // 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over a real Neo4j.
@@ -182,7 +168,7 @@ async fn share_scope_corpus_v1_holds_on_neo4j() {
 async fn space_administration_read_surface_v1_holds_on_neo4j() {
     let (directory, _fixture) = test_directory().await;
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
 }
 
 // 🔬️ ticket 26/09/18 slice DB2 — the neo4j twin of the directory format-stamp law.
@@ -192,18 +178,18 @@ async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_neo4j
     let (directory, fixture) = test_directory().await;
     let mut result = directory.graph.execute(query("MATCH (f:DirectoryFormat {id: 'singleton'}) RETURN f.schema AS schema, f.version AS version")).await.expect("read stamp");
     let row = result.next().await.expect("stamp row").expect("stamp written on creation");
-    assert_eq!(row.get::<String>("schema").expect("schema"), crate::directory::DIRECTORY_FORMAT_SCHEMA);
-    assert_eq!(row.get::<i64>("version").expect("version"), crate::directory::DIRECTORY_FORMAT_VERSION);
+    assert_eq!(row.get::<String>("schema").expect("schema"), semio_hub_directory_contract::DIRECTORY_FORMAT_SCHEMA);
+    assert_eq!(row.get::<i64>("version").expect("version"), semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION);
     drop(result);
 
-    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION + 1)).await.expect("forge a newer format");
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.version = $version").param("version", semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION + 1)).await.expect("forge a newer format");
     let refused = Neo4jDirectory::connect(&fixture.uri, &fixture.user, &fixture.password).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
 
-    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = 'semio/hub/directory-format/v9', f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("forge an unknown schema");
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = 'semio/hub/directory-format/v9', f.version = $version").param("version", semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION)).await.expect("forge an unknown schema");
     let unknown = Neo4jDirectory::connect(&fixture.uri, &fixture.user, &fixture.password).await.err().map(|error| error.to_string()).unwrap_or_default();
     assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
 
-    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = $schema, f.version = $version").param("schema", crate::directory::DIRECTORY_FORMAT_SCHEMA).param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("restore the stamp");
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = $schema, f.version = $version").param("schema", semio_hub_directory_contract::DIRECTORY_FORMAT_SCHEMA).param("version", semio_hub_directory_contract::DIRECTORY_FORMAT_VERSION)).await.expect("restore the stamp");
     fixture.connect().await;
 }

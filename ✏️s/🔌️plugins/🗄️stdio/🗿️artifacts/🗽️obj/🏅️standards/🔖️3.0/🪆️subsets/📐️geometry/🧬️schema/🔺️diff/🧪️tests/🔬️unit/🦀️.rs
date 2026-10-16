@@ -1,4 +1,5 @@
-use super::*;
+use crate::ObjSnapshot;
+use crate::standards::v3_0::subsets::any::schema::diff::*;
 
 #[test]
 fn invalid_collection_targets_are_rejected_before_mutation() {

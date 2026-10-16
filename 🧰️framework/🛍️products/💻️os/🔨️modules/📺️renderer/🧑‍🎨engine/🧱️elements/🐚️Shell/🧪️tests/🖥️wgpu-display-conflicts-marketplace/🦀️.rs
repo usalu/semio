@@ -32,10 +32,10 @@ fn published_keys(shell: &ShellState, tab_id: &str, node: &UiNode) -> Vec<String
 #[test]
 fn both_display_leaves_are_shell_owned_and_publish_a_body() {
     let mut shell = display_shell();
-    let leaves = shell.shell_owned_panel_leaves();
+    let leaves = shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs);
     for tab_id in [FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, FRAMEWORK_DISPLAY_LAYOUT_TAB_ID] {
         assert!(leaves.contains(&tab_id.to_string()), "🖥️ '{tab_id}' must be a shell-owned leaf");
-        let published = shell.publish_shell_panel_document(tab_id).expect("the Display leaf publishes");
+        let published = SessionCtx::of(&mut shell).publish_shell_panel_document(tab_id).expect("the Display leaf publishes");
         assert!(published.is_some(), "🖥️ '{tab_id}' must publish a retained body, not `Ok(None)`");
     }
 }
@@ -46,14 +46,14 @@ fn both_display_leaves_are_shell_owned_and_publish_a_body() {
 #[test]
 fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
     let mut shell = display_shell();
-    let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.build_display_windows_ui());
+    let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.docs.build_display_windows_ui(&shell.prefs));
     assert!(keys.iter().any(|key| key.ends_with("framework.display.windows.main")), "🖥️ a section per window kind, got {keys:?}");
     assert!(keys.iter().any(|key| key.ends_with("framework.display.windows.main.kind")), "🖥️ the plain kind leaf carries React's own id");
     assert!(!keys.iter().any(|key| key.contains(".projection.")), "🖥️ a canvas-2d kind offers no projection rows, exactly as React's `surfaceKind === \"world-3d\"` gate says");
 
-    let session = shell.session.as_mut().expect("the fixture binds a session");
+    let session = shell.docs.session.as_mut().expect("the fixture binds a session");
     session.app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
-    let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.build_display_windows_ui());
+    let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.docs.build_display_windows_ui(&shell.prefs));
     for react_id in [
         "framework.display.windows.main.projection.parallel",
         "framework.display.windows.main.projection.parallel.orthographic",
@@ -150,8 +150,8 @@ fn press_display_tree(engine: &mut ui_wgpu::wgpu::Ui, rect: ui_wgpu::wgpu::Rect)
 #[test]
 fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its_children_when_closed() {
     let mut shell = display_shell();
-    shell.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
-    let mut body = shell.build_display_windows_ui();
+    shell.docs.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    let mut body = shell.docs.build_display_windows_ui(&shell.prefs);
     let UiNode::Stack(panel) = &mut body else { panic!("Display body is a panel stack") };
     let UiNode::Tree(tree) = panel.children.first_mut().expect("Display panel tree") else { panic!("Display panel child is a Tree") };
     tree.sections.first_mut().expect("Display kind section").default_open = Some(true);
@@ -227,10 +227,10 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
     let expected: Vec<&str> = fixture["displayResolvedOrder"]["topToBottomIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
     assert!(expected.iter().all(|id| semio_framework::is_element_id(id)), "🆔️ the shared order names element ids only: {expected:?}");
     let mut shell = display_shell();
-    let kind = shell.session.as_mut().unwrap().app.window_kinds.first_mut();
+    let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
     kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
     kind.surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
-    let body = shell.build_display_windows_ui();
+    let body = shell.docs.build_display_windows_ui(&shell.prefs);
     let mut records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display records");
     for record in &mut records {
         match &mut record.component {
@@ -269,13 +269,13 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
 #[test]
 fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
     let mut shell = display_shell();
-    shell.layout_save_label.clear();
-    shell.user_layouts = vec![ui_wgpu::wgpu::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.to_window_layout(), origin: "user".into(), group_path: None }];
-    if let Some(session) = shell.session.as_mut() {
+    shell.dock.layout_save_label.clear();
+    shell.dock.user_layouts = vec![ui_wgpu::wgpu::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.dock.to_window_layout(), origin: "user".into(), group_path: None }];
+    if let Some(session) = shell.docs.session.as_mut() {
         session.app.named_layouts =
             vec![ui_wgpu::wgpu::NamedLayout { id: "review".into(), label: "Review".into(), icon_id: None, layout: ui_wgpu::wgpu::create_stack_layout(&["main".to_string()], None), origin: "builtin".into(), group_path: Some(vec!["Work".into()]) }];
     }
-    let node = shell.build_display_layout_ui();
+    let node = shell.dock.build_display_layout_ui(&shell.prefs, &shell.docs);
     let keys = published_keys(&shell, FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &node);
     for react_id in [
         "framework.display.layout.save",
@@ -295,8 +295,8 @@ fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
     let records = panel_ui_records(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &node).expect("the layout body projects");
     let save = records.iter().find(|record| record.key.as_str().ends_with("framework.display.save")).expect("the Save button");
     assert!(save.disabled, "🖥️ React disables Save on a blank name (`!host.layoutSaveLabel.trim()`)");
-    shell.layout_save_label = "Mine".into();
-    let records = panel_ui_records(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &shell.build_display_layout_ui()).expect("the layout body projects");
+    shell.dock.layout_save_label = "Mine".into();
+    let records = panel_ui_records(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &shell.dock.build_display_layout_ui(&shell.prefs, &shell.docs)).expect("the layout body projects");
     let save = records.iter().find(|record| record.key.as_str().ends_with("framework.display.save")).expect("the Save button");
     assert!(!save.disabled, "🖥️ a typed name enables Save");
 }
@@ -307,12 +307,12 @@ fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
 #[test]
 fn the_conflicts_leaf_paints_the_live_roster_and_reacts_resolution_pair() {
     let mut shell = display_shell();
-    let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui());
+    let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui());
     assert!(keys.iter().any(|key| key.ends_with("framework.settings.conflicts.empty.row")), "⚖️ an empty roster is React's own unavailable row");
 
-    shell.open_conflicts = vec![ShellConflictRow { id: "conflict-1".into(), quarantined: true, code: "mergeQuarantined".into(), message: "two actors edited the same joint".into(), preview_after: r#"{\n  "incoming": true\n}"#.into() }];
-    shell.selected_conflict_id = Some("conflict-1".into());
-    let node = shell.build_settings_conflicts_ui();
+    shell.prefs.open_conflicts = vec![ShellConflictRow { id: "conflict-1".into(), quarantined: true, code: "mergeQuarantined".into(), message: "two actors edited the same joint".into(), preview_after: r#"{\n  "incoming": true\n}"#.into() }];
+    shell.prefs.selected_conflict_id = Some("conflict-1".into());
+    let node = shell.prefs.build_settings_conflicts_ui();
     let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &node);
     for react_id in ["framework.settings.conflicts.table", "framework.settings.conflicts.conflict-1", "framework.settings.conflicts.conflict-1.accept", "framework.settings.conflicts.conflict-1.discard"] {
         assert!(keys.iter().any(|key| key.ends_with(react_id)), "⚖️ '{react_id}' is React's own id, got {keys:?}");
@@ -332,11 +332,11 @@ fn the_conflicts_leaf_paints_the_live_roster_and_reacts_resolution_pair() {
 fn a_tool_leaf_publishes_its_own_measures_under_their_own_ids() {
     let mut shell = display_shell();
     let tab_id = format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}fill");
-    let keys = published_keys(&shell, &tab_id, &shell.build_tool_panel_ui("fill"));
+    let keys = published_keys(&shell, &tab_id, &shell.windows.build_tool_panel_ui("fill", &shell.prefs, &shell.docs));
     assert!(keys.iter().any(|key| key.ends_with("tool.fill.options")), "🛠️ the headerless options section is React's own `tool.<id>.options`");
     assert_eq!(keys.iter().filter(|key| key.contains("/tool.fill.")).count(), 2, "🛠️ the stable panel root and empty options section are the only tool-owned records without measures");
 
-    shell.tool_measures.insert(
+    shell.windows.tool_measures.insert(
         "fill".into(),
         vec![WindowMeasure::Select {
             id: "fill.material".into(),
@@ -346,7 +346,7 @@ fn a_tool_leaf_publishes_its_own_measures_under_their_own_ids() {
             on_change: ActionDescriptor { controller_id: "test".into(), action: "setFillMaterial".into(), args: None },
         }],
     );
-    let node = shell.build_tool_panel_ui("fill");
+    let node = shell.windows.build_tool_panel_ui("fill", &shell.prefs, &shell.docs);
     let keys = published_keys(&shell, &tab_id, &node);
     assert_eq!(keys.iter().filter(|key| key.ends_with("fill.material")).count(), 2, "🛠️ the measure publishes its row AND its control, both under the measure's own id, got {keys:?}");
     let records = panel_ui_records(&tab_id, &node).expect("the tool body projects");
@@ -369,9 +369,9 @@ fn marketplace_verbs(props: &ui_contract::TreeItemProps) -> Vec<(String, bool)> 
 
 /// 🪟️ Points the Marketplace's roster window at `plugin_id`'s row, as the tree window observer would after a scroll.
 fn marketplace_window_at(shell: &mut ShellState, plugin_id: &str) {
-    let index = shell.marketplace_roster().iter().position(|id| id == plugin_id).unwrap_or_else(|| panic!("🛍️ '{plugin_id}' is on the roster")) as u32;
+    let index = shell.plugins.marketplace_roster().iter().position(|id| id == plugin_id).unwrap_or_else(|| panic!("🛍️ '{plugin_id}' is on the roster")) as u32;
     let key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/{MARKETPLACE_LOCAL_SECTION_ID}");
-    shell.tree_windows.report(FRAMEWORK_MARKETPLACE_TAB_ID, &[ui_wgpu::wgpu::tree_window::TreeWindowRequest { key, offset: index, rows: 1 }], 20, 0);
+    shell.dock.tree_windows.report(FRAMEWORK_MARKETPLACE_TAB_ID, &[ui_wgpu::wgpu::tree_window::TreeWindowRequest { key, offset: index, rows: 1 }], 20, 0);
 }
 
 /// 🛍️ **The Marketplace action lane.** A resident plugin offers React's reload/uninstall pair, a plugin only the activation
@@ -381,7 +381,7 @@ fn marketplace_window_at(shell: &mut ShellState, plugin_id: &str) {
 fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     let mut shell = display_shell();
     marketplace_window_at(&mut shell, "space");
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let (_, space) = marketplace_row(&records, "framework.marketplace.plugin.space");
     assert_eq!(marketplace_verbs(space), vec![("reloadPlugin".to_string(), false), ("uninstallPlugin".to_string(), true)], "🛍️ the session's OWN program is never uninstallable — React's `canUninstall`");
     let target = serde_json::to_value(space.target.as_ref().expect("🎯️ the row's one target")).expect("target json");
@@ -390,12 +390,12 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
 
     let installable = crate::program_bridge::plugin_artifact_kind_activations().iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
     marketplace_window_at(&mut shell, installable);
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let (_, row) = marketplace_row(&records, &format!("framework.marketplace.plugin.{installable}"));
     assert_eq!(marketplace_verbs(row), vec![("installPlugin".to_string(), false)], "🛍️ a non-resident plugin offers React's Install verb");
 
-    assert!(!shell.uninstall_plugin("space"), "🛍️ uninstalling the running program is refused");
-    assert_eq!(shell.plugins.len(), 1, "🛍️ and the roster is untouched");
+    assert!(!shell.docs.uninstall_plugin("space", &mut shell.plugins, &mut shell.directory), "🛍️ uninstalling the running program is refused");
+    assert_eq!(shell.plugins.plugins.len(), 1, "🛍️ and the roster is untouched");
 }
 
 /// 🚫️ **The disabled row action law** (U6 × WG11, W1E-1): the retained accessibility projection announces the session program's
@@ -405,7 +405,7 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
 fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_button() {
     for (locale, reason) in [("en", "The open document uses this plugin."), ("de", "Das geöffnete Dokument verwendet dieses Plugin.")] {
         let mut shell = display_shell();
-        shell.locale_id = locale.into();
+        shell.prefs.locale_id = locale.into();
         let nodes = marketplace_accessibility_nodes(&mut shell);
         let uninstall = nodes.iter().find(|node| node.key == format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/framework.marketplace.plugin.space::row-action::1")).expect("the Uninstall row action");
         assert!(uninstall.disabled && uninstall.focusable && uninstall.description.as_deref() == Some(reason), "💬️ {locale}: a disabled row action names its reason and stays reachable: {uninstall:?}");
@@ -425,7 +425,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
 /// ♿️ The mounted Marketplace's retained accessibility projection, with the session program's row in view.
 fn marketplace_accessibility_nodes(shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
     marketplace_window_at(shell, "space");
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_MARKETPLACE_TAB_ID).unwrap(),
@@ -457,15 +457,15 @@ fn the_marketplace_streams_its_roster_as_one_windowed_section() {
         let ui_contract::Component::TreeSection(props) = &record.component else { panic!("🪟️ a Tree section") };
         (*props.window.as_ref().expect("🪟️ the roster section is windowed"), record.children.len())
     };
-    let roster = shell.marketplace_roster();
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("🪟️ the whole roster projects inside the retained node ceiling");
+    let roster = shell.plugins.marketplace_roster();
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("🪟️ the whole roster projects inside the retained node ceiling");
     let (window, rows) = section(&records);
     assert_eq!((window.total as usize, window.offset), (roster.len(), 0), "🪟️ the window spans the whole roster and opens at its first row");
     assert!(rows <= MARKETPLACE_WINDOW_NODE_BUDGET && rows <= roster.len(), "🪟️ the first paint materialises inside the window budget: {rows}");
 
     let last = roster.last().expect("the fixture roster holds plugins").clone();
     marketplace_window_at(&mut shell, &last);
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("🪟️ the scrolled roster projects");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("🪟️ the scrolled roster projects");
     let (window, rows) = section(&records);
     assert_eq!((window.offset as usize, rows), (roster.len() - 1, 1), "🪟️ the reported window is the slice the leaf republishes");
     marketplace_row(&records, &format!("framework.marketplace.plugin.{last}"));
@@ -475,10 +475,10 @@ fn the_marketplace_streams_its_roster_as_one_windowed_section() {
 fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enablement_and_uninstall() {
     let mut shell = display_shell();
     let record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
-    let host = shell.plugins.first().expect("fixture host").plugin_id.clone();
-    shell.project_extension_record(ShellExtensionStoreRecord { extends_host: host.clone(), ..record.clone() }).expect("record admits");
+    let host = shell.plugins.plugins.first().expect("fixture host").plugin_id.clone();
+    shell.plugins.project_extension_record(ShellExtensionStoreRecord { extends_host: host.clone(), ..record.clone() }).expect("record admits");
     marketplace_window_at(&mut shell, &host);
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let keys: Vec<&str> = records.iter().map(|record| record.key.as_str()).collect();
     for id in ["framework.marketplace.extensions.install", "framework.marketplace.extensions.install.url", "framework.marketplace.extensions.install.file"] {
         assert!(keys.iter().any(|key| key.ends_with(id)), "the Store projection keeps React's Marketplace id {id}, got {keys:?}");
@@ -487,9 +487,9 @@ fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enable
     assert_eq!(marketplace_verbs(extension), vec![("setExtensionEnabled".to_string(), false), ("uninstallExtension".to_string(), false)], "an enabled available extension offers disable and uninstall");
     let target = serde_json::to_value(extension.target.as_ref().expect("🎯️ the extension row's one target")).expect("target json");
     assert_eq!((target["args"]["extensionId"].as_str(), target["args"]["enabled"].as_bool()), (Some(record.extension_id.as_str()), Some(false)), "🎯️ the toggle's next state lives in the target: {target}");
-    assert_eq!(shell.extensions.len(), 1);
-    assert!(shell.extensions[0].enabled);
-    assert_eq!(shell.extensions[0].load_status, ShellExtensionLoadStatus::Available);
+    assert_eq!(shell.plugins.extensions.len(), 1);
+    assert!(shell.plugins.extensions[0].enabled);
+    assert_eq!(shell.plugins.extensions[0].load_status, ShellExtensionLoadStatus::Available);
 }
 
 #[test]
@@ -497,9 +497,9 @@ fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_exec
     let mut shell = display_shell();
     let mut record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
     record.extends_host = "missing.host".into();
-    shell.project_extension_record(record.clone()).expect("record admits");
-    shell.extensions[0].load_status = ShellExtensionLoadStatus::Failed("fixture load fault".into());
-    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the orphaned package projects");
+    shell.plugins.project_extension_record(record.clone()).expect("record admits");
+    shell.plugins.extensions[0].load_status = ShellExtensionLoadStatus::Failed("fixture load fault".into());
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the orphaned package projects");
     let keys: Vec<&str> = records.iter().map(|record| record.key.as_str()).collect();
     assert!(keys.iter().any(|key| key.ends_with("framework.marketplace.missing-host.missing.host")), "an absent declared host has its own visible React-parity section, got {keys:?}");
     let (_, extension) = marketplace_row(&records, &format!("framework.marketplace.plugin.missing.host.extension.{}", record.extension_id));
@@ -510,9 +510,9 @@ fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_exec
 fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
-    shell.locale_id = "en".into();
+    shell.prefs.locale_id = "en".into();
     let source = &fixture["conflict"];
-    shell.open_conflicts = vec![ShellConflictRow {
+    shell.prefs.open_conflicts = vec![ShellConflictRow {
         id: source["id"].as_str().unwrap().into(),
         quarantined: source["quarantined"].as_bool().unwrap(),
         code: source["code"].as_str().unwrap().into(),
@@ -522,8 +522,8 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
 }"#
         .into(),
     }];
-    shell.selected_conflict_id = None;
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).unwrap();
+    shell.prefs.selected_conflict_id = None;
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui()).unwrap();
     let row_id = fixture["rowId"].as_str().unwrap();
     assert_eq!(records.iter().filter(|record| matches!(record.component, ui_contract::Component::TreeItem(_))).count(), fixture["expected"]["rowCount"].as_u64().unwrap() as usize);
     let row = records.iter().find(|record| record.key.as_str().ends_with(row_id)).unwrap();
@@ -551,8 +551,8 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
 fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView producer fixture");
     let mut shell = display_shell();
-    shell.locale_id = "en".into();
-    shell.open_conflicts = fixture["conflicts"]
+    shell.prefs.locale_id = "en".into();
+    shell.prefs.open_conflicts = fixture["conflicts"]
         .as_array()
         .expect("conflict rows")
         .iter()
@@ -564,8 +564,8 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
             preview_after: row["after"].as_str().unwrap().into(),
         })
         .collect();
-    shell.selected_conflict_id = Some(fixture["selectedConflictId"].as_str().unwrap().into());
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).expect("conflicts project");
+    shell.prefs.selected_conflict_id = Some(fixture["selectedConflictId"].as_str().unwrap().into());
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui()).expect("conflicts project");
     let selected = records.iter().find(|record| record.key.as_str().ends_with(fixture["selectedConflictId"].as_str().unwrap())).expect("selected conflict row");
     let ui_contract::Component::TreeItem(selected_props) = &selected.component else { panic!("selected conflict remains one TreeItem") };
     let detail_id = selected_props.detail.expect("selected row explicitly owns its detail");
@@ -602,9 +602,9 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
 fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
-    shell.locale_id = "en".into();
+    shell.prefs.locale_id = "en".into();
     let source = &fixture["conflict"];
-    shell.open_conflicts = vec![ShellConflictRow {
+    shell.prefs.open_conflicts = vec![ShellConflictRow {
         id: source["id"].as_str().unwrap().into(),
         quarantined: source["quarantined"].as_bool().unwrap(),
         code: source["code"].as_str().unwrap().into(),
@@ -614,7 +614,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
 }"#
         .into(),
     }];
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).expect("conflict controls project");
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui()).expect("conflict controls project");
     let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
         surface: SurfaceId::try_from(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID).unwrap(),
@@ -665,33 +665,33 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = display_order_fixture();
     let mut shell = display_shell();
-    let kind = shell.session.as_mut().unwrap().app.window_kinds.first_mut();
+    let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
     kind.id = fixture["displayResolvedOrder"]["windowKindId"].as_str().unwrap().into();
     kind.surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
     let anchor = PanelAnchor::BottomLeft;
-    shell.screen_w = 1_600.0;
-    shell.screen_h = 1_000.0;
-    shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch("framework.category.display", "Display", "layout", 0, vec![DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, "Windows", "app-window", 0)]));
-    shell.anchor_state_mut(anchor).path = vec!["framework.category.display".into(), FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into()];
-    shell.anchor_state_mut(anchor).visible = true;
-    let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.build_display_windows_ui()).unwrap();
-    let document = shell.publish_surface_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, records).unwrap();
-    shell.panel_documents.insert(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(), document);
+    shell.chrome.screen_w = 1_600.0;
+    shell.chrome.screen_h = 1_000.0;
+    shell.dock.dock_tabs.tabs_mut(anchor).clear();
+    shell.dock.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch("framework.category.display", "Display", "layout", 0, vec![DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, "Windows", "app-window", 0)]));
+    shell.dock.anchor_state_mut(anchor).path = vec!["framework.category.display".into(), FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into()];
+    shell.dock.anchor_state_mut(anchor).visible = true;
+    let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.docs.build_display_windows_ui(&shell.prefs)).unwrap();
+    let document = shell.windows.publish_surface_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, records).unwrap();
+    shell.docs.panel_documents.insert(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(), document);
     let icons = IconAtlas::default();
     let mut atlas = FontAtlas::builtin();
     let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
-    let body = shell.body_rect(&theme);
+    let body = SessionCtx::of(&mut shell).body_rect(&theme);
     let mut paint = |shell: &mut ShellState, input: &mut InputState<ActionDescriptor>| {
         while input.retire_hit_step() {}
-        shell.retained_hit_windows_staging.clear();
+        shell.input.retained_hit_windows_staging.clear();
         let mut draw = DrawList::default();
-        draw.set_screen_height(shell.screen_h);
+        draw.set_screen_height(shell.chrome.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx))));
-        shell.publish_retained_hit_registry(input);
+        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx))));
+        PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
     };
     assert_eq!(fixture["displayBranchPublication"]["rules"]["huggingPanelReflowsBeforePublication"], true);
     let base = fixture["displayBranchPublication"]["section"]["id"].as_str().unwrap();
@@ -704,8 +704,8 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
         let hit = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(id.as_str())).unwrap_or_else(|| panic!("Display physical disclosure {id} missing: {hits:?}")).clone();
         let (x, y) = (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5);
         assert_eq!(input.hit_at(x, y).and_then(|hit| hit.control_id.as_deref()), Some(id.as_str()));
-        semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &theme)).unwrap();
-        semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &theme)).unwrap();
+        semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).unwrap();
+        semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut input, &theme)).unwrap();
         paint(&mut shell, &mut input);
         println!("[DEBUG] actual Display disclosure {id}: intrinsic={:?} accepted={:?}", crate::interpreter::retained_content_height(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>());
     }

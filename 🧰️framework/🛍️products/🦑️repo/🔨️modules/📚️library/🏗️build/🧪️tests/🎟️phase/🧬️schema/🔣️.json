@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "accepted",
+    "reads"
+  ],
+  "properties": {
+    "phase": {
+      "enum": [
+        "issued",
+        "spread",
+        "expired",
+        "cancelled",
+        "after-await"
+      ]
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "reads": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "definitions": {
+    "Acquisition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "accepted",
+        "rechecks"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "live",
+            "cancel-before",
+            "cancel-after-recheck",
+            "expire-hash",
+            "sibling"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "rechecks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "Cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "body",
+        "close",
+        "outcome"
+      ],
+      "properties": {
+        "body": {
+          "enum": [
+            "success",
+            "undefined",
+            "frozen"
+          ]
+        },
+        "close": {
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "body",
+            "close"
+          ]
+        }
+      }
+    }
+  }
+}

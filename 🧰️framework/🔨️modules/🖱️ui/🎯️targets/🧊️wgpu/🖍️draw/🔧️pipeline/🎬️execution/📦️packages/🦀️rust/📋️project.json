@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-wgpu-draw-execution-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -10,11 +10,8 @@ pub async fn io_registry_entries() -> &'static [semio_framework_plugin::io::Comp
 }
 //#endregion 🔖️IoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub use semio_s_artifact_space_space_mutations::standards::v1::subsets::any::io::binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_s_artifact_space_space_mutations::standards::v1::subsets::any::io::text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_space_space_diff::standards::v1::subsets::any::io::sqlite;

@@ -1,8 +1,8 @@
 //! 📥️ The framework-owned bounded natural-file importer every editor declaring a natural file codec inherits.
-use crate::tool_contract::ArtifactToolCompletion;
-use crate::tool_contract::ArtifactToolCompletionRejection;
-use crate::tool_contract::ArtifactReservedToolInput;
-use crate::tool_contract::ArtifactReservedToolJobRequest;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolInput;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest;
 use semio_framework_value::DslValue;
 use semio_framework::Fault;
 use semio_framework::FaultCode;
@@ -15,18 +15,18 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use crate::app_contract::NaturalFileDecodeOwner;
-use crate::app_contract::NaturalFileDecodeProgress;
-use crate::app_contract::NaturalFileDecodeStep;
-use crate::app_contract::document_load_emit;
-use crate::app_contract::natural_file_input_bytes;
-use crate::app_emission::EphemeralEmit;
+use semio_framework_plugin_decl_app::NaturalFileDecodeOwner;
+use semio_framework_plugin_decl_app::NaturalFileDecodeProgress;
+use semio_framework_plugin_decl_app::NaturalFileDecodeStep;
+use semio_framework_plugin_decl_app::document_load_emit;
+use semio_framework_plugin_decl_app::natural_file_input_bytes;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use crate::tool_contract::ArtifactReservedJob;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::app_emission::ArtifactMutationOutcome;
-use crate::surface_contract::ArtifactEditor;
-use crate::surface_contract::EditorApp;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
+use crate::ArtifactEditor;
+use crate::EditorApp;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum NaturalFileImportStage {
@@ -40,7 +40,7 @@ enum NaturalFileImportStage {
 /// grant, checkpoints before publication, and retains every input/output owner until close. Source-byte
 /// admission is not a parser work or expansion bound; scalable formats supply a controlled decoder.
 pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
-    pub(crate) port: String,
+    pub port: String,
     media: Option<Media>,
     decoder: Option<NaturalFileDecodeOwner<E::Snapshot>>,
     completion: Option<ArtifactToolCompletion<EditorApp<E>>>,
@@ -51,21 +51,21 @@ pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
     pending_media_value: Option<(String, DslValue)>,
     pending_media_text: Option<(String, String)>,
     pending_port: Option<String>,
-    pub(crate) contract: semio_framework::ToolExecutionContract,
+    pub contract: semio_framework::ToolExecutionContract,
     byte_cursor: usize,
     byte_length: usize,
     decode_progress: NaturalFileDecodeProgress,
     stage: NaturalFileImportStage,
     completed: bool,
     state: [u8; 17],
-    fault: crate::tool_contract::BoundedFaultText,
-    pending: Option<crate::tool_contract::ReservedOutcomeKind>,
-    outcomes: crate::tool_contract::ReservedJobOutcomes,
-    pub(crate) closing: bool,
+    fault: semio_framework_plugin_decl_app::tool_contract::BoundedFaultText,
+    pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
+    outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
+    pub closing: bool,
 }
 
 impl<E: ArtifactEditor> NaturalFileImportJob<E> {
-    pub(crate) fn new(request: ArtifactReservedToolJobRequest<EditorApp<E>>) -> Result<Self, Fault> {
+    pub fn new(request: ArtifactReservedToolJobRequest<EditorApp<E>>) -> Result<Self, Fault> {
         let ArtifactReservedToolJobRequest { retained: _, contract, input, completion, .. } = request;
         let ArtifactReservedToolInput::Media { port, mut media } = input else { unreachable!("natural-file import builder admits only media") };
         let codec = E::natural_file_codec().ok_or_else(|| plugin_sdk_fault("natural-file import lost its codec declaration"))?;
@@ -98,16 +98,16 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
             stage,
             completed: false,
             state: [0; 17],
-            fault: crate::tool_contract::BoundedFaultText::new(),
+            fault: semio_framework_plugin_decl_app::tool_contract::BoundedFaultText::new(),
             pending: None,
-            outcomes: crate::tool_contract::ReservedJobOutcomes::new(),
+            outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),
             closing: false,
         })
     }
 
     fn fail(&mut self, detail: &str) {
         self.fault.set(detail);
-        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Fault);
+        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Fault);
     }
 
     fn checkpoint(&mut self) {
@@ -115,7 +115,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
         self.state[1..9].copy_from_slice(&(self.byte_cursor as u64).to_le_bytes());
         self.state[9..17].copy_from_slice(&(self.byte_length as u64).to_le_bytes());
         let applied_progress = if matches!(self.decoder, Some(NaturalFileDecodeOwner::Controlled(_))) { self.decode_progress.completed_work_units } else { self.byte_cursor as u64 };
-        self.pending = Some(crate::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress });
+        self.pending = Some(semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind::Checkpoint { applied_progress });
     }
 
     fn decode_synchronous(&mut self) -> Result<ArtifactMutationOutcome<E::Mutation, E::ConfigMutation, E::DraftMutation>, Fault> {
@@ -161,7 +161,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
 
 impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImportJob<E> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        use crate::tool_contract::ReservedOutcomeKind;
+        use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }

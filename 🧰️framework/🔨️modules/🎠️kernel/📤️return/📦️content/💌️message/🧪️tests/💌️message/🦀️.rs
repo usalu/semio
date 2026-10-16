@@ -1,6 +1,7 @@
 //#region 🧪️BorrowedMessageRecord
-use super::return_message::ReturnMessageCursor;
-use super::{Effect, MessageEndpoint, PluginInstanceId};
+use crate::return_message::ReturnMessageCursor;
+use crate::{Effect, MessageEndpoint};
+use semio_framework_kernel_identity::PluginInstanceId;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()

@@ -64,8 +64,8 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
     });
     assert!(complete, "the panel paint completed within its opportunity ceiling (parked in {})", cursor.phase_name());
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    shell.register_retained_body_hits(surface, Rect::new(0.0, 0.0, 360.0, 720.0), &mut input);
-    shell.publish_retained_hit_registry(&mut input);
+    shell.input.register_retained_body_hits(surface, Rect::new(0.0, 0.0, 360.0, 720.0), &mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
     caller.finish();
     PaintedPanel { input, instances }
@@ -84,8 +84,8 @@ fn dispatched(input: &mut InputState<ActionDescriptor>) -> Vec<Value> {
 fn press(shell: &mut ShellState, painted: &mut PaintedPanel, control: &str) {
     let hit = painted.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("`{control}` published a pointer target")).rect;
     let (x, y) = (hit.x + hit.w * 0.5, hit.y + hit.h * 0.5);
-    semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut painted.input, &Theme::default())).expect("published ToolRun press");
-    semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut painted.input, &Theme::default())).expect("published ToolRun release");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut painted.input, &Theme::default())).expect("published ToolRun press");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut painted.input, &Theme::default())).expect("published ToolRun release");
 }
 
 fn close_panel(surface: &str, document: &mut UiDocumentLease) {
@@ -145,13 +145,13 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     let mut focused = Vec::new();
     for _ in 0..3 {
         let commands = crate::interpreter::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
-        shell.chrome_build.note_content_focus_commands(&commands);
+        shell.chrome.chrome_build.note_content_focus_commands(&commands);
         focused.extend(commands.iter().filter_map(|command| match command {
             ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
             _ => None,
         }));
     }
-    assert!(shell.chrome_build.content_has_focus(surface), "keyboard focus lands in the ToolRun panel");
+    assert!(shell.chrome.chrome_build.content_has_focus(surface), "keyboard focus lands in the ToolRun panel");
     assert_eq!(focused[..2], ["framework.toolRun.1.toolRunPause".to_string(), "framework.toolRun.1.toolRunAbort".to_string()], "Tab walks the enabled run buttons in order and skips the disabled ones: {focused:?}");
     assert!(!focused.iter().any(|key| key.ends_with("toolRunStep")), "a disabled run button never takes focus: {focused:?}");
     let mut wrapped = None;

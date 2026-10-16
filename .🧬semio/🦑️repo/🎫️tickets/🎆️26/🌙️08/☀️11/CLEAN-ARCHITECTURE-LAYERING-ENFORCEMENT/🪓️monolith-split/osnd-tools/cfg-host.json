@@ -1,0 +1,81 @@
+{
+ "name": "host",
+ "crateName": "semio_framework_os",
+ "real": [
+  "🧰️framework/🛍️products/💻️os/🖥️host",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space"
+ ],
+ "snap": {
+  "🧰️framework/🛍️products/💻️os/🖥️host": "host",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space": "space"
+ },
+ "lib": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🦀️.rs",
+ "children": [
+  {
+   "ident": "semio_framework_os_host_codec_abi",
+   "root": "🧰️framework/🛍️products/💻️os/🖥️host/📡️codec-abi/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🖥️host/📡️codec-abi/📦️packages/🦀️rust",
+   "alias": "codec_abi"
+  },
+  {
+   "ident": "semio_framework_os_host_instance",
+   "root": "🧰️framework/🛍️products/💻️os/🖥️host/🧱️instance/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🖥️host/🧱️instance/📦️packages/🦀️rust",
+   "alias": "instance"
+  },
+  {
+   "ident": "semio_framework_os_host_registry",
+   "root": "🧰️framework/🛍️products/💻️os/🖥️host/🗂️registry/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🖥️host/🗂️registry/📦️packages/🦀️rust",
+   "alias": "registry"
+  },
+  {
+   "ident": "semio_framework_os_host_workflow",
+   "root": "🧰️framework/🛍️products/💻️os/🖥️host/🔀️workflow/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🖥️host/🔀️workflow/📦️packages/🦀️rust",
+   "alias": "workflow"
+  },
+  {
+   "ident": "semio_framework_os_host_media_raster",
+   "root": "🧰️framework/🛍️products/💻️os/🖥️host/🖼️media-export-raster/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🖥️host/🖼️media-export-raster/📦️packages/🦀️rust",
+   "alias": "media_export_raster"
+  },
+  {
+   "ident": "semio_framework_os_host_space",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/📦️packages/🦀️rust",
+   "alias": "space"
+  }
+ ],
+ "cfgs": {
+  "native": [],
+  "test": [
+   "--test"
+  ],
+  "wasm": [
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "wasmtest": [
+   "--test",
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "p2": [
+   "--target",
+   "wasm32-wasip2"
+  ],
+  "p2test": [
+   "--test",
+   "--target",
+   "wasm32-wasip2"
+  ]
+ },
+ "textNormalize": [
+  [
+   "crate::(host|registry)::resolve_kernel_future",
+   "resolve_kernel_future"
+  ]
+ ]
+}

@@ -1,6 +1,12 @@
 //! 🔀️ HubDirectories: the closed enum that dispatches HubDirectory over the sqlite, postgres and neo4j backends.
 
-use super::*;
+use semio_hub_directory_contract::{ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_FETCH_MAX, InviteCapability, InviteRedemptionScopeHintV1, NewDirectoryEvent, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SessionCapability, ShareCapability};
+use semio_hub_directory_contract::model::{AdminDirectoryOverviewCounts, AdminEffectCommitV1, AdminOperationAuditRecord, AdminOperationEffectReceiptV1, AdminSpaceSummaryRecord, AgentDelegationRecord, AgentDelegationRow, AuthAuditRecord, AuthSessionIssue, AuthSessionRecord, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CredentialAuditFactV1, DirectoryCommandClaimV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, InviteRecord, InviteRedemptionCommit, IssuedAgentDelegation, IssuedAuthSession, IssuedInvite, IssuedShareToken, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, RevokedAuthSession, ShareTokenRecord, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceAdministrationInviteRow, SpaceAdministrationMemberRow, SpaceRecord, SpaceRole, SyncSessionRecord, UserRecord};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation};
+use semio_hub_directory::{ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, HubDirectory, ProjectionRebuildControl};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryEvent, DocumentDescriptor, DocumentScope, Hlc, PublishedArtifactCheckpoint};
+use semio_hub_artifact_creation::{ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 
 //#region 🔖️Dispatch
 /// 🗄️ Closed-set dispatch enum over every `HubDirectory` backend this crate can compile in.
@@ -12,25 +18,25 @@ use super::*;
 /// other closed-set family in this program (R11). `bin.rs`'s `connect_directory` builds exactly
 /// one variant at process startup, chosen by `OS_HUB_DIRECTORY_BACKEND`.
 pub enum HubDirectories {
-    Sqlite(sqlite::SqliteDirectory),
-    Postgres(postgres::PostgresDirectory),
-    Neo4j(neo4j::Neo4jDirectory),
+    Sqlite(semio_hub_directory_sqlite::SqliteDirectory),
+    Postgres(semio_hub_directory_postgres::PostgresDirectory),
+    Neo4j(semio_hub_directory_neo4j::Neo4jDirectory),
 }
 
-impl ::core::convert::From<sqlite::SqliteDirectory> for HubDirectories {
-    fn from(value: sqlite::SqliteDirectory) -> Self {
+impl ::core::convert::From<semio_hub_directory_sqlite::SqliteDirectory> for HubDirectories {
+    fn from(value: semio_hub_directory_sqlite::SqliteDirectory) -> Self {
         Self::Sqlite(value)
     }
 }
 
-impl ::core::convert::From<postgres::PostgresDirectory> for HubDirectories {
-    fn from(value: postgres::PostgresDirectory) -> Self {
+impl ::core::convert::From<semio_hub_directory_postgres::PostgresDirectory> for HubDirectories {
+    fn from(value: semio_hub_directory_postgres::PostgresDirectory) -> Self {
         Self::Postgres(value)
     }
 }
 
-impl ::core::convert::From<neo4j::Neo4jDirectory> for HubDirectories {
-    fn from(value: neo4j::Neo4jDirectory) -> Self {
+impl ::core::convert::From<semio_hub_directory_neo4j::Neo4jDirectory> for HubDirectories {
+    fn from(value: semio_hub_directory_neo4j::Neo4jDirectory) -> Self {
         Self::Neo4j(value)
     }
 }

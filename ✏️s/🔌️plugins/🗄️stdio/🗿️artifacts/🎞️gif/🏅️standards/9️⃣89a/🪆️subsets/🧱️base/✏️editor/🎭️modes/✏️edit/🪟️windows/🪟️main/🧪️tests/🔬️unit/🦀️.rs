@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::editor::gif_89a::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

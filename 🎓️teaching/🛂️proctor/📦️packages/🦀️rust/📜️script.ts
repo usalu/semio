@@ -28,6 +28,8 @@ import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃�
 import { runCmd } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 
+import {verifyCapturedCargoArtifactsV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { join } from "node:path";
 import { PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCatalog, proctorDevelopmentEnvironment, proctorSelection, runDevelopmentProctor, runProctor } from "../../🏗️bootstrap/🟦️.ts";
@@ -35,7 +37,7 @@ import { PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCatalo
 /** 🏗️ Builds the crate's cargo artifacts (`--release` for a deployment). */
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
   }
 }
 
@@ -43,7 +45,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([PROCTOR_PACKAGE], join(this.repoRoot, TEACHING_WORKSPACE), this.invocation.control, rest);
+    await runRepositoryCargoTests([PROCTOR_PACKAGE], join(this.repoRoot, TEACHING_WORKSPACE), this.invocation, rest);
   }
 }
 

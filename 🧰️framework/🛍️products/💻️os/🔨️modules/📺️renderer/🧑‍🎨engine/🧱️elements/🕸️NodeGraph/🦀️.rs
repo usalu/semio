@@ -260,12 +260,12 @@ impl Default for GraphHost {
 impl GraphHost {
     pub fn from_host_snapshot(fixture: DagHostSnapshot) -> Self {
         let dag = DagHost::from_host_snapshot_without_layout(fixture);
-        let interaction_projection = dag.bounded_interaction_projection(0).ok();
+        let interaction_projection = dag.graph.bounded_interaction_projection(0).ok();
         Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, viewport_size: (1, 1, 1.0), pending_gather: None, press_positions: Vec::new(), interaction_revision: 0, interaction_projection }
     }
 
     fn refresh_interaction_projection(&mut self) {
-        self.interaction_projection = self.dag.bounded_interaction_projection(self.interaction_revision).ok();
+        self.interaction_projection = self.dag.graph.bounded_interaction_projection(self.interaction_revision).ok();
     }
 
     fn payload_signature(payload: &NodeGraphScenePayload) -> u64 {
@@ -296,48 +296,48 @@ impl GraphHost {
             let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, viewport.as_ref());
             self.dag = DagHost::from_host_snapshot_without_layout(fixture);
             let (width, height, dpr) = self.viewport_size;
-            self.dag.set_viewport(width, height, dpr);
+            self.dag.viewport.set_viewport(width, height, dpr);
             self.last_payload_signature = Some(signature);
         }
         if let Some(preview_off_json) = &payload.preview_off_json {
             if let Ok(ids) = serde_json::from_str::<Vec<String>>(preview_off_json) {
-                self.dag.set_dimmed(&ids);
+                set_dimmed(&mut self.dag.graph, &mut self.dag.paint, &ids);
             }
         }
         if let Some(lod_json) = &payload.lod_json {
             if let Ok(value) = serde_json::from_str::<Value>(lod_json) {
                 if let Some(automatic) = value.get("automatic").and_then(|v| v.as_bool()) {
-                    self.dag.set_automatic_lod(automatic);
+                    self.dag.viewport.set_automatic_lod(automatic);
                 }
                 if let Some(label) = value.get("lod").and_then(|v| v.as_str()) {
-                    self.dag.set_forced_draw_lod_label(label);
+                    self.dag.viewport.set_forced_draw_lod_label(label);
                 }
                 if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
-                    self.dag.set_proximity_distance(distance);
+                    self.dag.graph.set_proximity_distance(distance);
                 }
                 if let Some(visible) = value.get("gridVisible").and_then(|v| v.as_bool()) {
-                    self.dag.set_grid_visible(visible);
+                    self.dag.viewport.set_grid_visible(visible);
                 }
                 if let Some(enabled) = value.get("gridSnapEnabled").and_then(|v| v.as_bool()) {
-                    self.dag.set_grid_snap_enabled(enabled);
+                    self.dag.viewport.set_grid_snap_enabled(enabled);
                 }
                 if let Some(factor) = value.get("gridFactor").and_then(|v| v.as_f64()) {
-                    let _ = self.dag.set_grid_factor(factor);
+                    let _ = self.dag.viewport.set_grid_factor(factor);
                 }
                 if let Some(label) = value.get("forcedLabel").and_then(|v| v.as_str()) {
-                    self.dag.set_forced_draw_lod_label(label);
+                    self.dag.viewport.set_forced_draw_lod_label(label);
                 }
             }
         }
         if let Some(status_json) = &payload.status_json {
             let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
             let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
-            if let Ok(statuses)=semio_framework_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){self.dag.set_node_statuses(&statuses);}
+            if let Ok(statuses)=semio_framework_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){set_node_statuses(&mut self.dag.graph, &mut self.dag.paint, &statuses);}
         } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
                 let stale: Vec<String> = value.get("stale").and_then(|v| v.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();
-                self.dag.set_computing_progress(active.as_deref(), &stale);
+                set_computing_progress(&mut self.dag.graph, &mut self.dag.paint, active.as_deref(), &stale);
             }
         }
         self.controls_json = payload.controls_json.clone().unwrap_or_default();
@@ -372,25 +372,25 @@ impl GraphHost {
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport_size = (width, height, dpr);
-        self.dag.set_viewport(width, height, dpr);
+        self.dag.viewport.set_viewport(width, height, dpr);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
     }
 
     pub fn viewport(&self) -> Viewport2d {
-        let camera = &self.dag.host_snapshot.camera;
+        let camera = &self.dag.graph.host_snapshot.camera;
         Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom }
     }
 
     /// 🎯️ Projects selected semantic node identities.
-    pub fn selected_node_ids(&self)->Vec<String>{self.dag.selected_node_ids()}
+    pub fn selected_node_ids(&self)->Vec<String>{self.dag.graph.selected_node_ids()}
 
     pub fn hovered_node_id(&self) -> Option<String> {
-        self.dag.hovered_node_id()
+        hovered_node_id(&self.dag.viewport, &self.dag.graph)
     }
 
     /// 🖱️ Projects channel hover and live wire refusal facts.
-    pub fn hover_facts(&self)->semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.hover_facts()}
+    pub fn hover_facts(&self)->semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.graph.hover_facts()}
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, NodeGraphError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
@@ -405,13 +405,13 @@ impl GraphHost {
     /// BOTH axes — a trackpad's horizontal scroll and a two-finger pinch's sideways drift arrive as
     /// `delta_x` and move the camera exactly like `delta_y` moves it vertically.
     pub fn plan_wheel(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) -> GraphWheelPlan {
-        let cam = &self.dag.host_snapshot.camera;
+        let cam = &self.dag.graph.host_snapshot.camera;
         let expected = [cam.x, cam.y, cam.zoom];
         let next = if !zoom_gesture {
             let zoom = cam.zoom.max(1e-9);
             [cam.x - delta_x / zoom, cam.y - delta_y / zoom, zoom]
         } else {
-            let (wx, wy) = dag_screen_to_world(&self.dag, sx, sy);
+            let (wx, wy) = dag_screen_to_world(&self.dag.viewport, &self.dag.graph, sx, sy);
             let new_zoom = (cam.zoom * if delta_y < 0.0 { 1.1 } else { 0.9 }).clamp(0.05, 32.0);
             [wx - (wx - cam.x) * (new_zoom / cam.zoom), wy - (wy - cam.y) * (new_zoom / cam.zoom), new_zoom]
         };
@@ -419,11 +419,11 @@ impl GraphHost {
     }
 
     pub fn commit_wheel(&mut self, plan: GraphWheelPlan) -> bool {
-        let cam = &self.dag.host_snapshot.camera;
+        let cam = &self.dag.graph.host_snapshot.camera;
         if self.interaction_revision != plan.revision || [cam.x.to_bits(), cam.y.to_bits(), cam.zoom.to_bits()] != [plan.expected[0].to_bits(), plan.expected[1].to_bits(), plan.expected[2].to_bits()] {
             return false;
         }
-        self.dag.set_camera(plan.next[0], plan.next[1], plan.next[2]);
+        self.dag.graph.set_camera(plan.next[0], plan.next[1], plan.next[2]);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
         true
@@ -449,7 +449,7 @@ impl GraphHost {
         if projection.revision() != self.interaction_revision {
             return Err(dag::DagInteractionPlanFault::Unsupported);
         }
-        self.dag.derive_pointer_plan(projection, intent)
+        derive_pointer_plan(&self.dag.viewport, &self.dag.graph, &self.dag.minimap, projection, intent)
     }
 
     pub fn commit_pointer(&mut self, plan: dag::DagPointerPlan) -> bool {
@@ -457,7 +457,7 @@ impl GraphHost {
             return false;
         }
         self.press_positions.clear();
-        self.dag.apply_pointer_plan(&plan);
+        self.dag.graph.apply_pointer_plan(&plan);
         self.interaction_projection = Some(*plan.projection());
         self.interaction_revision = plan.projection().revision();
         true
@@ -466,19 +466,19 @@ impl GraphHost {
     pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<dag::DagPointerSnapshot, dag::DagInteractionPlanFault> {
         let projection = plan.projection();
         let mut bytes = 0usize;
-        for id in self.dag.projection_selected_id_refs(projection).chain(self.dag.projection_hovered_id_ref(projection)) {
+        for id in self.dag.graph.projection_selected_id_refs(projection).chain(self.dag.graph.projection_hovered_id_ref(projection)) {
             bytes = bytes.checked_add(id.len()).ok_or(dag::DagInteractionPlanFault::StringCredits)?;
             if bytes > 16 * 1024 {
                 return Err(dag::DagInteractionPlanFault::StringCredits);
             }
         }
-        Ok(dag::DagPointerSnapshot { node_ids: self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), hovered_id: self.dag.projection_hovered_id_ref(projection).map(str::to_owned), camera: projection.camera() })
+        Ok(dag::DagPointerSnapshot { node_ids: self.dag.graph.projection_selected_id_refs(projection).map(str::to_owned).collect(), hovered_id: self.dag.graph.projection_hovered_id_ref(projection).map(str::to_owned), camera: projection.camera() })
     }
 
     pub fn pointer_down_screen(&mut self, position: [f64; 2], button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         let [sx, sy] = position;
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
-        self.press_positions = if pan { Vec::new() } else { self.dag.node_positions() };
+        self.press_positions = if pan { Vec::new() } else { self.dag.graph.node_positions() };
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
@@ -496,22 +496,22 @@ impl GraphHost {
     /// flows back down through [`GraphHost::sync_interaction`] to become what actually paints.
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
-        let was_marquee = !self.dag.preselect_widget_ids().is_empty();
-        let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
+        let was_marquee = !self.dag.graph.preselect_widget_ids().is_empty();
+        let method = if was_marquee { selection_method_from_dag_label(self.dag.graph.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         let baseline = std::mem::take(&mut self.press_positions);
-        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
-            self.dag.restore_node_positions(&baseline);
+        if self.dag.graph.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+            self.dag.graph.restore_node_positions(&baseline);
         }
-        let target_ids = self.dag.selected_node_ids();
+        let target_ids = self.dag.graph.selected_node_ids();
         self.pending_gather = if target_ids.is_empty() { None } else { Some(SelectionGather { target_ids, method }) };
     }
 
     /// 🔗️ Drains what the last gesture did to the graph as the `nodeGraphEdit` arguments the renderer dispatches
     /// (`dag::dag_graph_edit_rows_json`, design §13.3) — never the whole fixture.
     pub fn take_graph_edits_json(&mut self) -> String {
-        let edits = self.dag.take_graph_edits();
-        let refusal = self.dag.take_journal_refusal();
+        let edits = self.dag.graph.take_graph_edits();
+        let refusal = self.dag.graph.take_journal_refusal();
         dag::dag_graph_edit_rows_json(&edits, refusal)
     }
 
@@ -535,21 +535,21 @@ impl GraphHost {
     /// at render time, independent of geometry sync (interaction state changes far more often).
     pub fn sync_interaction(&mut self, selection: Option<&DomainSelection>, hover: Option<&DomainHover>) {
         let ids: Vec<String> = selection.map(|selection| selection.ids.clone()).unwrap_or_default();
-        self.dag.set_selection(&ids);
+        self.dag.graph.set_selection(&ids);
         let hover_id = hover.and_then(|hover| hover.ids.first()).map(String::as_str);
-        self.dag.set_hover(hover_id);
+        self.dag.graph.set_hover(hover_id);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
     }
 
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
-        self.dag.pick_targets_at_screen_json(sx, sy)
+        dag_pick_targets_at_screen_json(&self.dag.viewport, &self.dag.graph, sx, sy)
     }
 
     /// 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
-        self.dag.entity_screen_json(domain, id)
+        entity_screen_json(&self.dag.viewport, &self.dag.graph, domain, id)
     }
 
     /// 📐️ Aligns or distributes the selection and journals what it moved as node-graph gesture records (design §13.3),
@@ -557,20 +557,20 @@ impl GraphHost {
     /// node stays where it was.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), NodeGraphError> {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
-        let baseline = self.dag.node_positions();
-        self.dag.align_selection(mode)?;
-        if self.dag.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
-            self.dag.restore_node_positions(&baseline);
+        let baseline = self.dag.graph.node_positions();
+        self.dag.graph.align_selection(mode)?;
+        if self.dag.graph.journal_moves_since(&dag::dag_drag_gesture_id(self.interaction_revision), &baseline).is_err() {
+            self.dag.graph.restore_node_positions(&baseline);
         }
         Ok(())
     }
 
     pub fn host_snapshot_json(&self) -> Result<String, NodeGraphError> {
-        Ok(self.dag.host_snapshot_json()?)
+        Ok(self.dag.graph.host_snapshot_json()?)
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {
-        self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
+        self.dag.viewport.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 }
 
@@ -742,7 +742,7 @@ mod wasm_session {
             let mut accepted = |_| true;
             let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
             if let Ok(overlay) = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control) {
-                self.state.borrow_mut().host.dag.set_canvas_palette(&overlay);
+                match &mut self.state.borrow_mut().host.dag { __host => dag_set_canvas_palette(&mut __host.viewport, &mut __host.paint, &overlay) };
             }
         }
 
@@ -750,7 +750,7 @@ mod wasm_session {
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             let mut scene = canvas::Scene::new();
-            let clear = inner.host.dag.canvas_theme.raster_clear;
+            let clear = inner.host.dag.viewport.canvas_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
             let scene = canvas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
@@ -790,27 +790,27 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = sliderOverlayStateJson)]
         pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.dag.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
+            match &self.state.borrow().host.dag { __host => slider_overlay_state_json(&__host.viewport, &__host.graph) }.map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
         pub fn selection_union_bounds_screen_json(&self) -> String {
-            self.state.borrow().host.dag.selection_union_bounds_screen_json()
+            match &self.state.borrow().host.dag { __host => selection_union_bounds_screen_json(&__host.viewport, &__host.graph) }
         }
 
         #[wasm_bindgen(js_name = selectionPreviewPointsJson)]
         pub fn selection_preview_points_json(&self) -> String {
-            self.state.borrow().host.dag.selection_preview_points_json()
+            self.state.borrow().host.dag.graph.selection_preview_points_json()
         }
 
         #[wasm_bindgen(js_name = selectionPreviewCrossing)]
         pub fn selection_preview_crossing(&self) -> bool {
-            self.state.borrow().host.dag.selection_preview_crossing()
+            self.state.borrow().host.dag.graph.selection_preview_crossing()
         }
 
         #[wasm_bindgen(js_name = selectionPreviewMethod)]
         pub fn selection_preview_method(&self) -> String {
-            self.state.borrow().host.dag.selection_preview_method().to_string()
+            self.state.borrow().host.dag.graph.selection_preview_method().to_string()
         }
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
@@ -849,43 +849,43 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = drawLodLabel)]
         pub fn draw_lod_label(&self) -> String {
-            self.state.borrow().host.dag.draw_lod_label().to_string()
+            match &self.state.borrow().host.dag { __host => dag_draw_lod_label(&__host.viewport, &__host.graph) }.to_string()
         }
 
         #[wasm_bindgen(js_name = setAutomaticLod)]
         pub fn set_automatic_lod(&self, enabled: bool) {
-            self.state.borrow_mut().host.dag.set_automatic_lod(enabled);
+            self.state.borrow_mut().host.dag.viewport.set_automatic_lod(enabled);
         }
 
         #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
         pub fn set_forced_draw_lod_label(&self, label: &str) {
-            self.state.borrow_mut().host.dag.set_forced_draw_lod_label(label);
+            self.state.borrow_mut().host.dag.viewport.set_forced_draw_lod_label(label);
         }
 
         #[wasm_bindgen(js_name = setGhostNodeJson)]
         pub fn set_ghost_node_json(&self, json: &str) {
             if json.trim().is_empty() {
-                self.state.borrow_mut().host.dag.set_ghost_node(None);
+                self.state.borrow_mut().host.dag.pointer.set_ghost_node(None);
                 return;
             }
             if let Ok(node) = semio_framework_pack_json::from_json_str::<DagNodeSpec>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-                self.state.borrow_mut().host.dag.set_ghost_node(Some(node));
+                self.state.borrow_mut().host.dag.pointer.set_ghost_node(Some(node));
             }
         }
 
         #[wasm_bindgen(js_name = clearGhostNode)]
         pub fn clear_ghost_node(&self) {
-            self.state.borrow_mut().host.dag.set_ghost_node(None);
+            self.state.borrow_mut().host.dag.pointer.set_ghost_node(None);
         }
 
         #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
         pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
-            self.state.borrow().host.dag.pick_targets_at_screen_json(sx, sy)
+            match &self.state.borrow().host.dag { __host => dag_pick_targets_at_screen_json(&__host.viewport, &__host.graph, sx, sy) }
         }
 
         #[wasm_bindgen(js_name = entityScreenJson)]
         pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
-            self.state.borrow().host.dag.entity_screen_json(domain, id)
+            match &self.state.borrow().host.dag { __host => entity_screen_json(&__host.viewport, &__host.graph, domain, id) }
         }
 
         /// 🕹️ Replaces the deleted `setHover`/`setHoverChannel` push-setters — `selectedIdsJson`/
@@ -926,12 +926,12 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = takePendingOpenInstanceId)]
         pub fn take_pending_open_instance_id(&self) -> Option<String> {
-            dag_take_pending_open_instance_id(&mut self.state.borrow_mut().host.dag)
+            dag_take_pending_open_instance_id(&mut self.state.borrow_mut().host.dag.pointer)
         }
 
         #[wasm_bindgen(js_name = screenToWorld)]
         pub fn screen_to_world(&self, x: f64, y: f64) -> js_sys::Array {
-            let (wx, wy) = dag_screen_to_world(&self.state.borrow().host.dag, x, y);
+            let (wx, wy) = dag_screen_to_world(&self.state.borrow().host.dag.viewport, &self.state.borrow().host.dag.graph, x, y);
             let out = js_sys::Array::new();
             out.push(&JsValue::from_f64(wx));
             out.push(&JsValue::from_f64(wy));
@@ -945,17 +945,17 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = selectAll)]
         pub fn select_all(&self) {
-            self.state.borrow_mut().host.dag.select_all();
+            self.state.borrow_mut().host.dag.graph.select_all();
         }
 
         #[wasm_bindgen(js_name = deleteSelection)]
         pub fn delete_selection(&self) {
-            self.state.borrow_mut().host.dag.delete_selected();
+            self.state.borrow_mut().host.dag.graph.delete_selected();
         }
 
         #[wasm_bindgen(js_name = cancelAreaSelect)]
         pub fn cancel_area_select(&self) {
-            self.state.borrow_mut().host.dag.cancel_area_select();
+            self.state.borrow_mut().host.dag.graph.cancel_area_select();
         }
 
         #[wasm_bindgen(js_name = reorganize)]
@@ -964,7 +964,7 @@ mod wasm_session {
             let mut decoding=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
             let opts=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
             let mut working=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut working);
-            self.state.borrow_mut().host.dag.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
+            self.state.borrow_mut().host.dag.graph.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -981,3 +981,4 @@ mod tests;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use dag::{dag_take_pending_open_instance_id};
+use dag::{dag_draw_lod_label, dag_pick_targets_at_screen_json, dag_set_canvas_palette};

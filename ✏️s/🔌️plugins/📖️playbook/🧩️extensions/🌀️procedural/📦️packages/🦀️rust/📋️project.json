@@ -27,13 +27,15 @@
       },
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧩️component/📦️packages/🦀️rust/dist/playbook-module-procedural.sxt"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/packages/e1c94e5866c18c2add46f9bc"
       ],
       "inputs": [
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/**/*"
       ]
     },
     "geometry-contract": {

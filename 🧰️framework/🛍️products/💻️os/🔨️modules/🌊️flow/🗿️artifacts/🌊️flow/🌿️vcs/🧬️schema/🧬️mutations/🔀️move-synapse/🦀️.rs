@@ -32,9 +32,3 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveSynapse {
 }
 
 //#endregion 🎮️Behavior
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

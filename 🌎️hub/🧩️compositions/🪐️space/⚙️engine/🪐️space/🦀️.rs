@@ -14,22 +14,29 @@
 //! WIRING + DISPATCH ONLY beyond that: every command's real body lives in its own
 //! `🎮️commands/<group>/🦀️.rs` payload module (see `app_commands!` below).
 
-use crate::engine::space::commands::node_graph_edit;
-use crate::engine::space::commands::node_graph_viewport;
-use crate::engine::space::commands::presence_heartbeat;
-use crate::engine::space::commands::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
-use crate::engine::space::commands::{close_focused_instance, open_instance};
-use crate::engine::space::commands::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
-use crate::engine::space::commands::{connect_media_ports, disconnect_media_edge};
-use crate::engine::space::commands::{
-    copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, paste_app_instance, patch_app_instances, patch_media_nodes, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app,
-};
-use crate::engine::space::commands::{export_media, import_media, import_media_payload};
-use crate::engine::space::commands::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
-use crate::engine::space::commands::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ClipboardSetting};
-use crate::engine::space::presence::{SpacePresence, SpacePresenceMutation};
-use crate::engine::space::terminology::SStudioLabels;
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+use semio_s_space_core::*;
+
+use semio_hub_space_commands_authoring::node_graph_edit;
+use semio_hub_space_commands_authoring::node_graph_viewport;
+use semio_hub_space_commands_media::presence_heartbeat;
+use semio_hub_space_commands_authoring::{add_parameter, bind_parameter_field, patch_parameter, remove_parameter, unbind_parameter_field};
+use semio_hub_space_commands_authoring::{close_focused_instance, open_instance};
+use semio_hub_space_commands_media::{compiled_dag_engagement_input, compiled_dag_engagement_submit, workflow_engagement_input, workflow_engagement_submit};
+use semio_hub_space_commands_media::{connect_media_ports, disconnect_media_edge};
+use semio_hub_space_commands_authoring::{copy_app_instance, delete_selection, duplicate_app_instance, move_media_node, paste_app_instance, patch_app_instances, remove_app_instance, rename_app_instance, reorganize_workflow, spawn_app};
+use semio_hub_space_commands_media::patch_media_nodes;
+use semio_hub_space_commands_media::{export_media, import_media, import_media_payload};
+use semio_hub_space_commands_media::{export_studio_dsl, export_studio_pack, import_space_pack, import_space_pack_payload, open_space, set_active_example};
+use semio_hub_space_commands_media::{go_home, navigate_virtual_file_system_node, set_active_panel_tab, set_app_registrations};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ClipboardSetting};
+use semio_hub_space_foundation::presence::{SpacePresence, SpacePresenceMutation};
+use semio_hub_space_foundation::terminology::SStudioLabels;
 use crate::parse_demo_space_document;
 use semio_framework::{DslValue, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_os::workflow::ConnectPorts;
@@ -44,26 +51,7 @@ use semio_framework_plugin::{
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
-
-//#region 🔖️Constants
-/// 🪪️ Canonical surface id (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET §1: every
-/// `App::builder(...)` id must parse via `semio_framework::parse_surface_app_id` as
-/// `<artifact_kind>@<standard>/<subset>#<role>`) — was the bare `"studio"`, which stopped parsing the
-/// moment that migration's validation landed in `PluginBuilder::document_app`'s `build_definition`.
-pub const S_PLAY_APP_ID: &str = "s.space.studio@1/*#editor";
-pub const S_PLAY_CONTROLLER_ID: &str = "s.space.studio@1/*#editor";
-pub const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
-pub const S_PLAY_PARAMETERS_TAB_ID: &str = "s-play-parameters";
-pub const S_PLAY_INSPECTOR_TAB_ID: &str = "s-play-inspector";
-pub const S_PLAY_CATALOGUE_BODY_KEY: &str = "s.play.catalogue";
-pub const S_PLAY_PARAMETERS_BODY_KEY: &str = "s.play.parameters";
-pub const S_PLAY_INSPECTOR_BODY_KEY: &str = "s.play.inspector";
-pub const S_PLAY_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
-pub const S_STUDIO_EXAMPLES: &[(&str, &str)] = &[("demo", "Demo Studio")];
-/// 🕹️ The `graph` interaction domain id (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
-/// one domain over the workflow node graph, shared by both the "instance" and "media-node" granularities.
-pub const S_PLAY_INTERACTION_DOMAIN: &str = "graph";
-//#endregion 🔖️Constants
+use semio_hub_space_foundation::{S_PLAY_APP_ID, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INTERACTION_DOMAIN, S_PLAY_PARAMETERS_BODY_KEY, S_STUDIO_EXAMPLES};
 
 //#region 🔖️DocumentHelpers
 pub(crate) fn s_play_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
@@ -121,39 +109,14 @@ pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> Act
     }
 }
 
-/// 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
-/// via `engine::negotiate_media_connect`, converting a rejection into a `Notify` effect — shared by
-/// `connections::connect_media_ports` and the `graph_edit::node_graph_edit`/`"connect"` fixture edit.
-pub(crate) async fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, Effect> {
-    crate::engine::space::engine::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).await.map_err(|reason| Effect::Notify { message: reason })
-}
-
-pub(crate) async fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowMutation {
-    WorkflowMutation::ConnectPorts(ConnectPorts {
-        edge: WorkflowEdge { id: create_os_id("edge"), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract },
-    })
-}
-
-/// 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
-/// current selection (rename/remove/open) when no explicit node id is supplied. `selected` is the
-/// `graph` domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no
-/// longer a deleted `SpaceConfig` field.
-pub(crate) async fn primary_selected_node_id(selected: &[String], config: &SpaceConfig) -> Option<String> {
-    selected.first().cloned().or_else(|| config.active_node_id.clone())
-}
-
 /// 🔧️ Small pure fold applying a batch of `SpaceConfigMutation`s onto a snapshot — used where a
 /// command handler needs the POST-command config (not the pre-command `cfg.snapshot`) to build a
 /// derived side value (the presence broadcast) in the very same call, without reaching back into a
 /// store this pure function doesn't own.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub(crate) async fn apply_config_mutations(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
     use protocol::Mutation;
     operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc).diff().clone())
-}
-
-pub(crate) async fn config_space_id(config: &SpaceConfig) -> String {
-    config.space_id.clone().unwrap_or_else(|| "default".into())
 }
 
 /// 🫀️ Remote presence is host-owned. Until `ArtifactHost` threads the typed `PresenceView` into render,
@@ -225,50 +188,50 @@ app_commands! {
     /// variant per action declared in `create_space_app`'s manifest.
     pub enum SpaceCommand for WorkflowSnapshot, WorkflowMutation, SpaceConfig, SpaceConfigMutation {
         // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
-        "patchParameter" as "patch-parameter" => patch_parameter::PatchParameter,
-        "addParameter" as "add-parameter" => add_parameter::AddParameter,
-        "removeParameter" as "remove-parameter" => remove_parameter::RemoveParameter,
-        "spawnApp" as "spawn-app" => spawn_app::SpawnApp,
-        "moveMediaNode" as "move-media-node" => move_media_node::MoveMediaNode,
-        "connectMediaPorts" as "connect-media-ports" => connect_media_ports::ConnectMediaPorts,
-        "disconnectMediaEdge" as "disconnect-media-edge" => disconnect_media_edge::DisconnectMediaEdge,
-        "removeAppInstance" as "remove-app-instance" => remove_app_instance::RemoveAppInstance,
-        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
-        "copyAppInstance" as "copy-app-instance" => copy_app_instance::CopyAppInstance,
-        "duplicateAppInstance" as "duplicate-app-instance" => duplicate_app_instance::DuplicateAppInstance,
-        "pasteAppInstance" as "paste-app-instance" => paste_app_instance::PasteAppInstance,
-        "renameAppInstance" as "rename-app-instance" => rename_app_instance::RenameAppInstance,
-        "patchMediaNodes" as "patch-media-nodes" => patch_media_nodes::PatchMediaNodes,
-        "patchAppInstances" as "patch-app-instances" => patch_app_instances::PatchAppInstances,
-        "bindParameterField" as "bind-parameter-field" => bind_parameter_field::BindParameterField,
-        "unbindParameterField" as "unbind-parameter-field" => unbind_parameter_field::UnbindParameterField,
-        "reorganizeWorkflow" as "reorganize-workflow" => reorganize_workflow::ReorganizeWorkflow,
-        "workflowEngagementSubmit" as "workflow-engagement-submit" => workflow_engagement_submit::WorkflowEngagementSubmit,
-        "compiledDagEngagementSubmit" as "compiled-dag-engagement-submit" => compiled_dag_engagement_submit::CompiledDagEngagementSubmit,
-        "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
+        "patchParameter" as "patch-parameter" => semio_hub_space_commands_authoring::patch_parameter::PatchParameter,
+        "addParameter" as "add-parameter" => semio_hub_space_commands_authoring::add_parameter::AddParameter,
+        "removeParameter" as "remove-parameter" => semio_hub_space_commands_authoring::remove_parameter::RemoveParameter,
+        "spawnApp" as "spawn-app" => semio_hub_space_commands_authoring::spawn_app::SpawnApp,
+        "moveMediaNode" as "move-media-node" => semio_hub_space_commands_authoring::move_media_node::MoveMediaNode,
+        "connectMediaPorts" as "connect-media-ports" => semio_hub_space_commands_media::connect_media_ports::ConnectMediaPorts,
+        "disconnectMediaEdge" as "disconnect-media-edge" => semio_hub_space_commands_media::disconnect_media_edge::DisconnectMediaEdge,
+        "removeAppInstance" as "remove-app-instance" => semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance,
+        "deleteSelection" as "delete-selection" => semio_hub_space_commands_authoring::delete_selection::DeleteSelection,
+        "copyAppInstance" as "copy-app-instance" => semio_hub_space_commands_authoring::copy_app_instance::CopyAppInstance,
+        "duplicateAppInstance" as "duplicate-app-instance" => semio_hub_space_commands_authoring::duplicate_app_instance::DuplicateAppInstance,
+        "pasteAppInstance" as "paste-app-instance" => semio_hub_space_commands_authoring::paste_app_instance::PasteAppInstance,
+        "renameAppInstance" as "rename-app-instance" => semio_hub_space_commands_authoring::rename_app_instance::RenameAppInstance,
+        "patchMediaNodes" as "patch-media-nodes" => semio_hub_space_commands_media::patch_media_nodes::PatchMediaNodes,
+        "patchAppInstances" as "patch-app-instances" => semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances,
+        "bindParameterField" as "bind-parameter-field" => semio_hub_space_commands_authoring::bind_parameter_field::BindParameterField,
+        "unbindParameterField" as "unbind-parameter-field" => semio_hub_space_commands_authoring::unbind_parameter_field::UnbindParameterField,
+        "reorganizeWorkflow" as "reorganize-workflow" => semio_hub_space_commands_authoring::reorganize_workflow::ReorganizeWorkflow,
+        "workflowEngagementSubmit" as "workflow-engagement-submit" => semio_hub_space_commands_media::workflow_engagement_submit::WorkflowEngagementSubmit,
+        "compiledDagEngagementSubmit" as "compiled-dag-engagement-submit" => semio_hub_space_commands_media::compiled_dag_engagement_submit::CompiledDagEngagementSubmit,
+        "nodeGraphEdit" as "node-graph-edit" => semio_hub_space_commands_authoring::node_graph_edit::NodeGraphEdit,
 
         // 👁️ Config-only — emit `config_mutations`, never document operations.
-        "setActivePanelTab" as "active-panel-tab" => set_active_panel_tab::SetActivePanelTab,
-        "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
-        "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
-        "workflowEngagementInput" as "workflow-engagement-input" => workflow_engagement_input::WorkflowEngagementInput,
-        "compiledDagEngagementInput" as "compiled-dag-engagement-input" => compiled_dag_engagement_input::CompiledDagEngagementInput,
+        "setActivePanelTab" as "active-panel-tab" => semio_hub_space_commands_media::set_active_panel_tab::SetActivePanelTab,
+        "nodeGraphViewport" as "node-graph-viewport" => semio_hub_space_commands_authoring::node_graph_viewport::NodeGraphViewport,
+        "presenceHeartbeat" as "presence-heartbeat" => semio_hub_space_commands_media::presence_heartbeat::PresenceHeartbeat,
+        "workflowEngagementInput" as "workflow-engagement-input" => semio_hub_space_commands_media::workflow_engagement_input::WorkflowEngagementInput,
+        "compiledDagEngagementInput" as "compiled-dag-engagement-input" => semio_hub_space_commands_media::compiled_dag_engagement_input::CompiledDagEngagementInput,
 
         // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
-        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
-        "exportMedia" as "export-media" => export_media::ExportMedia,
-        "importMedia" as "import-media" => import_media::ImportMedia,
-        "importMediaPayload" as "import-media-payload" => import_media_payload::ImportMediaPayload,
-        "exportStudioPack" as "export-studio-pack" => export_studio_pack::ExportStudioPack,
-        "exportStudioDsl" as "export-studio-dsl" => export_studio_dsl::ExportStudioDsl,
-        "importSpacePack" as "import-space-pack" => import_space_pack::ImportSpacePack,
-        "importSpacePackPayload" as "import-space-pack-payload" => import_space_pack_payload::ImportSpacePackPayload,
-        "openSpace" as "open-space" => open_space::OpenSpace,
-        "openInstance" as "open-instance" => open_instance::OpenInstance,
-        "closeFocusedInstance" as "close-focused-instance" => close_focused_instance::CloseFocusedInstance,
-        "goHome" as "go-home" => go_home::GoHome,
-        "navigateVirtualFileSystemNode" as "navigate-vfs-node" => navigate_virtual_file_system_node::NavigateVirtualFileSystemNode,
-        "setAppRegistrations" as "set-app-registrations" => set_app_registrations::SetAppRegistrations,
+        "setActiveExample" as "set-active-example" => semio_hub_space_commands_media::set_active_example::SetActiveExample,
+        "exportMedia" as "export-media" => semio_hub_space_commands_media::export_media::ExportMedia,
+        "importMedia" as "import-media" => semio_hub_space_commands_media::import_media::ImportMedia,
+        "importMediaPayload" as "import-media-payload" => semio_hub_space_commands_media::import_media_payload::ImportMediaPayload,
+        "exportStudioPack" as "export-studio-pack" => semio_hub_space_commands_media::export_studio_pack::ExportStudioPack,
+        "exportStudioDsl" as "export-studio-dsl" => semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl,
+        "importSpacePack" as "import-space-pack" => semio_hub_space_commands_media::import_space_pack::ImportSpacePack,
+        "importSpacePackPayload" as "import-space-pack-payload" => semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload,
+        "openSpace" as "open-space" => semio_hub_space_commands_media::open_space::OpenSpace,
+        "openInstance" as "open-instance" => semio_hub_space_commands_authoring::open_instance::OpenInstance,
+        "closeFocusedInstance" as "close-focused-instance" => semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance,
+        "goHome" as "go-home" => semio_hub_space_commands_media::go_home::GoHome,
+        "navigateVirtualFileSystemNode" as "navigate-vfs-node" => semio_hub_space_commands_media::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode,
+        "setAppRegistrations" as "set-app-registrations" => semio_hub_space_commands_media::set_app_registrations::SetAppRegistrations,
     }
 }
 //#endregion 🔖️SpaceCommand
@@ -361,18 +324,18 @@ fn space_bounded_reduce(
     // `InteractionState` `SpaceApp::handle` passes to their `apply`.
     let selected = || interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
     if let SpaceCommand::OpenInstance(payload) = command {
-        return Ok(crate::engine::space::engine::resolve_future(open_instance::open_with_selection(payload, &doc, config, &selected())));
+        return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::open_instance::open_with_selection(payload, &doc, config, &selected())));
     }
     if let SpaceCommand::DeleteSelection(_) = command {
-        return Ok(crate::engine::space::engine::resolve_future(delete_selection::delete_selected(config, &selected())));
+        return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::delete_selection::delete_selected(config, &selected())));
     }
     match command {
-        SpaceCommand::NodeGraphEdit(payload) => return crate::engine::space::engine::resolve_future(node_graph_edit::edit(payload, &doc)),
-        SpaceCommand::ReorganizeWorkflow(_) => return Ok(crate::engine::space::engine::resolve_future(reorganize_workflow::reorganize_selected(&doc, &selected()))),
+        SpaceCommand::NodeGraphEdit(payload) => return semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::node_graph_edit::edit(payload, &doc)),
+        SpaceCommand::ReorganizeWorkflow(_) => return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::reorganize_workflow::reorganize_selected(&doc, &selected()))),
         SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard(ClipboardSetting { node_ids: selected() })])),
-        SpaceCommand::DuplicateAppInstance(_) => return Ok(crate::engine::space::engine::resolve_future(duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
-        SpaceCommand::RemoveAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(remove_app_instance::remove_with_selection(payload, config, &selected()))),
-        SpaceCommand::RenameAppInstance(payload) => return Ok(crate::engine::space::engine::resolve_future(rename_app_instance::rename_with_selection(payload, &doc, config, &selected()))),
+        SpaceCommand::DuplicateAppInstance(_) => return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
+        SpaceCommand::RemoveAppInstance(payload) => return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::remove_app_instance::remove_with_selection(payload, config, &selected()))),
+        SpaceCommand::RenameAppInstance(payload) => return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::rename_app_instance::rename_with_selection(payload, &doc, config, &selected()))),
         _ => {}
     }
     if let SpaceCommand::PresenceHeartbeat(payload) = command {
@@ -380,7 +343,7 @@ fn space_bounded_reduce(
             .and_then(|context| context.view_state.as_ref())
             .and_then(crate::home_session_identity)
             .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
-        return presence_heartbeat::handle_with_identity(payload, identity, &doc, &ConfigView { snapshot: config, window: None });
+        return semio_hub_space_commands_media::presence_heartbeat::handle_with_identity(payload, identity, &doc, &ConfigView { snapshot: config, window: None });
     }
     command.dispatch(&doc, &ConfigView { snapshot: config, window: None })
 }
@@ -390,7 +353,7 @@ pub struct SpaceCommandJobFactory {
 }
 
 impl SpaceCommandJobFactory {
-    fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: SPACE_BOUNDED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
@@ -618,7 +581,7 @@ impl ArtifactApp for SpaceApp {
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c) — `register_document_app` registers it the
     /// moment this type is bound to the plugin, completing the app-schema declaration for `🪐️space`.
     async fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::engine::space::config::schema::app_schema_descriptor().await)
+        Some(semio_hub_space_foundation::config::schema::app_schema_descriptor().await)
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `SpaceCommand` until every call site speaks OpBinary.
@@ -631,36 +594,36 @@ impl ArtifactApp for SpaceApp {
         let json_field = |key: &str| args.and_then(|value| value.get(key)).map(|raw| raw.as_str().map_or_else(|| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(raw)), str::to_string));
         let node_id = || str_field("nodeId").or_else(|| str_field("node_id")).or_else(|| str_field("instanceId")).or_else(|| str_field("instance_id"));
         match action {
-            "patchParameter" => Ok(SpaceCommand::PatchParameter(patch_parameter::PatchParameter {
+            "patchParameter" => Ok(SpaceCommand::PatchParameter(semio_hub_space_commands_authoring::patch_parameter::PatchParameter {
                 parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
                 field: str_field("field").unwrap_or_default(),
                 value: json_field("value").unwrap_or_else(|| "null".into()),
             })),
-            "addParameter" => Ok(SpaceCommand::AddParameter(add_parameter::AddParameter { name: str_field("name").unwrap_or_else(|| "Parameter".into()), kind: str_field("kind").or_else(|| str_field("type")).unwrap_or_else(|| "numeric".into()) })),
-            "removeParameter" => Ok(SpaceCommand::RemoveParameter(remove_parameter::RemoveParameter { parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default() })),
-            "spawnApp" => Ok(SpaceCommand::SpawnApp(spawn_app::SpawnApp {
+            "addParameter" => Ok(SpaceCommand::AddParameter(semio_hub_space_commands_authoring::add_parameter::AddParameter { name: str_field("name").unwrap_or_else(|| "Parameter".into()), kind: str_field("kind").or_else(|| str_field("type")).unwrap_or_else(|| "numeric".into()) })),
+            "removeParameter" => Ok(SpaceCommand::RemoveParameter(semio_hub_space_commands_authoring::remove_parameter::RemoveParameter { parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default() })),
+            "spawnApp" => Ok(SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp {
                 plugin_id: str_field("pluginId").or_else(|| str_field("plugin_id")).unwrap_or_default(),
                 app_id: str_field("appId").or_else(|| str_field("app_id")).unwrap_or_default(),
                 x: f64_field("x").unwrap_or(0.0),
                 y: f64_field("y").unwrap_or(0.0),
             })),
-            "moveMediaNode" => Ok(SpaceCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node_id().unwrap_or_default(), x: f64_field("x").unwrap_or(0.0), y: f64_field("y").unwrap_or(0.0) })),
-            "connectMediaPorts" => Ok(SpaceCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
+            "moveMediaNode" => Ok(SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: node_id().unwrap_or_default(), x: f64_field("x").unwrap_or(0.0), y: f64_field("y").unwrap_or(0.0) })),
+            "connectMediaPorts" => Ok(SpaceCommand::ConnectMediaPorts(semio_hub_space_commands_media::connect_media_ports::ConnectMediaPorts {
                 source_node_id: str_field("sourceNodeId").or_else(|| str_field("source_node_id")).unwrap_or_default(),
                 source_port_id: str_field("sourcePortId").or_else(|| str_field("source_port_id")).unwrap_or_default(),
                 target_node_id: str_field("targetNodeId").or_else(|| str_field("target_node_id")).unwrap_or_default(),
                 target_port_id: str_field("targetPortId").or_else(|| str_field("target_port_id")).unwrap_or_default(),
             })),
-            "disconnectMediaEdge" => Ok(SpaceCommand::DisconnectMediaEdge(disconnect_media_edge::DisconnectMediaEdge { edge_id: str_field("edgeId").or_else(|| str_field("edge_id")).unwrap_or_default() })),
-            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(remove_app_instance::RemoveAppInstance { node_id: node_id() })),
-            "deleteSelection" => Ok(SpaceCommand::DeleteSelection(delete_selection::DeleteSelection {})),
-            "copyAppInstance" => Ok(SpaceCommand::CopyAppInstance(copy_app_instance::CopyAppInstance {})),
-            "duplicateAppInstance" => Ok(SpaceCommand::DuplicateAppInstance(duplicate_app_instance::DuplicateAppInstance {})),
-            "pasteAppInstance" => Ok(SpaceCommand::PasteAppInstance(paste_app_instance::PasteAppInstance {})),
-            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")) })),
+            "disconnectMediaEdge" => Ok(SpaceCommand::DisconnectMediaEdge(semio_hub_space_commands_media::disconnect_media_edge::DisconnectMediaEdge { edge_id: str_field("edgeId").or_else(|| str_field("edge_id")).unwrap_or_default() })),
+            "removeAppInstance" => Ok(SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: node_id() })),
+            "deleteSelection" => Ok(SpaceCommand::DeleteSelection(semio_hub_space_commands_authoring::delete_selection::DeleteSelection {})),
+            "copyAppInstance" => Ok(SpaceCommand::CopyAppInstance(semio_hub_space_commands_authoring::copy_app_instance::CopyAppInstance {})),
+            "duplicateAppInstance" => Ok(SpaceCommand::DuplicateAppInstance(semio_hub_space_commands_authoring::duplicate_app_instance::DuplicateAppInstance {})),
+            "pasteAppInstance" => Ok(SpaceCommand::PasteAppInstance(semio_hub_space_commands_authoring::paste_app_instance::PasteAppInstance {})),
+            "renameAppInstance" => Ok(SpaceCommand::RenameAppInstance(semio_hub_space_commands_authoring::rename_app_instance::RenameAppInstance { label: str_field("label").or_else(|| str_field("name")) })),
             "patchMediaNodes" => {
                 let ids = string_vec("nodeIds");
-                Ok(SpaceCommand::PatchMediaNodes(patch_media_nodes::PatchMediaNodes {
+                Ok(SpaceCommand::PatchMediaNodes(semio_hub_space_commands_media::patch_media_nodes::PatchMediaNodes {
                     node_ids: if ids.is_empty() { node_id().map(|id| vec![id]).unwrap_or_default() } else { ids },
                     field: str_field("field").unwrap_or_default(),
                     axis: str_field("axis"),
@@ -669,49 +632,49 @@ impl ArtifactApp for SpaceApp {
             }
             "patchAppInstances" => {
                 let ids = string_vec("nodeIds");
-                Ok(SpaceCommand::PatchAppInstances(patch_app_instances::PatchAppInstances {
+                Ok(SpaceCommand::PatchAppInstances(semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances {
                     node_ids: if ids.is_empty() { node_id().map(|id| vec![id]).unwrap_or_default() } else { ids },
                     field: str_field("field").unwrap_or_default(),
                     value: json_field("value").unwrap_or_else(|| "null".into()),
                 }))
             }
-            "bindParameterField" => Ok(SpaceCommand::BindParameterField(bind_parameter_field::BindParameterField {
+            "bindParameterField" => Ok(SpaceCommand::BindParameterField(semio_hub_space_commands_authoring::bind_parameter_field::BindParameterField {
                 node_id: node_id().unwrap_or_default(),
                 field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default(),
                 parameter_id: str_field("parameterId").or_else(|| str_field("parameter_id")).unwrap_or_default(),
             })),
             "unbindParameterField" => {
-                Ok(SpaceCommand::UnbindParameterField(unbind_parameter_field::UnbindParameterField { node_id: node_id().unwrap_or_default(), field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default() }))
+                Ok(SpaceCommand::UnbindParameterField(semio_hub_space_commands_authoring::unbind_parameter_field::UnbindParameterField { node_id: node_id().unwrap_or_default(), field_path: str_field("fieldPath").or_else(|| str_field("field_path")).unwrap_or_default() }))
             }
-            "reorganizeWorkflow" => Ok(SpaceCommand::ReorganizeWorkflow(reorganize_workflow::ReorganizeWorkflow {})),
-            "workflowEngagementSubmit" => Ok(SpaceCommand::WorkflowEngagementSubmit(workflow_engagement_submit::WorkflowEngagementSubmit { value: str_field("value") })),
-            "compiledDagEngagementSubmit" => Ok(SpaceCommand::CompiledDagEngagementSubmit(compiled_dag_engagement_submit::CompiledDagEngagementSubmit {})),
-            "nodeGraphEdit" => Ok(SpaceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json_field("operations").or_else(|| json_field("operationsJson")).unwrap_or_else(|| "[]".into()) })),
-            "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab(set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
+            "reorganizeWorkflow" => Ok(SpaceCommand::ReorganizeWorkflow(semio_hub_space_commands_authoring::reorganize_workflow::ReorganizeWorkflow {})),
+            "workflowEngagementSubmit" => Ok(SpaceCommand::WorkflowEngagementSubmit(semio_hub_space_commands_media::workflow_engagement_submit::WorkflowEngagementSubmit { value: str_field("value") })),
+            "compiledDagEngagementSubmit" => Ok(SpaceCommand::CompiledDagEngagementSubmit(semio_hub_space_commands_media::compiled_dag_engagement_submit::CompiledDagEngagementSubmit {})),
+            "nodeGraphEdit" => Ok(SpaceCommand::NodeGraphEdit(semio_hub_space_commands_authoring::node_graph_edit::NodeGraphEdit { operations_json: json_field("operations").or_else(|| json_field("operationsJson")).unwrap_or_else(|| "[]".into()) })),
+            "setActivePanelTab" => Ok(SpaceCommand::SetActivePanelTab(semio_hub_space_commands_media::set_active_panel_tab::SetActivePanelTab { tab_id: str_field("tabId").or_else(|| str_field("tab_id")).unwrap_or_default() })),
             "nodeGraphViewport" => {
                 let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
                 let viewport = <semio_framework_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
-                Ok(SpaceCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
+                Ok(SpaceCommand::NodeGraphViewport(semio_hub_space_commands_authoring::node_graph_viewport::NodeGraphViewport { viewport }))
             }
-            "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})),
-            "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput(workflow_engagement_input::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() })),
-            "compiledDagEngagementInput" => Ok(SpaceCommand::CompiledDagEngagementInput(compiled_dag_engagement_input::CompiledDagEngagementInput { value: str_field("value").unwrap_or_default() })),
-            "setActiveExample" => Ok(SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").or_else(|| str_field("example_id")).unwrap_or_default() })),
-            "exportMedia" => Ok(SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default(), document_json: str_field("documentJson").unwrap_or_default() })),
-            "importMedia" => Ok(SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default() })),
-            "importMediaPayload" => Ok(SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "exportStudioPack" => Ok(SpaceCommand::ExportStudioPack(export_studio_pack::ExportStudioPack {})),
-            "exportStudioDsl" => Ok(SpaceCommand::ExportStudioDsl(export_studio_dsl::ExportStudioDsl {})),
-            "importSpacePack" => Ok(SpaceCommand::ImportSpacePack(import_space_pack::ImportSpacePack {})),
-            "importSpacePackPayload" => Ok(SpaceCommand::ImportSpacePackPayload(import_space_pack_payload::ImportSpacePackPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
-            "openSpace" => Ok(SpaceCommand::OpenSpace(open_space::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
-            "openInstance" => Ok(SpaceCommand::OpenInstance(open_instance::OpenInstance { node_id: node_id() })),
-            "closeFocusedInstance" => Ok(SpaceCommand::CloseFocusedInstance(close_focused_instance::CloseFocusedInstance {})),
-            "goHome" => Ok(SpaceCommand::GoHome(go_home::GoHome {})),
-            "navigateVirtualFileSystemNode" => Ok(SpaceCommand::NavigateVirtualFileSystemNode(navigate_virtual_file_system_node::NavigateVirtualFileSystemNode {
+            "presenceHeartbeat" => Ok(SpaceCommand::PresenceHeartbeat(semio_hub_space_commands_media::presence_heartbeat::PresenceHeartbeat {})),
+            "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput(semio_hub_space_commands_media::workflow_engagement_input::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() })),
+            "compiledDagEngagementInput" => Ok(SpaceCommand::CompiledDagEngagementInput(semio_hub_space_commands_media::compiled_dag_engagement_input::CompiledDagEngagementInput { value: str_field("value").unwrap_or_default() })),
+            "setActiveExample" => Ok(SpaceCommand::SetActiveExample(semio_hub_space_commands_media::set_active_example::SetActiveExample { example_id: str_field("exampleId").or_else(|| str_field("example_id")).unwrap_or_default() })),
+            "exportMedia" => Ok(SpaceCommand::ExportMedia(semio_hub_space_commands_media::export_media::ExportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default(), document_json: str_field("documentJson").unwrap_or_default() })),
+            "importMedia" => Ok(SpaceCommand::ImportMedia(semio_hub_space_commands_media::import_media::ImportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default() })),
+            "importMediaPayload" => Ok(SpaceCommand::ImportMediaPayload(semio_hub_space_commands_media::import_media_payload::ImportMediaPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
+            "exportStudioPack" => Ok(SpaceCommand::ExportStudioPack(semio_hub_space_commands_media::export_studio_pack::ExportStudioPack {})),
+            "exportStudioDsl" => Ok(SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {})),
+            "importSpacePack" => Ok(SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {})),
+            "importSpacePackPayload" => Ok(SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
+            "openSpace" => Ok(SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: str_field("spaceId").or_else(|| str_field("space_id")).unwrap_or_default() })),
+            "openInstance" => Ok(SpaceCommand::OpenInstance(semio_hub_space_commands_authoring::open_instance::OpenInstance { node_id: node_id() })),
+            "closeFocusedInstance" => Ok(SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {})),
+            "goHome" => Ok(SpaceCommand::GoHome(semio_hub_space_commands_media::go_home::GoHome {})),
+            "navigateVirtualFileSystemNode" => Ok(SpaceCommand::NavigateVirtualFileSystemNode(semio_hub_space_commands_media::navigate_virtual_file_system_node::NavigateVirtualFileSystemNode {
                 space_id: str_field("spaceId").or_else(|| str_field("space_id")).or_else(|| str_field("nodeId")).or_else(|| str_field("node_id")).unwrap_or_default(),
             })),
-            "setAppRegistrations" => Ok(SpaceCommand::SetAppRegistrations(set_app_registrations::SetAppRegistrations { json: json_field("json").unwrap_or_else(|| "[]".into()) })),
+            "setAppRegistrations" => Ok(SpaceCommand::SetAppRegistrations(semio_hub_space_commands_media::set_app_registrations::SetAppRegistrations { json: json_field("json").unwrap_or_else(|| "[]".into()) })),
             other => Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.unhandled-action"), format!("space: unhandled action id {other}"))),
         }
     }
@@ -731,19 +694,19 @@ impl ArtifactApp for SpaceApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            SpaceCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::NodeGraphEdit(payload) => node_graph_edit::edit(payload, doc).await,
-            SpaceCommand::ReorganizeWorkflow(payload) => reorganize_workflow::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::CopyAppInstance(payload) => copy_app_instance::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::DuplicateAppInstance(payload) => duplicate_app_instance::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::RemoveAppInstance(payload) => remove_app_instance::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::RenameAppInstance(payload) => rename_app_instance::apply(payload, doc, cfg, interaction).await,
-            SpaceCommand::OpenInstance(payload) => open_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::DeleteSelection(payload) => semio_hub_space_commands_authoring::delete_selection::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::NodeGraphEdit(payload) => semio_hub_space_commands_authoring::node_graph_edit::edit(payload, doc).await,
+            SpaceCommand::ReorganizeWorkflow(payload) => semio_hub_space_commands_authoring::reorganize_workflow::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::CopyAppInstance(payload) => semio_hub_space_commands_authoring::copy_app_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::DuplicateAppInstance(payload) => semio_hub_space_commands_authoring::duplicate_app_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::RemoveAppInstance(payload) => semio_hub_space_commands_authoring::remove_app_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::RenameAppInstance(payload) => semio_hub_space_commands_authoring::rename_app_instance::apply(payload, doc, cfg, interaction).await,
+            SpaceCommand::OpenInstance(payload) => semio_hub_space_commands_authoring::open_instance::apply(payload, doc, cfg, interaction).await,
             SpaceCommand::PresenceHeartbeat(payload) => {
                 let identity = view_state
                     .and_then(crate::home_session_identity)
                     .ok_or_else(|| Fault::from("s.space.session-identity-required"))?;
-                presence_heartbeat::handle_with_identity(payload, identity, doc, cfg)
+                semio_hub_space_commands_media::presence_heartbeat::handle_with_identity(payload, identity, doc, cfg)
             }
             _ => command.dispatch(doc, cfg),
         }
@@ -770,29 +733,29 @@ impl ArtifactApp for SpaceApp {
         let config = cfg.snapshot;
         let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
         match body_key {
-            crate::engine::space::modes::main::windows::workflow::S_PLAY_BODY_WORKFLOW => {
-                crate::engine::space::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_framework_plugin::built_to_component_tree)
+            semio_hub_space_foundation::S_PLAY_BODY_WORKFLOW => {
+                crate::modes::main::windows::workflow::render(&SpaceApp, projection, config).await.map(semio_framework_plugin::built_to_component_tree)
             }
-            crate::engine::space::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::engine::space::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_framework_plugin::built_to_component_tree),
-            crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::engine::space::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
-            S_PLAY_CATALOGUE_BODY_KEY => crate::engine::space::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
+            crate::modes::main::windows::media_vfs::S_PLAY_BODY_MEDIA_VFS => crate::modes::main::windows::media_vfs::render(projection, view_state).await.map(semio_framework_plugin::built_to_component_tree),
+            crate::modes::main::windows::compiled_dag::S_PLAY_BODY_COMPILED_DAG => crate::modes::main::windows::compiled_dag::render(projection).await.map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_CATALOGUE_BODY_KEY => crate::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
                 .await
                 .map(semio_framework_plugin::built_to_component_tree),
             // 🧬️ `parameters`/`inspection` are now ported to the contract `BuiltNode` DSL (SEMANTIC-
             // UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20) — both `render` fns are U1-sync (the contract
             // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
-            S_PLAY_PARAMETERS_BODY_KEY => crate::engine::space::panels::parameters::render(projection, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_PARAMETERS_BODY_KEY => crate::panels::parameters::render(projection, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
             // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
             // inspector degrades to its "no selection" default until a future wave threads interaction
             // into render. Flagged as a discovered framework gap, not worked around here.
-            S_PLAY_INSPECTOR_BODY_KEY => crate::engine::space::panels::inspection::render(projection, &[], labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            S_PLAY_INSPECTOR_BODY_KEY => crate::panels::inspection::render(projection, &[], labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
     async fn window_measures(doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
-        HashMap::from([(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), crate::engine::space::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes, view_state).await)])
+        HashMap::from([(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW.into(), crate::modes::main::windows::workflow::window_measures(cfg.snapshot, &doc.snapshot.graph.nodes, view_state).await)])
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` — see ticket 26/08/14's
@@ -815,9 +778,9 @@ impl ArtifactApp for SpaceApp {
 async fn space_play_layout() -> WindowLayout {
     create_default_layout(
         &[
-            crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(),
-            crate::engine::space::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS.into(),
-            crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_WINDOW_COMPILED_DAG.into(),
+            semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW.into(),
+            crate::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS.into(),
+            crate::modes::main::windows::compiled_dag::S_PLAY_WINDOW_COMPILED_DAG.into(),
         ],
         "row",
         Some(&[40.0, 30.0, 30.0]),
@@ -826,18 +789,18 @@ async fn space_play_layout() -> WindowLayout {
 }
 
 pub async fn create_space_app() -> App {
-    use crate::engine::space::modes::main::windows::{compiled_dag, media_vfs, workflow};
+    use crate::modes::main::windows::{compiled_dag, media_vfs, workflow};
     let builder = App::builder(S_PLAY_APP_ID, LocalizedLabel::native("Space", "Space")).await.document(["semio", "s", "studio"])
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setAppRegistrations", LocalizedLabel::native("Set App Registrations", "App-Registrierungen festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("App Registrations", "App-Registrierungen"))]) }).await
         .icon_id("s").await
-        .mode_def(crate::engine::space::modes::main::definition().await).await
+        .mode_def(crate::modes::main::definition().await).await
         .default_mode_id("main").await
         .window_kind_def(workflow::definition().await).await
         .window_kind_def(media_vfs::definition().await).await
         .window_kind_def(compiled_dag::definition().await).await
-        .panel_tab_def(crate::engine::space::panels::catalogue::definition().await).await
-        .panel_tab_def(crate::engine::space::panels::parameters::definition().await).await
-        .panel_tab_def(crate::engine::space::panels::inspection::definition().await).await
+        .panel_tab_def(crate::panels::catalogue::definition().await).await
+        .panel_tab_def(crate::panels::parameters::definition().await).await
+        .panel_tab_def(crate::panels::inspection::definition().await).await
         .default_layout(space_play_layout().await).await
         .mutation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren")).await
         .mutation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen")).await
@@ -951,7 +914,7 @@ pub async fn create_space_app() -> App {
         // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
         // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
         // node-graph view actions stay unscoped orphans and appear on every window.
-        .window_kind_action_refs(workflow::S_PLAY_WINDOW_WORKFLOW, vec![
+        .window_kind_action_refs(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW, vec![
             "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
             "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
             "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
@@ -990,7 +953,7 @@ pub async fn create_space_app() -> App {
                 broadcast: true,
             },
         }).await
-        .window_kind_interactions(workflow::S_PLAY_WINDOW_WORKFLOW, vec![InteractionRef::new(S_PLAY_INTERACTION_DOMAIN)]).await
+        .window_kind_interactions(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW, vec![InteractionRef::new(S_PLAY_INTERACTION_DOMAIN)]).await
         .keybinding("mod+z", "undo").await
         .keybinding("mod+shift+z", "redo").await
         .action_describe("patchParameter", LocalizedLabel::native("Sets one field (such as name, value or range) of one studio parameter by id; the value may be JSON or plain text.", "Setzt ein Feld (etwa Name, Wert oder Bereich) eines Studioparameters anhand seiner Id; der Wert darf JSON oder Klartext sein.")).await
@@ -1055,9 +1018,9 @@ pub async fn create_space_app() -> App {
 //#region 🧪️UnitTests
 /// 🧪️ Shared test harness — every command-group test file needs this, added here first per the
 /// per-app recipe so other nodes don't each re-derive it.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
@@ -1067,3 +1030,55 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🔖️Windows
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod main {
+        #[path = "🎭️modes/🌐️main/🦀️.rs"]
+        mod component;
+        pub use component::*;
+
+        #[path = "."]
+        pub mod windows {
+            #[path = "."]
+            pub mod workflow {
+                #[path = "🎭️modes/🌐️main/🪟️windows/🔄️workflow/🦀️.rs"]
+                mod component;
+                pub use component::*;
+
+                #[path = "."]
+                pub mod options {
+                    #[path = "🎭️modes/🌐️main/🪟️windows/🔄️workflow/☑️options/🎯️active-instance/🦀️.rs"]
+                    pub mod active_instance;
+                }
+            }
+
+            #[path = "."]
+            pub mod media_vfs {
+                #[path = "🎭️modes/🌐️main/🪟️windows/🗂️media-vfs/🦀️.rs"]
+                mod component;
+                pub use component::*;
+            }
+
+            #[path = "."]
+            pub mod compiled_dag {
+                #[path = "🎭️modes/🌐️main/🪟️windows/🕸️compiled-dag/🦀️.rs"]
+                mod component;
+                pub use component::*;
+            }
+        }
+    }
+}
+
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/🛍️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🔍️inspection/🦀️.rs"]
+    pub mod inspection;
+    #[path = "📌️panels/🔢️parameters/🦀️.rs"]
+    pub mod parameters;
+}
+//#endregion 🔖️Windows

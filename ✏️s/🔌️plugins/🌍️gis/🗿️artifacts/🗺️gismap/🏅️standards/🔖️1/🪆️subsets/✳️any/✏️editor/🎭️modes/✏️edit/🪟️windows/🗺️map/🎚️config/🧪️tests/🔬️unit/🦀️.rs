@@ -11,7 +11,7 @@ async fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() 
 
 #[semio_framework_async_macros::async_test]
 async fn gis2d_config_default_lod_mode_matches_the_tiled_map_surface_constant() {
-    assert_eq!(MapWindowConfig::default().lod_mode, semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC);
+    assert_eq!(MapWindowConfig::default().lod_mode, semio_framework_surface::tiled_map::MAP_LOD_MODE_AUTOMATIC);
 }
 
 #[semio_framework_async_macros::async_test]

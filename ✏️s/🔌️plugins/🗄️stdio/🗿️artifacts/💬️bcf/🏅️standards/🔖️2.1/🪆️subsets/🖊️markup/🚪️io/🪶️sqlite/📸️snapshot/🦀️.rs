@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,FloatColumn,FloatRow,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
@@ -18,7 +18,7 @@ fn groups<'a>(rows:&Entities<'a>,parents:&Entities<'_>,control:&mut SqliteSnapsh
 fn write_strings(out:&mut RowWriter<'_,'_>,table:&str,owner:i64,strings:&[String])->Result<(),ValueError>{for(ordinal,value)in strings.iter().enumerate(){out.insert(table,&[Cell::Integer(owner),Cell::Integer(i64::try_from(ordinal).map_err(|error|work(error.to_string()))?),Cell::Text(value)])?;}Ok(())}
 fn read_strings(rows:Option<&Vec<&SqliteRow>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<String>,ValueError>{let mut strings=Vec::new();for row in rows.into_iter().flatten(){checkpoint(control,strings.len(),0)?;strings.push(reconstruct_text(control,row.text(3)?)?);}Ok(strings)}
 fn boolean(row:&SqliteRow,column:usize)->Result<bool,ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("BCF visibility must be boolean"))}}
-fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,ValueError>{Ok(BcfPoint3{x:row.real(column)?,y:row.real(column+1)?,z:row.real(column+2)?})}
+pub fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,ValueError>{Ok(BcfPoint3{x:row.real(column)?,y:row.real(column+1)?,z:row.real(column+2)?})}
 
 
 #[path="🧮️semantic/🦀️.rs"]mod semantic;
@@ -109,6 +109,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

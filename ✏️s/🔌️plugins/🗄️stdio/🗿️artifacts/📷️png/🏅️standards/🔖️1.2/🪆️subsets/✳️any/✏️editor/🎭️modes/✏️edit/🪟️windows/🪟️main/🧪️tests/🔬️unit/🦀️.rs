@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_ui_locale::Locale;
+use crate::editor::png::modes::edit::windows::main::*;
 use semio_framework_plugin::Component;
 
 fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {

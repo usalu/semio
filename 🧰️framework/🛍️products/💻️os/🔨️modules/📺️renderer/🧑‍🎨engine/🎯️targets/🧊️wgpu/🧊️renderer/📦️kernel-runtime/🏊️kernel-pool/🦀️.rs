@@ -11,7 +11,7 @@ impl KernelPoolState {
     ///
     /// 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
     /// type mints for itself — see `ParallelRuntime::new`'s own doc.
-    pub(super) async fn new(request_queue: Arc<KernelRequestQueue>, identity_policy:semio_framework_plugin_host::shard::ShardIdentityPolicy, original_clock:fn()->Option<u64>) -> Self {
+    pub async fn new(request_queue: Arc<KernelRequestQueue>, identity_policy:semio_framework_plugin_host::shard::ShardIdentityPolicy, original_clock:fn()->Option<u64>) -> Self {
         let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(original_clock)));
         let pool = Arc::new(crate::renderer_worker_pool());
         let worker_count = u16::try_from(pool.worker_count()).unwrap_or(u16::MAX);
@@ -87,7 +87,7 @@ impl KernelPoolState {
         }
     }
 
-    async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    async fn advance_product_replay(&mut self, instance: u32) -> Result<ExchangeOutcome, ProgramFault> {
         let idle = || ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() };
         if let Some(index) = self.product_replay_authorities.iter().position(|authority| authority.as_ref().is_some_and(|authority| authority.instance() == instance)) {
             let (actor, job, profile_cursor, profile_started) = {
@@ -698,7 +698,7 @@ impl KernelPoolState {
     /// extension actors." `wasm_path` is always `<modules_root>/<plugin_id>/<file>.wasm`
     /// (`program_bridge::load_wasm_plugins`'s own layout convention), so the extensions' own
     /// wasm artifacts live as siblings under the same `modules_root`.
-    async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, crate::program_bridge::ProgramFault> {
+    async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, ProgramFault> {
         let replay_route_index = self.replay_routes.iter().position(Option::is_none).ok_or_else(|| "kernel: fixed replay route registry is full".to_string())?;
         let component = read_native_component(&wasm_path).await?;
         let bytes = component.as_slice();
@@ -732,12 +732,13 @@ impl KernelPoolState {
             .map_err(|refusal| refusal.reason)?;
         self.replay_routes[replay_route_index] = Some(MountedReplayRouteSeed { actor, plugin: plugin_digest, package: hash.0, window: u64::from(instance_id), artifact: artifact_digest });
         self.instances.insert(instance_id, actor);
+        let assets = semio_framework_plugin_host::package_assets::package_assets_beside_module(&wasm_path).map_err(|message| format!("kernel: package assets of `{plugin_id}`: {message}"))?;
         let open = Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(app_id.clone()),
             actor: "local".to_string(),
             config: Vec::new(),
-            assets: Vec::new(),
+            assets,
             capabilities: Vec::new(),
             quotas: QuotaSchema::default(),
         };
@@ -1037,7 +1038,7 @@ impl KernelPoolState {
     /// patch. A rejection with no authority behind it (a surface the registry could not admit
     /// at all, so no turn ever reached a slot) has nothing to reject back and stays a local
     /// registry entry rather than a fabricated receipt.
-    async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, ProgramFault> {
         let Some(&actor) = self.instances.get(&instance) else {
             return Err((format!("kernel: instance {instance} is not registered")).into());
         };
@@ -1051,7 +1052,7 @@ impl KernelPoolState {
         Ok(outcome)
     }
 
-    async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, ProgramFault> {
         let key = u64::from(instance);
         let generation = driver.generation();
         if !self.retained_command_closes.terminal_is_empty() {
@@ -1196,7 +1197,7 @@ impl KernelPoolState {
     /// 🧵️ Events cross ONE per granted turn and each settles before the next is submitted: the shard
     /// executes one event per guest turn anyway, and a batch's later envelopes must not reach a guest
     /// the first one left owning ingress. [`RUN_TURN_SETTLE_BUDGET`] bounds the whole request.
-    async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    async fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, ProgramFault> {
         let deadline = std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET;
         let mut batches = events.into_iter().map(|event| vec![event]).collect::<std::collections::VecDeque<_>>();
         if batches.is_empty() {
@@ -1211,12 +1212,12 @@ impl KernelPoolState {
                 None => settled = Some(outcome),
             }
         }
-        settled.ok_or_else(|| crate::program_bridge::ProgramFault::from("kernel: a turn with no batch produced no outcome"))
+        settled.ok_or_else(|| ProgramFault::from("kernel: a turn with no batch produced no outcome"))
     }
 
     /// 🔁️ Continues one granted turn with what it still owes (see [`Self::run_turn`]) until it settled,
     /// [`run_turn_quiescent_continuations`] continuations in a row carried nothing, or `deadline` passed.
-    async fn settle_turn(&mut self, actor: ActorId, instance: u32, (mut outcome, continuation): (ExchangeOutcome, Option<Vec<Event>>), deadline: std::time::Instant) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    async fn settle_turn(&mut self, actor: ActorId, instance: u32, (mut outcome, continuation): (ExchangeOutcome, Option<Vec<Event>>), deadline: std::time::Instant) -> Result<ExchangeOutcome, ProgramFault> {
         let mut owed = run_turn_continuation_turns(continuation);
         let mut quiet = 0usize;
         while let Some(events) = owed.pop_front() {
@@ -1242,7 +1243,7 @@ impl KernelPoolState {
     /// - The shard then runs the guest's deferred `Event::JobCompleted` turn by itself; this host waits
     ///   for it and settles it like any turn, so the guest commits the job one unit per `MoreWork`
     ///   continuation and answers the verb (`Invocation { in_reply_to: 0 }`, `OperationCompleted`).
-    async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), crate::program_bridge::ProgramFault> {
+    async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), ProgramFault> {
         while self.reserved_jobs.iter().flatten().any(|job| job.actor == actor) {
             if self.turn_cancelled() {
                 return Err((self.retire_cancelled_turn(actor).await).into());
@@ -1267,7 +1268,7 @@ impl KernelPoolState {
     /// ✂️ Retires an actor whose turn was cancelled mid-call: a mid-flight guest can never be handed back,
     /// so its shard instance is dropped, the scheduler stops granting it, and every host record of it goes.
     /// Answers the error its request reports.
-    async fn retire_cancelled_turn(&mut self, actor: ActorId) -> crate::program_bridge::ProgramFault {
+    async fn retire_cancelled_turn(&mut self, actor: ActorId) -> ProgramFault {
         let _ = self.runtime.kernel_mut().suspend(actor, None).await;
         if let Err(error) = self.runtime.unregister(actor).await { return error.into(); }
         self.instances.retain(|_, instance_actor| *instance_actor != actor);
@@ -1411,7 +1412,7 @@ impl KernelPoolState {
     /// keeps granting it until its turn returns — after each of OUR actor's slices the request at the
     /// head of the queue may run first ([`Self::yield_slice`]), and only an explicit cancel ends the turn
     /// ([`Self::turn_cancelled`]).
-    async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
+    async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), ProgramFault> {
         let mut envelopes = Vec::with_capacity(events.len().max(1));
         let mut replay_start_index = None;
         if events.is_empty() {
@@ -1454,7 +1455,7 @@ impl KernelPoolState {
     /// 🧰️ One turn of `actor`'s oldest live [`ReservedToolJob`]: its next `Payload::JobStep`, or, once
     /// the job ended, no envelope at all and only the wait for the deferred `Event::JobCompleted` turn
     /// [`Self::dispatch_turn`] counts as owed.
-    async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
+    async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32) -> Result<(ExchangeOutcome, Option<Vec<Event>>), ProgramFault> {
         let Some(oldest) = self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor).min_by_key(|job| job.job).copied() else {
             return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
         };
@@ -1486,7 +1487,7 @@ impl KernelPoolState {
     /// ignored rather than aborting an otherwise-successful turn; unlike the
     /// ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
     /// for actors OTHER than `actor` (DRR is global), so those must not error out.
-    async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), crate::program_bridge::ProgramFault> {
+    async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), ProgramFault> {
         let stepped_reserved_job = envelopes.iter().find_map(|envelope| match &envelope.payload {
             Payload::JobStep { turn } => self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.job == turn.job).then_some(turn.job),
             _ => None,
@@ -1544,11 +1545,11 @@ impl KernelPoolState {
                 }
                 match outcome {
                     ShardOutcome::OriginalCall{actor:reported,returned,continuation,call}=>{
-                        self.runtime.kernel_mut().receive_original_call(ActorId(reported),returned,continuation).map_err(crate::program_bridge::ProgramFault::from)?;
+                        self.runtime.kernel_mut().receive_original_call(ActorId(reported),returned,continuation).map_err(ProgramFault::from)?;
                         if let Some(call)=call{if matches!(call.kind,semio_framework_plugin_host::original_actor_context::OriginalActorFixedKind::Failure{..}){return Err(call.into())}}
                     }
                     ShardOutcome::Turn { actor: reported, result, jobs } => {
-                        self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await.map_err(crate::program_bridge::ProgramFault::from)?;
+                        self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await.map_err(ProgramFault::from)?;
                         if reported == actor.0 {
                             let decoded = decode_actor_turn_result(&result, reported)?;
                             self.admit_reserved_jobs(actor, &decoded.effects, &jobs)?;
@@ -1648,7 +1649,7 @@ impl KernelPoolState {
             return if replay_capture_started || reserved_step_published {
                 Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None))
             } else {
-                Err(crate::program_bridge::ProgramFault::from("kernel: shard produced no outcome for this turn"))
+                Err(ProgramFault::from("kernel: shard produced no outcome for this turn"))
             };
         }
         let mut settled: Option<ExchangeOutcome> = None;
@@ -1757,7 +1758,7 @@ impl KernelPoolState {
         Ok(())
     }
 
-    fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, crate::program_bridge::ProgramFault> {
+    fn advance_retained_surface_one(&mut self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, ProgramFault> {
         let mut surfaces = UiFixedList::default();
         self.advance_retained_one(instance, Some(&surface), &mut surfaces)?;
         Ok(ExchangeOutcome { frames: Vec::new(), surfaces, effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() })
@@ -1785,7 +1786,7 @@ impl KernelPoolState {
             if self.semantic_close_document_lane {
                 let _ = ui_contract::close_ui_document_page_one();
             } else {
-                let _ = ui_contract::close_ui_patch_owner_one();
+                let _ = semio_framework_ui_contract_validation::close_ui_patch_owner_one();
             }
             self.semantic_close_document_lane = !self.semantic_close_document_lane;
             return Ok(());
@@ -1833,308 +1834,6 @@ impl KernelPoolState {
     }
 }
 
-pub(super) const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64;
-
-pub(super) struct KernelRequestQueue {
-    pub(super) state: Mutex<KernelRequestQueueState>,
-}
-
-struct KernelRequestQueueState {
-    slots: Box<[Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]>,
-    read: usize,
-    write: usize,
-    len: usize,
-    command_pages: usize,
-    command_bytes: usize,
-    pub(super) closing: bool,
-    consumer_waker: Option<Waker>,
-    producer_wakers: Vec<Waker>,
-}
-
-impl Default for KernelRequestQueue {
-    fn default() -> Self {
-        Self {
-            state: Mutex::new(KernelRequestQueueState {
-                slots: semio_framework_async::boxed_fixed_slots(|| None),
-                read: 0,
-                write: 0,
-                len: 0,
-                command_pages: 0,
-                command_bytes: 0,
-                closing: false,
-                consumer_waker: None,
-                producer_wakers: Vec::with_capacity(KERNEL_REQUEST_QUEUE_CAPACITY),
-            }),
-        }
-    }
-}
-
-impl KernelRequestQueue {
-    /// 📥️ Admits one request, or hands it back with its producer's wake already arranged: a queue
-    /// that is full (or over its command credit) keeps every distinct waiting producer's wake and
-    /// wakes them all when a request leaves it, and a queue whose lock is momentarily held asks the
-    /// producer to retry at once. A producer parked without either wake was never polled again — a
-    /// detached render hung for the rest of a 180 s law on one contended push, and a second waiting
-    /// producer used to overwrite the first one's wake (ticket 26/09/23 slice WG8, session 12).
-    pub(super) fn try_push(&self, request: KernelRequest, slot: Arc<ResponseSlot>, producer: Option<&Waker>) -> Result<(), (KernelRequest, Arc<ResponseSlot>)> {
-        let (pages, bytes) = request.command_credits();
-        let Ok(mut state) = self.state.try_lock() else {
-            if let Some(producer) = producer {
-                producer.wake_by_ref();
-            }
-            return Err((request, slot));
-        };
-        let admitted_pages = state.command_pages.checked_add(pages).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES);
-        let admitted_bytes = state.command_bytes.checked_add(bytes).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_BYTES);
-        if state.closing || state.len == KERNEL_REQUEST_QUEUE_CAPACITY || admitted_pages.is_none() || admitted_bytes.is_none() {
-            let retry = match producer {
-                Some(producer) if !state.producer_wakers.iter().any(|kept| kept.will_wake(producer)) => {
-                    if state.producer_wakers.len() < KERNEL_REQUEST_QUEUE_CAPACITY {
-                        state.producer_wakers.push(producer.clone());
-                        None
-                    } else {
-                        Some(producer)
-                    }
-                }
-                _ => None,
-            };
-            drop(state);
-            if let Some(producer) = retry {
-                producer.wake_by_ref();
-            }
-            return Err((request, slot));
-        }
-        let index = state.write;
-        assert!(state.slots[index].is_none(), "fixed kernel request write slot is empty after admission");
-        state.slots[index] = Some((request, slot));
-        state.write = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
-        state.len += 1;
-        state.command_pages = admitted_pages.expect("command page credit was admitted");
-        state.command_bytes = admitted_bytes.expect("command byte credit was admitted");
-        let consumer = state.consumer_waker.take();
-        drop(state);
-        if let Some(waker) = consumer {
-            waker.wake();
-        }
-        Ok(())
-    }
-
-    pub(super) fn poll(&self, cx: &mut Context<'_>) -> Poll<(KernelRequest, Arc<ResponseSlot>)> {
-        let Ok(mut state) = self.state.try_lock() else {
-            cx.waker().wake_by_ref();
-            return Poll::Pending;
-        };
-        if state.len == 0 {
-            state.consumer_waker = Some(cx.waker().clone());
-            return Poll::Pending;
-        }
-        let index = state.read;
-        let request = state.slots[index].take().expect("fixed kernel request read slot is occupied");
-        let (pages, bytes) = request.0.command_credits();
-        state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
-        state.len -= 1;
-        state.command_pages -= pages;
-        state.command_bytes -= bytes;
-        let producers: Vec<Waker> = state.producer_wakers.drain(..).collect();
-        drop(state);
-        producers.into_iter().for_each(Waker::wake);
-        Poll::Ready(request)
-    }
-
-    fn try_next(&self) -> Option<(KernelRequest, Arc<ResponseSlot>)> {
-        let mut state = self.state.try_lock().ok()?;
-        if state.len == 0 {
-            return None;
-        }
-        let index = state.read;
-        let request = state.slots[index].take().expect("fixed kernel request read slot is occupied");
-        let (pages, bytes) = request.0.command_credits();
-        state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
-        state.len -= 1;
-        state.command_pages -= pages;
-        state.command_bytes -= bytes;
-        let producers: Vec<Waker> = state.producer_wakers.drain(..).collect();
-        drop(state);
-        producers.into_iter().for_each(Waker::wake);
-        Some(request)
-    }
-
-    pub(super) async fn next(&self) -> (KernelRequest, Arc<ResponseSlot>) {
-        std::future::poll_fn(|cx| self.poll(cx)).await
-    }
-
-    /// 🎚️ Pops the head request only when `admit` accepts it — FIFO and the command credits stay exactly as
-    /// [`Self::try_next`] keeps them; a head that may not run now stays the head.
-    fn try_next_if(&self, admit: impl Fn(&KernelRequest) -> bool) -> Option<(KernelRequest, Arc<ResponseSlot>)> {
-        {
-            let state = self.state.try_lock().ok()?;
-            let head = state.slots[state.read].as_ref().filter(|_| state.len != 0)?;
-            if !admit(&head.0) {
-                return None;
-            }
-        }
-        self.try_next()
-    }
-
-    /// 🔔️ Wakes `waker` when the next request is admitted — the loop's own wait, borrowed by a request that
-    /// serves other instances while it waits for its own work ([`KernelPoolState::compile_serving_others`]).
-    fn watch(&self, waker: &Waker) {
-        if let Ok(mut state) = self.state.try_lock() {
-            state.consumer_waker = Some(waker.clone());
-        }
-    }
-
-    /// 🔔️ Wakes the loop so a request waiting in a gap re-reads its requester's cancel.
-    pub(super) fn wake_consumer(&self) {
-        let waker = self.state.try_lock().ok().and_then(|mut state| state.consumer_waker.take());
-        if let Some(waker) = waker {
-            waker.wake();
-        }
-    }
-
-    /// 👀️ Whether the head request satisfies `test` (`false` for an empty or contended queue).
-    fn head_is(&self, test: impl Fn(&KernelRequest) -> bool) -> bool {
-        self.state.try_lock().is_ok_and(|state| state.len != 0 && state.slots[state.read].as_ref().is_some_and(|head| test(&head.0)))
-    }
-
-    pub(super) async fn enqueue_retained(&self, request: KernelRequest, slot: Arc<ResponseSlot>) {
-        let mut owner = Some((request, slot));
-        std::future::poll_fn(|cx| {
-            let (request, slot) = owner.take().expect("retained queue admission owner is present");
-            match self.try_push(request, slot, Some(cx.waker())) {
-                Ok(()) => Poll::Ready(()),
-                Err(rejected) => {
-                    owner = Some(rejected);
-                    Poll::Pending
-                }
-            }
-        })
-        .await;
-    }
-
-    #[cfg(test)]
-    fn begin_shutdown(&self) -> bool {
-        let Ok(mut state) = self.state.try_lock() else {
-            return false;
-        };
-        state.closing = true;
-        true
-    }
-
-    #[cfg(test)]
-    fn shutdown_step(&self, maximum_bytes: usize) -> (bool, usize, usize) {
-        let Ok(mut state) = self.state.try_lock() else {
-            return (false, 0, 0);
-        };
-        if !state.closing || state.len == 0 {
-            return (state.closing && state.len == 0, 0, 0);
-        }
-        let index = state.read;
-        let (terminal, processed, released, page_released) = match &mut state.slots[index].as_mut().expect("fixed shutdown request slot is occupied").0 {
-            KernelRequest::ExchangeCommands { driver, .. } => {
-                let before = driver.remaining_pages();
-                let (terminal, released) = driver.close_step(maximum_bytes);
-                let page_released = usize::from(driver.remaining_pages() < before);
-                (terminal, usize::from(terminal || page_released != 0), released, page_released)
-            }
-            KernelRequest::CloseRejectedCommandBuild { owner, .. } => {
-                let before = owner.remaining_pages();
-                let (terminal, released) = owner.close_step(maximum_bytes);
-                let page_released = usize::from(owner.remaining_pages() < before);
-                (terminal, usize::from(terminal || page_released != 0), released, page_released)
-            }
-            KernelRequest::CreateApp { owner } => {
-                let (terminal, processed, released) = owner.close_step(maximum_bytes);
-                (terminal, processed, released, 0)
-            }
-            KernelRequest::DestroyApp { owner } => {
-                owner.finish(KernelCloseStatus::Fault);
-                (true, 1, 0, 0)
-            }
-            KernelRequest::CloseRealm { owner } => {
-                owner.finish(KernelCloseStatus::Fault);
-                (true, 1, 0, 0)
-            }
-            KernelRequest::Exchange { event, .. } => {
-                let (terminal, processed, released) = event.close_step(maximum_bytes);
-                (terminal, processed, released, 0)
-            }
-            KernelRequest::AdvanceRetained { .. } | KernelRequest::MountProductReplay { .. } | KernelRequest::RetireProductReplay { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::AdvanceProductReplay { .. } => {
-                (true, 1, 0, 0)
-            }
-            KernelRequest::CloseRejectedEvents { owner } => {
-                let (terminal, processed) = owner.close_step();
-                (terminal, processed, 0, 0)
-            }
-            KernelRequest::AcknowledgeJobProgress { token } => {
-                let returned = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").return_lease(*token);
-                (returned, usize::from(returned), 0, 0)
-            }
-        };
-        state.command_pages -= page_released;
-        state.command_bytes -= released;
-        if terminal {
-            let terminal = state.slots[index].take().expect("terminal shutdown request was present");
-            state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
-            state.len -= 1;
-            drop(state);
-            drop(terminal);
-            return (self.state.try_lock().is_ok_and(|state| state.len == 0), processed, released);
-        }
-        (false, processed, released)
-    }
-}
-
-pub(crate) struct KernelPoolFuture {
-    pub(super) pool: semio_framework_async::WorkerPool,
-    pub(super) lane: semio_framework_async::Lane,
-    future: Mutex<Option<Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>,
-    scheduled: std::sync::atomic::AtomicBool,
-    notified: std::sync::atomic::AtomicBool,
-}
-
-impl KernelPoolFuture {
-    pub(crate) fn spawn(pool: semio_framework_async::WorkerPool, lane: semio_framework_async::Lane, future: impl Future<Output = ()> + Send + 'static) -> Arc<Self> {
-        let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(crate::drive_renderer_worker_task(future)))), scheduled: std::sync::atomic::AtomicBool::new(false), notified: std::sync::atomic::AtomicBool::new(true) });
-        task.schedule();
-        task
-    }
-
-    fn schedule(self: &Arc<Self>) {
-        self.notified.store(true, std::sync::atomic::Ordering::Release);
-        if self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
-            return;
-        }
-        let task = self.clone();
-        self.pool.submit(self.lane, Box::new(move || task.run_turn()));
-    }
-
-    fn run_turn(self: Arc<Self>) {
-        self.notified.store(false, std::sync::atomic::Ordering::Release);
-        let future = self.future.lock().expect("kernel pool future lock").take();
-        if let Some(mut future) = future {
-            let waker = Waker::from(self.clone());
-            let mut context = Context::from_waker(&waker);
-            if future.as_mut().poll(&mut context).is_pending() {
-                *self.future.lock().expect("kernel pool future lock") = Some(future);
-            }
-        }
-        self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-        if self.notified.load(std::sync::atomic::Ordering::Acquire) && self.future.lock().expect("kernel pool future lock").is_some() {
-            self.schedule();
-        }
-    }
-}
-
-impl std::task::Wake for KernelPoolFuture {
-    fn wake(self: Arc<Self>) {
-        self.schedule();
-    }
-
-    fn wake_by_ref(self: &Arc<Self>) {
-        self.schedule();
-    }
-}
 
 async fn yield_kernel_maintenance_turn() {
     let mut yielded = false;
@@ -2150,7 +1849,7 @@ async fn yield_kernel_maintenance_turn() {
     .await
 }
 
-pub(super) async fn run_kernel_pool(queue: Arc<KernelRequestQueue>,original_clock:fn()->Option<u64>) {
+pub async fn run_kernel_pool(queue: Arc<KernelRequestQueue>,original_clock:fn()->Option<u64>) {
     let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../../../../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored native shard identity policy");
     let mut state = KernelPoolState::new(queue.clone(),identity_policy,original_clock).await;
     loop {
@@ -2250,7 +1949,5 @@ impl KernelPoolState {
     }
 }
 
-#[cfg(test)]
-include!("../../../../../🧪️tests/🔬️wgpu-renderer-kernel-runtime-semantic-document/🦀️.rs");
 //#endregion
 //#endregion 🎠️KernelRuntime

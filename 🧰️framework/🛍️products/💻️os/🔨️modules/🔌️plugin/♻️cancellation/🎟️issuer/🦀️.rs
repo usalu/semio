@@ -22,17 +22,22 @@ struct PendingLease {
  claim:Option<PublicationClaimHandle>,document_claim:Option<PublicationClaimHandle>,scope_claim:Option<PublicationClaimHandle>,lease_document_claim:Option<PublicationClaimHandle>,handle:Option<ToolCancellationHandle>,existing_document:bool,
 }
 impl PendingLease {
- fn into_parts(self)->crate::tool_cancellation::CancellationLeaseParts{
-  crate::tool_cancellation::CancellationLeaseParts::unpublished(self.handle,[self.token,self.scope_token,self.document],[self.claim,self.lease_document_claim,self.scope_claim,self.document_claim],self.keyed.then_some(u64::from(self.key.document.0)))
+ fn into_parts(self)->crate::CancellationLeaseParts{
+  crate::CancellationLeaseParts::unpublished(self.handle,[self.token,self.scope_token,self.document],[self.claim,self.lease_document_claim,self.scope_claim,self.document_claim],self.keyed.then_some(u64::from(self.key.document.0)))
  }
 }
 
-pub(crate) struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::tool_cancellation::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,cleanup_index:Option<usize>,closing:bool}
+#[doc(hidden)]
+pub struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,cleanup_index:Option<usize>,closing:bool}
 impl ToolCancellationIssuer{
- pub(crate) const fn empty()->Self{Self{admission:ManuallyDrop::new(Admission::empty()),issued:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),renew_cancel:ManuallyDrop::new(None),renew_claim:ManuallyDrop::new(None),renew_source:None,renew_swapped:false,cleanup_index:None,closing:false}}
- pub(crate) fn ready(&self)->bool{self.issued.is_some()}
- pub(crate) fn handle(&self)->Option<&ToolCancellationHandle>{self.issued.as_ref()}
- pub(crate) fn admit_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ #[doc(hidden)]
+ pub const fn empty()->Self{Self{admission:ManuallyDrop::new(Admission::empty()),issued:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),renew_cancel:ManuallyDrop::new(None),renew_claim:ManuallyDrop::new(None),renew_source:None,renew_swapped:false,cleanup_index:None,closing:false}}
+ #[doc(hidden)]
+ pub fn ready(&self)->bool{self.issued.is_some()}
+ #[doc(hidden)]
+ pub fn handle(&self)->Option<&ToolCancellationHandle>{self.issued.as_ref()}
+ #[doc(hidden)]
+ pub fn admit_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closing canonical cancellation issuer cannot admit more births").into())}
   if let Some(source)=self.admission.source.as_ref(){source.validate_context(cx)?}
   if self.ready(){return Ok(true)}
@@ -63,8 +68,10 @@ impl ToolCancellationIssuer{
   let capacity_bytes=if source.state.is_some(){0}else if source.slots.is_none()&&source.operations.is_none(){TOOL_CANCELLATION_SLOTS*size_of::<ToolDocumentCancellationScope>()}else if source.operations.is_none(){semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS*size_of::<(u64,ToolDocumentCancellationScope)>()}else if source.documents.is_none(){semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS*size_of::<(u64,ToolKeyedDocumentCancellationScope)>()}else if source.cancel.is_none(){semio_framework_job::CancelToken::root_admission_demands().capacity_bytes}else if source.claim.is_none(){PublicationClaim::admission_demands().capacity_bytes}else if source.generation.is_none(){semio_framework_value::shared_retirement_allocation_bytes::<AtomicU64>()}else if source.active.is_none(){semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>()}else{semio_framework_value::shared_retirement_allocation_bytes::<RetainedOwnerGate<ToolCancellationState>>()};
   RetirementDemand{copy_bytes:if source.state.is_some(){size_of::<ToolCancellationHandle>()}else{0},capacity_bytes,depth:1,..Default::default()}
  }
- pub(crate) fn begin(&mut self,key:&ToolOperationKey,cx:&mut StepContext<'_>)->Result<Option<ToolCancellationLease>,OriginalTurnFailure>{self.begin_original(key,false,cx)}
- pub(crate) fn begin_keyed(&mut self,key:&ToolOperationKey,cx:&mut StepContext<'_>)->Result<Option<ToolCancellationLease>,OriginalTurnFailure>{self.begin_original(key,true,cx)}
+ #[doc(hidden)]
+ pub fn begin(&mut self,key:&ToolOperationKey,cx:&mut StepContext<'_>)->Result<Option<ToolCancellationLease>,OriginalTurnFailure>{self.begin_original(key,false,cx)}
+ #[doc(hidden)]
+ pub fn begin_keyed(&mut self,key:&ToolOperationKey,cx:&mut StepContext<'_>)->Result<Option<ToolCancellationLease>,OriginalTurnFailure>{self.begin_original(key,true,cx)}
  fn begin_original(&mut self,key:&ToolOperationKey,keyed:bool,cx:&mut StepContext<'_>)->Result<Option<ToolCancellationLease>,OriginalTurnFailure>{
   if self.closing||!self.ready()||self.pending_close.is_some()||cx.should_yield()||cx.is_cancelled(){return Ok(None)}
   let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
@@ -110,7 +117,8 @@ impl ToolCancellationIssuer{
   }
   cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(None)
  }
- pub(crate) fn renew_scope_generation(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ #[doc(hidden)]
+ pub fn renew_scope_generation(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing||!self.ready()||self.pending.is_some()||cx.should_yield()||cx.is_cancelled(){return Ok(false)}
   let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if let Some(original)=self.renew_source{if original!=source{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation renewal belongs to another original source").into())}}
@@ -125,16 +133,18 @@ impl ToolCancellationIssuer{
    if grant.maximum_copy_bytes<size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(){return Ok(false)}self.renew_source=None;self.renew_swapped=false;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)
   }else if self.renew_cancel.is_none(){let original=self.admission.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"renewal lost its retained creation authority"))?;let Some((token,paid))=original.cancellation()?.admit_child(grant)?else{return Ok(false)};*self.renew_cancel=Some(token);progress=paid;}
   else if self.renew_claim.is_none(){let Some((claim,paid))=PublicationClaim::admit(grant)?else{return Ok(false)};*self.renew_claim=Some(claim);progress=paid;}
-  else{let bytes=size_of::<semio_framework_job::CancelToken>()+size_of::<PublicationClaimHandle>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let canonical=self.issued.as_mut().unwrap();let token=std::mem::replace(&mut canonical.app_scope,self.renew_cancel.take().unwrap());let claim=std::mem::replace(&mut canonical.publication_scope,self.renew_claim.take().unwrap());*self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[Some(token),None,None],[Some(claim),None,None,None],None));self.renew_swapped=true;progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};}
+  else{let bytes=size_of::<semio_framework_job::CancelToken>()+size_of::<PublicationClaimHandle>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let canonical=self.issued.as_mut().unwrap();let token=std::mem::replace(&mut canonical.app_scope,self.renew_cancel.take().unwrap());let claim=std::mem::replace(&mut canonical.publication_scope,self.renew_claim.take().unwrap());*self.pending_close=Some(crate::CancellationLeaseParts::unpublished(None,[Some(token),None,None],[Some(claim),None,None,None],None));self.renew_swapped=true;progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};}
   cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(false)
  }
- pub(crate) fn cancellation_cleanup_demands(&self,index:usize,body:usize,finished_only:bool)->Result<RetirementDemand,ValueError>{
+ #[doc(hidden)]
+ pub fn cancellation_cleanup_demands(&self,index:usize,body:usize,finished_only:bool)->Result<RetirementDemand,ValueError>{
   if let Some(parts)=self.pending_close.as_ref(){return parts.retirement_demands(self.issued.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"registered cancellation close lost canonical owner"))?,self.admission.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"registered cancellation close lost original creation source"))?.cancellation()?,body)}
   let Some(canonical)=self.issued.as_ref()else{return Ok(Default::default())};let state=canonical.state.try_lock().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancellation cleanup source is busy"))?;
   let scope=if index<TOOL_CANCELLATION_SLOTS{state.get(index)}else{state.keyed_operations.id_at(index-TOOL_CANCELLATION_SLOTS).and_then(|id|state.keyed_operations.get(id))};
   let copy_bytes=if scope.is_some_and(|scope|!finished_only||scope.publication_claim.is_finished()){size_of::<ToolDocumentCancellationScope>()+size_of::<ToolKeyedDocumentCancellationScope>()}else{size_of::<usize>()};Ok(RetirementDemand{copy_bytes,depth:1,..Default::default()})
  }
- pub(crate) fn cleanup_slot(&mut self,index:usize,cx:&mut StepContext<'_>,finished_only:bool)->Result<bool,OriginalTurnFailure>{
+ #[doc(hidden)]
+ pub fn cleanup_slot(&mut self,index:usize,cx:&mut StepContext<'_>,finished_only:bool)->Result<bool,OriginalTurnFailure>{
   if self.pending.is_some()||self.renew_swapped{return Ok(false)}if self.cleanup_index.is_some_and(|selected|selected!=index){return Ok(false)}
   if !self.ready(){return Ok(true)}if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if let Some(parts)=self.pending_close.as_mut(){
@@ -149,14 +159,19 @@ impl ToolCancellationIssuer{
   let document=if index>=TOOL_CANCELLATION_SLOTS{let document=state.keyed_documents.get_mut(document_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"exact cancellation cleanup lost original document scope"))?;document.active-=1;if document.active==0{state.keyed_documents.remove(document_id)}else{None}}else{None};
   canonical.active.fetch_sub(1,std::sync::atomic::Ordering::AcqRel);drop(state);let ToolDocumentCancellationScope{token,publication_claim,..}=original;
   let(document_token,document_claim)=document.map_or((None,None),|ToolKeyedDocumentCancellationScope{token,publication_claim,..}|(Some(token),Some(publication_claim)));
-  *self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[Some(token),document_token,None],[Some(publication_claim),document_claim,None,None],(index>=TOOL_CANCELLATION_SLOTS).then_some(document_id)));self.cleanup_index=Some(index);
+  *self.pending_close=Some(crate::CancellationLeaseParts::unpublished(None,[Some(token),document_token,None],[Some(publication_claim),document_claim,None,None],(index>=TOOL_CANCELLATION_SLOTS).then_some(document_id)));self.cleanup_index=Some(index);
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
  }
- pub(crate) fn scope_generation(&self)->u64{self.issued.as_ref().map_or(0,ToolCancellationHandle::scope_generation)}
- pub(crate) fn active_operation_count(&self)->usize{self.issued.as_ref().map_or(0,ToolCancellationHandle::active_operation_count)}
- pub(crate) fn cancel_scope_generation(&self){if let Some(issued)=self.issued.as_ref(){issued.cancel_scope_generation()}}
- pub(crate) fn terminal_is_empty(&self)->bool{let source=&*self.admission;self.pending.is_none()&&self.pending_close.is_none()&&self.renew_cancel.is_none()&&self.renew_claim.is_none()&&self.issued.is_none()&&source.source.is_none()&&source.slots.is_none()&&source.operations.is_none()&&source.documents.is_none()&&source.cancel.is_none()&&source.claim.is_none()&&source.generation.is_none()&&source.active.is_none()&&source.state.is_none()&&source.cancel_close.is_none()&&source.claim_close.is_none()}
- pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ #[doc(hidden)]
+ pub fn scope_generation(&self)->u64{self.issued.as_ref().map_or(0,ToolCancellationHandle::scope_generation)}
+ #[doc(hidden)]
+ pub fn active_operation_count(&self)->usize{self.issued.as_ref().map_or(0,ToolCancellationHandle::active_operation_count)}
+ #[doc(hidden)]
+ pub fn cancel_scope_generation(&self){if let Some(issued)=self.issued.as_ref(){issued.cancel_scope_generation()}}
+ #[doc(hidden)]
+ pub fn terminal_is_empty(&self)->bool{let source=&*self.admission;self.pending.is_none()&&self.pending_close.is_none()&&self.renew_cancel.is_none()&&self.renew_claim.is_none()&&self.issued.is_none()&&source.source.is_none()&&source.slots.is_none()&&source.operations.is_none()&&source.documents.is_none()&&source.cancel.is_none()&&source.claim.is_none()&&source.generation.is_none()&&source.active.is_none()&&source.state.is_none()&&source.cancel_close.is_none()&&source.claim_close.is_none()}
+ #[doc(hidden)]
+ pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let one=RetirementDemand{depth:1,..Default::default()};let source=&*self.admission;
   if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<bool>(),..one})}
   if self.pending.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<PendingLease>(),..one})}
@@ -175,7 +190,8 @@ impl ToolCancellationIssuer{
   if let Some(active)=source.active.as_ref(){return Ok(RetirementDemand{release_bytes:if Arc::strong_count(active)==1&&Arc::weak_count(active)==0{semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>()}else{0},..one})}
   Ok(one)
  }
- pub(crate) fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{
+ #[doc(hidden)]
+ pub fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{
   use semio_framework_job::InteractiveJobCloseStep;
   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
   if let Some(source)=self.admission.source.as_ref(){if !source.terminal_is_empty(){source.validate_retirement_context(cx)?}}
@@ -186,7 +202,7 @@ impl ToolCancellationIssuer{
   if !self.closing{self.closing=true;if let Some(handle)=self.issued.as_ref(){handle.cancel_scope_generation()}}
   else if let Some(pending)=self.pending.take(){*self.pending_close=Some(pending.into_parts());}
   else if let Some(parts)=self.pending_close.as_mut(){if parts.terminal_is_empty(){self.pending_close.take();}else{progress=parts.close_step(self.issued.as_ref().unwrap(),source.source.as_ref().unwrap().cancellation()?,grant)?.progress()}}
-  else if self.renew_cancel.is_some()||self.renew_claim.is_some(){*self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[self.renew_cancel.take(),None,None],[self.renew_claim.take(),None,None,None],None));}
+  else if self.renew_cancel.is_some()||self.renew_claim.is_some(){*self.pending_close=Some(crate::CancellationLeaseParts::unpublished(None,[self.renew_cancel.take(),None,None],[self.renew_claim.take(),None,None,None],None));}
   else if let Some(handle)=self.issued.take(){let ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}=handle;source.state=Some(state);source.cancel=Some(app_scope);source.claim=Some(publication_scope);source.generation=Some(app_generation);source.active=Some(active)}
   else if let Some(state)=source.state.as_ref(){
    if Arc::strong_count(state)!=1||Arc::weak_count(state)!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
@@ -213,4 +229,5 @@ impl Drop for ToolCancellationIssuer{fn drop(&mut self){assert!(std::thread::pan
 #[path="🧪️tests/🦀️.rs"]
 mod original_laws;
 #[cfg(any(test,feature="media-turn-testing"))]
-pub(crate) use original_laws::cancellation_issuer_original_creation_physical_birth_and_close;
+#[doc(hidden)]
+pub use original_laws::cancellation_issuer_original_creation_physical_birth_and_close;

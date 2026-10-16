@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-tests-02"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion test crate tests-02 of the plugin SDK partition (hosts: window-config)"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-tests-02"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-test-support = { path = "../../../🧯️test-support/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
+semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+wasmtime = { version = "47.0.3", features = ["cranelift"] }

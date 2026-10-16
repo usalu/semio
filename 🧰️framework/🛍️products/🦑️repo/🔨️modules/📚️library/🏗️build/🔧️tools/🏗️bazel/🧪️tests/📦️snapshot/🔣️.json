@@ -1,0 +1,27 @@
+{
+  "entries": [
+    {"path":"out/a","kind":"symlink","mode":511,"link":"long-directory","linkKind":"directory"},
+    {"path":"out/b","kind":"symlink","mode":511,"link":"long-directory/value.txt","linkKind":"file"}
+  ],
+  "invalid": [
+    {"path":"out/a","kind":"symlink","mode":511,"link":"long-directory"},
+    {"path":"out/a","kind":"symlink","mode":511,"link":"long-directory","linkKind":"foreign"},
+    {"path":"out/a","kind":"directory","mode":511,"linkKind":"directory"},
+    {"path":"out/a","kind":"file","mode":420,"linkKind":"file"}
+  ],
+  "directoryMode": 365,
+  "modeRaces": [
+    {"stage":"writable","foreignMode":448,"preserved":true},
+    {"stage":"final","foreignMode":448,"preserved":true}
+  ],
+  "modeCleanup": [
+    {"body":"error","close":"error","expected":"body"},
+    {"body":"undefined","close":"error","expected":"body"},
+    {"body":"error","close":"success","expected":"body"},
+    {"body":"success","close":"error","expected":"close"},
+    {"body":"success","close":"success","expected":"success"}
+  ],
+  "modeCleanupSchema": {"type":"object","additionalProperties":false,"required":["body","close","expected"],"properties":{"body":{"enum":["error","undefined","success"]},"close":{"enum":["error","success"]},"expected":{"enum":["body","close","success"]}}},
+  "expectedTypes": ["dir","file"],
+  "expectedPaths": ["out/a","out/b","out/long-directory","out/long-directory/value.txt"]
+}

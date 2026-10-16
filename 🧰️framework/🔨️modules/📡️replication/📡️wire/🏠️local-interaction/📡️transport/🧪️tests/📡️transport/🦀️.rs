@@ -35,7 +35,7 @@ fn local_interaction_transport_three_commands_preserve_full_authority() {
         encoded.push(0); assert!(decode_local_interaction_query_command(&encoded).is_err());
     }
     assert_eq!(
-        super::super::dsl_to_json(&crate::value::ToValue::to_value(&LocalInteractionQueryCommand::Read { request_id: u64::MAX }))["requestId"],
+        super::super::dsl_to_json(&semio_framework_value::ToValue::to_value(&LocalInteractionQueryCommand::Read { request_id: u64::MAX }))["requestId"],
         "18446744073709551615"
     );
 }

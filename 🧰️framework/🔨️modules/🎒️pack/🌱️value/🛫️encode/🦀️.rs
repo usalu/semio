@@ -1,12 +1,45 @@
 //! 🛫️ Literal Pack fields with borrowed symbol discovery and controlled physical emission.
-use semio_framework_value::{ValueError,ValueRefusalKind};
-use super::*;
+
+use semio_framework_value::{ValueError, ValueRefusalKind, DslValue, Number};
 use semio_framework_value::native_encoding::NativeEncodeControl;
-use semio_framework_dsl_record::NativeSchemaControl;
-use std::{cmp::Ordering,mem::size_of};
+use std::cmp::Ordering;
+use std::mem::size_of;
+use semio_framework_pack_error::PackRefusal;
+use semio_framework_dsl_record::{FieldValue, RecordSpec, RecordSpecProducer, RecordValue, Shape, WireNode, WireValue};
+use semio_framework_replication_codec::PackEncodeOptions as EncodeOptions;
+use semio_framework_pack_record_schema::{ELEM_BOOL, ELEM_ENUM, ELEM_F64, ELEM_FALLBACK, ELEM_INT, ELEM_STR, ELEM_UINT, NumKind, TAG_ABSENT, TAG_BLOCK, TAG_BYTES, TAG_BYTES_CHUNKED, TAG_ENUM, TAG_EXPR, TAG_F64, TAG_FALSE, TAG_INT, TAG_LIST, TAG_MAP, TAG_NULL, TAG_PACKED_F64, TAG_PACKED_VARINT, TAG_RECORD, TAG_STATEMENTS, TAG_STR, TAG_STR_INLINE, TAG_TABLE_SOA, TAG_TRUE, TAG_TUPLE, TAG_UINT, TAG_VALUE, TAG_WIRE, block_inner_shape, controlled_schema, elem_shape_of, elem_tag_for_shape, map_inner_shape, schema_hash_controlled, statements_variants, table_spec_of};
+
+#[cfg(test)]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
+#[cfg(test)]
+use semio_framework_dsl_record::RecordLayout;
+
+/// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
+pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{record_body(spec,record,options,control)}
+
+/// 📦️ Appends one exact Record body after the caller's existing prefix and returns its body length.
+/// The caller retains every accepted byte across refusal; no operation header is reset or replaced.
+pub fn encode_record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{record_body_into(spec,record,options,output,control)}
+
+/// 🫳️ Emits exact canonical Record bytes directly from the immutable original ordinal source.
+pub fn encode_projected_record_body_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(spec:&RecordSpec,source:&T,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{projected_record_body_into(spec,source,options,output,control)}
+
+/// 🎞️ Encodes a borrowed complete intrinsic value without a synthetic owned record.
+pub fn encode_value_record_body_controlled(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{value_record_body(field_id,value,options,control)}
+
+/// 🎞️ Appends one complete intrinsic body to the caller's sink under the same options and control.
+pub fn encode_value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{value_record_body_into(field_id,value,options,output,control)}
+
+/// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
+pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document(spec,record,options,control)}
+
 #[path = "🫳️borrowed/🦀️.rs"]
 mod borrowed;
-pub(super) use borrowed::projected_record_body_into;
+use borrowed::projected_record_body_into;
 #[path="🧭️symbols/🦀️.rs"]
 mod retained_symbols;
 pub use retained_symbols::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
@@ -71,7 +104,7 @@ impl<'a> Symbols<'a>{
 
 fn table_value(row:&FieldValue,id:u16)->Option<&FieldValue>{match row{FieldValue::Record(record)=>record.fields.get(&id).filter(|value|!matches!(value,FieldValue::Absent)),_=>None}}
 
-struct Output<'a>{bytes:Option<Vec<u8>>,external:Option<&'a mut dyn protocol::io::binary::operation_bytes::OperationByteOutput>,length:usize}
+struct Output<'a>{bytes:Option<Vec<u8>>,external:Option<&'a mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput>,length:usize}
 impl<'a> Output<'a>{
     fn measure()->Self{Self{bytes:None,external:None,length:0}}
     fn allocated(length:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,PackRefusal>{Ok(Self{bytes:Some(control.allocate_vec(length)?),external:None,length:0})}
@@ -81,7 +114,7 @@ impl<'a> Output<'a>{
     fn signed(&mut self,value:i64,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.varint(((value as u64)<<1)^((value>>63)as u64),control)}
 }
 
-struct Encoder<'a,'b,'c,'d>{symbols:&'a Symbols<'b>,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,writer:Option<&'c mut crate::format::ControlledPackWriter>,chunking:bool,next_chunk:u32}
+struct Encoder<'a,'b,'c,'d>{symbols:&'a Symbols<'b>,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,writer:Option<&'c mut semio_framework_pack_format::ControlledPackWriter>,chunking:bool,next_chunk:u32}
 impl Encoder<'_,'_,'_,'_>{
     fn text(&mut self,text:&str,inline:bool,output:&mut Output<'_>)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;output.bytes(text.as_bytes(),self.control)}
     fn forced(&mut self,text:&str,output:&mut Output<'_>)->Result<(),PackRefusal>{let index=self.symbols.index(text,self.control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Pack forced symbol missing"))?;output.varint(index,self.control)}
@@ -140,13 +173,13 @@ impl Encoder<'_,'_,'_,'_>{
     fn value_body(&mut self,field_id:u16,value:&DslValue,output:&mut Output<'_>)->Result<(),PackRefusal>{self.symbols(output)?;output.varint(1,self.control)?;output.varint(u64::from(field_id),self.control)?;output.byte(TAG_VALUE,self.control)?;self.dynamic(value,0,output)}
 }
 
-pub(super) fn record_body(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
+fn record_body(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());if control.owned_bytes()>maximum{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"Pack output admission exceeds max_total_alloc"})}
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.record(Some(spec),record,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.body(spec,record,&mut measure)?;if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Pack output exceeds caller allocation allowance").into())}let mut output=Output::allocated(measure.length,encoder.control)?;encoder.body(spec,record,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack output length changed between admission and emission").into())}Ok(output.bytes.unwrap())}))
 }
 
 
-pub(super) fn record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+fn record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
         control.begin_stage(0)?;
@@ -166,12 +199,12 @@ pub(super) fn record_body_into(spec:&RecordSpec,record:&RecordValue,options:&Enc
 }
 
 /// 🎞️ Borrows one complete intrinsic owner through symbol admission and exact byte emission.
-pub(super) fn value_record_body(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
+fn value_record_body(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.dynamic(value,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.value_body(field_id,value,&mut measure)?;if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit, "intrinsic wire exceeds max_file_len")))}if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic wire exceeds caller allocation allowance").into())}let mut output=Output::allocated(measure.length,encoder.control)?;encoder.value_body(field_id,value,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic wire changed after byte admission").into())}Ok(output.bytes.unwrap())}))
 }
 
-pub(super) fn value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+fn value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.dynamic(value,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.value_body(field_id,value,&mut measure)?;if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit, "intrinsic wire exceeds max_file_len")))}if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic wire exceeds caller allocation allowance").into())}let mut output=Output{bytes:None,external:Some(output),length:0};encoder.value_body(field_id,value,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic wire changed after byte admission").into())}Ok(output.length)}))
 }
@@ -183,20 +216,20 @@ impl DocumentSource<'_>{
     fn fields(&self,encoder:&mut Encoder<'_,'_,'_,'_>,output:&mut Output<'_>)->Result<(),PackRefusal>{match self{Self::Record{spec,record}=>encoder.fields(Some(spec),record,0,output),Self::Intrinsic{field_id,value,..}=>{output.varint(1,encoder.control)?;output.varint(u64::from(*field_id),encoder.control)?;output.byte(TAG_VALUE,encoder.control)?;encoder.dynamic(value,0,output)}}}
     fn field_count(&self)->u64{match self{Self::Record{record,..}=>record.fields.values().filter(|value|!matches!(value,FieldValue::Absent)).count()as u64,Self::Intrinsic{..}=>1}}
 }
-pub(super) fn document(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document_source(DocumentSource::Record{spec,record},options,control)}
-pub(super) fn intrinsic_document(spec:&RecordSpec,field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document_source(DocumentSource::Intrinsic{spec,field_id,value},options,control)}
+fn document(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document_source(DocumentSource::Record{spec,record},options,control)}
+pub fn intrinsic_document(spec:&RecordSpec,field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{document_source(DocumentSource::Intrinsic{spec,field_id,value},options,control)}
 
 fn document_source(source:DocumentSource<'_>,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
         control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};source.symbols(&mut symbols,options.limits.max_depth,control)?;symbols.finish(control)?;
         let symbol_bytes=|output:&mut Output<'_>,control:&mut NativeEncodeControl<'_>|->Result<(),PackRefusal>{output.varint(symbols.entries.len()as u64,control)?;for symbol in &symbols.entries{control.checkpoint()?;output.varint(symbol.text.len()as u64,control)?;output.bytes(symbol.text.as_bytes(),control)?;}Ok(())};
-        let write=crate::format::WriteOptions{required_flags:0,optional_flags:if options.canonical{crate::format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=crate::format::ControlledPackWriter::begin(&write,&options.limits,control)?;
+        let write=semio_framework_pack_format::WriteOptions{required_flags:0,optional_flags:if options.canonical{semio_framework_pack_format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=semio_framework_pack_format::ControlledPackWriter::begin(&write,&options.limits,control)?;
         let mut measure=Output::measure();symbol_bytes(&mut measure,control)?;let mut payload=Output::allocated(measure.length,control)?;symbol_bytes(&mut payload,control)?;writer.symbols(&payload.bytes.unwrap(),symbols.entries.len()as u64,control)?;
         let mut measure=Output::measure();{let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:true,next_chunk:0};source.fields(&mut encoder,&mut measure)?;}
         let mut payload=Output::allocated(measure.length,control)?;{let mut encoder=Encoder{symbols:&symbols,options,control,writer:Some(&mut writer),chunking:true,next_chunk:0};source.fields(&mut encoder,&mut payload)?;}
-        if payload.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack document size changed after admission").into())}let bytes=payload.bytes.unwrap();let start=writer.position();let size=usize::try_from(options.frame_size.max(1)).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit,"Pack frame size exceeds address space"))?;let frames=bytes.len().div_ceil(size);control.scoped_stage(|control|{control.begin_stage(frames)?;for frame in bytes.chunks(size){writer.segment(crate::KIND_DOCUMENT,frame,control)?;control.step()?;}Ok::<_,PackRefusal>(())})?;let end=writer.position();let hash=schema_hash_controlled(source.spec(),control)?;
-        let manifest=crate::format::Manifest{schema_name:String::new(),schema_hash:hash,doc_span:crate::ByteRange{offset:start,len:end-start},doc_frame_count:frames as u64,symbols_span:crate::ByteRange{offset:0,len:0},chunk_table_span:crate::ByteRange{offset:0,len:0},field_index_span:crate::ByteRange{offset:0,len:0},uncompressed_body_len:bytes.len()as u64,field_count:source.field_count(),chunk_count:0,symbol_count:symbols.entries.len()as u64};writer.finish(&manifest,control)
+        if payload.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack document size changed after admission").into())}let bytes=payload.bytes.unwrap();let start=writer.position();let size=usize::try_from(options.frame_size.max(1)).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit,"Pack frame size exceeds address space"))?;let frames=bytes.len().div_ceil(size);control.scoped_stage(|control|{control.begin_stage(frames)?;for frame in bytes.chunks(size){writer.segment(semio_framework_replication_codec::KIND_DOCUMENT,frame,control)?;control.step()?;}Ok::<_,PackRefusal>(())})?;let end=writer.position();let hash=schema_hash_controlled(source.spec(),control)?;
+        let manifest=semio_framework_pack_format::Manifest{schema_name:String::new(),schema_hash:hash,doc_span:semio_framework_replication_codec::ByteRange{offset:start,len:end-start},doc_frame_count:frames as u64,symbols_span:semio_framework_replication_codec::ByteRange{offset:0,len:0},chunk_table_span:semio_framework_replication_codec::ByteRange{offset:0,len:0},field_index_span:semio_framework_replication_codec::ByteRange{offset:0,len:0},uncompressed_body_len:bytes.len()as u64,field_count:source.field_count(),chunk_count:0,symbol_count:symbols.entries.len()as u64};writer.finish(&manifest,control)
     }))
 }
 

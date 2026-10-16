@@ -1,6 +1,13 @@
 //! 🗂️ The tree source and the list-verb stream filters: the filesystem tree source, the model ids and the stream options.
 
-use super::*;
+use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_cli_event_stream::Format;
+use semio_framework_repo_codebase::Codebase;
+use semio_framework_repo_graphql::RepoContext;
+use semio_framework_repo_identity::{emoji_text, entity as identity_entity, flat};
+use semio_framework_repo_model::{entity, TreeFilter, TreeNode, TreeNodeKind};
+use serde_json::{Map, Value as Json};
+use std::collections::BTreeMap;
 
 //#region 🧭️RepoCli
 //#region 🗂️TreeSource
@@ -342,7 +349,7 @@ impl StreamOptions {
 }
 
 /// 🔲️ The status filter of a list verb, twin of `getStatusFilter`.
-pub(crate) fn status_filter(invocation: &Invocation<'_>) -> Option<String> {
+pub fn status_filter(invocation: &Invocation<'_>) -> Option<String> {
     if invocation.flag("open") {
         return Some("open".to_string());
     }
@@ -353,7 +360,7 @@ pub(crate) fn status_filter(invocation: &Invocation<'_>) -> Option<String> {
 }
 
 /// 🧹️ The monorepo-tree filter the tree flags carry, twin of `buildTreeFilterFromFlags`.
-pub(crate) fn tree_filter(invocation: &Invocation<'_>) -> TreeFilter {
+pub fn tree_filter(invocation: &Invocation<'_>) -> TreeFilter {
     let kinds = [
         ("technology", TreeNodeKind::Technology),
         ("bundle", TreeNodeKind::Bundle),
@@ -441,7 +448,7 @@ pub(crate) fn tree_filter(invocation: &Invocation<'_>) -> TreeFilter {
 }
 
 /// 🌳️ Every non-category node of a tree, depth first.
-pub(crate) fn flatten_tree(node: &TreeNode, out: &mut Vec<TreeNode>) {
+pub fn flatten_tree(node: &TreeNode, out: &mut Vec<TreeNode>) {
     if node.kind != TreeNodeKind::Category {
         out.push(node.clone());
     }
@@ -451,7 +458,7 @@ pub(crate) fn flatten_tree(node: &TreeNode, out: &mut Vec<TreeNode>) {
 }
 
 /// 🌳️ The monorepo tree a search or list verb answers from.
-pub(crate) fn searched_tree(invocation: &Invocation<'_>, positional: usize) -> (TreeNode, TreeFilter) {
+pub fn searched_tree(invocation: &Invocation<'_>, positional: usize) -> (TreeNode, TreeFilter) {
     let mut filter = tree_filter(invocation);
     if invocation.args().len() > positional {
         filter.query = invocation.arg(positional);
@@ -467,7 +474,7 @@ pub(crate) fn searched_tree(invocation: &Invocation<'_>, positional: usize) -> (
 }
 
 /// 🖨️ One tree node in the invocation's format, exactly as `search` renders one.
-pub(crate) fn write_tree_node(invocation: &mut Invocation<'_>, node: &TreeNode) -> Result<(), CliError> {
+pub fn write_tree_node(invocation: &mut Invocation<'_>, node: &TreeNode) -> Result<(), CliError> {
     let text = match invocation.config.format {
         Format::Json => format!("{}\n", serde_json::to_string(node).map_err(|error| error.to_string())?),
         Format::Markdown => semio_framework_repo_tree::render_monorepo_tree_markdown(node, &semio_framework_repo_tree::DefaultEntityRenderer),
@@ -478,14 +485,14 @@ pub(crate) fn write_tree_node(invocation: &mut Invocation<'_>, node: &TreeNode) 
 }
 
 /// 🌲️ A forest under the anonymous category root the monorepo tree carries.
-pub(crate) fn write_tree_forest(invocation: &mut Invocation<'_>, roots: Vec<TreeNode>) -> Result<(), CliError> {
+pub fn write_tree_forest(invocation: &mut Invocation<'_>, roots: Vec<TreeNode>) -> Result<(), CliError> {
     let mut node = semio_framework_repo_tree::tree_node(TreeNodeKind::Category, "", ".", "");
     node.children = Some(roots);
     write_tree_node(invocation, &node)
 }
 
 /// 🌿️ A box-drawn text tree as log lines.
-pub(crate) fn text_tree_lines(nodes: &[TreeNode], prefix: &str, lines: &mut Vec<String>) {
+pub fn text_tree_lines(nodes: &[TreeNode], prefix: &str, lines: &mut Vec<String>) {
     let last = nodes.len().saturating_sub(1);
     for (index, node) in nodes.iter().enumerate() {
         let (connector, child_prefix) = if index == last { ("└️─️─️ ", format!("{prefix}    ")) } else { ("├️─️─️ ", format!("{prefix}│️   ")) };

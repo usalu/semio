@@ -1,5 +1,8 @@
 //! 🔏️ Original aggregate edits retain their native typed canonical seal and independent frame custody.
-use super::*;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_os_spr::Edit;
+use semio_framework_value::{ErasedSnapshotRetirement, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_value::{RetirementDemand,ValueRefusalKind,retirement::RetireOwned};
 
@@ -11,7 +14,7 @@ pub trait ArtifactStoreBatchDigest<M>:ErasedSnapshotRetirement{
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);
 }
-struct NativeBatchDigest<M:RetireOwned+ArtifactCanonicalJsonTree>{original:ArtifactCanonicalEditSealCursor<M>}
+struct NativeBatchDigest<M:RetireOwned+ArtifactCanonicalJsonTree>{pub original:ArtifactCanonicalEditSealCursor<M>}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"batch digest original depth overflow"))?;Ok(demand)}
 fn child(mut grant:RetainedCloneGrant)->RetainedCloneGrant{grant.maximum_items=1;grant.maximum_depth-=1;grant}
 fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}

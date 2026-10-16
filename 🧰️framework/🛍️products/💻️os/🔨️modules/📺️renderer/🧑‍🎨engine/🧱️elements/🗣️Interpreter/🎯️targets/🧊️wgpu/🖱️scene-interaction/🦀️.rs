@@ -3,24 +3,17 @@
 //! Driving one scene interaction step, the presented input candidates, the surface context menu and the framework
 //! scene host with its mounted layout text step.
 
-use super::ink_and_vfs_focus::{focus_ink_editor, focus_ink_surface, focus_vfs_control};
-use super::retained_ui_engine::{
-    ui_document_close_pending_for, SceneIntentEvent, SceneInteractionIntent, SCENE_INTENTS,
-    UI_ENGINE,
-};
-use super::text_and_table_focus::{
-    clear_focused_table_editable_text, commit_focused_table_editable_text_with_engine,
-    focus_table_editable_text, focus_table_stepper, focused_table_editable_text_address,
-    install_text_editor_focus, reset_text_editor_caret, text_editor_focus_in,
-};
-use super::ui_image_loading::{framework_widget_context, render_ui_image_step};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{focus_ink_editor, focus_ink_surface, focus_vfs_control};
+use crate::retained_ui_engine::{ui_document_close_pending_for, SceneIntentEvent, SceneInteractionIntent, SCENE_INTENTS, UI_ENGINE};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::{clear_focused_table_editable_text, commit_focused_table_editable_text_with_engine, focus_table_editable_text, focus_table_stepper, focused_table_editable_text_address, install_text_editor_focus, reset_text_editor_caret, text_editor_focus_in};
+use semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::{framework_widget_context, render_ui_image_step};
 use crate::element_contracts::ScenePointerTarget;
-use crate::scenes::render_component_scene_step;
+use semio_framework_os_renderer_wgpu_scene_render::render_component_scene_step;
 use ui_wgpu::wgpu::{ActionDescriptor, Rect, Theme, UiNode};
 
 pub fn drive_scene_interaction_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
-    crate::scenes::request_stale_canvas_authority_cancel(|window_id, generation| UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id) == Some(generation)));
-    if crate::scenes::canvas_pointer_terminal_step(input) {
+    semio_framework_os_renderer_wgpu_scene_render::request_stale_canvas_authority_cancel(|window_id, generation| UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id) == Some(generation)));
+    if semio_framework_os_renderer_wgpu_scene_render::canvas_pointer_terminal_step(input) {
         return true;
     }
     let Some(mut intent) = SCENE_INTENTS.with(|cell| cell.borrow_mut().pop_front()) else {
@@ -49,13 +42,13 @@ pub fn scene_interaction_terminal_is_empty() -> bool {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PresentedInputCandidateProgress {
+pub enum PresentedInputCandidateProgress {
     Stale,
     Pending { advanced: bool },
     Ready,
 }
 
-pub(crate) fn progress_presented_input_candidate(witness: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> PresentedInputCandidateProgress {
+pub fn progress_presented_input_candidate(witness: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> PresentedInputCandidateProgress {
     let blocked = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         if !engine.presented_input_candidate_matches(witness) {
@@ -81,7 +74,7 @@ pub struct SurfaceContextMenuTarget {
     pub surface_id: String,
     pub kind: ui_wgpu::wgpu::SurfaceKind,
     pub rect: Rect,
-    pub target: crate::scenes::SceneContextMenuTarget,
+    pub target: semio_framework_os_renderer_wgpu_scene_render::SceneContextMenuTarget,
 }
 
 /** 🖱️ The component scene under a WINDOW-LOCAL point, already resolved into its context-menu
@@ -102,7 +95,7 @@ pub fn surface_context_menu_target(window_id: &str, x: f32, y: f32) -> Option<Su
         let hit = engine.scene_at(window_id, x, y)?;
         let tree = engine.tree(window_id)?;
         let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
-        let target = crate::scenes::scene_context_menu_target(scene, hit.rect, x, y);
+        let target = semio_framework_os_renderer_wgpu_scene_render::scene_context_menu_target(scene, hit.rect, x, y);
         Some(SurfaceContextMenuTarget { surface_id: hit.surface_id, kind: hit.kind, rect: hit.rect, target })
     })
 }
@@ -116,7 +109,7 @@ pub fn text_editor_claim_menu_action(window_id: &str, x: f32, y: f32, action: &s
         .with(|cell| {
             let engine = cell.borrow();
             let hit = engine.scene_at(window_id, x, y)?;
-            (hit.kind == ui_wgpu::wgpu::SurfaceKind::TextEditor).then(|| crate::scenes::text_editor_queue_menu_action(&hit.surface_id, action, x, y))
+            (hit.kind == ui_wgpu::wgpu::SurfaceKind::TextEditor).then(|| semio_framework_os_renderer_wgpu_scene_text_vfs::text_editor_queue_menu_action(&hit.surface_id, action, x, y))
         })
         .unwrap_or(false)
 }
@@ -134,7 +127,7 @@ pub fn text_editor_claim_alt_completions(window_id: &str, x: f32, y: f32) -> boo
             }
             let tree = engine.tree(window_id)?;
             let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
-            Some(crate::scenes::text_editor_open_completions(scene))
+            Some(semio_framework_os_renderer_wgpu_scene_text_vfs::text_editor_open_completions(scene))
         })
         .unwrap_or(false)
 }
@@ -171,13 +164,13 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 _ => None,
             }) == Some(true)
     });
-    if !live || ui_document_close_pending_for(window_id) || crate::scenes::scene_host_retiring(&intent.host_id) {
+    if !live || ui_document_close_pending_for(window_id) || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&intent.host_id) {
         intent.retiring = true;
     }
     if intent.retiring {
         return Ok(if intent.close_step() { SceneIntentProgress::Complete } else { SceneIntentProgress::Pending });
     }
-    if crate::scenes::scene_has_bespoke_pointer_dispatch(kind) {
+    if semio_framework_os_renderer_wgpu_scene_render::scene_has_bespoke_pointer_dispatch(kind) {
         return Ok(SceneIntentProgress::Complete);
     }
     if kind == ui_wgpu::wgpu::SurfaceKind::TextEditor {
@@ -195,16 +188,16 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
             let focus = matches!(intent.event, SceneIntentEvent::PointerDown { .. }).then(|| text_editor_focus_in(&engine, window_id, intent.surface_generation, node, &scene.host_id)).flatten();
             let result = match intent.event {
                 SceneIntentEvent::PointerDown { x, y, button, .. } => {
-                    match crate::scenes::text_editor_popup_pointer(scene, rect, x, y, false, input) {
+                    match semio_framework_os_renderer_wgpu_scene_text_vfs::text_editor_popup_pointer(scene, rect, x, y, false, input) {
                         Ok(true) => return (Ok(SceneIntentProgress::Complete), focus),
                         Ok(false) => {}
                         Err(fault) => return (Err(fault), focus),
                     }
-                    crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
+                    semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
                 }
-                SceneIntentEvent::PointerUp { x, y, button, .. } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
-                SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
-                SceneIntentEvent::Scroll { delta_y, .. } => Ok(crate::engine_canvas::text_editor_wheel_into(scene, delta_y)),
+                SceneIntentEvent::PointerUp { x, y, button, .. } => semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
+                SceneIntentEvent::PointerMove { x, y, .. } => semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::Scroll { delta_y, .. } => Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_wheel_into(scene, delta_y)),
             };
             (result.map(|_| SceneIntentProgress::Complete), focus)
         });
@@ -227,10 +220,10 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
-                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
-                SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::paint2d_pointer_move_into(scene, rect, x, y, input),
-                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => crate::engine_canvas::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
+                SceneIntentEvent::PointerDown { x, y, button, modifiers } => semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
+                SceneIntentEvent::PointerUp { x, y, button, modifiers } => semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
+                SceneIntentEvent::PointerMove { x, y, .. } => semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
                 SceneIntentEvent::Scroll { .. } => Ok(false),
             };
             result.map(|_| SceneIntentProgress::Complete)
@@ -249,7 +242,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(
+                SceneIntentEvent::PointerDown { x, y, button, modifiers } => semio_framework_os_renderer_wgpu_scene_render::canvas_pointer_button_into(
                     scene,
                     rect,
                     intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?,
@@ -259,10 +252,10 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                     y,
                     true,
                     button,
-                    crate::scenes::SceneModifiers::from(modifiers),
+                    semio_framework_os_renderer_wgpu_scene_state::SceneModifiers::from(modifiers),
                     input,
                 ),
-                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(
+                SceneIntentEvent::PointerUp { x, y, button, modifiers } => semio_framework_os_renderer_wgpu_scene_render::canvas_pointer_button_into(
                     scene,
                     rect,
                     intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?,
@@ -272,18 +265,18 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                     y,
                     false,
                     button,
-                    crate::scenes::SceneModifiers::from(modifiers),
+                    semio_framework_os_renderer_wgpu_scene_state::SceneModifiers::from(modifiers),
                     input,
                 ),
                 SceneIntentEvent::PointerMove { x, y, modifiers } => {
                     let pointer_id = intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
-                    let result = crate::scenes::canvas_pointer_move_into(scene, rect, pointer_id, window_id, intent.surface_generation, x, y, crate::scenes::SceneModifiers::from(modifiers), input);
+                    let result = semio_framework_os_renderer_wgpu_scene_render::canvas_pointer_move_into(scene, rect, pointer_id, window_id, intent.surface_generation, x, y, semio_framework_os_renderer_wgpu_scene_state::SceneModifiers::from(modifiers), input);
                     if result.is_ok() {
-                        crate::scenes::set_scene_last_pointer_pos(&scene.host_id, x, y);
+                        semio_framework_os_renderer_wgpu_scene_state::set_scene_last_pointer_pos(&scene.host_id, x, y);
                     }
                     result
                 }
-                SceneIntentEvent::Scroll { x, y, delta_y, .. } => Ok(crate::scenes::canvas_wheel_into(scene, rect, x, y, delta_y)),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } => Ok(semio_framework_os_renderer_wgpu_scene_render::canvas_wheel_into(scene, rect, x, y, delta_y)),
             };
             result.map(|_| SceneIntentProgress::Complete)
         });
@@ -306,26 +299,26 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 }
             }
             match intent.event {
-                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => crate::scenes::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => semio_framework_os_renderer_wgpu_scene_ink::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
                 SceneIntentEvent::Scroll { .. } => Ok(SceneIntentProgress::Complete),
                 event => {
                     if intent.ink_job.is_none() {
                         let event = match event {
-                            SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::InkInteractionEvent::PointerDown { x, y, button, shift: modifiers.shift },
-                            SceneIntentEvent::PointerUp { x, y, .. } => crate::scenes::InkInteractionEvent::PointerUp { x, y },
-                            SceneIntentEvent::PointerMove { x, y, .. } => crate::scenes::InkInteractionEvent::PointerMove { x, y },
+                            SceneIntentEvent::PointerDown { x, y, button, modifiers } => semio_framework_os_renderer_wgpu_scene_ink::InkInteractionEvent::PointerDown { x, y, button, shift: modifiers.shift },
+                            SceneIntentEvent::PointerUp { x, y, .. } => semio_framework_os_renderer_wgpu_scene_ink::InkInteractionEvent::PointerUp { x, y },
+                            SceneIntentEvent::PointerMove { x, y, .. } => semio_framework_os_renderer_wgpu_scene_ink::InkInteractionEvent::PointerMove { x, y },
                             SceneIntentEvent::Scroll { .. } => unreachable!(),
                         };
-                        intent.ink_job = crate::scenes::InkInteractionJob::new(operation_generation, intent.surface_generation, intent.pointer_id, scene, event)?;
+                        intent.ink_job = semio_framework_os_renderer_wgpu_scene_ink::InkInteractionJob::new(operation_generation, intent.surface_generation, intent.pointer_id, scene, event)?;
                         if intent.ink_job.is_none() {
                             return Ok(SceneIntentProgress::Complete);
                         }
                         return Ok(SceneIntentProgress::Pending);
                     }
                     match intent.ink_job.as_mut().expect("ink job retained").step(operation_generation, scene, rect, input)? {
-                        crate::scenes::InkInteractionStep::Pending => Ok(SceneIntentProgress::Pending),
-                        crate::scenes::InkInteractionStep::Complete => {
-                            if intent.ink_job.as_ref().is_some_and(crate::scenes::InkInteractionJob::opened_edit) {
+                        semio_framework_os_renderer_wgpu_scene_ink::InkInteractionStep::Pending => Ok(SceneIntentProgress::Pending),
+                        semio_framework_os_renderer_wgpu_scene_ink::InkInteractionStep::Complete => {
+                            if intent.ink_job.as_ref().is_some_and(semio_framework_os_renderer_wgpu_scene_ink::InkInteractionJob::opened_edit) {
                                 if let Some(generation) = engine.surface_generation(window_id) {
                                     focus_ink_editor(window_id, generation, node, &scene.host_id);
                                 }
@@ -352,7 +345,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
         match intent.event {
             SceneIntentEvent::PointerDown { x, y, button, modifiers } => {
                 if kind == ui_wgpu::wgpu::SurfaceKind::Table && button == 0 {
-                    if let Some(target) = crate::scenes::table_editable_text_focus_target(scene, rect, x, y, intent.driver_drag) {
+                    if let Some(target) = semio_framework_os_renderer_wgpu_scene_tables::table_editable_text_focus_target(scene, rect, x, y, intent.driver_drag) {
                         focus_table_editable_text(&engine, window_id, intent.surface_generation, node, &scene.host_id, target, input)?;
                     } else {
                         let same_table = focused_table_editable_text_address().is_some_and(|(focused_window, focused_generation, focused_node, focused_host, _, _, _, _, _)| {
@@ -360,34 +353,34 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                         });
                         if same_table {
                             match commit_focused_table_editable_text_with_engine(&engine, input).transpose()? {
-                                Some(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing | crate::scenes::TableEditableTextCommitOutcome::AwaitingEcho) => {}
+                                Some(semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Conflict | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Publishing | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::AwaitingEcho) => {}
                                 _ => clear_focused_table_editable_text(input),
                             }
                         }
                     }
-                    if let Some(target) = crate::scenes::table_stepper_focus_target(scene, rect, x, y, intent.driver_drag) {
+                    if let Some(target) = semio_framework_os_renderer_wgpu_scene_tables::table_stepper_focus_target(scene, rect, x, y, intent.driver_drag) {
                         focus_table_stepper(window_id, intent.surface_generation, node, &scene.host_id, target);
                     }
                 }
                 if kind == ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem && button == 0 {
-                    if let Some(target) = crate::scenes::vfs_accessibility_focus_target(scene, x, y) {
+                    if let Some(target) = semio_framework_os_renderer_wgpu_scene_text_vfs::vfs_accessibility_focus_target(scene, x, y) {
                         focus_vfs_control(window_id, intent.surface_generation, node, &scene.host_id, target);
                     }
                 }
                 let pointer_id = intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
-                crate::scenes::passive_scene_pointer_button(scene, rect, pointer_id, x, y, true, button, crate::scenes::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
+                semio_framework_os_renderer_wgpu_scene_render::passive_scene_pointer_button(scene, rect, pointer_id, x, y, true, button, semio_framework_os_renderer_wgpu_scene_state::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
             }
             SceneIntentEvent::PointerUp { x, y, button, modifiers } => {
                 let pointer_id = intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
-                crate::scenes::passive_scene_pointer_button(scene, rect, pointer_id, x, y, false, button, crate::scenes::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
+                semio_framework_os_renderer_wgpu_scene_render::passive_scene_pointer_button(scene, rect, pointer_id, x, y, false, button, semio_framework_os_renderer_wgpu_scene_state::SceneModifiers::from(modifiers), window_id, intent.surface_generation, intent.driver_drag, input)?;
             }
             SceneIntentEvent::PointerMove { x, y, .. } => {
                 let pointer_id = intent.pointer_id.ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
-                crate::scenes::passive_scene_pointer_move(scene, rect, pointer_id, x, y, window_id, intent.surface_generation, intent.driver_drag);
+                semio_framework_os_renderer_wgpu_scene_render::passive_scene_pointer_move(scene, rect, pointer_id, x, y, window_id, intent.surface_generation, intent.driver_drag);
             }
             SceneIntentEvent::Scroll { x, y, delta_y, .. } => {
                 if delta_y.abs() >= 0.01 {
-                    crate::scenes::passive_scene_wheel(scene, rect, x, y, delta_y);
+                    semio_framework_os_renderer_wgpu_scene_render::passive_scene_wheel(scene, rect, x, y, delta_y);
                 }
             }
         }
@@ -408,23 +401,23 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
  * already has in scope (never stored longer than that one call) — mirrors why `Ui::frame` itself
  * takes `scene_host` as a parameter rather than a stored field (see that method's doc comment):
  * `gpu`/the per-surface-kind state maps aren't anything a `Ui`-owned `Box<dyn SceneHost>` could hold. */
-pub(super) struct FrameworkSceneHost<'ctx> {
-    pub(super) input: &'ctx mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-    pub(super) theme: &'ctx Theme,
-    pub(super) scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
-    pub(super) collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
-    pub(super) open_selects: &'ctx mut std::collections::HashMap<String, bool>,
-    pub(super) chrome_labels: crate::scenes::SceneChromeLabels,
+pub struct FrameworkSceneHost<'ctx> {
+    pub input: &'ctx mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    pub theme: &'ctx Theme,
+    pub scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
+    pub collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
+    pub open_selects: &'ctx mut std::collections::HashMap<String, bool>,
+    pub chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels,
     /// 🌍️ The shell's own `World3dState` map and this frame's world build context — the two pieces a
     /// `SurfaceKind::World3d` slot needs and a `Ui`-owned `Box<dyn SceneHost>` could never hold.
-    pub(super) world3d_states: &'ctx mut crate::scenes::AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    pub(super) world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
+    pub world3d_states: &'ctx mut semio_framework_os_renderer_wgpu_contracts::AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    pub world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
     /// 🪟️ The window instance this paint belongs to — carried so every engine surface the walk
     /// attaches names its retention owner (`🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`).
-    pub(super) window_id: &'ctx str,
-    pub(super) driver_drag: ui_wgpu::wgpu::UiDriverDrag,
-    pub(super) document_generation: u64,
-    pub(super) window_generation: u64,
+    pub window_id: &'ctx str,
+    pub driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    pub document_generation: u64,
+    pub window_generation: u64,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -449,7 +442,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
         }
         let viewport_height = draw.screen_height();
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None, viewport_height);
-        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: self.chrome_labels, world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources, window_id: self.window_id };
+        let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: self.chrome_labels, world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources, window_id: self.window_id };
         match &slot.content {
             ui_wgpu::wgpu::SlotContent::Scene(scene) => {
                 if cursor.phase() == 0 && cursor.byte() == 0 {
@@ -465,7 +458,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
                         kind: scene.component_kind,
                         surface_id: scene.surface_id.clone(),
                     };
-                    if !crate::scenes::mount_scene_identity(&owner) || scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && !crate::scenes::mount_canvas_camera(scene, owner) {
+                    if !semio_framework_os_renderer_wgpu_scene_state::mount_scene_identity(&owner) || scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && !semio_framework_os_renderer_wgpu_scene_state::mount_canvas_camera(scene, owner) {
                         return ui_wgpu::wgpu::ScenePaintStep::Fault;
                     }
                 }
@@ -478,7 +471,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
 
 /// ⏱️ Whether one layout scheduling call was `window_id`'s own work: a step of its own job (or an `Idle` stall of a dirty layout)
 /// is; a wait on the worker pool or a step of another surface's job is not.
-pub(super) fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, window_id: &str) -> bool {
+pub fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, window_id: &str) -> bool {
     match step {
         ui_wgpu::wgpu::UiLayoutStep::Awaiting { .. } => false,
         ui_wgpu::wgpu::UiLayoutStep::Refused { .. } => false,
@@ -487,8 +480,8 @@ pub(super) fn layout_step_is_window_work(step: &ui_wgpu::wgpu::UiLayoutStep, win
     }
 }
 
-pub(super) fn drive_mounted_layout_text_one(engine:&mut ui_wgpu::wgpu::Ui,atlas:&mut ui_wgpu::wgpu::FontAtlas,cx:&mut semio_framework_job::StepContext<'_>)->ui_wgpu::wgpu::UiLayoutStep{
-    let pool=crate::renderer_worker_pool();
+pub fn drive_mounted_layout_text_one(engine:&mut ui_wgpu::wgpu::Ui,atlas:&mut ui_wgpu::wgpu::FontAtlas,cx:&mut semio_framework_job::StepContext<'_>)->ui_wgpu::wgpu::UiLayoutStep{
+    let pool=semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool();
     let progress=engine.step_layouts(&pool,atlas,cx);
     #[cfg(target_arch="wasm32")]
     if let Some(now)=cx.now_us(){let _=pool.pump(now/1_000);}

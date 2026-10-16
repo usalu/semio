@@ -1,10 +1,14 @@
 //! 🧪️ Final selection preserves neutral ordered semantics and exact observed physical ownership.
 use super::*;
-use crate::{OperationMessageDrain, MutationReplayOutcome};
+use crate::OperationMessageDrain;
+use semio_framework_replication_conflict::MutationReplayOutcome;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
+use semio_framework_replication_mutation::MUTATION_MESSAGE_OWNER_BYTES;
+use semio_framework_replication_mutation::MUTATION_MESSAGE_TARGET_BYTES;
+use semio_framework_replication_mutation::MutationMessage;
 fn level(number: u64) -> Severity { [Severity::Info, Severity::Warning, Severity::Error, Severity::Fatal][number as usize] }
 fn observed(work: impl FnOnce() -> Result<RetainedCloneProgress,ValueError>, grant: RetainedCloneGrant) -> RetainedCloneProgress { let(result,heap)=observe_heap_allocations_on_this_thread(work);let progress=result.unwrap();assert!(progress.fits(grant));assert!(progress.copied_bytes+progress.retained_capacity_bytes<=4096);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));progress }
-fn outcome(messages:Vec<MutationMessage>)->MutationReplayOutcome {MutationReplayOutcome {mutation_id:crate::MutationId("original".into()),edit_id:"edit".into(),op_index:0,worst:None,messages,superseded:false,withdrawn:false}}
+fn outcome(messages:Vec<MutationMessage>)->MutationReplayOutcome {MutationReplayOutcome {mutation_id:semio_framework_replication_ids::MutationId("original".into()),edit_id:"edit".into(),op_index:0,worst:None,messages,superseded:false,withdrawn:false}}
 fn accumulate(messages:Vec<MutationMessage>)->ReplayMessageAccumulator {let mut ledger=ReplayMessageAccumulator::default();let mut cursor=OperationMessageDrain::new(outcome(messages));for _ in 0..100000 {if cursor.is_finished(){drop(cursor.take());return ledger;}let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:cursor.next_copy_byte_demand(&ledger),maximum_capacity_bytes:cursor.next_capacity_byte_demand(&ledger).unwrap(),maximum_release_bytes:cursor.next_release_byte_demand(),maximum_depth:64};observed(||cursor.step(&mut ledger,grant),grant);}panic!("original rows did not transfer");}
 fn close(ledger:&mut ReplayMessageAccumulator){for _ in 0..100000{if ledger.terminal_is_empty(){return;}let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:ledger.next_close_copy_byte_demand(),maximum_capacity_bytes:0,maximum_release_bytes:ledger.next_close_release_byte_demand().unwrap(),maximum_depth:64};observed(||ledger.close_step(grant),grant);}panic!("paged row closure did not terminate");}
 fn close_cursor(cursor:&mut FinalMessageSelection){cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){return;}let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:cursor.next_close_copy_byte_demand(),maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_release_byte_demand(),maximum_depth:1};let short=RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant};if short!=grant{assert_eq!(observed(||Ok(cursor.close_step(short)),short),Default::default());}observed(||Ok(cursor.close_step(grant)),grant);}panic!("final selection closure did not terminate");}

@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::standards::v89a::subsets::any::schema::inferences::dimensions::*;
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb};
 
 #[semio_framework_async_macros::async_test]

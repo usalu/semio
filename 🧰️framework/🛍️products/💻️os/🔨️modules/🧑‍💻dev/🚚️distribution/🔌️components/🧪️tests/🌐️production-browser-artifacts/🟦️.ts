@@ -47,9 +47,9 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     assert.deepEqual(sources.map(source => source.destination), cases.destinations);
     assert.ok(sources.every(source => !source.root.includes("runtime") && !source.root.includes("activation")));
     for (let index = 0; index < sources.length; index++) {
-      const source = sources[index], name = index === 0 ? "io.js" : index === 1 ? "worker.js" : index === 2 ? "font.bin" : "🌉️bridge.js";
+      const source = sources[index], component = source.shimDirectory !== undefined, name = component ? "🌉️bridge.js" : index === 0 ? "io.js" : index === 1 ? "worker.js" : "font.bin";
       await mkdir(source.root, { recursive: true });
-      const bytes = index === 0 ? 'export const identity = "owned";' : index > 2 ? 'export { identity } from "@bytecodealliance/preview2-shim/io";' : "owned";
+      const bytes = index === 0 ? 'export const identity = "owned";' : component ? 'export { identity } from "@bytecodealliance/preview2-shim/io";' : "owned";
       await writeFile(join(source.root, name), bytes);
       await writeFile(join(source.root, ".semio-artifact.json"), JSON.stringify({ version: 1, owner: source.owner, files: [name] }));
       await writeFile(join(source.root, "📥️install.json"), JSON.stringify({ installedAt: Date.now() }));
@@ -62,7 +62,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     await build(options);
     const files = await require("fast-glob")("**/*", { cwd: outDir, dot: true, onlyFiles: true });
     assert.ok(!files.some((path: string) => path.endsWith("📥️install.json") || path.endsWith(".semio-artifact.json")));
-    for (const source of sources.slice(3)) {
+    for (const source of sources.filter(source => source.shimDirectory !== undefined)) {
       const artifact = join(outDir, source.destination, "🌉️bridge.js");
       assert.equal((await import(pathToFileURL(artifact).href)).identity, "owned");
     }
@@ -76,7 +76,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     for (let index = 0; index < sources.length; index++) await cp(sources[index].root, join(root, "fixture-sources", String(index)), { recursive: true });
     await writeFile(join(root, "plan.json"), JSON.stringify(cases.plan));
     await writeFile(join(root, "⚙️vite.config.ts"), `import { productionBrowserArtifactsVitePlugin } from ${JSON.stringify(join(directory, "🟦️.ts"))}; import plan from "./plan.json"; import { dirname } from "node:path"; import { fileURLToPath } from "node:url"; const root = dirname(fileURLToPath(import.meta.url)); export default { root, publicDir: false, logLevel: "silent", plugins: [productionBrowserArtifactsVitePlugin(root, plan)] };`);
-    await writeFile(join(root, "📜️script.ts"), `import { appendFileSync } from "node:fs"; import { cp } from "node:fs/promises"; import { buildViteArtifact } from ${JSON.stringify(join(caching, "🌐️vite/🟦️.ts"))}; if (process.argv[2] === "prepare") { const sources = ${JSON.stringify(sources)}; for (let index = 0; index < sources.length; index++) await cp(import.meta.dir + "/fixture-sources/" + index, sources[index].root, { recursive: true }); } else { appendFileSync(import.meta.dir + "/.compiler-invocations", "build\\n"); await buildViteArtifact({ root: import.meta.dir, workspace: ${JSON.stringify(workspace)}, config: import.meta.dir + "/⚙️vite.config.ts", output: import.meta.dir + "/published", owner: "fixture:production" }); }`);
+    await writeFile(join(root, "📜️script.ts"), `import { appendFileSync } from "node:fs"; import { cp } from "node:fs/promises"; import { buildViteArtifact } from ${JSON.stringify(join(caching, "🌐️vite/🟦️.ts"))}; import {receiveScriptProcessInvocation} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"))}; import {scriptCompilerAdmissionControlV1} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"))}; await receiveScriptProcessInvocation(process.env,async invocation=>{const control=scriptCompilerAdmissionControlV1(invocation,"fixture:vite-production",0);if (process.argv[2] === "prepare") { const sources = ${JSON.stringify(sources)}; for (let index = 0; index < sources.length; index++) await cp(import.meta.dir + "/fixture-sources/" + index, sources[index].root, { recursive: true }); } else { appendFileSync(import.meta.dir + "/.compiler-invocations", "build\\n"); await buildViteArtifact({ invocation,control,root: import.meta.dir, workspace: ${JSON.stringify(workspace)}, config: import.meta.dir + "/⚙️vite.config.ts", owner: "fixture:production" }); }});`);
     await writeFile(join(root, "nx.json"), '{"plugins":[]}');
     await writeFile(join(root, "project.json"), JSON.stringify({ name: "browser-production", targets: { prepare: { executor: "nx:run-commands", cache: true, outputs: sources.map(source => `{projectRoot}/${relative(root, source.root).replaceAll("\\", "/")}`), inputs: ["{projectRoot}/fixture-sources/**/*", "{projectRoot}/📜️script.ts"], options: { command: "bun ./📜️script.ts prepare" } }, build: { executor: "nx:run-commands", cache: true, dependsOn: ["prepare"], outputs: ["{projectRoot}/published"], inputs: [...["entry.js", "index.html", "📜️script.ts", "⚙️vite.config.ts", "plan.json"].map(file => `{projectRoot}/${file}`), { dependentTasksOutputFiles: "**/*", transitive: true }], options: { command: "bun ./📜️script.ts build" } } } }));
     const configured = JSON.parse(await readFile(join(root, "project.json"), "utf8"));
@@ -101,7 +101,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     assert.match(await runNx(), /cache/i);
     assert.deepEqual(await inventory(), cold);
     assert.equal(await readFile(join(root, ".compiler-invocations"), "utf8"), "build\n");
-    for (const source of sources.slice(3)) assert.equal((await import(pathToFileURL(join(published, source.destination, "🌉️bridge.js")).href)).identity, "owned");
+    for (const source of sources.filter(source => source.shimDirectory !== undefined)) assert.equal((await import(pathToFileURL(join(published, source.destination, "🌉️bridge.js")).href)).identity, "owned");
     await writeFile(join(root, "fixture-sources/0/io.js"), 'export const identity = "updated";');
     await runNx();
     assert.equal(await readFile(join(root, ".compiler-invocations"), "utf8"), "build\nbuild\n");

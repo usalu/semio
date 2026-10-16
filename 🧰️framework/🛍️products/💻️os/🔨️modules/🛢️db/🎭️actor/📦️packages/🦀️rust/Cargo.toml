@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-actor"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db bounded-priority mailbox actor runtime"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-actor"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_actor"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-observe = { path = "../../../👁️observe/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-policy = { path = "../../../🎚️policy/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["testkit"] }

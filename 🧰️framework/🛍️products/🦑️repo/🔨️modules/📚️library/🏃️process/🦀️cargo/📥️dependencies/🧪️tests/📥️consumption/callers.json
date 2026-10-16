@@ -1,0 +1,1 @@
+[{"kind":"test","producer":"artifact","operation":"test"},{"kind":"lint","producer":"artifact","operation":"clippy"},{"kind":"wasm","producer":"browser-module","operation":"build"}]

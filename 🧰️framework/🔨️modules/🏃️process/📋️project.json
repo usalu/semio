@@ -450,6 +450,28 @@
         "command": "bun ./📜️script.ts test compiler-capacity"
       }
     },
+    "test-compiler-capacity-inheritance": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test compiler-capacity-inheritance"
+      }
+    },
+    "test-compiler-capacity-custodian": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/**/*"],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test compiler-capacity-custodian"
+      }
+    },
     "test-cargo-profile-policy": {
       "executor": "repo:script",
       "options": {

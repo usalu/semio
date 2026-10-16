@@ -25,13 +25,15 @@
       },
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧩️component/📦️packages/🦀️rust/dist/cad-extension-spatial-shape.sxt"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/packages/2662d790b02a65f490e6e534"
       ],
       "inputs": [
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/**/*"
       ]
     }
   }

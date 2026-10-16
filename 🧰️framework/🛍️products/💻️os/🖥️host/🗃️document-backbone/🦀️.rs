@@ -46,8 +46,8 @@ impl SpaceBackbonePort {
         let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
         let folder = path.parent().map_or_else(|| std::path::PathBuf::from("."), std::path::Path::to_path_buf);
         Ok(Self {
-            kind: Some(SpacePortKind::File { uri, storage: crate::host::resolve_kernel_future(FolderTextStorage::new(folder)), document_id, extension }),
-            memory: crate::host::resolve_kernel_future(MemoryBackbonePort::new()),
+            kind: Some(SpacePortKind::File { uri, storage: crate::registry::resolve_kernel_future(FolderTextStorage::new(folder)), document_id, extension }),
+            memory: crate::registry::resolve_kernel_future(MemoryBackbonePort::new()),
         })
     }
 
@@ -56,7 +56,7 @@ impl SpaceBackbonePort {
         let uri = format!("folder://{folder_path}");
         Ok(Self {
             kind: Some(SpacePortKind::Folder(uri, FolderEventLogStorage::new(std::path::PathBuf::from(folder_path)))),
-            memory: crate::host::resolve_kernel_future(MemoryBackbonePort::new()),
+            memory: crate::registry::resolve_kernel_future(MemoryBackbonePort::new()),
         })
     }
 }
@@ -74,10 +74,10 @@ impl OsBackbonePort for SpaceBackbonePort {
             match kind {
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                    let (pack, spr) = if let Some(pack_files) = crate::host::resolve_kernel_future(storage.read_pack(document_id, extension))? {
+                    let (pack, spr) = if let Some(pack_files) = crate::registry::resolve_kernel_future(storage.read_pack(document_id, extension))? {
                         (pack_files.pack, pack_files.spr)
                     } else {
-                        match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
+                        match crate::registry::resolve_kernel_future(storage.read(document_id, extension))? {
                             Some(text_files) => {
                                 let snapshot = <space::SpaceSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                 let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
@@ -87,14 +87,14 @@ impl OsBackbonePort for SpaceBackbonePort {
                             None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
                         }
                     };
-                    let inner = crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
-                    return Ok(crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
+                    let inner = crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
+                    return Ok(crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                    let (pack, spr) = crate::host::resolve_kernel_future(storage.read(SPACE_FOLDER_DOCUMENT_ID))?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
-                    let inner = crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
-                    return Ok(crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
+                    let (pack, spr) = crate::registry::resolve_kernel_future(storage.read(SPACE_FOLDER_DOCUMENT_ID))?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
+                    let inner = crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
+                    return Ok(crate::registry::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
                 }
                 _ => {}
             }
@@ -108,15 +108,15 @@ impl OsBackbonePort for SpaceBackbonePort {
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                     let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                    let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                    let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::registry::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                     let dsl_mirror = pack::snapshot::ArtifactDsl::print_dsl(&parsed.into_snapshot());
                     let pack_files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
-                    return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
+                    return crate::registry::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                     let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                    return crate::host::resolve_kernel_future(storage.write(SPACE_FOLDER_DOCUMENT_ID, space::S_SPACE_SCHEMA, &pack, &spr));
+                    return crate::registry::resolve_kernel_future(storage.write(SPACE_FOLDER_DOCUMENT_ID, space::S_SPACE_SCHEMA, &pack, &spr));
                 }
                 _ => {}
             }
@@ -129,8 +129,8 @@ impl OsBackbonePort for SpaceBackbonePort {
 /// pair — the half of the payload `SpaceBackbonePort`'s file/folder storage actually persists.
 #[cfg(not(target_arch = "wasm32"))]
 fn decode_os_space_pack_payload(payload: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
-    let (_name, inner) = crate::host::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(payload))?;
-    crate::host::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))
+    let (_name, inner) = crate::registry::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(payload))?;
+    crate::registry::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))
 }
 
 impl SpaceBackbonePort {
@@ -138,7 +138,7 @@ impl SpaceBackbonePort {
     /// that isn't this port's own configured file/folder uri (e.g. the space catalog uri) — bridge
     /// bytes↔string via base64, same as the blanket `impl<T: store::os_store::backbone::BackbonePort> OsBackbonePort`.
     fn read_via_memory(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-        let text = crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::read(&self.memory, uri))?;
+        let text = crate::registry::resolve_kernel_future(store::os_store::backbone::BackbonePort::read(&self.memory, uri))?;
         if text.is_empty() {
             return Ok(Vec::new());
         }
@@ -147,9 +147,9 @@ impl SpaceBackbonePort {
 
     fn write_via_memory(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
         if payload.is_empty() {
-            return crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, ""));
+            return crate::registry::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, ""));
         }
-        crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, &base64_codec::base64_standard_encode(payload)))
+        crate::registry::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, &base64_codec::base64_standard_encode(payload)))
     }
 }
 

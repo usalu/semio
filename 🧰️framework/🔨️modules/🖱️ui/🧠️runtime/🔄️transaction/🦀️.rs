@@ -567,15 +567,15 @@ impl FrameTransaction {
             self.stage = FrameTransactionStage::PresentSurface;
             return false;
         }
-        for &id in runtime.store.effects.notify.iter() {
+        for id in runtime.store.pending_notifications() {
             runtime.tracking.notify_entity(id);
         }
         let did_work = runtime.store.flush_effects();
         self.effect_cycles = self.effect_cycles.saturating_add(1);
         self.charge(1, 0, 0);
         if did_work && self.effect_cycles >= EFFECT_STORM_BUDGET {
-            let pending_notify = runtime.store.effects.notify.iter().copied().collect();
-            let pending_emit_sources = runtime.store.effects.emit.iter().map(|(id, _)| *id).collect();
+            let pending_notify = runtime.store.pending_notifications().collect();
+            let pending_emit_sources = runtime.store.pending_emit_sources().collect();
             self.transacted.faults.push(TransactFault::EffectStorm { cycles: self.effect_cycles, pending_notify, pending_emit_sources });
             self.effects_settled = true;
             self.deferred_effects.extend(runtime.store.drain_deferred());

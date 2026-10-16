@@ -20,6 +20,3 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-remodel-remodeling-model = { path = "../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-remodel-remodeling-mutations = { path = "../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
-
-[profile.prototype]
-inherits = "dev"

@@ -29,7 +29,11 @@
         "@semio-tech/framework-os-dev:prepare-generation3d-react-prototype",
         "@semio-tech/framework-os-dev:prepare-generator-react-prototype",
         "@semio-tech/framework-os-dev:prepare-koordinator-react-prototype",
-        "@semio-tech/framework-os-dev:prepare-verfolgen-react-prototype"
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react-prototype",
+        "@semio-tech/framework-surface-rs:wasm",
+        "@semio-tech/framework-editor-rs:wasm",
+        "@semio-tech/framework-os-node-graph-rs:wasm",
+        "@semio-tech/puzzle-plugin:wasm"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -60,7 +64,11 @@
         "@semio-tech/framework-os-dev:prepare-generation3d-react-release",
         "@semio-tech/framework-os-dev:prepare-generator-react-release",
         "@semio-tech/framework-os-dev:prepare-koordinator-react-release",
-        "@semio-tech/framework-os-dev:prepare-verfolgen-react-release"
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react-release",
+        "@semio-tech/framework-surface-rs:wasm",
+        "@semio-tech/framework-editor-rs:wasm",
+        "@semio-tech/framework-os-node-graph-rs:wasm",
+        "@semio-tech/puzzle-plugin:wasm"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -106,7 +114,11 @@
     "build": {
       "executor": "repo:script",
       "dependsOn": [
-        "prepare"
+        "prepare",
+        "@semio-tech/framework-surface-rs:wasm",
+        "@semio-tech/framework-editor-rs:wasm",
+        "@semio-tech/framework-os-node-graph-rs:wasm",
+        "@semio-tech/puzzle-plugin:wasm"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",

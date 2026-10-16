@@ -101,7 +101,7 @@ struct ResidentLedger {
     cursor: usize,
     runtime_backing: usize,
 }
-const CONTRACT_BACKING_BYTES: usize = size_of::<Mutex<ResidentLedger>>() + size_of::<[AtomicU8; UI_RESIDENT_SLOTS]>() + super::resident_static_backing_bytes() + crate::action::resident_static_backing_bytes();
+const CONTRACT_BACKING_BYTES: usize = size_of::<Mutex<ResidentLedger>>() + size_of::<[AtomicU8; UI_RESIDENT_SLOTS]>() + super::resident_static_backing_bytes() + semio_framework_ui_contract_values::resident_static_backing_bytes();
 const _: () = assert!(CONTRACT_BACKING_BYTES < UI_RESIDENT_AGGREGATE_BYTES);
 static RESIDENT_LEDGER: Mutex<ResidentLedger> = Mutex::new(ResidentLedger { slots: [ResidentSlot::EMPTY; UI_RESIDENT_SLOTS], snapshot: UiResidentSnapshot { items: 0, bytes: CONTRACT_BACKING_BYTES, used_slots: 0 }, cursor: 0, runtime_backing: 0 });
 static RETURNS: [AtomicU8; UI_RESIDENT_SLOTS] = [const { AtomicU8::new(0) }; UI_RESIDENT_SLOTS];

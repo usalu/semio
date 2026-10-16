@@ -2,30 +2,38 @@
 //! ring, and pair merges. The engine, history reads and time travel replay through it; it never names the engine.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-#[cfg(test)] use crate::hot_path_census;
-use super::replay_preparation;
+#[path = "📥️lifted/🏪️store/🦀️.rs"]
+pub mod lifted_store;
+#[path = "🎮️operation/🦀️.rs"]
+pub mod replay_preparation;
+#[path = "🛑️cancel/🦀️.rs"]
+pub mod raw_replay_retirement;
+#[path = "📥️lifted/🔗️read/🦀️.rs"]
+pub mod lifted_snapshot_read;
+#[cfg(any(test, feature = "hot-path-census"))] use semio_framework_os_store_ledger::hot_path_census;
+
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use super::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationTask, ArtifactReplayPrepared};
-use crate::os_spr::command::ArtifactMessageSource;
+use crate::replay_preparation::{ArtifactReplayPreparation, ArtifactReplayPreparationFactory, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationTask};
+use semio_framework_os_spr::command::ArtifactReplayPrepared;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use crate::os_spr::{HybridLogicalTimestamp, MutationId};
-use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_spr::{HybridLogicalTimestamp, MutationId};
+use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use crate::os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
-use crate::os_vcs::VcsError;
-use crate::os_vcs::{
-    ArtifactHistoryLedger, Identified, Patchable,
-};
-use crate::os_pack::pack_rt;
-use super::ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, CursorRevisionAccumulator, retire_replayed_projection, retire_scratch_operations};
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
+use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use semio_framework_os_vcs::VcsError;
+use semio_framework_os_vcs::{ArtifactHistoryLedger, Identified, Patchable};
+use semio_framework_os_pack::pack_rt;
+use semio_framework_os_store_message_ledger::ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES;
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_framework_os_store_projection::retire_replayed_projection;
+use semio_framework_os_store_command::retire_scratch_operations;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
 /// 🫱️ What merging a persisted pair into a live store found ([`ArtifactStore::merge_persisted_history`]): `merged` events the
 /// store took from the pair, and `ahead` events the store holds that the pair lacks — what a writer persists again for.
@@ -35,9 +43,7 @@ pub struct PairMerge {
     pub ahead: usize,
 }
 
-/// 🪞️ The effective supersession of every superseded operation ([`protocol::HistoryFold::supersessions`]): the
-/// replacement input every fold site reads in place of the recorded forward, which is never modified.
-pub type EffectiveSupersessions = protocol::HistoryFoldIndex<MutationId, protocol::EffectiveSupersession>;
+
 
 /// 🎭️ One forward operation as every fold site reads it: the recorded original, its decoded replacement, or nothing
 /// when withdrawn or when its supersession breaks the supersede law ([`admit_replacement`]). A decoded replacement
@@ -48,11 +54,11 @@ where
 {
     pub op_index: u32,
     pub mutation_id: MutationId,
-    original: &'a Mutation,
-    replacement: Option<Mutation>,
-    withdrawn: bool,
-    fault: Option<crate::os_spr::MutationMessage>,
-    marker: PhantomData<fn() -> P>,
+    pub original: &'a Mutation,
+    pub replacement: Option<Mutation>,
+    pub withdrawn: bool,
+    pub fault: Option<semio_framework_os_spr::MutationMessage>,
+    pub marker: PhantomData<fn() -> P>,
 }
 
 impl<P, Mutation> EffectiveOperation<'_, P, Mutation>
@@ -78,7 +84,7 @@ where
     }
 
     /// 🧯️ The `Fatal` message of a supersession breaking the supersede law; the operation then folds as a no-op.
-    pub fn fault(&self) -> Option<&crate::os_spr::MutationMessage> {
+    pub fn fault(&self) -> Option<&semio_framework_os_spr::MutationMessage> {
         self.fault.as_ref()
     }
 }
@@ -106,7 +112,7 @@ where
     effective_operation_with_supersession::<P, Mutation>(operation, op_index, mutation_id, schema, supersession)
 }
 
-pub(crate) fn effective_operation_with_supersession<'a, P, Mutation>(operation: &'a Mutation, op_index: u32, mutation_id: MutationId, schema: &str, supersession: Option<&protocol::EffectiveSupersession>) -> EffectiveOperation<'a, P, Mutation>
+pub fn effective_operation_with_supersession<'a, P, Mutation>(operation: &'a Mutation, op_index: u32, mutation_id: MutationId, schema: &str, supersession: Option<&protocol::EffectiveSupersession>) -> EffectiveOperation<'a, P, Mutation>
 where
     Mutation: self::Mutation<P> + OpBinary,
 {
@@ -117,7 +123,7 @@ where
         Ok(None) => effective.withdrawn = true,
         Err(reason) => {
             let mut fault =
-                crate::os_spr::MutationMessage::fatal("mutation.invariant", format!("supersession {} of {} {reason}; the operation folds as a no-op", supersession.transition_id, effective.mutation_id.0)).at([effective.mutation_id.0.clone()]);
+                semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", format!("supersession {} of {} {reason}; the operation folds as a no-op", supersession.transition_id, effective.mutation_id.0)).at([effective.mutation_id.0.clone()]);
             fault.op_index = Some(op_index);
             effective.fault = Some(fault);
         }
@@ -162,19 +168,15 @@ where
     P: 'a,
     Mutation: self::Mutation<P> + OpBinary + 'a,
 {
-    let ids = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+    let ids = semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
     edit.forwards.iter().zip(ids).enumerate().map(move |(index, (operation, mutation_id))| effective_operation::<P, Mutation>(operation, index as u32, mutation_id, schema, supersessions))
 }
 
-/// 🪜️ A fold's running projection: what the next operation diffs against, and how its successor displaces it.
-pub(crate) trait FoldProjection<P, Mutation> {
-    fn projection(&self) -> &P;
-    fn advance(&mut self, next: P);
-}
+
 
 /// 🔂️ Folds the first `take` effective forwards of `edit` into `projection` with keep-and-record semantics
 /// ([`fold_operation`]) — the one loop every messageless fold site shares.
-pub(crate) fn fold_effective_edit<P, Mutation>(projection: &mut impl FoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)
+pub fn fold_effective_edit<P, Mutation>(projection: &mut impl FoldProjection<P, Mutation>, edit: &Edit<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, take: usize)
 where
     Mutation: self::Mutation<P> + OpBinary,
 {
@@ -200,18 +202,18 @@ pub use protocol::apply_operation;
 /// 🛡️ Applies an already computed outcome through [`protocol::apply_diff`]: the next projection with the outcome intact, or —
 /// on an apply refusal — the unchanged `base`, an empty diff and one `Fatal` message. The builder-side twin of the fatal
 /// message production dispatch records.
-pub fn apply_outcome<P, D>(base: &P, outcome: crate::os_spr::MutationOutcome<D>) -> (P, crate::os_spr::MutationOutcome<D>)
+pub fn apply_outcome<P, D>(base: &P, outcome: semio_framework_os_spr::MutationOutcome<D>) -> (P, semio_framework_os_spr::MutationOutcome<D>)
 where
     P: Clone,
     D: MutationDiff<P>,
 {
     let (diff, mut messages) = outcome.into_parts();
-    match crate::os_spr::apply_diff(&diff, base) {
-        Ok(next) => (next, crate::os_spr::MutationOutcome::new(diff).absorb_messages(messages)),
+    match semio_framework_os_spr::apply_diff(&diff, base) {
+        Ok(next) => (next, semio_framework_os_spr::MutationOutcome::new(diff).absorb_messages(messages)),
         Err(error) => {
-            messages.push(crate::os_spr::MutationMessage::fatal(error.code, error.message).at(error.target));
+            messages.push(semio_framework_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target));
             D::retire_cold(diff);
-            (base.clone(), crate::os_spr::MutationOutcome::new(D::default()).absorb_messages(messages))
+            (base.clone(), semio_framework_os_spr::MutationOutcome::new(D::default()).absorb_messages(messages))
         }
     }
 }
@@ -219,7 +221,7 @@ where
 /// 🎬️ One operation that never drops a projection: the next projection when its diff applied, and its op-stamped
 /// messages — an apply refusal becomes one `Fatal` message and folds as a no-op. The keep-and-record step every fold
 /// site, the retained initializers included, takes.
-pub fn fold_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (Option<P>, Vec<crate::os_spr::MutationMessage>)
+pub fn fold_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (Option<P>, Vec<semio_framework_os_spr::MutationMessage>)
 where
     Mutation: self::Mutation<P>,
 {
@@ -227,7 +229,7 @@ where
     match applied {
         Ok(next) => (Some(next), messages),
         Err(error) => {
-            let mut fatal = crate::os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
+            let mut fatal = semio_framework_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
             fatal.op_index = Some(op_index);
             messages.push(fatal);
             (None, messages)
@@ -238,7 +240,7 @@ where
 /// 📼️ Folds `applied[from..to]` onto `base` under `supersessions` with keep-and-record semantics, handing out the
 /// projection after every prefix length below `to` that is a multiple of `stride` (aliases of the running state, no
 /// copies). A failure retires the running state and everything recorded.
-pub(crate) fn fold_recorded<P, Mutation>(
+pub fn fold_recorded<P, Mutation>(
     base: Arc<P>,
     applied: &[String],
     from: usize,
@@ -277,36 +279,14 @@ where
 
 pub use semio_framework_os_store_projection::retire_shared_projection;
 
-/// 🔏️ Content digest of one effective supersession: which transition installed it and what it replaces the input with.
-pub(crate) fn supersession_digest(mutation_id: &MutationId, supersession: &protocol::EffectiveSupersession) -> [u8; 32] {
-    let (kind, schema, payload): (&[u8], &[u8], &[u8]) = match &supersession.replacement {
-        protocol::InputReplacement::Input { schema, payload } => (b"input", schema.as_bytes(), payload),
-        protocol::InputReplacement::Withdrawn => (b"withdrawn", b"", b""),
-    };
-    CursorRevisionAccumulator::hash_record(b"supersession", &[mutation_id.0.as_bytes(), supersession.transition_id.as_bytes(), kind, schema, payload])
-}
 
-/// 🔐️ Digest of the supersessions in effect for `edit`'s operations, `None` when none is.
-pub(crate) fn edit_supersession_digest<P, Mutation>(edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> Option<[u8; 32]>
-where
-    Mutation: self::Mutation<P>,
-{
-    if supersessions.is_empty() {
-        return None;
-    }
-    let mut digest = None;
-    for (index, mutation_id) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().enumerate() {
-        if let Some(supersession) = supersessions.get(mutation_id) {
-            digest = Some(CursorRevisionAccumulator::hash_record(b"edit-supersessions", &[&digest.unwrap_or([0; 32]), &(index as u64).to_be_bytes(), &supersession_digest(mutation_id, supersession)]));
-        }
-    }
-    digest
-}
+
+
 
 /// 🎏️ Lists `ledger`'s facts in the order `order` names them — the fold's order, a pure function of the log, whatever order
 /// their events reached this replica in — by exchanging entries in place: slots, keys and reservations stay where they are.
 /// One comparison pass when the order already holds.
-pub(crate) fn order_ledger_as<'order, T>(ledger: &mut ArtifactHistoryLedger<T>, id: impl Fn(&T) -> &str, order: impl Iterator<Item = &'order str> + Clone) {
+pub fn order_ledger_as<'order, T>(ledger: &mut ArtifactHistoryLedger<T>, id: impl Fn(&T) -> &str, order: impl Iterator<Item = &'order str> + Clone) {
     if ledger.iter().map(&id).eq(order.clone()) {
         return;
     }
@@ -320,18 +300,18 @@ pub(crate) fn order_ledger_as<'order, T>(ledger: &mut ArtifactHistoryLedger<T>, 
 }
 
 /// 🤝️ How many leading ids `live` and `next` share.
-pub(crate) fn shared_prefix_len(live: &crate::os_vcs::HistoryPageStack<String>, next: &[String]) -> usize {
+pub fn shared_prefix_len(live: &semio_framework_os_vcs::HistoryPageStack<String>, next: &[String]) -> usize {
     live.iter().zip(next).take_while(|(live, next)| live == next).count()
 }
 
 /// 🪞️ Rewrites `mirror` from position `dirty` on to `live`'s suffix ([`StackMirrorDirt`]); answers the ids it displaced.
-pub(crate) fn mirror_id_suffix(mirror: &mut crate::os_vcs::HistoryPageStack<String>, live: &crate::os_vcs::HistoryPageStack<String>, dirty: usize) -> Option<Vec<String>> {
+pub fn mirror_id_suffix(mirror: &mut semio_framework_os_vcs::HistoryPageStack<String>, live: &semio_framework_os_vcs::HistoryPageStack<String>, dirty: usize) -> Option<Vec<String>> {
     let keep = dirty.min(live.len()).min(mirror.len());
     let mut displaced = Vec::new();
     while mirror.len() > keep {
         displaced.push(mirror.pop().expect("a mirrored id remains present"));
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "hot-path-census"))]
     hot_path_census::count(|census| census.mirrored += live.len() - keep);
     mirror.extend(live.iter_from(keep).cloned());
     (!displaced.is_empty()).then_some(displaced)
@@ -339,7 +319,7 @@ pub(crate) fn mirror_id_suffix(mirror: &mut crate::os_vcs::HistoryPageStack<Stri
 
 /// 🧭️ Forwards-only effective prefix digests of `applied`: entry `i` names the projection after the first `i` edits by
 /// their ids, forward counts and effective supersessions — never the inverses, metadata or messages a replay rewrites.
-pub(crate) fn forward_prefix_digests<P, Mutation, I, S>(identity: [u8; 32], applied: I, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
+pub fn forward_prefix_digests<P, Mutation, I, S>(identity: [u8; 32], applied: I, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
 where
     Mutation: self::Mutation<P>,
     I: IntoIterator<Item = S>,
@@ -358,16 +338,16 @@ where
 }
 
 /// 🧭️ The forwards-only digest of the empty prefix of a document of `identity` ([`forward_prefix_digests`]).
-pub(crate) fn forward_prefix_genesis(identity: [u8; 32]) -> [u8; 32] {
+pub fn forward_prefix_genesis(identity: [u8; 32]) -> [u8; 32] {
     CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&identity])
 }
 
 /// 🧭️ The forwards-only prefix digest after `edit`, given the digest of the prefix before it ([`forward_prefix_digests`]).
-pub(crate) fn forward_prefix_step<P, Mutation>(previous: &[u8; 32], edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> [u8; 32]
+pub fn forward_prefix_step<P, Mutation>(previous: &[u8; 32], edit: &Edit<Mutation>, supersessions: &EffectiveSupersessions) -> [u8; 32]
 where
     Mutation: self::Mutation<P>,
 {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "hot-path-census"))]
     hot_path_census::count(|census| census.digested += 1);
     let superseded = edit_supersession_digest::<P, Mutation>(edit, supersessions).unwrap_or([0; 32]);
     CursorRevisionAccumulator::hash_record(b"forward-prefix", &[previous, edit.id.as_bytes(), &(edit.forwards.len() as u64).to_be_bytes(), &superseded])
@@ -375,7 +355,7 @@ where
 
 /// 🧮️ The applied positions of every edit owning an operation whose effective supersession differs between `previous`
 /// and `next`, ascending.
-pub(crate) fn superseded_positions<P, Mutation>(applied: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, previous: &EffectiveSupersessions, next: &EffectiveSupersessions) -> Result<Vec<usize>, VcsError>
+pub fn superseded_positions<P, Mutation>(applied: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, previous: &EffectiveSupersessions, next: &EffectiveSupersessions) -> Result<Vec<usize>, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -391,7 +371,7 @@ where
     let mut positions = Vec::new();
     for (position, edit_id) in applied.iter().enumerate() {
         let edit = edits.find_near(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-        if crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
+        if semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).iter().any(|mutation_id| changed.contains(mutation_id)) {
             positions.push(position);
         }
     }
@@ -415,7 +395,7 @@ pub const DRAFT_SUPERSESSION_ID: &str = "draft";
 /// every outcome and never aborts, so its result is policy-independent and identical on every replica.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReplayMode {
-    Merge(crate::os_spr::MergePolicy),
+    Merge(semio_framework_os_spr::MergePolicy),
     Report,
 }
 
@@ -424,10 +404,10 @@ pub trait ReplayEdits<Mutation> {
     fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>>;
 }
 
-pub(crate) struct IndexedAppliedReplayEdits<'a, Mutation> {
-    pub(crate) edits: &'a ArtifactHistoryLedger<Edit<Mutation>>,
-    pub(crate) revision: &'a CursorRevisionAccumulator,
-    pub(crate) ids: &'a crate::os_vcs::HistoryPageStack<String>,
+pub struct IndexedAppliedReplayEdits<'a, Mutation> {
+    pub edits: &'a ArtifactHistoryLedger<Edit<Mutation>>,
+    pub revision: &'a CursorRevisionAccumulator,
+    pub ids: &'a semio_framework_os_vcs::HistoryPageStack<String>,
 }
 
 impl<Mutation> ReplayEdits<Mutation> for IndexedAppliedReplayEdits<'_, Mutation> {
@@ -458,10 +438,10 @@ pub enum ReplayStep {
 /// has been replayed, so a prefix whose state equals the previous state after the same prefix leaves the whole tail
 /// unchanged: the previous head is spliced in and the replay stops. `checkpoints` ascend by prefix length and end with
 /// the previous head.
-pub(crate) struct ReplayConvergence<P> {
-    pub(crate) horizon: usize,
-    pub(crate) checkpoints: Vec<(usize, Arc<P>)>,
-    pub(crate) equal: fn(&P, &P) -> bool,
+pub struct ReplayConvergence<P> {
+    pub horizon: usize,
+    pub checkpoints: Vec<(usize, Arc<P>)>,
+    pub equal: fn(&P, &P) -> bool,
 }
 
 /// ⏪️ Resumable replay of `order[from..]` over the projection after `order[..from]`, one operation per inner step:
@@ -471,10 +451,10 @@ pub(crate) struct ReplayConvergence<P> {
 /// running projections, staged inverses and checkpoint aliases until their independently admitted retirement.
 /// 🧳️ Retains the actual native replay state until every original owner has an admitted close.
 pub struct EditReplay<P, Mutation: self::Mutation<P>> {
-    pub(crate) original: std::mem::ManuallyDrop<ReplayOwnedState<P, Mutation>>,
+    pub original: std::mem::ManuallyDrop<ReplayOwnedState<P, Mutation>>,
     pub(crate) raw_retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub(crate) raw_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
-    pub(crate) retiring: bool,
+    pub retiring: bool,
 }
 
 impl<P, Mutation: self::Mutation<P>> std::ops::Deref for EditReplay<P, Mutation> {
@@ -487,15 +467,15 @@ impl<P, Mutation: self::Mutation<P>> std::ops::DerefMut for EditReplay<P, Mutati
 }
 
 impl<P, Mutation: self::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
-    pub(crate) fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
+    pub fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
     pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
-    pub(crate) fn new_counted(mode: ReplayMode, base: Arc<P>, order: crate::os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
+    pub(crate) fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
     pub fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new_after_prefix(mode, base_length, base, order, from, schema, supersessions, edits).map(Self::retain) }
-    pub(crate) fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self { self.original.replace_convergence(convergence); self }
-    pub(crate) fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self { self.original.record_stride = stride.max(1); self.original.recorded.extend(prefixes); self.original.record(); self }
+    pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self { self.original.replace_convergence(convergence); self }
+    pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self { self.original.record_stride = stride.max(1); self.original.recorded.extend(prefixes); self.original.record(); self }
     pub fn with_base(mut self, generation: u64, revision: [u8; 32]) -> Self { self.original.generation = generation; self.original.revision = revision; self }
     pub fn with_drafts(mut self, drafts: protocol::HistoryInputDrafts) -> Self { self.original.drafts = drafts; self }
-    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self where P: Send + Sync + 'static, Mutation: Send + 'static { self.original.replay_retirement_factory = Some(crate::os_spr::command::registered_replay_retirement_factory(snapshots, mutations)); self }
+    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self where P: Send + Sync + 'static, Mutation: Send + 'static { self.original.replay_retirement_factory = Some(semio_framework_os_spr::command::registered_replay_retirement_factory(snapshots, mutations)); self }
     pub fn with_operation_preparation(mut self, factory: Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>) -> Self { self.original.operation_preparation_factory = Some(factory); self }
     pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if self.retiring { return Err(VcsError::HistoryReplaying); }
@@ -528,7 +508,7 @@ impl<P, Mutation: self::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
         let outcomes = std::mem::take(&mut self.outcomes);
         let worst = self.report_worst;
         let result = ReplayResultOwnedState {
-            order: std::mem::replace(&mut self.order, crate::os_vcs::HistoryPageStack::empty()),
+            order: std::mem::replace(&mut self.order, semio_framework_os_vcs::HistoryPageStack::empty()),
             from: self.from,
             supersessions: std::mem::take(&mut self.supersessions),
             drafts: std::mem::take(&mut self.drafts),
@@ -554,8 +534,8 @@ impl<P, Mutation: self::Mutation<P> + OpBinary> EditReplay<P, Mutation> {
 
 /// 🧳️ Finished publication data retains its original residual replay alongside any untaken outputs.
 pub struct EditReplayResult<P, Mutation: self::Mutation<P>> {
-    pub(crate) original: std::mem::ManuallyDrop<ReplayResultOwnedState<P, Mutation>>,
-    pub(crate) residual: std::mem::ManuallyDrop<Option<EditReplay<P, Mutation>>>,
+    pub original: std::mem::ManuallyDrop<ReplayResultOwnedState<P, Mutation>>,
+    pub residual: std::mem::ManuallyDrop<Option<EditReplay<P, Mutation>>>,
 }
 
 impl<P, Mutation: self::Mutation<P>> std::ops::Deref for EditReplayResult<P, Mutation> {
@@ -571,55 +551,55 @@ pub struct ReplayOwnedState<P, Mutation>
 where
     Mutation: self::Mutation<P>,
 {
-    pub(crate) mode: ReplayMode,
-    pub(crate) order: crate::os_vcs::HistoryPageStack<String>,
-    from: usize,
+    pub mode: ReplayMode,
+    pub order: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub from: usize,
     prefix_until: usize,
-    pub(crate) prefix_work_progress: bool,
+    pub prefix_work_progress: bool,
     operation_progress: bool,
-    pub(crate) cursor: usize,
-    pub(crate) operation: usize,
-    pub(crate) schema: String,
-    pub(crate) supersessions: EffectiveSupersessions,
-    pub(crate) state: Option<Arc<P>>,
-    pub(crate) candidate: Option<Arc<P>>,
-    pub(crate) edit_messages: crate::os_spr::command::ReplayMessageAccumulator,
-    pub(crate) edit_inverse: semio_framework_value::list::PagedList<Mutation, {usize::MAX}>,
-    pub(crate) message_settlement: Option<super::edit_message_clamp::settlement::EditMessageSettlement>,
+    pub cursor: usize,
+    pub operation: usize,
+    pub schema: String,
+    pub supersessions: EffectiveSupersessions,
+    pub state: Option<Arc<P>>,
+    pub candidate: Option<Arc<P>>,
+    pub edit_messages: semio_framework_os_spr::command::ReplayMessageAccumulator,
+    pub edit_inverse: semio_framework_value::list::PagedList<Mutation, {usize::MAX}>,
+    pub message_settlement: Option<semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>,
     closed_outcomes: usize,
-    pub(crate) committed: Vec<String>,
+    pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
-    pub(crate) rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
-    pub(crate) replayed: Vec<crate::os_spr::EditMessages>,
-    pub(crate) outcomes: Vec<protocol::MutationReplayOutcome>,
+    pub rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
+    pub replayed: Vec<semio_framework_os_spr::EditMessages>,
+    pub outcomes: Vec<protocol::MutationReplayOutcome>,
     pub(crate) report_worst: Option<semio_framework_diagnostic::Severity>,
-    pub(crate) unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
-    pub(crate) operation_preparation_factory: Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>,
+    pub unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
+    pub operation_preparation_factory: Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>,
     pub(crate) operation_preparation: Option<ArtifactReplayPreparationTask<P, Mutation>>,
-    pub(crate) prepared_operation: Option<ArtifactReplayPrepared<P, Mutation>>,
+    pub prepared_operation: Option<ArtifactReplayPrepared<P, Mutation>>,
     pub(crate) operation_retirement: Option<ArtifactReplayPreparationRetirement<P, Mutation>>,
     pub(crate) operation_message_settlement: Option<replay_preparation::OperationMessageSettlement>,
     pub(crate) preparation_completed: ArtifactReplayPreparationProgress,
     pub(crate) replay_retirement_factory: Option<Arc<dyn replay_preparation::ArtifactReplayRetirementFactory<P, Mutation>>>,
-    pub(crate) replay_retirement: Option<replay_preparation::ReplayRetirement<P, Mutation>>,
+    pub replay_retirement: Option<replay_preparation::ReplayRetirement<P, Mutation>>,
     pub(crate) prefix_message_retirement: Option<ArtifactStoreMessageLedgerRetirement>,
     pub(crate) convergence: Option<ReplayConvergence<P>>,
-    pub(crate) convergence_search: Option<usize>,
+    pub convergence_search: Option<usize>,
     convergence_pending_finish: bool,
-    converged_at: Option<usize>,
+    pub converged_at: Option<usize>,
     record_stride: usize,
-    pub(crate) recorded: Vec<(usize, Arc<P>)>,
-    pub(crate) drafts: protocol::HistoryInputDrafts,
-    pub(crate) generation: u64,
-    pub(crate) revision: [u8; 32],
-    pub(crate) progress: ReplayProgress,
-    pub(crate) finished: bool,
+    pub recorded: Vec<(usize, Arc<P>)>,
+    pub drafts: protocol::HistoryInputDrafts,
+    pub generation: u64,
+    pub revision: [u8; 32],
+    pub progress: ReplayProgress,
+    pub finished: bool,
 }
 
 impl<P, M: Mutation<P>> ReplayOwnedState<P, M> {
-    pub(crate) fn terminal() -> Self {
+    pub fn terminal() -> Self {
         Self {
-            mode: ReplayMode::Report, order: crate::os_vcs::HistoryPageStack::empty(), from: 0, prefix_until: 0,
+            mode: ReplayMode::Report, order: semio_framework_os_vcs::HistoryPageStack::empty(), from: 0, prefix_until: 0,
             prefix_work_progress: false, operation_progress: false, cursor: 0, operation: 0, schema: String::new(),
             supersessions: Default::default(), state: None, candidate: None, edit_messages: Default::default(),
             edit_inverse: Default::default(), message_settlement: None, closed_outcomes: 0, committed: Vec::new(),
@@ -648,12 +628,12 @@ where
             let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
             total = total.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));
         }
-        let mut catalog = crate::os_vcs::HistoryPageStack::new();
+        let mut catalog = semio_framework_os_vcs::HistoryPageStack::new();
         catalog.extend(order);
         Self::new_counted(mode, base, catalog, from, schema, supersessions, total)
     }
 
-    fn new_counted(mode: ReplayMode, base: Arc<P>, order: crate::os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> {
+    fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> {
         let total = total.saturating_add(u32::try_from(order.len().saturating_sub(from)).unwrap_or(u32::MAX));
         let replay = Self {
             mode,
@@ -668,7 +648,7 @@ where
             supersessions,
             state: Some(base),
             candidate: None,
-            edit_messages: crate::os_spr::command::ReplayMessageAccumulator::default(),
+            edit_messages: semio_framework_os_spr::command::ReplayMessageAccumulator::default(),
             edit_inverse: Default::default(),
             message_settlement: None,
             closed_outcomes: 0,
@@ -719,7 +699,7 @@ where
         Ok(replay)
     }
 
-    fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self {
+    pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self {
         self.replace_convergence(convergence);
         self
     }
@@ -735,7 +715,7 @@ where
     /// 🧵️ Takes `appended` operations a tick appended to `edit_id` into the total when that edit is the unreplayed tail of
     /// this replay's order (the grown edit is read by id when the replay gets there), and forgets the convergence probe,
     /// whose previous head predates the tick.
-    pub(crate) fn absorb_tail_growth(&mut self, edit_id: &str, appended: usize) {
+    pub fn absorb_tail_growth(&mut self, edit_id: &str, appended: usize) {
         if self.cursor < self.order.len() && self.order.last().is_some_and(|tail| tail == edit_id) {
             self.progress.total = self.progress.total.saturating_add(u32::try_from(appended).unwrap_or(u32::MAX));
         }
@@ -745,7 +725,7 @@ where
     /// 🎙️ Keeps the projection after every replayed prefix whose length is a multiple of `stride`, for the prefix ring —
     /// seeded with `prefixes`, the retained projections the base was folded through, and with the base itself when its
     /// length is such a multiple.
-    fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self {
+    pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self {
         self.record_stride = stride.max(1);
         self.recorded.extend(prefixes);
         self.record();
@@ -787,12 +767,12 @@ where
     }
 
     /// ⏭️ Replays operations until the replay finishes or `deadline`, asked after every operation, answers `true`.
-    fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         self.step_with_operation_cap(edits, usize::MAX, deadline)
     }
 
     /// 🔢️ Caps folded mutations while retaining every structural deadline and owner check.
-    fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if !self.operation_progress {
             if self.progress.done != 0 { return Err(VcsError::ValidationFailed("operation-counted replay authority must be selected before work begins".into())); }
             self.progress.total = self.progress.total.saturating_sub(u32::try_from(self.order.len().saturating_sub(self.from)).unwrap_or(u32::MAX));
@@ -854,7 +834,7 @@ where
                         continue;
                     }
                     let index = self.operation;
-                    let id = crate::os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+                    let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
                     if edit.forwards[index].may_emit_foreign_steps() {
                         let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
                         self.unit_flags.insert((digest, index), edit.forwards[index].foreign_step_source(self.state.as_ref().expect("replay prefix state"), 0).map_err(VcsError::from)?.is_some());
@@ -913,14 +893,14 @@ where
     /// mutation is edited or withdrawn. A `Merge` replay refuses with [`VcsError::InverseRefused`].
     fn replay_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> {
         let index = self.operation;
-        let mutation_id = crate::os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
         if edit.forwards[index].may_emit_foreign_steps() {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
             let base = self.candidate.as_ref().or(self.state.as_ref()).expect("replay operation state");
             self.unit_flags.insert((digest, index), edit.forwards[index].foreign_step_source(base, 0).map_err(VcsError::from)?.is_some());
         }
         let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, mutation_id, &self.schema, &self.supersessions);
-        let mut messages: Vec<crate::os_spr::MutationMessage> = effective.fault().cloned().into_iter().collect();
+        let mut messages: Vec<semio_framework_os_spr::MutationMessage> = effective.fault().cloned().into_iter().collect();
         if let Some(operation) = effective.operation() {
             let base = match self.mode {
                 ReplayMode::Merge(_) => self.candidate.as_ref().or(self.state.as_ref()),
@@ -954,7 +934,7 @@ where
                 }
             };
             if let Some(cause) = refused {
-                let mut fatal = crate::os_spr::MutationMessage::fatal("mutation.inverse-refused", format!("the operation has no inverse on the replayed state: {cause}")).at([effective.mutation_id.0.clone()]);
+                let mut fatal = semio_framework_os_spr::MutationMessage::fatal("mutation.inverse-refused", format!("the operation has no inverse on the replayed state: {cause}")).at([effective.mutation_id.0.clone()]);
                 fatal.op_index = Some(index as u32);
                 messages.push(fatal);
             }
@@ -973,9 +953,9 @@ where
                 None => retire_scratch_operations::<P, Mutation>(back),
             }
         }
-        let worst = crate::os_spr::worst_level(&messages);
+        let worst = semio_framework_os_spr::worst_level(&messages);
         self.report_worst = self.report_worst.max(worst);
-        let mut drain = crate::os_spr::command::OperationMessageDrain::new(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
+        let mut drain = semio_framework_os_spr::command::OperationMessageDrain::new(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
         while !drain.is_finished() {
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: drain.next_copy_byte_demand(&self.edit_messages), maximum_capacity_bytes: drain.next_capacity_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_release_bytes: drain.next_release_byte_demand(), maximum_depth: 1 };
             drain.step(&mut self.edit_messages, grant).map_err(VcsError::InverseRefused)?;
@@ -987,7 +967,7 @@ where
     /// 📨️ Settles one bounded diagnostic unit before sealing an edit's staged owners.
     fn step_close_edit(&mut self, edit_id: &str) -> Result<bool, VcsError> {
         let Some(settlement) = self.message_settlement.as_mut() else {
-            self.message_settlement = Some(super::edit_message_clamp::settlement::EditMessageSettlement::new(edit_id, &self.edit_messages, self.closed_outcomes, self.outcomes.len()));
+            self.message_settlement = Some(semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement::new(edit_id, &self.edit_messages, self.closed_outcomes, self.outcomes.len()));
             return Ok(false);
         };
         if !settlement.is_finished() {
@@ -997,7 +977,7 @@ where
             return Ok(false);
         }
         let rejects = match self.mode {
-            ReplayMode::Merge(policy) => crate::os_spr::worst_level(settlement.messages()).is_some_and(|level| policy.rejects(level)),
+            ReplayMode::Merge(policy) => semio_framework_os_spr::worst_level(settlement.messages()).is_some_and(|level| policy.rejects(level)),
             ReplayMode::Report => false,
         };
         if rejects {
@@ -1014,7 +994,7 @@ where
         drop(self.message_settlement.take());
         self.closed_outcomes = self.outcomes.len();
         let inverse = std::mem::take(&mut self.edit_inverse);
-        self.replayed.push(crate::os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+        self.replayed.push(semio_framework_os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
         if rejects {
             self.quarantined.push(edit_id.to_string());
         } else {
@@ -1024,7 +1004,7 @@ where
         Ok(true)
     }
 
-    fn record(&mut self) {
+    pub fn record(&mut self) {
         if self.mode != ReplayMode::Report || self.cursor % self.record_stride != 0 || self.cursor >= self.order.len() {
             return;
         }
@@ -1067,21 +1047,21 @@ pub struct ReplayResultOwnedState<P, Mutation>
 where
     Mutation: self::Mutation<P>,
 {
-    pub(crate) unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
-    pub(crate) order: crate::os_vcs::HistoryPageStack<String>,
-    pub(crate) from: usize,
-    pub(crate) supersessions: EffectiveSupersessions,
-    pub(crate) drafts: protocol::HistoryInputDrafts,
-    pub(crate) generation: u64,
-    pub(crate) revision: [u8; 32],
-    pub(crate) state: Option<Arc<P>>,
-    converged_at: Option<usize>,
-    pub(crate) committed: Vec<String>,
+    pub unit_flags: protocol::HistoryFoldIndex<([u8; 32], usize), bool>,
+    pub order: semio_framework_os_vcs::HistoryPageStack<String>,
+    pub from: usize,
+    pub supersessions: EffectiveSupersessions,
+    pub drafts: protocol::HistoryInputDrafts,
+    pub generation: u64,
+    pub revision: [u8; 32],
+    pub state: Option<Arc<P>>,
+    pub converged_at: Option<usize>,
+    pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
-    pub(crate) rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
-    pub(crate) replayed: Vec<crate::os_spr::EditMessages>,
-    pub(crate) recorded: Vec<(usize, Arc<P>)>,
-    pub(crate) report: protocol::ReplayReport,
+    pub rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
+    pub replayed: Vec<semio_framework_os_spr::EditMessages>,
+    pub recorded: Vec<(usize, Arc<P>)>,
+    pub report: protocol::ReplayReport,
 }
 
 impl<P, Mutation> ReplayResultOwnedState<P, Mutation>
@@ -1124,7 +1104,7 @@ where
     }
 
     /// 📨️ Every replayed edit's messages, in order.
-    pub fn replayed(&self) -> &[crate::os_spr::EditMessages] {
+    pub fn replayed(&self) -> &[semio_framework_os_spr::EditMessages] {
         &self.replayed
     }
 
@@ -1149,7 +1129,7 @@ where
     }
 
     /// 📬️ Takes the replayed edits' messages.
-    pub fn take_replayed(&mut self) -> Vec<crate::os_spr::EditMessages> {
+    pub fn take_replayed(&mut self) -> Vec<semio_framework_os_spr::EditMessages> {
         std::mem::take(&mut self.replayed)
     }
 
@@ -1165,34 +1145,35 @@ where
 }
 
 /// 🟰️ Whether two supersession maps install the same effective inputs — which transition installed them aside.
-pub(crate) fn same_effective_inputs(left: &EffectiveSupersessions, right: &EffectiveSupersessions) -> bool {
+pub fn same_effective_inputs(left: &EffectiveSupersessions, right: &EffectiveSupersessions) -> bool {
     left.len() == right.len() && left.iter().zip(right.iter()).all(|((left_target, left), (right_target, right))| left_target == right_target && left.replacement == right.replacement)
 }
 
 /// 📸️ A retained projection after the first `length` applied edits, valid while `digest` names the live effective
 /// prefix ([`forward_prefix_digests`]).
-pub(crate) struct PrefixSnapshot<P> {
-    pub(crate) length: usize,
-    pub(crate) digest: [u8; 32],
-    pub(crate) snapshot: Arc<P>,
+pub struct PrefixSnapshot<P> {
+    pub length: usize,
+    pub digest: [u8; 32],
+    pub snapshot: Arc<P>,
 }
 
 /// 💍️ The most prefix projections a store retains, whatever its history length; the stride adapts so they spread over the
 /// whole applied history ([`ArtifactStore::prefix_ring_capacity`]).
-pub(crate) const PREFIX_SNAPSHOT_RING_CAPACITY: usize = 16;
+pub const PREFIX_SNAPSHOT_RING_CAPACITY: usize = 16;
 
 /// 🪙️ The fewest prefix projections a store retains once its history is long enough to stride.
-pub(crate) const PREFIX_SNAPSHOT_RING_FLOOR: usize = 8;
+pub const PREFIX_SNAPSHOT_RING_FLOOR: usize = 8;
 
 /// 🎟️ Displaced owners one reprojection displaces besides its message entries and prefix projections: the tail
 /// snapshot and its id, `current`, the applied, redo and checkpoint owners, the supersessions, the revision bump and a
 /// full prefix-ring prune.
-pub(crate) const REPROJECTION_OWNER_SLOTS: usize = 10 + PREFIX_SNAPSHOT_RING_CAPACITY;
+pub const REPROJECTION_OWNER_SLOTS: usize = 10 + PREFIX_SNAPSHOT_RING_CAPACITY;
 
 #[path="⏳pending/🦀️.rs"]
 pub(crate) mod pending;
-pub(crate) use pending::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailStep};
+pub use pending::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailStep};
 
 #[path="⏱️budget/🦀️.rs"]
 mod budget;
 pub use budget::ReplayTurnBudget;
+pub use semio_framework_os_store_ledger::lifted_replay::{EffectiveSupersessions, FoldProjection, edit_supersession_digest, supersession_digest};

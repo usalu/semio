@@ -23,7 +23,10 @@
 //! stages. Every building block (`RoleBasedPolicy`, `ReplayGuard`, `BudgetRegistry`, signing
 //! functions, `redact_fields`, `check_tenant`) is also usable standalone, since a deployment may
 //! wire only a subset (e.g. no signing, no per-tenant budgets).
-use crate::*;
+#![allow(async_fn_in_trait)]
+
+use db_ids::{ActorId, ArtifactId, DbError};
+use db_observe::{Emit, EmitEvent, EmitField, NullEmit};
 /// 🏢️ A tenant's identity — the isolation unit `check_tenant` gates on. Kept as its own
 /// newtype (distinct from `protocol::ActorId`/`ActorId`) since one tenant spans many
 /// actors and a `Principal` always belongs to exactly one.
@@ -335,7 +338,7 @@ pub struct ReplayGuard {
     window_ms: u64,
     capacity_per_actor: usize,
     order: std::collections::HashMap<protocol::ActorId, std::collections::VecDeque<(protocol::MutationId, u64)>>,
-    seen: std::collections::HashMap<protocol::ActorId, std::collections::HashSet<protocol::MutationId>>,
+    pub seen: std::collections::HashMap<protocol::ActorId, std::collections::HashSet<protocol::MutationId>>,
 }
 
 impl ReplayGuard {
@@ -417,7 +420,7 @@ impl TokenBucket {
 /// key-agnostic). Every unseen key gets a fresh bucket at full `capacity` on first use.
 #[derive(Clone, Debug)]
 pub struct BudgetRegistry {
-    capacity: u32,
+    pub capacity: u32,
     refill_per_sec: u32,
     buckets: std::collections::HashMap<String, TokenBucket>,
 }
@@ -548,10 +551,10 @@ fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 /// while every production wiring (`db_artifact`, `db_engine`, `🌎️hub`) uses the default `NullEmit`
 /// and never writes the type parameter out, so this is source-compatible everywhere unparameterized.
 pub struct SecurityGate<E: Emit + 'static = NullEmit> {
-    policy: RoleBasedPolicy,
-    replay: std::sync::Mutex<ReplayGuard>,
+    pub policy: RoleBasedPolicy,
+    pub replay: std::sync::Mutex<ReplayGuard>,
     budgets: std::sync::Mutex<BudgetRegistry>,
-    emit: std::sync::Arc<E>,
+    pub emit: std::sync::Arc<E>,
 }
 
 impl<E: Emit + 'static> SecurityGate<E> {

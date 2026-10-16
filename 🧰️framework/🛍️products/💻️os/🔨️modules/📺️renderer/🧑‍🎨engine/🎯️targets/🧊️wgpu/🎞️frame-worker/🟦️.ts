@@ -25,7 +25,7 @@ import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation 
 import { browserAssetFailureDisposition } from "./🧩️asset-failure/🟦️.ts";
 
 import { OriginalBrowserFrameSource, type OriginalBrowserFrameNative } from "./🎟️original/🟦️.ts";
-import { installCompilerFonts, type CompilerFontBindings } from "../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
+import { installRuntimeAssets, type RuntimeAssetBindings } from "../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 
 //#region 🔖️Bindings
 /** 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
@@ -60,7 +60,7 @@ type BrowserRendererBootstrapHandle = {
 type BrowserRendererBootStep = { readonly stage: string; readonly progress: number; readonly shellBoot: boolean; readonly complete: boolean; readonly elapsedUs: number };
 type RendererAssetDecodeStep = { readonly kind: "pending" | "published" | "cancelled" | "idle" | "fault"; readonly pending: boolean; readonly detail?: string };
 
-type RendererBindings = CompilerFontBindings & {
+type RendererBindings = RuntimeAssetBindings & {
   default?: (moduleOrPath?: WebAssembly.Module | RequestInfo | URL) => Promise<unknown>;
   dumpStructure?: (windowId?: string) => string;
   dumpFrameStats?: (windowId?: string) => string;
@@ -723,12 +723,12 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       loaded.semioWgpuSetHostIntroductionSuppressed?.(message.introductionSuppressed === true);
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
-    progress("compiler-fonts", 0.2);
+    progress("runtime-assets", 0.2);
     try {
-      await monitoredSuspension("compiler-fonts", () => installCompilerFonts(loaded, scope.location.href, (url) => fetch(url)), suspensionLedger);
+      await monitoredSuspension("runtime-assets", () => installRuntimeAssets(loaded, scope.location.href, (url) => fetch(url)), suspensionLedger);
     } catch (error) {
       if (closed || closing) throw error;
-      progress(`compiler-fonts-fault: ${error instanceof Error ? error.message : String(error)}`, 0.2);
+      progress(`runtime-assets-fault: ${error instanceof Error ? error.message : String(error)}`, 0.2);
     }
     progress("plugin-graph", 0.25);
     const catalogRows = admitPluginCatalogV1(message.catalog, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => bootAbort.signal.aborted, progress: ({ completed, total }) => progress("catalog-admission", 0.25 + 0.005 * completed / Math.max(1, total)) });

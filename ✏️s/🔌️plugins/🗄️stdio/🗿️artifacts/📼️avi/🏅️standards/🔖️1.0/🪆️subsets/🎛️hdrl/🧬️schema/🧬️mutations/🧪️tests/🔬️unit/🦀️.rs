@@ -1,5 +1,7 @@
+use crate::{standards::v1_0::subsets::any::schema::snapshot::AviChunk, standards::v1_0::subsets::any::schema::snapshot::AviMainHeader, standards::v1_0::subsets::any::schema::snapshot::AviSnapshot, standards::v1_0::subsets::any::schema::snapshot::AviStream, standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat, standards::v1_0::subsets::any::schema::snapshot::AviStreamHeader, standards::v1_0::subsets::any::schema::snapshot::RiffChunk};
+use protocol::Mutation;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v1_0::subsets::any::schema::mutations::*;
 use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
 use protocol::MutationDiff;

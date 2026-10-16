@@ -4,14 +4,14 @@ use super::*;
 #[test]
 fn stalled_shell_io_keeps_mailbox_poll_p99_below_two_ms() {
     let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    state.submit_shell_io(|| {
+    state.settle.submit_shell_io(|| {
         std::thread::sleep(std::time::Duration::from_millis(80));
         ShellIoCompletion::Finished
     });
     let mut samples = Vec::with_capacity(4096);
     for _ in 0..4096 {
         let started = std::time::Instant::now();
-        let _ = state.poll_shell_io();
+        let _ = SessionCtx::of(&mut state).poll_shell_io();
         samples.push(started.elapsed());
     }
     samples.sort_unstable();

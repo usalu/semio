@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -10,7 +11,7 @@
 // #endregion 🧲️Header
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -46,7 +47,7 @@ const KINDS = [
 /** 🎯️ Compiles the fixture and reduces it to the two answers the scenario asks for. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const records = roundProbeNumbers(
-    await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }),
+    await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }),
     DECIMALS,
   );
   const drawn = new Set<string>();
@@ -69,7 +70,7 @@ async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjecti
 /** 🌀 Compiles the rotation fixture and reduces the `…/at` records to angle and placement. */
 async function rotationSubject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
   const records = roundProbeNumbers(
-    await compileVizProbe(ctx.input(ROTATION_FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }),
+    await compileAdapterVizProbeV1(ctx,ctx.input(ROTATION_FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }),
     DECIMALS,
   );
   const placed = records.filter((record) => /^geometry\/mark\/[a-z0-9-]+\/at$/.test(record.key));

@@ -1,8 +1,17 @@
 //! 🧭️ Plugin registry rows, repo-root discovery, component paths and committed package descriptors.
 
-use super::{GatewayError, GatewayErrorCode, Path, PathBuf, is_repository_root};
+use semio_framework_os_kernel::native_catalog as component_artifacts;
+use std::path::Path;
+use std::path::PathBuf;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+
+/// 🏠️ Admits only a declared package workspace with regular build authority.
+pub fn is_repository_root(path: &Path) -> Result<bool, String> {
+    workspace_identity::is_workspace_root(path, |source| semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| matches!(value.get("workspaces"), Some(semio_framework_pack_json::Value::Array(_) | semio_framework_pack_json::Value::Object(_)))).map_err(|error| error.to_string()))
+}
 
 //#region 🔖️PluginPaths
+
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: this
 #[derive(Clone, Debug)]
 pub struct PluginRegistryEntry {
@@ -17,8 +26,6 @@ pub struct PluginRegistryEntry {
     pub crate_path: PathBuf,
     pub wasm_out: String,
 }
-
-use semio_framework_os_kernel::native_catalog as component_artifacts;
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🏗️bootstrap/🦀️.rs::find_repo_root` (walk up from
 /// this crate's own `CARGO_MANIFEST_DIR` for paired build and package workspace markers, `SEMIO_REPO_ROOT` override first) so a direct
@@ -70,9 +77,11 @@ pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -
     }
     Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s shipped component is missing at {}; build it with `bun repo run <its crate project>:describe`", entry.plugin_id, path.display())))
 }
+
 //#endregion 🔖️PluginPaths
 
 //#region 🔖️Descriptor
+
 /// 📖️ Reads `<owner_root>/🔣️.json` and decodes it as a real `semio_framework::PackageDescriptor`
 /// — the same JSON `semio-framework-plugin-describe` writes (packet E1/E2, `📓️status.md`'s
 /// "E2-builder-descriptor" entry) and the same type `🏃️run/🦀️.rs`'s own `WasmtimeNodeHost`
@@ -88,5 +97,5 @@ pub fn load_package_descriptor(owner_root: &Path) -> Result<semio_framework::Pac
     let text = std::fs::read_to_string(&descriptor_path).map_err(|error| GatewayError::new(GatewayErrorCode::NotFound, format!("no committed descriptor at {}: {error}", descriptor_path.display())))?;
     serde_json::from_str(&text).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("{} did not decode as a PackageDescriptor: {error}", descriptor_path.display())))
 }
-//#endregion 🔖️Descriptor
 
+//#endregion 🔖️Descriptor

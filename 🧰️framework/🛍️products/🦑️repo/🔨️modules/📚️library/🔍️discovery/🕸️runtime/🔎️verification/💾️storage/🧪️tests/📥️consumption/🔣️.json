@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/📥️runtime/🟦️.ts",
+      "calls": 4,
+      "consumption": {
+        "kind": "compiler",
+        "producer": "artifact",
+        "operation": "build"
+      },
+      "operations": [
+        "rustc",
+        "build",
+        "build",
+        "build"
+      ],
+      "consumes": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/📥️runtime/🟦️.ts",
+      "calls": 2,
+      "consumption": {
+        "kind": "resolution"
+      },
+      "operations": [
+        null,
+        null
+      ],
+      "consumes": []
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "calls": 1,
+      "consumption": {
+        "kind": "resolution"
+      },
+      "operations": [
+        null
+      ],
+      "consumes": [
+        0
+      ]
+    }
+  ]
+}

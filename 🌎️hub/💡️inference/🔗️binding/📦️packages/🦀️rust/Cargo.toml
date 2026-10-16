@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-inference-binding"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Neutral binding port between the hub inference runtime and the artifact that owns a composed map document"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-binding"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

@@ -24,8 +24,8 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "every-composited-kind-is-retained-alike").expect("cross-kind retained-surface case");
     let rows = case["frames"][0]["drain"].as_array().expect("painted surface rows");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
-    shell.dock_tabs = ShellDock::default();
+    shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock.dock_tabs = ShellDock::default();
     let mut documents = Vec::new();
     for row in rows {
         let surface = row["surfaceId"].as_str().expect("surface id");
@@ -50,19 +50,19 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
             kind => panic!("unsupported retained surface kind {kind}"),
         };
         let records = vec![super::shell_input_tests::tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];
-        let document = shell.publish_surface_records(window, records).expect("component scene document publishes");
+        let document = shell.windows.publish_surface_records(window, records).expect("component scene document publishes");
         documents.push((surface.to_string(), window.to_string(), controller.to_string(), rect(&row["bounds"]), document));
     }
-    shell.dock_window_plan = documents.iter().map(|(_, window, _, bounds, _)| (window.clone(), *bounds)).collect();
+    shell.dock.dock_window_plan = documents.iter().map(|(_, window, _, bounds, _)| (window.clone(), *bounds)).collect();
     let paint_rows: Vec<_> = documents.iter().map(|(_, window, controller, bounds, document)| (window.as_str(), controller.as_str(), document, *bounds)).collect();
     let mut input = super::shell_input_tests::paint_component_pointer_documents(&mut shell, &paint_rows);
-    shell.sync_engine_surface_states();
+    SessionCtx::of(&mut shell).sync_engine_surface_states();
     let theme = Theme::default();
     for probe in case["expectedResolve"].as_array().unwrap() {
         let surface = probe["surfaceId"].as_str().expect("live surface id");
         let x = probe["at"][0].as_f64().unwrap() as f32;
         let y = probe["at"][1].as_f64().unwrap() as f32;
-        let (control, (bounds, target)) = shell
+        let (control, (bounds, target)) = shell.input
             .retained_scene_hits
             .iter()
             .find(|(_, (_, target))| matches!(&target.key, ui_wgpu::wgpu::NodeKey::Explicit(key) if key == surface))
@@ -70,12 +70,12 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
             .unwrap_or_else(|| panic!("accepted ComponentScene hit for {surface}"));
         let expected_window = documents.iter().find(|(authored, _, _, _, _)| authored == surface).map(|(_, window, _, _, _)| window).expect("authored surface owner");
         assert_eq!((&target.window_id, &target.surface_id), (expected_window, expected_window), "the component host keeps its document owner while the authored pane identity remains the keyed node");
-        assert!(shell.node_graph_states.contains_key(&target.host_id) || shell.tiled_map_states.contains_key(&target.host_id) || shell.board2d_states.contains_key(&target.host_id), "{surface} state is keyed by its accepted component host");
-        assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
-        assert!(shell.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);
-        assert!(!shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "{} generic retained scroll must yield to {surface}", case["name"]);
-        shell.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
-        assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
+        assert!(shell.surfaces.node_graph_states.contains_key(&target.host_id) || shell.surfaces.tiled_map_states.contains_key(&target.host_id) || shell.surfaces.board2d_states.contains_key(&target.host_id), "{surface} state is keyed by its accepted component host");
+        assert_eq!(shell.input.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
+        assert!(shell.input.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);
+        assert!(!shell.input.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "{} generic retained scroll must yield to {surface}", case["name"]);
+        shell.input.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
+        assert_eq!(shell.input.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
     }
 }
 
@@ -126,7 +126,7 @@ impl SurfaceMirror {
         let registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration> = frame["drain"].as_array().expect("frame drain").iter().map(registration).collect();
         let live: Vec<String> = frame["liveWindows"].as_array().expect("live windows").iter().map(|id| id.as_str().expect("window id").to_string()).collect();
         let live: Vec<&str> = live.iter().map(String::as_str).collect();
-        ShellState::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, &mut self.world3d_window_ids, registrations, &live)
+        mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, &mut self.world3d_window_ids, registrations, &live)
     }
 
     /// 🖱️ Exactly the resolution the OS event loop performs: the first surface, in any bespoke map,
@@ -205,8 +205,8 @@ fn the_mirror_never_evicts_a_world3d_surface() {
         detail: crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json: Some("{\"phase\":\"evaluating\"}".into()) },
         created: true,
     };
-    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, vec![registration], &["procedural-preview"]);
+    mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, vec![registration], &["procedural-preview"]);
     assert_eq!(world3d_status.get("scene.1.0.0.1").map(String::as_str), Some("{\"phase\":\"evaluating\"}"));
-    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, Vec::new(), &["procedural-preview"]);
+    mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, Vec::new(), &["procedural-preview"]);
     assert_eq!(world3d_status.get("scene.1.0.0.1").map(String::as_str), Some("{\"phase\":\"evaluating\"}"), "a frame that did not repaint the preview does not retire its compute status");
 }

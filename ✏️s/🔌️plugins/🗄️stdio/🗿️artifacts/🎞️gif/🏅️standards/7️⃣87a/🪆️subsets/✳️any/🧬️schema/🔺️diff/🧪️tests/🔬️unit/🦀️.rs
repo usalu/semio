@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::v87a::subsets::any::schema::snapshot::GifColorTable, standards::v87a::subsets::any::schema::snapshot::GifImage, standards::v87a::subsets::any::schema::snapshot::GifSnapshot};
+use crate::standards::v87a::subsets::any::schema::diff::*;
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 

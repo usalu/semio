@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "purpose": "maintenance-held",
+      "reason": "Quiescent pre-pin cache storage admission required",
+      "waited": false
+    },
+    {
+      "purpose": "shared-held",
+      "reason": "Resource lease timed out:",
+      "waited": false
+    },
+    {
+      "purpose": "queued-cancel",
+      "reason": "Owned queued maintenance cancellation",
+      "waited": true
+    },
+    {
+      "purpose": "queued-deadline",
+      "reason": "deadline|timed out",
+      "waited": true
+    },
+    {
+      "purpose": "queued-reader",
+      "reason": "Queued cache maintenance must begin outside its reader scope",
+      "waited": false
+    },
+    {
+      "purpose": "queued-invalid-0",
+      "reason": "Closed queued cache maintenance request required",
+      "waited": false
+    },
+    {
+      "purpose": "queued-invalid-1",
+      "reason": "Closed queued cache maintenance request required",
+      "waited": false
+    },
+    {
+      "purpose": "queued-invalid-2",
+      "reason": "Closed queued cache maintenance request required",
+      "waited": false
+    }
+  ]
+}

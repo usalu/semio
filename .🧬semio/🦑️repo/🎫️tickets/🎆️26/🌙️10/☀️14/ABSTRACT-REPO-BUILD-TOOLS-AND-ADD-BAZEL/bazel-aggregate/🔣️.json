@@ -1,0 +1,1 @@
+{"cases":[{"mode":"--prepare","admitted":true},{"mode":"--execute","admitted":true},{"mode":"--receive-proof","admitted":true},{"mode":"--bazel-owner","admitted":false},{"mode":"--phase=cache","admitted":false}],"childMaximumMilliseconds":120000,"rootMaximumMilliseconds":0,"deadlineEpochMilliseconds":null,"tool":"nx"}

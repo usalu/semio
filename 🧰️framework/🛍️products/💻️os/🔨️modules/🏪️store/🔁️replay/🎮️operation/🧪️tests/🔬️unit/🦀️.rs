@@ -5,24 +5,24 @@ use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetir
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 struct TextInput {
-    text: String,
+    pub text: String,
     inverse_refused: bool,
     apply_refused: bool,
 }
 
 struct TextPreparation {
-    base: Option<Arc<String>>,
-    inverse: Option<String>,
-    next: Option<String>,
-    prepared: Option<ArtifactReplayPrepared<String, String>>,
-    active: Option<ControlledRetirement<String>>,
+    pub base: Option<Arc<String>>,
+    pub inverse: Option<String>,
+    pub next: Option<String>,
+    pub prepared: Option<ArtifactReplayPrepared<String, String>>,
+    pub active: Option<ControlledRetirement<String>>,
     shared: Option<SharedControlledRetirement<String>>,
     inverse_list: Option<ControlledRetirement<semio_framework_value::list::PagedList<String, {usize::MAX}>>>,
-    phase: u8,
-    context: ArtifactReplayPreparationContext,
+    pub phase: u8,
+    pub context: ArtifactReplayPreparationContext,
     calls: Arc<AtomicUsize>,
-    cancelled: bool,
-    closing: bool,
+    pub cancelled: bool,
+    pub closing: bool,
 }
 
 impl TextPreparation {
@@ -210,7 +210,7 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
     println!("[DEBUG] cooperative operation neutral UTF-8, freshness, deadline, inverse/apply refusal and terminal cancellation laws complete");
 }
 
-struct EmptyPreparation { payload: [u8; 513], closing: bool }
+struct EmptyPreparation { pub payload: [u8; 513], pub closing: bool }
 impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn next_advance_copy_demand(&self, _: &(), _: Option<&InputReplacement>) -> Result<usize, ValueError> { Ok(0) }
     fn next_advance_capacity_demand(&self, _: &(), _: Option<&InputReplacement>, _: usize) -> Result<usize, ValueError> { Ok(0) }

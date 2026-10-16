@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "maxItems": 16,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "packageName",
+      "root",
+      "entry",
+      "files"
+    ],
+    "properties": {
+      "packageName": {
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$"
+      },
+      "root": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 224
+      },
+      "entry": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "files": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 16,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_][a-zA-Z0-9._-]*$"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumQueryUnits": 256
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-scene-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Self-contained binary serde codec for SceneDoc payloads — wasm-safe, depends only on serde"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-pack"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-ui-scene-algebra = { path = "../../../📐️math/🧮️algebra/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../📐️math/🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }
+serde_json = { version = "1.0.140" }

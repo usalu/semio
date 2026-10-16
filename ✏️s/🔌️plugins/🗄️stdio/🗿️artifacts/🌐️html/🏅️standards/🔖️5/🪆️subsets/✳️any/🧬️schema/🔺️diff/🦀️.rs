@@ -671,7 +671,5 @@ pub(crate) fn demo_diff_cases() -> Vec<HtmlDiff> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests

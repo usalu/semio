@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "request": {
+        "version": 1,
+        "kind": "fonts",
+        "mode": "prototype"
+      },
+      "relative": "print/prototype/fonts",
+      "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "fonts",
+        "mode": "release"
+      },
+      "relative": "print/release/fonts",
+      "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tex",
+        "mode": "release"
+      },
+      "relative": "print/tex",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "aarch64-apple-darwin"
+      },
+      "relative": "print/tectonic/aarch64-apple-darwin",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "document",
+        "mode": "prototype",
+        "namespace": "print",
+        "id": "overview"
+      },
+      "relative": "print/prototype/documents/print/overview",
+      "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "document",
+        "mode": "release",
+        "namespace": "report",
+        "id": "overview"
+      },
+      "relative": "print/release/documents/report/overview",
+      "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "measurement",
+        "mode": "prototype",
+        "id": "gallery-evidence"
+      },
+      "relative": "print/prototype/measurements/gallery-evidence",
+      "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "measurement",
+        "mode": "release",
+        "id": "gallery-evidence"
+      },
+      "relative": "print/release/measurements/gallery-evidence",
+      "store": "products"
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "kind": "fonts",
+      "mode": "dev"
+    },
+    {
+      "version": 1,
+      "kind": "fonts",
+      "mode": "prototype",
+      "output": "/tmp/free"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "../escape"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "mode": "release",
+      "namespace": "report",
+      "id": "../escape"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "mode": "release",
+      "id": "overview"
+    }
+  ]
+}

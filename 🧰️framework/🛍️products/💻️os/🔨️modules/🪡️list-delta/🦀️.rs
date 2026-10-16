@@ -24,8 +24,15 @@
 //!
 //! @see ./🧪️tests/🔬️unit/🦀️.rs — the randomized sequence laws
 
-use crate::{ApplyCapability, MutationApplyError};
+use semio_framework_mutation_diff::{ApplyCapability, MutationApplyError};
 use semio_framework_value::list::PagedList;
+
+#[doc(hidden)]
+pub use semio_framework_dsl_record_derive as __dsl_record_derive;
+#[doc(hidden)]
+pub use semio_framework_mutation_diff as __mutation_diff;
+#[doc(hidden)]
+pub use semio_framework_value_derive as __value_derive;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
@@ -531,8 +538,8 @@ macro_rules! list_delta {
         }
 
         impl $delta {
-            fn into_parts(self) -> $crate::list_delta::Parts<$row, $patch, $keyer> {
-                $crate::list_delta::Parts {
+            fn into_parts(self) -> $crate::Parts<$row, $patch, $keyer> {
+                $crate::Parts {
                     removed: self.removed.into_iter().map(|entry| (entry.id, entry.index)).collect(),
                     inserted: self.inserted.into_iter().map(|entry| (entry.index, entry.row)).collect(),
                     moved: self.moved.into_iter().map(|entry| (entry.id, entry.from, entry.to)).collect(),
@@ -540,7 +547,7 @@ macro_rules! list_delta {
                 }
             }
 
-            fn from_parts(parts: $crate::list_delta::Parts<$row, $patch, $keyer>) -> Self {
+            fn from_parts(parts: $crate::Parts<$row, $patch, $keyer>) -> Self {
                 Self {
                     removed: parts.removed.into_iter().map(|(id, index)| $removal { id, index }).collect(),
                     inserted: parts.inserted.into_iter().map(|(index, row)| $insertion { index, row }).collect(),
@@ -551,46 +558,46 @@ macro_rules! list_delta {
 
             /// ➕️ The delta that inserts `row` at `index` of the after list.
             pub fn insertion(index: usize, row: $row) -> Self {
-                Self::from_parts($crate::list_delta::Parts::insertion(index, row))
+                Self::from_parts($crate::Parts::insertion(index, row))
             }
 
             /// ➖️ The delta that removes the row at `index` of `base`.
-            pub fn removal<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, index: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removal(base, index))
+            pub fn removal<L: $crate::ItemList<$row> + ?Sized>(base: &L, index: usize) -> Self {
+                Self::from_parts($crate::Parts::removal(base, index))
             }
 
             /// ➖️ The delta that removes the rows at `indices` of `base`.
-            pub fn removals<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, indices: &[usize]) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removals(base, indices))
+            pub fn removals<L: $crate::ItemList<$row> + ?Sized>(base: &L, indices: &[usize]) -> Self {
+                Self::from_parts($crate::Parts::removals(base, indices))
             }
 
             /// ➖️ The delta that removes the row `id` found at `index` of the base list.
             pub fn removal_by_id(id: impl Into<$key_ty>, index: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removal_by_id(id.into(), index))
+                Self::from_parts($crate::Parts::removal_by_id(id.into(), index))
             }
 
             /// ➖️ The delta that removes several rows, each named with its base index.
             pub fn removals_by_id(rows: Vec<($key_ty, usize)>) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removals_by_id(rows))
+                Self::from_parts($crate::Parts::removals_by_id(rows))
             }
 
             /// ↕️ The delta that moves the row at `from` of `base` to `to` of the after list.
-            pub fn relocation<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, from: usize, to: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::relocation(base, from, to))
+            pub fn relocation<L: $crate::ItemList<$row> + ?Sized>(base: &L, from: usize, to: usize) -> Self {
+                Self::from_parts($crate::Parts::relocation(base, from, to))
             }
 
             /// ↕️ The delta that moves the row `id` from `from` of the base list to `to` of the after list.
             pub fn relocation_by_id(id: impl Into<$key_ty>, from: usize, to: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::relocation_by_id(id.into(), from, to))
+                Self::from_parts($crate::Parts::relocation_by_id(id.into(), from, to))
             }
 
             /// 🩹 The delta that patches the row `id`.
             pub fn modification(id: impl Into<$key_ty>, patch: $patch) -> Self {
-                Self::from_parts($crate::list_delta::Parts::modification(id.into(), patch))
+                Self::from_parts($crate::Parts::modification(id.into(), patch))
             }
 
             /// ✍️ The list this delta turns `base` into; reached only from a diff type's own `apply`, under the central applier's capability.
-            pub fn commit_onto(&self, base: &$list, capability: $crate::ApplyCapability) -> Result<$list, $crate::list_delta::ApplyError> {
+            pub fn commit_onto(&self, base: &$list, capability: $crate::__mutation_diff::ApplyCapability) -> Result<$list, $crate::ApplyError> {
                 let parts = self.clone().into_parts();
                 let committed = parts.commit_onto(base, capability);
                 parts.retire_cold();
@@ -619,17 +626,17 @@ macro_rules! list_delta {
 
             /// 🧊️ Disposes a displaced list row by row through the cold-disposal hook of its key marker.
             pub fn retire_list(list: $list) {
-                $crate::list_delta::BuildList::<$row>::into_rows(list).into_iter().for_each(<$keyer as $crate::list_delta::KeyOf<$row>>::retire_cold);
+                $crate::BuildList::<$row>::into_rows(list).into_iter().for_each(<$keyer as $crate::KeyOf<$row>>::retire_cold);
             }
 
             /// 🕳️ Whether the delta changes nothing.
             pub fn is_empty(&self) -> bool {
-                self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| $crate::list_delta::RowPatch::<$row>::is_empty(&entry.patch))
+                self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| $crate::RowPatch::<$row>::is_empty(&entry.patch))
             }
         }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = |$item:ident| $key:expr $(,)? }) => {
-        impl $crate::list_delta::Keyed for $row {
+        impl $crate::Keyed for $row {
             type Key = $key_ty;
             fn key(&self) -> $key_ty {
                 let $item = self;
@@ -637,10 +644,10 @@ macro_rules! list_delta {
             }
         }
 
-        $crate::list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = keyed $(,)? }) => {
-        $crate::list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = by $keyer:ty $(,)? }) => {
         $crate::list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $keyer } }
@@ -652,7 +659,7 @@ macro_rules! list_delta {
         $crate::list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: Vec<$row>, key: String = |row| row.$key.clone(), values_only } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = |$item:ident| $key:expr , values_only $(,)? }) => {
-        impl $crate::list_delta::Keyed for $row {
+        impl $crate::Keyed for $row {
             type Key = $key_ty;
             fn key(&self) -> $key_ty {
                 let $item = self;
@@ -660,10 +667,10 @@ macro_rules! list_delta {
             }
         }
 
-        $crate::list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, modification: $modification:ident, row: $row:ty, patch: $patch:ty, list: $list:ty, key: $key_ty:ty = keyed , values_only $(,)? }) => {
-        $crate::list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, modification: $modification, row: $row, patch: $patch, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
 }
 
@@ -675,7 +682,7 @@ macro_rules! plain_list_delta {
         $crate::plain_list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: Vec<$row>, key: String = |row| row.$key.clone() } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: String $(,)? }) => {
-        $crate::plain_list_delta! { @wire [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: String, list: Vec<String>, key: String, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @wire [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: String, list: Vec<String>, key: String, keyer: $crate::ByKeyed } }
     };
     (@types [$($dsl:path),*] $(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty, keyer: $keyer:ty $(,)? }) => {
         $crate::plain_list_delta! { @wire [$($dsl),*] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $keyer } }
@@ -716,8 +723,8 @@ macro_rules! plain_list_delta {
         }
 
         impl $delta {
-            fn into_parts(self) -> $crate::list_delta::Parts<$row, $crate::list_delta::NoPatch, $keyer> {
-                $crate::list_delta::Parts {
+            fn into_parts(self) -> $crate::Parts<$row, $crate::NoPatch, $keyer> {
+                $crate::Parts {
                     removed: self.removed.into_iter().map(|entry| (entry.id, entry.index)).collect(),
                     inserted: self.inserted.into_iter().map(|entry| (entry.index, entry.row)).collect(),
                     moved: self.moved.into_iter().map(|entry| (entry.id, entry.from, entry.to)).collect(),
@@ -725,7 +732,7 @@ macro_rules! plain_list_delta {
                 }
             }
 
-            fn from_parts(parts: $crate::list_delta::Parts<$row, $crate::list_delta::NoPatch, $keyer>) -> Self {
+            fn from_parts(parts: $crate::Parts<$row, $crate::NoPatch, $keyer>) -> Self {
                 Self {
                     removed: parts.removed.into_iter().map(|(id, index)| $removal { id, index }).collect(),
                     inserted: parts.inserted.into_iter().map(|(index, row)| $insertion { index, row }).collect(),
@@ -735,41 +742,41 @@ macro_rules! plain_list_delta {
 
             /// ➕️ The delta that inserts `row` at `index` of the after list.
             pub fn insertion(index: usize, row: $row) -> Self {
-                Self::from_parts($crate::list_delta::Parts::insertion(index, row))
+                Self::from_parts($crate::Parts::insertion(index, row))
             }
 
             /// ➖️ The delta that removes the row at `index` of `base`.
-            pub fn removal<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, index: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removal(base, index))
+            pub fn removal<L: $crate::ItemList<$row> + ?Sized>(base: &L, index: usize) -> Self {
+                Self::from_parts($crate::Parts::removal(base, index))
             }
 
             /// ➖️ The delta that removes the rows at `indices` of `base`.
-            pub fn removals<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, indices: &[usize]) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removals(base, indices))
+            pub fn removals<L: $crate::ItemList<$row> + ?Sized>(base: &L, indices: &[usize]) -> Self {
+                Self::from_parts($crate::Parts::removals(base, indices))
             }
 
             /// ➖️ The delta that removes the row `id` found at `index` of the base list.
             pub fn removal_by_id(id: impl Into<$key_ty>, index: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removal_by_id(id.into(), index))
+                Self::from_parts($crate::Parts::removal_by_id(id.into(), index))
             }
 
             /// ➖️ The delta that removes several rows, each named with its base index.
             pub fn removals_by_id(rows: Vec<($key_ty, usize)>) -> Self {
-                Self::from_parts($crate::list_delta::Parts::removals_by_id(rows))
+                Self::from_parts($crate::Parts::removals_by_id(rows))
             }
 
             /// ↕️ The delta that moves the row at `from` of `base` to `to` of the after list.
-            pub fn relocation<L: $crate::list_delta::ItemList<$row> + ?Sized>(base: &L, from: usize, to: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::relocation(base, from, to))
+            pub fn relocation<L: $crate::ItemList<$row> + ?Sized>(base: &L, from: usize, to: usize) -> Self {
+                Self::from_parts($crate::Parts::relocation(base, from, to))
             }
 
             /// ↕️ The delta that moves the row `id` from `from` of the base list to `to` of the after list.
             pub fn relocation_by_id(id: impl Into<$key_ty>, from: usize, to: usize) -> Self {
-                Self::from_parts($crate::list_delta::Parts::relocation_by_id(id.into(), from, to))
+                Self::from_parts($crate::Parts::relocation_by_id(id.into(), from, to))
             }
 
             /// ✍️ The list this delta turns `base` into; reached only from a diff type's own `apply`, under the central applier's capability.
-            pub fn commit_onto(&self, base: &$list, capability: $crate::ApplyCapability) -> Result<$list, $crate::list_delta::ApplyError> {
+            pub fn commit_onto(&self, base: &$list, capability: $crate::__mutation_diff::ApplyCapability) -> Result<$list, $crate::ApplyError> {
                 let parts = self.clone().into_parts();
                 let committed = parts.commit_onto(base, capability);
                 parts.retire_cold();
@@ -798,7 +805,7 @@ macro_rules! plain_list_delta {
 
             /// 🧊️ Disposes a displaced list row by row through the cold-disposal hook of its key marker.
             pub fn retire_list(list: $list) {
-                $crate::list_delta::BuildList::<$row>::into_rows(list).into_iter().for_each(<$keyer as $crate::list_delta::KeyOf<$row>>::retire_cold);
+                $crate::BuildList::<$row>::into_rows(list).into_iter().for_each(<$keyer as $crate::KeyOf<$row>>::retire_cold);
             }
 
             /// 🕳️ Whether the delta changes nothing.
@@ -808,7 +815,7 @@ macro_rules! plain_list_delta {
         }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty = |$item:ident| $key:expr $(,)? }) => {
-        impl $crate::list_delta::Keyed for $row {
+        impl $crate::Keyed for $row {
             type Key = $key_ty;
             fn key(&self) -> $key_ty {
                 let $item = self;
@@ -816,10 +823,10 @@ macro_rules! plain_list_delta {
             }
         }
 
-        $crate::plain_list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty = keyed $(,)? }) => {
-        $crate::plain_list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty = by $keyer:ty $(,)? }) => {
         $crate::plain_list_delta! { @types [$crate::__dsl_record_derive::DslRecord] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $keyer } }
@@ -831,10 +838,10 @@ macro_rules! plain_list_delta {
         $crate::plain_list_delta! { $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: Vec<$row>, key: String = |row| row.$key.clone(), values_only } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: String , values_only $(,)? }) => {
-        $crate::plain_list_delta! { @wire [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: String, list: Vec<String>, key: String, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @wire [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: String, list: Vec<String>, key: String, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty = |$item:ident| $key:expr , values_only $(,)? }) => {
-        impl $crate::list_delta::Keyed for $row {
+        impl $crate::Keyed for $row {
             type Key = $key_ty;
             fn key(&self) -> $key_ty {
                 let $item = self;
@@ -842,10 +849,10 @@ macro_rules! plain_list_delta {
             }
         }
 
-        $crate::plain_list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
     ($(#[$meta:meta])* $vis:vis $delta:ident { removal: $removal:ident, insertion: $insertion:ident, relocation: $relocation:ident, row: $row:ty, list: $list:ty, key: $key_ty:ty = keyed , values_only $(,)? }) => {
-        $crate::plain_list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::list_delta::ByKeyed } }
+        $crate::plain_list_delta! { @types [] $(#[$meta])* $vis $delta { removal: $removal, insertion: $insertion, relocation: $relocation, row: $row, list: $list, key: $key_ty, keyer: $crate::ByKeyed } }
     };
 }
 
@@ -862,8 +869,8 @@ macro_rules! row_patch {
             $($(pub $nest: $nest_delta,)*)?
         }
 
-        impl $crate::list_delta::RowPatch<$row> for $patch {
-            fn commit_into(&self, row: &mut $row, capability: $crate::ApplyCapability) -> Result<(), $crate::list_delta::ApplyError> {
+        impl $crate::RowPatch<$row> for $patch {
+            fn commit_into(&self, row: &mut $row, capability: $crate::__mutation_diff::ApplyCapability) -> Result<(), $crate::ApplyError> {
                 $(if let Some(value) = &self.$set {
                     row.$set = value.clone();
                 })*

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-testing-acceptance-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

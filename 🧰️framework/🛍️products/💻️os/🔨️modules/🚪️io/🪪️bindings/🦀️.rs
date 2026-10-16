@@ -1,5 +1,4 @@
 //! 🪪️ Immutable codec publication rows retain original provenance before capability filtering.
-use crate::os_store as store;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 use std::{borrow::Cow,collections::BTreeMap,sync::{OnceLock,RwLock}};
@@ -19,27 +18,27 @@ pub struct ArtifactCodecBinding {
  pub apps:Vec<String>,
  pub schema:String,
  pub dialect:Option<ArtifactDialect>,
- pub native_identity:crate::os_store::serialization::ArtifactNativeSnapshotIdentity,
+ pub native_identity:semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity,
  pub sqlite_schema:Option<Cow<'static,str>>,
  pub factory:Option<String>,
 }
 
 impl ArtifactCodecBinding {
  /// 📥️ Captures exact owner and capability metadata before an original publisher filters it.
- pub fn from_codec(channel:ArtifactCodecBindingChannel,contributor:impl Into<String>,artifact_kind:Option<String>,apps:Vec<String>,dialect:Option<ArtifactDialect>,factory:Option<String>,codec:&crate::os_store::serialization::ArtifactCodec)->Self {
+ pub fn from_codec(channel:ArtifactCodecBindingChannel,contributor:impl Into<String>,artifact_kind:Option<String>,apps:Vec<String>,dialect:Option<ArtifactDialect>,factory:Option<String>,codec:&semio_framework_os_store_text_io::ArtifactCodec)->Self {
   Self{channel,contributor:contributor.into(),artifact_kind,apps,schema:codec.schema.clone(),dialect,native_identity:codec.native_identity.clone(),sqlite_schema:codec.snapshot_sqlite.as_ref().map(|provider|provider.schema.clone()),factory}
  }
  /// 👁️ Retains an original schema-only publication without assigning it a dialect or app.
- pub fn schema_only(codec:&crate::os_store::serialization::ArtifactCodec)->Self {
-  let contributor=match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
+ pub fn schema_only(codec:&semio_framework_os_store_text_io::ArtifactCodec)->Self {
+  let contributor=match &codec.native_identity{semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
   Self::from_codec(ArtifactCodecBindingChannel::SchemaOnlyDocument,contributor,None,Vec::new(),None,None,codec)
  }
- fn key(&self)->BindingKey{let mut apps=self.apps.clone();apps.sort();BindingKey{channel:self.channel,contributor:self.contributor.clone(),artifact_kind:self.artifact_kind.clone(),apps,schema:self.schema.clone(),dialect:self.dialect.clone()}}
- pub(crate) fn validates(&self,codec:&crate::os_store::serialization::ArtifactCodec)->bool {
+ pub fn key(&self)->BindingKey{let mut apps=self.apps.clone();apps.sort();BindingKey{channel:self.channel,contributor:self.contributor.clone(),artifact_kind:self.artifact_kind.clone(),apps,schema:self.schema.clone(),dialect:self.dialect.clone()}}
+ pub fn validates(&self,codec:&semio_framework_os_store_text_io::ArtifactCodec)->bool {
   let shape=match self.channel {
-   ArtifactCodecBindingChannel::SchemaOnlyDocument=>self.artifact_kind.is_none()&&self.dialect.is_none()&&self.apps.is_empty()&&self.factory.is_none()&&self.contributor==match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>*owner,crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.as_str()},
+   ArtifactCodecBindingChannel::SchemaOnlyDocument=>self.artifact_kind.is_none()&&self.dialect.is_none()&&self.apps.is_empty()&&self.factory.is_none()&&self.contributor==match &codec.native_identity{semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>*owner,semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.as_str()},
    ArtifactCodecBindingChannel::ForeignApp=>self.artifact_kind.is_none()&&self.dialect.is_some()&&self.apps.len()==1,
-   ArtifactCodecBindingChannel::Guest=>self.artifact_kind.is_some()&&self.dialect.is_some()&&matches!(&codec.native_identity,crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}if plugin_id==&self.contributor),
+   ArtifactCodecBindingChannel::Guest=>self.artifact_kind.is_some()&&self.dialect.is_some()&&matches!(&codec.native_identity,semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}if plugin_id==&self.contributor),
    _=>self.artifact_kind.is_some()&&self.dialect.is_some(),
   };
   shape&&!self.contributor.is_empty()&&!self.schema.is_empty()&&self.apps.iter().all(|app|!app.is_empty())&&self.apps.iter().enumerate().all(|(index,app)|!self.apps[..index].contains(app))
@@ -57,7 +56,7 @@ impl ArtifactCodecBinding {
 pub(crate) struct BindingKey { channel:ArtifactCodecBindingChannel,contributor:String,artifact_kind:Option<String>,apps:Vec<String>,schema:String,dialect:Option<ArtifactDialect> }
 pub(crate) type BindingMap=BTreeMap<BindingKey,ArtifactCodecBinding>;
 static BINDINGS:OnceLock<RwLock<BindingMap>>=OnceLock::new();
-pub(crate) fn registry()->&'static RwLock<BindingMap>{BINDINGS.get_or_init(||RwLock::new(BTreeMap::new()))}
+pub fn registry()->&'static RwLock<BindingMap>{BINDINGS.get_or_init(||RwLock::new(BTreeMap::new()))}
 
 /// 🚫️ A proposed row is duplicate, inconsistent with its actual codec, or conflicts with installed provenance.
 #[derive(Clone,Debug,PartialEq,Eq)]
@@ -69,7 +68,7 @@ impl std::fmt::Display for ArtifactCodecBindingError {
 }
 impl std::error::Error for ArtifactCodecBindingError {}
 
-pub(crate) fn propose(existing:&BindingMap,rows:&[ArtifactCodecBinding],codecs:&[crate::os_store::serialization::ArtifactCodec])->Result<BindingMap,ArtifactCodecBindingError>{
+pub fn propose(existing:&BindingMap,rows:&[ArtifactCodecBinding],codecs:&[semio_framework_os_store_text_io::ArtifactCodec])->Result<BindingMap,ArtifactCodecBindingError>{
  let mut proposed=BindingMap::new();
  for row in rows {
   if !codecs.iter().any(|codec|row.validates(codec)){return Err(ArtifactCodecBindingError::Invalid{schema:row.schema.clone()})}
@@ -83,13 +82,13 @@ pub(crate) fn propose(existing:&BindingMap,rows:&[ArtifactCodecBinding],codecs:&
 }
 
 /// 🔬️ Checks every original prefilter row without mutating any installed registry.
-pub fn preflight_artifact_codec_bindings(rows:&[ArtifactCodecBinding],codecs:&[crate::os_store::serialization::ArtifactCodec])->Result<(),ArtifactCodecBindingError>{
+pub fn preflight_artifact_codec_bindings(rows:&[ArtifactCodecBinding],codecs:&[semio_framework_os_store_text_io::ArtifactCodec])->Result<(),ArtifactCodecBindingError>{
  let _assembly=semio_framework_schema_registry::assembly::begin().map_err(|_|ArtifactCodecBindingError::Unavailable)?;
  preflight_artifact_codec_bindings_in_assembly(&_assembly,rows,codecs)
 }
 
 /// 🔐️ Checks original rows while the caller retains the same assembly publication barrier.
-pub fn preflight_artifact_codec_bindings_in_assembly(_assembly:&semio_framework_schema_registry::assembly::Transaction,rows:&[ArtifactCodecBinding],codecs:&[crate::os_store::serialization::ArtifactCodec])->Result<(),ArtifactCodecBindingError>{
+pub fn preflight_artifact_codec_bindings_in_assembly(_assembly:&semio_framework_schema_registry::assembly::Transaction,rows:&[ArtifactCodecBinding],codecs:&[semio_framework_os_store_text_io::ArtifactCodec])->Result<(),ArtifactCodecBindingError>{
  let existing=registry().read().map_err(|_|ArtifactCodecBindingError::Unavailable)?;
  propose(&existing,rows,codecs).map(|_|())
 }

@@ -1,8 +1,10 @@
+import {readNativeCallerAuthorityV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { bundleVirtualJavaScript } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withIssuedResourceOperationV1,withScriptInvocationSignalV1,SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
@@ -236,13 +238,15 @@ function closeBrowserCodegenModule(source: string, cores: readonly BrowserCompon
   const loaders = parsed.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "fetchCompile");
   if (loaders.length !== 1) return denied();
   const loader = loaders[0], edits: { start: number; end: number; text: string }[] = [];
+  if (!loader) return denied();
   const used = new Set<string>();
   let references = 0, imports = 0;
   const visit = (node: ts.Node): void => {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) return denied();
     if (ts.isIdentifier(node) && node.text === "fetchCompile") references++;
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-      if (node.pos < loader.pos || node.end > loader.end || node.arguments.length !== 1 || !ts.isStringLiteral(node.arguments[0]) || node.arguments[0].text !== "node:fs/promises") return denied();
+      const argument = node.arguments[0];
+      if (node.pos < loader.pos || node.end > loader.end || node.arguments.length !== 1 || !argument || !ts.isStringLiteral(argument) || argument.text !== "node:fs/promises") return denied();
       imports++;
     }
     if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "URL") {
@@ -346,22 +350,21 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
 }
 
 /** 🧵️ Transfers immutable compiler inputs while polling the caller's original cancellation port. */
-async function ownedBrowserBundleWorker(request: Parameters<typeof bundleVirtualJavaScript>[0], check: () => void, invocation?: ScriptInvocation, onLine?: (line: string) => void) {
-  check(); const controller = new AbortController(), timer = setInterval(() => { try { check(); } catch (error) { controller.abort(error); } }, 20);
-  const root = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : join(browserActorRepoRoot, ".🧬semio/🦑️repo/⚡️cache/bun-workers");
-  try { const run = (original: ScriptInvocation) => bundleVirtualJavaScript(request, { workspace: browserActorRepoRoot, temporaryRoot: root, invocation: original, signal: controller.signal, onLine }); const result = invocation ? await run(invocation) : await receiveScriptProcessInvocation(process.env, run); check(); return result; }
+async function ownedBrowserBundleWorker(request: Parameters<typeof bundleVirtualJavaScript>[0], check: () => void, invocation: ScriptInvocation, compiler:CompilerAdmissionControl, onLine?: (line: string) => void) {
+  requireIssuedResourceControlInvocationV1(compiler,invocation);check(); const controller = new AbortController(), timer = setInterval(() => { try { check(); } catch (error) { controller.abort(error); } }, 20);
+  try { const result = await bundleVirtualJavaScript(request, { workspace: browserActorRepoRoot, invocation, control:compiler, signal: controller.signal, onLine }); check(); return result; }
   finally { clearInterval(timer); }
 }
 
 /** 📚️ Supplies bounded captured JS to Bun and proves every metafile input was captured exactly once. */
-async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, captured?: (path: string) => void, invocation?: ScriptInvocation): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, invocation: ScriptInvocation, compiler:CompilerAdmissionControl, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
-  const result = await ownedBrowserBundleWorker({ version: 1, kind: "snapshot", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), entrypoint, roots, observe: captured !== undefined }, check, invocation, captured ? line => { if (line.startsWith("[bun-worker] captured ")) captured(JSON.parse(line.slice("[bun-worker] captured ".length))); } : undefined);
+  const result = await ownedBrowserBundleWorker({ version: 1, kind: "snapshot", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, entrypoint, roots, observe: captured !== undefined }, check, invocation, compiler, captured ? line => { if (line.startsWith("[bun-worker] captured ")) captured(JSON.parse(line.slice("[bun-worker] captured ".length))); } : undefined);
   return Object.freeze({ source: result.source, inputs: Object.freeze(result.inputs), physicalInputs: Object.freeze(result.physicalInputs) });
 }
 
 /** 🧬️ Closes the public browser compiler entry with its two component cores in one private build directory. */
-async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation?: ScriptInvocation): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
+async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation: ScriptInvocation, phase:CompilerAdmissionControl): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
@@ -372,7 +375,7 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void, in
     { name: "@bytecodealliance/jco/dist", path: dirname(entrypoint) },
     { name: "@bytecodealliance/jco-transpile/vendor", path: dirname(vendor) },
     { name: "@bytecodealliance/preview2-shim/dist/browser", path: join(shim, "browser") },
-  ], check, undefined, invocation);
+  ], check, invocation, phase);
   writeFileSync(join(evidence, "compiler-sources.json"), JSON.stringify(inputs), { mode: 0o600 });
   if (Buffer.byteLength(source) > 8 * 1024 * 1024) throw new Error("browser actor artifact: compiler closure bound");
   const admission = { remaining: browserActorMaximumBytes - Buffer.byteLength(source) };
@@ -390,32 +393,32 @@ function observedBrowserCodegenPolicy(executable:{sha256:string;byteLength:numbe
 }
 
 /** 🔬️ Verifies surviving original compiler/policy evidence against the complete current factory-owned input roster. */
-export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,control:BrowserActorBuildControl={},invocation?:ScriptInvocation):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
-  const check=()=>{if(control.cancelled?.())throw Error("browser actor producer: cancelled");},denied=():never=>{throw Error("browser actor producer: original input evidence differs from current owned factory");};
+export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,invocation:ScriptInvocation,phase:CompilerAdmissionControl,control:BrowserActorBuildControl={}):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
+  requireIssuedResourceControlInvocationV1(phase,invocation);const check=()=>{phase.signal.throwIfAborted();if(control.cancelled?.())throw Error("browser actor producer: cancelled");},denied=():never=>{throw Error("browser actor producer: original input evidence differs from current owned factory");};
   check();const [admit,admitPolicy]=await Promise.all([browserBundleValidator("BrowserActorProducerInputsV1"),browserBundleValidator("CodegenPolicyV1")]);if(!admit(observation))denied();
   const originalPolicy=JSON.parse(observation.policyCanonical);if(!admitPolicy(originalPolicy)||canonicalJson(originalPolicy)!==observation.policyCanonical||createHash("sha256").update(observation.policyCanonical).digest("hex")!==observation.policySha256)denied();
   const executable=exactExecutableFingerprint(realpathSync(process.execPath),{cancelled:control.cancelled,progress:(completed,total)=>control.progress?.("policy",completed,total)});if(canonicalJson(executable)!==canonicalJson(observation.runtime))denied();
   const originalCompiler=readStableBuildFile(observation.compiler.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(originalCompiler.byteLength!==observation.compiler.byteLength||createHash("sha256").update(originalCompiler).digest("hex")!==observation.compiler.sha256)denied();
   const managerPath=join(browserActorRepoRoot,"package.json"),manager=readStableBuildFile(managerPath,1024*1024,{remaining:1024*1024},check);if(Bun.version!=="1.3.14"||JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(manager)).packageManager!=="bun@1.3.14")denied();
   const runtime=captureBrowserActorRuntime(import.meta.dir,check),{physicalInputs,...policyInputs}=captureBrowserCodegenPolicyInputs(runtime,check),scratchRoot=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(scratchRoot,{recursive:true});const scratch=mkdtempSync(join(scratchRoot,"browser-producer-verification-"));
-  try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check,invocation),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
+  try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check,invocation,phase),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
     const ordered=(rows:readonly BrowserActorPhysicalInputV1[])=>rows.map(row=>({...row,path:resolve(row.path)})).sort((a,b)=>a.logicalPath.localeCompare(b.logicalPath)),keys=new Set(observation.inputs.map(row=>row.logicalPath));if(keys.size!==observation.inputs.length||canonicalJson(ordered(inputs))!==canonicalJson(ordered(observation.inputs))||current.canonical!==observation.policyCanonical||compiler.sha256!==observation.compiler.sha256||compiler.byteLength!==observation.compiler.byteLength)denied();
     for(const row of observation.inputs){const bytes=readStableBuildFile(row.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(bytes.byteLength!==row.byteLength||createHash("sha256").update(bytes).digest("hex")!==row.sha256)denied();}if(createHash("sha256").update(readFileSync(observation.compiler.path)).digest("hex")!==observation.compiler.sha256)denied();check();control.progress?.("closure",1,1);return Object.freeze({inputs:Object.freeze(inputs),importInterfaces:browserActorInterfaces});
   }finally{rmSync(scratch,{recursive:true,force:true});}
 }
 
 /** 🏗️ Derives closed actor bytes without caller-selected paths or compiler authority. */
-export async function buildClosedBrowserActorArtifactV1(component: Uint8Array, invocation: ScriptInvocation, control: BrowserActorBuildControl = {}): Promise<ClosedBrowserActorArtifactV1> {
-  if (!control || typeof control !== "object" || Array.isArray(control) || ![Object.prototype, null].includes(Object.getPrototypeOf(control)) || !Reflect.ownKeys(control).every(key => {
+export async function buildClosedBrowserActorArtifactV1(component: Uint8Array, invocation: ScriptInvocation, phase:CompilerAdmissionControl, control: BrowserActorBuildControl = {}): Promise<ClosedBrowserActorArtifactV1> {
+  requireIssuedResourceControlInvocationV1(phase,invocation);if (!control || typeof control !== "object" || Array.isArray(control) || ![Object.prototype, null].includes(Object.getPrototypeOf(control)) || !Reflect.ownKeys(control).every(key => {
     const field = Object.getOwnPropertyDescriptor(control, key)!;
     return (key === "cancelled" || key === "progress") && "value" in field && (field.value === undefined || typeof field.value === "function");
   })) throw new Error("browser actor artifact: invalid build control");
-  return buildClosedBrowserActorArtifactOwned(component, invocation, Object.freeze({ cancelled: control.cancelled, progress: control.progress }));
+  return buildClosedBrowserActorArtifactOwned(component, invocation, phase, Object.freeze({ cancelled: control.cancelled, progress: control.progress }));
 }
 
 /** 🗝️ Retains the one build owner; only in-module laws may retain diagnostic scratch. */
-async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invocation: ScriptInvocation, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
-  const check = () => { if (control.cancelled?.()) throw new Error("browser actor artifact: cancelled"); };
+async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invocation: ScriptInvocation, phase:CompilerAdmissionControl, control: BrowserActorBuildControl, evidenceRoot?: string): Promise<ClosedBrowserActorArtifactV1> {
+  requireIssuedResourceControlInvocationV1(phase,invocation);const check = () => { phase.signal.throwIfAborted();if (control.cancelled?.()) throw new Error("browser actor artifact: cancelled"); };
   check();
   if (browserActorBuildOccupied) throw new Error("browser actor artifact: build capacity");
   browserActorBuildOccupied = true;
@@ -444,11 +447,12 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
     if (process.platform === "win32" && process.env.SystemRoot) environment.SystemRoot = process.env.SystemRoot;
     control.progress?.("codegen", 0, snapshot.byteLength);
     check();
-    const compiler = await buildBrowserCodegenModule(evidence, check, invocation);
+    const compiler = await buildBrowserCodegenModule(evidence, check, invocation,phase);
     const policy = observedBrowserCodegenPolicy(executable,compiler,policyInputs);
     writeFileSync(join(evidence, "codegen-policy.json"), policy.canonical, { mode: 0o600 });
     check();
-    const generated = await captureOwnedProcess(executable.path, ["--no-install", "--no-env-file", "--conditions=browser", "--config=" + configPath, "--eval", `
+    const codegenDirectory=evidence;
+    const generated = await withIssuedResourceOperationV1(phase,()=>withScriptInvocationSignalV1(invocation,phase.signal,actual=>captureOwnedProcess(executable.path, ["--no-install", "--no-env-file", "--conditions=browser", "--config=" + configPath, "--eval", `
       import assert from "node:assert/strict";
       import { closeSync, fstatSync, lstatSync, openSync, readSync, writeFileSync } from "node:fs";
       import { createHash } from "node:crypto";
@@ -486,7 +490,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
         writeFileSync(join(outputRoot, name), bytes, { mode: 0o600 });
       }
       process.stdout.write(JSON.stringify({ version, runtime: "bun@" + Bun.version, importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
-    `, componentPath, evidence, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(snapshot.byteLength)], { invocation, cwd: browserActorRepoRoot, env: environment, budgetMs: 600_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "codegen.stdout.json"), stderrPath: join(evidence, "codegen.stderr") });
+    `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(snapshot.byteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: compilerAdmissionBudgetV1(phase), maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
     check();
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
     if (generated.status !== 0) throw new Error(`browser actor artifact: codegen ${generated.reason}: ${generated.stderr.slice(0, 4096)}`);
@@ -498,7 +502,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, invoc
     const read = (name: string, maximum: number): Uint8Array => readStableBuildFile(join(evidenceDirectory, name), maximum, admission, check);
     const source = new TextDecoder("utf-8", { fatal: true }).decode(read("browser-actor.js", 8 * 1024 * 1024));
     const cores = manifest.files.filter(name => name.endsWith(".wasm")).map(name => ({ name, bytes: read(name, browserActorMaximumBytes) }));
-    const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime, invocation);
+    const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime, invocation,phase);
     check();
     const byteLength = Buffer.byteLength(output);
     if (byteLength > browserActorMaximumBytes) throw new Error("browser actor artifact: closed byte bound");
@@ -522,14 +526,15 @@ function validateWasiSuspension(source: string): void {
   const functions = new Map<string, string>(), asynchronous = new Map<string, boolean>();
   const declarations = new Map<string, ts.VariableDeclaration[]>(), rebound = new Set<string>(), coreBindings = new Set<string>();
   const denied = (): never => { throw new Error("browser actor bundle: blocking WASI import requires JSPI suspension"); };
-  const lowerBinding = (node: ts.Expression): string | undefined => {
-    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression) || !ts.isIdentifier(node.expression.expression) || !["_lowerImport", "_lowerImportBackwardsCompat"].includes(node.expression.expression.text) || node.expression.name.text !== "bind" || node.arguments.length !== 2 || node.arguments[0].kind !== ts.SyntaxKind.NullKeyword || !ts.isObjectLiteralExpression(node.arguments[1])) return;
+  const lowerBinding = (node: ts.Expression | undefined): string | undefined => {
+    if (!node || !ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression) || !ts.isIdentifier(node.expression.expression) || !["_lowerImport", "_lowerImportBackwardsCompat"].includes(node.expression.expression.text) || node.expression.name.text !== "bind" || node.arguments.length !== 2 || node.arguments[0]?.kind !== ts.SyntaxKind.NullKeyword || !node.arguments[1] || !ts.isObjectLiteralExpression(node.arguments[1])) return;
     const bindings = node.arguments[1].properties.filter(property => ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) && property.name.text === "importFn");
-    if (bindings.length !== 1 || !ts.isPropertyAssignment(bindings[0]) || !ts.isIdentifier(bindings[0].initializer)) return;
-    return bindings[0].initializer.text;
+    const binding = bindings[0];
+    if (bindings.length !== 1 || !binding || !ts.isPropertyAssignment(binding) || !ts.isIdentifier(binding.initializer)) return;
+    return binding.initializer.text;
   };
-  const suspendingBinding = (node: ts.Expression): string | undefined => {
-    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== "_suspendingImport" || node.arguments.length !== 2 || !ts.isNumericLiteral(node.arguments[0])) return;
+  const suspendingBinding = (node: ts.Expression | undefined): string | undefined => {
+    if (!node || !ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== "_suspendingImport" || node.arguments.length !== 2 || !node.arguments[0] || !ts.isNumericLiteral(node.arguments[0])) return;
     return lowerBinding(node.arguments[1]);
   };
   const coreImportsExpression = (node: ts.Expression): ts.ObjectLiteralExpression | undefined => {
@@ -581,7 +586,7 @@ function validateWasiSuspension(source: string): void {
       if (!ts.isNewExpression(value.whenTrue) || value.whenTrue.expression.getText(parsed) !== "WebAssembly.Suspending" || value.whenTrue.arguments?.length !== 1 || suspendingBinding(value.whenTrue.arguments[0]) !== name || lowerBinding(value.whenFalse) !== name || entries.length !== 1 || rebound.has(binding)) denied();
       wrappers.push(binding);
     }
-    if (wrappers.length !== 1 || !coreBindings.has(wrappers[0])) denied();
+    if (wrappers.length !== 1 || !wrappers[0] || !coreBindings.has(wrappers[0])) denied();
   }
 }
 
@@ -591,16 +596,17 @@ export function validateAsyncTaskReturnLift(source: string): number {
   const denied = (): never => { throw new Error("browser actor bundle: unflattenable async result requires an indirect task.return"); };
   const property = (node: ts.ObjectLiteralExpression, key: string): ts.Expression | undefined => {
     const found = node.properties.filter(entry => ts.isPropertyAssignment(entry) && (ts.isIdentifier(entry.name) || ts.isStringLiteral(entry.name)) && entry.name.text === key);
-    return found.length === 1 && ts.isPropertyAssignment(found[0]) ? found[0].initializer : undefined;
+    const entry = found[0];
+    return found.length === 1 && entry && ts.isPropertyAssignment(entry) ? entry.initializer : undefined;
   };
   const unflattenable = (node: ts.Expression): boolean => {
-    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !node.expression.text.startsWith("_liftFlat") || node.arguments.length !== 1 || !ts.isObjectLiteralExpression(node.arguments[0])) return false;
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !node.expression.text.startsWith("_liftFlat") || node.arguments.length !== 1 || !node.arguments[0] || !ts.isObjectLiteralExpression(node.arguments[0])) return false;
     const flatCount = property(node.arguments[0], "variantFlatCount");
     return flatCount !== undefined && (flatCount.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(flatCount) && flatCount.text === "undefined"));
   };
   let bindings = 0;
   const visit = (node: ts.Node): void => {
-    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "taskReturn" && node.expression.name.text === "bind" && node.arguments.length === 2 && node.arguments[0].kind === ts.SyntaxKind.NullKeyword && ts.isObjectLiteralExpression(node.arguments[1])) {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "taskReturn" && node.expression.name.text === "bind" && node.arguments.length === 2 && node.arguments[0]?.kind === ts.SyntaxKind.NullKeyword && node.arguments[1] && ts.isObjectLiteralExpression(node.arguments[1])) {
       bindings += 1;
       const direct = property(node.arguments[1], "useDirectParams"), lifts = property(node.arguments[1], "liftFns");
       if (direct === undefined || ![ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword].includes(direct.kind) || lifts === undefined || !ts.isArrayLiteralExpression(lifts)) return denied();
@@ -613,14 +619,14 @@ export function validateAsyncTaskReturnLift(source: string): number {
 }
 
 /** 🎭️ Builds one closed actor module with fresh first-party host state and an explicit owner. */
-export async function closedBrowserActorBundle(source: string, cores: readonly BrowserComponentCore[], invocation: ScriptInvocation, control: BrowserComponentFactoryControl = {}): Promise<string> {
-  const check = () => { if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled"); };
-  return closedBrowserActorBundleFromRuntime(source, cores, control, captureBrowserActorRuntime(import.meta.dir, check), invocation);
+export async function closedBrowserActorBundle(source: string, cores: readonly BrowserComponentCore[], invocation: ScriptInvocation, compiler:CompilerAdmissionControl, control: BrowserComponentFactoryControl = {}): Promise<string> {
+  requireIssuedResourceControlInvocationV1(compiler,invocation);const check = () => { compiler.signal.throwIfAborted();if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled"); };
+  return closedBrowserActorBundleFromRuntime(source, cores, control, captureBrowserActorRuntime(import.meta.dir, check), invocation,compiler);
 }
 
 /** 🎬️ Closes the generated actor over exact retained runtime modules without reopening source paths. */
-async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot, invocation?: ScriptInvocation): Promise<string> {
-  const names = control.importInterfaces ?? [];
+async function closedBrowserActorBundleFromRuntime(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl, runtime: BrowserActorRuntimeSnapshot, invocation: ScriptInvocation, compiler:CompilerAdmissionControl): Promise<string> {
+  requireIssuedResourceControlInvocationV1(compiler,invocation);const names = control.importInterfaces ?? [];
   const known = { "semio:framework/pure@1.0.0": "pure", "semio:framework/host-async@1.0.0": "hostAsync" };
   if (names.some(name => !Object.hasOwn(known, name) && !browserWasiInterfaces.includes(name))) throw new Error("browser actor bundle: unsupported import interface");
   const wasiRequired = names.some(name => browserWasiInterfaces.includes(name));
@@ -692,7 +698,7 @@ export async function activate(identity, port, control = {}) {
 }
 `;
   if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
-  const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw Error("browser actor bundle: cancelled"); }, invocation);
+  const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw Error("browser actor bundle: cancelled"); }, invocation,compiler);
   if (result.loadedRuntime !== 2) throw Error("browser actor bundle: runtime snapshot coverage");
   const output = result.source;
   const parsed = ts.createSourceFile("actor.js", output, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -719,17 +725,17 @@ export async function closedBrowserComponentFactory(source: string, cores: reado
     if (ts.isFunctionDeclaration(statement) && statement.name?.text === "instantiate" && !factory) { factory = statement; continue; }
     if (ts.isVariableStatement(statement) && statement.declarationList.declarations.length === 1) {
       const declaration = statement.declarationList.declarations[0];
-      if (ts.isIdentifier(declaration.name) && declaration.name.text === "_util" && declaration.initializer && ts.isObjectLiteralExpression(declaration.initializer) && declaration.initializer.properties.length === 0) continue;
+      if (declaration && ts.isIdentifier(declaration.name) && declaration.name.text === "_util" && declaration.initializer && ts.isObjectLiteralExpression(declaration.initializer) && declaration.initializer.properties.length === 0) continue;
     }
     throw new Error("browser component factory: unexpected top-level declaration");
   }
-  if (!factory?.body || factory.parameters.length !== 3 || factory.parameters[0].name.getText(parsed) !== "getCoreModule" || factory.parameters[1].name.getText(parsed) !== "imports" || factory.parameters[2].name.getText(parsed) !== "instantiateCore") throw new Error("browser component factory: instantiation signature");
+  if (!factory?.body || factory.parameters.length !== 3 || factory.parameters[0]?.name.getText(parsed) !== "getCoreModule" || factory.parameters[1]?.name.getText(parsed) !== "imports" || factory.parameters[2]?.name.getText(parsed) !== "instantiateCore") throw new Error("browser component factory: instantiation signature");
   if (factory.asteriskToken || factory.modifiers?.some(modifier => ![ts.SyntaxKind.ExportKeyword, ts.SyntaxKind.AsyncKeyword].includes(modifier.kind))) throw new Error("browser component factory: instantiation modifier");
   const modifier = factory.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.AsyncKeyword) ? "async " : "";
   const edits: { start: number; end: number }[] = [];
   for (const statement of factory.body.statements) {
-    if (ts.isVariableStatement(statement) && statement.declarationList.declarations.length === 1 && statement.declarationList.declarations[0].name.getText(parsed) === "fetchCompile") {
-      const initializer = statement.declarationList.declarations[0].initializer;
+    if (ts.isVariableStatement(statement) && statement.declarationList.declarations.length === 1 && statement.declarationList.declarations[0]?.name.getText(parsed) === "fetchCompile") {
+      const initializer = statement.declarationList.declarations[0]?.initializer;
       if (!initializer || initializer.getText(parsed).replaceAll(/\s+/g, "") !== "url=>fetch(url).then(WebAssembly.compileStreaming)") throw new Error("browser component factory: unrecognized fetch fallback");
       edits.push({ start: statement.getStart(parsed), end: statement.end });
     }
@@ -758,8 +764,9 @@ export async function closedBrowserComponentFactory(source: string, cores: reado
     if (ts.isCallExpression(node)) {
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(node.expression) && ["fetch", "eval", "Function"].includes(node.expression.text)) || (ts.isPropertyAccessExpression(node.expression) && ["fetch", "eval"].includes(node.expression.name.text))) throw new Error("browser component factory: dynamic code or network loader");
       if (ts.isIdentifier(node.expression) && node.expression.text === "getCoreModule") {
-        if (node.arguments.length !== 1 || !ts.isStringLiteral(node.arguments[0])) throw new Error("browser component factory: dynamic core selector");
-        requested.add(node.arguments[0].text);
+        const argument = node.arguments[0];
+        if (node.arguments.length !== 1 || !argument || !ts.isStringLiteral(argument)) throw new Error("browser component factory: dynamic core selector");
+        requested.add(argument.text);
       }
     }
     if (ts.isNewExpression(node) && ts.isIdentifier(node.expression) && ["URL", "Function", "Worker", "SharedWorker", "WebSocket", "XMLHttpRequest"].includes(node.expression.text)) throw new Error("browser component factory: external executable resource");
@@ -906,7 +913,7 @@ if (import.meta.main) {
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
   const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");
-  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, (source, cores, control) => closedBrowserActorBundle(source, cores, invocation, control), true);
+  const run = (invocation: ScriptInvocation) => testCanonicalActorAsyncImport(browserActorRepoRoot, invocation, join(import.meta.dir, "dist", command), undefined, (source, cores, control) => closedBrowserActorBundle(source, cores, invocation, scriptCompilerAdmissionControlV1(invocation,"browser:canonical",0),control), true);
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) await receiveScriptProcessInvocation(process.env, run);
   else await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "browser-bundle", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 }

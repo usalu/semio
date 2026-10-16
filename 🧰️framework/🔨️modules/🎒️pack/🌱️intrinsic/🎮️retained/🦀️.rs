@@ -1,5 +1,5 @@
 //! 🎞️ Incremental intrinsic Body reconstruction with explicit source and partial-value custody.
-use crate::{PackLimits,PackRefusal,record::{RetainedRecordBodyCursor,RetainedRecordBodyToken,RetainedValueToken as Token,RetainedValueContainer as Container,RetainedValueRole as Role}};
+use semio_framework_replication_codec::PackLimits; use semio_framework_pack_error::PackRefusal; use semio_framework_pack_record_retained::{RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueToken as Token, RetainedValueContainer as Container, RetainedValueRole as Role};
 use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};
 
@@ -190,7 +190,7 @@ trait Driver:Sized{
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>;
  fn terminal_is_empty(&self)->bool;
 }
-fn close_receipt(step:crate::format::RetainedPackCloseStep)->RetainedCloneStep{match step{crate::format::RetainedPackCloseStep::Complete=>RetainedCloneStep::Complete(Default::default()),crate::format::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()})}}
+fn close_receipt(step:semio_framework_pack_format_retained::RetainedPackCloseStep)->RetainedCloneStep{match step{semio_framework_pack_format_retained::RetainedPackCloseStep::Complete=>RetainedCloneStep::Complete(Default::default()),semio_framework_pack_format_retained::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()})}}
 struct BodyDriver{cursor:RetainedRecordBodyCursor,offset:usize,sealed:bool}
 impl Driver for BodyDriver{
  fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{let symbols=length.min(limits.max_symbols as usize);Ok(Self{cursor:RetainedRecordBodyCursor::try_new_intrinsic(limits,symbols,length,length,maximum)?,offset:0,sealed:false})}

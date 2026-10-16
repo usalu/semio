@@ -16,6 +16,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-epw-snapshot = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw-schema = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw-mutations = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw-editor = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw-io-registry = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw-tests = { path = "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

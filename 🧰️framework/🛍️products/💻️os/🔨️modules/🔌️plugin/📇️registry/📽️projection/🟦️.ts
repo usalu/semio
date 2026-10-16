@@ -13,7 +13,7 @@ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/�
 import {buildModesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, componentOwnerRootV1, moduleDirectoryName, parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
-import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, TAXONOMY, generateComponentSourceRegistry, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
+import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, REGISTRY_INPUT_DISCOVERY, TAXONOMY, generateComponentSourceRegistry, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
 import { FrameworkPackageEntry, emitFrameworkPackagesTypeScript, generateFrameworkPackageRegistry } from "../🧰️framework-catalog/🟦️.ts";
 import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
@@ -393,7 +393,8 @@ export class PreviewGeneratedScript extends BundleScript {
   run(_segments: string[]): void {
     const repoRoot = this.repoRoot;
     const protocol = process.env.SEMIO_GENERATOR_PREVIEW_PROTOCOL;
-    const authority = TAXONOMY.generatorContracts["plugin-registry"].inputDiscovery!.previewInput;
+    const authority = REGISTRY_INPUT_DISCOVERY.previewInput;
+    if (authority === undefined) throw new Error("Registry preview input contract required");
     if (protocol && protocol !== authority.protocol) throw new Error("Unknown registry preview protocol");
     const native = registryCatalogInputView(repoRoot, TAXONOMY);
     const cancelFile = process.env.SEMIO_GENERATOR_PREVIEW_CANCEL_FILE;

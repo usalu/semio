@@ -9,8 +9,8 @@
     },
     "WasiProfileDirectory": {
       "enum": [
-        "wasm-release",
-        "wasm-prototype"
+        "release",
+        "prototype"
       ]
     },
     "CanonicalBootstrapFolderMirrorFrontier": {

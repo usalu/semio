@@ -70,7 +70,7 @@ test("owned member batch retains canonical fallible grant axes and denied origin
     expect(valid({ copyBytes: 4, capacityBytes: 128, releaseBytes: 0, depth: 2 })).toBe(true);
     expect(valid({ copyBytes: 4, capacityBytes: 128, releaseBytes: 0 })).toBe(false);
   } finally { database.close(); }
-  const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
+  const source = readFileSync(join(owner, "🦀️.rs"), "utf8") + readFileSync(join(owner, "../../../🎮️one-item/📬️publication/📥️lifted/📦️owned/🦀️.rs"), "utf8");
   expect(source).toContain("fn next_copy_byte_demand(&self) -> Result<usize, ValueError>");
   expect(source).toContain("maximum_body_bytes: usize");
   expect(source).toContain("next_depth_demand()");
@@ -386,6 +386,6 @@ test("shared Store coverage admits only every independently supplied axis",()=>{
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const {demand,denials}=fixture.grantCoverage;const policy=fixture.physicalCloseGrant;
  const schema=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🧬️schema/🔣️.json"),"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});expect(valid(demand)).toBe(true);
  const database=new Database(":memory:");try{for(const row of [{axis:null,value:null},...denials]){const g={...policy,...(row.axis?{[row.axis]:row.value}:{})};const own=g.maximumItems>0&&g.maximumCopyBytes>=demand.copyBytes&&g.maximumCapacityBytes>=demand.capacityBytes&&g.maximumReleaseBytes>=demand.releaseBytes&&g.maximumDepth>=demand.depth;const oracle=database.query("SELECT (? > 0 AND ? >= ? AND ? >= ? AND ? >= ? AND ? >= ?) AS covered").get(g.maximumItems,g.maximumCopyBytes,demand.copyBytes,g.maximumCapacityBytes,demand.capacityBytes,g.maximumReleaseBytes,demand.releaseBytes,g.maximumDepth,demand.depth) as {covered:number};expect(own).toBe(Boolean(oracle.covered));expect(own).toBe(row.axis===null);}}finally{database.close();}
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs"),"utf8");const start=source.indexOf("fn artifact_retirement_grant_covers(");const owner=source.slice(start,source.indexOf("\n}",start));expect(owner).toContain("grant.maximum_depth >= demand.depth");
+ const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🦀️.rs"),"utf8");const start=source.indexOf("fn artifact_retirement_grant_covers(");const owner=source.slice(start,source.indexOf("\n}",start));expect(owner).toContain("grant.maximum_depth >= demand.depth");
  console.log("[DEBUG] plain five-axis grant denial boundaries agree with independent SQLite/canonical Ajv; actual shared helper native law remains separately required");
 });

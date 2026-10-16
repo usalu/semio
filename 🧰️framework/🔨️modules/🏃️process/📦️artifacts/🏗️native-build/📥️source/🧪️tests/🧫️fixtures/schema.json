@@ -39,6 +39,9 @@
           },
           "expected": {
             "type": "string"
+          },
+          "oracle": {
+            "type": "boolean"
           }
         }
       }

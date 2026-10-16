@@ -5,18 +5,17 @@
 //! `🎮️commands/*` node that has to hit-test, frame or query the live map goes through here.
 
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
+use crate::tile_coordinates::gis_policy::{gis_map_extension, gis_map_overlays_value};
 use crate::GisMapSnapshot;
 use semio_framework_surface::tiled_map::MapHost;
 use serde_json::Value;
 
 //#region 🔖️MapHost
-/// 🗺️ Builds a `MapHost` from the document content (derived descriptor JSON) plus the config's
-/// camera/render/style/LOD/selection view state.
+/// 🗺️ Builds a `MapHost` rendering by the GIS map policy from the document content (its GIS
+/// overlays) plus the config's camera/render/style/LOD/selection view state.
 pub fn map_host_from(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> MapHost {
-    let mut host = MapHost::new();
-    let descriptor = gis_map_descriptor_json(document);
-    let _ = host.sync_map_json(&descriptor);
+    let mut host = MapHost::with_extension(gis_map_extension());
+    let _ = host.sync_map_json(&serde_json::json!({ "overlays": gis_map_overlays_value(document) }).to_string());
     if let Ok(camera) = serde_json::from_str::<Value>(&cfg.camera_json) {
         let x = camera.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
         let y = camera.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);

@@ -39,3 +39,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🔏️canonical/🦀️.rs"]
+mod canonical;

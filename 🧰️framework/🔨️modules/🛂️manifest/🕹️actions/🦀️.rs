@@ -1,17 +1,259 @@
-//! 🕹️ Action semantics and the action and command definitions the framework injects:
-//! `ActionSemantics`, `ActionDefinition`, history filter, host event, clipboard, interaction, active utility and tool, document transfer.
-//!
-//! Split from the manifest root by section C of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/SEAM-MAP-PLUGIN-MANIFEST-HUB.md`.
-use super::*;
+//! ⚡️ Action semantics, action and command definitions, framework action families and utilities.
+
+use semio_framework_tool_run::ToolRunDefinition;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
+use std::fmt::Display;
+use std::fmt::Formatter;
+use ui_wgpu::wgpu::IconName;
+use semio_framework_kernel_identity::CapabilityId;
+use semio_framework_kernel_ui::UiDirtyScope;
+use semio_framework_manifest_address::{PlatformKeybinding, UtilityRef};
+use semio_framework_manifest_arg_schema::{ActionArgDef, ActionArgOption};
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
+//#region 🔖️Utilities
+/// 🧰️ Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
+/// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
+/// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct UtilityDefinition {
+    pub id: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    pub label: LocalizedLabel,
+    pub icon_id: IconName,
+    /// 🧺️ Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub keys: Option<String>,
+    /// 🖱️ CSS/winit cursor name applied to the window body while this utility is active.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    /// 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
+    /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
+    /// set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.
+    #[serde(default)]
+    #[value(default)]
+    pub allows_actions_while_active: bool,
+    /// ⏯️ Declares that activating this utility runs a visible, abortable algorithm (tool run contract §2.4);
+    /// reserves the tool run actions through [`crate::tool_run::RESERVED`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub run: Option<ToolRunDefinition>,
+}
+
+impl UtilityDefinition {
+    /// 🧰️ A utility with sensible defaults (no group/keys/cursor/category/run, gates actions while active).
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false, run: None }
+    }
+}
+
+#[path = "../🪛️utilities/🌅️initial/🦀️.rs"]
+mod initial_window_utility;
+
+pub use initial_window_utility::{InitialWindowUtilityInput, InitialWindowUtilityResolution, resolve_initial_window_utility};
+
+//#endregion 🔖️Utilities
+//#region 🔖️Commands
+
+/// 🎛️ Declares one command: a categorized verb offered in the footer command panel.
+/// Its owner and availability are derived from the containing OS, plugin, app, or mode definition.
+/// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
+/// `ArtifactApp::handle_command`/`ActionEmit`.
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct CommandDefinition {
+    pub id: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    pub label: LocalizedLabel,
+    /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
+    pub category: String,
+    pub icon_id: IconName,
+    pub kind: ActionKind,
+    /// 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
+    pub args: Vec<ActionArgDef>,
+    #[serde(default)]
+    #[value(default)]
+    pub keybindings: Vec<PlatformKeybinding>,
+    #[serde(default)]
+    #[value(default)]
+    pub in_palette: bool,
+    /// 🎯️ See `ActionDefinition.semantics` — same D6/§3.1 field, same defaulting/inheritance story.
+    #[serde(default)]
+    #[value(default)]
+    pub semantics: ActionSemantics,
+}
+
+impl CommandDefinition {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, icon_id: impl Into<IconName>, kind: ActionKind) -> Self {
+        Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind) }
+    }
+
+    /// 🎛️ Declares a command with the neutral icon for its action kind.
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+        Self::new(id, label, category, default_action_icon_id(kind), kind)
+    }
+
+    /// ⚡️ Builds a catalog row without granting UI execution authority. A factory registration or
+    /// static bounded-first-step proof must classify the exact key separately.
+    pub fn bounded_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+        Self::new_catalog(id, label, category, kind)
+    }
+
+    /// 📝️ Attaches typed argument declarations to this command.
+    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+        self.args = args.into_iter().collect();
+        self
+    }
+
+    /// ⌨️ Attaches one platform-aware command keybinding.
+    pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
+        self.keybindings.push(keybinding);
+        self
+    }
+
+    /// 🎯️ Replaces this command's whole `ActionSemantics` wholesale.
+    pub async fn semantics(mut self, semantics: ActionSemantics) -> Self {
+        self.semantics = semantics;
+        self
+    }
+
+    /// ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
+    pub fn destructive(mut self) -> Self {
+        self.semantics.effects.destructive = true;
+        if self.semantics.policy.approval == ApprovalMode::Never {
+            self.semantics.policy.approval = ApprovalMode::WhenDestructive;
+        }
+        self
+    }
+
+    /// 🗣️ Sets `ActionSemantics.use_when` — see `ActionDefinition::use_when`.
+    pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
+        self
+    }
+
+    /// 💬️ Sets `ActionSemantics.description` — see `ActionDefinition::describe`.
+    pub fn describe(mut self, description: impl Into<LocalizedLabel>) -> Self {
+        self.semantics.description = Some(description.into());
+        self
+    }
+
+    /// 🎯️ Declares this command's [`CapabilityAudience`] — see `ActionDefinition::audience`.
+    pub fn audience(mut self, audience: CapabilityAudience) -> Self {
+        self.semantics.audience = Some(audience);
+        self
+    }
+
+    /// 📖️ Appends one `ActionSemantics.examples` entry — see `ActionDefinition::example`.
+    pub async fn example(mut self, example: impl Into<String>) -> Self {
+        self.semantics.examples.push(example.into());
+        self
+    }
+}
+
+/// 💻️ Operating-system command catalog shared by every renderer.
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct OsDefinition {
+    #[serde(default)]
+    #[value(default)]
+    pub commands: Vec<CommandDefinition>,
+}
+
+//#endregion 🔖️Commands
+//#region 🔖️Tools
+
+/// 🛠️ Declares one mode-level tool: an activatable, stateful capability of a whole app mode.
+/// Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
+/// window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
+/// and activation is host-owned session view state (`ViewModel.active_tool_id`), never a document
+/// field or VCS operation. A tool's live options are supplied dynamically via `ArtifactApp::tool_measures`,
+/// keyed by tool id — not part of this static declaration.
+// 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct ToolDefinition {
+    pub id: String,
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
+    pub label: LocalizedLabel,
+    pub icon_id: IconName,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub keys: Option<String>,
+    /// ⏯️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
+    /// reserves the tool run actions through [`crate::tool_run::RESERVED`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub run: Option<ToolRunDefinition>,
+}
+
+impl ToolDefinition {
+    /// 🛠️ A tool with sensible defaults (no keybinding, no run).
+    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+        Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None, run: None }
+    }
+}
+
+//#endregion 🔖️Tools
+//#region 🔖️ActionKind
+/// 🗂️ Classifies a declared action by how it interacts with VCS history.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum ActionKind {
+    /// Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
+    Mutation,
+    /// Ephemeral window or session state — recorded in the session command log, never as a VCS edit.
+    View,
+    /// Moves the applied stack, the head of the artifact or a reserved history session — injected by the framework or
+    /// a [`ReservedContribution`], never app-declared.
+    History,
+    /// Copies, cuts or pastes through the shell clipboard — framework-injected, never app-declared.
+    Clipboard,
+    /// Shell-only effect without a document mutation — recorded in the session command log via dispatch or the
+    /// `noteShellCommand` mechanism.
+    Shell,
+    /// Raw pointer interaction of a declared interaction domain — framework-injected, never app-declared.
+    Interaction,
+}
+
+semio_framework_value::artifact_retire_leaf!(ActionKind);
+
+//#endregion 🔖️ActionKind
 //#region 🔖️ActionSemantics
+
 // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, §3.1/D5:
 // what an `ActionDefinition`/`CommandDefinition` MEANS to an agent — effects, policy, execution
 // shape, and natural-language framing — kept deliberately separate from `CapabilityDefinition` (the
 // gateway's compiled projection, per D5, which lives in the gateway crate, not here) and from
-// `kernel::Broker`'s own `CapabilityId`/`BrokerCapabilityGrant` (the enforcement primitive
+// `Broker`'s own `CapabilityId`/`BrokerCapabilityGrant` (the enforcement primitive
 // `CapabilityPolicy.scopes` below references, never redefines).
 /// 🎯️ A templated resource-selector string identifying what a capability reads/writes —
 /// documented vocabulary (`"artifact:{self}"`, `"artifact:{arg.<id>}"`, `"config:{self}"`,
@@ -34,6 +276,7 @@ impl ToValue for ResourceSelector {
         self.0.to_value()
     }
 }
+
 impl FromValue for ResourceSelector {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         String::from_value(value).map(ResourceSelector)
@@ -84,9 +327,9 @@ pub enum ApprovalMode {
 }
 
 /// 🛡️ The scope/approval gate a capability invocation must clear — `scopes` are
-/// `kernel::CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
+/// `CapabilityId`s (the Broker's own enforcement primitive, see `🔖️Kernel` below), never a
 /// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
-/// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
+/// that `CapabilityId` is reachable from this crate with no dependency cycle.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -94,7 +337,7 @@ pub enum ApprovalMode {
 pub struct CapabilityPolicy {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub scopes: Vec<kernel::CapabilityId>,
+    pub scopes: Vec<CapabilityId>,
     #[serde(default)]
     #[value(default)]
     pub approval: ApprovalMode,
@@ -204,6 +447,22 @@ pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudien
     command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
 }
 
+/// 🧵️ How a declared action or command may be dispatched as an interactive job. The default is deliberately not
+/// executable: a declaration decoded without an explicit disposition stays visible to audit tooling but is rejected by
+/// [`validate_interactive_job_classification`] before a release catalog can be activated.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum InteractiveJobClassification {
+    #[default]
+    Unclassified,
+    Migrated,
+    BatchOnlyPendingRewrite,
+    ForbiddenFromUi,
+    Deleted,
+}
+
 /// ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -282,18 +541,18 @@ impl ActionSemantics {
         match kind {
             ActionKind::Mutation => Self {
                 effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.write".into())], approval: ApprovalMode::WhenDestructive },
+                policy: CapabilityPolicy { scopes: vec![CapabilityId("artifacts.write".into())], approval: ApprovalMode::WhenDestructive },
                 execution: CapabilityExecution { preview: PreviewMode::Diff, undo: UndoMode::Inverse, expected_revision: true, ..Default::default() },
                 ..Default::default()
             },
             ActionKind::View | ActionKind::Interaction => Self {
                 effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}")], ..Default::default() },
-                policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
+                policy: CapabilityPolicy { scopes: vec![CapabilityId("artifacts.read".into()), CapabilityId("shell.observe".into())], ..Default::default() },
                 ..Default::default()
             },
-            ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("artifacts.write".into())], ..Default::default() }, ..Default::default() },
-            ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
-            ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![CapabilityId("artifacts.write".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
+            ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
         }
     }
 }
@@ -336,6 +595,7 @@ pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<It
         Err(errors)
     }
 }
+
 //#endregion 🔖️ActionSemantics
 
 /// 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
@@ -493,21 +753,16 @@ impl ActionDefinition {
 /// concrete `entrySeq` from the history panel's "backwards" button).
 pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 
-/// 🕹️ The framework-owned History actions, auto-injected into every `AppDefinition`: the seven history-lane verbs
-/// followed by the [`history_edit_action_definitions`] of non-destructive history editing.
-pub fn history_action_definitions() -> Vec<ActionDefinition> {
-    let mut actions = history_lane_action_definitions();
-    actions.extend(history_edit_action_definitions());
-    actions
-}
-
 /// 🌿️ Moves the artifact head onto an existing alternative: `alternativeId`.
 pub const SWITCH_ALTERNATIVE_ACTION_ID: &str = "switchAlternative";
+
 /// 🪪️ `switchAlternative`'s alternative id argument.
 pub const SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID: &str = "alternativeId";
 
-/// 🕹️ The seven history-lane verbs: they move the applied stack or the head of the artifact.
-fn history_lane_action_definitions() -> Vec<ActionDefinition> {
+/// 🕹️ The seven framework-owned History verbs, auto-injected into every `AppDefinition`: they move the applied stack or
+/// the head of the artifact. A feature that reserves further history verbs contributes them through a
+/// [`ReservedContribution`].
+pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::resumable_framework("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History, "undo-2") }
             .describe(LocalizedLabel::native("Reverts the most recent edit on the open artifact and moves its head back one revision.", "Macht die letzte Änderung am geöffneten Artefakt rückgängig und setzt den Kopf eine Revision zurück."))
@@ -539,13 +794,17 @@ fn history_lane_action_definitions() -> Vec<ActionDefinition> {
     ]
 }
 
+
 /// 🎚️ The framework-owned action id apps dispatch to change the history panel's mutations
-/// filter — auto-injected unconditionally (mirrors `RECORD_TUTORIAL_ACTION_ID`).
+/// filter — auto-injected unconditionally.
 pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter";
+
 /// 🎚️ The `setHistoryCommandFilter` option (and `HistoryPatch.commandFilter` value) that shows every row.
 pub const HISTORY_COMMAND_FILTER_ALL: &str = "all";
+
 /// 🎚️ The option that hides the rows of document mutations.
 pub const HISTORY_COMMAND_FILTER_WITHOUT_MUTATIONS: &str = "withoutMutations";
+
 /// 🎚️ The option that shows only the rows of document mutations.
 pub const HISTORY_COMMAND_FILTER_ONLY_MUTATIONS: &str = "onlyMutations";
 
@@ -579,14 +838,19 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// 📨️ The host-forwarded window fact `hostEvent{windowId, kind}`: the runtime answers it with the app's own typed
 /// host-event command for that window (`ArtifactApp::host_event`), so an open gesture there ends without a trace.
 pub const HOST_EVENT_ACTION_ID: &str = "hostEvent";
+
 /// 🪟️ `hostEvent`'s window instance argument.
 pub const HOST_EVENT_ARG_WINDOW_ID: &str = "windowId";
+
 /// 🏷️ `hostEvent`'s event kind argument: [`HOST_EVENT_KIND_BLUR`], [`HOST_EVENT_KIND_CAPTURE_LOST`] or [`HOST_EVENT_KIND_RETIRING`].
 pub const HOST_EVENT_ARG_KIND: &str = "kind";
+
 /// 🌫️ The window lost keyboard focus.
 pub const HOST_EVENT_KIND_BLUR: &str = "blur";
+
 /// 🖐️ The window lost the pointer capture of a gesture (the release never reached it).
 pub const HOST_EVENT_KIND_CAPTURE_LOST: &str = "captureLost";
+
 /// 🚪️ The window is about to close.
 pub const HOST_EVENT_KIND_RETIRING: &str = "retiring";
 
@@ -612,6 +876,7 @@ pub fn host_event_action_definition() -> ActionDefinition {
             .required(),
         ])
 }
+
 //#endregion 🔖️HostEvent
 
 /// 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
@@ -664,9 +929,10 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ]),
     ]
 }
-//#endregion 🔖️Clipboard
 
+//#endregion 🔖️Clipboard
 //#region 🔖️Interaction
+
 /// 🕹️ The framework-owned action id a renderer dispatches to change a domain's selection (pick,
 /// marquee gather, keyboard range/toggle) — never in the palette: renderers translate raw
 /// pointer/keyboard input into this, the user never picks it from a menu.
@@ -762,9 +1028,9 @@ impl InteractionVerb {
 /// measures rail): every verb but `Hover` can move persisted interaction state a rail control binds,
 /// and `Hover` can move none. Utilities, tools, engagements, labels and the app-static catalogue are
 /// moved by no interaction verb.
-pub fn interaction_verb_surface_scope(verb: InteractionVerb, window_bodies: &[String], panel_bodies: &[String]) -> kernel::UiDirtyScope {
+pub fn interaction_verb_surface_scope(verb: InteractionVerb, window_bodies: &[String], panel_bodies: &[String]) -> UiDirtyScope {
     let selection_moved = matches!(verb, InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll);
-    kernel::UiDirtyScope::Partial {
+    UiDirtyScope::Partial {
         window_bodies: window_bodies.to_vec(),
         panel_bodies: if selection_moved { panel_bodies.to_vec() } else { Vec::new() },
         utilities: false,
@@ -775,47 +1041,11 @@ pub fn interaction_verb_surface_scope(verb: InteractionVerb, window_bodies: &[St
     }
 }
 
-/// 🕹️ Every declared window body key indexed by the interaction domain that window kind declares —
-/// the schema-first half of [`interaction_verb_surface_scope`], read once when an app's action
-/// registry is built rather than per dispatched hover.
-pub fn interaction_window_bodies_by_domain(app: &AppDefinition) -> BTreeMap<String, Vec<String>> {
-    let mut index: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for window in app.window_kinds.iter() {
-        for interaction in &window.interactions {
-            let bodies = index.entry(interaction.as_str().to_string()).or_default();
-            if !bodies.iter().any(|body| body == &window.body_key) {
-                bodies.push(window.body_key.clone());
-            }
-        }
-    }
-    index
-}
-
-/// 🌳️ Every declared panel LEAF body key, in declaration order, branches walked — the panel half of
-/// [`interaction_verb_surface_scope`].
-pub fn panel_leaf_body_keys(app: &AppDefinition) -> Vec<String> {
-    fn walk(tab: &PanelTabDefinition, out: &mut Vec<String>) {
-        if let Some(body_key) = &tab.body_key {
-            if !out.iter().any(|entry| entry == body_key) {
-                out.push(body_key.clone());
-            }
-        }
-        for child in &tab.children {
-            walk(child, out);
-        }
-    }
-    let mut out = Vec::new();
-    for tab in &app.panel_tabs {
-        walk(tab, &mut out);
-    }
-    out
-}
-
 /// 🐢️ The framework's own answer to "what does this verb repaint", for every app that implements no
 /// `ArtifactApp::interaction_scope` of its own. `None` — and with it the framework's widest
-/// [`kernel::UiDirtyScope::Full`] — is the answer whenever NO declared window paints a touched
+/// [`UiDirtyScope::Full`] — is the answer whenever NO declared window paints a touched
 /// domain, because then there is no declaration to derive from and narrowing would be a guess.
-pub fn interaction_declared_refresh_scope(verb: InteractionVerb, domains: &[&str], windows_by_domain: &BTreeMap<String, Vec<String>>, panel_bodies: &[String]) -> Option<kernel::UiDirtyScope> {
+pub fn interaction_declared_refresh_scope(verb: InteractionVerb, domains: &[&str], windows_by_domain: &BTreeMap<String, Vec<String>>, panel_bodies: &[String]) -> Option<UiDirtyScope> {
     let mut window_bodies: Vec<String> = Vec::new();
     for domain in domains {
         for body in windows_by_domain.get(*domain).into_iter().flatten() {
@@ -826,49 +1056,8 @@ pub fn interaction_declared_refresh_scope(verb: InteractionVerb, domains: &[&str
     }
     (!window_bodies.is_empty()).then(|| interaction_verb_surface_scope(verb, &window_bodies, panel_bodies))
 }
-//#endregion 🔖️InteractionRefreshScope
 
-/// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
-/// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
-/// `clipboard_action_definitions`, except conditional (like `set_active_utility_action_definition`)
-/// rather than unconditional: returns `[]` when `app.interactions` is empty. `interactionSelect`/
-/// `interactionHover` are the raw dispatch verbs renderers translate clicks/marquee/hover into
-/// (never in the palette); `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity`
-/// are user-facing and drive the per-domain Select controls.
-pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
-    if app.interactions.is_empty() {
-        return Vec::new();
-    }
-    let merge_options = vec![
-        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")),
-        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")),
-        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")),
-        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")),
-        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")),
-    ];
-    let method_options =
-        vec![ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")), ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso"))];
-    let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")), ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach"))];
-    vec![
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction, "mouse-pointer") }.with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
-            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
-            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
-        ]),
-        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Darüberfahren"), ActionKind::Interaction, "eye") }.with_args([
-            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
-            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
-        ]),
-        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction, "mouse-pointer-2") },
-        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction, "maximize-2") },
-        ActionDefinition::resumable_framework(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction, "sliders-horizontal")
-            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required()]),
-        ActionDefinition::resumable_framework(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction, "layers")
-            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required()]),
-    ]
-}
+//#endregion 🔖️InteractionRefreshScope
 //#endregion 🔖️Interaction
 
 /// 🧰️ The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
@@ -925,5 +1114,19 @@ pub fn document_transfer_action_definitions() -> [ActionDefinition; 2] {
         ActionDefinition::resumable_framework(IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, LocalizedLabel::native("Import Document…", "Dokument importieren…"), ActionKind::Shell, "import").with_category("transfer").audience(CapabilityAudience::Chrome),
     ]
 }
+
+
+/// 🎯️ Neutral icon for an action or command whose owner does not declare presentation metadata.
+pub fn default_action_icon_id(kind: ActionKind) -> IconName {
+    match kind {
+        ActionKind::View => "eye".into(),
+        ActionKind::Shell => "code".into(),
+        ActionKind::Mutation => "sparkles".into(),
+        ActionKind::History => "clock".into(),
+        ActionKind::Clipboard => "clipboard".into(),
+        ActionKind::Interaction => "mouse-pointer".into(),
+    }
+}
+
 //#endregion 🔖️Manifest
 // #endregion 🛂️Manifest

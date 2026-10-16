@@ -1,6 +1,6 @@
 //! 🧭️ 🧭️ S Studio app command — `set-active-panel-tab`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActivePanelTabSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActivePanelTabSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -14,8 +14,3 @@ pub fn handle(payload: &SetActivePanelTab, _doc: &ArtifactView<'_, WorkflowSnaps
     Ok(Emit::config(vec![SpaceConfigMutation::SetActivePanelTab(ActivePanelTabSetting { tab_id: payload.tab_id.clone() })]))
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

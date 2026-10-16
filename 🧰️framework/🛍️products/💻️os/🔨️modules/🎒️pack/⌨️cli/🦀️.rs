@@ -7,6 +7,9 @@
 //!
 //! See the `## pack_cli` section of the wave-0 contract at
 //! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`.
+//!
+//! 🌉️ Native tooling: the crate is empty on wasm32, where there is no file layer.
+#![cfg(not(target_arch = "wasm32"))]
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -151,25 +154,23 @@ async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     (positional, flags)
 }
 
-async fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_pack::VerificationLevel, String> {
+async fn parse_level(flags: &HashMap<String, String>) -> Result<semio_framework_os_pack::VerificationLevel, String> {
     match flags.get("level").map(String::as_str) {
-        None => Ok(crate::os_pack::VerificationLevel::Standard),
-        Some("trusted") => Ok(crate::os_pack::VerificationLevel::Trusted),
-        Some("standard") => Ok(crate::os_pack::VerificationLevel::Standard),
-        Some("full") => Ok(crate::os_pack::VerificationLevel::Full),
+        None => Ok(semio_framework_os_pack::VerificationLevel::Standard),
+        Some("trusted") => Ok(semio_framework_os_pack::VerificationLevel::Trusted),
+        Some("standard") => Ok(semio_framework_os_pack::VerificationLevel::Standard),
+        Some("full") => Ok(semio_framework_os_pack::VerificationLevel::Full),
         Some(other) => Err(format!("unknown --level '{other}' (expected trusted|standard|full)")),
     }
 }
 //#endregion 🔖️Args
-
-use crate::os_pack::control;
 
 //#region 🔖️Format
 async fn hex32(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-async fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_pack::Footer) {
+async fn print_manifest(manifest: &semio_framework_os_pack::Manifest, footer: &semio_framework_os_pack::Footer) {
     println!("== manifest ==");
     println!("  schema_name: {:?}", manifest.schema_name);
     println!("  schema_hash: {}", hex32(&manifest.schema_hash).await);
@@ -208,19 +209,19 @@ async fn cmd_inspect(rest: &[String], context: &control::CommandContext) -> i32 
         eprintln!("usage: pack inspect <file>");
         return 2;
     };
-    let source = match crate::os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
+    let source = match semio_framework_os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
         Ok(source) => source,
         Err(error) => {
             eprintln!("pack: cannot open '{path}': {error}");
             return 1;
         }
     };
-    let limits = crate::os_pack::PackLimits::default();
+    let limits = semio_framework_os_pack::PackLimits::default();
     // 🔁️ `recover` is `async fn` now, so it must resolve exactly once (R10 residue shape 2) — its
     // `Result` is borrowed in the `Ok` arm below and consumed in the `Err` arm, which is fine for a
     // plain value but not for a `Future` that a second `.await` would try to re-drive.
-    let recovery = crate::os_pack::recover(&source, &limits).await;
-    match crate::os_pack::PackFile::open_manifest(source, &limits, crate::os_pack::VerificationLevel::Standard).await {
+    let recovery = semio_framework_os_pack::recover(&source, &limits).await;
+    match semio_framework_os_pack::PackFile::open_manifest(source, &limits, semio_framework_os_pack::VerificationLevel::Standard).await {
         Ok(pack_file) => {
             let superblock = pack_file.superblock();
             println!("== header ==");
@@ -235,7 +236,7 @@ async fn cmd_inspect(rest: &[String], context: &control::CommandContext) -> i32 
                 print_manifest(manifest, &superblock.footer).await;
             }
             for id in 0..pack_file.chunk_count() {
-                if let Ok(range) = pack_file.chunk_range(crate::os_pack::ChunkId(id as u32)) {
+                if let Ok(range) = pack_file.chunk_range(semio_framework_os_pack::ChunkId(id as u32)) {
                     println!("  chunk[{id}]: offset={} stored_len={}", range.offset, range.len);
                 }
             }
@@ -283,15 +284,15 @@ async fn cmd_verify(rest: &[String], context: &control::CommandContext) -> i32 {
             return 2;
         }
     };
-    let source = match crate::os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
+    let source = match semio_framework_os_pack::FilePackSource::open(Path::new(path), context.transport().clone()) {
         Ok(source) => source,
         Err(error) => {
             println!("FAIL: cannot open '{path}': {error}");
             return 1;
         }
     };
-    let limits = crate::os_pack::PackLimits::default();
-    let pack_file = match crate::os_pack::PackFile::open_manifest(source, &limits, level).await {
+    let limits = semio_framework_os_pack::PackLimits::default();
+    let pack_file = match semio_framework_os_pack::PackFile::open_manifest(source, &limits, level).await {
         Ok(pack_file) => pack_file,
         Err(error) => {
             println!("FAIL: {error}");
@@ -303,7 +304,7 @@ async fn cmd_verify(rest: &[String], context: &control::CommandContext) -> i32 {
         return 1;
     }
     for id in 0..pack_file.chunk_count() {
-        if let Err(error) = pack_file.read_chunk(crate::os_pack::ChunkId(id as u32), level).await {
+        if let Err(error) = pack_file.read_chunk(semio_framework_os_pack::ChunkId(id as u32), level).await {
             println!("FAIL: chunk {id}: {error}");
             return 1;
         }
@@ -322,14 +323,14 @@ async fn cmd_hash(rest: &[String], context: &control::CommandContext) -> i32 {
         eprintln!("usage: pack hash <file>");
         return 2;
     };
-    let bytes = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await {
+    let bytes = match control::read_command_file(Path::new(path), semio_framework_os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
             return 1;
         }
     };
-    match crate::os_pack::content_hash(&bytes) {
+    match semio_framework_os_pack::content_hash(&bytes) {
         Ok(hash) => {
             println!("{hash}");
             0
@@ -359,14 +360,14 @@ async fn cmd_to_dsl(rest: &[String], context: &control::CommandContext) -> i32 {
         eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
-    let bytes = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await {
+    let bytes = match control::read_command_file(Path::new(path), semio_framework_os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
             return 1;
         }
     };
-    match crate::os_pack::record::decode_document(&bytes, &spec, &crate::os_pack::record::DecodeOptions::default()) {
+    match semio_framework_os_pack::record::decode_document(&bytes, &spec, &semio_framework_os_pack::record::DecodeOptions::default()) {
         Ok((record, report)) => {
             let mut writer = semio_framework_dsl_record::Writer::new();
             semio_framework_dsl_record::print_record(&record, &spec, &mut writer);
@@ -408,7 +409,7 @@ async fn cmd_from_dsl(rest: &[String], context: &control::CommandContext) -> i32
         eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
-    let text = match control::read_command_file(Path::new(path), crate::os_pack::PackLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
+    let text = match control::read_command_file(Path::new(path), semio_framework_os_pack::PackLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
         Ok(text) => text,
         Err(error) => {
             eprintln!("pack: cannot read '{path}': {error}");
@@ -422,14 +423,14 @@ async fn cmd_from_dsl(rest: &[String], context: &control::CommandContext) -> i32
             return 1;
         }
     };
-    let bytes = match crate::os_pack::record::encode_document(&spec, &record, &crate::os_pack::record::EncodeOptions::default()) {
+    let bytes = match semio_framework_os_pack::record::encode_document(&spec, &record, &semio_framework_os_pack::record::EncodeOptions::default()) {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: encode failed: {error}");
             return 1;
         }
     };
-    match crate::os_pack::write_atomic(Path::new(out_path), &bytes, context.transport()) {
+    match semio_framework_os_pack::write_atomic(Path::new(out_path), &bytes, context.transport()) {
         Ok(()) => {
             println!("wrote {out_path} ({} bytes)", bytes.len());
             0
@@ -473,14 +474,14 @@ async fn cmd_diff(rest: &[String], context: &control::CommandContext) -> i32 {
     }
     let path_a = &positional[0];
     let path_b = &positional[1];
-    let bytes_a = match control::read_command_file(Path::new(path_a), crate::os_pack::PackLimits::default().max_file_len, context).await {
+    let bytes_a = match control::read_command_file(Path::new(path_a), semio_framework_os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path_a}': {error}");
             return 1;
         }
     };
-    let bytes_b = match control::read_command_file(Path::new(path_b), crate::os_pack::PackLimits::default().max_file_len, context).await {
+    let bytes_b = match control::read_command_file(Path::new(path_b), semio_framework_os_pack::PackLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("pack: cannot read '{path_b}': {error}");
@@ -493,15 +494,15 @@ async fn cmd_diff(rest: &[String], context: &control::CommandContext) -> i32 {
             eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
             return 2;
         };
-        let options = crate::os_pack::record::DecodeOptions::default();
-        let record_a = match crate::os_pack::record::decode_document(&bytes_a, &spec, &options) {
+        let options = semio_framework_os_pack::record::DecodeOptions::default();
+        let record_a = match semio_framework_os_pack::record::decode_document(&bytes_a, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_a}' failed: {error}");
                 return 1;
             }
         };
-        let record_b = match crate::os_pack::record::decode_document(&bytes_b, &spec, &options) {
+        let record_b = match semio_framework_os_pack::record::decode_document(&bytes_b, &spec, &options) {
             Ok((record, _)) => record,
             Err(error) => {
                 eprintln!("pack: decode '{path_b}' failed: {error}");
@@ -519,8 +520,8 @@ async fn cmd_diff(rest: &[String], context: &control::CommandContext) -> i32 {
             1
         }
     } else {
-        let hash_a = crate::os_pack::content_hash(&bytes_a);
-        let hash_b = crate::os_pack::content_hash(&bytes_b);
+        let hash_a = semio_framework_os_pack::content_hash(&bytes_a);
+        let hash_b = semio_framework_os_pack::content_hash(&bytes_b);
         if let (Ok(hash_a), Ok(hash_b)) = (hash_a, hash_b) {
             if hash_a == hash_b && bytes_a.len() == bytes_b.len() {
                 println!("identical (content_hash {hash_a}, {} bytes)", bytes_a.len());
@@ -586,6 +587,9 @@ pub async fn main_impl(args: &[String], context: &control::CommandContext) -> i3
 //#endregion 🔖️Cli
 
 //#region 🧪️Tests
+#[path = "../🚦️control/🦀️.rs"]
+pub mod control;
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -10,7 +10,7 @@ use super::super::{IconRenderCameraFields, IconRenderMaterialFields, IconRenderP
 const SVG_OUTPUT_CAPACITY: usize = 64 * 1024 * 1024;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Phase {
+pub enum Phase {
     Faces,
     Lines,
     Retire,
@@ -66,7 +66,7 @@ struct SvgScene {
     primitives: Vec<World3dPrimitiveMaterial>,
 }
 
-pub(crate) struct IconSvgRejected {
+pub struct IconSvgRejected {
     fault: String,
     asset: Option<World3dMeshAsset>,
 }
@@ -78,11 +78,11 @@ impl std::fmt::Debug for IconSvgRejected {
 }
 
 impl IconSvgRejected {
-    pub(crate) fn fault(&self) -> &str {
+    pub fn fault(&self) -> &str {
         &self.fault
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         let Some(asset) = self.asset.as_mut() else { return true };
         if !asset.close_step() {
             return false;
@@ -91,12 +91,12 @@ impl IconSvgRejected {
         true
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.asset.is_none()
     }
 }
 
-pub(crate) struct IconSvgExport {
+pub struct IconSvgExport {
     phase: Phase,
     scene: Option<SvgScene>,
     mesh: Mesh3dLease,
@@ -117,7 +117,7 @@ pub(crate) struct IconSvgExport {
 
 impl IconSvgExport {
     #[expect(clippy::result_large_err, reason = "SVG refusal returns the exact decoded asset owner for bounded retirement.")]
-    pub(crate) fn new(request_json: &str, asset: World3dMeshAsset) -> Result<Self, IconSvgRejected> {
+    pub fn new(request_json: &str, asset: World3dMeshAsset) -> Result<Self, IconSvgRejected> {
         let validated = match validate_request(request_json) {
             Ok(validated) => validated,
             Err(fault) => return Err(IconSvgRejected { fault, asset: Some(asset) }),
@@ -167,7 +167,7 @@ impl IconSvgExport {
         })
     }
 
-    pub(crate) fn advance(&mut self) -> Result<bool, String> {
+    pub fn advance(&mut self) -> Result<bool, String> {
         if self.phase == Phase::Complete {
             return Ok(true);
         }
@@ -192,20 +192,20 @@ impl IconSvgExport {
         Ok(self.phase == Phase::Complete)
     }
 
-    pub(crate) fn progress(&self) -> (u8, usize, usize) {
+    pub fn progress(&self) -> (u8, usize, usize) {
         (self.phase as u8, self.work_completed.min(self.work_total), self.work_total)
     }
 
-    pub(crate) fn take_svg(&mut self) -> Option<Vec<u8>> {
+    pub fn take_svg(&mut self) -> Option<Vec<u8>> {
         (self.phase == Phase::Complete).then(|| self.output.take()).flatten()
     }
 
-    pub(crate) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.fault = None;
         self.phase = Phase::Close;
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.phase = Phase::Close;
         if let Some(asset) = self.asset.as_mut() {
             if !asset.close_step() {
@@ -232,7 +232,7 @@ impl IconSvgExport {
         true
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.asset.is_none() && self.scene.is_none() && self.items.is_empty() && self.body_style.is_none() && self.output.is_none()
     }
 
@@ -651,7 +651,7 @@ fn lerp4(a: [f32; 4], b: [f32; 4], t: f32) -> [f32; 4] {
     std::array::from_fn(|axis| a[axis] + (b[axis] - a[axis]) * t)
 }
 
-fn project(point: [f32; 4], dimensions: (u32, u32)) -> [f32; 3] {
+pub fn project(point: [f32; 4], dimensions: (u32, u32)) -> [f32; 3] {
     let inverse_w = if point[3].abs() < 1e-8 { 1.0 } else { 1.0 / point[3] };
     [point[0] * inverse_w * dimensions.0 as f32 * 0.5, -point[1] * inverse_w * dimensions.1 as f32 * 0.5, point[2] * inverse_w]
 }
@@ -662,7 +662,7 @@ fn front_facing(points: [[f32; 3]; 3]) -> bool {
     (points[2][0] - points[0][0]) * (points[1][1] - points[0][1]) - (points[2][1] - points[0][1]) * (points[1][0] - points[0][0]) > 0.0
 }
 
-fn visible(points: [[f32; 3]; 3], dimensions: (u32, u32)) -> bool {
+pub fn visible(points: [[f32; 3]; 3], dimensions: (u32, u32)) -> bool {
     let half = [dimensions.0 as f32 * 0.5, dimensions.1 as f32 * 0.5];
     let minimum = [0, 1].map(|axis| points.iter().map(|point| point[axis]).fold(f32::INFINITY, f32::min));
     let maximum = [0, 1].map(|axis| points.iter().map(|point| point[axis]).fold(f32::NEG_INFINITY, f32::max));
@@ -683,7 +683,7 @@ fn overdraw(points: &mut [[f32; 3]; 3], pixels: f32) {
     expand(points, 2, 0, pixels);
 }
 
-fn expand(points: &mut [[f32; 3]; 3], first: usize, second: usize, pixels: f32) {
+pub fn expand(points: &mut [[f32; 3]; 3], first: usize, second: usize, pixels: f32) {
     let dx = points[second][0] - points[first][0];
     let dy = points[second][1] - points[first][1];
     let length = dx.hypot(dy);
@@ -711,7 +711,7 @@ fn css_rgb(linear: [f32; 3]) -> String {
     format!("rgb({},{},{})", values[0], values[1], values[2])
 }
 
-fn scalar(value: f32) -> String {
+pub fn scalar(value: f32) -> String {
     if value.abs() < 0.000_000_5 {
         return "0".into();
     }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -14,7 +15,7 @@ import { daemonBudgetOpts, orchestratorBudgetOpts, runCargo, runRepositoryCargoT
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, MCP_GATEWAY_PACKAGES, readMcpGatewaySource, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 
 import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -85,7 +86,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -100,7 +101,7 @@ class BuildScript extends BundleScript {
 class BuildReleaseScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
     const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
     if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
     signExecutableForDistribution(staged);
@@ -120,21 +121,21 @@ class PublishScript extends BundleScript {
 
 class CheckScript extends BundleScript {
   run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml"], this.root);
+    runCargo(["check", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name])], this.root);
   }
 }
 
 class InstalledServiceCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void> {
     if (segments.length) throw new Error("Installed service protocol law has no arguments");
-    await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-mcp", "--lib", "installed_protocol_revokes_actual_calls", "--", "--nocapture"], this.repoRoot);
+    await runCargo(["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", "installed_protocol_revokes_actual_calls", "--", "--nocapture"], this.repoRoot);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -153,7 +154,7 @@ class OriginalInferenceSourceScript extends BundleScript {
 class OriginalInferenceNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Original inference native law has a fixed selector");
-    await runRepositoryCargoTests([MCP_CARGO_PACKAGE], this.repoRoot, this.invocation, ["--offline", "--lib", "original_mcp_", "--", "--nocapture"]);
+    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--offline", "--lib", "original_mcp_", "--", "--nocapture"]);
   }
 }
 
@@ -169,7 +170,7 @@ class ProbeSqliteSourceScript extends BundleScript {
 class ProbeSqliteNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite native law has a fixed original selector");
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
+    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
   }
 }
 
@@ -185,7 +186,7 @@ class CanonicalPairCheckScript extends BundleScript {
       "canonical_pair_receipt_preflights_streams_cancels_expires_and_never_resurrects_after_invalidation",
     ];
     const laws = suffixes.map((suffix) => {
-      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout
         .split("\n")
         .filter((line) => line.endsWith(": test"))
@@ -195,9 +196,9 @@ class CanonicalPairCheckScript extends BundleScript {
       return matches[0]!;
     });
     console.log(`canonical-pair-laws: ${laws.join(" ")}`);
-    for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
+    for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
     runCmd("bun", [oracle], { cwd: this.root, budgetMs: 120_000 });
-    runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features"], this.root);
+    runCargo(["check", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--all-features"], this.root);
   }
 }
 
@@ -243,7 +244,7 @@ class HubLiveCatalogOracleScript extends BundleScript {
 class HubLiveCatalogCheckScript extends BundleScript {
   run(): void {
     runCmd("bun", ["./📜️script.ts", "hub-live-catalog-oracle"], { cwd: this.root, budgetMs: 60_000 });
-    const workspace = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🦀️.rs"), "utf8");
+    const workspace = readMcpGatewaySource(this.repoRoot);
     const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
     const inference = readFileSync(join(this.root, "..", "..", "💡️inference", "🦀️.rs"), "utf8");
     const root = readFileSync(join(this.root, "..", "..", "🦀️.rs"), "utf8");
@@ -263,14 +264,14 @@ class HubLiveCatalogNativeCheckScript extends BundleScript {
   run(): void {
     const suffixes = ["authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it", "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback"];
     for (const suffix of suffixes) {
-      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout
         .split("\n")
         .filter((line) => line.endsWith(": test"))
         .map((line) => line.slice(0, -6))
         .filter((name) => name.endsWith(suffix));
       if (listed.status !== 0 || matches.length !== 1) throw new Error("Hub live-catalog exact-one preflight failed " + suffix + ": status=" + listed.status + " matches=" + matches.length + " diagnostic=" + listed.stderr.slice(-16_000));
-      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
       if (executed.status !== 0) throw new Error("Hub live-catalog exact law failed " + matches[0] + ": status=" + executed.status + " stdout=" + executed.stdout.slice(-8_000) + " stderr=" + executed.stderr.slice(-8_000));
     }
     console.log("hub-live-catalog-native: laws=" + suffixes.length + " authenticated-selection=1 revoked-fallback=denied");
@@ -310,9 +311,9 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
 class CanonicalCheckpointResourceCheckScript extends BundleScript {
   run(): void {
     runCmd("bun", ["./📜️script.ts", "canonical-checkpoint-resource-oracle"], { cwd: this.root, budgetMs: 60_000 });
-    const workspace = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🦀️.rs"), "utf8");
+    const workspace = readMcpGatewaySource(this.repoRoot);
     const remote = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🦀️.rs"), "utf8");
-    const pair = readFileSync(join(this.root, "..", "..", "🏠️workspace", "🔗️remote", "🧩️pair", "🦀️.rs"), "utf8");
+    const pair = readMcpGatewaySource(this.repoRoot);
     const context = readFileSync(join(this.root, "..", "..", "🧠️context", "🦀️.rs"), "utf8");
     for (const marker of ["checkpoint_resource_uri", "parse_checkpoint_resource_uri", "read_canonical_checkpoint", "CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES"])
       if (!remote.includes(marker)) throw new Error("remote checkpoint source missing " + marker);
@@ -328,14 +329,14 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
   run(): void {
     const suffixes = ["authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope"];
     for (const suffix of suffixes) {
-      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", suffix, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout
         .split("\n")
         .filter((line) => line.endsWith(": test"))
         .map((line) => line.slice(0, -6))
         .filter((name) => name.endsWith(suffix));
       if (listed.status !== 0 || matches.length !== 1) throw new Error(`canonical checkpoint resource exact-one preflight failed ${suffix}: status=${listed.status} matches=${matches.length} diagnostic=${listed.stderr.slice(-16_000)}`);
-      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      const executed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", ...MCP_GATEWAY_PACKAGES.flatMap((name) => ["-p", name]), "--lib", matches[0]!, "--", "--exact", "--test-threads=1"], { cwd: this.root, ...orchestratorBudgetOpts() });
       if (executed.status !== 0) throw new Error(`canonical checkpoint resource exact law failed ${matches[0]}: status=${executed.status} stdout=${executed.stdout.slice(-8_000)} stderr=${executed.stderr.slice(-8_000)}`);
     }
     console.log(`canonical-checkpoint-resource-native: laws=${suffixes.length} retained-pair=1`);

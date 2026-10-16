@@ -8,52 +8,32 @@ use directory::os_directory::{DirectoryActor, DirectoryActorKind};
 use futures::StreamExt;
 use semio_framework_hash::Sha256;
 use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryAccessRoleV1};
-use semio_hub::directory::model::{AuthSessionKind, DirectoryPrincipalV1, DocumentScope, SpaceRole};
-use semio_hub::directory::{HubDirectory, identity_subject_digest, HubCapability, IdentityAssertionVerifier, LocalBootstrapTransport, SessionCapability, AUTH_TEXT_MAX_BYTES};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_directory_contract::model::{AuthSessionKind, DirectoryPrincipalV1, SpaceRole};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::{identity_subject_digest, IdentityAssertionVerifier, LocalBootstrapTransport, SessionCapability, AUTH_TEXT_MAX_BYTES};
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use crate::startup::HubError;
-use crate::support::now_ms;
-use crate::state::HubState;
-use crate::readiness::HubMode;
-use crate::transport::{ForwardedTlsTrustV1, CrossOriginPolicyV1};
-use db::db_storage::PayloadStorage as _;
+use semio_hub_runtime::startup::HubError;
+use semio_hub_runtime::support::now_ms;
+use semio_hub_runtime::readiness::HubMode;
+use semio_hub_runtime::transport::{ForwardedTlsTrustV1, CrossOriginPolicyV1};
+use db::storage::PayloadStorage as _;
 
 //#region 🔖️Auth
 /// 🔎️ What a bearer token resolved to for document authority: an authenticated space
 /// member, an exact document share, or nothing. Public discovery never enters this boundary.
-pub(crate) enum AuthOutcome {
+pub enum AuthOutcome {
     Session { user_id: String, role: SpaceRole, session_id: String, authorization_generation: u64, session_kind: AuthSessionKind },
     ShareToken,
     Denied,
-}
-
-/// 🔐️ Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
-/// falls back to an active exact-space/document share grant when session resolution fails.
-async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
-    let capability = token.and_then(|value| HubCapability::parse(value).ok());
-    if let Some(HubCapability::Session(capability)) = &capability {
-        if let Ok(Some(session)) = state.directory.authenticate_session(capability).await {
-            if let Ok(Some(role)) = state.directory.principal_role(space_id, session.principal()).await {
-                return AuthOutcome::Session { user_id: session.user_id, role, session_id: session.id, authorization_generation: session.authorization_generation, session_kind: session.session_kind };
-            }
-        }
-    }
-    let scope = DocumentScope::new(space_id, document_id);
-    if let Some(HubCapability::Share(capability)) = &capability {
-        if let Ok(true) = state.directory.authenticate_share(&scope, capability).await {
-            return AuthOutcome::ShareToken;
-        }
-    }
-    AuthOutcome::Denied
 }
 
 /// 🎭️ THE declared-policy roles of one authenticated session holding `role` in a space (its ceiling-capped role,
 /// [`HubDirectory::principal_role`]): a human session is signed in plus its membership role; an agent session holds
 /// only its agent role — `agent-editor` under an author ceiling, `agent-reader` under a spectator one — so no grant the
 /// policy writes for humans (space creation, administration, delegation, preferences) ever reaches an agent.
-pub(crate) fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<DirectoryAccessRoleV1> {
+pub fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<DirectoryAccessRoleV1> {
     if session_kind.is_agent() {
         return role
             .map(|role| match role {
@@ -75,7 +55,7 @@ pub(crate) fn session_access_roles(session_kind: AuthSessionKind, role: Option<S
 impl AuthOutcome {
     /// 🎭️ The roles this bearer holds for its document: a session holds [`session_access_roles`], a share token is a
     /// share, and a refused bearer holds nothing.
-    pub(crate) fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
+    pub fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
         match self {
             Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, Some(*role)),
             Self::ShareToken => vec![DirectoryAccessRoleV1::Share],
@@ -84,77 +64,50 @@ impl AuthOutcome {
     }
 }
 
-/// 🛡️ The declared policy's decision for `roles` doing `action` inside one space. The space's kind is
-/// read here because kind-limited grants (an archive denies writes) must see it; a space that cannot
-/// be read is a refusal, never an unconstrained allow.
-pub(crate) async fn access_permits_in_space(state: &HubState, roles: &[DirectoryAccessRoleV1], action: DirectoryAccessActionV1, space_id: &str) -> bool {
-    match state.directory.get_space(space_id).await {
-        Ok(Some(space)) => directory_access_permits(roles, action, Some(space.kind.as_str())),
-        Ok(None) | Err(_) => false,
-    }
-}
-
-pub(crate) async fn authorized(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> bool {
-    access_permits_in_space(state, &resolve_auth(state, space_id, document_id, token).await.access_roles(), DirectoryAccessActionV1::DocumentRead, space_id).await
-}
-
-/// 📦️ A space-scoped blob read or write under the declared policy: a share never reaches the
-/// space's content-addressed store, and only a writer may add to it.
-pub(crate) async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>, action: DirectoryAccessActionV1) -> bool {
-    access_permits_in_space(state, &resolve_auth(state, space_id, hash, token).await.access_roles(), action, space_id).await
-}
-
-pub(crate) async fn authorized_for_canonical_pair(state: &HubState, scope: &DocumentScope, token: &str) -> bool {
-    #[cfg(test)]
-    if state.canonical_pair_authorization_gate.as_ref().is_some_and(|gate| !gate()) {
-        return false;
-    }
-    authorized(state, &scope.space_id, &scope.document_id, Some(token)).await
-}
 //#endregion 🔖️Auth
 
 //#region 🔖️AdminAuth
 #[derive(Clone)]
-pub(crate) struct AdminSubject {
-    pub(crate) provider_digest: [u8; 32],
-    pub(crate) subject_digest: [u8; 32],
+pub struct AdminSubject {
+    pub provider_digest: [u8; 32],
+    pub subject_digest: [u8; 32],
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct AdminPrincipalV1 {
-    pub(crate) user_id: String,
-    pub(crate) auth_session_id: String,
-    pub(crate) authorization_generation: u64,
-    pub(crate) identity_provider: String,
-    pub(crate) identity_subject_digest: [u8; 32],
-    pub(crate) expires_at_ms: i64,
-    pub(crate) correlation_id: String,
-    pub(crate) peer_class: &'static str,
-    pub(crate) session_kind: AuthSessionKind,
-    pub(crate) device_instance_id: String,
+pub struct AdminPrincipalV1 {
+    pub user_id: String,
+    pub auth_session_id: String,
+    pub authorization_generation: u64,
+    pub identity_provider: String,
+    pub identity_subject_digest: [u8; 32],
+    pub expires_at_ms: i64,
+    pub correlation_id: String,
+    pub peer_class: &'static str,
+    pub session_kind: AuthSessionKind,
+    pub device_instance_id: String,
 }
 
 impl AdminPrincipalV1 {
     /// 🎚️ Who this administrator asks a space-role question as.
-    pub(crate) fn principal(&self) -> DirectoryPrincipalV1<'_> {
+    pub fn principal(&self) -> DirectoryPrincipalV1<'_> {
         DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
     }
 
-    pub(crate) fn event_actor(&self) -> DirectoryActor {
+    pub fn event_actor(&self) -> DirectoryActor {
         DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#admin-session:{}", self.user_id, self.auth_session_id) }
     }
 
-    pub(crate) fn same_authority(&self, other: &Self) -> bool {
+    pub fn same_authority(&self, other: &Self) -> bool {
         self.user_id == other.user_id
             && self.auth_session_id == other.auth_session_id
             && self.authorization_generation == other.authorization_generation
             && self.identity_provider == other.identity_provider
-            && semio_hub::directory::constant_time_digest_eq(&self.identity_subject_digest, &other.identity_subject_digest)
+            && semio_hub_directory_contract::constant_time_digest_eq(&self.identity_subject_digest, &other.identity_subject_digest)
             && other.expires_at_ms > now_ms()
     }
 }
 
-pub(crate) fn admin_provider_digest(provider: &str) -> [u8; 32] {
+pub fn admin_provider_digest(provider: &str) -> [u8; 32] {
     let mut hash = Sha256::new();
     hash.update(b"semio/hub/admin-provider/v1\0");
     hash.update(&(provider.len() as u32).to_be_bytes());
@@ -162,7 +115,7 @@ pub(crate) fn admin_provider_digest(provider: &str) -> [u8; 32] {
     hash.finalize()
 }
 
-pub(crate) fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
+pub fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
     const ADMIN_SUBJECTS_MAX: usize = 64;
     let Some(encoded) = std::env::var("OS_HUB_ADMIN_SUBJECTS").ok().filter(|value| !value.is_empty()) else { return Ok(Arc::from([])) };
     let mut subjects = Vec::new();
@@ -173,7 +126,7 @@ pub(crate) fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubErro
         let (provider, subject) = entry.split_once(':').ok_or_else(|| HubError::UnsafeAuthConfiguration("OS_HUB_ADMIN_SUBJECTS entries must be provider:subject".into()))?;
         let subject_digest = identity_subject_digest(provider, subject).map_err(HubError::Directory)?;
         let provider_digest = admin_provider_digest(provider);
-        if subjects.iter().any(|existing: &AdminSubject| semio_hub::directory::constant_time_digest_eq(&existing.provider_digest, &provider_digest) && semio_hub::directory::constant_time_digest_eq(&existing.subject_digest, &subject_digest)) {
+        if subjects.iter().any(|existing: &AdminSubject| semio_hub_directory_contract::constant_time_digest_eq(&existing.provider_digest, &provider_digest) && semio_hub_directory_contract::constant_time_digest_eq(&existing.subject_digest, &subject_digest)) {
             return Err(HubError::UnsafeAuthConfiguration("OS_HUB_ADMIN_SUBJECTS contains a duplicate identity".into()));
         }
         subjects.push(AdminSubject { provider_digest, subject_digest });
@@ -199,7 +152,7 @@ pub(crate) fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubErro
 /// (not the loopback-development default and not `closed`, which would admit no browser at all), and
 /// [`ForwardedTlsTrustV1::TerminatingProxy`] says TLS is terminated in front. Any one of them missing
 /// is a refusal that names it. Development is unchanged: loopback, and the inherited fd-3 transport.
-pub(crate) fn validate_auth_startup(
+pub fn validate_auth_startup(
     mode: HubMode,
     bind: std::net::IpAddr,
     verifier: Option<&Arc<dyn IdentityAssertionVerifier>>,
@@ -238,7 +191,7 @@ pub(crate) fn validate_auth_startup(
     Ok(())
 }
 
-fn exact_admin_session_bearer(headers: &HeaderMap) -> Result<SessionCapability, StatusCode> {
+pub fn exact_admin_session_bearer(headers: &HeaderMap) -> Result<SessionCapability, StatusCode> {
     let mut values = headers.get_all(axum::http::header::AUTHORIZATION).iter();
     let value = values.next().ok_or(StatusCode::UNAUTHORIZED)?;
     if values.next().is_some() || value.as_bytes().len() > "Bearer ".len() + AUTH_TEXT_MAX_BYTES {
@@ -251,37 +204,4 @@ fn exact_admin_session_bearer(headers: &HeaderMap) -> Result<SessionCapability, 
     SessionCapability::parse(encoded).map_err(|_| StatusCode::UNAUTHORIZED)
 }
 
-/// 🛡️ Resolves one request-owned verified administrator principal from a live durable session.
-pub(crate) async fn authenticate_admin_principal(state: &HubState, headers: &HeaderMap, _peer: Option<SocketAddr>) -> Result<AdminPrincipalV1, StatusCode> {
-    let capability = exact_admin_session_bearer(headers)?;
-    let session =
-        tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    let provider_digest = admin_provider_digest(&session.identity_provider);
-    if session.authorization_generation == 0
-        || session.expires_at <= now_ms()
-        || session.session_kind.is_agent()
-        || !state
-            .admin_subjects
-            .iter()
-            .any(|subject| semio_hub::directory::constant_time_digest_eq(&subject.provider_digest, &provider_digest) && semio_hub::directory::constant_time_digest_eq(&subject.subject_digest, &session.identity_subject_digest))
-    {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    Ok(AdminPrincipalV1 {
-        user_id: session.user_id,
-        auth_session_id: session.id,
-        authorization_generation: session.authorization_generation,
-        identity_provider: session.identity_provider,
-        identity_subject_digest: session.identity_subject_digest,
-        expires_at_ms: session.expires_at,
-        correlation_id: directory::os_identity::time_ordered_id(),
-        peer_class: "admin-rest",
-        session_kind: session.session_kind,
-        device_instance_id: session.device_instance_id,
-    })
-}
-
-pub(crate) async fn is_admin(state: &HubState, headers: &HeaderMap, peer: Option<SocketAddr>) -> bool {
-    authenticate_admin_principal(state, headers, peer).await.is_ok()
-}
 //#endregion 🔖️AdminAuth

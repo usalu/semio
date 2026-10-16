@@ -1,0 +1,3 @@
+import {verifyTaxonomyScopesClosed} from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+const out = verifyTaxonomyScopesClosed({repoRoot: "/Users/ueli/Documents/semio", scopes: [process.argv[2]!], taxonomyPath: process.argv[3]} as any);
+for (const v of out) { console.log(`clean=${v.clean} errors=${v.violations.filter(x => x.severity === "error").length} warnings=${v.violations.filter(x => x.severity !== "error").length}`); for (const x of v.violations.slice(0, 25)) console.log(x.severity, x.code, x.path.slice(-80), "::", x.message.slice(0, 160)); }

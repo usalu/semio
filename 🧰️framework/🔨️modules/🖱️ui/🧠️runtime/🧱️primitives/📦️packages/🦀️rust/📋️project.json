@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-runtime-reconcile-primitives-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

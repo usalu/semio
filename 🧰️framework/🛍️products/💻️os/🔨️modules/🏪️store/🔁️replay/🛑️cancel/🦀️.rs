@@ -1,5 +1,16 @@
 //! 🛑️ Cancellation retains actual replay state until independently granted owners physically close.
-use super::*;
+use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+use crate::lifted_snapshot_read::{ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS, ArtifactStoreStringVectorRetirement, ArtifactStoreSupersessionRetirement};
+use std::sync::Arc;
+use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use crate::{EditReplay, EditReplayResult};
+use semio_framework_value::{ErasedSnapshotRetirement, ValueError};
+use semio_framework_os_spr::Mutation;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
+use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_framework_os_store_command::retire_scratch_operations;
+use semio_framework_os_store_projection::retire_shared_projection;
 use semio_framework_value::{FactoryAuthority, RetirementDemand, ValueRefusalKind, retirement::controlled::ControlledRetirement};
 
 impl<P, M: Mutation<P>> EditReplay<P, M> {
@@ -47,7 +58,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if !s.supersessions.terminal_is_empty() { return Ok(birth::<ArtifactStoreSupersessionRetirement>()); }
         if !s.drafts.terminal_is_empty() { return typed_birth::<protocol::HistoryInputDrafts>(); }
         if !s.unit_flags.terminal_is_empty() { return typed_birth::<protocol::HistoryFoldIndex<([u8; 32], usize), bool>>(); }
-        if s.replayed.capacity() != 0 { return Ok(birth::<crate::os_spr::command::EditMessageLedgerRetirement>()); }
+        if s.replayed.capacity() != 0 { return Ok(birth::<semio_framework_os_spr::command::EditMessageLedgerRetirement>()); }
         let release = if s.rebased_inverse.capacity() != 0 { s.rebased_inverse.capacity() * size_of::<(String, semio_framework_value::list::PagedList<M, {usize::MAX}>)>() }
         else if s.outcomes.capacity() != 0 { s.outcomes.capacity() * size_of::<protocol::MutationReplayOutcome>() }
         else if s.recorded.capacity() != 0 { s.recorded.capacity() * size_of::<(usize, Arc<P>)>() }
@@ -103,13 +114,13 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         else if s.committed.capacity() != 0 { admit_typed(&mut s.committed, &mut self.raw_retirement, child)? }
         else if s.quarantined.capacity() != 0 { admit_typed(&mut s.quarantined, &mut self.raw_retirement, child)? }
         else if s.order.capacity() != 0 {
-            match admit_artifact_retirement(std::mem::replace(&mut s.order, crate::os_vcs::HistoryPageStack::empty()), child, ArtifactStoreStringVectorRetirement::new) { Ok((owner, progress)) => { *self.raw_retirement = Some(owner); progress }, Err((error, original)) => { s.order = original; return Err(error); } }
+            match admit_artifact_retirement(std::mem::replace(&mut s.order, semio_framework_os_vcs::HistoryPageStack::empty()), child, ArtifactStoreStringVectorRetirement::new) { Ok((owner, progress)) => { *self.raw_retirement = Some(owner); progress }, Err((error, original)) => { s.order = original; return Err(error); } }
         } else if !s.supersessions.terminal_is_empty() {
             match admit_artifact_retirement(std::mem::take(&mut s.supersessions), child, ArtifactStoreSupersessionRetirement::new) { Ok((owner, progress)) => { *self.raw_retirement = Some(owner); progress }, Err((error, original)) => { s.supersessions = original; return Err(error); } }
         } else if !s.drafts.terminal_is_empty() { admit_typed(&mut s.drafts, &mut self.raw_retirement, child)? }
         else if !s.unit_flags.terminal_is_empty() { admit_typed(&mut s.unit_flags, &mut self.raw_retirement, child)? }
         else if s.replayed.capacity() != 0 {
-            match admit_artifact_retirement(std::mem::take(&mut s.replayed), child, crate::os_spr::command::EditMessageLedgerRetirement::new) { Ok((owner, progress)) => { *self.raw_retirement = Some(owner); progress }, Err((error, original)) => { s.replayed = original; return Err(error); } }
+            match admit_artifact_retirement(std::mem::take(&mut s.replayed), child, semio_framework_os_spr::command::EditMessageLedgerRetirement::new) { Ok((owner, progress)) => { *self.raw_retirement = Some(owner); progress }, Err((error, original)) => { s.replayed = original; return Err(error); } }
         } else if s.rebased_inverse.capacity() != 0 { drop(std::mem::take(&mut s.rebased_inverse)); RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle } }
         else if s.outcomes.capacity() != 0 { drop(std::mem::take(&mut s.outcomes)); RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle } }
         else if s.recorded.capacity() != 0 { drop(std::mem::take(&mut s.recorded)); RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..idle } }
@@ -172,7 +183,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
                 || r.replayed.capacity() != 0 || r.recorded.capacity() != 0 || r.outcomes.capacity() != 0 || !r.unit_flags.terminal_is_empty() {
                 return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "finished replay original output slots must stay empty until residual handoff"));
             }
-            r.order = std::mem::replace(&mut s.order, crate::os_vcs::HistoryPageStack::empty());
+            r.order = std::mem::replace(&mut s.order, semio_framework_os_vcs::HistoryPageStack::empty());
             r.supersessions = std::mem::take(&mut s.supersessions);
             r.drafts = std::mem::take(&mut s.drafts);
             r.state = s.state.take();
@@ -244,8 +255,6 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
-use crate::os_spr::command::prepared_retirement as prepared;
+
+use semio_framework_os_spr::command::prepared_retirement as prepared;

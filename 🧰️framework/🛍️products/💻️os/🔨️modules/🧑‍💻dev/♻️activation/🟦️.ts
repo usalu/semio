@@ -1,3 +1,4 @@
+import {browserProductRootsV1} from "./📂️paths/🟦️.ts";
 import { readBuildMode, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
@@ -70,10 +71,10 @@ export function readActivationReceipt(directory: string): ActivationReceipt {
 }
 
 /** 🗂️ Separates each renderer, variant and profile's activation and installations from compiled artifacts. */
-export function developmentRuntimeRoot(packageRoot: string, variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
+export function developmentRuntimeRoot(workspace: string, variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
   if (!["react", "wgpu"].includes(renderer)) throw new Error("Select a development renderer: react or wgpu");
   parseActivationReceipt({ schema: "semio.dev.activation/v1", variant, profile, plugins: [] });
-  return join(packageRoot, "dist", "runtime", renderer, profile, variant);
+  const path=join(browserProductRootsV1(workspace,profile).runtime,renderer,variant);if(path.length>224)throw Error("Finite activation runtime path required");return path;
 }
 
 /** 🔖️ Keys one component's mutable source state with a bounded digest. */
@@ -89,23 +90,11 @@ export function activationSourceFreshnessDirectory(runtimeRoot: string, pluginId
   return directory;
 }
 
-/** 🔌️ Resolves the leased active browser-module projection used by publication owners.
- * Build and activation consumers select immutable mode-qualified roots through {@link builtPluginModulesRootIn}. */
-export function pluginModulesRoot(): string {
-  return pluginModulesRootIn(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../.."));
-}
+/** 📦️ Describes canonical selected-mode browser modules without any physical custody. */
+export function builtPluginModulesRootIn(workspace:string,mode:BuildMode):string{return browserProductRootsV1(workspace,mode).modules;}
 
-/** 🗂️ The same plugin-modules root inside an EXPLICIT workspace — the one form a sandboxed consumer (the production
- * distribution copy, driven against a throwaway workspace in its own tests) may use. The repository-relative path lives
- * here once so no caller ever spells a second one. */
-export function pluginModulesRootIn(workspace: string): string {
-  return join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "🔌️plugin-modules");
-}
-
-/** 📦️ Selects canonical compiled browser modules independently of the active runtime view. */
-export function builtPluginModulesRootIn(workspace: string, mode: BuildMode): string {
-  return join(dirname(pluginModulesRootIn(workspace)), readBuildMode(mode), "🔌️plugin-modules");
-}
+/** 🎮️ Describes selected-mode session publications without granting their bytes. */
+export function playgroundSessionsRootV1(workspace:string,mode:BuildMode):string{return browserProductRootsV1(workspace,mode).sessions;}
 
 /** 📬️ Atomically announces completed preparation without rewriting a warm receipt. */
 export function publishActivationReceipt(directory: string, receipt: ActivationReceipt): boolean {

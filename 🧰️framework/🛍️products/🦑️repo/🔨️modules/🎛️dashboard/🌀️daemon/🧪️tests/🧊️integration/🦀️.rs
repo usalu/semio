@@ -3,10 +3,12 @@
 //! it should do; no other program has to be installed.
 
 use super::*;
+use dashboard_launch::{Ready, TaskLabel};
 use client::{Connection, Message};
-use ipc::{ClientMsg, Ready, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup, TaskLabel};
+use ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -164,7 +166,7 @@ impl Daemon {
     fn start_in(root: PathBuf) -> Self {
         let running = Arc::new(AtomicBool::new(true));
         let (served, flag) = (root.clone(), running.clone());
-        let thread = Some(std::thread::spawn(move || supervisor::serve(&served, &flag)));
+        let thread = Some(std::thread::spawn(move || lifecycle::serve(&served, &flag)));
         let deadline = Instant::now() + Duration::from_secs(90);
         while Connection::connect(&root).is_err() { assert!(Instant::now() < deadline, "the daemon must start serving"); std::thread::sleep(Duration::from_millis(20)); }
         Self { root, running, thread }
@@ -301,13 +303,13 @@ impl Raw {
     }
 }
 
-fn launch_process(command_id: &str, mode: &str, root: &Path, ready: Option<Ready>) -> crate::registry::LaunchProcess {
+fn launch_process(command_id: &str, mode: &str, root: &Path, ready: Option<Ready>) -> dashboard_launch::LaunchProcess {
     let command = child_command(mode, root);
-    crate::registry::LaunchProcess { command_id: command_id.into(), cmd: command.cmd, args: command.args, cwd: PathBuf::from(&command.cwd), env: command.env, label: TaskLabel { verb: "dev".into(), subject: command_id.into(), ..Default::default() }, ready, long_running: true }
+    dashboard_launch::LaunchProcess { command_id: command_id.into(), cmd: command.cmd, args: command.args, cwd: PathBuf::from(&command.cwd), env: command.env, label: TaskLabel { verb: "dev".into(), subject: command_id.into(), ..Default::default() }, ready, long_running: true }
 }
 
-fn launch(command_id: &str, processes: Vec<crate::registry::LaunchProcess>, requires: Vec<crate::registry::Launch>, group: Option<&str>, together: bool) -> crate::registry::Launch {
-    crate::registry::Launch { command_id: command_id.into(), label: processes[0].label.clone(), processes, requires, group: group.map(str::to_string), stop: if together { crate::registry::Stop::Together } else { crate::registry::Stop::Independent } }
+fn launch(command_id: &str, processes: Vec<dashboard_launch::LaunchProcess>, requires: Vec<dashboard_launch::Launch>, group: Option<&str>, together: bool) -> dashboard_launch::Launch {
+    dashboard_launch::Launch { command_id: command_id.into(), label: processes[0].label.clone(), processes, requires, group: group.map(str::to_string), stop: if together { dashboard_launch::Stop::Together } else { dashboard_launch::Stop::Independent } }
 }
 
 fn spawn(view: &mut View, session_id: &str, mode: &str, root: &Path) {
@@ -434,7 +436,7 @@ fn a_start_without_hello_and_a_foreign_protocol_are_refused_loudly() {
 #[test]
 fn a_second_daemon_cannot_take_over_a_running_workspace() {
     let daemon = Daemon::start("instance");
-    assert!(supervisor::serve(&daemon.root, &AtomicBool::new(true)).is_err());
+    assert!(lifecycle::serve(&daemon.root, &AtomicBool::new(true)).is_err());
     assert!(transport::Listener::bind(&daemon.root).is_err(), "the endpoint belongs to the running daemon");
     #[cfg(windows)]
     assert_eq!(ipc::pipe_name(&daemon.root), format!(r"\\.\pipe\semio-dashboard-{}", ipc::workspace_key(&daemon.root)));
@@ -653,7 +655,7 @@ mod windows {
 }
 
 // #region 🔖️Groups
-fn serving(command_id: &str, port: u16, delay: u64, root: &Path, path: &str) -> crate::registry::LaunchProcess {
+fn serving(command_id: &str, port: u16, delay: u64, root: &Path, path: &str) -> dashboard_launch::LaunchProcess {
     launch_process(command_id, &format!("serve:{port}:{delay}"), root, Some(Ready { port, path: path.into(), printed: false }))
 }
 

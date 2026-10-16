@@ -6,11 +6,11 @@ async fn child_read_capture_retains_exact_existing_lease_across_publication_and_
  let mut app=contract_composed_app_raw().await;
  app.register_child(slot,id,test_child_dialect().await,new_test_child(id).await.expect("actual child")).await.expect("register exact child");
  let old_label=format!("{}{}",contract["owners"][0]["label"].as_str().expect("old label"),"x".repeat(contract["retainedTailBytes"].as_u64().expect("tail")as usize));
- let TestMembers::Child(child)=&mut app.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
+ let TestMembers::Child(child)=&mut app.child_composition.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
  child.dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:old_label.clone()})],transaction:None}).await.expect("publish old full owner");
- let generation=app.admit_child_content_publication().expect("old publication");
- app.publish_child_content_member(generation,slot,id).await.expect("old entry lease");
- let view=ChildContentView::clone(&app.child_content_root);
+ let generation=app.child_composition.admit_child_content_publication().expect("old publication");
+ app.child_composition.publish_child_content_member(generation, slot, id).await.expect("old entry lease");
+ let view=ChildContentView::clone(&app.child_composition.child_content_root);
  let borrowed=view.typed_read::<TestSnapshot>(slot,id).expect("existing immutable owner");
  let pointer=&*borrowed as *const TestSnapshot;
  MAXIMUM_CHILD_CLONES.store(0,std::sync::atomic::Ordering::Release);MAXIMUM_CHILD_ENCODINGS.store(0,std::sync::atomic::Ordering::Release);
@@ -33,13 +33,13 @@ async fn child_read_capture_retains_exact_existing_lease_across_publication_and_
  }
  drop(view);
  let new_label=contract["owners"][1]["label"].as_str().expect("new label");
- let TestMembers::Child(child)=&mut app.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
+ let TestMembers::Child(child)=&mut app.child_composition.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
  child.dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:new_label.to_owned()})],transaction:None}).await.expect("publish new full owner");
- let generation=app.admit_child_content_publication().expect("new publication");
- app.publish_child_content_member(generation,slot,id).await.expect("new entry lease");
+ let generation=app.child_composition.admit_child_content_publication().expect("new publication");
+ app.child_composition.publish_child_content_member(generation, slot, id).await.expect("new entry lease");
  assert_eq!(capture.snapshot().expect("old retained lease")as *const TestSnapshot,pointer);
  assert_eq!(capture.snapshot().expect("old retained lease").label,old_label);
- assert_eq!(app.child_content_root.typed_read::<TestSnapshot>(slot,id).expect("current child").label,new_label);
+ assert_eq!(app.child_composition.child_content_root.typed_read::<TestSnapshot>(slot,id).expect("current child").label,new_label);
  install_test_snapshot_retirement(&mut app,id,false);
  assert_maintenance_reports_block(&mut app,4,"captured old child entry lease");
  drop(capture);

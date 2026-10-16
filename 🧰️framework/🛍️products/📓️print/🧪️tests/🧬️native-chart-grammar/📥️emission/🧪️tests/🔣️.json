@@ -1,0 +1,37 @@
+{
+  "records": [
+    {
+      "version": 1,
+      "kind": "main",
+      "name": "native-chart.tex",
+      "source": "\\begin{VizFigure}α\\end{VizFigure}"
+    },
+    {
+      "version": 1,
+      "kind": "spatial",
+      "name": "spatial-bars-en-light.tex",
+      "source": "spatial"
+    },
+    {
+      "version": 1,
+      "kind": "planar",
+      "name": "geo-planar-bars-light.tex",
+      "source": "planar"
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "kind": "main",
+      "name": "../escape.tex",
+      "source": "x"
+    },
+    {
+      "version": 1,
+      "kind": "main",
+      "name": "main.tex",
+      "source": "x",
+      "path": "/tmp/escape"
+    }
+  ]
+}

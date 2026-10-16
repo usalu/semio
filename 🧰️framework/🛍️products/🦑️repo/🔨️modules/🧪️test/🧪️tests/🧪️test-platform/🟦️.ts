@@ -8,6 +8,8 @@
 
 //#region 🔌️Adapters
 import { describe, expect, test } from "bun:test";
+import{withBuildTestInvocationV1}from"../../../📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, sep } from "node:path";
@@ -422,20 +424,20 @@ describe("📥️ subject raw routing", () => {
     expect(routed).toEqual({ s1: { rust: "/r/s1.rust", typescript: "/r/s1.ts" }, s2: { rust: "/r/s2.rust" } });
   });
 
-  test("an oracle scenario reads exactly its own subject scenario's bytes and refuses a scenario without any", () => {
+  test("an oracle scenario reads exactly its own subject scenario's bytes and refuses a scenario without any", ()=>withBuildTestInvocationV1(async invocation=>{
     const dir = mkdtempSync(join(tmpdir(), "semio-raw-routing-"));
     try {
       writeFileSync(join(dir, "s1.raw"), "first");
       writeFileSync(join(dir, "s2.raw"), "second");
       const plan = { workDir: join(dir, "work"), artifactDir: join(dir, "artifacts"), inputs: [], subjectRawInputs: { s1: { rust: join(dir, "s1.raw") }, s2: { rust: join(dir, "s2.raw") } } } as unknown as TestCasePlan;
-      const context = (id: string) => makeAdapterContext(dir, plan, { id, name: id, steps: [] } as unknown as FeatureScenario, "oracle");
+      const phaseControl=createIssuedResourceControlV1(invocation,"test:subject-raw-fixture",0),context = (id: string) => makeAdapterContext(dir, plan, { id, name: id, steps: [] } as unknown as FeatureScenario, "oracle",invocation,phaseControl);
       expect(new TextDecoder().decode(context("s1").subjectRawBytes("rust"))).toBe("first");
       expect(new TextDecoder().decode(context("s2").subjectRawBytes("rust"))).toBe("second");
       expect(() => context("s3").subjectRawBytes("rust")).toThrow("scenario s3 has no raw subject output from rust");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }));
 });
 
 describe("📈️ non-aggregate metrics", () => {

@@ -1,13 +1,18 @@
-use super::*;
-use crate::catalog::{audit_source, compile, description_findings, CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog, CatalogAuditFinding, CatalogSource, DescriptionFinding};
+//! 🧱️ Search_long of the capabilities crate: Gateway capability declarations and the core catalog.
+
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
+use std::collections::BTreeSet;
+use crate::catalog_source_discovery::discover_catalog_source;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog, CatalogAuditFinding, CatalogSource, DescriptionFinding, audit_source, compile, description_findings};
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::find_repo_root;
+use semio_framework_os_mcp_catalog::search::{SearchFilters, search};
 
 /// 📇️ The catalog source an agent actually meets: the repo's generated plugin registry and every
 /// committed `🔣️.json` descriptor, discovered exactly as `semio-os-mcp stdio --folder .` does.
 fn installed_source() -> CatalogSource {
-    let root = crate::find_repo_root().expect("the tests run inside the repo");
-    crate::discover_catalog_source(Some(&root))
+    let root = find_repo_root().expect("the tests run inside the repo");
+    discover_catalog_source(Some(&root))
 }
 
 fn installed_catalog(locale: Locale) -> Catalog {

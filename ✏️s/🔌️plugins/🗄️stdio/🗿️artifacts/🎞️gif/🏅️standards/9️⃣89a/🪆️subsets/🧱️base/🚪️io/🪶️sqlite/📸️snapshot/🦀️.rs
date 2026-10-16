@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v89a::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::OwnershipLimit,message)}
 fn allocation(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,message)}
@@ -24,7 +24,7 @@ fn groups<'a>(rows:&'a [SqliteRow],parents:&BTreeSet<i64>,ordered:bool,control:&
 fn palette(out:&mut Projection<'_,'_>,header:&str,entries:&str,owner:i64,palette:&Option<GifColorTable>)->Result<(),ValueError>{if let Some(palette)=palette{out.insert_key(header,owner,&[Cell::Integer(i64::from(palette.sorted))])?;for(ordinal,color)in palette.colors.iter().enumerate(){out.insert(entries,&[Cell::Integer(owner),Cell::Integer(ordinal as i64),Cell::Integer(color.r.into()),Cell::Integer(color.g.into()),Cell::Integer(color.b.into())])?;}}Ok(())}
 fn read_palette(header:Option<&&SqliteRow>,colors:Option<&Vec<&SqliteRow>>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<GifColorTable>,ValueError>{let Some(header)=header else{return Ok(None)};let mut entries=Vec::new();for row in colors.into_iter().flatten(){if entries.len()%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,entries.len(),0)?;}entries.push(GifRgb{r:byte(row,3)?,g:byte(row,4)?,b:byte(row,5)?});}Ok(Some(GifColorTable{sorted:flag(header,1)?,colors:entries}))}
 fn read_pixels(rows:Option<&Vec<&SqliteRow>>,_width:u32,_height:u32,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<u8>,ValueError>{let rows=rows.map(Vec::as_slice).unwrap_or_default();control.check_value_bytes(rows.len())?;let mut indices=Vec::new();indices.try_reserve_exact(rows.len()).map_err(|_|allocation("GIF index allocation"))?;for(ordinal,row)in rows.iter().enumerate(){if ordinal%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal,rows.len())?;}if row.integer(2)?!=ordinal as i64{return Err(invalid("GIF index ordinals must be dense"));}indices.push(byte(row,3)?);}Ok(indices)}
-fn disposal(value:GifDisposal)->&'static str{match value{GifDisposal::Unspecified=>"unspecified",GifDisposal::DoNotDispose=>"do_not_dispose",GifDisposal::RestoreToBackground=>"restore_to_background",GifDisposal::RestoreToPrevious=>"restore_to_previous"}}
+pub fn disposal(value:GifDisposal)->&'static str{match value{GifDisposal::Unspecified=>"unspecified",GifDisposal::DoNotDispose=>"do_not_dispose",GifDisposal::RestoreToBackground=>"restore_to_background",GifDisposal::RestoreToPrevious=>"restore_to_previous"}}
 fn read_disposal(value:&str)->Result<GifDisposal,ValueError>{match value{"unspecified"=>Ok(GifDisposal::Unspecified),"do_not_dispose"=>Ok(GifDisposal::DoNotDispose),"restore_to_background"=>Ok(GifDisposal::RestoreToBackground),"restore_to_previous"=>Ok(GifDisposal::RestoreToPrevious),_=>Err(invalid("unknown GIF89 disposal policy"))}}
 fn read_plain_text(row:Option<&&SqliteRow>,control:&mut SqliteSnapshotControl<'_>)->Result<Option<GifPlainText>,ValueError>{row.map(|row|Ok(GifPlainText{left:unsigned(row,1)?,top:unsigned(row,2)?,width:unsigned(row,3)?,height:unsigned(row,4)?,cell_width:byte(row,5)?,cell_height:byte(row,6)?,fg_color_index:byte(row,7)?,bg_color_index:byte(row,8)?,text:reconstruct_text(control,row.text(9)?)?})).transpose()}
 
@@ -84,6 +84,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

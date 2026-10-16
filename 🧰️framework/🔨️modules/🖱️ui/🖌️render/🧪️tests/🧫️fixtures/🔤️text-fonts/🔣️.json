@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "fonts": [
+    {
+      "role": "Sans",
+      "assetPath": "🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+      "byteLength": 26772,
+      "sfntTag": "00010000",
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f"
+    },
+    {
+      "role": "Serif",
+      "assetPath": "🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+      "byteLength": 27608,
+      "sfntTag": "00010000",
+      "sha256": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6"
+    },
+    {
+      "role": "Mono",
+      "assetPath": "⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+      "byteLength": 19540,
+      "sfntTag": "00010000",
+      "sha256": "31ff08942c8f4ff98276c050f039a2685d91d923867ea6c776c6a291a086fc13"
+    },
+    {
+      "role": "EmojiRegions",
+      "assetPath": "😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+      "byteLength": 23652,
+      "sfntTag": "00010000",
+      "sha256": "afbacbae52dbd6a6250f9ffd1e690227564c744508d703d36df14c322816b657"
+    },
+    {
+      "role": "EmojiFlags",
+      "assetPath": "😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+      "byteLength": 8536,
+      "sfntTag": "00010000",
+      "sha256": "ebbfea501df1f01063a103c99ac6c76a6a239ee45856a57c6730d8c4456803e4"
+    },
+    {
+      "role": "EmojiSymbols",
+      "assetPath": "😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "byteLength": 83404,
+      "sfntTag": "00010000",
+      "sha256": "207ecd3bb593edda35f515399f8d2aad0021d72525ba0a5ac212001f318cc4e5"
+    },
+    {
+      "role": "EmojiObjects",
+      "assetPath": "😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+      "byteLength": 146732,
+      "sfntTag": "00010000",
+      "sha256": "fa6c50b00fb39b2f984a53fbf03f2ae5c2624045d1738614e80c1e68c59267a7"
+    },
+    {
+      "role": "EmojiActivities",
+      "assetPath": "😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+      "byteLength": 79792,
+      "sfntTag": "00010000",
+      "sha256": "4eaa8acc313c6fc34aa9a0b6a2ff24ebb8a910568d2c1b3f4fed2aeead58ba15"
+    },
+    {
+      "role": "EmojiTravel",
+      "assetPath": "😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+      "byteLength": 86008,
+      "sfntTag": "00010000",
+      "sha256": "654c549ae1488f355924e53b9bfd150d672df6b0c053b21b8dd17a2f8a2c6718"
+    },
+    {
+      "role": "EmojiFood",
+      "assetPath": "😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+      "byteLength": 80404,
+      "sfntTag": "00010000",
+      "sha256": "0bb1b805256ac06bfe079eed3624fd3ffe2117e854c8ab5cafa87baa3778b3ec"
+    },
+    {
+      "role": "EmojiNature",
+      "assetPath": "😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+      "byteLength": 178048,
+      "sfntTag": "00010000",
+      "sha256": "b107e95dcd571bd40408cf5906f91780171abd9edf4328af54888e95a28549d1"
+    },
+    {
+      "role": "EmojiPeople",
+      "assetPath": "😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+      "byteLength": 150208,
+      "sfntTag": "00010000",
+      "sha256": "ff5d9966357cff7cf59bae37208e2c7fb473bd538add5e11676be691eba87f42"
+    },
+    {
+      "role": "EmojiFaces",
+      "assetPath": "😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+      "byteLength": 136852,
+      "sfntTag": "00010000",
+      "sha256": "b972f7d349cd89ac6c6fee0b0eaed39c1656aa51d74e932cac89abd21f00fff9"
+    },
+    {
+      "role": "EmojiJoinedForms",
+      "assetPath": "😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+      "byteLength": 30548,
+      "sfntTag": "00010000",
+      "sha256": "dfe0fc53375e8bb7f6fbaa639087f905d7aebf07108816d92524e9b3d81b2a50"
+    },
+    {
+      "role": "EmojiSupplement",
+      "assetPath": "😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+      "byteLength": 5444,
+      "sfntTag": "00010000",
+      "sha256": "5b6d1483840ee81afd7220816e6cca4713692f85626273d1a827f8b878f32a35"
+    }
+  ]
+}

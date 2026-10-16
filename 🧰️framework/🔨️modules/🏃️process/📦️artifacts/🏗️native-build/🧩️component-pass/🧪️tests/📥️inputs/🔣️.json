@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "unit-graph",
+      "arguments": [
+        "build",
+        "--unit-graph"
+      ],
+      "cancel": false
+    },
+    {
+      "kind": "batch",
+      "arguments": [
+        "build",
+        "-p",
+        "one"
+      ],
+      "cancel": false
+    },
+    {
+      "kind": "job",
+      "arguments": [
+        "test",
+        "--lib"
+      ],
+      "cancel": false
+    },
+    {
+      "kind": "cancelled",
+      "arguments": [
+        "build",
+        "-p",
+        "two"
+      ],
+      "cancel": true
+    }
+  ]
+}

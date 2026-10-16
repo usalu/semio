@@ -1,0 +1,41 @@
+{
+  "rank": { "command": 20, "job": 19, "time-travel-panel": 40, "tool-run": 41, "time-travel": 42 },
+  "homes": {
+    "time-travel": ["⏪️time-travel/🦀️.rs"],
+    "time-travel-panel": ["⏪️time-travel/🪟️panel/🔢️pointer/🦀️.rs", "⏪️time-travel/🪟️panel/🖼️sections/🦀️.rs", "⏪️time-travel/🪟️panel/🛬️lifted/🎮️command/🦀️.rs"],
+    "command": ["🎮️command/🛬️lifted/⏪️time-travel/🦀️.rs"],
+    "tool-run": ["⏯️tool-run/🦀️.rs"],
+    "job": ["👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
+  },
+  "mounts": {
+    "⏪️time-travel/🦀️.rs": ["🪟️panel/🔢️pointer/🦀️.rs", "🪟️panel/🖼️sections/🦀️.rs", "../🎮️command/🛬️lifted/⏪️time-travel/🦀️.rs"],
+    "⏯️tool-run/🦀️.rs": ["../👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
+  },
+  "items": [
+    { "name": "TimeTravelLedger", "kind": "struct", "crate": "time-travel" },
+    { "name": "TimeTravelStoreState", "kind": "struct", "crate": "time-travel" },
+    { "name": "SupersedeLedger", "kind": "struct", "crate": "time-travel" },
+    { "name": "time_travel_selection_value", "kind": "fn", "crate": "time-travel" },
+    { "name": "time_travel_pointer_get", "kind": "fn", "crate": "time-travel-panel" },
+    { "name": "time_travel_band_section", "kind": "fn", "crate": "time-travel-panel" },
+    { "name": "mutation_row_refusals", "kind": "fn", "crate": "time-travel-panel" },
+    { "name": "ui_history_panel", "kind": "fn", "crate": "time-travel-panel" },
+    { "name": "TIME_TRAVEL_ENTITY_NAME_VISITS", "kind": "const", "crate": "time-travel-panel" },
+    { "name": "TIME_TRAVEL_SHORT_ID_CHARS", "kind": "const", "crate": "time-travel-panel" },
+    { "name": "TimeTravelPanel", "kind": "struct", "crate": "command" },
+    { "name": "TimeTravelEditorPanel", "kind": "struct", "crate": "command" },
+    { "name": "MutationRowRefusals", "kind": "struct", "crate": "command" },
+    { "name": "history_mutation_entry", "kind": "fn", "crate": "command" },
+    { "name": "HistoryPanelText", "kind": "enum", "crate": "command" },
+    { "name": "history_mutation_description", "kind": "fn", "crate": "command" },
+    { "name": "history_severity_tone", "kind": "fn", "crate": "command" },
+    { "name": "HistoryMutationPage", "kind": "struct", "crate": "command" },
+    { "name": "MemberEditHistory", "kind": "struct", "crate": "command" },
+    { "name": "HistoryStoreStamp", "kind": "struct", "crate": "command" },
+    { "name": "HISTORY_ROW_MUTATION_ROWS", "kind": "const", "crate": "command" },
+    { "name": "ToolRunLedger", "kind": "struct", "crate": "tool-run" },
+    { "name": "tool_run_arg_u64", "kind": "fn", "crate": "tool-run" },
+    { "name": "time_travel_arg_generation", "kind": "fn", "crate": "time-travel" },
+    { "name": "is_tool_run_action_id", "kind": "fn", "crate": "job" }
+  ]
+}

@@ -1,4 +1,13 @@
-use super::*;
+use crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
+use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::wav::{WavDetailsProvider};
+use crate::editor::wav::*;
 
 /// 🧬️ Registers the document schema wav's declaration contributes — the registered contract every snapshot edit validates
 /// against; a fixture editor runs without the plugin assembly that publishes it.
@@ -272,7 +281,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::WavEditor, || semio_framework_plugin::App { definition: super::create_wav_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::wav::WavEditor, || semio_framework_plugin::App { definition: crate::editor::wav::create_wav_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {

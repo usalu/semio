@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-scene-mesh"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Paged mesh authority, native resource custody and instance records for the scene math — wasm-safe, uses canonical Value retirement"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-mesh"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-mesh-component-references = { path = "../../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
+semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
+semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { version = "1.0.140" }

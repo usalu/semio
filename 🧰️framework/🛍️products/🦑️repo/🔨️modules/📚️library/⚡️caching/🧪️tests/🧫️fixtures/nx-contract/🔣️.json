@@ -626,13 +626,15 @@
       "target": "build",
       "prerequisites": [
         "workspace:deps-wasm-opt",
-        "@semio-tech/plugin-registry:generate"
+        "@semio-tech/plugin-registry:generate",
+        "@semio-tech/assets:build"
       ],
       "jobs": [
         "describe-tool",
         "font-assets",
         "fonts",
         "support",
+        "canvas-runtime-assets",
         "flow-wasm",
         "surface-wasm",
         "puzzle-wasm",

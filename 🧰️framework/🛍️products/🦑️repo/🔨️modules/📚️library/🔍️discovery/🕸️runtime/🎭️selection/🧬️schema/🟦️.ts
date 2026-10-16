@@ -1,3 +1,5 @@
+import {requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type { FileObservationControlV1, PhysicalFileClaimV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type { RuntimeCargoObservationV1 } from "../../🧬️schema/🟦️.ts";
@@ -25,7 +27,7 @@ export interface SelectedRuntimeActorEvidenceV1 { readonly version:1; readonly d
 /** 🔄️ Evidence retains its actual owning recheck operation under explicit authority. */
 export interface SelectedRuntimeActorsV1 extends SelectedRuntimeActorEvidenceV1 { recheck(control:FileObservationControlV1):Promise<void> }
 /** 🚪️ Required observation and explicit acquisition operations supplied by application composition. */
-export interface SelectedRuntimeActorPublicationPortV1 { readonly diagnosticOwner:string; observeCurrent(control:FileObservationControlV1):Promise<SelectedRuntimeActorsV1>; acquireCurrent(control:FileObservationControlV1):Promise<void> }
+export interface SelectedRuntimeActorPublicationPortV1 { readonly diagnosticOwner:string; observeCurrent(control:FileObservationControlV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<SelectedRuntimeActorsV1>; acquireCurrent(control:FileObservationControlV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> }
 const refuse:(reason:string)=>never=(reason)=>{throw Error("Selected runtime actor evidence: "+reason);};
 function check(control:FileObservationControlV1):void{
  if(!control||!Number.isSafeInteger(control.maxBytes)||control.maxBytes<0||control.maxBytes>134217728||!Number.isSafeInteger(control.maxWork)||control.maxWork<1||control.maxWork>65536||!Number.isSafeInteger(control.chunkBytes)||control.chunkBytes<1||control.chunkBytes>1048576||typeof control.cancelled!=="function"||typeof control.remainingMs!=="function"||typeof control.onProgress!=="function")refuse("invalid observation authority");
@@ -52,11 +54,11 @@ export async function parseSelectedRuntimeActorEvidenceV1(input:unknown,control:
 }
 function admitPort(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1):void{check(control);if(!port||typeof port.diagnosticOwner!=="string"||!port.diagnosticOwner||port.diagnosticOwner.length>4096||typeof port.observeCurrent!=="function"||typeof port.acquireCurrent!=="function")refuse("required publication port");}
 /** 🔍️ Validates the owning current observation without acquiring production evidence. */
-export async function observeSelectedRuntimeActorsV1(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1):Promise<SelectedRuntimeActorsV1>{
- admitPort(port,control);const current=await port.observeCurrent(control);check(control);if(!current||typeof current.recheck!=="function")refuse("required owning recheck");const {recheck,...input}=current,evidence=await parseSelectedRuntimeActorEvidenceV1(input,control);return{...evidence,recheck:async authority=>{check(authority);await recheck.call(current,authority);check(authority);}};
+export async function observeSelectedRuntimeActorsV1(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<SelectedRuntimeActorsV1>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);admitPort(port,control);const current=await withIssuedResourceOperationV1(phaseControl,()=>port.observeCurrent(control,invocation,phaseControl));requireIssuedResourceControlInvocationV1(phaseControl,invocation);check(control);if(!current||typeof current.recheck!=="function")refuse("required owning recheck");const {recheck,...input}=current,evidence=await parseSelectedRuntimeActorEvidenceV1(input,control);return{...evidence,recheck:async authority=>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);check(authority);await withIssuedResourceOperationV1(phaseControl,()=>recheck.call(current,authority));requireIssuedResourceControlInvocationV1(phaseControl,invocation);check(authority);}};
 }
 /** 🏗️ Executes only the explicitly supplied acquisition operation under the caller's authority. */
-export async function acquireSelectedRuntimeActorsV1(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1):Promise<void>{admitPort(port,control);await port.acquireCurrent(control);check(control);}
+export async function acquireSelectedRuntimeActorsV1(port:SelectedRuntimeActorPublicationPortV1,control:FileObservationControlV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);admitPort(port,control);await withIssuedResourceOperationV1(phaseControl,()=>port.acquireCurrent(control,invocation,phaseControl));requireIssuedResourceControlInvocationV1(phaseControl,invocation);check(control);}
 
 /** 🗺️ Required finite relative package roots selected by the owning workspace composition. */
 export type SelectedRuntimeGraphPackageRootsV1=readonly string[];

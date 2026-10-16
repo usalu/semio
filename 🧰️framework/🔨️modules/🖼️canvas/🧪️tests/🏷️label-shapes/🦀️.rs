@@ -5,6 +5,7 @@ mod label_shapes_laws {
 
     use super::super::draw_list::{scene_draw_list_json, DrawListOptions};
     use super::*;
+    use semio_framework_canvas_assets::testkit::install_repository_assets;
     use serde_json::Value;
 
     const FIXTURE: &str = include_str!("../🧫️fixtures/🏷️label-shapes/🔣️.json");
@@ -114,6 +115,7 @@ mod label_shapes_laws {
 
     #[test]
     fn every_label_paints_what_usvg_shapes_and_shapes_it_once() {
+        install_repository_assets();
         let document = fixture();
         let at = origin(&document);
         for row in document["labels"].as_array().expect("labels") {
@@ -148,6 +150,7 @@ mod label_shapes_laws {
 
     #[test]
     fn every_tspan_line_paints_what_usvg_shapes_and_shapes_it_once() {
+        install_repository_assets();
         let document = fixture();
         let at = origin(&document);
         for row in document["tspans"].as_array().expect("tspans") {
@@ -172,6 +175,7 @@ mod label_shapes_laws {
 
     #[test]
     fn a_working_set_is_accounted_by_its_outline_bytes_within_the_declared_bounds() {
+        install_repository_assets();
         let bounds = LabelShapeBounds::declared();
         let before = label_shape_stats();
         let mut scene = Scene::new();

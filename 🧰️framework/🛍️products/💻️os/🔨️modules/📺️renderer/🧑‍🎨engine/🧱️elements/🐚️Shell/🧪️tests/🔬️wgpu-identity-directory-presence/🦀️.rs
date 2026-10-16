@@ -213,9 +213,9 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
 fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
     let pill_for = |status: Option<ArtifactSyncStatus>, progress: Option<(u64, u64, u32, u32)>| {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        shell.sync_status = status;
-        shell.sync_bootstrap_progress = progress;
-        shell_sync_pill_text(shell.sync_pill(), false)
+        shell.sync.sync_status = status;
+        shell.sync.sync_bootstrap_progress = progress;
+        shell_sync_pill_text(shell.sync.sync_pill(), false)
     };
     assert_eq!(pill_for(None, None), "Remote: detached");
     assert_eq!(pill_for(Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None }), None), "Persisted");

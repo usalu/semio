@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "receipt": {
+        "version": 1,
+        "platform": "linux",
+        "dev": 1,
+        "ino": 2,
+        "size": 33554432,
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008
+      },
+      "before": "loop:7:0/mount:35",
+      "after": "loop:7:1/mount:42",
+      "expected": {
+        "version": 1,
+        "platform": "linux",
+        "dev": 1,
+        "ino": 2,
+        "size": 33554432,
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008
+      }
+    },
+    {
+      "receipt": {
+        "version": 1,
+        "platform": "win32",
+        "dev": 1,
+        "ino": 2,
+        "size": 33554432,
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008
+      },
+      "before": "volume:original",
+      "after": "volume:reactivated",
+      "expected": {
+        "version": 1,
+        "platform": "win32",
+        "dev": 1,
+        "ino": 2,
+        "size": 33554432,
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008
+      }
+    }
+  ]
+}

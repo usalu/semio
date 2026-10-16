@@ -1,7 +1,7 @@
 //! 👁️ Deliberately nondeterministic command retaining shared, nonserialized observation state.
 
 use super::super::{CounterDiff, CounterMutation};
-use crate::os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -29,8 +29,8 @@ impl MutationKind<i64, CounterMutation> for AddObservedCounter {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add observed counter", "Beobachteten Zähler hinzufügen")
     }
 }
 //#endregion ⚙️Behavior

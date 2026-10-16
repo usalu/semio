@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-scene-views"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The text-editor, table, block-list, diff-view, event-feed, graph-timeline, virtual-file-system and icon-render scene payloads with the draft text splice — wasm-safe"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-views"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+protocol = { path = "../../../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui-scene-doc = { path = "../../../📜️doc/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

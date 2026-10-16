@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-directory-dispatch-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

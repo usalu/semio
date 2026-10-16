@@ -1,0 +1,290 @@
+[
+ {
+  "name": "semio-framework-artifact-space-collection",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-artifact-space-space",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-canvas-scene",
+  "entry": "🧰️framework/🔨️modules/🖼️canvas/🎬️scene/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🖼️canvas/🎬️scene/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🖼️canvas/🎬️scene/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-io-base64",
+  "entry": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🚪️io/🔤️base64/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-io-control",
+  "entry": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-io-sqlite-snapshot",
+  "entry": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-channel",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-flow-geometry",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-history",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-history-record-decode",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-inference",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-kernel",
+  "entry": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-kernel",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-mcp",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-mcp-plugin-runtime",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-presence-native-snapshot",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-ephemeral",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-message-ledger",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🔬️record-laws/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🔬️record-laws/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧮️record-schema-laws/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧮️record-schema-laws/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-error",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-intrinsic",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-json",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-json-retained-schema",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-record-encode",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-record-preflight",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-pack-record-retained",
+  "entry": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-plugin-host-test-component",
+  "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-replication",
+  "entry": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-surface-node-graph",
+  "entry": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-ui-raster-owner",
+  "entry": "🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-ui-text",
+  "entry": "🧰️framework/🔨️modules/🖱️ui/🔤️typography/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🖱️ui/🔤️typography/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-framework-value-snapshot-read",
+  "entry": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs",
+  "pkg": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust",
+  "mounts": [
+   "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-s-artifact-stdio-csv",
+  "entry": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+  "pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
+  "mounts": [
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"
+  ]
+ },
+ {
+  "name": "semio-s-artifact-stdio-dxf",
+  "entry": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+  "pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust",
+  "mounts": [
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs"
+  ]
+ }
+]

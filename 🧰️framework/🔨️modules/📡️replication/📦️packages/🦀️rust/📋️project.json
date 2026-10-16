@@ -152,6 +152,25 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧪️tests/🧫️fixtures/📄️pages/🔣️.json"
       ]
     },
+    "test-crate-partition": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-crate-partition",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/🏛️crate-partition/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🏛️crate-partition/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧬️schema/🏛️crate-partition/🔣️.json"
+      ],
+      "outputs": []
+    },
     "test-original-conflict-source": {
       "executor": "repo:script",
       "options": {

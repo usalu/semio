@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-canvas-camera"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canvas camera: the pan-and-zoom transform between world and screen space, the opening-camera fit of a content extent and the level-of-detail bands zoom selects"
+
+[package.metadata.semio]
+role = "framework"
+id = "canvas-camera"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -1,4 +1,4 @@
-import {buildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "../../🏗️build/📥️caller/📤️orchestration/🟨️.mjs";
+import {buildOrchestrationSourceIdentityV1,buildOrchestrationContextV1,requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "../../🏗️build/📥️caller/📤️orchestration/🟨️.mjs";
 import {dirname,resolve} from "node:path";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
@@ -6,12 +6,14 @@ import {mkdir,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 const key="SEMIO_OWNER_ARGUMENTS";
-const executorSchema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️executor.json",import.meta.url),"utf8"));
-const nativeCallerSchema=JSON.parse(readFileSync(new URL("./🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
+const taskAuthorityPaths=[new URL(import.meta.url),...['🔣️executor.json','📥️native-caller.json','📥️source.json'].map(path=>new URL('./🧬️schema/'+path,import.meta.url))],taskAuthorityBytes=taskAuthorityPaths.map(path=>readFileSync(path)),executorSchema=JSON.parse(taskAuthorityBytes[1].toString("utf8")),nativeCallerSchema=JSON.parse(taskAuthorityBytes[2].toString("utf8")),sourceSchema=JSON.parse(taskAuthorityBytes[3].toString("utf8"));
 const nativeSchema=JSON.parse(readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
-const sourceSchema=JSON.parse(readFileSync(new URL("./🧬️schema/📥️source.json",import.meta.url),"utf8"));
 
 import {encodeOwnerArgumentsV1,conformsOwnerContractV1 as conforms} from "../../🏗️build/📤️arguments/🟨️.mjs";
+
+const taskAuthority=(captured=false)=>createHash('sha256').update(JSON.stringify([buildOrchestrationSourceIdentityV1(),...taskAuthorityPaths.map((path,index)=>createHash('sha256').update(captured?taskAuthorityBytes[index]:readFileSync(path)).digest('hex'))])).digest('hex'),loadedTaskAuthority=taskAuthority(true);
+/** 🔏️ Refuses executor code or delegation contracts changed after actual module evaluation. */
+export function nxTaskArgumentsSourceIdentityV1(){if(taskAuthority()!==loadedTaskAuthority)throw Error('Loaded private Nx task Source changed');return loadedTaskAuthority;}
 
 /** 🐚️ Retains Nx process lifecycle while Bun's portable shell receives exact literal arguments. */
 export async function executeLiteralBuildArgumentsV1(options,context,delegate){
@@ -83,9 +85,13 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
 
 /** 🧭️ Projects only a reachable immutable orchestration task before its owned script process is born. */
 export async function issueNxBuildOrchestrationV1(options,context,environment,now){
+ nxTaskArgumentsSourceIdentityV1();
  const declaration=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName]?.metadata?.semio?.execution;if(declaration?.kind!=="orchestration"||declaration.children===undefined)return;
  const {original,declared,task,expected}=await readNxTaskAuthorityV1(options,context,environment,now);if(options.nativeOwnerCommand!==undefined||expected.command!==options.command||JSON.stringify(expected.commands)!==JSON.stringify(options.commands)||JSON.stringify(expected.args??[])!==JSON.stringify(options.args??[])||JSON.stringify(expected.__unparsed__??[])!==JSON.stringify(options.__unparsed__??[]))throw Error("Original orchestration task command changed");
- const projects=context.projectsConfigurations.projects,selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(projects,selection),capabilities=projectBuildOrchestrationCapabilitiesV1(original,context.root,"nx",bound,now);return {...original,capabilities};
+ const {readPrivateNxBuildGraphV1}=await import("../../🟨️.mjs"),portable=readPrivateNxBuildGraphV1(context.root,environment),selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(portable.projects,selection);
+ if(!bound||JSON.stringify(declaration)!==JSON.stringify(portable.projects[selection.project]?.targets?.[selection.target]?.metadata?.semio?.execution))throw Error("Immutable orchestration task declaration changed");
+ const current=buildOrchestrationContextV1(context.projectsConfigurations.projects,{project:selection.project,target:selection.target});requireBuildOrchestrationContextV1(portable.projects,{...current,task:selection});
+ if(original.deadlineEpochMilliseconds!==null&&original.deadlineEpochMilliseconds<=Date.now())throw Error("Original orchestration deadline exhausted");const capabilities=projectBuildOrchestrationCapabilitiesV1(original,context.root,"nx",bound,Date.now());return {...original,capabilities};
 }
 
 /** 🎯️ Keeps Nx process handling while its static owner command receives no dynamic shell interpolation. */

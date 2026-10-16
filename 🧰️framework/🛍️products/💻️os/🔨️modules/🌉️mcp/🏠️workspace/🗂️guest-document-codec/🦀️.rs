@@ -1,13 +1,20 @@
 //! 🗂️ Guest document codec routes: print, apply, replay, compile and sqlite snapshot bridges.
 
 #[cfg(not(target_arch = "wasm32"))]
-use super::{Arc, GatewayError, GatewayErrorCode, GuestRuntimes, Mutex};
+use semio_framework_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
-use super::compiled_components::shared_plugin_runtime;
+use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
-use super::plugin_artifact_channel::shared_compiled_component;
+use std::sync::Mutex;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::compiled_components::shared_plugin_runtime;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::plugin_artifact_channel::shared_compiled_component;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 //#region 🗂️GuestDocumentCodec
+
 /// ⛽️ The ceiling one pure `codec` call runs under. The WIT states the contract these functions
 /// honour — no storage, no window, no effect, one throwaway instance per call — so what bounds them
 /// is wall time, not effect or frame counts. 60 s is the same order as [`headless_open_budget`],
@@ -18,7 +25,7 @@ use super::plugin_artifact_channel::shared_compiled_component;
 /// documents, which a headless channel with one bound artifact per plugin cannot do — so the
 /// generation is a constant rather than a counter that would imply a history it does not have.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) const DOCUMENT_BACKBONE_BINDING_GENERATION: u64 = 1;
+pub(crate) const DOCUMENT_BACKBONE_BINDING_GENERATION: u64 = 1;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn headless_codec_budget() -> semio_framework::kernel::Budget {
@@ -44,7 +51,7 @@ fn headless_codec_budget() -> semio_framework::kernel::Budget {
 /// is process-wide so it outlives any one workspace — a document actor must not lose its driver
 /// because the session that opened it went away mid-close.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, GatewayError> {
+pub fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, GatewayError> {
     static REACTOR: std::sync::OnceLock<Result<tokio::runtime::Runtime, String>> = std::sync::OnceLock::new();
     REACTOR
         .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_io().enable_time().thread_name("semio-mcp-document-socket").build().map_err(|error| error.to_string()))
@@ -55,7 +62,7 @@ pub(super) fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, G
 /// 💓️ Whether a hub document event is a moment an agent session owes the hub a presence beat: a
 /// new connection (`Session`) or a live status on it. Everything else leaves the roster as it is.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn agent_presence_moment(event: &store::sync::ArtifactEvent) -> bool {
+pub fn agent_presence_moment(event: &store::sync::ArtifactEvent) -> bool {
     matches!(event, store::sync::ArtifactEvent::Session { .. } | store::sync::ArtifactEvent::Status(store::sync::ArtifactSyncStatus { remote: store::sync::RemoteState::Live { .. }, .. }))
 }
 
@@ -63,7 +70,7 @@ pub(crate) fn agent_presence_moment(event: &store::sync::ArtifactEvent) -> bool 
 /// admitted field claimed, since the hub overwrites label, user, role, color, surface and principal
 /// kind with what it authenticated for the socket.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
+pub fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
     store::os_spr::PresencePeer {
         actor: actor.to_string(),
         connected_at_ms: 0,
@@ -93,11 +100,11 @@ pub(crate) fn agent_presence_peer(actor: &str) -> store::os_spr::PresencePeer {
 /// instantiable by the runtime that produced it.
 #[cfg(not(target_arch = "wasm32"))]
 struct GuestCodecRoute {
-    pub(super) dialect: semio_framework_artifact_reference::ArtifactDialect,
-    pub(super) artifact_schema: String,
-    pub(super) plugin_id: String,
-    pub(super) runtime: Arc<GuestRuntimes>,
-    pub(super) compiled: semio_framework_plugin_host::CompiledHandle,
+    pub dialect: semio_framework_artifact_reference::ArtifactDialect,
+    pub artifact_schema: String,
+    pub plugin_id: String,
+    pub runtime: Arc<GuestRuntimes>,
+    pub compiled: semio_framework_plugin_host::CompiledHandle,
 }
 
 /// 🗂️ Every guest-backed codec this process has registered, in registration order.
@@ -128,7 +135,7 @@ fn guest_codec_route_snapshot() -> Vec<Arc<GuestCodecRoute>> {
 /// the exact fence the interface defines, once per candidate. In a real gateway session the
 /// candidate list is the packages whose documents this agent has open, which is one or two.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<store::os_store::text_format::ArtifactTextFiles, store::VcsError>> + Send + 'a>> {
+pub fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<store::os_store::text_format::ArtifactTextFiles, store::VcsError>> + Send + 'a>> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
@@ -145,7 +152,7 @@ pub(super) fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin:
 /// 🧩️ `(pack, spr, encode_ops_vec) -> (pack, spr, ops text)` through the same route resolution.
 /// The ops text is the component's own print of the RESULT pair, never a host re-derivation.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
+pub fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
@@ -202,12 +209,12 @@ fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]
 /// binding that has no folder. A typed refusal naming that is the honest answer; fabricating text
 /// here would put bytes in a `.ops` file that no component ever produced.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::os_store::serialization::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
+pub fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::os_store::serialization::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
     Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no `compile-dsl`: `interface codec` exports pack-schema-hash, genesis, print-mirror, apply-ops and replay-envelopes only".to_string())) })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, store::VcsError>> + 'a>> {
+pub fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, store::VcsError>> + 'a>> {
     Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no per-envelope text printer: `interface codec` prints whole pairs, not single edits".to_string())) })
 }
 
@@ -261,20 +268,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(semio_framework_value::RetireOwned)]
 struct GuestSqliteImportFrame {
-    database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
-    pub(super) bytes: Vec<u8>,
-    coordinate: String,
+    pub(crate) database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
+    pub bytes: Vec<u8>,
+    pub(crate) coordinate: String,
     pub(super) wire: Option<semio_framework_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
     diagnostics: Vec<semio_framework::Diagnostic>,
 }
 
-#[cfg(test)]
-#[path="../🪶️sqlite/🧪️tests/guest-input-slot.rs"]
-mod guest_sqlite_original;
-
 /// 🪶️ Quotes the exact original coordinate allocation before its caller slot adopts it.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::ArtifactDialect,coordinate:&mut String,native:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<(),semio_framework_value::ValueError>{
+pub(crate) fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::ArtifactDialect,coordinate:&mut String,native:&mut store::NativeSnapshotEncodeOwner<'_, '_>)->Result<(),semio_framework_value::ValueError>{
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
     if !coordinate.is_empty()||coordinate.capacity()!=0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest coordinate original slot is occupied"))}
     let extent=dialect.artifact_kind.len().checked_add(dialect.standard.len()).and_then(|n|n.checked_add(dialect.subset.len())).and_then(|n|n.checked_add(2)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest dialect coordinate extent overflow"))?;
@@ -297,7 +300,7 @@ fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::A
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
     use semio_framework_plugin_guest_contract::{sqlite_wire,GuestCallCancellation};
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
@@ -355,7 +358,7 @@ fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_referenc
 /// 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
 /// text lane (see [`guest_compile_dsl`]), which is the only place this is read.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
+pub fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let runtime = shared_plugin_runtime()?;
@@ -393,5 +396,5 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
 }
-//#endregion 🗂️GuestDocumentCodec
 
+//#endregion 🗂️GuestDocumentCodec

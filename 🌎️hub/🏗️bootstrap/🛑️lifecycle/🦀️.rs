@@ -5,9 +5,10 @@
 use axum::extract::ws::{CloseFrame, Message};
 use futures::SinkExt;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord, Tracer};
-use semio_hub::artifact_authority::chunk_cas::{Neo4jArtifactChunkCasStorage, PostgresArtifactChunkCasStorage, SqliteArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
-use semio_hub::directory::sqlite::SqliteDirectory;
-use semio_hub::directory::{HubDirectories, LocalBootstrapTransport};
+use semio_hub_artifact_authority::chunk_cas::{Neo4jArtifactChunkCasStorage, PostgresArtifactChunkCasStorage, SqliteArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+use semio_hub_directory_sqlite::SqliteDirectory;
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory_contract::LocalBootstrapTransport;
 use std::sync::Arc;
 use crate::startup::HubError;
 
@@ -37,8 +38,8 @@ use crate::startup::HubError;
 /// behind laws that hold a worker for their whole body. That is why `an_authenticated_session_read…` and
 /// `the_observability_route_answers…` never answered in-process while passing under nextest (one process per
 /// law) and on a live hub. Per-state pools restore the isolation nextest gets for free.
-pub(crate) fn hub_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
-    #[cfg(test)]
+pub fn hub_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
+    #[cfg(any(test, feature = "testkit"))]
     {
         return Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
     }
@@ -50,7 +51,7 @@ pub(crate) fn hub_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
     }
 }
 
-pub(crate) async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
+pub async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let profile = db::Profile::Prod;
     let pool = hub_worker_pool();
@@ -81,7 +82,7 @@ pub(crate) async fn connect_db(data_dir: &std::path::Path) -> Result<db::Databas
 }
 
 /// 🧩️ Opens the hub-owned artifact CAS in a namespace independent from generic DB payloads.
-pub(crate) async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<ArtifactChunkCasStores>, HubError> {
+pub async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<ArtifactChunkCasStores>, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let storage = match backend.as_str() {
         "fs" | "" => ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&data_dir.join("artifact-cas/v1")).await?),
@@ -113,7 +114,7 @@ pub(crate) async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<A
 // URIs/connection strings instead, never a local path) — whenever the `sqlite` feature is off it
 // goes genuinely unused (whether or not another backend feature is on), so the allow is scoped to
 // exactly that condition rather than blanket-silencing the lint for every feature set.
-pub(crate) async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirectories>, HubError> {
+pub async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirectories>, HubError> {
     let backend = std::env::var("OS_HUB_DIRECTORY_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {
         "sqlite" | "" => {
@@ -127,7 +128,7 @@ pub(crate) async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<
         }
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DIRECTORY_DATABASE_URL").map_err(|_| HubError::UnknownDirectoryBackend("postgres requires OS_HUB_DIRECTORY_DATABASE_URL".into()))?;
-            let directory = semio_hub::directory::postgres::PostgresDirectory::connect(&database_url).await?;
+            let directory = semio_hub_directory_postgres::PostgresDirectory::connect(&database_url).await?;
             directory.seed().await?;
             Ok(Arc::new(directory.into()))
         }
@@ -135,7 +136,7 @@ pub(crate) async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<
             let uri = std::env::var("OS_HUB_DIRECTORY_NEO4J_URI").map_err(|_| HubError::UnknownDirectoryBackend("neo4j requires OS_HUB_DIRECTORY_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_DIRECTORY_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
             let password = std::env::var("OS_HUB_DIRECTORY_NEO4J_PASSWORD").unwrap_or_default();
-            let directory = semio_hub::directory::neo4j::Neo4jDirectory::connect(&uri, &user, &password).await?;
+            let directory = semio_hub_directory_neo4j::Neo4jDirectory::connect(&uri, &user, &password).await?;
             directory.seed().await?;
             Ok(Arc::new(directory.into()))
         }
@@ -145,18 +146,18 @@ pub(crate) async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<
 
 /// ⏳️ How long `main` waits for upgraded sockets to finish their own close path (directory
 /// session close, presence leave, color release) after it told them to close.
-pub(crate) const SOCKET_DRAIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(5);
+pub const SOCKET_DRAIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// ⏳️ How long `main` gives the `Database` to retire every document authority before it
 /// closes the storage anyway. Closing the storage is what releases the cross-process WAL writer
 /// fence (Postgres advisory lock, Neo4j lease), so it runs even when this deadline elapsed.
-pub(crate) const DATABASE_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
+pub const DATABASE_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
 
 /// 🚪️ The one owner of every upgraded socket's lifetime. `axum`'s graceful shutdown stops
 /// accepting and waits for HTTP responses, but an upgraded connection has left `hyper`'s connection
 /// tracking, so without this owner a document socket keeps its `ArtifactHandle` (and with it the
 /// document's WAL writer) until the process dies.
-pub(crate) struct HubSocketDrainV1 {
+pub struct HubSocketDrainV1 {
     pub(crate) closing: tokio::sync::watch::Sender<bool>,
     pub(crate) live: std::sync::atomic::AtomicUsize,
     idle: tokio::sync::Notify,
@@ -180,13 +181,13 @@ impl HubSocketDrainV1 {
     }
 
     /// 📣️ Tells every admitted socket to close and refuses every later one. Idempotent.
-    pub(crate) fn begin(&self) {
+    pub fn begin(&self) {
         self.closing.send_replace(true);
     }
 
     /// ⏳️ Waits until the last admission dropped or `deadline` elapsed; answers how many
     /// sockets are still live.
-    pub(crate) async fn drained(&self, deadline: std::time::Duration) -> usize {
+    pub async fn drained(&self, deadline: std::time::Duration) -> usize {
         let wait = async {
             loop {
                 let notified = self.idle.notified();
@@ -227,10 +228,10 @@ impl Drop for HubSocketDrainAdmissionV1 {
 /// 🔌️ The close code a socket receives when the hub shuts down: 1012 "service restart",
 /// which every client treats as transient and redials (only 4401 is terminal). Pinned by
 /// `🧫️fixtures/🤝️two-client-document-v1` `shutdown.closeCode`.
-pub(crate) const HUB_SHUTDOWN_CLOSE_CODE: u16 = 1012;
+pub const HUB_SHUTDOWN_CLOSE_CODE: u16 = 1012;
 
 /// 🔌️ The close frame carrying [`HUB_SHUTDOWN_CLOSE_CODE`].
-pub(crate) fn hub_shutdown_close_frame() -> Message {
+pub fn hub_shutdown_close_frame() -> Message {
     Message::Close(Some(CloseFrame { code: HUB_SHUTDOWN_CLOSE_CODE, reason: "hub-shutdown".into() }))
 }
 
@@ -240,7 +241,7 @@ pub(crate) fn hub_shutdown_close_frame() -> Message {
 /// advisory lock's session ends and the Neo4j lease is marked released — and resolves only after
 /// the backend confirmed it, so a restart right after this process exits reopens the same documents
 /// immediately. Contract: `🛢️db/🗄️storage/🔐️writer/🧬️schema/🔣️.json#/$defs/WalWriterFenceV1`.
-pub(crate) async fn close_hub_database(db: Arc<db::Database>, deadline: std::time::Duration) -> Result<(), HubError> {
+pub async fn close_hub_database(db: Arc<db::Database>, deadline: std::time::Duration) -> Result<(), HubError> {
     let started = std::time::Instant::now();
     let control = db::DatabaseShutdownControl::for_timeout(deadline);
     let storage = db.storage().await;
@@ -265,14 +266,14 @@ pub(crate) async fn close_hub_database(db: Arc<db::Database>, deadline: std::tim
 /// returns (`AdminOperationTaskOwner::shutdown`, `ArtifactCreationHttpTaskOwnerV1::shutdown` →
 /// `shutdown_with_deadline`, the inference runtime close and the artifact CAS maintenance stop).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TerminationSignalV1 {
+pub enum TerminationSignalV1 {
     Interrupt,
     Terminate,
 }
 
 impl TerminationSignalV1 {
     /// 🏷️ The POSIX name, as the shutdown line reports it.
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::Interrupt => "SIGINT",
             Self::Terminate => "SIGTERM",
@@ -284,7 +285,7 @@ impl TerminationSignalV1 {
 /// ready — the orchestrator's verdict outranks a console interrupt. Taking the two futures as
 /// arguments is what makes the choice testable without raising a real signal at a shared test
 /// binary.
-pub(crate) async fn first_termination_signal(interrupt: impl std::future::Future<Output = ()>, terminate: impl std::future::Future<Output = ()>) -> TerminationSignalV1 {
+pub async fn first_termination_signal(interrupt: impl std::future::Future<Output = ()>, terminate: impl std::future::Future<Output = ()>) -> TerminationSignalV1 {
     tokio::pin!(interrupt);
     tokio::pin!(terminate);
     tokio::select! {
@@ -298,7 +299,7 @@ pub(crate) async fn first_termination_signal(interrupt: impl std::future::Future
 /// leaves that arm pending for ever rather than failing the boot: a hub that cannot hear `SIGTERM`
 /// is the behaviour this process had before, and it still hears `SIGINT`.
 #[cfg(unix)]
-pub(crate) async fn termination_signal(tracer: &Tracer) -> TerminationSignalV1 {
+pub async fn termination_signal(tracer: &Tracer) -> TerminationSignalV1 {
     let interrupt = async {
         let _ = tokio::signal::ctrl_c().await;
     };
@@ -321,7 +322,7 @@ pub(crate) async fn termination_signal(tracer: &Tracer) -> TerminationSignalV1 {
 /// 🛑️ See the unix twin. Windows has no `SIGTERM`; `ctrl_c` covers both console interrupt
 /// and the shutdown event a service manager raises.
 #[cfg(not(unix))]
-pub(crate) async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 {
+pub async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 {
     let _ = tokio::signal::ctrl_c().await;
     TerminationSignalV1::Interrupt
 }
@@ -331,5 +332,5 @@ pub(crate) async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 
 /// middleware stack, and in an unoptimized build that chain outgrows tokio's 2 MiB default: measured
 /// as a SIGABRT stack overflow in `inflate` under `post_inference_gis_map_job_approval`. 8 MiB is the
 /// budget a process main thread gets on every supported platform.
-pub(crate) const HUB_RUNTIME_THREAD_STACK_BYTES: usize = 8 * 1024 * 1024;
+pub const HUB_RUNTIME_THREAD_STACK_BYTES: usize = 8 * 1024 * 1024;
 //#endregion 🔖️Main

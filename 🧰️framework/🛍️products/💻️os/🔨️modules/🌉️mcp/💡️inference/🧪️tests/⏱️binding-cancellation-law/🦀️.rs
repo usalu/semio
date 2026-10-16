@@ -3,18 +3,41 @@
 //! map starts empty and the persisted component identities live under a private `SEMIO_HOME` whose
 //! `.cwasm` store points at the shared one, so the component is read and hashed here while its
 //! compiled code still loads from the cache instead of a cold compile.
-use semio_framework_os_mcp::*;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+
+use std::path::Path;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::time::Duration;
+use std::time::Instant;
+use semio_framework_os_mcp_capabilities::core_capabilities::build_catalog;
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore};
+use semio_framework_os_mcp_port::channel_port::{ActivationPhase, ActivationScope};
+use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
+use semio_framework_os_mcp_routing::hub_relay::InstalledArtifactKind;
+use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_plugin_runtime::compiled_components::set_component_compile_worker;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
+    serde_json::from_str(fixture_text("../../💡️inference/🧪️tests/🧫️fixtures/⏱️binding-cancellation-law.json")).expect("binding-cancellation law fixture")
 }
 
 fn create_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../🗿️artifact/🧪️tests/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
+    serde_json::from_str(fixture_text("../../🗿️artifact/🧪️tests/🧫️fixtures/⏱️create-cancellation-law.json")).expect("create-cancellation law fixture")
 }
 
 fn phase(id: &str) -> ActivationPhase {

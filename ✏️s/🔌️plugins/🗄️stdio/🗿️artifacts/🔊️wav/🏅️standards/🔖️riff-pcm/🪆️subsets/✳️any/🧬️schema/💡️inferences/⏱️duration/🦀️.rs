@@ -52,8 +52,5 @@ pub fn compute_wav_duration(snapshot: &WavSnapshot) -> WavDuration {
 }
 //#endregion 🔖️Duration
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

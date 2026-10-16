@@ -31,7 +31,4 @@ pub async fn parse_layer_anchor_text(text: &str) -> Result<(String, f64, f64, Op
 }
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

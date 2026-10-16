@@ -1,31 +1,46 @@
 
+//! 🧬️ Direct DAG mutation leaves: roster, wire witnesses, codecs, inverses and wire index exactness through the artifact facade.
 use super::*;
+use crate::os_spr::Mutation;
+use crate::os_store::store_schema::ArtifactCommand;
 use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
+use semio_framework_pack_json::Value;
 
 fn fixture() -> Value {
     semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️mutations.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral Dag mutation fixture")
 }
 
-/// 🧾️ The committed wire witness of each direct leaf, in roster order: the Rust `ToValue` of one aggregate operation.
-const WITNESSES: [&str; 14] = [
-    include_str!("../🧫️fixtures/🧬️mutations/➕️create-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🗑️delete-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/✏️rename-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🔤️change-node-name/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/↔️move-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/📐️resize-node/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🖼️change-node-icon/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🔡️change-node-abbreviation/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🧮️change-node-operator-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🔁️replace-node-kind/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🗃️replace-node-properties/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🔀️reorder-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/🔗️connect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
-    include_str!("../🧫️fixtures/🧬️mutations/✂️disconnect-nodes/🧾️wire-witness/🦠️mutation/🔣️.json"),
+/// 🧾️ The leaf folder of each committed direct-leaf wire witness, in roster order.
+const WITNESS_LEAVES: [&str; 14] = [
+    "➕️create-node",
+    "🗑️delete-node",
+    "✏️rename-node",
+    "🔤️change-node-name",
+    "↔️move-node",
+    "📐️resize-node",
+    "🖼️change-node-icon",
+    "🔡️change-node-abbreviation",
+    "🧮️change-node-operator-kind",
+    "🔁️replace-node-kind",
+    "🗃️replace-node-properties",
+    "🔀️reorder-nodes",
+    "🔗️connect-nodes",
+    "✂️disconnect-nodes",
 ];
 
+/// 📖️ Reads one committed fixture below `🌿️vcs` at run time, so the test closure counts none of them as source inputs.
+pub(crate) fn read_vcs_fixture(relative: &str) -> String {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🌿️vcs").join(relative);
+    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("committed fixture {}: {error}", path.display()))
+}
+
+fn witness_text(index: usize) -> String {
+    read_vcs_fixture(&format!("🧪️tests/🧫️fixtures/🧬️mutations/{}/🧾️wire-witness/🦠️mutation/🔣️.json", WITNESS_LEAVES[index]))
+}
+
 fn witness(index: usize) -> Value {
-    semio_framework_pack_json::parse(WITNESSES[index], semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed Dag wire witness")
+    semio_framework_pack_json::parse(&witness_text(index), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed Dag wire witness")
 }
 
 fn witness_payload(index: usize) -> Value {
@@ -123,9 +138,9 @@ fn direct_leaf_roster_and_codec_contracts() {
     let fixture = fixture();
     assert_eq!(DagMutation::kinds().len(), 14);
     assert_eq!(<DagMutation as Mutation<DagSnapshot>>::DESCRIPTORS.len(), 14);
-    for index in 0..WITNESSES.len() {
+    for index in 0..WITNESS_LEAVES.len() {
         let mutation = from_pack_value::<DagMutation>(&witness(index)).expect("committed aggregate wire witness");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).expect("wire JSON"), serde_json::from_str::<serde_json::Value>(WITNESSES[index]).expect("witness JSON"), "the committed wire witness is the canonical Rust wire");
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).expect("wire JSON"), serde_json::from_str::<serde_json::Value>(&witness_text(index)).expect("witness JSON"), "the committed wire witness is the canonical Rust wire");
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
         assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
         assert_codecs(&mutation);

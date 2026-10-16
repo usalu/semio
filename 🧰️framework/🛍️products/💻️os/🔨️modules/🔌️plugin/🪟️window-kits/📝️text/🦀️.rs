@@ -16,11 +16,11 @@ use semio_framework_ui_contract::*;
 use serde::Serialize;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
-use crate::window_kits::WindowKit;
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::scene_surface;
-use crate::window_surface::ui_assembly_error;
-use crate::window_surface::window_kind_definition;
+use crate::WindowKit;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_window_transient::scene_surface;
+use semio_framework_plugin_interaction::ui_assembly_error;
+use semio_framework_plugin_window_transient::window_kind_definition;
 
 
 

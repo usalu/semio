@@ -111,7 +111,7 @@ pub(crate) fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
         HostEvent::BaseMoved { .. } => GestureHostEvent::BaseMoved,
     }
 }
-//#endregion 🖐️Gesture
+//#endregion 🔖️Tag
 
 //#region 🔖️Runtime
 /// 🎚️ One leaf of a press — every lane of its emit (design §13.1, §12, §20.1): an absolute document leaf, an owned child's
@@ -327,7 +327,7 @@ impl<P, M: Mutation<P> + RetireOwned+Send+'static, C, CM: Mutation<C> + 'static>
         displaced
     }
 }
-//#endregion 🔖️Driver
+//#endregion 🔖️Runtime
 
 //#region 🧪️Tests
 #[cfg(test)]

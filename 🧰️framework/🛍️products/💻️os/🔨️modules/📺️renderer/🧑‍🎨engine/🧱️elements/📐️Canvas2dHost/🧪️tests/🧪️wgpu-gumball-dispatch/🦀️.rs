@@ -4,7 +4,7 @@
 
 use super::*;
 
-const CORPUS: &str = include_str!("../🧫️fixtures/🧫️gumball-dispatch/🔣️.json");
+pub const CORPUS: &str = include_str!("../🧫️fixtures/🧫️gumball-dispatch/🔣️.json");
 
 /// 🏷️ A handle's corpus name (`moveX`, …).
 fn handle_name(kind: GumballHandle) -> &'static str {
@@ -18,16 +18,16 @@ fn handle_name(kind: GumballHandle) -> &'static str {
     }
 }
 
-fn number(value: &Value, key: &str) -> f64 {
+pub fn number(value: &Value, key: &str) -> f64 {
     value[key].as_f64().unwrap_or_else(|| panic!("{key} is a number: {value}"))
 }
 
-fn view(case: &Value) -> GumballView {
+pub fn view(case: &Value) -> GumballView {
     GumballView { camera_x: number(&case["camera"], "x"), camera_y: number(&case["camera"], "y"), zoom: number(&case["camera"], "zoom"), width: number(&case["viewport"], "width"), height: number(&case["viewport"], "height") }
 }
 
 /// ▶️ One case through the twin: the handle the press grabs and every dispatch as `{action, args}`.
-fn replay(case: &Value) -> (Value, Vec<Value>) {
+pub fn replay(case: &Value) -> (Value, Vec<Value>) {
     let meta: GumballMeta = serde_json::from_value(case["layer"]["gumball"].clone()).expect("the corpus gumball decodes");
     let view = view(case);
     let (press_x, press_y) = (number(&case["press"], "x"), number(&case["press"], "y"));
@@ -50,7 +50,7 @@ fn replay(case: &Value) -> (Value, Vec<Value>) {
     (Value::from(handle_name(kind)), dispatches.into_iter().map(|dispatch| json!({ "action": dispatch.verb, "args": dispatch.args() })).collect())
 }
 
-fn assert_close(actual: &Value, expected: &Value, tolerance: f64, path: &str) {
+pub fn assert_close(actual: &Value, expected: &Value, tolerance: f64, path: &str) {
     match expected {
         Value::Number(expected) => {
             let (actual, expected) = (actual.as_f64().unwrap_or_else(|| panic!("{path}: {actual} is no number")), expected.as_f64().expect("a finite expectation"));

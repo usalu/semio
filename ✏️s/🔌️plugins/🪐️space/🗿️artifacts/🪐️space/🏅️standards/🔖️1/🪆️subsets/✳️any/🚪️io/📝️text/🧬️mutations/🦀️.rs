@@ -39,17 +39,13 @@ impl protocol::OpText for SSpaceMutation {
 
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[path = "🏷️rename-artifact/🦀️.rs"]
-pub mod rename_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::text::mutations::rename_artifact;
 
-#[path = "🗑️delete-artifact/🦀️.rs"]
-pub mod delete_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::text::mutations::delete_artifact;
 
-#[path = "🕒touch-artifact/🦀️.rs"]
-pub mod touch_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::text::mutations::touch_artifact;
 
-#[path = "🌱create-artifact/🦀️.rs"]
-pub mod create_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::text::mutations::create_artifact;
 
 #[allow(unused_imports)]
 mod mutations_codec {

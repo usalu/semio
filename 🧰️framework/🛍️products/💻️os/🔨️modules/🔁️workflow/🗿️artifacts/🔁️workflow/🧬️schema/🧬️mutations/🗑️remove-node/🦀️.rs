@@ -42,7 +42,3 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
     }
 }
 //#endregion ⚙️Semantics
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

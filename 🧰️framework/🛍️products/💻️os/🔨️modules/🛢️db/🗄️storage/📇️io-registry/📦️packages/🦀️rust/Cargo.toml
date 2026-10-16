@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-kernel-db-io-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db I/O kernel backend registry, close and retirement turns"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-io-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_io_registry"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

@@ -1,13 +1,28 @@
 //! 🧵️ Probe JSON preserves original first-party cursors and all refused partial owners.
-use semio_framework_pack_json::{JsonBorrowedWriteCursor,JsonError,JsonGrammarCursor,JsonMemberPolicy};
-use semio_framework_value::{DslValue,NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
-use store::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
+
+use semio_framework_pack_json::JsonBorrowedWriteCursor;
+use semio_framework_pack_json::JsonError;
+use semio_framework_pack_json::JsonGrammarCursor;
+use semio_framework_pack_json::JsonMemberPolicy;
+use semio_framework_value::DslValue;
+use semio_framework_value::NativeDecodeControl;
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value::RetainedCloneGrant;
+use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use store::NativeSnapshotBodyWallet;
+use store::NativeSnapshotDecodeOwner;
+use store::NativeSnapshotEncodeOwner;
+use crate::probe_document::ProbeSnapshot;
 
 const PLAIN_GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:16_777_216,maximum_copy_bytes:134_217_728,maximum_capacity_bytes:134_217_728,maximum_release_bytes:134_217_728,maximum_depth:256};
+
 const CLOSE_GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:65536,maximum_capacity_bytes:134_217_728,maximum_release_bytes:134_217_728,maximum_depth:256};
 
-pub(super) fn validate(value:&DslValue)->Result<(),ValueError>{validate_with(value,&mut |_|Ok(()))}
-pub(super) fn validate_with(value:&DslValue,checkpoint:&mut impl FnMut(usize)->Result<(),ValueError>)->Result<(),ValueError>{
+pub(crate) fn validate(value:&DslValue)->Result<(),ValueError>{validate_with(value,&mut |_|Ok(()))}
+
+pub(crate) fn validate_with(value:&DslValue,checkpoint:&mut impl FnMut(usize)->Result<(),ValueError>)->Result<(),ValueError>{
  fn node(value:&DslValue,depth:usize,checkpoint:&mut impl FnMut(usize)->Result<(),ValueError>)->Result<(),ValueError>{
   checkpoint(depth+1)?;
   if depth>semio_framework_pack_json::MAX_DEPTH as usize{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Probe JSON exceeds declared grammar depth"))}
@@ -23,7 +38,9 @@ pub(super) fn validate_with(value:&DslValue,checkpoint:&mut impl FnMut(usize)->R
 }
 
 fn admit_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<T>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1})}
+
 fn record_inline<T>(body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<T>(),..Default::default()})}
+
 fn admit_turn(body:&NativeSnapshotBodyWallet,demand:semio_framework_value::RetirementDemand)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth})}
 
 /// 🫴️ Moves the direct grammar result while retaining cursor and original diagnostic custody.
@@ -56,13 +73,13 @@ fn read_original<T:semio_framework_value::retirement::RetireOwned>(text:&str,own
 }
 
 /// 🌱️ Publishes the original value through the same retained receiving lifecycle.
-pub(super) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<DslValue,ValueError>{read_original(text,owner,std::convert::identity)}
+pub(crate) fn read(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<DslValue,ValueError>{read_original(text,owner,std::convert::identity)}
 
 /// 🧩️ Constructs only this domain's allocation-free snapshot wrapper inside original receiving custody.
-pub(super) fn receive_snapshot(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<super::ProbeSnapshot,ValueError>{read_original(text,owner,super::ProbeSnapshot)}
+pub(crate) fn receive_snapshot(text:&str,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<ProbeSnapshot,ValueError>{read_original(text,owner,ProbeSnapshot)}
 
 /// 🪶️ Borrows the unchanged tree and publishes the original canonical String backing.
-pub(super) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<String,ValueError>{
+pub(crate) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<String,ValueError>{
  type Receiving=(JsonBorrowedWriteCursor,Option<String>);
  owner.receive::<Receiving,String>(|slot,native,body|{
   validate_with(value,&mut |depth|{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_depth:depth,..Default::default()})?;native.checkpoint()?;body.record_progress(RetainedCloneProgress{copied_items:1,..Default::default()})})?;
@@ -85,7 +102,7 @@ pub(super) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapsho
 }
 
 /// 🌱️ Supplies a bounded synchronous caller and its own separate original retirement turns.
-pub(super) fn parse(text:&str)->Result<DslValue,ValueError>{
+pub(crate) fn parse(text:&str)->Result<DslValue,ValueError>{
  if text.len()>33_554_432{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON input exceeds synchronous caller policy"))}
  let mut accepted=|_|true;
  let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
@@ -97,7 +114,7 @@ pub(super) fn parse(text:&str)->Result<DslValue,ValueError>{
 }
 
 /// 🔤️ Supplies a bounded synchronous writer without an intermediate projected tree.
-pub(super) fn print(value:&DslValue)->Result<String,ValueError>{
+pub(crate) fn print(value:&DslValue)->Result<String,ValueError>{
  let mut accepted=|_|true;
  let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
  let mut native=NativeEncodeControl::new(268_435_456,&mut accepted);

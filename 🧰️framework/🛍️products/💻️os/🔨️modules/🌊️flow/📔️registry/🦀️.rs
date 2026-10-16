@@ -36,14 +36,14 @@ pub struct FlowExtensionInfo {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ContributedFlowExtension {
     plugin_id: String,
-    manifest_json: String,
+    pub manifest_json: String,
 }
 
 #[derive(Deserialize, semio_framework_value_derive::FromValue)]
 struct FlowExtensionMetadata {
     id: String,
     name: String,
-    version: String,
+    pub version: String,
 }
 
 pub(crate) struct FlowExtensionRegistryState {
@@ -51,7 +51,7 @@ pub(crate) struct FlowExtensionRegistryState {
     /// 📜️ [`installed_flow_extensions_shared`]'s memo of `contributed`, dropped by
     /// [`FlowRegistryReplacement::publish`] — the ONE thing that can change the table.
     installed: Option<std::sync::Arc<Vec<FlowExtensionInfo>>>,
-    pub(crate) registry: neural::SharedRegistry,
+    pub registry: neural::SharedRegistry,
     registry_retirement: neural::RegistryRetirement,
     retired: VecDeque<neural::RegistryRetirement>,
     pub(crate) generation: u64,
@@ -304,7 +304,7 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) -> Result<(), &'static st
 #[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 struct FlowExtensionTopicPayload {
-    manifest_json: String,
+    pub manifest_json: String,
 }
 
 const FLOW_EXTENSION_TOPIC: &str = "flow.extension";
@@ -372,13 +372,13 @@ pub const FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_PAGES: u32 = 4_096;
 static CONTRIBUTIONS_ASSEMBLY: Mutex<FlowContributionsAssembly> = Mutex::new(FlowContributionsAssembly { buffer: String::new(), next_page: 0, page_count: 0 });
 
 struct FlowContributionsAssembly {
-    buffer: String,
+    pub buffer: String,
     next_page: u32,
     page_count: u32,
 }
 
 impl FlowContributionsAssembly {
-    fn reset(&mut self) {
+    pub fn reset(&mut self) {
         self.buffer.clear();
         self.buffer.shrink_to_fit();
         self.next_page = 0;

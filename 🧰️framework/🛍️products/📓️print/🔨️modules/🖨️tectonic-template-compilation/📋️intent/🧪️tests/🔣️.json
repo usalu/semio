@@ -1,0 +1,93 @@
+{
+  "valid": [
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "print",
+      "id": "sample",
+      "sourceRoot": "🧰️framework/🛍️products/📓️print",
+      "texPath": "🧾️template/📄️sample.tex",
+      "sources": [
+        "🧾️template"
+      ],
+      "dark": true
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "name": "sample.tex",
+      "source": "\\documentclass{semio}"
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "name": "probe.tex",
+      "source": "\\documentclass{semio}",
+      "resources": [
+        {
+          "name": "image.png",
+          "source": "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🖼️image.png"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "kind": "generated-document",
+      "namespace": "print",
+      "id": "api-publication-en",
+      "name": "viz-api-en.tex",
+      "source": "\\documentclass[theme=light]{semio}",
+      "dark": true,
+      "resources": []
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "kind": "probe",
+      "name": "../out.tex",
+      "source": "content"
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "name": "sample.tex",
+      "source": "content",
+      "output": "/tmp/out"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "print",
+      "id": "sample",
+      "sourceRoot": "../outside",
+      "texPath": "sample.tex",
+      "sources": [
+        "sample.tex"
+      ],
+      "dark": false
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "name": "probe.tex",
+      "source": "TeX",
+      "resources": [
+        {
+          "name": "../out",
+          "source": "input.png"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "kind": "generated-document",
+      "namespace": "print",
+      "id": "api-publication-en",
+      "name": "viz-api-en.tex",
+      "source": "content",
+      "dark": true,
+      "output": "/tmp/free"
+    }
+  ]
+}

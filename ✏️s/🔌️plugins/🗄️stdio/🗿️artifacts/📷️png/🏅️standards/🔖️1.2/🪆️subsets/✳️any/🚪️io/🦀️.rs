@@ -132,7 +132,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region Signature
-const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+pub const PNG_SIGNATURE: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
 //#endregion Signature
 
 //#region Crc
@@ -151,7 +151,7 @@ fn png_crc32_parts(kind: &[u8; 4], data: &[u8]) -> u32 {
 
 //#region ChunkIo
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
+pub fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
     out.extend_from_slice(&(data.len() as u32).to_be_bytes());
     out.extend_from_slice(ty);
     out.extend_from_slice(data);
@@ -161,7 +161,7 @@ fn write_chunk(out: &mut Vec<u8>, ty: &[u8; 4], data: &[u8]) {
 /// 📖 Splits a PNG byte stream into `(type, data)` chunks, rejecting CRC mismatches and
 /// truncation up front so downstream decode logic never has to re-check framing.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_chunks<'a>(data: &'a [u8], control:&mut NativeDecodeControl<'_>) -> Result<Vec<PngChunkView<'a>>, PngReadError> {
+pub fn read_chunks<'a>(data: &'a [u8], control:&mut NativeDecodeControl<'_>) -> Result<Vec<PngChunkView<'a>>, PngReadError> {
     if data.len() < 8 || data[0..8] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
@@ -367,7 +367,7 @@ fn validate_png_structure(chunks: &[PngChunkView<'_>]) -> Result<(), String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn samples_per_pixel(color_type: u8) -> usize {
+pub fn samples_per_pixel(color_type: u8) -> usize {
     match color_type {
         0 => 1,
         2 => 3,
@@ -384,7 +384,7 @@ fn bpp_bytes(ihdr: &Ihdr) -> usize {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
+pub fn packed_row_bytes(width: u32, color_type: u8, bit_depth: u8) -> usize {
     let samples = width as usize * samples_per_pixel(color_type);
     if bit_depth >= 8 { samples * (bit_depth as usize / 8) } else { samples.div_ceil(8 / bit_depth as usize) }
 }
@@ -504,10 +504,10 @@ fn defilter_pass(raw: &[u8], mut pos: usize, height: u32, row_bytes: usize, bpp:
 
 //#region Adam7
 /// 🪜 Pass geometry `(start_x, start_y, step_x, step_y)`, PNG spec §8.2.
-const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)];
+pub const ADAM7: [(u32, u32, u32, u32); 7] = [(0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2)];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
+pub fn adam7_pass_dims(width: u32, height: u32, pass: usize) -> (u32, u32) {
     let (sx, sy, stx, sty) = ADAM7[pass];
     let w = if width > sx { (width - sx).div_ceil(stx) } else { 0 };
     let h = if height > sy { (height - sy).div_ceil(sty) } else { 0 };
@@ -662,7 +662,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) -> Result<(), String> 
 //#region ExactAuthority
 pub fn empty_png_bytes()->Vec<u8> {encode_png(&PngSnapshot::default()).expect("authored empty PNG model")}
 
-fn chunk_addresses(bytes: &[u8]) -> Result<Vec<PngChunkAddress>, String> {
+pub fn chunk_addresses(bytes: &[u8]) -> Result<Vec<PngChunkAddress>, String> {
     if bytes.len() < PNG_SIGNATURE.len() || bytes[..PNG_SIGNATURE.len()] != PNG_SIGNATURE {
         return Err("png: bad signature".into());
     }
@@ -752,7 +752,7 @@ pub fn png_preview(snapshot: &PngSnapshot) -> Result<PngPreview, String> {
     Ok(PngPreview { width: layout.width, height: layout.height, bytes })
 }
 
-fn write_native_sample(row: &mut [u8], ordinal: usize, bit_depth: u8, sample: u16) {
+pub fn write_native_sample(row: &mut [u8], ordinal: usize, bit_depth: u8, sample: u16) {
     match bit_depth {
         16 => row[ordinal * 2..ordinal * 2 + 2].copy_from_slice(&sample.to_be_bytes()),
         8 => row[ordinal] = sample as u8,
@@ -1283,9 +1283,7 @@ pub mod io_registry {
 //#endregion 🚪️DerivedIoRegistry
 
 //#region 🧪️CodecTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️codec/🦀️.rs"]
-mod codec_tests;
+
 //#endregion 🧪️CodecTests
 
 #[path="🚦️native/🦀️.rs"]
@@ -1297,8 +1295,7 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_stdio_png_diff::standards::v1_2::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{PngDiff, PngMutation, PngSnapshot};
@@ -1445,6 +1442,18 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: PngComposer,
 );
 
-#[cfg(test)]
-#[path="🧪️tests/🧬️owned-native-oracle/🦀️.rs"]
-mod owned_native_oracle_tests;
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_PNG_DOCUMENT_SCHEMA};
+pub use crate::schema::mutations::PngMutation;
+pub use crate::schema::snapshot::PngSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA);
+    codec.extension = "png";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("💾️binary/📸️snapshot/📡️.protocol.semio"));
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5

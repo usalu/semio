@@ -7,169 +7,47 @@
 //! from the `⚠️errors`/`🧬️schema`/`🧭️protocol`/`🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge` facets
 //! is re-exported flat at this crate root for ergonomic downstream use.
 
-//#region 🔖️Facets
-pub use crate::actions::*;
-pub use crate::artifact::*;
-pub use crate::audit::*;
-pub use crate::bridge::*;
-pub use crate::catalog::*;
-pub use crate::inference::*;
-pub use crate::conformance::*;
-pub use crate::context::*;
-pub use crate::errors::*;
-pub use crate::handles::*;
-pub use crate::policy::*;
-pub use crate::prompts::*;
-pub use crate::protocol::*;
-pub use crate::registry::*;
-pub use crate::schema::*;
-pub use crate::search::*;
-pub use crate::transport::*;
-pub use crate::ui::*;
-pub use crate::workspace::*;
-// 🧫️ Test-only: `🧪️tests/🧱️source-builders` is a `#[cfg(test)] pub(crate) mod` on the crate root
-// (`📦️packages/🦀️rust/🦀️.rs`), and this crate's own test modules reach its builders unqualified
-// through this root (`crate::note_descriptor()`, `note_and_cad_source()`) exactly as they reach every
-// other facet above. Restored after a repo-wide sweep dropped it and left `📇️registry`/`🧪️tests`'
-// own `#[cfg(test)]` modules unresolvable — not a new export, and invisible to any non-test build.
-#[cfg(test)]
-pub use crate::source_builders::*;
-// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the glob re-exports
-// above already bring every facet's public items into this module's namespace unqualified (matching
-// this file's pre-existing convention — `StdioTransport`/`GatewayError`/`HttpTransportOptions` below
-// are never module-qualified either), so P2's own new code below deliberately stays unqualified too;
-// the one real ambiguity this crate now has (P1a's `schema::SearchHit` vs this packet's own BM25
-// ranking type) is resolved by naming the latter `RankedHit`, not by qualifying paths.
-// 🎬️ packet P6-actions-policy: `actions`/`policy` add no further name collisions (`ActionAdapter`/
-// `ArtifactChannel`/`UnboundArtifactChannel`/`InvokeRequest`/`SagaReport`/`UndoRedoReport` and
-// `AgentPrincipal`/`PolicyEngine`/`AutoApprovePolicy`/`ApprovalGate` are all novel names crate-wide).
-//#endregion 🔖️Facets
-
-//#region 🔖️CoreCapabilities
-// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the small, stable
-// direct-tool core `📋️master.md` §"MCP tool names" names (`context_resolve`, `capabilities_search`,
-// `capabilities_describe`) — built as real `CapabilityDefinition`s (not just ad hoc `Tool`s)
-// so they compile INTO the catalog like every other capability (searchable, describable,
-// `semio://capability/{id}`-readable) and their `input_schema`/`output_schema`/`title`/`description`
-// have exactly one source of truth, read back by `tool_from_capability` below.
-fn capabilities_search_capability() -> CapabilityDefinition {
-    let input_schema = capabilities_search_input_schema();
-    CapabilityDefinition {
-        id: CapabilityRef("capabilities.search".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Meta,
-        audience: CapabilityAudience::Agent,
-        title: "Search Capabilities".to_string(),
-        description: "Deterministic BM25 search over the compiled capability catalog — no LLM.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["find a capability".to_string(), "what can I do".to_string(), "search for an action".to_string()],
-        input_schema,
-        output_schema: capabilities_search_output_schema(),
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "capabilities_search".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("search".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn capabilities_describe_capability() -> CapabilityDefinition {
-    let input_schema = capabilities_describe_input_schema();
-    CapabilityDefinition {
-        id: CapabilityRef("capabilities.describe".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Meta,
-        audience: CapabilityAudience::Agent,
-        title: "Describe Capability".to_string(),
-        description: "Returns the full CapabilityDefinition for one capability id.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["show me the details of a capability".to_string(), "what arguments does this take".to_string()],
-        input_schema,
-        output_schema: capabilities_describe_output_schema(),
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "capabilities_describe".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("info".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn context_resolve_capability() -> CapabilityDefinition {
-    let input_schema = context_resolve_input_schema();
-    CapabilityDefinition {
-        id: CapabilityRef("context.resolve".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Meta,
-        audience: CapabilityAudience::Agent,
-        title: "Resolve Context".to_string(),
-        description: "Opens/refreshes the calling session and returns a token-cheap ContextSummary.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["start a session".to_string(), "what can this session do".to_string()],
-        input_schema,
-        output_schema: context_resolve_output_schema(),
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "context_resolve".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("plug".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-/// 🎯️ The three real, backend-free core tools this packet registers — folded into
-/// `CatalogSource.gateway` so they appear in the compiled catalog exactly like every other
-/// capability (D5: the catalog is the one source of truth `tools/list` and `capabilities.search`
-/// both read from).
-pub fn core_tool_capabilities() -> Vec<CapabilityDefinition> {
-    let mut capabilities = vec![capabilities_search_capability(), capabilities_describe_capability(), context_resolve_capability()];
-    capabilities.extend(artifact_capabilities());
-    capabilities.extend(inference_capabilities());
-    capabilities.extend(inference_job_capabilities());
-    capabilities.extend(ui_capabilities());
-    capabilities
-}
-//#endregion 🔖️CoreCapabilities
-
-//#region 🔖️Catalog
-/// 🗂️ Compiles the live gateway's catalog from the REAL installed plugin registry
-/// (`registry::discover_catalog_source`, ticket 26/08/29/AI-MCP-END-TO-END packet W1) — never the
-/// hand-written `🧫️note_and_cad_source()` fixture, which stays reserved for
-/// `🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`'s own tests. `discover_catalog_source(None)`
-/// resolves the repo/space root itself and degrades to gateway-only capabilities (never a panic,
-/// never a fallback to fixture data) when no plugin is installed or discoverable; if a real install
-/// somehow yields a colliding capability id across two plugins, `compile()`'s `Err` degrades the same
-/// way — a running gateway server with SOME broken plugin data must still start and serve its core
-/// tools, never crash on launch.
-pub fn build_catalog() -> Catalog {
-    compile(&discover_catalog_source(None), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).unwrap_or_else(|error| {
-        eprintln!("[mcp registry] catalog compile failed ({error}) — falling back to gateway-only capabilities");
-        let gateway_only = CatalogSource { descriptors: Vec::new(), os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
-        compile(&gateway_only, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("core gateway capabilities alone never collide with themselves")
-    })
-}
-
-/// 🔐 Compiles a capability catalog from descriptors already verified by an external authority.
-/// Unlike installed discovery, this function never reads a registry or descriptor path.
-pub(crate) fn catalog_from_descriptors(descriptors: Vec<semio_framework::PackageDescriptor>) -> Result<Catalog, GatewayError> {
-    let source = CatalogSource { descriptors, os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() };
-    compile(&source, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
-        .map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("authenticated Hub descriptor catalog did not compile: {error}")).retryable())
-}
-
-fn gateway_only_catalog() -> std::sync::Arc<Catalog> {
-    std::sync::Arc::new(catalog_from_descriptors(Vec::new()).expect("core gateway capabilities alone never collide with themselves"))
-}
-//#endregion 🔖️Catalog
+use semio_framework_os_mcp_bridge::session::AgentConversation;
+use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_framework_os_mcp_capabilities::core_capabilities::{build_catalog, gateway_only_catalog};
+use semio_framework_os_mcp_catalog::capability_tools::{to_schema_search_hit, tool_from_capability};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, Catalog};
+use semio_framework_os_mcp_catalog::search::{SearchFilters, search};
+use semio_framework_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
+use semio_framework_os_mcp_consent::elicitation::ElicitationSlot;
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::agent_credential::AgentCredentialSource;
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, FileAuditSink, default_audit_dir};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_framework_os_mcp_foundation::rendezvous::{BridgeOffer, BridgeOfferScope, PublishedBridgeOffer, RENDEZVOUS_SCHEMA_VERSION, live_os_sessions, mint_admission_proof, publish_offer};
+use semio_framework_os_mcp_foundation::reports::{RevisionStamp, SearchHit};
+use semio_framework_os_mcp_http_transport::transport::{HttpTransport, HttpTransportOptions, HttpTransportRun};
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_port::channel_port::{InvokeRequest, UnboundArtifactChannel};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{ArtifactChannels, ShellRoutedArtifactChannel};
+use semio_framework_os_mcp_schema::schema::{action_invoke_input_schema, action_prepare_input_schema, capability_generic_output_schema, handle_input_schema, tool_output_schema, transaction_begin_input_schema};
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
+use semio_framework_os_mcp_shell_channel::context_resolve::{mint_session_id, resolve_context};
+use semio_framework_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
+use semio_framework_os_mcp_tools_gateway::artifact::register_artifact_tools;
+use semio_framework_os_mcp_tools_gateway::context::WorkspaceResourceRegistry;
+use semio_framework_os_mcp_tools_gateway::prompts::build_prompt_registry;
+use semio_framework_os_mcp_tools_gateway::ui::{register_conversation_tools, register_ui_tools};
+use semio_framework_os_mcp_tools_inference::inference::{register_inference_job_tools, register_inference_tools};
+use semio_framework_os_mcp_wire::notify::notification_slot;
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, NullBackend, PromptRegistry, ResourceRegistry, Tool, ToolRegistry};
+use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_hub_remote::remote::exchange_delegated_session_v1;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
 //#region 🔖️Tools
+
 fn parse_capability_kind(raw: &str) -> Option<CapabilityKind> {
     match raw.to_ascii_lowercase().as_str() {
         "mutation" => Some(CapabilityKind::Mutation),
@@ -202,6 +80,7 @@ fn search_filters_from_arguments(arguments: &serde_json::Value) -> SearchFilters
 /// never a silently truncated 20 (the pre-M5a behavior: a hardcoded `.take(20)` with no `total`, so
 /// a caller could not tell a 20-hit answer from a 400-hit catalog).
 const SEARCH_PAGE_DEFAULT: usize = 20;
+
 const SEARCH_PAGE_MAX: usize = 100;
 
 fn search_page_size(arguments: &serde_json::Value) -> usize {
@@ -213,34 +92,6 @@ fn search_page_size(arguments: &serde_json::Value) -> usize {
 /// erroring: a page boundary is never worth failing a discovery call over.
 fn search_offset(arguments: &serde_json::Value) -> usize {
     arguments.get("cursor").and_then(serde_json::Value::as_str).and_then(|cursor| cursor.parse::<usize>().ok()).unwrap_or(0)
-}
-
-pub(crate) fn to_schema_search_hit(capability: &CapabilityDefinition, score: f64) -> SearchHit {
-    let (plugin_id, app_id) = match &capability.owner {
-        CapabilityOwner::Plugin { plugin_id, app_id, .. } => (plugin_id.clone(), app_id.clone().unwrap_or_default()),
-        CapabilityOwner::Framework => ("framework".to_string(), String::new()),
-        CapabilityOwner::Os => ("os".to_string(), String::new()),
-        CapabilityOwner::Shell => ("shell".to_string(), String::new()),
-        CapabilityOwner::Gateway => ("gateway".to_string(), String::new()),
-        CapabilityOwner::Extension { extension_id } => (extension_id.clone(), String::new()),
-    };
-    let audience = match capability.audience {
-        CapabilityAudience::Agent => "agent",
-        CapabilityAudience::Input => "input",
-        CapabilityAudience::Chrome => "chrome",
-    };
-    SearchHit { capability_id: capability.id.to_string(), title: capability.title.clone(), description: capability.description.clone(), score, plugin_id, app_id, audience: audience.to_string(), artifact_kind: capability.artifact_kind.clone().unwrap_or_default() }
-}
-
-/// 🔧️ Projects one `CapabilityDefinition` onto the MCP `Tool` shape — the single place a tool's
-/// title/description/schemas are read back off the catalog, shared by every facet that registers
-/// direct tools (`🗿️artifact`, `💡️inference`, `🖥️ui`) so no facet re-derives them.
-pub(crate) fn tool_from_capability(capability: &CapabilityDefinition, tool_name: &str) -> Tool {
-    let mut tool = Tool::new(tool_name, capability.input_schema.clone());
-    tool.title = Some(capability.title.clone());
-    tool.description = Some(capability.description.clone());
-    tool.output_schema = Some(capability.output_schema.clone());
-    tool
 }
 
 fn capabilities_search_handler(catalog: &Catalog, arguments: serde_json::Value) -> CallToolResult {
@@ -309,9 +160,11 @@ pub const GATEWAY_TOOL_NAMES: [&str; 28] = [
     "job_get",
     "job_cancel",
 ];
+
 //#endregion 🔖️Tools
 
 //#region 🔖️MutationProtocolTools
+
 /// 🕐️ Wall-clock milliseconds — every `ActionAdapter`/`HandleTable` call takes `now_ms` explicitly
 /// (testability), this is the ONE call site that reads the real clock for the live server.
 fn now_ms() -> u64 {
@@ -544,6 +397,7 @@ pub fn build_tool_registry(
 }
 
 //#region 🔖️GatewayRuntime
+
 /// 🔌️ Everything a live gateway binds LATE, after the tool registry already exists: the `/bridge`
 /// slot a shell attaches through, the server→client request channel an `elicitation`-capable client
 /// is asked through, and the launch-time `--auto-approve` policy. One struct rather than three more
@@ -558,17 +412,17 @@ pub struct GatewayRuntime {
     /// executes it and the `context_resolve` handler that reports it. `None` in the ordinary test
     /// tier and on every gateway that never built a shell-routed channel — `channel_binding()`
     /// mints a headless-only one on demand so `context_resolve` always has an answer.
-    pub channel_binding: Option<std::sync::Arc<crate::shell_channel::SessionChannelBinding>>,
+    pub channel_binding: Option<std::sync::Arc<SessionChannelBinding>>,
 }
 
 impl GatewayRuntime {
     /// 🐚️ The binding this runtime reports and routes through — the one it was built with, or a
     /// fresh one over this runtime's own bridge slot (which decides `headless` whenever no shell
     /// with `relayAppCommands` is attached).
-    pub fn channel_binding(&self) -> std::sync::Arc<crate::shell_channel::SessionChannelBinding> {
+    pub fn channel_binding(&self) -> std::sync::Arc<SessionChannelBinding> {
         match &self.channel_binding {
             Some(binding) => std::sync::Arc::clone(binding),
-            None => std::sync::Arc::new(crate::shell_channel::SessionChannelBinding::new(self.bridge.clone())),
+            None => std::sync::Arc::new(SessionChannelBinding::new(self.bridge.clone())),
         }
     }
 
@@ -579,6 +433,7 @@ impl GatewayRuntime {
         std::sync::Arc::new(ApprovalCoordinator::new(self.elicitation.clone(), self.bridge.clone()))
     }
 }
+
 //#endregion 🔖️GatewayRuntime
 
 /// 🏗️ Assembles the real `McpServer`: the catalog-backed + action-adapter-backed tool registry, the
@@ -652,15 +507,15 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
 /// refreshing or revoked gets only gateway-owned tools; installed plugin descriptors are never a
 /// fallback. Folder workspaces retain their installed catalog.
 struct WorkspaceToolRegistry {
-    workspace: std::sync::Arc<HeadlessWorkspace>,
+    pub(crate) workspace: std::sync::Arc<HeadlessWorkspace>,
     actions: std::sync::Arc<ActionAdapter>,
-    principal: AgentPrincipal,
+    pub(crate) principal: AgentPrincipal,
     bridge: Option<BridgeSlot>,
-    channel_binding: std::sync::Arc<crate::shell_channel::SessionChannelBinding>,
+    channel_binding: std::sync::Arc<SessionChannelBinding>,
 }
 
 impl WorkspaceToolRegistry {
-    fn current(&self) -> InMemoryToolRegistry {
+    pub(crate) fn current(&self) -> InMemoryToolRegistry {
         let catalog = self.workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
         let mut tools = build_tool_registry(catalog.clone(), self.actions.clone(), self.principal.clone(), Some(self.workspace.clone()), self.bridge.clone());
         let context_tool = tool_from_capability(catalog.get("context.resolve").expect("context.resolve compiled"), "context_resolve");
@@ -726,7 +581,7 @@ fn workspace_tool_catalog_meta(workspace: &HeadlessWorkspace) -> Option<serde_js
 /// same breath. `SessionChannelBinding::resolve` is sticky, so the `channel` a client
 /// reads here is the channel every later `action_invoke`/`history_undo` on this
 /// session executes through.
-fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_tool: Tool, workspace: std::sync::Arc<HeadlessWorkspace>, principal_id: String, channel_binding: std::sync::Arc<crate::shell_channel::SessionChannelBinding>) {
+fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_tool: Tool, workspace: std::sync::Arc<HeadlessWorkspace>, principal_id: String, channel_binding: std::sync::Arc<SessionChannelBinding>) {
     tools
         .register(context_tool, move |_arguments| match workspace.resolve_context(&principal_id) {
             Ok(mut summary) => {
@@ -737,9 +592,11 @@ fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_t
         })
         .expect("context_resolve is a valid tool name");
 }
+
 //#endregion 🔖️MutationProtocolTools
 
 //#region 🔖️WorkspaceOptions
+
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
 /// `--hub <url> --space <id>` — the second binding shape `📋️master.md` §2.1 names
 /// alongside `--folder`. Shared by `StdioOptions`/`HttpOptions` rather than duplicated per mode.
@@ -753,21 +610,6 @@ pub struct HubOptions {
     pub credential: Option<AgentCredentialSource>,
 }
 
-/// 🤖️ Where the delegated credential comes from. Only ever a *location*: the secret itself never
-/// enters argv, the environment, or any `Debug` output.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum AgentCredentialSource {
-    File(String),
-    Descriptor(i32),
-}
-
-impl AgentCredentialSource {
-    /// 📥️ Loads and bounds-checks the credential this source names.
-    pub fn load(&self) -> Result<(crate::agent_credential::CredentialExchangeProtocolV1, crate::agent_credential::DelegatedCredentialV1), GatewayError> {
-        crate::agent_credential::load_delegated_credential_v1(self)
-    }
-}
-
 impl std::fmt::Debug for HubOptions {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.debug_struct("HubOptions").field("base_url", &self.base_url).field("space_id", &self.space_id).field("credential", &self.credential).finish()
@@ -778,7 +620,8 @@ impl std::fmt::Debug for HubOptions {
 /// the fixed step between attempts. The bound is what makes this a retry rather than a wait: a hub
 /// that stays mid-refresh for longer than `HUB_OPEN_RETRY_ATTEMPTS × HUB_OPEN_RETRY_STEP_MS` still
 /// fails, with the hub's own last message, instead of hanging a client's `initialize` forever.
-const HUB_OPEN_RETRY_ATTEMPTS: u32 = 6;
+pub(crate) const HUB_OPEN_RETRY_ATTEMPTS: u32 = 6;
+
 const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 
 /// 🔁️ Opens the hub workspace, re-attempting ONLY the states the hub marks retryable — a descriptor
@@ -864,7 +707,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
                 if delegation.scope_id() != hub.space_id {
                     return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("this agent credential is scoped to space `{}`, not `{}`", delegation.scope_id(), hub.space_id)));
                 }
-                let grant = crate::workspace::remote::exchange_delegated_session_v1(&hub.base_url, &delegation, protocol)?;
+                let grant = exchange_delegated_session_v1(&hub.base_url, &delegation, protocol)?;
                 eprintln!("[semio-os-mcp] acting as agent principal {} (\"{}\") in space {}", grant.agent_principal_id, grant.agent_label, grant.space_id);
                 adopted = Some((grant.agent_principal_id.clone(), grant.agent_label.clone()));
                 std::sync::Arc::new(
@@ -886,17 +729,19 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
         return Ok((build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime), principal_id));
     };
     eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
-    let binding = std::sync::Arc::new(crate::shell_channel::SessionChannelBinding::for_principal(&principal, runtime.bridge.clone()));
+    let binding = std::sync::Arc::new(SessionChannelBinding::for_principal(&principal, runtime.bridge.clone()));
     runtime.channel_binding = Some(std::sync::Arc::clone(&binding));
     let catalog = std::sync::Arc::new(build_catalog());
     workspace.bind_shell_route(std::sync::Arc::clone(&binding), std::sync::Arc::clone(&catalog));
-    let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Shell(crate::workspace::ShellRoutedArtifactChannel::new(binding, catalog, workspace.open_routing_channel())));
+    let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Shell(ShellRoutedArtifactChannel::new(binding, catalog, workspace.open_routing_channel())));
     let principal_id = principal.id.clone();
     Ok((build_server_with_workspace(principal, audit, workspace, channel, runtime), principal_id))
 }
+
 //#endregion 🔖️WorkspaceOptions
 
 //#region 🔖️StdioEntrypoint
+
 /// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
 /// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all]
 /// [--no-bridge]`).
@@ -929,7 +774,7 @@ fn start_stdio_bridge(options: &StdioOptions, bridge_slot: &BridgeSlot) -> Optio
     if options.no_bridge {
         return None;
     }
-    let proof = crate::rendezvous::mint_admission_proof();
+    let proof = mint_admission_proof();
     let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof)).publishing_bridge_into(bridge_slot.clone());
     match transport.start_bridge_only() {
         Ok(run) => Some(StdioBridgeListener { run, proof }),
@@ -949,14 +794,14 @@ struct StdioBridgeListener {
 /// 📤️ Publishes `listener`'s offer for exactly the shells `scope` admits, as `principal_id` (ticket 26/09/23, G12 session
 /// 14c: an unscoped offer reached every live os session of the machine and another person's shell attached to a hub
 /// agent's gateway). A publication that fails cancels the listener rather than leaving an unreachable socket open.
-fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: String, scope: crate::rendezvous::BridgeOfferScope) -> Option<StdioBridgeAttachment> {
+fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: String, scope: BridgeOfferScope) -> Option<StdioBridgeAttachment> {
     let StdioBridgeListener { run, proof } = listener;
     let offered_to = match &scope {
-        crate::rendezvous::BridgeOfferScope::Hub { hub_origin, space_id } => format!("the shell of the human who delegated {principal_id} on {hub_origin} space {space_id}"),
-        crate::rendezvous::BridgeOfferScope::Local => format!("this user's local os sessions ({} live)", crate::rendezvous::live_os_sessions().len()),
+        BridgeOfferScope::Hub { hub_origin, space_id } => format!("the shell of the human who delegated {principal_id} on {hub_origin} space {space_id}"),
+        BridgeOfferScope::Local => format!("this user's local os sessions ({} live)", live_os_sessions().len()),
     };
-    let offer = crate::rendezvous::BridgeOffer {
-        schema_version: crate::rendezvous::RENDEZVOUS_SCHEMA_VERSION,
+    let offer = BridgeOffer {
+        schema_version: RENDEZVOUS_SCHEMA_VERSION,
         url: format!("ws://{}/bridge", run.local_addr()),
         admission_proof: proof,
         principal: principal_id,
@@ -964,7 +809,7 @@ fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: Strin
         published_at_ms: now_ms(),
         scope,
     };
-    match crate::rendezvous::publish_offer(offer) {
+    match publish_offer(offer) {
         Ok(published) => {
             eprintln!("[semio-os-mcp] bridge listening on ws://{}/bridge — offered to {offered_to} via {}", run.local_addr(), published.path().display());
             let offer = std::sync::Arc::new(std::sync::Mutex::new(Some(published)));
@@ -991,7 +836,7 @@ fn publish_stdio_bridge_offer(listener: StdioBridgeListener, principal_id: Strin
 /// on the dropping thread itself: the process may exit before the completion watcher wakes.
 struct StdioBridgeAttachment {
     run: HttpTransportRun,
-    offer: std::sync::Arc<std::sync::Mutex<Option<crate::rendezvous::PublishedBridgeOffer>>>,
+    offer: std::sync::Arc<std::sync::Mutex<Option<PublishedBridgeOffer>>>,
 }
 
 impl Drop for StdioBridgeAttachment {
@@ -1028,10 +873,10 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let listener = start_stdio_bridge(&options, &bridge_slot);
     let runtime = GatewayRuntime { bridge: listener.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
     let (server, principal_id) = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime, options.host_driver_policy)?;
-    let scope = options.hub.as_ref().map_or(crate::rendezvous::BridgeOfferScope::Local, |hub| crate::rendezvous::BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
+    let scope = options.hub.as_ref().map_or(BridgeOfferScope::Local, |hub| BridgeOfferScope::Hub { hub_origin: hub.base_url.clone(), space_id: hub.space_id.clone() });
     let attachment = listener.and_then(|listener| publish_stdio_bridge_offer(listener, principal_id, scope));
     let features = server.client_features();
-    let notifications = crate::notify::notification_slot();
+    let notifications = notification_slot();
     let server = server.publishing_notifications_into(notifications.clone());
     let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), std::io::stderr())
         .publishing_elicitation_into(elicitation, features)
@@ -1040,9 +885,11 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     drop(attachment);
     result
 }
+
 //#endregion 🔖️StdioEntrypoint
 
 //#region 🔖️HttpEntrypoint
+
 /// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `http` subcommand parses off argv (`semio-os-mcp http [--port <p>]
 /// [--bind <addr>] [--folder <dir>] [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]
 /// [--audit-dir <dir>] [--allow-origin <origin>]…`). HTTP and bridge admission are both authorized
@@ -1079,15 +926,16 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;
     eprintln!("[semio-os-mcp] bridge listening on ws://{bind_ip}:{}/bridge", options.port);
     let transport_options = HttpTransportOptions::new(credential).bind_addr(std::net::SocketAddr::new(bind_ip, options.port)).allowed_origins(options.allow_origin);
-    let notifications = crate::notify::notification_slot();
+    let notifications = notification_slot();
     let server = server.publishing_notifications_into(notifications.clone());
     let mut transport = HttpTransport::new(transport_options).publishing_bridge_into(bridge_slot).publishing_notifications_into(notifications);
     transport.start(server)?.wait()
 }
+
 //#endregion 🔖️HttpEntrypoint
 
+//#region 🔖️Facets
+//#endregion 🔖️Facets
+
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

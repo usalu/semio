@@ -5,5 +5,4 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 
 
-#[path = "📦️pack/🦀️.rs"]
-pub(crate) mod native_pack;
+pub(crate) use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::io::binary::snapshot::native_pack;

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "namespace": "canvas",
+  "modes": ["prototype", "release"],
+  "trees": ["port-assets/compiler-fonts", "port-assets/canvas-fonts", "port-assets/icon-pack", "guest-assets/compiler-fonts", "guest-assets/canvas-fonts", "guest-assets/icon-pack"],
+  "invalidModes": ["debug", "production", "", null],
+  "invalidRoots": ["relative", "", "/products/../foreign"]
+}

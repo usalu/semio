@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-routing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Route resolution, hub relay and the closed artifact channel set."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-routing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[features]
+testkit = ["semio-framework-os-mcp-port/testkit"]
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-framework-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../../⚙️plugin-runtime/📦️packages/🦀️rust" }
+semio-framework-os-mcp-hub-remote = { path = "../../../🌍️hub-remote/📦️packages/🦀️rust" }
+semio-framework-os-mcp-shell-channel = { path = "../../../🎛️shell-channel/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+
+[dev-dependencies]
+semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }

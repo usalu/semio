@@ -56,5 +56,186 @@
       "exclusive": false,
       "expected": false
     }
-  ]
+  ],
+  "quiescentCases": [
+    {
+      "current": true,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": true,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": true,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": false,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": false,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": false,
+      "witness": false,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": false,
+      "witness": false,
+      "exclusive": true,
+      "expected": true,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": true,
+      "exclusive": true,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": true,
+      "exclusive": true,
+      "expected": true,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": false,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": false,
+      "exclusive": false,
+      "expected": false,
+      "imageExclusive": true
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": true,
+      "exclusive": false,
+      "expected": false,
+      "imageExclusive": false
+    },
+    {
+      "current": false,
+      "authenticated": true,
+      "readerProtocol": true,
+      "witness": true,
+      "exclusive": false,
+      "expected": false,
+      "imageExclusive": true
+    }
+  ],
+  "capacityCases": [
+    {
+      "availableBytes": 866873344,
+      "requiredBytes": 885590291,
+      "deficitBytes": 18716947
+    },
+    {
+      "availableBytes": 885590291,
+      "requiredBytes": 885590291,
+      "deficitBytes": 0
+    },
+    {
+      "availableBytes": 900000000,
+      "requiredBytes": 885590291,
+      "deficitBytes": 0
+    },
+    {
+      "availableBytes": 0,
+      "requiredBytes": 1610612736,
+      "deficitBytes": 1610612736
+    }
+  ],
+  "queuedMaintenance": {
+    "request": {
+      "version": 1,
+      "mode": "queued",
+      "maximumWaitMilliseconds": 0
+    },
+    "deadlineRequest": {
+      "version": 1,
+      "mode": "queued",
+      "maximumWaitMilliseconds": 2000
+    },
+    "invalid": [
+      {
+        "version": 1,
+        "mode": "queued",
+        "maximumWaitMilliseconds": -1
+      },
+      {
+        "version": 1,
+        "mode": "queued",
+        "maximumWaitMilliseconds": 0,
+        "extra": true
+      },
+      {
+        "version": 1,
+        "mode": "try",
+        "maximumWaitMilliseconds": 0
+      }
+    ],
+    "releaseDelayMilliseconds": 20
+  }
 }

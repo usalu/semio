@@ -21,3 +21,6 @@ export {readNxGraphSourceProofV1} from "../../../../🕸️graph/🔏️seal/�
 export {withOriginalSelectedNativeSnapshotV1,selectedNativeWorkspaceRootV1,selectedNativeWorkspaceInventoryV1,requireSelectedNativeFileCoverageV1} from "../../../../../🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts";
 export {withNxDaemonServiceV1,withNxDaemonRequestV1,requestNxDaemonShutdownV1,completeNxDaemonShutdownV1,beginNxDaemonShutdownV1,markNxDaemonServerClosedV1,registerNxDaemonServerV1,nxDaemonPinnedEnvironmentV1,retainNxDaemonWorkerV1} from "../../../../🕸️graph/🏁️startup/🚦️service/🟦️.ts";
 export {createNxDaemonJournalWorkerV1} from "../../../../🕸️graph/🏁️startup/🚦️service/🟦️.ts";
+
+export {readNxRustCacheExpectationV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🦀️promotion/🟦️.ts";
+export {requireOriginalNxRustCachePromotionV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";

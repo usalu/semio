@@ -1,4 +1,4 @@
-import {receiveScriptProcessInvocation} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 // 🧪️ Nx plugin: one virtual project per test OWNER (the directory holding a `🧪️tests` directory of discovered cases).
 //
 // Discovery is every taxonomy-declared kind-only feature beneath `🧪️tests/*`. There are no hand-authored `📋️project.json` files
@@ -328,9 +328,9 @@ function testCaseDependencies(_options, context) {
 export function testBuildInferenceDirectoryV1(workspace){return repositoryBuildGraphDataDirectoryV1(workspace,"inference");}
 
 /** ♻️ Refreshes resident inference after authored source changes without discarding build state. */
-async function withTestInferenceWriterV1(context,body){const run=invocation=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,()=>body(invocation));return context.invocation?run(context.invocation):receiveScriptProcessInvocation(process.env,run);}
+async function withTestInferenceWriterV1(context,body){const run=(invocation,phaseControl)=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,phaseControl,(_store,actualControl)=>body(invocation,actualControl));return context.invocation?run(context.invocation,context.phaseControl):receiveScriptProcessInvocation(process.env,invocation=>run(invocation,createIssuedResourceControlV1(invocation,"graph:test-inference-entry",0)));}
 
-async function invokeCurrentImplementation(kind,args){const index=kind==="nodes"?2:1,context=args[index];return withTestInferenceWriterV1(context,invocation=>{const original=[...args];original[index]={...context,invocation};return invokeCurrentImplementationV1(kind,original);});}
+async function invokeCurrentImplementation(kind,args){const index=kind==="nodes"?2:1,context=args[index];return withTestInferenceWriterV1(context,(invocation,phaseControl)=>{const original=[...args];original[index]={...context,invocation,phaseControl};return invokeCurrentImplementationV1(kind,original);});}
 
 async function invokeCurrentImplementationV1(kind, args) {
   await testBootstrap;
@@ -399,7 +399,7 @@ export function discoverCaseDirs(workspaceRoot) {
 }
 
 /** 🏗️ Supplies portable test-owner projects without acquiring a task-runner runtime. */
-export async function discoverTestBuildProjectsV1(files,options,context) { return withTestInferenceWriterV1(context,async()=>{await testBootstrap;return testCaseProjects(files,options,context);}); }
+export async function discoverTestBuildProjectsV1(files,options,context) { return withTestInferenceWriterV1(context,async(invocation,phaseControl)=>{await testBootstrap;return testCaseProjects(files,options,{...context,invocation,phaseControl});}); }
 
 /** 🪢️ Supplies test-owner dependency edges from the portable project inventory. */
-export async function discoverTestBuildDependenciesV1(options,context) { return withTestInferenceWriterV1(context,async()=>{await testBootstrap;return testCaseDependencies(options,context);}); }
+export async function discoverTestBuildDependenciesV1(options,context) { return withTestInferenceWriterV1(context,async(invocation,phaseControl)=>{await testBootstrap;return testCaseDependencies(options,{...context,invocation,phaseControl});}); }

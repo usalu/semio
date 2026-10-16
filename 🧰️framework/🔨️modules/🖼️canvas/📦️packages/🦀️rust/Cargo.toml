@@ -11,40 +11,27 @@ role = "framework"
 id = "canvas"
 cargo-execution = "🧪️execution/🔣️.json"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
 [lib]
 name = "semio_framework_canvas"
-path = "🦀️.rs"
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-canvas-assets/testkit"]
 
 [dependencies]
-semio-framework-icon-contract = { path = "../../../🖼️assets/🔣️icons/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-value = { workspace = true }
-semio-framework-value-derive = { workspace = true }
-semio-framework-async = { workspace = true }
-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-base64_codec = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-compiler = { path = "../../../📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
-serde = { workspace = true }
-serde_json = { workspace = true }
-[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-vello = { version = "0.9.0", features = ["wgpu", "wgpu_default"] }
-vello_svg = { version = "0.10.0", default-features = true, features = ["wgpu"] }
-kurbo = "0.13.1"
-peniko = "0.6.1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
-[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-semio-framework-intrinsic-size = { path = "../../../📏️intrinsic-size/📦️packages/🦀️rust" }
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-wasm-bindgen = { workspace = true }
-js-sys = "0.3.83"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+semio-framework-canvas-assets = { path = "../../🔌️runtime-assets/📦️packages/🦀️rust" }
+semio-framework-canvas-camera = { path = "../../📷️camera/📦️packages/🦀️rust" }
+semio-framework-canvas-icons = { path = "../../🪪️icon-codec/📦️packages/🦀️rust" }
+semio-framework-canvas-scene = { path = "../../🎬️scene/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-trace = { workspace = true }
-
-[[test]]
-name="original_scene_retirement"
-path="../../♻️retirement/🎬️scene/🧪️tests/🦀️.rs"
+geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+serde_json = { workspace = true }

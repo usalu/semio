@@ -3,7 +3,12 @@
 //! synthetic 2-hop chain through the SAME `register_composer_entries`/`io_dispatch` machinery
 //! every real chain (e.g. stdio's png↔deflate↔binary) goes through, proving the mechanism
 //! against the real registry rather than a hand-simulated call graph.
-use super::*;
+use semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId};
+use semio_framework_os_store_codec_registry::composer_registry::{ComposeError, ComposedArtifact, ComposerEntry, Confidence, ErasedComposeSource, FormatDescriptor, FormatRegistryConflict, FormatRegistryError, IoDirection, IoKey, IoRegistryRegistrationError, format_mimes, formats_csv};
+use semio_framework_io_schema::IoPayload;
+use semio_framework_os_io::{IoWireError, MAX_IO_WIRE_BYTES, MAX_IO_WIRE_DIALECT_COMPONENT_BYTES, compose_thunk, format_accept_filter, format_descriptor, io_compose_via, preflight_composer_entry_refs, preflight_format_descriptors, register_composer_entries, register_format_descriptors, wire_decode_composed_artifact};
+use semio_framework_os_store_codec_registry::lifted_io::{WireComposedArtifact, resolve};
+use crate::io::text;
 use semio_framework_artifact_reference::{ArtifactKindId,ArtifactRef,is_canonical_artifact_kind};
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 

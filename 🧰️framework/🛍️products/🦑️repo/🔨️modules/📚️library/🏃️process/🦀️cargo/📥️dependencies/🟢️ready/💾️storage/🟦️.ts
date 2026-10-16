@@ -20,7 +20,7 @@ interface ReadyOptions extends RepositoryCargoInputsV1 {readonly requests:readon
 class UnsupportedReadySource extends Error{}
 function ownedSource(root:string,path:string):string{const local=relative(root,resolve(path)).split(sep).join("/");if(!cargoRegistryReadyPathV1(local))throw new UnsupportedReadySource("Repository-owned Cargo ready Source required");return local;}
 function firstPartyLock(value:Record<string,any>|undefined):boolean{return Boolean(value&&Array.isArray(value.package)&&value.package.every((row:any)=>row&&typeof row==="object"&&row.source===undefined));}
-async function sourceBytes(options:ReadyOptions,path:string,remainingFiles:number){return readPhysicalCargoSourceV1(join(options.workspace,path),{version:1,root:options.workspace,maximumBytes:protocol.maximumInputBytes,remainingFiles},options.control);}
+async function sourceBytes(options:ReadyOptions,path:string,remainingFiles:number){return readPhysicalCargoSourceV1(join(options.workspace,path),{expectedBytes:null,version:1,root:options.workspace,maximumBytes:protocol.maximumInputBytes,remainingFiles},options.control);}
 function requestIdentity(options:ReadyOptions):string|undefined{
  if(typeof Bun==="undefined"||![{args:options.args},...(options.additionalManifests??[])].every(row=>row.args.some(value=>value==="--locked"||value==="--frozen"))||!options.environment.RUSTC||["RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC","CARGO_BUILD_RUSTC_WRAPPER","CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"].some(name=>Boolean(options.environment[name])))return;
  const program=Bun.which(options.environment.RUSTC,{PATH:options.environment.PATH,cwd:options.cwd});if(!program)return;let toolchain:string;try{toolchain=repositoryRustToolchainIdentityV1(program);}catch{return;}
@@ -44,7 +44,7 @@ async function readyInputs(options:ReadyOptions,row:ReadyReceipt):Promise<boolea
  return true;
 }
 async function readReady(options:ReadyOptions,file:string,request:string):Promise<ReadyReceipt|undefined>{
- const bytes=await readPhysicalCargoSourceV1(file,{version:1,root:options.storage.backing.root,maximumBytes:protocol.maximumReceiptBytes,remainingFiles:1},options.control);if(!bytes)return;let value:unknown;try{value=JSON.parse(Buffer.from(bytes).toString("utf8"));}catch{return;}
+ const bytes=await readPhysicalCargoSourceV1(file,{expectedBytes:null,version:1,root:options.storage.backing.root,maximumBytes:protocol.maximumReceiptBytes,remainingFiles:1},options.control);if(!bytes)return;let value:unknown;try{value=JSON.parse(Buffer.from(bytes).toString("utf8"));}catch{return;}
  if(validateJsonSchemaSubset(schema.definitions.Receipt,value,schema).length)return;const row=value as ReadyReceipt;try{if(row.request===request&&await readyInputs(options,row))return row;}catch(error){if(!(error instanceof UnsupportedReadySource))throw error;}
 }
 async function captureReady(options:ReadyOptions,request:string):Promise<ReadyReceipt|undefined>{

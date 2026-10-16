@@ -58,8 +58,5 @@ pub fn compute_mp4_duration(snapshot: &Mp4Snapshot) -> Mp4Duration {
 }
 //#endregion 🔖️Duration
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

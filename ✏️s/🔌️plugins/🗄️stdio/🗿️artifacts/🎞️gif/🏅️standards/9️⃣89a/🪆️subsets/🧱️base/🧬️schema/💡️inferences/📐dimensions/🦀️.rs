@@ -42,8 +42,5 @@ pub fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
 }
 //#endregion 🔖️Dimensions
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

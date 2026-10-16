@@ -1,12 +1,13 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
+use crate::tile_coordinates::gis_policy::GIS_MAP_OVERLAY_POSITIONS;
 
 #[semio_framework_async_macros::async_test]
 async fn the_host_mirrors_the_document_features_and_the_config_camera() {
     let document = default_document();
     let config = MapWindowConfig { camera_json: r#"{"x":10,"y":20,"zoom":4}"#.into(), ..MapWindowConfig::default() };
     let host = map_host_from(&document, &config);
-    assert!(!host.features.positions.is_empty(), "the reuse-map fixture seeds position features");
+    assert!(host.overlays.features(GIS_MAP_OVERLAY_POSITIONS).next().is_some(), "the reuse-map fixture seeds position features");
     let camera: Value = serde_json::from_str(&host.camera_json()).expect("camera json");
     assert_eq!(camera.get("zoom").and_then(Value::as_f64), Some(4.0));
 }

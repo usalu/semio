@@ -1,0 +1,47 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-trusted-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Trusted-catalog loader, guest residency and the verified catalog"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-trusted-catalog"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+integration-fixtures = ["semio-hub-trusted-catalog-contract/integration-fixtures"]
+testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-trusted-catalog-contract/testkit"]
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-trusted-catalog-contract = { workspace = true }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+semio-framework-artifact-reference = { path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+futures = "0.3"
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-hub-stdio-catalog = { workspace = true }
+semio-framework-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]

@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-ledgers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hub ledgers: socket grants, document open plans, authentication guard types, pair blobs and access-grant vocabulary"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-ledgers"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-directory/testkit", "semio-hub-inference-runtime-contract/testkit", "semio-hub-runtime/testkit"]
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-artifact-creation = { workspace = true }
+semio-hub-auth = { workspace = true }
+semio-hub-directory = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+semio-hub-inference-runtime-contract = { workspace = true }
+semio-hub-lag-rebootstrap = { workspace = true }
+semio-hub-runtime = { workspace = true }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+axum = { version = "0.8", features = ["ws"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+futures = "0.3"
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+
+[dev-dependencies]

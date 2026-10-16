@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-composition-emission-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

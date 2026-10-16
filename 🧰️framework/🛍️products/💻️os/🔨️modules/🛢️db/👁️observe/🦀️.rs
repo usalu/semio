@@ -19,8 +19,11 @@
 //! `crc32c` (the `AuditSink` tamper-evidence chain, see its doc for why CRC-32C rather than a
 //! blake3 `ContentHash`) and `ContentHash` itself as `DeterminismVerifier`'s digest type, since
 //! that's exactly the type `CommandReceipt.state_hash` carries per the frozen `db` facade API.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::*;
+use db_ids::{ArtifactId, DbError};
+use pack::ContentHash;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::future::Future;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -192,7 +195,7 @@ pub trait EventSink: Send + Sync {
 /// would have written without touching the filesystem.
 #[derive(Default)]
 pub struct MemorySink {
-    lines: Mutex<Vec<String>>,
+    pub lines: Mutex<Vec<String>>,
 }
 
 impl MemorySink {

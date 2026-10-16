@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "maximumEntries": 3,
+  "cases": [
+    {
+      "name": "unlisted initial name",
+      "files": {
+        "intruder": "x"
+      },
+      "inputs": {},
+      "accepted": false
+    },
+    {
+      "name": "exact initial input",
+      "files": {
+        "package.json": "{}"
+      },
+      "inputs": {
+        "package.json": "{}"
+      },
+      "accepted": true
+    },
+    {
+      "name": "changed initial bytes",
+      "files": {
+        "package.json": "[]"
+      },
+      "inputs": {
+        "package.json": "{}"
+      },
+      "accepted": false
+    },
+    {
+      "name": "exact patch ancestor",
+      "files": {
+        "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch": "patch"
+      },
+      "inputs": {
+        "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch": "patch"
+      },
+      "accepted": true
+    },
+    {
+      "name": "unlisted patch",
+      "files": {
+        "patches/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.patch": "patch"
+      },
+      "inputs": {
+        "patches/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.patch": "patch"
+      },
+      "accepted": false
+    }
+  ],
+  "directoryModeBefore": 493,
+  "directoryModeAfter": 365,
+  "unknownEntries": 32,
+  "maximumUnknownYields": 1,
+  "maximumRosterArrayReads": 0,
+  "maximumInputFiles": 32,
+  "maximumInputBytes": 16777216,
+  "rootPrefix": {
+    "prefixDepth": 3,
+    "cases": [
+      {
+        "path": "node_modules",
+        "expectedPrefixPasses": [],
+        "expectedBoundaries": []
+      },
+      {
+        "path": "node_modules/child",
+        "expectedPrefixPasses": [
+          2
+        ],
+        "expectedBoundaries": [
+          6
+        ]
+      }
+    ]
+  },
+  "rootMetadata": {
+    "sameRootPath": true,
+    "interveningAwait": false,
+    "expectedAsyncRootReads": 0,
+    "expectedSynchronousRootReads": 1,
+    "continuationEntries": 128
+  }
+}

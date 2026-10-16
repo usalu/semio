@@ -1,59 +1,27 @@
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, extname, join, relative as relativePath } from "node:path";
-
-const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-
-/** 🔤️ Resolves semantic filenames to names accepted by TeX auxiliary-file handling. */
-export function printCompilerName(name: string): string {
-  if (name === "📐️.tex") return "_.tex";
-  // 📐 The staged library root is itself a compiler search path, so a child
-  // directory named "latex" would shadow the "latex" *format* the engine loads
-  // before any input file — tectonic opens the directory and aborts with
-  // "could not open format file latex". The package directory therefore stages
-  // under a name no TeX format can claim.
-  if (name === "🖋️latex") return "semio-latex";
-  const first = segmenter.segment(name)[Symbol.iterator]().next().value?.segment ?? "";
-  return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(first) ? name.slice(first.length) : name;
-}
-
-/** 📄️ Stages compiler inputs and their references without modifying canonical source files. */
-export function stagePrintSources(sourceRoot: string, entries: readonly string[], stageRoot: string): ReadonlyMap<string, string> {
-  const files = new Map<string, string>();
-  const destinations = new Set<string>();
-  const names = new Map<string, string>();
-  const visit = (relative: string): void => {
-    const parts = relative.split(/[\\/]/);
-    const staged = join(stageRoot, ...parts.map(printCompilerName));
-    if (destinations.has(staged)) throw new Error(`colliding print source: ${relative}`);
-    destinations.add(staged);
-    for (const part of parts) if (part !== "📐️.tex" && printCompilerName(part) !== part) {
-      names.set(part, printCompilerName(part));
-      if (part.endsWith(".tex")) names.set(part.slice(0, -4), printCompilerName(part).slice(0, -4));
-    }
-    if (statSync(join(sourceRoot, relative)).isFile()) {
-      const sourceRelative = relative.replaceAll("\\", "/"), stagedRelative = relativePath(stageRoot, staged).replaceAll("\\", "/");
-      files.set(sourceRelative, staged);
-      if (parts.at(-1) === "📐️.tex") {
-        names.set(sourceRelative, stagedRelative);
-        names.set(sourceRelative.slice(0, -4), stagedRelative.slice(0, -4));
-      }
-    }
-    else for (const entry of readdirSync(join(sourceRoot, relative))) {
-      if ([".DS_Store", "dist", ".semio-dark"].includes(entry)) continue;
-      visit(join(relative, entry));
-    }
-  };
-  for (const entry of entries) visit(entry);
-  const pattern = names.size ? new RegExp([...names.keys()].sort((a, b) => b.length - a.length).map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g") : undefined;
-  rmSync(stageRoot, { recursive: true, force: true });
-  for (const [relative, staged] of files) {
-    const source = join(sourceRoot, relative);
-    mkdirSync(dirname(staged), { recursive: true });
-    if (![".tex", ".bib", ".sty", ".cls"].includes(extname(source))) copyFileSync(source, staged);
-    else {
-      const content = readFileSync(source, "utf8");
-      writeFileSync(staged, pattern ? content.replace(pattern, (name) => names.get(name)!) : content, "utf8");
-    }
-  }
-  return files;
-}
+import{types}from"node:util";
+import{createHash}from"node:crypto";
+import{lstat,mkdir,opendir,writeFile}from"node:fs/promises";
+import{dirname,extname,isAbsolute,join,relative,resolve,sep}from"node:path";
+import{validateJsonSchemaSubset}from"./../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,type ScriptInvocation}from"./../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{readPrintMaterialFileV1}from"../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+const segmenter=new Intl.Segmenter(undefined,{granularity:"grapheme"}),policy=schema.definitions.Policy.const;
+/** 🔤️ Maps canonical semantic filenames to TeX auxiliary-file names. */
+export function printCompilerName(name:string):string{if(name==="📐️.tex")return"_.tex";if(name==="🖋️latex")return"semio-latex";const first=segmenter.segment(name)[Symbol.iterator]().next().value?.segment??"";return /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(first)?name.slice(first.length):name;}
+/** 🗺️ Projects the same finite authored names used by actual Source staging. */
+export function printSourceReferenceMapV1(entries:readonly string[]):ReadonlyMap<string,string>{if(entries.length>policy.maximumEntries)throw Error("Bounded Print Source references required");const names=new Map<string,string>(),outputs=new Set<string>(),rows:{key:string;name:string}[]=[];for(const name of entries){if(typeof name!=="string"||!name||name.length>policy.maximumPathUnits||name.includes(":")||name.includes("\\")||isAbsolute(name)||name.split("/").some(part=>!part||part==="."||part===".."))throw Error("Canonical Print Source reference required");const parts=name.split("/"),output=parts.map(printCompilerName).join("/"),key=output.normalize("NFC").toLowerCase();if(outputs.has(key))throw Error("Distinct Print staged Source required");outputs.add(key);rows.push({key,name});for(const part of parts){const staged=printCompilerName(part);if(part!=="📐️.tex"&&staged!==part){names.set(part,staged);if(part.endsWith(".tex"))names.set(part.slice(0,-4),staged.slice(0,-4));}}if(parts.at(-1)==="📐️.tex"){names.set(name,output);names.set(name.slice(0,-4),output.slice(0,-4));}}const parents:{key:string;name:string}[]=[];for(const row of rows.sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0)){while(parents.length&&!row.key.startsWith((parents.at(-1)?.key??"")+"/"))parents.pop();const parent=parents.at(-1);if(parent&&!row.name.startsWith(parent.name+"/"))throw Error("Distinct Print staged Source required");parents.push(row);}return names;}
+/** 🖋️ Rewrites bounded text using the exact captured semantic Source names. */
+export function printSourceReferenceTextV1(text:string,names:ReadonlyMap<string,string>):string{if(Buffer.byteLength(text)>policy.maximumFileBytes||names.size>policy.maximumEntries*policy.maximumPathUnits)throw Error("Bounded Print Source text required");if(!names.size)return text;const pattern=new RegExp([...names.keys()].sort((a,b)=>b.length-a.length).map(name=>name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"),"g");return text.replace(pattern,match=>{const replacement=names.get(match);if(replacement===undefined)throw Error("Captured Print reference required");return replacement;});}
+/** 📋️ Copies bounded source intent without granting a destination or reader. */
+export function printSourceStagingPlanV1(value:unknown):Readonly<{version:1;directory:string;entries:readonly string[]}>{if(!value||typeof value!=="object"||types.isProxy(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw Error("Plain Print Source intent required");const keys=Reflect.ownKeys(value);if(keys.length!==3||keys.some(key=>!["version","directory","entries"].includes(String(key))))throw Error("Closed Print Source fields required");const fields:Record<string,unknown>=Object.create(null);for(const key of keys){if(typeof key!=="string")throw Error("JSON Print Source field required");const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!descriptor?.enumerable||!("value"in descriptor))throw Error("Print Source accessor refused");fields[key]=descriptor.value;}const incoming=fields.entries;if(!Array.isArray(incoming)||types.isProxy(incoming)||Object.getPrototypeOf(incoming)!==Array.prototype)throw Error("Plain Print Source entries required");const count=Object.getOwnPropertyDescriptor(incoming,"length")?.value;if(!Number.isSafeInteger(count)||count<1||count>policy.maximumEntries||Reflect.ownKeys(incoming).length!==count+1)throw Error("Bounded dense Print Source entries required");const entries:string[]=[];for(let index=0;index<count;index++){const descriptor=Object.getOwnPropertyDescriptor(incoming,String(index));if(!descriptor?.enumerable||!("value"in descriptor)||typeof descriptor.value!=="string")throw Error("Plain Print Source name required");entries.push(descriptor.value);}const row={version:fields.version,directory:fields.directory,entries};if(validateJsonSchemaSubset(schema,row).length)throw Error("Closed bounded Print source staging intent required");for(const entry of entries)if(entry.includes("\\")||entry.includes(":")||isAbsolute(entry)||entry.split("/").some(part=>!part||part==="."||part===".."))throw Error("Canonical Print source entry required");if(row.version!==1||typeof row.directory!=="string")throw Error("Actual Print Source plan required");return Object.freeze({version:1,directory:row.directory,entries:Object.freeze(entries)});}
+/** 📚️ Retains the exact consumed Source roster for post-compilation verification. */
+export interface StagedPrintSourcesV1{readonly files:ReadonlyMap<string,string>;recheck():Promise<void>}
+/** 📄️ Copies complete bounded no-follow Source only into the actual funded destination callback. */
+export function stagePrintSources(destination:ArtifactDestinationV1,invocation:ScriptInvocation,sourceRoot:string,value:unknown,phaseControl:ResourceLeaseControl):Promise<StagedPrintSourcesV1>{const plan=printSourceStagingPlanV1(value),root=resolve(sourceRoot);return withArtifactDestinationTaskV1(destination,invocation,async context=>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);requireIssuedResourceControlRefinementV1(context.control,phaseControl);return withIssuedResourceOperationV1(phaseControl,async()=>{const distance=relative(context.workspace,root);if(root!==sourceRoot||isAbsolute(distance)||distance===".."||distance.startsWith(".."+sep))throw Error("Actual workspace Print Source root required");const output=join(context.directory,plan.directory),files=new Map<string,string>(),destinations=new Set<string>(),directories=new Map<string,string>(),contentHashes=new Map<string,string>();let entries=0,total=0,consumed=0;
+ const fingerprint=(row:Awaited<ReturnType<typeof lstat>>)=>[row.dev,row.ino,row.mode,row.size,row.mtimeMs,row.ctimeMs].join(":"),inside=(path:string)=>{if(path.length>policy.maximumPathUnits)throw Error("Finite Print Source path required");return path;};
+ const visit=async(name:string,depth:number):Promise<void>=>{checkResourceLeaseControl(phaseControl);if(++entries>policy.maximumEntries||depth>policy.maximumDepth)throw Error("Print Source inventory capacity exceeded");const parts=name.split("/"),target=inside(join(output,...parts.map(printCompilerName)));const destinationKey=target.normalize("NFC").toLowerCase();if(destinations.has(destinationKey))throw Error("Distinct Print staged Source required");destinations.add(destinationKey);const source=inside(join(root,...parts)),facts=await lstat(source);if(facts.isSymbolicLink())throw Error("Physical Print Source required");if(facts.isFile()){if(facts.nlink!==1||facts.size>policy.maximumFileBytes||facts.size>policy.maximumBytes-total)throw Error("Print Source byte ceiling exceeded");total+=facts.size;files.set(name,target);}else if(facts.isDirectory()){directories.set(source,fingerprint(facts));const directory=await opendir(source);for await(const child of directory){if([".DS_Store","dist",".semio-dark"].includes(child.name))continue;await visit(name+"/"+child.name,depth+1);}if(fingerprint(await lstat(source))!==fingerprint(facts))throw Error("Print Source directory changed while discovering");}else throw Error("Ordinary Print Source node required");};for(const entry of plan.entries)await visit(entry,0);const references=printSourceReferenceMapV1([...directories.keys()].map(path=>relative(root,path).replaceAll("\\","/")).concat([...files.keys()]));await mkdir(output,{recursive:true});
+ for(const[name,target]of files){checkResourceLeaseControl(phaseControl);const source=join(root,...name.split("/")),bytes=await readPrintMaterialFileV1(source,Math.min(policy.maximumFileBytes,policy.maximumBytes-consumed),phaseControl);consumed+=bytes.byteLength;contentHashes.set(source,createHash("sha256").update(bytes).digest("hex"));await mkdir(dirname(target),{recursive:true});if([".tex",".bib",".sty",".cls"].includes(extname(name))){const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);await writeFile(target,printSourceReferenceTextV1(text,references),{flag:"wx"});}else await writeFile(target,bytes,{flag:"wx"});}
+ const recheck=async()=>{checkResourceLeaseControl(phaseControl);for(const[path,expected]of directories)if(fingerprint(await lstat(path))!==expected)throw Error("Consumed Print Source membership changed");for(const[path,expected]of contentHashes)if(createHash("sha256").update(await readPrintMaterialFileV1(path,policy.maximumFileBytes,phaseControl)).digest("hex")!==expected)throw Error("Consumed Print Source bytes changed");checkResourceLeaseControl(phaseControl);};await recheck();return Object.freeze({files,recheck});});});}

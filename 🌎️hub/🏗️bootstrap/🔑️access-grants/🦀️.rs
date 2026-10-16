@@ -13,92 +13,32 @@ use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1
 use futures::StreamExt;
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::TraceOutcome;
-use semio_hub::artifact_authority::creation::ArtifactCreationCommitAuthorityV1;
-use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogAsset, VerifiedExecutionTargetAssets};
-use semio_hub::auth::rate_limit::{RateLimitSubjectV1, StreamLimitClassV1, StreamPermitV1};
-use semio_hub::directory::model::{DocumentScope, SocketSessionBindingStatus};
-use semio_hub::directory::{HubDirectory, HubCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
+use semio_hub_trusted_catalog_descriptor::{TrustedCatalogAsset, VerifiedExecutionTargetAssets};
+use semio_hub_auth::rate_limit::{RateLimitSubjectV1, StreamLimitClassV1};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::model::SocketSessionBindingStatus;
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::{HubCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability};
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Serialize;
-use crate::startup::DocumentOpenCatalogAuthorityV1;
-use crate::support::{DirectoryJson, now_ms, directory_error_status};
-use crate::state::HubState;
-use crate::socket_grants::{SOCKET_GRANT_TTL_MS, SOCKET_PROTOCOL_V1, SocketAudienceV1, SocketSubjectV1, SocketBindingValidityV1, SocketGrantLedgerErrorV1};
-#[cfg(test)]
-use crate::socket_grants::{SESSION_PROTOCOL_V1, SocketGrantRecordV1};
-#[cfg(test)]
-use crate::presence::{db_artifact_id, document_scope_key_v1};
-use crate::open_plan::DocumentOpenPlanAuthorityV1;
-use crate::transport::rate_limit_refusal_response;
-#[cfg(test)]
-use crate::directory_commands::{FencedDirectoryCommandErrorV1, acquire_directory_command_fence, invalidate_directory_event_authority};
-use db::db_storage::PayloadStorage as _;
-
-//#region 🔖️State
-pub(crate) const DOCUMENT_OPEN_PLAN_REQUEST_MAX_BYTES: usize = 8 * 1024;
-
-const DOCUMENT_OPEN_PLAN_DEADLINE_MS: u64 = 10_000;
-
-pub(crate) const DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES: usize = 8 * 1024;
-//#endregion 🔖️State
+use semio_hub_runtime::startup::DocumentOpenCatalogAuthorityV1;
+use semio_hub_runtime::support::{DirectoryJson, now_ms, directory_error_status};
+use semio_hub_state::HubState;
+use semio_hub_ledgers::socket_grants::{SOCKET_GRANT_TTL_MS, SOCKET_PROTOCOL_V1, SocketAudienceV1, SocketSubjectV1, SocketBindingValidityV1, SocketGrantLedgerErrorV1};
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_ledgers::socket_grants::{SESSION_PROTOCOL_V1, SocketGrantRecordV1};
+use semio_hub_ledgers::open_plan::DocumentOpenPlanAuthorityV1;
+use semio_hub_runtime::transport::rate_limit_refusal_response;
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_route_models::directory_commands::FencedDirectoryCommandErrorV1;
+#[cfg(any(test, feature = "testkit"))]
+use crate::directory_commands::{acquire_directory_command_fence, invalidate_directory_event_authority};
+use db::storage::PayloadStorage as _;
 
 //#region 🔖️Rest
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct SocketGrantReceiptV1 {
-    pub(crate) schema: &'static str,
-    pub(crate) protocol: &'static str,
-    pub(crate) grant: String,
-    pub(crate) actor_id: String,
-    pub(crate) expires_at_ms: i64,
-}
 
-/// 📝️ Schema of [`DocumentSocketGrantReceiptV1`] — `os.directory#/$defs/DocumentSocketGrantReceiptV1`.
-pub(crate) const DOCUMENT_SOCKET_GRANT_SCHEMA_V1: &str = "semio.hub.document-socket-grant/v1";
-
-/// 📝️ The answer to a document open-plan exchange: the actor the next `semio.session.v1`
-/// upgrade of the same credential is admitted as, and until when. It carries no secret — the
-/// credential itself is what the upgrade presents.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DocumentSocketGrantReceiptV1 {
-    pub(crate) schema: &'static str,
-    pub(crate) protocol: &'static str,
-    pub(crate) actor_id: String,
-    pub(crate) expires_at_ms: i64,
-}
-
-pub(crate) fn socket_issue_bearer(headers: &HeaderMap) -> Result<String, StatusCode> {
-    let values = headers.get_all(axum::http::header::AUTHORIZATION);
-    if values.iter().count() != 1 {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    let encoded = values.iter().next().and_then(|value| value.to_str().ok()).ok_or(StatusCode::UNAUTHORIZED)?;
-    if encoded.len() > AUTH_TEXT_MAX_BYTES {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    let capability = encoded.strip_prefix("Bearer ").ok_or(StatusCode::UNAUTHORIZED)?;
-    if capability.is_empty() || capability.len() > AUTH_TEXT_MAX_BYTES {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    Ok(capability.to_string())
-}
-
-/// 🙋️ The hub actor id bound to one credential: a session or a share token hashes to the same
-/// actor on every open-plan, socket grant and socket upgrade, so no caller ever names its actor.
-pub(crate) fn socket_actor_id(material: &[u8; 32], stable_session: bool) -> String {
-    let mut digest = Sha256::new();
-    digest.update(b"semio/hub/socket/actor/v1\0");
-    digest.update(if stable_session { b"session".as_slice() } else { b"share".as_slice() });
-    digest.update(material);
-    format!("hub.v1.{}", os_directory::io::binary::artifact_hash::hex_lower(&digest.finalize()))
-}
-
-pub(crate) fn socket_text_bounded(value: &str) -> bool {
-    !value.is_empty() && value.len() <= AUTH_TEXT_MAX_BYTES
-}
-
-pub(crate) async fn socket_binding_validity(state: &HubState, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> SocketBindingValidityV1 {
+pub async fn socket_binding_validity(state: &HubState, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> SocketBindingValidityV1 {
     let validity = tokio::time::timeout(std::time::Duration::from_secs(2), subject.revalidate(state.directory.as_ref(), audience, now_ms())).await.unwrap_or(SocketBindingValidityV1::Unavailable);
     if validity != SocketBindingValidityV1::Active {
         return validity;
@@ -160,7 +100,7 @@ async fn authenticate_document_socket_subject(state: &HubState, scope: &Document
 /// per-actor undo spans reconnects), a share holder's actor is minted per plan (two viewers of one link
 /// stay two presences). The socket upgrade resolves the same subject and admits the pending grant
 /// issued to its binding, so the actor always comes from the hub, never from the caller.
-pub(crate) async fn authenticate_document_credential(state: &HubState, scope: &DocumentScope, bearer: &str) -> Result<(SocketSubjectV1, String), DocumentOpenPlanErrorCodeV1> {
+pub async fn authenticate_document_credential(state: &HubState, scope: &DocumentScope, bearer: &str) -> Result<(SocketSubjectV1, String), DocumentOpenPlanErrorCodeV1> {
     let capability = HubCapability::parse(bearer).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
     let (subject, actor_id) = match capability {
         HubCapability::Session(capability) => {
@@ -195,34 +135,7 @@ pub(crate) async fn authenticate_document_credential(state: &HubState, scope: &D
     Ok((subject, actor_id))
 }
 
-pub(crate) type DocumentOpenPlanRouteError = (StatusCode, DirectoryJson<DocumentOpenPlanErrorV1>);
-
-fn document_open_plan_route_error(status: StatusCode, code: DocumentOpenPlanErrorCodeV1) -> DocumentOpenPlanRouteError {
-    (status, DirectoryJson(DocumentOpenPlanErrorV1 { schema: "semio.hub.document-open-plan-error/v1".into(), code }))
-}
-
-fn document_open_plan_exchange_error(code: DocumentOpenPlanErrorCodeV1) -> DocumentOpenPlanRouteError {
-    let status = match code {
-        DocumentOpenPlanErrorCodeV1::Denied => StatusCode::UNAUTHORIZED,
-        DocumentOpenPlanErrorCodeV1::NotFound => StatusCode::NOT_FOUND,
-        DocumentOpenPlanErrorCodeV1::Expired => StatusCode::GONE,
-        DocumentOpenPlanErrorCodeV1::Stale | DocumentOpenPlanErrorCodeV1::AlreadyConsumed => StatusCode::CONFLICT,
-        DocumentOpenPlanErrorCodeV1::Cancelled => StatusCode::REQUEST_TIMEOUT,
-        DocumentOpenPlanErrorCodeV1::CatalogUnavailable | DocumentOpenPlanErrorCodeV1::ComponentUnavailable | DocumentOpenPlanErrorCodeV1::DeadlineExceeded => StatusCode::SERVICE_UNAVAILABLE,
-    };
-    document_open_plan_route_error(status, code)
-}
-
-pub(crate) fn document_open_checkpoint(checkpoint: PublishedArtifactCheckpoint) -> DocumentOpenCheckpointV1 {
-    DocumentOpenCheckpointV1 {
-        checkpoint_id: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.checkpoint_id.0),
-        descriptor_digest_v1: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.descriptor_digest_v1.0),
-        baseline_frontier: checkpoint.baseline_frontier,
-        aggregate_sha256: os_directory::io::binary::artifact_hash::hex_lower(&checkpoint.aggregate_sha256.0),
-    }
-}
-
-pub(crate) async fn issue_document_open_plan_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<DirectoryJson<DocumentOpenPlanV1>, DocumentOpenPlanRouteError> {
+pub async fn issue_document_open_plan_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<DirectoryJson<DocumentOpenPlanV1>, DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
         || !socket_text_bounded(&document_id)
@@ -297,7 +210,7 @@ pub(crate) async fn issue_document_open_plan_inner(space_id: String, document_id
         client_instance_id_digest,
     };
     authority.validate().map_err(document_open_plan_exchange_error)?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     if let Some(gate) = &state.document_open_plan_issue_gate {
         gate.admitted.add_permits(1);
         gate.release.acquire().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Cancelled))?.forget();
@@ -321,7 +234,7 @@ pub(crate) async fn issue_document_open_plan_inner(space_id: String, document_id
     state.document_open_plans.issue(authority, issued_at_ms, expires_at_ms).map(DirectoryJson).map_err(document_open_plan_exchange_error)
 }
 
-pub(crate) async fn issue_document_open_plan(
+pub async fn issue_document_open_plan(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -330,7 +243,7 @@ pub(crate) async fn issue_document_open_plan(
     if uri.query().is_some() {
         return Err(document_open_plan_route_error(StatusCode::BAD_REQUEST, DocumentOpenPlanErrorCodeV1::Denied));
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     let deadline_ms = state.document_open_plan_deadline_ms.unwrap_or(DOCUMENT_OPEN_PLAN_DEADLINE_MS);
     #[cfg(not(test))]
     let deadline_ms = DOCUMENT_OPEN_PLAN_DEADLINE_MS;
@@ -350,7 +263,7 @@ pub(crate) async fn issue_document_open_plan(
 /// claim a revision the directory has not reached: that pin is forged and stays refused. Whether
 /// this caller still holds this scope is decided by membership and session revocation on their own
 /// paths, which is what closes a removed member's socket in the very same exchange.
-pub(crate) async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<Json<DocumentSocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
+pub async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<Json<DocumentSocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
         || !socket_text_bounded(&document_id)
@@ -403,17 +316,6 @@ pub(crate) async fn issue_document_plan_socket_grant_inner(space_id: String, doc
 }
 
 //#region 🪪️ExecutionTargetLease
-const DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES: usize = 8 * 1024;
-
-const DOCUMENT_EXECUTION_TARGET_DEADLINE_MS: u64 = 8_000;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum DocumentExecutionTargetAssetV1 {
-    Manifest,
-    Component,
-    Descriptor,
-    BrowserActor,
-}
 
 /// 🛡️ One protected document-scoped execution-target read. Every call re-authenticates the exact
 /// session or share binding, reloads the durable descriptor, and resolves the current trusted
@@ -421,7 +323,7 @@ enum DocumentExecutionTargetAssetV1 {
 /// `DocumentOpenIntentV1`; a package id, digest, catalog generation, local path or plan receipt is
 /// never a selector. The private browser verifier rejects independently selected reads that differ
 /// from its open plan; this route rejects authorization or directory changes during one selection.
-pub(crate) async fn document_execution_target_selection(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<(DocumentExecutionTargetLeaseFieldsV1, VerifiedExecutionTargetAssets, RateLimitSubjectV1), DocumentOpenPlanRouteError> {
+pub async fn document_execution_target_selection(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<(DocumentExecutionTargetLeaseFieldsV1, VerifiedExecutionTargetAssets, RateLimitSubjectV1), DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
         || !socket_text_bounded(&document_id)
@@ -508,7 +410,7 @@ pub(crate) async fn document_execution_target_selection(space_id: String, docume
         revalidation: DocumentOpenRevalidationV1 { directory_revision, membership_generation: directory_revision, session_generation, share_generation },
     };
     fields.validate().map_err(document_open_plan_exchange_error)?;
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     if let Some(gate) = &state.document_open_plan_issue_gate {
         gate.admitted.add_permits(1);
         gate.release.acquire().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Cancelled))?.forget();
@@ -562,28 +464,7 @@ async fn issue_document_execution_target(
     }
 }
 
-/// 🌊️ Streams one catalog-verified execution-target asset (the document's component or browser actor, tens of MB) from
-/// the generation it was verified in. The route's deadline bounds the selection that authorizes it, never the transfer:
-/// reading and hashing the whole asset under that deadline answered 503 for every large component once the hub was busy
-/// (ticket 26/09/23 S15: catalog B2 puzzle3d, `execution-target/component` 503 after a slow creation; the plugin-module
-/// twin of this defect was S12-1b). The stream withholds its last chunk until length, SHA-256 and BLAKE3 match, so a
-/// tampered asset ends the body short instead of completing it. It holds `permit`, its slot of the asset stream rule, until
-/// the body ends or the client drops it.
-fn document_execution_target_stream(asset: &TrustedCatalogAsset, permit: StreamPermitV1) -> Result<Response, DocumentOpenPlanRouteError> {
-    let stream = asset.stream().map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::ComponentUnavailable))?;
-    let length = stream.byte_length();
-    let body = axum::body::Body::from_stream(futures::stream::unfold((stream, permit), |(mut stream, permit)| async move {
-        stream.next_chunk().await.map(|chunk| (chunk.map_err(|error| std::io::Error::other(error.to_string())), (stream, permit)))
-    }));
-    Ok((StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, length.to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], body).into_response())
-}
-
-fn document_execution_target_bytes(bytes: &[u8]) -> Response {
-    (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()), (axum::http::header::CONTENT_LENGTH, bytes.len().to_string()), (axum::http::header::CACHE_CONTROL, "no-store".to_string())], bytes.to_vec())
-        .into_response()
-}
-
-pub(crate) async fn issue_document_execution_target_manifest(
+pub async fn issue_document_execution_target_manifest(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -592,7 +473,7 @@ pub(crate) async fn issue_document_execution_target_manifest(
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Manifest, uri, space_id, document_id, state, request).await
 }
 
-pub(crate) async fn issue_document_execution_target_component(
+pub async fn issue_document_execution_target_component(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -601,7 +482,7 @@ pub(crate) async fn issue_document_execution_target_component(
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Component, uri, space_id, document_id, state, request).await
 }
 
-pub(crate) async fn issue_document_execution_target_descriptor(
+pub async fn issue_document_execution_target_descriptor(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -610,7 +491,7 @@ pub(crate) async fn issue_document_execution_target_descriptor(
     issue_document_execution_target(DocumentExecutionTargetAssetV1::Descriptor, uri, space_id, document_id, state, request).await
 }
 
-pub(crate) async fn issue_document_execution_target_browser_actor(
+pub async fn issue_document_execution_target_browser_actor(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -620,7 +501,7 @@ pub(crate) async fn issue_document_execution_target_browser_actor(
 }
 //#endregion 🪪️ExecutionTargetLease
 
-pub(crate) async fn issue_document_plan_socket_grant(
+pub async fn issue_document_plan_socket_grant(
     OriginalUri(uri): OriginalUri,
     Path((space_id, document_id)): Path<(String, String)>,
     State(state): State<HubState>,
@@ -638,10 +519,97 @@ pub(crate) async fn issue_document_plan_socket_grant(
     .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
 }
 
-#[cfg(test)]
-include!("../../🧪️tests/🔬️standalone/🦀️.rs");
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_directory_service::CommandResult;
+use semio_hub_ledgers::access_grants::{DOCUMENT_EXECUTION_TARGET_DEADLINE_MS, DOCUMENT_EXECUTION_TARGET_REQUEST_MAX_BYTES, DOCUMENT_OPEN_PLAN_DEADLINE_MS, DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES, DOCUMENT_OPEN_PLAN_REQUEST_MAX_BYTES, DOCUMENT_SOCKET_GRANT_SCHEMA_V1, DocumentExecutionTargetAssetV1, DocumentOpenPlanRouteError, DocumentSocketGrantReceiptV1, SocketGrantReceiptV1, document_execution_target_bytes, document_execution_target_stream, document_open_checkpoint, document_open_plan_exchange_error, document_open_plan_route_error, socket_actor_id, socket_issue_bearer, socket_text_bounded};
 
-pub(crate) async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+/// 🧪️ A document socket grant without the open-plan route: the credential's subject and actor, a
+/// descriptor-only plan-free admission for socket laws that are not about plan revalidation.
+#[cfg(any(test, feature = "testkit"))]
+pub async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentSocketGrantReceiptV1>, StatusCode> {
+    if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    let scope = DocumentScope::new(space_id, document_id);
+    let (subject, actor_id) = authenticate_document_socket_subject(&state, &scope, &headers).await.map_err(|error| match error {
+        DocumentOpenPlanErrorCodeV1::DeadlineExceeded => StatusCode::SERVICE_UNAVAILABLE,
+        _ => StatusCode::UNAUTHORIZED,
+    })?;
+    let descriptor = state.directory.get_document_descriptor(&scope).await.map_err(directory_error_status)?;
+    if descriptor.is_none() {
+        return Err(StatusCode::NOT_FOUND);
+    }
+    let audience = SocketAudienceV1::Document(scope);
+    let _admission = state.socket_binding_gates.share_record(&subject, &audience).await;
+    if socket_binding_validity(&state, &subject, &audience).await != SocketBindingValidityV1::Active {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let now = now_ms();
+    let binding_expiry = match &subject {
+        SocketSubjectV1::Session { expires_at_ms, .. } | SocketSubjectV1::Share { expires_at_ms, .. } => *expires_at_ms,
+    };
+    let expires_at_ms = now.checked_add(SOCKET_GRANT_TTL_MS).ok_or(StatusCode::SERVICE_UNAVAILABLE)?.min(binding_expiry);
+    state.socket_grants.admit_document_without_plan_for_test(audience, actor_id.clone(), subject, now, expires_at_ms).map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+    Ok(Json(DocumentSocketGrantReceiptV1 { schema: DOCUMENT_SOCKET_GRANT_SCHEMA_V1, protocol: SESSION_PROTOCOL_V1, actor_id, expires_at_ms }))
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub async fn pause_directory_command_authority(state: &HubState, user_id: &str, fenced: bool) {
+    if let Some(gate) = &state.live_gate {
+        if !fenced {
+            gate.directory_command_attempted.add_permits(1);
+        }
+        let pause = gate.directory_command_pause_user.lock().unwrap().as_ref().is_some_and(|(user, phase)| user == user_id && *phase == fenced);
+        if pause {
+            gate.directory_command_admitted.add_permits(1);
+            gate.directory_command_release.acquire().await.expect("directory command test release").forget();
+        }
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub async fn pause_directory_command_membership_fence(state: &HubState) {
+    if let Some(test_gate) = &state.live_gate {
+        if test_gate.socket_membership_remove_enabled.load(std::sync::atomic::Ordering::Acquire) {
+            test_gate.socket_membership_remove_admitted.add_permits(1);
+            let _ = test_gate.socket_membership_remove_release.acquire().await;
+        }
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub async fn pause_admin_effect_started(state: &HubState) {
+    if let Some(gate) = &state.live_gate {
+        if gate.admin_effect_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
+            gate.admin_effect_admitted.add_permits(1);
+            gate.admin_effect_release.acquire().await.expect("administrator effect test release").forget();
+        }
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActor, command: DirectoryCommand) -> Result<(Vec<DirectoryEvent>, Option<CommandResult>), FencedDirectoryCommandErrorV1> {
+    let _authority = acquire_directory_command_fence(state, Vec::new(), &command).await?;
+    if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
+        pause_directory_command_membership_fence(state).await;
+    }
+    let result = state.directory_service.execute(actor, command).await.map_err(FencedDirectoryCommandErrorV1::Directory)?;
+    invalidate_directory_event_authority(state, &result.0);
+    Ok(result)
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketGrantRecordV1, mode: u8) {
+    let Some(gate) = &state.live_gate else { return };
+    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return };
+    let pause = gate.socket_global_send_pause.lock().expect("global send pause").clone();
+    if matches!(&record.audience, SocketAudienceV1::Directory { .. }) && pause.as_ref().is_some_and(|(recipient, point)| recipient == user_id && *point == mode) {
+        gate.socket_global_send_admitted.add_permits(1);
+        gate.socket_global_send_release.acquire().await.expect("global send release").forget();
+    }
+}
+
+pub async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
     if !body.is_empty() {
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -654,7 +622,7 @@ pub(crate) async fn issue_directory_socket_grant(headers: HeaderMap, State(state
     issue_socket_grant(&state, subject, audience, actor_id).await
 }
 
-pub(crate) async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
+pub async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) || !body.is_empty() {
         return Err(StatusCode::BAD_REQUEST);
     }

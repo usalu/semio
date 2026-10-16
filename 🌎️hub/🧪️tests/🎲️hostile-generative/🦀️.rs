@@ -2,7 +2,14 @@
 //! route's own request and drawn frame sequences on every socket, from deterministic language-neutral seeds, within a
 //! bounded time, and shrinks what it finds before reporting it with its seed.
 
-use super::*;
+use semio_hub_state::HubState;
+use semio_hub_route_testkit::{RawHttpResponse, hostile_http_request, issue_test_session};
+use semio_framework_hash::Sha256;
+use std::net::SocketAddr;
+use futures::StreamExt;
+use tokio_tungstenite::tungstenite::Message as WsMessage;
+#[cfg(test)]
+use axum::extract::Query;
 
 /// 🧫️ The fixture this law and its language-neutral oracle (`🧪️tests/🚧️hostile-input/🟦️.ts`) read.
 const HOSTILE_FIXTURE: &str = include_str!("../🧫️fixtures/🚧️hostile-input-v1/🔣️.json");
@@ -217,7 +224,7 @@ fn judge_generated(answer: &Result<RawHttpResponse, String>, method: &str, route
         return Some(HostileFindingV1::ServerFailure);
     }
     let head = response.headers.to_ascii_lowercase();
-    if !head.lines().any(|line| line.starts_with(&format!("{}: ", semio_hub::refusal::HUB_REFUSAL_HEADER))) {
+    if !head.lines().any(|line| line.starts_with(&format!("{}: ", semio_hub_refusal::HUB_REFUSAL_HEADER))) {
         return Some(HostileFindingV1::UntypedRefusal);
     }
     None
@@ -330,6 +337,20 @@ where
 
 mod long {
     use super::*;
+#[cfg(test)]
+use axum::body::Bytes;
+#[cfg(test)]
+use directory::os_directory::{DirectorySpaceRole, DirectorySpaceVisibility};
+#[cfg(test)]
+use protocol::Lane;
+#[cfg(test)]
+use axum::extract::{Path, State};
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_session_routes::access_grants::issue_document_socket_grant_fixture;
+use tokio_tungstenite::tungstenite::Message as WsMessage;
+use semio_hub_route_testkit::{announce_document_for_test, bearer_headers, create_space_for_test, document_socket_request, issue_test_session, run_socket_test, socket_hello, socket_request, spawn_server, test_state, upsert_member_for_test};
+use tokio_tungstenite::connect_async;
+use semio_hub_session_routes::access_grants::issue_directory_socket_grant;
 
     /// 🎲️ The draws are the fixture's language-neutral vectors.
     #[test]

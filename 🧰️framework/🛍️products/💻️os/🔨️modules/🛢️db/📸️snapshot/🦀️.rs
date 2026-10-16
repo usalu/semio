@@ -39,13 +39,16 @@
 //! `db_storage::LeaseStorage` so an in-flight replica read isn't pruned out from under it belongs
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_durability::EpochFence;
-use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::*;
+use db_durability::EpochFence;
+use db_durability::Frontier;
+use db_ids::{ArtifactId, DbError, check_len};
+use db_ids::GenerationId;
+use pack::ContentHash;
 use db_state::Page;
-use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
+use db_io_core::{LeaseInfo, LeaseStorage, SnapshotStorage};
 
 //#region 🔖️Descriptor
 /// 🔢️ Wire format tag for `SnapshotDescriptor::encode`/`decode` — bumped on any
@@ -295,14 +298,14 @@ async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>
 /// `semio_framework_pack_source::PackSource` — the mechanism this crate uses to open one generation's own pack structure
 /// (`PackFile::open_manifest`, `read_footer_only`) at an arbitrary offset inside a larger
 /// multi-generation concatenation, without touching any `pack_format` private internals.
-#[cfg(test)]
-struct SubSource<'a> {
+#[cfg(any(test, feature = "testkit"))]
+pub struct SubSource<'a> {
     inner: &'a [u8],
     base: u64,
     len: u64,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'a> semio_framework_pack_source::PackSource for SubSource<'a> {
     async fn len(&self) -> u64 {
         self.len
@@ -319,7 +322,7 @@ impl<'a> semio_framework_pack_source::PackSource for SubSource<'a> {
 
 #[derive(Clone, Copy)]
 struct PageSubSource<'pages> {
-    inner: &'pages db_storage::DbIoPages,
+    inner: &'pages db_io_core::DbIoPages,
     base: u64,
     len: u64,
 }
@@ -492,7 +495,7 @@ async fn decode_snapshot_descriptor(source: &impl semio_framework_pack_source::P
 
 //#region 🔖️Generation
 struct SnapshotPageSink {
-    writer: db_storage::DbIoPageWriter,
+    writer: db_io_core::DbIoPageWriter,
 }
 
 impl semio_framework_pack_source::PackSink for SnapshotPageSink {
@@ -516,7 +519,7 @@ impl semio_framework_pack_source::PackSink for SnapshotPageSink {
 
 impl SnapshotPageSink {
     fn try_new() -> Result<Self, DbError> {
-        let writer = db_storage::DbIoPageWriter::try_reserve(db_storage::DB_IO_OPERATION_PAGES).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        let writer = db_io_core::DbIoPageWriter::try_reserve(db_io_core::DB_IO_OPERATION_PAGES).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
         Ok(Self { writer })
     }
 
@@ -558,8 +561,8 @@ impl SnapshotPageSink {
         Ok(())
     }
 
-    async fn into_pages(self) -> Result<db_storage::DbIoPages, DbError> {
-        self.writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    async fn into_pages(self) -> Result<db_io_core::DbIoPages, DbError> {
+        self.writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)
     }
 }
 
@@ -641,7 +644,7 @@ impl SnapshotPageSource for OptionalSnapshotPages<'_> {
 /// trailer. If `parent_footer_position` is `Some`, the trailing footer's `prev_footer_offset` is
 /// patched in place afterward (see module doc) and `REQUIRED_FOOTER_CHAIN` is set in both the
 /// header and the footer's `required_flags`.
-async fn build_generation_page_source<P: SnapshotPageSource + ?Sized>(descriptor: &SnapshotDescriptor, new_pages: &P, parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn build_generation_page_source<P: SnapshotPageSource + ?Sized>(descriptor: &SnapshotDescriptor, new_pages: &P, parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     if new_pages.len() != descriptor.new_pages.len() {
         return Err(DbError::InvalidArgument("new_pages count does not match descriptor.new_pages".to_string()));
     }
@@ -750,7 +753,7 @@ async fn write_retained_publication_descriptor<P: SnapshotPageSource + ?Sized>(s
     snapshot_segment_write_varint(segment, body.created_at_ms).await
 }
 
-async fn build_generation_retained_expected<P: SnapshotPageSource + ?Sized>(document: &ArtifactId, generation: u64, body: &SnapshotBody, new_pages: &P, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn build_generation_retained_expected<P: SnapshotPageSource + ?Sized>(document: &ArtifactId, generation: u64, body: &SnapshotBody, new_pages: &P, control: &mut SnapshotCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     let required_flags = if new_pages.is_empty() { 0 } else { pack::REQUIRED_CHUNKED };
     let options = pack::os_pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
     let mut writer = pack::PackWriter::begin(SnapshotPageSink::try_new()?, &options).await?;
@@ -789,7 +792,7 @@ async fn build_generation_retained_expected<P: SnapshotPageSource + ?Sized>(docu
     writer.finish(&manifest).await?.into_pages().await
 }
 
-pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>, control: &mut SnapshotCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     build_generation_page_source(descriptor, new_pages, parent_footer_position, control).await
 }
 
@@ -797,7 +800,7 @@ pub async fn build_generation_pages(descriptor: &SnapshotDescriptor, new_pages: 
 async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
     let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let mut pages = build_generation_pages(descriptor, new_pages, parent_footer_position, &mut control).await?;
-    let mut prepared = db_storage::db_io_prepare_platform(&pages)?.await?;
+    let mut prepared = db_io_registry::db_io_prepare_platform(&pages)?.await?;
     let output = prepared.as_slice().to_vec();
     let _ = prepared.close_step()?;
     drop(prepared);
@@ -853,21 +856,21 @@ impl GenerationHandle {
     }
 }
 
-#[cfg(test)]
-async fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Footer) -> Result<GenerationHandle, DbError> {
+#[cfg(any(test, feature = "testkit"))]
+pub async fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Footer) -> Result<GenerationHandle, DbError> {
     let sub = SubSource { inner: combined, base, len };
     let mut control = SnapshotCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
     let descriptor = decode_snapshot_descriptor(&sub, &mut control).await?;
     Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
 }
 
-async fn open_generation_pages_at(combined: &db_storage::DbIoPages, base: u64, len: u64, footer: &pack::Footer, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
+async fn open_generation_pages_at(combined: &db_io_core::DbIoPages, base: u64, len: u64, footer: &pack::Footer, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
     let sub = PageSubSource { inner: combined, base, len };
     let descriptor = decode_snapshot_descriptor(&sub, control).await?;
     Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
 }
 
-async fn open_latest_pages(combined: &db_storage::DbIoPages, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
+async fn open_latest_pages(combined: &db_io_core::DbIoPages, control: &mut SnapshotCursorControl) -> Result<GenerationHandle, DbError> {
     control.grant()?;
     let whole = PageSubSource { inner: combined, base: 0, len: combined.len() as u64 };
     let footer = pack::read_footer_only(&whole).await?;
@@ -881,7 +884,7 @@ async fn open_latest_pages(combined: &db_storage::DbIoPages, control: &mut Snaps
 /// 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
 /// at `combined.len() - FOOTER_SIZE`) — the entry point for reading a freshly-fetched or
 /// freshly-materialized retained chain.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub async fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
     let whole = SubSource { inner: combined, base: 0, len: combined.len() as u64 };
     let footer = pack::read_footer_only(&whole).await?;
@@ -1001,15 +1004,15 @@ impl SnapshotPolicy {
 /// `db_storage::SnapshotStorage` backend: publish (`build_generation` + `write_generation`), load,
 /// chain materialization, retention, and verification.
 pub struct SnapshotManager<'storage, S: SnapshotStorage> {
-    storage: &'storage S,
+    pub storage: &'storage S,
 }
 
 //#region 🔖️ChainCursor
 /// ⏳️ One resumable snapshot-chain grant authority.
 pub struct SnapshotCursorControl {
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    deadline: std::time::Instant,
-    fuel: usize,
+    pub cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub deadline: std::time::Instant,
+    pub fuel: usize,
 }
 
 impl SnapshotCursorControl {
@@ -1029,7 +1032,7 @@ impl SnapshotCursorControl {
         Ok(())
     }
 
-    fn grant(&mut self) -> Result<(), DbError> {
+    pub fn grant(&mut self) -> Result<(), DbError> {
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
             return Err(DbError::Unavailable("snapshot cursor cancelled".to_string()));
         }
@@ -1045,12 +1048,12 @@ impl SnapshotCursorControl {
 /// prepared platform slot per grant.
 #[must_use]
 pub struct SnapshotChainCursor<'manager, 'storage, S: SnapshotStorage> {
-    manager: &'manager SnapshotManager<'storage, S>,
-    document: &'manager ArtifactId,
+    pub manager: &'manager SnapshotManager<'storage, S>,
+    pub document: &'manager ArtifactId,
     through_generation: u64,
-    control: SnapshotCursorControl,
+    pub control: SnapshotCursorControl,
     operation: Option<u64>,
-    closed: bool,
+    pub closed: bool,
 }
 
 impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'storage, S> {
@@ -1077,7 +1080,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
         self.descriptor_at(generation).await.map(|(descriptor, _)| descriptor)
     }
 
-    pub async fn read_page(&mut self, hash: ContentHash) -> Result<db_storage::DbIoPages, DbError> {
+    pub async fn read_page(&mut self, hash: ContentHash) -> Result<db_io_core::DbIoPages, DbError> {
         let mut generation = Some(self.through_generation);
         while let Some(current) = generation {
             self.control.grant()?;
@@ -1089,9 +1092,9 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
                 let sub = PageSubSource { inner: &source, base: handle.base, len: handle.len };
                 let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard).await?;
                 let mut cursor = file.identity_chunk_cursor(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard)?;
-                let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(source.operation(), usize::try_from(cursor.len()).map_err(|_| DbError::LimitExceeded("snapshot identity chunk length"))?.div_ceil(db_storage::DB_IO_PAGE_BYTES))
-                    .map_err(db_storage::DbIoPageWriterRejected::into_error)?;
-                let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+                let mut writer = db_io_core::DbIoPageWriter::try_reserve_for_operation(source.operation(), usize::try_from(cursor.len()).map_err(|_| DbError::LimitExceeded("snapshot identity chunk length"))?.div_ceil(db_io_core::DB_IO_PAGE_BYTES))
+                    .map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
+                let mut fragment = [0u8; db_io_core::DB_IO_PAGE_BYTES];
                 loop {
                     self.control.grant()?;
                     let read = cursor.read_fragment(&mut fragment).await?;
@@ -1105,7 +1108,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
                 drop(cursor);
                 drop(file);
                 drop(source);
-                return writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error);
+                return writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error);
             }
             generation = handle.descriptor.parent_generation;
             drop(source);
@@ -1113,7 +1116,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
         Err(DbError::NotFound(format!("page {hash} not found anywhere in the snapshot chain")))
     }
 
-    pub async fn materialize_pages(&mut self) -> Result<db_storage::DbIoPages, DbError> {
+    pub async fn materialize_pages(&mut self) -> Result<db_io_core::DbIoPages, DbError> {
         let mut root = self.through_generation;
         let mut current = Some(self.through_generation);
         let mut total = 0usize;
@@ -1123,11 +1126,11 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
             total = total.checked_add(len).ok_or(DbError::LimitExceeded("snapshot chain bytes"))?;
             current = descriptor.parent_generation;
         }
-        let page_count = total.div_ceil(db_storage::DB_IO_PAGE_BYTES);
-        if page_count > db_storage::DB_IO_OPERATION_PAGES {
+        let page_count = total.div_ceil(db_io_core::DB_IO_PAGE_BYTES);
+        if page_count > db_io_core::DB_IO_OPERATION_PAGES {
             return Err(DbError::LimitExceeded("snapshot chain page reservation"));
         }
-        let mut writer = db_storage::DbIoPageWriter::try_reserve(page_count).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        let mut writer = db_io_core::DbIoPageWriter::try_reserve(page_count).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
         self.operation = Some(writer.operation());
         let mut expected_parent = None;
         for generation in root..=self.through_generation {
@@ -1148,7 +1151,7 @@ impl<'manager, 'storage, S: SnapshotStorage> SnapshotChainCursor<'manager, 'stor
             }
             drop(source);
         }
-        writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+        writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)
     }
 
     pub fn close_step(&mut self) -> Result<bool, DbError> {
@@ -1239,7 +1242,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             SnapshotOrigin::Incremental => {
                 let parent_generation = latest.ok_or_else(|| DbError::InvalidArgument("cannot publish an incremental snapshot with no prior generation".to_string()))?;
                 let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-                let control = SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), db_storage::DB_IO_OPERATION_PAGES * 8)?;
+                let control = SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), db_io_core::DB_IO_OPERATION_PAGES * 8)?;
                 let mut cursor = self.chain_cursor(document, parent_generation, control);
                 let mut combined = cursor.materialize_pages().await?;
                 let parent_footer_position = combined.len() as u64 - pack::FOOTER_SIZE as u64;
@@ -1353,7 +1356,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level).await?;
         for index in 0..handle.descriptor.new_pages.len() {
             let mut cursor = file.identity_chunk_cursor(pack::ChunkId(index as u32), level)?;
-            let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+            let mut fragment = [0u8; db_io_core::DB_IO_PAGE_BYTES];
             while cursor.read_fragment(&mut fragment).await? != 0 {
                 control.grant()?;
             }

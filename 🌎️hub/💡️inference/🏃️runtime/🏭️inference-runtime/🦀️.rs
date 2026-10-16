@@ -1,27 +1,30 @@
 //! 🏭️ HubInferenceRuntimeV1: the hub inference authority and its frozen-identity helpers.
 
 use super::*;
+use semio_hub_inference_runtime_contract::{DOCUMENT_GATE_CAPACITY, GisMapApprovalCommitErrorV1, GisMapApprovalCommitRequestV1, GisMapApprovalCommitterV1, GisMapApprovalIngressAuthorityV1, GisMapApprovalOutcomeV1, GisMapApprovalUndoCommitReceiptV1, GisMapApprovalUndoCommitRequestV1, GisMapPreparedUndoCommandV1, InferenceMapBaseV1, InferenceOperationAdmissionV1, InferenceProposalV1, InferenceRouteErrorV1, InferenceRunKeyV1, RetainedInferenceRunSupervisorV1, RetainedInferenceRunV1, WORK_UNIT_LIMIT, approval_actor, approval_mutation_id, approval_stamp_v1, document_key, fresh_now_ms, gis_map_storage_refusal, inference_budget};
 
 /// 🏃️ The hub's only inference authority: frozen binding, ledger, gates, retained cancellation.
 pub struct HubInferenceRuntimeV1 {
-    pub(super) binding: Arc<VerifiedGisMapArtifactBindingV1>,
-    pub(super) ledger: Arc<InferenceJobLedgerV1>,
+    pub binding: Arc<VerifiedGisMapArtifactBindingV1>,
+    pub ledger: Arc<InferenceJobLedgerV1>,
     supervisor: RetainedInferenceRunSupervisorV1,
     document_gates: Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
-    pub(super) committer: Arc<dyn GisMapApprovalCommitterV1>,
+    pub committer: Arc<dyn GisMapApprovalCommitterV1>,
+    pub(super) proposals: Arc<dyn MapInferenceProposalBindingV1>,
     #[cfg(feature = "integration-fixtures")]
     pub(super) checkpoint_test_gate: Mutex<Option<Arc<InferenceCheckpointTestGateV1>>>,
 }
 
 impl HubInferenceRuntimeV1 {
-    /// 🧊️ Binds one process-lifetime runtime to an already-verified GIS Map selection.
-    pub fn new(binding: Arc<VerifiedGisMapArtifactBindingV1>, ledger: Arc<InferenceJobLedgerV1>, committer: Arc<dyn GisMapApprovalCommitterV1>) -> Self {
+    /// 🧊️ Binds one process-lifetime runtime to an already-verified GIS Map selection and the registered proposal binding.
+    pub fn new(binding: Arc<VerifiedGisMapArtifactBindingV1>, ledger: Arc<InferenceJobLedgerV1>, committer: Arc<dyn GisMapApprovalCommitterV1>, proposals: Arc<dyn MapInferenceProposalBindingV1>) -> Self {
         Self {
             binding,
             ledger,
             supervisor: RetainedInferenceRunSupervisorV1::new(),
             document_gates: Mutex::new(HashMap::new()),
             committer,
+            proposals,
             #[cfg(feature = "integration-fixtures")]
             checkpoint_test_gate: Mutex::new(None),
         }
@@ -37,6 +40,10 @@ impl HubInferenceRuntimeV1 {
 
     pub fn committer(&self) -> &Arc<dyn GisMapApprovalCommitterV1> {
         &self.committer
+    }
+
+    pub fn proposals(&self) -> &Arc<dyn MapInferenceProposalBindingV1> {
+        &self.proposals
     }
 
     /// 🧪️ Installs one exact pause at the real native codec checkpoint for physical race laws.
@@ -85,9 +92,9 @@ impl HubInferenceRuntimeV1 {
         self.supervisor.reap_finished_operations().await
     }
 
-    pub(super) fn install_operation<F, Fut>(&self, receipt: &super::super::sqlite::InferenceLedgerJobRowV1, identity: &InferenceIdentityV1, now_ms: u64, control: Arc<InferenceOperationControlV1>, task: F) -> Result<InferenceOperationAdmissionV1, InferenceRouteErrorV1>
+    pub(super) fn install_operation<F, Fut>(&self, receipt: &semio_hub_inference_ledger::InferenceLedgerJobRowV1, identity: &InferenceIdentityV1, now_ms: u64, control: Arc<InferenceOperationControlV1>, task: F) -> Result<InferenceOperationAdmissionV1, InferenceRouteErrorV1>
     where
-        F: FnOnce(super::super::sqlite::InferenceRunClaimV1, oneshot::Receiver<()>, OwnedSemaphorePermit) -> Fut,
+        F: FnOnce(semio_hub_inference_ledger::InferenceRunClaimV1, oneshot::Receiver<()>, OwnedSemaphorePermit) -> Fut,
         Fut: Future<Output = ()> + Send + 'static,
     {
         let mut operations = self.supervisor.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
@@ -131,21 +138,9 @@ impl HubInferenceRuntimeV1 {
         control: &InferenceOperationControlV1,
         checkpoint: &mut dyn FnMut(u64, u64) -> Result<(), InferenceRouteErrorV1>,
     ) -> Result<InferenceProposalV1, InferenceRouteErrorV1> {
-        use directory::FromValue;
-        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let _ = identity;
-        let budgets = semio_framework_plugin::WireArtifactInferenceBudget { allocation_bytes: ALLOCATION_BYTES, work_units: WORK_UNIT_LIMIT, recursion_depth: RECURSION_DEPTH };
-        let request = semio_framework_plugin::ArtifactInferenceExecutionRequest {
-            policy: b"gis-map-v1",
-            budgets: &budgets,
-            cancellation_id: job_id,
-            previous_state: None,
-            requested_cache_mode: semio_framework_plugin::WireArtifactInferenceCacheMode::Cold,
-            canonical_payload: base.pack.as_slice(),
-            dependencies: &[],
-        };
         let mut failure: Option<InferenceRouteErrorV1> = None;
-        let execution = semio_s_artifact_gis_gismap::infer_gis_map_controlled(&request, &mut |completed| {
+        let run = self.proposals.infer(base.pack.as_slice(), job_id, &inference_budget(), &mut |completed| {
             if let Err(error) = control.checkpoint(completed) {
                 failure = Some(error.into());
                 return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
@@ -156,30 +151,22 @@ impl HubInferenceRuntimeV1 {
             }
             Ok(())
         });
-        let execution = match execution {
-            Ok(execution) => execution,
-            Err(_) => return Err(failure.unwrap_or(InferenceRouteErrorV1::Invalid)),
+        let run = match run {
+            Ok(run) => run,
+            Err(MapBindingRefusalV1::Execution) => return Err(failure.unwrap_or(InferenceRouteErrorV1::Invalid)),
+            Err(refusal) => return Err(refusal.into()),
         };
-        let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let proposal_bytes = semio_framework_pack_json::to_json_string(&mutation).into_bytes();
-        let proposal = InferencePrivateBytesV1::new(proposal_bytes, PROPOSAL_MAX_BYTES)?;
+        let proposal = InferencePrivateBytesV1::new(run.proposal, PROPOSAL_MAX_BYTES)?;
         let proposal_hash = sha256(proposal.as_slice());
-        Ok(InferenceProposalV1 { result: InferencePrivateBytesV1::new(execution.canonical_payload, RESULT_MAX_BYTES)?, proposal, proposal_hash })
+        Ok(InferenceProposalV1 { result: InferencePrivateBytesV1::new(run.result, RESULT_MAX_BYTES)?, proposal, proposal_hash })
     }
 
     /// ✍️ Rebuilds the sole `CreateRegion` and its inverse server-side and stamps one canonical envelope.
     pub fn server_stamped_command(&self, identity: &InferenceIdentityV1, job_id: &str, base: &InferenceMapBaseV1, proposal_hash: &str, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<InferencePrivateBytesV1, InferenceRouteErrorV1> {
-        use semio_s_artifact_gis_gismap::mutations::inverse_gis_map_mutation;
-        let (snapshot, inference) = deterministic_map_inference(base, job_id)?;
-        let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let proposal_bytes = semio_framework_pack_json::to_json_string(&mutation).into_bytes();
-        if sha256(&proposal_bytes) != proposal_hash {
+        let effect = self.proposals.approval_effect(base.pack.as_slice(), job_id, &inference_budget())?;
+        if sha256(&effect.forward) != proposal_hash {
             return Err(InferenceRouteErrorV1::Conflict);
         }
-        let inverse = inverse_gis_map_mutation(&snapshot, &mutation);
-        let inverse_bytes = semio_framework_pack_json::to_json_string(&inverse).into_bytes();
         let mutation_id = approval_mutation_id(job_id, proposal_hash);
         let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
         let bytes = encode_server_stamped_command_v1(&CanonicalInferenceCommandPartsV1 {
@@ -187,44 +174,31 @@ impl HubInferenceRuntimeV1 {
             document_id: &document_key(&scope),
             actor: &approval_actor(identity),
             diff_schema: GIS_DOCUMENT_SCHEMA,
-            diff_payload: &proposal_bytes,
+            diff_payload: &effect.forward,
             inverse_schema: GIS_DOCUMENT_SCHEMA,
-            inverse_payload: &inverse_bytes,
+            inverse_payload: &effect.inverse,
             timestamp: approval_stamp_v1(document_clock, now_ms),
         })?;
-        Ok(InferencePrivateBytesV1::new(bytes, super::super::command::COMMAND_MAX_BYTES)?)
+        Ok(InferencePrivateBytesV1::new(bytes, semio_hub_inference::command::COMMAND_MAX_BYTES)?)
     }
 
     /// ↩️ Rebuilds the original fixed-three work and stamps only its exact typed inverse.
-    pub(super) fn server_stamped_undo_command(&self, target: &super::super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
-        use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
-        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
-        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
-
+    pub(super) fn server_stamped_undo_command(&self, target: &semio_hub_inference_ledger::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
         if sha256(target.original_command.as_slice()) != target.original_command_hash {
             return Err(InferenceRouteErrorV1::Conflict);
         }
         let original = CanonicalInferenceCommandV1::decode(target.original_command.as_slice()).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let inverse_text = std::str::from_utf8(original.inverse_payload()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        let inverses = semio_framework_pack_json::from_json_str::<Vec<GisMapMutation>>(inverse_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        if inverses.len() != 1 {
-            return Err(InferenceRouteErrorV1::Conflict);
-        }
-        let current = <semio_s_artifact_gis_gismap::GisMapSnapshot as pack::snapshot::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-        let mut before = current.clone();
-        apply_gis_map_mutation(&mut before, &inverses[0]).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let work = GisMapInference::infer(&before).create_region_group_work(&before, &target.original_job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
-        let original_forward = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
-        let original_inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
+        let effect = self.proposals.undo_effect(base.pack.as_slice(), original.inverse_payload(), &target.original_job_id)?;
+        let original_forward = effect.original_forward;
+        let original_inverse = effect.original_inverse;
         let actor = format!("user:{}#session:{}", target.user_id, target.session_id);
         if target.original_mutation_id != approval_mutation_id(&target.original_job_id, &sha256(&original_forward))
             || !original.matches_fixed_three_parent(&target.original_mutation_id, &document_key(&target.scope), &actor, &original_forward, &original_inverse)
         {
             return Err(InferenceRouteErrorV1::Conflict);
         }
-        let diff = semio_framework_pack_json::to_json_string(&inverses[0]).into_bytes();
-        let inverse = semio_framework_pack_json::to_json_string(&vec![work.parent]).into_bytes();
+        let diff = effect.forward;
+        let inverse = effect.inverse;
         let operation_id = sha256(format!("semio.hub.gis-map-approval-undo-operation/v1\0{}\0{idempotency_key}", target.target_id).as_bytes())[..32].to_owned();
         let proposal_hash = sha256(&diff);
         let mutation_id = approval_mutation_id(&operation_id, &proposal_hash);
@@ -239,7 +213,7 @@ impl HubInferenceRuntimeV1 {
             timestamp: approval_stamp_v1(document_clock, now_ms),
         })?;
         let command_hash = sha256(&bytes);
-        Ok(GisMapPreparedUndoCommandV1 { operation_id, proposal_hash, mutation_id, command_hash, command: InferencePrivateBytesV1::new(bytes, super::super::command::COMMAND_MAX_BYTES)? })
+        Ok(GisMapPreparedUndoCommandV1 { operation_id, proposal_hash, mutation_id, command_hash, command: InferencePrivateBytesV1::new(bytes, semio_hub_inference::command::COMMAND_MAX_BYTES)? })
     }
 
     /// 🧾️ Hands the prepared envelope to the composition transaction and reconciles only its witness.
@@ -255,12 +229,12 @@ impl HubInferenceRuntimeV1 {
         document_write: Arc<tokio::sync::Mutex<()>>,
         ingress: Arc<dyn GisMapApprovalIngressAuthorityV1>,
     ) -> Result<GisMapApprovalOutcomeV1, InferenceRouteErrorV1> {
-        commit_prepared_approval(&self.committer, identity, job_id, proposal_hash, command, base, deadline_ms, now_ms, document_write, ingress).await
+        commit_prepared_approval(&self.committer, self.proposals.as_ref(), identity, job_id, proposal_hash, command, base, deadline_ms, now_ms, document_write, ingress).await
     }
 
     pub(super) async fn commit_undo(
         &self,
-        target: &super::super::sqlite::GisMapApprovalUndoTargetV1,
+        target: &semio_hub_inference_ledger::GisMapApprovalUndoTargetV1,
         idempotency_key: &str,
         prepared: &GisMapPreparedUndoCommandV1,
         base: &InferenceMapBaseV1,
@@ -269,7 +243,7 @@ impl HubInferenceRuntimeV1 {
         document_write: Arc<tokio::sync::Mutex<()>>,
         ingress: Arc<dyn GisMapApprovalIngressAuthorityV1>,
     ) -> Result<GisMapApprovalUndoCommitReceiptV1, InferenceRouteErrorV1> {
-        let composed_children = base.composed_children()?;
+        let composed_children = base.composed_children(self.proposals.as_ref())?;
         let actor = format!("user:{}#session:{}", target.user_id, target.session_id);
         self.committer
             .undo(GisMapApprovalUndoCommitRequestV1 {
@@ -301,7 +275,7 @@ impl HubInferenceRuntimeV1 {
 }
 
 /// 🔍️ Compares one frozen binding plus scope, document, frontier and base-pack digest, exactly.
-pub fn compare_frozen_identity(frozen: &super::super::schema::InferenceBindingIdentityV1, identity: &InferenceIdentityV1, scope: &DocumentScope, base: &InferenceMapBaseV1) -> Result<(), InferenceRouteErrorV1> {
+pub fn compare_frozen_identity(frozen: &semio_hub_inference::schema::InferenceBindingIdentityV1, identity: &InferenceIdentityV1, scope: &DocumentScope, base: &InferenceMapBaseV1) -> Result<(), InferenceRouteErrorV1> {
     if identity.binding != *frozen {
         return Err(InferenceRouteErrorV1::Conflict);
     }
@@ -323,6 +297,7 @@ pub fn compare_frozen_identity(frozen: &super::super::schema::InferenceBindingId
 #[allow(clippy::too_many_arguments)]
 pub async fn commit_prepared_approval(
     committer: &Arc<dyn GisMapApprovalCommitterV1>,
+    proposals: &dyn MapInferenceProposalBindingV1,
     identity: &InferenceIdentityV1,
     job_id: &str,
     proposal_hash: &str,
@@ -337,8 +312,8 @@ pub async fn commit_prepared_approval(
     if ingress.scope() != &scope || ingress.user_id() != identity.user_id || ingress.session_id() != identity.session_id || ingress.authorization_generation() != identity.authorization_generation {
         return Err(InferenceRouteErrorV1::Denied);
     }
-    let composed_children = base.composed_children()?;
-    if composed_children.as_slice() != ["gismap-drawing", "gismap-value"] {
+    let composed_children = base.composed_children(proposals)?;
+    if composed_children.as_slice() != proposals.commit_members() {
         return Err(InferenceRouteErrorV1::CommitUnavailable);
     }
     let receipt = committer
@@ -367,4 +342,20 @@ pub async fn commit_prepared_approval(
             GisMapApprovalCommitErrorV1::Storage => InferenceRouteErrorV1::Storage,
         })?;
     Ok(GisMapApprovalOutcomeV1 { applied: receipt.applied, undo: receipt.undo })
+}
+
+/// 🔒️ The private input and authorities retained until the blocking worker is joined.
+pub(super) struct RetainedInferenceRunOwnerV1 {
+    pub(super) runtime: Arc<HubInferenceRuntimeV1>,
+    pub(super) directory: Arc<semio_hub_directory_dispatch::HubDirectories>,
+    pub(super) rebootstrap: Arc<semio_hub_lag_rebootstrap::VerifiedRebootstrapSource>,
+    pub(super) gate: Arc<tokio::sync::Mutex<()>>,
+    pub(super) scope: DocumentScope,
+    pub(super) identity: InferenceIdentityV1,
+    pub(super) job_id: String,
+    pub(super) expires_at_ms: u64,
+    pub(super) claim: semio_hub_inference_ledger::InferenceRunClaimV1,
+    pub(super) base: InferenceMapBaseV1,
+    pub(super) control: Arc<InferenceOperationControlV1>,
+    pub(super) _permit: OwnedSemaphorePermit,
 }

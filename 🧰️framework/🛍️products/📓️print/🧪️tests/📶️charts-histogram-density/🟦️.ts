@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -6,7 +7,7 @@
 // #region 🔌️Adapters
 import { bin, deviation, quantileSorted, ticks as d3ticks } from "d3-array";
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -24,7 +25,7 @@ const SORTED = [...SAMPLE].sort((a, b) => a - b);
 
 /** 🎯️ Compiles one committed fixture of this case and returns its whole projection. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.input(`shared://📶️charts-histogram-density/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://📶️charts-histogram-density/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
 }
 

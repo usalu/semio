@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -24,7 +25,7 @@
 // #region 🔌️Adapters
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { compileVizProbe, roundProbeNumbers, type ProbeProjection, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { roundProbeNumbers, type ProbeProjection, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -92,7 +93,7 @@ export function showcaseProjection(records: readonly ProbeRecord[], families: re
  */
 async function subject(ctx: AdapterContext, fixture: string, families: readonly string[]): Promise<{ projection: ProbeProjection }> {
   const records = roundProbeNumbers(
-    await compileVizProbe(ctx.input(fixture), { workDir: ctx.workDir, caseName: CASE }),
+    await compileAdapterVizProbeV1(ctx,ctx.input(fixture), { caseName: CASE }),
     DECIMALS,
   );
   return { projection: showcaseProjection(records, families) };

@@ -1,0 +1,41 @@
+{
+ "parent": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📡️protocol/🦀️.rs",
+ "sha1": "7928307a7feeadfdef8b62a4fa494575917af531",
+ "near_scan": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/**/*.rs"
+ ],
+ "far_scan": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧩️domain-adapter/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌉️domain-impl/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌿️vcs-feature/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎬️actions-a/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧭️dispatch/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🛠️adapter-ops/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🔤️argument-helpers/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🔗️linear-memory/🦀️.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧵️dag-input/🦀️.rs"
+ ],
+ "children": [
+  {
+   "folder": "🪢️domain",
+   "mod": "domain",
+   "doc": "🪢️ The `FlowDomain` trait: what a Flow bridge session asks of the domain that serves its operations.",
+   "lo": 116,
+   "hi": 125,
+   "chk_lo": "pub trait FlowDomain",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🌉️bridge",
+   "mod": "bridge",
+   "doc": "🌉️ The Flow bridge runtime: sessions, operations, request and event tables and the owned ABI port.",
+   "lo": 240,
+   "hi": 793,
+   "chk_lo": "struct FlowSession<D> {",
+   "chk_hi": "}",
+   "far_vis": "pub"
+  }
+ ]
+}

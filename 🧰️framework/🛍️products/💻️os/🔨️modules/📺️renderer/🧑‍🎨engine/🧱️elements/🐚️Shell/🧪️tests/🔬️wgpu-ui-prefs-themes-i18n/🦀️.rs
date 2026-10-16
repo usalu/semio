@@ -126,11 +126,11 @@ fn shell_pref_locks_reads_the_four_lockable_envs() {
 fn load_ui_prefs_once_prefers_a_lock_over_storage() {
     let previous = with_boot_locks(crate::WgpuBootLocks { appearance: "dark".to_string(), ..Default::default() });
     let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    state.load_ui_prefs_once();
-    assert_eq!(state.appearance_id, "dark");
-    state.appearance_id = "light".to_string();
-    state.load_ui_prefs_once();
-    assert_eq!(state.appearance_id, "light");
+    state.prefs.load_ui_prefs_once(&mut state.chrome);
+    assert_eq!(state.prefs.appearance_id, "dark");
+    state.prefs.appearance_id = "light".to_string();
+    state.prefs.load_ui_prefs_once(&mut state.chrome);
+    assert_eq!(state.prefs.appearance_id, "light");
     crate::apply_boot_descriptor(previous).expect("restored boot descriptor");
 }
 
@@ -151,20 +151,20 @@ fn load_ui_prefs_once_prefers_a_lock_over_storage() {
 #[test]
 fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
     let mut state = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    state.load_ui_prefs_once();
-    let after_load = state.chrome_present.last_synced_preferences.clone();
+    state.prefs.load_ui_prefs_once(&mut state.chrome);
+    let after_load = state.chrome.chrome_present.last_synced_preferences.clone();
     assert!(after_load.is_some());
-    state.persist_ui_prefs_if_changed();
-    let after_noop_persist = state.chrome_present.last_synced_preferences.clone();
+    state.prefs.persist_ui_prefs_if_changed(&mut state.chrome);
+    let after_noop_persist = state.chrome.chrome_present.last_synced_preferences.clone();
     assert!(after_load == after_noop_persist);
-    let original_driver_id = state.driver_id.clone();
+    let original_driver_id = state.prefs.driver_id.clone();
     let toggled_driver_id = if original_driver_id == "compact" { "default" } else { "compact" };
-    state.driver_id = toggled_driver_id.to_string();
-    state.persist_ui_prefs_if_changed();
-    let after_change = state.chrome_present.last_synced_preferences.clone();
+    state.prefs.driver_id = toggled_driver_id.to_string();
+    state.prefs.persist_ui_prefs_if_changed(&mut state.chrome);
+    let after_change = state.chrome.chrome_present.last_synced_preferences.clone();
     assert!(after_change != after_noop_persist);
-    state.driver_id = original_driver_id;
-    state.persist_ui_prefs_if_changed();
+    state.prefs.driver_id = original_driver_id;
+    state.prefs.persist_ui_prefs_if_changed(&mut state.chrome);
 }
 
 /// 🧪️ `resolve_theme_for_ids("semio", _)` is exactly `resolve_theme` (the pre-WP14 behavior),

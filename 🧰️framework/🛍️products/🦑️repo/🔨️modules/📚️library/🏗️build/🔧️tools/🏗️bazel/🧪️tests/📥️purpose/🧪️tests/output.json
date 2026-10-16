@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "valid",
+    "accepted": true
+  },
+  {
+    "kind": "oversize",
+    "accepted": false
+  },
+  {
+    "kind": "excess-lines",
+    "accepted": false
+  },
+  {
+    "kind": "foreign-variant",
+    "accepted": false
+  }
+]

@@ -1,5 +1,16 @@
+//! 🧱️ Bridge_quick of the bridge crate: Shell bridge connection handle, outbox and agent conversation.
 
-use super::*;
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
+use crate::session::{BRIDGE_BROADCAST_MAX_RECIPIENTS, BRIDGE_OUTBOX_MAX_BYTES, BRIDGE_OUTBOX_MAX_ITEMS, BRIDGE_OUTBOX_MAX_PAGES, BRIDGE_OUTBOX_PAGE_BYTES, BridgeBroadcastCompletion, BridgeBroadcastCursor, BridgeBroadcastStep, BridgeEncodedFrame, BridgeHandle, BridgeOutbox, BridgeRecipientState, ShellConnectionId};
+use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, BRIDGE_INBOUND_MAX_FIELD_BYTES, BRIDGE_INBOUND_PAGE_BYTES, BRIDGE_VERSION, BridgeFlags, BridgeInstanceRef, GatewayToShell, ShellDecodeFault, ShellDecodeStep, ShellKind, ShellMaterializeStep, ShellToGateway, ShellToGatewayDecodeCursor, ShellToGatewayMaterializeCursor, bridge_wire_field_len};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn bounded_shell_decode(bytes: &[u8]) -> Result<ShellToGateway, ShellDecodeFault> {
     let mut decoder = ShellToGatewayDecodeCursor::new(bytes.len());
@@ -101,6 +112,7 @@ fn sample_gateway_frames() -> Vec<GatewayToShell> {
 }
 
 //#region 🔖️RoundTrip
+
 #[test]
 fn every_shell_to_gateway_variant_round_trips_through_encode_decode() {
     for frame in sample_shell_frames() {
@@ -448,9 +460,11 @@ fn terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_cre
     drop(state);
     assert!(handle.close_one_terminal_retired_page());
 }
+
 //#endregion 🔖️RoundTrip
 
 //#region 🔖️FixtureParity
+
 /// 🧬️ The anti-drift mechanism: `🧫️fixtures/📨️frames.json` holds `{direction, variant, frame, hex}`
 /// rows. For each row this test (a) deserializes `frame` via serde into the real enum, (b) hand-
 /// encodes it and compares to `hex`, and (c) hex-decodes `hex` and compares the result back to the
@@ -458,7 +472,7 @@ fn terminal_broadcast_close_returns_one_exact_original_and_cancels_recipient_cre
 /// codec. The TS twin runs the mirror-image check against the SAME file.
 #[test]
 fn every_fixture_round_trips_through_the_rust_codec() {
-    let raw = include_str!("../🧫️fixtures/📨️frames.json");
+    let raw = fixture_text("../../../🧵️bridge/🧪️tests/🧫️fixtures/📨️frames.json");
     let rows: Vec<serde_json::Value> = serde_json::from_str(raw).expect("🧫️fixtures/📨️frames.json must parse");
     assert!(!rows.is_empty(), "fixture file must not be empty");
     let mut shell_to_gateway_count = 0;
@@ -497,4 +511,5 @@ fn encode_hex(bytes: &[u8]) -> String {
 fn decode_hex(hex: &str) -> Vec<u8> {
     (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("valid hex")).collect()
 }
+
 //#endregion 🔖️FixtureParity

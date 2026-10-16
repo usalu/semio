@@ -2,239 +2,11 @@
 use super::*;
 
 //#region 📮️RuntimeMailbox
-#[derive(Clone,Copy,PartialEq,Eq)]
-pub(crate) enum FramePreparationStep { Pending, Complete, Cancelled, Fault }
-
-pub(crate) struct AppFramePreparation {
-    pub(crate) retained: semio_framework_job::RetainedCloneGrant,
-    pub(crate) params: Option<semio_framework_job_worker_authority::BatchJobParams>,
-    pub(crate) params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    pub(crate) worker_semantic_pending: bool,
-    pub(crate) outcome_pending: Option<FramePreparationStep>,
-    pub(crate) outcome_acknowledged: bool,
-    pub(crate) refused_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
-    pub(crate) job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
-    pub(crate) job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
-    pub(crate) input_candidate: Option<shell::PresentedInputCandidateWitness>,
-    pub(crate) session: Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
-    pub(crate) engine_packets: Option<FrameEnginePackets>,
-    pub(crate) generation: semio_framework_trace::Generation,
-    pub(crate) cursor: SemioCursor,
-    pub(crate) theme_dark: bool,
-    pub(crate) fullscreen: Option<bool>,
-    pub(crate) cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
-    pub(crate) terminal: bool,
-    pub(crate) fault: Option<&'static str>,
-}
-
-/// 🪙️ Compares actual child demand with the five unchanged incoming frame axes.
-fn frame_retirement_permits(grant: semio_framework_job::RetainedCloneGrant, demand: semio_framework_value::RetirementDemand) -> bool {
-    grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth
-}
-
-impl AppFramePreparation {
-    /// 🩺️ Why this preparation refused, for the ONE caller that must not swallow it.
-    ///
-    /// 🩸️ Every refusal here became an empty `StepOutcome::Fault`/`Cancelled`, and `ActiveFrameBuild`
-    /// answered it by cancelling its own token — no fault recorded, no log, no quarantine. A single
-    /// unbound raster producer therefore ended every frame build after the reference image decoded and
-    /// the shell presented ONE frame per boot with a completely silent console (ticket
-    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md`).
-    pub(crate) fn fault(&self) -> Option<&'static str> {
-        self.fault
-    }
-
-    pub(crate) fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
-        self.session.as_ref().and_then(semio_framework_job_worker::BatchJobSession::callback_verdict)
-    }
-
-    pub(crate) fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_value::ValueError> {
-        use semio_framework_job::{JobOutcomeView};
-use semio_framework_job_worker::{WorkerJobPoll};
-        use semio_framework_value::{ValueError,ValueRefusalKind};
-        let refuse=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
-        if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused")); }
-        if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected")); }
-        if self.job.is_some() && self.params.is_none() {
-            let Some(cancel)=cx.admit_original_cancel_alias()? else { return Ok(FramePreparationStep::Pending); };
-            self.params=Some(semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
-            return Ok(FramePreparationStep::Pending);
-        }
-        if self.job.is_some() {
-            if let Some((session,_already_received))=semio_framework_job_worker::BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)? { self.session=Some(session); }
-            return Ok(FramePreparationStep::Pending);
-        }
-        let session=self.session.as_mut().ok_or_else(||refuse("original prepared render session is absent"))?;
-        if let Some(outcome)=self.outcome_pending {
-            if !self.outcome_acknowledged {
-                let step=session.acknowledge_outcome(cx.retained_grant());
-                cx.consume_retained(step.progress())?;
-                self.outcome_acknowledged=matches!(step,semio_framework_value::RetainedCloneStep::Complete(_));
-                return Ok(FramePreparationStep::Pending);
-            }
-            if outcome==FramePreparationStep::Pending {
-                session.resume().map_err(|_|refuse("original prepared worker resume was refused"))?;
-                self.worker_semantic_pending=false;self.outcome_pending=None;self.outcome_acknowledged=false;
-                return Ok(FramePreparationStep::Pending);
-            }
-            self.terminal=true;
-            return Ok(outcome);
-        }
-        if !self.worker_semantic_pending {
-            if !matches!(session.step(cx.retained_grant()),Ok(WorkerJobPoll::Outcome|WorkerJobPoll::Terminal)) || !session.checkout_outcome() { return Ok(FramePreparationStep::Pending); }
-            if let Some((issued,progress))=session.take_checked_out_retained_step_receipt() {
-                let remaining=cx.retained_grant();
-                let expected=RetainedCloneGrant { maximum_items:remaining.maximum_items.min(self.retained.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(self.retained.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(self.retained.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(self.retained.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(self.retained.maximum_depth) };
-                self.worker_semantic_pending=true;
-                let received=cx.consume_retained(progress);
-                if issued!=expected || !progress.fits(issued) || received.is_err() { self.refused_receipt=Some((issued,progress));return Err(received.err().unwrap_or_else(||refuse("original prepared worker tuple differs from issued authority"))); }
-                return Ok(FramePreparationStep::Pending);
-            }
-            return Err(refuse("original prepared worker omitted its checked-out physical receipt"));
-        }
-        self.outcome_pending=Some(match session.checked_out_outcome()? {
-            None|Some(JobOutcomeView::Yield { .. })=>FramePreparationStep::Pending,
-            Some(JobOutcomeView::Complete { .. })=>FramePreparationStep::Complete,
-            Some(JobOutcomeView::Cancelled { .. })=>{self.fault=Some("prepared render job was cancelled");FramePreparationStep::Cancelled},
-            Some(JobOutcomeView::Fault { .. }|JobOutcomeView::PreviewReady { .. }|JobOutcomeView::CheckpointReady { .. })=>{self.fault=Some("prepared render job refused its terminal candidate");FramePreparationStep::Fault},
-        });
-        Ok(FramePreparationStep::Pending)
-    }
-
-    pub(crate) fn take_presentation(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<AppFramePresentation>,semio_framework_value::ValueError> {
-        if !self.terminal || !self.outcome_acknowledged {
-            return Ok(None);
-        }
-        let grant=cx.retained_grant();
-        if grant.maximum_items==0 || grant.maximum_depth==0 { return Ok(None); }
-        if self.engine_packets.is_none() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame engine packets are absent")); }
-        let Some(packet)=self.session.as_mut().and_then(|session|session.checked_out_job_mut()).and_then(|job|job.take_packet())else{return Ok(None)};
-        cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
-        if let Some(session)=self.session.as_mut(){session.begin_close();}
-        Ok(Some(AppFramePresentation {
-            retained: self.retained,
-            packet: Some(packet),
-            input_candidate: self.input_candidate.take(),
-            engine_packets: self.engine_packets.take().expect("original frame engine packets validated before publication"),
-            generation: self.generation,
-            cursor: self.cursor,
-            theme_dark: self.theme_dark,
-            fullscreen: self.fullscreen,
-            cursor_wake: self.cursor_wake.take(),
-            #[cfg(not(target_arch = "wasm32"))]
-            job_progress: self.job_progress.take(),
-        }))
-    }
-
-    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
-        discard_frame_input_candidate(runtime, &mut self.input_candidate)
-    }
-
-    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, witness: Option<&semio_framework_job::CancelToken>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
-        let grant=cx.retained_grant();
-        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
-        if self.job_rejected.is_some() { return frame_receive_close(frame_unpriced_child(),cx); }
-        if self.params.is_some() {
-            if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
-            let params=self.params.take().expect("original prepared params selected before paid transfer");
-            self.params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));
-            return frame_receive_close(frame_inline_progress(0),cx);
-        }
-        if let Some(original)=self.params_cancel_retirement.as_mut() {
-            if !original.terminal_is_empty() {
-                let Some(witness)=witness else{return Ok(InteractiveJobCloseStep::Blocked)};
-                return frame_receive_close(match original.return_alias_step(witness,grant) {
-                    Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
-                    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
-                    Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
-                },cx);
-            }
-            if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
-            self.params_cancel_retirement=None;
-            return frame_receive_close(frame_inline_progress(0),cx);
-        }
-        if let Some(job) = self.job.as_mut() {
-            use semio_framework_job::InteractiveJob;
-            job.begin_close();
-            if !job.terminal_is_empty() {
-                return frame_received_child(job.close_step(cx), grant, job.terminal_is_empty());
-            }
-            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderJob>>();
-            if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
-            self.job = None;
-            return frame_receive_close(frame_inline_progress(bytes),cx);
-        }
-        if let Some(session) = self.session.as_mut() {
-            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-                session.begin_close();
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-            }
-            if let Some(witness)=witness {
-                match session.has_original_cancel_alias_witness(witness) {
-                    Ok(true)=>return frame_receive_close(match session.return_original_cancel_alias_step(witness,grant) {
-                        Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
-                        Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
-                        Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),
-                    },cx),
-                    Ok(false)=>{},
-                    Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
-                    Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
-                }
-            }
-            if !session.terminal_is_empty() { let step=session.close_step(cx)?;return frame_worker_child_step(step, grant, session.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from); }
-            let bytes = std::mem::size_of::<Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>>();
-            if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
-            self.session = None;
-            return frame_receive_close(frame_inline_progress(bytes),cx);
-        }
-        if self.cursor_wake.is_some() {
-            let bytes = std::mem::size_of::<Option<infinite_world::world::WorldCursorWakeToken>>();
-            if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
-            self.cursor_wake = None;
-            return frame_receive_close(frame_inline_progress(bytes),cx);
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if self.job_progress.is_some() { return frame_receive_close(frame_unpriced_child(),cx); }
-        if let Some(packets) = self.engine_packets.as_mut() {
-            if !packets.terminal_is_empty() {
-                if !packets.is_empty() { return frame_receive_close(frame_unpriced_child(),cx); }
-                return frame_receive_close(frame_child_step(packets.close_backing_step(grant), grant, packets.terminal_is_empty()),cx);
-            }
-            let bytes = std::mem::size_of::<Option<FrameEnginePackets>>();
-            if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
-            self.engine_packets = None;
-            return frame_receive_close(frame_inline_progress(bytes),cx);
-        }
-        if self.worker_semantic_pending || self.outcome_pending.is_some() || self.outcome_acknowledged || self.refused_receipt.is_some() {
-            if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
-            self.worker_semantic_pending=false;self.outcome_pending=None;self.outcome_acknowledged=false;self.refused_receipt=None;
-            return frame_receive_close(frame_inline_progress(0),cx);
-        }
-        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
-    }
-
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.params.is_none() && self.params_cancel_retirement.is_none() && !self.worker_semantic_pending && self.outcome_pending.is_none() && !self.outcome_acknowledged && self.refused_receipt.is_none() && self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                self.job_progress.is_none()
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                true
-            }
-        }
-    }
-}
-
 pub(crate) struct AppPresenter {
     pub(crate) gpu: GpuContext,
     pub(crate) engine: engine_canvas::EngineCanvasPresenter,
     pub(crate) gate: ui_wgpu::wgpu::PreparedRenderGate,
-    pub(crate) runtime: RuntimeMailbox,
+    pub(crate) runtime: AppMailbox,
     pub(crate) presentation_authority: RuntimePresentationAuthority,
     pub(crate) raster_operation_authority: RuntimeRasterOperationAuthority,
     pub(crate) window: Option<Arc<Window>>,
@@ -388,12 +160,12 @@ struct AppPresentCursor {
     engine: usize,
     upload: usize,
     witness: Option<ui_wgpu::wgpu::PreparedPresenterWitness>,
-    raster_witness: Option<ui_wgpu::wgpu::RasterTextureWitness>,
+    raster_witness: Option<ui_gpu::RasterTextureWitness>,
     raster_keep: ui_wgpu::wgpu::PreparedRasterKeepCursorV1,
     raster_keep_steps: usize,
     input_wait: AppPresentInputWait,
     input_progress: u64,
-    gpu_cursor: Option<ui_wgpu::wgpu::PreparedGpuPresentCursor>,
+    gpu_cursor: Option<ui_gpu::PreparedGpuPresentCursor>,
     retained_control_deadline: Option<f64>,
     shell_clock_deadline: Option<f64>,
 }
@@ -404,7 +176,7 @@ struct AppPresentedRetirement {
     raster: RasterCandidateRetirement,
     acknowledged_eviction: usize,
     acknowledged_upload_scan: usize,
-    acknowledged_versions: [u64; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+    acknowledged_versions: [u64; ui_gpu::MESH_GPU_KEEP_VERSION_CAPACITY],
     acknowledged_version_count: usize,
     release_previous_raster_ownership: bool,
     unowned_rasters_retired: bool,
@@ -413,8 +185,8 @@ struct AppPresentedRetirement {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum RasterCandidateRetirement {
     Infer,
-    Abort(ui_wgpu::wgpu::RasterTextureWitness),
-    Commit(ui_wgpu::wgpu::RasterTextureWitness),
+    Abort(ui_gpu::RasterTextureWitness),
+    Commit(ui_gpu::RasterTextureWitness),
     Complete,
 }
 
@@ -436,49 +208,6 @@ pub(crate) enum AppPresentStep {
     },
 }
 
-impl AppFramePresentation {
-    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
-        discard_frame_input_candidate(runtime, &mut self.input_candidate)
-    }
-
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep,semio_framework_value::ValueError> {
-        if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
-        if let Some(packet) = self.packet.as_mut() {
-            if !packet.retirement_is_empty() { return frame_child_step(packet.close_step(grant), grant, packet.retirement_is_empty()); }
-            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderPacket>>();
-            if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
-            self.packet = None;
-            return frame_inline_progress(bytes);
-        }
-        if !self.engine_packets.terminal_is_empty() {
-            if !self.engine_packets.is_empty() { return frame_unpriced_child(); }
-            return frame_child_step(self.engine_packets.close_backing_step(grant), grant, self.engine_packets.terminal_is_empty());
-        }
-        if self.cursor_wake.is_some() {
-            let bytes = std::mem::size_of::<Option<infinite_world::world::WorldCursorWakeToken>>();
-            if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
-            self.cursor_wake = None;
-            return frame_inline_progress(bytes);
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if self.job_progress.is_some() { return frame_unpriced_child(); }
-        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
-    }
-
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.input_candidate.is_none() && self.engine_packets.terminal_is_empty() && self.cursor_wake.is_none() && {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                self.job_progress.is_none()
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                true
-            }
-        }
-    }
-}
-
 impl AppPresentedRetirement {
     fn new(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>) -> Self {
         Self {
@@ -487,14 +216,14 @@ impl AppPresentedRetirement {
             raster: RasterCandidateRetirement::Infer,
             acknowledged_eviction: 0,
             acknowledged_upload_scan: 0,
-            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_versions: [0; ui_gpu::MESH_GPU_KEEP_VERSION_CAPACITY],
             acknowledged_version_count: 0,
             release_previous_raster_ownership: false,
             unowned_rasters_retired: false,
         }
     }
 
-    fn abort(previous: ui_wgpu::wgpu::PreparedRenderPacket, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
+    fn abort(previous: ui_wgpu::wgpu::PreparedRenderPacket, witness: ui_gpu::RasterTextureWitness) -> Self {
         let raster = RasterCandidateRetirement::Abort(witness);
         Self {
             previous: Some(previous),
@@ -502,21 +231,21 @@ impl AppPresentedRetirement {
             raster,
             acknowledged_eviction: 0,
             acknowledged_upload_scan: 0,
-            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_versions: [0; ui_gpu::MESH_GPU_KEEP_VERSION_CAPACITY],
             acknowledged_version_count: 0,
             release_previous_raster_ownership: false,
             unowned_rasters_retired: false,
         }
     }
 
-    fn commit(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
+    fn commit(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>, witness: ui_gpu::RasterTextureWitness) -> Self {
         Self {
             previous,
             completed_frame: None,
             raster: RasterCandidateRetirement::Commit(witness),
             acknowledged_eviction: 0,
             acknowledged_upload_scan: 0,
-            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_versions: [0; ui_gpu::MESH_GPU_KEEP_VERSION_CAPACITY],
             acknowledged_version_count: 0,
             release_previous_raster_ownership: true,
             unowned_rasters_retired: false,
@@ -712,7 +441,7 @@ impl AppPresenter {
     fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor, upload_progress: (u32, u32, usize)) -> Option<String> {
         note_present_stall_signature(
             watch,
-            (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps, cursor.input_wait, cursor.input_progress),
+            (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_gpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps, cursor.input_wait, cursor.input_progress),
         )
     }
 
@@ -746,7 +475,7 @@ impl AppPresenter {
                     self.pending = Some(cursor);
                     return Ok(false);
                 };
-                if !interaction.shell.discard_presented_input_candidate(input_candidate) {
+                if !interaction.shell.input.discard_presented_input_candidate(input_candidate) {
                     self.pending = Some(cursor);
                     return Err("presenter close lost its staged input witness".to_string());
                 }
@@ -893,7 +622,7 @@ impl AppPresenter {
     pub(crate) fn present_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(AppPresentStep::Pending)}
         if let Some(cursor)=self.pending.as_mut().filter(|cursor|cursor.phase==AppPresentPhase::Media){
-            let Ok(runtime)=self.runtime.try_lock()else{return Ok(AppPresentStep::RetryRuntime)};let Some(interaction)=runtime.interaction.as_ref()else{return Ok(AppPresentStep::AwaitingRuntime)};if !interaction.shell.drive_presented_media_slots(&mut cursor.media_collect,&mut cursor.media_slots,cx)?{return Ok(AppPresentStep::Pending)}cursor.phase=AppPresentPhase::ProgressAcknowledge;return Ok(AppPresentStep::Pending)
+            let Ok(runtime)=self.runtime.try_lock()else{return Ok(AppPresentStep::RetryRuntime)};let Some(interaction)=runtime.interaction.as_ref()else{return Ok(AppPresentStep::AwaitingRuntime)};if !interaction.shell.input.drive_presented_media_slots(&mut cursor.media_collect,&mut cursor.media_slots,cx)?{return Ok(AppPresentStep::Pending)}cursor.phase=AppPresentPhase::ProgressAcknowledge;return Ok(AppPresentStep::Pending)
         }
         let owner = self.pending.as_ref().map(|cursor| (cursor.frame.generation.0, cursor.phase.latency_stage())).or_else(|| {
             self.has_pending_presentation().then(|| {
@@ -973,7 +702,7 @@ impl AppPresenter {
                     let runtime = self.runtime.clone();
                     let Ok(mut runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
                     let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::Pending) };
-                    if !interaction.shell.discard_presented_input_candidate(input_candidate) {
+                    if !interaction.shell.input.discard_presented_input_candidate(input_candidate) {
                         return Err("aborted presentation lost its staged input witness".to_string());
                     }
                     cursor.frame.input_candidate = None;
@@ -1169,7 +898,7 @@ impl AppPresenter {
                 }
                 let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::AwaitingRuntime) };
                 let AppInteractionState { shell, input, .. } = interaction;
-                match shell.progress_presented_input_candidate(input, input_candidate) {
+                match shell.input.progress_presented_input_candidate(input, input_candidate) {
                     interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
                     interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
@@ -1186,7 +915,7 @@ impl AppPresenter {
                         return Ok(AppPresentStep::Pending);
                     }
                 }
-                if !shell.presented_input_candidate_matches(input_candidate) {
+                if !shell.input.presented_input_candidate_matches(input_candidate) {
                     drop(runtime);
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.witness = None;
@@ -1307,13 +1036,13 @@ impl AppPresenter {
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("prepared frame input candidate witness was missing before acknowledgement".to_string());
                 };
-                if !interaction.shell.presented_input_candidate_matches(input_candidate) {
+                if !interaction.shell.input.presented_input_candidate_matches(input_candidate) {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("prepared frame input authority was stale before acknowledgement".to_string());
                 }
                 let AppInteractionState { shell, input, .. } = interaction;
-                match shell.progress_presented_input_candidate(input, input_candidate) {
+                match shell.input.progress_presented_input_candidate(input, input_candidate) {
                     interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
                     interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
                         cursor.input_wait = AppPresentInputWait::SceneIntent;
@@ -1328,13 +1057,13 @@ impl AppPresenter {
                         return Err("prepared frame input authority was stale before acknowledgement".to_string());
                     }
                 }
-                if !shell.acknowledge_presented_input(input, input_candidate) {
+                if !crate::shell::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
                 cursor.has_animated_primitives = packet.has_animated_primitives();
-                cursor.retained_control_deadline = shell.presented_retained_clock_deadline();
+                cursor.retained_control_deadline = shell.input.presented_retained_clock_deadline();
                 if let Some(now_us) = semio_framework_job::default_now_us() {
-                    cursor.shell_clock_deadline = shell.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms());
+                    cursor.shell_clock_deadline = shell.surfaces.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms(), &shell.chrome, &shell.tutorial);
                 }
                 cursor.frame.input_candidate = None;
                 let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };
@@ -1422,6 +1151,63 @@ impl AppPresenter {
 
     pub(crate) fn engine_surfaces_terminal_is_empty(&self) -> bool {
         self.engine.terminal_is_empty()
+    }
+}
+//#endregion 📮️RuntimeMailbox
+
+//#region 📮️RuntimeMailbox
+impl AppPresenter {
+    /// 🌍️ Plan section 5.3, inversion I3: the world3d dynamic-resource close step needs the presenter's GPU and the mailbox's runtime, so it lives with the presenter and borrows the mailbox.
+    pub(crate) fn close_world3d_dynamic_step(&mut self,mailbox:&AppMailbox,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+        if cx.retirement_should_yield(){return Ok(false)}
+        if !mailbox.close_renderer_asset_step() {
+            return Ok(false);
+        }
+        let Ok(mut runtime) = mailbox.try_lock() else {
+            return Ok(false);
+        };
+        let Some(interaction) = runtime.interaction_mut() else {
+            drop(runtime);
+            return Ok(mailbox.close_world_cursor_wake_step());
+        };
+        if !interaction.shell.opening.close_icon_export_step(cx)? {
+            return Ok(false);
+        }
+        if interaction.shell.surfaces.advance_world3d_retirement_step() {
+            if let Some(fault)=interaction.shell.surfaces.world3d_retirement_fault() {mailbox.record_frame_fault(&format!("retired terrain owner refused: {fault:?}"));}
+            return Ok(false);
+        }
+        let Ok(mut cursor) = mailbox.0.world3d_close_cursor.try_lock() else {
+            return Ok(false);
+        };
+        let Some(state) = interaction.shell.surfaces.world3d_states.get_mut_at(*cursor) else {
+            drop(cursor);
+            drop(runtime);
+            return Ok(mailbox.close_world_cursor_wake_step());
+        };
+        if world3d_dynamic_retirement_terminal_is_empty(state) {
+            *cursor += 1;
+            return Ok(false);
+        }
+        if state.dynamic_retirement_is_idle() {
+            begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets);
+            return Ok(false);
+        }
+        let terrain_grant=cx.retained_grant();
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,cx);
+        if !terrain.ownership.fits(terrain_grant) {return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"world3d terrain retirement receipt exceeded caller grant").with_retained_progress(terrain.ownership),cx));}
+        cx.consume_retained(terrain.ownership)?;
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{mailbox.record_frame_fault(&format!("world3d terrain retirement refused: {fault:?}"));return Ok(false);}
+        }
+        let gpu_return=infinite_world::world::world3d_return_native_mesh_gpu_step(&mut state.scene,cx.retained_grant(),|key,source|self.gpu.retire_original_mesh_source_step(key,source)).map_err(|_|semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original World GPU source return refused")))?;
+        cx.consume_retained(gpu_return)?;if gpu_return.copied_items!=0{cx.consume_fuel(1);return Ok(false)}
+        if step_world3d_dynamic_retirement(state, cx) && world3d_dynamic_retirement_terminal_is_empty(state) {
+            *cursor += 1;
+        }
+        Ok(false)
     }
 }
 //#endregion 📮️RuntimeMailbox

@@ -1,7 +1,8 @@
 //! 🧪️ Actual window wrapper backing stays in custody until independently funded retirement.
 use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement,OwnedValueRetirementFactory}};
 use std::sync::Arc;
-pub(crate) fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
+#[doc(hidden)]
+pub fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
 pub(crate) fn close_with<T:RetireOwned>(value:T,mut pump:impl FnMut()){
  let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();
  let grant=crate::app_testing::artifact_app_laws::fixture_mounted_policy().close;

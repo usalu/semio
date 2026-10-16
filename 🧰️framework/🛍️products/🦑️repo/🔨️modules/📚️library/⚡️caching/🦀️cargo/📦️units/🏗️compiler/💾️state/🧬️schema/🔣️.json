@@ -1,0 +1,482 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "chargeBytes": 4294967296,
+        "parentMetadataBytes": 67108864,
+        "maximumBackingBytes": 4227858432,
+        "filesystemBytes": 4226809856,
+        "maximumSlots": 8,
+        "maximumCatalogBytes": 32768,
+        "maximumEntries": 262144,
+        "maximumDepth": 64,
+        "maximumPathBytes": 256,
+        "maximumPending": 32,
+        "maximumOutputBytes": 16777216,
+        "maximumOutputLines": 65536,
+        "namespace": "cs",
+        "workDirectory": "w",
+        "slotDirectory": "i",
+        "catalogFile": "slots.json",
+        "chargeFile": "compiler-state.json",
+        "intentFile": "compiler-state.intent.json",
+        "volumeDirectory": "v",
+        "initialCompilerFloorBytes": 4294967296
+      }
+    },
+    "Slot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "context",
+        "content",
+        "state",
+        "sequence",
+        "digest"
+      ],
+      "properties": {
+        "slot": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "context": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "content": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "state": {
+          "enum": [
+            "clean",
+            "dirty"
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sequence",
+        "slots"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740990
+        },
+        "slots": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "slot",
+              "context",
+              "content",
+              "state",
+              "sequence",
+              "digest"
+            ],
+            "properties": {
+              "slot": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7
+              },
+              "context": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "content": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "state": {
+                "enum": [
+                  "clean",
+                  "dirty"
+                ]
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "digest": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "state",
+        "context",
+        "content",
+        "active"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "state": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "sequence",
+            "slots"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740990
+            },
+            "slots": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "slot",
+                  "context",
+                  "content",
+                  "state",
+                  "sequence",
+                  "digest"
+                ],
+                "properties": {
+                  "slot": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7
+                  },
+                  "context": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "content": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "state": {
+                    "enum": [
+                      "clean",
+                      "dirty"
+                    ]
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "digest": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "context": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "content": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "active": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "directory",
+        "policy"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "policy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "directory",
+        "policy",
+        "owner",
+        "bytes",
+        "receipt",
+        "dev",
+        "ino",
+        "size"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "policy": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "owner": {
+          "const": "repo:compiler-state:prototype"
+        },
+        "bytes": {
+          "const": 4294967296
+        },
+        "receipt": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Funding": {
+      "type": "object",
+      "required": [
+        "version",
+        "availableBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "availableBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ChargeBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "candidates",
+        "binding",
+        "intent",
+        "directoryPresent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "candidates": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          }
+        },
+        "binding": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "directoryPresent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Environment": {
+      "type": "object",
+      "maxProperties": 512,
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string",
+            "maxLength": 32768
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "EnvironmentPolicy": {
+      "const": {
+        "maximumEntries": 512,
+        "maximumBytes": 2097152,
+        "maximumNameBytes": 128,
+        "maximumValueBytes": 32768,
+        "semanticName": "^SEMIO_[A-Za-z0-9_]+$",
+        "machine": [
+          "PATH",
+          "SystemRoot",
+          "WINDIR",
+          "PATHEXT",
+          "RUSTUP_HOME",
+          "RUSTC_BOOTSTRAP",
+          "RUST_MIN_STACK"
+        ],
+        "owned": [
+          "SEMIO_SCRIPT_PROCESS_INVOCATION",
+          "SEMIO_COMPILER_CAPACITY_HELD",
+          "SEMIO_COMPILER_PARALLELISM",
+          "TMPDIR",
+          "TMP",
+          "TEMP"
+        ]
+      }
+    },
+    "Receiver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepting",
+        "pending",
+        "accepted",
+        "replacing"
+      ],
+      "properties": {
+        "accepting": {
+          "type": "boolean"
+        },
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "accepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "replacing": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ReceiverEvent": {
+      "enum": [
+        "read",
+        "replace",
+        "settle-read",
+        "settle-replace",
+        "close"
+      ]
+    }
+  }
+}

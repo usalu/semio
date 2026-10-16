@@ -17,8 +17,8 @@ mod native {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Mutex;
 
-    use crate::format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
-    use crate::{PackLimits};
+    use semio_framework_pack_format::{Manifest, PackWriter, RecoveryReport, WriteOptions};
+    use semio_framework_replication_codec::PackLimits;
 use semio_framework_pack_source::{PackSink, PackSource};
     use semio_framework_pack_error::{PackError,PackTransportContext,PackTransportPhase,PackTransportCategory,PackRetryDisposition};
     use semio_framework_value::ValueRefusalKind;
@@ -172,7 +172,7 @@ use semio_framework_pack_source::{PackSink, PackSource};
             self.inner.write_segment(kind, payload).await
         }
 
-        pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<crate::format::PackIdentityChunk<'_, FilePackSink>, PackError> {
+        pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<semio_framework_pack_format::PackIdentityChunk<'_, FilePackSink>, PackError> {
             self.inner.begin_identity_chunk(payload_len).await
         }
 
@@ -191,7 +191,7 @@ use semio_framework_pack_source::{PackSink, PackSource};
     /// segments precede the corruption.
     pub async fn recover_file(path: &Path, limits: &PackLimits,context:PackTransportContext) -> Result<RecoveryReport, PackError> {
         let source = FilePackSource::open(path,context)?;
-        crate::format::recover(&source, limits).await
+        semio_framework_pack_format::recover(&source, limits).await
     }
     //#endregion 🔖️Recover
 

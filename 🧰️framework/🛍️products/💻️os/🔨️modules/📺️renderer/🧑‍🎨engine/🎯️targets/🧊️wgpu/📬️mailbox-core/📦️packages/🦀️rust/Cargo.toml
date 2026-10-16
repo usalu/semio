@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-mailbox-core"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Target-neutral bounded completion queue and interaction checkout ledger"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-mailbox-core"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = "1.0.140"

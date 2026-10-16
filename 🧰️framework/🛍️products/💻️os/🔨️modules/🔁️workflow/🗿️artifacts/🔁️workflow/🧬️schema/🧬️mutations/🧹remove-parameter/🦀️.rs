@@ -39,7 +39,3 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveParame
     }
 }
 //#endregion ⚙️Semantics
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

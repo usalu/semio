@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "kind": "pressure",
+      "expectedReason": "Funded Nx graph cache capacity exhausted"
+    },
+    {
+      "kind": "watcher",
+      "expectedReason": "Bounded watcher metadata capacity exhausted"
+    },
+    {
+      "kind": "ledger",
+      "expectedReason": "Original graph purpose ledger refusal"
+    }
+  ],
+  "cleanupCases": [
+    {
+      "body": "undefined",
+      "expected": "body"
+    },
+    {
+      "body": "frozen",
+      "expected": "body"
+    },
+    {
+      "body": "resolve",
+      "expected": "cleanup"
+    }
+  ]
+}

@@ -139,7 +139,3 @@ mod windows {
         if violations.is_empty() { Ok(()) } else { Err(format!("`{}` is not owner-only after icacls: {}", path.display(), violations.join("; "))) }
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod unit;

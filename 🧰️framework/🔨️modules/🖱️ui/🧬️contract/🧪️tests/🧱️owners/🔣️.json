@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "name": "values",
+      "root": "🌱️values",
+      "declarations": [
+        "UiValue",
+        "UiFixedList",
+        "UiFixedMap",
+        "UiList",
+        "UiMap"
+      ]
+    },
+    {
+      "name": "actions",
+      "root": "🎬️action",
+      "declarations": [
+        "ActionId",
+        "ActionBinding",
+        "UiIntent"
+      ]
+    },
+    {
+      "name": "presentation",
+      "root": "🖼️presentation",
+      "declarations": [
+        "Label",
+        "AccessibilitySpec",
+        "LayoutSpec",
+        "SurfaceProps"
+      ]
+    },
+    {
+      "name": "components",
+      "root": "🧩️component",
+      "declarations": [
+        "Component",
+        "InputProps",
+        "TreeItemProps"
+      ]
+    },
+    {
+      "name": "builder",
+      "root": "🏗️builder",
+      "declarations": [
+        "BuiltNode",
+        "BuiltChildren",
+        "StackBuilder"
+      ]
+    },
+    {
+      "name": "validation",
+      "root": "🛡️limits",
+      "declarations": [
+        "UiDocumentLimits",
+        "UiPatchApplyProducer"
+      ]
+    },
+    {
+      "name": "typegen",
+      "root": "🧬️schema/🟦️projection",
+      "declarations": [
+        "SchemaMetadata"
+      ]
+    },
+    {
+      "name": "operations",
+      "root": "⚙️operations",
+      "declarations": [
+        "UiComponentCopy",
+        "UiComponentCompare"
+      ]
+    },
+    {
+      "name": "text-edit",
+      "root": "🪢️text-edit",
+      "declarations": [
+        "TextRoot",
+        "TextEditAuthority"
+      ]
+    },
+    {
+      "name": "conformance",
+      "root": "🧪️conformance",
+      "declarations": []
+    }
+  ],
+  "values": [
+    {
+      "value": null,
+      "wire": "null"
+    },
+    {
+      "value": true,
+      "wire": "true"
+    },
+    {
+      "value": 7,
+      "wire": "7"
+    },
+    {
+      "value": "Größe 🧬️",
+      "wire": "\"Größe 🧬️\""
+    },
+    {
+      "value": [
+        null,
+        7,
+        "x"
+      ],
+      "wire": "[null,7,\"x\"]"
+    },
+    {
+      "value": {
+        "label": "Änderung",
+        "visible": true
+      },
+      "wire": "{\"label\":\"Änderung\",\"visible\":true}"
+    }
+  ],
+  "custody": [
+    {
+      "id": "returned",
+      "original": [
+        "record",
+        "surface"
+      ],
+      "caller": [
+        "record",
+        "surface"
+      ],
+      "retained": [],
+      "valid": true
+    },
+    {
+      "id": "retained",
+      "original": [
+        "record",
+        "surface"
+      ],
+      "caller": [],
+      "retained": [
+        "record",
+        "surface"
+      ],
+      "valid": true
+    },
+    {
+      "id": "lost",
+      "original": [
+        "record",
+        "surface"
+      ],
+      "caller": [
+        "record"
+      ],
+      "retained": [],
+      "valid": false
+    },
+    {
+      "id": "duplicate",
+      "original": [
+        "record"
+      ],
+      "caller": [
+        "record"
+      ],
+      "retained": [
+        "record"
+      ],
+      "valid": false
+    }
+  ],
+  "dependencyCases": [
+    {
+      "id": "qualified-needs-direct-not-transitive",
+      "source": "use semio_framework_ui_contract_budget::TREE_WINDOW_BODY_NODE_BUDGET;",
+      "declared": [
+        "semio_framework_ui_contract_values"
+      ],
+      "required": [
+        "semio_framework_ui_contract_budget"
+      ],
+      "missing": [
+        "semio_framework_ui_contract_budget"
+      ]
+    },
+    {
+      "id": "derive-explicit-runtime",
+      "source": "#[derive(ToValue, FromValue)] #[value(crate=\"::semio_framework_value\")] pub struct A;",
+      "declared": [
+        "semio_framework_value_derive"
+      ],
+      "required": [
+        "semio_framework_value"
+      ],
+      "missing": [
+        "semio_framework_value"
+      ]
+    },
+    {
+      "id": "derive-default-runtime",
+      "source": "#[derive(ToValue)] pub enum A { X }",
+      "declared": [
+        "semio_framework_value_derive"
+      ],
+      "required": [
+        "semio_framework_value"
+      ],
+      "missing": [
+        "semio_framework_value"
+      ]
+    },
+    {
+      "id": "derive-renamed-runtime",
+      "source": "#[derive(FromValue)] #[value(crate=\"::value_api\")] pub struct A;",
+      "declared": [
+        "value_api"
+      ],
+      "required": [
+        "value_api"
+      ],
+      "missing": []
+    },
+    {
+      "id": "each-item-keeps-own-runtime",
+      "source": "#[derive(ToValue)] #[value(crate=\"::value_api\")] pub struct A; #[derive(FromValue)] pub struct B;",
+      "declared": [
+        "value_api"
+      ],
+      "required": [
+        "semio_framework_value",
+        "value_api"
+      ],
+      "missing": [
+        "semio_framework_value"
+      ]
+    },
+    {
+      "id": "comments-and-strings-are-not-imports",
+      "source": "// use semio_framework_missing::X;\nconst S: &str = \"semio_framework_missing::X\"; use serde::Serialize;",
+      "declared": [
+        "serde"
+      ],
+      "required": [
+        "serde"
+      ],
+      "missing": []
+    },
+    {
+      "id": "local-value-derive-root",
+      "source": "#[derive(ToValue)] #[value(crate=\"crate\")] pub struct A;",
+      "declared": [],
+      "required": [],
+      "missing": []
+    },
+    {
+      "id": "serde-derive-default-runtime",
+      "source": "#[derive(Serialize)] pub struct A;",
+      "declared": [],
+      "required": [
+        "serde"
+      ],
+      "missing": [
+        "serde"
+      ]
+    },
+    {
+      "id": "derive-runtimes-do-not-cross-contaminate",
+      "source": "#[derive(ToValue, Serialize)] #[value(crate=\"::value_api\")] #[serde(crate=\"serde_api\")] pub struct A;",
+      "declared": [
+        "value_api",
+        "serde_api"
+      ],
+      "required": [
+        "serde_api",
+        "value_api"
+      ],
+      "missing": []
+    },
+    {
+      "id": "local-module-is-not-an-extern-prelude-edge",
+      "source": "use crate::semio_framework_local::X;",
+      "declared": [],
+      "required": [],
+      "missing": []
+    }
+  ]
+}

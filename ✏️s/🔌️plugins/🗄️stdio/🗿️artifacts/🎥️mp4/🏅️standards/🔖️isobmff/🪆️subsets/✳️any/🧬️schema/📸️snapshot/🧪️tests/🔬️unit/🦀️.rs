@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::isobmff::subsets::any::schema::snapshot::*;
 
 async fn sample_snapshot() -> Mp4Snapshot {
     Mp4Snapshot {
@@ -79,7 +79,7 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_survives_pack_and_dsl_codecs() {
-    let bytes = include_bytes!("../../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let snapshot = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let pack = <Mp4Snapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);

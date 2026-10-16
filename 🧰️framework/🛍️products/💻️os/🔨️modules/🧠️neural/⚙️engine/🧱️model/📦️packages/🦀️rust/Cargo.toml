@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-kernel-neural-engine-model"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Neural engine model: the dictionary, schema, tree and operator vocabulary with their retirement, hashing and validation laws"
+
+[package.metadata.semio]
+role = "product"
+id = "os-neural-engine-model"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-job.workspace = true
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

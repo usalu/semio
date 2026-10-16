@@ -85,7 +85,7 @@ fn note_lease() -> semio_framework_os_kernel::os_directory::DocumentExecutionTar
                 schema: semio_framework_os_kernel::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                 plugin_id: "note".into(),
                 package_id: "semio:note".into(),
-                profile: semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::WasmRelease,
+                profile: semio_framework_os_kernel::os_component_receipt::ComponentProfileV1::Release,
                 target: semio_framework_os_kernel::os_component_receipt::COMPONENT_TARGET.into(),
                 wasm_sha256: "33".repeat(32),
                 wasm_bytes: 1024,
@@ -145,7 +145,7 @@ fn a_remote_backbone_uri_names_host_space_and_document() {
     assert_eq!(parse_remote_backbone_uri("remote://127.0.0.1:7800/space-1"), None, "no document part");
     assert_eq!(parse_remote_backbone_uri("remote:///space-1/doc-a"), None, "no host part");
     assert_eq!(parse_remote_backbone_uri("folder:///tmp/space"), None, "not a remote uri");
-    assert!(ShellState::parse_persistence_binding("remote://127.0.0.1:7800/space-1").is_err(), "a partial remote uri is refused, never guessed");
+    assert!(parse_persistence_binding("remote://127.0.0.1:7800/space-1").is_err(), "a partial remote uri is refused, never guessed");
 }
 
 /// 🧭️ The `/hub` workspace overlay is shell chrome: focusing one of its controls must never make it
@@ -154,9 +154,9 @@ fn a_remote_backbone_uri_names_host_space_and_document() {
 #[test]
 fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
     let shell = super::panel_anchor_model_tests::host_test_shell();
-    assert!(shell.retained_surface_is_panel(crate::hub_connection::FRAMEWORK_HUB_PANEL_ID));
-    let plugin_window = shell.session.as_ref().expect("host test shell has a session").app.window_kinds.first().id.clone();
-    assert!(!shell.retained_surface_is_panel(&plugin_window), "a plugin window stays a window");
+    assert!(SessionCtx::of(&mut shell).retained_surface_is_panel(crate::hub_connection::FRAMEWORK_HUB_PANEL_ID));
+    let plugin_window = shell.docs.session.as_ref().expect("host test shell has a session").app.window_kinds.first().id.clone();
+    assert!(!SessionCtx::of(&mut shell).retained_surface_is_panel(&plugin_window), "a plugin window stays a window");
 }
 
 /// 🔄️ Every sync-card verb republishes the mounted Sync panel: choosing Remote must show its path input
@@ -165,15 +165,15 @@ fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
 #[test]
 fn every_sync_card_verb_republishes_the_sync_panel() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let initial = shell.publish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID).expect("sync panel publication").expect("the sync panel owns a retained document");
-    shell.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
+    let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID).expect("sync panel publication").expect("the sync panel owns a retained document");
+    shell.docs.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
     for (action, args) in [("selectRemote", None), ("setSyncDraft", Some(serde_json::json!({ "value": "127.0.0.1:7800/space-1/doc-a" })))] {
-        let before = shell.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header before");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: args.map(semio_framework::DslValue::from) })).expect("sync card verb");
-        let after = shell.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header after");
+        let before = shell.docs.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header before");
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework.sync".into(), action: action.into(), args: args.map(semio_framework::DslValue::from) })).expect("sync card verb");
+        let after = shell.docs.panel_documents.get(FRAMEWORK_SYNC_PANEL_TAB_ID).unwrap().header().expect("sync header after");
         assert!(after.revision != before.revision && after.generation > before.generation, "{action} republished the sync panel");
     }
-    let tree = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
+    let tree = serde_json::to_string(&shell.sync.build_sync_attach_ui(&shell.prefs)).expect("sync ui json");
     assert!(tree.contains("framework.sync.remote.path") && tree.contains("127.0.0.1:7800/space-1/doc-a"), "the republished card carries the path input and the typed uri");
 }
 
@@ -205,12 +205,12 @@ fn a_short_link_is_spoken_and_a_terminal_link_ends_until_the_next_open() {
     assert_eq!(shell_sync_link_terminal("access-revoked"), Some(DocumentLinkStatus::AccessRevoked));
     assert_eq!(shell_sync_link_terminal("artifactBootstrap"), None);
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let quiet = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
+    let quiet = serde_json::to_string(&shell.sync.build_sync_attach_ui(&shell.prefs)).expect("sync ui json");
     assert!(!quiet.contains("framework.sync.link."), "a linked document speaks no link line");
     for (status, locale) in [(DocumentLinkStatus::Reconnecting, "en"), (DocumentLinkStatus::LinkExpired, "de"), (DocumentLinkStatus::AccessRevoked, "en")] {
-        shell.sync_link = status;
-        shell.locale_id = locale.into();
-        let tree = serde_json::to_string(&shell.build_sync_attach_ui()).expect("sync ui json");
+        shell.sync.sync_link = status;
+        shell.prefs.locale_id = locale.into();
+        let tree = serde_json::to_string(&shell.sync.build_sync_attach_ui(&shell.prefs)).expect("sync ui json");
         let line = status.text(locale == "de").expect("a shortage status speaks");
         assert!(tree.contains(&format!("framework.sync.link.{}", status.code())) && tree.contains(line), "{} in {locale}", status.code());
     }
@@ -247,15 +247,15 @@ fn the_sync_pump_cadence_is_not_gated_off_the_browser_build() {
 #[test]
 fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let pill = shell_sync_pill_text(shell.sync_pill(), false);
-    shell.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
-    let detached = shell.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
-    shell.sync_status = Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None });
-    shell.relabel_sync_tab();
-    let live = shell.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
+    let pill = shell_sync_pill_text(shell.sync.sync_pill(), false);
+    shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomLeft).push(DockTabNode::leaf(FRAMEWORK_SYNC_PANEL_TAB_ID, pill, "refresh-cw", 0));
+    let detached = shell.dock.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
+    shell.sync.sync_status = Some(ArtifactSyncStatus { persisted: true, pending_mutations: 0, remote: RemoteState::Live { peer_count: 1 }, acknowledged_head: None });
+    shell.dock.relabel_sync_tab(&shell.prefs, &shell.sync);
+    let live = shell.dock.dock_tabs.tabs(PanelAnchor::BottomLeft)[0].label.clone();
     assert_ne!(live, detached, "a live document never keeps the detached pill");
-    assert_eq!(live, shell_sync_pill_text(shell.sync_pill(), false));
-    let nodes = shell.chrome_accessibility_nodes(&[]);
+    assert_eq!(live, shell_sync_pill_text(shell.sync.sync_pill(), false));
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]);
     let roster = nodes.iter().find(|node| node.key == "s-presence-peers").expect("the roster chip is a named node");
     assert_eq!(roster.role, "status");
     assert!(!roster.focusable && !roster.actionable, "a status is read, never a tab stop");

@@ -3,17 +3,10 @@
 //! Validates a component scene render plan against its fixed limits before it is walked: tree depth, node count,
 //! window body surfaces and the per-kind scene bounds.
 
-#[cfg(test)]
-use super::ui_image_loading::{
-    apply_ui_image_bytes, current_ui_image_key, object_contain_rect, render_ui_image_step,
-    resolve_ui_image, INLINE_SVG_PARSE_CALLS, UI_IMAGE_SIZES,
-};
-#[cfg(test)]
-use infinite_world::world::{WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use ui_wgpu::wgpu::UiComponentSceneNode;
-#[cfg(test)]
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, UiNode, UiPresence};
+#[cfg(any(test, feature = "testkit"))]
+use ui_wgpu::wgpu::{UiNode, UiPresence};
 
 //#region RenderPlanValidator
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -166,16 +159,17 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} board2d.selection"), &board.selection_json, limits)?;
         check_json_payload(&format!("{scene_label} board2d.brushWeights"), &board.brush_weights_json, limits)?;
         check_json_payload(&format!("{scene_label} board2d.placementCompatibility"), &board.placement_compatibility_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} board2d.placementNaming"), &board.placement_naming, limits)?;
     }
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 struct RenderPlanWalkState {
-    pub(super) node_count: usize,
+    pub node_count: usize,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn walk_ui_node(node: &UiNode, depth: usize, limits: &RenderPlanLimits, state: &mut RenderPlanWalkState) -> Result<(), String> {
     state.node_count += 1;
     if state.node_count > limits.max_node_count {
@@ -201,13 +195,13 @@ fn walk_ui_node(node: &UiNode, depth: usize, limits: &RenderPlanLimits, state: &
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn validate_ui_node(node: &UiNode, limits: &RenderPlanLimits) -> Result<(), String> {
     let mut state = RenderPlanWalkState { node_count: 0 };
     walk_ui_node(node, 1, limits, &mut state)
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn validate_window_body_surface(kind: &semio_framework::WindowKindDefinition, node: &UiNode) -> Result<(), String> {
     match node {
         UiNode::ComponentScene(scene) if scene.component_kind != kind.surface_kind => Err(format!("window {} declared {} but program returned {}", kind.id, kind.surface_kind.as_str(), scene.component_kind.as_str())),

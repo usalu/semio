@@ -29,14 +29,14 @@ struct HubProjectionExpected {
 #[test]
 fn hub_command_opens_the_route_overlay_without_adding_a_default_dock_tab() {
     let mut shell = shell();
-    let dock = shell.default_dock();
+    let dock = SessionCtx::of(&mut shell).default_dock();
     assert!(!PanelAnchor::ALL.into_iter().flat_map(|anchor| dock.tabs(anchor)).any(|tab| tab.id == FRAMEWORK_HUB_PANEL_ID));
-    semio_framework_async::block_on(shell.apply_os_command("os.openHub", None)).expect("Hub command opens the workspace");
-    assert!(shell.hub_workspace_open);
-    assert_eq!(shell.uri_history.get(shell.uri_index).map(String::as_str), Some("/hub"));
-    assert!(shell.shell_owned_panel_leaves().iter().any(|id| id == FRAMEWORK_HUB_PANEL_ID), "the overlay keeps its retained body publication");
-    semio_framework_async::block_on(shell.handle_hub_workspace_action(crate::hub_connection::action::CLOSE_WORKSPACE, None));
-    assert!(!shell.hub_workspace_open);
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("Hub command opens the workspace");
+    assert!(shell.directory.hub_workspace_open);
+    assert_eq!(shell.opening.uri_history.get(shell.opening.uri_index).map(String::as_str), Some("/hub"));
+    assert!(shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs).iter().any(|id| id == FRAMEWORK_HUB_PANEL_ID), "the overlay keeps its retained body publication");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(crate::hub_connection::action::CLOSE_WORKSPACE, None));
+    assert!(!shell.directory.hub_workspace_open);
 }
 
 #[test]
@@ -53,34 +53,34 @@ fn neutral_session_link_and_multi_document_vectors_fold_to_the_shared_summary() 
 #[test]
 fn status_replacement_and_document_retirement_share_one_projection() {
     let mut shell = shell();
-    shell.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Connecting);
-    shell.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Live { peer_count: 4 });
-    shell.publish_hub_document_status("hub:b/two", ShellHubRemoteV1::Backoff { retry_in_ms: 1000 });
-    assert_eq!(shell.hub_documents.len(), 2);
+    shell.sync.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Connecting);
+    shell.sync.publish_hub_document_status("hub:a/one", ShellHubRemoteV1::Live { peer_count: 4 });
+    shell.sync.publish_hub_document_status("hub:b/two", ShellHubRemoteV1::Backoff { retry_in_ms: 1000 });
+    assert_eq!(shell.sync.hub_documents.len(), 2);
     let projection = ShellHubProjectionV1 {
         session: HubSessionPresence::SignedIn,
         link: HubLink::Reachable,
-        documents: shell.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect(),
+        documents: shell.sync.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect(),
     };
     let summary = shell_hub_connection_summary_v1(&projection);
     assert_eq!(summary.state, HubConnectionState::Live { peer_count: 4 });
-    shell.retire_hub_document_status("hub:a/one");
-    assert_eq!(shell.hub_documents.len(), 1);
-    shell.retire_hub_document_status("hub:b/two");
-    assert!(shell.hub_documents.is_empty());
+    shell.sync.retire_hub_document_status("hub:a/one");
+    assert_eq!(shell.sync.hub_documents.len(), 1);
+    shell.sync.retire_hub_document_status("hub:b/two");
+    assert!(shell.sync.hub_documents.is_empty());
 }
 
 #[test]
 fn document_projection_refuses_a_sixty_fifth_distinct_owner_but_allows_replacement() {
     let mut shell = shell();
     for index in 0..64 {
-        shell.publish_hub_document_status(format!("hub:a/{index}"), ShellHubRemoteV1::Detached);
+        shell.sync.publish_hub_document_status(format!("hub:a/{index}"), ShellHubRemoteV1::Detached);
     }
-    shell.publish_hub_document_status("hub:a/64", ShellHubRemoteV1::Connecting);
-    assert_eq!(shell.hub_documents.len(), 64);
-    assert!(!shell.hub_documents.contains_key("hub:a/64"));
-    shell.publish_hub_document_status("hub:a/0", ShellHubRemoteV1::Live { peer_count: 2 });
-    assert_eq!(shell.hub_documents.get("hub:a/0"), Some(&ShellHubRemoteV1::Live { peer_count: 2 }));
+    shell.sync.publish_hub_document_status("hub:a/64", ShellHubRemoteV1::Connecting);
+    assert_eq!(shell.sync.hub_documents.len(), 64);
+    assert!(!shell.sync.hub_documents.contains_key("hub:a/64"));
+    shell.sync.publish_hub_document_status("hub:a/0", ShellHubRemoteV1::Live { peer_count: 2 });
+    assert_eq!(shell.sync.hub_documents.get("hub:a/0"), Some(&ShellHubRemoteV1::Live { peer_count: 2 }));
 }
 
 /// 🧩️ A hub document's open band names the resolution step it is on — asking the hub for the lease, downloading
@@ -115,23 +115,23 @@ fn the_open_band_names_every_resolution_step_in_both_tongues() {
 fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
     let args = (!args.is_empty()).then(|| DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect()));
     #[cfg(not(target_arch = "wasm32"))]
-    drive(shell.handle_hub_workspace_action(verb, args));
+    drive(ActionsCtx::of(&mut shell).handle_hub_workspace_action(verb, args));
     #[cfg(target_arch = "wasm32")]
-    semio_framework_async::block_on(shell.handle_hub_workspace_action(verb, args));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_hub_workspace_action(verb, args));
     settle_hub_workspace(shell);
 }
 
 /// 🔐️ Pumps the directory lane until the hub workspace's spawned requests (sign-in, spaces) have answered — the
 /// verbs only arm them now, and a frame applies the answer.
 fn settle_hub_workspace(shell: &mut ShellState) {
-    while !shell.hub_workspace_settled() {
+    while !shell.directory.hub_workspace_settled() {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = crate::pump_renderer_io_sessions(1);
-            drive(shell.pump_directory_events());
+            drive(ActionsCtx::of(&mut shell).pump_directory_events());
         }
         #[cfg(target_arch = "wasm32")]
-        semio_framework_async::block_on(shell.pump_directory_events());
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).pump_directory_events());
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
 }
@@ -162,28 +162,28 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     let password = std::env::var("SEMIO_HUB_LIVE_PASSWORD").expect("SEMIO_HUB_LIVE_PASSWORD");
     let space_name = format!("wg6 live {}", chrome_now_ms() as u64);
     let mut shell = shell();
-    semio_framework_async::block_on(shell.apply_os_command("os.openHub", None)).expect("the hub route opens");
-    assert!(shell.hub_workspace_open);
-    assert_eq!(shell.hub_workspace.presence(), HubSessionPresence::SignedOut);
-    assert_eq!(shell.hub_connection_state(), HubConnectionState::SignedOut);
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
+    assert!(shell.directory.hub_workspace_open);
+    assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
+    assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::SignedOut);
     hub_verb(&mut shell, crate::hub_connection::action::SET_ADDRESS, &[("value", origin.as_str())]);
     hub_verb(&mut shell, crate::hub_connection::action::ADD_CONNECTION, &[]);
-    assert_eq!(shell.hub_workspace.origin(), origin.trim_end_matches('/'));
+    assert_eq!(shell.directory.hub_workspace.origin(), origin.trim_end_matches('/'));
     hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", email.as_str())]);
     hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", password.as_str())]);
     hub_verb(&mut shell, crate::hub_connection::action::SIGN_IN, &[]);
-    println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.hub_workspace.session.phase.as_str(), shell.hub_workspace.session.error, shell.hub_workspace.session.user_id, shell.hub_workspace.display_name);
-    assert_eq!(shell.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.hub_workspace.session.error);
-    assert!(shell.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
-    assert!(shell.hub_workspace.display_name.is_some());
-    assert_eq!(shell.hub_connection_state(), HubConnectionState::Online, "a verified session on a reachable hub with nothing attached");
+    println!("wg6-live sign-in phase={} error={:?} user={:?} display={:?}", shell.directory.hub_workspace.session.phase.as_str(), shell.directory.hub_workspace.session.error, shell.directory.hub_workspace.session.user_id, shell.directory.hub_workspace.display_name);
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "error {:?}", shell.directory.hub_workspace.session.error);
+    assert!(shell.directory.hub_workspace.password_draft.is_empty(), "the password never outlives its request");
+    assert!(shell.directory.hub_workspace.display_name.is_some());
+    assert_eq!(shell.sync.hub_connection_state(&shell.directory), HubConnectionState::Online, "a verified session on a reachable hub with nothing attached");
     hub_verb(&mut shell, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
     hub_verb(&mut shell, crate::hub_connection::action::CREATE_SPACE, &[]);
-    println!("wg6-live spaces phase={} rows={:?}", shell.hub_workspace.phase.as_str(), shell.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
-    assert_eq!(shell.hub_workspace.phase, crate::space_browser::SpaceBrowserPhase::Ready);
-    let created = shell.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
+    println!("wg6-live spaces phase={} rows={:?}", shell.directory.hub_workspace.phase.as_str(), shell.directory.hub_workspace.rows.iter().map(|row| (row.name.as_str(), row.id.as_str(), row.access.as_str())).collect::<Vec<_>>());
+    assert_eq!(shell.directory.hub_workspace.phase, crate::space_browser::SpaceBrowserPhase::Ready);
+    let created = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).expect("the created space is listed").id.clone();
     for locale in [Locale::En, Locale::De] {
-        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.hub_workspace, locale);
+        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut spaces = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-space", &mut spaces);
         let mut phases = Vec::new();
@@ -195,15 +195,15 @@ fn a_live_hub_signs_in_and_its_spaces_reach_the_retained_workspace() {
     hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", created.as_str())]);
     println!(
         "wg6-live open space={:?} members={:?} uri={:?}",
-        shell.hub_workspace.open_space_id,
-        shell.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(),
-        shell.uri_history.get(shell.uri_index)
+        shell.directory.hub_workspace.open_space_id,
+        shell.directory.hub_workspace.members.iter().map(|member| (member.display_name.as_str(), member.owner)).collect::<Vec<_>>(),
+        shell.opening.uri_history.get(shell.opening.uri_index)
     );
-    assert_eq!(shell.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
-    assert!(shell.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
+    assert_eq!(shell.directory.hub_workspace.open_space_id.as_deref(), Some(created.as_str()));
+    assert!(shell.directory.hub_workspace.members.iter().any(|member| member.owner), "the creator is listed as the owner");
     hub_verb(&mut shell, crate::hub_connection::action::SIGN_OUT, &[]);
-    assert_eq!(shell.hub_workspace.presence(), HubSessionPresence::SignedOut);
-    assert!(shell.hub_workspace.rows.is_empty());
+    assert_eq!(shell.directory.hub_workspace.presence(), HubSessionPresence::SignedOut);
+    assert!(shell.directory.hub_workspace.rows.is_empty());
 }
 
 /// ✂️ A loopback TCP relay in front of the hub whose every live connection can be cut at once,
@@ -313,7 +313,7 @@ fn live_env(key: &str) -> String {
 /// 5 s command deadline under load); answers the first attempt's refusal, if any.
 #[cfg(not(target_arch = "wasm32"))]
 fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &str) -> Option<String> {
-    drive(shell.apply_os_command("os.openHub", None)).expect("the hub route opens");
+    drive(ActionsCtx::of(&mut shell).apply_os_command("os.openHub", None)).expect("the hub route opens");
     hub_verb(shell, crate::hub_connection::action::SET_ADDRESS, &[("value", origin)]);
     hub_verb(shell, crate::hub_connection::action::ADD_CONNECTION, &[]);
     let mut first_refusal = None;
@@ -321,10 +321,10 @@ fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &st
         hub_verb(shell, crate::hub_connection::action::SET_EMAIL, &[("value", email)]);
         hub_verb(shell, crate::hub_connection::action::SET_PASSWORD, &[("value", password)]);
         hub_verb(shell, crate::hub_connection::action::SIGN_IN, &[]);
-        if shell.hub_workspace.session.phase == HubSessionPhase::SignedIn {
+        if shell.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {
             break;
         }
-        first_refusal.get_or_insert_with(|| format!("{:?}", shell.hub_workspace.session.error));
+        first_refusal.get_or_insert_with(|| format!("{:?}", shell.directory.hub_workspace.session.error));
     }
     first_refusal
 }
@@ -332,7 +332,7 @@ fn sign_in_live(shell: &mut ShellState, origin: &str, email: &str, password: &st
 #[cfg(not(target_arch = "wasm32"))]
 fn shell_command(shell: &mut ShellState, action_id: &str, args: &[(&str, &str)]) {
     let args = DslValue::Object(args.iter().map(|(key, value)| ((*key).to_string(), DslValue::String((*value).to_string()))).collect());
-    drive(shell.handle_replay_shell_command(action_id, Some(&args)));
+    drive(ActionsCtx::of(&mut shell).handle_replay_shell_command(action_id, Some(&args)));
 }
 
 /// 📣️ The shared replay-refusal vocabulary (`🏛️ShellHost/📣️replay-refusal/🔣️.json`) names exactly the reasons this shell can
@@ -368,12 +368,12 @@ fn an_unserved_guest_replay_is_refused_out_loud_in_the_shells_tongue() {
     ];
     for (locale, action_id, signed_in, args, reason) in cases {
         let mut shell = shell();
-        shell.locale_id = locale.into();
+        shell.prefs.locale_id = locale.into();
         if signed_in {
-            shell.identity = Some(identity());
+            shell.directory.identity = Some(identity());
         }
         shell_command(&mut shell, action_id, args);
-        let notice = shell.transient_notice().unwrap_or_else(|| panic!("{action_id} ({locale}) is refused out loud"));
+        let notice = shell.chrome.transient_notice().unwrap_or_else(|| panic!("{action_id} ({locale}) is refused out loud"));
         let label = &REPLAY_REFUSAL_V1.reasons[&reason.key()];
         let spoken = if locale == "de" { label.de.as_str() } else { label.en.as_str() };
         assert_eq!((notice.message.as_str(), notice.code.as_deref()), (spoken, Some(reason.code().as_str())), "{locale} {action_id}");
@@ -457,12 +457,12 @@ fn the_agent_bridge_offer_scope_follows_sign_in_space_and_revocation() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn remote_of(shell: &ShellState) -> String {
-    shell.sync_status.as_ref().map_or_else(|| "none".to_string(), |status| format!("{:?}", status.remote))
+    shell.sync.sync_status.as_ref().map_or_else(|| "none".to_string(), |status| format!("{:?}", status.remote))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn is_live(shell: &ShellState) -> bool {
-    matches!(shell.sync_status.as_ref().map(|status| &status.remote), Some(RemoteState::Live { .. }))
+    matches!(shell.sync.sync_status.as_ref().map(|status| &status.remote), Some(RemoteState::Live { .. }))
 }
 
 /// 🖼️ What one painted frame does for an open document, headless, answering how many renderer I/O
@@ -477,13 +477,13 @@ fn is_live(shell: &ShellState) -> bool {
 fn frame_pump(shell: &mut ShellState) -> usize {
     let advanced = crate::pump_renderer_io_sessions(1);
     let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    drive(shell.pump_sync_events());
-    shell.request_presence_preview();
-    if shell.chrome_present.maintenance.presence_requested {
-        shell.advance_presence_preview_step();
+    drive(PointerCtx::of(&mut shell).pump_sync_events());
+    shell.sync.request_presence_preview(&mut shell.chrome);
+    if shell.chrome.chrome_present.maintenance.presence_requested {
+        ChromeViewCtx::of(&mut shell).advance_presence_preview_step();
     }
-    if shell.settle_pump_pending() {
-        drive(shell.settle_pump_step());
+    if PointerCtx::of(&mut shell).settle_pump_pending() {
+        drive(PointerCtx::of(&mut shell).settle_pump_step());
     }
     advanced
 }
@@ -507,7 +507,7 @@ struct OpenFrames {
 fn settle_document_opening(shell: &mut ShellState) -> OpenFrames {
     let started = std::time::Instant::now();
     let mut frames = OpenFrames::default();
-    while shell.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) && started.elapsed() < std::time::Duration::from_secs(180) {
+    while shell.opening.document_opening.as_ref().is_some_and(ShellDocumentOpening::running) && started.elapsed() < std::time::Duration::from_secs(180) {
         let frame = std::time::Instant::now();
         let advanced = frame_pump(shell);
         frames.opening += 1;
@@ -516,7 +516,7 @@ fn settle_document_opening(shell: &mut ShellState) -> OpenFrames {
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
     }
-    while shell.settle_pump_pending() && started.elapsed() < std::time::Duration::from_secs(180) {
+    while PointerCtx::of(&mut shell).settle_pump_pending() && started.elapsed() < std::time::Duration::from_secs(180) {
         let frame = std::time::Instant::now();
         let _ = frame_pump(shell);
         frames.rendering += 1;
@@ -548,22 +548,22 @@ fn pump_pair(a: &mut ShellState, b: &mut ShellState, budget: std::time::Duration
 
 #[cfg(not(target_arch = "wasm32"))]
 fn applied_edits(shell: &mut ShellState) -> Vec<(String, bool)> {
-    drive(shell.refresh_history_snapshot());
-    history_rows_oldest_first(&shell.history_entries).into_iter().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
+    drive(SessionCtx::of(&mut shell).refresh_history_snapshot());
+    history_rows_oldest_first(&shell.history.history_entries).into_iter().filter(|entry| entry.kind == "mutation").map(|entry| (entry.action_id.clone(), entry.applied)).collect()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn author_edit(shell: &mut ShellState, action: &str) -> (Result<(), String>, std::time::Duration) {
-    let controller_id = shell.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+    let controller_id = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
     let started = std::time::Instant::now();
-    let outcome = drive(shell.dispatch_action(ActionDescriptor { controller_id, action: action.to_string(), args: None }));
+    let outcome = drive(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id, action: action.to_string(), args: None }));
     (outcome, started.elapsed())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn online_members(shell: &mut ShellState, space_id: &str) -> Vec<(String, bool)> {
-    drive(shell.reload_hub_members(space_id));
-    shell.hub_workspace.members.iter().map(|member| (member.display_name.clone(), member.online)).collect()
+    drive(shell.directory.reload_hub_members(space_id));
+    shell.directory.hub_workspace.members.iter().map(|member| (member.display_name.clone(), member.online)).collect()
 }
 
 /// 🤝️ Two native wgpu shells, two hub users, one hub document — the whole collaboration journey
@@ -601,20 +601,20 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
 
     let a_retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
     let b_retry = sign_in_live(&mut b, &relay.origin, &b_email, &b_password);
-    let (a_user, b_user) = (a.hub_workspace.session.user_id.clone(), b.hub_workspace.session.user_id.clone());
+    let (a_user, b_user) = (a.directory.hub_workspace.session.user_id.clone(), b.directory.hub_workspace.session.user_id.clone());
     ledger.record(
         "1-sign-in",
-        a.hub_workspace.session.phase == HubSessionPhase::SignedIn && b.hub_workspace.session.phase == HubSessionPhase::SignedIn && a_user.is_some() && a_user != b_user,
+        a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn && b.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn && a_user.is_some() && a_user != b_user,
         format!(
             "A={} {:?} {:?} error={:?} retried-after={a_retry:?} B={} {:?} {:?} error={:?} retried-after={b_retry:?} (B via relay {})",
-            a.hub_workspace.session.phase.as_str(),
+            a.directory.hub_workspace.session.phase.as_str(),
             a_user,
-            a.hub_workspace.display_name,
-            a.hub_workspace.session.error,
-            b.hub_workspace.session.phase.as_str(),
+            a.directory.hub_workspace.display_name,
+            a.directory.hub_workspace.session.error,
+            b.directory.hub_workspace.session.phase.as_str(),
             b_user,
-            b.hub_workspace.display_name,
-            b.hub_workspace.session.error,
+            b.directory.hub_workspace.display_name,
+            b.directory.hub_workspace.session.error,
             relay.origin
         ),
     );
@@ -622,10 +622,10 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let space_name = format!("g7w collaboration {}", chrome_now_ms() as u64);
     hub_verb(&mut a, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
     hub_verb(&mut a, crate::hub_connection::action::CREATE_SPACE, &[]);
-    let space_id = a.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
+    let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
     shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
     hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
-    let b_row = b.hub_workspace.rows.iter().find(|row| row.id == space_id).map(|row| (row.name.clone(), row.role));
+    let b_row = b.directory.hub_workspace.rows.iter().find(|row| row.id == space_id).map(|row| (row.name.clone(), row.role));
     ledger.record("2-same-space", !space_id.is_empty() && b_row.as_ref().is_some_and(|(_, role)| *role == Some(DirectorySpaceRole::Author)), format!("space={space_id} B sees {b_row:?}"));
 
     hub_verb(&mut a, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
@@ -633,30 +633,30 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let (a_roster, b_roster) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
     ledger.record("3-roster", a_roster.len() == 2 && b_roster.len() == 2, format!("A roster={a_roster:?} B roster={b_roster:?}"));
 
-    let kind_id = a.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == journey.schema.as_str())).map(|kind| kind.kind_id.clone()).unwrap_or_default();
+    let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == journey.schema.as_str())).map(|kind| kind.kind_id.clone()).unwrap_or_default();
     hub_verb(&mut a, crate::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
     hub_verb(&mut a, crate::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Shared board")]);
     hub_verb(&mut a, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
     let creation_started = std::time::Instant::now();
     let mut creation_trail = Vec::new();
     while creation_started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = a.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if creation_trail.last() != Some(&observed) {
             creation_trail.push(observed);
         }
-        if a.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
+        if a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
             break;
         }
         let _ = frame_pump(&mut a);
         std::thread::sleep(std::time::Duration::from_millis(25));
     }
     let a_open = settle_document_opening(&mut a);
-    println!("g7w-live A open frames={a_open:?} phase={:?}", a.document_opening.as_ref().map(|opening| &opening.phase));
-    let created = a.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone());
+    println!("g7w-live A open frames={a_open:?} phase={:?}", a.opening.document_opening.as_ref().map(|opening| &opening.phase));
+    let created = a.directory.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.clone());
     ledger.record(
         "4a-create-through-the-door",
-        created.is_some() && a.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening == HubArtifactOpening::Opened),
-        format!("catalog={} kind={kind_id:?} trail={creation_trail:?} created={created:?} after={:?}", a.hub_workspace.creation.catalog_phase.as_str(), creation_started.elapsed()),
+        created.is_some() && a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening == HubArtifactOpening::Opened),
+        format!("catalog={} kind={kind_id:?} trail={creation_trail:?} created={created:?} after={:?}", a.directory.hub_workspace.creation.catalog_phase.as_str(), creation_started.elapsed()),
     );
     let document_id = created.as_ref().map(|ready| ready.artifact_id.clone()).unwrap_or_default();
     let open_args =
@@ -664,16 +664,16 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     shell_command(&mut b, "os.open-artifact", &open_args);
     let b_open = settle_document_opening(&mut b);
     println!("g7w-live B open frames={b_open:?}");
-    let session_of = |shell: &ShellState| shell.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
+    let session_of = |shell: &ShellState| shell.docs.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
     ledger.record(
         "4-guest-mounted",
-        [&a, &b].iter().all(|shell| shell.session.as_ref().is_some_and(|session| session.plugin_id == journey.plugin_id.as_str() && session.app.id == journey.app_id.as_str())),
-        format!("A session={:?} error={:?} B session={:?} error={:?}", session_of(&a), a.error, session_of(&b), b.error),
+        [&a, &b].iter().all(|shell| shell.docs.session.as_ref().is_some_and(|session| session.plugin_id == journey.plugin_id.as_str() && session.app.id == journey.app_id.as_str())),
+        format!("A session={:?} error={:?} B session={:?} error={:?}", session_of(&a), a.chrome.error, session_of(&b), b.chrome.error),
     );
     ledger.record(
         "5-hub-binding",
-        a.sync_channel.is_some() && b.sync_channel.is_some() && a.presence_surface.is_some() && b.presence_surface.is_some(),
-        format!("A uri={:?} surface={:?} B uri={:?} surface={:?}", a.sync_backbone_uri, a.presence_surface, b.sync_backbone_uri, b.presence_surface),
+        a.sync.sync_channel.is_some() && b.sync.sync_channel.is_some() && a.directory.presence_surface.is_some() && b.directory.presence_surface.is_some(),
+        format!("A uri={:?} surface={:?} B uri={:?} surface={:?}", a.sync.sync_backbone_uri, a.directory.presence_surface, b.sync.sync_backbone_uri, b.directory.presence_surface),
     );
 
     let mut trail = Vec::new();
@@ -682,14 +682,14 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
         Ok(Some(codec)) => drive(codec.pack_schema_hash()).ok(),
         _ => None,
     };
-    let socket_live = ledger.record("6-document-socket-live", live_after.is_some(), format!("after={live_after:?} trail={trail:?} native codec for {}={codec:?} hub_documents A={:?} B={:?}", journey.schema, a.hub_documents, b.hub_documents));
+    let socket_live = ledger.record("6-document-socket-live", live_after.is_some(), format!("after={live_after:?} trail={trail:?} native codec for {}={codec:?} hub_documents A={:?} B={:?}", journey.schema, a.sync.hub_documents, b.sync.hub_documents));
 
-    let presence_after = socket_live.then(|| pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |a, b| a.presence_peers.len() >= 2 && b.presence_peers.len() >= 2)).flatten();
+    let presence_after = socket_live.then(|| pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |a, b| a.directory.presence_peers.len() >= 2 && b.directory.presence_peers.len() >= 2)).flatten();
     let (a_online, b_online) = (online_members(&mut a, &space_id), online_members(&mut b, &space_id));
     ledger.record(
         "7-presence-both",
         presence_after.is_some() && a_online.iter().all(|(_, online)| *online) && b_online.iter().all(|(_, online)| *online),
-        format!("after={presence_after:?} A peers={} roster={a_online:?} B peers={} roster={b_online:?}", a.presence_peers.len(), b.presence_peers.len()),
+        format!("after={presence_after:?} A peers={} roster={a_online:?} B peers={} roster={b_online:?}", a.directory.presence_peers.len(), b.directory.presence_peers.len()),
     );
 
     let a_before = applied_edits(&mut a).len();
@@ -720,11 +720,11 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
     let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(3), &mut trail, |_, _| false);
     let pump_elapsed = offline_pump.elapsed();
     hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
-    let offline_phase = b.hub_workspace.phase.as_str();
+    let offline_phase = b.directory.hub_workspace.phase.as_str();
     let offline_remote = remote_of(&b);
     relay.heal();
     hub_verb(&mut b, crate::hub_connection::action::REFRESH_SPACES, &[]);
-    let healed_phase = b.hub_workspace.phase.as_str();
+    let healed_phase = b.directory.hub_workspace.phase.as_str();
     let a_before_heal = applied_edits(&mut a).len();
     let relive = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(40), &mut trail, |a, b| is_live(a) && is_live(b));
     let _ = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(10), &mut trail, |_, _| false);
@@ -787,12 +787,12 @@ fn native_guest_authored(journey: &NativeGuestJourney) -> ShellState {
     );
     let command = started.elapsed();
     let frames = settle_document_opening(&mut shell);
-    let session = shell.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
-    println!("native-guest-journey open command={command:?} frames={frames:?} session={session:?} error={:?}", shell.error);
-    assert!(shell.document_opening.is_none(), "the open settled and cleared its band: {:?}", shell.document_opening.as_ref().map(|opening| &opening.phase));
+    let session = shell.docs.session.as_ref().map(|session| (session.plugin_id.clone(), session.app.id.clone(), session.instance_id));
+    println!("native-guest-journey open command={command:?} frames={frames:?} session={session:?} error={:?}", shell.chrome.error);
+    assert!(shell.opening.document_opening.is_none(), "the open settled and cleared its band: {:?}", shell.opening.document_opening.as_ref().map(|opening| &opening.phase));
     assert_eq!(session.as_ref().map(|(plugin, app, _)| (plugin.as_str(), app.as_str())), Some((journey.plugin_id.as_str(), journey.app_id.as_str())), "the relay mounted the guest's app");
-    assert_eq!(shell.error, None, "every surface the session opened reached the retained registry");
-    assert_eq!(shell.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some(document_id.as_str()), "the relay bound the session to the document it opened");
+    assert_eq!(shell.chrome.error, None, "every surface the session opened reached the retained registry");
+    assert_eq!(shell.sync.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some(document_id.as_str()), "the relay bound the session to the document it opened");
 
     let before = applied_edits(&mut shell);
     let (edit, latency) = author_edit(&mut shell, &journey.verb);
@@ -916,21 +916,21 @@ fn a_native_guest_open_keeps_the_frame_loop_painting_and_is_cancellable() {
     };
 
     let command = open(&mut shell, "native-guest-open-cancelled");
-    assert_eq!(shell.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Instantiating), "the relay only starts the open");
-    shell.cancel_document_opening();
+    assert_eq!(shell.opening.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Instantiating), "the relay only starts the open");
+    shell.opening.cancel_document_opening();
     let cancelled = settle_document_opening(&mut shell);
-    println!("native-guest-open cancel command={command:?} frames={cancelled:?} phase={:?}", shell.document_opening.as_ref().map(|opening| &opening.phase));
-    assert_eq!(shell.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Cancelled), "the cancel settled the open");
-    assert!(shell.session.is_none() && shell.sync_channel.is_none(), "a cancelled open mounts nothing");
-    shell.cancel_document_opening();
-    assert!(shell.document_opening.is_none(), "closing the settled band clears it");
+    println!("native-guest-open cancel command={command:?} frames={cancelled:?} phase={:?}", shell.opening.document_opening.as_ref().map(|opening| &opening.phase));
+    assert_eq!(shell.opening.document_opening.as_ref().map(|opening| opening.phase.clone()), Some(ShellDocumentOpenPhase::Cancelled), "the cancel settled the open");
+    assert!(shell.docs.session.is_none() && shell.sync.sync_channel.is_none(), "a cancelled open mounts nothing");
+    shell.opening.cancel_document_opening();
+    assert!(shell.opening.document_opening.is_none(), "closing the settled band clears it");
 
     let command = open(&mut shell, "native-guest-open-painted");
     let frames = settle_document_opening(&mut shell);
     println!("native-guest-open command={command:?} frames={frames:?}");
     assert!(command < std::time::Duration::from_millis(500), "the relay started the open without a guest turn: {command:?}");
     assert!(frames.opening > 1 && frames.opening_longest < std::time::Duration::from_millis(500), "every frame stayed short while the guest opened: {frames:?}");
-    assert_eq!(shell.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some("native-guest-open-painted"));
+    assert_eq!(shell.sync.sync_channel.as_ref().map(|channel| channel.document_id.as_str()), Some("native-guest-open-painted"));
 }
 
 /// 🌱️ One native wgpu shell creates a hub-bound artifact through its own creation door against a
@@ -950,13 +950,13 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     let origin = live_env("SEMIO_HUB_LIVE_ORIGIN");
     let mut shell = shell();
     let refusal = sign_in_live(&mut shell, &origin, &live_env("SEMIO_HUB_LIVE_EMAIL"), &live_env("SEMIO_HUB_LIVE_PASSWORD"));
-    assert_eq!(shell.hub_workspace.session.phase, HubSessionPhase::SignedIn, "first refusal {refusal:?}");
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SignedIn, "first refusal {refusal:?}");
     let space_name = format!("wg8 door {}", chrome_now_ms() as u64);
     hub_verb(&mut shell, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
     hub_verb(&mut shell, crate::hub_connection::action::CREATE_SPACE, &[]);
-    let space_id = shell.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).expect("the created space is listed");
+    let space_id = shell.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).expect("the created space is listed");
     hub_verb(&mut shell, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
-    let creation = &shell.hub_workspace.creation;
+    let creation = &shell.directory.hub_workspace.creation;
     let kinds: Vec<(String, String, String)> = creation.catalog.iter().flat_map(|catalog| catalog.kinds.iter()).map(|kind| (kind.kind_id.clone(), kind.label.en.clone(), kind.label.de.clone())).collect();
     println!("wg8-door catalog={} kinds={kinds:?}", creation.catalog_phase.as_str());
     assert_eq!(creation.catalog_phase, HubArtifactCatalogPhase::Ready);
@@ -967,20 +967,20 @@ fn a_live_hub_artifact_is_created_through_the_wgpu_creation_door() {
     hub_verb(&mut shell, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
     let mut trail = Vec::new();
     while started.elapsed() < std::time::Duration::from_secs(150) {
-        let observed = shell.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+        let observed = shell.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
         if trail.last() != Some(&observed) {
             trail.push(observed);
         }
-        if shell.hub_workspace.creation.operation.as_ref().is_some_and(|operation| hub_artifact_creation_terminal(operation.phase) && operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
+        if shell.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| hub_artifact_creation_terminal(operation.phase) && operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening) {
             break;
         }
-        drive(shell.pump_sync_events());
+        drive(PointerCtx::of(&mut shell).pump_sync_events());
         std::thread::sleep(std::time::Duration::from_millis(25));
     }
-    let operation = shell.hub_workspace.creation.operation.clone().expect("the door holds its creation");
+    let operation = shell.directory.hub_workspace.creation.operation.clone().expect("the door holds its creation");
     println!("wg8-door kind={kind_id} trail={trail:?} after={:?} ready={:?}", started.elapsed(), operation.ready);
     for locale in [Locale::En, Locale::De] {
-        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.hub_workspace, locale);
+        let tree = crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale);
         let mut phases = Vec::new();
         hub_attribute_values(&tree, "data-semio-hub-artifact-creation-phase", &mut phases);
         println!("wg8-door tree locale={locale:?} phase={phases:?}");
@@ -1032,17 +1032,17 @@ impl CrossShellHandshake {
 #[cfg(not(target_arch = "wasm32"))]
 fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
-    let controller = shell.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
-    let mut windows: Vec<String> = shell.window_ui.keys().cloned().collect();
+    let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+    let mut windows: Vec<String> = shell.docs.window_ui.keys().cloned().collect();
     windows.sort();
-    shell.dock_window_plan = windows.iter().map(|window_id| (window_id.clone(), body)).collect();
-    let documents: Vec<(String, UiDocumentLease)> = windows.iter().filter_map(|window_id| shell.window_ui.remove(window_id).map(|document| (window_id.clone(), document))).collect();
+    shell.dock.dock_window_plan = windows.iter().map(|window_id| (window_id.clone(), body)).collect();
+    let documents: Vec<(String, UiDocumentLease)> = windows.iter().filter_map(|window_id| shell.docs.window_ui.remove(window_id).map(|document| (window_id.clone(), document))).collect();
     let rows: Vec<(&str, &str, &UiDocumentLease, Rect)> = documents.iter().map(|(window_id, document)| (window_id.as_str(), controller.as_str(), document, body)).collect();
     let _input = shell_input_tests::paint_component_pointer_documents(shell, &rows);
     drop(rows);
-    shell.window_ui.extend(documents);
-    shell.sync_engine_surface_states();
-    let boards: Vec<String> = shell.board2d_states.iter().map(|(_, surface)| surface.window_id.clone()).collect();
+    shell.docs.window_ui.extend(documents);
+    SessionCtx::of(&mut shell).sync_engine_surface_states();
+    let boards: Vec<String> = shell.surfaces.board2d_states.iter().map(|(_, surface)| surface.window_id.clone()).collect();
     println!("cross-shell native painted windows={windows:?} boards={boards:?}");
     boards
 }
@@ -1081,24 +1081,24 @@ impl CrossShellMeeting {
         let mut a = ShellState::new(plugins, variant, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
 
         let retry = sign_in_live(&mut a, &origin, &a_email, &a_password);
-        let a_user = a.hub_workspace.session.user_id.clone();
-        ledger.record("1-a-signs-in", a.hub_workspace.session.phase == HubSessionPhase::SignedIn, format!("A={} {a_user:?} retried-after={retry:?}", a.hub_workspace.session.phase.as_str()));
+        let a_user = a.directory.hub_workspace.session.user_id.clone();
+        ledger.record("1-a-signs-in", a.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn, format!("A={} {a_user:?} retried-after={retry:?}", a.directory.hub_workspace.session.phase.as_str()));
 
         let space_name = format!("wg8 cross-shell {}", chrome_now_ms() as u64);
         hub_verb(&mut a, crate::hub_connection::action::SET_SPACE_NAME, &[("value", space_name.as_str())]);
         hub_verb(&mut a, crate::hub_connection::action::CREATE_SPACE, &[]);
-        let space_id = a.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
+        let space_id = a.directory.hub_workspace.rows.iter().find(|row| row.name == space_name).map(|row| row.id.clone()).unwrap_or_default();
         shell_command(&mut a, "os.directory.upsert-member", &[("spaceId", space_id.as_str()), ("email", b_email.as_str()), ("role", "author")]);
         hub_verb(&mut a, crate::hub_connection::action::OPEN_SPACE, &[("spaceId", space_id.as_str())]);
-        let kind_id = a.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == schema)).map(|kind| kind.kind_id.clone()).unwrap_or_default();
+        let kind_id = a.directory.hub_workspace.creation.catalog.as_ref().and_then(|catalog| catalog.kinds.iter().find(|kind| kind.schema == schema)).map(|kind| kind.kind_id.clone()).unwrap_or_default();
         hub_verb(&mut a, crate::hub_connection::action::SELECT_ARTIFACT_KIND, &[("kindId", kind_id.as_str())]);
         hub_verb(&mut a, crate::hub_connection::action::SET_ARTIFACT_NAME, &[("value", "Cross-shell board")]);
         hub_verb(&mut a, crate::hub_connection::action::CREATE_ARTIFACT, &[]);
         let creation_started = std::time::Instant::now();
         let mut creation_trail = Vec::new();
-        while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
+        while creation_started.elapsed() < std::time::Duration::from_secs(600) && !a.directory.hub_workspace.creation.operation.as_ref().is_some_and(|operation| operation.opening != HubArtifactOpening::Idle && operation.opening != HubArtifactOpening::Opening)
         {
-            let observed = a.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
+            let observed = a.directory.hub_workspace.creation.operation.as_ref().map(|operation| (crate::hub_connection::hub_artifact_creation_phase_str(operation.phase), operation.opening));
             if creation_trail.last() != Some(&observed) {
                 creation_trail.push(observed);
             }
@@ -1108,30 +1108,30 @@ impl CrossShellMeeting {
         let a_open = settle_document_opening(&mut a);
         println!(
             "cross-shell native creation catalog={} trail={creation_trail:?} after={:?} open={a_open:?} phase={:?} error={:?}",
-            a.hub_workspace.creation.catalog_phase.as_str(),
+            a.directory.hub_workspace.creation.catalog_phase.as_str(),
             creation_started.elapsed(),
-            a.document_opening.as_ref().map(|opening| &opening.phase),
-            a.error
+            a.opening.document_opening.as_ref().map(|opening| &opening.phase),
+            a.chrome.error
         );
-        let document_id = a.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.as_ref()).map(|ready| ready.artifact_id.clone()).unwrap_or_default();
+        let document_id = a.directory.hub_workspace.creation.operation.as_ref().and_then(|operation| operation.ready.as_ref()).map(|ready| ready.artifact_id.clone()).unwrap_or_default();
         let live_after = pump_until(&mut a, std::time::Duration::from_secs(30), is_live);
         ledger.record(
             "2-a-creates-and-opens",
             !space_id.is_empty() && !document_id.is_empty() && live_after.is_some(),
-            format!("space={space_id} schema={schema} kind={kind_id:?} document={document_id} opening={:?} live-after={live_after:?} remote={}", a.hub_workspace.creation.operation.as_ref().map(|operation| operation.opening), remote_of(&a)),
+            format!("space={space_id} schema={schema} kind={kind_id:?} document={document_id} opening={:?} live-after={live_after:?} remote={}", a.directory.hub_workspace.creation.operation.as_ref().map(|operation| operation.opening), remote_of(&a)),
         );
         let boards = paint_session_windows(&mut a, Rect::new(0.0, 40.0, 1200.0, 760.0));
-        let a_actor = a.presence_self.as_ref().map(|(actor, _)| actor.clone()).unwrap_or_default();
+        let a_actor = a.directory.presence_self.as_ref().map(|(actor, _)| actor.clone()).unwrap_or_default();
         handshake.publish("open", serde_json::json!({ "spaceId": space_id, "documentId": document_id, "schema": schema, "actor": a_actor, "userId": a_user, "boards": boards, "live": live_after.is_some() }));
 
         let react_open = handshake.await_react(&mut a, "open", std::time::Duration::from_secs(600));
         ledger.record("3-b-opens-in-react", react_open.as_ref().is_some_and(|value| value["live"] == true), format!("{react_open:?}"));
 
         let is_b = |peer: &PresencePeer, a_actor: &str| peer.actor != a_actor && peer.user_id.is_some() && peer.user_id != a_user;
-        let presence_after = pump_until(&mut a, std::time::Duration::from_secs(30), |shell| shell.presence_peers.iter().any(|peer| is_b(peer, &a_actor)));
-        let b_peer = a.presence_peers.iter().find(|peer| is_b(peer, &a_actor)).cloned();
+        let presence_after = pump_until(&mut a, std::time::Duration::from_secs(30), |shell| shell.directory.presence_peers.iter().any(|peer| is_b(peer, &a_actor)));
+        let b_peer = a.directory.presence_peers.iter().find(|peer| is_b(peer, &a_actor)).cloned();
         let b_actor = b_peer.as_ref().map(|peer| peer.actor.clone()).unwrap_or_default();
-        handshake.publish("presence", serde_json::json!({ "seesReact": b_peer.is_some(), "reactActor": b_actor, "peers": a.presence_peers.iter().map(|peer| serde_json::json!({ "actor": peer.actor, "userId": peer.user_id, "label": peer.label, "color": peer.color, "views": peer.views.len() })).collect::<Vec<_>>() }));
+        handshake.publish("presence", serde_json::json!({ "seesReact": b_peer.is_some(), "reactActor": b_actor, "peers": a.directory.presence_peers.iter().map(|peer| serde_json::json!({ "actor": peer.actor, "userId": peer.user_id, "label": peer.label, "color": peer.color, "views": peer.views.len() })).collect::<Vec<_>>() }));
         let react_presence = handshake.await_react(&mut a, "presence", std::time::Duration::from_secs(120));
         ledger.record(
             "4-presence-both-ways",
@@ -1224,11 +1224,11 @@ fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
     let mut meeting = CrossShellMeeting::meet(CROSS_SHELL_BOARD_SCHEMA);
     let CrossShellMeeting { a, handshake, ledger, b_actor, boards, .. } = &mut meeting;
 
-    let board = a.board2d_states.iter().next().map(|(_, surface)| (surface.window_id.clone(), surface.bounds));
+    let board = a.surfaces.board2d_states.iter().next().map(|(_, surface)| (surface.window_id.clone(), surface.bounds));
     if let Some((_, bounds)) = board.as_ref() {
-        a.presence_pointer = Some((bounds.x + bounds.w * 0.75, bounds.y + bounds.h * 0.25));
+        a.directory.presence_pointer = Some((bounds.x + bounds.w * 0.75, bounds.y + bounds.h * 0.25));
     }
-    let (views, _) = a.board_presence_views();
+    let (views, _) = a.directory.board_presence_views(&a.surfaces);
     let _ = pump_until(a, std::time::Duration::from_secs(2), |_| false);
     handshake.publish(
         "cursor",
@@ -1236,9 +1236,9 @@ fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
     );
     let react_cursor = handshake.await_react(a, "cursor", std::time::Duration::from_secs(120));
     let b_actor = b_actor.clone();
-    let native_sees = pump_until(a, std::time::Duration::from_secs(20), |shell| shell.board_peer_overlays().iter().any(|(_, overlays)| overlays.cursors.iter().any(|cursor| cursor.actor == b_actor)));
-    let a_overlays: Vec<String> = a.board_peer_overlays().iter().flat_map(|(_, overlays)| overlays.cursors.iter().map(|cursor| format!("{}@{:?} chip={}", cursor.actor, cursor.at, cursor.chip))).collect();
-    let b_views: Vec<String> = a.presence_peers.iter().filter(|peer| peer.actor == b_actor).flat_map(|peer| peer.views.iter().map(|view| format!("{}:{}:{:?}", view.window_id, view.space, view.pointer))).collect();
+    let native_sees = pump_until(a, std::time::Duration::from_secs(20), |shell| shell.directory.board_peer_overlays(&shell.surfaces).iter().any(|(_, overlays)| overlays.cursors.iter().any(|cursor| cursor.actor == b_actor)));
+    let a_overlays: Vec<String> = a.directory.board_peer_overlays(&a.surfaces).iter().flat_map(|(_, overlays)| overlays.cursors.iter().map(|cursor| format!("{}@{:?} chip={}", cursor.actor, cursor.at, cursor.chip))).collect();
+    let b_views: Vec<String> = a.directory.presence_peers.iter().filter(|peer| peer.actor == b_actor).flat_map(|peer| peer.views.iter().map(|view| format!("{}:{}:{:?}", view.window_id, view.space, view.pointer))).collect();
     ledger.record(
         "5-cursors-both-ways",
         native_sees.is_some() && react_cursor.as_ref().is_some_and(|value| value["seesNativeCursor"] == true),
@@ -1386,25 +1386,25 @@ fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
     hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", "user1@semio.dev")]);
     hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", "correct horse battery staple")]);
     let (sender, receiver) = std::sync::mpsc::channel();
-    shell.hub_workspace.session = reduce_hub_session(&shell.hub_workspace.session, &HubSessionEvent::Submit);
-    shell.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
-    assert_eq!(shell.hub_workspace.session.phase, HubSessionPhase::SigningIn);
+    shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    assert_eq!(shell.directory.hub_workspace.session.phase, HubSessionPhase::SigningIn);
     for locale in [Locale::En, Locale::De] {
-        let tree = serde_json::to_string(&crate::hub_connection::build_hub_workspace_ui(&shell.hub_workspace, locale)).expect("hub tree json");
+        let tree = serde_json::to_string(&crate::hub_connection::build_hub_workspace_ui(&shell.directory.hub_workspace, locale)).expect("hub tree json");
         assert!(tree.contains("framework.hub.sign-in.cancel"), "a running sign-in offers Cancel ({locale:?})");
     }
-    assert!(!shell.poll_hub_workspace_tasks(), "nothing is applied before the hub answers");
+    assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "nothing is applied before the hub answers");
     sender.send(ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::InvalidCredentials, retry_after_seconds: None }).expect("the task answers");
-    assert!(shell.poll_hub_workspace_tasks(), "the pump applies the answer");
-    assert!(shell.hub_workspace_settled());
-    assert_eq!(shell.hub_workspace.session.error, Some(HubSignInErrorCode::InvalidCredentials));
+    assert!(shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "the pump applies the answer");
+    assert!(shell.directory.hub_workspace_settled());
+    assert_eq!(shell.directory.hub_workspace.session.error, Some(HubSignInErrorCode::InvalidCredentials));
 
     let (late, receiver) = std::sync::mpsc::channel();
-    shell.hub_workspace.session = reduce_hub_session(&shell.hub_workspace.session, &HubSessionEvent::Submit);
-    shell.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    shell.directory.hub_workspace.session = reduce_hub_session(&shell.directory.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.directory.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
     hub_verb(&mut shell, crate::hub_connection::action::CANCEL_SIGN_IN, &[]);
-    assert!(shell.hub_workspace_settled(), "Cancel ends the request");
+    assert!(shell.directory.hub_workspace_settled(), "Cancel ends the request");
     let _ = late.send(ShellHubSignInAnswer::Unverified);
-    assert!(!shell.poll_hub_workspace_tasks(), "a cancelled sign-in's late answer is never applied");
-    assert_eq!(shell.hub_workspace.session.error, Some(HubSignInErrorCode::Cancelled));
+    assert!(!shell.sync.poll_hub_workspace_tasks(&mut shell.directory), "a cancelled sign-in's late answer is never applied");
+    assert_eq!(shell.directory.hub_workspace.session.error, Some(HubSignInErrorCode::Cancelled));
 }

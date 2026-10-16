@@ -1,3 +1,6 @@
+import {isAbsolute,join,relative,resolve} from "node:path";
+import {frameworkOsEngineDeliveriesV1} from "../🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {flowBrowserPackageRequestV1} from "../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
 import { runtimeFixturePathV1 } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import catalog from "./📇️layout.json";
 import { installationDirectoryEmoji } from "../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
@@ -59,6 +62,12 @@ export function parseDistributionLayout(input: unknown): DistributionLayout {
 }
 
 export const DISTRIBUTION_LAYOUT = parseDistributionLayout(catalog);
+
+/** 🗺️ Binds symbolic engine coordinates to exactly the same selected immutable files as the retained input readers. */
+export function distributionLayoutForModeV1(workspace:string,productsRoot:string,mode:"prototype"|"release"):DistributionLayout{
+ if(!isAbsolute(workspace)||resolve(workspace)!==workspace)throw Error("Canonical distribution workspace DATA required");const engines=frameworkOsEngineDeliveriesV1(productsRoot,{version:1,mode,facet:"distribution"}),flow=flowBrowserPackageRequestV1(productsRoot,{version:1,mode}),coordinates=new Map<string,string>();for(const row of engines){coordinates.set("@engine/"+row.id+"/main",row.entry);const wasm=row.files.find(name=>name.endsWith(".wasm"));if(!wasm)throw Error("Declared engine binary required");coordinates.set("@engine/"+row.id+"/wasm",join(row.root,wasm));}for(const[key,file]of[["native","flow_core.js"],["browser","🌐️browser/🟨️.js"],["wasm","flow_core_bg.wasm"]]as const)coordinates.set("@engine/flow/"+key,join(flow.path,file));const source=(value:string)=>{if(!value.startsWith("@engine/"))return value;const path=coordinates.get(value);if(!path||path.length>256)throw Error("Exact bounded distribution engine coordinate required");return sourceCoordinate(relative(workspace,path).replaceAll("\\","/"));};return parseDistributionLayout({...DISTRIBUTION_LAYOUT,chunks:DISTRIBUTION_LAYOUT.chunks.map(row=>({...row,source:source(row.source)})),assets:DISTRIBUTION_LAYOUT.assets.map(row=>({...row,source:row.kind==="source"?source(row.source):row.source}))});
+}
+
 
 export type DistributionStaticInputs = { readonly version: 1; readonly paths: readonly string[]; readonly moduleEntries: readonly string[] };
 

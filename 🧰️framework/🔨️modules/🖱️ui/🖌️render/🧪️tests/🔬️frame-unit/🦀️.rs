@@ -52,7 +52,7 @@ impl Element for TestLeaf {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, _layout: &mut (), cx: &mut PrepaintCx<'_>) {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
-        cx.register(id, self.flags, self.listeners.clone(), Some(hitbox));
+        cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -100,7 +100,7 @@ impl<C: Element> Element for Wrap<C> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, cx: &mut PrepaintCx<'_>) -> Self::PrepaintState {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
-        let node = cx.register(id, self.flags, self.listeners.clone(), Some(hitbox));
+        let node = cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
         let child_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("child".into()));
         let child_bounds = offset_bounds(bounds, self.offset);
         let child = &mut self.child;
@@ -147,7 +147,7 @@ impl<A: Element, B: Element> Element for Pair<A, B> {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, cx: &mut PrepaintCx<'_>) -> Self::PrepaintState {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
-        let node = cx.register(id, self.flags, self.listeners.clone(), Some(hitbox));
+        let node = cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
         let a_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("a".into()));
         let b_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("b".into()));
         let a_bounds = offset_bounds(bounds, self.a_offset);
@@ -194,8 +194,8 @@ fn listen(bindings: Vec<ActionBinding>) -> crate::ListenerSet {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn build<E: Element>(root: E, viewport: [f32; 2]) -> Rc<FrameSnapshot> {
     let mut engine = FrameEngine::new();
-    let mut resources = crate::resource::ResourceRegistry::default();
-    let mut text = crate::TextSystem::default();
+    let mut resources = crate::ResourceRegistry::default();
+    let mut text = crate::TextSystem::without_builtin_fonts();
     let mut scheduler = FrameScheduler::default();
     let inputs = FrameInputs { resources: &mut resources, text: &mut text, scheduler: &mut scheduler, viewport, dpr: 1.0, time_seconds: 0.0 };
     engine.build_frame(root, inputs).expect("build_frame must succeed for these test elements");

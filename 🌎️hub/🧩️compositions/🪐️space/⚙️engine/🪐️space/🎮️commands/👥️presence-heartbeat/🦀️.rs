@@ -1,9 +1,8 @@
 //! 👥️ 👥️ S Studio app command — `presence-heartbeat`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "presence-heartbeat")]
@@ -28,8 +27,3 @@ pub fn handle_with_identity(
     Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::None, ..Default::default() })
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

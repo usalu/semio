@@ -1,4 +1,6 @@
-use super::*;
+use crate::TxtSnapshot;
+use semio_framework_plugin::BuiltNode;
+use crate::viewer::txt::modes::view::windows::main::*;
 use semio_framework_plugin::Component;
 
 /// 🚚️ Decodes the text surface and re-attaches every lane its carrier children hold (`SceneDoc::merge_lane`).

@@ -22,9 +22,9 @@ fn framework_root() -> std::path::PathBuf {
 
 fn armed_tour_shell() -> ShellState {
     let mut shell = super::appearance_tour_and_footer_pill_tests::tour_shell(Some(super::appearance_tour_and_footer_pill_tests::tour_introduction()));
-    shell.screen_w = 1440.0;
-    shell.screen_h = 900.0;
-    shell.auto_start_introduction("tour-app", false);
+    shell.chrome.screen_w = 1440.0;
+    shell.chrome.screen_h = 900.0;
+    shell.docs.auto_start_introduction("tour-app", false, &mut shell.chrome, &shell.tutorial);
     shell
 }
 
@@ -50,10 +50,10 @@ fn paint_tour(shell: &mut ShellState, theme: &Theme) -> PaintedTour {
     let mut steps = 0usize;
     let complete = (0..8192).any(|_| {
         steps += 1;
-        shell.render_chrome_tour_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, theme, 1440.0, 900.0)
+        OverlaysViewCtx::of(&mut shell).render_chrome_tour_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, theme, 1440.0, 900.0)
     });
     assert!(complete, "🎓️ the tour walk terminates");
-    assert_eq!(shell.error, None, "🎓️ and leaves no retained fault");
+    assert_eq!(shell.chrome.error, None, "🎓️ and leaves no retained fault");
     let card_region = overlay.layers.iter().find_map(|layer| layer.foreground_of);
     let quads_of = |foreground: bool| -> Vec<[f32; 4]> { overlay.layers.iter().filter(|layer| layer.foreground_of.is_some() == foreground).flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect() };
     PaintedTour {
@@ -80,7 +80,7 @@ fn paint_tour(shell: &mut ShellState, theme: &Theme) -> PaintedTour {
 fn an_armed_tour_paints_a_veil_a_card_and_its_controls() {
     let theme = Theme::light();
     let mut shell = armed_tour_shell();
-    assert_eq!(shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "🎓️ a fresh profile arms step 1");
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "🎓️ a fresh profile arms step 1");
     let painted = paint_tour(&mut shell, &theme);
 
     assert!(painted.veil.iter().any(|region| region.rect[2] >= 1439.0 && region.rect[3] >= 899.0), "🎓️ a screen-style step veils the WHOLE viewport: {:?}", painted.veil.len());
@@ -118,11 +118,11 @@ fn an_introduced_target_is_cut_out_of_the_veil_and_the_card_moves_beside_it() {
     let screen = paint_tour(&mut shell, &theme).glass[0];
 
     let anchor = Rect::new(100.0, 400.0, 120.0, 40.0);
-    shell.chrome_build.register_element_rect("transform", anchor);
+    shell.chrome.chrome_build.register_element_rect("transform", anchor);
     let mut introduction = super::appearance_tour_and_footer_pill_tests::tour_introduction();
     introduction.steps[0].introduce = Some("transform".into());
-    introduction.steps[0].placement = semio_framework::IntroductionPlacement::Right;
-    if let Some(session) = shell.session.as_mut() {
+    introduction.steps[0].placement = semio_framework::onboarding::IntroductionPlacement::Right;
+    if let Some(session) = shell.docs.session.as_mut() {
         session.app.introduction = Some(introduction);
     }
     let painted = paint_tour(&mut shell, &theme);
@@ -154,23 +154,23 @@ fn the_veil_owns_every_pointer_it_covers() {
     let painted = paint_tour(&mut shell, &theme);
     for (id, rect) in &painted.hits {
         let hit = HitTarget { rect: *rect, event: None, control_id: Some(id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None };
-        assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&hit)), "🧯️ {id} is the shell's press, never the surface's");
+        assert!(pointer_press_belongs_to_shell_chrome(Some(&hit)), "🧯️ {id} is the shell's press, never the surface's");
     }
     let stray = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("tree.label.seed-left-001".into()), kind: HitKind::Button, drag_axis: None, drag_data: None };
-    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&stray)), "🧯️ and an ordinary chrome Button still leaves the surface's press alone");
+    assert!(!pointer_press_belongs_to_shell_chrome(Some(&stray)), "🧯️ and an ordinary chrome Button still leaves the surface's press alone");
 
     let press = |shell: &mut ShellState, control_id: &str| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id.to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a tour press never errors"), "🧯️ the shell claims {control_id}");
+        assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a tour press never errors"), "🧯️ the shell claims {control_id}");
     };
     press(&mut shell, UI_INTRODUCTION_NEXT_CONTROL_ID);
-    assert_eq!(shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(1), "🎓️ Next advances");
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(1), "🎓️ Next advances");
     press(&mut shell, UI_INTRODUCTION_BACK_CONTROL_ID);
-    assert_eq!(shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "🎓️ Back returns");
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "🎓️ Back returns");
     press(&mut shell, UI_INTRODUCTION_VEIL_CONTROL_ID);
-    assert!(shell.chrome_build.tour_state.is_none(), "🧯️ a press on the veil ends the tour, as React's `onPointerDown={{skip}}` does");
-    assert!(shell.chrome_build.introduction_was_seen("tour-app"), "🎓️ and persists the answer through the same door Skip uses");
-    assert_eq!(shell.chrome_build.introduction_seen_writes, vec!["tour-app".to_string()], "🎓️ queued for W5a's storage door, not written twice");
+    assert!(shell.chrome.chrome_build.tour_state.is_none(), "🧯️ a press on the veil ends the tour, as React's `onPointerDown={{skip}}` does");
+    assert!(shell.chrome.chrome_build.introduction_was_seen("tour-app"), "🎓️ and persists the answer through the same door Skip uses");
+    assert_eq!(shell.chrome.chrome_build.introduction_seen_writes, vec!["tour-app".to_string()], "🎓️ queued for W5a's storage door, not written twice");
 }
 
 /// 🧪️ **The checklist law.** A step that declares interactions shows React's checklist instead of a
@@ -181,10 +181,10 @@ fn an_interaction_step_paints_a_checklist_and_no_next_button() {
     let mut shell = armed_tour_shell();
     let mut introduction = super::appearance_tour_and_footer_pill_tests::tour_introduction();
     introduction.steps[0].interactions = vec![
-        semio_framework::IntroductionInteraction { label: "Zoom".into(), on: semio_framework::IntroductionInteractionKind::Action("zoomIn".into()), celebrate: None },
-        semio_framework::IntroductionInteraction { label: "Pan".into(), on: semio_framework::IntroductionInteractionKind::Action("panLeft".into()), celebrate: None },
+        semio_framework::onboarding::IntroductionInteraction { label: "Zoom".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("zoomIn".into()), celebrate: None },
+        semio_framework::onboarding::IntroductionInteraction { label: "Pan".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("panLeft".into()), celebrate: None },
     ];
-    if let Some(session) = shell.session.as_mut() {
+    if let Some(session) = shell.docs.session.as_mut() {
         session.app.introduction = Some(introduction);
     }
     let painted = paint_tour(&mut shell, &theme);
@@ -217,7 +217,7 @@ fn the_published_control_ids_are_reacts_own() {
     assert_eq!(panel_tab_introduction_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
 
     let shell = super::appearance_tour_and_footer_pill_tests::tour_shell(None);
-    assert_eq!(shell.panel_tab_anchor("nothing.like.a.tab"), None, "🆔️ a non-tab id is not a panel tab");
+    assert_eq!(shell.dock.panel_tab_anchor("nothing.like.a.tab"), None, "🆔️ a non-tab id is not a panel tab");
 
     let source = crate::shell::SHELL_SOURCE.to_string();
     for dead in ["\"shell.tour.skip\"", "\"shell.tour.next\"", "\"shell.tour.back\"", "fn dock_tab_control("] {
@@ -420,12 +420,12 @@ fn every_chord_glyph_the_formatter_emits_rasterises() {
 fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scrim() {
     let theme = Theme::light();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
+    shell.chrome.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..8192).any(|_| shell.render_chrome_dialog_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme, 1440.0, 900.0));
+    let complete = (0..8192).any(|_| OverlaysViewCtx::of(&mut shell).render_chrome_dialog_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme, 1440.0, 900.0));
     assert!(complete, "🗨️ the dialog walk terminates");
 
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the dialog opens a glass-content layer");
@@ -445,10 +445,10 @@ fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scri
 
 /// 🔬️ The measured card of the armed step, straight off the production measurer.
 fn tour_layout(shell: &mut ShellState, theme: &Theme, atlas: &mut FontAtlas) -> ChromeTourLayout {
-    let step = shell.chrome_tour_active_step().expect("🎓️ a step is armed");
-    let step_index = shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index).expect("🎓️ the tour carries its index");
-    let step_count = shell.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()).expect("🎓️ the app declares its steps");
-    chrome_tour_layout(shell, atlas, theme, &step, step_index, step_count, 1440.0, 900.0)
+    let step = shell.docs.chrome_tour_active_step(&shell.chrome).expect("🎓️ a step is armed");
+    let step_index = shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index).expect("🎓️ the tour carries its index");
+    let step_count = shell.docs.session.as_ref().and_then(|session| session.app.introduction.as_ref()).map(|introduction| introduction.steps.len()).expect("🎓️ the app declares its steps");
+    chrome_tour_layout(&OverlaysViewCtx::of(shell), atlas, theme, &step, step_index, step_count, 1440.0, 900.0)
 }
 
 /// 🧪️ **The step-counter law.** The footer chip reads `1 / 2` — the step AND the total, with nothing
@@ -514,7 +514,7 @@ fn the_cards_chips_carry_reacts_label_chord_icon_order() {
     assert!(layout.grip.w > 0.0 && layout.grip.x + layout.grip.w <= layout.title_chip.x + layout.title_chip.w, "🎓️ the drag grip sits at the title chip's trailing edge");
     assert!(layout.title_rect.x + layout.title_rect.w <= layout.grip.x, "🎓️ after the title, never over it");
 
-    shell.chrome_build.tour_state.as_mut().expect("🎓️ the tour is armed").step_index = 1;
+    shell.chrome.chrome_build.tour_state.as_mut().expect("🎓️ the tour is armed").step_index = 1;
     let last = tour_layout(&mut shell, &theme, &mut atlas);
     assert_eq!(last.counter_text, "2 / 2");
     assert_eq!(last.next.as_ref().expect("🎓️ the last step still advances by button").icon_id, "check", "🎓️ the terminal step is Done, with React's own check icon");
@@ -549,13 +549,13 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
 
     let theme = Theme::light();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.context_menu = Some(ContextMenuState { x: 100.0, y: 100.0, items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }], ..Default::default() });
+    shell.input.context_menu = Some(ContextMenuState { x: 100.0, y: 100.0, items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }], ..Default::default() });
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..8192).any(|_| shell.render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
+    let complete = (0..8192).any(|_| ChromeViewCtx::of(&mut shell).render_context_menu_step(&mut cursor, &mut overlay, &mut atlas, &icons, &mut input, &theme, 1440.0, 900.0));
     assert!(complete, "🖱️ the context-menu walk terminates");
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the context menu opens a glass-content layer");
     let menu = overlay.glass_regions[sheet].rect;

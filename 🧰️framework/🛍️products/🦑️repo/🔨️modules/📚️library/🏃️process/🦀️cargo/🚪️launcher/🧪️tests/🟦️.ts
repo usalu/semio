@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
@@ -42,10 +43,10 @@ test("cache TestScript admits every branch through one original diagnostics call
 });
 
 test("isolated Cargo stores are removed on every owner settlement and swept only after their kernel claim is released",async()=>{
- await receiveScriptProcessInvocation(process.env,original=>withRepositoryTestArtifactsV1(process.cwd(),original,async()=>{const artifacts=repositoryTestArtifactRootV1(process.cwd());const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
+ await receiveScriptProcessInvocation(process.env,original=>withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{const artifacts=repositoryTestArtifactRootV1(process.cwd());const bounded=join(process.cwd(),fixture.diagnostics.directory),selected=relative(bounded,artifacts);expect(!isAbsolute(selected)&&selected!==".."&&!selected.startsWith("..\\")&&!selected.startsWith("../")).toBe(true);expect(lstatSync(artifacts).dev===lstatSync(bounded).dev).toBe(fixture.diagnostics.sameFilesystem);
  const parent=mkdtempSync(join(artifacts,"cl-")),directory=join(parent,"v"),leaseDirectory=join(process.cwd(),".cache/b/l/m/data");
  await receiveScriptProcessInvocation(process.env,async original=>{
-  const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),image=await openNativeImageStorageV1({directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control}),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
+  const control=scriptCompilerAdmissionControlV1(original,"repo:cargo:isolated-law",60000),options={directory,leaseDirectory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control};const image=await openNativeImageStorageV1(options),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:34603008,maximumWorkspaceBytes:8388608,maximumArtifactBytes:8388608};
   const storage=await acquireNativeStorageV1({policy,control,port:nativeStorageRetirementPortV1(image.port,async()=>{}),owner:"repo:cargo:isolated-law",kind:"compiler-workspace",bytes:8388608}),base=join(image.root,"cargo","prototype"),isolated=join(base,REPOSITORY_CARGO_LAUNCH_POLICY_V1.isolatedDirectory);
   const db=new Database(":memory:");db.exec("CREATE TABLE expected(name TEXT PRIMARY KEY, removed_after_owner INTEGER NOT NULL, removed_by_sweep INTEGER NOT NULL)");
   const present=(root:string)=>{const result=spawnSync("python3",["-c","import os,sys;print(int(os.path.isdir(sys.argv[1])))",root],{encoding:"utf8"});expect(result.status,result.stderr).toBe(0);return result.stdout.trim()==="1";};

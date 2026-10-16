@@ -1,4 +1,4 @@
-//! 📷️ MapHost camera, level-of-detail queries, tile cache, interaction commit, uploads, pointer input and feature picking.
+//! 📷️ MapHost policy wiring, camera, level-of-detail queries, tile cache, interaction commit, uploads, pointer input and feature picking.
 //!
 //! First half of `impl MapHost`; the second half lives in `host_scene`.
 
@@ -9,6 +9,38 @@ use super::*;
 impl MapHost {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// 🧩️ A host rendering by `extension`'s policy.
+    pub fn with_extension(extension: Arc<dyn MapExtension>) -> Self {
+        let mut host = Self::default();
+        host.set_extension(extension);
+        host
+    }
+
+    /// 🔁️ Replaces the domain extension (and with it the policy), invalidating the vector-scene cache.
+    pub fn set_extension(&mut self, extension: Arc<dyn MapExtension>) {
+        self.extension = extension;
+        self.policy_revision = self.policy_revision.wrapping_add(1);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+    }
+
+    pub fn extension(&self) -> &dyn MapExtension {
+        self.extension.as_ref()
+    }
+
+    pub fn policy(&self) -> &dyn MapPolicy {
+        self.extension.policy()
+    }
+
+    /// 📌️ The requested pinned band id, while the policy declares it.
+    pub fn pinned_band_id(&self) -> Option<&str> {
+        self.forced_lod_id.as_deref().filter(|id| self.policy().band_index(id).is_some())
+    }
+
+    /// 🌐️ Visible longitude span of the viewport, in degrees.
+    pub fn viewport_span_degrees(&self) -> f64 {
+        viewport_lon_span_degrees(&self.camera, &self.viewport)
     }
 
     fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
@@ -74,16 +106,17 @@ impl MapHost {
     }
 
     pub fn current_lod_json(&self) -> String {
-        let lod = active_map_lod(self.forced_lod_id.as_deref(), &self.camera, &self.viewport);
-        let tile_z = self.pick_raster_tile_zoom();
+        let policy = self.policy();
+        let pinned = self.pinned_band_id();
         let span_deg = viewport_lon_span_degrees(&self.camera, &self.viewport);
+        let band = policy.band(policy.band_for_span(span_deg, pinned));
         serde_json::json!({
-            "id": lod.id,
-            "name": lod.name,
-            "description": lod.description,
-            "tileZ": tile_z,
+            "id": band.id,
+            "name": band.name,
+            "description": band.description,
+            "tileZ": self.pick_raster_tile_zoom(),
             "spanDeg": span_deg,
-            "mode": self.forced_lod_id.as_deref().unwrap_or(GIS_MAP_LOD_MODE_AUTOMATIC),
+            "mode": pinned.unwrap_or(MAP_LOD_MODE_AUTOMATIC),
         })
         .to_string()
     }
@@ -170,49 +203,58 @@ impl MapHost {
         }
     }
 
+    /// 🌈️ Requests the policy style preset `style`; an id the policy does not declare paints its first preset.
     pub fn set_vector_style(&mut self, style: &str) {
-        self.vector_style = MapVectorStyle::parse(style);
+        self.vector_style = style.to_string();
     }
 
+    /// 🎨️ The style preset the host paints with.
+    pub fn style_preset(&self) -> &MapStylePreset {
+        self.policy().style_preset(&self.vector_style)
+    }
+
+    /// 🔽️ [`MAP_LOD_MODE_AUTOMATIC`] or a band id; the id is kept even before the policy that declares it arrives, and pins only once it does.
     pub fn set_lod_mode(&mut self, mode: &str) {
-        if mode == GIS_MAP_LOD_MODE_AUTOMATIC {
-            self.forced_lod_id = None;
-            return;
-        }
-        if GIS_MAP_LOD_SCALE.index_of(mode).is_some() {
-            self.forced_lod_id = Some(mode.to_string());
-        }
+        self.forced_lod_id = (mode != MAP_LOD_MODE_AUTOMATIC).then(|| mode.to_string());
     }
 
+    /// 👁️ Replaces the per-toggle visibility with a `{ "<toggle key>": bool }` object; an absent key is visible.
     pub fn set_layer_visibility_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
-        self.layer_visibility = serde_json::from_str(json)?;
+        self.layer_switches.visibility = serde_json::from_str(json)?;
         Ok(())
     }
 
     pub fn layer_visibility_json(&self) -> String {
-        serde_json::to_string(&self.layer_visibility).unwrap_or_else(|_| "{}".into())
+        serde_json::to_string(&self.layer_switches.visibility).unwrap_or_else(|_| "{}".into())
     }
 
+    /// 📏️ Replaces the per-toggle weights with a `{ "<toggle key>": number }` object, clamped to the slider range; an absent key weighs 1.0.
     pub fn set_layer_stroke_scale_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
-        let parsed: MapLayerStrokeScale = serde_json::from_str(json)?;
-        self.layer_stroke_scale = parsed.sanitized();
+        self.layer_switches.weights = MapLayerSwitches::sanitized_weights(serde_json::from_str(json)?);
         Ok(())
     }
 
     pub fn layer_stroke_scale_json(&self) -> String {
-        serde_json::to_string(&self.layer_stroke_scale).unwrap_or_else(|_| "{}".into())
+        serde_json::to_string(&self.layer_switches.weights).unwrap_or_else(|_| "{}".into())
+    }
+
+    /// 👀️ Whether `target` paints under the policy's toggles and the current switches.
+    pub fn layer_visible(&self, target: &MapLayerTarget) -> bool {
+        self.layer_switches.visible(self.policy(), target)
+    }
+
+    /// ⚖️ The weight `target` paints with under the policy's toggles and the current switches.
+    pub fn layer_weight(&self, target: &MapLayerTarget) -> f64 {
+        self.layer_switches.weight(self.policy(), target)
     }
 
     pub fn pick_raster_tile_zoom(&self) -> u32 {
-        tiles::pick_zoom(&self.camera, &self.viewport, self.forced_lod_id.as_deref())
+        tiles::pick_zoom(&self.camera, &self.viewport, self.policy(), self.pinned_band_id())
     }
 
     pub fn pick_vector_tile_zoom(&self) -> u32 {
-        let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-        let span_cap = vector_tiles::max_tile_z_for_span(span);
-        let lod_idx = resolve_map_lod_index_from_span(span);
-        let mut z = if lod_idx <= 1 { span_cap } else { self.pick_raster_tile_zoom().min(span_cap) };
-        z = z.min(vector_tiles::MAP_VECTOR_TILE_MAX_Z);
+        let policy = self.policy();
+        let mut z = policy.vector_tile_z_target(map_view_facts(&self.camera, &self.viewport, policy), self.pick_raster_tile_zoom());
         while z > 0 && tiles::visible_tile_cursor(&self.camera, &self.viewport, z).remaining() > MAX_VISIBLE_TILE_REQUESTS {
             z -= 1;
         }
@@ -227,8 +269,8 @@ impl MapHost {
         }
     }
 
-    pub fn vector_style_str(&self) -> &'static str {
-        self.vector_style.as_str()
+    pub fn vector_style_str(&self) -> &str {
+        &self.style_preset().id
     }
 
     pub(super) fn retain_tiles_for_keys(&mut self, pinned: &std::collections::BTreeSet<String>) {
@@ -388,20 +430,15 @@ impl MapHost {
         Ok(())
     }
 
+    /// 📨️ Mirrors the overlay features wholesale; a `policy` member that differs from the current policy replaces the extension with a [`DefaultMapExtension`] carrying it.
     pub fn sync_map_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
-        let desc: MapDescriptorJson = serde_json::from_str(json)?;
-        self.features.positions.clear();
-        self.features.routes.clear();
-        self.features.regions.clear();
-        for p in desc.positions {
-            self.features.positions.insert(p.id.clone(), p);
+        let sync: MapSyncJson = serde_json::from_str(json)?;
+        if let Some(descriptor) = sync.policy {
+            if self.policy().descriptor() != &descriptor {
+                self.set_extension(Arc::new(DefaultMapExtension::with_policy(DescribedMapPolicy::new(descriptor))));
+            }
         }
-        for r in desc.routes {
-            self.features.routes.insert(r.id.clone(), r);
-        }
-        for reg in desc.regions {
-            self.features.regions.insert(reg.id.clone(), reg);
-        }
+        self.overlays.layers = sync.overlays.into_iter().map(|(layer, features)| (layer, features.into_iter().map(|feature| (feature.id.clone(), feature)).collect())).collect();
         Ok(())
     }
 
@@ -447,218 +484,154 @@ impl MapHost {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
-    fn hit_test_position(&self, sx: f64, sy: f64) -> Option<String> {
-        let hit_r = 14.0;
-        let hit_r2 = hit_r * hit_r;
-        let mut best: Option<(String, f64)> = None;
-        for pos in self.features.positions.values() {
-            let w = projection::lonlat_to_world(pos.lon, pos.lat);
-            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let dx = s.x - sx;
-            let dy = s.y - sy;
-            let d2 = dx * dx + dy * dy;
-            if d2 <= hit_r2 && best.as_ref().is_none_or(|(_, best_d2)| d2 < *best_d2) {
-                best = Some((pos.id.clone(), d2));
-            }
-        }
-        best.map(|(id, _)| id)
+    /// 🖥️ Screen points of one overlay feature's coordinates through the live camera.
+    fn overlay_screen_points(&self, feature: &MapOverlayFeature) -> Vec<Point> {
+        feature.coordinates.iter().map(|[lon, lat]| map_viewport::world_to_screen(&self.camera, &self.viewport, projection::lonlat_to_world(*lon, *lat))).collect()
     }
 
-    fn hit_test_route(&self, sx: f64, sy: f64) -> Option<String> {
-        let hit_r = ui_styling::strokes::MAP_ROUTE_DEFAULT * 4.0 + 6.0;
-        let mut best: Option<(String, f64)> = None;
-        for route in self.features.routes.values() {
-            if route.points.len() < 2 {
-                continue;
-            }
-            let mut min_d = f64::INFINITY;
-            let mut prev: Option<Point> = None;
-            for [lon, lat] in &route.points {
-                let w = projection::lonlat_to_world(*lon, *lat);
-                let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-                if let Some(p0) = prev {
-                    min_d = min_d.min(map_point_segment_distance(sx, sy, p0.x, p0.y, s.x, s.y));
+    /// 📏️ Screen distance from `(sx, sy)` to one overlay feature: the marker centre for a point, the nearest segment for a line, zero inside or the nearest edge of an area; `None` when the feature has too few coordinates.
+    fn overlay_screen_distance(&self, layer: &MapOverlayLayer, feature: &MapOverlayFeature, sx: f64, sy: f64) -> Option<f64> {
+        let points = self.overlay_screen_points(feature);
+        match layer.geometry {
+            MapOverlayGeometry::Point => points.first().map(|s| ((s.x - sx).powi(2) + (s.y - sy).powi(2)).sqrt()),
+            MapOverlayGeometry::Line | MapOverlayGeometry::Area => {
+                if points.len() < 2 {
+                    return None;
                 }
-                prev = Some(s);
-            }
-            if min_d <= hit_r && best.as_ref().is_none_or(|(_, best_d)| min_d < *best_d) {
-                best = Some((route.id.clone(), min_d));
+                if layer.geometry == MapOverlayGeometry::Area && map_point_in_polygon(sx, sy, &points) {
+                    return Some(0.0);
+                }
+                Some(points.windows(2).map(|pair| map_point_segment_distance(sx, sy, pair[0].x, pair[0].y, pair[1].x, pair[1].y)).fold(f64::INFINITY, f64::min))
             }
         }
-        best.map(|(id, _)| id)
     }
 
+    /// 🎯️ The pickable overlay layers (those with a granularity), in declaration order.
+    pub fn pickable_overlays(&self) -> impl Iterator<Item = &MapOverlayLayer> {
+        self.policy().overlay_layers().iter().filter(|layer| layer.granularity.is_some())
+    }
+
+    /// 🎯️ The nearest pickable overlay feature within its layer's hit radius as `{ "kind": <granularity>, "id" }`, or `null`; the topmost (last declared) layer wins a tie.
     pub fn hit_test_feature_json(&self, sx: f64, sy: f64) -> String {
-        let pos_hit = self.hit_test_position(sx, sy);
-        let route_hit = self.hit_test_route(sx, sy);
-        match (pos_hit, route_hit) {
-            (Some(pos_id), Some(route_id)) => {
-                let pos_d = self.position_screen_distance(sx, sy, &pos_id).unwrap_or(f64::INFINITY);
-                let route_d = self.route_screen_distance(sx, sy, &route_id).unwrap_or(f64::INFINITY);
-                if pos_d <= route_d {
-                    serde_json::json!({ "kind": "position", "id": pos_id }).to_string()
-                } else {
-                    serde_json::json!({ "kind": "route", "id": route_id }).to_string()
+        let mut best: Option<(&str, &str, f64)> = None;
+        let layers: Vec<&MapOverlayLayer> = self.pickable_overlays().collect();
+        for layer in layers.into_iter().rev() {
+            let Some(granularity) = layer.granularity.as_deref() else {
+                continue;
+            };
+            for feature in self.overlays.features(&layer.id) {
+                let Some(distance) = self.overlay_screen_distance(layer, feature, sx, sy) else {
+                    continue;
+                };
+                if distance <= layer.hit_radius_px && best.is_none_or(|(_, _, best_distance)| distance < best_distance) {
+                    best = Some((granularity, feature.id.as_str(), distance));
                 }
             }
-            (Some(pos_id), None) => serde_json::json!({ "kind": "position", "id": pos_id }).to_string(),
-            (None, Some(route_id)) => serde_json::json!({ "kind": "route", "id": route_id }).to_string(),
-            (None, None) => "null".into(),
         }
+        best.map_or_else(|| "null".into(), |(kind, id, _)| serde_json::json!({ "kind": kind, "id": id }).to_string())
     }
 
-    fn position_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
-        let pos = self.features.positions.get(id)?;
-        let w = projection::lonlat_to_world(pos.lon, pos.lat);
-        let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-        Some(((s.x - sx).powi(2) + (s.y - sy).powi(2)).sqrt())
-    }
-
-    fn route_screen_distance(&self, sx: f64, sy: f64, id: &str) -> Option<f64> {
-        let route = self.features.routes.get(id)?;
-        if route.points.len() < 2 {
-            return None;
+    /// 🧺️ `{ "<pickable layer id>": [ids] }` with one (possibly empty) row per pickable overlay layer.
+    fn overlay_rows_json(&self, mut admits: impl FnMut(&MapOverlayLayer, &[Point]) -> bool) -> String {
+        let mut rows = serde_json::Map::new();
+        for layer in self.pickable_overlays() {
+            let ids: Vec<serde_json::Value> = self
+                .overlays
+                .features(&layer.id)
+                .filter(|feature| {
+                    let points = self.overlay_screen_points(feature);
+                    let enough = if layer.geometry == MapOverlayGeometry::Point { !points.is_empty() } else { points.len() >= 2 };
+                    enough && admits(layer, &points)
+                })
+                .map(|feature| serde_json::Value::String(feature.id.clone()))
+                .collect();
+            rows.insert(layer.id.clone(), serde_json::Value::Array(ids));
         }
-        let mut min_d = f64::INFINITY;
-        let mut prev: Option<Point> = None;
-        for [lon, lat] in &route.points {
-            let w = projection::lonlat_to_world(*lon, *lat);
-            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            if let Some(p0) = prev {
-                min_d = min_d.min(map_point_segment_distance(sx, sy, p0.x, p0.y, s.x, s.y));
-            }
-            prev = Some(s);
-        }
-        Some(min_d)
+        serde_json::Value::Object(rows).to_string()
     }
 
     pub fn features_in_rect_json(&self, x0: f64, y0: f64, x1: f64, y1: f64, crossing: bool) -> String {
         let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
-        let mut positions: Vec<String> = Vec::new();
-        let mut routes: Vec<String> = Vec::new();
-        for pos in self.features.positions.values() {
-            let w = projection::lonlat_to_world(pos.lon, pos.lat);
-            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let hit = s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y;
-            if hit {
-                positions.push(pos.id.clone());
+        let inside = |p: &Point| p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y;
+        self.overlay_rows_json(|layer, points| match layer.geometry {
+            MapOverlayGeometry::Point => inside(&points[0]),
+            MapOverlayGeometry::Line | MapOverlayGeometry::Area => {
+                if crossing {
+                    map_polyline_intersects_rect(points, min_x, min_y, max_x, max_y)
+                } else {
+                    points.iter().all(inside)
+                }
             }
-        }
-        for route in self.features.routes.values() {
-            if route.points.len() < 2 {
-                continue;
-            }
-            let screen_pts: Vec<Point> = route
-                .points
-                .iter()
-                .map(|[lon, lat]| {
-                    let w = projection::lonlat_to_world(*lon, *lat);
-                    map_viewport::world_to_screen(&self.camera, &self.viewport, w)
-                })
-                .collect();
-            let hit = if crossing { map_polyline_intersects_rect(&screen_pts, min_x, min_y, max_x, max_y) } else { screen_pts.iter().all(|p| p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y) };
-            if hit {
-                routes.push(route.id.clone());
-            }
-        }
-        serde_json::json!({ "positions": positions, "routes": routes }).to_string()
+        })
     }
 
     pub fn features_in_polygon_json(&self, points_json: &str, crossing: bool) -> String {
-        let points: Vec<Point> = match serde_json::from_str::<Vec<[f64; 2]>>(points_json) {
-            Ok(rows) => rows.into_iter().map(|[x, y]| Point::new(x, y)).collect(),
-            Err(_) => return serde_json::json!({ "positions": [], "routes": [] }).to_string(),
-        };
-        if points.len() < 3 {
-            return serde_json::json!({ "positions": [], "routes": [] }).to_string();
+        let polygon: Vec<Point> = serde_json::from_str::<Vec<[f64; 2]>>(points_json).map(|rows| rows.into_iter().map(|[x, y]| Point::new(x, y)).collect()).unwrap_or_default();
+        if polygon.len() < 3 {
+            return self.overlay_rows_json(|_, _| false);
         }
-        let mut positions: Vec<String> = Vec::new();
-        let mut routes: Vec<String> = Vec::new();
-        for pos in self.features.positions.values() {
-            let w = projection::lonlat_to_world(pos.lon, pos.lat);
-            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let inside = map_point_in_polygon(s.x, s.y, &points);
-            if crossing {
-                if inside {
-                    positions.push(pos.id.clone());
+        self.overlay_rows_json(|layer, points| match layer.geometry {
+            MapOverlayGeometry::Point => map_point_in_polygon(points[0].x, points[0].y, &polygon),
+            MapOverlayGeometry::Line | MapOverlayGeometry::Area => {
+                if crossing {
+                    map_polyline_intersects_polygon(points, &polygon)
+                } else {
+                    points.iter().all(|p| map_point_in_polygon(p.x, p.y, &polygon))
                 }
-            } else if inside {
-                positions.push(pos.id.clone());
             }
-        }
-        for route in self.features.routes.values() {
-            if route.points.len() < 2 {
-                continue;
-            }
-            let screen_pts: Vec<Point> = route
-                .points
-                .iter()
-                .map(|[lon, lat]| {
-                    let w = projection::lonlat_to_world(*lon, *lat);
-                    map_viewport::world_to_screen(&self.camera, &self.viewport, w)
-                })
-                .collect();
-            let hit = if crossing { map_polyline_intersects_polygon(&screen_pts, &points) } else { screen_pts.iter().all(|p| map_point_in_polygon(p.x, p.y, &points)) };
-            if hit {
-                routes.push(route.id.clone());
-            }
-        }
-        serde_json::json!({ "positions": positions, "routes": routes }).to_string()
+        })
     }
 
+    /// 📍️ Screen placement of one pickable feature (`kind` is its layer's granularity): `{ x, y }` for a point, the centroid plus `polyline` for a line or area, `null` when unknown.
     pub fn feature_screen_json(&self, kind: &str, id: &str) -> String {
-        match kind {
-            "position" => self.position_screen_json(id),
-            "route" => {
-                let Some(route) = self.features.routes.get(id) else {
-                    return "null".into();
-                };
-                if route.points.is_empty() {
-                    return "null".into();
-                }
-                let mut cx = 0.0;
-                let mut cy = 0.0;
-                let mut polyline = Vec::with_capacity(route.points.len());
-                for [lon, lat] in &route.points {
-                    let w = projection::lonlat_to_world(*lon, *lat);
-                    let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-                    cx += s.x;
-                    cy += s.y;
-                    polyline.push([s.x, s.y]);
-                }
-                let n = route.points.len() as f64;
-                serde_json::to_string(&serde_json::json!({ "x": cx / n, "y": cy / n, "polyline": polyline })).unwrap_or_else(|_| "null".into())
-            }
-            _ => "null".into(),
+        let Some(layer) = self.policy().overlay_for_granularity(kind) else {
+            return "null".into();
+        };
+        let Some(feature) = self.overlays.feature(&layer.id, id) else {
+            return "null".into();
+        };
+        let points = self.overlay_screen_points(feature);
+        if points.is_empty() {
+            return "null".into();
         }
+        if layer.geometry == MapOverlayGeometry::Point {
+            return serde_json::to_string(&serde_json::json!({ "x": points[0].x, "y": points[0].y })).unwrap_or_else(|_| "null".into());
+        }
+        let n = points.len() as f64;
+        let cx = points.iter().map(|p| p.x).sum::<f64>() / n;
+        let cy = points.iter().map(|p| p.y).sum::<f64>() / n;
+        let polyline: Vec<[f64; 2]> = points.iter().map(|p| [p.x, p.y]).collect();
+        serde_json::to_string(&serde_json::json!({ "x": cx, "y": cy, "polyline": polyline })).unwrap_or_else(|_| "null".into())
     }
 
     /// 🕹️ Replaces the deleted `set_selection_json`/`set_hover_json` push-setters. `granularity` is
-    /// the domain's currently-active granularity (`"position"` or `"route"`, from
+    /// the domain's currently-active granularity (an overlay layer's granularity, from
     /// `InteractionState::active_granularity`) — the framework's `DomainSelection`/`DomainHover` carry
-    /// one flat id list each, scoped to that granularity, so it clears the other kind's ids and tags
-    /// the hover accordingly. Called at render time with the framework's `InteractionState`, not
-    /// pushed arbitrarily by app code.
+    /// one flat id list each, scoped to that granularity, so it clears every other granularity's ids
+    /// and tags the hover accordingly. Called at render time with the framework's `InteractionState`,
+    /// not pushed arbitrarily by app code.
     pub fn sync_interaction(&mut self, granularity: &str, selected_ids: &[String], hovered_id: Option<&str>) {
-        self.selected_positions.clear();
-        self.selected_routes.clear();
-        match granularity {
-            "route" => self.selected_routes = selected_ids.iter().cloned().collect(),
-            _ => self.selected_positions = selected_ids.iter().cloned().collect(),
+        self.selected.clear();
+        if !selected_ids.is_empty() {
+            self.selected.insert(granularity.to_string(), selected_ids.iter().cloned().collect());
         }
         self.hovered_kind = hovered_id.map(|_| granularity.to_string());
         self.hovered_id = hovered_id.map(str::to_string);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
-    pub fn position_screen_json(&self, id: &str) -> String {
-        let Some(pos) = self.features.positions.get(id) else {
-            return "null".into();
-        };
-        let w = projection::lonlat_to_world(pos.lon, pos.lat);
-        let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-        serde_json::to_string(&serde_json::json!({ "x": s.x, "y": s.y })).unwrap_or_else(|_| "null".into())
+    /// 🕹️ Applies a scene's `selection_json` (`{ <overlay layer id>: [ids] }`) and `hover_json` (`{ "kind": <granularity>, "id" }` or `null`): the first declared pickable layer with selected ids wins, else the hover's granularity, else the first pickable one; the hover only lands when its kind is that granularity. The twin of React `resolveMapInteractionSync`.
+    pub fn sync_interaction_json(&mut self, selection_json: &str, hover_json: &str) {
+        let selection = serde_json::from_str::<serde_json::Value>(selection_json).unwrap_or_default();
+        let hover = serde_json::from_str::<serde_json::Value>(hover_json).unwrap_or_default();
+        let hover_kind = hover.get("kind").and_then(serde_json::Value::as_str).filter(|kind| !kind.is_empty());
+        let ids = |layer: &MapOverlayLayer| -> Vec<String> { selection.get(&layer.id).and_then(serde_json::Value::as_array).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_owned)).collect()).unwrap_or_default() };
+        let selected = self.pickable_overlays().map(|layer| (layer, ids(layer))).find(|(_, ids)| !ids.is_empty());
+        let granularity = selected.as_ref().and_then(|(layer, _)| layer.granularity.clone()).or_else(|| hover_kind.map(str::to_owned)).or_else(|| self.pickable_overlays().find_map(|layer| layer.granularity.clone())).unwrap_or_default();
+        let hovered = (hover_kind == Some(granularity.as_str())).then(|| hover.get("id").and_then(serde_json::Value::as_str)).flatten();
+        let selected_ids = selected.map(|(_, ids)| ids).unwrap_or_default();
+        self.sync_interaction(&granularity, &selected_ids, hovered);
     }
 
     /// 👻️ World coordinates to surface-local pixels through the map's live camera.
@@ -667,52 +640,45 @@ impl MapHost {
         (point.x, point.y)
     }
 
+    /// 🔍️ Frames one pickable feature (`kind` is its layer's granularity): centres and zooms in on a point, fits a line or area of at least two coordinates.
     pub fn focus_feature(&mut self, kind: &str, id: &str) -> bool {
-        let limits: serde_json::Value = serde_json::from_str(&gis_map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
+        let limits: serde_json::Value = serde_json::from_str(&map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
         let min_zoom = limits.get("min").and_then(|value| value.as_f64()).unwrap_or(0.05);
         let max_zoom = limits.get("max").and_then(|value| value.as_f64()).unwrap_or(64.0);
-        match kind {
-            "position" => {
-                let Some(pos) = self.features.positions.get(id) else {
-                    return false;
-                };
-                let world = projection::lonlat_to_world(pos.lon, pos.lat);
-                self.camera.x = world.x;
-                self.camera.y = world.y;
-                self.camera.zoom = (self.camera.zoom * 1.75).clamp(min_zoom, max_zoom);
-                self.clamp_camera_to_world();
-                self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
-                true
+        let Some((geometry, coordinates)) = self.policy().overlay_for_granularity(kind).and_then(|layer| self.overlays.feature(&layer.id, id).map(|feature| (layer.geometry, feature.coordinates.clone()))) else {
+            return false;
+        };
+        if geometry == MapOverlayGeometry::Point {
+            let Some([lon, lat]) = coordinates.first().copied() else {
+                return false;
+            };
+            let world = projection::lonlat_to_world(lon, lat);
+            self.camera.x = world.x;
+            self.camera.y = world.y;
+            self.camera.zoom = (self.camera.zoom * 1.75).clamp(min_zoom, max_zoom);
+        } else {
+            if coordinates.len() < 2 {
+                return false;
             }
-            "route" => {
-                let Some(route) = self.features.routes.get(id) else {
-                    return false;
-                };
-                if route.points.len() < 2 {
-                    return false;
-                }
-                let mut min_x = f64::INFINITY;
-                let mut max_x = f64::NEG_INFINITY;
-                let mut min_y = f64::INFINITY;
-                let mut max_y = f64::NEG_INFINITY;
-                for [lon, lat] in &route.points {
-                    let world = projection::lonlat_to_world(*lon, *lat);
-                    min_x = min_x.min(world.x);
-                    max_x = max_x.max(world.x);
-                    min_y = min_y.min(world.y);
-                    max_y = max_y.max(world.y);
-                }
-                let span = (max_x - min_x).max(max_y - min_y).max(64.0);
-                let fit_zoom = ((self.viewport.width as f64) * 0.55 / span).clamp(min_zoom, max_zoom);
-                self.camera.x = (min_x + max_x) * 0.5;
-                self.camera.y = (min_y + max_y) * 0.5;
-                self.camera.zoom = fit_zoom;
-                self.clamp_camera_to_world();
-                self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
-                true
+            let mut min_x = f64::INFINITY;
+            let mut max_x = f64::NEG_INFINITY;
+            let mut min_y = f64::INFINITY;
+            let mut max_y = f64::NEG_INFINITY;
+            for [lon, lat] in &coordinates {
+                let world = projection::lonlat_to_world(*lon, *lat);
+                min_x = min_x.min(world.x);
+                max_x = max_x.max(world.x);
+                min_y = min_y.min(world.y);
+                max_y = max_y.max(world.y);
             }
-            _ => false,
+            let span = (max_x - min_x).max(max_y - min_y).max(64.0);
+            self.camera.x = (min_x + max_x) * 0.5;
+            self.camera.y = (min_y + max_y) * 0.5;
+            self.camera.zoom = ((self.viewport.width as f64) * 0.55 / span).clamp(min_zoom, max_zoom);
         }
+        self.clamp_camera_to_world();
+        self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        true
     }
 
     pub fn has_tile(&self, key: &str) -> bool {
@@ -723,20 +689,14 @@ impl MapHost {
         self.tiles.vector_tiles.contains_key(key)
     }
 
-    pub fn selected_positions_json(&self) -> Vec<String> {
-        self.selected_positions.iter().cloned().collect()
+    /// 🔎️ One overlay feature by layer id and feature id.
+    pub fn overlay_feature(&self, layer: &str, id: &str) -> Option<&MapOverlayFeature> {
+        self.overlays.feature(layer, id)
     }
 
-    pub fn selected_position_ids(&self) -> impl ExactSizeIterator<Item = &str> {
-        self.selected_positions.iter().map(String::as_str)
-    }
-
-    pub fn selected_routes_json(&self) -> Vec<String> {
-        self.selected_routes.iter().cloned().collect()
-    }
-
-    pub fn selected_route_ids(&self) -> impl ExactSizeIterator<Item = &str> {
-        self.selected_routes.iter().map(String::as_str)
+    /// 🕹️ The selected feature ids of one granularity, in id order.
+    pub fn selected_ids<'a>(&'a self, granularity: &str) -> impl Iterator<Item = &'a str> + 'a {
+        self.selected.get(granularity).into_iter().flat_map(|ids| ids.iter()).map(String::as_str)
     }
 
     pub fn hovered_kind(&self) -> Option<&str> {

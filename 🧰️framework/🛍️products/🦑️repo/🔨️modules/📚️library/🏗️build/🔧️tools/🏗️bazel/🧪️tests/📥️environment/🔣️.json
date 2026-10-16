@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"name": "absent-root", "root": "/owned/repository", "inheritedRoot": null},
+    {"name": "foreign-root", "root": "/owned/repository", "inheritedRoot": "/foreign/repository"},
+    {"name": "windows-root", "root": "C:\\owned\\repository", "inheritedRoot": "C:\\foreign\\repository"}
+  ],
+  "maximumChildMilliseconds": 120000
+}

@@ -8,7 +8,7 @@
 //! contract wire JSON, derived independently of this implementation).
 
 use super::*;
-use crate::program_bridge::window_measures_section_tests::{fixture, measures_section_document};
+use crate::shell::section_fixtures::{fixture, measures_section_document};
 
 fn tree_parity_fixture() -> Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json")).expect("window measure tree parity fixture")
@@ -37,16 +37,16 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
     let body = &law["body"];
     let body = Rect::new(body["x"].as_f64().unwrap() as f32, body["y"].as_f64().unwrap() as f32, body["width"].as_f64().unwrap() as f32, body["height"].as_f64().unwrap() as f32);
     let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.screen_w = 1_000.0;
-    shell.screen_h = 900.0;
-    shell.measures_folded.insert(window.into(), false);
+    shell.chrome.screen_w = 1_000.0;
+    shell.chrome.screen_h = 900.0;
+    shell.windows.measures_folded.insert(window.into(), false);
     let surface = window_measures_surface_id(window);
-    let document = shell.publish_window_measures(window, &surface, &measures).unwrap().unwrap();
-    shell.window_measures_documents.insert(window.into(), document);
+    let document = shell.windows.publish_window_measures(window, &surface, &measures).unwrap().unwrap();
+    shell.docs.window_measures_documents.insert(window.into(), document);
     let first = paint_overlay(&mut shell, window, body);
     assert!(!first.input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(format!("{window}/sun-intensity").as_str())), "a folded measure group publishes no child input");
     let theme = Theme::default();
-    let rect = shell.window_measures_rect(window, body, &theme);
+    let rect = shell.windows.window_measures_rect(window, body, &theme);
     assert!(rect.y >= body.y + theme.control_height, "Window Options body begins below its chip");
     assert!(rect.h + (law["expected"]["minimumUnusedHeight"].as_f64().unwrap() as f32) < body.h, "Window Options hugs accepted content instead of consuming the viewport");
     for control in ["grid-visible", "grid-mode", "grid-spacing"] {
@@ -134,13 +134,13 @@ fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> Painted
     let mut cursor = ShellChromeChildCursor::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        let complete = caller.turn(|cx|shell.paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
+        let complete = caller.turn(|cx|ChromeViewCtx::of(&mut shell).paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
         assert!(!cursor.document.terminal_is_fault(), "the overlay paint faulted in phase {}", cursor.document.phase_name());
         complete
     });
     assert!(complete, "the overlay paint completed within its opportunity ceiling");
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    shell.publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
     caller.finish();
     PaintedOverlay { input, instances }
@@ -168,14 +168,14 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
     let fixture = fixture();
     let measures = section_measures();
     let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.active_utility_by_window.insert("puzzle3d-main".into(), "fill".into());
+    shell.windows.active_utility_by_window.insert("puzzle3d-main".into(), "fill".into());
     for gesture in fixture["gestures"].as_array().expect("fixture gestures") {
         let name = gesture["name"].as_str().expect("gesture name");
         let window_id = gesture["windowId"].as_str().expect("gesture window");
         let surface = window_measures_surface_id(window_id);
-        let document = shell.publish_window_measures(window_id, &surface, &measures[window_id]).expect("overlay publishes").expect("the window has general measures");
-        shell.window_measures_documents.insert(window_id.to_string(), document);
-        shell.measures_folded.insert(window_id.to_string(), false);
+        let document = shell.windows.publish_window_measures(window_id, &surface, &measures[window_id]).expect("overlay publishes").expect("the window has general measures");
+        shell.docs.window_measures_documents.insert(window_id.to_string(), document);
+        shell.windows.measures_folded.insert(window_id.to_string(), false);
         let rect = Rect::new(0.0, 0.0, 600.0, 720.0);
         let mut painted = paint_overlay(&mut shell, window_id, rect);
         assert!(painted.instances > 0, "{name}: the overlay painted instances");
@@ -187,15 +187,15 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         if let Some(events) = gesture["events"].as_array() {
             for event in events {
                 let commands = crate::interpreter::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
-                shell.chrome_build.note_content_focus_commands(&commands);
+                shell.chrome.chrome_build.note_content_focus_commands(&commands);
             }
-            assert!(shell.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
+            assert!(shell.chrome.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
         }
         if let Some(control) = gesture["press"].as_str() {
             let hit = painted.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("{name}: `{control}` registered a pointer target")).rect;
             let (x, y) = (hit.x + hit.w * 0.5, hit.y + hit.h * 0.5);
-            semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut painted.input, &Theme::default())).expect("accepted Measures press");
-            semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut painted.input, &Theme::default())).expect("accepted Measures release");
+            semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut painted.input, &Theme::default())).expect("accepted Measures press");
+            semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut painted.input, &Theme::default())).expect("accepted Measures release");
         }
         let expected = &gesture["expectedAction"];
         assert_eq!(dispatched(&mut painted.input, expected["action"].as_str().expect("expected action")), *expected, "{name}");
@@ -207,7 +207,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
             assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
         }
         assert!(!crate::interpreter::ui_document_close_pending_for(&surface));
-        let mut document = shell.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
+        let mut document = shell.docs.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
         while !document.close_step() {}
     }
     caller.finish();

@@ -5,25 +5,33 @@
 //! from the raw call arguments BEFORE anything is constructed, and `mod quick`'s
 //! `sensitive_field_never_reaches_the_sink` test proves it end-to-end through a real [`AuditSink`].
 
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::schema::RevisionStamp;
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
-use serde::{Deserialize, Serialize};
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use semio_framework_dispatch_macros::dyn_enum;
+use semio_framework_dispatch_macros::dyn_enum_close;
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Serialize;
+use std::fs::OpenOptions;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
+use crate::errors::{GatewayError, GatewayErrorCode};
+use crate::reports::RevisionStamp;
 
 //#region 🔖️ClientInfo
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct ClientInfo {
     pub name: String,
     pub version: String,
 }
+
 //#endregion 🔖️ClientInfo
 
 //#region 🔖️AuditDecision
+
 /// ⚖️ `Allowed|Denied{code}|Approved{by,mode}` — `📋️master.md` §3.4's frozen decision shape.
 // 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
 // out per-variant instead, same wire names.
@@ -38,9 +46,11 @@ pub enum AuditDecision {
     #[value(rename = "APPROVED")]
     Approved { by: String, mode: String },
 }
+
 //#endregion 🔖️AuditDecision
 
 //#region 🔖️AgentAuditEvent
+
 /// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `AgentAuditEvent::input_redacted`, built on
 /// `🌱️value/🦀️.rs`'s own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls.
 fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
@@ -79,9 +89,11 @@ pub struct AgentAuditEvent {
     pub undo_token: Option<String>,
     pub client: ClientInfo,
 }
+
 //#endregion 🔖️AgentAuditEvent
 
 //#region 🔖️Redaction
+
 /// 🙈️ Case-insensitive key names a real capability's raw arguments must never leak past — a later
 /// packet's per-capability policy can widen this per call site; this is the crate-wide floor.
 pub const SENSITIVE_KEYS: &[&str] = &["password", "token", "secret", "apikey", "api_key", "authorization", "bearer", "credential", "credentials"];
@@ -111,9 +123,11 @@ pub fn redact_input(input: &serde_json::Value, sensitive_keys: &[&str]) -> serde
         other => other.clone(),
     }
 }
+
 //#endregion 🔖️Redaction
 
 //#region 🔖️AuditSink
+
 /// 🖇️ Append-only writer seam — the event-sourced OS lane (`os.agent.audit` via `ArtifactHost`) a
 /// later packet builds implements this trait instead of [`FileAuditSink`]; nothing upstream of the
 /// trait changes when that lands.
@@ -128,7 +142,7 @@ pub trait AuditSink: Send + Sync {
 /// 🧪️ Test-only sink — records every appended event in order, nothing more.
 #[derive(Default)]
 pub struct InMemoryAuditSink {
-    events: Mutex<Vec<AgentAuditEvent>>,
+    pub events: Mutex<Vec<AgentAuditEvent>>,
 }
 
 impl InMemoryAuditSink {
@@ -151,7 +165,7 @@ impl AuditSink for InMemoryAuditSink {
 /// 📁️ JSON-lines file sink under [`default_audit_dir`] (overridable — `semio-os-mcp`'s CLI flags
 /// pass an explicit path) — one file, append-only, one `AgentAuditEvent` per line.
 pub struct FileAuditSink {
-    path: PathBuf,
+    pub path: PathBuf,
     write_lock: Mutex<()>,
 }
 
@@ -204,10 +218,8 @@ fn home_dir() -> Option<PathBuf> {
     }
     None
 }
+
 //#endregion 🔖️AuditSink
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

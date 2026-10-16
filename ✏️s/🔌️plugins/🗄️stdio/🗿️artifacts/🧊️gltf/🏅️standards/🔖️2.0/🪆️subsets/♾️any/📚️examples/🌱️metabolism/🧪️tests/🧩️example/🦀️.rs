@@ -5,8 +5,6 @@
 //! (c) analyzer→builder round-trip (the project's core acceptance test). F4: rewritten against the
 //! fully typed `GltfDocument` model -- no `serde_json::Value` indexing anywhere in this file.
 
-use semio_s_artifact_stdio_gltf_editor::examples::metabolism::decoded_snapshot;
-use semio_s_artifact_stdio_gltf_editor::examples::metabolism::BASE_GLB_BYTES;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
@@ -19,6 +17,15 @@ use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
 use crate::standards::v2_0::subsets::any::{GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
 use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
+
+/// 🗂️ The committed fixture, read when a test runs: the example leaf lives in the editor crate, which a test here consumes as a dependency, so it has no host-less fallback of its own.
+static BASE_GLB: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable").into_boxed_slice()));
+
+/// 🧬️ The fixture decoded through the real `.glb` container codec, as the example leaf does.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn decoded_snapshot() -> semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot {
+    decode_glb(*BASE_GLB).unwrap_or_else(|error| panic!("metabolism example base.glb decodes: {error}"))
+}
 
 //#region 🔖️(a) RealDecode
 #[semio_framework_async_macros::async_test]
@@ -83,7 +90,7 @@ async fn base_glb_decodes_with_real_non_trivial_invariants() {
 //#region 🔖️(b) DecodeEncodeDecode
 #[semio_framework_async_macros::async_test]
 async fn base_glb_decode_encode_decode_is_semantically_equal() {
-    let original = decode_glb(BASE_GLB_BYTES).expect("decode base.glb");
+    let original = decode_glb(*BASE_GLB).expect("decode base.glb");
     let reencoded = encode_glb(&original).expect("re-encode");
     assert_eq!(&reencoded[0..4], b"glTF");
     let redecoded = decode_glb(&reencoded).expect("re-decode");
@@ -114,7 +121,7 @@ async fn base_glb_decode_encode_decode_is_semantically_equal() {
 /// construction), then prove the rebuilt document decodes to the same real data as the original.
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
-    let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(BASE_GLB_BYTES)]);
+    let analysis = GltfAnalyzer::analyze(&[AnalyzeSource::Binary(*BASE_GLB)]);
     let original = analysis.parts.snapshot.expect("analyzer decodes base.glb");
     let doc = &original.document;
 

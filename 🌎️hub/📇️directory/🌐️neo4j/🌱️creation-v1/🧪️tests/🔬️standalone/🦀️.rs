@@ -1,13 +1,22 @@
 //! 🧪️ Real Neo4j genesis acknowledgement, lock-time authority, and recovery ownership laws.
 
-use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
-use super::tests::{Neo4jFixture, test_directory};
-use super::*;
-use crate::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
-use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
-use crate::artifact_authority::{ArtifactPair, checkpoint_id_encoding_v1};
-use crate::directory::published_artifact_checkpoint;
+use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
+use semio_hub_directory_neo4j::testkit::{Neo4jFixture, test_directory};
+
+use semio_hub_artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
+use semio_hub_artifact_authority::{ArtifactPair, checkpoint_id_encoding_v1};
+use semio_hub_directory::published_artifact_checkpoint;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
+use semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation;
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody};
+use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
+use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
+use semio_hub_directory_neo4j::Neo4jDirectory;
+use semio_hub_directory_neo4j_rows::now_ms;
+use neo4rs::query;
 
 struct GenesisFixture {
     directory: std::sync::Arc<Neo4jDirectory>,
@@ -58,7 +67,7 @@ impl GenesisFixture {
     }
 
     async fn operation(&self) -> ArtifactCreationOperationV1 {
-        crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&self.directory.read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
+        semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&self.directory.read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
     }
 
     async fn create() -> Self {
@@ -68,7 +77,7 @@ impl GenesisFixture {
             .issue_auth_session(&AuthSessionIssue {
                 user_id: "seed".into(),
                 identity_provider: "genesis-test".into(),
-                identity_subject_digest: crate::directory::identity_subject_digest("genesis-test", "seed").unwrap(),
+                identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("genesis-test", "seed").unwrap(),
                 ttl_secs: 60,
                 device_instance_id: "genesis-device".into(),
                 session_kind: AuthSessionKind::DevelopmentLocal,
@@ -90,7 +99,7 @@ impl GenesisFixture {
         prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&prepared.descriptor).unwrap();
         prepared.checkpoint.published_at_ms = intent.accepted_at_ms;
         prepared.checkpoint.checkpoint_id = ArtifactHash(semio_framework_hash::Sha256::digest(&checkpoint_id_encoding_v1(&prepared.checkpoint).unwrap()));
-        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
+        semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
         assert!(matches!(directory.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Accepted(_)));
         directory
             .append_artifact_creation_fact(&ArtifactCreationFactAppendV1 {

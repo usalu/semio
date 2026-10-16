@@ -6,10 +6,10 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
-import { JSDOM } from "jsdom";
-import { computeAccessibleDescription } from "dom-accessibility-api";
+const {JSDOM}=require("jsdom")as{JSDOM:new(markup:string)=>{window:{document:Document;close():void}}};
+const {computeAccessibleDescription}=require("dom-accessibility-api")as{computeAccessibleDescription(element:Element):string};
 import type { Component, UiNodeRecord } from "../../../../🛂️manifest/🟦️.ts";
-import { uiAccessibilityAnnouncedV1, uiAccessibilityIsFocusableV1, uiAccessibilityProjectionNodeV1, uiAccessibilityRoleV1, uiAccessibilityValueV1, uiProgressFractionV1 } from "../../♿️accessibility/🟦️.ts";
+import { uiAccessibilityAnnouncedV1, uiAccessibilityIsFocusableV1, uiAccessibilityProjectionNodeV1, uiAccessibilityRoleV1, uiAccessibilityValueV1, uiProgressFractionV1 } from "../../🖼️presentation/♿️accessibility/🟦️.ts";
 
 type RoleRow = { readonly id: string; readonly component: Component; readonly activatable: boolean; readonly role: string; readonly focusable: boolean };
 type ExpectedRow = {
@@ -95,6 +95,7 @@ export function accessibilityProjectionSelfTests(): number {
   });
   for (const [index, node] of projection.entries()) {
     const row = fixture.expected[index];
+    assert(row,"projection has an exact expected fixture row");
     assert.equal(node.key, row.key, `${row.key}: key`);
     assert.equal(node.role, row.role, `${row.key}: role`);
     assert.equal(node.label, row.label, `${row.key}: label`);

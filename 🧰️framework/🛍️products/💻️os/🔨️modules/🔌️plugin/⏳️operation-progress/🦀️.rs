@@ -32,13 +32,7 @@ pub fn operation_progress_dirty_scope(changed: bool, declared: impl FnOnce() -> 
     changed.then(declared).filter(|scope| *scope != UiDirtyScope::None)
 }
 
-pub fn cancellation_result_lane(user_requested: bool, worker_fault: bool) -> TypedOperationResultLane {
-    if user_requested && !worker_fault {
-        TypedOperationResultLane::Terminal
-    } else {
-        TypedOperationResultLane::Fault
-    }
-}
+pub use semio_framework_plugin_decl_app::operation_progress::cancellation_result_lane;
 
 pub fn operation_cancellation_target_admitted(present: bool, terminal: bool, cancellable: bool) -> bool {
     present && !terminal && cancellable

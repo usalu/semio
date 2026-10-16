@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🪪️ `artifact_kind().schema` IS `PROCEDURE_DOCUMENT_SCHEMA`: a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace
 /// store and host-media contributions all key on it (ticket 26/09/23 W4: a distinct "media schema" left the package without a

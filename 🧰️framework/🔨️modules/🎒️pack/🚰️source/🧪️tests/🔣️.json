@@ -104,8 +104,11 @@
     }
   ],
   "consumers": [
-    "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
-    "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/📡️replication/📐️format/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🎒️pack/🔌️io/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust/Cargo.toml",

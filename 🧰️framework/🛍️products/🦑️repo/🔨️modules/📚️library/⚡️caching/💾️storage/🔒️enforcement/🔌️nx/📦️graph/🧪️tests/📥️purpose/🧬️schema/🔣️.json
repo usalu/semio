@@ -1,0 +1,218 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumInputBytes": 4096,
+        "maximumReceiptBytes": 16384,
+        "reasons": {
+          "pressure": "Funded Nx graph cache capacity exhausted",
+          "watcher": "Bounded watcher metadata capacity exhausted",
+          "ledger": "Original graph purpose ledger refusal"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities",
+        "proof"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "pressure",
+            "watcher",
+            "ledger"
+          ]
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "proof": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "physicalWorkspace",
+                "positive",
+                "observations"
+              ],
+              "properties": {
+                "physicalWorkspace": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "positive": {
+                  "const": true
+                },
+                "observations": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "parentBytes",
+                    "selectedBytes",
+                    "poolMaximum",
+                    "parentFreeBytes",
+                    "activeReadersProtected",
+                    "refusedBody"
+                  ],
+                  "properties": {
+                    "parentBytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "selectedBytes": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "poolMaximum": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "parentFreeBytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "activeReadersProtected": {
+                      "const": true
+                    },
+                    "refusedBody": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "physicalWorkspace",
+                "positive",
+                "observations"
+              ],
+              "properties": {
+                "physicalWorkspace": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "positive": {
+                  "const": true
+                },
+                "observations": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "counts",
+                    "union",
+                    "malformedRefused",
+                    "foreignAbsent"
+                  ],
+                  "properties": {
+                    "counts": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "union": {
+                      "const": 64
+                    },
+                    "malformedRefused": {
+                      "const": true
+                    },
+                    "foreignAbsent": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "physicalWorkspace",
+                "positive",
+                "observations"
+              ],
+              "properties": {
+                "physicalWorkspace": {
+                  "type": "null"
+                },
+                "positive": {
+                  "const": false
+                },
+                "observations": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ledgerRefused"
+                  ],
+                  "properties": {
+                    "ledgerRefused": {
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "directory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "pressure",
+        "watcher",
+        "ledger"
+      ]
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PrintSourceStaging",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "directory",
+    "entries"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "directory": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "maxLength": 32
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 224
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumEntries": 4096,
+        "maximumFileBytes": 33554432,
+        "maximumBytes": 134217728,
+        "maximumDepth": 24,
+        "maximumPathUnits": 256
+      }
+    }
+  }
+}

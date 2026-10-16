@@ -142,7 +142,7 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
 
     // 🔒️ The switch carries the run start on its OWN emit, and the shell feeds those `requestedEffects`
     // back — exactly what is replayed here, together with every hop the run hands the host.
-    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "setActiveExample carries exactly one run start");
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "setActiveExample carries exactly one run start");
     let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
     assert!(ticks > 0, "the run setActiveExample started must dispatch at least one addressed flowEvalTick");
 
@@ -178,7 +178,7 @@ async fn generate_preview_eval_is_the_run_addressed_at_the_generate_preview() {
     app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
-    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "addGeneration carries exactly one run start on its own emit");
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "addGeneration carries exactly one run start on its own emit");
     let run = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
     assert!(run.hop_windows.iter().any(|window| window == "generation3d-generate-preview"), "the run must evaluate the generate preview window: {run:?}");
     assert!(run.answered > 0, "generate preview eval must cross the extension boundary, not settle as a dead sync tick: {run:?}");

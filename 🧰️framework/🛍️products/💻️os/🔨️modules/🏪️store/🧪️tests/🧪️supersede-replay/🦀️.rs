@@ -396,7 +396,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
     let mut probe = store.begin_report_replay(&entries, None).expect("probe").with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()));
     let total = probe.progress().total;
     probe.cancel();
-    super::super::raw_replay_retirement::tests::close(&mut probe);
+    super::super::raw_replay_retirement_tests::close(&mut probe);
     assert_eq!(total, 7);
     for stop in 0..=total {
         let (generation, revision, snapshot, applied, transitions, outcomes) =
@@ -415,7 +415,7 @@ async fn cancelling_a_report_replay_at_every_step_leaves_the_store_untouched() {
         assert_eq!(store.applied_edit_ids(), applied.as_slice());
         assert_eq!(store.envelope().transitions.len(), transitions);
         assert_eq!(store.mutation_outcomes().unwrap(), outcomes);
-        super::super::raw_replay_retirement::tests::close(&mut replay);
+        super::super::raw_replay_retirement_tests::close(&mut replay);
     }
 }
 
@@ -475,8 +475,8 @@ async fn state_before_answers_the_projection_before_an_operation_under_drafts() 
     assert_eq!(observe(&ids[3], protocol::HistoryInputDrafts::new()), Some(6));
     assert_eq!(observe(&ids[3], drafts(&[(&ids[0], Some(set(10)))])), Some(15));
     assert_eq!(observe(&ids[2], drafts(&[(&ids[1], None)])), Some(1));
-    assert!(store.prefix_ring.iter().all(|entry| entry.length <= 2), "only live prefixes are retained");
-    assert!(!store.prefix_ring.is_empty());
+    assert!(store.live.prefix_ring.iter().all(|entry| entry.length <= 2), "only live prefixes are retained");
+    assert!(!store.live.prefix_ring.is_empty());
     assert_eq!(store.snapshot_ref().n, Some(10), "a preview never touches the live projection");
 }
 
@@ -521,13 +521,13 @@ async fn prefix_ring_evictions_retire_through_the_snapshot_factory() {
     let ids = operation_ids(&store);
     let preview = store.state_before(&ids[5], &protocol::HistoryInputDrafts::new()).expect("preview");
     drive_retirement_terminal(admit_demo_alias_retirement(&store,preview));
-    let retained: Vec<usize> = store.prefix_ring.iter().map(|entry| entry.length).collect();
+    let retained: Vec<usize> = store.live.prefix_ring.iter().map(|entry| entry.length).collect();
     assert!(!retained.is_empty() && retained.iter().all(|length| *length >= 1));
-    let displaced = store.displaced_retirements.owners.len();
+    let displaced = store.owners.displaced_retirements.owners.len();
     fixture_author(&mut store, ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(40)))] }).await.expect("supersede");
-    assert!(store.displaced_retirements.owners.len() > displaced, "stale ring entries retire through displaced owners");
-    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation, _, _>(store.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
-    assert!(store.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "no stale entry survives");
+    assert!(store.owners.displaced_retirements.owners.len() > displaced, "stale ring entries retire through displaced owners");
+    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation, _, _>(store.cursor.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
+    assert!(store.live.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "no stale entry survives");
     close_demo_artifact_store(&mut store);
     assert!(completed.load(std::sync::atomic::Ordering::SeqCst) > retained.len(), "every evicted and live root retired exactly");
 }

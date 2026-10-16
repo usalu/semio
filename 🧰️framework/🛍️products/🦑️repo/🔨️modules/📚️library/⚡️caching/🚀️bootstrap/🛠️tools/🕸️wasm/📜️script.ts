@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -124,7 +125,7 @@ export async function prepareBinaryen(workspace: string, store:RepositoryTooling
 class PrepareScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Optimizer preparation accepts no arguments");
-    await withRepositoryToolingStoreV1(this.root,this.invocation,async store=>{const executable=await prepareBinaryen(this.root,store);console.log(`[DEBUG] Prepared bounded Binaryen ${executable}`);});
+    await withRepositoryToolingStoreV1(this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async store=>{const executable=await prepareBinaryen(this.root,store);console.log(`[DEBUG] Prepared bounded Binaryen ${executable}`);});
   }
 }
 

@@ -27,11 +27,11 @@ export async function testFlowRetainedReceipt():Promise<void>{
   if(result.failed){assert.deepEqual(result.error.retainedProgress,row.progress);assertions++;}
   const runtimeMemory=new WebAssembly.Memory({initial:2});const runtimeBridge=new MockFlowBridge(runtimeMemory);const runtime=await createFlowBrowserRuntime({source:runtimeBridge.exports});assert.deepEqual(runtime.stepProgress(),{copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0});await runtime.close();assertions++;
  }
- const protocol=readFileSync(new URL("../../📡️protocol/🦀️.rs",import.meta.url),"utf8");
+ const protocol=["🦀️.rs","🌉️bridge/🦀️.rs"].map((file)=>readFileSync(new URL(`../../📡️protocol/${file}`,import.meta.url),"utf8")).join("\n");
  assert.ok(/FlowFeatureStep::Failed\(failure\)\s*=>\s*\{\s*self\.retained_progress\s*=\s*failure\.retained_progress\s*;/.test(protocol),"actual normal failed child receipt must survive before reply projection");assertions++;
  const causes=fixture.failureCauses,text=causes.text.repeat(causes.repeat);assert.equal(Buffer.byteLength(text),causes.utf8Bytes);assertions++;
  for(const kind of causes.kinds){const original={kind,message:text,retainedProgress:fixture.normalFailure.progress};assert.equal(stableStringify(applyPatch(original,[],true,false).newDocument),stableStringify(original));assertions++;}
- const vcs=readFileSync(new URL("../../../🌿️vcs/♻️retirement/🦀️.rs",import.meta.url),"utf8"),domain=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+ const vcs=readFileSync(new URL("../../../🌿️vcs/♻️retirement/🦀️.rs",import.meta.url),"utf8"),domain=["🌉️domain-impl","🧩️domain-adapter","🌿️vcs-feature"].map((folder)=>readFileSync(new URL(`../../${folder}/🦀️.rs`,import.meta.url),"utf8")).join("\n");
  assert.ok(protocol.includes("pub enum FlowFailureCause")&&protocol.includes("Value(semio_framework_value::ValueError)"),"the original Flow failure must own the complete typed refusal");assertions++;
  assert.ok(vcs.includes("pub cause:Option<ValueError>")&&vcs.includes("cause:Some(error)"));assertions++;
  assert.ok(domain.includes("FlowFailure::from_value")&&domain.includes("failure.cause"));assertions++;

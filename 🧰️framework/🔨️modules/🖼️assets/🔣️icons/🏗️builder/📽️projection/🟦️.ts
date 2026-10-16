@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { leadingEmojiIdentity } from "../../../../🪪️identity/🧩️grapheme/🟦️.ts";
@@ -316,7 +317,7 @@ Shared fonts, cursors, lists, and UI chrome icons served at \`/🖼️assets/*\`
 
 Chrome icons are committed SVGs grouped by subject under \`🔣️icons/\`. Each source has one handpicked emoji; its public icon id is independent of that path. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Add or edit SVGs under \`🔣️icons/\`, then run the assets build dashboard command (\`@semio-tech/assets:build\`). Generated Rust SVG copies retain the exact source paths.
+Add or edit SVGs under \`🔣️icons/\`, then run the assets build dashboard command (\`@semio-tech/assets:build\`). Generated Rust SVG copies retain the exact source paths. Rust hosts receive the vendored sources, catalog and metabolism, as one runtime icon pack (\`🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json\`) through Canvas's runtime asset port; no Rust crate embeds an icon.
 
 ### Catalog icon ids
 
@@ -325,7 +326,10 @@ ${list}
   return { path: join(assetsDir, "README.md"), content: body };
 }
 
-/** 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
+/** 🔖️ Wire version of the runtime icon pack; the Rust reader `IconPack::VERSION` refuses any other. */
+export const ICON_PACK_VERSION = 1;
+
+/** 🔖️ Renders the emoji shortcode bindings, the runtime icon pack (raw themed and plain SVG sources) and the pack's size and SHA-256 digest (`🔏️digest/`, JSON and Rust constants, what a wasip2 plugin declares its package asset with) from the explicit external emoji snapshot. */
 function renderShortcodes(icons: Record<string, string>, iconsDir: string, generatedDir: string): readonly AssetArtifact[] {
   const catalog = Object.keys(icons).sort();
   const snapshotPath = join(iconsDir, "🔣️shortcodes.json");
@@ -367,27 +371,23 @@ export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefi
 `;
   const literal = (value: string): string => `"${escapeRustString(value)}"`;
   const sources = readCatalogSources(iconsDir);
-  const metabolism = readCatalogSources(join(assetsRoot(), "🌱️metabolism/🔣️icons"));
-  const emojiArms = Object.keys(emoji).sort().map((code) => `        ${literal(code)} => Some(ShortcodeResolved::Emoji(${literal(emoji[code]!)})),`).join("\n");
-  const arms = (values: readonly { id: string; path: string }[], prefix: string, kind: string): string => values.map(({id,path}) => `        ${literal(id)} => Some(ShortcodeResolved::${kind}(include_str!(${literal(prefix + path)}))),`).join("\n");
-  const rustBody = `/// 🔖️ Generated universal shortcode bindings owned by General Assets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ShortcodeResolved {
-    Emoji(&'static str),
-    SvgPlain(&'static str),
-    SvgThemed(&'static str),
-}
-pub fn icon_shortcode_resolve(code: &str) -> Option<ShortcodeResolved> {
-    let code = code.trim();
-    match code {
+  const metabolismDir = join(assetsRoot(), "🌱️metabolism/🔣️icons");
+  const metabolism = readCatalogSources(metabolismDir);
+  const emojiArms = Object.keys(emoji).sort().map((code) => `        ${literal(code)} => Some(${literal(emoji[code]!)}),`).join("\n");
+  const rustBody = `/// 🔖️ Generated universal shortcode emoji bindings owned by General Assets; the SVG bindings are the runtime icon pack \`🔣️.json\` beside this file.
+pub fn icon_shortcode_emoji(code: &str) -> Option<&'static str> {
+    match code.trim() {
 ${emojiArms}
-${arms(metabolism,"../../../🌱️metabolism/🔣️icons/","SvgThemed")}
-${arms(sources,"../../","SvgPlain")}
         _ => None,
     }
 }
 `;
-  return [{ path: join(generatedDir, "🔤️shortcodes", "🟦️.ts"), content: tsBody }, { path: join(generatedDir, "🔤️shortcodes", "🦀️.rs"), content: rustBody }];
+  const readSvgs = (directory: string, values: readonly { id: string; path: string }[]): Record<string, string> => Object.fromEntries(values.map(({ id, path }) => [id, readFileSync(join(directory, path), "utf8")]));
+  const packBody = `${JSON.stringify({ version: ICON_PACK_VERSION, themed: readSvgs(metabolismDir, metabolism), plain: readSvgs(iconsDir, sources) }, null, 1)}\n`;
+  const digest = { sizeBytes: Buffer.byteLength(packBody), sha256: createHash("sha256").update(packBody).digest("hex") };
+  const digestJson = `${JSON.stringify(digest)}\n`;
+  const digestRust = `/// 🔏️ Generated size and SHA-256 of the runtime icon pack \`../🔣️.json\`: what a wasip2 plugin declares its package asset with.\npub const ICON_PACK_SIZE_BYTES: u64 = ${digest.sizeBytes};\n\npub const ICON_PACK_SHA256: &str = "${digest.sha256}";\n`;
+  return [{ path: join(generatedDir, "🔤️shortcodes", "🟦️.ts"), content: tsBody }, { path: join(generatedDir, "🔤️shortcodes", "🦀️.rs"), content: rustBody }, { path: join(generatedDir, "🔤️shortcodes", "🔣️.json"), content: packBody }, { path: join(generatedDir, "🔤️shortcodes", "🔏️digest", "🔣️.json"), content: digestJson }, { path: join(generatedDir, "🔤️shortcodes", "🔏️digest", "🦀️.rs"), content: digestRust }];
 }
 //#endregion 🧬️Codegen
 

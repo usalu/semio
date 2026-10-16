@@ -10,10 +10,10 @@
 //! this crate as op payloads are — it stores/hashes/frames them, never decodes them; only
 //! `decode_base`'s caller knows how to turn embedded bytes into `P`.
 
-use crate::os_pack::{ByteReader, ByteWriter};
-use crate::os_spr::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
+use semio_framework_os_pack::{ByteReader, ByteWriter};
+use crate::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCursor, VerificationLevel, HEADER_SIZE};
 use protocol::ProtocolError;
-use crate::os_spr::wire::{DictReader, ProtocolLimits, RecordHasher};
+use crate::wire::{DictReader, ProtocolLimits, RecordHasher};
 use std::collections::HashMap;
 
 //#region 🔖️Snapshot
@@ -267,7 +267,7 @@ async fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> b
 async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
     let mut cursor = FrameCursor::new(trusted, offset).await;
     let frame = cursor.next_frame().await?.ok_or_else(|| malformed("snapshot frame", "missing frame at indexed offset"))?;
-    if frame.kind != crate::os_spr::REC_PROJECTION {
+    if frame.kind != crate::REC_PROJECTION {
         return Err(malformed("snapshot frame", "kind mismatch at indexed offset"));
     }
     let (header, body_span) = parse_snapshot(frame.payload().await).await?;
@@ -279,12 +279,12 @@ async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, 
 /// `SEC_CHECKPOINT_OFFSETS` are exactly what `resolve_plan` consults. `None` if no valid `REC_INDEX`
 /// frame exists (a file that has never been compacted/indexed), signalling the reverse-frame-scan
 /// fallback below.
-async fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexReader<'_>> {
+async fn locate_index(trusted: &[u8]) -> Option<crate::history::IndexReader<'_>> {
     let record_stream = &trusted[HEADER_SIZE..];
     let mut cursor = ReverseFrameCursor::at_end(record_stream).await;
     while let Ok(Some(frame)) = cursor.prev_frame().await {
-        if frame.kind == crate::os_spr::REC_INDEX {
-            if let Ok(reader) = crate::os_spr::history::IndexReader::open(frame.payload().await).await {
+        if frame.kind == crate::REC_INDEX {
+            if let Ok(reader) = crate::history::IndexReader::open(frame.payload().await).await {
                 return Some(reader);
             }
         }
@@ -296,7 +296,7 @@ async fn locate_index(trusted: &[u8]) -> Option<crate::os_spr::history::IndexRea
 /// corruption retries at a strictly lower ordinal cap (jumping straight past the corrupt entry when
 /// its own ordinal is known, else stepping down by one) until a valid candidate is found or the
 /// index is exhausted.
-async fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::os_spr::history::IndexReader<'_>, cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
+async fn find_snapshot_via_index<'a>(trusted: &'a [u8], index: &crate::history::IndexReader<'_>, cap: u64, skipped: &mut u32) -> Option<Candidate<'a>> {
     let hasher = Blake3Hasher;
     let mut remaining_cap = cap;
     loop {
@@ -323,7 +323,7 @@ async fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u3
     let record_stream = &trusted[HEADER_SIZE..];
     let mut cursor = ReverseFrameCursor::at_end(record_stream).await;
     while let Ok(Some(frame)) = cursor.prev_frame().await {
-        if frame.kind != crate::os_spr::REC_PROJECTION {
+        if frame.kind != crate::REC_PROJECTION {
             continue;
         }
         match parse_snapshot(frame.payload().await).await {
@@ -360,8 +360,8 @@ async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, li
             return Ok(Some(ordinal));
         }
     }
-    let options = crate::os_spr::history::DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
-    let log = crate::os_spr::history::decode_history(trusted, &options).await?;
+    let options = crate::history::DecodeOptions { verification: VerificationLevel::Standard, limits: limits.clone() };
+    let log = crate::history::decode_history(trusted, &options).await?;
     let fold = log.fold()?;
     let checkpoint = fold.checkpoints.iter().find(|c| c.id == checkpoint_id).ok_or_else(|| malformed("checkpoint", format!("checkpoint '{checkpoint_id}' not found")))?;
     let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
@@ -397,7 +397,7 @@ async fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget,
 // enum they're done with); it happens to be read-only in this implementation.
 #[allow(clippy::needless_pass_by_value)]
 pub async fn resolve_plan<'a>(protocol_bytes: &'a [u8], initial_pack: &'a [u8], target: MaterializeTarget, limits: &ProtocolLimits) -> Result<MaterializePlan<'a>, ProtocolError> {
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, limits, RecoveryMode::LastCommit).await?;
+    let recovery = crate::format::recover(&protocol_bytes, limits, RecoveryMode::LastCommit).await?;
     let trusted: &'a [u8] = &protocol_bytes[..recovery.bytes_recovered as usize];
 
     let target_edit_ordinal = resolve_target_edit_ordinal(trusted, &target, limits).await?;
@@ -454,11 +454,11 @@ async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(Di
             break;
         }
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
-            crate::os_spr::REC_EDIT => {
+            crate::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
+            crate::REC_EDIT => {
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
-                let edit = crate::os_spr::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
+                let edit = crate::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 edit_ids.push(edit.id);
             }
             _ => {}
@@ -479,7 +479,7 @@ pub async fn materialize_with<P, E>(
     plan: MaterializePlan<'_>,
     protocol_bytes: &[u8],
     decode_base: impl FnOnce(&[u8]) -> Result<P, E>,
-    mut apply_edit: impl AsyncFnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>,
+    mut apply_edit: impl AsyncFnMut(&mut P, &crate::history::HistoryEdit) -> Result<(), E>,
 ) -> Result<(P, MaterializeReport), E>
 where
     E: From<ProtocolError>,
@@ -491,7 +491,7 @@ where
     let mut snapshot = decode_base(base_bytes)?;
 
     let limits = ProtocolLimits::default();
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &limits, RecoveryMode::LastCommit).await.map_err(E::from)?;
+    let recovery = crate::format::recover(&protocol_bytes, &limits, RecoveryMode::LastCommit).await.map_err(E::from)?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
     let (mut dict, mut edit_ids) = prescan_dict_and_edits(trusted, plan.tail_start_offset).await.map_err(E::from)?;
@@ -504,8 +504,8 @@ where
     while let Some(frame) = cursor.next_frame().await.map_err(E::from)? {
         bytes_read += frame.frame_len().await;
         match frame.kind {
-            crate::os_spr::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await.map_err(E::from)?,
-            crate::os_spr::REC_EDIT => {
+            crate::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await.map_err(E::from)?,
+            crate::REC_EDIT => {
                 if let Some(target) = plan.target_edit_ordinal {
                     if edit_ordinal > target {
                         break;
@@ -513,7 +513,7 @@ where
                 }
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
-                let edit = crate::os_spr::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.map_err(E::from)?;
+                let edit = crate::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.map_err(E::from)?;
                 apply_edit(&mut snapshot, &edit).await?;
                 edit_ids.push(edit.id);
                 edit_ordinal += 1;

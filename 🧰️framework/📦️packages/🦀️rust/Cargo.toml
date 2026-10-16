@@ -17,44 +17,41 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-artifact-reference = { workspace = true }
-semio-framework-io-sqlite-snapshot = { path = "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
-replication = { package = "semio-framework-replication", path = "../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
-semio-framework-io-schema = { path = "../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-diagnostic = { path = "../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-io-schema = { path = "../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-# ⏯️ `ToolRunDefinition` on `ToolDefinition`/`UtilityDefinition` and the reserved tool run actions (manifest region `🔖️ToolRun`).
-semio-framework-tool-run = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
-semio-framework-hash = { path = "../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-# ⬇️ `kernel::media_export_bytes` — the first-party RFC 4648 codec that turns a
-# `Effect::DownloadMediaExport` envelope into the bytes a shell saves. No runtime `base64` crate.
-semio-framework-io-base64 = { path = "../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-# 📥️ `kernel::IMPORT_CHUNK_BYTES` derives the import chunk extent from the guest's own contiguous
-# request ceiling rather than restating it. `semio-framework-trace` is a zero-dependency pure-std
-# crate of exactly such bounds. Workspace-internal — the external dependency count is unchanged.
 semio-framework-trace = { workspace = true }
-semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
-semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-# 🧬️ `register_scope_schema_exports`/`resolve_schema_export` — the `(scope id, export id, format id)`
-# registry this crate's mounted `interaction::schema` leaf declares its named exports into.
-semio-framework-schema = { workspace = true }
+semio-framework-abi = { path = "../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
+semio-framework-action-bus = { path = "../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-interaction = { path = "../../🔨️modules/🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-kernel = { path = "../../🔨️modules/🎠️kernel/📦️packages/🦀️rust" }
+semio-framework-kernel-history = { path = "../../🔨️modules/🎠️kernel/📜️history/📦️packages/🦀️rust" }
+semio-framework-kernel-identity = { path = "../../🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-kernel-media-jobs = { path = "../../🔨️modules/🎠️kernel/🎞️media-jobs/📦️packages/🦀️rust" }
+semio-framework-kernel-ui = { path = "../../🔨️modules/🎠️kernel/🖼️ui/📦️packages/🦀️rust" }
+semio-framework-manifest-actions = { path = "../../🔨️modules/🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
+semio-framework-manifest-address = { path = "../../🔨️modules/🛂️manifest/🧭️address/📦️packages/🦀️rust" }
+semio-framework-manifest-app-surface = { path = "../../🔨️modules/🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
+semio-framework-manifest-arg-schema = { path = "../../🔨️modules/🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-manifest-contribution = { path = "../../🔨️modules/🛂️manifest/🧩️contribution/📦️packages/🦀️rust" }
+semio-framework-manifest-media = { path = "../../🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }
+semio-framework-manifest-mutation-inputs = { path = "../../🔨️modules/🛂️manifest/🔡️mutation-inputs/📦️packages/🦀️rust" }
+semio-framework-manifest-plugin = { path = "../../🔨️modules/🛂️manifest/🧾️plugin-manifest/📦️packages/🦀️rust" }
+semio-framework-manifest-view-model = { path = "../../🔨️modules/🛂️manifest/🖼️view-model/📦️packages/🦀️rust" }
+semio-framework-onboarding = { path = "../../🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }
+semio-framework-source-projection = { path = "../../🔨️modules/📁️filesystem/📷️snapshot/📦️packages/🦀️rust" }
+semio-framework-time-travel-actions = { path = "../../🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust" }
+semio-framework-tool-run-actions = { path = "../../🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
-pack = { workspace = true }
-semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🔬️ Third-party oracle for `kernel::media_export_bytes`'s base64 lane — dev-only, never a runtime dep.
-base64 = "0.22.1"
 
 [[test]]
 name="original_kernel_retirement"

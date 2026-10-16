@@ -13,7 +13,7 @@ use std::f64::consts::{FRAC_PI_2, TAU};
 /// skipped (`pathSegmentsToSvgD` emits nothing for it) and a missing field ends the path where the SVG parser would.
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct ScenePathSegment {
+pub struct ScenePathSegment {
     #[serde(default)]
     pub kind: String,
     #[serde(default)]
@@ -38,13 +38,13 @@ pub(crate) struct ScenePathSegment {
 
 /// 🪢️ The fill rule: `evenodd` unless the node says `nonzero` (`drawSceneNode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FillRule {
+pub enum FillRule {
     EvenOdd,
     NonZero,
 }
 
 impl FillRule {
-    pub(crate) fn of(rule: Option<&str>) -> Self {
+    pub fn of(rule: Option<&str>) -> Self {
         if rule == Some("nonzero") {
             Self::NonZero
         } else {
@@ -62,14 +62,14 @@ impl FillRule {
 
 /// 🧢️ The stroke end cap; `butt` unless named.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum LineCap {
+pub enum LineCap {
     Butt,
     Round,
     Square,
 }
 
 impl LineCap {
-    pub(crate) fn of(cap: Option<&str>) -> Self {
+    pub fn of(cap: Option<&str>) -> Self {
         match cap {
             Some("round") => Self::Round,
             Some("square") => Self::Square,
@@ -80,14 +80,14 @@ impl LineCap {
 
 /// 🦵️ The stroke join; `miter` unless named.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum LineJoin {
+pub enum LineJoin {
     Miter,
     Round,
     Bevel,
 }
 
 impl LineJoin {
-    pub(crate) fn of(join: Option<&str>) -> Self {
+    pub fn of(join: Option<&str>) -> Self {
         match join {
             Some("round") => Self::Round,
             Some("bevel") => Self::Bevel,
@@ -100,13 +100,13 @@ impl LineJoin {
 //#region 📐️Affine
 /// 📐️ A 2D affine map in canvas `transform` order `[a, b, c, d, e, f]`: `x' = a·x + c·y + e`, `y' = b·x + d·y + f`.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Affine(pub [f64; 6]);
+pub struct Affine(pub [f64; 6]);
 
 impl Affine {
-    pub(crate) const IDENTITY: Self = Self([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    pub const IDENTITY: Self = Self([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
 
     /// 🔁️ The node's own `transform`, read like `applySceneTransform`: only a list of at least six numbers applies.
-    pub(crate) fn node(transform: Option<&[f64]>) -> Self {
+    pub fn node(transform: Option<&[f64]>) -> Self {
         match transform {
             Some(m) if m.len() >= 6 => Self([m[0], m[1], m[2], m[3], m[4], m[5]]),
             _ => Self::IDENTITY,
@@ -115,31 +115,31 @@ impl Affine {
 
     /// 🎥️ The host camera: world → screen for a canvas whose top-left corner is `(left, top)`, logical size
     /// `width × height`, centred on `(x, y)` at `zoom` (`worldToScreenLogical`).
-    pub(crate) fn camera(x: f64, y: f64, zoom: f64, left: f64, top: f64, width: f64, height: f64) -> Self {
+    pub fn camera(x: f64, y: f64, zoom: f64, left: f64, top: f64, width: f64, height: f64) -> Self {
         Self([zoom, 0.0, 0.0, zoom, left + width * 0.5 - x * zoom, top + height * 0.5 - y * zoom])
     }
 
     /// ➡️ `self` first, then `next`.
-    pub(crate) fn then(self, next: Self) -> Self {
+    pub fn then(self, next: Self) -> Self {
         let [a, b, c, d, e, f] = self.0;
         let [na, nb, nc, nd, ne, nf] = next.0;
         Self([na * a + nc * b, nb * a + nd * b, na * c + nc * d, nb * c + nd * d, na * e + nc * f + ne, nb * e + nd * f + nf])
     }
 
-    pub(crate) fn apply(&self, [x, y]: [f64; 2]) -> [f64; 2] {
+    pub fn apply(&self, [x, y]: [f64; 2]) -> [f64; 2] {
         let [a, b, c, d, e, f] = self.0;
         [a * x + c * y + e, b * x + d * y + f]
     }
 
     /// ↩️ The inverse map, `None` when the map collapses the plane.
-    pub(crate) fn inverse(&self) -> Option<Self> {
+    pub fn inverse(&self) -> Option<Self> {
         let [a, b, c, d, e, f] = self.0;
         let det = a * d - b * c;
         (det != 0.0 && det.is_finite()).then(|| Self([d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det]))
     }
 
     /// 📏️ The factor a line width scales by: the geometric mean of the axes, `√|det|`.
-    pub(crate) fn line_scale(&self) -> f64 {
+    pub fn line_scale(&self) -> f64 {
         let [a, b, c, d, ..] = self.0;
         (a * d - b * c).abs().sqrt()
     }
@@ -157,13 +157,13 @@ impl Affine {
 //#region ✏️Flatten
 /// 🧵️ One flattened subpath in screen space: its points (no two consecutive equal) and whether a `close` ended it.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct Contour {
+pub struct Contour {
     pub points: Vec<[f64; 2]>,
     pub closed: bool,
 }
 
 /// 🎯️ The screen distance a flattened curve may stray from the true one.
-pub(crate) const FLATNESS: f64 = 0.2;
+pub const FLATNESS: f64 = 0.2;
 const MAX_CURVE_STEPS: usize = 256;
 const MAX_ARC_STEPS: usize = 512;
 
@@ -255,7 +255,7 @@ fn arc(contour: &mut Contour, map: &Affine, from: [f64; 2], to: [f64; 2], rx: f6
 /// ✏️ Flattens `segments` through `map` (node transform then camera) into screen-space subpaths with the SVG path
 /// semantics `Path2D` parses them with: a path starts with a move (anything else before it ends the path), a segment after
 /// a close starts a new subpath at the closed subpath's start, an unknown kind is skipped and a missing field ends the path.
-pub(crate) fn flatten(segments: &[ScenePathSegment], map: &Affine) -> Vec<Contour> {
+pub fn flatten(segments: &[ScenePathSegment], map: &Affine) -> Vec<Contour> {
     let mut contours = Vec::new();
     let mut current: Option<Contour> = None;
     let mut cursor: Option<[f64; 2]> = None;
@@ -302,7 +302,7 @@ pub(crate) fn flatten(segments: &[ScenePathSegment], map: &Affine) -> Vec<Contou
 //#region 🪣️Fill
 /// 🟫️ One fill trapezoid in screen space: a horizontal top and bottom and the left and right x at each.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Trapezoid {
+pub struct Trapezoid {
     pub top: f64,
     pub bottom: f64,
     pub top_left: f64,
@@ -313,18 +313,18 @@ pub(crate) struct Trapezoid {
 
 impl Trapezoid {
     /// 🔷️ Its corners clockwise from the top left — a convex polygon (two corners may coincide).
-    pub(crate) fn corners(&self) -> [[f64; 2]; 4] {
+    pub fn corners(&self) -> [[f64; 2]; 4] {
         [[self.top_left, self.top], [self.top_right, self.top], [self.bottom_right, self.bottom], [self.bottom_left, self.bottom]]
     }
 
     /// ⚖️ The mean of its corners, where a gradient piece samples its colour.
-    pub(crate) fn center(&self) -> [f64; 2] {
+    pub fn center(&self) -> [f64; 2] {
         [(self.top_left + self.top_right + self.bottom_left + self.bottom_right) * 0.25, (self.top + self.bottom) * 0.5]
     }
 
     /// ✂️ Cuts it into pieces at most `step` pixels tall and wide: horizontal cuts, then ruled cuts joining matching points
     /// of the top and the bottom, so every piece is a trapezoid again.
-    pub(crate) fn pieces(&self, step: f64) -> Vec<Trapezoid> {
+    pub fn pieces(&self, step: f64) -> Vec<Trapezoid> {
         let rows = ((self.bottom - self.top) / step).ceil().max(1.0) as usize;
         let mut pieces = Vec::new();
         for row in 0..rows {
@@ -358,7 +358,7 @@ impl Edge {
 
 /// 🪣️ Tessellates the fill of `contours` (every subpath implicitly closed) under `rule` into trapezoids between the screen
 /// rows `clip.0` and `clip.1`: a sweep over every vertex row, bands split where edges cross, spans walked by winding.
-pub(crate) fn fill_trapezoids(contours: &[Contour], rule: FillRule, clip: (f64, f64)) -> Vec<Trapezoid> {
+pub fn fill_trapezoids(contours: &[Contour], rule: FillRule, clip: (f64, f64)) -> Vec<Trapezoid> {
     let mut edges = Vec::new();
     for contour in contours.iter().filter(|contour| contour.points.len() >= 3) {
         let count = contour.points.len();
@@ -431,7 +431,7 @@ fn fill_band(active: &[Edge], top: f64, bottom: f64, rule: FillRule, out: &mut V
 //#region 🖊️Stroke
 /// 🖊️ A stroke in screen pixels: width, cap, join and the dash pattern (empty = solid).
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct StrokeGeometry {
+pub struct StrokeGeometry {
     pub width: f64,
     pub cap: LineCap,
     pub join: LineJoin,
@@ -439,7 +439,7 @@ pub(crate) struct StrokeGeometry {
 }
 
 /// 📐️ The canvas default `miterLimit`: a miter longer than this many half widths becomes a bevel.
-pub(crate) const MITER_LIMIT: f64 = 10.0;
+pub const MITER_LIMIT: f64 = 10.0;
 
 fn sub(a: [f64; 2], b: [f64; 2]) -> [f64; 2] {
     [a[0] - b[0], a[1] - b[1]]
@@ -596,7 +596,7 @@ fn stroke_run(contour: &Contour, half: f64, style: &StrokeGeometry, out: &mut Ve
 
 /// 🖊️ The stroke of `contours` as convex screen-space polygons: one quad per edge, one piece per join, the caps of open
 /// runs, the dash pattern walked along every subpath.
-pub(crate) fn stroke_polygons(contours: &[Contour], style: &StrokeGeometry) -> Vec<Vec<[f64; 2]>> {
+pub fn stroke_polygons(contours: &[Contour], style: &StrokeGeometry) -> Vec<Vec<[f64; 2]>> {
     let half = style.width * 0.5;
     let mut out = Vec::new();
     if !(half > 0.0 && half.is_finite()) {

@@ -22,7 +22,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        ".cache/b/p/m/repo-test/dotnet/{options.env.SEMIO_BUILD_MODE}/out"
       ],
       "options": {
         "command": "bun ./📜️script.ts build"

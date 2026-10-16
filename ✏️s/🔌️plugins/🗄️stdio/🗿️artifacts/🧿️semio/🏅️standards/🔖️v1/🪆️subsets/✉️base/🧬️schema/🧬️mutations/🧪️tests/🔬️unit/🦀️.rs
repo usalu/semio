@@ -395,7 +395,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, arm) in KINDS.iter().zip(arms) {
         assert_eq!(*kind, format!("apply-{}", semio_subset_tag(&enveloped(arm))), "KINDS must follow SemioSubsetSnapshot's own declaration order and wrap the envelope's own runtime subset tag");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = &std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🔮️oracles/🔣️.json")).expect("the committed fixture is readable");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }

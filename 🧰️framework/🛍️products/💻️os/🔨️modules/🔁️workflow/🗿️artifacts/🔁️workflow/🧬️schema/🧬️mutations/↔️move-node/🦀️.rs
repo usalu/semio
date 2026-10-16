@@ -35,7 +35,3 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNode {
     }
 }
 //#endregion ⚙️Semantics
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

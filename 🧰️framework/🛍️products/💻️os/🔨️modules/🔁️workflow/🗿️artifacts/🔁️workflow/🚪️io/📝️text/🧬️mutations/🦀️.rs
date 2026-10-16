@@ -1,5 +1,5 @@
 //! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+use super::*;
 
 impl protocol::OpText for WorkflowMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

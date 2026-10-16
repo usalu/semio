@@ -1,10 +1,10 @@
 import {join,resolve,dirname,relative,sep,isAbsolute} from "node:path";
-import {randomUUID,createHash} from "node:crypto";
+import {randomBytes,createHash} from "node:crypto";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {statSync,lstatSync,mkdirSync,rmSync,statfsSync} from "node:fs";
 import {readdir,lstat,unlink} from "node:fs/promises";
 import {withRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkScriptInvocation,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import policy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import {openBuildGraphOptionalLedgerV1} from "./📒️ledger/🟨️.mjs";
 import ledgerSchema from "./🧬️schema/📒️ledger.json" with {type:"json"};
@@ -54,9 +54,9 @@ async function optionalInventoryV1(image,control){
 }
 
 /** 📒️ Awaits original ledger initialization custody without retaining it through producer work. */
-async function openOriginalGraphLedgerV1(workspace,original,invocation){
- const lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+resolve(workspace),mode:"exclusive",owner:randomUUID(),control:original.control,signal:original.control.signal});
- try{for(;;){try{return await openBuildGraphOptionalLedgerV1({image:original.image,control:original.control,leaseDirectory:repositoryLeaseDirectoryV1(workspace),maximumBytes:quotaSchema.policy.maximumBytes,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes});}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(original.control);await original.control.publish({resource:"repository-graph-optional-ledger",mode:"exclusive",elapsedMs:0});await original.control.yieldContinuation();}}}finally{lease.release();}
+async function openOriginalGraphLedgerV1(workspace,original,control){
+ const lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+resolve(workspace),mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:control,signal:control.signal});
+ try{for(;;){try{return await openBuildGraphOptionalLedgerV1({image:original.image,control:control,leaseDirectory:repositoryLeaseDirectoryV1(workspace),maximumBytes:quotaSchema.policy.maximumBytes,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes});}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(control);await control.publish({resource:"repository-graph-optional-ledger",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}}}finally{lease.release();}
 }
 
 /** 🚰️ Requests low-water optional headroom before pressure can deny later publication peaks. */
@@ -111,22 +111,45 @@ export function buildGraphWriterResourceV1(workspace,kind,identity){
 }
 
 /** 🎟️ Holds enforcing storage before any synchronous graph fact producer runs. */
-export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,body){return withGraphFactWriterV1(workspace,invocation,body);}
+export async function withRepositoryBuildGraphFactStoreV1(workspace,invocation,phaseControl,body){return withGraphFactWriterV1(workspace,invocation,phaseControl,body);}
 
 /** 🔒️ Retains one physical inference namespace while shared quota commits stay short. */
-async function withGraphFactWriterV1(workspace,invocation,body,namespace){
+async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,namespace){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const current=writers.getStore(),owner=graphDatasetWorkspaceV1(workspace);
- if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);return body(current.store);}
+ if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);requireIssuedResourceControlRefinementV1(current.phaseControl,phaseControl);const nested={...current,live:true,phaseControl};try{return await writers.run(nested,async()=>{checkResourceLeaseControl(phaseControl);const value=await body(current.store,phaseControl);requireRepositoryBuildGraphWriterV1(workspace);return value;});}finally{nested.live=false;}}
  if(datasets.getStore()||current?.workspace===owner&&current.store.invocation!==invocation)throw Error("Original graph writer invocation identity changed");
- return withRepositoryCacheStoreV1(workspace,"leases",invocation,async leases=>{
-  const held=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:namespace?buildGraphWriterResourceV1(workspace,...namespace.split(":")):"repository-graph-facts:"+resolve(workspace),mode:"exclusive",owner:randomUUID(),control:leases.control,signal:leases.control.signal});
-  try{if(!current){const image=await openRepositoryCachePartitionV1(workspace,"graph",leases.control);try{await maintainBuildGraphOptionalCachesV1(image,leases.control);}finally{await image.close();}}return await withRepositoryCacheStoreV1(workspace,"graph",invocation,async original=>{await original.recheck();const status=statSync(original.root),ledger=await openOriginalGraphLedgerV1(workspace,original,invocation),space=statfsSync(original.root),optionalQuota=current?.store.invocation===invocation?current.store.optionalQuota:createBuildGraphOptionalQuotaV1({maximumBytes:quotaSchema.policy.maximumBytes,usedBytes:ledger.observe().usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes},()=>checkScriptInvocation(invocation)),store=Object.freeze({...original,optionalQuota}),scope={workspace:resolve(workspace),store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,namespace};try{return await writers.run(scope,async()=>{let failed=false;try{return await body(store);}catch(error){failed=true;throw error;}finally{let failure;for(const close of scope.handles)try{close();}catch(error){failure??=error;}if(failure&&!failed)throw failure;}});}finally{scope.live=false;ledger.close();}});}finally{held.release();}
+ return withRepositoryCacheStoreV1(workspace,"leases",invocation,phaseControl,async(leases,leasePhase)=>{
+  const check=()=>{checkResourceLeaseControl(phaseControl);checkResourceLeaseControl(leasePhase);};check();
+  const held=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:namespace?buildGraphWriterResourceV1(workspace,...namespace.split(":")):"repository-graph-facts:"+resolve(workspace),mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:leasePhase,signal:leasePhase.signal});
+  let primary;
+  try{
+   check();
+   let maintained=false;
+   const maintain=async force=>{const image=await openRepositoryCachePartitionV1(workspace,"graph",leasePhase);let failed=false;try{await image.recheck();check();const space=statfsSync(image.root);if(force||space.bavail*space.bsize<quotaSchema.policy.minimumAvailableBytes){maintained=true;await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();}}catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}};
+   if(!current)await maintain(false);
+   for(;;){
+    let retry=false;
+    const value=await withRepositoryCacheStoreV1(workspace,"graph",invocation,leasePhase,async(original,actualControl)=>{
+     const checkActual=()=>{check();requireIssuedResourceControlRefinementV1(leasePhase,actualControl);checkResourceLeaseControl(actualControl);};checkActual();
+     await original.recheck();checkActual();const status=statSync(original.root),ledger=await openOriginalGraphLedgerV1(workspace,original,actualControl);let failed=false;
+     try{
+      checkActual();const observed=ledger.observe(),space=statfsSync(original.root);
+      if(!current&&!maintained&&buildGraphOptionalRetirementDueV1(observed.usedBytes,space.bavail*space.bsize)){retry=true;return;}
+      const optionalQuota=current?.store.invocation===invocation?current.store.optionalQuota:createBuildGraphOptionalQuotaV1({maximumBytes:quotaSchema.policy.maximumBytes,usedBytes:observed.usedBytes,availableBytes:space.bavail*space.bsize,minimumAvailableBytes:quotaSchema.policy.minimumAvailableBytes},()=>{checkActual();requireRepositoryBuildGraphWriterV1(workspace);}),store=Object.freeze({...original,optionalQuota}),scope={workspace:resolve(workspace),store,device:status.dev,inode:status.ino,live:true,handles:new Set(),ledger,namespace,phaseControl:actualControl};
+      try{return await writers.run(scope,async()=>{let failed=false;try{const value=await body(store,actualControl);checkActual();return value;}catch(error){failed=true;throw error;}finally{let closeFailed=false,failure;for(const close of scope.handles)try{close();}catch(error){if(!closeFailed){closeFailed=true;failure=error;}}if(closeFailed&&!failed)throw failure;}});}finally{scope.live=false;}
+     }catch(error){failed=true;throw error;}finally{try{ledger.close();}catch(error){if(!failed)throw error;}}
+    });
+    if(!retry)return value;
+    await maintain(true);
+   }
+  }catch(error){primary={error};throw error;}finally{try{held.release();}catch(error){if(!primary)throw error;if(primary.error instanceof Error&&Object.isExtensible(primary.error))try{Object.defineProperty(primary.error,"graphWriterLeaseReleaseFailure",{value:error});}catch{}}}
  });
 }
 
 /** 🔒️ Refuses graph fact publication outside live original fixed-volume custody. */
 export function requireRepositoryBuildGraphWriterV1(workspace){
- const current=writers.getStore();if(!current?.live||current.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original bounded graph writer custody required");checkScriptInvocation(current.store.invocation);const actual=statSync(current.store.root);if(actual.dev!==current.device||actual.ino!==current.inode)throw Error("Original bounded graph writer volume changed");
+ const current=writers.getStore();if(!current?.live||current.workspace!==graphDatasetWorkspaceV1(workspace))throw Error("Original bounded graph writer custody required");checkScriptInvocation(current.store.invocation);requireIssuedResourceControlInvocationV1(current.phaseControl,current.store.invocation);requireIssuedResourceControlRefinementV1(current.store.control,current.phaseControl);checkResourceLeaseControl(current.phaseControl);const actual=statSync(current.store.root);if(actual.dev!==current.device||actual.ino!==current.inode)throw Error("Original bounded graph writer volume changed");
 }
 
 /** 📁️ Admits the closed fact directory on the original mounted device before a writer follows it. */
@@ -135,12 +158,13 @@ export function repositoryBuildGraphWriterDirectoryV1(workspace,namespace){
 }
 
 /** 🎯️ Separates mutable selected facts inside the original fixed-volume writer custody. */
-export async function withRepositoryBuildGraphSelectionV1(workspace,invocation,identity,body){
+export async function withRepositoryBuildGraphSelectionV1(workspace,invocation,phaseControl,identity,body){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  if(!/^[a-f0-9]{64}$/u.test(identity)||selections.getStore()||datasets.getStore())throw Error("Closed original selected graph scope required");
- return withGraphFactWriterV1(workspace,invocation,async store=>{
+ return withGraphFactWriterV1(workspace,invocation,phaseControl,async(store,actualControl)=>{
   const base=repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),directories=[join(base,"selections"),join(base,"selections",identity)];
   for(const path of directories){requireNativeStoragePathV1(store.root,path);try{mkdirSync(path);}catch(error){if(error?.code!=="EEXIST")throw error;}const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original selected graph directory required");}
-  const selection={workspace:resolve(workspace),identity,live:true};try{return await selections.run(selection,()=>body(store));}finally{selection.live=false;}
+  const selection={workspace:resolve(workspace),identity,live:true};try{return await selections.run(selection,()=>body(store,actualControl));}finally{selection.live=false;}
  },"selection:"+identity);
 }
 
@@ -150,14 +174,15 @@ export function readBuildInferenceDatasetV1(value){
 }
 
 /** 🧷️ Holds one logical inference namespace inside the actual original graph backing. */
-export async function withRepositoryBuildInferenceDatasetV1(workspace,invocation,value,body){
+export async function withRepositoryBuildInferenceDatasetV1(workspace,invocation,phaseControl,value,body){
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
  const dataset=readBuildInferenceDatasetV1(value);if(datasets.getStore())throw Error("Nested inference dataset refused");const actual=resolve(workspace),sourceRoot=resolve(actual,dataset.sourceRoot),distance=relative(actual,sourceRoot);if(sourceRoot.length>256||[...sourceRoot].length>256||!distance||distance===".."||distance.startsWith(".."+sep)||isAbsolute(distance)||dataset.sourceRoot.split("/").some(part=>!part||part==="."||part===".."))throw Error("Original inference dataset source root required");for(let path=sourceRoot;;path=dirname(path)){const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink())throw Error("Original inference dataset real source ancestry required");if(path===actual)break;}
- return withGraphFactWriterV1(workspace,invocation,async store=>{
+ return withGraphFactWriterV1(workspace,invocation,phaseControl,async(store,actualControl)=>{
   const base=repositoryBuildGraphWriterDirectoryV1(workspace,"inference"),directory=join(base,"contexts",dataset.identity);
   {for(const path of[join(base,"contexts"),directory]){requireNativeStoragePathV1(store.root,path);try{mkdirSync(path);}catch(error){if(error?.code!=="EEXIST")throw error;}const status=lstatSync(path);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original inference dataset directory required");}
    const scope={workspace:actual,sourceRoot,identity:dataset.identity,live:true},pending=new Set();let retirement;
-   const retire=()=>{requireRepositoryBuildGraphWriterV1(workspace);if(!scope.live||datasets.getStore()!==scope)throw Error("Original inference dataset retirement lifetime required");if(retirement)return retirement;const operation=(async()=>{requireNativeStoragePathV1(store.root,directory);const status=lstatSync(directory);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original inference dataset retirement directory required");const writer=writers.getStore(),lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+actual,mode:"exclusive",owner:randomUUID(),control:store.control,signal:store.control.signal});try{for(;;){try{writer.ledger.retire(()=>rmSync(directory,{recursive:true}));break;}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(store.control);await store.control.publish({resource:"repository-graph-optional-retirement",mode:"exclusive",elapsedMs:0});await store.control.yieldContinuation();}}}finally{lease.release();}})();retirement=operation;pending.add(operation);void operation.then(()=>pending.delete(operation),()=>{});return operation;};
-   try{return await datasets.run(scope,async()=>{let failed=false;try{return await body({root:directory,retire});}catch(error){failed=true;throw error;}finally{const results=await Promise.allSettled(pending);if(!failed){const failure=results.find(row=>row.status==="rejected");if(failure)throw failure.reason;}}});}finally{scope.live=false;}
+   const retire=()=>{requireRepositoryBuildGraphWriterV1(workspace);if(!scope.live||datasets.getStore()!==scope)throw Error("Original inference dataset retirement lifetime required");if(retirement)return retirement;const operation=(async()=>{requireNativeStoragePathV1(store.root,directory);const status=lstatSync(directory);if(!status.isDirectory()||status.isSymbolicLink()||status.dev!==writers.getStore().device)throw Error("Original inference dataset retirement directory required");const writer=writers.getStore(),lease=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"repository-graph-optional-ledger:"+actual,mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});try{for(;;){try{writer.ledger.retire(()=>rmSync(directory,{recursive:true}));break;}catch(error){if(error?.code!=="SQLITE_BUSY"&&error?.errcode!==5&&error?.errno!==5)throw error;checkResourceLeaseControl(actualControl);await actualControl.publish({resource:"repository-graph-optional-retirement",mode:"exclusive",elapsedMs:0});await actualControl.yieldContinuation();}}}finally{lease.release();}})();retirement=operation;pending.add(operation);void operation.then(()=>pending.delete(operation),()=>{});return operation;};
+   try{return await datasets.run(scope,async()=>{let failed=false;try{return await body({root:directory,retire},actualControl);}catch(error){failed=true;throw error;}finally{const results=await Promise.allSettled(pending);if(!failed){const failure=results.find(row=>row.status==="rejected");if(failure)throw failure.reason;}}});}finally{scope.live=false;}
 
   }
  },"dataset:"+dataset.identity);

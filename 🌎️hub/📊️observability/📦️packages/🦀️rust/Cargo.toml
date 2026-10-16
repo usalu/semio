@@ -1,0 +1,35 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-observability"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Counters and latency percentiles an administrator reads"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-observability"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-trusted-catalog = { workspace = true }
+semio-hub-trusted-catalog-contract = { workspace = true }
+serde = { workspace = true }
+semio-framework-trace = { workspace = true }
+db = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+
+[dev-dependencies]
+semio-hub-trusted-catalog = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-hub-trusted-catalog-contract = { workspace = true, features = ["testkit", "integration-fixtures"] }
+db = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+serde_json = { workspace = true }

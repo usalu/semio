@@ -11,7 +11,7 @@
 
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
-use crate::wgpu::draw::{DrawList, IconAtlas};
+use crate::wgpu::draw_types::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::tree::UiTree;

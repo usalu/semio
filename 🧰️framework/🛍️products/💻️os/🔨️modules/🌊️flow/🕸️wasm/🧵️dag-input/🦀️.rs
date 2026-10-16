@@ -1,15 +1,15 @@
 //! 🧵️ Operation-owned DAG native codecs retain lifetime authority independently of poll fuel.
 use super::*;
-use crate::infinite::board::io::text::dag_input::{retained::{DagInputCursor,DagInputKind},output::{DagJsonSource,DagOutputKind,DagOutputPreparation}};
+use semio_framework_os_infinite::board::io::text::dag_input::{retained::{DagInputCursor,DagInputKind},output::{DagJsonSource,DagOutputKind,DagOutputPreparation}};
 use semio_framework_pack_json::JsonBorrowedWriteCursor;
-use crate::infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
+use semio_framework_os_infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
 use semio_framework_value::retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement};
 use semio_framework_value::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::native_encoding::NativeEncodeContinuation;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::RetainedCloneGrant,retirement::{RetireOwned,admit_owned_retirement}};
 
-pub(super) struct FlowDagAction{
-    operation:u16,admission:Option<FlowFeatureAdmission>,input_ceiling:usize,output_ceiling:usize,program:FlowProgramState,observer:Rc<FlowOperationObserver>,
+pub struct FlowDagAction{
+    pub operation:u16,admission:Option<FlowFeatureAdmission>,input_ceiling:usize,output_ceiling:usize,program:FlowProgramState,observer:Rc<FlowOperationObserver>,
     input:Option<DagInputCursor>,output:Option<JsonBorrowedWriteCursor>,kind:Option<DagOutputKind>,
     application:Option<DagInputApplication>,displaced:Option<Box<ControlledRetirement<DagInputDisplaced>>>,
     output_preparation:Option<DagOutputPreparation>,output_prepared:bool,
@@ -23,7 +23,7 @@ impl FlowDagAction{
         let kind=match operation{2518=>Some(DagOutputKind::Nodes),2519=>Some(DagOutputKind::Edges),2520=>Some(DagOutputKind::Selection),2522=>Some(DagOutputKind::Hover),2523=>Some(DagOutputKind::Channels),_=>None};
         Self{operation,admission:None,input_ceiling:0,output_ceiling:0,program:FlowProgramState::new(args),observer:Rc::new(FlowOperationObserver::new()),input:input.map(DagInputCursor::new),output:kind.map(|_|JsonBorrowedWriteCursor::new()),kind,application:None,displaced:None,output_preparation:kind.map(DagOutputPreparation::new),output_prepared:false,decode:None,encode:None,decode_started:false,encode_started:false,retirement:None,transitions:0,close_capacity:0,close_copy:0,close_release:0,receipt:Default::default()}
     }
-    fn progress(&mut self)->FlowFeatureStep{self.transitions=self.transitions.saturating_add(1);FlowFeatureStep::Progress{completed:self.transitions,total:0}}
+    pub fn progress(&mut self)->FlowFeatureStep{self.transitions=self.transitions.saturating_add(1);FlowFeatureStep::Progress{completed:self.transitions,total:0}}
     fn domain_step(&mut self,domain:&mut FlowDomainAdapter,args:&FlowArguments,budget:AbiWorkBudget)->FlowFeatureStep{
         if !self.observer.bound.get(){if let Err(failure)=self.observer.begin_poll(budget){return FlowFeatureStep::Failed(failure)}}
         if self.retirement.is_some(){let before=self.receipt;return match self.drain_retirement(budget.retained){Ok(_)=>if self.receipt==before{FlowFeatureStep::Yield}else{self.progress()},Err(error)=>self.program.finish_domain(Err(error))}}

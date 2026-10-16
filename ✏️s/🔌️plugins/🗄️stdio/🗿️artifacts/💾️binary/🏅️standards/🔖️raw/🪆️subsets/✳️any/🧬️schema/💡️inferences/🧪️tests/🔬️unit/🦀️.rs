@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+use crate::standards::v_raw::subsets::any::schema::inferences::*;
 use crate::standards::v_raw::subsets::any::schema::{demo_binary_snapshot, empty_binary_snapshot};
 use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use protocol::Inference;

@@ -3,12 +3,12 @@ use super::{ObjSnapshot,ObjVertex,ObjTexCoord,ObjNormal,ObjFace,ObjFaceVertex,Ob
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotReceivingControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,cell,text_cell,row,push_row,sort,ordinal,integer,identity_position,parent_range,validate_schema_sql,check_database,settle}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::{cell::{Cell,RefCell},mem::size_of};
-type Result<T>=std::result::Result<T,ValueError>;
+pub type Result<T>=std::result::Result<T,ValueError>;
 type Paid<'a,'b,'c>=Port<'a,'b,'c,store::NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"OBJ complete semantic state differs")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"OBJ semantic extent overflow"))}
-fn empty()->ObjSnapshot{ObjSnapshot{schema:String::new(),vertices:Vec::new(),texcoords:Vec::new(),normals:Vec::new(),faces:Vec::new(),groups:Vec::new(),objects:Vec::new(),mtllib:None,usemtl:Vec::new(),smoothing_groups:Vec::new(),unknown_statements:Vec::new()}}
+pub fn empty()->ObjSnapshot{ObjSnapshot{schema:String::new(),vertices:Vec::new(),texcoords:Vec::new(),normals:Vec::new(),faces:Vec::new(),groups:Vec::new(),objects:Vec::new(),mtllib:None,usemtl:Vec::new(),smoothing_groups:Vec::new(),unknown_statements:Vec::new()}}
 #[derive(semio_framework_value::RetireOwned)]
 struct Frame{projection:Projection,snapshot:ObjSnapshot,ids:[Vec<usize>;14],ordered:[Vec<usize>;14],status:Option<Result<()>>}
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),status:None}}}
@@ -16,7 +16,7 @@ fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.ta
 fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
 fn class(value:f64)->&'static str{if value.is_nan(){"nan"}else if value==f64::INFINITY{"positiveInfinity"}else if value==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"}}
 fn id(position:usize)->Result<i64>{ordinal(add(position,1)?)}
-fn word(value:u64)->[i64;2]{[(value>>32)as i64,(value&u64::from(u32::MAX))as i64]}
+pub fn word(value:u64)->[i64;2]{[(value>>32)as i64,(value&u64::from(u32::MAX))as i64]}
 fn resolve(value:Option<u64>,count:usize)->Result<Scalar>{match value{Some(value)if value<count as u64=>Ok(Scalar::Integer(id(usize::try_from(value).map_err(|_|invalid())?)?)),_=>Ok(Scalar::Null)}}
 fn optional(value:Option<u32>)->Scalar{value.map(|value|Scalar::Integer(i64::from(value))).unwrap_or(Scalar::Null)}
 fn prefix(frame:&mut Projection,table:usize,position:usize,parent:i64,port:&mut Paid<'_,'_,'_>)->Result<()>{row(frame,id(position)?,TABLES[table].1,port)?;cell(frame,Scalar::Integer(parent),port)?;cell(frame,Scalar::Integer(ordinal(position)?),port)}
@@ -37,7 +37,7 @@ fn project(source:&ObjSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Resul
  for(position,value)in source.smoothing_groups.iter().enumerate(){prefix(output,12,position,1,port)?;for value in word(value.face_index_from){cell(output,Scalar::Integer(value),port)?}cell(output,resolve(Some(value.face_index_from),counts[10])?,port)?;cell(output,optional(value.group),port)?;push_row(output,12,port)?}
  for(position,value)in source.unknown_statements.iter().enumerate(){prefix(output,13,position,1,port)?;for value in word(value.line_index){cell(output,Scalar::Integer(value),port)?}text_cell(output,&value.raw,port)?;push_row(output,13,port)?}port.control.checkpoint(port.phase(),total,total)
 }
-fn definition(index:usize)->&'static str{SQL.split(';').filter(|sql|!sql.trim().is_empty()).nth(index).unwrap().trim()}
+pub fn definition(index:usize)->&'static str{SQL.split(';').filter(|sql|!sql.trim().is_empty()).nth(index).unwrap().trim()}
 fn indexed(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
  validate_schema_sql(database,SQL,port)?;check_database(database,port)?;if table(database,0)?.rows.len()!=1{return Err(invalid())}
  for index in 0..14{let rows=&table(database,index)?.rows;port.vector(rows.len(),&mut frame.ids[index],2)?;if index>0{port.vector(rows.len(),&mut frame.ordered[index],2)?}for(position,row)in rows.iter().enumerate(){port.work(2,size_of::<usize>())?;if row.values.len()!=TABLES[index].1||integer(row,0)?!=row.rowid{return Err(invalid())}frame.ids[index].push(position);if index>0{port.work(2,size_of::<usize>())?;frame.ordered[index].push(position);if integer(row,2)?<0{return Err(invalid())}}}sort(&mut frame.ids[index],port,|a,b|Ok(rows[a].rowid.cmp(&rows[b].rowid)))?;for pair in frame.ids[index].windows(2){port.work(2,0)?;if rows[pair[0]].rowid==rows[pair[1]].rowid{return Err(invalid())}}if index>0{sort(&mut frame.ordered[index],port,|a,b|Ok((integer(&rows[a],1)?,integer(&rows[a],2)?).cmp(&(integer(&rows[b],1)?,integer(&rows[b],2)?))))?;for pair in frame.ordered[index].windows(2){port.work(2,0)?;if (integer(&rows[pair[0]],1)?,integer(&rows[pair[0]],2)?)==(integer(&rows[pair[1]],1)?,integer(&rows[pair[1]],2)?){return Err(invalid())}}}}
@@ -64,7 +64,7 @@ fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&ObjSnapshot>,po
  for kind in [11,12,13]{for(position,index)in sequence(database,frame,kind,root,port)?.enumerate(){let row=ordered(database,frame,kind,index)?;port.work(2,size_of::<u64>())?;let value=source64(row,3)?;if kind!=13{resolved(database,frame,row,5,10,Some(value),port)?}match kind{11=>{let material=text(row,6)?;if let Some(source)=source{let expected=&source.usemtl[position];if value!=expected.face_index_from{return Err(invalid())}equal(&expected.material,material,port)?}else{port.work(2,size_of::<ObjUsemtlRange>())?;frame.snapshot.usemtl.push(ObjUsemtlRange{face_index_from:value,material:String::new()});copy(material,&mut frame.snapshot.usemtl.last_mut().unwrap().material,port)?}},12=>{let group=optional32(row,6)?;if let Some(source)=source{let expected=&source.smoothing_groups[position];if (value,group)!=(expected.face_index_from,expected.group){return Err(invalid())}}else{port.work(2,size_of::<ObjSmoothingRange>())?;frame.snapshot.smoothing_groups.push(ObjSmoothingRange{face_index_from:value,group})}},_=>{let raw=text(row,5)?;if let Some(source)=source{let expected=&source.unknown_statements[position];if value!=expected.line_index{return Err(invalid())}equal(&expected.raw,raw,port)?}else{port.work(2,size_of::<ObjUnknownStatement>())?;frame.snapshot.unknown_statements.push(ObjUnknownStatement{line_index:value,raw:String::new()});copy(raw,&mut frame.snapshot.unknown_statements.last_mut().unwrap().raw,port)?}}}}}
  port.control.checkpoint(port.phase(),counts.iter().sum(),counts.iter().sum())
 }
-struct Settlement<'a,'b>{control:RefCell<SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:Cell<bool>,cause:RefCell<Option<ValueError>>}
+pub struct Settlement<'a,'b>{control:RefCell<SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:Cell<bool>,cause:RefCell<Option<ValueError>>}
 impl<'a,'b> Settlement<'a,'b>{
  fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:Cell::new(false),cause:RefCell::new(None)}}
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
@@ -86,6 +86,3 @@ receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::
 receive!(validate_decoding,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,(),|source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
 receive!(validate_encoding,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,(),|source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

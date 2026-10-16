@@ -25,7 +25,7 @@ import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨�
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
@@ -44,7 +44,7 @@ const ARTIFACT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 const IO_CHUNK_BYTES = 64 * 1024;
 const CATALOG_DEADLINE_MS = 1_200_000;
 const COMPONENT_FUNCTION_MAX = 1_000_000;
-const COMPONENT_PROFILE = "wasm-release";
+const COMPONENT_PROFILE = "release";
 
 /** 🧬️ Compiles one PascalCase `$defs` export of the Stdio plugin-root draft-07 schema module.
  * @see 🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json */
@@ -847,7 +847,8 @@ class HomeIoSurfaceScript extends BundleScript {
     assert(!consumers.includes(osHostManifestPath), "OS host must not select domain artifact codecs");
     assert(!osHostManifest.includes("semio-hub-stdio"), "OS host depends on Stdio");
     const osHostRoot = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
-    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module};`, "mu"));
+    for (const module of ["host", "backbone"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module};`, "mu"));
+    for (const [module, producer] of [["codec_abi", "codec_abi"], ["instance", "instance"], ["registry", "registry"], ["workflow", "workflow"], ["media_export_raster", "media_raster"]] as const) assert.match(osHostRoot, new RegExp(`^pub use semio_framework_os_host_${producer} as ${module};`, "mu"));
     const spaceRoot = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space");
     const productionRefs = stdioWalkText(spaceRoot)
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
@@ -1081,10 +1082,10 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
   const exact = realpathSync(root);
   const ambientTarget = cargoTargetDirectory(repoRoot);
   const ambientBuild = cargoBuildDirectory(repoRoot);
-  const developmentCache = pluginModulesRootIn(repoRoot);
+  const developmentCaches=(["prototype","release"]as const).map(mode=>builtPluginModulesRootIn(repoRoot,mode));
   if (pathIsWithin(ambientTarget, exact)) throw new Error("catalog-root refuses the ambient shared target");
   if (pathIsWithin(ambientBuild, exact)) throw new Error("catalog-root refuses the ambient shared build directory");
-  if (pathIsWithin(developmentCache, exact)) throw new Error("catalog-root refuses the development cache");
+  if(developmentCaches.some(cache=>pathIsWithin(cache,exact))) throw new Error("catalog-root refuses the development cache");
   if (exact === resolve(repoRoot)) throw new Error("catalog-root requires a dedicated fresh directory");
   return exact;
 }
@@ -1094,7 +1095,7 @@ function catalogCargoEnvironment(target: string, inherited: NodeJS.ProcessEnv = 
   return devToolingEnv({ ...inherited, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: join(target, "build"), CARGO_INCREMENTAL: "0" });
 }
 
-/** 🌳 Stages and verifies the one strict stdio row in an empty caller-owned root: the shipped `wasm-release` component, the
+/** 🌳 Stages and verifies the one strict stdio row in an empty caller-owned root: the shipped `release` component, the
  * committed semantic descriptor and the `ComponentReceiptV1` binding the two — the release pass's own bytes, never a rebuild. */
 class CatalogRootScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

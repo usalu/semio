@@ -596,3 +596,119 @@ fn a_rotated_drawing_frame_turns_the_plan_and_keeps_its_png() {
     );
     assert!(json.contains("\"kind\":\"image\"") && json.contains("data:image/png;base64,"), "{json}");
 }
+
+//#region 🔤️BuiltInTextFonts
+fn font_catalog() -> std::path::PathBuf {
+    let catalog = std::path::Path::new("🧰️framework/🔨️modules/🖼️assets/🔤️fonts");
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().map(|ancestor| ancestor.join(catalog)).find(|candidate| candidate.join(TextFontRole::Sans.asset_path()).is_file()).expect("the built-in font catalog sits above the engine package")
+}
+
+fn host_font_set() -> TextFontSet<'static> {
+    let files: &'static TextFontFiles = Box::leak(Box::new(TextFontFiles::read(&font_catalog()).expect("built-in text fonts load from the assets catalog")));
+    files.set()
+}
+
+fn glyph_ids(text: &mut TextSystem, sample: &str) -> Vec<u16> {
+    text.shape(sample, &TextStyle { family: FontFamilyChoice::SansSerif, size_px: 16.0 }).glyphs.iter().map(|glyph| glyph.glyph_id).collect()
+}
+
+#[test]
+fn an_engine_built_from_a_host_font_set_has_the_built_in_families() {
+    let fonts = host_font_set();
+    let mut engine = LayoutEngine::with_text_fonts(&fonts).expect("the built-in set registers");
+    let mut reference = TextSystem::new(&fonts).expect("the built-in set registers");
+    let engine_ids = glyph_ids(&mut engine.text, "Hello");
+    assert_eq!(engine_ids.len(), 5);
+    assert!(engine_ids.iter().all(|id| *id != 0), "every Latin glyph must come from the built-in sans family, got {engine_ids:?}");
+    assert_eq!(engine_ids, glyph_ids(&mut reference, "Hello"));
+    for sample in ["😀", "a😀b", "🏳️‍🌈"] {
+        assert_eq!(glyph_ids(&mut engine.text, sample), glyph_ids(&mut reference, sample), "fallback for {sample:?} must equal the plain text system over the same fonts");
+    }
+    let mut bare = LayoutEngine::from_text_system(TextSystem::without_builtin_fonts());
+    assert_ne!(glyph_ids(&mut bare.text, "Hello"), engine_ids, "an engine without the built-in set must be observably different");
+}
+
+#[test]
+fn the_layout_font_still_shapes_through_the_engine_with_the_built_in_set_installed() {
+    let mut engine = LayoutEngine::with_text_fonts(&host_font_set()).expect("the built-in set registers");
+    let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::Custom(engine.font), size_px: 12.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment: TextAlignment::Left };
+    let shaped = engine.text.shape_paragraph("Layout", &style, 200.0);
+    assert!(!shaped.glyphs.is_empty() && shaped.width > 0.0);
+}
+
+#[test]
+fn new_uses_the_fonts_the_host_installed() {
+    let installed = install_text_fonts(host_font_set());
+    assert!(matches!(installed, Ok(()) | Err(TextFontsInstallError::AlreadyInstalled)), "the install must be accepted or already satisfied by an earlier engine in this process");
+    let mut engine = LayoutEngine::new();
+    let ids = glyph_ids(&mut engine.text, "Hello");
+    assert_eq!(ids.len(), 5);
+    assert!(ids.iter().all(|id| *id != 0), "LayoutEngine::new must carry the built-in sans family once fonts are installed, got {ids:?}");
+}
+
+#[test]
+fn installing_the_wrong_number_of_files_or_non_fonts_is_refused() {
+    assert!(matches!(install_text_font_bytes(vec![vec![0u8]]), Err(TextFontsInstallError::WrongFontCount { expected: 15, found: 1 })));
+    let garbage = TextFontSet::try_from_loader::<()>(|_| Ok(&b"not a font"[..])).expect("the loader never fails");
+    assert!(LayoutEngine::with_text_fonts(&garbage).is_err());
+}
+
+#[test]
+fn a_missing_native_catalog_is_reported_not_silently_ignored() {
+    let error = install_native_text_fonts(Some(std::path::Path::new("/semio-missing-font-catalog"))).err().expect("a missing catalog must be refused");
+    assert!(matches!(error, TextFontsInstallError::Unreadable(_)), "{error}");
+}
+
+const FONT_FIXTURE: &str = include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧪️tests/🧫️fixtures/🔤️text-fonts/🔣️.json");
+
+fn delivered_package_assets() -> std::collections::HashMap<String, &'static [u8]> {
+    TextFontRole::ALL
+        .into_iter()
+        .map(|role| {
+            let bytes = std::fs::read(font_catalog().join(role.asset_path())).expect("font file");
+            (text_font_asset_name(role), &*Box::leak(bytes.into_boxed_slice()))
+        })
+        .collect()
+}
+
+#[test]
+fn the_layout_package_declares_every_built_in_text_font_as_an_asset_matching_the_files() {
+    let declarations = text_font_asset_declarations();
+    assert_eq!(declarations.len(), TextFontRole::ALL.len());
+    let fixture: Value = serde_json::from_str(FONT_FIXTURE).expect("the shared font fixture is JSON");
+    let rows = fixture["fonts"].as_array().expect("font rows");
+    for ((role, declaration), row) in TextFontRole::ALL.into_iter().zip(&declarations).zip(rows) {
+        assert_eq!(declaration.name, text_font_asset_name(role));
+        assert_eq!(declaration.name, format!("{TEXT_FONT_ASSET_ROOT}/{}", role.asset_path()));
+        assert!(declaration.name.starts_with("🧰️framework/") && !declaration.name.contains(".."), "{}", declaration.name);
+        let bytes = std::fs::read(font_catalog().join(role.asset_path())).expect("font file");
+        assert_eq!(declaration.size_bytes, bytes.len() as u64, "{role:?}");
+        assert_eq!(row["role"].as_str(), Some(format!("{role:?}").as_str()));
+        assert_eq!(declaration.size_bytes, row["byteLength"].as_u64().expect("byteLength"), "{role:?}");
+        assert_eq!(declaration.sha256, row["sha256"].as_str().expect("sha256"), "{role:?} must declare the independently computed SHA-256");
+    }
+    let names: std::collections::HashSet<&str> = declarations.iter().map(|declaration| declaration.name.as_str()).collect();
+    assert_eq!(names.len(), declarations.len(), "declared names are unique");
+}
+
+#[test]
+fn an_engine_shapes_with_real_glyphs_from_the_fonts_the_host_delivered_on_open() {
+    let delivered = delivered_package_assets();
+    let set = package_text_font_set(|name| delivered.get(name).copied()).expect("every declared font was delivered");
+    let mut engine = LayoutEngine::with_text_fonts(&set).expect("the delivered fonts register");
+    let ids = glyph_ids(&mut engine.text, "Hello");
+    assert_eq!(ids.len(), 5);
+    assert!(ids.iter().all(|id| *id != 0), "delivered sans family must shape real glyphs, got {ids:?}");
+    let mut reference = TextSystem::new(&host_font_set()).expect("the built-in set registers");
+    assert_eq!(ids, glyph_ids(&mut reference, "Hello"), "delivered fonts shape exactly like the fonts read from the catalog");
+}
+
+#[test]
+fn a_host_that_delivered_no_package_asset_is_reported_by_name_and_installs_nothing() {
+    let delivered = delivered_package_assets();
+    let first = text_font_asset_name(TextFontRole::Sans);
+    let result = package_text_font_set(|name| if name == first { None } else { delivered.get(name).copied() });
+    assert!(matches!(result, Err(TextFontsInstallError::PackageAssetMissing { ref name }) if *name == first), "a missing delivery must name the asset");
+    assert!(matches!(install_package_text_fonts(|_| None), Err(TextFontsInstallError::PackageAssetMissing { .. })));
+}
+//#endregion 🔤️BuiltInTextFonts

@@ -1,16 +1,33 @@
-use super::*;
-use crate::bridge::{BridgeFlags, BridgeInstanceRef, ShellToGateway};
+//! 🧱️ Shell_channel_quick of the shell-channel crate: The live-shell artifact channel and context resolution.
+
+use std::time::Duration;
+use std::time::Instant;
+use crate::shell_channel::{ChannelKind, SHELL_CHANNEL_PAYLOAD_VERSION, SessionChannelBinding, ShellArtifactChannel, decode_app_frame, decode_base64, encode_app_command};
+use semio_framework_os_mcp_bridge::session::BridgeHandle;
+use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_framework_os_mcp_bridge_codec::bridge::{BridgeFlags, BridgeInstanceRef, ShellToGateway};
+use semio_framework_os_mcp_catalog::catalog::Catalog;
+use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
+use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+use semio_framework_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, InferenceCancel, MutationOrigin, PreparedOps};
+use semio_framework_os_mcp_port::policy::AgentPrincipal;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn fixtures() -> Vec<serde_json::Value> {
-    serde_json::from_str(include_str!("../🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
+    serde_json::from_str(fixture_text("../../../🐚️channel/🧪️tests/🧫️fixtures/🗿️app-payloads.json")).expect("the shared shell-channel payload fixture parses")
 }
 
 fn fixture(kind: &str) -> serde_json::Value {
     fixtures().into_iter().find(|entry| entry.get("kind").and_then(serde_json::Value::as_str) == Some(kind)).unwrap_or_else(|| panic!("fixture `{kind}` exists")).get("payload").cloned().expect("every fixture row carries a payload")
 }
 
-fn empty_catalog() -> std::sync::Arc<crate::catalog::Catalog> {
-    std::sync::Arc::new(crate::catalog::Catalog { hash: "empty".to_string(), entries: Vec::new() })
+fn empty_catalog() -> std::sync::Arc<Catalog> {
+    std::sync::Arc::new(Catalog { hash: "empty".to_string(), entries: Vec::new() })
 }
 
 fn agent_origin() -> MutationOrigin {
@@ -146,9 +163,9 @@ fn a_delegated_agent_never_routes_artifact_verbs_through_the_attached_shell() {
     handle.record_hello(id, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
     let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
     slot.set(std::sync::Arc::clone(&handle)).ok();
-    let agent = crate::policy::AgentPrincipal::from_scope_names("agent:delegation-1", "delegated agent", &["artifact.write".to_string()], Some("user:human-1".to_string()));
+    let agent = AgentPrincipal::from_scope_names("agent:delegation-1", "delegated agent", &["artifact.write".to_string()], Some("user:human-1".to_string()));
     assert_eq!(SessionChannelBinding::for_principal(&agent, Some(std::sync::Arc::clone(&slot))).resolve(), ChannelKind::Headless);
-    let human = crate::policy::AgentPrincipal::from_scope_names("agent:local", "human's own gateway", &["artifact.write".to_string()], None);
+    let human = AgentPrincipal::from_scope_names("agent:local", "human's own gateway", &["artifact.write".to_string()], None);
     assert_eq!(SessionChannelBinding::for_principal(&human, Some(slot)).resolve(), ChannelKind::Shell);
 }
 
@@ -285,7 +302,7 @@ fn an_ambiguous_artifact_handle_is_refused_by_name_with_its_candidates() {
 fn inference_never_travels_the_shell_route() {
     let binding = std::sync::Arc::new(SessionChannelBinding::new(None));
     let mut channel = ShellArtifactChannel::new(binding, empty_catalog());
-    let fault = channel.exchange(0, vec![AppCommand::Infer(crate::actions::InferCommand{plugin_id:"neutral".into(),artifact_kind:"test.neutral.record".into(),inference_schema:"test.neutral.record.compute".into(),turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original shell refusal cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:crate::actions::InferenceCancel::default()})]).expect_err("inference is refused");
+    let fault = channel.exchange(0, vec![AppCommand::Infer(InferCommand{plugin_id:"neutral".into(),artifact_kind:"test.neutral.record".into(),inference_schema:"test.neutral.record.compute".into(),turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original shell refusal cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default()})]).expect_err("inference is refused");
     assert_eq!(fault.code, "plugin.unavailable");
     assert!(fault.message.contains("inference"), "{}", fault.message);
 }

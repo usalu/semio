@@ -12,6 +12,7 @@ import {nativeCallerPhaseV1} from "../../../../../🧰️framework/🛍️produc
 import {captureOwnedCommandResultV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {withRepositoryRustToolchainV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME } from "../🪪️identity/🟦️.ts";
 
@@ -51,13 +52,13 @@ export async function stdioCargoMetadata(repoRoot:string,invocation:ScriptInvoca
  const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(Error("Original native child deadline exhausted")),phase.budget());
  try{return await withScriptInvocationSignalV1(invocation,timeout.signal,bounded=>{
  const control=createIssuedResourceControlV1(bounded,"stdio:cargo-metadata",Math.floor(phase.budget()));
- return withRepositoryToolingStoreV1(repoRoot,bounded,store=>withRepositoryRustToolchainV1(repoRoot,store,async generation=>{
+ return withRepositoryToolingStoreV1(repoRoot,bounded,control,(store,toolsPhase)=>withRepositoryRustToolchainV1(repoRoot,store,toolsPhase,async(generation,cargoPhase)=>{
   const manifests=[...new Set(stdioArtifactPackageContract(repoRoot).packages.map(entry=>cargoWorkspaceForManifest(repoRoot,entry.rust.manifest).manifest))],packages:JsonMap[]=[];
   for(const manifest of manifests){
-   await phase.advance("stdio:cargo-metadata");await generation.recheck();
-   const result=await captureOwnedCommandResultV1(generation.cargo,["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,{control,env:phase.options({...process.env,...generation.environment}).env,output:{maximumBytes:Math.min(16777216,phase.authority.transport.maximumBytes),maximumLines:Math.min(65536,phase.authority.transport.maximumLines)}});
+   checkResourceLeaseControl(cargoPhase);await phase.advance("stdio:cargo-metadata");checkResourceLeaseControl(cargoPhase);await generation.recheck();checkResourceLeaseControl(cargoPhase);
+   const result=await captureOwnedCommandResultV1(generation.cargo,["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,{control:cargoPhase,env:phase.options({...process.env,...generation.environment}).env,output:{maximumBytes:Math.min(16777216,phase.authority.transport.maximumBytes),maximumLines:Math.min(65536,phase.authority.transport.maximumLines)}});checkResourceLeaseControl(cargoPhase);
    assert.equal(result.status,0,result.stderr||"Original Cargo metadata failed");assert.equal(result.signal,null,"Original Cargo metadata interrupted");
-   const metadata=JSON.parse(result.stdout) as JsonMap;assert(Array.isArray(metadata.packages),"Original Cargo metadata packages required");packages.push(...metadata.packages);await generation.recheck();phase.budget();checkScriptInvocation(invocation);
+   const metadata=JSON.parse(result.stdout) as JsonMap;assert(Array.isArray(metadata.packages),"Original Cargo metadata packages required");packages.push(...metadata.packages);await generation.recheck();checkResourceLeaseControl(cargoPhase);phase.budget();checkScriptInvocation(invocation);
    console.log("[DEBUG] Stdio sealed Cargo metadata "+JSON.stringify({manifest,stdoutBytes:Buffer.byteLength(result.stdout),stderrBytes:Buffer.byteLength(result.stderr),packages:metadata.packages.length,generation:generation.digest}));
   }
   return{packages:[...new Map(packages.map(entry=>[entry.id,entry])).values()]};

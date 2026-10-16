@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-scene-text-vfs-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

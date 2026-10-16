@@ -30,11 +30,11 @@ async fn canonical_json_round_trip_uses_camel_case_and_skips_empty_promoted() {
 #[semio_framework_async_macros::async_test]
 async fn never_conflated_with_capability_requests() {
     // 🚨️ `AgentContributions.capabilities` (what this package OFFERS) and
-    // `PackageDescriptor.capability_requests: Vec<kernel::CapabilityRequest>` (what this
+    // `PackageDescriptor.capability_requests: Vec<CapabilityRequest>` (what this
     // package NEEDS) are different types with different shapes — this test exists only to
     // pin the distinction in code, not just in the doc comment above, so a future edit that
     // tries to merge them fails to compile rather than silently drifting.
     let offers = AgentContributions { capabilities: vec!["note.editor.deleteSelection".into()], promoted: vec![] };
-    let needs = kernel::CapabilityRequest { id: kernel::CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist edits".into(), optional: false };
+    let needs = CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist edits".into(), optional: false };
     assert_ne!(offers.capabilities.first().map(String::as_str), Some(needs.id.0.as_str()));
 }

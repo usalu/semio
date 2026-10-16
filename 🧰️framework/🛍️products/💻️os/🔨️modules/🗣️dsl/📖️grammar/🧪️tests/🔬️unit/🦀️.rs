@@ -31,7 +31,7 @@ async fn every_shipped_grammar_semio_parses_and_compiles() {
                     failures.push(format!("{}: dialect {:?}, expected Grammar", file.display(), grammar.dialect));
                     continue;
                 }
-                let _ = Recognizer::compile(&grammar, &crate::os_dsl::grammar::family_fragments().expect("OS family grammar"), crate::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+                let _ = Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             }
         }
     }
@@ -43,7 +43,7 @@ async fn every_shipped_grammar_semio_parses_and_compiles() {
 #[semio_framework_async_macros::async_test]
 async fn recognizer_matches_plain_arrow_via_registered_edge_macro() {
     let grammar = parse_grammar("grammar demo\nstart doc\ndoc = edge\n").expect("parse_grammar");
-    let recognizer = Recognizer::compile(&grammar, &crate::os_dsl::grammar::family_fragments().expect("OS family grammar"), crate::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     assert!(recognizer.recognize("a->b").expect("recognize"));
     assert!(recognizer.recognize("a -[e1:Connection]->b").expect("recognize"));
     assert!(!recognizer.recognize("a-> ->").expect("recognize"));

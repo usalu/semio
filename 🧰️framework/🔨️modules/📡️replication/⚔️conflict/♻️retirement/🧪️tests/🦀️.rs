@@ -3,7 +3,7 @@ use super::*;
 use crate::ConflictKind;
 use std::mem::size_of;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
-use crate::ids::{ActorId,ArtifactId,HybridLogicalTimestamp,MutationId,SchemaId};
+use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 use semio_framework_diagnostic::Severity;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
@@ -13,12 +13,12 @@ fn bytes(row:&serde_json::Value,key:&str,capacity:&str)->Vec<u8> {let mut values
 fn envelope(row:&serde_json::Value)->MutationEnvelope {
     let text=row["text"].as_str().unwrap().repeat(row["repeat"].as_u64().unwrap()as usize);let fresh=||string(&text,row["stringCapacity"].as_u64().unwrap()as usize);let optional=row["optional"].as_bool().unwrap();
     let mut dependencies=Vec::with_capacity(row["dependencyCapacity"].as_u64().unwrap()as usize);for value in row["dependencies"].as_array().unwrap(){dependencies.push(MutationId(string(value.as_str().unwrap(),23)));}
-    MutationEnvelope {mutation_id:MutationId(fresh()),document_id:ArtifactId(fresh()),actor:ActorId(fresh().into()),dependencies,observed:optional.then(||MutationId(fresh())),target:strings(row,"targets","targetCapacity"),diff:crate::ArtifactDiff {schema:SchemaId(fresh()),payload:bytes(row,"forward","forwardCapacity")},inverse:crate::InverseMutation {schema:SchemaId(fresh()),payload:bytes(row,"inverse","inverseCapacity")},timestamp:HybridLogicalTimestamp::new(7,11),transaction:optional.then(||crate::TransactionRef {id:fresh(),tool:fresh()}),verb:optional.then(fresh),line:optional.then(fresh)}
+    MutationEnvelope {mutation_id:MutationId(fresh()),document_id:ArtifactId(fresh()),actor:ActorId(fresh().into()),dependencies,observed:optional.then(||MutationId(fresh())),target:strings(row,"targets","targetCapacity"),diff:semio_framework_replication_causal::ArtifactDiff {schema:SchemaId(fresh()),payload:bytes(row,"forward","forwardCapacity")},inverse:semio_framework_replication_causal::InverseMutation {schema:SchemaId(fresh()),payload:bytes(row,"inverse","inverseCapacity")},timestamp:HybridLogicalTimestamp::new(7,11),transaction:optional.then(||semio_framework_replication_edit::TransactionRef {id:fresh(),tool:fresh()}),verb:optional.then(fresh),line:optional.then(fresh)}
 }
 fn conflict(row:&serde_json::Value,law:&serde_json::Value)->Conflict {
     let kind=if row["kind"]=="quarantined" {let mut values=Vec::with_capacity(row["rowCapacity"].as_u64().unwrap()as usize);for index in row["rows"].as_array().unwrap(){values.push(envelope(&law["envelopes"][index.as_u64().unwrap()as usize]));}ConflictKind::Quarantined {envelopes:values}}else{ConflictKind::Degraded {edit_ids:strings(row,"identities","identityCapacity")}};
     let mut actors=Vec::with_capacity(row["actorCapacity"].as_u64().unwrap()as usize);for value in row["actors"].as_array().unwrap(){actors.push(ActorId(string(value.as_str().unwrap(),29).into()));}
-    let mut messages=Vec::with_capacity(row["messageCapacity"].as_u64().unwrap()as usize);for value in row["messages"].as_array().unwrap(){let mut target=Vec::with_capacity(11);target.push(string("",19));target.push(string("field:🐚",37));messages.push(crate::MutationMessage {level:Severity::Fatal,code:string("mutation.invariant",41).into(),message:string(value.as_str().unwrap(),71),target,op_index:Some(7)});}
+    let mut messages=Vec::with_capacity(row["messageCapacity"].as_u64().unwrap()as usize);for value in row["messages"].as_array().unwrap(){let mut target=Vec::with_capacity(11);target.push(string("",19));target.push(string("field:🐚",37));messages.push(semio_framework_replication_mutation::MutationMessage {level:Severity::Fatal,code:string("mutation.invariant",41).into(),message:string(value.as_str().unwrap(),71),target,op_index:Some(7)});}
     Conflict {id:crate::ConflictId(string(row["id"].as_str().unwrap(),row["idCapacity"].as_u64().unwrap()as usize)),kind,status:crate::ConflictStatus::Open,messages,actors,timestamp:HybridLogicalTimestamp::new(7,11)}
 }
 fn verify(mut cursor:ProtocolConflictRetirement,held:usize,copy:usize,release:usize,maximum_turns:usize) {

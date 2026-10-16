@@ -28,7 +28,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
         vec!["nodes".into()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

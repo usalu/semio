@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::OwnershipLimit,message)}
 use semio_framework_os_kernel::{
@@ -23,7 +23,7 @@ impl UnsignedWord{
 fn unsigned(row: &SqliteRow, column: usize) -> Result<u32, ValueError> {
     u32::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string()))
 }
-fn short(row: &SqliteRow, column: usize) -> Result<u16, ValueError> {
+pub fn short(row: &SqliteRow, column: usize) -> Result<u16, ValueError> {
     u16::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string()))
 }
 fn octet(row: &SqliteRow, column: usize) -> Result<u8, ValueError> {
@@ -308,6 +308,3 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

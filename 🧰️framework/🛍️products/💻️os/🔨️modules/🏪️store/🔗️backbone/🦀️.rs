@@ -2,25 +2,23 @@
 //! The engine attaches them; their retirement lives beside them in `♻️retirement`.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+#[path = "♻️retirement/🦀️.rs"]
+pub mod backbone_retirement;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use crate::os_spr::command::ArtifactMessageSource;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use crate::os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
-use crate::os_vcs::VcsError;
-use crate::os_vcs::{
-    Identified, Patchable,
-};
-use super::store_schema::{ArtifactBackboneRef, document_backbone_ref};
+use semio_framework_os_vcs::VcsError;
+use semio_framework_os_vcs::{Identified, Patchable};
+use semio_framework_os_store_envelope::{ArtifactBackboneRef, document_backbone_ref};
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use crate::os_pack::pack_rt;
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
+use semio_framework_os_pack::pack_rt;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 
 /// 📨️ Wire message exchanged over an attached backbone channel. B-R6 "kill hand-rolled binary
 /// codecs": `#[derive(crate::os_dsl::DslOps)]` generates `OpBinary::encode_op`/`decode_op` (`format u8 (=1) |
@@ -92,22 +90,22 @@ impl OpText for BackboneMessage {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl OpBinary for BackboneMessage {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        crate::os_dsl::variants_binary::encode_op(self)
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
+        semio_framework_os_dsl::variants_binary::encode_op(self)
     }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        crate::os_dsl::variants_binary::decode_op(bytes)
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
+        semio_framework_os_dsl::variants_binary::decode_op(bytes)
     }
 }
 
-pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = crate::os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES;
+pub const BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES;
 
 pub const BACKBONE_GENESIS_MESSAGE_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
 
-pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = crate::os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES;
+pub const BACKBONE_CHANNEL_MAXIMUM_MESSAGES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES;
 
-pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = crate::os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES;
+pub const BACKBONE_CHANNEL_MAXIMUM_BYTES: usize = semio_framework_os_spr::DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES;
 
 pub fn decode_backbone_message_exact(bytes: &[u8]) -> Result<BackboneMessage, VcsError> {
     if bytes.len() > BACKBONE_GENESIS_MESSAGE_MAXIMUM_BYTES {
@@ -150,7 +148,7 @@ pub trait BackbonePort {
     async fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
 }
 
-pub(crate) static HOST_BACKBONE_PORT: Mutex<Option<Arc<BackbonePorts>>> = Mutex::new(None);
+pub static HOST_BACKBONE_PORT: Mutex<Option<Arc<BackbonePorts>>> = Mutex::new(None);
 
 /// 🔌️ Injects the browser or dev-server backbone port for wasm file/folder IO.
 pub async fn set_host_backbone_port(port: Arc<BackbonePorts>) {
@@ -159,7 +157,7 @@ pub async fn set_host_backbone_port(port: Arc<BackbonePorts>) {
     }
 }
 
-pub(crate) async fn host_backbone_port() -> Option<Arc<BackbonePorts>> {
+pub async fn host_backbone_port() -> Option<Arc<BackbonePorts>> {
     HOST_BACKBONE_PORT.lock().ok().and_then(|guard| guard.clone())
 }
 
@@ -186,7 +184,7 @@ impl BackbonePort for MemoryBackbonePort {
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-pub(crate) async fn local_storage_backbone_key(uri: &str) -> String {
+pub async fn local_storage_backbone_key(uri: &str) -> String {
     format!("semio:vcs:{uri}")
 }
 
@@ -271,17 +269,17 @@ pub trait BackboneChannelPort: Send + Sync {
     async fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
 }
 
-pub(crate) struct ActorBackboneChannelState {
-    uri: String,
-    inbound: VecDeque<Vec<u8>>,
-    outbound: VecDeque<Vec<u8>>,
+pub struct ActorBackboneChannelState {
+    pub uri: String,
+    pub inbound: VecDeque<Vec<u8>>,
+    pub outbound: VecDeque<Vec<u8>>,
     inbound_bytes: usize,
     outbound_bytes: usize,
     accepting: bool,
 }
 
 pub struct ActorBackboneChannelPort {
-    state: Arc<Mutex<ActorBackboneChannelState>>,
+    pub state: Arc<Mutex<ActorBackboneChannelState>>,
 }
 
 #[derive(Clone)]
@@ -289,7 +287,7 @@ pub struct ActorBackboneChannelOwner {
     state: Arc<Mutex<ActorBackboneChannelState>>,
 }
 
-pub(crate) fn push_actor_backbone_outbound(state: &Arc<Mutex<ActorBackboneChannelState>>, uri: &str, message: &[u8]) -> Result<(), VcsError> {
+pub fn push_actor_backbone_outbound(state: &Arc<Mutex<ActorBackboneChannelState>>, uri: &str, message: &[u8]) -> Result<(), VcsError> {
     decode_hot_backbone_message_exact(message)?;
     let mut state = state.lock().map_err(|_| VcsError::Backbone("actor backbone channel lock poisoned".into()))?;
     if !state.accepting || state.uri != uri {
@@ -393,8 +391,8 @@ impl BackboneChannelPort for BackboneChannelPorts {
 /// [`PortBackbone::new`] leaves it unset and `send`/`receive` surface a real "no host backbone
 /// linked" error rather than silently no-op'ing.
 pub struct PortBackbone {
-    pub(crate) uri: String,
-    pub(crate) channel: Option<Arc<BackboneChannelPorts>>,
+    pub uri: String,
+    pub channel: Option<Arc<BackboneChannelPorts>>,
 }
 
 impl PortBackbone {
@@ -430,9 +428,9 @@ impl Backbone for PortBackbone {
 
 /// 🔗️ Two crossed in-memory channel ends: whatever `a` sends, `b` receives, and vice versa.
 pub struct MemoryBackbone {
-    pub(crate) uri: String,
-    pub(crate) inbox: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
-    pub(crate) outbox: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
+    pub uri: String,
+    pub inbox: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
+    pub outbox: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
 }
 
 impl MemoryBackbone {
@@ -464,9 +462,9 @@ impl Backbone for MemoryBackbone {
 /// actor (built in `framework/sync`, a later workstream) that pushes inbound messages and drains the
 /// store's outbound ones. This crate only provides the queue plumbing — never the actor itself.
 pub struct ChannelBackbone {
-    pub(crate) uri: String,
-    pub(crate) inbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
-    pub(crate) outbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
+    pub uri: String,
+    pub inbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
+    pub outbound: Option<Arc<Mutex<VecDeque<BackboneMessage>>>>,
     pub(crate) outbound_wake: Arc<std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>>,
 }
 
@@ -474,9 +472,9 @@ pub struct ChannelBackbone {
 /// the store's inbound queue, `try_pop_front` takes one exact outbound owner. Not a
 /// `Backbone` — this is the handle an IO-owning actor endpoint holds across the store boundary.
 pub struct ChannelBackboneRemote {
-    uri: String,
-    inbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
-    pub(crate) outbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    pub uri: String,
+    pub inbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
+    pub outbound: Arc<Mutex<VecDeque<BackboneMessage>>>,
     outbound_wake: Arc<std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>>,
 }
 

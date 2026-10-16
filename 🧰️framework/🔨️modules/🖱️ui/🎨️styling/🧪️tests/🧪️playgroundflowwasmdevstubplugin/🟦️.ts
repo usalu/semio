@@ -27,15 +27,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("playgroundFlowWasmDevStubPlugin", () => {
     const importer = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx");
-    const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
+    const plugin = playgroundFlowWasmDevStubPlugin(repoRoot,{version:1,kind:"source",browser:resolve(repoRoot,"browser.js"),host:resolve(repoRoot,"host.js")});
     const resolveId = plugin.resolveId as (id: string, importer: string) => string | undefined;
 
-    it("resolves bare @semio-tech/flow-core to the wasm-pack entry, not the stub", () => {
+    it("stubs bare Flow native imports deterministically on source serves", () => {
       const resolved = resolveId("@semio-tech/flow-core", importer);
       expect(resolved).toBeDefined();
-      expect(resolved).not.toContain("playground-wasm-stub");
-      expect(resolved).toMatch(/flow_core\.js$/);
-      expect(existsSync(resolved!)).toBe(true);
+      expect(resolved).toBe(`${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey("@semio-tech/flow-core")}`);
     });
 
     it("falls back to stub for an unbuilt @semio-tech wasm package subpath", () => {

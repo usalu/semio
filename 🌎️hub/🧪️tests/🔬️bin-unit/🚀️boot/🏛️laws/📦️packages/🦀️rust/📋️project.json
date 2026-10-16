@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-boot-laws-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

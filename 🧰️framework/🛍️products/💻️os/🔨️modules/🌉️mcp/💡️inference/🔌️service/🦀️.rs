@@ -1,8 +1,16 @@
 //! 🧩 Installed remote inference codecs and revocable owner contribution lifetime.
-use super::*;
-use semio_framework_value::DslValue;
-use semio_framework_os_kernel::os_directory::client::{DocumentHttpPortDeclarationV1,DocumentHttpPortCodeV1,HttpMethod};
+
+use semio_framework_async::OperationContext;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
+use semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
+use semio_framework_os_kernel::os_directory::client::HttpMethod;
 use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_framework_value::DslValue;
+use std::sync::Arc;
+use crate::hub_wire::{InferenceHubMethodV1, InferenceHubRequestV1, InferenceHubTransport, InferenceRouteErrorV1, is_hub_inference_route};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::percent_codec::percent_encode;
 
 /// 📦 The executable installs owner behavior; transport authority remains with the gateway.
 #[derive(Clone)]
@@ -20,12 +28,13 @@ pub struct RemoteInferenceProtocolV1 {
 }
 
 struct RetainedProtocolV1 {
-    protocol:RemoteInferenceProtocolV1,
-    active:std::sync::atomic::AtomicBool,
+    pub protocol:RemoteInferenceProtocolV1,
+    pub active:std::sync::atomic::AtomicBool,
     calls:std::sync::Mutex<Vec<semio_framework_async::CancelToken>>,
 }
 
 static PROTOCOLS:std::sync::OnceLock<std::sync::Mutex<Vec<Arc<RetainedProtocolV1>>>>=std::sync::OnceLock::new();
+
 fn protocols()->&'static std::sync::Mutex<Vec<Arc<RetainedProtocolV1>>> {PROTOCOLS.get_or_init(Default::default)}
 
 /// 🔐 Installs a bounded unique inventory and retires every prior call before publication.
@@ -83,7 +92,3 @@ fn port_error(code:DocumentHttpPortCodeV1)->InferenceRouteErrorV1 {
         _=>InferenceRouteErrorV1::Unavailable,
     }
 }
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

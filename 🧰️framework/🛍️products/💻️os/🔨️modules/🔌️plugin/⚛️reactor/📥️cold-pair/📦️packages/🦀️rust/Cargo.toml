@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-reactor-surfaces"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Cold pair, checkpoint and surface slots of the plugin reactor"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-surfaces"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-tasks = { path = "../../../⏲️tasks/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-instances = { path = "../../../🏃️runtime/📦️instances/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }

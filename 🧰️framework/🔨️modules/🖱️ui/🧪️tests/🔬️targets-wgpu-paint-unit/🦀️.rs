@@ -1,7 +1,7 @@
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
-use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_ROUNDED, KIND_SOLID, KIND_WAITING_BORDER};
+use crate::wgpu::draw_types::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_ROUNDED, KIND_SOLID, KIND_WAITING_BORDER};
 use crate::wgpu::select::{arm_retained_select_scroll_at, select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
 use crate::wgpu::tree::EditState;
 
@@ -1649,7 +1649,7 @@ fn section_and_field_chrome_paint_only_inside_their_measured_bands() {
     let control_layout = field_tree.accepted_layout(field_control).expect("field control layout");
     let mut field_draw = DrawList::default();
     paint_tree(&mut field_tree, field_root, &theme, &mut field_atlas, None, false, &mut field_draw);
-    let color_matches = |instance: &&crate::wgpu::draw::UiInstance, color: crate::wgpu::theme::Rgba| (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001;
+    let color_matches = |instance: &&crate::wgpu::draw_types::UiInstance, color: crate::wgpu::theme::Rgba| (instance.color[0] - color.r).abs() < 0.001 && (instance.color[1] - color.g).abs() < 0.001 && (instance.color[2] - color.b).abs() < 0.001;
     let glyphs: Vec<_> = field_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).collect();
     let description: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.text_muted)).collect();
     let error: Vec<_> = glyphs.iter().copied().filter(|instance| color_matches(instance, theme.error)).collect();

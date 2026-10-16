@@ -1,5 +1,7 @@
+use crate::schema::snapshot::CsvRecord;
+use crate::CsvSnapshot;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_rfc4180::subsets::any::schema::mutations::*;
 use crate::schema::snapshot::CsvField;
 use protocol::command::DiffAlgebra;
 

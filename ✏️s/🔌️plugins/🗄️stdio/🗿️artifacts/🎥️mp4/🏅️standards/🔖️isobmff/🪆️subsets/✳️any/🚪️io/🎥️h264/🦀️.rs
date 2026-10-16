@@ -300,6 +300,4 @@ pub fn build_avcc_extended(sps_list: &[Vec<u8>], pps_list: &[Vec<u8>], nal_lengt
 }
 //#endregion 🔖️AvcC
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

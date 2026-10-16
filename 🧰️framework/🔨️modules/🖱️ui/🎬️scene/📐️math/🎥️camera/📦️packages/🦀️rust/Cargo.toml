@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-scene-camera"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Orbit and parallel cameras, projection matrices, framing, gumball and ray math and the level-of-detail grid — wasm-safe scene camera math"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-camera"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
+semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../../../../🪟️viewport/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

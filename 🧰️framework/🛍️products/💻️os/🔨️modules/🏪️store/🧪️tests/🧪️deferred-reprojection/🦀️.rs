@@ -81,7 +81,7 @@ async fn drive(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, budget: us
 
 /// 🧳️ Captures the actual retained replay's diagnostic, convergence and cleanup cursors.
 fn replay_owner_work<M: super::Mutation<DemoSnapshot> + OpBinary>(store: &ArtifactStore<DemoSnapshot, M>) -> (usize, Option<(u64, bool)>, Option<usize>, bool) {
-    let replay = store.pending_reprojection.as_ref().and_then(|pending| pending.replay.as_ref()).map(|(_, replay)| replay);
+    let replay = store.replay.pending_reprojection.as_ref().and_then(|pending| pending.replay.as_ref()).map(|(_, replay)| replay);
     replay.map_or((0, None, None, false), |replay| (replay.cursor, replay.message_settlement.as_ref().map(|settlement| (settlement.completed_work(), settlement.is_finished())), replay.convergence_search, replay.replay_retirement.is_some()))
 }
 //#endregion 🧰️Harness
@@ -234,11 +234,11 @@ async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
     store.ingest_remote(remote_supersede("deferred-ring", vec![replaced(&first, set(1000))], 0)).await.expect("a remote supersession of the first operation");
     assert_eq!(store.snapshot_ref().n, Some(1099));
     let stride = 100usize.div_ceil(10);
-    let lengths: Vec<usize> = store.prefix_ring.iter().map(|entry| entry.length).collect();
+    let lengths: Vec<usize> = store.live.prefix_ring.iter().map(|entry| entry.length).collect();
     assert!(lengths.len() > 8 && lengths.len() <= 10, "about √100 prefixes, more than the floor of 8: {lengths:?}");
     assert!(lengths.iter().all(|length| length % stride == 0), "strided by ⌈100 / √100⌉: {lengths:?}");
-    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation, _, _>(store.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
-    assert!(store.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "every retained prefix is live");
+    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation, _, _>(store.cursor.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
+    assert!(store.live.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "every retained prefix is live");
 }
 //#endregion 🧪️DeferredReprojectionLaws
 //#region 🧪️DeferredLocalStepLaws

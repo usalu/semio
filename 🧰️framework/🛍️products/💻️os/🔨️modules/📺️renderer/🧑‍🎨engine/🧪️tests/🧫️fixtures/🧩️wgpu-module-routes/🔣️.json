@@ -9,13 +9,17 @@
   },
   "mounts": {
     "/renderer-modules/wgpu": "compilerRoot",
-    "/renderer-modules/compiler-fonts": "fontRoot",
     "/🚀️boot.js": "bootRoot",
     "/🎞️frame-worker.js": "workerRoot",
     "/🔌️plugin-modules": "moduleRoot",
     "/🧩️extension-modules": "extensionRoot",
     "/🎬️renderer-boot.js": "libraryRoot"
   },
+  "runtimeAssetRoutes": [
+    "/renderer-modules/compiler-fonts",
+    "/renderer-modules/canvas-fonts",
+    "/renderer-modules/icon-pack"
+  ],
   "descriptorFile": "🔣️.json",
   "descriptorProbeDirectory": "🧊️flow-extension-brep"
 }

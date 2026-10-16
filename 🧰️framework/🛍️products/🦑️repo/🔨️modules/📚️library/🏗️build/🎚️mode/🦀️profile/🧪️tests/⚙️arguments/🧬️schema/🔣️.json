@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumArtifactBytes",
+    "contexts",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumArtifactBytes": {
+      "const": 2097152
+    },
+    "contexts": {
+      "const": [
+        "single",
+        "dependency"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "profile",
+          "settings"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z-]+$",
+            "maxLength": 64
+          },
+          "profile": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "settings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "opt-level",
+              "lto",
+              "codegen-units",
+              "debug",
+              "split-debuginfo",
+              "incremental",
+              "panic",
+              "debug-assertions",
+              "overflow-checks",
+              "rpath",
+              "strip"
+            ],
+            "properties": {
+              "opt-level": {
+                "enum": [
+                  0,
+                  3
+                ]
+              },
+              "lto": {
+                "enum": [
+                  "off",
+                  "thin",
+                  "fat",
+                  false
+                ]
+              },
+              "codegen-units": {
+                "enum": [
+                  1,
+                  4,
+                  16,
+                  256
+                ]
+              },
+              "debug": {
+                "enum": [
+                  0,
+                  1,
+                  2
+                ]
+              },
+              "split-debuginfo": {
+                "enum": [
+                  "off",
+                  "packed"
+                ]
+              },
+              "incremental": {
+                "type": "boolean"
+              },
+              "panic": {
+                "enum": [
+                  "abort",
+                  "unwind"
+                ]
+              },
+              "debug-assertions": {
+                "type": "boolean"
+              },
+              "overflow-checks": {
+                "type": "boolean"
+              },
+              "rpath": {
+                "type": "boolean"
+              },
+              "strip": {
+                "enum": [
+                  "none",
+                  "debuginfo",
+                  "symbols"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

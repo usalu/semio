@@ -14,10 +14,16 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
-      "cache": true
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

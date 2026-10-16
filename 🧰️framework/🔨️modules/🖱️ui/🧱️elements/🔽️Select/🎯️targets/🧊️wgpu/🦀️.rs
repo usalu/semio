@@ -98,7 +98,7 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
     } else {
         ctx.scroll_offsets.insert(scroll_key, popup.scroll);
     }
-    let mut render_rows = |draw: &mut crate::wgpu::draw::DrawList| {
+    let mut render_rows = |draw: &mut crate::wgpu::draw_types::DrawList| {
         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
         crate::wgpu::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);

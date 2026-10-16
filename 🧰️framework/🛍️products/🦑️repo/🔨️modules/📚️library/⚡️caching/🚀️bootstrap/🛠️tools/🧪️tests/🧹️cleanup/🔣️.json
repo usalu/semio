@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "name": "undefined-primary",
+      "body": "undefined",
+      "cleanup": "throw",
+      "diagnostic": "resolve",
+      "expected": "body"
+    },
+    {
+      "name": "frozen-primary",
+      "body": "frozen",
+      "cleanup": "throw",
+      "diagnostic": "resolve",
+      "expected": "body"
+    },
+    {
+      "name": "primitive-primary",
+      "body": "primitive",
+      "cleanup": "throw",
+      "diagnostic": "resolve",
+      "expected": "body"
+    },
+    {
+      "name": "diagnostic-secondary",
+      "body": "frozen",
+      "cleanup": "throw",
+      "diagnostic": "throw",
+      "expected": "body"
+    },
+    {
+      "name": "cleanup-after-success",
+      "body": "resolve",
+      "cleanup": "throw",
+      "diagnostic": "resolve",
+      "expected": "cleanup"
+    },
+    {
+      "name": "success",
+      "body": "resolve",
+      "cleanup": "resolve",
+      "diagnostic": "resolve",
+      "expected": "value"
+    },
+    {
+      "name": "primary-cleanup-success",
+      "body": "undefined",
+      "cleanup": "resolve",
+      "diagnostic": "resolve",
+      "expected": "body"
+    }
+  ]
+}

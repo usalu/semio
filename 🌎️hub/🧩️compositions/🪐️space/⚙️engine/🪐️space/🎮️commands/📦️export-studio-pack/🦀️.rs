@@ -1,18 +1,17 @@
 //! 💾️ 💾️ S Studio app command — `export-studio-pack`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::host::export_os_space_pack;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "export-studio-pack")]
 pub struct ExportStudioPack {}
 
 pub fn handle(_payload: &ExportStudioPack, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    let space_id = crate::engine::space::engine::resolve_future(crate::engine::space::config_space_id(cfg.snapshot));
-    match crate::engine::space::engine::resolve_future(crate::resolve_studio_document(&space_id)) {
+    let space_id = semio_hub_space_operations::resolve_future(semio_hub_space_operations::config_space_id(cfg.snapshot));
+    match semio_hub_space_operations::resolve_future(crate::resolve_studio_document(&space_id)) {
         Some(document) => match export_os_space_pack(&document) {
             Ok(pack_files) => {
                 Ok(Emit {

@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-space-history"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "SQLite snapshot IO of space history: native, preflight, admission, validation and receiving"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-space-history"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+semio-framework-io-schema = { path = "../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

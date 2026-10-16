@@ -1,3 +1,8 @@
+use crate::{standards::iana::subsets::any::schema::snapshot::TsvSnapshot, standards::iana::subsets::any::schema::snapshot::LineEnding};
+use semio_framework_os_kernel::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::ValueError};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase;
+use crate::standards::iana::subsets::any::io::sqlite::snapshot::{admission};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::iana::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary;
@@ -65,7 +70,7 @@ fn sqlite_snapshot_tsv_wide_record_preflight_can_be_cancelled() {
 
 #[test]
 fn sqlite_snapshot_tsv_records_fields_and_line_endings_are_relational() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = TsvSnapshot { schema: fixture["schema"].as_str().unwrap().into(), records: fixture["records"].as_array().unwrap().iter().map(|record| record.as_array().unwrap().iter().map(|field| field.as_str().unwrap().into()).collect()).collect(), trailing_newline: true, line_ending: LineEnding::Crlf };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.table("tsv_record").unwrap().rows.len(), 3);
@@ -82,7 +87,7 @@ fn sqlite_snapshot_tsv_records_fields_and_line_endings_are_relational() {
     assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
 }
 
-fn tsv_native_control_fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🛬️native-control/🔣️.json")).unwrap()}
+fn tsv_native_control_fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🔣️.json")).unwrap()}
 fn tsv_native_control_snapshot()->TsvSnapshot{let input=tsv_native_control_fixture();let count=usize::try_from(input["workItems"].as_u64().unwrap()).unwrap();let pattern=input["bytePattern"].as_array().unwrap().iter().map(|v|u8::try_from(v.as_u64().unwrap()).unwrap()).collect::<Vec<_>>();TsvSnapshot{schema:input["ownedSchema"].as_str().unwrap().into(),records:vec![Vec::new(),(0..count).map(|_|input["fieldText"].as_str().unwrap().into()).collect(),vec![String::new()],Vec::new()],trailing_newline:true,line_ending:LineEnding::Crlf}}
 fn tsv_native_payload(snapshot:&TsvSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<TsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<TsvSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
@@ -170,7 +175,7 @@ fn sqlite_snapshot_tsv_literal_long_field_copies_cancel_at_paid_utf8_boundary() 
 async fn sqlite_snapshot_tsv_complete_logical_owner_erased_factory_preserves_every_literal_field(){
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🔣️.json")).unwrap();
  semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("Tsv complete logical owner").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
  let codec=store::os_store::codec_registry::document_codec(crate::STDIO_TSV_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().unwrap();assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<TsvSnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.tsv".into(),standard:"iana".into(),subset:"*".into()};
@@ -192,7 +197,7 @@ async fn sqlite_snapshot_tsv_complete_logical_owner_erased_factory_preserves_eve
 #[test]
 fn sqlite_snapshot_tsv_canonical_owner_assets_match_actual_producers_and_natural_sources(){
  use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};
- for(text,binary)in[(include_str!("🧫️fixtures/🧠️logical-owner/🗣️0.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️0.pack.semio").as_slice()),(include_str!("🧫️fixtures/🧠️logical-owner/🗣️1.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️1.pack.semio").as_slice()),(include_str!("🧫️fixtures/🧠️logical-owner/🗣️2.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️2.pack.semio").as_slice()),(include_str!("🧫️fixtures/🧠️logical-owner/🗣️3.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️3.pack.semio").as_slice())]{let snapshot=TsvSnapshot::parse_dsl(text).unwrap();assert_eq!(snapshot.print_dsl(),text);assert_eq!(snapshot.encode_pack_with(&Default::default()).unwrap(),binary);assert_eq!(TsvSnapshot::decode_pack(binary).unwrap(),snapshot);}
+ for(text,binary)in[(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️0.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️0.pack.semio").as_slice()),(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️1.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️1.pack.semio").as_slice()),(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️2.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️2.pack.semio").as_slice()),(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧠️logical-owner/🗣️3.dsl.semio"),include_bytes!("🧫️fixtures/🧠️logical-owner/🎒️3.pack.semio").as_slice())]{let snapshot=TsvSnapshot::parse_dsl(text).unwrap();assert_eq!(snapshot.print_dsl(),text);assert_eq!(snapshot.encode_pack_with(&Default::default()).unwrap(),binary);assert_eq!(TsvSnapshot::decode_pack(binary).unwrap(),snapshot);}
  let demo=TsvSnapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap();assert_eq!(demo.print_dsl(),crate::examples::demo::PRIMARY_TEXT);assert_eq!(demo.encode_pack_with(&Default::default()).unwrap(),crate::examples::demo::PACK_BYTES);let raw=crate::examples::demo::RAW_TSV.as_bytes();let text=std::str::from_utf8(raw).unwrap();assert_eq!(TsvSnapshot::parse_dsl(text).unwrap(),demo);assert_eq!(read_tsv_source_binary(raw).unwrap(),demo);assert_eq!(read_tsv_source_binary(crate::examples::demo::PACK_BYTES).unwrap(),demo);
  println!("[DEBUG] actual TSV owner producers matched every paired asset and authored natural file");
 }
@@ -201,7 +206,7 @@ fn tsv_semantic_corpus_snapshot(value:&serde_json::Value)->TsvSnapshot{TsvSnapsh
 #[test]
 fn sqlite_snapshot_tsv_complete_native_semantic_cells_use_closed_independent_sql_authority(){
  use store::sqlite_snapshot::SnapshotEncoding;use std::io::Write;use std::process::{Command,Stdio};
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
+ let plan:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
  for sample in plan["cases"].as_array().unwrap(){let snapshot=tsv_semantic_corpus_snapshot(&sample["snapshot"]);let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,defaults)).unwrap();let file=export_sqlite_database(&database,defaults,&mut |_|true).unwrap();
   let mut child=Command::new("bun").args(["-e","import Ajv from \"ajv/dist/2020\";import{Database}from\"bun:sqlite\";const plan=JSON.parse(process.argv[1]),sample=JSON.parse(process.argv[2]);const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer())),quote=v=>'\"'+v.replaceAll('\"','\"\"')+'\"';try{if(db.query(\"PRAGMA integrity_check\").get().integrity_check!==\"ok\"||db.query(\"PRAGMA foreign_key_check\").all().length)throw Error(\"independent SQL integrity\");let rows=0,bytes=0;for(const[table,width]of Object.entries(plan.tableWidths)){const fields=db.query(\"PRAGMA table_info(\"+quote(table)+\")\").all().map(v=>v.name);if(fields.length!==width)throw Error(\"authored columns \"+table);const cells=fields.map(v=>{const f=quote(v);return \"CASE typeof(\"+f+\") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST(\"+f+\" AS BLOB)) WHEN 'blob' THEN length(\"+f+\") ELSE 0 END\";}).join(\"+\");const extent=db.query(\"SELECT COUNT(*) AS rows,COALESCE(SUM(\"+cells+\"),0) AS bytes FROM \"+quote(table)).get();rows+=extent.rows;bytes+=extent.bytes;}if(rows!==sample.rows||bytes!==sample.bytes)throw Error(\"independent complete cells \"+JSON.stringify({rows,bytes,expected:sample}));}finally{db.close();}"]).arg(plan.to_string()).arg(sample.to_string()).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}: {}",sample["id"],String::from_utf8_lossy(&result.stderr));
   let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;let authored=TsvSnapshot::SQLITE_SCHEMA.len();
@@ -218,7 +223,7 @@ fn sqlite_snapshot_tsv_complete_native_semantic_cells_use_closed_independent_sql
 #[test]
 fn sqlite_snapshot_tsv_complete_borrowed_gate_isolated_exact_and_one_short_before_typed_binding(){
  use store::sqlite_snapshot::SnapshotEncoding;
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  let defaults=SqliteDatabaseLimits::default();let columns=plan["tableWidths"].as_object().unwrap().values().map(|v|v.as_u64().unwrap()as usize).max().unwrap();let tables=plan["tableWidths"].as_object().unwrap().len();
  for sample in plan["cases"].as_array().unwrap(){let snapshot=tsv_semantic_corpus_snapshot(&sample["snapshot"]);let rows=sample["rows"].as_u64().unwrap()as usize;let bytes=sample["bytes"].as_u64().unwrap()as usize;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=tsv_native_payload(&snapshot,encoding);
@@ -227,7 +232,7 @@ fn sqlite_snapshot_tsv_complete_borrowed_gate_isolated_exact_and_one_short_befor
 }
 
 /** 🫴️ Constructs one actual native caller from independently authored body and close authority. */
-fn native_caller_policy()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🛬️native-control/🎟️original.json")).unwrap()}
+fn native_caller_policy()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️native-control/🎟️original.json")).unwrap()}
 trait OriginalNativeRefusalReceipt{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress;}
 impl OriginalNativeRefusalReceipt for semio_framework_value::ValueError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.retained_progress()}}
 impl OriginalNativeRefusalReceipt for store::io_schema::IoError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.cause.retained_progress()}}
@@ -252,4 +257,9 @@ original_native_caller!(with_original_encode,native_encoding,NativeEncodeControl
 fn retire_original_output<T:semio_framework_value::retirement::RetireOwned>(source:T,law:&serde_json::Value){
  let close=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();
  for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){return}assert!(owner.step(close).unwrap().progress().fits(close));}assert!(owner.terminal_is_empty(),"original caller output did not reach funded terminal");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

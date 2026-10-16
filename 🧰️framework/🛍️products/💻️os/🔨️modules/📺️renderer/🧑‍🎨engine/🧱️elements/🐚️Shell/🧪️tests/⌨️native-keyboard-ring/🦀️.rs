@@ -24,9 +24,9 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
-    shell.publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     let published: Vec<String> = fixture["controls"].as_array().unwrap().iter().map(|control| control["controlId"].as_str().unwrap().to_string()).collect();
-    let ring: Vec<String> = shell.keyboard_ring().into_iter().filter_map(|stop| match stop { ShellKeyboardStop::Chrome(key) => Some(key), ShellKeyboardStop::Window(..) => None }).collect();
+    let ring: Vec<String> = shell.dock.keyboard_ring(&shell.chrome).into_iter().filter_map(|stop| match stop { ShellKeyboardStop::Chrome(key) => Some(key), ShellKeyboardStop::Window(..) => None }).collect();
     assert_eq!(ring, published, "the ring is the chrome's focusable controls in publication order");
     for step in fixture["steps"].as_array().unwrap() {
         let (action, shift) = match step["key"].as_str().unwrap() {
@@ -35,15 +35,15 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
             _ => (ui_wgpu::wgpu::KeyAction::Enter, false),
         };
         let modifiers = PointerModifiers { shift, ..PointerModifiers::default() };
-        semio_framework_async::block_on(shell.handle_keyboard_async(action, &modifiers, &mut input)).expect("keyboard step");
-        assert_eq!(shell.accessibility_focused_control_id.as_deref(), step["focus"].as_str(), "{step}");
+        semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &modifiers, &mut input)).expect("keyboard step");
+        assert_eq!(shell.input.accessibility_focused_control_id.as_deref(), step["focus"].as_str(), "{step}");
         if let Some(open) = step["searchOpen"].as_bool() {
-            assert_eq!(shell.search_open, open, "{step}: Enter pressed the focused control once");
+            assert_eq!(shell.commands.search_open, open, "{step}: Enter pressed the focused control once");
         }
         if published.iter().any(|control| Some(control.as_str()) == step["focus"].as_str()) {
             register_fixture_hits(&fixture, &mut input);
-            shell.publish_retained_hit_registry(&mut input);
-            let focused: Vec<&str> = shell.presented_chrome_accessibility.iter().filter(|node| node.focused).map(|node| node.key.as_str()).collect();
+            PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+            let focused: Vec<&str> = shell.chrome.presented_chrome_accessibility.iter().filter(|node| node.focused).map(|node| node.key.as_str()).collect();
             assert_eq!(focused, vec![step["focus"].as_str().unwrap()], "{step}: the next presented frame announces the ring's focus to assistive technology");
         }
     }
@@ -55,11 +55,11 @@ fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     register_fixture_hits(&fixture, &mut input);
-    shell.publish_retained_hit_registry(&mut input);
-    assert_eq!(shell.keyboard_focus_ring_rect(&input), None, "nothing is keyboard-focused yet");
-    shell.accessibility_focused_control_id = Some("ui.find.toggle".into());
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    assert_eq!(shell.input.keyboard_focus_ring_rect(&input), None, "nothing is keyboard-focused yet");
+    shell.input.accessibility_focused_control_id = Some("ui.find.toggle".into());
     register_fixture_hits(&fixture, &mut input);
-    assert_eq!(shell.keyboard_focus_ring_rect(&input), Some(Rect::new(40.0, 4.0, 24.0, 24.0)), "the ring is drawn around this frame's hit rect of the focused control");
+    assert_eq!(shell.input.keyboard_focus_ring_rect(&input), Some(Rect::new(40.0, 4.0, 24.0, 24.0)), "the ring is drawn around this frame's hit rect of the focused control");
 }
 
 /// ♿️ The platform tree sanity of a REAL painted chrome: the navbar walks to completion, the frame is presented, and the
@@ -69,20 +69,20 @@ fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
 fn a_painted_navbar_hands_the_platform_a_named_tree() {
     let theme = Theme::light();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.screen_w = 1440.0;
-    shell.sync_dock_tabs();
+    shell.chrome.screen_w = 1440.0;
+    SessionCtx::of(&mut shell).sync_dock_tabs();
     for (id, label) in [("fixture.leading.first", "First"), ("fixture.leading.second", "Second"), ("fixture.leading.third", "Third")] {
-        shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf(id, label, "box", 0));
+        shell.dock.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf(id, label, "box", 0));
     }
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let walked = (0..16_384).take_while(|_| !shell.render_navbar_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, 1440.0)).count();
-    assert!(walked < 16_384 && shell.error.is_none(), "the navbar walk completes: {:?}", shell.error);
+    let walked = (0..16_384).take_while(|_| !ChromeViewCtx::of(&mut shell).render_navbar_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, 1440.0)).count();
+    assert!(walked < 16_384 && shell.chrome.error.is_none(), "the navbar walk completes: {:?}", shell.chrome.error);
     let painted = input.staged_hits().iter().filter(|hit| hit.control_id.is_some()).count();
-    shell.publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     let publication = crate::native_accessibility::published_native_accessibility();
     let chrome = publication.windows.iter().find(|window| window.window_id == crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
     let census = crate::native_accessibility::native_accessibility_census(&publication);

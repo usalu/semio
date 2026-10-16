@@ -77,12 +77,12 @@ fn session_shell() -> ShellState {
         children: vec![],
     });
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
-    shell.dock.active_window_id = Some("main".into());
-    shell.active_window_id = Some("main".into());
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    shell.screen_w = 1280.0;
-    shell.screen_h = 720.0;
+    shell.dock.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main"), DockStackTab::new("side")], active: "main".into() };
+    shell.dock.dock.active_window_id = Some("main".into());
+    shell.windows.active_window_id = Some("main".into());
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.chrome.screen_w = 1280.0;
+    shell.chrome.screen_h = 720.0;
     shell
 }
 
@@ -91,7 +91,7 @@ fn paint_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for _ in 0..100_000 {
-        if shell.render_time_travel_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+        if OverlaysViewCtx::of(&mut shell).render_time_travel_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
             return input.staged_hits().to_vec();
         }
     }
@@ -132,7 +132,7 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
-    let mut world3d_states = std::mem::take(&mut shell.world3d_states);
+    let mut world3d_states = std::mem::take(&mut shell.surfaces.world3d_states);
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     crate::interpreter::begin_accessibility_visible_documents();
     let mut cursor = UiDocumentFrameCursor::default();
@@ -143,11 +143,11 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {
-        shell.register_retained_panel_scroll_region(surface, body, &mut input);
+        shell.input.register_retained_panel_scroll_region(surface, body, &mut input);
     }
-    shell.register_retained_body_hits(surface, body, &mut input);
-    shell.world3d_states = world3d_states;
-    shell.publish_retained_hit_registry(&mut input);
+    shell.input.register_retained_body_hits(surface, body, &mut input);
+    shell.surfaces.world3d_states = world3d_states;
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
     caller.finish();
     input
@@ -217,28 +217,28 @@ fn the_shared_band_corpus_holds_on_wgpu() {
 #[test]
 fn the_band_announces_its_message_politely() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(shell.time_travel_status_accessibility_node(1).is_none(), "no session, nothing announced");
+    assert!(OverlaysViewCtx::of(&mut shell).time_travel_status_accessibility_node(1).is_none(), "no session, nothing announced");
     for (name, progress_expected, busy) in [("editing a mutation", false, false), ("editing prepares a history preview with visible localized progress", true, false), ("a running replay", true, true), ("an error downstream", false, false), ("finalizing offers", false, true)] {
         let status = session(name);
-        shell.locale_id = "de".into();
-        shell.observe_history_time_travel(Some(&status));
-        let node = shell.time_travel_status_accessibility_node(1).expect("an open session announces itself");
+        shell.prefs.locale_id = "de".into();
+        SessionCtx::of(&mut shell).observe_history_time_travel(Some(&status));
+        let node = OverlaysViewCtx::of(&mut shell).time_travel_status_accessibility_node(1).expect("an open session announces itself");
         assert_eq!((node.role.as_str(), node.busy, node.value_now, node.value_max), ("status", busy, None, None), "{name}: one stable status");
         let lines = time_travel_band_lines(&status, Terminology::Native, Locale::De);
         assert_eq!(node.label, Some(lines.message()), "{name}");
         assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite));
-        let progress = shell.time_travel_progress_accessibility_node(2);
+        let progress = OverlaysViewCtx::of(&mut shell).time_travel_progress_accessibility_node(2);
         assert_eq!(progress.is_some(), progress_expected, "{name}: a progress bar while preparation or replay with a known total runs");
         if let Some(progress) = progress {
             assert_eq!((progress.key.as_str(), progress.role.as_str(), progress.depth, progress.value_min, progress.value_now, progress.value_max), (TIME_TRAVEL_BAND_PROGRESS_ID, "progressbar", 1, Some(0.0), Some(f64::from(status.done.unwrap_or(0))), status.total.map(f64::from)), "{name}");
             assert_eq!((progress.label.clone(), progress.value_text.clone()), (lines.progress.clone(), lines.progress.clone()), "{name}: named and valued by the progress line");
             assert_eq!(progress.live, ui_contract::liveness_name(ui_contract::Liveness::Off), "{name}: the status is the one live region");
         }
-        let keys: Vec<String> = shell.band_accessibility_nodes(1).into_iter().map(|node| node.key).collect();
+        let keys: Vec<String> = OverlaysViewCtx::of(&mut shell).band_accessibility_nodes(1).into_iter().map(|node| node.key).collect();
         assert_eq!(keys, if progress_expected { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string(), TIME_TRAVEL_BAND_PROGRESS_ID.to_string()] } else { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string()] }, "{name}: the progress follows its status");
     }
-    shell.observe_history_time_travel(None);
-    assert!(shell.history_time_travel().is_none(), "an absent status closes the session");
+    SessionCtx::of(&mut shell).observe_history_time_travel(None);
+    assert!(shell.history.history_time_travel().is_none(), "an absent status closes the session");
     assert_eq!(time_travel_band_lines(&session("an error downstream"), Terminology::Native, Locale::En).message(), "Reviewing the edited history · Errors must be fixed or withdrawn before finalizing · Worst outcome: Error · Accepted changes: 2");
 }
 
@@ -262,10 +262,10 @@ fn every_control_reads_reacts_caption_and_names_its_reserved_action() {
     }
     let mut shell = session_shell();
     let editing = session("editing a mutation");
-    shell.observe_history_time_travel(Some(&editing));
-    let accept = |shell: &ShellState| shell.time_travel_band_plan_for(&editing, &Theme::light()).buttons.into_iter().find(|button| button.control.verb == TimeTravelVerb::Accept).expect("Accept is offered").label;
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&editing));
+    let accept = |shell: &ShellState| shell.prefs.time_travel_band_plan_for(&editing, &Theme::light(), &shell.chrome).buttons.into_iter().find(|button| button.control.verb == TimeTravelVerb::Accept).expect("Accept is offered").label;
     let terse = accept(&shell);
-    shell.chrome_build.driver.label_tier = ui_wgpu::wgpu::UiDriverLabelTier::Beginner;
+    shell.chrome.chrome_build.driver.label_tier = ui_wgpu::wgpu::UiDriverLabelTier::Beginner;
     let explaining = accept(&shell);
     let caption = &corpus["labels"]["ui.timeTravel.accept"];
     assert!(terse.contains(caption["normal"]["en"].as_str().expect("normal")) && explaining.contains(caption["beginner"]["en"].as_str().expect("beginner")) && terse != explaining, "the band reads the driver's label tier: {terse:?} / {explaining:?}");
@@ -327,7 +327,7 @@ fn the_time_travel_chords_are_remappable_rows_and_escape_is_never_one() {
 #[test]
 fn a_chord_dispatches_only_what_the_stage_offers() {
     let mut shell = session_shell();
-    assert!(shell.time_travel_shortcut_action(TimeTravelVerb::Exit).is_none(), "no session, no verb");
+    assert!(shell.docs.time_travel_shortcut_action(TimeTravelVerb::Exit, &shell.chrome, &shell.history).is_none(), "no session, no verb");
     for (name, verb, expected) in [
         ("editing a mutation", TimeTravelVerb::Accept, Some("historyEditAccept")),
         ("editing a mutation", TimeTravelVerb::Discard, Some("historyEditDiscard")),
@@ -339,9 +339,9 @@ fn a_chord_dispatches_only_what_the_stage_offers() {
         ("finalizing offers", TimeTravelVerb::Exit, None),
     ] {
         let status = session(name);
-        shell.observe_history_time_travel(Some(&status));
+        SessionCtx::of(&mut shell).observe_history_time_travel(Some(&status));
         let expected = expected.map(|action| ("test".to_string(), action.to_string(), Some(serde_json::json!({ "generation": status.generation }))));
-        assert_eq!(shell.time_travel_shortcut_action(verb).map(|action| (action.controller_id, action.action, action.args.as_ref().map(dsl_value_as_json))), expected, "{name} / {verb:?}");
+        assert_eq!(shell.docs.time_travel_shortcut_action(verb, &shell.chrome, &shell.history).map(|action| (action.controller_id, action.action, action.args.as_ref().map(dsl_value_as_json))), expected, "{name} / {verb:?}");
     }
     assert!(time_travel_chord_yields_to(Some(RetainedNodeFocusKind::Input)), "a focused text or number field keeps its keys");
     assert!(!time_travel_chord_yields_to(Some(RetainedNodeFocusKind::Slider)));
@@ -354,17 +354,17 @@ fn a_chord_dispatches_only_what_the_stage_offers() {
 fn the_keyboard_router_accepts_by_chord_and_escape_discards_nothing() {
     DISPATCHED.with(|log| log.borrow_mut().clear());
     let mut shell = panel_anchor_model_tests::host_test_shell();
-    shell.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(record_action);
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(record_action);
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord("alt+enter");
-    semio_framework_async::block_on(shell.handle_keyboard_async(action, &modifiers, &mut input)).expect("the chord routes");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &modifiers, &mut input)).expect("the chord routes");
     assert!(dispatched().iter().any(|action| action.contains("historyEditAccept")), "the chord reached the guest: {:?}", dispatched());
-    assert_eq!(shell.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying), "the dispatch reply's patch moved the band");
+    assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying), "the dispatch reply's patch moved the band");
     let before = dispatched().len();
-    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("Escape routes");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("Escape routes");
     assert!(!dispatched()[before..].iter().any(|action| action.contains("historyEdit")), "Escape dispatched no history-edit verb: {:?}", &dispatched()[before..]);
-    assert_eq!(shell.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying));
+    assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying));
 }
 //#endregion ⌨️Chords
 
@@ -428,16 +428,16 @@ fn the_bands_reserve_the_subfooter_row_under_the_footer() {
     let theme = Theme::light();
     for (width, height) in [(1280.0_f32, 720.0_f32), (375.0, 812.0)] {
         let mut shell = session_shell();
-        (shell.screen_w, shell.screen_h) = (width, height);
-        assert_eq!(shell.subfooter_height(&theme), 0.0, "{width}: no band, no row");
-        let open = shell.body_rect(&theme);
+        (shell.chrome.screen_w, shell.chrome.screen_h) = (width, height);
+        assert_eq!(SessionCtx::of(&mut shell).subfooter_height(&theme), 0.0, "{width}: no band, no row");
+        let open = SessionCtx::of(&mut shell).body_rect(&theme);
         assert!((open.y + open.h - (height - theme.footer_height)).abs() < 0.001, "{width}: the body ends at the footer");
         let status = session("a ready review");
-        shell.observe_history_time_travel(Some(&status));
-        let band = shell.time_travel_band_plan_for(&status, &theme).band;
-        let reserved = shell.subfooter_height(&theme);
+        SessionCtx::of(&mut shell).observe_history_time_travel(Some(&status));
+        let band = shell.prefs.time_travel_band_plan_for(&status, &theme, &shell.chrome).band;
+        let reserved = SessionCtx::of(&mut shell).subfooter_height(&theme);
         assert!((band.y + band.h - height).abs() < 0.001 && (reserved - band.h).abs() < 0.001 && reserved > 0.0, "{width}: the band fills the reserved row: {band:?} / {reserved}");
-        let body = shell.body_rect(&theme);
+        let body = SessionCtx::of(&mut shell).body_rect(&theme);
         assert!((body.y + body.h + theme.footer_height - band.y).abs() < 0.001, "{width}: body, footer, band — nothing overlaps");
         assert!((open.h - body.h - reserved).abs() < 0.001, "{width}: the body gives exactly the reserved row");
     }
@@ -449,8 +449,8 @@ fn the_bands_reserve_the_subfooter_row_under_the_footer() {
 #[test]
 fn the_band_registers_each_control_with_its_dispatch_name_and_state() {
     let mut shell = session_shell();
-    shell.locale_id = "de".into();
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    shell.prefs.locale_id = "de".into();
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
     let hits = paint_band(&mut shell);
     assert_eq!(
         hit_events(&hits),
@@ -461,24 +461,24 @@ fn the_band_registers_each_control_with_its_dispatch_name_and_state() {
         ]
     );
     assert!(hits.iter().filter_map(|hit| hit.event.as_ref()).all(|event| event.controller_id == "test" && event.args.as_ref().map(dsl_value_as_json) == Some(serde_json::json!({ "generation": 3 }))));
-    let nodes = shell.chrome_accessibility_nodes(&hits);
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
     let accept = nodes.iter().find(|node| node.key == "ui.timeTravel.accept").expect("Accept is announced");
     assert_eq!((accept.role.as_str(), accept.label.as_deref(), accept.disabled), ("button", Some("Entwurf übernehmen"), false));
     assert_eq!(accept.shortcut, Some(format_keybinding_shortcut("alt+enter")), "aria-keyshortcuts comes from the remappable row");
     let band = nodes.iter().find(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID).expect("the band's live node");
     assert_eq!(band.label.as_deref(), Some("Mutation wird bearbeitet · Bearbeitet: Auswahl ziehen"));
 
-    shell.observe_history_time_travel(Some(&session("an error downstream")));
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("an error downstream")));
     let hits = paint_band(&mut shell);
     assert_eq!(
         hit_events(&hits),
         [("shell.time-travel.rerun".to_string(), None), ("shell.time-travel.finalize".to_string(), None), ("ui.timeTravel.exit".to_string(), Some("historyEditExit".to_string()))],
         "a blocked Finalize and an unavailable replay stay visible and dispatch nothing"
     );
-    let finalize = shell.chrome_accessibility_nodes(&hits).into_iter().find(|node| node.key == "shell.time-travel.finalize").expect("Finalize is announced");
+    let finalize = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits).into_iter().find(|node| node.key == "shell.time-travel.finalize").expect("Finalize is announced");
     assert_eq!((finalize.disabled, finalize.description.as_deref()), (true, Some("Blockiert: zuerst die offene Änderung oder die Fehler auflösen")));
 
-    shell.chrome_build.open_dialog(ChromeDialogRequest::confirm("finalizeHistoryEdit", "Finish", "historyEditCommit"));
+    shell.chrome.chrome_build.open_dialog(ChromeDialogRequest::confirm("finalizeHistoryEdit", "Finish", "historyEditCommit"));
     assert!(paint_band(&mut shell).is_empty(), "the finalize prompt owns the pointer; the band under its veil registers nothing");
 }
 //#endregion 📐️Band
@@ -509,14 +509,14 @@ fn the_shared_band_transitions_hold_on_wgpu() {
         let transition = time_travel_transition(from.as_ref(), to.as_ref());
         assert_eq!((Value::Bool(transition.reveal), focus_name(transition.focus), transition.scroll_to.clone().map_or(Value::Null, Value::String)), (row["reveal"].clone(), row["focus"].clone(), row["scrollTo"].clone()), "{name}");
         let mut shell = session_shell();
-        shell.sync_dock_tabs();
-        shell.observe_history_time_travel(from.as_ref());
-        let anchor = shell.dock_tabs.locate(FRAMEWORK_PANEL_TAB_HISTORY_ID).map(|(anchor, _)| anchor).expect("the History tab is docked");
-        shell.anchor_state_mut(anchor).visible = false;
-        shell.time_travel_focus = None;
-        shell.observe_history_time_travel(to.as_ref());
-        assert_eq!(shell.anchor_open(anchor), transition.reveal, "{name}: the History panel opens exactly on a reveal");
-        assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), transition.focus, "{name}: the focus waits for the screen");
+        SessionCtx::of(&mut shell).sync_dock_tabs();
+        SessionCtx::of(&mut shell).observe_history_time_travel(from.as_ref());
+        let anchor = shell.dock.dock_tabs.locate(FRAMEWORK_PANEL_TAB_HISTORY_ID).map(|(anchor, _)| anchor).expect("the History tab is docked");
+        shell.dock.anchor_state_mut(anchor).visible = false;
+        shell.history.time_travel_focus = None;
+        SessionCtx::of(&mut shell).observe_history_time_travel(to.as_ref());
+        assert_eq!(shell.dock.anchor_open(anchor), transition.reveal, "{name}: the History panel opens exactly on a reveal");
+        assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), transition.focus, "{name}: the focus waits for the screen");
     }
 }
 
@@ -566,12 +566,12 @@ fn present_band(shell: &mut ShellState) -> InputState<ActionDescriptor> {
         input.register_hit(hit);
     }
     input.publish_hits();
-    shell.resolve_time_travel_focus(&mut input);
+    shell.input.resolve_time_travel_focus(&mut input, &mut shell.chrome, &mut shell.history);
     input
 }
 
 fn focused_chrome(shell: &ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
-    shell.chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
+    PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
 }
 
 /// ⚖️ LAW: a replay or a review moves keyboard focus onto the band's live status node — the node the ARIA mirror then
@@ -581,48 +581,48 @@ fn focused_chrome(shell: &ShellState, input: &InputState<ActionDescriptor>) -> V
 #[test]
 fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewhere_keeps_it() {
     let mut shell = session_shell();
-    shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
-    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor));
+    shell.docs.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
+    assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor));
     present_band(&mut shell);
-    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
-    shell.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
+    assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
+    shell.history.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
     let input = present_band(&mut shell);
-    assert_eq!((shell.time_travel_focus, focused_chrome(&shell, &input)), (None, Vec::<String>::new()), "past the settle time the move is given up");
+    assert_eq!((shell.history.time_travel_focus, focused_chrome(&shell, &input)), (None, Vec::<String>::new()), "past the settle time the move is given up");
 
     let mut replaying = session("a running replay");
-    shell.observe_history_time_travel(Some(&replaying));
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&replaying));
     let input = present_band(&mut shell);
     assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID]);
-    let band = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID).expect("the band's live node");
+    let band = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID).expect("the band's live node");
     assert!(band.focusable && !band.tabbable && band.focused, "focused programmatically, never a Tab stop");
-    shell.accessibility_focused_control_id = Some("ui.timeTravel.exit".into());
+    shell.input.accessibility_focused_control_id = Some("ui.timeTravel.exit".into());
     replaying.done = Some(4);
-    shell.observe_history_time_travel(Some(&replaying));
-    assert_eq!(shell.time_travel_focus, None, "progress inside the replay moves nothing");
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&replaying));
+    assert_eq!(shell.history.time_travel_focus, None, "progress inside the replay moves nothing");
 
-    shell.observe_history_time_travel(Some(&session("an error downstream")));
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("an error downstream")));
     let input = present_band(&mut shell);
     assert_eq!(focused_chrome(&shell, &input), [TIME_TRAVEL_BAND_STATUS_ID], "the review lands on the band that names what blocks");
 
-    shell.observe_history_time_travel(Some(&session("the finalize prompt can go back")));
-    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Dialog));
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("the finalize prompt can go back")));
+    assert_eq!(shell.history.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Dialog));
     present_band(&mut shell);
-    assert!(shell.time_travel_focus.is_some(), "the prompt is not open yet");
+    assert!(shell.history.time_travel_focus.is_some(), "the prompt is not open yet");
     open_finalize_prompt(&mut shell, "Alternative");
     let input = present_band(&mut shell);
-    assert!(shell.time_travel_focus.is_none() && input.hits().is_empty() && shell.chrome_build.dialog_open(), "the open prompt holds focus; under it the band registers nothing");
+    assert!(shell.history.time_travel_focus.is_none() && input.hits().is_empty() && shell.chrome.chrome_build.dialog_open(), "the open prompt holds focus; under it the band registers nothing");
 
     let mut typing = session_shell();
-    typing.observe_history_time_travel(Some(&session("a running replay")));
+    SessionCtx::of(&mut typing).observe_history_time_travel(Some(&session("a running replay")));
     let mut input = InputState::<ActionDescriptor>::default();
     input.focus_input_owned("ui.search.input".to_string(), "dra".to_string());
-    typing.resolve_time_travel_focus(&mut input);
-    assert_eq!((typing.time_travel_focus, typing.accessibility_focused_control_id.clone()), (None, None), "a person typing elsewhere keeps their focus");
+    typing.input.resolve_time_travel_focus(&mut input, &mut typing.chrome, &mut typing.history);
+    assert_eq!((typing.history.time_travel_focus, typing.input.accessibility_focused_control_id.clone()), (None, None), "a person typing elsewhere keeps their focus");
 
-    shell.observe_history_time_travel(Some(&session("a ready review")));
-    shell.observe_history_time_travel(None);
-    assert_eq!(shell.time_travel_focus, None, "a closed session drops a waiting focus");
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("a ready review")));
+    SessionCtx::of(&mut shell).observe_history_time_travel(None);
+    assert_eq!(shell.history.time_travel_focus, None, "a closed session drops a waiting focus");
 }
 
 /// ⚖️ LAW (focus reaches the ARIA mirror): beginning an edit gives the first input control of the history body's draft
@@ -643,15 +643,15 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
         tree_pointer_record(7, "framework.history.editor.input.dx", component(serde_json::json!({ "type": "numberStepper", "value": 2.0, "step": 1.0, "uniform": false })), &[], None),
     ];
     let mut shell = session_shell();
-    let document = shell.publish_surface_records(SURFACE, records).expect("the history body publishes");
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    let document = shell.windows.publish_surface_records(SURFACE, records).expect("the history body publishes");
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
     let _ = paint_retained_body(&mut shell, SURFACE, &document, Rect::new(0.0, 0.0, 420.0, 640.0));
-    assert_eq!(shell.time_travel_focus, None, "the editor reached the screen and took the focus");
+    assert_eq!(shell.history.time_travel_focus, None, "the editor reached the screen and took the focus");
     let nodes = crate::interpreter::published_accessibility_nodes_for_test(SURFACE);
     let focused: Vec<_> = nodes.iter().filter(|node| node.focused).map(|node| (node.key.clone(), node.role.clone())).collect();
     assert_eq!(focused.len(), 1, "one focused node: {focused:?}");
     assert!(projected_key_is(&focused[0].0, "framework.history.editor.input.dx") && focused[0].1 == "spinbutton", "the stepper itself, not its row: {focused:?}");
-    assert_eq!(shell.chrome_build.focused_retained_surface.as_deref(), Some(SURFACE), "the history body holds the keyboard");
+    assert_eq!(shell.chrome.chrome_build.focused_retained_surface.as_deref(), Some(SURFACE), "the history body holds the keyboard");
 }
 //#endregion 🎯️Focus
 
@@ -661,19 +661,19 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
 #[test]
 fn a_session_reveals_the_history_tab_and_each_pane_wears_an_indicator() {
     let mut shell = session_shell();
-    shell.sync_dock_tabs();
-    let anchor = shell.dock_tabs.locate(FRAMEWORK_PANEL_TAB_HISTORY_ID).map(|(anchor, _)| anchor).expect("the History tab is docked");
-    shell.anchor_state_mut(anchor).visible = false;
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
-    assert!(shell.anchor_open(anchor), "the session start opens the History panel");
-    assert_eq!(shell.anchor_state(anchor).active_tab(), Some(FRAMEWORK_PANEL_TAB_HISTORY_ID));
-    shell.anchor_state_mut(anchor).visible = false;
-    shell.observe_history_time_travel(Some(&session("a running replay")));
-    assert!(!shell.anchor_open(anchor), "only the edge into a session reveals");
+    SessionCtx::of(&mut shell).sync_dock_tabs();
+    let anchor = shell.dock.dock_tabs.locate(FRAMEWORK_PANEL_TAB_HISTORY_ID).map(|(anchor, _)| anchor).expect("the History tab is docked");
+    shell.dock.anchor_state_mut(anchor).visible = false;
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
+    assert!(shell.dock.anchor_open(anchor), "the session start opens the History panel");
+    assert_eq!(shell.dock.anchor_state(anchor).active_tab(), Some(FRAMEWORK_PANEL_TAB_HISTORY_ID));
+    shell.dock.anchor_state_mut(anchor).visible = false;
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("a running replay")));
+    assert!(!shell.dock.anchor_open(anchor), "only the edge into a session reveals");
 
     let indicator = time_travel_indicator_control_id("side");
     assert!(indicator.starts_with("framework.window.") && indicator.ends_with(".timeTravel.indicator"));
-    assert!(shell.window_pane_chip_target(&indicator).is_none(), "no pane chip claims the indicator");
+    assert!(shell.dock.window_pane_chip_target(&indicator, &shell.docs).is_none(), "no pane chip claims the indicator");
     assert_eq!((time_travel_indicator_caption(Locale::En), time_travel_indicator_caption(Locale::De)), ("History editing", "Verlaufsbearbeitung"));
 }
 
@@ -682,17 +682,17 @@ fn a_session_reveals_the_history_tab_and_each_pane_wears_an_indicator() {
 #[test]
 fn on_a_phone_the_session_start_opens_the_mobile_panel_on_history() {
     let mut shell = session_shell();
-    shell.sync_dock_tabs();
-    shell.observe_history_time_travel(Some(&session("editing a mutation")));
-    assert!(!shell.mobile_panel_visible, "a desktop reveals the anchor, not the mobile panel");
+    SessionCtx::of(&mut shell).sync_dock_tabs();
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("editing a mutation")));
+    assert!(!shell.dock.mobile_panel_visible, "a desktop reveals the anchor, not the mobile panel");
     let mut phone = session_shell();
-    phone.screen_w = 375.0;
-    phone.screen_h = 812.0;
-    phone.sync_dock_tabs();
-    assert!(phone.mobile_panel_active() && !phone.mobile_panel_visible);
-    phone.observe_history_time_travel(Some(&session("editing a mutation")));
-    assert!(phone.mobile_panel_visible, "the mobile panel opens");
-    assert_eq!(phone.mobile_panel_path.last().map(String::as_str), Some(FRAMEWORK_PANEL_TAB_HISTORY_ID), "on the History tab");
+    phone.chrome.screen_w = 375.0;
+    phone.chrome.screen_h = 812.0;
+    SessionCtx::of(&mut phone).sync_dock_tabs();
+    assert!(phone.chrome.mobile_panel_active() && !phone.dock.mobile_panel_visible);
+    SessionCtx::of(&mut phone).observe_history_time_travel(Some(&session("editing a mutation")));
+    assert!(phone.dock.mobile_panel_visible, "the mobile panel opens");
+    assert_eq!(phone.dock.mobile_panel_path.last().map(String::as_str), Some(FRAMEWORK_PANEL_TAB_HISTORY_ID), "on the History tab");
 }
 
 /// ⚖️ LAW: every non-stale dispatch reply carries the session status (absent = closed); a stale reply changes nothing;
@@ -701,14 +701,14 @@ fn on_a_phone_the_session_start_opens_the_mobile_panel_on_history() {
 fn replies_carry_the_status_and_rows_fold_by_their_edit() {
     let mut shell = session_shell();
     let open = HistoryPatch { cursor: 5, time_travel: Some(session("editing a mutation")), ..Default::default() };
-    semio_framework_async::block_on(shell.observe_invocation_history(Some(&open)));
-    assert_eq!(shell.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Editing));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&open)));
+    assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Editing));
     let stale = HistoryPatch { cursor: 4, ..Default::default() };
-    semio_framework_async::block_on(shell.observe_invocation_history(Some(&stale)));
-    assert!(shell.history_time_travel().is_some(), "a stale reply is ignored");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&stale)));
+    assert!(shell.history.history_time_travel().is_some(), "a stale reply is ignored");
     let closed = HistoryPatch { cursor: 6, ..Default::default() };
-    semio_framework_async::block_on(shell.observe_invocation_history(Some(&closed)));
-    assert!(shell.history_time_travel().is_none(), "a reply without a status closes the band");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&closed)));
+    assert!(shell.history.history_time_travel().is_none(), "a reply without a status closes the band");
 
     let row = |seq: u64, edit: Option<&str>| HistoryEntry { seq, edit_id: edit.map(str::to_string), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, ..Default::default() };
     let mut entries = BTreeMap::new();
@@ -737,9 +737,9 @@ fn progress_patch(patch: HistoryPatch) -> OperationPublication {
 /// 🏛️ The host fixture shell with its guest program's publication lane under the law's hand and nothing owed.
 fn publication_shell() -> ShellState {
     let mut shell = panel_anchor_model_tests::host_test_shell();
-    shell.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_publications(queued_publications);
+    shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_publications(queued_publications);
     PUBLISHED.with(|queue| queue.borrow_mut().clear());
-    shell.owed_refresh_scope = UiDirtyScope::None;
+    shell.settle.owed_refresh_scope = UiDirtyScope::None;
     shell
 }
 
@@ -750,15 +750,15 @@ fn publication_shell() -> ShellState {
 #[test]
 fn unsolicited_progress_patches_move_the_band_between_dispatches() {
     let mut shell = publication_shell();
-    semio_framework_async::block_on(shell.observe_invocation_history(Some(&HistoryPatch { cursor: 5, time_travel: Some(session("editing a mutation")), ..Default::default() })));
-    assert!(!semio_framework_async::block_on(shell.drain_operation_publications()), "nothing queued is no change");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&HistoryPatch { cursor: 5, time_travel: Some(session("editing a mutation")), ..Default::default() })));
+    assert!(!semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "nothing queued is no change");
     let replaying = session("a running replay");
     PUBLISHED.with(|queue| queue.borrow_mut().extend([progress_patch(HistoryPatch { cursor: 5, time_travel: Some(replaying.clone()), ..Default::default() }), progress_patch(HistoryPatch { cursor: 4, ..Default::default() })]));
-    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "the queued progress moved the band");
-    assert_eq!(shell.history_time_travel(), Some(&replaying), "the stale patch after it closed nothing");
-    assert!(shell.owed_refresh_scope.asks_for_nothing(), "a patch without a scope on a progress frame re-renders nothing");
+    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "the queued progress moved the band");
+    assert_eq!(shell.history.history_time_travel(), Some(&replaying), "the stale patch after it closed nothing");
+    assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a patch without a scope on a progress frame re-renders nothing");
     assert!(PUBLISHED.with(|queue| queue.borrow().is_empty()), "the drain took the queue");
-    assert!(!semio_framework_async::block_on(shell.drain_operation_publications()));
+    assert!(!semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()));
 }
 
 /// ⚖️ LAW (live fault F11; React's `subscribeOperationCompletions` pass): a typed operation that ends AFTER the host
@@ -769,7 +769,7 @@ fn unsolicited_progress_patches_move_the_band_between_dispatches() {
 #[test]
 fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_rows() {
     let mut shell = publication_shell();
-    let before = history_rows_oldest_first(&shell.history_entries).len();
+    let before = history_rows_oldest_first(&shell.history.history_entries).len();
     let board = UiDirtyScope::Partial { window_bodies: vec!["board".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false };
     let row = HistoryEntry { seq: 41, action_id: "setActiveExample".into(), label: LocalizedLabel::native("Load example", "Beispiel laden"), kind: "command".into(), applied: true, ..Default::default() };
     PUBLISHED.with(|queue| {
@@ -778,15 +778,15 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
             OperationPublication { completed: true, ui_scope: UiDirtyScope::None, history_patch: Some(HistoryPatch { cursor: 41, upserts: vec![row], ..Default::default() }), fault: None, resync: false },
         ])
     });
-    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "the lane alone changed the shell");
-    let rows = history_rows_oldest_first(&shell.history_entries);
+    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "the lane alone changed the shell");
+    let rows = history_rows_oldest_first(&shell.history.history_entries);
     assert_eq!(rows.len(), before + 1, "the completion's row is in the projection");
     assert!(rows.iter().any(|entry| entry.key() == "seq:41"));
-    assert!(shell.owed_refresh_scope.wants_window_body("board"), "the progress scope is owed: {:?}", shell.owed_refresh_scope);
-    assert!(shell.owed_refresh_scope.wants_panel_body(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.owed_refresh_scope);
-    assert!(!shell.owed_refresh_scope.wants_window_body("another"), "one merged pass, never a full one");
-    assert!(shell.settle_pump_pending(), "the settle lane refreshes without a dispatch");
-    assert!(shell.transient_notice().is_none(), "a completion is told by its rows, not by a notice");
+    assert!(shell.settle.owed_refresh_scope.wants_window_body("board"), "the progress scope is owed: {:?}", shell.settle.owed_refresh_scope);
+    assert!(shell.settle.owed_refresh_scope.wants_panel_body(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.settle.owed_refresh_scope);
+    assert!(!shell.settle.owed_refresh_scope.wants_window_body("another"), "one merged pass, never a full one");
+    assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "the settle lane refreshes without a dispatch");
+    assert!(shell.chrome.transient_notice().is_none(), "a completion is told by its rows, not by a notice");
 }
 
 /// ⚖️ LAW (live fault F11): a typed-operation drain that stopped is never silence — its fault reaches the person
@@ -796,10 +796,10 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
 fn a_refused_completion_is_told_as_a_notice() {
     let mut shell = publication_shell();
     PUBLISHED.with(|queue| queue.borrow_mut().push(OperationPublication { completed: false, ui_scope: UiDirtyScope::None, history_patch: None, fault: Some("browser-actor-publication: noncanonical bytes".into()), resync: false }));
-    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "a told fault repaints");
-    let notice = shell.transient_notice().expect("the refused completion is told");
+    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut shell).drain_operation_publications()), "a told fault repaints");
+    let notice = shell.chrome.transient_notice().expect("the refused completion is told");
     assert!(notice.message.contains("noncanonical bytes"), "the notice names what was refused: {}", notice.message);
-    assert!(shell.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");
+    assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");
     let unreadable = crate::program_bridge::operation_publications_from_json("{\"completed\":true}");
     assert_eq!(unreadable.len(), 1);
     assert!(unreadable[0].fault.as_deref().is_some_and(|fault| fault.starts_with("wgpu-bridge.operation-publication.unreadable")) && unreadable[0].resync, "an unreadable answer is a fault and a re-read: {unreadable:?}");
@@ -873,9 +873,9 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
     assert!(history_refusal_notice("app.command.rejected: conflicting edit", Locale::En).is_none());
     assert!(history_refusal_of_fault("app.command.rejected: the history.transition-refusedness of it", Locale::En).is_none(), "a code inside a word is no code");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.locale_id = "de".into();
-    shell.note_dispatch_fault("history.unknown-target: edit-9#0");
-    let notice = shell.transient_notice().expect("a banner is showing");
+    shell.prefs.locale_id = "de".into();
+    shell.prefs.note_dispatch_fault("history.unknown-target: edit-9#0", &mut shell.chrome);
+    let notice = shell.chrome.transient_notice().expect("a banner is showing");
     assert_eq!((notice.severity, notice.code.as_deref()), (semio_framework::Severity::Error, Some("history.unknown-target")));
     assert_eq!(notice.message, "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr.");
 }
@@ -929,10 +929,10 @@ fn every_history_lane_refusal_is_a_notice_carrying_its_code() {
                 assert_eq!(classify_dispatch_fault_notice(&fault, Some(&refused), Terminology::Native, locale), (text.clone(), semio_framework::Severity::Warning, Some(code.to_string())), "{fault}");
             }
             let mut shell = session_shell();
-            shell.locale_id = locale_id.into();
-            shell.chrome_build.refused_guest_fault = Some(refused.clone());
-            shell.note_dispatch_fault(&format!("{code}: refused"));
-            let told: Vec<(Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.label, node.description)).collect();
+            shell.prefs.locale_id = locale_id.into();
+            shell.chrome.chrome_build.refused_guest_fault = Some(refused.clone());
+            shell.prefs.note_dispatch_fault(&format!("{code}: refused"), &mut shell.chrome);
+            let told: Vec<(Option<String>, Option<String>)> = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.label, node.description)).collect();
             assert_eq!(told, [(Some(text.clone()), Some(code.to_string()))], "{code} ({tongue}): the mirror tells the notice by its message and its code");
         }
     }
@@ -948,10 +948,10 @@ fn every_history_lane_refusal_is_a_notice_carrying_its_code() {
 fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_by_its_code() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧯️wgpu-transient-notice/🔣️.json")).expect("the transient notice fixture parses");
     let expected = &fixture["node"];
-    let notice_node = |shell: &ShellState| shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
+    let notice_node = |shell: &ShellState| PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == expected["key"].as_str().expect("key")).collect::<Vec<_>>();
     for notice in fixture["notices"].as_array().expect("notices") {
         let mut shell = session_shell();
-        shell.locale_id = notice["locale"].as_str().expect("locale").into();
+        shell.prefs.locale_id = notice["locale"].as_str().expect("locale").into();
         let severity = match notice["severity"].as_str().expect("severity") {
             "info" => semio_framework::Severity::Info,
             "warning" => semio_framework::Severity::Warning,
@@ -959,17 +959,17 @@ fn every_transient_notice_is_a_polite_status_named_by_its_message_and_described_
         };
         let message = notice["message"].as_str().expect("message");
         assert!(notice_node(&shell).is_empty(), "no notice, no node");
-        shell.show_transient_notice(message, severity, notice["code"].as_str());
+        shell.chrome.show_transient_notice(message, severity, notice["code"].as_str());
         let nodes = notice_node(&shell);
         assert_eq!(nodes.len(), 1, "{message}: one status node");
         let node = &nodes[0];
         assert_eq!((node.role.as_str(), node.live.as_str(), node.focusable, node.actionable), (expected["role"].as_str().expect("role"), expected["live"].as_str().expect("live"), false, false), "{message}");
         assert_eq!((node.label.as_deref(), node.description.as_deref()), (Some(message), notice["code"].as_str()), "{message}: named by the message, described by the code");
-        shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
-        shell.observe_history_time_travel(Some(&session("the finalize prompt can go back")));
+        shell.docs.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
+        SessionCtx::of(&mut shell).observe_history_time_travel(Some(&session("the finalize prompt can go back")));
         open_finalize_prompt(&mut shell, "Alternative");
         assert_eq!(notice_node(&shell).len(), 1, "{message}: still told while a modal dialog is open");
-        shell.chrome_build.transient_notice.as_mut().expect("showing").shown_at_ms -= 5_000.0;
+        shell.chrome.chrome_build.transient_notice.as_mut().expect("showing").shown_at_ms -= 5_000.0;
         assert!(notice_node(&shell).is_empty(), "{message}: nothing past the 4 s deadline");
     }
 }
@@ -1075,18 +1075,18 @@ fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
     let corpus = peers_corpus();
     let case = corpus["cases"].as_array().expect("cases").iter().find(|case| case["name"].as_str().is_some_and(|name| name.starts_with("two peers"))).expect("the two-peer case").clone();
     let mut shell = session_shell();
-    shell.history_entries = peer_rows(&corpus);
-    shell.presence_surface = Some("s".into());
-    shell.presence_peers = case["peers"].as_array().expect("peers").iter().map(|peer| corpus_peer(peer, "s")).collect();
-    shell.presence_peers.push(corpus_peer(&serde_json::json!({ "actor": "actor-far", "label": "Far", "historyEdit": { "mutationId": "m-drag", "stage": "editing", "drafts": 1 } }), "elsewhere"));
-    shell.locale_id = "de".into();
-    let rows = shell.footer_presence_rows();
+    shell.history.history_entries = peer_rows(&corpus);
+    shell.directory.presence_surface = Some("s".into());
+    shell.directory.presence_peers = case["peers"].as_array().expect("peers").iter().map(|peer| corpus_peer(peer, "s")).collect();
+    shell.directory.presence_peers.push(corpus_peer(&serde_json::json!({ "actor": "actor-far", "label": "Far", "historyEdit": { "mutationId": "m-drag", "stage": "editing", "drafts": 1 } }), "elsewhere"));
+    shell.prefs.locale_id = "de".into();
+    let rows = PanelsViewCtx::of(&mut shell).footer_presence_rows();
     assert_eq!(rows.iter().map(|row| (row.actor.as_str(), row.activity.as_ref().map(|activity| activity.badge.as_str()))).collect::<Vec<_>>(), [("actor-ada", Some("⏪")), ("actor-cy", None), ("actor-bo", Some("⏪"))]);
     assert_eq!(ui_wgpu::wgpu::presence_bar_chip_text(&rows, None, Locale::De), "Ada ⏪ · Cy · Bo ⏪");
-    let announced = shell.footer_status_chips().into_iter().find(|(key, _)| *key == "s-presence-peers").expect("the roster is announced").1;
+    let announced = PanelsViewCtx::of(&mut shell).footer_status_chips().into_iter().find(|(key, _)| *key == "s-presence-peers").expect("the roster is announced").1;
     assert_eq!(announced, "Ada (Ada bearbeitet Skalieren im Verlauf) · Cy · Bo (Bo bearbeitet Drehen im Verlauf)");
     let expected: Vec<(String, String)> = case["expect"]["de"]["notes"].as_array().expect("notes").iter().map(|note| (note["key"].as_str().expect("key").into(), note["text"].as_str().expect("text").into())).collect();
-    assert_eq!(shell.peer_time_travel_presence().notes, expected, "a peer on another surface notes nothing");
+    assert_eq!(shell.directory.peer_time_travel_presence(&shell.chrome, &shell.history, &shell.prefs).notes, expected, "a peer on another surface notes nothing");
 }
 //#endregion 👥️PeerHistoryEdits
 
@@ -1099,14 +1099,14 @@ fn finalize_dialog() -> DialogDefinition {
 /// 🗨️ Opens the framework-injected finalize prompt exactly as the runtime does: `Effect::OpenDialog` seeded with the
 /// localized default name and the session generation (a context arg no field declares).
 fn open_finalize_prompt(shell: &mut ShellState, name: &str) {
-    let controller = shell.session.as_ref().map(|session| session.app.controller_id.clone()).expect("a session");
-    let generation = shell.history_time_travel().map(|status| status.generation).expect("a live session");
-    shell.queue_host_effects(&controller, vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "finalizeHistoryEdit".into(), args: Some(DslValue::from(serde_json::json!({ "name": name, "generation": generation }))) }]);
-    assert!(shell.chrome_build.dialog_open(), "the prompt opened from the session's dialogs");
+    let controller = shell.docs.session.as_ref().map(|session| session.app.controller_id.clone()).expect("a session");
+    let generation = shell.history.history_time_travel().map(|status| status.generation).expect("a live session");
+    WindowActionsCtx::of(&mut shell).queue_host_effects(&controller, vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "finalizeHistoryEdit".into(), args: Some(DslValue::from(serde_json::json!({ "name": name, "generation": generation }))) }]);
+    assert!(shell.chrome.chrome_build.dialog_open(), "the prompt opened from the session's dialogs");
 }
 
 fn key(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action: ui_wgpu::wgpu::KeyAction) {
-    semio_framework_async::block_on(shell.handle_keyboard_async(action, &PointerModifiers::default(), input)).expect("the key routes");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &PointerModifiers::default(), input)).expect("the key routes");
 }
 
 /// ⚖️ LAW: keyboard alone finalizes through the real async router — the open prompt owns every key ahead of the shell's
@@ -1116,17 +1116,17 @@ fn key(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action:
 #[test]
 fn the_finalize_prompt_is_operated_by_keyboard_alone() {
     let mut shell = session_shell();
-    shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
+    shell.docs.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
     let choosing = session("the finalize prompt can go back");
-    shell.observe_history_time_travel(Some(&choosing));
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&choosing));
     let mut input = InputState::<ActionDescriptor>::default();
 
     open_finalize_prompt(&mut shell, "Edited history");
-    assert_eq!(shell.chrome_build.dialog_stack.last().map(|request| request.fields[0].draft.clone()), Some("Edited history".to_string()), "the runtime's default name seeds the field");
+    assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(|request| request.fields[0].draft.clone()), Some("Edited history".to_string()), "the runtime's default name seeds the field");
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Char("!".into()));
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
-    assert!(!shell.chrome_build.dialog_open());
-    let submit = shell.deferred_actions.pop().expect("the submit dispatched");
+    assert!(!shell.chrome.chrome_build.dialog_open());
+    let submit = shell.settle.deferred_actions.pop().expect("the submit dispatched");
     assert_eq!((submit.controller_id.as_str(), submit.action.as_str()), ("test", "historyEditCommit"));
     assert_eq!(serde_json::to_value(submit.args.expect("args")).expect("wire"), serde_json::json!({ "generation": choosing.generation, "name": "Edited history!" }));
 
@@ -1135,19 +1135,19 @@ fn the_finalize_prompt_is_operated_by_keyboard_alone() {
         key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Backspace);
     }
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
-    assert!(shell.chrome_build.dialog_open(), "a cleared name gates the new alternative");
+    assert!(shell.chrome.chrome_build.dialog_open(), "a cleared name gates the new alternative");
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Tab);
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Tab);
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
-    let overwrite = shell.deferred_actions.pop().expect("the overwrite choice dispatched without a name");
+    let overwrite = shell.settle.deferred_actions.pop().expect("the overwrite choice dispatched without a name");
     assert_eq!(serde_json::to_value(overwrite.args.expect("args")).expect("wire"), serde_json::json!({ "generation": choosing.generation, "choice": "overwrite" }));
 
     open_finalize_prompt(&mut shell, "Edited history");
     key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Escape);
-    assert!(!shell.chrome_build.dialog_open());
-    let back = shell.deferred_actions.pop().expect("Escape answered");
+    assert!(!shell.chrome.chrome_build.dialog_open());
+    let back = shell.settle.deferred_actions.pop().expect("Escape answered");
     assert_eq!((back.action.as_str(), back.args), ("historyEditBack", None), "Escape goes back to reviewing — it never discards");
-    assert!(!shell.deferred_actions.iter().any(|action| matches!(action.action.as_str(), "historyEditDiscard" | "historyEditExit")));
+    assert!(!shell.settle.deferred_actions.iter().any(|action| matches!(action.action.as_str(), "historyEditDiscard" | "historyEditExit")));
 }
 //#endregion 🗨️FinalizePrompt
 
@@ -1242,9 +1242,9 @@ fn staging_splices_axes_and_reads_the_selection_domain() {
     assert_eq!(reference_selection_ids(&selection(), None, None), ["n1", "n2"], "the one domain that selects anything");
     let mut shell = session_shell();
     let stage = |args: Value| ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: Some(DslValue::from(args)) };
-    semio_framework_async::block_on(shell.dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 1, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 4.0 })))).expect("stages");
-    semio_framework_async::block_on(shell.dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 2, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 5.0 })))).expect("stages");
-    assert_eq!(shell.staged_map_for("main", "move").get("offset"), Some(&serde_json::json!([0.0, 4.0, 5.0])), "the second axis keeps the first");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 1, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 4.0 })))).expect("stages");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(stage(serde_json::json!({ "window": "main", "action": "move", "arg": "offset", "index": 2, "dims": 3, "tuple": [0.0, 0.0, 0.0], "value": 5.0 })))).expect("stages");
+    assert_eq!(shell.commands.staged_map_for("main", "move").get("offset"), Some(&serde_json::json!([0.0, 4.0, 5.0])), "the second axis keeps the first");
 }
 
 /// 🎚️ One row of the shared `🛂️manifest/🧫️fixtures/🧫️number-facets` corpus as the facets a staged row carries (absent = none
@@ -1342,15 +1342,15 @@ fn kinds_dialog() -> DialogDefinition {
 
 fn press(shell: &mut ShellState, action: ui_wgpu::wgpu::KeyAction) {
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.handle_keyboard(action, &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(action, &PointerModifiers::default(), &mut input);
 }
 
 fn focus(shell: &mut ShellState, stop: ChromeDialogStop) {
-    shell.chrome_build.dialog_stack.last_mut().expect("an open dialog").focus_stop(stop);
+    shell.chrome.chrome_build.dialog_stack.last_mut().expect("an open dialog").focus_stop(stop);
 }
 
 fn staged(shell: &ShellState, id: &str) -> Option<Value> {
-    shell.chrome_build.dialog_stack.last().and_then(|request| request.effective().get(id).map(dsl_value_as_json))
+    shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get(id).map(dsl_value_as_json))
 }
 
 /// ⚖️ LAW: a chrome dialog stages every editor kind by keyboard alone — a stepper steps inside its bounds, a slider
@@ -1360,10 +1360,10 @@ fn staged(shell: &ShellState, id: &str) -> Option<Value> {
 #[test]
 fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
     let mut shell = session_shell();
-    shell.interaction_selection = selection();
+    shell.input.interaction_selection = selection();
     let request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::Native, Locale::En);
     assert_eq!(request.fields.iter().map(|field| field.label.as_str()).collect::<Vec<_>>(), ["Count", "Angle", "Mode", "Offset x", "Offset y", "Offset z", "Targets"]);
-    shell.chrome_build.open_dialog(request);
+    shell.chrome.chrome_build.open_dialog(request);
 
     focus(&mut shell, ChromeDialogStop::Field(0));
     for action in [ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowDown] {
@@ -1391,17 +1391,17 @@ fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
     focus(&mut shell, ChromeDialogStop::Field(6));
     press(&mut shell, ui_wgpu::wgpu::KeyAction::Enter);
     assert_eq!(staged(&shell, "targets"), Some(serde_json::json!(["n1", "n2"])), "Enter on a reference field uses the current selection");
-    let stops = shell.chrome_build.dialog_stack.last().expect("dialog").stops();
+    let stops = shell.chrome.chrome_build.dialog_stack.last().expect("dialog").stops();
     assert!(stops.contains(&ChromeDialogStop::Chip(6, 0)) && stops.contains(&ChromeDialogStop::Chip(6, 1)), "each chip is a focus stop");
     press(&mut shell, ui_wgpu::wgpu::KeyAction::Tab);
-    assert_eq!(shell.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)));
+    assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)));
     press(&mut shell, ui_wgpu::wgpu::KeyAction::Backspace);
     assert_eq!(staged(&shell, "targets"), Some(serde_json::json!(["n2"])));
-    assert_eq!(shell.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)), "focus stays on the chip that took its place");
+    assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)), "focus stays on the chip that took its place");
 
     focus(&mut shell, ChromeDialogStop::Confirm);
     press(&mut shell, ui_wgpu::wgpu::KeyAction::Enter);
-    let submit = shell.deferred_actions.pop().expect("the submit dispatched");
+    let submit = shell.settle.deferred_actions.pop().expect("the submit dispatched");
     assert_eq!(submit.action, "apply");
     assert_eq!(args_of(&submit), serde_json::json!({ "count": 2.0, "angle": 45.0, "mode": "cut", "offset": [0.0, 7.0, 0.0], "targets": ["n2"] }));
 }
@@ -1412,11 +1412,11 @@ fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
 #[test]
 fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
     let mut shell = session_shell();
-    shell.interaction_selection = selection();
+    shell.input.interaction_selection = selection();
     let mut request = ChromeDialogRequest::from_definition("test", &kinds_dialog(), None, Terminology::Native, Locale::De);
     request.use_selection(6, &selection());
     let theme = Theme::light();
-    let ops = ShellState::chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
+    let ops = chrome_dialog_paint_ops(&request, 1440.0, 900.0, &theme, &mut FontAtlas::builtin());
     let semantics = |key: &str| {
         ops.iter()
             .find_map(|op| match op {
@@ -1443,14 +1443,14 @@ fn a_chrome_dialog_paints_each_editor_accessibly_and_answers_the_pointer() {
     let cut = ops.iter().find_map(|op| if let ChromeDialogPaintOp::Segment { rect, option: 1, .. } = op { Some(*rect) } else { None }).expect("the second segment");
     let increase = ops.iter().find_map(|op| if let ChromeDialogPaintOp::Nudge { rect, sign, .. } = op { (*sign > 0.0).then_some(*rect) } else { None }).expect("the increase button");
     let rail = ops.iter().find_map(|op| if let ChromeDialogPaintOp::Hit { rect, kind: HitKind::Slider, .. } = op { Some(*rect) } else { None }).expect("the slider rail");
-    shell.chrome_build.open_dialog(request);
+    shell.chrome.chrome_build.open_dialog(request);
     for (x, y) in [centre(cut), centre(increase), (rail.x + rail.w * 0.49, rail.y + rail.h * 0.5)] {
-        shell.resolve_chrome_dialog_click(&ops, dialog, x, y);
+        shell.input.resolve_chrome_dialog_click(&ops, dialog, x, y, &mut shell.chrome, &mut shell.settle);
     }
     assert_eq!(staged(&shell, "mode"), Some(serde_json::json!("cut")));
     assert_eq!(staged(&shell, "count"), Some(serde_json::json!(1.0)));
     assert_eq!(staged(&shell, "angle"), Some(serde_json::json!(45.0)), "the pointer lands on the nearby detent");
-    assert!(shell.chrome_build.dialog_open(), "editing a field never closes the dialog");
+    assert!(shell.chrome.chrome_build.dialog_open(), "editing a field never closes the dialog");
 }
 //#endregion 🎛️StagedEditors
 
@@ -1622,7 +1622,7 @@ fn wheel_history_window_into_view(shell: &mut ShellState, surface: &str, documen
             return;
         }
         let (x, y, row_h) = input.hits().iter().find(|hit| hit.kind == HitKind::TreeItem && body.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)).map_or((body.x + body.w * 0.5, body.y + body.h * 0.5, 24.0), |hit| (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5, hit.rect.h));
-        assert!(shell.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
+        assert!(shell.input.handle_pointer_wheel(x, y, 0.0, row_h * 3.0, &mut input), "the History body owns the wheel");
         input = paint_retained_body(shell, surface, document, body);
     }
     panic!("`{wanted}` never scrolled into the History body: windows={:?} shown={:?}", crate::interpreter::tree_window_measures(surface), history_mirror_mutations());
@@ -1633,7 +1633,7 @@ fn activate_history_mirror_node(shell: &mut ShellState, key: &str) -> Vec<Action
     let node = history_mirror_node(key).unwrap_or_else(|| panic!("`{key}` is in the mirror"));
     let target = crate::interpreter::published_accessibility_target_for_test(FRAMEWORK_PANEL_TAB_HISTORY_ID, &node.key).expect("a mirror node is an accessibility target");
     let mut input = InputState::<ActionDescriptor>::default();
-    semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("the activation is handled");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("the activation is handled");
     crate::collect_fixture_actions(&mut input)
 }
 
@@ -1661,8 +1661,8 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     let _ = activate_history_mirror_node(&mut shell, row);
     let _ = paint_retained_body(&mut shell, surface, &documents[0], body);
     assert_eq!(history_mirror_node(row).and_then(|node| node.expanded), Some(true), "the mirror's activation opens the row");
-    shell.observe_tree_windows(surface);
-    let (requests, _) = shell.tree_windows.view_state_fields();
+    shell.dock.observe_tree_windows(surface, &shell.docs);
+    let (requests, _) = shell.dock.tree_windows.view_state_fields();
     let path = history_row_window_path(1);
     let asked = requests.iter().find(|request| request.body_key == ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY && request.node_key == path).cloned().unwrap_or_else(|| panic!("the opened row is asked for by the guest's window path {path:?}: {requests:?}"));
     assert!(asked.open == Some(true) && asked.rows > HISTORY_BODY_PROJECTED, "the request opens the row over more than its projection: {asked:?}");
@@ -1685,7 +1685,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
             assert!(told.contains(edit_word) && told.contains(reason), "{locale:?}: it is named Edit and tells the reason: {told:?}");
         }
         let begun = [activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0"), activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100")].concat();
-        assert!(!begun.iter().any(|action| action.action == semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID), "{locale:?}: neither the refused Edit nor its row begins an edit: {begun:?}");
+        assert!(!begun.iter().any(|action| action.action == semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID), "{locale:?}: neither the refused Edit nor its row begins an edit: {begun:?}");
     }
 
     documents.push(history_body(&mut producer, Some((100, 8)), None, None, Locale::En, 5));
@@ -1693,7 +1693,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     let edit = history_mirror_node("framework.history.mutation.m-100::row-action::0").expect("m-100's Edit is in the mirror");
     assert!(!edit.disabled && edit.actionable && edit.label.as_deref().is_some_and(|label| label.starts_with("Edit:")), "Begin allowed: Edit is an enabled button: {edit:?}");
     let begun = activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0");
-    assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
+    assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
     eprintln!("[DEBUG] WGPU history paging: closed/opened windows, EN/DE refused actions, enabled target dispatch, and exact reader/producer retirement verified");
@@ -1734,7 +1734,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
         let removed = activate_history_mirror_node(&mut shell, "framework.history.editor.input.targets.chip.0");
         assert_eq!(
             removed.iter().map(|action| (action.action.as_str(), args_of(action)["path"].clone(), args_of(action)["edit"].clone())).collect::<Vec<_>>(),
-            [(semio_framework::HISTORY_EDIT_INPUT_ACTION_ID, serde_json::json!("/targets/0"), serde_json::json!(semio_framework::HISTORY_EDIT_INPUT_REMOVE))],
+            [(semio_framework::history_edit::HISTORY_EDIT_INPUT_ACTION_ID, serde_json::json!("/targets/0"), serde_json::json!(semio_framework::history_edit::HISTORY_EDIT_INPUT_REMOVE))],
             "{locale:?}: a chip drafts the removal of its own item"
         );
     }
@@ -1772,7 +1772,7 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
         let button = node("framework.history.reprojection.cancelReplay");
         assert!(button.role == "button" && button.actionable && !button.disabled && button.label.as_deref() == Some(cancel), "{locale:?} {kind:?}: Cancel replay is an enabled button: {button:?}");
         let sent = activate_history_mirror_node(&mut shell, "framework.history.reprojection.cancelReplay");
-        assert_eq!(sent.iter().map(|action| (action.action.as_str(), args_of(action).get("generation").cloned())).collect::<Vec<_>>(), [(semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, None)], "{locale:?} {kind:?}: it cancels, addressing no session");
+        assert_eq!(sent.iter().map(|action| (action.action.as_str(), args_of(action).get("generation").cloned())).collect::<Vec<_>>(), [(semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, None)], "{locale:?} {kind:?}: it cancels, addressing no session");
     }
     for (generation, locale, refusal) in [(10, Locale::En, "History step refused: "), (11, Locale::De, "Verlaufsschritt abgelehnt: ")] {
         documents.push(history_body(&mut producer, None, None, Some(HistoryReprojection { done: 0, total: 0, processed: None, kind: Kind::Step, paused: false, fault: Some("timeTravel.blocked".into()) }), locale, generation));
@@ -1802,10 +1802,10 @@ fn a_panel_body_is_one_scroll_region_under_its_rows() {
     let index = hits.iter().position(|hit| hit.control_id.as_deref() == Some(region.as_str())).expect("the panel's scroll region is registered");
     assert!(hits[index].kind == HitKind::ScrollRegion && hits[index].rect == body, "the whole content rect: {:?}", hits[index]);
     assert!(hits[index + 1..].iter().any(|hit| hit.kind == HitKind::TreeItem), "its rows register above it");
-    assert_eq!(shell.retained_hit_windows.get(&region).map(|(owner, _)| owner.as_str()), Some(surface), "owned by the History surface");
+    assert_eq!(shell.input.retained_hit_windows.get(&region).map(|(owner, _)| owner.as_str()), Some(surface), "owned by the History surface");
     let gap = (body.x + body.w * 0.5, body.y + body.h - 4.0);
     assert_eq!(input.hit_at(gap.0, gap.1).and_then(|hit| hit.control_id.clone()).as_deref(), Some(region.as_str()), "the gap below the rows is the region");
-    assert!(shell.handle_pointer_wheel(gap.0, gap.1, 0.0, 40.0, &mut input), "a wheel over the gap scrolls the body");
+    assert!(shell.input.handle_pointer_wheel(gap.0, gap.1, 0.0, 40.0, &mut input), "a wheel over the gap scrolls the body");
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
 }
@@ -1817,7 +1817,7 @@ fn paint_reprojection_band(shell: &mut ShellState) -> (usize, Vec<HitTarget<Acti
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for step in 0..100_000 {
-        if shell.render_history_reprojection_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+        if OverlaysViewCtx::of(&mut shell).render_history_reprojection_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
             return (step, input.staged_hits().to_vec());
         }
     }
@@ -1836,7 +1836,7 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️history-reprojection/🔣️.json")).expect("the shared history-reprojection fixture parses");
     let theme = Theme::light();
     let mut shell = session_shell();
-    assert!(shell.history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "nothing replays, nothing is announced or painted");
+    assert!(OverlaysViewCtx::of(&mut shell).history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "nothing replays, nothing is announced or painted");
     let cases = fixture["cases"].as_array().expect("cases");
     assert!(!cases.is_empty());
     for case in cases {
@@ -1844,12 +1844,12 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
         let reprojection: HistoryReprojection = serde_json::from_value(case["reprojection"].clone()).unwrap_or_else(|error| panic!("{name}: a kernel HistoryReprojection: {error}"));
         let paused = case["paused"].as_bool().expect("paused");
         let running = !paused && reprojection.total > 0;
-        shell.observe_history_reprojection(Some(&reprojection));
+        shell.history.observe_history_reprojection(Some(&reprojection));
         for locale in ["en", "de"] {
-            shell.locale_id = locale.into();
+            shell.prefs.locale_id = locale.into();
             let message = format!("{}: {}", case["title"][locale].as_str().expect("title"), case["text"][locale].as_str().expect("text"));
             let (steps, hits) = paint_reprojection_band(&mut shell);
-            let nodes = shell.chrome_accessibility_nodes(&hits);
+            let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
             let node = nodes.iter().find(|node| node.key == HISTORY_REPROJECTION_STATUS_ID).unwrap_or_else(|| panic!("{name} {locale}: announced"));
             assert_eq!(node.label.as_deref(), Some(message.as_str()), "{name} {locale}: named by the kernel's title and status line");
             assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite), "{name} {locale}: politely");
@@ -1861,12 +1861,12 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
                 assert_eq!((progress.role.as_str(), progress.value_min, progress.value_now, progress.value_max), ("progressbar", Some(0.0), Some(f64::from(reprojection.done)), Some(f64::from(reprojection.total))), "{name} {locale}");
                 assert_eq!((progress.label.as_deref(), progress.value_text.as_deref()), (case["title"][locale].as_str(), case["text"][locale].as_str()), "{name} {locale}: named by the title, valued by the status line");
             }
-            let (_, plan) = shell.history_reprojection_band_plan_for(&theme).expect("a band");
+            let (_, plan) = shell.prefs.history_reprojection_band_plan_for(&theme, &shell.chrome, &shell.history).expect("a band");
             assert_eq!((plan.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" "), plan.progress.is_some()), (message.clone(), running), "{name} {locale}: its lines read the message, a track while it replays");
             assert!(steps > CHROME_BAND_FRAME_STEPS, "{name} {locale}: the band paints its frame and its lines");
             let expected = match (paused, running) {
-                (true, _) => Some(("shell.history.reprojection.rerun", semio_framework::HISTORY_EDIT_RERUN_ACTION_ID)),
-                (false, true) => Some(("shell.history.reprojection.cancel-replay", semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID)),
+                (true, _) => Some(("shell.history.reprojection.rerun", semio_framework::history_edit::HISTORY_EDIT_RERUN_ACTION_ID)),
+                (false, true) => Some(("shell.history.reprojection.cancel-replay", semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID)),
                 (false, false) => None,
             };
             let controls: Vec<(String, String, Option<Value>)> = hits.iter().map(|hit| (hit.control_id.clone().unwrap_or_default(), hit.event.as_ref().map(|event| event.action.clone()).unwrap_or_default(), hit.event.as_ref().and_then(|event| event.args.as_ref()).map(dsl_value_as_json))).collect();
@@ -1877,17 +1877,17 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
             }
         }
     }
-    shell.locale_id = "en".into();
-    shell.observe_history_reprojection(Some(&HistoryReprojection { done: 3, total: 12, processed: None, kind: semio_framework::kernel::HistoryReprojectionKind::Step, paused: false, fault: None }));
+    shell.prefs.locale_id = "en".into();
+    shell.history.observe_history_reprojection(Some(&HistoryReprojection { done: 3, total: 12, processed: None, kind: semio_framework::kernel::HistoryReprojectionKind::Step, paused: false, fault: None }));
     let editing = session("editing a mutation");
-    shell.observe_history_time_travel(Some(&editing));
-    let session_band = shell.time_travel_band_plan_for(&editing, &theme).band;
-    let (_, plan) = shell.history_reprojection_band_plan_for(&theme).expect("still announced");
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&editing));
+    let session_band = shell.prefs.time_travel_band_plan_for(&editing, &theme, &shell.chrome).band;
+    let (_, plan) = shell.prefs.history_reprojection_band_plan_for(&theme, &shell.chrome, &shell.history).expect("still announced");
     assert!(plan.band.y + plan.band.h <= session_band.y && plan.control.is_none(), "stacked above the session band, which owns the controls: {plan:?} over {session_band:?}");
     assert!(paint_reprojection_band(&mut shell).1.is_empty(), "no control while a session is open");
-    assert!(shell.chrome_accessibility_nodes(&[]).iter().any(|node| node.key == HISTORY_REPROJECTION_STATUS_ID) && shell.chrome_accessibility_nodes(&[]).iter().any(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID), "both live nodes while a session is open");
-    shell.observe_history_reprojection(None);
-    assert!(shell.history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "adopted: nothing announced or painted any more");
+    assert!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).iter().any(|node| node.key == HISTORY_REPROJECTION_STATUS_ID) && PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).iter().any(|node| node.key == TIME_TRAVEL_BAND_STATUS_ID), "both live nodes while a session is open");
+    shell.history.observe_history_reprojection(None);
+    assert!(OverlaysViewCtx::of(&mut shell).history_reprojection_accessibility_node(1).is_none() && paint_reprojection_band(&mut shell).0 == 0, "adopted: nothing announced or painted any more");
 }
 //#endregion 📡️HistoryReprojectionStatus
 
@@ -1898,14 +1898,14 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
 #[test]
 fn a_host_window_blur_blurs_the_active_pane_for_its_program_once() {
     let mut shell = session_shell();
-    assert!(!shell.arm_host_window_blur(), "no blur, nothing armed");
+    assert!(!WindowActionsCtx::of(&mut shell).arm_host_window_blur(), "no blur, nothing armed");
     note_host_window_blur();
-    assert!(shell.settle_pump_pending(), "a pending blur is work the settle pump owes");
-    assert!(shell.arm_host_window_blur(), "the drain takes the blur");
-    let controller_id = shell.shell_command_controller_id().expect("the session's controller");
-    let armed: Vec<(String, String, Value)> = shell.deferred_actions.iter().filter(|action| action.action == semio_framework::HOST_EVENT_ACTION_ID).map(|action| (action.controller_id.clone(), action.action.clone(), args_of(action))).collect();
+    assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "a pending blur is work the settle pump owes");
+    assert!(WindowActionsCtx::of(&mut shell).arm_host_window_blur(), "the drain takes the blur");
+    let controller_id = shell.docs.shell_command_controller_id(&shell.plugins).expect("the session's controller");
+    let armed: Vec<(String, String, Value)> = shell.settle.deferred_actions.iter().filter(|action| action.action == semio_framework::HOST_EVENT_ACTION_ID).map(|action| (action.controller_id.clone(), action.action.clone(), args_of(action))).collect();
     assert_eq!(armed, [(controller_id, semio_framework::HOST_EVENT_ACTION_ID.to_string(), serde_json::json!({ "windowId": "main", "kind": semio_framework::HOST_EVENT_KIND_BLUR }))], "one blur for the active pane");
-    assert!(!shell.arm_host_window_blur(), "a blur is taken once");
+    assert!(!WindowActionsCtx::of(&mut shell).arm_host_window_blur(), "a blur is taken once");
 }
 //#endregion 🫥️HostWindowBlur
 
@@ -1914,12 +1914,12 @@ fn a_host_window_blur_blurs_the_active_pane_for_its_program_once() {
 /// worth of payload, `b.obj` of one).
 fn importing_shell() -> (ShellState, u64) {
     let mut shell = session_shell();
-    shell.session.as_mut().expect("session").app.actions.push(semio_framework::ActionDefinition::new(IMPORT_ABORT_ACTION_ID, LocalizedLabel::native("Abort import", "Import abbrechen"), semio_framework::ActionKind::Mutation, IconName::X));
+    shell.docs.session.as_mut().expect("session").app.actions.push(semio_framework::ActionDefinition::new(IMPORT_ABORT_ACTION_ID, LocalizedLabel::native("Abort import", "Import abbrechen"), semio_framework::ActionKind::Mutation, IconName::X));
     let chunk = semio_framework::kernel::import_payload_chunks("x").len();
     assert_eq!(chunk, 1, "a tiny file is one chunk");
     let opened = vec![OpenedFile { name: "a.obj".into(), contents: "a".repeat(400_000) }, OpenedFile { name: "b.obj".into(), contents: "b".into() }];
-    assert!(shell.begin_import_transfer(PickedImport { controller_id: "test.controller".into(), import_action: "importFile".into(), args: None, opened, multiple: true }));
-    let id = shell.import_transfers.front().expect("the import").id;
+    assert!(shell.opening.begin_import_transfer(PickedImport { controller_id: "test.controller".into(), import_action: "importFile".into(), args: None, opened, multiple: true }, &shell.docs));
+    let id = shell.opening.import_transfers.front().expect("the import").id;
     (shell, id)
 }
 
@@ -1930,31 +1930,31 @@ fn importing_shell() -> (ShellState, u64) {
 #[test]
 fn a_picked_import_is_a_cancellable_task_that_frees_a_started_import() {
     let (mut shell, id) = importing_shell();
-    let transfer = shell.import_transfers.front().expect("the import").clone();
+    let transfer = shell.opening.import_transfers.front().expect("the import").clone();
     assert!(transfer.total > 2 && transfer.delivered == 0 && transfer.file == "a.obj, b.obj", "every file's chunks wait in order: {transfer:?}");
-    assert!(shell.settle_pump_pending(), "a waiting import is work the settle pump owes");
-    let body = serde_json::to_value(shell.build_task_manager_ui()).expect("the Task Manager body serializes");
+    assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "a waiting import is work the settle pump owes");
+    let body = serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("the Task Manager body serializes");
     let text = body.to_string();
     for expected in ["Running tasks", "a.obj, b.obj · Document import · test · Running", &format!("os.task-manager.progress.documentTransfer:{id}"), &format!("os.task-manager.cancel.documentTransfer:{id}"), "Cancel a.obj, b.obj", "cancelImportTransfer"] {
         assert!(text.contains(expected), "the Task Manager shows {expected:?}: {text}");
     }
-    shell.locale_id = "de".into();
-    let german = serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string();
+    shell.prefs.locale_id = "de".into();
+    let german = serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("serializes").to_string();
     assert!(german.contains("Laufende Aufgaben") && german.contains("a.obj, b.obj abbrechen") && german.contains("Dokumentimport"), "{german}");
-    shell.locale_id = "en".into();
+    shell.prefs.locale_id = "en".into();
 
-    assert!(shell.cancel_import_transfer(id));
-    assert!(shell.import_transfers.is_empty() && !shell.deferred_actions.iter().any(|action| action.action == IMPORT_ABORT_ACTION_ID), "nothing reached the guest, nothing to free");
-    let notice = shell.transient_notice().expect("told");
+    assert!(SessionCtx::of(&mut shell).cancel_import_transfer(id));
+    assert!(shell.opening.import_transfers.is_empty() && !shell.settle.deferred_actions.iter().any(|action| action.action == IMPORT_ABORT_ACTION_ID), "nothing reached the guest, nothing to free");
+    let notice = shell.chrome.transient_notice().expect("told");
     assert_eq!((notice.message.as_str(), notice.code.as_deref()), ("Import of “a.obj” cancelled.", Some("shell.documentTransfer.import-cancelled")));
-    assert!(serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string().contains("No task is running."));
+    assert!(serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("serializes").to_string().contains("No task is running."));
 
     let (mut shell, id) = importing_shell();
-    shell.import_transfers.front_mut().expect("the import").delivered = 1;
-    assert!(shell.cancel_import_transfer(id));
-    let aborts: Vec<(String, Value)> = shell.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).map(|action| (action.controller_id.clone(), args_of(action))).collect();
+    shell.opening.import_transfers.front_mut().expect("the import").delivered = 1;
+    assert!(SessionCtx::of(&mut shell).cancel_import_transfer(id));
+    let aborts: Vec<(String, Value)> = shell.settle.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).map(|action| (action.controller_id.clone(), args_of(action))).collect();
     assert_eq!(aborts, [("test.controller".to_string(), serde_json::json!({}))], "a started import is freed once, without a reason");
-    assert!(!shell.cancel_import_transfer(id), "a cancelled import is gone");
+    assert!(!SessionCtx::of(&mut shell).cancel_import_transfer(id), "a cancelled import is gone");
 }
 
 /// ⚖️ LAW (`RequestMediaFrames` host cancel): the frames one decoded video yields — each `frameAction`, then `doneAction` —
@@ -1964,25 +1964,25 @@ fn a_picked_import_is_a_cancellable_task_that_frees_a_started_import() {
 #[test]
 fn a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream() {
     let (mut shell, _) = importing_shell();
-    shell.import_transfers.clear();
-    assert!(!shell.begin_media_frames_transfer("test.controller".into(), Vec::new()), "no pick, no task");
+    shell.opening.import_transfers.clear();
+    assert!(!shell.opening.begin_media_frames_transfer("test.controller".into(), Vec::new(), &shell.docs), "no pick, no task");
     let frame = |action: &str, index: usize| ActionDescriptor { controller_id: "test.controller".into(), action: action.into(), args: crate::action_args_json!({ "name": "clip.mp4", "index": index }) };
-    assert!(shell.begin_media_frames_transfer("test.controller".into(), vec![frame("importVideoFramePayload", 0), frame("importVideoFramePayload", 1), frame("importVideoDone", 2)]));
-    let transfer = shell.import_transfers.front().expect("the stream").clone();
+    assert!(shell.opening.begin_media_frames_transfer("test.controller".into(), vec![frame("importVideoFramePayload", 0), frame("importVideoFramePayload", 1), frame("importVideoDone", 2)], &shell.docs));
+    let transfer = shell.opening.import_transfers.front().expect("the stream").clone();
     assert_eq!((transfer.lane, transfer.file.as_str(), transfer.total, transfer.chunks.back().map(|last| last.action.as_str())), (TransferLane::VideoFrames, "clip.mp4", 3, Some("importVideoDone")), "every frame, then done, waits in order: {transfer:?}");
-    assert!(shell.settle_pump_pending(), "a waiting stream is work the settle pump owes");
-    let text = serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string();
+    assert!(PointerCtx::of(&mut shell).settle_pump_pending(), "a waiting stream is work the settle pump owes");
+    let text = serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("serializes").to_string();
     for expected in ["clip.mp4 · Video frames · test · Running", &format!("os.task-manager.cancel.documentTransfer:{}", transfer.id), "Cancel clip.mp4"] {
         assert!(text.contains(expected), "the Task Manager shows {expected:?}: {text}");
     }
-    shell.locale_id = "de".into();
-    assert!(serde_json::to_value(shell.build_task_manager_ui()).expect("serializes").to_string().contains("clip.mp4 · Videobilder · test · Läuft"));
-    shell.locale_id = "en".into();
-    shell.import_transfers.front_mut().expect("the stream").delivered = 1;
-    assert!(shell.cancel_import_transfer(transfer.id));
-    assert!(shell.import_transfers.is_empty() && !shell.deferred_actions.iter().any(|action| action.action == "importVideoDone"), "the rest of the stream is dropped");
-    assert_eq!(shell.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).count(), 1, "a started stream is freed once");
-    assert_eq!(shell.transient_notice().map(|notice| notice.message.clone()).as_deref(), Some("Import of “clip.mp4” cancelled."));
+    shell.prefs.locale_id = "de".into();
+    assert!(serde_json::to_value(shell.opening.build_task_manager_ui(&shell.prefs)).expect("serializes").to_string().contains("clip.mp4 · Videobilder · test · Läuft"));
+    shell.prefs.locale_id = "en".into();
+    shell.opening.import_transfers.front_mut().expect("the stream").delivered = 1;
+    assert!(SessionCtx::of(&mut shell).cancel_import_transfer(transfer.id));
+    assert!(shell.opening.import_transfers.is_empty() && !shell.settle.deferred_actions.iter().any(|action| action.action == "importVideoDone"), "the rest of the stream is dropped");
+    assert_eq!(shell.settle.deferred_actions.iter().filter(|action| action.action == IMPORT_ABORT_ACTION_ID).count(), 1, "a started stream is freed once");
+    assert_eq!(shell.chrome.transient_notice().map(|notice| notice.message.clone()).as_deref(), Some("Import of “clip.mp4” cancelled."));
 }
 //#endregion 📥️ImportTransfer
 
@@ -2008,25 +2008,25 @@ fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
     assert_eq!(context_menu_path_for_ordinal(&items, &[], 2), Some(vec![3]), "ordinals count enabled rows only");
 
     let mut shell = session_shell();
-    shell.context_menu = Some(ContextMenuState { items: items.clone(), active: vec![2], ..Default::default() });
-    assert!(matches!(shell.context_menu_handle_key(ui_wgpu::wgpu::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
-    assert!(shell.context_menu.is_some(), "and keeps the menu open");
+    shell.input.context_menu = Some(ContextMenuState { items: items.clone(), active: vec![2], ..Default::default() });
+    assert!(matches!(shell.input.context_menu_handle_key(ui_wgpu::wgpu::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
+    assert!(shell.input.context_menu.is_some(), "and keeps the menu open");
 
-    let menu = shell.context_menu.clone().expect("open");
+    let menu = shell.input.context_menu.clone().expect("open");
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
-    ShellState::render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
+    render_context_menu_level(&mut draw, &mut atlas, &icons, &mut input, &theme, &menu, &menu.items, &[], 0.0, 0.0, 800.0, 600.0);
     let hits = input.staged_hits().to_vec();
     let paste_hit = hits.iter().find(|hit| hit.control_id.as_deref() == Some("menu.paste")).expect("the disabled row is a hit target");
     assert!(paste_hit.event.is_none(), "that fires nothing");
-    let nodes = shell.chrome_accessibility_nodes(&hits);
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
     let node = |key: &str| nodes.iter().find(|node| node.key == key).unwrap_or_else(|| panic!("`{key}` is projected"));
     let disabled = node("menu.paste");
     assert_eq!((disabled.role.as_str(), disabled.label.as_deref(), disabled.description.as_deref(), disabled.disabled, disabled.actionable, disabled.focusable), ("menuitem", Some("Paste"), Some("The clipboard is empty"), true, false, true));
     let enabled = node("menu.copy");
     assert_eq!((enabled.label.as_deref(), enabled.description.as_deref(), enabled.disabled, enabled.actionable), (Some("Copy"), None, false, true));
 
-    let consumed = semio_framework_async::block_on(shell.handle_shell_hit(paste_hit, &InputState::<ActionDescriptor>::default())).expect("activating a disabled row never errors");
-    assert!(consumed && shell.context_menu.is_some() && shell.deferred_actions.iter().all(|action| action.action != "paste"), "its activation fires nothing and keeps the menu open");
+    let consumed = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(paste_hit, &InputState::<ActionDescriptor>::default())).expect("activating a disabled row never errors");
+    assert!(consumed && shell.input.context_menu.is_some() && shell.settle.deferred_actions.iter().all(|action| action.action != "paste"), "its activation fires nothing and keeps the menu open");
 }
 //#endregion 🍔️ContextMenuReason

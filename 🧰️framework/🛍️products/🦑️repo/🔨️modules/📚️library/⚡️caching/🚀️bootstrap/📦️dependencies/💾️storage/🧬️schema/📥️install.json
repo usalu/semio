@@ -90,6 +90,37 @@
           }
         }
       }
+    },
+    "ReadProtocol": {
+      "const": {
+        "version": 1,
+        "installerMode": "exclusive",
+        "consumerMode": "shared",
+        "steps": [
+          "authenticate-phase",
+          "open-funded-store",
+          "acquire-shared-bindings",
+          "inspect-expected-locked-generation",
+          "verify-exact-ready-receipt-and-links",
+          "consume-and-drain",
+          "recheck-source-receipt-links",
+          "release-shared-bindings"
+        ],
+        "compilerCallback": [
+          "store",
+          "actualControl"
+        ]
+      }
+    },
+    "ProjectionPolicy": {
+      "const": {
+        "maximumPackages": 4096,
+        "maximumSourceEntries": 65536,
+        "maximumFileBytes": 8388608,
+        "maximumSourceBytes": 67108864,
+        "maximumReceiptBytes": 4194304,
+        "chunkBytes": 65536
+      }
     }
   }
 }

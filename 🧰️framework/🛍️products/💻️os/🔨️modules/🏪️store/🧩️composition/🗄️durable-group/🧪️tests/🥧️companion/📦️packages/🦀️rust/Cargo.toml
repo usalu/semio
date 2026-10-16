@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-store-durable-group-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of os-store-durable-group: journal and recovery laws"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-durable-group-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-durable-group = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-fixtures = { path = "../../../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]

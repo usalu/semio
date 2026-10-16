@@ -231,6 +231,52 @@
           "minimum": 1
         }
       }
+    },
+    "boundaryCorpus": {
+      "type": "object",
+      "required": [
+        "version",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "language",
+              "source",
+              "completeness"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "language": {
+                "enum": [
+                  "ts",
+                  "tsx"
+                ]
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "completeness": {
+                "const": "incomplete"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

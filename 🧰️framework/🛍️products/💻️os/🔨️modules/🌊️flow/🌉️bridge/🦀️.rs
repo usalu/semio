@@ -64,7 +64,7 @@ fn output_ports_json(dict: &Dictionary) -> semio_framework_pack_json::Object {
     ports
 }
 
-pub(crate) fn outputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
+pub fn outputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
     let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return HistoryFoldIndex::new();
     };
@@ -89,7 +89,7 @@ pub(crate) fn outputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<Str
     outputs
 }
 
-pub(crate) fn inputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
+pub fn inputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<String, Dictionary> {
     let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return HistoryFoldIndex::new();
     };
@@ -114,7 +114,7 @@ pub(crate) fn inputs_from_channel_eval_json(json: &str) -> HistoryFoldIndex<Stri
     inputs
 }
 
-pub(crate) fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to_port: &str) -> Dictionary {
+pub fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to_port: &str) -> Dictionary {
     let payload = if from_port.is_empty() {
         src.clone()
     } else if let Some(dict) = src.get(from_port).and_then(|value| value.as_dictionary()) {
@@ -131,7 +131,7 @@ pub(crate) fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to
     }
 }
 
-pub(crate) fn widget_operator_info(widget: &Widget, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Option<OperatorInfo> {
+pub fn widget_operator_info(widget: &Widget, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> Option<OperatorInfo> {
     match widget {
         Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).cloned(),
         Widget::Variable { name, schema, .. } => {
@@ -154,7 +154,7 @@ pub(crate) fn widget_operator_info(widget: &Widget, kind_infos: &HistoryFoldInde
     }
 }
 
-pub(crate) fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
+pub fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
     match widget {
         Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
         Widget::InputSlider { id, label, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("label", NeuralValue::Atom(Atom::String(label.clone()))).insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
@@ -165,7 +165,7 @@ pub(crate) fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
     }
 }
 
-pub(crate) fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
+pub fn contract_boundary_params(channel: &str, schema: &str) -> Dictionary {
     Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String(channel.into()))).insert("operators", NeuralValue::Atom(Atom::String(schema.into())))
 }
 
@@ -173,7 +173,7 @@ fn boundary_schema_from_params(params: &Dictionary) -> String {
     params.get("operators").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("dictionary").to_string()
 }
 
-pub(crate) fn variable_widget_meta(widgets: &[Widget], id: &str) -> Option<(String, String)> {
+pub fn variable_widget_meta(widgets: &[Widget], id: &str) -> Option<(String, String)> {
     widgets.iter().find_map(|widget| match widget {
         Widget::Variable { id: widget_id, name, schema } if widget_id == id => Some((name.clone(), schema.clone())),
         _ => None,
@@ -184,7 +184,7 @@ fn is_variable_widget(widgets: &[Widget], id: &str) -> bool {
     widgets.iter().any(|widget| widget_id_for(widget) == id && matches!(widget, Widget::Variable { .. }))
 }
 
-pub(crate) fn boundary_variable_widget_ids(selected: &BTreeSet<String>, crossing: &[SynapseSpec], widgets: &[Widget]) -> BTreeSet<String> {
+pub fn boundary_variable_widget_ids(selected: &BTreeSet<String>, crossing: &[SynapseSpec], widgets: &[Widget]) -> BTreeSet<String> {
     let mut ids = BTreeSet::new();
     for synapse in crossing {
         let from_selected = selected.contains(&synapse.from);
@@ -199,7 +199,7 @@ pub(crate) fn boundary_variable_widget_ids(selected: &BTreeSet<String>, crossing
     ids
 }
 
-pub(crate) fn unique_generated_boundary_name(prefix: &str, serial: &mut usize, used: &BTreeSet<String>) -> String {
+pub fn unique_generated_boundary_name(prefix: &str, serial: &mut usize, used: &BTreeSet<String>) -> String {
     loop {
         *serial += 1;
         let candidate = format!("{prefix}{serial}");
@@ -214,7 +214,7 @@ fn dictionary_schema_at_port(output: &Dictionary, port: &str) -> Option<String> 
     dict.schema().map(str::to_string)
 }
 
-pub(crate) fn infer_port_schema(outputs: &HistoryFoldIndex<String, Dictionary>, kind_infos: &HistoryFoldIndex<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
+pub fn infer_port_schema(outputs: &HistoryFoldIndex<String, Dictionary>, kind_infos: &HistoryFoldIndex<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
     if let Some(schema) = outputs.get(widget_id).and_then(|out| dictionary_schema_at_port(out, port)) {
         return schema;
     }
@@ -248,7 +248,7 @@ enum CoreNeuronKind {
 }
 
 impl CoreNeuronKind {
-    fn parse(kind: &str) -> Option<Self> {
+    pub fn parse(kind: &str) -> Option<Self> {
         match kind {
             "core.number" => Some(Self::Number),
             "core.text" => Some(Self::Text),
@@ -259,7 +259,7 @@ impl CoreNeuronKind {
     }
 }
 
-pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
+pub fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     match neuron.kind.as_str() {
         INPUT_KIND => {
             Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
@@ -286,7 +286,7 @@ pub(crate) fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     }
 }
 
-pub(crate) fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {
+pub fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &EvalChannels, kind_infos: &HistoryFoldIndex<String, OperatorInfo>) -> String {
     let mut widgets = semio_framework_pack_json::Object::new();
     for widget in &host_snapshot.widgets {
         let id = widget_id_for(widget);
@@ -341,7 +341,7 @@ fn collect_geometry_handles_from_value(value: &NeuralValue, handles: &mut Vec<St
     }
 }
 
-pub(crate) fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
+pub fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<String>) {
     if let Some(handle) = dict.get("handle").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()) {
         if is_brep_geometry_handle(handle) {
             handles.push(handle.to_string());
@@ -354,7 +354,7 @@ pub(crate) fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handle
     }
 }
 
-pub(crate) fn collect_live_geometry_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
+pub fn collect_live_geometry_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
     let mut handles = Vec::new();
     for dict in channels.outputs.values().chain(channels.inputs.values()) {
         collect_geometry_handles_from_dictionary(dict, &mut handles);
@@ -385,7 +385,7 @@ fn collect_drawing_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec<
     }
 }
 
-pub(crate) fn collect_live_drawing_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
+pub fn collect_live_drawing_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
     let mut handles = Vec::new();
     for dict in channels.outputs.values().chain(channels.inputs.values()) {
         collect_drawing_handles_from_dictionary(dict, &mut handles);
@@ -395,7 +395,7 @@ pub(crate) fn collect_live_drawing_handles_from_channels(channels: &EvalChannels
     handles
 }
 
-pub(crate) fn is_global_eval_error_json(json: &str) -> bool {
+pub fn is_global_eval_error_json(json: &str) -> bool {
     let Ok(parsed) = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
         return true;
     };

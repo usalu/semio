@@ -1,5 +1,7 @@
 use super::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
+use semio_s_artifact_stdio_contract_editing::{snapshot_edit_event_from_action, SnapshotEditEvent, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID, SNAPSHOT_EDIT_ACTION_IDS};
+use semio_s_artifact_stdio_contract_wire::snapshot_edit_source;
 
 #[test]
 fn intrinsic_bytes_details_use_a_bounded_leaf_and_validate_the_json_octet_domain() {
@@ -50,7 +52,7 @@ fn details_definition_owns_all_snapshot_actions_in_both_languages() {
     let definition = snapshot_details_window_definition();
     assert_eq!(definition.id, SNAPSHOT_DETAILS_WINDOW_KIND_ID);
     assert_eq!(definition.body_key, SNAPSHOT_DETAILS_BODY_KEY);
-    assert_eq!(definition.actions.len(), super::super::SNAPSHOT_EDIT_ACTION_IDS.len());
+    assert_eq!(definition.actions.len(), SNAPSHOT_EDIT_ACTION_IDS.len());
     assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::En), "");
     assert_ne!(definition.label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De), "");
 }
@@ -211,7 +213,7 @@ fn collection_rows_are_open_windowed_tree_item_descendants_with_edit_controls() 
     let collection_key = fixture["collectionKey"].as_str().expect("collection key");
     let expected_values = fixture["expectedValues"].as_array().expect("expected values");
     let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native fixture parse");
-    let native_source = super::super::snapshot_edit_source(&snapshot);
+    let native_source = snapshot_edit_source(&snapshot);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&native_source).expect("third-party native-source oracle"), fixture["snapshot"]);
     let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);
     let records_path = [SnapshotDetailPathSegment::Key(collection_key.into())];
@@ -303,7 +305,7 @@ fn table_details_first_paint_keeps_fields_reachable_across_repeated_projection()
     let source = serde_json::to_string(&fixture["snapshot"]).unwrap();
     let schema = serde_json::to_string(&fixture["input"]["schema"]).unwrap();
     let snapshot: DslValue = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&snapshot)).unwrap(), fixture["snapshot"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&snapshot_edit_source(&snapshot)).unwrap(), fixture["snapshot"]);
     let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value_and_schema(snapshot, &schema);
     let folded_collection = fixture["foldedPath"][0].as_str().expect("folded collection key");
     let folded_collection_id = path_id(&[SnapshotDetailPathSegment::Key(folded_collection.into())]);
@@ -473,8 +475,8 @@ fn numeric_controls_preserve_json_number_kinds_through_the_action_parser() {
         let Some(UiValue::Map(arguments)) = &binding.args else { panic!("static arguments") };
         assert!(arguments.iter().any(|(key, value)| key.as_str() == "valueEncoding" && matches!(value, UiValue::Text(value) if value.as_str() == "json")));
         let args = DslValue::Object(vec![("path".into(), DslValue::String(String::new())), ("value".into(), DslValue::String(props.value.as_str().into())), ("valueEncoding".into(), DslValue::String("json".into()))]);
-        let event = super::super::snapshot_edit_event_from_action(super::super::SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("parse").expect("known action");
-        assert_eq!(event, super::super::SnapshotEditEvent::SetValue { path: String::new(), value: expected });
+        let event = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("parse").expect("known action");
+        assert_eq!(event, SnapshotEditEvent::SetValue { path: String::new(), value: expected });
     }
 }
 
@@ -562,7 +564,7 @@ fn schema_templates_create_required_records_in_empty_lists_and_nullable_fields()
     assert!(contains_key(&rendered, &format!("{selection_id}-null-template")));
     assert!(!contains_key(&rendered, &format!("{records_id}-add-0")));
     assert!(!contains_key(&rendered, &format!("{selection_id}-null-0")));
-    let oracle: serde_json::Value = serde_json::from_str(&super::super::snapshot_edit_source(&provider.creation_template(&[SnapshotDetailPathSegment::Key("selection".into())], false).unwrap())).expect("third-party JSON oracle");
+    let oracle: serde_json::Value = serde_json::from_str(&snapshot_edit_source(&provider.creation_template(&[SnapshotDetailPathSegment::Key("selection".into())], false).unwrap())).expect("third-party JSON oracle");
     assert_eq!(oracle, serde_json::json!({"name":"x","enabled":false}));
 }
 
@@ -608,7 +610,7 @@ fn schema_templates_reject_invalid_defaults_and_satisfy_min_properties() {
     assert_eq!(provider.creation_template(&coded_path, false), None, "an annotation default rejected by an unmodeled pattern is never offered");
     assert_eq!(record, DslValue::Object(vec![("title".into(), DslValue::String("Created".into()))]));
     let candidate = DslValue::Object(vec![("short".into(), short), ("record".into(), record)]);
-    let source = super::super::snapshot_edit_source(&candidate);
+    let source = snapshot_edit_source(&candidate);
     let oracle: serde_json::Value = serde_json::from_str(&source).expect("third-party JSON oracle");
     assert_eq!(oracle, serde_json::json!({"short":"xx","record":{"title":"Created"}}));
     semio_framework_schema::OwnedJsonSchemaValidator::compile(schema).expect("native schema compile").validate_json(&source).expect("offered templates satisfy the authoritative validator");
@@ -913,7 +915,7 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
     );
     let candidate = serde_json::json!({
         "schema":"test.details-envelope",
-        "subset":serde_json::from_str::<serde_json::Value>(&super::super::snapshot_edit_source(&variants[0].value)).expect("variant JSON")
+        "subset":serde_json::from_str::<serde_json::Value>(&snapshot_edit_source(&variants[0].value)).expect("variant JSON")
     });
     let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(ENVELOPE, &[MODEL, TEXT]).expect("cross-document validator");
     validator.validate_json(&serde_json::to_string(&candidate).expect("candidate JSON")).expect("alternate variant is authoritative-schema valid");
@@ -944,10 +946,10 @@ fn enum_values_render_as_an_accessible_typed_select() {
     let binding = select.bindings.iter().find(|binding| binding.trigger == semio_framework_ui_contract::Trigger::Change).expect("enum change binding");
     let Some(UiValue::Map(arguments)) = &binding.args else { panic!("enum path arguments") };
     assert!(arguments.iter().any(|(key, value)| key.as_str() == "path" && matches!(value, UiValue::Text(value) if value.as_str().is_empty())));
-    let event = super::super::snapshot_edit_event_from_action(super::super::SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![("path".into(), DslValue::String(String::new())), ("value".into(), DslValue::String("published".into()))])))
+    let event = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![("path".into(), DslValue::String(String::new())), ("value".into(), DslValue::String("published".into()))])))
         .expect("parse enum action")
         .expect("known action");
-    assert_eq!(event, super::super::SnapshotEditEvent::SetValue { path: String::new(), value: DslValue::String("published".into()) });
+    assert_eq!(event, SnapshotEditEvent::SetValue { path: String::new(), value: DslValue::String("published".into()) });
 }
 
 #[test]
@@ -965,10 +967,10 @@ fn unicode_rfc6901_paths_past_one_text_value_use_lossless_chunks() {
         assert!(chunk.len() <= semio_framework_ui_contract::UI_TEXT_MAX_BYTES);
         decoded.push(DslValue::String(chunk.to_string()));
     }
-    let event = super::super::snapshot_edit_event_from_action(super::super::SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![(argument.into(), DslValue::Array(decoded)), ("value".into(), DslValue::String("after".into()))])))
+    let event = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&DslValue::Object(vec![(argument.into(), DslValue::Array(decoded)), ("value".into(), DslValue::String("after".into()))])))
         .expect("parse chunked control")
         .expect("known action");
-    assert_eq!(event, super::super::SnapshotEditEvent::SetValue { path: path.clone(), value: DslValue::String("after".into()) });
+    assert_eq!(event, SnapshotEditEvent::SetValue { path: path.clone(), value: DslValue::String("after".into()) });
     let oracle = serde_json::json!({ key: "before" });
     assert_eq!(oracle.pointer(&path), Some(&serde_json::json!("before")));
 }
@@ -994,7 +996,7 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
             true
         }
         fn source(&self) -> Option<String> {
-            Some(super::super::snapshot_edit_source(&DslValue::Object(vec![(self.0.clone(), DslValue::String("before".into()))])))
+            Some(snapshot_edit_source(&DslValue::Object(vec![(self.0.clone(), DslValue::String("before".into()))])))
         }
     }
     let provider = HugeKey("🚀".repeat(40_000));
@@ -1018,7 +1020,7 @@ fn paths_beyond_the_flat_chunk_carrier_open_the_complete_editable_source() {
     }
     let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings JSON");
     assert_eq!(settings["readOnly"], false);
-    assert_eq!(settings["editAction"], super::super::REPLACE_SNAPSHOT_SOURCE_ACTION_ID);
+    assert_eq!(settings["editAction"], REPLACE_SNAPSHOT_SOURCE_ACTION_ID);
     assert_eq!(settings["commit"], "explicit");
     assert!(scene.buffer.contains("before"));
 }

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/📚️cohorts/🟦️.ts",
+  "validator": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+  "permanentEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+  "registeredImport": "../📚️cohorts/🧪️tests/🟦️.ts"
+}

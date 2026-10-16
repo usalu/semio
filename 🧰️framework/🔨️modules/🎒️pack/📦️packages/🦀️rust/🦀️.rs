@@ -11,33 +11,39 @@
 
 // 📡️ Container and record streams share replication codecs and the independent pack byte owner.
 #[cfg(test)]
-#[path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
 
 extern crate self as pack;
 
-pub use protocol::codec;
-pub use protocol::codec::ids;
+pub use semio_framework_replication_codec as codec;
+pub use semio_framework_replication_codec::ids;
 /// 🌱️ Re-exported so a crate that already depends on `pack` (e.g. `🏗️mesh-engine`) can implement
 /// `ToValue`/`FromValue` for its own types without taking a second, direct dependency on
 /// `replication` — implementing a foreign trait for a local type is allowed by the orphan rule.
-pub use protocol::value;
+pub use semio_framework_value as value;
 
-#[path = "../../📐️format/🦀️.rs"]
-pub mod format;
+pub mod format {
+    pub use semio_framework_pack_format::{ControlledPackWriter, FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, Footer, HEADER_SIZE, Header, MAGIC, Manifest, OPTIONAL_CANONICAL, OPTIONAL_HAS_SCHEMA, OPTIONAL_STREAMED, PackFile, PackIdentityChunk, PackIdentityChunkCursor, PackIdentitySegment, PackWriter, REQUIRED_CHUNKED, REQUIRED_COMPRESSED, REQUIRED_ENCRYPTED, REQUIRED_FOOTER_CHAIN, RecoveryReport, Superblock, VerificationLevel, WriteOptions, encode_symbols, read_footer_only, recover};
+    pub use semio_framework_pack_format_retained::{RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalogCause, RetainedPackCatalogFault, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentAdmission, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSegmentHeader, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep, RetainedPackSourceCursor, RetainedPackSourceEvent, RetainedPackSourceFault, RetainedPackSourceProgress, RetainedVarintCursor, RetainedVarintFault, RetainedVarintStep};
+    pub use semio_framework_pack_format_catalog::{RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent, RetainedPackCatalogProgress, RetainedPackChunkEntry, RetainedPackManifest, RetainedPackSymbolSpan, RetainedPackSymbolTable, RetainedUtf8Cursor};
+    pub use semio_framework_pack_format_catalog::retained_inline_symbols;
+}
 
-#[path = "../../⏳️async/🦀️.rs"]
-pub mod async_;
+pub mod async_ {
+    pub use semio_framework_pack_async::{AsyncPackSource, BoundedDemand, CancellationToken, DemandPermit, LoadPriority, ReadRequest, ReadScheduler};
+}
 
-#[path = "../../🌐️http/🦀️.rs"]
-pub mod http;
+pub mod http {
+    pub use semio_framework_pack_http::{HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy, RetryRuntime};
+}
 
 #[cfg(not(target_arch = "wasm32"))]
-#[path = "../../🔌️io/🦀️.rs"]
-pub mod io;
+pub mod io {
+    pub use semio_framework_pack_io::{FilePackSink, FilePackSource, StreamingPackWriter, recover_file, write_atomic};
+}
 
 #[cfg(any(test, feature = "corruption-testing"))]
 #[path = "../../🧪️tests/🧨️corruption/🦀️.rs"]
@@ -47,8 +53,8 @@ pub mod corruption_testing;
 mod component;
 pub use component::*;
 
-pub use protocol::codec::ids::*;
-pub use protocol::codec::*;
+pub use semio_framework_replication_codec::ids::*;
+pub use semio_framework_replication_codec::*;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🧭️producer-authority/🦀️.rs"]
@@ -60,11 +66,17 @@ mod codec_authority_tests;
 
 pub use semio_framework_pack_error::{PackError, PackRefusal, PackRetryDisposition, PackTransportCategory, PackTransportContext, PackTransportPolicy, PackTransportProgress, PackTransportPhase, TransportAdmission, TransportContextRefusal, TransportContextRefusalCause};
 
-#[path = "../../🌱️value/🦀️.rs"]
-pub mod record;
+pub mod record {
+    pub use semio_framework_pack_record::{DecodeOptions, DecodeReport, EncodeOptions, decode_document, decode_document_controlled, decode_record_body, decode_record_body_exact, decode_record_body_exact_controlled, decode_record_body_span_exact_controlled, decode_value_record_body_exact, decode_value_record_body_exact_controlled, decode_value_record_body_span_exact_controlled, encode_document, encode_record_body, intrinsic, scalar_witness};
+    pub use semio_framework_pack_record_schema::{PackSchemaField, PackSchemaGraph, PackSchemaShape, schema_hash, schema_hash_controlled};
+    pub use semio_framework_pack_record_retained::{RetainedRecordBodyAllocationError, RetainedRecordBodyAllocationStep, RetainedRecordBodyCursor, RetainedRecordBodyReadLimits, RetainedRecordBodySourceDecode, RetainedRecordBodySourceStep, RetainedRecordBodyToken, RetainedRecordReceiving, RetainedValueAllocationError, RetainedValueAllocationStep, RetainedValueContainer, RetainedValueCursor, RetainedValueProgress, RetainedValueRole, RetainedValueToken};
+    pub use semio_framework_pack_record_encode::{BorrowedPackSource, BorrowedProjectedPackCursor, BorrowedProjectedPackFailure, BorrowedProjectedPackOperation, BorrowedProjectedPackProgress, OwnedProjectedPackWireCursor, OwnedProjectedPackWireReady, OwnedProjectedPackWireStep, OwnedVariantPackSource, ProjectedSymbolScratch, SourceTextKind, SourceTextLocator, encode_document_controlled, encode_projected_record_body_into, encode_record_body_controlled, encode_record_body_into, encode_value_record_body_controlled, encode_value_record_body_into};
+    pub use semio_framework_pack_record_preflight::{measure_document_borrowed};
+}
 
-#[path = "../../🌱️intrinsic/🦀️.rs"]
-pub mod intrinsic;
+pub mod intrinsic {
+    pub use semio_framework_pack_intrinsic::{IntrinsicFormat, RetainedIntrinsicBody, RetainedIntrinsicDocument, RetainedIntrinsicInput, RetainedIntrinsicOriginalCall, RetainedIntrinsicStep, decode};
+}
 
 /// 📸️ Domain-neutral representation contracts owned by framework IO.
 #[path="../../../🚪️io/📸️snapshot/🦀️.rs"]

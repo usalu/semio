@@ -1,0 +1,1 @@
+{"version":1,"parallelReads":16,"parents":["","node_modules","node_modules/dep"],"leafCount":33,"refused":["../outside","node_modules/../outside","node_modules//dep","node_modules\\dep"],"failurePaths":["node_modules/a","node_modules/b","node_modules/a/child"],"failureKinds":["marker","undefined"]}

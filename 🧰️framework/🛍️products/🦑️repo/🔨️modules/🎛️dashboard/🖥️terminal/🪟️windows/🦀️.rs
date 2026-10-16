@@ -4,15 +4,16 @@
 //!
 //! @see 🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs
 
-use super::labels::{labels, DashboardLabels};
 use super::launcher::LauncherState;
 use super::panes::Pane;
 use super::sessions::Link;
-use crate::inventory::{Job, Phase};
-use crate::ipc::{ClientMsg, SessionInfo, SessionStatus};
-use crate::preferences::keymap::Keymap;
-use crate::preferences::{Change, Preferences};
-use crate::registry::{self, Registry, TaskLabel};
+use dashboard_inventory::{Job, Phase};
+use dashboard_labels::{labels, DashboardLabels};
+use dashboard_launch::TaskLabel;
+use dashboard_preferences::keymap::Keymap;
+use dashboard_preferences::{Change, Preferences};
+use dashboard_registry::Registry;
+use dashboard_wire::ipc::{ClientMsg, SessionInfo, SessionStatus};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -365,7 +366,7 @@ impl Dashboard {
             Body::Help => text.title_keyboard.as_str().into(),
             Body::Launcher(_) => text.title_commands.as_str().into(),
             Body::Output { session: Some(session), .. } => {
-                let title = registry::window_title(&session.command.label, self.locale);
+                let title = dashboard_labels::window_title(&session.command.label, self.locale);
                 match session.code.filter(|_| !session.status.live()) { Some(code) => format!("{title} · {}", text.exit_code.fill(&[("code", &code.to_string())]).as_str()), None => title }
             }
             Body::Output { session: None, .. } => text.title_tasks.as_str().into(),
@@ -382,7 +383,7 @@ impl Dashboard {
             let mut tasks: Vec<(&DashboardWindow, &SessionInfo)> = members.iter().filter_map(|member| member.session().map(|session| (*member, session))).collect();
             tasks.sort_by_key(|(_, session)| (session.started_ms, session.session_id.clone()));
             let labels: Vec<&TaskLabel> = tasks.iter().map(|(_, session)| &session.command.label).collect();
-            let texts = registry::tab_texts(&labels, self.locale, registry::TAB_CELLS.saturating_sub(2));
+            let texts = dashboard_labels::tab_texts(&labels, self.locale, dashboard_labels::TAB_CELLS.saturating_sub(2));
             for ((member, _), text) in tasks.iter().zip(texts) { tabs.insert(member.id.clone(), text); }
             for member in members { tabs.entry(member.id.clone()).or_insert_with(|| self.body_title(member)); }
         }

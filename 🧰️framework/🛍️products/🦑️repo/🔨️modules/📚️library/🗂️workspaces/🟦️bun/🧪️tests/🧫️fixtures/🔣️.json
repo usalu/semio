@@ -900,5 +900,30 @@
         "expected": null
       }
     ]
+  },
+  "readonly": {
+    "members": [
+      "members/**"
+    ],
+    "packages": [
+      {
+        "path": "members/a",
+        "name": "readonly-a"
+      },
+      {
+        "path": "members/b",
+        "name": "readonly-b"
+      }
+    ],
+    "current": [
+      "members/a",
+      "members/b"
+    ],
+    "stale": [
+      "unused"
+    ],
+    "mutated": "members/late",
+    "maximumManifestBytes": 8388608,
+    "maximumAggregateManifestBytes": 67108864
   }
 }

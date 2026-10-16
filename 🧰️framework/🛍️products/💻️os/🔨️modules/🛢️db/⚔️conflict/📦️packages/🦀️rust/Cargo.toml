@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-conflict"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db conflict detection for concurrent commands"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-conflict"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_conflict"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-state = { path = "../../../🔘️state/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+
+[dev-dependencies]

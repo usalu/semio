@@ -37,7 +37,5 @@ pub fn render(scene: &ProcedureScene, view_state: &semio_framework_plugin::ViewM
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

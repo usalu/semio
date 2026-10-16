@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "cases": [
+    "writer-release",
+    "undefined-primary",
+    "frozen-primary"
+  ]
+}

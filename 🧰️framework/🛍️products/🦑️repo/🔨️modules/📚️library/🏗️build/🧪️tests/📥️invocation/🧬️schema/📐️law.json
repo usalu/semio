@@ -1,0 +1,48 @@
+{
+  "$id": "semio:build-test-law:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "plans"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "plans": {
+      "const": {
+        "sdk-fence": {
+          "totalMilliseconds": 30000,
+          "bodyMilliseconds": 25000,
+          "drainMilliseconds": 5000
+        },
+        "sdk-runtime": {
+          "totalMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000
+        },
+        "profile-oracle": {
+          "totalMilliseconds": 120000,
+          "bodyMilliseconds": 110000,
+          "drainMilliseconds": 10000
+        },
+        "receiver-proof": {
+          "totalMilliseconds": 2000,
+          "bodyMilliseconds": 1000,
+          "drainMilliseconds": 1000
+        },
+        "watch-lifecycle": {
+          "totalMilliseconds": 15000,
+          "bodyMilliseconds": 10000,
+          "drainMilliseconds": 5000
+        },
+        "caller-birth": {
+          "totalMilliseconds": 15000,
+          "bodyMilliseconds": 10000,
+          "drainMilliseconds": 5000
+        }
+      }
+    }
+  }
+}

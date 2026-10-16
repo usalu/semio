@@ -1,5 +1,10 @@
+//! 🧱️ Schema_quick of the inference-hub crate: Inference job wire, hub inference client and bindings.
 
-use super::*;
+use crate::hub_wire::HubInferenceApprovalRequestV1;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, InvocationStatus, JobState, JobStatus, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_framework_os_mcp_schema::schema::{SCHEMA_MIRROR_ID, SCHEMA_MIRROR_JSON, compile_validator, hub_inference_approval_request_schema, register_scope_exports, schema_mirror_document, schemas, scope_export_ids, tool_output_schema, validate};
+use semio_framework_os_mcp_wire::tool_shapes::{SCHEMA_BOOLEAN_KEYWORDS, admit_tool_errors, convert_draft07_to_2020_12, normalize_boolean_subschemas};
 
 fn has_bare_boolean(value: &serde_json::Value) -> bool {
     match value {
@@ -163,9 +168,6 @@ fn the_scope_export_declaration_matches_the_registry() {
     }
 }
 
-
-
-
 /// 🧯️ Every tool output schema admits BOTH its success shape and the typed tool error: the official
 /// MCP SDK validates `structuredContent` against `outputSchema` on error results too, so a success-only
 /// schema turns a typed error into a client exception. The widened schema keeps the `$defs` its
@@ -190,7 +192,7 @@ fn a_tool_output_schema_admits_its_success_shape_and_the_typed_tool_error() {
 #[test]
 fn inference_approval_encoding_consumes_the_framework_owned_contract() {
     let contract = hub_inference_approval_request_schema();
-    let approval = crate::inference::HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
+    let approval = HubInferenceApprovalRequestV1::new("00112233445566778899aabbccddeeff", &"ab".repeat(32));
     let validator = compile_validator(&contract).unwrap();
     validate(&validator, &serde_json::to_value(&approval).unwrap()).unwrap();
     let mut hostile = serde_json::to_value(&approval).unwrap();

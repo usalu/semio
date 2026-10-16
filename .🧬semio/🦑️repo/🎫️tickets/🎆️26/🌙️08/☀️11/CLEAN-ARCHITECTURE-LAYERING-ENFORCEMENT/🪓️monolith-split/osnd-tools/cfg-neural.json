@@ -1,0 +1,56 @@
+{
+ "name": "neural",
+ "crateName": "neural_engine",
+ "real": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine"
+ ],
+ "snap": {
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine": "neural"
+ },
+ "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/🦀️.rs",
+ "children": [
+  {
+   "ident": "semio_framework_os_kernel_neural_engine_model",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📦️packages/🦀️rust",
+   "alias": "model"
+  },
+  {
+   "ident": "semio_framework_os_kernel_neural_engine_registry",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/📦️packages/🦀️rust",
+   "alias": "registry"
+  },
+  {
+   "ident": "semio_framework_os_kernel_neural_engine_budgeted",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/⏱️evaluation/📦️packages/🦀️rust",
+   "alias": "evaluation"
+  }
+ ],
+ "textNormalize": [],
+ "cfgs": {
+  "native": [],
+  "test": [
+   "--test"
+  ],
+  "wasm": [
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "wasmtest": [
+   "--test",
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "p2": [
+   "--target",
+   "wasm32-wasip2"
+  ],
+  "p2test": [
+   "--test",
+   "--target",
+   "wasm32-wasip2"
+  ]
+ }
+}

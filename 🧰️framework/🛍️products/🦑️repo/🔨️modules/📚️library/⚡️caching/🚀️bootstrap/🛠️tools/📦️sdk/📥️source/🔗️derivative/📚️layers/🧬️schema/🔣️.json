@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Policy":{"const":{"version":1,"maximumParallelOperations":16}},"Path":{"type":"string","maxLength":256,"pattern":"^(?:|node_modules(?:/(?![.]{1,2}(?:/|$))[^/\\\\\\u0000]+)*)$"}}}

@@ -1,17 +1,20 @@
 //! ♻️ Original transport queues and message backing remain attached until physical release admission.
-use super::{Backbones, BackboneMessage, ErasedSnapshotRetirement, VecDeque, Arc, Mutex};
+use crate::{Backbones, BackboneMessage};
+use semio_framework_value::ErasedSnapshotRetirement;
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::shared::shared_retirement_allocation_bytes};
 use std::mem::ManuallyDrop;
 
 type Wake = std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>;
 type Queue = Mutex<VecDeque<BackboneMessage>>;
 
-pub(super) struct ArtifactStoreBackboneRetirement {
-    backbone: ManuallyDrop<Option<Backbones>>,
-    queue: ManuallyDrop<Option<VecDeque<BackboneMessage>>>,
-    message: ManuallyDrop<Option<BackboneMessage>>,
-    bytes: ManuallyDrop<Option<Vec<u8>>>,
-    wake: ManuallyDrop<Option<Arc<Wake>>>,
+pub struct ArtifactStoreBackboneRetirement {
+    pub backbone: ManuallyDrop<Option<Backbones>>,
+    pub queue: ManuallyDrop<Option<VecDeque<BackboneMessage>>>,
+    pub message: ManuallyDrop<Option<BackboneMessage>>,
+    pub bytes: ManuallyDrop<Option<Vec<u8>>>,
+    pub wake: ManuallyDrop<Option<Arc<Wake>>>,
 }
 
 impl ArtifactStoreBackboneRetirement {
@@ -50,7 +53,7 @@ impl ArtifactStoreBackboneRetirement {
             _ => 0,
         }
     }
-    pub(super) fn demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
         let release_bytes = if let Some(bytes) = self.bytes.as_ref() { bytes.capacity() }
         else if let Some(message) = self.message.as_ref() { Self::message_release(message) }
         else if let Some(queue) = self.queue.as_ref() { if queue.is_empty() { queue.capacity() * size_of::<BackboneMessage>() } else { 0 } }

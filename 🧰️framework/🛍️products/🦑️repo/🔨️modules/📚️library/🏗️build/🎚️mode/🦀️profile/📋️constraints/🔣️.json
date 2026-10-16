@@ -1,0 +1,1306 @@
+{
+  "version": 1,
+  "groups": {
+    "repository": {
+      "native": [
+        {
+          "package": "cranelift-assembler-x64",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bforest",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bitset",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen-shared",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-control",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-entity",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-frontend",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-native",
+          "optLevel": "3"
+        },
+        {
+          "package": "gimli",
+          "optLevel": "3"
+        },
+        {
+          "package": "object",
+          "optLevel": "3"
+        },
+        {
+          "package": "pulley-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "regalloc2",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-plugin-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmparser",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-environ",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cache",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-component-util",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-core",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cranelift",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-fiber",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-debug",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-icache-coherence",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-unwinder",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi-io",
+          "optLevel": "3"
+        },
+        {
+          "package": "wit-parser",
+          "optLevel": "3"
+        }
+      ],
+      "wasm": [
+        {
+          "package": "semio-framework-os-flow",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-drawing",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-extensions",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-geometry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-core",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-read",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-session",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-source",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-mesh",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-operators",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-vcs",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-a",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-b",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-domain",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-model",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-async",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format-catalog",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format-retained",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-http",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-intrinsic",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-io",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-encode",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-preflight",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-retained",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-schema",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-causal",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-codec",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-command-ingress",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-conflict",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-edit",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-format",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-frames",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history-index",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-ids",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-local-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation-messages",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-presence",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-wire-core",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-ui-wgpu-render",
+          "optLevel": "1"
+        }
+      ]
+    },
+    "framework": {
+      "native": [
+        {
+          "package": "cranelift-assembler-x64",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bforest",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bitset",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen-shared",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-control",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-entity",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-frontend",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-native",
+          "optLevel": "3"
+        },
+        {
+          "package": "gimli",
+          "optLevel": "3"
+        },
+        {
+          "package": "object",
+          "optLevel": "3"
+        },
+        {
+          "package": "pulley-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "regalloc2",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmparser",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-environ",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cache",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-component-util",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-core",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cranelift",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-fiber",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-debug",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-icache-coherence",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-unwinder",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi-io",
+          "optLevel": "3"
+        },
+        {
+          "package": "wit-parser",
+          "optLevel": "3"
+        }
+      ],
+      "wasm": [
+        {
+          "package": "semio-framework-os-flow",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-drawing",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-extensions",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-geometry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-core",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-read",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-session",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-source",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-mesh",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-operators",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-vcs",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-a",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-b",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-domain",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-model",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-async",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format-catalog",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-format-retained",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-http",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-intrinsic",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-io",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-encode",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-preflight",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-retained",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack-record-schema",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-causal",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-codec",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-command-ingress",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-conflict",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-edit",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-format",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-frames",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history-index",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-ids",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-local-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation-messages",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-presence",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-wire-core",
+          "optLevel": "2"
+        }
+      ]
+    },
+    "runtime": {
+      "native": [
+        {
+          "package": "cranelift-assembler-x64",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bforest",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bitset",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen-shared",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-control",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-entity",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-frontend",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-native",
+          "optLevel": "3"
+        },
+        {
+          "package": "gimli",
+          "optLevel": "3"
+        },
+        {
+          "package": "object",
+          "optLevel": "3"
+        },
+        {
+          "package": "pulley-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "regalloc2",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-plugin-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmparser",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-environ",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cache",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-component-util",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-core",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cranelift",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-fiber",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-debug",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-icache-coherence",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-unwinder",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi-io",
+          "optLevel": "3"
+        },
+        {
+          "package": "wit-parser",
+          "optLevel": "3"
+        }
+      ],
+      "wasm": [
+        {
+          "package": "semio-framework-os-flow",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-drawing",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-extensions",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-geometry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-core",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-read",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-session",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-host-source",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-mesh",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-operators",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-vcs",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-a",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-actions-b",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-flow-wasm-domain",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-budgeted",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-model",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine-registry",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-causal",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-codec",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-command-ingress",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-conflict",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-edit",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-format",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-frames",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-history-index",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-ids",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-local-interaction",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-mutation-messages",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-presence",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication-wire-core",
+          "optLevel": "2"
+        }
+      ]
+    },
+    "streaming": {
+      "native": [
+        {
+          "package": "cranelift-assembler-x64",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bforest",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-bitset",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-codegen-shared",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-control",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-entity",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-frontend",
+          "optLevel": "3"
+        },
+        {
+          "package": "cranelift-native",
+          "optLevel": "3"
+        },
+        {
+          "package": "gimli",
+          "optLevel": "3"
+        },
+        {
+          "package": "object",
+          "optLevel": "3"
+        },
+        {
+          "package": "pulley-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "regalloc2",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-hash",
+          "optLevel": "3"
+        },
+        {
+          "package": "semio-framework-plugin-interpreter",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmparser",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-environ",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cache",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-component-util",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-core",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-cranelift",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-fiber",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-debug",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-jit-icache-coherence",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-internal-unwinder",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi",
+          "optLevel": "3"
+        },
+        {
+          "package": "wasmtime-wasi-io",
+          "optLevel": "3"
+        },
+        {
+          "package": "wit-parser",
+          "optLevel": "3"
+        }
+      ],
+      "wasm": [
+        {
+          "package": "semio-framework-os-flow",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-os-kernel-neural-engine",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-pack",
+          "optLevel": "2"
+        },
+        {
+          "package": "semio-framework-replication",
+          "optLevel": "2"
+        }
+      ]
+    },
+    "isolated": {
+      "native": [],
+      "wasm": []
+    }
+  },
+  "owners": {
+    "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🀄️wfc/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌀️procedural/🫀️core/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏗️fem/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📕️norm/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🔋️energy/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🔱️trinity/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.toml": "streaming",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗄️stdio/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧩️puzzle/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🧱️block/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/🌊️flow/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/💡️services/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/📐️cad/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "✏️s/🧑‍💻dev/🧩️composition/Cargo.toml": "runtime",
+    "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.toml": "runtime",
+    "✏️s/Cargo.toml": "runtime",
+    "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "🌎️hub/Cargo.toml": "runtime",
+    "🎓️teaching/Cargo.toml": "runtime",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust/Cargo.toml": "isolated",
+    "🧰️framework/Cargo.toml": "framework",
+    "Cargo.toml": "repository"
+  }
+}

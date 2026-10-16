@@ -5,7 +5,7 @@ use std::io::{self, Read};
 /// 🧾️ A portable reference to one completed component and its verified descriptor.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct NativeRuntimeModule {
+pub struct NativeRuntimeModule {
     pub plugin_id: String,
     pub wasm_sha256: String,
     pub wasm_path: String,
@@ -15,7 +15,7 @@ pub(crate) struct NativeRuntimeModule {
 /// 📋️ The native runtime's compact, profile-specific artifact manifest.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(crate) struct NativeRuntimeManifest {
+pub struct NativeRuntimeManifest {
     version: u32,
     variant: String,
     profile: String,
@@ -47,7 +47,7 @@ impl NativeRuntimeManifest {
 }
 
 /// 📄️ Supplies borrowed payload pages to a JSON reader without collecting another byte buffer.
-pub(crate) struct NativeJsonPages<'a, I: Iterator<Item = &'a [u8]>> {
+pub struct NativeJsonPages<'a, I: Iterator<Item = &'a [u8]>> {
     pages: I,
     current: &'a [u8],
 }

@@ -39,6 +39,4 @@ pub fn render(spec: &PlaybookSpec) -> semio_framework_plugin::UiAssemblyResult<s
     semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_SOURCE, semio_framework_ui_contract::SurfaceKind::TextEditor, &scene(spec))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

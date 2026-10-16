@@ -24,6 +24,4 @@ pub fn render(snapshot: &HtmlSnapshot, locale: Locale, publication_revision: sem
     TextWindowKit::render_editable(&TextEditView { surface_id: WINDOW_KIND_ID.into(), text: write_html_document(snapshot), language: Some("html".into()), revision: None, publication_revision }, locale)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

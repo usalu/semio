@@ -1,0 +1,15 @@
+# Graph Closure Reader Lifetime Review
+
+2026-10-16. Read-only Source tracing; no Native image, mutation, compiler, SDK activation, lease or retirement operation ran.
+
+`repositoryBuildGraphDataDirectoryV1` puts immutable source/lock closures directly in the outer managed Graph image; inference contexts/selections refer to those closures by environment digest. The separate Nx pool is a funded nested image. `withRepositoryNxGraphNativeStorageV1` retains the outer Graph store around the nested pool and all held namespaces, then releases exact namespace receivers before returning. This is the concrete enclosing Source path for the ordinary bootstrap selected-reuse capture at bootstrap Script line511, which receives actualPhase. Its source closure reader is now bounded (see selected-task-bounded-record-current.md).
+
+`selectedGraphSdkPortsV1` currently returns callable ports whose scope delegates to selectedTaskScopeV1 with only the supplied AbortSignal; the function itself does not require the live native binding around every call or retain a private port lifetime. The immutable authorizer export also exposes the raw finite metadata reader. The installed SDK handoff entry receives a real Original but must be traced through its actual external wrapper to establish the complete enclosing Graph lifetime. An observed environment/path or a still-unaborted signal alone is not that proof. Current finite reader tests deliberately make no full managed-reader claim.
+
+A coupled mandatory-inventory retirement must exclude every actual reader of outer Graph records, not merely holders of an Nx JSON namespace. Whole outer-image exclusive maintenance is sufficient only if all actual consumers retain that image until completion and accepted descendants/OS readers close. The existing headroom owner authenticates only snapshots/current canonical+authority, while optional retention touches only declared inference accelerator leaves. Neither currently retires mandatory closure records. Retiring those records alone can invalidate a warm inference publication; ownership by name/hash is not quiescence or dependency closure.
+
+The next implementation must first close actual SDK-port lifetime, including parent bootstrap and immutable SDK handoff consumers, under their genuine received Original/returned phase. Then schema-first coupled retirement can invalidate/recompute all referencing inference publications and snapshots under actual exclusive custody, complete FD exclusion and fresh recensus, preserving journals/guards/Native receiver identities. No deletion or recovery was attempted by this review.
+
+## SDK Task Successor
+
+The later Source successor and its independent corrective rereview are recorded in [Selected SDK Native Reader Task Successor](selected-sdk-native-task-current.md). Its combined reader/SDK/ledger corpus is BOTH7tests/60assertions plus BOTH owned strict exit0. Earlier source hashes and raw-port lifetime concerns above identify their pinned epoch; installed SDK/Native physical qualification and coupled mandatory closure retention remain separate.

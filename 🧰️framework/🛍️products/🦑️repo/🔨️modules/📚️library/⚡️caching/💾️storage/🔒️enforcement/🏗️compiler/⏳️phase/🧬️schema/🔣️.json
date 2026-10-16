@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "failure",
+    "heldBeforeRelease",
+    "settledBeforeRelease",
+    "lateRefused"
+  ],
+  "properties": {
+    "failure": {
+      "enum": [
+        "success",
+        "error",
+        "undefined",
+        "cancel"
+      ]
+    },
+    "heldBeforeRelease": {
+      "const": true
+    },
+    "settledBeforeRelease": {
+      "const": false
+    },
+    "lateRefused": {
+      "const": true
+    }
+  }
+}

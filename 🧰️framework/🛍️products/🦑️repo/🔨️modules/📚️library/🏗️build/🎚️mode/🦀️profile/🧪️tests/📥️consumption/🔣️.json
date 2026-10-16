@@ -1,0 +1,2060 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "manifest": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🫀️core/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏗️fem/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔋️energy/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/Cargo.toml",
+      "native": 29,
+      "wasm": 4,
+      "digest": "39ba752d6e333e6859f0e3c15f2d2b576eb95ee26710d7ef84ac77f1ffd669c7"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🔁️codec/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧱️block/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/🌊️flow/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/💡️services/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/📐️cad/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/🧩️composition/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "✏️s/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "🌎️hub/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "🎓️teaching/Cargo.toml",
+      "native": 29,
+      "wasm": 38,
+      "digest": "12430eb3a98185613c4018c9e278e5d7ac68451ac0182f87b141a0f0e5a8171c"
+    },
+    {
+      "manifest": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust/Cargo.toml",
+      "native": 0,
+      "wasm": 0,
+      "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "manifest": "🧰️framework/Cargo.toml",
+      "native": 28,
+      "wasm": 50,
+      "digest": "2c51c384fb319b446de089f738cf1365a2bc6ae5d9838b09fdf86ce667e28461"
+    },
+    {
+      "manifest": "Cargo.toml",
+      "native": 29,
+      "wasm": 51,
+      "digest": "039b8cfb5087175c39c2c5c115739136d0a8f692df9aab5b28ee0958bd742a65"
+    }
+  ],
+  "rendering": [
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "aarch64-apple-darwin",
+        "producer": "artifact",
+        "operation": "build"
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": 0,
+        "debug": 1,
+        "codegen-units": 256,
+        "incremental": true,
+        "lto": "off",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "none",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "aarch64-apple-darwin",
+        "producer": "descriptor-emitter",
+        "operation": "build"
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": 0,
+        "debug": 1,
+        "codegen-units": 256,
+        "incremental": true,
+        "lto": "off",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "none",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build"
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": 1,
+        "debug": 1,
+        "codegen-units": 256,
+        "incremental": true,
+        "lto": "off",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "none",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "wasm32-unknown-unknown",
+        "producer": "browser-canvas",
+        "operation": "build"
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": 1,
+        "debug": 1,
+        "codegen-units": 256,
+        "incremental": true,
+        "lto": "off",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "none",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "aarch64-apple-darwin",
+        "producer": "artifact",
+        "operation": "build"
+      },
+      "target": {
+        "opt-level": 3,
+        "debug": 0,
+        "codegen-units": 1,
+        "incremental": false,
+        "lto": "thin",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "debuginfo",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "aarch64-apple-darwin",
+        "producer": "descriptor-emitter",
+        "operation": "build"
+      },
+      "target": {
+        "opt-level": 3,
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": false,
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "debuginfo",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-wasip2",
+        "producer": "wasm-component",
+        "operation": "build"
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "thin",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "target": "wasm32-unknown-unknown",
+        "producer": "browser-canvas",
+        "operation": "build"
+      },
+      "target": {
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "thin",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
+        "debug": 0,
+        "codegen-units": 256,
+        "incremental": false
+      }
+    }
+  ],
+  "workspaceSelection": [
+    {
+      "name": "nearest-root",
+      "manifest": "member/Cargo.toml",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "text": "[workspace]\nmembers=[\"member\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=[\"member/Cargo.toml\"]\nexclude-patterns=[]\n"
+        },
+        {
+          "path": "member/Cargo.toml",
+          "text": "[package]\nname=\"selection-leaf\"\nversion=\"0.0.0\"\n"
+        }
+      ],
+      "expected": "Cargo.toml"
+    },
+    {
+      "name": "nearest-child",
+      "manifest": "nested/unit/Cargo.toml",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "text": "[workspace]\nmembers=[\"member\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=[\"member/Cargo.toml\"]\nexclude-patterns=[]\n"
+        },
+        {
+          "path": "nested/Cargo.toml",
+          "text": "[workspace]\nmembers=[\"unit\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=[\"unit/Cargo.toml\"]\nexclude-patterns=[]\n"
+        },
+        {
+          "path": "nested/unit/Cargo.toml",
+          "text": "[package]\nname=\"selection-leaf\"\nversion=\"0.0.0\"\n"
+        }
+      ],
+      "expected": "nested/Cargo.toml"
+    },
+    {
+      "name": "explicit-root",
+      "manifest": "nested/unit/Cargo.toml",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "text": "[workspace]\nmembers=[\"member\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=[\"member/Cargo.toml\"]\nexclude-patterns=[]\n"
+        },
+        {
+          "path": "nested/Cargo.toml",
+          "text": "[workspace]\nmembers=[\"unit\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[]\nmember-manifests=[\"unit/Cargo.toml\"]\nexclude-patterns=[]\n"
+        },
+        {
+          "path": "nested/unit/Cargo.toml",
+          "text": "[package]\nname=\"selection-leaf\"\nversion=\"0.0.0\"\nworkspace=\"../..\"\n"
+        }
+      ],
+      "expected": "Cargo.toml"
+    }
+  ],
+  "consumption": [
+    {
+      "request": {
+        "kind": "resolution"
+      },
+      "accept": true
+    },
+    {
+      "request": {
+        "kind": "compiler",
+        "producer": "artifact",
+        "operation": "build"
+      },
+      "accept": true
+    },
+    {
+      "request": {
+        "kind": "compiler",
+        "producer": "browser-canvas",
+        "operation": "build"
+      },
+      "accept": true
+    },
+    {
+      "request": {
+        "kind": "compiler",
+        "producer": "unknown",
+        "operation": "build"
+      },
+      "accept": false
+    },
+    {
+      "request": {
+        "kind": "compiler",
+        "producer": "artifact",
+        "operation": "build",
+        "workspace": "isolated"
+      },
+      "accept": false
+    },
+    {
+      "request": {
+        "kind": "compiler",
+        "producer": "artifact",
+        "operation": "build",
+        "mode": "release"
+      },
+      "accept": false
+    }
+  ],
+  "argumentInsertion": [
+    {
+      "input": [
+        "test",
+        "--no-run"
+      ],
+      "head": [
+        "test",
+        "--no-run"
+      ],
+      "tail": []
+    },
+    {
+      "input": [
+        "test",
+        "--lib",
+        "--",
+        "profile.release.lto=false"
+      ],
+      "head": [
+        "test",
+        "--lib"
+      ],
+      "tail": [
+        "--",
+        "profile.release.lto=false"
+      ]
+    }
+  ],
+  "wasmInvocation": [
+    {
+      "mode": "prototype",
+      "pack": [
+        "--profile",
+        "prototype"
+      ],
+      "cargo": [
+        "--profile",
+        "prototype"
+      ]
+    },
+    {
+      "mode": "release",
+      "pack": [
+        "--profile",
+        "release"
+      ],
+      "cargo": [
+        "--profile",
+        "release"
+      ]
+    }
+  ],
+  "targetRoles": [
+    {
+      "producer": "artifact",
+      "target": "aarch64-apple-darwin",
+      "role": "native"
+    },
+    {
+      "producer": "artifact",
+      "target": "wasm32-wasip2",
+      "role": "component"
+    },
+    {
+      "producer": "artifact",
+      "target": "wasm32-unknown-unknown",
+      "role": "browser"
+    },
+    {
+      "producer": "artifact",
+      "target": "unknown",
+      "role": null
+    },
+    {
+      "producer": "descriptor-emitter",
+      "target": "wasm32-wasip2",
+      "role": null
+    },
+    {
+      "producer": "browser-canvas",
+      "target": "aarch64-apple-darwin",
+      "role": null
+    }
+  ],
+  "artifactProfileAdmission": [
+    {
+      "mode": "prototype",
+      "profile": "prototype",
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "profile": "release",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "host-tool",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "wasm-prototype",
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "profile": "wasm-release",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "prototype",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "release",
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "profile": "host-tool",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "wasm-prototype",
+      "accept": false
+    },
+    {
+      "mode": "release",
+      "profile": "wasm-release",
+      "accept": false
+    }
+  ],
+  "compilerPortOwners": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "function": "buildCargoArtifacts",
+      "call": "withCargoCompilerInputsV1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "function": "buildRepositoryCargoArtifacts",
+      "call": "repositoryCargoCompilerInputsV1"
+    }
+  ],
+  "writerSelectors": [
+    {
+      "args": [
+        "build"
+      ],
+      "accept": true
+    },
+    {
+      "args": [
+        "build",
+        "--config",
+        "/repo/.cargo/config.toml",
+        "--config",
+        "build.build-dir=\"/paid/build\""
+      ],
+      "accept": true
+    },
+    {
+      "args": [
+        "build",
+        "--config",
+        "build.build-dir=\"/paid/build\"",
+        "--config",
+        "/repo/.cargo/config.toml"
+      ],
+      "accept": true
+    },
+    {
+      "args": [
+        "build",
+        "--config",
+        "build.build-dir=\"/foreign/build\""
+      ],
+      "accept": false
+    }
+  ],
+  "actorArguments": [
+    {
+      "version": 1,
+      "kind": "component",
+      "mode": "release",
+      "root": "/repo",
+      "workspaceOwner": "🌎️hub/Cargo.toml",
+      "workspaceKind": "repository",
+      "packageManifest": "/repo/🌎️hub/actor/Cargo.toml",
+      "packageName": "neutral-actor",
+      "buildDirectory": "/paid/build"
+    },
+    {
+      "version": 1,
+      "kind": "descriptor-emitter",
+      "mode": "release",
+      "root": "/repo",
+      "workspaceOwner": "🧰️framework/Cargo.toml",
+      "workspaceKind": "repository",
+      "packageManifest": "/repo/🧰️framework/describe/Cargo.toml",
+      "packageName": "semio-framework-plugin-describe",
+      "buildDirectory": "/paid/build"
+    }
+  ],
+  "isolatedProfileSources": [
+    "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🌿️vcs/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🎥️shooting/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🎪️demonstrator/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🏙️bim/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/💠️lowpoly/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📏️layout/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📐️cad/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📜️imperative/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/📸️remodel/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🖍️draw/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🖨️raster/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🗒️note/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🧱️block/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🎚️config/🏭️bridge/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "standardModeFlags": [
+    {
+      "mode": "release",
+      "args": [
+        "build",
+        "--release"
+      ],
+      "head": [
+        "build",
+        "--profile",
+        "release"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "build",
+        "--release"
+      ],
+      "head": [],
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "build"
+      ],
+      "head": [
+        "build",
+        "--profile",
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "args": [
+        "build",
+        "--release",
+        "--profile",
+        "release"
+      ],
+      "head": [],
+      "accept": false
+    }
+  ]
+}

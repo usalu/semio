@@ -27,7 +27,7 @@ export const GIS_MAP_OPENFREEMAP_TILEJSON = "https://tiles.openfreemap.org/plane
 export type GisMapTileProvidersV1 = { readonly rasterTemplate: string; readonly vectorTileJson: string; readonly userAgent: string };
 export const GIS_MAP_TILE_PROVIDERS: GisMapTileProvidersV1 = { rasterTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", vectorTileJson: GIS_MAP_OPENFREEMAP_TILEJSON, userAgent: GIS_MAP_TILE_USER_AGENT };
 
-/** 🗺️ Highest zoom prefetched for offline map play (matches `GIS_MAP_LOD_TILE_Z` building band). */
+/** 🗺️ Highest zoom prefetched for offline map play (covers the building band's raster tile z in `🌍️gis-policy/🦀️.rs` `GIS_MAP_LOD_TILE_Z`). */
 export const GIS_MAP_PREFETCH_RASTER_Z_MAX = 13;
 
 export function mapTileCacheRoots(repoRoot: string): { readonly osm: string; readonly vt: string } {

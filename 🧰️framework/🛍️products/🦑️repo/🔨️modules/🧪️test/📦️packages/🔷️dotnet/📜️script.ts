@@ -1,32 +1,26 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readdirSync } from "node:fs";
-import { join } from "node:path";
-import { runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { repoCacheDirectory } from "../../../📚️library/⚡️caching/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import{receiveScriptProcessInvocation,scriptInvocationEnvironment,createIssuedResourceControlV1,BundleScript,ScriptRouter,runScriptMain,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{compilerAdmissionBudgetV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{readBuildMode}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import{runOwnedCommand}from"../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{withResourceLeases}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{withRepositoryCacheStoreV1}from"../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import{stageRepositoryArtifacts,withRepositoryArtifactDestinationV1}from"../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import{collectArtifactFiles}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{mkdir}from"node:fs/promises";
+import{join}from"node:path";
 
-const project = "🧪️Semio.Repo.Test.csproj";
-const nativeState = (root: string): string => repoCacheDirectory(root, "dotnet", "repo-test");
+const project="🧪️Semio.Repo.Test.csproj";
+/** 🔷️ Retains the actual dependency cache, fixed compiler state, diagnostics and publication until the owned dotnet child settles. */
+function withDotnet(invocation:ScriptInvocation,workspace:string,build:boolean):Promise<void>{const mode=readBuildMode(process.env.SEMIO_BUILD_MODE),phaseControl=createIssuedResourceControlV1(invocation,"artifact:dotnet-support",120000);return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phaseControl,dependencies=>withRepositoryCacheStoreV1(workspace,"products",invocation,phaseControl,products=>withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,phaseControl,diagnostics=>withArtifactScratchV1({workspace,invocation,storage:diagnostics.storage,control:diagnostics.control,phaseControl,request:{version:1,mode,owner:"repo-test/dotnet"}},destination=>withArtifactDestinationTaskV1(destination,invocation,async sink=>{
+ const state=requireNativeStoragePathV1(products.root,join(products.root,"repo-test/dotnet",mode,"state")),output=join(sink.directory,"out"),packages=requireNativeStoragePathV1(dependencies.root,join(dependencies.root,"nuget/packages")),http=requireNativeStoragePathV1(dependencies.root,join(dependencies.root,"nuget/http")),home=requireNativeStoragePathV1(dependencies.root,join(dependencies.root,"dotnet/home"));await withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),control:sink.control,signal:sink.control.signal,resources:[{resource:"dotnet:nuget:"+dependencies.root,mode:"exclusive"},{resource:"dotnet:repo-test:"+mode,mode:"exclusive"}]},async()=>{await dependencies.recheck();await products.recheck();for(const directory of[state,output,packages,http,home])await mkdir(directory,{recursive:true});const environment=scriptInvocationEnvironment(invocation,{...process.env,...dependencies.environment,...products.environment,...diagnostics.environment,...sink.environment,NUGET_PACKAGES:packages,NUGET_HTTP_CACHE_PATH:http,DOTNET_CLI_HOME:home,DOTNET_BUNDLE_EXTRACT_BASE_DIR:sink.directory,DOTNET_CLI_TELEMETRY_OPTOUT:"1",DOTNET_SKIP_FIRST_TIME_EXPERIENCE:"1",DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE:"true",DOTNET_NOLOGO:"1"}),args=build?["build",project,"--no-restore","--configuration","Release","--artifacts-path",state,"--output",output,`-p:PathMap=${workspace}=/_/`,"-p:ContinuousIntegrationBuild=true"]:["restore",project,"--locked-mode","--artifacts-path",state];await runOwnedCommand("dotnet",args,import.meta.dir,"artifact:dotnet-support",compilerAdmissionBudgetV1(sink.control),{env:environment,signal:sink.control.signal,output:readNativeCallerAuthorityV1(invocation.capabilities).transport});await dependencies.recheck();await products.recheck();if(build)await withRepositoryArtifactDestinationV1({workspace,invocation,storage:products.storage,control:products.control,phaseControl:sink.control,directory:join(products.root,"repo-test/dotnet",mode,"out")},async target=>stageRepositoryArtifacts(target,`@semio-tech/repo-test-dotnet:${mode}`,await collectArtifactFiles(output,sink.control.signal)));console.log(`[DEBUG] Bounded .NET support ${build?"build":"restore"} settled mode=${mode}`);});})))));}
 
-/** 📥️ Restores the locked support-library dependencies without compiling consumers. */
-class DepsScript extends BundleScript {
-  run(): void {
-    runCmd("dotnet", ["restore", project, "--locked-mode", "--artifacts-path", nativeState(this.repoRoot)], { cwd: import.meta.dir });
-  }
-}
-
-/** 🔷️ Publishes only the support-library deliverables after a successful incremental build. */
-class BuildScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("The .NET support library has one Release artifact contract");
-    const output = join(nativeState(this.repoRoot), "deliverables");
-    runCmd("dotnet", ["build", project, "--no-restore", "--configuration", "Release", "--artifacts-path", nativeState(this.repoRoot), "--output", output, `-p:PathMap=${this.repoRoot}=/_/`, "-p:ContinuousIntegrationBuild=true"], { cwd: import.meta.dir });
-    await stageRepositoryArtifacts(join(import.meta.dir, "dist/build"), "@semio-tech/repo-test-dotnet:build", new Map(readdirSync(output, { withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => [entry.name, join(output, entry.name)])));
-  }
-}
-
-const router = new ScriptRouter(import.meta.dir).register("deps", DepsScript).register("build", BuildScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
+/** 📥️ Restores the locked support dependencies inside their actual finite shared backing. */
+class DepsScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("The .NET support restore accepts no path or compiler arguments");await withDotnet(this.invocation,this.repoRoot,false);}}
+/** 📦️ Publishes the support library's unchanged Release ABI into the current intent's fixed product tree. */
+class BuildScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("The .NET support library accepts no output or compiler arguments");await withDotnet(this.invocation,this.repoRoot,true);}}
+const router=new ScriptRouter(import.meta.dir).register("deps",DepsScript).register("build",BuildScript);
+if(import.meta.main)await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original}));

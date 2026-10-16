@@ -1,0 +1,853 @@
+//! 🔌️ Channel port of the port crate: The artifact channel port, mutation records and the policy engine.
+
+#[cfg(any(test, feature = "testkit"))]
+use std::collections::BTreeMap;
+#[cfg(any(test, feature = "testkit"))]
+use std::sync::Arc;
+#[cfg(any(test, feature = "testkit"))]
+use std::sync::Mutex;
+use semio_framework_dispatch_macros::dyn_enum;
+use semio_framework_value::DslValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Serialize;
+use semio_framework_os_mcp_catalog::catalog::CapabilityDefinition;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::opaque_json::dsl_json;
+use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+
+/// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
+/// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
+/// `serde_json::Value`.
+fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
+    semio_framework_value::DslValue::from(value)
+}
+
+/// 🌉️ See [`json_value_to_dsl`] — the `FromValue` direction, infallible.
+fn dsl_to_json_value(value: DslValue) -> Result<serde_json::Value, ValueError> {
+    Ok(serde_json::Value::from(value))
+}
+
+//#region 🔖️Port
+
+/// 📦️ One op payload set, split by store lane — matches `📓️luna-channel-audit.md` §4's recommended
+/// `TransactionPrepare.prepared_ops` shape (`Vec<Vec<u8>>`, one element per complete op payload,
+/// never a single stream). `Emit` returns this from `PureCommand`; `TransactionPrepare` sends the
+/// SAME bytes back unmodified — this adapter never decodes an individual op's contents.
+/// `children` is the composing guest's owned-child share of the same gesture (`AppFrame::Emit.child_ops`, the guest's
+/// `ChildEmit` wire pack) — carried from `Emit` to `TransactionPrepare` byte for byte, never decoded here; empty when the
+/// gesture touches no owned child. The shell route's deferred plan never produces it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct PreparedOps {
+    pub document: Vec<Vec<u8>>,
+    pub config: Vec<Vec<u8>>,
+    pub draft: Vec<Vec<u8>>,
+    #[serde(default)]
+    #[value(default)]
+    pub children: Vec<u8>,
+}
+
+impl PreparedOps {
+    pub fn op_counts(&self) -> serde_json::Value {
+        serde_json::json!({ "document": self.document.len(), "config": self.config.len(), "draft": self.draft.len(), "childOpBytes": self.children.len() })
+    }
+
+    /// 📭️ Whether the preview produced no operation in any lane and touched no owned child: nothing to prepare,
+    /// commit or undo.
+    pub fn is_empty(&self) -> bool {
+        self.document.is_empty() && self.config.is_empty() && self.draft.is_empty() && self.children.is_empty()
+    }
+}
+
+/// 📭️ The one warning an invocation whose preview produced no operation answers with. Such a verb
+/// changed nothing (a selection verb with nothing selected, or a verb whose change is a host effect
+/// the two-phase agent lane does not carry), so no transaction is opened, the revision stays where
+/// it was and there is no undo token: never a guest transaction over an empty op list.
+pub const NO_CHANGE_WARNING: &str = "no-change: the action produced no document, config or draft operation, so nothing was committed and there is nothing to undo";
+
+/// ✍️ `MutationOrigin::Agent` — the real channel's `origin` field on `TransactionPrepare`
+/// (`📋️master.md` §3.3: `origin: MutationOrigin::Agent{..}`); this packet's own minimal mirror,
+/// carrying just enough for the real channel's `Origin::Agent` (peer ticket packet A1, leased) to be
+/// constructed FROM by P7's real `ArtifactChannel` implementation.
+#[derive(Clone, Debug, PartialEq)]
+pub enum MutationOrigin {
+    Agent { principal: String, invocation_id: String },
+}
+
+/// 📤️ Commands this adapter sends — a deliberate, minimal subset of the real channel's `AppCommand`
+/// (`📓️luna-channel-audit.md` §9: every variant here survives channel v12). No `seq`/batching: this
+/// port's contract is ONE command per [`ArtifactChannel::exchange`] call, always exactly one reply
+/// frame — simpler to implement and test than the real channel's batched duplex; P7's real
+/// implementation is responsible for wrapping each call in a one-element batch (or its own
+/// seq/in_reply_to bookkeeping) against the real channel underneath.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AppCommand {
+    ReadHistory,
+    PureCommand { capability_id: String, input: serde_json::Value },
+    TransactionPrepare { txn_id: String, ops: PreparedOps, origin: MutationOrigin },
+    TransactionCommit { txn_id: String },
+    TransactionRollback { txn_id: String },
+    TransactionUndo { group_id: String },
+    TransactionRedo { group_id: String },
+    Infer(InferCommand),
+    /// 📤️ Export one artifact through the owning app's own media OUT port — `document`/`document_spr`
+    /// are the artifact's real pack bytes, loaded into the guest through the stepped archive load before
+    /// the port is read. Mirrors the archive load → `MediaOut` sequence `🏃️run`'s workflow executor
+    /// drives; this port adds no export-specific wire of its own.
+    ExportMedia { port: String, document: Vec<u8>, document_spr: Vec<u8> },
+    /// 🆕️ Read the guest's own freshly-opened (genesis) document — how a plugin-typed artifact is
+    /// created without this host ever knowing that plugin's schema.
+    ReadArtifact,
+}
+
+/// 💡️ One plugin-declared inference execution — the `Infer` command's whole payload, kept as its own
+/// struct so the variant stays readable and so a caller that already resolved a declared inference
+/// row (`crate::inference::DeclaredInference`) can build it field-for-field. `plugin_id` is the
+/// plugin whose guest actually owns the route (the row's `contributor`, which equals `owner` for an
+/// owner-authored inference): `RoutingArtifactChannel` reads it directly rather than decoding a
+/// plugin out of `instance`, because an inference carries no capability id. Every remaining field is
+/// exactly what `semio_framework_plugin_host::ArtifactInferenceRouter::infer`'s own request wire
+/// carries — this port never invents one of its own.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InferCommand {
+    pub plugin_id: String,
+    pub artifact_kind: String,
+    pub inference_schema: String,
+    pub revision: u64,
+    pub turn: semio_framework_actor::RetainedTurnInput,
+    pub retained_policy: semio_framework_value::RetainedCloneGrant,
+    pub cancellation_id: String,
+    pub work_units: u64,
+    pub maximum_elapsed_milliseconds: u64,
+    pub canonical_payload: Vec<u8>,
+    /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an
+    /// artifact is not expressible as a hand-typed payload — nobody types 4 096 bitmap cells into a
+    /// tool call — so the caller names an artifact and this command carries the document the
+    /// guest reads its own snapshot out of. Empty for an inference whose published contract
+    /// declares no artifact binding (`semio_framework::InferenceArtifactBinding`), which is the
+    /// only case where a bare `canonical_payload` is the whole request.
+    pub artifact_id: String,
+    pub artifact_document: Option<ArtifactDocumentBinding>,
+    pub cancel: InferenceCancel,
+}
+
+/// 🛑️ The caller's live cancellation for one inference run. `inference_run` binds it to its job, so
+/// `job_cancel` and `notifications/cancelled` stop the in-flight guest job through the plugin host's
+/// cold relay instead of waiting for the solve to finish. Two handles compare equal when they are in
+/// the same state — the token itself has no identity a frame log could print.
+#[derive(Clone)]
+pub struct InferenceCancel(pub semio_framework_async::CancelToken);
+
+impl Default for InferenceCancel {
+    fn default() -> Self {
+        Self(semio_framework_async::CancelToken::root_now())
+    }
+}
+
+impl std::fmt::Debug for InferenceCancel {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "InferenceCancel(cancelled: {})", self.0.is_cancelled_now())
+    }
+}
+
+impl PartialEq for InferenceCancel {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.is_cancelled_now() == other.0.is_cancelled_now()
+    }
+}
+
+/// 🧭️ One phase of activating a plugin session and reading its document — `SessionActivationPhaseV1`
+/// in `🏠️workspace/🧬️schema`. The session's component is resolved, read, content-hashed, loaded or
+/// compiled, its guest opened, a bound hub document loaded into it (the stepped archive load, whose
+/// polled `completed / total` is this phase's fraction), then its document is read. Every job that
+/// activates a session (`inference_run`'s artifact binding, `artifact_create`) reports these, and a
+/// session that already passed a phase skips it rather than reporting it again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ActivationPhase {
+    ResolvingComponent,
+    ReadingComponent,
+    HashingComponent,
+    LoadingCompiledCode,
+    CompilingComponent,
+    OpeningGuest,
+    LoadingDocument,
+    ReadingDocument,
+}
+
+impl ActivationPhase {
+    pub const ALL: [ActivationPhase; 8] = [Self::ResolvingComponent, Self::ReadingComponent, Self::HashingComponent, Self::LoadingCompiledCode, Self::CompilingComponent, Self::OpeningGuest, Self::LoadingDocument, Self::ReadingDocument];
+
+    /// 🪪️ The schema's kebab-case id.
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::ResolvingComponent => "resolving-component",
+            Self::ReadingComponent => "reading-component",
+            Self::HashingComponent => "hashing-component",
+            Self::LoadingCompiledCode => "loading-compiled-code",
+            Self::CompilingComponent => "compiling-component",
+            Self::OpeningGuest => "opening-guest",
+            Self::LoadingDocument => "loading-document",
+            Self::ReadingDocument => "reading-document",
+        }
+    }
+
+    /// 📈️ Where the phase starts within an activation, `0..1`; each job maps it onto its own span.
+    pub fn position(self) -> f64 {
+        Self::ALL.iter().position(|phase| *phase == self).map_or(0.0, |index| index as f64 / Self::ALL.len() as f64)
+    }
+
+    /// 📏️ Where `fraction` of this phase lands within an activation, `0..1`.
+    pub fn at(self, fraction: f64) -> f64 {
+        self.position() + fraction.clamp(0.0, 1.0) / Self::ALL.len() as f64
+    }
+}
+
+/// 🏷️ The fault code an activation stopped by its caller's cancel carries; [`map_fault`] answers it
+/// as `CANCELLED`.
+pub const ACTIVATION_CANCELLED_FAULT_CODE: &str = "job.cancelled";
+
+/// 🎚️ Progress and cancellation for one session activation. Every interruptible phase boundary is a
+/// [`ActivationScope::checkpoint`]; a phase with measurable size (hashing) reports its fraction.
+pub struct ActivationScope {
+    pub cancel: semio_framework_async::CancelToken,
+    pub report: Box<dyn Fn(ActivationPhase, f64) + Send + Sync>,
+}
+
+impl ActivationScope {
+    pub fn new(cancel: semio_framework_async::CancelToken, report: impl Fn(ActivationPhase, f64) + Send + Sync + 'static) -> Self {
+        Self { cancel, report: Box::new(report) }
+    }
+
+    /// 🫥️ An activation nobody watches or cancels — what an ordinary command exchange opens with.
+    pub fn detached() -> Self {
+        Self::new(semio_framework_async::CancelToken::root_now(), |_, _| {})
+    }
+
+    pub fn cancel(&self) -> &semio_framework_async::CancelToken {
+        &self.cancel
+    }
+
+    /// ▶️ Reports entry into `phase`, then checks the caller's cancel.
+    pub fn enter(&self, phase: ActivationPhase) -> Result<(), Fault> {
+        (self.report)(phase, 0.0);
+        self.checkpoint()
+    }
+
+    /// 📏️ Reports `fraction` (0..=1) of `phase` done, then checks the caller's cancel.
+    pub fn advance(&self, phase: ActivationPhase, fraction: f64) -> Result<(), Fault> {
+        (self.report)(phase, fraction.clamp(0.0, 1.0));
+        self.checkpoint()
+    }
+
+    pub fn checkpoint(&self) -> Result<(), Fault> {
+        if self.cancel.is_cancelled_now() {
+            return Err(Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: "the caller cancelled while its plugin session was being activated".to_string() });
+        }
+        Ok(())
+    }
+}
+
+/// 📦️ One artifact's canonical `pack`/`spr` pair on its way to a guest inference — host-opaque
+/// bytes, carried verbatim and encoded only at the boundary the plugin's own contract names.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ArtifactDocumentBinding {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
+}
+
+/// 📮️ Whether a hub document acknowledged the envelopes one commit relayed to it — and, when its link is
+/// terminal (`access-revoked`, `link-expired`), the code that says the hub will never take them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HubRelayOutcome {
+    pub acknowledged: bool,
+    pub detail: String,
+    pub refused: Option<String>,
+}
+
+/// 📥️ Replies — [`AppFrame::Error`] is a COMMAND-level (business) failure (e.g. generation-mismatch,
+/// instance-busy); a hard transport-level failure (no such instance, dead connection) is
+/// `Err(Fault)` at the [`ArtifactChannel::exchange`] boundary instead.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AppFrame {
+    HistorySnapshot(RevisionStamp),
+    Emit { ops: PreparedOps, warnings: Vec<String> },
+    TransactionPrepared { txn_id: String },
+    /// `relay` is present when the commit relayed envelopes to a hub document: whether the hub
+    /// acknowledged them within [`crate::workspace::HUB_RELAY_ACK_WAIT_MS`].
+    TransactionCommitted { txn_id: String, edit_id: String, relay: Option<HubRelayOutcome> },
+    TransactionRolledBack { txn_id: String },
+    TransactionUndone { group_id: String },
+    TransactionRedone { group_id: String },
+    /// 💡️ The guest's own inference result, exactly as its `artifact-infer` job returned it:
+    /// `payload` is the result wire's `canonicalPayload` bytes and `complete` its `complete` flag.
+    /// Never a host-synthesised value — a guest that refuses answers [`AppFrame::Error`] instead.
+    Inferred { inference_schema: String, complete: bool, payload: Option<Vec<u8>> },
+    /// 📤️ The guest's own exported media for one OUT port, exactly as `AppFrame::Media` carried it:
+    /// `descriptor` is the guest's packed media descriptor, `data` the exported bytes.
+    Exported { port: String, descriptor: Vec<u8>, data: Vec<u8> },
+    /// 🆕️ The guest's own document pack+spr bytes, host-opaque.
+    Artifact { pack: Vec<u8>, spr: Vec<u8> },
+    Error(Fault),
+}
+
+/// ⚠️ This port's own minimal `Fault` — `code` mirrors the real channel's fault code strings
+/// (`"transaction.generation-mismatch"`, `"transaction.instance-busy"`, `"app.command.rejected"`,
+/// `"viewer.read-only"`, `"capability-denied"`) verbatim, per `📋️master.md` §3.3's Fault code table,
+/// plus `"budget.exceeded"` (quota exhaustion, this crate's own addition, mapped to
+/// `GatewayErrorCode::BudgetExceeded`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Fault {
+    pub code: String,
+    pub message: String,
+}
+
+/// 💡️ What [`ActionAdapter::run_inference`] hands back — the guest's own result payload and its
+/// `complete` flag, plus the `inferenceSchema` the guest echoed (asserted equal to the requested one
+/// by the real router before it ever reaches here).
+#[derive(Clone, Debug, PartialEq)]
+pub struct InferenceOutcome {
+    pub inference_schema: String,
+    pub complete: bool,
+    pub payload: Option<Vec<u8>>,
+}
+
+/// 🔌️ The narrow port `ActionAdapter` drives — this packet's brief §3.1 names this exact shape.
+/// `instance` is an opaque handle a real `InstanceDirectory` (P7) would resolve from a
+/// `(plugin_id, app_id, artifact_ref)` triple; until P7 lands, every capability in this crate's live
+/// binary targets a single default instance (`0`), documented at the call site in the module root.
+// 🔀️ dedyn-fw-os-misc, O1/R11: closed 2-implementor set (`MockArtifactChannel` here,
+// `🏠️workspace::PluginArtifactChannel`) — `#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s
+// `ArtifactChannels` (the module both implementors are jointly nameable from) closes it into an enum
+// instead of `Box<dyn ArtifactChannel>`.
+#[dyn_enum]
+pub trait ArtifactChannel: Send {
+    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
+
+    /// 🔌️ Brings `instance`'s session up to where its next exchange runs without opening anything:
+    /// the component compiled, the guest open. Reports each phase to `scope` and stops at the next
+    /// interruptible boundary once `scope` is cancelled, leaving no half-open guest behind.
+    fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault>;
+}
+
+/// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.
+pub trait HistoryUndoPort: Send + Sync {
+    fn undo_hub_inference_approval(&self, member: &HubInferenceApprovalUndoMemberV1) -> Result<(), GatewayError>;
+}
+
+/// 🧭️ The fault the plugin SDK's agent-lane preview (`🔌️plugin` `preview_addressed_action`) answers for a
+/// verb whose previewed result publishes a lane an agent transaction cannot carry — anything beside its document, config,
+/// draft and owned-child operations (`agent_lane_carriage`: every host effect, extension calls, events, follow-up tasks,
+/// ephemeral lanes). The preview fails closed, so the verb runs only from the shell.
+pub const AGENT_LANE_UNCARRIED_FAULT_CODE: &str = "interactive-job.agent-lane-uncarried";
+
+/// 🫥️ The fault the same preview answers for a verb that, in the document's current state, carries no operation and only
+/// presents something to its human — a notice (each one a structured `app.notice` cause of the fault) or a selection.
+pub const COMMAND_NO_EFFECT_FAULT_CODE: &str = "app.command.no-effect";
+
+/// ⏱️ The fault the same preview answers for a job still running past its preview budget; like
+/// [`AGENT_LANE_UNCARRIED_FAULT_CODE`] the verb runs only from the shell.
+pub const AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE: &str = "interactive-job.preview-budget";
+
+/// 🎯️ The fault a verb answers when it names no targets and the agent lane holds no selection to take them from — the
+/// agent must pass the ids the verb declares.
+pub const COMMAND_TARGETS_REQUIRED_FAULT_CODE: &str = "app.command.targets-required";
+
+/// 👁️ The fault an edit answers on a hub session whose principal only reads: the hub holds it as a spectator of its
+/// space (its delegation's audience is `read`). Refused before any guest runs.
+pub const VIEWER_READ_ONLY_FAULT_CODE: &str = "viewer.read-only";
+
+/// 🗣️ What the agent tells its human about a [`VIEWER_READ_ONLY_FAULT_CODE`] refusal, `(en, de)`.
+pub const VIEWER_READ_ONLY_REMEDY: (&str, &str) = (
+    "This session may only read this space; ask your human for an edit delegation.",
+    "Diese Sitzung darf diesen Space nur lesen; bitte deinen Menschen um eine Delegation zum Bearbeiten.",
+);
+
+/// 🧷️ The fault an edit answers on a hub session that holds no live hub document for the verb's plugin: nothing it
+/// authored could reach the hub, so it never runs (a hub session never edits a plugin's own genesis document).
+pub const HUB_EDIT_UNBOUND_FAULT_CODE: &str = "hub.edit-unbound";
+
+/// 📮️ The fault a committed edit answers when its hub document did not acknowledge it in time; the edit is reverted in
+/// the session, so the agent retries instead of believing a write the hub may never hold.
+pub const HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE: &str = "hub.relay-unacknowledged";
+
+/// 🗣️ What the agent tells its human about a [`COMMAND_NO_EFFECT_FAULT_CODE`] refusal, `(en, de)`.
+pub const COMMAND_NO_EFFECT_REMEDY: (&str, &str) = (
+    "Nothing changed: the document is not in a state this action acts on; check what it needs and the app's notice.",
+    "Nichts geändert: Das Dokument ist nicht in einem Zustand, in dem diese Aktion wirkt; prüfe, was sie braucht, und den Hinweis der App.",
+);
+
+/// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
+pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
+    "This action runs only in the semio shell; ask your human to run it there.",
+    "Diese Aktion läuft nur in der semio-Oberfläche; bitte deinen Menschen, sie dort auszuführen.",
+);
+
+/// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
+/// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
+/// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️.rs`'s `RoutingArtifactChannel`
+/// — a caller-supplied bad capability id vs. a plugin that genuinely cannot be reached right now).
+/// Three plugin answers are not gateway defects and say so: a verb whose interactive-job
+/// classification keeps it out of the agent lane (`interactive-job.not-ui-safe`, e.g.
+/// `BatchOnlyPendingRewrite`) is a non-retryable `PLUGIN_UNAVAILABLE`; a preview whose ops exceed the
+/// verb's declared output cap (`interactive-job.preview-output`) is `INPUT_INVALID`; a mutation the
+/// document's own state refuses (`transaction.member-rejected`, e.g. a target that is not there) is
+/// `PRECONDITION_FAILED`. A hub session's edit that could not reach the hub is refused by name: a spectator's is
+/// `PERMISSION_DENIED` ([`VIEWER_READ_ONLY_FAULT_CODE`]), one with no live hub document `PRECONDITION_FAILED`
+/// ([`HUB_EDIT_UNBOUND_FAULT_CODE`]), one the hub did not acknowledge a retryable `PLUGIN_UNAVAILABLE`
+/// ([`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`]). A verb whose emit publishes a lane an agent transaction cannot carry
+/// ([`AGENT_LANE_UNCARRIED_FAULT_CODE`]) is a non-retryable `PLUGIN_UNAVAILABLE` whose `details` name the
+/// fault and tell the agent, in en and de, to hand the action to its human; a verb that changes nothing in the
+/// document's state ([`COMMAND_NO_EFFECT_FAULT_CODE`]) is a non-retryable `PRECONDITION_FAILED` with its own en + de
+/// remedy. An unrecognised code is `Internal` (never silently swallowed).
+pub fn map_fault(fault: &Fault) -> GatewayError {
+    match fault.code.as_str() {
+        VIEWER_READ_ONLY_FAULT_CODE => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": VIEWER_READ_ONLY_REMEDY.0, "de": VIEWER_READ_ONLY_REMEDY.1 } })),
+        "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
+        HUB_EDIT_UNBOUND_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
+        HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
+        "app.command.rejected" => GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.message.clone()),
+        "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
+        "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
+        "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
+        COMMAND_TARGETS_REQUIRED_FAULT_CODE => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
+        COMMAND_NO_EFFECT_FAULT_CODE => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": COMMAND_NO_EFFECT_REMEDY.0, "de": COMMAND_NO_EFFECT_REMEDY.1 } })),
+        AGENT_LANE_UNCARRIED_FAULT_CODE | AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
+        "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
+        "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
+        "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
+        "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
+        "plugin.unavailable" | "workspace.unbound" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
+        ACTIVATION_CANCELLED_FAULT_CODE => GatewayError::new(GatewayErrorCode::Cancelled, fault.message.clone()),
+        code if code == store::sync::DocumentLinkStatus::AccessRevoked.code() => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
+        code if code == store::sync::DocumentLinkStatus::LinkExpired.code() => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
+        _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
+    }
+}
+
+/// 🧮️ The input an action runs with: the caller's own values, plus the declared `default` of every argument the caller
+/// left out — the ONE effective-args rule the shells apply before dispatch (`manifest::effective_action_args`), because the
+/// guest SDK no longer fills defaults (an agent's `{}` for forms `addBlock` failed "missing field `kind`" though `kind`
+/// defaults to `text`). A key the caller sent is never replaced or dropped, declared or not, so the capability's schema
+/// still refuses an undeclared one.
+pub fn declared_effective_input(capability: &CapabilityDefinition, input: serde_json::Value) -> serde_json::Value {
+    let mut given = match input {
+        serde_json::Value::Object(given) => given,
+        other => return other,
+    };
+    let definitions = capability.presentation.args.iter().filter_map(|arg| arg.definition.clone()).collect::<Vec<_>>();
+    if definitions.is_empty() {
+        return serde_json::Value::Object(given);
+    }
+    let effective = semio_framework::manifest::effective_action_args(&definitions, &semio_framework_value::DslValue::from(&serde_json::Value::Object(given.clone())), None);
+    for (key, value) in effective.as_object().unwrap_or_default() {
+        if !given.contains_key(key) {
+            given.insert(key.clone(), serde_json::Value::from(value.clone()));
+        }
+    }
+    serde_json::Value::Object(given)
+}
+
+/// 📮️ The error a commit answers when its hub document did not acknowledge it: the refusal the link reported, or
+/// [`HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE`] when the hub stayed silent. The caller has already reverted the edit.
+pub fn unacknowledged_relay_error(edit_id: &str, relay: &HubRelayOutcome) -> GatewayError {
+    match &relay.refused {
+        Some(code) => map_fault(&Fault { code: code.clone(), message: format!("the hub refused edit {edit_id} ({}); it was reverted in this session", relay.detail) }),
+        None => map_fault(&Fault { code: HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE.to_string(), message: format!("the hub did not acknowledge edit {edit_id} in time ({}); it was reverted in this session — retry once the hub answers", relay.detail) }),
+    }
+}
+
+//#endregion 🔖️Port
+
+//#region 🔖️UnboundArtifactChannel
+
+/// 🚫️ The channel a gateway with NO `--folder`/`--hub` binding runs on: every command answers the
+/// same typed, retryable `workspace.unbound` fault naming exactly which flag closes the gap, so a
+/// mutation-protocol call against an unbound session can never be mistaken for a real edit. It
+/// replaces the scripted [`MockArtifactChannel`] that used to occupy this slot in the live binary —
+/// a caller could not tell a mock commit from a real one from the result alone
+/// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct UnboundArtifactChannel;
+
+/// 🏷️ The fault code every unbound exchange carries — mapped by [`map_fault`] onto a retryable
+/// `PLUGIN_UNAVAILABLE`, the same shape `🗿️artifact`'s own tier-1 gate already answers with.
+pub const WORKSPACE_UNBOUND_FAULT_CODE: &str = "workspace.unbound";
+
+/// 📝️ The one message every unbound surface repeats verbatim — one sentence, naming both bindings.
+pub const WORKSPACE_UNBOUND_MESSAGE: &str =
+    "no workspace is bound to this session — start the gateway with --folder <dir> or --hub <url> --space <id> before invoking a capability";
+
+impl UnboundArtifactChannel {
+    pub fn fault() -> Fault {
+        Fault { code: WORKSPACE_UNBOUND_FAULT_CODE.to_string(), message: WORKSPACE_UNBOUND_MESSAGE.to_string() }
+    }
+}
+
+impl ArtifactChannel for UnboundArtifactChannel {
+    fn exchange(&mut self, _instance: u32, _commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        Err(Self::fault())
+    }
+
+    fn activate(&mut self, _instance: u32, _scope: &ActivationScope) -> Result<(), Fault> {
+        Err(Self::fault())
+    }
+}
+
+//#endregion 🔖️UnboundArtifactChannel
+
+//#region 🔖️MockArtifactChannel
+
+#[cfg(any(test, feature = "testkit"))]
+struct MockInstanceState {
+    pub artifact_id: String,
+    pub generation: u64,
+    pub head_edit_id: u64,
+    pub pending: Option<String>,
+    prepared: BTreeMap<String, (PreparedOps, u64)>,
+    pub force_budget_exceeded: bool,
+    pub force_commit_fault: Option<Fault>,
+    pub force_relay: Option<HubRelayOutcome>,
+    pub force_undo_fails: bool,
+    empty_preview: bool,
+    child_preview: Option<Vec<u8>>,
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl MockInstanceState {
+    fn new(instance: u32) -> Self {
+        Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_relay: None, force_undo_fails: false, empty_preview: false, child_preview: None }
+    }
+
+    pub fn revision(&self) -> RevisionStamp {
+        RevisionStamp { artifact_id: self.artifact_id.clone(), head_edit_id: format!("edit-{}", self.head_edit_id), cursor: format!("gen-{}", self.generation) }
+    }
+
+    /// 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an
+    /// instance whose generation has moved past the request's is a real staleness rejection
+    /// (the same `validate_commit` rule the real router enforces); otherwise the request's own
+    /// canonical payload comes back as the result payload, so a test can assert the request
+    /// really travelled the port without this double ever claiming to have computed anything.
+    ///
+    /// 📤️🆕️ This double owns no guest, so it can neither run a media port nor mint a plugin's
+    /// genesis document. It says so with the SAME typed fault a real unreachable plugin uses,
+    /// never a synthesised export or an empty pack that a caller could mistake for real bytes.
+    pub fn handle(&mut self, command: AppCommand) -> AppFrame {
+        match command {
+            AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
+            AppCommand::PureCommand { .. } if self.empty_preview => AppFrame::Emit { ops: PreparedOps::default(), warnings: Vec::new() },
+            AppCommand::PureCommand { .. } if self.child_preview.is_some() => AppFrame::Emit { ops: PreparedOps { children: self.child_preview.clone().unwrap_or_default(), ..PreparedOps::default() }, warnings: Vec::new() },
+            AppCommand::PureCommand { capability_id, input } => {
+                let payload = serde_json::to_vec(&serde_json::json!({ "capabilityId": capability_id, "input": input })).unwrap_or_default();
+                AppFrame::Emit { ops: PreparedOps { document: vec![payload], config: Vec::new(), draft: Vec::new(), children: Vec::new() }, warnings: Vec::new() }
+            }
+            AppCommand::TransactionPrepare { txn_id, ops, .. } => {
+                if self.force_budget_exceeded {
+                    self.force_budget_exceeded = false;
+                    return AppFrame::Error(Fault { code: "budget.exceeded".into(), message: "capability budget exhausted".into() });
+                }
+                if self.pending.is_some() {
+                    return AppFrame::Error(Fault { code: "transaction.instance-busy".into(), message: "already has a pending transaction".into() });
+                }
+                self.pending = Some(txn_id.clone());
+                self.prepared.insert(txn_id.clone(), (ops, self.generation));
+                AppFrame::TransactionPrepared { txn_id }
+            }
+            AppCommand::TransactionCommit { txn_id } => {
+                if let Some(fault) = self.force_commit_fault.take() {
+                    self.pending = None;
+                    self.prepared.remove(&txn_id);
+                    return AppFrame::Error(fault);
+                }
+                match self.prepared.get(&txn_id).map(|(_, base_generation)| *base_generation) {
+                    None => AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("no prepared transaction {txn_id}") }),
+                    Some(base_generation) => {
+                        if base_generation != self.generation {
+                            self.prepared.remove(&txn_id);
+                            self.pending = None;
+                            AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("base generation {base_generation} no longer matches current generation {}", self.generation) })
+                        } else {
+                            self.generation += 1;
+                            self.head_edit_id += 1;
+                            let edit_id = format!("edit-{}", self.head_edit_id);
+                            self.prepared.remove(&txn_id);
+                            self.pending = None;
+                            AppFrame::TransactionCommitted { txn_id, edit_id, relay: self.force_relay.take() }
+                        }
+                    }
+                }
+            }
+            AppCommand::TransactionRollback { txn_id } => {
+                self.prepared.remove(&txn_id);
+                if self.pending.as_deref() == Some(txn_id.as_str()) {
+                    self.pending = None;
+                }
+                AppFrame::TransactionRolledBack { txn_id }
+            }
+            AppCommand::TransactionUndo { group_id } => {
+                if self.force_undo_fails {
+                    self.force_undo_fails = false;
+                    return AppFrame::Error(Fault { code: "app.command.rejected".into(), message: "undo rejected".into() });
+                }
+                self.generation += 1;
+                AppFrame::TransactionUndone { group_id }
+            }
+            AppCommand::TransactionRedo { group_id } => {
+                self.generation += 1;
+                AppFrame::TransactionRedone { group_id }
+            }
+            AppCommand::Infer(command) => {
+                if command.turn.generation != self.generation {
+                    return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.turn.generation, self.generation) });
+                }
+                AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: Some(command.canonical_payload) }
+            }
+            AppCommand::ExportMedia { port, .. } => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: format!("the scripted in-memory channel has no guest to read media port `{port}` from — bind a workspace with --folder/--hub") }),
+            AppCommand::ReadArtifact => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: "the scripted in-memory channel has no guest to read a genesis document from — bind a workspace with --folder/--hub".into() }),
+        }
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+struct MockChannelState {
+    pub instances: BTreeMap<u32, MockInstanceState>,
+    pub log: Vec<(u32, AppCommand)>,
+}
+
+/// 🧪️ A fully-scripted in-memory artifact store — every generation/revision/prepared-transaction
+/// invariant is REAL (not stubbed): `TransactionCommit` genuinely checks the generation captured at
+/// `TransactionPrepare` time, a second `TransactionPrepare` on a still-pending instance genuinely
+/// returns `transaction.instance-busy`. `Clone` shares the SAME underlying state (`Arc<Mutex<..>>`) —
+/// a test keeps one handle for scripting/assertions while handing a clone to `ActionAdapter` (which
+/// takes ownership of a `Box<ArtifactChannels>` (was `Box<dyn ArtifactChannel>`, see the
+/// `dyn_enum_close!` note above the trait).
+#[cfg(any(test, feature = "testkit"))]
+#[derive(Clone)]
+pub struct MockArtifactChannel {
+    pub state: Arc<Mutex<MockChannelState>>,
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl MockArtifactChannel {
+    pub fn new() -> Self {
+        Self { state: Arc::new(Mutex::new(MockChannelState { instances: BTreeMap::new(), log: Vec::new() })) }
+    }
+
+    /// 📜️ Every command sent, in order, tagged with its target instance — the "assert on the recorded
+    /// frame log, not just the error" tool the brief's §4 requires.
+    pub fn frame_log(&self) -> Vec<(u32, AppCommand)> {
+        self.state.lock().expect("mock channel lock poisoned").log.clone()
+    }
+
+    fn with_instance(&self, instance: u32, mutate: impl FnOnce(&mut MockInstanceState)) {
+        let mut state = self.state.lock().expect("mock channel lock poisoned");
+        let instance_state = state.instances.entry(instance).or_insert_with(|| MockInstanceState::new(instance));
+        mutate(instance_state);
+    }
+
+    /// 🏃️ Simulates a concurrent edit landing on `instance` between this adapter's own prepare and
+    /// commit — the next `TransactionCommit` against a transaction prepared before this call now sees
+    /// a stale `base_generation` and returns `transaction.generation-mismatch`.
+    pub fn bump_generation(&self, instance: u32) {
+        self.with_instance(instance, |state| state.generation += 1);
+    }
+
+    pub fn force_budget_exceeded(&self, instance: u32) {
+        self.with_instance(instance, |state| state.force_budget_exceeded = true);
+    }
+
+    pub fn force_commit_fault(&self, instance: u32, fault: Fault) {
+        self.with_instance(instance, |state| state.force_commit_fault = Some(fault));
+    }
+
+    /// 📮️ The next commit on `instance` answers as a hub-bound commit whose relay ended with `outcome`.
+    pub fn force_relay(&self, instance: u32, outcome: HubRelayOutcome) {
+        self.with_instance(instance, |state| state.force_relay = Some(outcome));
+    }
+
+    pub fn force_undo_fails(&self, instance: u32) {
+        self.with_instance(instance, |state| state.force_undo_fails = true);
+    }
+
+    /// 📭️ Every later preview on `instance` produces no operation, as a guest verb that changes nothing does.
+    pub fn force_empty_preview(&self, instance: u32) {
+        self.with_instance(instance, |state| state.empty_preview = true);
+    }
+
+    /// 🧩️ Every later preview on `instance` edits only owned children, carrying `children` as the guest's child groups.
+    pub fn force_child_preview(&self, instance: u32, children: Vec<u8>) {
+        self.with_instance(instance, |state| state.child_preview = Some(children));
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl Default for MockArtifactChannel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl ArtifactChannel for MockArtifactChannel {
+    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        let mut state = self.state.lock().expect("mock channel lock poisoned");
+        let mut frames = Vec::with_capacity(commands.len());
+        for command in commands {
+            state.log.push((instance, command.clone()));
+            let instance_state = state.instances.entry(instance).or_insert_with(|| MockInstanceState::new(instance));
+            frames.push(instance_state.handle(command));
+        }
+        Ok(frames)
+    }
+
+    fn activate(&mut self, _instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+        scope.checkpoint()
+    }
+}
+
+//#endregion 🔖️MockArtifactChannel
+
+//#region 🔖️InternalRecords
+
+/// 🎫️ The `prep_` handle payload — everything `invoke`/`transaction.begin` need to resume a prepared
+/// action without re-running prepare/preview.
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct PreparedActionRecord {
+    pub capability_id: String,
+    #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
+    pub input: serde_json::Value,
+    pub instance: u32,
+    pub baseline: RevisionStamp,
+    pub ops: PreparedOps,
+    pub principal_id: String,
+}
+
+/// 🎫️ The `txn_` (saga) handle payload — an ordered list of already-prepared members bound together
+/// by `transaction.begin`.
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct SagaMember {
+    pub prepared_handle: String,
+    pub capability_id: String,
+    pub instance: u32,
+    pub ops: PreparedOps,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct SagaRecord {
+    pub members: Vec<SagaMember>,
+}
+
+/// 🎫️ The `undo_` handle payload — every low-level channel `txn_id` (paired with its instance) a
+/// committed invocation or saga touched; `history.undo`/`history.redo` fan `TransactionUndo`/
+/// `TransactionRedo` out to every member, best-effort, exactly like the real
+/// `HostTransactionCoordinator::undo_group`/`redo_group` (`📓️luna-channel-audit.md` §6).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "kind", content = "member", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum UndoMember {
+    LocalGuestTransaction { instance: u32, transaction_id: String },
+    HubInferenceApproval(HubInferenceApprovalUndoMemberV1),
+}
+
+/// 🌐 Exact server-owned remote history member; it carries a locator/frontier, never inverse bytes.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HubInferenceApprovalUndoMemberV1 {
+    pub hub_origin: String,
+    pub route: String,
+    pub space_id: String,
+    pub document_id: String,
+    pub idempotency_key: String,
+    #[serde(with="crate::inference::dsl_json")]
+    pub payload:semio_framework_value::DslValue,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct UndoRecord {
+    pub members: Vec<UndoMember>,
+}
+
+//#endregion 🔖️InternalRecords
+
+//#region 🔖️RevisionGuard
+
+/// 🏷️ The typed refusal of a one-shot invoke that omits a revision argument and names no `expectedRevision`.
+pub const REVISION_GUARD_REQUIRED_FAULT_CODE: &str = "revision.guard-required";
+
+/// 🔐️ The revision arguments `capability` declares (`x-semio-format` `documentRevision` / `targetRevision`) that `input` omits.
+/// The plugin's agent lane admits each against the token its rendered binding carries at admission — only behind a
+/// document-level stale-write guard: a prepared handle (its prepare-time baseline is re-checked at invoke) or an explicit
+/// `expectedRevision` (ticket 26/09/23, G12 session 14c).
+pub fn omitted_revision_arguments(capability: &CapabilityDefinition, input: &serde_json::Value) -> Vec<String> {
+    capability
+        .input_schema
+        .get("properties")
+        .and_then(serde_json::Value::as_object)
+        .map(|properties| {
+            properties
+                .iter()
+                .filter(|(name, schema)| matches!(schema.get("x-semio-format").and_then(serde_json::Value::as_str), Some("documentRevision" | "targetRevision")) && input.get(name.as_str()).is_none())
+                .map(|(name, _)| name.clone())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// 🚫️ Nothing would guard such a write against a document that moved since the agent read it, so it is refused by name.
+pub fn revision_guard_required(capability_id: &str, omitted: &[String]) -> GatewayError {
+    GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("capability {capability_id} omits its revision argument(s) {} and names no expectedRevision — nothing would guard this write against a document that moved since it was read", omitted.join(", "))).with_details(serde_json::json!({
+        "faultCode": REVISION_GUARD_REQUIRED_FAULT_CODE,
+        "omitted": omitted,
+        "remedy": {
+            "en": "Prepare the action first (action_prepare, then action_invoke with its handle) or pass the document's expectedRevision.",
+            "de": "Bereite die Aktion zuerst vor (action_prepare, dann action_invoke mit ihrem Handle) oder gib die expectedRevision des Dokuments mit.",
+        },
+    }))
+}
+
+//#endregion 🔖️RevisionGuard
+
+//#region 🔖️PublicReports
+
+/// 📨️ `action.invoke`'s combined input — `preparedActionHandle` XOR `(capabilityId, input)`, an
+/// optional caller-asserted `expectedRevision` (defaults to the baseline `prepare` captured),
+/// `idempotencyKey`, and an `approvalHandle` resuming a previously-required approval gate.
+#[derive(Clone, Debug, Default)]
+pub struct InvokeRequest {
+    pub prepared_handle: Option<String>,
+    pub capability_id: Option<String>,
+    pub input: Option<serde_json::Value>,
+    pub expected_revision: Option<RevisionStamp>,
+    pub idempotency_key: Option<String>,
+    pub approval_handle: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct SagaMemberResult {
+    pub prepared_handle: String,
+    pub capability_id: String,
+    pub edit_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct SagaReport {
+    pub transaction_handle: String,
+    pub members: Vec<SagaMemberResult>,
+    pub undo_token: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct UndoRedoReport {
+    pub undo_token: String,
+    pub members: usize,
+    pub warnings: Vec<String>,
+}
+
+//#endregion 🔖️PublicReports

@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering};
 
 //#region 🔖️SurfaceLane
 
-pub(crate) const SURFACE_RESIZE_LANE_CAPACITY: usize = 64;
+pub const SURFACE_RESIZE_LANE_CAPACITY: usize = 64;
 const SURFACE_RESIZE_STEP_FUEL: u64 = 1;
 const SURFACE_RESIZE_STEP_BUDGET_US: u64 = 1_000;
 
@@ -17,13 +17,13 @@ static SURFACE_LANE_GENERATIONS: [AtomicU64; SURFACE_RESIZE_LANE_CAPACITY] = [co
 static SURFACE_LANE_ABANDONMENT: [AtomicPtr<MountedSurfaceResizeLane>; SURFACE_RESIZE_LANE_CAPACITY] = [const { AtomicPtr::new(std::ptr::null_mut()) }; SURFACE_RESIZE_LANE_CAPACITY];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct SurfaceLaneToken {
+pub struct SurfaceLaneToken {
     slot: u16,
     generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct SurfaceResizeRequest {
+pub struct SurfaceResizeRequest {
     token: SurfaceLaneToken,
     metrics_generation: u64,
     physical_width: u32,
@@ -32,7 +32,7 @@ pub(crate) struct SurfaceResizeRequest {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct PreparedSurfaceResize {
+pub struct PreparedSurfaceResize {
     token: SurfaceLaneToken,
     metrics_generation: u64,
     physical_width: u32,
@@ -43,23 +43,23 @@ pub(crate) struct PreparedSurfaceResize {
 }
 
 impl PreparedSurfaceResize {
-    pub(crate) fn metrics_generation(self) -> u64 {
+    pub fn metrics_generation(self) -> u64 {
         self.metrics_generation
     }
 
-    pub(crate) fn logical_width(self) -> f32 {
+    pub fn logical_width(self) -> f32 {
         self.logical_width
     }
 
-    pub(crate) fn logical_height(self) -> f32 {
+    pub fn logical_height(self) -> f32 {
         self.logical_height
     }
 
-    pub(crate) fn scale_factor(self) -> f32 {
+    pub fn scale_factor(self) -> f32 {
         self.scale_factor
     }
 
-    pub(crate) fn suspended(self) -> bool {
+    pub fn suspended(self) -> bool {
         self.physical_width == 0 || self.physical_height == 0
     }
 }
@@ -161,17 +161,17 @@ impl InteractiveJob for SurfaceResizeJob {
     }
 }
 
-pub(crate) struct SurfaceResizeLaneAdmissionRejected {
+pub struct SurfaceResizeLaneAdmissionRejected {
     operation: Option<OperationId>,
 }
 
 impl SurfaceResizeLaneAdmissionRejected {
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.operation.take();
         self.operation.is_none()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.operation.is_none()
     }
 }
@@ -181,7 +181,7 @@ enum SurfaceResizeSession {
     Rejected(semio_framework_job_worker::WorkerJobSessionAdmissionRejected<SurfaceResizeJob>),
 }
 
-pub(crate) struct MountedSurfaceResizeLane {
+pub struct MountedSurfaceResizeLane {
     operation: Option<OperationId>,
     token: Option<SurfaceLaneToken>,
     pending: Option<SurfaceResizeRequest>,
@@ -193,7 +193,7 @@ pub(crate) struct MountedSurfaceResizeLane {
 }
 
 impl MountedSurfaceResizeLane {
-    pub(crate) fn try_new(operation: OperationId) -> Result<Self, SurfaceResizeLaneAdmissionRejected> {
+    pub fn try_new(operation: OperationId) -> Result<Self, SurfaceResizeLaneAdmissionRejected> {
         let Some((slot, generation)) = SURFACE_LANE_OCCUPIED.iter().enumerate().find_map(|(slot, occupied)| {
             if occupied.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
                 return None;
@@ -210,7 +210,7 @@ impl MountedSurfaceResizeLane {
         Ok(Self { operation: Some(operation), token: Some(SurfaceLaneToken { slot: slot as u16, generation }), pending: None, session: None, ready: None, metrics_generation: 0, session_closing: false, closing: false })
     }
 
-    pub(crate) fn enqueue(&mut self, physical_width: u32, physical_height: u32, scale_factor: f32) -> Result<Option<SurfaceResizeRequest>, SurfaceResizeRequest> {
+    pub fn enqueue(&mut self, physical_width: u32, physical_height: u32, scale_factor: f32) -> Result<Option<SurfaceResizeRequest>, SurfaceResizeRequest> {
         let Some(token) = self.token else {
             return Err(SurfaceResizeRequest { token: SurfaceLaneToken { slot: 0, generation: 0 }, metrics_generation: self.metrics_generation, physical_width, physical_height, scale_factor });
         };
@@ -232,7 +232,7 @@ impl MountedSurfaceResizeLane {
         Ok(self.pending.replace(request))
     }
 
-    pub(crate) fn drive_one(&mut self) {
+    pub fn drive_one(&mut self) {
         if (self.session_closing || matches!(self.session.as_ref(), Some(SurfaceResizeSession::Rejected(_)))) && self.drive_session_close_one() {
             return;
         }
@@ -255,7 +255,7 @@ impl MountedSurfaceResizeLane {
                 }
                 return;
             }
-            let _ = session.pump_one(&crate::renderer_worker_pool(), Lane::Interactive);
+            let _ = session.pump_one(&semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Interactive);
             return;
         }
         let Some(request) = self.pending.take() else { return };
@@ -306,11 +306,11 @@ impl MountedSurfaceResizeLane {
         true
     }
 
-    pub(crate) fn take_ready(&mut self) -> Option<PreparedSurfaceResize> {
+    pub fn take_ready(&mut self) -> Option<PreparedSurfaceResize> {
         self.ready.take().filter(|candidate| self.token == Some(candidate.token) && candidate.metrics_generation == self.metrics_generation)
     }
 
-    pub(crate) fn restore_ready(&mut self, candidate: PreparedSurfaceResize) -> Result<(), PreparedSurfaceResize> {
+    pub fn restore_ready(&mut self, candidate: PreparedSurfaceResize) -> Result<(), PreparedSurfaceResize> {
         if self.ready.is_some() || self.token != Some(candidate.token) || candidate.metrics_generation != self.metrics_generation {
             return Err(candidate);
         }
@@ -318,11 +318,11 @@ impl MountedSurfaceResizeLane {
         Ok(())
     }
 
-    pub(crate) fn has_work(&self) -> bool {
+    pub fn has_work(&self) -> bool {
         self.pending.is_some() || self.session.is_some() || self.ready.is_some()
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
         if let Some(session) = self.session.as_mut() {
             match session {
@@ -333,7 +333,7 @@ impl MountedSurfaceResizeLane {
         }
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.begin_close();
         if self.drive_session_close_one() {
             return false;
@@ -355,11 +355,11 @@ impl MountedSurfaceResizeLane {
         self.terminal_is_empty()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.operation.is_none() && self.token.is_none() && self.pending.is_none() && self.session.is_none() && self.ready.is_none()
     }
 
-    pub(crate) fn close_abandoned_step() -> bool {
+    pub fn close_abandoned_step() -> bool {
         let Some((slot, pointer)) = SURFACE_LANE_ABANDONMENT.iter().enumerate().find_map(|(slot, owner)| {
             let pointer = owner.swap(std::ptr::null_mut(), Ordering::AcqRel);
             (!pointer.is_null()).then_some((slot, pointer))
@@ -376,67 +376,67 @@ impl MountedSurfaceResizeLane {
     }
 }
 
-pub(crate) enum SurfaceResizeAuthority {
+pub enum SurfaceResizeAuthority {
     Mounted(MountedSurfaceResizeLane),
     Rejected(SurfaceResizeLaneAdmissionRejected),
 }
 
 impl SurfaceResizeAuthority {
-    pub(crate) fn new(operation: OperationId) -> Self {
+    pub fn new(operation: OperationId) -> Self {
         match MountedSurfaceResizeLane::try_new(operation) {
             Ok(lane) => Self::Mounted(lane),
             Err(rejected) => Self::Rejected(rejected),
         }
     }
 
-    pub(crate) fn enqueue(&mut self, physical_width: u32, physical_height: u32, scale_factor: f32) -> Result<Option<SurfaceResizeRequest>, SurfaceResizeRequest> {
+    pub fn enqueue(&mut self, physical_width: u32, physical_height: u32, scale_factor: f32) -> Result<Option<SurfaceResizeRequest>, SurfaceResizeRequest> {
         match self {
             Self::Mounted(lane) => lane.enqueue(physical_width, physical_height, scale_factor),
             Self::Rejected(_) => Err(SurfaceResizeRequest { token: SurfaceLaneToken { slot: 0, generation: 0 }, metrics_generation: 0, physical_width, physical_height, scale_factor }),
         }
     }
 
-    pub(crate) fn drive_one(&mut self) {
+    pub fn drive_one(&mut self) {
         if let Self::Mounted(lane) = self {
             lane.drive_one();
         }
     }
 
-    pub(crate) fn take_ready(&mut self) -> Option<PreparedSurfaceResize> {
+    pub fn take_ready(&mut self) -> Option<PreparedSurfaceResize> {
         match self {
             Self::Mounted(lane) => lane.take_ready(),
             Self::Rejected(_) => None,
         }
     }
 
-    pub(crate) fn restore_ready(&mut self, candidate: PreparedSurfaceResize) -> Result<(), PreparedSurfaceResize> {
+    pub fn restore_ready(&mut self, candidate: PreparedSurfaceResize) -> Result<(), PreparedSurfaceResize> {
         match self {
             Self::Mounted(lane) => lane.restore_ready(candidate),
             Self::Rejected(_) => Err(candidate),
         }
     }
 
-    pub(crate) fn has_work(&self) -> bool {
+    pub fn has_work(&self) -> bool {
         match self {
             Self::Mounted(lane) => lane.has_work(),
             Self::Rejected(rejected) => !rejected.terminal_is_empty(),
         }
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         if let Self::Mounted(lane) = self {
             lane.begin_close();
         }
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         match self {
             Self::Mounted(lane) => lane.close_step(),
             Self::Rejected(rejected) => rejected.close_step(),
         }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         match self {
             Self::Mounted(lane) => lane.terminal_is_empty(),
             Self::Rejected(rejected) => rejected.terminal_is_empty(),

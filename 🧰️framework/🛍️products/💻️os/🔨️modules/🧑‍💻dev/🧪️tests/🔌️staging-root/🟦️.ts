@@ -13,7 +13,7 @@ import picomatch from "picomatch";
 import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
 import { COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, GENERATED_COMPONENT_OWNER_FILES, UNWATCHED_COMPONENT_SOURCE_DIRECTORIES, buildComponentSourceStatIndex, componentSourceContentHash, newestComponentSourceMtime, readStagedSourceContentHash, readStagedSourceStatIndex, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, SOURCE_FRESHNESS_FILE_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash, writeStagedSourceFreshness } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, pluginModulesRoot, pluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
+import { healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, builtPluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteDir, "../../../../../../..");
@@ -52,48 +52,48 @@ function oracleStagingRoot(profile: string): string {
 
 describe("one plugin staging root", () => {
   it.each(fixture.root.profiles)("resolves %s to the single fixture-declared directory", (profile) => {
-    expect(pluginModulesRoot(profile)).toBe(join(repoRoot, fixture.root.packageRelativePath, profile, fixture.root.modulesDirectoryName));
+    expect(builtPluginModulesRootIn(repoRoot,profile)).toBe(join(repoRoot, fixture.root.packageRelativePath, profile, fixture.root.modulesDirectoryName));
   });
 
   it.each(fixture.root.profiles)("agrees with whatwg-url's independent relative-reference resolution for %s", (profile) => {
-    expect(pluginModulesRoot(profile)).toBe(oracleStagingRoot(profile));
+    expect(builtPluginModulesRootIn(repoRoot,profile)).toBe(oracleStagingRoot(profile));
   });
 
   it("projects every declared staging-input consumer to one root per profile", () => {
     const byProfile = new Map<string, Set<string>>();
     for (const consumer of fixture.root.consumers) {
       const roots = byProfile.get(consumer.profile) ?? new Set<string>();
-      roots.add(pluginModulesRoot(consumer.profile));
+      roots.add(builtPluginModulesRootIn(repoRoot,consumer.profile));
       byProfile.set(consumer.profile, roots);
     }
     for (const [profile, roots] of byProfile) expect([...roots], `${profile} must resolve to exactly one root`).toHaveLength(1);
     expect(new Set(fixture.root.consumers.map((consumer) => consumer.renderer))).toEqual(new Set(["react", "wgpu"]));
   });
 
-  it.each(fixture.root.profiles)("derives %s identically with and without an explicit workspace", (profile) => {
-    expect(pluginModulesRoot(profile)).toBe(pluginModulesRootIn(repoRoot, profile));
+  it.each(fixture.root.profiles)("keeps %s inside the caller-declared products workspace", (profile) => {
+    expect(builtPluginModulesRootIn(repoRoot,profile)).toBe(builtPluginModulesRootIn(repoRoot, profile));
   });
 
   it("keeps a sandboxed consumer inside its own workspace", () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-workspace-"));
     try {
-      expect(pluginModulesRootIn(sandbox, "release")).toBe(join(sandbox, fixture.root.packageRelativePath, "release", fixture.root.modulesDirectoryName));
-      expect(pluginModulesRootIn(sandbox, "release")).not.toBe(pluginModulesRoot("release"));
+      expect(builtPluginModulesRootIn(sandbox, "release")).toBe(join(sandbox, fixture.root.packageRelativePath, "release", fixture.root.modulesDirectoryName));
+      expect(builtPluginModulesRootIn(sandbox, "release")).not.toBe(builtPluginModulesRootIn(repoRoot,"release"));
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
   });
 
   it.each(fixture.root.rejectedProfiles)("refuses %j for an explicit workspace too", (profile) => {
-    expect(() => pluginModulesRootIn(repoRoot, profile as "prototype" | "release")).toThrow(/staging profile/u);
+    expect(() => builtPluginModulesRootIn(repoRoot, profile as "prototype" | "release")).toThrow(/mode|intent|profile/u);
   });
 
   it("keeps the two profiles apart", () => {
-    expect(pluginModulesRoot("prototype")).not.toBe(pluginModulesRoot("release"));
+    expect(builtPluginModulesRootIn(repoRoot,"prototype")).not.toBe(builtPluginModulesRootIn(repoRoot,"release"));
   });
 
   it.each(fixture.root.rejectedProfiles)("refuses %j rather than inventing a third root", (profile) => {
-    expect(() => pluginModulesRoot(profile as "prototype" | "release")).toThrow(/staging profile/u);
+    expect(() => builtPluginModulesRootIn(repoRoot,profile as "prototype" | "release")).toThrow(/mode|intent|profile/u);
   });
 
   it("leaves no retired root or symbol in any declared source file", () => {

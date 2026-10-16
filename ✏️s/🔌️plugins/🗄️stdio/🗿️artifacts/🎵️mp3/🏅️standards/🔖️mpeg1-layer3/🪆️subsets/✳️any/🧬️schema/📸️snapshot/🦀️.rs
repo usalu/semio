@@ -3,8 +3,7 @@
 //! this is a container-level codec, not a full audio decoder), and an optional typed ID3v1
 //! trailer. Real byte-accurate codec (see `⚙️engine`), not a container placeholder.
 
-#[path = "🏷️metadata/🦀️.rs"]
-pub mod metadata;
+pub use semio_s_artifact_stdio_mp3_metadata::standards::mpeg1_layer3::subsets::any::schema::snapshot::metadata;
 pub use metadata::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag, id3_content_kind, validate_id3_frame, validate_id3v1_tag};
 
 /// 📦️ Owned by `mp3`: one MPEG audio frame header, every field of the real 4-byte header typed

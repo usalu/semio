@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::playbook::commands::add_step::*;
 use crate::editor::playbook::commands::move_step::MoveStep;
 use crate::editor::playbook::commands::remove_step::RemoveStep;
 use crate::editor::playbook::commands::update_playbook::UpdatePlaybook;

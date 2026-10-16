@@ -12,7 +12,7 @@ fn invalid(detail:&'static str)->PackRefusal{PackRefusal::RetainedMalformed{kind
 
 /// 🛫️ Borrows the complete value through canonical terminal body emission and one caller control.
 pub fn encode_body(value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
-    super::encode_value_record_body_controlled(FIELD_ID,value,options,control)
+    semio_framework_pack_record_encode::encode_value_record_body_controlled(FIELD_ID,value,options,control)
 }
 
 /// 🛬️ Materializes exactly one intrinsic field without accepting unknown fields or suffix bytes.
@@ -23,7 +23,7 @@ pub fn decode_body(bytes:&[u8],options:&DecodeOptions,control:&mut NativeDecodeC
 /// 📦️ Writes the borrowed value with the authored one-field schema and cumulative physical admission.
 pub fn encode_document(value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX);
-    control.scoped_maximum(maximum,|control|{control.checkpoint()?;let spec=schema(control)?;super::controlled_encoding::intrinsic_document(&spec,FIELD_ID,value,options,control)})
+    control.scoped_maximum(maximum,|control|{control.checkpoint()?;let spec=schema(control)?;semio_framework_pack_record_encode::intrinsic_document(&spec,FIELD_ID,value,options,control)})
 }
 
 /// 📤️ Moves the one decoded value from its declared document field after exact schema admission.

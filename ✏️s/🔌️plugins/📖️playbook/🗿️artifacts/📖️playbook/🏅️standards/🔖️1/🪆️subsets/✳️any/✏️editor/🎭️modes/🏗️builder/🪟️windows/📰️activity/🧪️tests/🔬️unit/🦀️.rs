@@ -1,4 +1,5 @@
-use super::*;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::playbook::modes::builder::windows::activity::*;
 
 #[test]
 fn activity_window_is_a_registered_event_feed_surface() {

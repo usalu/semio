@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {frameworkOsViteArtifactInputsV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { buildModeEnvironment, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
@@ -15,7 +18,7 @@ class BuildScript extends BundleScript {
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
       await prefetchDemonstratorMapTiles(this.repoRoot);
-      await buildViteArtifact({ invocation: this.invocation, root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), owner: "demonstrator:site", signal: this.invocation.control.signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) });
+      await buildViteArtifact({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(process.env.SEMIO_BUILD_MODE), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),renderer:"react",command:"build",engines:"play"}), root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), owner: "demonstrator:site", signal: this.invocation.control.signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" } });
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

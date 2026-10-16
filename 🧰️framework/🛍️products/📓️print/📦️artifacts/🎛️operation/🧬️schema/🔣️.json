@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "mode"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "toolchain",
+        "bundle",
+        "fonts",
+        "document",
+        "probe"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "stores": {
+          "toolchain": [
+            "tools",
+            "diagnostics"
+          ],
+          "bundle": [
+            "tools",
+            "diagnostics"
+          ],
+          "fonts": [
+            "products",
+            "diagnostics"
+          ],
+          "document": [
+            "dependencies",
+            "tools",
+            "products",
+            "diagnostics"
+          ],
+          "probe": [
+            "dependencies",
+            "tools",
+            "products",
+            "diagnostics"
+          ]
+        }
+      }
+    }
+  }
+}

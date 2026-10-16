@@ -25,51 +25,52 @@ pub struct TiledMapSurface {
     pub window_id: String,
 }
 
-pub(crate) fn query_map_feature_hits(host: &semio_framework_surface::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
+pub fn query_map_feature_hits(host: &semio_framework_surface::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> Vec<String> {
     if method == "lasso" && points.len() >= 3 {
         let payload: Vec<[f64; 2]> = points.iter().map(|(x, y)| [*x as f64, *y as f64]).collect();
         let points_json = serde_json::to_string(&payload).unwrap_or_else(|_| "[]".into());
-        engine_canvas::parse_map_feature_hit(&host.features_in_polygon_json(&points_json, crossing))
+        semio_framework_os_renderer_wgpu_engine_board::tiled_map::parse_map_feature_hit(&host.features_in_polygon_json(&points_json, crossing))
     } else if points.len() >= 2 {
         let (x0, y0) = points[0];
         let (x1, y1) = points[points.len() - 1];
         let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
-        engine_canvas::parse_map_feature_hit(&host.features_in_rect_json(min_x as f64, min_y as f64, max_x as f64, max_y as f64, crossing))
+        semio_framework_os_renderer_wgpu_engine_board::tiled_map::parse_map_feature_hit(&host.features_in_rect_json(min_x as f64, min_y as f64, max_x as f64, max_y as f64, crossing))
     } else {
-        (Vec::new(), Vec::new())
+        Vec::new()
     }
 }
 
-/** 🗺️ The GIS map context-menu surface target for a screen-space right-click: the feature
- * under the point as a `ContextMenuHit`, plus the live feature selection split into its
- * `"position"`/`"route"` groups. Port of `onContextMenu` in `🧭️TiledMapHost/🟦️.tsx` — the domains
- * are exactly the ones `gis2d_context_menu_items` matches on (`feature`/`position`/`route`), and the
- * groups are what decides whether its `clearSelection` row renders enabled. */
+/** 🗺️ The map context-menu surface target for a screen-space right-click: the feature
+ * under the point as a `ContextMenuHit`, plus the live feature selection grouped per pickable overlay
+ * granularity. Port of `onContextMenu` in `🧭️TiledMapHost/🟦️.tsx` — every domain is an overlay
+ * layer's granularity, and the groups decide whether the app's `clearSelection` row renders enabled. */
 pub fn tiled_map_context_menu_target(surface_id: &str, inner: Rect, x: f32, y: f32) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
     #[derive(Deserialize)]
     struct HitRow {
         kind: String,
         id: String,
     }
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
-    let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-    let hits = serde_json::from_str::<Option<HitRow>>(&hit_json).ok().flatten().map(|row| ui_wgpu::wgpu::ContextMenuHit { domain: if row.kind == "route" { "route".into() } else { "position".into() }, id: row.id, label: None }).into_iter().collect();
-    let (positions, routes) = engine_canvas::with_map_host(surface_id, |host| (host.selected_position_ids().map(str::to_owned).collect::<Vec<_>>(), host.selected_route_ids().map(str::to_owned).collect::<Vec<_>>())).unwrap_or_default();
-    let mut selection = Vec::new();
-    if !positions.is_empty() {
-        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "position".into(), ids: positions });
-    }
-    if !routes.is_empty() {
-        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "route".into(), ids: routes });
-    }
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+    let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hits = serde_json::from_str::<Option<HitRow>>(&hit_json).ok().flatten().map(|row| ui_wgpu::wgpu::ContextMenuHit { domain: row.kind, id: row.id, label: None }).into_iter().collect();
+    let selection: Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup> = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| {
+        host.pickable_overlays()
+            .filter_map(|layer| layer.granularity.as_deref())
+            .filter_map(|granularity| {
+                let ids: Vec<String> = host.selected_ids(granularity).map(str::to_owned).collect();
+                (!ids.is_empty()).then(|| ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: granularity.into(), ids })
+            })
+            .collect()
+    })
+    .unwrap_or_default();
     (hits, selection)
 }
 
-/// 🕹️ The framework-owned `"features"` interaction domain a GIS map addresses, and its feature
+/// 🕹️ The framework-owned `"features"` interaction domain a map app addresses, and its feature
 /// granularity — the constants React's `🧭️TiledMapHost` spells `MAP_INTERACTION_DOMAIN`/
-/// `MAP_FEATURE_GRANULARITY`/`MAP_HOVER_CHANNEL`, and the domain the GIS app declares
-/// (`🌍️gis/…/✏️editor`'s `InteractionDefinition { id: "features", … }`).
+/// `MAP_FEATURE_GRANULARITY`/`MAP_HOVER_CHANNEL`, and the domain a map app declares
+/// (`InteractionDefinition { id: "features", … }`).
 const MAP_INTERACTION_DOMAIN: &str = "features";
 const MAP_FEATURE_GRANULARITY: &str = "feature";
 const MAP_HOVER_CHANNEL: &str = "pointer";
@@ -84,19 +85,18 @@ fn map_feature_targets_json(ids: impl Iterator<Item = impl AsRef<str>>) -> Resul
 /// 🕹️ A map pick/marquee release: `interactionSelect` against the `"features"` domain, or
 /// `clearSelection` on a miss. Mirrors `emitFeatureSelection` in `🧭️TiledMapHost/🟦️.tsx` — including
 /// its hit/miss split, because `next_selection` treats an empty `targets` as a no-op, not a clear.
-/// The bespoke `setFeatureSelection` this used to publish was DELETED from the GIS app (ticket
+/// The bespoke `setFeatureSelection` this used to publish was DELETED from the map apps (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): every such dispatch was refused.
 fn write_tiled_map_selection(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     controller_id: &str,
     surface_id: &str,
-    positions: &[String],
-    routes: &[String],
+    ids: &[String],
     merge: &str,
     method: &str,
     commit: impl FnOnce(),
 ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    if positions.is_empty() && routes.is_empty() {
+    if ids.is_empty() {
         let action = ui_wgpu::wgpu::tiled_map_actions::CLEAR_SELECTION;
         let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id])?;
         let mut reservation = input.reserve_action(controller_id, action, bytes)?;
@@ -106,7 +106,7 @@ fn write_tiled_map_selection(
         builder.end_container()?;
         return reservation.publish_with(commit);
     }
-    let targets = map_feature_targets_json(positions.iter().chain(routes))?;
+    let targets = map_feature_targets_json(ids.iter())?;
     if targets.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
         return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
     }
@@ -144,7 +144,7 @@ fn write_tiled_map_hover(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>
     reservation.publish_with(commit)
 }
 
-pub(crate) fn touch_pointer_down(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
+pub fn touch_pointer_down(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
     let mut verdict = GestureVerdict::Single;
     mutate_scene_state(host_id, |state| {
         verdict = state.touch_gesture.down(GesturePointer { id: pointer_id.0, x, y });
@@ -152,7 +152,7 @@ pub(crate) fn touch_pointer_down(host_id: &str, pointer_id: ui_render::PointerId
     verdict
 }
 
-pub(crate) fn touch_pointer_move(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
+pub fn touch_pointer_move(host_id: &str, pointer_id: ui_render::PointerId, x: f64, y: f64) -> GestureVerdict {
     let mut verdict = GestureVerdict::Single;
     mutate_scene_state(host_id, |state| {
         verdict = state.touch_gesture.move_to(GesturePointer { id: pointer_id.0, x, y });
@@ -160,7 +160,7 @@ pub(crate) fn touch_pointer_move(host_id: &str, pointer_id: ui_render::PointerId
     verdict
 }
 
-pub(crate) fn touch_pointer_up(host_id: &str, pointer_id: ui_render::PointerId) -> GestureVerdict {
+pub fn touch_pointer_up(host_id: &str, pointer_id: ui_render::PointerId) -> GestureVerdict {
     let mut verdict = GestureVerdict::Single;
     mutate_scene_state(host_id, |state| {
         verdict = state.touch_gesture.up(pointer_id.0);
@@ -168,14 +168,14 @@ pub(crate) fn touch_pointer_up(host_id: &str, pointer_id: ui_render::PointerId) 
     verdict
 }
 
-pub(crate) fn pinch_camera(current: [f64; 3], step: semio_framework::interaction::gesture::PinchStep, viewport: [f64; 2], bounds: ZoomBounds) -> [f64; 3] {
+pub fn pinch_camera(current: [f64; 3], step: semio_framework::interaction::gesture::PinchStep, viewport: [f64; 2], bounds: ZoomBounds) -> [f64; 3] {
     let camera = apply_pinch_to_camera(Camera2d { x: current[0], y: current[1], zoom: current[2] }, step, viewport, bounds);
     [camera.x, camera.y, camera.zoom]
 }
 
 /// 🤏️ Transfers a map's first-touch lane to pinch ownership when contact two lands.
 pub fn tiled_map_touch_pointer_down(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     match touch_pointer_down(host_id, pointer_id, sx, sy) {
         GestureVerdict::Single => false,
         GestureVerdict::PinchBegin(_) => {
@@ -188,18 +188,18 @@ pub fn tiled_map_touch_pointer_down(host_id: &str, inner: Rect, pointer_id: ui_r
 
 /// 🤏️ Applies one silent map pinch step; the single-pointer lane stays suppressed while latched.
 pub fn tiled_map_touch_pointer_move(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     match touch_pointer_move(host_id, pointer_id, sx, sy) {
         GestureVerdict::Single => false,
         GestureVerdict::Pinch(step) => {
-            if let Some(current) = engine_canvas::tiled_map_camera(host_id) {
+            if let Some(current) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_camera(host_id) {
                 let next = pinch_camera(
                     current,
                     step,
                     [inner.w as f64, inner.h as f64],
                     ZoomBounds { min: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MIN, max: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MAX },
                 );
-                engine_canvas::tiled_map_set_camera_silent(host_id, next);
+                semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_set_camera_silent(host_id, next);
             }
             true
         }
@@ -216,7 +216,7 @@ pub fn tiled_map_touch_pointer_up_into(
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     match touch_pointer_up(host_id, pointer_id) {
         GestureVerdict::Single => Ok(false),
-        GestureVerdict::PinchEnd => engine_canvas::tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true),
+        GestureVerdict::PinchEnd => semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true),
         _ => Ok(true),
     }
 }
@@ -234,59 +234,32 @@ pub fn tiled_map_pointer_down_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if button == 0 {
         if selection_method.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
             return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
         }
         mutate_scene_state(host_id, |state| {
-            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_owned(), merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_owned() } });
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_owned(), merge_mode: semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_mode(shift, ctrl_or_meta).to_owned() } });
             state.map_marquee_points = vec![(sx as f32, sy as f32)];
             state.map_marquee_active = false;
             state.map_interaction_owner = Some(owner.clone());
         });
-        engine_canvas::stamp_map_interaction_owner(host_id, owner);
+        semio_framework_os_renderer_wgpu_engine_board::tiled_map::stamp_map_interaction_owner(host_id, owner);
         return Ok(true);
     }
     if button == 1 {
-        let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerDown { sx, sy, button: 1 })?;
+        let published = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerDown { sx, sy, button: 1 })?;
         if published {
             mutate_scene_state(host_id, |state| {
                 state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan });
                 state.map_interaction_owner = Some(owner.clone());
             });
-            engine_canvas::stamp_map_interaction_owner(host_id, owner);
+            semio_framework_os_renderer_wgpu_engine_board::tiled_map::stamp_map_interaction_owner(host_id, owner);
         }
         return Ok(published);
     }
     Ok(false)
-}
-
-pub fn retire_tiled_map_scene_identity(owner: &crate::element_contracts::ScenePointerTarget) -> bool {
-    if owner.kind != ui_wgpu::wgpu::SurfaceKind::TiledMap {
-        return false;
-    }
-    let (retired_interaction, retired_hover) = SCENE_STATE.with(|cell| {
-        let mut states = cell.borrow_mut();
-        let Some(state) = states.get_mut(&owner.host_id) else { return (false, false) };
-        let interaction = state.map_interaction_owner.as_ref().is_some_and(|current| current.same_component_host(owner));
-        let hover = state.map_hover_owner.as_ref().is_some_and(|current| current.same_component_host(owner));
-        if interaction {
-            state.drag = None;
-            state.map_marquee_points.clear();
-            state.map_marquee_active = false;
-            state.map_interaction_owner = None;
-        }
-        if hover {
-            state.map_last_hover_json = None;
-            state.map_hover_owner = None;
-        }
-        (interaction, hover)
-    });
-    if retired_interaction {
-        engine_canvas::retire_map_interaction_owner(owner);
-    }
-    retired_interaction || retired_hover
 }
 
 fn clear_tiled_map_interaction(host_id: &str) {
@@ -299,7 +272,7 @@ fn clear_tiled_map_interaction(host_id: &str) {
         state.map_interaction_owner.take()
     });
     if let Some(owner) = owner {
-        engine_canvas::retire_map_interaction_owner(&owner);
+        semio_framework_os_renderer_wgpu_engine_board::tiled_map::retire_map_interaction_owner(&owner);
     }
 }
 
@@ -313,12 +286,12 @@ pub fn tiled_map_pointer_move_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if down {
         let state = scene_state(host_id);
         if let Some(drag) = &state.drag {
             match &drag.mode {
-                SceneDragMode::MapPan => return engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerMove { sx, sy }),
+                SceneDragMode::MapPan => return semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerMove { sx, sy }),
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
                     mutate_scene_state(host_id, |state| {
@@ -346,7 +319,7 @@ pub fn tiled_map_pointer_move_into(
         kind: String,
         id: String,
     }
-    let hit_json = engine_canvas::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
     let hover = serde_json::from_str::<Option<HoverRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let hover_json = hover.as_ref().map(|row| format!("{}:{}", row.kind, row.id)).unwrap_or_else(|| "null".into());
     if scene_state(host_id).map_last_hover_json.as_deref() == Some(hover_json.as_str()) {
@@ -369,8 +342,8 @@ pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: 
     };
     match drag.mode {
         SceneDragMode::MapPan => {
-            let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
-            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
+            let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+            let published = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
             if published {
                 clear_tiled_map_interaction(host_id);
             }
@@ -401,14 +374,14 @@ pub fn tiled_map_pointer_leave_into(host_id: &str, surface_id: &str, controller_
 /// 🎯️ `method` is `"pick"` for a click and the marquee's own method for a drag — the exact
 /// split `emitFeatureSelection`'s two call sites make in `🧭️TiledMapHost/🟦️.tsx`.
 pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let state = scene_state(host_id);
     let Some(drag) = state.drag.as_ref() else {
         return Ok(false);
     };
     match &drag.mode {
         SceneDragMode::MapPan => {
-            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
+            let published = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
             if published {
                 clear_tiled_map_interaction(host_id);
             }
@@ -416,8 +389,7 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
         }
         SceneDragMode::MapMarquee { start_x, start_y, method, merge_mode } => {
             let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
-            let mut positions = Vec::new();
-            let mut routes = Vec::new();
+            let mut ids = Vec::new();
             if state.map_marquee_active && distance >= MAP_MARQUEE_THRESHOLD_PX {
                 let mut points = state.map_marquee_points.clone();
                 if method == "lasso" {
@@ -425,29 +397,24 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
                 } else {
                     points = vec![(*start_x, *start_y), (sx as f32, sy as f32)];
                 }
-                let crossing = engine_canvas::map_marquee_crossing(method, *start_x, sx as f32);
-                (positions, routes) = engine_canvas::with_map_host(host_id, |host| query_map_feature_hits(host, method, &points, crossing)).unwrap_or_default();
+                let crossing = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_crossing(method, *start_x, sx as f32);
+                ids = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| query_map_feature_hits(host, method, &points, crossing)).unwrap_or_default();
             } else if distance < MAP_MARQUEE_THRESHOLD_PX {
                 #[derive(Deserialize)]
                 struct HitRow {
-                    kind: String,
                     id: String,
                 }
-                let hit_json = engine_canvas::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+                let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
                 if let Some(hit) = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)? {
-                    match hit.kind.as_str() {
-                        "position" => positions.push(hit.id),
-                        "route" => routes.push(hit.id),
-                        _ => {}
-                    }
+                    ids.push(hit.id);
                 }
             }
-            if positions.is_empty() && routes.is_empty() && distance >= MAP_MARQUEE_THRESHOLD_PX && !state.map_marquee_active {
+            if ids.is_empty() && distance >= MAP_MARQUEE_THRESHOLD_PX && !state.map_marquee_active {
                 clear_tiled_map_interaction(host_id);
                 return Ok(false);
             }
             let select_method = if state.map_marquee_active && distance >= MAP_MARQUEE_THRESHOLD_PX { method.as_str() } else { "pick" };
-            write_tiled_map_selection(input, controller_id, surface_id, &positions, &routes, merge_mode, select_method, || {
+            write_tiled_map_selection(input, controller_id, surface_id, &ids, merge_mode, select_method, || {
                 clear_tiled_map_interaction(host_id);
             })?;
             Ok(true)

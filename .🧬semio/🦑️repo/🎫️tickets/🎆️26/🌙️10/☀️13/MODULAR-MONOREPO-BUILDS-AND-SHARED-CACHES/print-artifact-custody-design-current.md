@@ -1,0 +1,19 @@
+# Print Artifact Custody Design
+
+2026-10-15. Actual Source census/design, no Print production edit or compiler/network/native run yet. Goal/ticket remain active.
+
+## Confirmed Actual Gaps
+
+Print toolchain and TeX bundle preparation still create arbitrary `.prepare-*` directories under old `.🧬semio/🦑️repo/⚡️cache/tools/tectonic` and call the removed path-string publisher API. Tectonic archive extraction uses raw child spawn, verification Bun.spawnSync. Their prepared functions return bare executable/bundle paths after synchronous receipts/checksums without holding producer SH or actual store lifetime. The bundle downloader has finite per-file byte/range checks and four workers, but `failure ??= error` plus `if(failure)` loses thrown undefined. It cannot issue cache or network authority from a URL/receipt.
+
+Print font staging still publishes `📦️packages/🟦️typescript/dist/fonts` through the old API; registered document PDFs publish `dist/documents/<id>`. The real compiler has a global workspace root, optional ticket output escape or old loose print cache scratch, raw spawned Tectonic with independent buildBudgetMs, and preparation from probe compilation. Global stagedPrintFonts memoizes a Promise across invocations instead of borrowing actual publication custody. Completion reads bare PDF roots. The print-font-provisioning runtime command invokes the build writer, mixing runtime command and build infrastructure. Font metrics generation writes authored JSON Source and must remain an explicit authored-data generation operation, not a cache writer.
+
+## Intended Source Cut
+
+Use pure closed layout/schema DATA with explicit actual tools/products root and selected mode: fixed `tools/print/tectonic/<target>` and `tools/print/tex`, plus `products/print/<mode>/fonts` and `products/print/<mode>/documents/<catalog-id>`. Pinned version/manifest bytes are Nx inputs and receipt checks, rather than unbounded directories by version/hash history. Fixed names remain protected by the actual generic artifact SH/EX so old consumers finish before replacement. Every computed path obeys256 units.
+
+Tool/bundle preparation receives the real invocation and carried phase, owns actual tools + diagnostics stores and funded scratch, validates closed manifests before effects, obeys actual network policy, joins bounded downloader workers preserving Error/undefined, invokes extraction under actual owned child/CPU, and publishes with an opaque actual tools destination. Prepared-tool/bundle readers become callback APIs enclosing actual generic reader/tasks and checksum/receipt checks. No path-returning compatibility overload remains.
+
+Document/font producers own products and opaque destinations, validate Original intent, and declare exact mode-specific Nx outputs. Compiler/probe execution receives actual invocation/control and actual funded output scratch; it borrows the tool, bundle and fonts through all child/effect settlement, rather than preparing through a bare runtime API. Source staging, both PDF themes, panel rasterization and final copy remain within the exact funded sink, with finite byte/file/page/pixel limits and progress/cancellation. Existing thirdparty raster/PDF calls require the existing firstparty interface boundary and expensive work termination plan; a wrapper alone does not prove cancellation.
+
+Update actual registered/probe/publish callers and completion through genuine readers, and all Nx output/input recipes together. Existing command names stay; any genuinely new executable route also needs both editor catalogs. No broad old-cache deletion or old-root adoption follows from this change. Genuine Source/data REDs precede producers; actual tiny image/child failure gates wait until the partial-open attribution boundary is understood. Real Tectonic/network/PDF/native platform runs remain separate required qualification.

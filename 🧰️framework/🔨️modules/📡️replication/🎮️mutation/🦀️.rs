@@ -18,24 +18,6 @@ pub const MUTATION_MESSAGE_ENTRY_BYTES: usize = 4096;
 pub const MUTATION_MESSAGE_OWNER_BYTES: usize = 96;
 /// 🧭️ Every target segment consumes normative owner credit, including empty text.
 pub const MUTATION_MESSAGE_TARGET_BYTES: usize = 24;
-#[path = "📨️messages/🧵️compose/🦀️.rs"]
-mod message_composition;
-pub use message_composition::{ArtifactMessageComposeCursor, ArtifactMessageComposeRefusal, ArtifactMessageFragment, ArtifactMessageSource};
-#[path = "📨️messages/♻️retire/🦀️.rs"]
-mod message_ledger_retirement;
-pub use message_ledger_retirement::{EditMessageLedgerRetirement, MutationMessageLedgerRetirement};
-#[path = "📨️messages/📦️accumulate/🦀️.rs"]
-mod message_accumulation;
-pub use message_accumulation::{MutationMessageRetirement, OperationMessageDrain, ReplayMessageAccumulator};
-#[path = "📨️messages/✂️clamp/🦀️.rs"]
-mod message_selection;
-pub use message_selection::FinalMessageSelection;
-#[path = "📨️messages/📋️copy/🦀️.rs"]
-mod message_copy;
-pub use message_copy::MessageCopyCursor;
-#[path = "♻️retirement/🦀️.rs"]
-mod replay_retirement;
-pub use replay_retirement::{ArtifactReplayRetirementFactory, ReplayRetirement, registered_replay_retirement_factory};
 
 //#region 🔖️Mutation
 pub use semio_framework_mutation_diff::{MutationApplyError,MutationApplyResult,ApplyCapability,apply_diff,MutationDiff,DiffAlgebra};
@@ -50,7 +32,7 @@ pub use semio_framework_mutation_diff::{MutationApplyError,MutationApplyResult,A
 /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4): every rejection or
 /// merge-policy concern a technology used to express through those hooks now travels as a
 /// [`MutationMessage`] on `diff`'s own [`MutationOutcome`].
-pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
+pub trait Mutation<P>: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue {
     type Diff: MutationDiff<P>;
     /// 🧷️ Every direct mutation leaf's static metadata, in aggregate-variant order.
     const DESCRIPTORS: &'static [MutationLeafDescriptor];
@@ -68,10 +50,10 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     {
     }
 
-    fn mutation_id(&self) -> Option<crate::ids::MutationId> {
+    fn mutation_id(&self) -> Option<semio_framework_replication_ids::MutationId> {
         None
     }
-    fn dependencies(&self) -> Vec<crate::ids::MutationId> {
+    fn dependencies(&self) -> Vec<semio_framework_replication_ids::MutationId> {
         Vec::new()
     }
     /// 🎯️ The structured address this operation writes (outermost segment first; empty: the
@@ -81,17 +63,17 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn conflict_target(&self) -> Vec<String> {
         Vec::new()
     }
-    fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
+    fn base_version(&self) -> Option<semio_framework_replication_ids::ArtifactVersion> {
         None
     }
-    fn author_id(&self) -> Option<crate::ids::ActorId> {
+    fn author_id(&self) -> Option<semio_framework_replication_ids::ActorId> {
         None
     }
-    fn timestamp(&self) -> Option<crate::ids::HybridLogicalTimestamp> {
+    fn timestamp(&self) -> Option<semio_framework_replication_ids::HybridLogicalTimestamp> {
         None
     }
-    fn undo_policy(&self) -> crate::UndoPolicy {
-        crate::UndoPolicy::ExactBaseOnly
+    fn undo_policy(&self) -> semio_framework_replication_wire_core::UndoPolicy {
+        semio_framework_replication_wire_core::UndoPolicy::ExactBaseOnly
     }
     /// 🗂️ Which durability/visibility class this operation's diffs belong to.
     fn state_class(&self) -> semio_framework_schema_state::StateClass {
@@ -128,12 +110,12 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     }
     /// 🧬️ The value [`Self::input_schema`] describes: the leaf payload without any aggregate tag or wrapper, so a
     /// generic editor never depends on the aggregate's wire layout. The default is the whole value.
-    fn payload_value(&self) -> crate::value::DslValue {
+    fn payload_value(&self) -> semio_framework_value::DslValue {
         self.to_value()
     }
     /// 🧬️ Rebuilds this operation's own kind from an edited [`Self::payload_value`]; a value that does not decode as
     /// that leaf is refused, never reinterpreted as another kind. The default decodes the whole value.
-    fn with_payload_value(&self, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
         Self: Sized,
     {
@@ -142,12 +124,12 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     /// 🧬️ Builds the operation of semantic kind `kind` (its leaf descriptor's `semantic_kind`) from its editable payload
     /// ([`Self::payload_value`]) alone — the constructor a wire witness such as a `🥒️.feature` row decodes through.
     /// `#[derive(Mutations)]` answers every leaf kind of the aggregate; the default refuses.
-    fn from_payload_value(kind: &str, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
         Self: Sized,
     {
         let _ = value;
-        Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::UnsupportedOwner, format!("{kind} has no payload constructor")))
+        Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("{kind} has no payload constructor")))
     }
 }
 //#endregion 🔖️Mutation
@@ -166,9 +148,9 @@ pub enum MutationInvertibility {
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin below
 /// documents. `Serialize`-only in the original (no `Deserialize`: these are static roster metadata,
 /// never hydrated from the wire), so only `ToValue` is mirrored — capability parity, not more.
-impl crate::value::ToValue for MutationInvertibility {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
+impl semio_framework_value::ToValue for MutationInvertibility {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(
             match self {
                 MutationInvertibility::SelfInvertible => "self",
                 MutationInvertibility::ExplicitMutation => "explicit-mutation",
@@ -191,9 +173,9 @@ pub enum MutationDiffParticipation {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
-impl crate::value::ToValue for MutationDiffParticipation {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
+impl semio_framework_value::ToValue for MutationDiffParticipation {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(
             match self {
                 MutationDiffParticipation::Detect => "detect",
                 MutationDiffParticipation::ApplyOnly => "apply-only",
@@ -233,9 +215,9 @@ impl MutationOutcomeClass {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
-impl crate::value::ToValue for MutationOutcomeClass {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(self.as_str().to_string())
+impl semio_framework_value::ToValue for MutationOutcomeClass {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(self.as_str().to_string())
     }
 }
 
@@ -248,9 +230,9 @@ pub enum MutationComposition {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
-impl crate::value::ToValue for MutationComposition {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(match self { MutationComposition::Atomic => "atomic", MutationComposition::Composite => "composite" }.to_string())
+impl semio_framework_value::ToValue for MutationComposition {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(match self { MutationComposition::Atomic => "atomic", MutationComposition::Composite => "composite" }.to_string())
     }
 }
 
@@ -268,9 +250,9 @@ pub enum MutationLanguageSurface {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above.
-impl crate::value::ToValue for MutationLanguageSurface {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
+impl semio_framework_value::ToValue for MutationLanguageSurface {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(
             match self {
                 MutationLanguageSurface::Rust => "rust",
                 MutationLanguageSurface::Typescript => "typescript",
@@ -307,25 +289,25 @@ pub struct MutationLeafDescriptor {
 /// 🌱️ Hand-written, not derived — same reason as `MutationInvertibility` above. `&'static str`/
 /// `&'static [T]` have no blanket `ToValue` (unlike `String`/`Vec<T>`), so string/slice fields are
 /// encoded inline rather than through a generic impl.
-impl crate::value::ToValue for MutationLeafDescriptor {
-    fn to_value(&self) -> crate::value::DslValue {
+impl semio_framework_value::ToValue for MutationLeafDescriptor {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let entries = vec![
-            ("schemaVersion".to_string(), crate::value::ToValue::to_value(&self.schema_version)),
-            ("owner".to_string(), crate::value::DslValue::String(self.owner.to_string())),
-            ("semanticKind".to_string(), crate::value::DslValue::String(self.semantic_kind.to_string())),
-            ("displayName".to_string(), crate::value::DslValue::String(self.display_name.to_string())),
-            ("emoji".to_string(), crate::value::DslValue::String(self.emoji.to_string())),
-            ("aggregateVariant".to_string(), crate::value::DslValue::String(self.aggregate_variant.to_string())),
-            ("payloadSchema".to_string(), crate::value::DslValue::String(self.payload_schema.to_string())),
-            ("textOpcode".to_string(), match self.text_opcode { Some(s) => crate::value::DslValue::String(s.to_string()), None => crate::value::DslValue::Null }),
-            ("binaryTag".to_string(), crate::value::ToValue::to_value(&self.binary_tag)),
-            ("invertibility".to_string(), crate::value::ToValue::to_value(&self.invertibility)),
-            ("diffParticipation".to_string(), crate::value::ToValue::to_value(&self.diff_participation)),
-            ("outcomeClasses".to_string(), crate::value::DslValue::Array(self.outcome_classes.iter().map(crate::value::ToValue::to_value).collect())),
-            ("composition".to_string(), crate::value::ToValue::to_value(&self.composition)),
-            ("requiredLanguageSurfaces".to_string(), crate::value::DslValue::Array(self.required_language_surfaces.iter().map(crate::value::ToValue::to_value).collect())),
+            ("schemaVersion".to_string(), semio_framework_value::ToValue::to_value(&self.schema_version)),
+            ("owner".to_string(), semio_framework_value::DslValue::String(self.owner.to_string())),
+            ("semanticKind".to_string(), semio_framework_value::DslValue::String(self.semantic_kind.to_string())),
+            ("displayName".to_string(), semio_framework_value::DslValue::String(self.display_name.to_string())),
+            ("emoji".to_string(), semio_framework_value::DslValue::String(self.emoji.to_string())),
+            ("aggregateVariant".to_string(), semio_framework_value::DslValue::String(self.aggregate_variant.to_string())),
+            ("payloadSchema".to_string(), semio_framework_value::DslValue::String(self.payload_schema.to_string())),
+            ("textOpcode".to_string(), match self.text_opcode { Some(s) => semio_framework_value::DslValue::String(s.to_string()), None => semio_framework_value::DslValue::Null }),
+            ("binaryTag".to_string(), semio_framework_value::ToValue::to_value(&self.binary_tag)),
+            ("invertibility".to_string(), semio_framework_value::ToValue::to_value(&self.invertibility)),
+            ("diffParticipation".to_string(), semio_framework_value::ToValue::to_value(&self.diff_participation)),
+            ("outcomeClasses".to_string(), semio_framework_value::DslValue::Array(self.outcome_classes.iter().map(semio_framework_value::ToValue::to_value).collect())),
+            ("composition".to_string(), semio_framework_value::ToValue::to_value(&self.composition)),
+            ("requiredLanguageSurfaces".to_string(), semio_framework_value::DslValue::Array(self.required_language_surfaces.iter().map(semio_framework_value::ToValue::to_value).collect())),
         ];
-        crate::value::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
 
@@ -861,26 +843,26 @@ pub trait MutationLeaf {
         Some(Self::PAYLOAD_SCHEMA)
     }
     /// 🧬️ The value [`Self::input_schema`] describes: the whole leaf value, or the content of the `payload` variant.
-    fn input_value(&self) -> crate::value::DslValue
+    fn input_value(&self) -> semio_framework_value::DslValue
     where
-        Self: crate::value::ToValue,
+        Self: semio_framework_value::ToValue,
     {
-        crate::value::ToValue::to_value(self)
+        semio_framework_value::ToValue::to_value(self)
     }
     /// 🧬️ Rebuilds this operation from an edited [`Self::input_value`]; an operation that is not editable refuses.
-    fn with_input_value(&self, value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    fn with_input_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
-        Self: Sized + crate::value::FromValue,
+        Self: Sized + semio_framework_value::FromValue,
     {
-        <Self as crate::value::FromValue>::from_value(value)
+        <Self as semio_framework_value::FromValue>::from_value(value)
     }
     /// 🧬️ A new editable operation of this leaf from its [`Self::input_value`] alone: the whole leaf value, or the content
     /// of the `payload` variant.
-    fn from_input_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError>
+    fn from_input_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError>
     where
-        Self: Sized + crate::value::FromValue,
+        Self: Sized + semio_framework_value::FromValue,
     {
-        <Self as crate::value::FromValue>::from_value(value)
+        <Self as semio_framework_value::FromValue>::from_value(value)
     }
     /// 🧾️ The upper bound of the rows `Mutation::inverse` yields for this operation on any base, declared schema-first by the
     /// leaf payload schema's `x-semio-inverse-rows` (`fixed`, `perTarget`, `bounded`; absent = one row) and generated by
@@ -1009,26 +991,26 @@ pub struct MutationMessage {
 /// 🌉️ Hand-written, not derived: mirrors the `#[serde(default, skip_serializing_if = "…")]`
 /// sparse-emission on `target`/`op_index` (only emitted when non-default), matching the
 /// pre-existing serde wire shape byte-for-byte in field presence.
-impl crate::value::ToValue for MutationMessage {
-    fn to_value(&self) -> crate::value::DslValue {
+impl semio_framework_value::ToValue for MutationMessage {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = vec![
-            ("level".to_string(), crate::value::ToValue::to_value(&self.level)),
-            ("code".to_string(), crate::value::ToValue::to_value(&self.code)),
-            ("message".to_string(), crate::value::ToValue::to_value(&self.message)),
+            ("level".to_string(), semio_framework_value::ToValue::to_value(&self.level)),
+            ("code".to_string(), semio_framework_value::ToValue::to_value(&self.code)),
+            ("message".to_string(), semio_framework_value::ToValue::to_value(&self.message)),
         ];
         if !self.target.is_empty() {
-            entries.push(("target".to_string(), crate::value::ToValue::to_value(&self.target)));
+            entries.push(("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)));
         }
         if self.op_index.is_some() {
-            entries.push(("opIndex".to_string(), crate::value::ToValue::to_value(&self.op_index)));
+            entries.push(("opIndex".to_string(), semio_framework_value::ToValue::to_value(&self.op_index)));
         }
-        crate::value::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl crate::value::FromValue for MutationMessage {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationMessage, found {value:?}")));
+impl semio_framework_value::FromValue for MutationMessage {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationMessage, found {value:?}")));
         };
         let mut level = None;
         let mut code = None;
@@ -1037,18 +1019,18 @@ impl crate::value::FromValue for MutationMessage {
         let mut op_index = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "level" => level = Some(<semio_framework_diagnostic::Severity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("level"))?),
-                "code" => code = Some(<semio_framework_diagnostic::FaultCode as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
-                "message" => message = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
-                "target" => target = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
-                "opIndex" => op_index = <Option<u32> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("opIndex"))?,
+                "level" => level = Some(<semio_framework_diagnostic::Severity as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("level"))?),
+                "code" => code = Some(<semio_framework_diagnostic::FaultCode as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
+                "message" => message = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
+                "target" => target = <Vec<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                "opIndex" => op_index = <Option<u32> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("opIndex"))?,
                 _ => {}
             }
         }
         Ok(MutationMessage {
-            level: level.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMessage missing level"))?,
-            code: code.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMessage missing code"))?,
-            message: message.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMessage missing message"))?,
+            level: level.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationMessage missing level"))?,
+            code: code.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationMessage missing code"))?,
+            message: message.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationMessage missing message"))?,
             target,
             op_index,
         })
@@ -1119,30 +1101,30 @@ pub struct MutationOutcome<D> {
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
 /// documents. Mirrors `#[serde(rename_all = "camelCase", default, skip_serializing_if =
 /// "Vec::is_empty")]` byte-for-byte.
-impl<D: crate::value::ToValue> crate::value::ToValue for MutationOutcome<D> {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries = vec![("diff".to_string(), crate::value::ToValue::to_value(&self.diff))];
+impl<D: semio_framework_value::ToValue> semio_framework_value::ToValue for MutationOutcome<D> {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let mut entries = vec![("diff".to_string(), semio_framework_value::ToValue::to_value(&self.diff))];
         if !self.messages.is_empty() {
-            entries.push(("messages".to_string(), crate::value::ToValue::to_value(&self.messages)));
+            entries.push(("messages".to_string(), semio_framework_value::ToValue::to_value(&self.messages)));
         }
-        crate::value::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl<D: crate::value::FromValue> crate::value::FromValue for MutationOutcome<D> {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationOutcome, found {value:?}")));
+impl<D: semio_framework_value::FromValue> semio_framework_value::FromValue for MutationOutcome<D> {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationOutcome, found {value:?}")));
         };
         let mut diff = None;
         let mut messages = Vec::new();
         for (key, entry) in fields {
             match key.as_str() {
-                "diff" => diff = Some(<D as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("diff"))?),
-                "messages" => messages = <Vec<MutationMessage> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?,
+                "diff" => diff = Some(<D as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("diff"))?),
+                "messages" => messages = <Vec<MutationMessage> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("messages"))?,
                 _ => {}
             }
         }
-        Ok(MutationOutcome { diff: diff.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOutcome missing diff"))?, messages })
+        Ok(MutationOutcome { diff: diff.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationOutcome missing diff"))?, messages })
     }
 }
 
@@ -1223,7 +1205,7 @@ impl<D> MutationOutcome<D> {
 
     /// ✅️ Whether `policy` would accept this outcome (i.e. does NOT reject its worst level). An
     /// outcome with no messages is always applicable.
-    pub fn is_applicable(&self, policy: crate::MergePolicy) -> bool {
+    pub fn is_applicable(&self, policy: semio_framework_replication_wire_core::MergePolicy) -> bool {
         match self.worst_level() {
             Some(level) => !policy.rejects(level),
             None => true,
@@ -1237,424 +1219,30 @@ impl<D> MutationOutcome<D> {
 }
 //#endregion 🔖️Message
 
-
-
-
-
-
-
 //#region 🔖️Foreign
 #[path = "🌐️foreign/🦀️.rs"]
 mod foreign_output;
 pub use foreign_output::{ForeignTarget,ForeignStep,ForeignStepSource,ForeignStepCopy,ForeignStepRetirement,ForeignStepsOwner,ForeignStepsPreparation};
 //#endregion 🔖️Foreign
 
-//#region 🔖️Meta
-
-/// 🧾️ The committed tool transaction that authored an operation: `id` is `tx-<hex16>`
-/// ([`TransactionRef::mint`]), `tool` the authoring action/tool id `<appId>#<toolId>`. Every
-/// operation one transaction produced carries the same ref, in the edit ledger and on the wire.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct TransactionRef {
-    pub id: String,
-    pub tool: String,
-}
-
-impl TransactionRef {
-    /// 🪪️ `tx-{hex16(blake3(actor | hlc | tool))}`: deterministic per author, tick and tool.
-    pub fn mint(actor: &crate::ids::ActorId, timestamp: &crate::ids::HybridLogicalTimestamp, tool: impl Into<String>) -> Self {
-        let tool = tool.into();
-        let mut material = Vec::with_capacity(actor.0.len() + tool.len() + 32);
-        crate::write_str(&mut material, &actor.0);
-        crate::wire::write_varint_u64(&mut material, timestamp.actor);
-        crate::wire::write_varint_u64(&mut material, timestamp.physical_ms);
-        crate::wire::write_varint_u64(&mut material, timestamp.logical);
-        crate::write_str(&mut material, &tool);
-        let digest = crate::wire::RecordHasher::hash(&crate::format::Blake3Hasher, &material);
-        let mut id = String::with_capacity("tx-".len() + 16);
-        id.push_str("tx-");
-        for byte in &digest[..8] {
-            id.push_str(&format!("{byte:02x}"));
-        }
-        Self { id, tool }
-    }
-}
-
-impl crate::value::ToValue for TransactionRef {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![("id".to_string(), crate::value::ToValue::to_value(&self.id)), ("tool".to_string(), crate::value::ToValue::to_value(&self.tool))])
-    }
-}
-impl crate::value::FromValue for TransactionRef {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for TransactionRef, found {value:?}")));
-        };
-        let mut id = None;
-        let mut tool = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("id"))?),
-                "tool" => tool = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("tool"))?),
-                _ => {}
-            }
-        }
-        Ok(TransactionRef { id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "TransactionRef missing id"))?, tool: tool.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "TransactionRef missing tool"))? })
-    }
-}
-
-/// 🧾️ Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
-/// `crate::os_store::MutationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
-/// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
-/// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
-/// it is durable).
-#[derive(Clone, Debug, PartialEq)]
-pub struct MutationMeta {
-    pub mutation_id: Option<crate::ids::MutationId>,
-    pub dependencies: Vec<crate::ids::MutationId>,
-    pub base_version: u64,
-    pub author_id: Option<crate::ids::ActorId>,
-    pub timestamp: crate::ids::HybridLogicalTimestamp,
-    pub undo_policy: crate::UndoPolicy,
-    pub payload_hash: Option<crate::ids::PayloadHash>,
-    /// 🗣️ `"<doc-schema>#<kind>"` once the authoring mutation implements [`SemanticMutation`]
-    /// — additive, `None` for mutations still on generic vocabulary. Populated by callers (store
-    /// replay tightens this once a store's `Mutation: SemanticMutation<P>`, at the final ratchet);
-    /// this crate never derives it implicitly to avoid a premature trait-bound change here.
-    pub semantic_kind: Option<crate::ids::SchemaId>,
-    /// 🏷️ Human undo/history label captured at authoring time (`MutationKind::label`/
-    /// `SemanticMutation::label`), so history UI stops reverse-engineering one from `print_op`.
-    pub label: Option<String>,
-    /// 🧑‍🤝‍🧑️ Composite-gesture stamp: `Some(id)` when this edit was authored as one member
-    /// of a multi-document composite gesture (the future `CompositionCoordinator`'s atomic
-    /// parent+child dispatch across several `ArtifactEnvelope`s), so group undo can find and
-    /// reverse every sibling member together; `None` for a solitary, single-document edit.
-    /// Additive, mirrors `semantic_kind`/`label` above. 🎞️ Wire representation is the bare id
-    /// string `semio_framework::kernel::InvocationId` wraps, not that newtype itself: this crate
-    /// (`semio-framework-os-kernel`) is a dependency `semio-framework` builds on (see
-    /// `📦️packages/🦀️rust/Cargo.toml`), so importing `InvocationId` here would invert that edge —
-    /// see `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/b1-spr-vcs-report.md` for the
-    /// decision record. Callers holding a real `InvocationId` pass `.0`; this field round-trips
-    /// through `Edit.mutation_meta` into the `.spr` history log (`HistoryOpMeta.group_id`,
-    /// `📡️spr/📜️history/🦀️.rs`) so it survives persistence and sync.
-    pub group_id: Option<String>,
-    /// 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
-    /// overwhelming common case, an edit authored by the artifact's own owner logic), `Contributed`
-    /// (synthesized by a contributor plugin's `contributor.artifact-mutation-plan` response), or
-    /// `Transaction` (applied as one member of a cross-artifact composite gesture initiated
-    /// elsewhere). Additive, mirrors `group_id`/`semantic_kind`/`label` above — see
-    /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
-    /// §1.
-    pub origin: MutationOrigin,
-    /// 🧾️ The committed tool transaction that authored this operation (`None`: authored outside
-    /// any tool transaction). Wire-omitted when `None`, like `group_id`.
-    pub transaction: Option<TransactionRef>,
-}
-
-/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
-/// No `#[serde(rename_all = ...)]` on this struct, so field names stay snake_case (unlike
-/// `ForeignTarget`/`MutationOrigin` above); mirrors every `skip_serializing_if` by hand.
-impl crate::value::ToValue for MutationMeta {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries = Vec::new();
-        if self.mutation_id.is_some() {
-            entries.push(("mutation_id".to_string(), crate::value::ToValue::to_value(&self.mutation_id)));
-        }
-        if !self.dependencies.is_empty() {
-            entries.push(("dependencies".to_string(), crate::value::ToValue::to_value(&self.dependencies)));
-        }
-        entries.push(("base_version".to_string(), crate::value::ToValue::to_value(&self.base_version)));
-        if self.author_id.is_some() {
-            entries.push(("author_id".to_string(), crate::value::ToValue::to_value(&self.author_id)));
-        }
-        entries.push(("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)));
-        entries.push(("undo_policy".to_string(), crate::value::ToValue::to_value(&self.undo_policy)));
-        if self.payload_hash.is_some() {
-            entries.push(("payload_hash".to_string(), crate::value::ToValue::to_value(&self.payload_hash)));
-        }
-        if self.semantic_kind.is_some() {
-            entries.push(("semantic_kind".to_string(), crate::value::ToValue::to_value(&self.semantic_kind)));
-        }
-        if self.label.is_some() {
-            entries.push(("label".to_string(), crate::value::ToValue::to_value(&self.label)));
-        }
-        if self.group_id.is_some() {
-            entries.push(("group_id".to_string(), crate::value::ToValue::to_value(&self.group_id)));
-        }
-        if !self.origin.is_owner() {
-            entries.push(("origin".to_string(), crate::value::ToValue::to_value(&self.origin)));
-        }
-        if self.transaction.is_some() {
-            entries.push(("transaction".to_string(), crate::value::ToValue::to_value(&self.transaction)));
-        }
-        crate::value::DslValue::object(entries)
-    }
-}
-impl crate::value::FromValue for MutationMeta {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationMeta, found {value:?}")));
-        };
-        let mut mutation_id = None;
-        let mut dependencies = Vec::new();
-        let mut base_version = None;
-        let mut author_id = None;
-        let mut timestamp = None;
-        let mut undo_policy = None;
-        let mut payload_hash = None;
-        let mut semantic_kind = None;
-        let mut label = None;
-        let mut group_id = None;
-        let mut origin = MutationOrigin::Owner;
-        let mut transaction = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "mutation_id" => mutation_id = <Option<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutation_id"))?,
-                "dependencies" => dependencies = <Vec<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("dependencies"))?,
-                "base_version" => base_version = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("base_version"))?),
-                "author_id" => author_id = <Option<crate::ids::ActorId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("author_id"))?,
-                "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("timestamp"))?),
-                "undo_policy" => undo_policy = Some(<crate::UndoPolicy as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("undo_policy"))?),
-                "payload_hash" => payload_hash = <Option<crate::ids::PayloadHash> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("payload_hash"))?,
-                "semantic_kind" => semantic_kind = <Option<crate::ids::SchemaId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("semantic_kind"))?,
-                "label" => label = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("label"))?,
-                "group_id" => group_id = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("group_id"))?,
-                "origin" => origin = <MutationOrigin as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("origin"))?,
-                "transaction" => transaction = <Option<TransactionRef> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("transaction"))?,
-                _ => {}
-            }
-        }
-        Ok(MutationMeta {
-            mutation_id,
-            dependencies,
-            base_version: base_version.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMeta missing base_version"))?,
-            author_id,
-            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMeta missing timestamp"))?,
-            undo_policy: undo_policy.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationMeta missing undo_policy"))?,
-            payload_hash,
-            semantic_kind,
-            label,
-            group_id,
-            origin,
-            transaction,
-        })
-    }
-}
-
-/// 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
-/// Moved verbatim from `crate::os_store::Edit` (was `vcs/rs/lib.rs` L73).
-#[derive(Clone, Debug, PartialEq)]
-pub struct Edit<Op> {
-    pub id: String,
-    pub actor: Option<semio_framework_value::SharedUtf8>,
-    /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
-    pub line: Option<String>,
-    pub forwards: Vec<Op>,
-    pub inverse: crate::value::list::PagedList<Op, {usize::MAX}>,
-    pub mutation_meta: Vec<MutationMeta>,
-    /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
-    /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
-    pub verb: Option<String>,
-    pub sequence_number: i32,
-    pub started_at: String,
-    pub finished_at: Option<String>,
-}
-
-/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above (and
-/// the actual trigger of the os-kernel cascade: `CursorRevisionAccumulator::edit_digest`/
-/// `reconcile_stack` already bound `Mutation: ToValue` and hash via `to_json_string`, which needs
-/// `Edit<Mutation>: ToValue` itself, not just its generic parameter). Mirrors
-/// `#[serde(rename_all = "camelCase")]` field naming and every `skip_serializing_if`; `Option<T>`
-/// fields with no explicit `#[serde(default)]` (`finished_at`) still default to
-/// `None` when absent — serde's built-in behavior for `Option<T>` fields, mirrored here too.
-impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries = vec![("id".to_string(), crate::value::ToValue::to_value(&self.id))];
-        if self.actor.is_some() {
-            entries.push(("actor".to_string(), crate::value::ToValue::to_value(&self.actor)));
-        }
-        entries.push(("forwards".to_string(), crate::value::ToValue::to_value(&self.forwards)));
-        entries.push(("inverse".to_string(), crate::value::ToValue::to_value(&self.inverse)));
-        if !self.mutation_meta.is_empty() {
-            entries.push(("mutationMeta".to_string(), crate::value::ToValue::to_value(&self.mutation_meta)));
-        }
-        if self.verb.is_some() {
-            entries.push(("verb".to_string(), crate::value::ToValue::to_value(&self.verb)));
-        }
-        entries.push(("sequenceNumber".to_string(), crate::value::ToValue::to_value(&self.sequence_number)));
-        entries.push(("startedAt".to_string(), crate::value::ToValue::to_value(&self.started_at)));
-        if self.finished_at.is_some() {
-            entries.push(("finishedAt".to_string(), crate::value::ToValue::to_value(&self.finished_at)));
-        }
-        entries.push(("line".to_string(), crate::value::ToValue::to_value(&self.line)));
-        crate::value::DslValue::object(entries)
-    }
-}
-impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for Edit, found {value:?}")));
-        };
-        let mut id = None;
-        let mut actor = None;
-        let mut line = None;
-        let mut forwards = None;
-        let mut inverse = None;
-        let mut mutation_meta = Vec::new();
-        let mut verb = None;
-        let mut sequence_number = None;
-        let mut started_at = None;
-        let mut finished_at = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("id"))?),
-                "line" => {
-                    if line.is_some() { return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit repeats line")); }
-                    line = Some(<Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("line"))?);
-                }
-                "actor" => actor = <Option<semio_framework_value::SharedUtf8> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
-                "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
-                "inverse" => inverse = Some(<crate::value::list::PagedList<Op, {usize::MAX}> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
-                "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
-                "verb" => verb = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("verb"))?,
-                "sequenceNumber" => sequence_number = Some(<i32 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),
-                "startedAt" => started_at = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("startedAt"))?),
-                "finishedAt" => finished_at = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("finishedAt"))?,
-                _ => {}
-            }
-        }
-        Ok(Edit {
-            id: id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing id"))?,
-            actor,
-            line: line.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing line"))?,
-            forwards: forwards.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing forwards"))?,
-            inverse: inverse.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing inverse"))?,
-            mutation_meta,
-            verb,
-            sequence_number: sequence_number.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing sequenceNumber"))?,
-            started_at: started_at.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing startedAt"))?,
-            finished_at,
-        })
-    }
-}
-
-#[path="🧾️transaction/🎟️admission/🦀️.rs"]
-pub mod transaction_admission;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧪️transaction-ref/🦀️.rs"]
-mod transaction_ref_tests;
-
 #[cfg(test)]
 #[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
 mod outcome_code_tests;
-//#endregion 🔖️Meta
-
-//#region 🔖️Origin
-/// 🔀️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
-/// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
-/// `skip_serializing_if`.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub enum MutationOrigin {
-    #[default]
-    Owner,
-    Contributed {
-        plugin_id: String,
-        mutation_id: crate::ids::SchemaId,
-        payload_hash: crate::ids::PayloadHash,
-    },
-    Transaction {
-        initiator: ForeignTarget,
-    },
-}
-impl MutationOrigin {
-    /// 🕳️ Whether this is the (wire-omitted) default owner origin.
-    // 🚫️async: E1 — called by name from `#[serde(skip_serializing_if = "...")]`, whose generated
-    // call site is sync.
-    pub fn is_owner(&self) -> bool {
-        matches!(self, Self::Owner)
-    }
-}
-
-/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
-/// `#[serde(tag = "kind")]` internal tagging has no adjacently-tagged (`tag` + `content`) shape the
-/// derive macro supports anyway, so this was always going to be hand-written; mirrors the wire
-/// shape (`kind` sibling to each struct variant's own fields) exactly.
-impl crate::value::ToValue for MutationOrigin {
-    fn to_value(&self) -> crate::value::DslValue {
-        match self {
-            MutationOrigin::Owner => crate::value::DslValue::object([("kind".to_string(), crate::value::DslValue::String("owner".to_string()))]),
-            MutationOrigin::Contributed { plugin_id, mutation_id, payload_hash } => crate::value::DslValue::object([
-                ("kind".to_string(), crate::value::DslValue::String("contributed".to_string())),
-                ("pluginId".to_string(), crate::value::ToValue::to_value(plugin_id)),
-                ("mutationId".to_string(), crate::value::ToValue::to_value(mutation_id)),
-                ("payloadHash".to_string(), crate::value::ToValue::to_value(payload_hash)),
-            ]),
-            MutationOrigin::Transaction { initiator } => crate::value::DslValue::object([
-                ("kind".to_string(), crate::value::DslValue::String("transaction".to_string())),
-                ("initiator".to_string(), crate::value::ToValue::to_value(initiator)),
-            ]),
-        }
-    }
-}
-impl crate::value::FromValue for MutationOrigin {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationOrigin, found {value:?}")));
-        };
-        let mut kind = None;
-        let mut plugin_id = None;
-        let mut mutation_id = None;
-        let mut payload_hash = None;
-        let mut initiator = None;
-        for (key, entry) in fields {
-            match key.as_str() {
-                "kind" => kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("kind"))?),
-                "pluginId" => plugin_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("pluginId"))?),
-                "mutationId" => mutation_id = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationId"))?),
-                "payloadHash" => payload_hash = Some(<crate::ids::PayloadHash as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("payloadHash"))?),
-                "initiator" => initiator = Some(<ForeignTarget as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("initiator"))?),
-                _ => {}
-            }
-        }
-        match kind.as_deref() {
-            Some("owner") => Ok(MutationOrigin::Owner),
-            Some("contributed") => Ok(MutationOrigin::Contributed {
-                plugin_id: plugin_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOrigin::Contributed missing pluginId"))?,
-                mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOrigin::Contributed missing mutationId"))?,
-                payload_hash: payload_hash.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOrigin::Contributed missing payloadHash"))?,
-            }),
-            Some("transaction") => Ok(MutationOrigin::Transaction {
-                initiator: initiator.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOrigin::Transaction missing initiator"))?,
-            }),
-            Some(other) => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown MutationOrigin kind `{other}`"))),
-            None => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "MutationOrigin missing kind")),
-        }
-    }
-}
-//#endregion 🔖️Origin
-
-
-
-#[path="🧳️prepared/🦀️.rs"]
-mod prepared;
-pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};
-
-#[path="🧵️canonical/🦀️.rs"]
-mod canonical_fields;
-pub use canonical_fields::ArtifactCanonicalEditIdentityCursor;
-pub use canonical_fields::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor};
 
 /// 🎯️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
 /// [`protocol::apply_diff`] and retires the diff cold. Every store lane, replay, merge and backbone fold routes through
 /// here; the apply refusal stays structured for callers that must fail instead of record.
-pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (crate::MutationApplyResult<P>, Vec<crate::MutationMessage>)
+pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (semio_framework_mutation_diff::MutationApplyResult<P>, Vec<crate::MutationMessage>)
 where
     Mutation: self::Mutation<P>,
 {
     let (diff, messages) = operation.diff(state).stamp_op_index(op_index).into_parts();
-    let applied = crate::apply_diff(&diff, state);
+    let applied = semio_framework_mutation_diff::apply_diff(&diff, state);
     <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
     (applied, messages)
 }
 
+mod owned_retirement {
+    use super::*;
+    semio_framework_value::artifact_retire_struct!(MutationMessage { level, code, message, target, op_index });
+}

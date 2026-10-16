@@ -11,7 +11,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
-import { roundUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
+import { roundUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
 import type { UiNumberLimits } from "@semio-tech/framework";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";

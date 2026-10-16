@@ -107,3 +107,10 @@ pub fn create_epw_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
+}
+//#endregion 🧩️ArtifactItems

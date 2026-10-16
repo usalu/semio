@@ -1,0 +1,53 @@
+{
+  "valid": [
+    {
+      "version": 1,
+      "previous": 0,
+      "bytes": [],
+      "expected": 0
+    },
+    {
+      "version": 1,
+      "previous": 0,
+      "bytes": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57
+      ],
+      "expected": 3421780262
+    },
+    {
+      "version": 1,
+      "previous": 0,
+      "bytes": [
+        0
+      ],
+      "expected": 3523407757
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "previous": -1,
+      "bytes": []
+    },
+    {
+      "version": 1,
+      "previous": 4294967296,
+      "bytes": []
+    },
+    {
+      "version": 1,
+      "previous": 0,
+      "bytes": [
+        256
+      ]
+    }
+  ]
+}

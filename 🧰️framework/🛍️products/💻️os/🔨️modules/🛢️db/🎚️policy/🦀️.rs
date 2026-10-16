@@ -1,7 +1,7 @@
 //! 🎚️ Mailbox priority, capabilities, and open profiles.
 
-use crate::db_durability::DurabilityClass;
-use crate::*;
+use db_durability::DurabilityClass;
+use db_ids::DbLimits;
 
 //#region 🔖️Priority
 /// 🚦️ The six bounded mailbox lanes every document actor's inbox is split into
@@ -96,7 +96,7 @@ pub enum Profile {
 
 /// 🚦️ Per-`Priority`-lane mailbox bounds, indexed by `Priority::rank`.
 #[derive(Clone, Copy, Debug)]
-pub struct MailboxCapacities([u32; 6]);
+pub struct MailboxCapacities(pub [u32; 6]);
 
 impl MailboxCapacities {
     /// 🟰️ The same bound for every lane.
@@ -180,7 +180,7 @@ pub fn worker_submit_retry_attempt(kind: semio_framework_async::WorkerSubmitErro
 /// waiter is woken on release (at most `N`), so no wake is lost to a waiter that was cancelled
 /// between its wake and its claim.
 pub struct AdmissionWaiters<const N: usize> {
-    entries: [Option<(u64, std::task::Waker)>; N],
+    pub entries: [Option<(u64, std::task::Waker)>; N],
     next_id: u64,
 }
 

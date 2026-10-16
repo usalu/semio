@@ -105,7 +105,7 @@ fn in_window(actor: &str, window: &str) -> ActionMeta {
 /// 🚃️ One stream tick of `window` setting the count to `value`, as the dispatch `operation` that publishes: admitted on the
 /// live revision, driven against its slot, settled like a publishing completion. Answers what the tick committed.
 fn stream(app: &mut ToyApp, actor: &str, operation: u64, window: &str, value: i32) -> Option<(protocol::TransactionRef, Vec<TestMutation>)> {
-    let base = app.store.content_revision_now();
+    let base = app.stores.store.content_revision_now();
     let slot = app.admit_gesture_slot(operation, &base, &in_window(actor, window),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     let committed = slot.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value }.into()), "seed").expect("a stream tick is never refused");
     assert!(app.settle_gesture_slot(operation, true), "the dispatch drove its slot");
@@ -127,7 +127,7 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert!(ToyHistoryApp::host_event(&HostEvent::TimeTravelFrozen { window_id: "pane-a".into() }).is_none(), "the app has no Frozen arm of its own");
-    let (generation, committed, edits) = (app.store.generation(), head(&app), app.edit_transactions().len());
+    let (generation, committed, edits) = (app.stores.store.generation(), head(&app), app.edit_transactions().len());
     assert_eq!(stream(&mut app, &actor, 900, "pane-a", 40), None, "a tick publishes nothing");
     assert_eq!(stream(&mut app, &actor, 901, "pane-a", 41), None);
     assert_eq!(stream(&mut app, &actor, 902, "pane-b", 42), None);
@@ -135,7 +135,7 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     let resumed = app.tool_machines.gestures().open("pane-a").expect("pane-a holds its gesture").clone();
     assert_eq!((resumed.verb.as_str(), resumed.entries.as_slice()), ("nudge", [("leaf".to_string(), TestMutation::from(SetCount { value: 41 }))].as_slice()), "the second tick resumed the first tick's gesture");
     assert_eq!(app.rendered_snapshot().count, 42, "every render reads committed ⊕ the open gestures, window by window");
-    assert_eq!((app.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed.clone(), edits), "an open gesture never touches the committed document");
+    assert_eq!((app.stores.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed.clone(), edits), "an open gesture never touches the committed document");
     TOY_HOST_EVENTS.with(|events| events.borrow_mut().clear());
     let mutation = seeded_mutation(&app, 0);
     let begun = app.handle_action("historyEditBegin", Some(&DslValue::Object(vec![("mutationId".into(), DslValue::String(mutation))])), &in_window(&actor, "pane-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("begin");
@@ -145,7 +145,7 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     assert_eq!(app.rendered_snapshot().count, committed.0, "no overlay is left");
     assert_eq!(stream(&mut app, &actor, 903, "pane-b", 77), None);
     assert!(app.tool_machines.gestures().is_empty(), "a tick on the frozen document opens no gesture");
-    assert_eq!((app.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed, edits), "zero trace: no edit, no store change");
+    assert_eq!((app.stores.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed, edits), "zero trace: no edit, no store change");
     app.handle_action("historyEditExit", None, &in_window(&actor, "pane-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("exit");
     let mounted_policy = app.mounted_policy;
     pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
@@ -160,7 +160,7 @@ async fn a_windows_host_fact_ends_only_its_own_gesture() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let (generation, committed) = (app.store.generation(), head(&app));
+    let (generation, committed) = (app.stores.store.generation(), head(&app));
     stream(&mut app, &actor, 900, "pane-a", 40);
     stream(&mut app, &actor, 901, "pane-b", 42);
     let host = |window: &str, kind: &str| DslValue::Object(vec![(semio_framework::HOST_EVENT_ARG_WINDOW_ID.to_string(), DslValue::String(window.to_string())), (semio_framework::HOST_EVENT_ARG_KIND.to_string(), DslValue::String(kind.to_string()))]);
@@ -170,7 +170,7 @@ async fn a_windows_host_fact_ends_only_its_own_gesture() {
     app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&host("pane-b", semio_framework::HOST_EVENT_KIND_CAPTURE_LOST)), &in_window(&actor, "pane-b"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("capture lost");
     assert!(app.tool_machines.gestures().is_empty());
     assert_eq!(app.rendered_snapshot().count, committed.0, "the render reads the committed document again");
-    assert_eq!((app.store.generation(), head(&app)), (generation, committed), "zero trace");
+    assert_eq!((app.stores.store.generation(), head(&app)), (generation, committed), "zero trace");
     close(&mut app);
 }
 
@@ -182,7 +182,7 @@ async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let base = app.store.content_revision_now();
+    let base = app.stores.store.content_revision_now();
     let dispatch = |app: &mut ToyApp, operation: u64, press: &str, phase: GesturePhase, value: i32| {
         let slot = app.admit_gesture_slot(operation, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
         let committed = slot.drive::<NudgeTool>(Some(press), "nudge", phase, Some(SetCount { value }.into()), "seed").expect("the dispatch is never refused");
@@ -216,7 +216,7 @@ async fn the_slot_follows_only_a_publishing_dispatch_admitted_on_the_gesture_it_
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let base = app.store.content_revision_now();
+    let base = app.stores.store.content_revision_now();
     let faulted = app.admit_gesture_slot(900, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
     faulted.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 7 }.into()), "seed").expect("a tick");
     assert!(app.settle_gesture_slot(900, false));

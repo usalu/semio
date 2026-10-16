@@ -1,9 +1,9 @@
 use super::*;
-use db_storage::MemoryStorage;
+use db_storage_memory::MemoryStorage;
 
-fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test snapshot writer admitted");
-    for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+fn pages(bytes: &[u8]) -> db_io_core::DbIoPages {
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).expect("test snapshot writer admitted");
+    for fragment in bytes.chunks(db_io_core::DB_IO_PAGE_BYTES) {
         assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
     }
     writer.finish().unwrap()
@@ -192,7 +192,7 @@ async fn body(head_seq: u64) -> SnapshotBody {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_publishes_full_baseline_then_loads_it_back() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-a".into();
     let pages = vec![page(b"p0").await];
@@ -208,7 +208,7 @@ async fn manager_publishes_full_baseline_then_loads_it_back() {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_incremental_publish_without_prior_generation_errors() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-b".into();
     let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0).await));
@@ -217,7 +217,7 @@ async fn manager_incremental_publish_without_prior_generation_errors() {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-c".into();
 
@@ -246,7 +246,7 @@ async fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_retain_from_requires_full_baseline_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-d".into();
     db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -257,7 +257,7 @@ async fn manager_retain_from_requires_full_baseline_floor() {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-e".into();
     db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -270,7 +270,7 @@ async fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() 
 
 #[semio_framework_async_macros::async_test]
 async fn manager_select_generation_picks_highest_head_seq_at_most_target() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-f".into();
     db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
@@ -287,7 +287,7 @@ async fn manager_select_generation_picks_highest_head_seq_at_most_target() {
 
 #[semio_framework_async_macros::async_test]
 async fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document: ArtifactId = "doc-g".into();
     let source_pages = vec![page(b"verify-me").await];
@@ -296,7 +296,7 @@ async fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
     db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full)).unwrap();
 
     let mut retained = db_actor::block_on(storage.read_generation(&document, 0)).unwrap();
-    let mut prepared = db_storage::db_io_prepare_platform(&retained).unwrap().await.unwrap();
+    let mut prepared = db_io_registry::db_io_prepare_platform(&retained).unwrap().await.unwrap();
     let mut corrupted = prepared.as_slice().to_vec();
     while prepared.close_step().unwrap() {}
     while retained.close_step().unwrap().is_some() {}
@@ -321,7 +321,7 @@ async fn snapshot_policy_fires_on_any_threshold_alone() {
 //#region 🔖️Lease
 #[semio_framework_async_macros::async_test]
 async fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
 
     let fence = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0)).unwrap();

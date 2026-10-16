@@ -1,0 +1,543 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "fresh-create",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "none",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "create"
+    },
+    {
+      "id": "pending-drains-before-any-role",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "none",
+        "pending": 32,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "join-accepted"
+    },
+    {
+      "id": "dead-opening-retains",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "none",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": false,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "dead-body-cleans-before-ack",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "none",
+        "pending": 0,
+        "bodyLive": false,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "cleanup-before-ack"
+    },
+    {
+      "id": "missing-exclusive-refuses",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "none",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "none",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "fresh-never-adopts-existing-receipt",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "existing",
+        "creator": "none",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "fresh-unknown-creator-retains",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "unknown",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "fresh-created-needs-observation",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "observe-before-effect"
+    },
+    {
+      "id": "fresh-exact-inactive-activates",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "inactive",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "activate"
+    },
+    {
+      "id": "accepted-activation-needs-complete-observation",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "observe-after-effect"
+    },
+    {
+      "id": "fresh-active-without-own-effect-refuses",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "fresh-active-constructs-real-receiver",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "construct-receiver"
+    },
+    {
+      "id": "fresh-created-receipt-acknowledges-concrete-guard",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": false,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "acknowledge"
+    },
+    {
+      "id": "receipt-cannot-acknowledge-alone",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "inactive-never-adopts-missing-receipt",
+      "input": {
+        "version": 1,
+        "role": "inactive",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "inactive-observes-before-effect",
+      "input": {
+        "version": 1,
+        "role": "inactive",
+        "guard": "exclusive",
+        "mapping": "unknown",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "observe-before-effect"
+    },
+    {
+      "id": "inactive-prior-active-refuses",
+      "input": {
+        "version": 1,
+        "role": "inactive",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "inactive-exact-can-activate",
+      "input": {
+        "version": 1,
+        "role": "inactive",
+        "guard": "exclusive",
+        "mapping": "inactive",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "activate"
+    },
+    {
+      "id": "inactive-active-own-effect-constructs",
+      "input": {
+        "version": 1,
+        "role": "inactive",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "construct-receiver"
+    },
+    {
+      "id": "acknowledged-writer-transfers-real-guard",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": false,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "transfer-to-shared"
+    },
+    {
+      "id": "acknowledged-gap-acquires-under-opening",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "none",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": false,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "acquire-shared"
+    },
+    {
+      "id": "acknowledged-shared-reverifies",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "shared",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": false,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "verify-receiver"
+    },
+    {
+      "id": "acknowledged-ready",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "shared",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": false,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": true
+      },
+      "expected": "ready"
+    },
+    {
+      "id": "ack-without-concrete-owner-retains",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "created",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "ack-changed-receipt-retains",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "active",
+        "receipt": "changed",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": true,
+        "activationAccepted": true,
+        "verified": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "mounted-borrower-ready-no-effect",
+      "input": {
+        "version": 1,
+        "role": "mounted",
+        "guard": "shared",
+        "mapping": "active",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": true
+      },
+      "expected": "ready"
+    },
+    {
+      "id": "mounted-borrower-cannot-activate",
+      "input": {
+        "version": 1,
+        "role": "mounted",
+        "guard": "shared",
+        "mapping": "inactive",
+        "receipt": "existing",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": true,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "ambiguous-mapping-retains",
+      "input": {
+        "version": 1,
+        "role": "fresh",
+        "guard": "exclusive",
+        "mapping": "ambiguous",
+        "receipt": "absent",
+        "creator": "exact",
+        "pending": 0,
+        "bodyLive": true,
+        "openingLive": true,
+        "receiverOwnsGuard": false,
+        "acknowledged": false,
+        "activationAccepted": false,
+        "verified": false
+      },
+      "expected": "retain-unresolved"
+    }
+  ],
+  "image": {
+    "filesystemBytes": 66060288,
+    "maximumPhysicalBytes": 67108864,
+    "maximumLeaseDatabaseBytes": 16384,
+    "probeMilliseconds": 5000
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-render-prepared-shaders-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -49,91 +49,91 @@ pub struct PayloadHash(pub [u8; 32]);
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp` above (this crate
 /// sits below `os-kernel`, where the derive macro's generated code is rooted). `#[serde(transparent)]`
 /// means the wire shape is the bare inner value, mirrored here directly.
-impl crate::value::ToValue for MutationId {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for MutationId {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
-impl crate::value::FromValue for MutationId {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
-    }
-}
-
-impl crate::value::ToValue for ActorId {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
-    }
-}
-impl crate::value::FromValue for ActorId {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<semio_framework_value::SharedUtf8 as crate::value::FromValue>::from_value(value)?))
+impl semio_framework_value::FromValue for MutationId {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<String as semio_framework_value::FromValue>::from_value(value)?))
     }
 }
 
-impl crate::value::ToValue for SchemaId {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for ActorId {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
-impl crate::value::FromValue for SchemaId {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
-    }
-}
-
-impl crate::value::ToValue for ArtifactId {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
-    }
-}
-impl crate::value::FromValue for ArtifactId {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+impl semio_framework_value::FromValue for ActorId {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<semio_framework_value::SharedUtf8 as semio_framework_value::FromValue>::from_value(value)?))
     }
 }
 
-impl crate::value::ToValue for ArtifactVersion {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for SchemaId {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
-impl crate::value::FromValue for ArtifactVersion {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<u64 as crate::value::FromValue>::from_value(value)?))
+impl semio_framework_value::FromValue for SchemaId {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<String as semio_framework_value::FromValue>::from_value(value)?))
     }
 }
 
-impl crate::value::ToValue for SchemaVersion {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::ToValue::to_value(&self.0)
+impl semio_framework_value::ToValue for ArtifactId {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
     }
 }
-impl crate::value::FromValue for SchemaVersion {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        Ok(Self(<u32 as crate::value::FromValue>::from_value(value)?))
+impl semio_framework_value::FromValue for ArtifactId {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<String as semio_framework_value::FromValue>::from_value(value)?))
+    }
+}
+
+impl semio_framework_value::ToValue for ArtifactVersion {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
+    }
+}
+impl semio_framework_value::FromValue for ArtifactVersion {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<u64 as semio_framework_value::FromValue>::from_value(value)?))
+    }
+}
+
+impl semio_framework_value::ToValue for SchemaVersion {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
+    }
+}
+impl semio_framework_value::FromValue for SchemaVersion {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(<u32 as semio_framework_value::FromValue>::from_value(value)?))
     }
 }
 
 /// 🌉️ `[u8; 32]` has no blanket `ToValue`/`FromValue` (unlike serde, which supports fixed arrays
 /// natively) — encoded/decoded element-by-element as a `DslValue::Array`, matching serde's default
 /// `[u8; N]` wire shape (a plain JSON array of numbers) byte for byte.
-impl crate::value::ToValue for PayloadHash {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::Array(self.0.iter().map(crate::value::ToValue::to_value).collect())
+impl semio_framework_value::ToValue for PayloadHash {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Array(self.0.iter().map(semio_framework_value::ToValue::to_value).collect())
     }
 }
-impl crate::value::FromValue for PayloadHash {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Array(items) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an array for PayloadHash, found {value:?}")));
+impl semio_framework_value::FromValue for PayloadHash {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Array(items) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array for PayloadHash, found {value:?}")));
         };
         if items.len() != 32 {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected exactly 32 bytes for PayloadHash, found {}", items.len())));
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly 32 bytes for PayloadHash, found {}", items.len())));
         }
         let mut bytes = [0u8; 32];
         for (index, item) in items.into_iter().enumerate() {
-            bytes[index] = <u8 as crate::value::FromValue>::from_value(item).map_err(|error| error.under(index))?;
+            bytes[index] = <u8 as semio_framework_value::FromValue>::from_value(item).map_err(|error| error.under(index))?;
         }
         Ok(Self(bytes))
     }
@@ -205,52 +205,78 @@ impl PartialOrd for HybridLogicalTimestamp {
 /// resolve here. `crate::value` is the raw first-party value module mounted directly by `#[path]`
 /// (see the crate root), so it needs no such dependency edge. Field names match the pre-existing
 /// serde wire shape (no `rename_all`, so `physical_ms` stays snake_case, not `physicalMs`).
-impl crate::value::ToValue for HybridLogicalTimestamp {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object([
-            ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
-            ("physical_ms".to_string(), crate::value::ToValue::to_value(&self.physical_ms)),
-            ("logical".to_string(), crate::value::ToValue::to_value(&self.logical)),
+impl semio_framework_value::ToValue for HybridLogicalTimestamp {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([
+            ("actor".to_string(), semio_framework_value::ToValue::to_value(&self.actor)),
+            ("physical_ms".to_string(), semio_framework_value::ToValue::to_value(&self.physical_ms)),
+            ("logical".to_string(), semio_framework_value::ToValue::to_value(&self.logical)),
         ])
     }
 
-    fn to_value_controlled(&self, control: &mut crate::value::NativeEncodeControl<'_>) -> Result<crate::value::DslValue, crate::value::ValueError> {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
             control.begin_stage(3)?;
             control.step()?;
             control.step()?;
             control.step()?;
             control.begin_stage(3)?;
-            let mut output = crate::value::DslValue::object_encoding_controlled(3, control)?;
+            let mut output = semio_framework_value::DslValue::object_encoding_controlled(3, control)?;
             for (key, field) in [("actor", self.actor), ("physical_ms", self.physical_ms), ("logical", self.logical)] {
-                crate::value::DslValue::push_encoding_controlled(output.get_mut(), key, crate::value::ToValue::to_value_controlled(&field, control)?, control)?;
+                semio_framework_value::DslValue::push_encoding_controlled(output.get_mut(), key, semio_framework_value::ToValue::to_value_controlled(&field, control)?, control)?;
                 control.step()?;
             }
-            Ok(crate::value::DslValue::Object(output.take()))
+            Ok(semio_framework_value::DslValue::Object(output.take()))
         }))
     }
 }
-impl crate::value::FromValue for HybridLogicalTimestamp {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for HybridLogicalTimestamp, found {value:?}")));
+impl semio_framework_value::FromValue for HybridLogicalTimestamp {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for HybridLogicalTimestamp, found {value:?}")));
         };
         let mut actor = None;
         let mut physical_ms = None;
         let mut logical = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "actor" => actor = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
-                "physical_ms" => physical_ms = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("physical_ms"))?),
-                "logical" => logical = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("logical"))?),
+                "actor" => actor = Some(<u64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "physical_ms" => physical_ms = Some(<u64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("physical_ms"))?),
+                "logical" => logical = Some(<u64 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("logical"))?),
                 _ => {}
             }
         }
         Ok(HybridLogicalTimestamp {
-            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing actor"))?,
-            physical_ms: physical_ms.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing physical_ms"))?,
-            logical: logical.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing logical"))?,
+            actor: actor.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing actor"))?,
+            physical_ms: physical_ms.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing physical_ms"))?,
+            logical: logical.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "HybridLogicalTimestamp missing logical"))?,
         })
     }
 }
 //#endregion 🔖️HybridLogicalTimestamp
+
+#[path = "../🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"]
+mod canonical_tree;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+mod owned_retirement {
+    use super::*;
+    use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+    semio_framework_value::artifact_retire_leaf!(HybridLogicalTimestamp);
+    impl RetireOwned for MutationId {
+        fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}
+        fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}
+        fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()}
+    }
+    impl RetireOwned for ActorId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{semio_framework_value::SharedUtf8::controlled_retirement_supported()} }
+    impl RetireOwned for ArtifactId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
+    impl RetireOwned for SchemaId { fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()} fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()} }
+    impl RetireOwned for PayloadHash {
+     fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}
+     fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}
+     fn controlled_retirement_supported()->bool{<[u8;32]>::controlled_retirement_supported()}
+    }
+}

@@ -63,7 +63,7 @@ fn every_action_stays_reachable_by_keyboard_under_any_customization() {
 
 #[test]
 fn every_scenario_of_the_keymap_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../../🧪️tests/⌨️keymap/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/⌨️keymap/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs")], &[
         ("Key spellings fold into one canonical key", &["spellings_fold_into_one_canonical_key_with_a_readable_label"]),
         ("The keymap is data with action ids", &["shipped_defaults_resolve_per_the_shared_vectors_and_never_collide"]),
         ("Customizations fold over the defaults without losing a key", &["customizations_fold_over_the_defaults_and_collisions_are_named"]),

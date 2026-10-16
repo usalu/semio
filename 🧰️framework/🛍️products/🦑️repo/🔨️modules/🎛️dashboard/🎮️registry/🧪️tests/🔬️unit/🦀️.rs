@@ -1,4 +1,8 @@
-use super::*;
+use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
+use dashboard_registry::{graph_file, verb_of, verb_rank, CommandId, Facts, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, Request, RunPolicy, TargetFacts, FALLBACK_VERB, GRAPH_REUSE};
+use dashboard_repo_domain::{RepoAction, RepoImplementation};
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
 
@@ -9,7 +13,7 @@ fn neutral_graph_publication_uses_declared_partition_and_preserves_charge_identi
     assert_ne!(graph_file(), document["publication"]["charge"].as_str().unwrap());
     let root = materialise("publication-path");
     std::fs::write(root.join(document["publication"]["charge"].as_str().unwrap()), "storage charge receipt").unwrap();
-    let registry = crate::inventory::discover_with_catalog(&root, &std::sync::atomic::AtomicBool::new(false), Some(&root.join("catalog")));
+    let registry = crate::discover_with_catalog(&root, &std::sync::atomic::AtomicBool::new(false), Some(&root.join("catalog")));
     assert!(registry.find("@fixture/artifact-wav:check").is_some());
     assert!(registry.problems().is_empty());
     std::fs::remove_dir_all(root).unwrap();
@@ -32,7 +36,7 @@ fn materialise_text(name: &str, fixture: &str) -> PathBuf {
 
 fn fixture(name: &str) -> (PathBuf, Registry) {
     let root = materialise(name);
-    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
+    let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     (root, registry)
 }
 
@@ -297,7 +301,7 @@ fn a_catalog_example_is_chosen_by_its_slug_or_its_bare_id() {
     let root = materialise("bare-example");
     std::fs::create_dir_all(root.join("catalog")).unwrap();
     std::fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"p","pluginId":"x","cratePath":"x","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
-    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
+    let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     for chosen in ["second", "🎬️second"] { assert_eq!(env_of(&resolve(&registry, "playground:p", &request(&[("example", chosen)], &[], &[])).processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), Some("🎬️second")); }
     assert!(registry.resolve_with("playground:p", &request(&[("example", "third")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose 🎬️first, 🎬️second"));
 }
@@ -328,7 +332,7 @@ fn repo_commands_follow_the_policy_that_picks_the_implementation() {
     let rust = registry.resolve_with("repo:goals.list", &Request::default(), RunPolicy::default()).unwrap();
     assert_eq!(rust.processes[0].args[0], "repo-view");
     let go = registry.resolve_with("repo:goals.list", &Request::default(), RunPolicy { repo: RepoImplementation::Go, ..RunPolicy::default() }).unwrap();
-    assert_eq!((go.processes[0].cmd.as_str(), go.processes[0].args.as_slice()), (crate::repo_domain::go_binary_path(&root).display().to_string().as_str(), ["goal", "list"].map(String::from).as_slice()));
+    assert_eq!((go.processes[0].cmd.as_str(), go.processes[0].args.as_slice()), (dashboard_repo_domain::go_binary_path(&root).display().to_string().as_str(), ["goal", "list"].map(String::from).as_slice()));
     assert!(registry.resolve_with("repo:goals.list", &request(&[], &["x"], &[]), RunPolicy::default()).is_err());
     assert_eq!(registry.find("repo:ticket.close:26/09/23/OPEN-PROBE").map(|entry| entry.mutating), Some(true));
 }
@@ -364,23 +368,6 @@ fn entries_are_searched_by_label_and_identity_and_closed_tickets_stay_unlisted()
     assert!(ids(&["design", "3d"], false).contains(&"playground:cad".to_string()), "a playground is found by its aliases");
     assert!(ids(&["CLOSED-PROBE"], false).is_empty());
     assert!(ids(&["closed-probe"], true).iter().any(|id| id == "repo:ticket.reopen:26/08/01/CLOSED-PROBE"));
-}
-
-#[test]
-fn tab_text_keeps_the_verb_and_elides_the_subject_in_the_middle() {
-    let label = TaskLabel { verb: "dev".into(), owner: vec![], subject: "a-very-long-subject-name-indeed".into(), qualifier: "react".into(), parameters: vec![], members: 0 };
-    let text = tab_text(&label, Locale::En, TAB_CELLS);
-    assert!(text.starts_with("dev ") && text.contains('…') && cells(&text) <= TAB_CELLS, "{text}");
-    assert_eq!(tab_text(&TaskLabel { subject: "hub".into(), ..label.clone() }, Locale::En, TAB_CELLS), "dev hub react");
-    assert_eq!(tab_texts(&[&label, &label], Locale::En, TAB_CELLS).iter().filter(|text| text.ends_with(" ·2")).count(), 1);
-    assert_eq!(window_title(&TaskLabel { subject: "hub".into(), owner: vec!["hub".into()], members: 2, parameters: vec![("backend".into(), "pg".into())], ..label }, Locale::De), "entwickeln · hub ×2 · react · backend=pg");
-}
-
-#[test]
-fn the_xxh3_hash_matches_the_reference_vectors() {
-    assert_eq!(xxh3_64(b""), 0x2d06_8005_38d3_94c2);
-    assert_eq!(xxh3_64(b"a"), 0xe6c6_32b6_1e96_4e1f);
-    assert_eq!(xxh3_64(b"abc"), 0x78af_5f94_892f_3950);
 }
 
 fn publish_graph_basis(root: &Path, registry: &Registry) {
@@ -444,8 +431,16 @@ fn a_tool_that_is_an_mcp_server_lists_the_clients_that_start_it_and_a_wrong_expo
     for (from, to, message) in [(r#""claude-code": {}"#, r#""emacs": {}"#, "mcp client \"emacs\""), (r#""project": "workspace" } } }"#, r#""nothing": "x" } } }"#, "states \"nothing\""), (r#""server": "bun-test""#, r#""server": "Bun Test""#, "mcp server")] {
         let (_, broken) = {
             let root = materialise_text("mcp-broken", &FIXTURE.replace(from, to));
-            (root.clone(), crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog"))))
+            (root.clone(), crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog"))))
         };
         assert!(broken.problems().iter().any(|problem| problem.message.contains(message)), "{message}: {:?}", broken.problems());
     }
+}
+
+#[test]
+fn every_action_has_a_distinct_key_the_registry_grammar_accepts() {
+    let actions = [RepoAction::GoalsList, RepoAction::GoalsTree, RepoAction::TreeMonorepo, RepoAction::TreeGoal, RepoAction::TreeStatute, RepoAction::TreeTerritory, RepoAction::StatutesCatalog, RepoAction::Analyze { scope: "rust".into() }, RepoAction::TicketShow { id: "26/09/06/X".into() }, RepoAction::TicketFiles { id: "26/09/06/X".into() }, RepoAction::TicketClose { id: "26/09/06/X".into() }, RepoAction::TicketReopen { id: "26/09/06/X".into() }];
+    let keys: std::collections::BTreeSet<String> = actions.iter().map(dashboard_repo_domain::action_key).collect();
+    assert_eq!(keys.len(), actions.len());
+    for key in keys { assert!(CommandId::parse(&format!("repo:{key}")).is_ok_and(|id| matches!(id, CommandId::Repo { .. })), "{key}"); }
 }

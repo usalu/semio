@@ -250,3 +250,123 @@ pub fn create_gif_87a_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_GIF_DOCUMENT_SCHEMA};
+use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+pub use crate::schema::mutations::GifMutation;
+pub use crate::schema::snapshot::GifSnapshot;
+pub use crate::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA;
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("gif", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `gif` declares for both standards (`87a`, `89a`, independently versioned ids): schemas, format, inference
+/// descriptors, composers and document codecs.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor())
+        .schemas([crate::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor()])
+        .formats(formats)
+        .inferences([crate::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor(), crate::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor()])
+        .composers(crate::standards::v87a::subsets::any::io::io_registry::entries())
+        .composers(crate::standards::v89a::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot, crate::standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") })
+        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") })
+        .try_build()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.gif".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Gif", "Gif"),
+        source_format: STDIO_GIF_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_GIF_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "gif", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems8
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{artifact_kind, declaration};
+use crate::{definition};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const GIF_87A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
+pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") };
+
+#[cfg(test)]
+pub fn register_sqlite_test_declaration(){
+    static DECLARED:std::sync::OnceLock<()>=std::sync::OnceLock::new();
+    DECLARED.get_or_init(||{semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio").label("GIF SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(declaration(definition().unwrap()).unwrap()).try_build().unwrap();});
+}
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems9

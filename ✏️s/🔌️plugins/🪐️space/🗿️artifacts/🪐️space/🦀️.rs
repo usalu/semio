@@ -11,8 +11,6 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 #[path = "🫀️index/🦀️.rs"]
 pub mod index;
 
@@ -20,40 +18,7 @@ pub use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactDialect, SpaceArtifactRow};
 
-pub const S_SPACE_INDEX_DOCUMENT_SCHEMA: &str = "s.space";
-
-//#region 🔖️Dialect
-/// 🪪️ Lives at the ARTIFACT level (not under `editor`/`viewer`), mirroring `HOME_DIALECT`'s own
-/// placement doc — `artifact_kind` matches this subset's `#[artifact_schema(id = "s.space.space")]`,
-/// `standard`/`subset` match this file's own `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Canonical
-/// surface id: `s.space.space@1/*#editor` / `s.space.space@1/*#viewer` (contract §1 grammar).
-pub const SPACE_INDEX_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.space.space", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
-
-/// 📇️ The `os.space-index` topic row through which this plugin names the artifact-index document the os shell opens for a hub space, so the framework never names this plugin's dialect or document schema.
-pub fn space_index_topic_contribution() -> semio_framework_plugin::TopicContribution {
-    semio_framework_plugin::SpaceIndexContribution { dialect: SPACE_INDEX_DIALECT.into(), document_schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string() }.into_topic_contribution()
-}
-//#endregion 🔖️Dialect
-
-//#region 🔖️ArtifactKind
-/// 🗂️ OS artifact kind for this document.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "space.sspace".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Space Artifacts", "Space-Artefakte"),
-        source_format: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(),
-        component_kind: "space-index".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_space_space_schema::{SPACE_INDEX_DIALECT, S_SPACE_INDEX_DOCUMENT_SCHEMA, artifact_kind, space_index_topic_contribution};
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's declaration — mirrors `semio_s_artifact_space_home::declaration()`'s shape. No
@@ -101,92 +66,15 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
                     pub mod any {
                         #[path = "."]
                         pub mod schema {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
-                            pub mod operations;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                            pub mod snapshot;
-                            #[path = "."]
-                            pub mod mutations {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[path = "."]
-                                pub mod create_artifact {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends/🦀️.rs"]
-                                    mod tests_appends_artifact_3_to_the_index;
-                                }
-                                #[path = "."]
-                                pub mod delete_artifact {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🧪️removes/🦀️.rs"]
-                                    mod tests_removes_artifact_2_from_the_index;
-                                }
-                                #[path = "."]
-                                pub mod rename_artifact {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🧪️tests/🧪️renames-artifact-1/🦀️.rs"]
-                                    mod tests_renames_artifact_1;
-                                }
-                                #[path = "."]
-                                pub mod touch_artifact {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🦀️.rs"]
-                                    mod component;
-                                    pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🔺️diff/🦀️.rs"]
-                                    pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️.rs"]
-                                    pub mod inverse;
-                                    #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🧪️stamps/🦀️.rs"]
-                                    mod tests_stamps_artifact_1_with_a_new_editor;
-                                }
-                            }
+                            pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::schema::*;
+                            
+                            pub use semio_s_artifact_space_space_diff::standards::v1::subsets::any::schema::diff;
+                            pub use semio_s_artifact_space_space_mutations::standards::v1::subsets::any::schema::operations;
+                            pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::schema::snapshot;
+                            pub use semio_s_artifact_space_space_mutations::standards::v1::subsets::any::schema::mutations;
                         }
-                        #[path = "."]
-                        pub mod io {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod examples {
-                            #[path = "."]
-                            pub mod demo {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                                #[cfg(test)]
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🔬️unit/🦀️.rs"]
-                                mod tests;
-                            }
-                        }
+                        pub use semio_s_artifact_space_space_editor::standards::v1::subsets::any::io;
+                        pub use semio_s_artifact_space_space_diff::standards::v1::subsets::any::examples;
                     }
                 }
             }
@@ -196,81 +84,24 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 pub mod editor {
     #[path = "."]
     pub mod space_index {
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-#[path = "."]
-pub mod presence {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-    pub mod schema;
-}
+pub use semio_s_artifact_space_space_editor::editor::space_index::*;
+        
+pub use semio_s_artifact_space_space_schema::editor::space_index::presence;
 
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
+        pub use semio_s_artifact_space_space_diff::editor::space_index::config;
 
-        #[path = "."]
-        pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗copy-invite-link/🦀️.rs"]
-            pub mod copy_invite_link;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱create-artifact/🦀️.rs"]
-            pub mod create_artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-artifact/🦀️.rs"]
-            pub mod delete_artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📇fold-directory-events/🦀️.rs"]
-            pub mod fold_directory_events;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💌invite-member/🦀️.rs"]
-            pub mod invite_member;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️open-artifact/🦀️.rs"]
-            pub mod open_artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️open-artifact-with/🦀️.rs"]
-            pub mod open_artifact_with;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💓presence-heartbeat/🦀️.rs"]
-            pub mod presence_heartbeat;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪remove-member/🦀️.rs"]
-            pub mod remove_member;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-artifact/🦀️.rs"]
-            pub mod rename_artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❔request-delete-artifact/🦀️.rs"]
-            pub mod request_delete_artifact;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❕request-invite-member/🦀️.rs"]
-            pub mod request_invite_member;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-visibility/🦀️.rs"]
-            pub mod set_visibility;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕒touch-artifact/🦀️.rs"]
-            pub mod touch_artifact;
-        }
+        pub use semio_s_artifact_space_space_editor::editor::space_index::commands;
 
-        #[path = "."]
-        pub mod panels {
-            #[path = "."]
-            pub mod members {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/👥️members/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-        }
+        pub use semio_s_artifact_space_space_editor::editor::space_index::panels;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_space_space_editor::editor::space_index::modes::edit::*;
+                
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_space_space_editor::editor::space_index::modes::edit::windows;
             }
         }
     }
@@ -280,48 +111,26 @@ pub mod presence {
 pub mod viewer {
     #[path = "."]
     pub mod space_index {
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-#[path = "."]
-pub mod presence {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-    pub mod schema;
-}
-#[path = "."]
-pub mod config {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-    pub mod schema;
-}
+pub use semio_s_artifact_space_space_editor::viewer::space_index::*;
+        
+pub use semio_s_artifact_space_space_diff::viewer::space_index::presence;
+pub use semio_s_artifact_space_space_diff::viewer::space_index::config;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_space_space_diff::viewer::space_index::modes::view::*;
+                
 
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_space_space_diff::viewer::space_index::modes::view::windows;
             }
         }
     }
 }
 
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_space_space_diff::examples;
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

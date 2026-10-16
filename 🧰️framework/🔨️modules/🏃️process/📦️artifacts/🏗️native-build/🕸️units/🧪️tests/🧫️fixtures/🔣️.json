@@ -27,8 +27,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": "aarch64-apple-darwin",
           "mode": "build",
@@ -58,8 +64,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": "aarch64-apple-darwin",
           "mode": "build",
@@ -114,8 +126,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": null,
           "mode": "build",
@@ -143,8 +161,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": null,
           "mode": "build",
@@ -179,8 +203,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": null,
           "mode": "build",
@@ -208,8 +238,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": null,
           "mode": "build",
@@ -285,8 +321,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": "aarch64-apple-darwin",
           "mode": "build",
@@ -316,8 +358,14 @@
             "panic": "unwind",
             "debug_assertions": true,
             "overflow_checks": true,
-            "lto": "false",
-            "incremental": true
+            "lto": "off",
+            "incremental": true,
+            "codegen_backend": null,
+            "split_debuginfo": null,
+            "rpath": false,
+            "strip": {
+              "resolved": "None"
+            }
           },
           "platform": "aarch64-apple-darwin",
           "mode": "build",

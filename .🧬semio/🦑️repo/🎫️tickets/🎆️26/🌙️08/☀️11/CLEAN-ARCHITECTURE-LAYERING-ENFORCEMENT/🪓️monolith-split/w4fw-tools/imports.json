@@ -1,0 +1,2238 @@
+{
+ "root": [
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::IconName",
+     "alias": "IconName"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::Locale",
+     "alias": "Locale"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::LocalizedLabel",
+     "alias": "LocalizedLabel"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::Terminology",
+     "alias": "Terminology"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_io_schema",
+     "alias": "io_schema"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_io_sqlite_snapshot",
+     "alias": "sqlite_snapshot"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "component",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "action_bus::ActionBus",
+     "alias": "ActionBus"
+    },
+    {
+     "path": "action_bus::ErasedToolJob",
+     "alias": "ErasedToolJob"
+    },
+    {
+     "path": "action_bus::ToolCancellationPolicy",
+     "alias": "ToolCancellationPolicy"
+    },
+    {
+     "path": "action_bus::ToolDispatchError",
+     "alias": "ToolDispatchError"
+    },
+    {
+     "path": "action_bus::ToolExecutionContract",
+     "alias": "ToolExecutionContract"
+    },
+    {
+     "path": "action_bus::ToolExecutionShape",
+     "alias": "ToolExecutionShape"
+    },
+    {
+     "path": "action_bus::ToolFactoryKey",
+     "alias": "ToolFactoryKey"
+    },
+    {
+     "path": "action_bus::ToolFreshnessPolicy",
+     "alias": "ToolFreshnessPolicy"
+    },
+    {
+     "path": "action_bus::ToolJobDispatch",
+     "alias": "ToolJobDispatch"
+    },
+    {
+     "path": "action_bus::ToolJobFactory",
+     "alias": "ToolJobFactory"
+    },
+    {
+     "path": "action_bus::ToolJobFactoryError",
+     "alias": "ToolJobFactoryError"
+    },
+    {
+     "path": "action_bus::ToolOperationSpec",
+     "alias": "ToolOperationSpec"
+    },
+    {
+     "path": "action_bus::ToolPayload",
+     "alias": "ToolPayload"
+    },
+    {
+     "path": "action_bus::ToolRegistrationError",
+     "alias": "ToolRegistrationError"
+    },
+    {
+     "path": "action_bus::ToolWireAdmission",
+     "alias": "ToolWireAdmission"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_value::dsl_value",
+     "alias": "dsl_value"
+    },
+    {
+     "path": "semio_framework_value::DslValue",
+     "alias": "DslValue"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Diagnostic",
+     "alias": "Diagnostic"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Fault",
+     "alias": "Fault"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultCause",
+     "alias": "FaultCause"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultCode",
+     "alias": "FaultCode"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultFrom",
+     "alias": "FaultFrom"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultOrigin",
+     "alias": "FaultOrigin"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultParams",
+     "alias": "FaultParams"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::is_fault_param_name",
+     "alias": "is_fault_param_name"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultScope",
+     "alias": "FaultScope"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Severity",
+     "alias": "Severity"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::TextError",
+     "alias": "TextError"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::TextSpan",
+     "alias": "TextSpan"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_mesh_engine::io",
+     "alias": "mesh_io"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_mesh_engine::mesh_box",
+     "alias": "mesh_box"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_cone",
+     "alias": "mesh_cone"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_cylinder",
+     "alias": "mesh_cylinder"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_from_indexed",
+     "alias": "mesh_from_indexed"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_from_indexed_with_face_groups",
+     "alias": "mesh_from_indexed_with_face_groups"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_from_kind",
+     "alias": "mesh_from_kind"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_ico_sphere",
+     "alias": "mesh_ico_sphere"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_plane",
+     "alias": "mesh_plane"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_torus",
+     "alias": "mesh_torus"
+    },
+    {
+     "path": "semio_framework_mesh_engine::mesh_uv_sphere",
+     "alias": "mesh_uv_sphere"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshAttribute",
+     "alias": "MeshAttribute"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshAttributeDomain",
+     "alias": "MeshAttributeDomain"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshAttributeSemantic",
+     "alias": "MeshAttributeSemantic"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshAttributeInterpolation",
+     "alias": "MeshAttributeInterpolation"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshTexture",
+     "alias": "MeshTexture"
+    },
+    {
+     "path": "semio_framework_mesh_engine::PolygonMeshSource",
+     "alias": "PolygonMeshSource"
+    },
+    {
+     "path": "semio_framework_mesh_engine::validate_polygon_mesh_attributes",
+     "alias": "validate_polygon_mesh_attributes"
+    },
+    {
+     "path": "semio_framework_mesh_engine::validate_mesh_surface_assets",
+     "alias": "validate_mesh_surface_assets"
+    },
+    {
+     "path": "semio_framework_mesh_engine::validate_mesh_attribute",
+     "alias": "validate_mesh_attribute"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshData",
+     "alias": "MeshData"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshCanonicalDecoder",
+     "alias": "MeshCanonicalDecoder"
+    },
+    {
+     "path": "semio_framework_mesh_engine::MeshCanonicalIntakeSource",
+     "alias": "MeshCanonicalIntakeSource"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "abi",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "interaction",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_artifact_reference::ArtifactDialect",
+     "alias": "ArtifactDialect"
+    },
+    {
+     "path": "semio_framework_artifact_reference::Dialect",
+     "alias": "Dialect"
+    },
+    {
+     "path": "semio_framework_artifact_reference::StandardId",
+     "alias": "StandardId"
+    },
+    {
+     "path": "semio_framework_artifact_reference::SubsetId",
+     "alias": "SubsetId"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "manifest",
+     "alias": "ui"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "manifest::kernel::decode_presence_peer",
+     "alias": "decode_presence_peer"
+    },
+    {
+     "path": "manifest::kernel::encode_presence_peer",
+     "alias": "encode_presence_peer"
+    },
+    {
+     "path": "manifest::kernel::ActionContext",
+     "alias": "ActionContext"
+    },
+    {
+     "path": "manifest::kernel::ActionDef",
+     "alias": "ActionDef"
+    },
+    {
+     "path": "manifest::kernel::ActionId",
+     "alias": "ActionId"
+    },
+    {
+     "path": "manifest::kernel::ActionInvocation",
+     "alias": "ActionInvocation"
+    },
+    {
+     "path": "manifest::kernel::ActionRequest",
+     "alias": "ActionRequest"
+    },
+    {
+     "path": "manifest::kernel::ActorId",
+     "alias": "ActorId"
+    },
+    {
+     "path": "manifest::kernel::AppEvent",
+     "alias": "AppEvent"
+    },
+    {
+     "path": "manifest::kernel::AppInstanceId",
+     "alias": "AppInstanceId"
+    },
+    {
+     "path": "manifest::kernel::Appearance",
+     "alias": "Appearance"
+    },
+    {
+     "path": "manifest::kernel::ArtifactDiff",
+     "alias": "ArtifactDiff"
+    },
+    {
+     "path": "manifest::kernel::ArtifactHandle",
+     "alias": "ArtifactHandle"
+    },
+    {
+     "path": "manifest::kernel::ArtifactId",
+     "alias": "ArtifactId"
+    },
+    {
+     "path": "manifest::kernel::ArtifactKind",
+     "alias": "ArtifactKind"
+    },
+    {
+     "path": "manifest::kernel::ArtifactVersion",
+     "alias": "ArtifactVersion"
+    },
+    {
+     "path": "manifest::kernel::AssetHandle",
+     "alias": "AssetHandle"
+    },
+    {
+     "path": "manifest::kernel::Capability",
+     "alias": "Capability"
+    },
+    {
+     "path": "manifest::kernel::CapabilityGrant",
+     "alias": "CapabilityGrant"
+    },
+    {
+     "path": "manifest::kernel::CapabilityRequirement",
+     "alias": "CapabilityRequirement"
+    },
+    {
+     "path": "manifest::kernel::CapabilityToken",
+     "alias": "CapabilityToken"
+    },
+    {
+     "path": "manifest::kernel::CommandContext",
+     "alias": "CommandContext"
+    },
+    {
+     "path": "manifest::kernel::CommandId",
+     "alias": "CommandId"
+    },
+    {
+     "path": "manifest::kernel::CommandInvocation",
+     "alias": "CommandInvocation"
+    },
+    {
+     "path": "manifest::kernel::Effect",
+     "alias": "Effect"
+    },
+    {
+     "path": "manifest::kernel::HybridLogicalTimestamp",
+     "alias": "HybridLogicalTimestamp"
+    },
+    {
+     "path": "manifest::kernel::IconRenderExportItem",
+     "alias": "IconRenderExportItem"
+    },
+    {
+     "path": "manifest::kernel::InverseMutation",
+     "alias": "InverseMutation"
+    },
+    {
+     "path": "manifest::kernel::InvocationId",
+     "alias": "InvocationId"
+    },
+    {
+     "path": "manifest::kernel::InvocationResult",
+     "alias": "InvocationResult"
+    },
+    {
+     "path": "manifest::kernel::KernelMutation",
+     "alias": "KernelMutation"
+    },
+    {
+     "path": "manifest::kernel::MutationId",
+     "alias": "MutationId"
+    },
+    {
+     "path": "manifest::kernel::PhysicalSize",
+     "alias": "PhysicalSize"
+    },
+    {
+     "path": "manifest::kernel::PluginInstanceId",
+     "alias": "PluginInstanceId"
+    },
+    {
+     "path": "manifest::kernel::PresencePeer",
+     "alias": "PresencePeer"
+    },
+    {
+     "path": "manifest::kernel::PresenceToolRun",
+     "alias": "PresenceToolRun"
+    },
+    {
+     "path": "manifest::kernel::PresenceToolRunState",
+     "alias": "PresenceToolRunState"
+    },
+    {
+     "path": "manifest::kernel::PresenceUi",
+     "alias": "PresenceUi"
+    },
+    {
+     "path": "manifest::kernel::PresenceViewKind",
+     "alias": "PresenceViewKind"
+    },
+    {
+     "path": "manifest::kernel::PresenceWindowView",
+     "alias": "PresenceWindowView"
+    },
+    {
+     "path": "manifest::kernel::RequestId",
+     "alias": "RequestId"
+    },
+    {
+     "path": "manifest::kernel::Rights",
+     "alias": "Rights"
+    },
+    {
+     "path": "manifest::kernel::SchemaId",
+     "alias": "SchemaId"
+    },
+    {
+     "path": "manifest::kernel::SchemaVersion",
+     "alias": "SchemaVersion"
+    },
+    {
+     "path": "manifest::kernel::Scope",
+     "alias": "Scope"
+    },
+    {
+     "path": "manifest::kernel::UndoGroup",
+     "alias": "UndoGroup"
+    },
+    {
+     "path": "manifest::kernel::UndoPolicy",
+     "alias": "UndoPolicy"
+    },
+    {
+     "path": "manifest::kernel::WindowEvent",
+     "alias": "WindowEvent"
+    },
+    {
+     "path": "manifest::kernel::WindowHandle",
+     "alias": "WindowHandle"
+    },
+    {
+     "path": "manifest::kernel::WindowInput",
+     "alias": "WindowInput"
+    },
+    {
+     "path": "manifest::kernel::WindowKindDef",
+     "alias": "WindowKindDef"
+    },
+    {
+     "path": "manifest::kernel::WindowKindId",
+     "alias": "WindowKindId"
+    },
+    {
+     "path": "manifest::kernel::WindowOutput",
+     "alias": "WindowOutput"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "manifest",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "platform::PanelVisibility",
+     "alias": "PanelVisibility"
+    },
+    {
+     "path": "platform::Platform",
+     "alias": "Platform"
+    },
+    {
+     "path": "platform::PlatformSpec",
+     "alias": "PlatformSpec"
+    }
+   ]
+  }
+ ],
+ "abi": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::fmt::Display",
+     "alias": "Display"
+    },
+    {
+     "path": "std::fmt::Formatter",
+     "alias": "Formatter"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_value::retained_clone::RetainedCloneGrant",
+     "alias": "RetainedCloneGrant"
+    }
+   ]
+  }
+ ],
+ "action_bus": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::manifest::InteractiveJobClassification",
+     "alias": "InteractiveJobClassification"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_job::InteractiveJob",
+     "alias": "InteractiveJob"
+    },
+    {
+     "path": "semio_framework_job::Operation",
+     "alias": "Operation"
+    },
+    {
+     "path": "semio_framework_job::StepContext",
+     "alias": "StepContext"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::any::Any",
+     "alias": "Any"
+    },
+    {
+     "path": "std::any::TypeId",
+     "alias": "TypeId"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::collections::HashMap",
+     "alias": "HashMap"
+    },
+    {
+     "path": "std::collections::HashSet",
+     "alias": "HashSet"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::error::Error",
+     "alias": "Error"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::fmt::Display",
+     "alias": "Display"
+    },
+    {
+     "path": "std::fmt::Formatter",
+     "alias": "Formatter"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::sync::Arc",
+     "alias": "Arc"
+    },
+    {
+     "path": "std::sync::Mutex",
+     "alias": "Mutex"
+    },
+    {
+     "path": "std::sync::OnceLock",
+     "alias": "OnceLock"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_job::InteractiveJobCloseStep",
+     "alias": "InteractiveJobCloseStep"
+    },
+    {
+     "path": "semio_framework_job::RetainedCloneProgress",
+     "alias": "RetainedCloneProgress"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_job::InteractiveJobCloseStep",
+     "alias": "InteractiveJobCloseStep"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::ValueError",
+     "alias": "ValueError"
+    },
+    {
+     "path": "semio_framework_value::ValueRefusalKind",
+     "alias": "ValueRefusalKind"
+    },
+    {
+     "path": "semio_framework_value::retained_clone::RetainedCloneProgress",
+     "alias": "RetainedCloneProgress"
+    }
+   ]
+  }
+ ],
+ "source_projection": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::collections::BTreeMap",
+     "alias": "BTreeMap"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::fmt",
+     "alias": "fmt"
+    }
+   ]
+  }
+ ],
+ "platform": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::action_bus::ActionBus",
+     "alias": "ActionBus"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::ui::AppDefinition",
+     "alias": "AppDefinition"
+    }
+   ]
+  }
+ ],
+ "interaction": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    },
+    {
+     "path": "serde::Serialize",
+     "alias": "Serialize"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::LocalizedLabel",
+     "alias": "LocalizedLabel"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::IconName",
+     "alias": "IconName"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::next_hover",
+     "alias": "next_hover"
+    },
+    {
+     "path": "::replication::next_selection",
+     "alias": "next_selection"
+    },
+    {
+     "path": "::replication::validate_state",
+     "alias": "validate_state"
+    },
+    {
+     "path": "::replication::HoverInput",
+     "alias": "HoverInput"
+    },
+    {
+     "path": "::replication::PresenceDomain",
+     "alias": "PresenceDomain"
+    },
+    {
+     "path": "::replication::PresenceInteraction",
+     "alias": "PresenceInteraction"
+    },
+    {
+     "path": "::replication::SelectionInput",
+     "alias": "SelectionInput"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::DomainHover",
+     "alias": "DomainHover"
+    },
+    {
+     "path": "::replication::DomainSelection",
+     "alias": "DomainSelection"
+    },
+    {
+     "path": "::replication::DomainTopology",
+     "alias": "DomainTopology"
+    },
+    {
+     "path": "::replication::HierarchyProvider",
+     "alias": "HierarchyProvider"
+    },
+    {
+     "path": "::replication::HoverSpec",
+     "alias": "HoverSpec"
+    },
+    {
+     "path": "::replication::InteractionOutline",
+     "alias": "InteractionOutline"
+    },
+    {
+     "path": "::replication::InteractionState",
+     "alias": "InteractionState"
+    },
+    {
+     "path": "::replication::InteractionTarget",
+     "alias": "InteractionTarget"
+    },
+    {
+     "path": "::replication::InteractionTopology",
+     "alias": "InteractionTopology"
+    },
+    {
+     "path": "::replication::MergeMode",
+     "alias": "MergeMode"
+    },
+    {
+     "path": "::replication::SelectionMethod",
+     "alias": "SelectionMethod"
+    },
+    {
+     "path": "::replication::SelectionMode",
+     "alias": "SelectionMode"
+    },
+    {
+     "path": "::replication::SelectionSpec",
+     "alias": "SelectionSpec"
+    },
+    {
+     "path": "::replication::TopologyNode",
+     "alias": "TopologyNode"
+    }
+   ]
+  }
+ ],
+ "interaction_gesture": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    }
+   ]
+  }
+ ],
+ "interaction_schema": [
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "super::InteractionRef",
+     "alias": "InteractionRef"
+    },
+    {
+     "path": "super::InteractionTopology",
+     "alias": "InteractionTopology"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_schema_registry::register_scope_schema_exports",
+     "alias": "register_exports"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_schema_registry::FacetLeaves",
+     "alias": "FacetLeaves"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_schema_registry::SchemaExport",
+     "alias": "SchemaExport"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_schema_registry::ScopeSchemaExports",
+     "alias": "ScopeSchemaExports"
+    }
+   ]
+  }
+ ],
+ "kernel": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::manifest::MediaType",
+     "alias": "MediaType"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::DslValue",
+     "alias": "DslValue"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_actor::RetainedTurnInput",
+     "alias": "RetainedTurnInput"
+    },
+    {
+     "path": "semio_framework_actor::RetainedTurnReceipt",
+     "alias": "RetainedTurnReceipt"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobSource",
+     "alias": "OriginalJobSource"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobSourceCursor",
+     "alias": "OriginalJobSourceCursor"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobTurnLoan",
+     "alias": "OriginalJobTurnLoan"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobBudget",
+     "alias": "OriginalJobBudget"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobCallFailure",
+     "alias": "OriginalJobCallFailure"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobStartReply",
+     "alias": "OriginalJobStartReply"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobStepReply",
+     "alias": "OriginalJobStepReply"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobCancelReply",
+     "alias": "OriginalJobCancelReply"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobOutputState",
+     "alias": "OriginalJobOutputState"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobOutcome",
+     "alias": "OriginalJobOutcome"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobOutputChunk",
+     "alias": "OriginalJobOutputChunk"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobOutputReply",
+     "alias": "OriginalJobOutputReply"
+    },
+    {
+     "path": "semio_framework_actor::OriginalJobOutputAckReply",
+     "alias": "OriginalJobOutputAckReply"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Diagnostic",
+     "alias": "Diagnostic"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Fault",
+     "alias": "Fault"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultCause",
+     "alias": "FaultCause"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultCode",
+     "alias": "FaultCode"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultFrom",
+     "alias": "FaultFrom"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultOrigin",
+     "alias": "FaultOrigin"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::FaultScope",
+     "alias": "FaultScope"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_diagnostic::Severity",
+     "alias": "Severity"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value_derive::FromValue",
+     "alias": "FromValue"
+    },
+    {
+     "path": "semio_framework_value_derive::ToValue",
+     "alias": "ToValue"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    },
+    {
+     "path": "serde::Serialize",
+     "alias": "Serialize"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::UiNode",
+     "alias": "UiNode"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::ActorId",
+     "alias": "ActorId"
+    },
+    {
+     "path": "::replication::ArtifactId",
+     "alias": "ArtifactId"
+    },
+    {
+     "path": "::replication::ArtifactVersion",
+     "alias": "ArtifactVersion"
+    },
+    {
+     "path": "::replication::MutationId",
+     "alias": "MutationId"
+    },
+    {
+     "path": "::replication::SchemaId",
+     "alias": "SchemaId"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::HybridLogicalTimestamp",
+     "alias": "HybridLogicalTimestamp"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "clipboard_envelope::CLIPBOARD_TEXT_MAX_BYTES",
+     "alias": "CLIPBOARD_TEXT_MAX_BYTES"
+    },
+    {
+     "path": "clipboard_envelope::CLIPBOARD_METADATA_MAX_WIRE_BYTES",
+     "alias": "CLIPBOARD_METADATA_MAX_WIRE_BYTES"
+    },
+    {
+     "path": "clipboard_envelope::CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES",
+     "alias": "CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES"
+    },
+    {
+     "path": "clipboard_envelope::CLIPBOARD_PASTE_MAX_WIRE_BYTES",
+     "alias": "CLIPBOARD_PASTE_MAX_WIRE_BYTES"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::ArtifactDiff",
+     "alias": "ArtifactDiff"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::UndoPolicy",
+     "alias": "UndoPolicy"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super::Severity",
+     "alias": "Severity"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    },
+    {
+     "path": "serde::Deserializer",
+     "alias": "Deserializer"
+    },
+    {
+     "path": "serde::Serializer",
+     "alias": "Serializer"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super::Severity",
+     "alias": "Severity"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    },
+    {
+     "path": "serde::Deserializer",
+     "alias": "Deserializer"
+    },
+    {
+     "path": "serde::Serializer",
+     "alias": "Serializer"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::decode_presence_history_edit",
+     "alias": "decode_presence_history_edit"
+    },
+    {
+     "path": "::replication::decode_presence_peer",
+     "alias": "decode_presence_peer"
+    },
+    {
+     "path": "::replication::encode_presence_history_edit",
+     "alias": "encode_presence_history_edit"
+    },
+    {
+     "path": "::replication::encode_presence_peer",
+     "alias": "encode_presence_peer"
+    },
+    {
+     "path": "::replication::PresenceHistoryEdit",
+     "alias": "PresenceHistoryEdit"
+    },
+    {
+     "path": "::replication::PresenceHistoryEditStage",
+     "alias": "PresenceHistoryEditStage"
+    },
+    {
+     "path": "::replication::PresencePeer",
+     "alias": "PresencePeer"
+    },
+    {
+     "path": "::replication::PresenceToolRun",
+     "alias": "PresenceToolRun"
+    },
+    {
+     "path": "::replication::PresenceToolRunState",
+     "alias": "PresenceToolRunState"
+    },
+    {
+     "path": "::replication::PresenceUi",
+     "alias": "PresenceUi"
+    },
+    {
+     "path": "::replication::PresenceViewKind",
+     "alias": "PresenceViewKind"
+    },
+    {
+     "path": "::replication::PresenceWindowView",
+     "alias": "PresenceWindowView"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "::replication::wire::command_ingress::FixedCommandPage",
+     "alias": "FixedCommandPage"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandPageSet",
+     "alias": "CommandPageSet"
+    },
+    {
+     "path": "::replication::wire::command_ingress::PagedCommand",
+     "alias": "PagedCommand"
+    },
+    {
+     "path": "::replication::wire::command_ingress::PagedCommandReader",
+     "alias": "PagedCommandReader"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandEnvelope",
+     "alias": "CommandEnvelope"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandBatch",
+     "alias": "CommandBatch"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandEnvelopeSet",
+     "alias": "CommandEnvelopeSet"
+    },
+    {
+     "path": "::replication::wire::command_ingress::RejectedCommandBuild",
+     "alias": "RejectedCommandBuild"
+    },
+    {
+     "path": "::replication::wire::command_ingress::RejectedCommandBuildRegistry",
+     "alias": "RejectedCommandBuildRegistry"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandBatchProgress",
+     "alias": "CommandBatchProgress"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandBatchDriver",
+     "alias": "CommandBatchDriver"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandDriverRegistry",
+     "alias": "CommandDriverRegistry"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandPageCursor",
+     "alias": "CommandPageCursor"
+    },
+    {
+     "path": "::replication::wire::command_ingress::CommandIngressStatus",
+     "alias": "CommandIngressStatus"
+    },
+    {
+     "path": "::replication::wire::command_ingress::COMMAND_PAGE_MAXIMUM_BYTES",
+     "alias": "COMMAND_PAGE_MAXIMUM_BYTES"
+    },
+    {
+     "path": "::replication::wire::command_ingress::COMMAND_MAXIMUM_BYTES",
+     "alias": "COMMAND_MAXIMUM_BYTES"
+    },
+    {
+     "path": "::replication::wire::command_ingress::COMMAND_MAXIMUM_PAGES",
+     "alias": "COMMAND_MAXIMUM_PAGES"
+    },
+    {
+     "path": "::replication::wire::command_ingress::COMMAND_BATCH_MAXIMUM_ITEMS",
+     "alias": "COMMAND_BATCH_MAXIMUM_ITEMS"
+    },
+    {
+     "path": "::replication::wire::command_ingress::INVOCATION_RESULT_PACK_MAXIMUM_BYTES",
+     "alias": "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorInstanceCloseRequest",
+     "alias": "ActorInstanceCloseRequest"
+    },
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorInstanceLifecycleAck",
+     "alias": "ActorInstanceLifecycleAck"
+    },
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorInstanceLifecycleReceipt",
+     "alias": "ActorInstanceLifecycleReceipt"
+    },
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorInstanceLifetime",
+     "alias": "ActorInstanceLifetime"
+    },
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorInstanceOpenRequest",
+     "alias": "ActorInstanceOpenRequest"
+    },
+    {
+     "path": "semio_framework_actor::instance_lifetime::ActorUiPatchReceipt",
+     "alias": "ActorUiPatchReceipt"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "cold_pair::ColdDocumentPairApplied",
+     "alias": "ColdDocumentPairApplied"
+    },
+    {
+     "path": "cold_pair::ColdDocumentPairCursor",
+     "alias": "ColdDocumentPairCursor"
+    },
+    {
+     "path": "cold_pair::ColdDocumentPairFrontier",
+     "alias": "ColdDocumentPairFrontier"
+    },
+    {
+     "path": "cold_pair::ColdDocumentPairHeader",
+     "alias": "ColdDocumentPairHeader"
+    },
+    {
+     "path": "cold_pair::ColdDocumentPairPage",
+     "alias": "ColdDocumentPairPage"
+    },
+    {
+     "path": "cold_pair::ColdPairIngressStatus",
+     "alias": "ColdPairIngressStatus"
+    },
+    {
+     "path": "cold_pair::COLD_PAIR_MAXIMUM_BYTES",
+     "alias": "COLD_PAIR_MAXIMUM_BYTES"
+    },
+    {
+     "path": "cold_pair::COLD_PAIR_MAXIMUM_PAGES",
+     "alias": "COLD_PAIR_MAXIMUM_PAGES"
+    },
+    {
+     "path": "cold_pair::COLD_PAIR_PAGE_MAXIMUM_BYTES",
+     "alias": "COLD_PAIR_PAGE_MAXIMUM_BYTES"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_ui_contract::PresenceUpdate",
+     "alias": "PresenceUpdate"
+    },
+    {
+     "path": "semio_framework_ui_contract::UiPatch",
+     "alias": "UiPatch"
+    },
+    {
+     "path": "semio_framework_ui_contract::UiPatchOp",
+     "alias": "UiPatchOp"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_contract::UiValueRetirementStep",
+     "alias": "UiValueRetirementStep"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_contract::UiValueRetirementStep",
+     "alias": "UiValueRetirementStep"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::ser::SerializeSeq",
+     "alias": "SerializeSeq"
+    }
+   ]
+  }
+ ],
+ "k_clipboard": [],
+ "k_content": [],
+ "k_message": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super::return_content::ReturnContentHeader",
+     "alias": "ReturnContentHeader"
+    },
+    {
+     "path": "super::Effect",
+     "alias": "Effect"
+    },
+    {
+     "path": "super::MessageEndpoint",
+     "alias": "MessageEndpoint"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_actor::byte_page::ACTOR_BYTE_PAGE_BYTES",
+     "alias": "ACTOR_BYTE_PAGE_BYTES"
+    }
+   ]
+  }
+ ],
+ "k_cold": [
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_actor::cold_pair::ColdDocumentPairApplied",
+     "alias": "ColdDocumentPairApplied"
+    },
+    {
+     "path": "semio_framework_actor::cold_pair::ColdDocumentPairCursor",
+     "alias": "ColdDocumentPairCursor"
+    },
+    {
+     "path": "semio_framework_actor::cold_pair::ColdDocumentPairFrontier",
+     "alias": "ColdDocumentPairFrontier"
+    },
+    {
+     "path": "semio_framework_actor::cold_pair::ColdPairIngressStatus",
+     "alias": "ColdPairIngressStatus"
+    },
+    {
+     "path": "semio_framework_actor::cold_pair::COLD_PAIR_MAXIMUM_PAGES",
+     "alias": "COLD_PAIR_MAXIMUM_PAGES"
+    }
+   ]
+  }
+ ],
+ "manifest": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::DslValue",
+     "alias": "DslValue"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::FromValue",
+     "alias": "FromValue"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::ToValue",
+     "alias": "ToValue"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::ValueError",
+     "alias": "ValueError"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::Deserialize",
+     "alias": "Deserialize"
+    },
+    {
+     "path": "serde::Serialize",
+     "alias": "Serialize"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::collections::BTreeMap",
+     "alias": "BTreeMap"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::ActionDescriptor",
+     "alias": "ActionDescriptor"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::Locale",
+     "alias": "Locale"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::LocalizedLabel",
+     "alias": "LocalizedLabel"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::NamedLayout",
+     "alias": "NamedLayout"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::SurfaceKind",
+     "alias": "SurfaceKind"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_locale::Terminology",
+     "alias": "Terminology"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::WindowLayout",
+     "alias": "WindowLayout"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "ui_wgpu::wgpu::WindowOptions",
+     "alias": "WindowOptions"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::IconName",
+     "alias": "IconName"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::DomainSelection",
+     "alias": "DomainSelection"
+    },
+    {
+     "path": "crate::InteractionDefinition",
+     "alias": "InteractionDefinition"
+    },
+    {
+     "path": "crate::InteractionRef",
+     "alias": "InteractionRef"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "crate::ArtifactDialect",
+     "alias": "ArtifactDialect"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "arg_schema",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "actions",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "product_vocabulary",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "app_surface",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "plugin_manifest",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "space_index",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "view_model",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "initial_window_utility::InitialWindowUtilityInput",
+     "alias": "InitialWindowUtilityInput"
+    },
+    {
+     "path": "initial_window_utility::InitialWindowUtilityResolution",
+     "alias": "InitialWindowUtilityResolution"
+    },
+    {
+     "path": "initial_window_utility::resolve_initial_window_utility",
+     "alias": "resolve_initial_window_utility"
+    }
+   ]
+  }
+ ],
+ "m_canonical": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super::ProgramContributionEntry",
+     "alias": "ProgramContributionEntry"
+    },
+    {
+     "path": "super::TopicContribution",
+     "alias": "TopicContribution"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_pack_json::ArtifactCanonicalJsonNode",
+     "alias": "Node"
+    },
+    {
+     "path": "semio_framework_pack_json::ArtifactCanonicalJsonText",
+     "alias": "Text"
+    },
+    {
+     "path": "semio_framework_pack_json::ArtifactCanonicalJsonTree",
+     "alias": "Tree"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::ValueError",
+     "alias": "ValueError"
+    },
+    {
+     "path": "semio_framework_value::ValueRefusalKind",
+     "alias": "ValueRefusalKind"
+    }
+   ]
+  }
+ ],
+ "m_media": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::DslValue",
+     "alias": "DslValue"
+    },
+    {
+     "path": "semio_framework_value::Number",
+     "alias": "Number"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_hash::Sha256",
+     "alias": "Sha256"
+    }
+   ]
+  }
+ ],
+ "m_space": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  }
+ ],
+ "m_utilinit": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super::UtilityRef",
+     "alias": "UtilityRef"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "std::collections::HashMap",
+     "alias": "HashMap"
+    }
+   ]
+  }
+ ],
+ "m_argschema": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_ui_contract::SliderAppearance",
+     "alias": "SliderAppearance"
+    },
+    {
+     "path": "semio_framework_ui_contract::UiNumberBound",
+     "alias": "UiNumberBound"
+    },
+    {
+     "path": "semio_framework_ui_contract::UiNumberLimits",
+     "alias": "UiNumberLimits"
+    },
+    {
+     "path": "semio_framework_ui_contract::UiNumberScale",
+     "alias": "UiNumberScale"
+    }
+   ]
+  }
+ ],
+ "m_actions": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  }
+ ],
+ "m_vocab": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": true,
+   "items": [
+    {
+     "path": "semio_framework_tool_run::JobKindId",
+     "alias": "JobKindId"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunAction",
+     "alias": "ToolRunAction"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunCounterDefinition",
+     "alias": "ToolRunCounterDefinition"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunDefinition",
+     "alias": "ToolRunDefinition"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunDefinitionError",
+     "alias": "ToolRunDefinitionError"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunReasonDefinition",
+     "alias": "ToolRunReasonDefinition"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunRebasePolicy",
+     "alias": "ToolRunRebasePolicy"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunReconfigurePolicy",
+     "alias": "ToolRunReconfigurePolicy"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunSettingsReads",
+     "alias": "ToolRunSettingsReads"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunStageDefinition",
+     "alias": "ToolRunStageDefinition"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunTraceCursor",
+     "alias": "ToolRunTraceCursor"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunTraceKind",
+     "alias": "ToolRunTraceKind"
+    },
+    {
+     "path": "semio_framework_tool_run::ToolRunVerdict",
+     "alias": "ToolRunVerdict"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID",
+     "alias": "TOOL_RUN_ABORT_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::tool_run_panel_new_runs",
+     "alias": "tool_run_panel_new_runs"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_ACTION_IDS",
+     "alias": "TOOL_RUN_ACTION_IDS"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_DISMISS_ACTION_ID",
+     "alias": "TOOL_RUN_DISMISS_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_DISMISS_CHORD",
+     "alias": "TOOL_RUN_DISMISS_CHORD"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID",
+     "alias": "TOOL_RUN_FINALIZE_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_PAUSE_ACTION_ID",
+     "alias": "TOOL_RUN_PAUSE_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_RESUME_ACTION_ID",
+     "alias": "TOOL_RUN_RESUME_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_START_ACTION_ID",
+     "alias": "TOOL_RUN_START_ACTION_ID"
+    },
+    {
+     "path": "semio_framework_tool_run::TOOL_RUN_STEP_ACTION_ID",
+     "alias": "TOOL_RUN_STEP_ACTION_ID"
+    }
+   ]
+  }
+ ],
+ "m_surface": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText",
+     "alias": "_"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText",
+     "alias": "_"
+    }
+   ]
+  }
+ ],
+ "m_plugin": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "serde::ser::SerializeStruct",
+     "alias": "SerializeStruct"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText",
+     "alias": "_"
+    }
+   ]
+  }
+ ],
+ "m_view": [
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "super",
+     "alias": "*"
+    }
+   ]
+  },
+  {
+   "pub": false,
+   "items": [
+    {
+     "path": "semio_framework_value::DslValue",
+     "alias": "DslValue"
+    }
+   ]
+  }
+ ]
+}

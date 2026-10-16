@@ -2,13 +2,17 @@
 //! runner". `check()` is pure and deterministic (no LLM, no network) — every finding is derived
 //! entirely from the compiled `Catalog`'s own data.
 
-use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog, CatalogSource};
-use semio_framework::manifest::{ApprovalMode, UndoMode};
+use semio_framework::manifest::ApprovalMode;
+use semio_framework::manifest::UndoMode;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use std::collections::BTreeMap;
+use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog, CatalogSource, compile};
+use crate::search::{SearchFilters, search};
+use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
 
 //#region 🔖️Finding
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Severity {
     Error,
@@ -23,25 +27,30 @@ pub struct Finding {
 }
 
 impl Finding {
-    fn error(capability_id: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn error(capability_id: impl Into<String>, message: impl Into<String>) -> Self {
         Self { severity: Severity::Error, capability_id: Some(capability_id.into()), message: message.into() }
     }
 }
+
 //#endregion 🔖️Finding
 
 //#region 🔖️KnownScopes
+
 /// 📇️ `📋️master.md` §3.4's scope table, right-hand `CapabilityId`s — every value a `CapabilityPolicy`
 /// is allowed to name. `fs.read:*`/`fs.write:*`/`http:*`/`secrets:*` are prefix families (the table's
 /// own `<root>`/`<origin>`/`<name>` placeholders).
 const KNOWN_EXACT_SCOPES: [&str; 13] = ["artifacts.read", "artifacts.write", "jobs.spawn", "shell.observe", "shell.converse", "shell.control", "ui.window", "ui.dialog", "shell.navigate", "shell.raw", "shell.clipboard", "packages.install", "process.spawn"];
+
 const KNOWN_SCOPE_PREFIXES: [&str; 4] = ["fs.read:", "fs.write:", "http:", "secrets:"];
 
 fn is_known_scope(scope: &str) -> bool {
     KNOWN_EXACT_SCOPES.contains(&scope) || KNOWN_SCOPE_PREFIXES.iter().any(|prefix| scope.starts_with(prefix))
 }
+
 //#endregion 🔖️KnownScopes
 
 //#region 🔖️IdGrammar
+
 fn validate_id_grammar(capability: &CapabilityDefinition) -> Result<(), String> {
     let id = capability.id.as_str();
     if id.is_empty() || id.chars().any(char::is_whitespace) {
@@ -68,9 +77,11 @@ fn validate_id_grammar(capability: &CapabilityDefinition) -> Result<(), String> 
     }
     Ok(())
 }
+
 //#endregion 🔖️IdGrammar
 
 //#region 🔖️Check
+
 /// 🧪️ Every conformance rule this packet's brief §2.5 names, run over one already-compiled
 /// `Catalog`: schema validity (2020-12), examples validating against their own schema, kind/effects
 /// consistency, scope vocabulary, id grammar, and no duplicate `(owner, title)`. En+de label
@@ -84,17 +95,17 @@ pub fn check(catalog: &Catalog) -> Vec<Finding> {
         let id = capability.id.as_str();
 
         for (label, schema) in [("input", &capability.input_schema), ("output", &capability.output_schema)] {
-            if let Err(error) = crate::schema::compile_validator(schema) {
+            if let Err(error) = compile_validator(schema) {
                 findings.push(Finding::error(id, format!("{label} schema failed to compile as JSON Schema 2020-12: {error}")));
             }
         }
 
-        if let Ok(validator) = crate::schema::compile_validator(&capability.input_schema) {
+        if let Ok(validator) = compile_validator(&capability.input_schema) {
             for example in &capability.examples {
                 if example.input.is_null() {
                     continue;
                 }
-                if crate::schema::validate(&validator, &example.input).is_err() {
+                if validate(&validator, &example.input).is_err() {
                     findings.push(Finding::error(id, format!("example {:?} does not validate against its own input schema", example.request)));
                 }
             }
@@ -137,7 +148,7 @@ pub fn check(catalog: &Catalog) -> Vec<Finding> {
 pub fn check_bilingual_labels(source: &CatalogSource) -> Vec<Finding> {
     let mut findings = Vec::new();
     for (locale, name) in [(Locale::En, "en"), (Locale::De, "de")] {
-        match crate::catalog::compile(source, locale, Terminology::Native) {
+        match compile(source, locale, Terminology::Native) {
             Ok(catalog) => {
                 for capability in &catalog.entries {
                     if capability.title.trim().is_empty() {
@@ -150,9 +161,11 @@ pub fn check_bilingual_labels(source: &CatalogSource) -> Vec<Finding> {
     }
     findings
 }
+
 //#endregion 🔖️Check
 
 //#region 🔖️Eval
+
 /// 📖️ One `🧫️fixtures/🔣️eval.json` row.
 #[derive(Clone, Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -205,7 +218,7 @@ pub fn run_eval(catalog: &Catalog, cases: &[EvalCase]) -> EvalReport {
     let mut top3_hits = 0usize;
     let mut misses = Vec::new();
     for case in cases {
-        let hits = crate::search::search(catalog, &case.request, &crate::search::SearchFilters::default());
+        let hits = search(catalog, &case.request, &SearchFilters::default());
         let top1 = hits.first().map(|hit| hit.capability_id.clone());
         if top1.as_deref() == Some(case.expected_capability_id.as_str()) {
             top1_hits += 1;
@@ -219,10 +232,8 @@ pub fn run_eval(catalog: &Catalog, cases: &[EvalCase]) -> EvalReport {
     }
     EvalReport { total: cases.len(), top1_hits, top3_hits, misses }
 }
+
 //#endregion 🔖️Eval
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

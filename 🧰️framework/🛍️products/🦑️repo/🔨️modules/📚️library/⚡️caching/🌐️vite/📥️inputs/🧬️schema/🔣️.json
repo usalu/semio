@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "type": "array",
+      "maxItems": 0
+    },
+    {
+      "$ref": "urn:semio:repository-artifact-group:v1"
+    }
+  ],
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "admission": "repository-artifact-group"
+      }
+    }
+  }
+}

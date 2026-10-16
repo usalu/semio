@@ -1,8 +1,11 @@
 //! 🧪️ The generic `Mutation<S>` structural edit prepares insert, remove, replace and multi-row removal over documents of any size, restores the base through its ordered inverse rows and conserves custody through every cancellation frontier.
 use super::mutation_apply_preparation_factory;
-use crate::os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
-use crate::os_store::{one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, one_item::ArtifactStoreOneItemPreparationStep, store_schema::HistoryLane, snapshot_read::SnapshotRead, SnapshotReadRegistryHandle};
-use crate::Mutation;
+use semio_framework_os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
+use semio_framework_os_store_command::HistoryLane;
+use semio_framework_value_snapshot_read::{SnapshotRead, SnapshotReadRegistryHandle};
+use semio_framework_os_spr::Mutation;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::{FromValue, ToValue, ValueError, ValueRefusalKind};
@@ -116,8 +119,8 @@ impl Mutation<Document> for DocumentMutation {
 }
 
 impl OpBinary for DocumentMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> { serde_json::to_vec(self).map_err(|error| crate::ProtocolError::Io(error.to_string())) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError> { serde_json::from_slice(bytes).map_err(|error| crate::ProtocolError::Io(error.to_string())) }
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> { serde_json::to_vec(self).map_err(|error| semio_framework_os_spr::ProtocolError::Io(error.to_string())) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> { serde_json::from_slice(bytes).map_err(|error| semio_framework_os_spr::ProtocolError::Io(error.to_string())) }
 }
 
 fn fixture() -> Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
@@ -135,7 +138,7 @@ struct Stall;
 
 enum Outcome { Completed { post: Document, inverse: Vec<DocumentMutation>, turns: usize, retained: usize, peak: usize }, Cancelled, Refused(ValueError) }
 
-impl crate::snapshot_clone_preparation::ConfigApplyMutation<Document> for DocumentMutation {
+impl semio_framework_os_store_snapshot_clone::config_apply::ConfigApplyMutation<Document> for DocumentMutation {
     fn exchange(self, post: &mut Document) -> Result<Self, (ValueError, Self)> {
         match self {
             Self::SetText { index, text } if index < post.nodes.len() => Ok(Self::SetText { index, text: std::mem::replace(&mut post.nodes[index].text, text) }),
@@ -153,7 +156,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(document);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1, 0), "actor".into(), None, None, None));
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 0), "actor".into(), None, None, None));
     let request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1), base_revision: [0; 32], lane: HistoryLane::Document, authority, base: SnapshotRead::new(Arc::clone(&root), lease), mutation, mutation_retirement: Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default()), snapshot_retirement: Arc::new(SharedValueRetirementFactory::<Document>::default()) };
     let footprint = factory.preflight(&request.mutation, request.lane);
     let begun = factory.begin(request, grant);
@@ -241,7 +244,7 @@ fn mutation_apply_admits_documents_beyond_the_one_item_cap_when_turns_fund_the_s
     let large = Document { title: "large".into(), nodes: (0..1400).map(|index| Node { id: format!("n{index}"), text: text.clone() }).collect() };
     let build = || (large.clone(), DocumentMutation::SetText { index: 700, text: "edited".into() });
     let bytes: usize = large.nodes.iter().map(|node| node.id.len() + node.text.len()).sum();
-    assert!(bytes > crate::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
+    assert!(bytes > semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
     let factory = mutation_apply_preparation_factory::<Document, DocumentMutation>();
     let footprint = factory.preflight(&build().1, HistoryLane::Document).unwrap();
     assert!(footprint.retained_bytes < 4096 && footprint.is_admissible(), "the footprint counts only the mutation");
@@ -278,7 +281,7 @@ fn mutation_apply_wire_values_round_trip_through_the_value_contract() {
 fn config_apply_reaches_prepared_in_the_same_harness() {
     let policy = fixture();
     let base = document(&policy["base"]);
-    let factory = crate::snapshot_clone_preparation::config_apply_preparation_factory::<Document, DocumentMutation>();
+    let factory = semio_framework_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<Document, DocumentMutation>();
     let build = || (base.clone(), DocumentMutation::SetText { index: 1, text: "changed".into() });
     let Outcome::Completed { post, inverse, turns, retained, peak } = prepare_with(&factory, &build, grant(1 << 16, WIDE), None) else { panic!("config apply must complete") };
     eprintln!("[DEBUG] sealer retained capacity for a 4-node record: cumulative {retained}, peak live {peak}");

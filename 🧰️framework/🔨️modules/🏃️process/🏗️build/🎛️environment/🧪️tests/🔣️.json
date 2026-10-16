@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "environment": {},
+      "accepted": false
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+      },
+      "accepted": false
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "cache",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      },
+      "accepted": false
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "0"
+      },
+      "accepted": false
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      },
+      "accepted": true
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_BUILD_MODE": "prototype",
+        "CUSTOM": "unchanged",
+        "REMOVED": null
+      },
+      "accepted": true
+    },
+    {
+      "environment": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "NUMERIC": 1
+      },
+      "accepted": false
+    }
+  ]
+}

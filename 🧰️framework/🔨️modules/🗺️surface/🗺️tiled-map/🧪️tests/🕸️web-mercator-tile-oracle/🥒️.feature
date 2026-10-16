@@ -16,9 +16,9 @@ Feature: Web-Mercator projection and slippy-tile selection agree with a third-pa
   repository's Rust implementation matches the same frozen fixture) read that one file, so oracle and
   subject are checked against the identical inputs.
 
-  `lodBands` in the fixture are NOT third-party-checked: `GIS_MAP_LOD_MAX_SPAN_DEG` /
-  `GIS_MAP_LOD_TILE_Z` are a repository-owned band scheme with no published external standard, so
-  those vectors are specification vectors pinning `🦀️.rs`, not an oracle claim.
+  `lodBands` in the fixture are NOT third-party-checked: they are specification vectors of the sample
+  band table `lodConstants` (`maxSpanDeg` / `tileZ`) applied by a neutral `DescribedMapPolicy`, a
+  repository-owned band scheme with no published external standard — a pin of `🦀️.rs`, not an oracle claim.
 
   @id-lonlat-world-round-trip
   @level-fundamental
@@ -55,7 +55,7 @@ Feature: Web-Mercator projection and slippy-tile selection agree with a third-pa
   @mode-conformance
   Scenario: LOD band and tile-z selection match the frozen specification vectors
     Given a viewport longitude span in degrees from the fixture's `lodBands` array
-    Then the LOD band index resolved from `GIS_MAP_LOD_MAX_SPAN_DEG` and the tile z resolved from `GIS_MAP_LOD_TILE_Z` match the fixture's `lodIndex` and `tileZ`
+    Then the band index a `DescribedMapPolicy` built from the fixture's `lodConstants` resolves, and that band's raster tile z, match the fixture's `lodIndex` and `tileZ`
 
   @id-cursor-anchored-zoom-invariant
   @level-fundamental

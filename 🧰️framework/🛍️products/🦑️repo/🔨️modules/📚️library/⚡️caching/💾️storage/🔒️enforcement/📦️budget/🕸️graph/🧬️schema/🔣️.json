@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object", "additionalProperties": false,
-  "required": ["version", "maximumSnapshotBytes", "maximumRetainedBytes"],
+  "required": ["version", "maximumSnapshotBytes", "maximumRetainedBytes", "maximumAdmissionAttempts"],
   "properties": {
     "version": {"const": 1},
     "maximumSnapshotBytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
-    "maximumRetainedBytes": {"type": "integer", "minimum": 1, "maximum": 2147483648}
+    "maximumRetainedBytes": {"type": "integer", "minimum": 1, "maximum": 2147483648},
+    "maximumAdmissionAttempts": {"type": "integer", "minimum": 1, "maximum": 64}
   }
 }

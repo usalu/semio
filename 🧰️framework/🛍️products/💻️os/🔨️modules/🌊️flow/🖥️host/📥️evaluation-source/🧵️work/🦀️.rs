@@ -60,6 +60,3 @@ impl RetirementCursor for WorkRetirement{
  fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for FlowEvaluationWork{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(WorkRetirement(self))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<WorkRetirement>())}fn controlled_retirement_supported()->bool{true}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -669,7 +669,7 @@ async fn run_action(app: &mut EnergyEditorApp, action: &str, arguments: Vec<(Str
 }
 
 async fn start(app: &mut EnergyEditorApp) {
-    let output = run_action(app, semio_framework_plugin::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(tools::simulation::TOOL_ID.into()))]).await;
+    let output = run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(tools::simulation::TOOL_ID.into()))]).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("spawnJob"), "the framework starts the simulation run");
 }
 
@@ -724,7 +724,7 @@ async fn a_completed_simulation_run_finalizes_without_changing_the_document_or_h
     let panel = render_text(&mut app, semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY).await;
     assert!(panel.contains("Final: "), "the final quality tier readout is published into the run steps: {panel}");
     let arguments = run_arguments(&mut app).await;
-    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
     assert!(output.get("rejected").is_some(), "a finalized run accepts no second finalize");
     let after = durable(&mut app).await;
     assert_eq!(expected["documentPackUnchanged"].as_bool(), Some(before.0 == after.0 && before.1 == after.1), "finalizing a read-only run publishes no document edit");
@@ -753,7 +753,7 @@ async fn aborting_a_simulation_run_leaves_the_document_byte_identical() {
     start(&mut app).await;
     pump_presence(&mut app, "first timesteps", |run| run.completed > 0).await;
     let arguments = run_arguments(&mut app).await;
-    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("closeJob"));
     pump_state(&mut app, "abort settles", expected["state"].as_str().unwrap()).await;
     let after = durable(&mut app).await;
@@ -770,19 +770,19 @@ async fn a_paused_simulation_run_steps_exactly_one_timestep_per_step() {
     start(&mut app).await;
     pump_presence(&mut app, "first timesteps", |run| run.completed > 0).await;
     let arguments = run_arguments(&mut app).await;
-    assert_eq!(run_action(&mut app, semio_framework_plugin::TOOL_RUN_PAUSE_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("stopScheduling"));
+    assert_eq!(run_action(&mut app, semio_framework_tool_run::TOOL_RUN_PAUSE_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("stopScheduling"));
     pump_state(&mut app, "pause settles", "paused").await;
     let mut completed = presence(&app).expect("paused run").completed;
     for _ in 0..3 {
         let arguments = run_arguments(&mut app).await;
-        assert_eq!(run_action(&mut app, semio_framework_plugin::TOOL_RUN_STEP_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("driveOneUnit"));
+        assert_eq!(run_action(&mut app, semio_framework_tool_run::TOOL_RUN_STEP_ACTION_ID, arguments).await.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("driveOneUnit"));
         pump_state(&mut app, "single step settles", "paused").await;
         let after = presence(&app).expect("paused run").completed;
         assert_eq!(after - completed, fixture["fuel"]["completedAdvancePerTick"].as_u64().unwrap(), "one step computes exactly one timestep");
         completed = after;
     }
     let arguments = run_arguments(&mut app).await;
-    run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
     pump_state(&mut app, "abort settles", "aborted").await;
     close(app);
 }
@@ -794,7 +794,7 @@ async fn changing_the_simulation_settings_restarts_a_live_run_in_its_next_genera
     start(&mut app).await;
     pump_presence(&mut app, "first timesteps", |run| run.completed > 1).await;
     let arguments = run_arguments(&mut app).await;
-    run_action(&mut app, semio_framework_plugin::TOOL_RUN_PAUSE_ACTION_ID, arguments).await;
+    run_action(&mut app, semio_framework_tool_run::TOOL_RUN_PAUSE_ACTION_ID, arguments).await;
     pump_state(&mut app, "pause settles", "paused").await;
     let generation = run_arguments(&mut app).await[1].1.clone();
     run_action(&mut app, simulation::SET_SETTINGS_ACTION_ID, vec![("zoneTimestepMinutes".into(), DslValue::String("30".into())), ("systemTimestepMinutes".into(), DslValue::String("30".into())), ("warmupDays".into(), DslValue::String("1".into()))]).await;
@@ -810,11 +810,11 @@ async fn changing_the_simulation_settings_restarts_a_live_run_in_its_next_genera
     }
     assert_ne!(arguments[1].1, generation, "a settings change moves the run to its next generation");
     assert_eq!(state_of(&app), Some("paused"), "reconfigure keeps the paused state");
-    run_action(&mut app, semio_framework_plugin::TOOL_RUN_STEP_ACTION_ID, arguments).await;
+    run_action(&mut app, semio_framework_tool_run::TOOL_RUN_STEP_ACTION_ID, arguments).await;
     pump_state(&mut app, "restarted step settles", "paused").await;
     assert_eq!(presence(&app).expect("restarted run").completed, 1, "reconfigure: restart recomputes from the first timestep");
     let arguments = run_arguments(&mut app).await;
-    run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
     pump_state(&mut app, "abort settles", "aborted").await;
     close(app);
 }
@@ -833,7 +833,7 @@ async fn every_keybinding_uses_canonical_punctuation_key_tokens() {
         }
     }
     let abort = def.keybindings.iter().find(|binding| binding.keys == "mod+.").expect("the abort chord is bound");
-    assert_eq!(abort.action.action, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, "mod+. aborts the framework tool run, never a plugin verb");
+    assert_eq!(abort.action.action, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, "mod+. aborts the framework tool run, never a plugin verb");
 }
 
 #[semio_framework_async_macros::async_test]

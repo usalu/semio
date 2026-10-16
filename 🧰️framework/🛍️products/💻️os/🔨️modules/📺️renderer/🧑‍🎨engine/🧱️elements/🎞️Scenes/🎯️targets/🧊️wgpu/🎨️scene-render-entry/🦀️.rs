@@ -49,20 +49,20 @@ pub fn scene_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x: 
         SurfaceKind::InkCanvas => ink_canvas_context_menu_target(scene, bounds, x, y),
         SurfaceKind::Paint2d => {
             let selection_json = scene.paint_2d.as_ref().map(|paint| paint.selection_json.clone()).unwrap_or_else(|| "[]".into());
-            let (hits, selection) = engine_canvas::paint2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::Board2d => {
             let selection_json = scene.board2d.as_ref().map(|board| board.selection_json.clone()).unwrap_or_else(|| "[]".into());
-            let (hits, selection) = engine_canvas::board2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::board2d_context_menu_target(&scene.host_id, &selection_json, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::NodeGraph => {
-            let (hits, selection) = engine_canvas::node_graph_context_menu_target(&scene.host_id, f64::from(x - bounds.x), f64::from(y - bounds.y));
+            let (hits, selection) = semio_framework_os_renderer_wgpu_engine_board::paint2d::node_graph_context_menu_target(&scene.host_id, f64::from(x - bounds.x), f64::from(y - bounds.y));
             SceneContextMenuTarget { hits, selection, text: None }
         }
         SurfaceKind::TextEditor => {
-            let (hits, text) = engine_canvas::text_editor_context_menu_target(scene, bounds, x, y);
+            let (hits, text) = semio_framework_os_renderer_wgpu_engine_board::paint2d::text_editor_context_menu_target(scene, bounds, x, y);
             SceneContextMenuTarget { hits, selection: Vec::new(), text }
         }
         SurfaceKind::TiledMap => {
@@ -213,71 +213,6 @@ pub fn context_menu_surface_kind_id(kind: SurfaceKind) -> &'static str {
 }
 //#endregion 🖱️SurfaceContextMenu
 
-//#region RenderEntry
-pub(crate) fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
-    draw_text(ctx, &format!("{kind} host"), bounds.x + 12.0, bounds.y + 24.0, theme.font_size_body, theme.text_muted);
-}
-
-/// 🎞️ Advances one retained scene identifier scalar or one pre-admitted chrome output item.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct VirtualFileSystemChromeLabels {
-    pub name: &'static str,
-    pub no_file_system_nodes: &'static str,
-    pub expand: &'static str,
-    pub collapse: &'static str,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct BlockListChromeLabels {
-    pub steps: &'static str,
-    pub add_step: &'static str,
-    pub delete: &'static str,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct IconRenderChromeLabels {
-    pub empty_scene: &'static str,
-    pub rendering: &'static str,
-    pub failed: &'static str,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SceneChromeLabels {
-    pub virtual_file_system: VirtualFileSystemChromeLabels,
-    pub block_list: BlockListChromeLabels,
-    pub icon_render: IconRenderChromeLabels,
-    /// 🌍️ Whether the labels are the German bundle; the world surface writes its annotation and legend text in the same language.
-    pub german: bool,
-}
-
-impl SceneChromeLabels {
-    pub const fn english() -> Self {
-        Self {
-            german: false,
-            virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
-            block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
-            icon_render: IconRenderChromeLabels { empty_scene: "No scene", rendering: "Rendering…", failed: "Icon rendering failed" },
-        }
-    }
-}
-
-/// 🧩️ The per-frame engine state the retained scene paint needs beyond its own draw list: the shell's
-/// `World3dState` map (a `World3d` surface's host, addressed there by every pick/asset/authority
-/// ladder) and this frame's `World3dBuildContext` (built in `FrameBuildPhase::WorldResources`, drained
-/// again in `FrameBuildPhase::WorldTransfer`). Borrowed for exactly one chrome walk and never stored —
-/// the same reason `Ui::frame` takes its `SceneHost` as a parameter rather than owning one.
-pub struct SceneEngineHosts<'a> {
-    pub chrome_labels: SceneChromeLabels,
-    pub world3d_states: &'a mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
-    pub world_resources: &'a mut infinite_world::world::World3dBuildContext,
-    /// 🪟️ The window instance whose body this walk is painting — the retention authority every
-    /// attached engine surface is recorded against, so the shell can keep a surface alive through
-    /// frames its window did not repaint. See
-    /// `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`.
-    pub window_id: &'a str,
-}
-
 /// 🍿️ The editor's own popup chrome, painted LAST so it lands over the composited
 /// `EditorHost` texture phase 6 staged — React's absolutely-positioned overlays inside the
 /// host element (`🧱️elements/✏️TextEditor/🟦️.tsx:503-608`).
@@ -364,10 +299,10 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         4 => {
-            if !engine_canvas::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
+            if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
                 return cursor.finish();
             }
-            let Some(token) = engine_canvas::engine_surface_token(&scene.host_id) else {
+            let Some(token) = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token(&scene.host_id) else {
                 return ui_wgpu::wgpu::ScenePaintStep::Fault;
             };
             if !bind_scene_engine_token(&scene.host_id, token) {
@@ -379,14 +314,14 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         5 => {
-            let progress = engine_canvas::advance_raster_composite(scene);
+            let progress = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::advance_raster_composite(scene);
             if cursor.observe_external_progress(progress.completed).is_err() {
                 return ui_wgpu::wgpu::ScenePaintStep::Fault;
             }
             if !progress.done {
                 return ui_wgpu::wgpu::ScenePaintStep::Pending;
             }
-            if !engine_canvas::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
+            if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
@@ -395,7 +330,7 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         6 => {
-            let Some(key) = engine_canvas::engine_raster_key(&scene.host_id) else {
+            let Some(key) = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(&scene.host_id) else {
                 return ui_wgpu::wgpu::ScenePaintStep::Fault;
             };
             if ctx.draw.try_reserve_retained_items(1).is_err() {
@@ -410,7 +345,7 @@ pub fn render_component_scene_step(
         7 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
                 ctx.draw.push_scissor(bounds);
-                engine_canvas::paint_node_graph_labels(ctx, scene, bounds);
+                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_node_graph_labels(ctx, scene, bounds);
                 ctx.draw.pop_scissor();
             } else if !matches!(scene.component_kind, SurfaceKind::TextEditor | SurfaceKind::Paint2d) {
                 return cursor.finish();
@@ -422,11 +357,11 @@ pub fn render_component_scene_step(
         }
         8 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
-                engine_canvas::paint_node_graph_overlays(ctx, scene, bounds);
+                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_node_graph_overlays(ctx, scene, bounds);
             }
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
-                engine_canvas::paint_paint2d_overlays(ctx, scene, bounds);
+                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_paint2d_overlays(ctx, scene, bounds);
                 ctx.draw.pop_scissor();
             }
             if cursor.advance_phase().is_err() {
@@ -601,19 +536,19 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     let Some(state) = hosts.world3d_states.get_or_insert_with(scene.host_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
         return ui_wgpu::wgpu::ScenePaintStep::Fault;
     };
-    if state.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
-        state.tool_run_trace_window_id = Some(hosts.window_id.to_string());
+    if state.trace.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
+        state.trace.tool_run_trace_window_id = Some(hosts.window_id.to_string());
     }
     state.set_modelling_locale(hosts.chrome_labels.german);
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources, infinite_world::world::World3dShadowProfile::World);
     stage_world3d_accessibility_controls(
         &scene.host_id,
-        infinite_world::world::world3d_modelling_accessibility(state, scene).into_iter().map(|entry| World3dAccessibilityControl { key: entry.key, role: entry.role, label: entry.label, depth: entry.depth, polite: entry.polite }).collect(),
+        infinite_world::world::world3d_modelling_accessibility(&state.session, &state.overlay, scene).into_iter().map(|entry| World3dAccessibilityControl { key: entry.key, role: entry.role, label: entry.label, depth: entry.depth, polite: entry.polite }).collect(),
     );
-    engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
+    semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::register_engine_surface(scene, hosts.window_id, bounds, semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     if semio_framework_trace::runtime_diagnostics_enabled() {
-        crate::interpreter::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(state));
+        semio_framework_os_renderer_wgpu_scene_state::note_world3d_live_camera(&scene.host_id, infinite_world::world::world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene));
     }
     cursor.finish()
 }
@@ -665,7 +600,7 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
         ),
         None => "pass=none".to_string(),
     };
-    let visual = infinite_world::world::world3d_live_camera_json(state);
+    let visual = infinite_world::world::world3d_live_camera_json(&state.session, &state.camera, &state.selection, &state.scene);
     debug_log_diagnostic(&format!(
         "[TRACE] world3d surface={} pane={:?} bounds={}x{}+{},{} {geometry} {} {} visual={} {payload}",
         scene.surface_id,
@@ -680,7 +615,7 @@ fn world3d_surface_debug_log(scene: &UiComponentSceneNode, bounds: Rect, ctx: &F
     ));
 }
 
-fn debug_log(line: &str) {
+pub fn debug_log(line: &str) {
     #[cfg(target_arch = "wasm32")]
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
     #[cfg(not(target_arch = "wasm32"))]
@@ -688,7 +623,7 @@ fn debug_log(line: &str) {
 }
 
 /// 🩺️ A PER-FRAME dump — printed only while `SEMIO_RUNTIME_DIAGNOSTICS` is armed, the same gate
-/// `crate::log_debug_diagnostic` applies in the renderer. One `world3d surface=…` census per surface
+/// `crate::host_base::log_debug_diagnostic` applies in the renderer. One `world3d surface=…` census per surface
 /// per frame is two lines a frame on this playground alone, which is what buried the asset-decoder
 /// boot fault (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
 fn debug_log_diagnostic(line: &str) {
@@ -698,7 +633,7 @@ fn debug_log_diagnostic(line: &str) {
 }
 
 /** 🧭️ Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
-pub(crate) fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
+pub fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
     matches!(kind, SurfaceKind::World3d | SurfaceKind::NodeGraph | SurfaceKind::TiledMap | SurfaceKind::Board2d)
 }
 

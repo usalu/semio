@@ -111,7 +111,7 @@ fn viewport_projection_pack_outside_control_fov_matches_native_projection_math()
 
     let spec = Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: 130.0 }, orientation: Viewport3dProjectionOrientation::Free {} };
     let decoded: Viewport3dProjectionSpec = from_bytes(&to_bytes(&spec).unwrap()).unwrap();
-    let mut camera = crate::math::Camera3d::default();
+    let mut camera = semio_framework_ui_scene_camera::Camera3d::default();
     let Viewport3dProjectionMode::ThreePoint { fov } = decoded.mode else { panic!("unexpected projection mode") };
     camera.fov_y = (fov as f32).to_radians();
     let matrix = camera.view_proj(1600.0, 900.0);
@@ -129,7 +129,8 @@ fn viewport_projection_pack_rejects_nonfinite_active_values() {
 
 #[test]
 fn viewport_projection_render_math_matches_the_shared_three_oracle() {
-    use crate::math::{frame_projection_orbit_to_spec_bounds, projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, CameraProjection3d, Mat4Math, OrbitController, Vec3Math, WORLD_PROJECTION_FRAME_PADDING};
+    use semio_framework_ui_scene_algebra::{Mat4Math, Vec3Math};
+    use semio_framework_ui_scene_camera::{frame_projection_orbit_to_spec_bounds, projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, CameraProjection3d, OrbitController, WORLD_PROJECTION_FRAME_PADDING};
     use semio_framework_ui_viewport::Viewport3dProjectionSpec;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧪️tests/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
@@ -265,74 +266,6 @@ fn owned_scene_neutral_vectors_match_native_serde_packet() {
             _ => panic!("Unmatched neutral scene case: {name}"),
         };
         assert_eq!(actual, expected, "{name}");
-    }
-}
-#[test]
-fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
-    use crate::*;
-    fn packet(value: &serde_json::Value, bytes: &mut Vec<u8>) {
-        match value {
-            serde_json::Value::Null => bytes.push(TAG_NONE),
-            serde_json::Value::Bool(value) => bytes.extend(to_bytes(value).unwrap()),
-            serde_json::Value::Number(value) => bytes.extend(to_bytes(&value.as_f64().unwrap()).unwrap()),
-            serde_json::Value::String(value) => bytes.extend(to_bytes(value).unwrap()),
-            serde_json::Value::Array(values) => {
-                bytes.push(TAG_SEQ);
-                write_varint(bytes, values.len() as u64);
-                for value in values {
-                    packet(value, bytes);
-                }
-            }
-            serde_json::Value::Object(values) => {
-                if let Some(value) = values.get("$some") {
-                    bytes.push(TAG_SOME);
-                    packet(value, bytes);
-                } else if let Some(value) = values.get("$u64") {
-                    bytes.extend(to_bytes(&value.as_u64().unwrap()).unwrap());
-                } else {
-                    bytes.push(TAG_MAP);
-                    write_varint(bytes, values.len() as u64);
-                    for (key, value) in values {
-                        bytes.extend(to_bytes(key).unwrap());
-                        packet(value, bytes);
-                    }
-                }
-            }
-        }
-    }
-    fn check<T: SceneDoc>(schema: &str, bytes: &[u8]) -> bool {
-        schema == T::SCHEMA && T::decode_pack(bytes).is_ok()
-    }
-    fn admitted(case: &serde_json::Value) -> bool {
-        let mut bytes = Vec::new();
-        packet(&case["value"], &mut bytes);
-        let schema = case["schema"].as_str().unwrap();
-        match case["kind"].as_str().unwrap() {
-            "canvas-2d" => check::<Canvas2dScene>(schema, &bytes),
-            "world-3d" => check::<World3dScene>(schema, &bytes),
-            "node-graph" => check::<NodeGraphScene>(schema, &bytes),
-            "text-editor" => check::<TextEditorScene>(schema, &bytes),
-            "table" => check::<TableScene>(schema, &bytes),
-            "paint-2d" => check::<Paint2dScene>(schema, &bytes),
-            "virtual-file-system" => check::<VirtualFileSystemScene>(schema, &bytes),
-            "tiled-map" => check::<TiledMapScene>(schema, &bytes),
-            "board-2d" => check::<Board2dScene>(schema, &bytes),
-            "icon-render" => check::<IconRenderScene>(schema, &bytes),
-            "ink-canvas" => check::<InkCanvasScene>(schema, &bytes),
-            "graph-timeline" => check::<GraphTimelineScene>(schema, &bytes),
-            "block-list" => check::<BlockListScene>(schema, &bytes),
-            "diff-view" => check::<DiffViewScene>(schema, &bytes),
-            "event-feed" => check::<EventFeedScene>(schema, &bytes),
-            _ => false,
-        }
-    }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🧾️typed-scene/🔣️.json")).unwrap();
-    assert_eq!(fixture["cases"].as_array().unwrap().len(), 15);
-    for case in fixture["cases"].as_array().unwrap() {
-        assert!(admitted(case), "{case}");
-    }
-    for case in fixture["hostile"].as_array().unwrap() {
-        assert!(!admitted(case), "{case}");
     }
 }
 #[test]

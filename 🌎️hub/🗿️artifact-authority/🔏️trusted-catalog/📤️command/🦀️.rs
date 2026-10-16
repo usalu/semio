@@ -2,7 +2,7 @@
 //! (the publication transport) and `open-targets` (the hub's own document-open pairing rule over one
 //! descriptor, so a publisher never re-derives it).
 
-use super::HubError;
+use semio_hub_runtime::startup::HubError;
 use std::ffi::OsString;
 
 /// 🚪️ The closed set of trusted-catalog verbs.
@@ -27,7 +27,8 @@ fn selected(arguments: &[OsString]) -> Result<Option<TrustedCatalogVerb>, HubErr
 
 /// 🎯️ Reads one bounded package descriptor from stdin and writes the hub's document-open targets for it.
 fn open_targets() -> Result<(), HubError> {
-    use semio_hub::artifact_authority::trusted_catalog::{descriptor_open_targets_answer, TRUSTED_DESCRIPTOR_MAX_BYTES};
+    use semio_hub_trusted_catalog_descriptor::descriptor_open_targets_answer;
+use semio_hub_trusted_catalog_contract::TRUSTED_DESCRIPTOR_MAX_BYTES;
     use std::io::{Read, Write};
     let mut bytes = Vec::new();
     std::io::stdin().lock().take(TRUSTED_DESCRIPTOR_MAX_BYTES + 1).read_to_end(&mut bytes)?;
@@ -49,8 +50,11 @@ fn read_command(input: impl std::io::Read) -> Result<Vec<u8>, HubError> {
 }
 
 async fn publish() -> Result<(), HubError> {
-    use super::{AuthorityError, AuthorityLimits, NativeCodecProviderSetV1, OperationContext, StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, Tracer, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
-    use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogPublicationOutcome, TrustedCatalogPublisher};
+    use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, OperationContext};
+use semio_hub_native_openable::NativeCodecProviderSetV1;
+use semio_hub_runtime::startup::{StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
+use super::Tracer;
+    use semio_hub_trusted_catalog::{TrustedCatalogPublicationOutcome, TrustedCatalogPublisher};
     use std::io::Write;
     use std::time::Duration;
     let data = std::env::var_os("OS_HUB_DATA").map(std::path::PathBuf::from).filter(|path| path.is_absolute()).ok_or_else(|| HubError::UnsafeAuthConfiguration("publication requires an explicit absolute server-owned OS_HUB_DATA".into()))?;
@@ -83,7 +87,6 @@ async fn publish() -> Result<(), HubError> {
     }
     Ok(())
 }
-
 
 /// 🚪️ Handles only the exact trusted-catalog verbs and leaves ordinary no-argument startup untouched.
 pub(super) async fn dispatch(arguments: &[OsString]) -> Result<bool, HubError> {

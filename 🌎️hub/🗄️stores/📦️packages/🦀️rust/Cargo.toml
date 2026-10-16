@@ -1,0 +1,36 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-stores"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hub as instance #1 of the server product with its four durable storage roles"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-stores"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-directory = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+protocol = { path = "../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-dispatch-macros = { workspace = true }
+
+[dev-dependencies]
+semio-hub-directory = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }

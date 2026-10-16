@@ -117,7 +117,7 @@ fn raster_lifecycle_packet(scene_revision: u64, metrics_generation: u64) -> Engi
 #[cfg(test)]
 #[test]
 fn gpu_candidate_executes_reuse_publication_changed_tuple_rejection_and_metrics_invalidation() {
-    let expected = ui_wgpu::wgpu::RasterTextureWitness { scene_revision: 5, preview_generation: 7, operation: 11 };
+    let expected = ui_gpu::RasterTextureWitness { scene_revision: 5, preview_generation: 7, operation: 11 };
     let packet = raster_lifecycle_packet(9, 13);
     let mut fresh_slot = EngineGpuSlot::new();
     fresh_slot.id = Some(packet.surface.id);
@@ -169,9 +169,13 @@ fn rendered_target_transfers_to_the_table_without_an_unused_second_target() {
     let start = source.find("pub(crate) fn realize_step").unwrap_or(0);
     let end = source[start..].find("pub(crate) fn close_active_candidate_step").map(|offset| start + offset).unwrap_or(source.len());
     let mounted = &source[start..end];
-    assert!(mounted.contains("build.phase = EngineGpuBuildPhase::RetireRenderer"));
-    assert!(mounted.contains("if build.renderer.take().is_some()"));
-    assert_eq!(mounted.matches("create_target_texture(gpu.device(), build.width, build.height)").count(), 1);
+    assert!(mounted.contains("gpu.engine_raster_step(owner,&packet.scene,packet.clear,expected)"));
+    assert!(mounted.contains("build.phase=owner.phase();build.gpu=Some(owner);"));
+    assert!(mounted.contains("EngineRasterStageFault::Returned{fault,build:owner}"));
+    assert!(mounted.contains("EngineRasterStageFault::Retained{fault,build:owner}"));
+    assert_eq!(mounted.matches("gpu.begin_engine_raster(").count(), 1);
+    assert!(!source.contains("gpu.device()"));
+    assert!(!source.contains("gpu.queue()"));
     assert!(!source.contains("replacement_texture"));
     assert!(!source.contains("EngineGpuSurface"));
 }
@@ -206,7 +210,7 @@ fn with_engine_close_context<T>(fuel: u64, step: impl FnOnce(&mut semio_framewor
 /// produced — the `AppFrameTransactionPhase::BoardAuthority` ladder
 /// (`🧊️renderer/🦀️.rs:12233`), reduced to the single surface a law exercises.
 ///
-/// 🩸️ `puzzle_board_pointer_up_into` does NOT finish a gesture: every non-`Idle` plan
+/// 🩸️ `board2d_pointer_up_into` does NOT finish a gesture: every non-`Idle` plan
 /// `requires_retained_commit`, so the handler only ARMS `begin_pointer_commit` and answers whether
 /// the plan emits. The gesture ends when this authority reaches `Complete`, which is why a law that
 /// read `defers_descriptor_sync_from_js()` straight after the handler saw a still-live gesture.
@@ -420,20 +424,20 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     let board_id = "board-plan-saturation";
     ensure_engine_surface(board_id, board_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default())));
-    let board_before = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    let board_before = with_board_host(board_id, |host| [host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom]).unwrap();
     let mut board_input = ui_wgpu::wgpu::InputState::default();
     saturate(&mut board_input, 1);
-    assert_eq!(puzzle_board_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
-    let board_after = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    assert_eq!(board2d_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    let board_after = with_board_host(board_id, |host| [host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom]).unwrap();
     assert_eq!(board_after, board_before);
-    puzzle_board_pointer_down_into(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false, &mut board_input).expect("an idle board takes the press");
+    board2d_pointer_down_into(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false, &mut board_input).expect("an idle board takes the press");
     board_input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
-    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
-    assert!(with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
+    assert_eq!(board2d_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert!(with_board_host(board_id, |host| defers_descriptor_sync_from_js(&host.focus, &host.gestures)).unwrap());
     let mut retry = ui_wgpu::wgpu::InputState::default();
-    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut retry), Ok(true));
+    assert_eq!(board2d_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut retry), Ok(true));
     assert!(settle_board_pointer_authority(board_id, &mut retry), "the retried pointer-up's retained commit reaches its terminal");
-    assert!(!with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
+    assert!(!with_board_host(board_id, |host| defers_descriptor_sync_from_js(&host.focus, &host.gestures)).unwrap());
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         map.remove(graph_id);
@@ -483,11 +487,11 @@ fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<Act
 
 #[cfg(test)]
 fn board_camera_action(surface_id: &str, controller_id: &str) -> Option<ActionDescriptor> {
-    with_board_host(surface_id, |host| board_action(controller_id, "setCamera", json!({ "camera": { "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom } })))
+    with_board_host(surface_id, |host| board_action(controller_id, "setCamera", json!({ "camera": { "x": host.scene.camera.x, "y": host.scene.camera.y, "zoom": host.scene.camera.zoom } })))
 }
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
+pub fn board2d_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt));
     board_set_pointer_inside(surface_id, true);
@@ -495,14 +499,14 @@ pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: R
 }
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
+pub fn board2d_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
     board_flush_events_action(surface_id, controller_id).into_iter().collect()
 }
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
+pub fn board2d_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
     let was_inside = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else {
@@ -520,9 +524,9 @@ pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bo
 }
 
 #[cfg(test)]
-pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
+pub fn board2d_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
-    with_board_host_mut(surface_id, |host| host.wheel_screen(sx, sy, delta as f64));
+    with_board_host_mut(surface_id, |host| wheel_screen(&mut host.scene, &mut host.outbox, sx, sy, delta as f64));
     let mut actions = Vec::new();
     if let Some(camera_action) = board_camera_action(surface_id, controller_id) {
         actions.push(camera_action);

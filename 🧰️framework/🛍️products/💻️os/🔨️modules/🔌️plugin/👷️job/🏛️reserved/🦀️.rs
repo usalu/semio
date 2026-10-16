@@ -15,7 +15,8 @@ use super::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
 use semio_framework::AppDefinition;
-use semio_framework::{kernel::InvocationResult, Fault, FaultCode, FaultFrom, FaultOrigin, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID};
+use semio_framework::{kernel::InvocationResult, Fault, FaultCode, FaultFrom, FaultOrigin, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SELECT_ALL_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID};
+use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::ViewModel;
 use store::os_store::store_schema::ArtifactCommand;
@@ -291,27 +292,6 @@ framework_reserved_job!(FrameworkSelectAllJob, FrameworkSelectAllJobFactory, "se
 framework_reserved_job!(FrameworkSetInteractionGranularityJob, FrameworkSetInteractionGranularityJobFactory, "setInteractionGranularity", 18, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
 
 framework_reserved_job!(FrameworkSetSelectionModeJob, FrameworkSetSelectionModeJobFactory, "setSelectionMode", 19, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
-
-/// 🎛️ The one place a framework-reserved route id becomes its retained job. Deliberately a plain
-/// non-`async` fn OUTSIDE `dispatch_framework_reserved_action`'s generator: every arm erases into
-/// the same [`ArtifactReservedToolJob`], so one `match` here costs one small frame, whereas the
-/// same arms spelled inline each owned a separate, non-overlapping `run_framework_reserved_job`
-/// future slot in the single resume frame — 1.80 MiB of stack for ONE dispatch in an unoptimized
-/// build, more than a default 2 MiB thread or an 8 MiB wasm shadow stack can absorb once the rest
-/// of the route is layered on top (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-/// `📓️selection-overflow-2026-09-09.md`). `copy`/`cut`/`paste` reach it only when the app declares
-/// no reserved job of its own.
-/// 🧮️ The ONE work capacity every framework-reserved route declares. Its durable lane is a
-/// bounded config store whose preflight ([`admit_bounded_config_mutation`]) declares one
-/// POINT-INVERTIBLE item — a forward row plus an inverse row — so a reserved gesture of `n`
-/// items costs `n` × that, in the very unit `ArtifactStore::fold_batch_item` measures. The
-/// ceiling is the store's own one-item maximum expressed in items, so a gesture this refuses is
-/// one the store could never admit either. `interactionSelect` and its five interaction siblings
-/// used to declare ONE work item against that TWO-row footprint, which is the same
-/// declaration-vs-arithmetic split `📓️fold-contract-2026-09-10.md` fixed one layer down
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) const FRAMEWORK_RESERVED_ROUTE_CAPACITY: crate::retained_command::ArtifactRetainedWorkCapacity =
-    crate::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS / store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
 
 fn framework_reserved_route_job(action: &str, raw: Vec<u8>, work_items: usize) -> Result<ArtifactReservedToolJob, Fault> {
     Ok(match action {
@@ -929,3 +909,7 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
     }
     Ok((controller_id, proofs))
 }
+
+#[path = "../../🧵️retained-command/🛬️lifted/🏛️reserved/🦀️.rs"]
+mod lifted_route_capacity;
+pub use lifted_route_capacity::*;

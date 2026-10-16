@@ -1,5 +1,5 @@
 use super::*;
-use crate::db_storage::db_io_maintenance_step;
+use db_io_driver::db_io_maintenance_step;
 
 #[semio_framework_async_macros::async_test]
 async fn lost_postgres_facade_drives_the_real_lazy_pool_to_closed() {

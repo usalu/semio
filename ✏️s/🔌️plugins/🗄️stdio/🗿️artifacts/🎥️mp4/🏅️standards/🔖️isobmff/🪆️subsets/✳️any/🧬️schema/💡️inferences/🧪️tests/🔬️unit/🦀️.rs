@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use crate::standards::isobmff::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

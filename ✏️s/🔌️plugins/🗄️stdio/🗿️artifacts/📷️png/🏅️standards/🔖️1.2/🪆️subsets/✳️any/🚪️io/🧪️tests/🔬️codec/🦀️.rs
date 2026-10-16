@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_value::NativeDecodeControl;
+use crate::schema::snapshot::PngColorType;
+use crate::standards::v1_2::subsets::any::io::{PNG_SIGNATURE, write_chunk, read_chunks, samples_per_pixel, packed_row_bytes, ADAM7, adam7_pass_dims, chunk_addresses, write_native_sample};
+use crate::standards::v1_2::subsets::any::io::*;
 use crate::schema::operations::*;
 use crate::schema::snapshot::{PngRegion,PngNativePaint};
 use protocol::{Mutation, MutationDiff};
@@ -9,8 +12,8 @@ const INDEXED_2: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫�
 const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png");
 const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
 const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧪️tests/🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
-const CONTROLLED_PAINT: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/🧬️native-paint-controlled/🔣️.json");
-const STRUCTURE_CORPUS: &str = include_str!("../../🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️audit/🔣️.json");
+static CONTROLLED_PAINT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../../../../../🧪️tests/🧫️fixtures/🧬️native-paint-controlled/🔣️.json"));
+static STRUCTURE_CORPUS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🚦️audit/🔣️.json"));
 
 fn hex(text: &str) -> Vec<u8> {
     text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
@@ -147,7 +150,7 @@ fn gamma_edit_preserves_owned_samples_and_other_metadata() {
 
 #[test]
 fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
-    let corpus: serde_json::Value = serde_json::from_str(STRUCTURE_CORPUS).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str((*STRUCTURE_CORPUS)).unwrap();
     let law = &corpus["gammaEdit"];
     let snapshot = decode_png(INDEXED_2).unwrap();
     let mutation = crate::PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation {
@@ -177,7 +180,7 @@ fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
 
 #[test]
 fn checked_source_refuses_neutral_structural_and_profile_violations() {
-    let corpus: serde_json::Value = serde_json::from_str(STRUCTURE_CORPUS).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str((*STRUCTURE_CORPUS)).unwrap();
     for case in corpus["invalidPng"].as_array().unwrap() {
         assert!(decode_png(&fixture_png(case)).is_err(), "checked source admitted neutral case {}", case["id"]);
     }
@@ -213,7 +216,7 @@ fn region_paint_is_exactly_profile_scoped_and_revision_guarded() {
 
 #[test]
 fn native_paint_preserves_index_identity_packing_and_non_idat_bytes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../../✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["cases"][0]["id"], "indexed-duplicate-identity");
     let snapshot = decode_png(INDEXED_2).unwrap();
     let before_non_idat = non_idat_chunks(&encode_png(&snapshot).unwrap());
@@ -392,4 +395,9 @@ fn corrupt_crc_and_non_png_sources_are_refused() {
     bytes[20] ^= 0x80;
     assert!(decode_png(&bytes).unwrap_err().contains("CRC"));
     assert!(decode_png(b"not a png").unwrap_err().contains("signature"));
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -1,5 +1,6 @@
 //! 📦️ Retains original diagnostics in native pages until one final edit selection.
-use crate::{MutationMessage, MutationReplayOutcome};
+use semio_framework_replication_mutation::MutationMessage;
+use semio_framework_replication_conflict::MutationReplayOutcome;
 use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError};
 use std::mem::{size_of, ManuallyDrop};
 

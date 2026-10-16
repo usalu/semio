@@ -29,7 +29,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
         vec!["nodes".into(), self.node.id.clone()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

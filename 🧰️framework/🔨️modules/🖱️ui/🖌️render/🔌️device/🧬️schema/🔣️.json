@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "bytes",
+    "width",
+    "height",
+    "layers",
+    "mips",
+    "samples"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "buffer",
+        "texture"
+      ]
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16384
+    },
+    "layers": {
+      "const": 1
+    },
+    "mips": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 15
+    },
+    "samples": {
+      "enum": [
+        1,
+        4
+      ]
+    }
+  }
+}

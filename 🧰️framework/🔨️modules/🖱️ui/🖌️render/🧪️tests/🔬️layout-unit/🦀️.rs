@@ -3,14 +3,14 @@ use super::*;
 use ui_contract::LeafLayout;
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn shared<'a>(arena: &'a mut crate::element::FrameArena, resources: &'a mut crate::resource::ResourceRegistry, retained: &'a mut crate::element::RetainedStore) -> crate::element::SharedFrameCx<'a> {
+fn shared<'a>(arena: &'a mut crate::element::FrameArena, resources: &'a mut crate::ResourceRegistry, retained: &'a mut crate::element::RetainedStore) -> crate::element::SharedFrameCx<'a> {
     crate::element::SharedFrameCx { arena, resources, retained, time_seconds: 0.0 }
 }
 
 #[test]
 fn a_fixed_size_leaf_resolves_to_exactly_that_size() {
     let mut arena = crate::element::FrameArena::default();
-    let mut resources = crate::resource::ResourceRegistry::default();
+    let mut resources = crate::ResourceRegistry::default();
     let mut retained = crate::element::RetainedStore::default();
     let mut cx = LayoutCx::new(shared(&mut arena, &mut resources, &mut retained));
 
@@ -26,7 +26,7 @@ fn a_fixed_size_leaf_resolves_to_exactly_that_size() {
 #[test]
 fn a_vertical_stack_places_its_second_child_below_the_first() {
     let mut arena = crate::element::FrameArena::default();
-    let mut resources = crate::resource::ResourceRegistry::default();
+    let mut resources = crate::ResourceRegistry::default();
     let mut retained = crate::element::RetainedStore::default();
     let mut cx = LayoutCx::new(shared(&mut arena, &mut resources, &mut retained));
 
@@ -46,7 +46,7 @@ fn a_vertical_stack_places_its_second_child_below_the_first() {
 #[test]
 fn a_pending_measurement_yields_the_placeholder_size_and_is_recorded() {
     let mut arena = crate::element::FrameArena::default();
-    let mut resources = crate::resource::ResourceRegistry::default();
+    let mut resources = crate::ResourceRegistry::default();
     let mut retained = crate::element::RetainedStore::default();
     let mut cx = LayoutCx::new(shared(&mut arena, &mut resources, &mut retained));
 
@@ -65,7 +65,7 @@ fn a_pending_measurement_yields_the_placeholder_size_and_is_recorded() {
 #[test]
 fn a_ready_measurement_does_not_mark_pending() {
     let mut arena = crate::element::FrameArena::default();
-    let mut resources = crate::resource::ResourceRegistry::default();
+    let mut resources = crate::ResourceRegistry::default();
     let mut retained = crate::element::RetainedStore::default();
     let mut cx = LayoutCx::new(shared(&mut arena, &mut resources, &mut retained));
 

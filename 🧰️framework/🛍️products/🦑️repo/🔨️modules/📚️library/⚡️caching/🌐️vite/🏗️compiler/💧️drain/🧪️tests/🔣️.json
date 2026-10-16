@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "operation": "value",
+      "processing": [],
+      "expected": "value"
+    },
+    {
+      "operation": "value",
+      "processing": [
+        "value",
+        "value"
+      ],
+      "expected": "value"
+    },
+    {
+      "operation": "value",
+      "processing": [
+        "error",
+        "value"
+      ],
+      "expected": "error"
+    },
+    {
+      "operation": "value",
+      "processing": [
+        "undefined",
+        "error"
+      ],
+      "expected": "undefined"
+    },
+    {
+      "operation": "error",
+      "processing": [
+        "undefined",
+        "error"
+      ],
+      "expected": "error"
+    },
+    {
+      "operation": "undefined",
+      "processing": [
+        "error",
+        "value"
+      ],
+      "expected": "undefined"
+    }
+  ]
+}

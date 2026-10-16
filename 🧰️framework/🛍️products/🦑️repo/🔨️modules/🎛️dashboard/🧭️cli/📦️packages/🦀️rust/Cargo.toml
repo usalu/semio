@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard command line: commands, run, tasks, logs, stop, restart, kill and open without a terminal view"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-cli"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_daemon = { path = "../../../🌀️daemon/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-daemon" }
+dashboard_inventory = { path = "../../../📚️inventory/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-inventory" }
+dashboard_registry = { path = "../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }
+dashboard_repo_domain = { path = "../../../🏛️repo-domain/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-repo-domain" }
+dashboard_wire = { path = "../../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
+dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }

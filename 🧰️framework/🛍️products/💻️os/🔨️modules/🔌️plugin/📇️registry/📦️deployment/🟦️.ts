@@ -47,7 +47,8 @@ export function publishedPageUrl(path: string, origins: Readonly<Record<string, 
   let pathname: string;
   try { pathname = decodeURIComponent(encoded); } catch { return path; }
   const key = Object.keys(origins).sort((a, b) => b.length - a.length).find((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-  return key ? `${origins[key].replace(/\/$/, "")}${path}` : path;
+  const origin = key === undefined ? undefined : origins[key];
+  return origin === undefined ? path : `${origin.replace(/\/$/, "")}${path}`;
 }
 
 

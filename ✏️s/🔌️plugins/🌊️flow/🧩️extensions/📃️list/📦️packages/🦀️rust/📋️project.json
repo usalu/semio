@@ -25,13 +25,15 @@
       },
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/🧩️component/📦️packages/🦀️rust/dist/flow-extension-list.sxt"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/packages/b5ae4dfc00ae99e666dcc2ab"
       ],
       "inputs": [
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/**/*"
       ]
     }
   }

@@ -1,6 +1,6 @@
 //! 🧪️ The interaction family's controlled native output and canonical tree are exactly its `ToValue` document, parsed by an independent serde_json.
 use super::{DomainHover, DomainSelection, InteractionState, SelectionMode};
-use crate::value::{FromValue, NativeDecodeControl, NativeEncodeControl, ToValue};
+use semio_framework_value::{FromValue, NativeDecodeControl, NativeEncodeControl, ToValue};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree};
 use std::collections::BTreeMap;
 
@@ -32,7 +32,7 @@ fn walk(tree: &dyn ArtifactCanonicalJsonTree) -> serde_json::Value {
 #[test]
 fn the_controlled_native_output_is_the_to_value_document_for_every_shape() {
     for state in [InteractionState::default(), populated()] {
-        let mut allow = |_: crate::value::native_encoding::NativeEncodeProgress| true;
+        let mut allow = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
         let mut control = NativeEncodeControl::new(1 << 20, &mut allow);
         assert_eq!(state.to_value_controlled(&mut control).expect("controlled native output"), state.to_value());
     }
@@ -58,9 +58,9 @@ fn the_canonical_tree_omits_exactly_an_absent_anchor_and_refuses_unknown_ordinal
 fn the_controlled_and_plain_decoders_round_trip_the_serde_json_document_of_every_shape() {
     for state in [InteractionState::default(), populated()] {
         let document = serde_json::to_string(&state.to_value()).expect("independent serde_json document");
-        let parsed: crate::value::DslValue = serde_json::from_str(&document).expect("the document parses back through an independent parser");
+        let parsed: semio_framework_value::DslValue = serde_json::from_str(&document).expect("the document parses back through an independent parser");
         assert_eq!(InteractionState::from_value(parsed.clone()).expect("plain decode"), state);
-        let mut allow = |_: crate::value::native_decoding::NativeDecodeProgress| true;
+        let mut allow = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
         let mut control = NativeDecodeControl::new(1 << 20, &mut allow);
         let decoded = InteractionState::from_value_controlled(&parsed, &mut control).expect("controlled decode");
         assert_eq!(decoded, state);
@@ -80,9 +80,9 @@ fn the_serde_twin_and_the_value_twin_speak_the_same_keys_and_values() {
 #[test]
 fn unknown_modes_and_wrong_shapes_are_refused_by_both_decoders() {
     let bad = serde_json::json!({"activeGranularity": {}, "activeMode": {"scene": "triple"}, "hover": {}, "selection": {}});
-    let parsed: crate::value::DslValue = serde_json::from_value(bad).expect("document parses");
+    let parsed: semio_framework_value::DslValue = serde_json::from_value(bad).expect("document parses");
     assert!(InteractionState::from_value(parsed.clone()).is_err());
-    let mut allow = |_: crate::value::native_decoding::NativeDecodeProgress| true;
+    let mut allow = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut control = NativeDecodeControl::new(1 << 20, &mut allow);
     assert!(InteractionState::from_value_controlled(&parsed, &mut control).is_err());
 }

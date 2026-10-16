@@ -1,5 +1,6 @@
+use crate::{standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3v1Tag, standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3v2Tag, standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Frame, standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Frame, Mp3FrameHeader};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;

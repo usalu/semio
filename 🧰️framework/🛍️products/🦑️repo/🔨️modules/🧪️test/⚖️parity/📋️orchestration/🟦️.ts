@@ -8,7 +8,7 @@ import { type ComparisonProfile, type Implementation } from "../../../../../../�
 import { adapterRegistersSubject, type DiscoveredCase, type TestResult, buildCasePlan, computeCoverageMetrics, evaluateCrossSubjectParity, evaluateParity, executePipeline, formatMetrics, loadOracleRegistry, markRunComplete, oracleImplementation, pipelineRoleArtifacts, pipelineTable, probeTable, profileTable, renderDiff, renderJUnit, subjectRawInputsByScenario, summarizeRun, testCacheDir } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
-import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { Script,withIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -50,7 +50,8 @@ export function planModeOf(repoRoot: string, discovered: DiscoveredCase, level: 
 }
 
 /** 🏃️ Runs the requested phases for every selected case and writes the run report. */
-export function runPhases(repoRoot: string, segments: readonly string[], phases: readonly ("oracle" | "subject")[]): number {
+export function runPhases(repoRoot: string, segments: readonly string[], phases: readonly ("oracle" | "subject")[], invocation: ScriptInvocation): Promise<number> {
+ return withIssuedResourceControlV1(invocation,"test:phases",0,async phaseControl=>{
   const { level, rest } = resolveTestLevel([...segments]);
   const cases = selectCases(repoRoot, rest);
   const allResults: TestResult[] = [];
@@ -68,7 +69,7 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
     const caseResults: TestResult[] = [];
     const rawInputOracle = buildCasePlan(repoRoot, discovered, level).plan.oracleInput === "subject-raw";
 
-    const runSubjects = (): void => {
+    const runSubjects = async (): Promise<void> => {
       if (!phases.includes("subject") && !rawInputOracle) return;
       // 🔬️Only the languages this repository actually implements the owner in are dispatched as
       // subjects; see `ownerShipsImplementation`.
@@ -80,22 +81,22 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
       if (subjects.length === 0 && selectImplementations(discovered, rest).length > 0)
         console.error(`[test] no-subject-implementation ${discovered.caseDir} (requested adapters ${selectImplementations(discovered, rest).join(", ")} host references only: the owner ships no package in their language, or the adapter is the case's own declared oracle)`);
       for (const implementation of subjects) {
-        const outcome = executeOne(repoRoot, discovered, level, "subject", implementation);
+        const outcome = await executeOne(repoRoot, discovered, level, "subject", implementation,invocation,phaseControl);
         caseResults.push(...outcome.results);
         problems.push(...outcome.problems);
       }
     };
-    if (rawInputOracle) runSubjects();
+    if (rawInputOracle) await runSubjects();
     if (phases.includes("oracle") && decision.unavailable !== null) {
       oracleUnavailable.push({ caseDir: discovered.caseDir, ...decision.unavailable });
       console.error(`[test] oracle-unavailable ${discovered.caseDir} (${decision.unavailable.oracle} needs ${decision.unavailable.missing.join(", ")} on PATH)`);
     }
     if (phases.includes("oracle") && decision.implementation !== null && decision.unavailable === null) {
-      const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation, rawInputOracle ? subjectRawInputsByScenario(caseResults) : undefined);
+      const outcome = await executeOne(repoRoot, discovered, level, "oracle", decision.implementation,invocation,phaseControl,rawInputOracle ? subjectRawInputsByScenario(caseResults) : undefined);
       caseResults.push(...outcome.results);
       problems.push(...outcome.problems);
     }
-    if (!rawInputOracle) runSubjects();
+    if (!rawInputOracle) await runSubjects();
     scenarioCount += new Set(caseResults.map((result) => result.scenario)).size;
     allResults.push(...caseResults);
 
@@ -192,25 +193,26 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
   if (segments.includes("--metrics")) console.log(formatMetrics(metrics, readImplementationCoverage(repoRoot)));
   for (const problem of problems) console.error(`[test] ${problem}`);
   return summary.failed + summary.errored + problems.length === 0 ? 0 : 1;
+ });
 }
 
 /** 🔮️ The oracle phase — proves the reference library actually supports the case before any local code exists, except an explicit byte-decoder oracle, which first receives its subject artifact. */
 export class OracleScript extends Script {
-  run(segments: string[]): void {
-    process.exitCode = runPhases(this.repoRoot, segments, ["oracle"]);
+  async run(segments: string[]): Promise<void> {
+    process.exitCode = await runPhases(this.repoRoot, segments, ["oracle"],this.invocation);
   }
 }
 
 /** 🎯️ The subject phase — this repository's implementations, on the same inputs. */
 export class SubjectScript extends Script {
-  run(segments: string[]): void {
-    process.exitCode = runPhases(this.repoRoot, segments, ["subject"]);
+  async run(segments: string[]): Promise<void> {
+    process.exitCode = await runPhases(this.repoRoot, segments, ["subject"],this.invocation);
   }
 }
 
 /** ⚖️ Oracle + subject + semantic comparison + pairwise subject equivalence. */
 export class ParityScript extends Script {
-  run(segments: string[]): void {
-    process.exitCode = runPhases(this.repoRoot, segments, ["oracle", "subject"]);
+  async run(segments: string[]): Promise<void> {
+    process.exitCode = await runPhases(this.repoRoot, segments, ["oracle", "subject"],this.invocation);
   }
 }

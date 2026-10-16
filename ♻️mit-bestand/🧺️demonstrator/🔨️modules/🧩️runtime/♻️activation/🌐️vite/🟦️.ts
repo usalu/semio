@@ -4,7 +4,7 @@
  * `🔨️modules/🧩️runtime/🟦️.ts`. */
 // #endregion 🧲️Header
 
-import type { Plugin } from "vite";
+import type {OwnedBuildPlugin} from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { observeActivationReceipts } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { demonstratorActivationLaneReceiptDirectories, publishDemonstratorUnionReceipt } from "../🟦️.ts";
 
@@ -19,7 +19,7 @@ import { demonstratorActivationLaneReceiptDirectories, publishDemonstratorUnionR
  * A failed merge is logged, never thrown: a lane receipt is rewritten atomically but a lane can be
  * mid-rebuild and legitimately disagree with its peers for a moment, and killing the dev server over a
  * transient disagreement would cost a full cold plugin boot. */
-export function demonstratorUnionReceiptVitePlugin(options: { readonly workspace: string }): Plugin {
+export function demonstratorUnionReceiptVitePlugin(options: { readonly workspace: string }): OwnedBuildPlugin {
   const observers: { close: () => void }[] = [];
   const report = (error: unknown): void => console.error(`[demonstrator] union activation receipt refused: ${error instanceof Error ? error.message : String(error)}`);
   const dispose = (): void => { while (observers.length > 0) { try { observers.pop()!.close(); } catch { /* a watcher already torn down by its own error */ } } };

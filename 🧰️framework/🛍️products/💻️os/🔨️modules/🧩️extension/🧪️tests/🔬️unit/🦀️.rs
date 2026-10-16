@@ -91,7 +91,7 @@ async fn pack_unpack_verify_round_trip() {
     let assets = vec![("readme.txt".into(), b"hello".to_vec()), ("nested/icon.svg".into(), b"<svg/>".to_vec())];
 
     let packed = pack(&manifest, &component, &assets).await.expect("pack");
-    assert!(packed.starts_with(&crate::os_semio::BINARY_MAGIC));
+    assert!(packed.starts_with(&semio_framework_os_semio::BINARY_MAGIC));
 
     let verified = verify(&packed).await.expect("verify");
     assert_eq!(verified, manifest);

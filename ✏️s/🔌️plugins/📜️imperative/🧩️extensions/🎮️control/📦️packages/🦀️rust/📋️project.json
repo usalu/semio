@@ -25,13 +25,15 @@
       },
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/🧩️component/📦️packages/🦀️rust/dist/imperative-extension-control.sxt"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/packages/b010c5dbf13bb815ee5011aa"
       ],
       "inputs": [
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/**/*"
       ]
     }
   }

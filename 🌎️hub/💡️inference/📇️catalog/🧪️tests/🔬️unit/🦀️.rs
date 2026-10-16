@@ -6,7 +6,7 @@ fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️gis-map-frozen-binding-v1/🔣️.json")).unwrap();
     let projection: GisMapFrozenBindingV1 = serde_json::from_value(fixture["binding"].clone()).unwrap();
     let native = semio_s_artifact_gis_gismap::gis_map_inference_service();
-    assert_eq!(validate_gis_map_binding_projection(&projection, native), Ok(()));
+    assert_eq!(validate_gis_map_binding_projection(&projection, native, native), Ok(()));
     assert_eq!(gis_map_binding_digest(&projection).unwrap(), fixture["expectedDigest"]);
     for hostile in fixture["hostile"].as_array().unwrap() {
         let mut candidate = fixture["binding"].clone();
@@ -18,7 +18,7 @@ fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
         at[path.last().unwrap().as_str().unwrap()] = hostile["value"].clone();
         let admitted = serde_json::from_value::<GisMapFrozenBindingV1>(candidate)
             .ok()
-            .is_some_and(|candidate| validate_gis_map_binding_projection(&candidate, native).is_ok() && gis_map_binding_digest(&candidate).ok().as_deref() == fixture["expectedDigest"].as_str());
+            .is_some_and(|candidate| validate_gis_map_binding_projection(&candidate, native, native).is_ok() && gis_map_binding_digest(&candidate).ok().as_deref() == fixture["expectedDigest"].as_str());
         assert_eq!(admitted, hostile["accepted"], "{}", hostile["name"]);
     }
 
@@ -26,7 +26,7 @@ fn gis_map_verified_binding_freezes_catalog_selection_and_native_executable() {
         Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("test.reject", "wrong executable"))
     }
     let substituted = ArtifactInferenceService::new(native.metadata(), reject,rejected_owner_demands);
-    assert_eq!(validate_gis_map_binding_projection(&projection, substituted), Err(InferenceErrorV1::Denied));
+    assert_eq!(validate_gis_map_binding_projection(&projection, substituted, native), Err(InferenceErrorV1::Denied));
 }
 
 #[test]

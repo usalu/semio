@@ -1,5 +1,6 @@
+use crate::{schema::snapshot::BcfComment, schema::snapshot::BcfTopic, schema::snapshot::BcfViewpoint};
 use protocol::OpText;
-use super::*;
+use crate::standards::v2_1::subsets::any::schema::mutations::*;
 
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {

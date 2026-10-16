@@ -7,7 +7,7 @@ fn backbone_retirement_installed_admission_keeps_original_backbone_after_empty_q
     let uri = String::with_capacity(32768);
     let uri_pointer = uri.as_ptr();
     let uri_capacity = uri.capacity();
-    let mut backbone = Some(Backbones::Port(super::super::super::PortBackbone { uri, channel: None }));
+    let mut backbone = Some(Backbones::Port(crate::PortBackbone { uri, channel: None }));
     let frame = ArtifactStoreBackboneRetirement::constructor_capacity_bytes();
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: frame, maximum_depth: 1, ..Default::default() };
     let mut released = 0;

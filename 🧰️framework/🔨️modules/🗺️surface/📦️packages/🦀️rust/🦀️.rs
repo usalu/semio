@@ -1,21 +1,8 @@
-//! 🗺️ The semio surface framework: one crate for every renderable 2D/GPU surface family.
+//! 🗺️ The semio surface framework facade: one library for every renderable 2D/GPU surface family.
 //!
-//! Each domain is a `🦀️.rs` in the owner tree; this entry file is pure wiring.
+//! Each family is its own producer crate with its own gate budget; this entry file only re-exports them under their former module names.
 
-#[path = "../../🎨️paint/🦀️.rs"]
-pub mod paint;
-
-#[path = "../../🏔️terrain/🦀️.rs"]
-pub mod terrain;
-
-#[path = "../../🕸️node-graph/🦀️.rs"]
-pub mod node_graph;
-
-#[path = "../../🗺️tiled-map/🦀️.rs"]
-pub mod tiled_map;
-#[cfg(test)]
-#[path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
-#[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+pub use semio_framework_surface_node_graph as node_graph;
+pub use semio_framework_surface_paint as paint;
+pub use semio_framework_surface_terrain as terrain;
+pub use semio_framework_surface_tiled_map as tiled_map;

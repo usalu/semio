@@ -612,7 +612,7 @@ async fn toy_app(target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> ToyApp 
 }
 
 async fn set_target(app: &mut ToyApp, target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("toy target config applies");
+    app.stores.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("toy target config applies");
 }
 
 fn toy_meta() -> ActionMeta {
@@ -704,10 +704,10 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     let fixture = fixture();
     let expected = &fixture["overlay"];
     let mut app = toy_app(number(&expected["units"]), &mut caller).await;
-    let generation = app.store.generation();
+    let generation = app.stores.store.generation();
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "overlay run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
-    assert_eq!(app.store.generation(), generation, "ticks never touch the store generation");
+    assert_eq!(app.stores.store.generation(), generation, "ticks never touch the store generation");
     assert_eq!(app.snapshot().expect("committed snapshot").count, number(&expected["committedCount"]) as i32);
     assert_eq!(app.tool_runs.provisional().len() as u64, number(&expected["provisionalOps"]));
     let entities: Vec<u64> = expected["entities"].as_array().expect("entities").iter().map(number).collect();
@@ -755,16 +755,16 @@ async fn tool_run_abort_leaves_store_generation_edits_command_log_and_outbox_unt
     let mut probe = attach_probe(&mut app, "tool-run-abort").await;
     drain(&mut probe).await;
     app.refresh_cache().await.expect("backfill the command log before the invariant capture");
-    let (generation, edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
+    let (generation, edits, commands) = (app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len());
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "first provisional unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture["opsPerUnit"]), &mut caller).await;
     let output = run_action(&mut app, "toolRunAbort", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(app.tool_runs.state().map(ToolRunState::as_str), Some(text(&expected["state"])));
-    assert_eq!(app.store.generation(), generation, "abort: store generation");
-    assert_eq!(app.store.envelope().vcs.edits.len(), edits, "abort: envelope.vcs.edits length");
-    assert_eq!(app.command_log.len(), commands, "abort: command log");
+    assert_eq!(app.stores.store.generation(), generation, "abort: store generation");
+    assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits, "abort: envelope.vcs.edits length");
+    assert_eq!(app.history.command_log.len(), commands, "abort: command log");
     assert_eq!(drain(&mut probe).await, (0, 0), "abort: memory-backbone outbox");
     assert!(app.tool_runs.provisional().is_empty(), "abort retires every provisional op");
     assert_eq!(app.snapshot().expect("committed").count, 0);
@@ -794,12 +794,12 @@ async fn tool_run_finalize_while_running_publishes_exactly_the_partial_result_co
     pump_until(&mut app, "the partial result", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeFinalize"]) * ops_per_unit, &mut caller).await;
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "the run is still computing");
     let computed = app.tool_runs.provisional().len();
-    let edits = app.store.envelope().vcs.edits.len();
+    let edits = app.stores.store.envelope().vcs.edits.len();
     let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "partial finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    assert_eq!((app.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
-    let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
+    assert_eq!((app.stores.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
+    let edit = app.stores.store.envelope().vcs.edits.last().expect("finalized edit");
     assert_eq!(edit.forwards.len(), computed, "the edit carries exactly the ops computed until the finalize");
     assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(text(&expected["groupId"]))));
     assert_eq!(app.snapshot().expect("committed").count as u64, computed as u64 / ops_per_unit, "the document holds exactly the computed units");
@@ -825,21 +825,21 @@ async fn tool_run_finalize_publishes_one_grouped_edit_one_mutations_batch_and_un
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     drain(&mut probe).await;
-    let (generation, edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
+    let (generation, edits, commands) = (app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len());
     let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    assert_eq!(app.store.generation() - generation, number(&expected["storeGenerationAdded"]));
-    assert_eq!((app.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
-    assert_eq!((app.command_log.len() - commands) as u64, number(&expected["commandRowsAdded"]));
-    let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
+    assert_eq!(app.stores.store.generation() - generation, number(&expected["storeGenerationAdded"]));
+    assert_eq!((app.stores.store.envelope().vcs.edits.len() - edits) as u64, number(&expected["editsAdded"]));
+    assert_eq!((app.history.command_log.len() - commands) as u64, number(&expected["commandRowsAdded"]));
+    let edit = app.stores.store.envelope().vcs.edits.last().expect("finalized edit");
     assert_eq!(edit.forwards.len(), number(&fixture["overlay"]["provisionalOps"]) as usize, "every provisional op lands in the one edit");
     assert!(edit.mutation_meta.iter().all(|meta| meta.group_id.as_deref() == Some(text(&expected["groupId"]))), "the edit is stamped with the run's group id");
     assert_eq!(drain(&mut probe).await, (number(&expected["mutationsMessages"]) as usize, number(&expected["genesisMessages"]) as usize), "one Mutations batch, no genesis re-announcement");
     let committed = app.snapshot().expect("committed after finalize");
     assert_eq!((committed.count, committed.label.as_str()), (number(&expected["countAfterFinalize"]) as i32, text(&expected["labelAfterFinalize"])));
     assert!(app.tool_runs.provisional().is_empty());
-    app.store.dispatch(ArtifactCommand::Undo, &mut caller.identity).await.expect("undo the finalized run");
+    app.stores.store.dispatch(ArtifactCommand::Undo, &mut caller.identity).await.expect("undo the finalized run");
     let undone = app.snapshot().expect("committed after undo");
     assert_eq!((undone.count, undone.label.as_str()), (number(&expected["countAfterUndo"]) as i32, text(&expected["labelAfterUndo"])), "one undo removes the whole run");
     drop(probe);
@@ -866,7 +866,7 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     run_action(&mut app, "toolRunFinalize", &mut caller).await;
     pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
+    let edit = app.stores.store.envelope().vcs.edits.last().expect("finalized edit");
     let edit_id = edit.id.clone();
     let transaction = edit.mutation_meta.first().and_then(|meta| meta.transaction.clone()).expect("the finalized edit is a tool transaction");
     assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every op of the run carries the one ref");
@@ -900,7 +900,7 @@ async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() 
     let mut app = toy_app(units, &mut caller).await;
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
-    let edits = app.store.envelope().vcs.edits.len();
+    let edits = app.stores.store.envelope().vcs.edits.len();
     let output = run_action(&mut app, "toolRunFinalize", &mut caller).await;
     assert_eq!(output.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     let (mut turns, mut peak) = (0usize, 0usize);
@@ -909,11 +909,11 @@ async fn tool_run_large_finalize_reclaims_each_folded_root_before_the_next_op() 
         assert!(std::time::Instant::now() < deadline, "the large finalize never settled; state {:?}", app.tool_runs.state());
         advance_toy(&mut app, &mut caller).await.unwrap_or_else(|fault| panic!("large finalize driver turn faulted: {fault:?}"));
         turns += 1;
-        peak = peak.max(app.store.returned_snapshot_read_count());
+        peak = peak.max(app.stores.store.returned_snapshot_read_count());
         assert!(peak <= maximum, "turn {turns}: {peak} returned document roots are still held (at most {maximum})");
     }
-    assert_eq!(app.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
-    assert_eq!(app.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
+    assert_eq!(app.stores.store.envelope().vcs.edits.len() - edits, 1, "still exactly one grouped edit");
+    assert_eq!(app.stores.store.envelope().vcs.edits.last().expect("finalized edit").forwards.len() as u64, units * number(&fixture["opsPerUnit"]), "every provisional op landed");
     close(&mut app, &mut caller);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
@@ -936,24 +936,24 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete), &mut caller).await;
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into()), caller.policy, &mut caller.identity).await;
     let mut remote_probe = attach_probe(&mut remote, "tool-run-conflict-remote").await;
-    assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
+    assert_eq!(remote.stores.store.local_actor_id(), &protocol::ActorId("remote".into()));
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
-    let generation = app.store.generation();
+    let generation = app.stores.store.generation();
     app.tick_backbone(&mut caller.identity).await.expect("ingest remote edit");
-    assert_eq!(app.store.generation(), generation + 1, "the remote edit is ingested");
+    assert_eq!(app.stores.store.generation(), generation + 1, "the remote edit is ingested");
     pump_until(&mut app, "rebase refold settles", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"])) && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Complete));
-    let store_generation = app.store.generation();
+    let store_generation = app.stores.store.generation();
     run_action(&mut app, "toolRunFinalize", &mut caller).await;
     pump_until(&mut app, "revalidation returns", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!(slot.state.as_str(), text(&expected["state"]));
     assert_eq!(u64::from(slot.generation), number(&expected["generationAfterConflict"]));
     assert_eq!(u64::from(app.tool_runs.conflicts()), number(&expected["retracted"]));
-    assert_eq!(app.store.generation(), store_generation, "a conflict return never publishes");
+    assert_eq!(app.stores.store.generation(), store_generation, "a conflict return never publishes");
     assert!(app.tool_runs.provisional().is_empty(), "conflicting ops are retracted");
     assert!(app.tool_runs.steps().expect("steps").iter().any(|step| step.reason == semio_framework_tool_run::TOOL_RUN_REASON_CONFLICT), "a danger conflict step is shown");
     drop((probe, remote_probe));
@@ -975,16 +975,16 @@ async fn the_runtime_installs_its_canonical_operation_wire_on_every_store_it_min
     let mut caller=ToyFixtureCaller{context:cx,policy:mounted_policy,identity,receipts:Vec::new()};
 
     let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
-    assert!(app.store.operation_wire().is_some(), "the document store mints with its semantic wire");
-    assert!(app.config_store.operation_wire().is_some(), "the config store mints with its canonical wire");
-    assert!(app.draft_store.operation_wire().is_some(), "the draft store mints with its canonical wire");
-    assert!(app.interaction_store.operation_wire().is_some(), "the interaction store mints with its canonical wire");
+    assert!(app.stores.store.operation_wire().is_some(), "the document store mints with its semantic wire");
+    assert!(app.stores.config_store.operation_wire().is_some(), "the config store mints with its canonical wire");
+    assert!(app.stores.draft_store.operation_wire().is_some(), "the draft store mints with its canonical wire");
+    assert!(app.stores.interaction_store.operation_wire().is_some(), "the interaction store mints with its canonical wire");
     let config_mutation: <ToyRunApp as ArtifactApp>::ConfigMutation = ChangeTestConfigSelection { selected: Some("7".to_string()) }.into();
-    let rows = app.config_store.authored_operation_bytes(std::slice::from_ref(&config_mutation), &mut caller.identity).expect("the config mutation authors through the runtime's wire");
+    let rows = app.stores.config_store.authored_operation_bytes(std::slice::from_ref(&config_mutation), &mut caller.identity).expect("the config mutation authors through the runtime's wire");
     assert_eq!(rows.len(), 1);
     assert!(rows[0].starts_with(b"op"), "{:?}", String::from_utf8_lossy(&rows[0]));
     let interaction = <crate::local_interaction::mutations::InteractionConfigMutation>::set_state(protocol::InteractionState::default());
-    let interaction_rows = app.interaction_store.authored_operation_bytes(std::slice::from_ref(&interaction), &mut caller.identity).expect("the interaction mutation authors through the runtime's wire");
+    let interaction_rows = app.stores.interaction_store.authored_operation_bytes(std::slice::from_ref(&interaction), &mut caller.identity).expect("the interaction mutation authors through the runtime's wire");
     let oracle = format!("op{}", serde_json::json!({ "setInteractionState": { "activeGranularity": {}, "activeMode": {}, "hover": {}, "selection": {} } }));
     assert_eq!(String::from_utf8(interaction_rows[0].clone()).expect("canonical JSON is text"), oracle, "the interaction wire is the independent serde_json document");
     std::mem::forget(app);
@@ -1011,10 +1011,10 @@ async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_ille
     let wrong_run = tool_run_action(&mut app, "toolRunAbort", vec![("runId".into(), DslValue::String(number(&fixture["stale"]["wrongRun"]).to_string())), ("generation".into(), DslValue::String(slot.generation.to_string()))], &mut caller).await;
     assert_eq!(wrong_run.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["stale"]["code"])));
     assert_eq!(app.tool_runs.state(), Some(ToolRunState::Running), "stale actions change nothing");
-    let generation = app.store.generation();
+    let generation = app.stores.store.generation();
     let illegal = run_action(&mut app, "toolRunResume", &mut caller).await;
     assert_eq!(illegal.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["illegal"]["code"])));
-    assert_eq!(app.store.generation(), generation, "an illegal action publishes nothing");
+    assert_eq!(app.stores.store.generation(), generation, "an illegal action publishes nothing");
     let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))], &mut caller).await;
     assert_eq!(busy.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["busy"]["code"])));
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY, &mut caller).await).expect("panel parses");
@@ -1565,14 +1565,14 @@ async fn a_read_only_run_finalizes_itself_and_frees_its_slot_for_the_next_start(
 async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, channel: &str, count: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) {
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId("remote".into()), caller.policy, &mut caller.identity).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
-    assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
+    assert_eq!(remote.stores.store.local_actor_id(), &protocol::ActorId("remote".into()));
+    remote.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }, &mut caller.identity).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
-    let generation = app.store.generation();
+    let generation = app.stores.store.generation();
     app.tick_backbone(&mut caller.identity).await.expect("ingest remote edit");
-    assert_eq!(app.store.generation(), generation + 1, "the remote edit is ingested");
+    assert_eq!(app.stores.store.generation(), generation + 1, "the remote edit is ingested");
     drop(remote_probe);
     close(&mut remote, caller);
 }
@@ -1671,9 +1671,9 @@ async fn tool_run_settings_changed_fires_only_for_the_declared_settings_reads() 
         let mut app = toy_app(number(&expected["target"]), &mut caller).await;
         start(&mut app, tool_id, &mut caller).await;
         pump_until(&mut app, "running with provisional units", |app| app.tool_runs.state() == Some(ToolRunState::Running) && !app.tool_runs.provisional().is_empty(), &mut caller).await;
-        let config_generation = app.config_store.generation();
+        let config_generation = app.stores.config_store.generation();
         set_target(&mut app, number(&expected["target"]), &mut caller).await;
-        assert!(app.config_store.generation() > config_generation, "{tool_id}: the republished target is a real config publication");
+        assert!(app.stores.config_store.generation() > config_generation, "{tool_id}: the republished target is a real config publication");
         app.tool_runs.note_window_config_published();
         for _ in 0..8 {
             advance_toy(&mut app, &mut caller).await.expect("turn");
@@ -1931,11 +1931,11 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     let window_id = text(&fixture["windowSettingsReads"]["startWindowId"]);
     let mut app = toy_app(1, &mut caller).await;
     let view = window_view(window_id, None);
-    let authority = app.window_config_store.capture(Some(&view)).await.expect("window authority capture").expect("the world window owns a config partition");
+    let authority = app.stores.window_config_store.capture(Some(&view)).await.expect("window authority capture").expect("the world window owns a config partition");
     let generation_before = authority.snapshot.generation();
-    let revision = app.store.content_revision_now();
-    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
-    let lease = app.tool_cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).expect("cancellation lease");
+    let revision = app.stores.store.content_revision_now();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
+    let lease = app.tools.tool_cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).expect("cancellation lease");
     let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some("5".into()) }.into());
     let mut mounted = test_blank_mounted_operation::<ToyRunApp>();
     mounted.verb = "setWorldSelection".into();
@@ -1989,9 +1989,9 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
             break;
         }
         if mounted.lease_retirement_ready() {
-            let _demand = mounted.lease_retirement_demands(&app.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement");
+            let _demand = mounted.lease_retirement_demands(&app.tools.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement");
             let quoted = grant;
-            mounted.lease_retirement_step(&app.tool_cancellations, quoted).expect("cancellation lease retirement");
+            mounted.lease_retirement_step(&app.tools.tool_cancellations, quoted).expect("cancellation lease retirement");
             continue;
         }
         let _demand = mounted.retirement_demands(grant.maximum_copy_bytes).expect("quoted mounted retirement");
@@ -2332,7 +2332,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
 
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1, &mut caller).await;
-        app.config_store
+        app.stores.config_store
             .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], transaction: None }, &mut caller.identity)
             .await
             .expect("a retained config past one envelope page applies");

@@ -1,10 +1,10 @@
 //! 🌦️ Complete lexical EPW receiving retains every original table, index and partial native field.
 use semio_framework_os_kernel::sqlite_snapshot::receiving::{SqliteSnapshotDecodeReceiving,SqliteSnapshotEncodeReceiving};
-use super::{EpwSnapshot,EpwLocation,EpwDataPeriods,EpwDataPeriod,EpwRecord};
+use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwSnapshot,EpwLocation,EpwDataPeriods,EpwDataPeriod,EpwRecord};
 use semio_framework_os_kernel::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
-type Result<T>=std::result::Result<T,ValueError>;
+pub type Result<T>=std::result::Result<T,ValueError>;
 type Paid<'a,'b,'c>=Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const TABLES:[(&str,usize);5]=[("epw_document",8),("epw_location",10),("epw_data_periods",2),("epw_data_period",7),("epw_record",38)];
@@ -12,17 +12,17 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"EPW
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"EPW semantic extent overflow"))}
 fn empty()->EpwSnapshot{EpwSnapshot{schema:String::new(),location:EpwLocation::default(),design_conditions:String::new(),typical_extreme_periods:String::new(),ground_temperatures:String::new(),holidays_dst:String::new(),comments_1:String::new(),comments_2:String::new(),data_periods:EpwDataPeriods::default(),records:Vec::new()}}
 #[derive(semio_framework_value::RetireOwned)]
-struct Frame{projection:Projection,snapshot:EpwSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],status:Option<Result<()>>}
+pub struct Frame{projection:Projection,snapshot:EpwSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],status:Option<Result<()>>}
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),status:None}}}
-fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
-fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
+pub fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
+pub fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
 fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
 fn doc_fields(value:&EpwSnapshot)->[&str;7]{[&value.schema,&value.design_conditions,&value.typical_extreme_periods,&value.ground_temperatures,&value.holidays_dst,&value.comments_1,&value.comments_2]}
-fn doc_fields_mut(value:&mut EpwSnapshot)->[&mut String;7]{[&mut value.schema,&mut value.design_conditions,&mut value.typical_extreme_periods,&mut value.ground_temperatures,&mut value.holidays_dst,&mut value.comments_1,&mut value.comments_2]}
+pub fn doc_fields_mut(value:&mut EpwSnapshot)->[&mut String;7]{[&mut value.schema,&mut value.design_conditions,&mut value.typical_extreme_periods,&mut value.ground_temperatures,&mut value.holidays_dst,&mut value.comments_1,&mut value.comments_2]}
 fn location_fields(value:&EpwLocation)->[&str;9]{[&value.city,&value.state_province,&value.country,&value.source,&value.wmo,&value.latitude,&value.longitude,&value.time_zone,&value.elevation]}
-fn location_fields_mut(value:&mut EpwLocation)->[&mut String;9]{[&mut value.city,&mut value.state_province,&mut value.country,&mut value.source,&mut value.wmo,&mut value.latitude,&mut value.longitude,&mut value.time_zone,&mut value.elevation]}
+pub fn location_fields_mut(value:&mut EpwLocation)->[&mut String;9]{[&mut value.city,&mut value.state_province,&mut value.country,&mut value.source,&mut value.wmo,&mut value.latitude,&mut value.longitude,&mut value.time_zone,&mut value.elevation]}
 fn period_fields(value:&EpwDataPeriod)->[&str;4]{[&value.name,&value.start_day_of_week,&value.start_date,&value.end_date]}
-fn period_fields_mut(value:&mut EpwDataPeriod)->[&mut String;4]{[&mut value.name,&mut value.start_day_of_week,&mut value.start_date,&mut value.end_date]}
+pub fn period_fields_mut(value:&mut EpwDataPeriod)->[&mut String;4]{[&mut value.name,&mut value.start_day_of_week,&mut value.start_date,&mut value.end_date]}
 fn equal(left:&str,right:&str,port:&mut Paid<'_,'_,'_>)->Result<()>{port.work(2,0)?;if left.len()!=right.len(){return Err(invalid())}port.control.checkpoint(port.phase(),0,left.len())?;for(index,(a,b))in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)).enumerate(){port.work(2,0)?;if a!=b{return Err(invalid())}port.control.checkpoint(port.phase(),index*256+a.len(),left.len())?}Ok(())}
 fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>,depth:usize)->Result<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,depth)}
 fn indexes(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
@@ -30,14 +30,14 @@ fn indexes(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->
   if index>=3{let order=&mut frame.ordered[index-3];port.vector(rows.len(),order,2)?;for position in 0..rows.len(){port.work(2,size_of::<usize>())?;order.push(position)}sort(order,port,|a,b|Ok(integer(&rows[a],2)?.cmp(&integer(&rows[b],2)?)))?;for(ordinal_index,position)in order.iter().copied().enumerate(){port.work(2,0)?;if integer(&rows[position],1)?!=1||integer(&rows[position],2)?!=ordinal(ordinal_index)?{return Err(invalid())}}}
  }Ok(())
 }
-fn project(source:&EpwSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
+pub fn project(source:&EpwSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
  let counts=[1,1,1,source.data_periods.periods.len(),source.records.len()];let total=counts.into_iter().try_fold(0,add)?;port.control.check_rows(total)?;let limits=port.control.limits();let schema=TABLES.iter().enumerate().try_fold(0,|sum,(index,(name,_))|add(sum,add(name.len(),definition(index).len())?))?;if limits.max_tables<5||limits.max_columns<38||SQL.len()>limits.max_schema_bytes||schema>limits.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"EPW authored schema exceeds original allowance"))}
  let output=&mut frame.projection;port.vector(5,&mut output.database.tables,1)?;for(index,(name,_))in TABLES.iter().enumerate(){port.work(2,size_of::<SqliteTable>())?;output.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut output.database.tables[index];port.text(name,&mut table.name,2)?;port.text(definition(index),&mut table.sql,2)?;port.vector(counts[index],&mut table.rows,2)?}
  row(output,1,8,port)?;for value in doc_fields(source){text_cell(output,value,port)?}push_row(output,0,port)?;row(output,1,10,port)?;for value in location_fields(&source.location){text_cell(output,value,port)?}push_row(output,1,port)?;row(output,1,2,port)?;cell(output,Scalar::Integer(source.data_periods.records_per_hour.into()),port)?;push_row(output,2,port)?;
  for(index,value)in source.data_periods.periods.iter().enumerate(){row(output,ordinal(add(index,1)?)?,7,port)?;cell(output,Scalar::Integer(1),port)?;cell(output,Scalar::Integer(ordinal(index)?),port)?;for field in period_fields(value){text_cell(output,field,port)?}push_row(output,3,port)?;port.control.checkpoint(port.phase(),index+1,source.data_periods.periods.len())?}
  for(index,value)in source.records.iter().enumerate(){row(output,ordinal(add(index,1)?)?,38,port)?;cell(output,Scalar::Integer(1),port)?;cell(output,Scalar::Integer(ordinal(index)?),port)?;for field in value.fields(){text_cell(output,field,port)?}push_row(output,4,port)?;port.control.checkpoint(port.phase(),index+1,source.records.len())?}port.control.checkpoint(port.phase(),total,total)
 }
-fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&EpwSnapshot>,port:&mut Paid<'_,'_,'_>)->Result<()>{
+pub fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&EpwSnapshot>,port:&mut Paid<'_,'_,'_>)->Result<()>{
  validate_schema_sql(database,SQL,port)?;check_database(database,port)?;indexes(database,frame,port)?;for index in 0..3{let rows=&table(database,index)?.rows;port.work(2,0)?;if rows.len()!=1||rows[0].rowid!=1{return Err(invalid())}}let d=&table(database,0)?.rows[0];let l=&table(database,1)?.rows[0];let h=&table(database,2)?.rows[0];port.work(2,0)?;let per_hour=u32::try_from(integer(h,1)?).map_err(|_|invalid())?;
  if let Some(source)=source{if per_hour!=source.data_periods.records_per_hour{return Err(invalid())}for(index,value)in doc_fields(source).into_iter().enumerate(){equal(value,text(d,index+1)?,port)?}for(index,value)in location_fields(&source.location).into_iter().enumerate(){equal(value,text(l,index+1)?,port)?}}else{port.work(2,size_of::<u32>())?;frame.snapshot.data_periods.records_per_hour=per_hour;for(index,value)in doc_fields_mut(&mut frame.snapshot).into_iter().enumerate(){copy(text(d,index+1)?,value,port,2)?}for(index,value)in location_fields_mut(&mut frame.snapshot.location).into_iter().enumerate(){copy(text(l,index+1)?,value,port,3)?}}
  let periods=&table(database,3)?.rows;if let Some(source)=source{if source.data_periods.periods.len()!=periods.len(){return Err(invalid())}}else{port.vector(periods.len(),&mut frame.snapshot.data_periods.periods,2)?}
@@ -52,6 +52,4 @@ pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteS
 pub(super)fn validate_decoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
 pub(super)fn validate_encoding(source:&EpwSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

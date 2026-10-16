@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-spr-cli-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

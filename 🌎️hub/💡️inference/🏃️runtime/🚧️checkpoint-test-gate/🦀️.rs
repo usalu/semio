@@ -5,7 +5,7 @@ use super::*;
 /// 🧪️ A bounded test-only pause placed inside the real GIS codec checkpoint callback.
 #[cfg(feature = "integration-fixtures")]
 pub struct InferenceCheckpointTestGateV1 {
-    pub(super) entered: AtomicBool,
+    pub entered: AtomicBool,
     entered_notify: tokio::sync::Notify,
     pub(super) released: Mutex<bool>,
     release_notify: std::sync::Condvar,
@@ -42,8 +42,8 @@ impl InferenceCheckpointTestGateV1 {
         }
     }
 
-    pub(super) fn checkpoint(&self, control: &InferenceOperationControlV1, job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Result<(), InferenceRouteErrorV1> {
-        if progress_cursor == 0 || progress_cursor > super::super::schema::PROGRESS_MAX_CURSOR || completed == 0 || completed > total || total > super::super::schema::SAFE_INTEGER_MAX {
+    pub fn checkpoint(&self, control: &InferenceOperationControlV1, job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Result<(), InferenceRouteErrorV1> {
+        if progress_cursor == 0 || progress_cursor > semio_hub_inference::schema::PROGRESS_MAX_CURSOR || completed == 0 || completed > total || total > semio_hub_inference::schema::SAFE_INTEGER_MAX {
             return Err(InferenceRouteErrorV1::Bounds);
         }
         self.entered.store(true, Ordering::Release);
@@ -76,19 +76,9 @@ const INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES: usize = 256;
 #[cfg(feature = "integration-fixtures")]
 const INHERITED_INFERENCE_CHECKPOINT_DESCRIPTOR: i32 = 4;
 
-#[cfg(feature = "integration-fixtures")]
-use super::super::schema::GisInferenceCheckpointControlFrameV1;
-
-#[cfg(feature = "integration-fixtures")]
-impl GisInferenceCheckpointControlFrameV1 {
-    fn progress_persisted(job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Self {
-        Self { schema: "semio.hub.gis-inference-checkpoint-control/v1".into(), version: 1, sequence: 1, kind: "progress-persisted".into(), job_id: job_id.into(), progress_cursor, completed, total }
-    }
-
-    pub(super) fn release(job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Self {
-        Self { schema: "semio.hub.gis-inference-checkpoint-control/v1".into(), version: 1, sequence: 2, kind: "release".into(), job_id: job_id.into(), progress_cursor, completed, total }
-    }
-}
+#[cfg(feature="integration-fixtures")]
+use semio_hub_inference::schema::GisInferenceCheckpointControlFrameV1;
+use semio_hub_inference_runtime_contract::InferenceRouteErrorV1;
 
 #[cfg(feature = "integration-fixtures")]
 fn write_inference_checkpoint_control_frame(endpoint: &mut std::fs::File, frame: &GisInferenceCheckpointControlFrameV1) -> Result<(), InferenceRouteErrorV1> {

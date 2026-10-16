@@ -5,7 +5,7 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🔣️.json
 
-use crate::registry::{Entry, Kind, Registry};
+use dashboard_registry::{Entry, Kind, Registry};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -39,7 +39,7 @@ pub struct CommandNode {
 pub fn discover(root: &Path) -> CommandNode { discover_cancellable(root, &std::sync::atomic::AtomicBool::new(false)) }
 
 /// ⏳️ Discovers current commands with cooperative cancellation.
-pub fn discover_cancellable(root: &Path, cancelled: &std::sync::atomic::AtomicBool) -> CommandNode { tree(&crate::inventory::discover(root, cancelled), true) }
+pub fn discover_cancellable(root: &Path, cancelled: &std::sync::atomic::AtomicBool) -> CommandNode { tree(&crate::discover(root, cancelled), true) }
 // #endregion 🔖️Discover
 
 // #region 🔖️Projection
@@ -69,7 +69,7 @@ impl TrieNode {
 
     fn into_command_node(self, key: &str, depth: usize) -> CommandNode {
         let mut children: Vec<CommandNode> = self.children.into_iter().map(|(key, node)| node.into_command_node(&key, depth + 1)).collect();
-        if depth == 0 { children.sort_by(|left, right| crate::registry::verb_rank(&left.key).cmp(&crate::registry::verb_rank(&right.key)).then_with(|| left.label.cmp(&right.label))); } else { children.sort_by(|left, right| left.label.cmp(&right.label)); }
+        if depth == 0 { children.sort_by(|left, right| dashboard_registry::verb_rank(&left.key).cmp(&dashboard_registry::verb_rank(&right.key)).then_with(|| left.label.cmp(&right.label))); } else { children.sort_by(|left, right| left.label.cmp(&right.label)); }
         CommandNode { key: key.to_string(), label: if self.label.is_empty() { key.to_string() } else { self.label }, children, leaf: self.leaf }
     }
 }
@@ -102,13 +102,13 @@ pub fn tree_json(registry: &Registry, node: &CommandNode) -> serde_json::Value {
 /// 🧾️ The discovered tree of a repository root as the pretty JSON document `semio command-tree
 /// --dump-tree` prints, so a client never has to name the encoder crate itself.
 pub fn tree_json_text(root: &Path) -> String {
-    let registry = crate::inventory::discover(root, &std::sync::atomic::AtomicBool::new(false));
+    let registry = crate::discover(root, &std::sync::atomic::AtomicBool::new(false));
     serde_json::to_string_pretty(&tree_json(&registry, &tree(&registry, true))).unwrap_or_else(|error| format!("{{\"error\":\"{error}\"}}"))
 }
 
 fn leaf_json(registry: &Registry, leaf: &Leaf) -> serde_json::Value {
     match registry.find(&leaf.id).and_then(Entry::repo_action) {
-        Some(action) => serde_json::json!({ "kind": "repo", "action": crate::repo_domain::action_key(action), "goArgv": action.go_argv() }),
+        Some(action) => serde_json::json!({ "kind": "repo", "action": dashboard_repo_domain::action_key(action), "goArgv": action.go_argv() }),
         None => serde_json::json!({ "kind": "command", "id": leaf.id, "parameters": leaf.parameters }),
     }
 }
@@ -116,7 +116,7 @@ fn leaf_json(registry: &Registry, leaf: &Leaf) -> serde_json::Value {
 
 // #region 🔖️Command
 /// 🖨️ Presents the discovered command tree without entering the interactive dashboard.
-pub fn run(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
+pub fn run(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     let root = parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from);
     if parsed.has_flag("dump-tree") {
         println!("{}", tree_json_text(&root));

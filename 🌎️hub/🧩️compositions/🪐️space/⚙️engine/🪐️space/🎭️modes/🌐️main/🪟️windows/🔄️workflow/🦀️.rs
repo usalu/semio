@@ -2,27 +2,22 @@
 //! The primary node-graph canvas: spawn/move/connect/select app instances, edit parameters.
 
 use crate::demo_space_projection;
-use crate::engine::space::config::SpaceConfig;
-use crate::engine::space::terminology::SStudioLabels;
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_hub_space_foundation::terminology::SStudioLabels;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_locale::{LocalizedLabel};
 use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene};
+use semio_hub_space_foundation::{S_PLAY_BODY_WORKFLOW, S_PLAY_SURFACE_WORKFLOW, S_PLAY_WINDOW_WORKFLOW};
 
 /// 🎯️ Builds a controller-addressed `ActionDescriptor` with no args — the `s_play_action` helper
 /// returns a `UiAssemblyResult<(ActionId, Option<UiValue>)>` tuple (the `UiNode`-tree action shape),
 /// not an `ActionDescriptor`, so window-engagement fields (which want the latter directly) construct
 /// it inline instead, same as the sibling `note_action`/`lowpoly_window_action` pattern.
 fn s_play_action_descriptor(action: &str) -> ActionDescriptor {
-    ActionDescriptor { controller_id: crate::engine::space::S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
+    ActionDescriptor { controller_id: semio_hub_space_foundation::S_PLAY_CONTROLLER_ID.into(), action: action.into(), args: None }
 }
-
-//#region 🔖️Constants
-pub const S_PLAY_WINDOW_WORKFLOW: &str = "s-workflow";
-pub const S_PLAY_BODY_WORKFLOW: &str = "s.play.workflow";
-pub const S_PLAY_SURFACE_WORKFLOW: &str = "s.play.workflow";
-//#endregion 🔖️Constants
 
 //#region 🔖️Manifest
 async fn workflow_engagement(config: &SpaceConfig, node_count: usize) -> WindowEngagement {
@@ -68,7 +63,7 @@ pub async fn definition() -> WindowKindDefinition {
         // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); `create_space_app`'s
         // `.window_kind_interactions(...)` call re-asserts the same ref, this literal just keeps
         // `definition()` honest on its own.
-        interactions: vec![InteractionRef::new(crate::engine::space::S_PLAY_INTERACTION_DOMAIN)],
+        interactions: vec![InteractionRef::new(semio_hub_space_foundation::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,
@@ -105,7 +100,7 @@ async fn workflow_camera(config: &SpaceConfig) -> OsWorkflowCamera {
     config.camera.get(S_PLAY_WINDOW_WORKFLOW).copied().map(Into::into).unwrap_or_default()
 }
 
-pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub async fn render(app: &crate::SpaceApp, projection: &WorkflowSnapshot, config: &SpaceConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let graph_payload = os_workflow_to_node_graph_payload(&projection.graph);
     let camera = workflow_camera(config).await;
     let fixture = os_workflow_to_flow_host_snapshot_json(&projection.graph, &camera);
@@ -123,7 +118,7 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
         find_items: json_array_to_node_graph_find_items(&graph_payload.find_items_json).await,
         capabilities_json: Some(r#"{"engine":"flow","spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
         host_snapshot_json: Some(fixture.to_string()),
-        presence_peers_json: Some(crate::engine::space::presence_peers_json(app, config).await),
+        presence_peers_json: Some(crate::presence_peers_json(app, config).await),
         ..NodeGraphScene::base(json_array_to_node_graph_nodes(&graph_payload.nodes_json).await, json_array_to_node_graph_edges(&graph_payload.edges_json).await, Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom })
     };
     semio_framework_plugin::scene_surface(S_PLAY_SURFACE_WORKFLOW, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
@@ -133,7 +128,7 @@ pub async fn render(app: &crate::engine::space::SpaceApp, projection: &WorkflowS
 //#region 🔖️Measures
 pub async fn window_measures(config: &SpaceConfig, nodes: &[semio_framework_os::WorkflowNode], view_state: &ViewModel) -> Vec<semio_framework_plugin::WindowMeasure> {
     let labels = resolve_labels::<SStudioLabels>(view_state);
-    vec![crate::engine::space::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels).await]
+    vec![crate::modes::main::windows::workflow::options::active_instance::measure(config, nodes, labels).await]
 }
 //#endregion 🔖️Measures
 

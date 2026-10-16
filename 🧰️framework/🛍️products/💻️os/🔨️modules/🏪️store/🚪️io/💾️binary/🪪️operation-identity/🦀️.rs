@@ -1,16 +1,18 @@
 //! ⚙️ Controlled operation-source commitments with deferred original cursor retirement.
-use super::{ArtifactPreparedOperationCursor,ArtifactPreparedOperationSource,ErasedSnapshotRetirement,ARTIFACT_CANONICAL_JSON_DEPTH};
+use semio_framework_os_store_operation_wire::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
+use semio_framework_value::ErasedSnapshotRetirement;
+use semio_framework_os_store_canonical_json::ARTIFACT_CANONICAL_JSON_DEPTH;
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
-use crate::os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
+use semio_framework_os_vcs::io::binary::entity_identity::NativeIdentityPreimage;
 
 #[path="📑️rows/🦀️.rs"]
 mod rows;
-pub(super) use rows::OperationWireRows;
+pub use rows::OperationWireRows;
 
-pub(super) struct OperationIdentityCursor{cursor:ArtifactPreparedOperationCursor,terminal:bool}
+pub struct OperationIdentityCursor{pub cursor:ArtifactPreparedOperationCursor,pub terminal:bool}
 impl OperationIdentityCursor{
     pub(super) fn new()->Self{Self{cursor:ArtifactPreparedOperationCursor::default(),terminal:false}}
-    pub(super) fn encode_into(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut Vec<u8>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
+    pub fn encode_into(&mut self,source:ArtifactPreparedOperationSource<'_>,output:&mut Vec<u8>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
         control.begin_stage(0)?;
         let mut span=[0;64];
         loop{
@@ -23,7 +25,7 @@ impl OperationIdentityCursor{
             if step.processed_items==0&&step.written_bytes==0&&step.retained_capacity_bytes==0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation wire source exhausted its declared progress"));}
         }
     }
-    pub(super) fn commit(&mut self,source:ArtifactPreparedOperationSource<'_>,stamp:(u64,u64,u64),control:&mut NativeEncodeControl<'_>)->Result<(String,[u8;32]),ValueError>{
+    pub fn commit(&mut self,source:ArtifactPreparedOperationSource<'_>,stamp:(u64,u64,u64),control:&mut NativeEncodeControl<'_>)->Result<(String,[u8;32]),ValueError>{
         let mut identity=NativeIdentityPreimage::new("mutation",control)?;let mut payload=semio_framework_hash::Hasher::new();let mut output=[0;64];
         loop{
             control.checkpoint()?;

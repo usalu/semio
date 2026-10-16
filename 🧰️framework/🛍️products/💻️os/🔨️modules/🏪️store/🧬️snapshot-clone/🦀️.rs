@@ -1,11 +1,15 @@
 //! 🧩 Bounded retained-clone publication preparation.
 
-use crate::os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
-use crate::os_store::{
-    one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonTree, ArtifactStoreBatchDigest, admit_artifact_batch_digest, ArtifactOwnedValueRetirementFactory, one_item::ArtifactStoreOneItemCheckpoint, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemLiveAuthority,
-    one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, one_item::ArtifactStoreOneItemPreparationStep, one_item_publication::ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, ErasedSnapshotRetirement,
-    store_schema::HistoryLane, snapshot_read::SnapshotRead, SnapshotRetirementFactory,
-};
+use semio_framework_os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
+use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_os_store_one_item_publication::batch_digest::{ArtifactStoreBatchDigest, admit_artifact_batch_digest};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
+use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
+use semio_framework_os_store_command::HistoryLane;
+use semio_framework_value_snapshot_read::SnapshotRead;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_close};
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement, shared::SharedControlledRetirement}, FactoryAuthority};
 use std::{marker::PhantomData, mem::size_of, sync::Arc};
@@ -20,10 +24,10 @@ use handoff::RetainedCloneCursorHandoff;
 #[path = "♻️pending/🦀️.rs"]
 mod pending;
 #[path = "♻️custody/🦀️.rs"]
-mod custody;
+pub mod custody;
 pub use custody::RetainedEditCustody;
 #[path = "✏️config-apply/🦀️.rs"]
-mod config_apply;
+pub mod config_apply;
 #[path = "⚖️law/🦀️.rs"]
 mod law;
 pub use law::{drive_one_item_preparation_law, OneItemPreparationLaw};
@@ -186,16 +190,16 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     pending_base: Option<SnapshotRead<P>>,
     pending_base_close: Option<ControlledRetirement<SnapshotRead<P>>>,
     pending_mutation_close: Option<ControlledRetirement<M>>,
-    pending_mutation: Option<M>,
+    pub pending_mutation: Option<M>,
     pending_mutation_authority: Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
-    edit: Option<Arc<E>>,
-    source: Option<RetainedCloneSource<P,SnapshotRead<P>>>,
+    pub edit: Option<Arc<E>>,
+    pub source: Option<RetainedCloneSource<P,SnapshotRead<P>>>,
     clone_cursor: Option<P::Cursor>,
     clone_handoff: Option<RetainedCloneCursorHandoff<P>>,
-    copied: Option<P>,
+    pub copied: Option<P>,
     edit_cursor: Option<E::Cursor>,
-    inverse: Option<Vec<M>>,
-    foreign_step_presence: Option<bool>,
+    pub inverse: Option<Vec<M>>,
+    pub foreign_step_presence: Option<bool>,
     publication_post: Option<Arc<P>>,
     publication_post_close: Option<SharedControlledRetirement<P>>,
     publication_inverse: Option<Box<OriginalVectorCursor<M>>>,
@@ -204,24 +208,24 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
     publication_edit: Option<Edit<M>>,
     publication_edit_close: Option<ControlledRetirement<Edit<M>>>,
     build_stage: u8,
-    mutation: Option<RetainedCloneSource<M>>,
-    authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    sealer: Option<ArtifactStoreOneItemSealer<P, M>>,
-    mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
-    snapshot_retirement: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    pub mutation: Option<RetainedCloneSource<M>>,
+    pub authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
+    pub sealer: Option<ArtifactStoreOneItemSealer<P, M>>,
+    pub mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
+    pub snapshot_retirement: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     copied_close: Option<ControlledRetirement<P>>,
     inverse_close: Option<ControlledRetirement<Vec<M>>>,
-    authority_close: Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
-    factory_close: Option<FactoryAuthority>,
-    footprint: ArtifactStoreOneItemFootprint,
-    retained_capacity_bytes: usize,
-    maximum_depth: usize,
-    checkpoint: ArtifactStoreOneItemCheckpoint,
-    ownership: RetainedCloneProgress,
+    pub authority_close: Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
+    pub factory_close: Option<FactoryAuthority>,
+    pub footprint: ArtifactStoreOneItemFootprint,
+    pub retained_capacity_bytes: usize,
+    pub maximum_depth: usize,
+    pub checkpoint: ArtifactStoreOneItemCheckpoint,
+    pub ownership: RetainedCloneProgress,
     seal_base: ArtifactStoreOneItemCheckpoint,
-    phase: RetainedClonePreparationPhase,
-    cancelled: bool,
-    closing: bool,
+    pub phase: RetainedClonePreparationPhase,
+    pub cancelled: bool,
+    pub closing: bool,
 }
 
 impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
@@ -244,7 +248,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         Ok(())
     }
 
-    fn record_progress(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError> {
+    pub fn record_progress(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError> {
         self.ownership=progress;
         self.charge_footprint(progress, "retained clone preparation exceeded its admitted retained capacity")?;
         self.record_document_progress(progress)
@@ -270,7 +274,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
         })
     }
 
-    fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn close_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         macro_rules! typed {
             ($value:expr) => { return Ok(RetirementDemand { copy_bytes: $value.next_close_copy_byte_demand()?, capacity_bytes: $value.next_close_capacity_byte_demand(body)?, release_bytes: $value.next_close_release_byte_demand()?, depth: $value.next_close_depth_demand()? }); };
@@ -346,7 +350,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
     }
 
 
-    fn advance_original(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    pub fn advance_original(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=RetainedCloneProgress::default();
         if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);

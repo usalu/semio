@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-host-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "OS host plugin manifest registry, artifact catalog and the immediate kernel-future bridge"
+
+[package.metadata.semio]
+role = "product"
+id = "os-host-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
+semio-framework-artifact-workflow-workflow = { workspace = true }
+semio-framework-os-host-instance = { path = "../../../🧱️instance/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resourceLeasePathV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {test,expect} from "bun:test";
@@ -20,7 +21,7 @@ test("portable graph headroom request is bounded before physical work",async()=>
  try{for(const row of fixture.requests){let accepted=true;try{api.readBuildGraphHeadroomRequestV1(row.value);}catch{accepted=false;}expect(accepted).toBe(row.accepted);expect(validate(row.value)).toBe(row.accepted);const keys=Object.keys(row.value).join(),v=row.value.minimumAvailableBytes,independent=oracle.query("select ?1='minimumAvailableBytes' and ?2=cast(?2 as integer) and ?2 between 0 and 2684354560 admitted").get(keys,v)as{admitted:number};expect(Boolean(independent.admitted)).toBe(row.accepted);}console.log("[DEBUG] Closed graph headroom vectors agree with Ajv and SQLite arithmetic");}finally{oracle.close();}
 });
 
-test.skipIf(process.platform!=="darwin")("actual graph headroom pressure, reader, integrity and deadline custody",async()=>receiveScriptProcessInvocation(process.env,async original=>{for(const scenario of["pressure","reader","corrupt","invalid-request"]as const)await withRepositoryTestArtifactsV1(process.cwd(),original,async()=>{
+test.skipIf(process.platform!=="darwin")("actual graph headroom pressure, reader, integrity and deadline custody",async()=>receiveScriptProcessInvocation(process.env,async original=>{for(const scenario of["pressure","reader","corrupt","invalid-request"]as const)await withRepositoryTestArtifactsV1(process.cwd(),original,artifactEntryControlV1(original,"test:artifact-entry",0),async artifactPhase=>{
  const api=await import("../🟦️.ts"),row=fixture.physical,parent=mkdtempSync(join(repositoryTestArtifactRootV1(process.cwd()),"gh-")),directory=join(parent,"i"),leaseDirectory=repositoryLeaseDirectoryV1(process.cwd()),control=scriptCompilerAdmissionControlV1(original,"graph:headroom:"+scenario,60000),options={directory,leaseDirectory,filesystemBytes:row.filesystemBytes,maximumPhysicalBytes:row.maximumPhysicalBytes,control};let image=await openNativeImageStorageV1(options),reader:typeof image|undefined;
  const root=image.root,snapshots=join(root,"snapshots"),unknown=join(root,"unknown.input"),canonical=join(root,"canonical.json"),authority=join(root,"authority.json"),paths:string[]=[];
  try{

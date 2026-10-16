@@ -135,7 +135,7 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
     group.push(output);
     generatorPolicies.set(key, group);
   }
-  for (const group of generatorPolicies.values()) if (new Set(group.map((output) => output.inclusion)).size > 1) diagnose("contradictory-generator-output", group[0].rootPath, "One generator contract/root identity declares conflicting inclusion policies");
+  for(const group of generatorPolicies.values()){const first=group[0];if(!first)throw new Error("Required generator policy group is empty");if(new Set(group.map(output=>output.inclusion)).size>1)diagnose("contradictory-generator-output",first.rootPath,"One generator contract/root identity declares conflicting inclusion policies");}
   const groups = new Map<string, TaxonomySourceCandidateObservation[]>(), normalizedGeneratorRoots = input.generatorOutputRoots.map((root) => [root, root.rootPath.normalize("NFC")] as const);
   for (const row of input.candidates) {
     if (!sourceAdmissionSafePath(row.sourcePath)) { diagnose("invalid-source-path", row.sourcePath, "Candidate sourcePath is not a safe repository-relative slash path"); continue; }
@@ -146,14 +146,14 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
     groups.set(row.sourcePath, group);
   }
   const observations = [...groups].map(([sourcePath, rows]): TaxonomySourceObservation => {
-    const first = rows[0], normalized = sourcePath.normalize("NFC");
+    const first=rows[0];if(!first)throw new Error("Required source admission candidate group is empty");const normalized = sourcePath.normalize("NFC");
     const physical = new Set(rows.map((row) => JSON.stringify([row.observedKind, row.worktreeMode, row.explicitDirectory])));
     const indexEntries = [...new Map(rows.flatMap((row) => row.indexEntries).map((entry) => [JSON.stringify([entry.stage, entry.mode, entry.objectId]), entry])).values()].sort((left, right) => left.stage - right.stage || sourceAdmissionByteCompare(left.mode, right.mode) || sourceAdmissionByteCompare(left.objectId, right.objectId));
     const generatorOutputs = [...new Map(normalizedGeneratorRoots.filter(([, rootPath]) => normalized === rootPath || normalized.startsWith(rootPath + "/")).map(([root]) => root).map((root) => [JSON.stringify([root.contractId, root.rootPath, root.inclusion]), root])).values()].sort((left, right) => sourceAdmissionByteCompare(left.contractId, right.contractId) || sourceAdmissionByteCompare(left.rootPath, right.rootPath) || sourceAdmissionByteCompare(left.inclusion, right.inclusion));
     const supplied = new Set(rows.flatMap((row) => row.origins)), hasIgnored = generatorOutputs.some((root) => root.inclusion === "ignored");
     const opaque = sourceAdmissionOpaque(sourcePath, input.opaquePrefixes), unsafe = rows.some((row) => row.unsafeAncestor);
     const stageZero = indexEntries.some((entry) => entry.stage === 0), conflicted = indexEntries.some((entry) => entry.stage !== 0);
-    const repositoryBoundary = !opaque && !unsafe && physical.size === 1 && supplied.has("tracked") && indexEntries.length === 1 && indexEntries[0].stage === 0 && indexEntries[0].mode === "160000" && sourceAdmissionPhysicalConsistent(first) && (first.observedKind === "directory" || first.observedKind === "absent") ? "gitlink" as const : null;
+    const repositoryBoundary = !opaque && !unsafe && physical.size === 1 && supplied.has("tracked") && indexEntries.length === 1 && indexEntries[0]?.stage === 0 && indexEntries[0]?.mode === "160000" && sourceAdmissionPhysicalConsistent(first) && (first.observedKind === "directory" || first.observedKind === "absent") ? "gitlink" as const : null;
     if (physical.size > 1) diagnose("contradictory-physical-observation", sourcePath, "Duplicate rows disagree on observed physical kind, mode, or directory status");
     if (new Set(indexEntries.map((entry) => entry.stage)).size !== indexEntries.length) diagnose("contradictory-index-entry", sourcePath, "Duplicate rows disagree on an exact Git index stage identity");
     if (supplied.has("ignored-generator") && !hasIgnored) diagnose("untrusted-generator-origin", sourcePath, "Ignored-generator authority is derived only from declared ignored output roots");

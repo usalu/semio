@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "export",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "export": {
+      "const": {
+        "name": "createIssuedResourceControlV1",
+        "source": "./📥️invocation/🏃️process/🟦️.ts"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "milliseconds",
+          "accepted"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "live",
+              "forged",
+              "cancelled",
+              "released"
+            ]
+          },
+          "milliseconds": {
+            "type": "number"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

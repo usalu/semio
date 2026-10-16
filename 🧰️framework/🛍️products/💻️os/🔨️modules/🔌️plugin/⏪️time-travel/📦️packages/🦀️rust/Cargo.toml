@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-time-travel"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Time travel ledger, store state and supersessions of the plugin SDK"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-time-travel"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-child = { path = "../../../🪆️child/📦️packages/🦀️rust" }
+semio-framework-plugin-command = { path = "../../../🎮️command/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel-panel = { path = "../../🪟️panel/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-schema = { path = "../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-time-travel = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+
+[dev-dependencies]

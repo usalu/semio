@@ -19,6 +19,8 @@ test("dashboard launch preserves unrelated entries and projects exact owned comm
  const current={version:"0.2.0",configurations:[fixture.unrelated],inputs:[]};
  const actual=projectDashboardLaunch(current,commands,fixture.ticket);
  expect(output(actual)).toBe(true);
+ for(const row of fixture.runtimeInvalid){const changed=structuredClone(actual);changed.configurations[1]!.env={...changed.configurations[1]!.env,[row.key]:row.value};expect(output(changed)).toBe(false);}
+ for(const key of fixture.runtimeMissing){const changed=structuredClone(actual);delete changed.configurations[1]!.env[key];expect(output(changed)).toBe(false);}
  expect(actual.configurations[0]).toEqual(fixture.unrelated);
  expect(actual.configurations.slice(1).map(x=>x.name)).toEqual([
   "Test · ticket:26/09/30/HISTORY/test-choice [EN]","Test · ticket:26/09/30/HISTORY/test-text [EN]",
@@ -49,7 +51,9 @@ test("current ticket declarations and generated launch routes are admitted by th
  const ticket="26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING";
  const declaration=JSON.parse(readFileSync(resolve(root,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🎮️commands.json"),"utf8"));
  expect(admits(declaration),JSON.stringify(admits.errors)).toBe(true);
- const published=JSON.parse(readFileSync(resolve(root,".vscode/launch.json"),"utf8"));
+ const ts=await import("typescript"),published=ts.parseConfigFileTextToJson("launch.json",readFileSync(resolve(root,".vscode/launch.json"),"utf8")).config,seed=ts.parseConfigFileTextToJson("seed.jsonc",readFileSync(resolve(root,".vscode/🧩️launch.seed.jsonc"),"utf8")).config;
+ expect(output(published),JSON.stringify(output.errors)).toBe(true);
+ const runtime=ajv.compile(read("🧬️schema/🚀️launch/🔣️.json").$defs.RuntimeEnvironment);for(const document of[published,seed]){const rows=document.configurations.filter((value:any)=>value?.command==="bun repo run repo:test-toolkit-outputs --exclude-dependencies --skip-cache");expect(rows).toHaveLength(2);for(const row of rows)expect(runtime({BUN_RUNTIME_TRANSPILER_CACHE_PATH:row.env.BUN_RUNTIME_TRANSPILER_CACHE_PATH,NODE_DISABLE_COMPILE_CACHE:row.env.NODE_DISABLE_COMPILE_CACHE})).toBe(true);}
  expect(output(published),JSON.stringify(output.errors)).toBe(true);
  const commands=ticketLaunchCommands(ticket,declaration);
  expect(projectDashboardLaunch(published,commands,ticket)).toEqual(published);
@@ -61,14 +65,9 @@ test("current ticket declarations and generated launch routes are admitted by th
  console.log(`[DEBUG] dashboard current declaration schema=true tools=${commands.length} launchConfigurations=${rows.length} BuildRouting=true`);
 });
 
-/** 🧼️ RFC6902 independently states the complete neutral editor projection, including capabilities. */
-test("launch publication normalizes fresh backend commands and nested capabilities while retaining backend choices",async()=>{
- const {normalizeDashboardLaunchBuildV1}=await owner(),vector=fixture.buildNormalization;
- const expected=applyPatch(structuredClone(vector.current),vector.patch,true).newDocument;
- const actual=normalizeDashboardLaunchBuildV1(vector.current);
- expect(actual).toEqual(expected);
- expect(output(actual),JSON.stringify(output.errors)).toBe(true);
- expect(normalizeDashboardLaunchBuildV1(actual)).toEqual(actual);
- expect(actual.inputs[0].options).toEqual(["nx","bazel"]);
- console.log("[DEBUG] launch normalization command=true capabilityArguments=true nestedPayload=true backendEnvironmentRemoved=true backendChoicesPreserved=true");
+/** 🧾️ Unrelated serialized data is preserved without interpreting backend-looking words. */
+test("launch publication preserves unrelated serialized values without backend compatibility rewrites",async()=>{
+ const api=await owner(),actual=api.projectDashboardLaunch(structuredClone(fixture.unrelatedSerialized),[],fixture.ticket),expected=applyPatch(structuredClone(fixture.unrelatedSerialized),[],true).newDocument;
+ expect(actual).toEqual(expected);expect(output(actual),JSON.stringify(output.errors)).toBe(true);expect(actual.configurations[0].env.SEMIO_PREVIEW_JSON).toBe(fixture.unrelatedSerialized.configurations[0].env.SEMIO_PREVIEW_JSON);expect(actual.inputs![0].options).toEqual(["nx","bazel"]);
+ const ts=await import("typescript"),source=readFileSync(resolve(dashboard,"🌳️command-tree/🚀️launch/🟦️.ts"),"utf8"),file=ts.createSourceFile("launch.ts",source,ts.ScriptTarget.Latest,true),exports=file.statements.filter(ts.isFunctionDeclaration).filter(node=>node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)).map(node=>node.name?.text);expect(exports).not.toContain("normalizeDashboardLaunchBuildV1");console.log("[DEBUG] Actual dashboard projection agrees with independent RFC6902 identity and leaves literal serialized backend labels/choices unchanged; AST has no compatibility normalizer");
 });

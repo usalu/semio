@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import {Database} from "bun:sqlite";
 import {openSync,closeSync,writeSync,fsyncSync,ftruncateSync,fstatSync,lstatSync,statfsSync,unlinkSync,mkdirSync,type Stats} from "node:fs";
 import {join} from "node:path";
-import {provisionNativeImageStorageV1} from "../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {withNativeImageStorageV1} from "../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
 import {acquireResourceLease,requireResourceLeaseCustodyV1,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../🟦️.ts";
 import {retainResourceQueueMetadataHeadroomV1} from "../../../📦️metadata/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../🎛️owned-execution/🟦️.ts";
@@ -12,7 +12,7 @@ function change(db:Database,sql:string,value:Buffer):void{const statement=db.pre
 
 /** 🧪️ Measures two real rollback journals after full-filesystem refusal and exact same-inode reserve recovery. */
 export async function proveFiniteResourceReserveV1(directory:string,control:ResourceLeaseControl,environment:NodeJS.ProcessEnv):Promise<Record<string,boolean>>{
- const image=await provisionNativeImageStorageV1({directory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control}),root=image.root,data=join(root,"data");mkdirSync(data);
+ return withNativeImageStorageV1({...{directory,filesystemBytes:33554432,maximumPhysicalBytes:34603008,control},leaseDirectory:join(directory,"..","leases")},async(image,control)=>{const root=image.root,data=join(root,"data");mkdirSync(data);
  console.log("[DEBUG] Isolated reserve image ready for catalog");
  const guard=await acquireResourceLease({directory:data,resource:"queue-claim-catalog",mode:"exclusive",signal:control.signal,control,maximumDatabaseBytes:16384}),reservePath=join(data,"metadata-headroom.bin"),filler=join(root,"filler"),paths=[join(data,"catalog.sqlite"),join(data,"guard.sqlite")],databases:Database[]=[];
  console.log("[DEBUG] Isolated reserve catalog acquired");
@@ -35,6 +35,6 @@ export async function proveFiniteResourceReserveV1(directory:string,control:Reso
   const errors:unknown[]=[],step=(name:string,run:()=>void)=>{try{run();}catch(error){console.error("[DEBUG] Isolated reserve cleanup step failed "+name,error);errors.push(error);}};
   if(fillFd!==undefined)step("filler close",()=>closeSync(fillFd!));step("filler unlink",()=>{try{unlinkSync(filler);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}});
   for(const db of databases){step("rollback",()=>{if(db.inTransaction)db.exec("ROLLBACK");});step("connection finalize",()=>db.close(true));}
-  step("catalog release",()=>guard.release());try{await image.close();}catch(error){console.error("[DEBUG] Isolated reserve cleanup image failed",error);errors.push(error);}if(errors.length)throw errors[0];
+  step("catalog release",()=>guard.release());if(errors.length)throw errors[0];
  }
-}
+});}

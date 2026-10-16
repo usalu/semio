@@ -1,0 +1,45 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-spr-laws-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of os-spr: protocol laws and mutation laws"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-spr-laws-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
+dsl_derive = { path = "../../../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-mutation-diff = { path = "../../../../../../../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-pack-tools = { path = "../../../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }

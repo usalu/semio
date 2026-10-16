@@ -1,7 +1,7 @@
 //! 📦️ App instance schemas, parameters, and studio bindings.
 // #region instance
 
-use crate::workflow;
+use semio_framework_artifact_workflow_workflow::WorkflowNode;
 use semio_framework::ConfigSpec;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -428,7 +428,7 @@ pub fn materialize_os_app_instance_document_json(current_document_json: &str, no
 /// own `ArtifactApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
 pub fn app_instance_document_patches_for_binding(
     parameter_id: &str,
-    nodes: &[workflow::WorkflowNode],
+    nodes: &[WorkflowNode],
     bindings: &[OsParameterFieldBinding],
     parameters: &[OsParameter],
     current_document_json: impl Fn(&str) -> Option<String>,

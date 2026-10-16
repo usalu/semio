@@ -1,15 +1,22 @@
+use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase};
+#[allow(unused_imports)]
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::transfer::heap_sort, sqlite_snapshot::transfer::reserve, sqlite_snapshot::validate_sqlite_database_schema_controlled, sqlite_snapshot::SqliteRow};
+use crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::{invalid, short};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::riff_pcm::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 #[path="💰️backing/🦀️.rs"]
 mod owned_requests;
 
-fn owned_control_laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🎛️controls.json")).unwrap()}
+fn owned_control_laws()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️controls.json")).unwrap()}
 fn owned_control_payload(snapshot:&WavSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(snapshot))}}
 
 #[test]
 fn sqlite_snapshot_wav_integer_query_samples_match_exact_native_words(){
- let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🧫️fixtures/🎯️integer-query.json")).unwrap();
  for case in cases["cases"].as_array().unwrap(){let bits=u32::from_str_radix(case["binary32Bits"].as_str().unwrap(),16).unwrap();let snapshot=WavSnapshot{data:WavData::Float32(vec![f32::from_bits(bits)]),..fixture()};let mut database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();let integer=case["integer"].as_str().unwrap().parse::<i64>().unwrap();database.table_mut("wav_float32_sample").unwrap().rows[0].values[5]=SqliteValue::Integer(integer);assert_eq!(WavSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).is_ok(),case["accept32"].as_bool().unwrap(),"WAV query INTEGER {integer}");}
 }
 
@@ -39,7 +46,7 @@ fn sqlite_snapshot_wav_large_owned_text_cancels_inside_all_four_phases(){
 }
 #[test]
 fn sqlite_snapshot_wav_manual_metadata_preserves_neutral_fields_and_enforces_cumulative_admission(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  for(index,producer)in[{let semio_framework_dsl_record::Shape::Record(record)=<WavData as semio_framework_dsl_record::DslField>::shape()else{panic!("WavData record")};record},{let semio_framework_dsl_record::Shape::Record(record)=<WavChunkRef as semio_framework_dsl_record::DslField>::shape()else{panic!("WavChunkRef record")};record}].iter().enumerate(){
   let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();assert!(exact>0);
   let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
@@ -61,7 +68,7 @@ fn sqlite_snapshot_wav_controlled_native_owner_preserves_full_fixture_and_enforc
 }
 #[test]
 fn sqlite_snapshot_wav_canonical_json_preserves_raw_sample_words_and_full_chunk_indices() {
-    let words: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
+    let words: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let bits: Vec<u32> = words["ieee754Binary32Bits"].as_array().unwrap().iter().map(|word| word.as_u64().unwrap() as u32).collect();
     let snapshot = WavSnapshot { data: WavData::Float32(bits.iter().copied().map(f32::from_bits).collect()), chunk_order: vec![WavChunkRef::Other(u64::MAX)], ..fixture() };
     let text = semio_framework_pack_json::to_json_string(&snapshot);
@@ -106,11 +113,11 @@ use semio_framework_os_kernel::{
 };
 
 fn fixture() -> WavSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 #[test]
 fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relationships() {
-    let indices: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧭️indices.json")).unwrap();
+    let indices: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧭️indices.json")).unwrap();
     let mut snapshot = fixture();
     snapshot.chunk_order = indices["unsigned64ChunkIndices"].as_array().unwrap().iter().map(|value| WavChunkRef::Other(value.as_str().unwrap().parse().unwrap())).collect();
     assert_eq!(roundtrip(&snapshot), snapshot);
@@ -119,7 +126,7 @@ fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relations
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_wav_actual_erased_capability_retains_all_owned_sample_states() {
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding};
-    let patterns: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
+    let patterns: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let floats = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| f32::from_bits(value.as_u64().unwrap() as u32)).collect();
     semio_framework_plugin::PluginBuilder::<_, semio_framework_plugin::app::NoPluginApp>::new("stdio")
         .label("Wav erased SQLite")
@@ -201,7 +208,7 @@ fn sqlite_snapshot_wav_semantic_fields_and_all_sample_kinds() {
     let snapshot = fixture();
     assert_eq!(roundtrip(&snapshot), snapshot);
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
-    assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap());
+    assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap());
     for data in [WavData::Pcm16(vec![i16::MIN, i16::MAX]), WavData::Pcm8(vec![0, 255]), WavData::Raw(vec![0, 255, 17])] {
         let value = WavSnapshot {
             schema: "自由 世界".into(),
@@ -218,7 +225,7 @@ fn sqlite_snapshot_wav_semantic_fields_and_all_sample_kinds() {
         let value = WavSnapshot { fmt: WavFmt { ext, ..WavFmt::default() }, ..WavSnapshot::default() };
         assert_eq!(roundtrip(&value), value);
     }
-    let patterns: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
+    let patterns: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let patterns: Vec<u32> = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect();
     let value = WavSnapshot { data: WavData::Float32(patterns.iter().copied().map(f32::from_bits).collect()), ..snapshot.clone() };
     let WavData::Float32(restored) = roundtrip(&value).data else { panic!("float32 kind lost") };
@@ -285,7 +292,7 @@ fn sqlite_snapshot_wav_ieee754_samples_survive_independent_sqlite_and_detect_inc
         io::Write,
         process::{Command, Stdio},
     };
-    let patterns: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
+    let patterns: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
     let patterns: Vec<u32> = patterns["ieee754Binary32Bits"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect();
     let snapshot = WavSnapshot { data: WavData::Float32(patterns.iter().copied().map(f32::from_bits).collect()), ..WavSnapshot::default() };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
@@ -307,7 +314,7 @@ fn sqlite_snapshot_wav_ieee754_samples_survive_independent_sqlite_and_detect_inc
 
 #[test]
 fn sqlite_snapshot_wav_data_equality_preserves_every_literal_ieee_word(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();
  let words=fixture["ieee754Binary32Bits"].as_array().unwrap();
  for left in words{for right in words{
   let left=left.as_u64().unwrap()as u32;let right=right.as_u64().unwrap()as u32;
@@ -320,9 +327,9 @@ fn sqlite_snapshot_wav_data_equality_preserves_every_literal_ieee_word(){
 
 #[test]
 fn sqlite_snapshot_wav_required_padding_defaults_match_the_closed_neutral_contract() {
-    let laws: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🎚️presence/🔣️.json")).unwrap();
+    let laws: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎚️presence/🔣️.json")).unwrap();
     for role in laws["cases"].as_array().unwrap() {
-        let mut wire: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+        let mut wire: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         for field in ["fmtPadByte", "dataPadByte"] {
             if role["present"].as_bool().unwrap() {
                 wire.as_object_mut().unwrap().insert(field.into(), role["value"].clone());
@@ -354,8 +361,8 @@ fn sqlite_snapshot_wav_required_padding_defaults_match_the_closed_neutral_contra
 #[test]
 fn sqlite_snapshot_wav_complete_cells_have_independent_pretyped_native_admission(){
  use store::sqlite_snapshot::SnapshotEncoding;use std::{io::Write,process::{Command,Stdio}};
- let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️cells/🔣️.json")).unwrap();
- let words:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔢️float32.json")).unwrap();let indices:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧭️indices.json")).unwrap();
+ let plan:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️cells/🔣️.json")).unwrap();
+ let words:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔢️float32.json")).unwrap();let indices:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧭️indices.json")).unwrap();
  for extension in plan["extensionStates"].as_array().unwrap(){
   for kind in plan["sampleKinds"].as_array().unwrap(){
    let mut input=fixture();input.schema="WAV 世界\0".into();input.fmt.ext=match extension.as_str().unwrap(){"absent"=>None,"empty"=>Some(Vec::new()),"present"=>input.fmt.ext.take(),_=>panic!("authored extension state")};
@@ -381,6 +388,11 @@ fn sqlite_snapshot_wav_complete_cells_have_independent_pretyped_native_admission
 
 #[test]
 fn sqlite_snapshot_wav_borrowed_carriers_match_the_neutral_manual_records(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🏭️schema/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🏭️schema/🔣️.json")).unwrap();
  for(index,record)in[<WavData as semio_framework_dsl_record::BorrowedDslRecord>::RECORD,<WavChunkRef as semio_framework_dsl_record::BorrowedDslRecord>::RECORD].iter().enumerate(){let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let semio_framework_dsl_record::BorrowedShape::Enum(labels)=record.fields[0].shape else{panic!("WAV tagged record")};assert_eq!(serde_json::json!(labels),fixture["records"][index]["tags"]);}
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

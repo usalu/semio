@@ -1,8 +1,8 @@
 use semio_framework_schema_state::StateClass;
-use semio_framework_schema_registry::{artifact_inference_catalog_len, artifact_inference_descriptor_registered, ArtifactInferenceDescriptor, FacetLeaves, register_artifact_inference_descriptor, with_artifact_inference_catalog};
 
 use super::*;
-use crate::{ArtifactVersion, DictBuilder, DictReader, HybridLogicalTimestamp, MutationId, RecordHasher};
+use crate::{DictBuilder, DictReader};
+use semio_framework_replication_crypto::RecordHasher;
 
 //#region 🔖️Errors
 #[test]
@@ -81,8 +81,8 @@ fn frame_codec_id_masks_to_three_bits() {
 
 //#region 🔖️Scalars
 mod scalars {
-    use crate::codec::{ByteReader, ByteWriter};
-    use crate::scalar::{read_id, read_timestamp, write_id, write_timestamp};
+    use semio_framework_replication_codec::{ByteReader, ByteWriter};
+    use crate::{read_id, read_timestamp, write_id, write_timestamp};
 
     #[test]
     fn timestamp_round_trips_canonical_utc_no_fraction() {
@@ -306,74 +306,6 @@ fn record_hasher_trait_is_object_usable() {
 }
 //#endregion 🔖️Crypto
 
-//#region 🔖️HybridLogicalTimestamp
-#[test]
-fn hlc_tick_advances_on_newer_physical_time() {
-    let mut hlc = HybridLogicalTimestamp::new(1, 100);
-    hlc.tick(200);
-    assert_eq!(hlc.physical_ms, 200);
-    assert_eq!(hlc.logical, 0);
-}
-
-#[test]
-fn hlc_tick_bumps_logical_on_equal_or_older_physical_time() {
-    let mut hlc = HybridLogicalTimestamp::new(1, 100);
-    hlc.tick(100);
-    assert_eq!(hlc.logical, 1);
-    hlc.tick(50);
-    assert_eq!(hlc.logical, 2);
-}
-
-#[test]
-fn hlc_merge_adopts_the_greater_remote_tick_then_bumps() {
-    let mut local = HybridLogicalTimestamp::new(1, 100);
-    let remote = HybridLogicalTimestamp { actor: 2, physical_ms: 150, logical: 3 };
-    local.merge(&remote);
-    assert_eq!(local.physical_ms, 150);
-    assert_eq!(local.logical, 4);
-}
-
-#[test]
-fn hlc_ordering_uses_actor_as_final_tiebreak() {
-    let a = HybridLogicalTimestamp { actor: 1, physical_ms: 100, logical: 5 };
-    let b = HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 5 };
-    assert!(a < b, "equal physical_ms/logical must tiebreak by actor, not compare Equal");
-    assert_ne!(a.cmp_key(), b.cmp_key());
-}
-
-#[test]
-fn hlc_ordering_prioritizes_physical_then_logical_then_actor() {
-    let older = HybridLogicalTimestamp { actor: 9, physical_ms: 100, logical: 0 };
-    let newer_physical = HybridLogicalTimestamp { actor: 0, physical_ms: 101, logical: 0 };
-    let newer_logical = HybridLogicalTimestamp { actor: 0, physical_ms: 100, logical: 1 };
-    assert!(older < newer_physical);
-    assert!(older < newer_logical);
-    assert!(newer_logical < newer_physical);
-}
-//#endregion 🔖️HybridLogicalTimestamp
-
-//#region 🔖️Identifiers
-/// 🌱️ Rewritten off `serde_json` (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-/// 26/09/01): asserts the same transparent shape directly on `DslValue`.
-#[test]
-fn identifier_newtypes_to_value_round_trip_transparently() {
-    let op = MutationId("op-1".to_string());
-    let value = crate::value::ToValue::to_value(&op);
-    assert_eq!(value, crate::value::DslValue::String("op-1".to_string()));
-    assert_eq!(<MutationId as crate::value::FromValue>::from_value(value).unwrap(), op);
-
-    let version = ArtifactVersion(42);
-    let value = crate::value::ToValue::to_value(&version);
-    assert_eq!(value, crate::value::DslValue::uint(42));
-    assert_eq!(<ArtifactVersion as crate::value::FromValue>::from_value(value).unwrap(), version);
-}
-
-#[test]
-fn document_version_orders_numerically() {
-    assert!(ArtifactVersion(1) < ArtifactVersion(2));
-}
-//#endregion 🔖️Identifiers
-
 //#region 🔖️Policies
 #[test]
 fn merge_policy_default_is_normal() {
@@ -412,36 +344,17 @@ fn merge_policy_as_u8_from_u8_round_trips() {
 #[test]
 fn undo_policy_and_state_class_to_value_round_trip() {
     for policy in [UndoPolicy::ExactBaseOnly, UndoPolicy::TransformAgainstConcurrent, UndoPolicy::SemanticUndo, UndoPolicy::CompensatingAction] {
-        let value = crate::value::ToValue::to_value(&policy);
-        assert_eq!(<UndoPolicy as crate::value::FromValue>::from_value(value).unwrap(), policy);
+        let value = semio_framework_value::ToValue::to_value(&policy);
+        assert_eq!(<UndoPolicy as semio_framework_value::FromValue>::from_value(value).unwrap(), policy);
     }
     let lanes = [StateClass::Artifact, StateClass::Config, StateClass::Presence, StateClass::Transient];
     for class in lanes {
-        let value = crate::value::ToValue::to_value(&class);
-        assert_eq!(<StateClass as crate::value::FromValue>::from_value(value).unwrap(), class);
+        let value = semio_framework_value::ToValue::to_value(&class);
+        assert_eq!(<StateClass as semio_framework_value::FromValue>::from_value(value).unwrap(), class);
     }
     assert_eq!(lanes.len(), 4, "the state square admits exactly four lanes");
 }
 //#endregion 🔖️Policies
-
-//#region 🔖️ArtifactInferenceCatalog
-fn empty_kernel_facet_leaves() -> FacetLeaves {
-    FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }
-}
-
-#[test]
-fn kernel_artifact_inference_catalog_registers_independently_of_the_four_facet_descriptor() {
-    let before = artifact_inference_catalog_len();
-    register_artifact_inference_descriptor(ArtifactInferenceDescriptor { id: "s.wave3.synthetic.inference", inference: empty_kernel_facet_leaves() }).expect("schema descriptor publication");
-    assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.inference"));
-    assert_eq!(artifact_inference_catalog_len(), before.max(1));
-    let mut found = false;
-    with_artifact_inference_catalog(|entries| {
-        found = entries.iter().any(|entry| entry.id == "s.wave3.synthetic.inference");
-    });
-    assert!(found, "registered inference descriptor must be visible via with_artifact_inference_catalog");
-}
-//#endregion 🔖️ArtifactInferenceCatalog
 
 //#region 🔖️WireCodec
 #[test]

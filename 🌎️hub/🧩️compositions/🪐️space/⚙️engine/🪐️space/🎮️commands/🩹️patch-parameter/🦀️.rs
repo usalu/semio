@@ -1,11 +1,11 @@
 //! 🔢️ 🔢️ S Studio app command — `patch-parameter`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_pack_json::{self as json, Value};
 use semio_framework_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-use crate::engine::space::engine::parameter_entity_id;
+use semio_hub_space_operations::parameter_entity_id;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-parameter")]
@@ -20,7 +20,7 @@ pub fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>
     let value_json: Value = json::parse(&payload.value, json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::String(payload.value.clone()));
     let mut current = None;
     for entry in &projection.parameters {
-        if crate::engine::space::engine::resolve_future(parameter_entity_id(entry)) == payload.parameter_id {
+        if semio_hub_space_operations::resolve_future(parameter_entity_id(entry)) == payload.parameter_id {
             current = Some(entry);
             break;
         }
@@ -53,7 +53,7 @@ pub fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>
         Some(json::object([(payload.field.clone(), value_json)]))
     };
     match patch {
-        Some(patch) => match crate::engine::space::engine::resolve_future(crate::engine::space::engine::patch_parameter_operation(projection, &payload.parameter_id, &patch)) {
+        Some(patch) => match semio_hub_space_operations::resolve_future(semio_hub_space_operations::patch_parameter_operation(projection, &payload.parameter_id, &patch)) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),
         },
@@ -61,8 +61,3 @@ pub fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>
     }
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "failure": "success",
+      "heldBeforeRelease": true,
+      "settledBeforeRelease": false,
+      "lateRefused": true
+    },
+    {
+      "failure": "error",
+      "heldBeforeRelease": true,
+      "settledBeforeRelease": false,
+      "lateRefused": true
+    },
+    {
+      "failure": "undefined",
+      "heldBeforeRelease": true,
+      "settledBeforeRelease": false,
+      "lateRefused": true
+    },
+    {
+      "failure": "cancel",
+      "heldBeforeRelease": true,
+      "settledBeforeRelease": false,
+      "lateRefused": true
+    }
+  ]
+}

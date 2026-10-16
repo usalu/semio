@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-directory-backend-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Directory backend laws: the per-backend unit laws of the sqlite, postgres and neo4j directories"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-directory-backend-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-directory = { workspace = true, features = ["testkit"] }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-neo4j = { workspace = true, features = ["testkit"] }
+semio-hub-directory-neo4j-rows = { workspace = true }
+semio-hub-directory-postgres = { workspace = true, features = ["testkit"] }
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-testing = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
+semio-framework-async = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+neo4rs = { version = "0.8" }
+serde = { workspace = true }

@@ -50,7 +50,7 @@ impl RetainedRecordBodyCursor{
  }
  /// ♻️ Keeps every owner and phase unchanged on an unfunded grant; a funded turn is exactly one close transition.
  pub fn retire_record_storage(&mut self,maximum_body_bytes:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,PackRefusal>{
-  use crate::format::RetainedPackCloseStep;
+  use semio_framework_pack_format_retained::RetainedPackCloseStep;
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let demand=self.record_storage_retirement_demands(maximum_body_bytes)?;if !funded(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
   Ok(match self.close_step(1,demand.release_bytes)?{

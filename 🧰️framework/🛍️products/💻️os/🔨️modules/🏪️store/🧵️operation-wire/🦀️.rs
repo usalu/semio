@@ -1,8 +1,9 @@
 //! 📦️ Prestage operation bytes from exact borrowed typed sources, with inline retained traversal.
-use super::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::{ValueError, ValueRefusalKind};
-use crate::os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
+use semio_framework_os_pack::record::{BorrowedProjectedPackCursor, BorrowedProjectedPackFailure};
 use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjectionSource};
 
 #[path = "📝️text/🦀️.rs"]
@@ -12,15 +13,9 @@ pub use text::{ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperati
 #[path = "📦️output/🦀️.rs"]
 mod output;
 pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,ArtifactPreparedOperationsOwner};
+pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
-/// 🫳️ Installed domain codec authority over one original immutable typed operation.
-#[derive(Clone, Copy)]
-pub enum ArtifactPreparedOperationSource<'a> {
-    Pack { tag: u64, body: &'a dyn FieldProjectionSource, spec: BorrowedRecordSpec },
-    Text { header: &'static [u8], body: &'a dyn ArtifactOperationText },
-    CanonicalJson { header: &'static [u8], body: &'a dyn ArtifactCanonicalJson },
-    HexJson { header: &'static [u8], prefix: &'static [u8], body: &'a dyn ArtifactCanonicalJson },
-}
+
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -33,20 +28,11 @@ pub struct ArtifactPreparedOperationProgress {
     pub complete: bool,
 }
 
-/// ⚠️ Exact initialized output prefix remains visible when a domain source refuses.
-#[derive(Debug)]
-pub struct ArtifactPreparedOperationError {
-    pub written_bytes: usize,
-    pub reason: ValueError,
-}
 
-impl From<ValueError> for ArtifactPreparedOperationError {
-    fn from(reason: ValueError) -> Self { Self { written_bytes: 0, reason } }
-}
 
-impl From<BorrowedProjectedPackFailure> for ArtifactPreparedOperationError {
-    fn from(failure: BorrowedProjectedPackFailure) -> Self { Self { written_bytes: failure.written_bytes, reason: failure.reason } }
-}
+
+
+
 
 fn text_failure(error:ArtifactPreparedOperationError,header_bytes:usize)->ArtifactPreparedOperationError {
     let child=error.reason.retained_progress();
@@ -204,117 +190,56 @@ pub fn operation_wire_preparation_factory_source_birth_demand<P: 'static, M: 'st
 }
 
 /// 🧵️ Constructs the funded wire authority around the original semantic preparation factory.
-pub fn operation_wire_preparation_factory<P: 'static, M: 'static>(factory: std::sync::Arc<dyn super::ArtifactStoreOneItemPreparationFactory<P, M>>, source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>, schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>) -> std::sync::Arc<dyn super::ArtifactStoreOneItemPreparationFactory<P, M>> {
+pub fn operation_wire_preparation_factory<P: 'static, M: 'static>(factory: std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>, source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>, schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>) -> std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>> {
     std::sync::Arc::new(OperationWirePreparationFactory { factory, source, schema })
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct OperationWirePreparationFactory<P, M> {
     #[factory_child]
-    factory: std::sync::Arc<dyn super::ArtifactStoreOneItemPreparationFactory<P, M>>,
+    factory: std::sync::Arc<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>,
     source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>,
     schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>,
 }
 
-impl<P: 'static, M: 'static> super::ArtifactStoreOneItemPreparationFactory<P, M> for OperationWirePreparationFactory<P, M> {
-    fn begin_batch_digest(&self,edit:&mut Option<Box<crate::os_spr::Edit<M>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>,semio_framework_value::RetainedCloneProgress)>,ValueError>{self.factory.begin_batch_digest(edit,grant)}
+impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for OperationWirePreparationFactory<P, M> {
+    fn begin_batch_digest(&self,edit:&mut Option<Box<semio_framework_os_spr::Edit<M>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_os_store_one_item_publication::batch_digest::ArtifactStoreBatchDigest<M>>,semio_framework_value::RetainedCloneProgress)>,ValueError>{self.factory.begin_batch_digest(edit,grant)}
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
-    fn preflight(&self, mutation: &M, lane: super::HistoryLane) -> Result<super::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
-    fn begin_demand(&self, mutation: &M, lane: super::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
-    fn begin(&self, request: super::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: super::ArtifactStoreOneItemGrant) -> Result<(Box<dyn super::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, super::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
-    fn stamped_clock(&self) -> Option<super::HybridLogicalTimestamp> { self.factory.stamped_clock() }
-    fn stamped_mutation_id(&self) -> Option<&super::MutationId> { self.factory.stamped_mutation_id() }
+    fn preflight(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
+    fn begin_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
+    fn begin(&self, request: semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
+    fn stamped_clock(&self) -> Option<semio_framework_os_spr::HybridLogicalTimestamp> { self.factory.stamped_clock() }
+    fn stamped_mutation_id(&self) -> Option<&semio_framework_os_spr::MutationId> { self.factory.stamped_mutation_id() }
 }
 
-/// 🌲️ Views one original mutation as its path-addressed canonical JSON without copying it: the wire of a mutation IS its canonical tree.
-#[repr(transparent)]
-pub struct ArtifactCanonicalTreeSource<M>(M);
 
-impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalTreeSource<M> {
-    /// 🔗️ Reborrows the original mutation in place as its canonical wire role.
-    pub const fn view(mutation: &M) -> &Self {
-        unsafe { &*(mutation as *const M).cast::<Self>() }
-    }
 
-    fn descend<'a>(&'a self, path: &[usize]) -> Result<&'a dyn ArtifactCanonicalJsonTree, ValueError> {
-        let mut node: &dyn ArtifactCanonicalJsonTree = &self.0;
-        for ordinal in path {
-            node = node.canonical_tree_child(*ordinal)?;
-        }
-        Ok(node)
-    }
-}
 
-impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalJson for ArtifactCanonicalTreeSource<M> {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
-        self.descend(path)?.canonical_tree_node()
-    }
 
-    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
-        self.descend(object_path)?.canonical_tree_key(index)
-    }
-}
 
-/// 🪪️ The canonical operation wire of one mutation vocabulary, installed exactly once on every Store that authors it.
-///
-/// The wire is a pure function of the original mutation, so the Store owns the default instead of every preparation factory:
-/// factories, catalogs and genesis ordering cannot leave a lane without one. A factory that speaks a domain codec
-/// (pack, text, hex JSON) still overrides it per mutation through
-/// [`ArtifactStoreOneItemPreparationFactory::operation_wire_source`](super::ArtifactStoreOneItemPreparationFactory::operation_wire_source).
-pub struct ArtifactOperationWire<M> {
-    source: for<'a> fn(&'a M) -> Option<ArtifactPreparedOperationSource<'a>>,
-    schema: for<'a> fn(&'a M) -> Option<(&'a str, &'a str)>,
-    digest: BatchDigestAdmission<M>,
-}
 
-/// 🔏️ Admission of the canonical digest owner of one original aggregate edit: a pure function of the mutation vocabulary, so the Store owns it beside the wire.
-pub type BatchDigestAdmission<M> = fn(&mut Option<Box<crate::os_spr::Edit<M>>>, RetainedCloneGrant) -> Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>, semio_framework_value::RetainedCloneProgress)>, ValueError>;
 
-impl<M> Clone for ArtifactOperationWire<M> {
-    fn clone(&self) -> Self { *self }
-}
 
-impl<M> Copy for ArtifactOperationWire<M> {}
 
-fn canonical_tree_source<M: ArtifactCanonicalJsonTree>(mutation: &M) -> Option<ArtifactPreparedOperationSource<'_>> {
-    Some(ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: ArtifactCanonicalTreeSource::view(mutation) })
-}
 
-fn semantic_schema<P, M: crate::os_spr::SemanticMutation<P>>(mutation: &M) -> Option<(&str, &str)> {
-    let semantics = mutation.semantics();
-    Some((semantics.entity, semantics.kind))
-}
 
-fn no_schema<M>(_mutation: &M) -> Option<(&str, &str)> { None }
 
-fn no_digest<M>(_edit: &mut Option<Box<crate::os_spr::Edit<M>>>, _grant: RetainedCloneGrant) -> Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>, semio_framework_value::RetainedCloneProgress)>, ValueError> {
-    Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "the installed operation wire carries no batch digest authority"))
-}
 
-impl<M: ArtifactCanonicalJsonTree> ArtifactOperationWire<M> {
-    /// 🧬️ Wire of a lane whose mutations carry no semantic vocabulary (config, draft, interaction): canonical tree JSON, no schema pair.
-    pub fn canonical() -> Self { Self { source: canonical_tree_source::<M>, schema: no_schema::<M>, digest: no_digest::<M> } }
 
-    /// 🔖️ Wire of a document lane: canonical tree JSON plus the `(entity, kind)` schema pair its member receipts name.
-    pub fn semantic<P>() -> Self where M: crate::os_spr::SemanticMutation<P> { Self { source: canonical_tree_source::<M>, schema: semantic_schema::<P, M>, digest: no_digest::<M> } }
-}
 
-impl<M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> ArtifactOperationWire<M> {
-    /// 🔏️ Grants the wire its aggregate-edit digest authority: with it, a Store whose factory slot is empty still commits multi-operation gestures and transactions.
-    pub fn with_batch_digest(mut self) -> Self { self.digest = super::admit_artifact_batch_digest::<M>; self }
-}
 
-impl<M> ArtifactOperationWire<M> {
-    /// 📤️ Borrows the canonical wire of one original mutation.
-    pub fn source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
 
-    /// 🔏️ Admits the canonical digest owner of one original aggregate edit through the Store's own vocabulary.
-    pub fn begin_batch_digest(&self, edit: &mut Option<Box<crate::os_spr::Edit<M>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn super::ArtifactStoreBatchDigest<M>>, semio_framework_value::RetainedCloneProgress)>, ValueError> { (self.digest)(edit, grant) }
 
-    /// 📛️ Borrows the `(entity, kind)` schema pair of one original mutation, when its lane has a semantic vocabulary.
-    pub fn schema<'a>(&self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
-}
+
+
+
+
+
+
+
+
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

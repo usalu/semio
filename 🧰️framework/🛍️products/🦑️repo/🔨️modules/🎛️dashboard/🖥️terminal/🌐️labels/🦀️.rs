@@ -4,7 +4,9 @@
 //!
 //! @see 🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧩️labels/🦀️.rs
 
+use dashboard_launch::TaskLabel;
 use ui_locale::{AppLabels, Locale, Terminology};
+use ui_tui::tui::text::{elide_end, elide_middle};
 
 macro_rules! dashboard_labels {
     ($($field:ident: $en:expr, $de:expr;)+) => {
@@ -190,8 +192,8 @@ pub fn labels(locale: Locale) -> &'static DashboardLabels { <DashboardLabels as 
 
 impl DashboardLabels {
     /// 🚨 What the daemon's error kind means, in the language of the dashboard; `message` is its own detail.
-    pub fn error(&self, code: Option<crate::ipc::ErrorCode>, message: &str) -> String {
-        use crate::ipc::ErrorCode as Kind;
+    pub fn error(&self, code: Option<dashboard_wire::ipc::ErrorCode>, message: &str) -> String {
+        use dashboard_wire::ipc::ErrorCode as Kind;
         let text = match code {
             Some(Kind::Protocol) => self.error_protocol, Some(Kind::Decode) => self.error_decode, Some(Kind::Invalid) => self.error_invalid, Some(Kind::HelloRequired) => self.error_hello_required,
             Some(Kind::UnknownSession) => self.error_unknown_session, Some(Kind::UnknownGroup) => self.error_unknown_group, Some(Kind::AlreadyRunning) => self.error_already_running, Some(Kind::Limit) => self.error_limit, Some(Kind::ViewLimit) => self.error_view_limit,
@@ -201,7 +203,7 @@ impl DashboardLabels {
     }
 
     /// ⚖️ The sentence that names how the daemon differs from this client, in the language of the dashboard.
-    pub fn skew(&self, skew: &crate::daemon::client::Skew) -> String {
+    pub fn skew(&self, skew: &dashboard_wire::client::Skew) -> String {
         if skew.incompatible() { self.skew_incompatible.fill(&[("daemon", &skew.daemon_protocol.to_string()), ("client", &skew.client_protocol.to_string())]).into_string() } else { self.skew_build.fill(&[("daemon", &skew.daemon_build), ("client", &skew.client_build)]).into_string() }
     }
 
@@ -225,6 +227,63 @@ impl DashboardLabels {
         Some(text.as_str())
     }
 }
+
+// #region 🔖️Labels
+/// 📐️ The cells a tab may take, glyph and close control included.
+pub const TAB_CELLS: usize = 24;
+const TAIL_CELLS: usize = 6;
+
+/// 🗣️ The word a verb is shown as; identifiers stay language-neutral.
+pub fn verb_text(verb: &str, locale: Locale) -> &str {
+    if locale != Locale::De { return verb; }
+    match verb {
+        "setup" => "einrichten", "start" => "starten", "dev" => "entwickeln", "serve" => "ausliefern", "watch" => "beobachten", "activate" => "aktivieren", "prepare" => "vorbereiten", "run" => "ausführen", "build" => "bauen", "package" => "paketieren", "test" => "testen", "smoke" => "rauchtest", "check" => "prüfen", "typecheck" => "typprüfung", "verify" => "verifizieren", "gate" => "freigabe", "lint" => "linten", "format" => "formatieren", "generate" => "generieren", "publish" => "veröffentlichen", "deploy" => "bereitstellen", "preview" => "vorschau", "bench" => "messen", "clean" => "aufräumen", "task" => "aufgabe", "goals" => "ziele", "analyze" => "analysieren", "tree" => "baum", "statutes" => "statuten",
+        other => other,
+    }
+}
+
+fn cells(text: &str) -> usize { usize::from(ui_tui::tui::text::display_width(text)) }
+
+/// 📏️ A cell budget as the shared text helpers take it.
+fn cap(budget: usize) -> u16 { u16::try_from(budget).unwrap_or(u16::MAX) }
+
+/// 📑️ The tab text of a task, `verb subject [qualifier] [×members]`, within `budget` cells: the
+/// subject gives way first (middle elided, last cells kept), then the qualifier; the verb never does.
+pub fn tab_text(label: &TaskLabel, locale: Locale, budget: usize) -> String {
+    let verb = verb_text(&label.verb, locale);
+    let members = if label.members > 0 { format!(" ×{}", label.members) } else { String::new() };
+    let join = |subject: &str, qualifier: &str| format!("{verb} {subject}{}{qualifier}{members}", if qualifier.is_empty() { "" } else { " " });
+    let fixed = cells(verb) + 1 + cells(&members);
+    let qualified = if label.qualifier.is_empty() { 0 } else { 1 + cells(&label.qualifier) };
+    if fixed + cells(&label.subject) + qualified <= budget { return join(&label.subject, &label.qualifier); }
+    let subject = elide_middle(&label.subject, cap(budget.saturating_sub(fixed + qualified).max(TAIL_CELLS + 2)), TAIL_CELLS as u16).into_owned();
+    if fixed + cells(&subject) + qualified <= budget { return join(&subject, &label.qualifier); }
+    let room = budget.saturating_sub(fixed + cells(&subject) + 1);
+    let qualifier = if room < 2 { String::new() } else { elide_end(&label.qualifier, cap(room)).into_owned() };
+    let text = join(&subject, &qualifier);
+    if cells(&text) <= budget { text } else { format!("{verb} {}", elide_end(&text[verb.len() + 1..], cap(budget.saturating_sub(cells(verb) + 1).max(1)))) }
+}
+
+/// 🧮️ The tab texts of tasks in creation order: a text an earlier task already shows gets ` ·2`,
+/// ` ·3`, … and stays within the budget.
+pub fn tab_texts(labels: &[&TaskLabel], locale: Locale, budget: usize) -> Vec<String> {
+    let plain: Vec<String> = labels.iter().map(|label| tab_text(label, locale, budget)).collect();
+    plain.iter().enumerate().map(|(index, text)| match plain[..index].iter().filter(|earlier| *earlier == text).count() {
+        0 => text.clone(),
+        earlier => { let suffix = format!(" ·{}", earlier + 1); format!("{}{suffix}", tab_text(labels[index], locale, budget.saturating_sub(cells(&suffix)))) }
+    }).collect()
+}
+
+/// 🪟️ The window title of a task: verb, owner path, subject, qualifier and chosen parameters.
+pub fn window_title(label: &TaskLabel, locale: Locale) -> String {
+    let mut parts = vec![verb_text(&label.verb, locale).to_string()];
+    if !label.owner.is_empty() && label.owner.last() != Some(&label.subject) { parts.push(label.owner.join(" / ")); }
+    parts.push(if label.members > 0 { format!("{} ×{}", label.subject, label.members) } else { label.subject.clone() });
+    if !label.qualifier.is_empty() { parts.push(label.qualifier.clone()); }
+    parts.extend(label.parameters.iter().map(|(key, value)| format!("{key}={value}")));
+    parts.join(" · ")
+}
+// #endregion 🔖️Labels
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

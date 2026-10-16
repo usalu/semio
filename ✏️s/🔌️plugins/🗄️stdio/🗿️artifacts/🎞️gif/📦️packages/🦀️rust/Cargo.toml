@@ -16,6 +16,14 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-gif-inferences = { path = "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-snapshot = { path = "../../🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-schema = { path = "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-mutations = { path = "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-mutations-2 = { path = "../../🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-fixture-tests = { path = "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-schema-2 = { path = "../../🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gif-editor = { path = "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

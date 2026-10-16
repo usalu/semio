@@ -7,12 +7,29 @@
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build"
+        "command": "bun ./📜️script.ts build --host-platform={hostPlatform}",
+        "forwardAllArgs": false
       },
       "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/build"
-      ]
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "hostPlatformOutputsV1": {
+            "version": 1,
+            "outputs": {
+              "darwin": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/descriptor-emitter/darwin"
+              ],
+              "linux": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/descriptor-emitter/linux"
+              ],
+              "win32": [
+                "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/tools/descriptor-emitter/win32"
+              ]
+            }
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

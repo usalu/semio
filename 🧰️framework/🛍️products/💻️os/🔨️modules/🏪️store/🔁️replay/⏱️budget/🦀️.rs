@@ -23,13 +23,13 @@ impl ReplayTurnBudget {
 
     /// ⌛️ The turn's deadline on `now_us`: the runtime's `deadline_us`, else `wall_us` from now (now when the clock cannot
     /// be read); `None` without a wall limit.
-    pub(crate) fn turn_deadline(&self, deadline_us: Option<u64>) -> Option<u64> {
+    pub fn turn_deadline(&self, deadline_us: Option<u64>) -> Option<u64> {
         deadline_us.or_else(|| (self.wall_us != u64::MAX).then(|| (self.now_us)().map_or(0, |now| now.saturating_add(self.wall_us))))
     }
 
     /// 🛎️ Whether a turn that replayed `replayed` operations ends: its cap is reached or its deadline passed on `now_us`
     /// (an unreadable clock ends it).
-    pub(crate) fn turn_ends(&self, replayed: usize, deadline_us: Option<u64>) -> bool {
+    pub fn turn_ends(&self, replayed: usize, deadline_us: Option<u64>) -> bool {
         replayed >= self.operations || deadline_us.is_some_and(|deadline| (self.now_us)().is_none_or(|now| now >= deadline))
     }
 }

@@ -56,9 +56,6 @@ pub mod chrome;
 #[path = "👆️cursor/🦀️.rs"]
 pub mod cursor;
 
-#[cfg(feature = "wgpu-engine")]
-#[path = "🖍️draw/🦀️.rs"]
-pub mod draw;
 
 /// 🧩️ Target-neutral half of `draw.rs` (`DrawList` + its CPU accumulation API, `mesh_content_version`,
 /// `paint_selection_marquee`) and of `widgets.rs`'s `gizmo` submodule (placement/tip-geometry/
@@ -83,9 +80,6 @@ pub use semio_framework_ui_theme::geometry;
 #[path = "🗺️minimap/🦀️.rs"]
 pub mod minimap;
 
-#[cfg(feature = "wgpu-engine")]
-#[path = "🧊️gpu/🦀️.rs"]
-pub mod gpu;
 
 /// 🧩️ 100% target-neutral (job-driven CPU staging/admission state machine for GPU uploads — zero
 /// `wgpu::`/`bytemuck`/etc reference anywhere in the file, confirmed by grep). Mounted
@@ -115,9 +109,6 @@ pub mod flex;
 #[path = "📌️mounted_layout/🦀️.rs"]
 pub mod mounted_layout;
 
-#[cfg(feature = "wgpu-engine")]
-#[path = "🎨️shaders/🦀️.rs"]
-pub mod shaders;
 
 #[cfg(feature = "wgpu-engine")]
 pub use semio_framework_ui_text as text;
@@ -250,8 +241,7 @@ pub use cursor::apply_canvas_cursor;
 pub use cursor::apply_window_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
-#[cfg(feature = "wgpu-engine")]
-pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, MeshGpuSourceReturn, RasterKeepSetV1, RasterResidencyLedger, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
+pub use draw_types::{ear_clip_polygon, IconAtlas};
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, NodeKeyRef, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
@@ -285,16 +275,6 @@ pub use chrome::{
 };
 #[cfg(feature = "wgpu-engine")]
 pub use engine::{SurfaceLane, Ui, UiCaretSource, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiPresentedCaret, UiPresentedTreeLoan, UiSceneHit, UiSurfaceToken, UiWindowClockStep, UI_LAYOUT_SURFACE_SLOTS};
-#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
-pub use gpu::schedule_frame;
-#[cfg(feature = "wgpu-engine")]
-pub use gpu::GpuContext;
-/// 🧹️ `PreparedGpuPresentCursor` is the abandonment-owner handle the OS renderer's own presenter
-/// holds (`🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs:14178`) and drains (`:15054`,
-/// `close_abandoned_step`) — it was reachable only as `gpu::PreparedGpuPresentCursor`, so both call
-/// sites failed `E0425`/`E0433` on every target. Same feature gate as `mod gpu` itself.
-#[cfg(feature = "wgpu-engine")]
-pub use gpu::{PreparedGpuPresentCursor, PreparedGpuReadback};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]

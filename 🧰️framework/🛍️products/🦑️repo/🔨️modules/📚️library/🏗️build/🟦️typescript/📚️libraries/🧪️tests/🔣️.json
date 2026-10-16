@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "valid": {
+    "version": 1,
+    "libraries": [
+      "DOM",
+      "DOM.AsyncIterable",
+      "DOM.Iterable",
+      "ESNext"
+    ]
+  },
+  "invalid": [
+    {
+      "version": 1,
+      "libraries": [
+        "ES2022"
+      ]
+    },
+    {
+      "version": 1,
+      "libraries": [
+        "DOM",
+        "DOM.AsyncIterable",
+        "DOM.Iterable",
+        "ESNext"
+      ],
+      "target": "ESNext"
+    },
+    {
+      "version": 1,
+      "libraries": [
+        "DOM",
+        "ESNext"
+      ]
+    }
+  ],
+  "flags": [
+    "--lib",
+    "DOM,DOM.AsyncIterable,DOM.Iterable,ESNext"
+  ],
+  "files": [
+    "lib.dom.d.ts",
+    "lib.dom.asynciterable.d.ts",
+    "lib.dom.iterable.d.ts",
+    "lib.esnext.d.ts"
+  ],
+  "values": [
+    1,
+    4,
+    2,
+    8
+  ],
+  "minimum": 4,
+  "last": 8,
+  "lastIndex": 3
+}

@@ -25,6 +25,7 @@ import { join, relative } from "node:path";
 
 /** 🧪️ Proves browser compiler policy and state ownership against real Vite and TypeScript. */
 export async function proveWebBuild(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
+ const vitePhase=scriptCompilerAdmissionControlV1(invocation,"test:vite-entry",0);
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️cases.json"), "utf8"));
   const { semioViteBuild } = await import("../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
   for (const row of fixture.modes) {
@@ -91,7 +92,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   console.log("[DEBUG] Next standalone publication contains the actual installed SDK trace closure in both modes");
   const bunPackage = join(temporary, "bun-package"); await mkdir(bunPackage); await writeFile(join(bunPackage, "entry.ts"), fixture.bunPackage.source); await writeFile(join(bunPackage, "payload.txt"), fixture.bunPackage.payload);
   for (const row of fixture.modes) {
-    const result = await bundleVirtualJavaScript({ version: 1, kind: "bun-package", mode: row.mode, entrypoint: join(bunPackage, "entry.ts") }, { workspace, temporaryRoot: temporary, invocation });
+    const result = await bundleVirtualJavaScript({ version: 1, kind: "bun-package", mode: row.mode, entrypoint: join(bunPackage, "entry.ts") }, { workspace, invocation, control:scriptCompilerAdmissionControlV1(invocation,"test:bun-carried-phase",120000) });
     const emitted = join(bunPackage, `${row.mode}.js`); await writeFile(emitted, result.source); assert.equal((await import(emitted)).answer, fixture.bunPackage.answer);
     const oracle = await require("esbuild").build({ entryPoints: [join(bunPackage, "entry.ts")], bundle: true, write: false, format: "esm", loader: { ".txt": "text" }, plugins: [{ name: "text-oracle", setup(build: any) { build.onLoad({ filter: /entry\.ts$/ }, () => ({ contents: fixture.bunPackage.source.replace(' with { type: "text" }', ""), loader: "ts" })); } }] });
     const oracleFile = join(bunPackage, `${row.mode}-oracle.js`); await writeFile(oracleFile, oracle.outputFiles[0].text); assert.equal((await import(oracleFile)).answer, fixture.bunPackage.answer);
@@ -120,19 +121,19 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   const config = join(app, "🟦️.ts"), policyPath = join(workspace, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
   const wasmPluginPath = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts");
   await writeFile(config, `import { semioViteBuild } from ${JSON.stringify(policyPath)}; import { canonicalWasmBuildVitePlugin } from ${JSON.stringify(wasmPluginPath)}; export default ({ mode }) => ({ plugins: [canonicalWasmBuildVitePlugin(${JSON.stringify(workspace)}, mode)], publicDir: false, logLevel: "silent", cacheDir: process.env.SEMIO_VITE_CACHE_DIRECTORY, build: semioViteBuild(undefined, mode) });`);
-  const options = { invocation, root: app, workspace, config, owner: fixture.owner };
+  const options = { invocation, control:scriptCompilerAdmissionControlV1(invocation,"test:vite-entry",0), root: app, workspace, config, owner: fixture.owner };
   const sizes = new Map<string, number>();
   try {
     assert.equal(require("jsonschema").validate(fixture.bunWorker, bunWorkerSchema).valid, true);
     for (const row of fixture.modes) {
-      const observed = await bundleVirtualJavaScript({ ...fixture.bunWorker, mode: row.mode }, { workspace, temporaryRoot: temporary, invocation, signal: invocation.control.signal });
+      const observed = await bundleVirtualJavaScript({ ...fixture.bunWorker, mode: row.mode }, { workspace, invocation, control:scriptCompilerAdmissionControlV1(invocation,"test:bun-carried-phase",120000), signal: invocation.control.signal });
       const load = async (source: string) => import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
       const oracle = await require("esbuild").build({ stdin: { contents: fixture.bunWorker.contents, loader: "ts" }, bundle: true, format: "esm", write: false, plugins: [{ name: "fixture-runtime", setup(build: any) { build.onResolve({ filter: /^semio:actor-/ }, (args: any) => ({ path: args.path.slice("semio:actor-".length), namespace: "fixture" })); build.onLoad({ filter: /.*/, namespace: "fixture" }, (args: any) => ({ contents: fixture.bunWorker.runtime[args.path], loader: "ts" })); } }] });
       assert.equal((await load(observed.source)).answer, (await load(oracle.outputFiles[0].text)).answer); assert.equal(observed.loadedRuntime, 2);
     }
     const cancellation = new AbortController(); let compiling = false;
     const request = { version: 1 as const, mode: "prototype" as const, kind: "actor" as const, contents: Array.from({ length: 50_000 }, (_, index) => `export function function${index}(value: number): number { return value + ${index}; }`).join("\n"), runtime: { host: "export const host = 1;", wasi: "export const wasi = 2;" } };
-    await assert.rejects(bundleVirtualJavaScript(request, { workspace, temporaryRoot: temporary, invocation, signal: cancellation.signal, onLine: line => { if (line.includes("[bun-worker] compiling")) { compiling = true; setTimeout(() => cancellation.abort(), 20); } } }));
+    await assert.rejects(bundleVirtualJavaScript(request, { workspace, invocation, control:scriptCompilerAdmissionControlV1(invocation,"test:bun-carried-phase",120000), signal: cancellation.signal, onLine: line => { if (line.includes("[bun-worker] compiling")) { compiling = true; setTimeout(() => cancellation.abort(), 20); } } }));
     assert.equal(compiling, true);
     await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "web:capacity", 10_000), async () => {});
     console.log("[DEBUG] Actual Bun virtual-source compilation cancelled after worker start; process tree exited and host capacity released");
@@ -163,7 +164,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const serving = [new AbortController(), new AbortController()], addresses: string[] = [], listeners: Promise<void>[] = [];
     try {
       await Promise.all(serving.map((controller, index) => new Promise<void>((accept, reject) => {
-        const running = serveVite({ invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: controller.signal, ready: url => { addresses[index] = url; accept(); } });
+        const running = serveVite({control:vitePhase, invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: controller.signal, ready: url => { addresses[index] = url; accept(); } });
         running.catch(reject); listeners.push(running);
       })));
       assert.notEqual(addresses[0], addresses[1]);
@@ -181,7 +182,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
     const warmService = new AbortController();
     let warmed!: Promise<void>;
     await new Promise<void>((accept, reject) => {
-      warmed = serveVite({ invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: warmService.signal, ready: async url => { const response = await fetch(url); assert.equal(response.status, 200); await response.text(); accept(); } });
+      warmed = serveVite({control:vitePhase, invocation, root: app, config, mode: "prototype", host: "127.0.0.1", port: 0, signal: warmService.signal, ready: async url => { const response = await fetch(url); assert.equal(response.status, 200); await response.text(); accept(); } });
       warmed.catch(reject);
     });
     warmService.abort(); await warmed;

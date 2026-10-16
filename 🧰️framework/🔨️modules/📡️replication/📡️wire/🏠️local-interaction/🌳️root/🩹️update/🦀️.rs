@@ -2,13 +2,17 @@
 
 use super::{DomainSelection,LocalInteractionRoot,SelectionMode};
 use super::super::LocalInteractionDomainPatch;
-use crate::value::{ordered::{SharedOwner,UpdateCursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement},ValueError,ValueRefusalKind};
+use semio_framework_value::ordered::{SharedOwner, UpdateCursor};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::mem::ManuallyDrop;
 
 #[derive(Default)]
 struct PatchState {selection:Option<SharedOwner<DomainSelection>>,mode:Option<SharedOwner<SelectionMode>>,granularity:Option<SharedOwner<String>>}
 impl PatchState {fn is_empty(&self)->bool{self.selection.is_none()&&self.mode.is_none()&&self.granularity.is_none()}}
-crate::value::artifact_retire_struct!(PatchState {selection,mode,granularity});
+semio_framework_value::artifact_retire_struct!(PatchState {selection,mode,granularity});
 
 #[must_use="interaction patch inputs require transfer or typed retirement"]
 pub struct LocalInteractionRootPatch {owned:ManuallyDrop<PatchState>}
@@ -44,13 +48,13 @@ impl RetireOwned for MapUpdate {
 }
 
 #[derive(Default)]
-struct CandidateCleanup {selection:Option<crate::value::ordered::OrderedMap<DomainSelection>>,mode:Option<crate::value::ordered::OrderedMap<SelectionMode>>,granularity:Option<crate::value::ordered::OrderedMap<String>>,current:Option<MapUpdate>}
-crate::value::artifact_retire_struct!(CandidateCleanup {selection,mode,granularity,current});
+struct CandidateCleanup {selection:Option<semio_framework_value::ordered::OrderedMap<DomainSelection>>,mode:Option<semio_framework_value::ordered::OrderedMap<SelectionMode>>,granularity:Option<semio_framework_value::ordered::OrderedMap<String>>,current:Option<MapUpdate>}
+semio_framework_value::artifact_retire_struct!(CandidateCleanup {selection,mode,granularity,current});
 
 struct UpdateState {candidate:Option<LocalInteractionRoot>,domain:Option<SharedOwner<String>>,patch:PatchState,current:Option<MapUpdate>,pending:Option<CandidateCleanup>,cleanup:Option<ControlledRetirement<CandidateCleanup>>,phase:u8}
 impl RetireOwned for UpdateState {
-    fn retirement(self)->Box<dyn RetirementCursor>{let Self {candidate,domain,patch,current,pending,cleanup,..}=self;crate::value::retirement::sequence(vec![crate::value::retirement::deferred(candidate),crate::value::retirement::deferred(domain),crate::value::retirement::deferred(patch),crate::value::retirement::deferred(current),crate::value::retirement::deferred(pending),crate::value::retirement::deferred(cleanup)])}
-    fn retirement_birth_bytes(&self)->Option<usize>{crate::value::retirement::sequence_birth_bytes(&[crate::value::retirement::deferred_birth_bytes_for(&self.candidate),crate::value::retirement::deferred_birth_bytes_for(&self.domain),crate::value::retirement::deferred_birth_bytes_for(&self.patch),crate::value::retirement::deferred_birth_bytes_for(&self.current),crate::value::retirement::deferred_birth_bytes_for(&self.pending),crate::value::retirement::deferred_birth_bytes_for(&self.cleanup)])}
+    fn retirement(self)->Box<dyn RetirementCursor>{let Self {candidate,domain,patch,current,pending,cleanup,..}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(candidate),semio_framework_value::retirement::deferred(domain),semio_framework_value::retirement::deferred(patch),semio_framework_value::retirement::deferred(current),semio_framework_value::retirement::deferred(pending),semio_framework_value::retirement::deferred(cleanup)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.candidate),semio_framework_value::retirement::deferred_birth_bytes_for(&self.domain),semio_framework_value::retirement::deferred_birth_bytes_for(&self.patch),semio_framework_value::retirement::deferred_birth_bytes_for(&self.current),semio_framework_value::retirement::deferred_birth_bytes_for(&self.pending),semio_framework_value::retirement::deferred_birth_bytes_for(&self.cleanup)])}
     fn controlled_retirement_supported()->bool{true}
 }
 impl UpdateState {fn complete(&self)->bool{self.phase==3&&self.current.is_none()&&self.pending.is_none()&&self.cleanup.is_none()}}

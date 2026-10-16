@@ -1,9 +1,13 @@
 //! 🧩️ App-command and app-frame helpers plus the `ArtifactChannel` implementation of the plugin channel.
 
 #[cfg(not(target_arch = "wasm32"))]
-use super::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, PreparedOps, RevisionStamp};
+use crate::plugin_artifact_channel::{PluginArtifactChannel, headless_agent_ops};
 #[cfg(not(target_arch = "wasm32"))]
-use super::plugin_artifact_channel::{PluginArtifactChannel, headless_agent_ops};
+use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, PreparedOps};
 
 /// 🔢️ Every `AppCommand` variant's own leading `seq`, as a place to WRITE. The kernel envelope's
 /// sequence and the command's own must be the same number: the guest answers a command by publishing
@@ -12,7 +16,7 @@ use super::plugin_artifact_channel::{PluginArtifactChannel, headless_agent_ops};
 /// gets back. `🏃️run/🦀️.rs`'s `app_command_seq` reads the same field for the same reason, in the
 /// other direction. Exhaustive on purpose: a new variant is a compile error, not a silent seq-of-zero.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
+pub(crate) fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
     match command {
         store::AppCommand::ConfigCommand { seq, .. }
         | store::AppCommand::Command { seq, .. }
@@ -69,7 +73,7 @@ pub(super) fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
 /// terminals — carry no reply sequence at all: the transaction trio correlates on its own `txn_id`
 /// and the others are pushes. Exhaustive on purpose.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
+pub(crate) fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
     match frame {
         store::AppFrame::Done { in_reply_to }
         | store::AppFrame::Invocation { in_reply_to, .. }
@@ -110,14 +114,14 @@ pub(super) fn app_frame_reply_seq(frame: &store::AppFrame) -> Option<u64> {
 /// `txn_id` the caller itself sent (and which the caller's own arm checks) rather than on a
 /// sequence. Everything else without a reply sequence is an unsolicited push and is never an answer.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn app_frame_is_transaction_terminal(frame: &store::AppFrame) -> bool {
+pub(crate) fn app_frame_is_transaction_terminal(frame: &store::AppFrame) -> bool {
     matches!(frame, store::AppFrame::TransactionPrepared { .. } | store::AppFrame::TransactionCommitted { .. } | store::AppFrame::TransactionRolledBack { .. })
 }
 
 /// 📬️ One frame's variant name, for a fault that has to say what came back without quoting a
 /// guest's bytes.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
+pub(crate) fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
     match frame {
         store::AppFrame::Done { .. } => "Done",
         store::AppFrame::Invocation { .. } => "Invocation",
@@ -161,7 +165,7 @@ pub(super) fn app_frame_tag(frame: &store::AppFrame) -> &'static str {
 /// `plugin.command-cancelled-by-close`, …) — so both are decoded, in that order, and neither is
 /// ever silently dropped.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn ingress_fault_text(status: &semio_framework::kernel::CommandIngressStatus) -> String {
+pub(crate) fn ingress_fault_text(status: &semio_framework::kernel::CommandIngressStatus) -> String {
     let semio_framework::kernel::CommandIngressStatus::Fault { fault, .. } = status else {
         return format!("the driver reported a fault while the guest reported {status:?}");
     };
@@ -179,7 +183,7 @@ pub(super) fn ingress_fault_text(status: &semio_framework::kernel::CommandIngres
 /// command's answer and an interactive job's result page/ack — so the two job languages are told
 /// apart by their own magic prefix rather than by a failed decode.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn shell_app_frame_payload(instance: u32, effect: &semio_framework::kernel::Effect) -> Option<&[u8]> {
+pub(crate) fn shell_app_frame_payload(instance: u32, effect: &semio_framework::kernel::Effect) -> Option<&[u8]> {
     let semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: addressed }, payload } = effect else {
         return None;
     };
@@ -195,7 +199,7 @@ pub(super) fn shell_app_frame_payload(instance: u32, effect: &semio_framework::k
 /// addresses another actor's backbone is publishing into a document this channel does not own, and
 /// its bytes must not be relayed as if it did.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn document_backbone_payload<'a>(actor_label: &str, effect: &'a semio_framework::kernel::Effect) -> Option<&'a [u8]> {
+pub fn document_backbone_payload<'a>(actor_label: &str, effect: &'a semio_framework::kernel::Effect) -> Option<&'a [u8]> {
     let semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload } = effect else {
         return None;
     };
@@ -205,7 +209,7 @@ pub(super) fn document_backbone_payload<'a>(actor_label: &str, effect: &'a semio
 /// 🧯️ The refusal a guest answered on `instance`'s shell lane, if `effect` is one: an `AppFrame::Error`
 /// that is neither a typed-operation page nor an acknowledgement.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn shell_lane_fault(instance: u32, effect: &semio_framework::kernel::Effect) -> Option<Fault> {
+pub(crate) fn shell_lane_fault(instance: u32, effect: &semio_framework::kernel::Effect) -> Option<Fault> {
     let semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: addressed }, payload } = effect else {
         return None;
     };
@@ -223,7 +227,7 @@ pub(super) fn shell_lane_fault(instance: u32, effect: &semio_framework::kernel::
 /// "addressed at another instance" and "addressed at this one but unreadable" are different defects
 /// and a fault that collapses them costs the next reader the measurement all over again.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn effect_shape(instance: u32, effect: &semio_framework::kernel::Effect) -> String {
+pub(crate) fn effect_shape(instance: u32, effect: &semio_framework::kernel::Effect) -> String {
     match effect {
         semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: addressed }, payload } => {
             let lane = if payload.starts_with(TYPED_OPERATION_PAGE_MAGIC) {
@@ -252,7 +256,7 @@ pub(super) fn effect_shape(instance: u32, effect: &semio_framework::kernel::Effe
 /// 🧾️ A `Debug` rendering cut at its variant name — the payload of an effect is a guest's bytes and
 /// has no place in an agent-facing fault.
 #[cfg(not(target_arch = "wasm32"))]
-struct EffectTag<'a>(&'a semio_framework::kernel::Effect);
+struct EffectTag<'a>(pub &'a semio_framework::kernel::Effect);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl std::fmt::Display for EffectTag<'_> {
@@ -266,7 +270,7 @@ impl std::fmt::Display for EffectTag<'_> {
 /// 🧾️ The shapes above, joined — or an explicit "nothing", because an empty list in a fault message
 /// reads as a truncation rather than as a measurement.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn named_shapes(shapes: &[String]) -> String {
+pub(crate) fn named_shapes(shapes: &[String]) -> String {
     if shapes.is_empty() {
         "no effects at all".to_string()
     } else {
@@ -282,6 +286,7 @@ pub(super) fn named_shapes(shapes: &[String]) -> String {
 /// does not depend on `🔌️plugin` (see its Cargo.toml), which is why the bytes are restated here.
 #[cfg(not(target_arch = "wasm32"))]
 const TYPED_OPERATION_PAGE_MAGIC: &[u8] = b"semio.typed-operation-page.v1\0";
+
 #[cfg(not(target_arch = "wasm32"))]
 const TYPED_OPERATION_ACK_MAGIC: &[u8] = b"semio.typed-operation-ack.v1\0";
 
@@ -289,7 +294,7 @@ const TYPED_OPERATION_ACK_MAGIC: &[u8] = b"semio.typed-operation-ack.v1\0";
 /// command owes another turn". Keeping these apart from `Fault` is what lets the loop above bound
 /// the NUMBER of turns without having to read a fault's code to decide whether to continue.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) enum CommandTurn {
+pub(crate) enum CommandTurn {
     Settled(store::AppFrame),
     MoreWork,
 }
@@ -302,7 +307,7 @@ pub(super) enum CommandTurn {
 /// `AppCommand not wired` before it reached a guest, which is why no `action_prepare`/`action_invoke`
 /// from a real MCP client could ever reach a plugin (ticket 26/09/18 slice A1).
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn persistent_command_completion_port_ready() -> bool {
+pub(crate) fn persistent_command_completion_port_ready() -> bool {
     semio_framework::kernel::COMMAND_MAXIMUM_PAGES != 0 && semio_framework::kernel::COMMAND_MAXIMUM_BYTES >= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES
 }
 
@@ -313,7 +318,7 @@ pub(super) fn persistent_command_completion_port_ready() -> bool {
 /// travels over generically, as a `DslValue`, and reads `code`/`message` defensively —
 /// never panics, never invents a code the guest did not send.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn decode_guest_fault(bytes: &[u8]) -> Fault {
+pub fn decode_guest_fault(bytes: &[u8]) -> Fault {
     let decoded = store::pack_rt::decode_wire_value(bytes).ok();
     match decoded {
         Some(value) => {
@@ -363,7 +368,7 @@ fn ops_pack_lane(bytes: Vec<u8>) -> Result<Vec<Vec<u8>>, Fault> {
 /// own pack, so it is a real declared surface — but an app-specific port is the better answer when
 /// one exists, and an export with no requested format takes the first.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> {
+pub fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> {
     let mut ports: Vec<String> = app
         .media_outputs
         .iter()
@@ -381,7 +386,7 @@ pub(super) fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<S
 /// (`semio_framework_plugin::inference_child_dependency`, the key the guest's request validation accepts), value the child's
 /// HEAD snapshot pack, in the guest's slot/id order.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn child_head_dependencies(entries: Vec<store::ChildHeadPackEntry>) -> Vec<(String, Vec<u8>)> {
+pub fn child_head_dependencies(entries: Vec<store::ChildHeadPackEntry>) -> Vec<(String, Vec<u8>)> {
     entries.into_iter().map(|entry| (semio_framework_plugin::inference_child_dependency(&entry.slot, &entry.child_id), entry.head_pack)).collect()
 }
 
@@ -410,7 +415,7 @@ pub(super) fn child_head_dependencies(entries: Vec<store::ChildHeadPackEntry>) -
 /// unroutable (measured 2026-09-22 21:2x) — the guest, which owns the schema, is the judge
 /// of a body that exists; this gateway only refuses an EMPTY one.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetadata, command: &crate::actions::InferCommand) -> Result<Vec<u8>, Fault> {
+pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetadata, command: &InferCommand) -> Result<Vec<u8>, Fault> {
     let Some(binding) = declared.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) else {
         return Ok(command.canonical_payload.clone());
     };
@@ -433,7 +438,7 @@ pub(super) fn bind_inference_document(declared: &semio_framework::ContributedInf
     }
     match command.artifact_document.as_ref() {
         Some(document) => {
-            object.insert(binding.field.clone(), serde_json::json!({ "pack": crate::shell_channel::encode_base64(&document.pack), "spr": crate::shell_channel::encode_base64(&document.spr) }));
+            object.insert(binding.field.clone(), serde_json::json!({ "pack": encode_base64(&document.pack), "spr": encode_base64(&document.spr) }));
         }
         None if binding.required && object.is_empty() => {
             return Err(Fault {
@@ -602,4 +607,3 @@ impl ArtifactChannel for PluginArtifactChannel {
         self.ensure_instance_scoped(instance, scope)
     }
 }
-

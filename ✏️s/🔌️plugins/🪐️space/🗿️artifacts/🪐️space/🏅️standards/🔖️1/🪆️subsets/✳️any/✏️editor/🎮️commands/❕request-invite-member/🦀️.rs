@@ -17,7 +17,4 @@ pub fn handle(_payload: &RequestInviteMember, _doc: &ArtifactView<'_, SSpaceSnap
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

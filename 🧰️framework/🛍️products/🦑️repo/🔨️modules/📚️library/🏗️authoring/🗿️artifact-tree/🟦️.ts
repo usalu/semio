@@ -4,6 +4,7 @@ import { authorArtifactScaffold, type ArtifactScaffoldLeaf, type ArtifactScaffol
 import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { policyStripEmoji } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { newScaffoldEmptyFacetMarkdown, newScaffoldRustLeaf, newScaffoldTsLeaf } from "../🧱️contract/🟦️.ts";
+import { scaffoldSubsetCrates } from "../📦️crate-tree/🧱️scaffold/🟦️.ts";
 
 export function newScaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: string, created: string[], skipped: string[], dryRun: boolean): void {
   const abs = join(repoRoot, relPath);
@@ -60,7 +61,10 @@ export function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxon
     leaves.push({ path: `${surfaceRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf(`${role} surface`) });
   }
   leaves.push({ path: `${subsetRel}/📚️examples/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown("examples") });
-  return authorArtifactScaffold(repoRoot, { kind: "subset", subsetPath: subsetRel }, leaves, taxonomy, { ...options, dryRun });
+  const authored = authorArtifactScaffold(repoRoot, { kind: "subset", subsetPath: subsetRel }, leaves, taxonomy, { ...options, dryRun });
+  const crates = scaffoldSubsetCrates(repoRoot, subsetRel, taxonomy.artifactsDirName, dryRun);
+  for (const note of crates.notes) console.warn(`new subset: ${note}`);
+  return { created: [...authored.created, ...crates.created], skipped: [...authored.skipped, ...crates.skipped] };
 }
 
 export function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {

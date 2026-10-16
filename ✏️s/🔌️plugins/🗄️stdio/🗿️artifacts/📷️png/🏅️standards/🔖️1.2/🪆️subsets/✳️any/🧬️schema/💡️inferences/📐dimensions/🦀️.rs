@@ -31,8 +31,5 @@ pub fn compute_png_dimensions(snapshot: &PngSnapshot) -> PngDimensions {
 }
 //#endregion 🔖️Dimensions
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -4,7 +4,7 @@ use super::pilot_resolve;
 use semio_framework_dsl::parse_grammar;
 use semio_framework_dsl::Recognizer;
 use semio_framework_dsl::SemioDialect;
-use crate::os_store::semio_format::split_text_preamble;
+use semio_framework_os_kernel::os_store::semio_format::split_text_preamble;
 
 pub(super) async fn dsl_body_from_host_snapshot(text: &str) -> String {
     if text.trim_start().starts_with("semio ") {
@@ -20,7 +20,7 @@ async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> R
     if grammar.dialect != SemioDialect::Grammar {
         return Err("expected grammar dialect".to_string());
     }
-    let recognizer = Recognizer::compile(&grammar, &crate::os_dsl::grammar::family_fragments().expect("OS family grammar"), crate::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+    let recognizer = Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let body = dsl_body_from_host_snapshot(fixture_semio);
     let ok = recognizer.recognize(&body.await).map_err(|error| format!("recognize failed: {error:?}"))?;
     if !ok {

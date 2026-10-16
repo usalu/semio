@@ -1,13 +1,16 @@
+import {RUNTIME_ASSET_CHANNELS} from "../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import {frameworkOsViteArtifactPathsV1} from "../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
-import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { COMPILER_FONTS_ROUTE } from "../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
+import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { packageAssetMounts } from "../../../../../../../../🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
 import { FONT_ASSET } from "../../../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
@@ -24,7 +27,6 @@ export type WgpuBrowserConfiguration = {
   readonly extensionRoot: string;
   readonly bootRoot: string;
   readonly libraryRoot: string;
-  readonly fontRoot: string;
   readonly workerRoot: string;
   readonly reloadFile: string;
   readonly assets: readonly AssetDeliveryDeclarationV1[];
@@ -55,9 +57,12 @@ function completedArtifactReload(path: string): OwnedBuildPlugin {
 
 /** 🚏️ Projects each completed source to its one browser route. */
 export function wgpuBrowserMounts(options: WgpuBrowserConfiguration): readonly (readonly [string, string])[] {
+  const staged = frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile);
   return [
     ["/renderer-modules/wgpu", options.compilerRoot],
-    [COMPILER_FONTS_ROUTE, options.fontRoot],
+    [MODULE_ROUTES.plugin+"/"+MODULE_VENDOR_DIRECTORY, staged.fonts],
+    ...RUNTIME_ASSET_CHANNELS.map(({route,directory})=>[route,resolve(options.workspace,directory)] as const),
+    ...packageAssetMounts().map(([route, directory]) => [route, resolve(options.workspace, directory)] as const),
     ["/🚀️boot.js", options.bootRoot],
     ["/🎬️renderer-boot.js", options.libraryRoot],
     ["/🎞️frame-worker.js", options.workerRoot],
@@ -100,7 +105,7 @@ export function wgpuBrowserSelectionPlugin(variant: string | undefined): OwnedBu
 
 export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): OwnedBuildConfig {
   if (!["prototype", "release"].includes(options.profile)) throw new Error("Select a WGPU browser profile");
-  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu-component.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [join(options.moduleRoot, "🪞️vendor"), FONT_ASSET]]) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
+  for (const [root, file] of [[options.compilerRoot, "semio-framework-os-renderer-wgpu-component.js"], [options.compilerRoot, "semio-framework-os-renderer-wgpu-component_bg.wasm"], [options.bootRoot, "🟨️.js"], [options.libraryRoot, "🟨️.js"], [options.workerRoot, "🟨️.js"], [frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(options.workspace, "products"), options.profile).fonts, FONT_ASSET]] as const) if (!existsSync(join(root, file))) throw new Error("Missing prepared WGPU artifact: " + join(root, file));
   const mounts = wgpuBrowserMounts(options);
   return {
     root: options.root,
@@ -120,7 +125,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
         configureServer(server) {
           server.middlewares.use((request, response, next) => {
             let path: string;
-            try { path = decodeURIComponent((request.url ?? "").split("?")[0]); }
+            try { path = decodeURIComponent((request.url ?? "").split("?")[0] ?? ""); }
             catch { response.statusCode = 400; response.end(); return; }
             if (!mounts.some(([route]) => path === route || path.startsWith(route + "/"))) return next();
             response.statusCode = 404;

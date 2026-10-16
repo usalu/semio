@@ -2,7 +2,7 @@
 
 #[test]
 fn dsl_asset_parses_and_round_trips() {
-    let text = include_str!("../../🖼️assets/🌙️dream/🗣️.dsl.semio");
+    let text = super::capsule_dream::dsl_text();
     assert!(text.len() > 64, "dsl fixture must carry real payload");
     let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     assert_eq!(projection.parts.len(), 2880);
@@ -12,10 +12,10 @@ fn dsl_asset_parses_and_round_trips() {
 
 #[test]
 fn flatten_matches_golden_poses_to_1e4() {
-    let text = include_str!("../../🖼️assets/🌙️dream/🗣️.dsl.semio");
+    let text = super::capsule_dream::dsl_text();
     let mut projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     crate::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
-    let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_str(include_str!("../../🖼️assets/🔣️.json")).expect("golden json");
+    let golden: serde_json::Map<String, serde_json::Value> = serde_json::from_slice(&std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🔣️.json")).expect("the committed golden poses are readable")).expect("golden json");
     assert_eq!(golden.len(), 2880);
     let mut center_mismatches = 0usize;
     let mut origin_mismatches = 0usize;
@@ -56,7 +56,20 @@ fn inference_default_law() {
 fn inference_determinism_law() {
     use crate::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
-    let text = include_str!("../../🖼️assets/🌙️dream/🗣️.dsl.semio");
+    let text = super::capsule_dream::dsl_text();
     let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     assert_eq!(Puzzle5dInference::infer(&projection).expect("valid materialized inference fixture"), Puzzle5dInference::infer(&projection).expect("valid materialized inference fixture"));
+}
+
+/// 🔏️ The digest sidecar declares the DSL the host would deliver: a repository-relative name, the exact length of the bytes and a
+/// well-formed SHA-256 (recomputed independently by the `📦️package-asset-constants` law); the delivery declaration repeats it.
+#[test]
+fn the_digest_sidecar_declares_the_dsl_it_stands_for() {
+    let (name, size_bytes, sha256) = super::capsule_dream::dsl_bytes_digest();
+    assert!(!name.starts_with('/') && !name.contains(".."), "{name}");
+    assert_eq!(super::capsule_dream::dsl_bytes().len() as u64, size_bytes);
+    assert_eq!(sha256.len(), 64);
+    assert!(sha256.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)));
+    let declaration = super::capsule_dream::dsl_asset_declaration();
+    assert_eq!((declaration.name.as_str(), declaration.size_bytes, declaration.sha256.as_str()), (name, size_bytes, sha256));
 }

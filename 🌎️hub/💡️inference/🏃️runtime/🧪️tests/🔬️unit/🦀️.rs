@@ -1,6 +1,23 @@
-use super::*;
-use crate::inference::schema::{InferenceIdentityV1 as Identity, INPUT_MAX_BYTES, PROGRESS_MAX_CURSOR};
+
+use semio_hub_inference::schema::{InferenceIdentityV1 as Identity, INPUT_MAX_BYTES, PROGRESS_MAX_CURSOR};
+use semio_hub_gis::inference::GisMapInferenceBindingV1;
+use semio_hub_inference_binding::{MapInferenceRunV1, MapProposalEffectV1, MapRegionPreviewV1, MapUndoEffectV1};
 use std::future::Future;
+use semio_hub_inference_runtime_contract::{ALLOCATION_BYTES, APPROVAL_MAX_RECORDS, DOCUMENT_GATE_CAPACITY, GisMapApprovalCheckpointPublisherV1, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalCommitRequestV1, GisMapApprovalCommitterV1, GisMapApprovalIngressAuthorityV1, GisMapApprovalReceiptV1, GisMapApprovalUndoCommitRequestV1, GisMapCommitConflictArmV1, GisMapDocumentWriteAuthorityV1, InferenceMapBaseV1, InferenceRouteErrorV1, OPERATION_CAPACITY, RECURSION_DEPTH, UnavailableGisMapApprovalCommitterV1, WORK_UNIT_LIMIT, approval_actor, approval_mutation_id, document_key, gis_map_commit_conflict, inference_budget, reader};
+use std::sync::Arc;
+use directory::os_directory::{ArtifactFrontier, DocumentScope};
+use semio_hub_inference::command::{CanonicalInferenceCommandPartsV1, CanonicalInferenceCommandV1, encode_server_stamped_command_v1};
+use semio_hub_inference_binding::{ComposedMapCommitBindingV1, MapBindingRefusalV1, MapInferenceProposalBindingV1};
+use semio_hub_inference::schema::{GIS_DOCUMENT_SCHEMA, PROPOSAL_MAX_BYTES, RESULT_MAX_BYTES};
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1, sha256};
+use semio_hub_inference_ledger::{InferenceJobLedgerV1, InferenceReaderV1};
+use std::sync::atomic::Ordering;
+use semio_hub_inference_committer::{RetainedGisMapApprovalCommitterV1, RetainedGisMapDocumentStateV1};
+use semio_hub_inference_runtime::{commit_prepared_approval, compare_frozen_identity, gis_map_inference_preview};
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_inference_runtime_contract::{last_abandoned_assembly_turn, last_close_store_step, last_gis_map_commit_conflict_arm, last_gis_map_identity_mismatch, last_gis_map_prepare_conflict, last_gis_map_storage_refusal};
+
+type GisRetainedCommitterV1 = RetainedGisMapApprovalCommitterV1<GisMapInferenceBindingV1>;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
@@ -54,12 +71,11 @@ fn canonical_identity_and_base() -> (Identity, InferenceMapBaseV1) {
 }
 
 fn canonical_approval(identity: &Identity, job_id: &str, base: &InferenceMapBaseV1, now_ms: u64) -> (InferencePrivateBytesV1, InferencePrivateBytesV1) {
-    let (snapshot, inference) = deterministic_map_inference(base, job_id).expect("real GIS Map inference");
-    let work = inference.create_region_group_work(&snapshot, job_id).expect("server-derived fixed-three CreateRegion work");
-    let proposal_bytes = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
+    let (_snapshot, work) = <GisMapInferenceBindingV1 as ComposedMapCommitBindingV1>::executed_approval_work(base.pack.as_slice(), job_id, &inference_budget()).expect("real GIS Map inference and server-derived fixed-three CreateRegion work");
+    let proposal_bytes = work.parent_json;
     let proposal = InferencePrivateBytesV1::new(proposal_bytes, PROPOSAL_MAX_BYTES).expect("bounded canonical proposal");
     let proposal_hash = sha256(proposal.as_slice());
-    let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
+    let inverse = work.parent_inverse_json;
     let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
     let mutation_id = approval_mutation_id(job_id, &proposal_hash);
     let document_id = document_key(&scope);
@@ -75,7 +91,7 @@ fn canonical_approval(identity: &Identity, job_id: &str, base: &InferenceMapBase
         timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
     })
     .expect("server-stamped approval command");
-    (proposal, InferencePrivateBytesV1::new(command, super::super::command::COMMAND_MAX_BYTES).expect("bounded approval command"))
+    (proposal, InferencePrivateBytesV1::new(command, semio_hub_inference::command::COMMAND_MAX_BYTES).expect("bounded approval command"))
 }
 
 struct TestApprovalIngressAuthorityV1 {
@@ -186,7 +202,7 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
                 return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherRegionDiffers));
             }
             let view = self.ledger.read(&self.job_id, &reader(&self.identity), decision_now_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
-            let expected_proposal_state = if attempt < 2 { super::super::schema::InferenceProposalStateV1::Offered } else { super::super::schema::InferenceProposalStateV1::Approved };
+            let expected_proposal_state = if attempt < 2 { semio_hub_inference::schema::InferenceProposalStateV1::Offered } else { semio_hub_inference::schema::InferenceProposalStateV1::Approved };
             if view.proposal_state != expected_proposal_state || document_write.gate.try_lock().is_ok() {
                 return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherProposalStateOrGate));
             }
@@ -200,7 +216,7 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
                     release.notified().await;
                 }
             }
-            let frontier = RetainedGisMapApprovalCommitterV1::publication_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
+            let frontier = GisRetainedCommitterV1::publication_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             let pack_hash = directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&sha256(&request.pair.pack)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             let spr_hash = directory::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(&sha256(&request.pair.spr)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("public-checkpoint-ack");
@@ -220,7 +236,7 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
 
     fn checkpoint_applied(&self, checkpoint: &directory::os_directory::PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1> {
         let view = self.ledger.read(&self.job_id, &reader(&self.identity), checkpoint.published_at_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
-        if view.proposal_state != super::super::schema::InferenceProposalStateV1::Approved {
+        if view.proposal_state != semio_hub_inference::schema::InferenceProposalStateV1::Approved {
             return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherCheckpointApplyState));
         }
         self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("peer-rebootstrap");
@@ -250,7 +266,7 @@ impl std::task::Wake for ApprovalPollWakeV1 {
     }
 }
 
-async fn poll_approval_to_phase<F>(future: &mut std::pin::Pin<Box<F>>, committer: &RetainedGisMapApprovalCommitterV1, key: &str, phase: AbandonedApprovalPhaseV1)
+async fn poll_approval_to_phase<F>(future: &mut std::pin::Pin<Box<F>>, committer: &GisRetainedCommitterV1, key: &str, phase: AbandonedApprovalPhaseV1)
 where
     F: std::future::Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + ?Sized,
 {
@@ -344,7 +360,7 @@ impl Drop for RuntimeLawHangWatchdogV1 {
     }
 }
 
-async fn wait_for_abandoned_approval_handoff(committer: &RetainedGisMapApprovalCommitterV1, key: &str, gate: &Arc<tokio::sync::Mutex<()>>, ingress_released: &std::sync::atomic::AtomicBool) {
+async fn wait_for_abandoned_approval_handoff(committer: &GisRetainedCommitterV1, key: &str, gate: &Arc<tokio::sync::Mutex<()>>, ingress_released: &std::sync::atomic::AtomicBool) {
     tokio::time::timeout(std::time::Duration::from_secs(5), async {
         loop {
             let ready = {
@@ -386,7 +402,7 @@ async fn wait_for_abandoned_approval_handoff(committer: &RetainedGisMapApprovalC
 }
 
 async fn wait_for_abandoned_prepared_handoff(
-    committer: &RetainedGisMapApprovalCommitterV1,
+    committer: &GisRetainedCommitterV1,
     ledger: &InferenceJobLedgerV1,
     identity: &Identity,
     job_id: &str,
@@ -410,7 +426,7 @@ async fn wait_for_abandoned_prepared_handoff(
     .expect("unpolled or rejected preflight returns its exact ingress and prepared outbox");
 }
 
-async fn resume_parked_cleanup(committer: &RetainedGisMapApprovalCommitterV1) {
+async fn resume_parked_cleanup(committer: &GisRetainedCommitterV1) {
     tokio::time::timeout(std::time::Duration::from_secs(5), async {
         loop {
             committer.resume_parked_requests();
@@ -448,7 +464,7 @@ fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation()
     let page = ledger.events(&receipt.job_id, &owner, 0, 45_003).expect("owner page");
     assert_eq!(page.progress.iter().map(|row| row.cursor).collect::<Vec<_>>(), vec![1, 2, 3, 4]);
     assert_eq!(page.next_cursor, 4);
-    assert!(page.progress.len() <= super::super::schema::EVENT_PAGE_MAX_ITEMS && page.events.len() <= super::super::schema::EVENT_PAGE_MAX_ITEMS);
+    assert!(page.progress.len() <= semio_hub_inference::schema::EVENT_PAGE_MAX_ITEMS && page.events.len() <= semio_hub_inference::schema::EVENT_PAGE_MAX_ITEMS);
     assert_eq!(ledger.events(&receipt.job_id, &owner, 4, 45_004).expect("tail page").progress.len(), 0);
     assert_eq!(ledger.events(&receipt.job_id, &owner, PROGRESS_MAX_CURSOR + 1, 45_004).err(), Some(InferenceErrorV1::Bounds));
     assert!(ledger.request_cancel(&receipt.job_id, &owner, 45_005).expect("durable cancel request"));
@@ -503,7 +519,7 @@ async fn gis_map_approval_fails_closed_without_a_composition_transaction_and_nev
     let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
     assert!(ledger.succeed(&receipt.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
     let hex = outbox["commandHex"].as_str().expect("literal command");
-    let command = InferencePrivateBytesV1::new((0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect(), super::super::command::COMMAND_MAX_BYTES).expect("bounded command");
+    let command = InferencePrivateBytesV1::new((0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect(), semio_hub_inference::command::COMMAND_MAX_BYTES).expect("bounded command");
     let proposal_hash = sha256(proposal.as_slice());
     let prepared = ledger.prepare_approval(&receipt.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
     assert_eq!(prepared.mutation_id, approval_mutation_id(&receipt.job_id, &proposal_hash));
@@ -515,7 +531,7 @@ async fn gis_map_approval_fails_closed_without_a_composition_transaction_and_nev
     for attempt in 0..2 {
         assert!(
             matches!(
-                commit_prepared_approval(&committer, &identity, &receipt.job_id, &proposal_hash, &command, &base, 60_000, 1_005 + attempt, Arc::new(tokio::sync::Mutex::new(())), approval_ingress(&identity),).await,
+                commit_prepared_approval(&committer, &GisMapInferenceBindingV1, &identity, &receipt.job_id, &proposal_hash, &command, &base, 60_000, 1_005 + attempt, Arc::new(tokio::sync::Mutex::new(())), approval_ingress(&identity),).await,
                 Err(InferenceRouteErrorV1::CommitUnavailable)
             ),
             "no composition transaction is registered, so approval must fail closed"
@@ -574,10 +590,10 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
         pause: Some((publisher_entered.clone(), publisher_release.clone())),
     });
     let backend_witness = backend.clone();
-    let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
+    let committer = Arc::new(GisRetainedCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
     let committer_port: Arc<dyn GisMapApprovalCommitterV1> = committer.clone();
     let gate = Arc::new(tokio::sync::Mutex::new(()));
-    let composed_children = base.composed_children().expect("canonical fixed-three children");
+    let composed_children = base.composed_children(&GisMapInferenceBindingV1).expect("canonical fixed-three children");
     let expected_mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
     let expected_command_hash = sha256(command.as_slice());
     let approval_actor = approval_actor(&identity);
@@ -599,17 +615,17 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
         ingress: pure_ingress,
     };
     assert!(committer.validate_prepared_request(&pure_request).is_ok(), "the exact ledger/base tuple passes immutable admission before any owner reservation");
-    assert!(RetainedGisMapApprovalCommitterV1::preflight(&pure_request).is_ok(), "the exact fixed-three command passes pure GIS preflight before Store assembly");
+    assert!(GisRetainedCommitterV1::preflight(&pure_request).is_ok(), "the exact fixed-three command passes pure GIS preflight before Store assembly");
     let wrong_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> =
         Arc::new(TestApprovalIngressAuthorityV1 { scope: scope.clone(), user_id: identity.user_id.clone(), session_id: identity.session_id.clone(), authorization_generation: identity.authorization_generation + 1, released: None });
     assert!(
-        matches!(commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), wrong_ingress).await, Err(InferenceRouteErrorV1::Denied)),
+        matches!(commit_prepared_approval(&committer_port, &GisMapInferenceBindingV1, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), wrong_ingress).await, Err(InferenceRouteErrorV1::Denied)),
         "a substituted Hub ingress generation is rejected before document-write acquisition",
     );
     assert!(gate.try_lock().is_ok(), "rejected ingress never acquires the document writer");
     let first_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let first_ingress = tracked_approval_ingress(&identity, Some(first_ingress_released.clone()));
-    let first = commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), first_ingress).await;
+    let first = commit_prepared_approval(&committer_port, &GisMapInferenceBindingV1, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), first_ingress).await;
     assert!(
         matches!(first, Err(InferenceRouteErrorV1::Storage)),
         "public checkpoint refusal remains a retained nonterminal publication, got {:?} refused as {:?}; {:?}",
@@ -619,7 +635,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     );
     assert!(first_ingress_released.load(Ordering::Acquire), "a failed request releases its live Hub ingress authority after the durable decision is retained");
     assert!(gate.try_lock().is_err(), "the exact document write authority remains held after publication refusal");
-    assert_eq!(ledger.read(&accepted.job_id, &owner, 1_005).expect("retained proposal").proposal_state, super::super::schema::InferenceProposalStateV1::Offered);
+    assert_eq!(ledger.read(&accepted.job_id, &owner, 1_005).expect("retained proposal").proposal_state, semio_hub_inference::schema::InferenceProposalStateV1::Offered);
     let actor = handle.checkpoint_publication_snapshot().await.expect("committed Event actor frontier");
     assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq), (1, 1));
     let expected_mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
@@ -693,7 +709,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(terminal.frontier.head_edit_ordinal, base.frontier.head_edit_ordinal + undo_contract["firstCommandOrdinalDelta"].as_u64().expect("first command delta"), "the first real command is the first history edit",);
     drop(retry);
     let approved = ledger.read(&accepted.job_id, &owner, 1_007).expect("approved proposal");
-    assert_eq!(approved.proposal_state, super::super::schema::InferenceProposalStateV1::Approved);
+    assert_eq!(approved.proposal_state, semio_hub_inference::schema::InferenceProposalStateV1::Approved);
     assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
     assert!(gate.try_lock().is_ok(), "the document write authority releases only after public ACK and ledger apply");
     assert!(retry_ingress_released.load(Ordering::Acquire), "the fresh Hub ingress authority releases after public ACK and ledger apply");
@@ -747,13 +763,13 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 1_010, logical: 0 },
         })
         .expect("server-stamped undo command"),
-        super::super::command::COMMAND_MAX_BYTES,
+        semio_hub_inference::command::COMMAND_MAX_BYTES,
     )
     .expect("bounded undo command");
     let undo_command_hash = sha256(undo_command.as_slice());
     assert!(matches!(
         ledger.prepare_gis_map_approval_undo(&target, &undo_idempotency_key, &undo_operation_id, &undo_proposal_hash, &undo_mutation_id, &undo_command_hash, &undo_command,),
-        Ok(super::super::sqlite::GisMapApprovalUndoAdmissionV1::Prepared)
+        Ok(semio_hub_inference_ledger::GisMapApprovalUndoAdmissionV1::Prepared)
     ));
     let undo_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let undo_ingress = tracked_approval_ingress(&identity, Some(undo_ingress_released.clone()));
@@ -820,7 +836,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             &replay.command_hash,
             &undo_command,
         ),
-        Ok(super::super::sqlite::GisMapApprovalUndoAdmissionV1::Replayed(receipt)) if receipt.frontier == undo_receipt.frontier
+        Ok(semio_hub_inference_ledger::GisMapApprovalUndoAdmissionV1::Replayed(receipt)) if receipt.frontier == undo_receipt.frontier
     ));
 
     committer.close().await.unwrap_or_else(|error| panic!("committer close: {error:?}, last close-store step {:?}", last_close_store_step()));
@@ -871,9 +887,9 @@ async fn gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admiss
         pause: None,
     });
     let backend_witness = backend.clone();
-    let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
+    let committer = Arc::new(GisRetainedCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
     let gate = Arc::new(tokio::sync::Mutex::new(()));
-    let children = base.composed_children().expect("exact composed children");
+    let children = base.composed_children(&GisMapInferenceBindingV1).expect("exact composed children");
     let actor = approval_actor(&identity);
     let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
     let command_hash = sha256(command.as_slice());
@@ -948,12 +964,12 @@ async fn gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admiss
 #[test]
 fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vocabulary() {
     let fixture = fixture();
-    let preview = gis_map_inference_preview(fixture["sampleJobId"].as_str().expect("sample job"), fixture["proposalHash"].as_str().expect("proposal hash"), fixture["proposalCanonical"].as_str().expect("canonical proposal").as_bytes())
+    let preview = gis_map_inference_preview(&GisMapInferenceBindingV1, fixture["sampleJobId"].as_str().expect("sample job"), fixture["proposalHash"].as_str().expect("proposal hash"), fixture["proposalCanonical"].as_str().expect("canonical proposal").as_bytes())
         .expect("typed owner preview");
     assert_eq!(serde_json::to_value(preview).expect("preview wire"), fixture["preview"]);
-    assert_eq!(gis_map_inference_preview(fixture["sampleJobId"].as_str().expect("sample job"), &"0".repeat(64), fixture["proposalCanonical"].as_str().expect("proposal").as_bytes()).err(), Some(InferenceRouteErrorV1::Conflict));
+    assert_eq!(gis_map_inference_preview(&GisMapInferenceBindingV1, fixture["sampleJobId"].as_str().expect("sample job"), &"0".repeat(64), fixture["proposalCanonical"].as_str().expect("proposal").as_bytes()).err(), Some(InferenceRouteErrorV1::Conflict));
     let substituted = b"{\"DeleteRegion\":{\"id\":\"inference-11111111111111111111111111111111\"}}";
-    assert_eq!(gis_map_inference_preview(fixture["sampleJobId"].as_str().expect("sample job"), &sha256(substituted), substituted).err(), Some(InferenceRouteErrorV1::Conflict));
+    assert_eq!(gis_map_inference_preview(&GisMapInferenceBindingV1, fixture["sampleJobId"].as_str().expect("sample job"), &sha256(substituted), substituted).err(), Some(InferenceRouteErrorV1::Conflict));
     let proposal = || serde_json::from_str::<serde_json::Value>(fixture["proposalCanonical"].as_str().expect("proposal")).expect("proposal value");
     let rejected = [
         ("wrong-region-id", serde_json::json!("substituted"), "/CreateRegion/item/id", InferenceRouteErrorV1::Conflict),
@@ -966,7 +982,7 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
         let mut candidate = proposal();
         *candidate.pointer_mut(pointer).unwrap_or_else(|| panic!("{name} pointer")) = value;
         let bytes = serde_json::to_vec(&candidate).expect("candidate bytes");
-        assert_eq!(gis_map_inference_preview(fixture["sampleJobId"].as_str().expect("sample job"), &sha256(&bytes), &bytes).err(), Some(expected), "{name}");
+        assert_eq!(gis_map_inference_preview(&GisMapInferenceBindingV1, fixture["sampleJobId"].as_str().expect("sample job"), &sha256(&bytes), &bytes).err(), Some(expected), "{name}");
     }
     for (name, bytes) in [
         ("malformed", b"{".as_slice()),
@@ -976,10 +992,10 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
                 .as_slice(),
         ),
     ] {
-        assert_eq!(gis_map_inference_preview(fixture["sampleJobId"].as_str().expect("sample job"), &sha256(bytes), bytes).err(), Some(InferenceRouteErrorV1::Invalid), "{name}");
+        assert_eq!(gis_map_inference_preview(&GisMapInferenceBindingV1, fixture["sampleJobId"].as_str().expect("sample job"), &sha256(bytes), bytes).err(), Some(InferenceRouteErrorV1::Invalid), "{name}");
     }
     let identity = identity();
-    let frozen: super::super::schema::InferenceBindingIdentityV1 = serde_json::from_value(fixture["binding"].clone()).expect("frozen binding identity");
+    let frozen: semio_hub_inference::schema::InferenceBindingIdentityV1 = serde_json::from_value(fixture["binding"].clone()).expect("frozen binding identity");
     assert_eq!(frozen, identity.binding);
     let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
     let base = InferenceMapBaseV1 {
@@ -1013,7 +1029,7 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
     cross_space.space_id = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee".into();
     assert!(compare_frozen_identity(&frozen, &cross_space, &scope, &base).is_err());
     let limits = &fixture["limits"];
-    assert_eq!(limits["requestMaxBytes"], super::super::schema::REQUEST_MAX_BYTES as u64);
+    assert_eq!(limits["requestMaxBytes"], semio_hub_inference::schema::REQUEST_MAX_BYTES as u64);
     assert_eq!(limits["inputMaxBytes"], INPUT_MAX_BYTES as u64);
     let default_map = {
         use pack::snapshot::ArtifactPack as _;
@@ -1022,15 +1038,15 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
     assert!(InferencePrivateBytesV1::new(default_map.clone(), INPUT_MAX_BYTES).is_ok(), "the map the hub creates by default ({} B) must be inferable within inputMaxBytes", default_map.len());
     assert_eq!(limits["resultMaxBytes"], RESULT_MAX_BYTES as u64);
     assert_eq!(limits["proposalMaxBytes"], PROPOSAL_MAX_BYTES as u64);
-    assert_eq!(limits["commandMaxBytes"], super::super::command::COMMAND_MAX_BYTES as u64);
-    assert_eq!(limits["identityJsonMaxBytes"], super::super::schema::IDENTITY_JSON_MAX_BYTES as u64);
-    assert_eq!(limits["jobCapacity"], super::super::schema::JOB_CAPACITY as u64);
+    assert_eq!(limits["commandMaxBytes"], semio_hub_inference::command::COMMAND_MAX_BYTES as u64);
+    assert_eq!(limits["identityJsonMaxBytes"], semio_hub_inference::schema::IDENTITY_JSON_MAX_BYTES as u64);
+    assert_eq!(limits["jobCapacity"], semio_hub_inference::schema::JOB_CAPACITY as u64);
     assert_eq!(limits["operationCapacity"], OPERATION_CAPACITY as u64);
     assert_eq!(limits["documentGateCapacity"], DOCUMENT_GATE_CAPACITY as u64);
     assert_eq!(limits["progressMaxCursor"], PROGRESS_MAX_CURSOR);
-    assert_eq!(limits["eventPageMaxItems"], super::super::schema::EVENT_PAGE_MAX_ITEMS as u64);
-    assert_eq!(limits["claimLeaseMaxMs"], super::super::schema::CLAIM_LEASE_MAX_MS);
-    assert_eq!(limits["jobMaxLifetimeMs"], super::super::schema::JOB_MAX_LIFETIME_MS);
+    assert_eq!(limits["eventPageMaxItems"], semio_hub_inference::schema::EVENT_PAGE_MAX_ITEMS as u64);
+    assert_eq!(limits["claimLeaseMaxMs"], semio_hub_inference::schema::CLAIM_LEASE_MAX_MS);
+    assert_eq!(limits["jobMaxLifetimeMs"], semio_hub_inference::schema::JOB_MAX_LIFETIME_MS);
     assert_eq!(limits["workUnitLimit"], WORK_UNIT_LIMIT);
     assert_eq!(limits["recursionDepth"], u64::from(RECURSION_DEPTH));
     assert_eq!(limits["allocationBytes"], ALLOCATION_BYTES);
@@ -1062,6 +1078,15 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
 
 mod quick {
     use super::*;
+use std::sync::Arc;
+use directory::os_directory::DocumentScope;
+use semio_hub_inference_committer::{GisMapAbandonedRequestTaskV1, GisMapAbandonedRequestV1, GisMapPreparedApprovalTaskV1, GisMapPreparedApprovalV1};
+use semio_hub_inference_runtime_contract::{GisMapApprovalCheckpointPublisherV1, GisMapApprovalCommitErrorV1, GisMapApprovalCommitRequestV1, GisMapApprovalIngressAuthorityV1, GisMapApprovalRequestTokenV1, InferenceMapBaseV1, approval_actor, approval_mutation_id, document_key, reader};
+use semio_hub_inference::{InferenceOperationControlV1, InferencePrivateBytesV1, sha256};
+use std::sync::atomic::Ordering;
+use semio_hub_inference::schema::RESULT_MAX_BYTES;
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_inference_runtime_contract::last_close_store_step;
 
     #[tokio::test]
     async fn gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer() {
@@ -1086,10 +1111,10 @@ mod quick {
         let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
             Arc::new(OrderedApprovalCheckpointPublisherV1 { ledger: ledger.clone(), identity: identity.clone(), job_id: accepted.job_id.clone(), attempts: std::sync::atomic::AtomicUsize::new(0), order: order.clone(), pause: None });
         let backend_witness = backend.clone();
-        let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
+        let committer = Arc::new(GisRetainedCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
         let key = document_key(&scope);
         let gate = Arc::new(tokio::sync::Mutex::new(()));
-        let composed_children = base.composed_children().expect("exact composed children");
+        let composed_children = base.composed_children(&GisMapInferenceBindingV1).expect("exact composed children");
         let actor = approval_actor(&identity);
         let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
         let command_hash = sha256(command.as_slice());
@@ -1256,7 +1281,7 @@ mod quick {
             (prepared_after_substitution.0.command_hash.as_str(), prepared_after_substitution.0.proposal_hash.as_str(), prepared_after_substitution.1.authorization_generation,),
             (command_hash.as_str(), proposal_hash.as_str(), identity.authorization_generation),
         );
-        let cleanup_reservations = (0..crate::inference::schema::JOB_CAPACITY).map(|index| format!("{index:064x}")).collect::<Vec<_>>();
+        let cleanup_reservations = (0..semio_hub_inference::schema::JOB_CAPACITY).map(|index| format!("{index:064x}")).collect::<Vec<_>>();
         for job_id in &cleanup_reservations {
             committer.reserve_cleanup_job(job_id).expect("bounded cleanup reservation");
         }
@@ -1324,7 +1349,7 @@ mod quick {
         committer.reserve_cleanup_job(&accepted.job_id).expect("request cleanup reservation");
         let runtime_shutdown_ingress = tracked_approval_ingress(&identity, Some(runtime_shutdown_ingress_released.clone()));
         let runtime_shutdown_request = Arc::new(GisMapApprovalRequestTokenV1);
-        let (runtime_shutdown_identity, _) = RetainedGisMapApprovalCommitterV1::preflight(&GisMapApprovalCommitRequestV1 {
+        let (runtime_shutdown_identity, _) = GisRetainedCommitterV1::preflight(&GisMapApprovalCommitRequestV1 {
             composed_children: &composed_children,
             scope: &scope,
             actor: &actor,
@@ -1342,7 +1367,7 @@ mod quick {
         })
         .expect("runtime-shutdown cursor preflight");
         let runtime_shutdown_owner = GisMapAbandonedRequestV1 { key: key.clone(), identity: runtime_shutdown_identity, request: runtime_shutdown_request };
-        let runtime_shutdown_maintenance_key = RetainedGisMapApprovalCommitterV1::abandoned_request_maintenance_key(&runtime_shutdown_owner);
+        let runtime_shutdown_maintenance_key = GisRetainedCommitterV1::abandoned_request_maintenance_key(&runtime_shutdown_owner);
         assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(runtime_shutdown_maintenance_key.clone()));
         let runtime_shutdown_task = GisMapAbandonedRequestTaskV1 { committer: committer.as_ref().clone(), maintenance_key: runtime_shutdown_maintenance_key, owner: Some(runtime_shutdown_owner) };
         std::thread::spawn(move || {
@@ -1380,7 +1405,7 @@ mod quick {
         let thread_released = thread_ingress_released.clone();
         std::thread::spawn(move || {
             let thread_base = InferenceMapBaseV1 { frontier: thread_frontier, descriptor_digest: thread_descriptor, pack: InferencePrivateBytesV1::new(thread_pack, INPUT_MAX_BYTES).expect("bounded thread base") };
-            let thread_command = InferencePrivateBytesV1::new(thread_command, crate::inference::command::COMMAND_MAX_BYTES).expect("bounded thread command");
+            let thread_command = InferencePrivateBytesV1::new(thread_command, semio_hub_inference::command::COMMAND_MAX_BYTES).expect("bounded thread command");
             let future = thread_committer.commit(GisMapApprovalCommitRequestV1 {
                 composed_children: &thread_children,
                 scope: &thread_scope,
@@ -1485,7 +1510,7 @@ mod quick {
         let prepared_events = ledger.events(&accepted.job_id, &reader(&identity), 0, 1_008).expect("owner event page").events.into_iter().filter(|event| event.kind == "approval-prepared").count();
         assert_eq!(prepared_events, 1, "three exact cancellation/revival cycles preserve one immutable preparation event");
         assert!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty(), "pre-witness cancellation emits neither a public checkpoint nor a peer rebootstrap signal");
-        assert_eq!(ledger.read(&accepted.job_id, &reader(&identity), 1_005).expect("offered proposal").proposal_state, crate::inference::schema::InferenceProposalStateV1::Offered);
+        assert_eq!(ledger.read(&accepted.job_id, &reader(&identity), 1_005).expect("offered proposal").proposal_state, semio_hub_inference::schema::InferenceProposalStateV1::Offered);
         let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
         let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
@@ -1510,7 +1535,7 @@ mod quick {
         watchdog.at("awaiting the autonomous public checkpoint and ledger apply after the receipt cutover");
         tokio::time::timeout(std::time::Duration::from_secs(10), async {
             loop {
-                let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == crate::inference::schema::InferenceProposalStateV1::Approved);
+                let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == semio_hub_inference::schema::InferenceProposalStateV1::Approved);
                 let maintenance_idle = !committer.maintenance_owns_document(&key);
                 if approved && maintenance_idle && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
                     return;
@@ -1538,4 +1563,49 @@ mod quick {
         watchdog.at("shutting the worker pool down");
         pool.shutdown().expect("worker pool shutdown");
     }
+}
+
+struct FixedMembersBindingV1;
+
+impl MapInferenceProposalBindingV1 for FixedMembersBindingV1 {
+    fn inference_service(&self) -> semio_framework_plugin::ArtifactInferenceService {
+        GisMapInferenceBindingV1.inference_service()
+    }
+
+    fn commit_members(&self) -> [&'static str; 2] {
+        ["fixed-drawing", "fixed-value"]
+    }
+
+    fn composed_children(&self, _pack: &[u8]) -> Result<Vec<String>, MapBindingRefusalV1> {
+        Ok(vec!["fixed-drawing".to_owned(), "fixed-value".to_owned()])
+    }
+
+    fn infer(&self, _pack: &[u8], _job_id: &str, _budget: &semio_framework_plugin::WireArtifactInferenceBudget, _checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>) -> Result<MapInferenceRunV1, MapBindingRefusalV1> {
+        Err(MapBindingRefusalV1::Execution)
+    }
+
+    fn approval_effect(&self, _pack: &[u8], _job_id: &str, _budget: &semio_framework_plugin::WireArtifactInferenceBudget) -> Result<MapProposalEffectV1, MapBindingRefusalV1> {
+        Err(MapBindingRefusalV1::Composition)
+    }
+
+    fn undo_effect(&self, _pack: &[u8], _original_inverse_payload: &[u8], _original_job_id: &str) -> Result<MapUndoEffectV1, MapBindingRefusalV1> {
+        Err(MapBindingRefusalV1::Arity)
+    }
+
+    fn preview(&self, job_id: &str, _proposal: &[u8]) -> Result<MapRegionPreviewV1, MapBindingRefusalV1> {
+        Ok(MapRegionPreviewV1 { region_id: format!("fixed-{job_id}"), ring: [[1.0, 2.0]; 5] })
+    }
+}
+
+#[test]
+fn the_inference_runtime_honours_a_non_default_proposal_binding() {
+    let (_identity, base) = canonical_identity_and_base();
+    assert_eq!(base.composed_children(&FixedMembersBindingV1), Ok(vec!["fixed-drawing".to_owned(), "fixed-value".to_owned()]));
+    assert_ne!(base.composed_children(&GisMapInferenceBindingV1), base.composed_children(&FixedMembersBindingV1), "the members come from the registered binding, not from a hub literal");
+    let preview = gis_map_inference_preview(&FixedMembersBindingV1, "job", &sha256(b"any proposal"), b"any proposal").expect("the registered binding decodes the preview");
+    assert_eq!(serde_json::to_value(preview).expect("preview wire"), serde_json::json!({"schema": "semio.hub.gis-map-inference-preview/v1", "jobId": "job", "proposalHash": sha256(b"any proposal"), "regionId": "fixed-job", "ring": [[1.0, 2.0], [1.0, 2.0], [1.0, 2.0], [1.0, 2.0], [1.0, 2.0]]}));
+    assert_eq!(gis_map_inference_preview(&FixedMembersBindingV1, "job", &"0".repeat(64), b"any proposal").err(), Some(InferenceRouteErrorV1::Conflict), "the hub still owns the exact proposal hash check");
+    assert_eq!(InferenceRouteErrorV1::from(MapBindingRefusalV1::Bounds), InferenceRouteErrorV1::Bounds);
+    assert_eq!(InferenceRouteErrorV1::from(MapBindingRefusalV1::Arity), InferenceRouteErrorV1::Conflict);
+    assert_eq!(InferenceRouteErrorV1::from(MapBindingRefusalV1::Undecodable), InferenceRouteErrorV1::Invalid);
 }

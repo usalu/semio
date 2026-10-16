@@ -1,4 +1,5 @@
-use super::*;
+use crate::LasSnapshot;
+use crate::standards::v1_0::subsets::any::schema::inferences::bounds::*;
 use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::STDIO_LAS_DOCUMENT_SCHEMA;
 

@@ -1,0 +1,42 @@
+{
+  "valid": [
+    {
+      "version": 1,
+      "name": "command-boundary-0.json",
+      "bytes": 12
+    },
+    {
+      "version": 1,
+      "name": "api-publication/en/light/pages/page-001.png",
+      "bytes": 16777216
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "name": "../escape.json",
+      "bytes": 1
+    },
+    {
+      "version": 1,
+      "name": "/absolute.json",
+      "bytes": 1
+    },
+    {
+      "version": 1,
+      "name": "report.json",
+      "bytes": 0
+    },
+    {
+      "version": 1,
+      "name": "report.json",
+      "bytes": 16777217
+    },
+    {
+      "version": 1,
+      "name": "report.json",
+      "bytes": 1,
+      "output": "/tmp/free"
+    }
+  ]
+}

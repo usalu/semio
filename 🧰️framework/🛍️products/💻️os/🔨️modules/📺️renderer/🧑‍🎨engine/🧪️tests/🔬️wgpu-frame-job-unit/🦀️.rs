@@ -16,7 +16,7 @@ fn partial_control_deadline_publication_cannot_erase_another_owner_when_a_candid
         runtime.publish_shell_clock_deadline(row["shellDueUs"].as_f64().map(|value| value / 1_000_000.0));
         runtime.publish_retained_control_deadline(row["uiDueUs"].as_f64().map(|value| value / 1_000_000.0));
         assert_eq!(runtime.control_deadline_us(), row["expectedDueUs"].as_u64(), "{}", row["id"]);
-        assert!(runtime.try_lock().unwrap().shell.presented_input_candidate_matches(witness));
+        assert!(runtime.try_lock().unwrap().shell.input.presented_input_candidate_matches(witness));
     }
     let mut scheduler = ui_render::FrameScheduler::new();
     let key = crate::deadlines::RETAINED_CONTROL_CLOCK;
@@ -57,7 +57,7 @@ fn retained_clock_publication_preserves_the_live_frame_and_uses_its_completion_w
         runtime.publish_retained_control_deadline(seconds);
         assert_eq!(runtime.0.retained_control_deadline_us.load(std::sync::atomic::Ordering::Acquire), row["dueUs"].as_u64().unwrap_or(u64::MAX), "{}", row["id"]);
         assert_eq!(runtime.0.presentation_authority.current(), before);
-        assert!(runtime.try_lock().unwrap().shell.presented_input_candidate_matches(witness));
+        assert!(runtime.try_lock().unwrap().shell.input.presented_input_candidate_matches(witness));
     }
     assert_eq!(wakes.load(std::sync::atomic::Ordering::SeqCst), 0, "deadline publication rides the existing frame completion; generic Wake would supersede this build");
     assert!(runtime.retained_control_deadline(0.0).is_none());
@@ -180,7 +180,7 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::shell::PresentedInputCandidateWitness) {
+fn runtime_with_presented_input_candidate() -> (crate::AppMailbox, crate::shell::PresentedInputCandidateWitness) {
     crate::interpreter::begin_accessibility_visible_documents();
     let mut interaction = crate::AppInteractionState {
         shell: crate::shell::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
@@ -201,9 +201,9 @@ fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::sh
         text_cancel_pending: false,
         last_sync_pump_ms: 0.0,
     };
-    let accepted = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("accepted A presented input candidate");
-    assert!(interaction.shell.acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
-    let witness = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("stale B presented input candidate");
+    let accepted = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("accepted A presented input candidate");
+    assert!(crate::shell::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
+    let witness = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("stale B presented input candidate");
     let runtime = crate::RuntimeMailbox::new(crate::AppRuntime {
         atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
         icons: ui_wgpu::wgpu::IconAtlas::default(),
@@ -227,7 +227,7 @@ fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::sh
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn close_active_frame(mut active: ActiveFrameBuild) -> crate::RuntimeMailbox {
+fn close_active_frame(mut active: ActiveFrameBuild) -> crate::AppMailbox {
     let runtime = active.runtime.clone();
     active.begin_close();
     for _ in 0..262_144 {
@@ -240,14 +240,14 @@ fn close_active_frame(mut active: ActiveFrameBuild) -> crate::RuntimeMailbox {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn assert_candidate_returned(runtime: &crate::RuntimeMailbox, witness: crate::shell::PresentedInputCandidateWitness) {
+fn assert_candidate_returned(runtime: &crate::AppMailbox, witness: crate::shell::PresentedInputCandidateWitness) {
     let mut runtime = runtime.try_lock().expect("test runtime lock");
     let interaction = runtime.interaction.as_mut().expect("test interaction owner");
-    assert!(!interaction.shell.presented_input_candidate_matches(witness), "the abandoned frame returns its exact sealed input candidate");
-    let successor = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("successor presented input candidate");
+    assert!(!interaction.shell.input.presented_input_candidate_matches(witness), "the abandoned frame returns its exact sealed input candidate");
+    let successor = crate::shell::ChromeViewCtx::of(&mut interaction.shell).seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("successor presented input candidate");
     assert_ne!(successor, witness, "the successor receives a fresh presentation witness");
-    assert!(interaction.shell.presented_input_candidate_matches(successor), "the successor owns the one retained candidate slot");
-    assert!(interaction.shell.acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
+    assert!(interaction.shell.input.presented_input_candidate_matches(successor), "the successor owns the one retained candidate slot");
+    assert!(crate::shell::PanelsViewCtx::of(&mut interaction.shell).acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
 }
 
 #[cfg(not(target_arch = "wasm32"))]

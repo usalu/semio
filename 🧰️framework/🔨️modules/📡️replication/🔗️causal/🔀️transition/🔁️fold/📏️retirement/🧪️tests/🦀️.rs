@@ -15,7 +15,7 @@ fn bounded_history_fold_physical_retirement_preserves_whole_queued_owners_and_te
 
 #[test]
 fn bounded_history_fold_cancellation_preserves_tracked_future_and_error_backings(){
-    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(crate::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] tracked fold future/error extent={extent} preserve originals on independent undergrants; birth/release trace agrees; terminalDrop0heap");}
+    for extent in [1usize,8194,65536,262144]{let original=String::from_utf8(vec![37u8;extent]).unwrap();let pointer=original.as_ptr()as usize;let mut job=HistoryFoldJob::new(move|control|async move{let original=control.track(original).unwrap_or_else(|_| unreachable!()).await;assert_eq!(original.as_ptr()as usize,pointer);std::future::pending::<()>().await;drop(original);Ok(())});assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let detail=String::from_utf8(vec![37u8;extent]).unwrap();let mut job=HistoryFoldJob::<()>::new(move|_|std::future::ready(Err(semio_framework_replication_error::ProtocolError::Io(detail))));assert!(matches!(job.step(job.next_step_grant(1,1).unwrap(),&mut||false).unwrap(),HistoryFoldJobStep::Pending{released_bytes:0,..}));close_fold_and_check_original_grants(&mut job);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(job));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));println!("[DEBUG] tracked fold future/error extent={extent} preserve originals on independent undergrants; birth/release trace agrees; terminalDrop0heap");}
 }
 
 #[test]
@@ -119,14 +119,14 @@ fn bounded_history_manual_protocol_variants_declare_exact_native_birth_and_relea
     for variant in law["manualProtocolVariants"].as_array().unwrap(){match variant.as_str().unwrap(){
         "input"=>check(crate::InputReplacement::Input{schema:"owned-schema".into(),payload:vec![1u8,2,3]}),
         "withdrawn"=>check(crate::InputReplacement::Withdrawn),
-        "owner"=>check(crate::MutationOrigin::Owner),
-        "contributed"=>check(crate::MutationOrigin::Contributed{plugin_id:"owned-plugin".into(),mutation_id:crate::SchemaId("owned-mutation".into()),payload_hash:crate::PayloadHash([7;32])}),
-        "transaction"=>check(crate::MutationOrigin::Transaction{initiator:crate::ForeignTarget{artifact_id:"owned-artifact".into(),artifact_kind:"owned-kind".into(),dialect:Some("owned-dialect".into())}}),
-        "quarantined"=>check(crate::ConflictKind::Quarantined{envelopes:Vec::new()}),
-        "degraded"=>check(crate::ConflictKind::Degraded{edit_ids:vec!["owned-edit".into()]}),
-        "set"=>check(crate::MapEntryOperation::Set("owned-value".to_owned())),
-        "remove"=>check(crate::MapEntryOperation::<String>::Remove),
-        "reject"=>check(crate::MapEntryOperation::<String>::Reject),
+        "owner"=>check(semio_framework_replication_edit::MutationOrigin::Owner),
+        "contributed"=>check(semio_framework_replication_edit::MutationOrigin::Contributed{plugin_id:"owned-plugin".into(),mutation_id:semio_framework_replication_ids::SchemaId("owned-mutation".into()),payload_hash:semio_framework_replication_ids::PayloadHash([7;32])}),
+        "transaction"=>check(semio_framework_replication_edit::MutationOrigin::Transaction{initiator:semio_framework_replication_mutation::ForeignTarget{artifact_id:"owned-artifact".into(),artifact_kind:"owned-kind".into(),dialect:Some("owned-dialect".into())}}),
+        "quarantined"=>check(semio_framework_replication_conflict::ConflictKind::Quarantined{envelopes:Vec::new()}),
+        "degraded"=>check(semio_framework_replication_conflict::ConflictKind::Degraded{edit_ids:vec!["owned-edit".into()]}),
+        "set"=>check(semio_framework_replication_mutation::MapEntryOperation::Set("owned-value".to_owned())),
+        "remove"=>check(semio_framework_replication_mutation::MapEntryOperation::<String>::Remove),
+        "reject"=>check(semio_framework_replication_mutation::MapEntryOperation::<String>::Reject),
         _=>panic!("unknown neutral protocol variant"),
     }println!("[DEBUG] manual protocol variant={} actual native frame/scaffold/backing birth and release equal genuine receipts; every independent undergrant preserves original custody",variant.as_str().unwrap());}
 }

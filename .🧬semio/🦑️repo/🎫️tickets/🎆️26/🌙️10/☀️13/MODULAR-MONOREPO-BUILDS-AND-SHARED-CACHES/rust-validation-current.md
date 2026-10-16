@@ -141,3 +141,32 @@ No Rust Source changed after the final fixture fixes and their Native cohorts. F
 |`🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧪️tests/🦀️.rs`|923acbe669a71bd68df75ac609661bb88db44ec3ea4f6bde332f62a7ef2327c6|
 
 Final owner/caller strict54509 includes the isolated recensus entry and shared helper and ended exit0 with actual completion DEBUG output. Transcript SHA256`b902d25ff85e92c3aa97a911ef236c1cadd2ea61e7b4e044b11b7fdb069b8b03`. All own handles terminal after this check.
+
+## Current UI Extraction Workspace Lock Successor
+
+Root operation64136 was collected terminal exit0. Under the existing600000ms whole Original and unchanged240000ms per-call admission, all20 actual generate-lockfile and fetch --locked pairs completed, Frameworkfirst, after the child UI WGPU manifest declaration. No Rust compile or native test ran in this metadata cohort. Actual final physical admission was4301160448 available bytes against4294967296 required; no floor/cap change. All own scopesclosed.
+
+Exact completed manifest roster:
+
+- `🧰️framework/Cargo.toml`
+- `Cargo.toml`
+- `✏️s/🔌️plugins/🀄️wfc/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.toml`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml`
+- `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.toml`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.toml`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.toml`
+- `✏️s/🔌️plugins/🧩️puzzle/Cargo.toml`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.toml`
+
+Output `🗑️generated/root-workspace-locks-post-ui.log`: 22493 bytes, SHA256 `32452478f6db0a3d5e009ac4ebcf7b70dd1c5937366134a1d40df1ca102409cc`. The earlier Actor12456 stale-lock failure remains failed; no Actor successor is inferred. CPU owns next actual child native test under its explicit separate finite operation.

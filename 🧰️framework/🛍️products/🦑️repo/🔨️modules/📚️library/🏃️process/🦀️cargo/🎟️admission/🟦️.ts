@@ -1,3 +1,4 @@
+import{appendCargoProfileSelectorsV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {resolve,relative,basename} from "node:path";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
@@ -19,10 +20,9 @@ import {withRepositoryCompilerStoreV1} from "./../../../⚡️caching/💾️sto
 
 async function execute(request:CargoTestRequestV1,policy:CargoTestPolicyV1,workspace:string,invocation:ScriptInvocation,lint:boolean):Promise<void>{
  const control=scriptCompilerAdmissionControlV1(invocation,lint?"cargo:lint":"cargo:test",policy.buildBudgetMs),network=repositoryCargoNetworkV1(invocation,workspace);
- await withRepositoryCompilerStoreV1(workspace,policy.mode,control,request.environment??process.env,async store=>{
+ await withRepositoryCompilerStoreV1(workspace,policy.mode,control,request.environment??process.env,async (store,control)=>{
   const bounded={...policy,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,artifactDirectory:store.captureDirectory,...(policy.coveragePath?{coveragePath:join(store.captureDirectory,basename(policy.coveragePath))}: {})};
-  const compilerArgs=lint?cargoLintPlanV1(request,bounded).args:cargoTestCompilerArgumentsV1(request,bounded);
-  await withRepositoryCargoInputsV1({workspace,cwd:request.cwd,manifest:request.manifestPath,args:compilerArgs,network,control,storage:store.storage,environment:store.environment},environment=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,()=>(lint?runCargoLintV1:runCargoTestsV1)({...request,environment},bounded,{workspaceRoot:workspace,control,storage:store.storage,sourceBoundary:store.sourceBoundary})));
+  await(lint?runCargoLintV1:runCargoTestsV1)({...request,environment:store.environment},bounded,{workspaceRoot:workspace,control,storage:store.storage,sourceBoundary:store.sourceBoundary,withCargoInputs:(compiler,body)=>withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:lint?"clippy":"test"},workspace,cwd:compiler.cwd,manifest:compiler.manifest,args:compiler.arguments,network,control:compiler.control,storage:store.storage,environment:compiler.environment},input=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control})))});
  });
 }
 /** 🧪️ Composes original repository caller authority with one bounded compiler backing. */

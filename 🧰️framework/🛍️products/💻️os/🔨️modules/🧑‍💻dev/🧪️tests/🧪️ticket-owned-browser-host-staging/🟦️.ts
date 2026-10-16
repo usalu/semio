@@ -1279,19 +1279,17 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       }
       for (const row of fixture.artifactPaths) expect(pluginWasmArtifactPath(repoRoot, row.packageName, row.profile, "/target")).toBe(join("/target", row.expectedRelativePath));
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
-      expect(manifest.profile["wasm-dev"]).toBeUndefined();
-      expect(manifest.profile["wasm-release"]).toEqual(fixture.release);
-      const { package: hot, ...iterate } = manifest.profile["wasm-prototype"];
-      expect(iterate).toEqual(fixture.iterate);
-      expect(hot).toEqual(fixture.iterateHotPackages);
+      expect(manifest.profile).toBeUndefined();
+      const {renderCargoProfileConfigurationV1}=await import("../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts");
+      for(const mode of ["prototype","release"] as const){const rendered=renderCargoProfileConfigurationV1({version:1,mode,target:"wasm32-wasip2",producer:"wasm-component",operation:"build"},"Cargo.toml","repository"),parsed=toml.parse(rendered.selectors.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(parsed.profile[mode]!["opt-level"]).toBe(mode==="release"?"s":1);expect(rendered.plan.profile).toBe(mode);}
     });
   });
 
   describe("componentCargoV1", () => {
     it("links every actor component exactly as the release driver's pass does, with the guest stack in the cargo config", async () => {
-      const cargo = componentCargoV1("semio-hub-procedural", "wasm-release");
+      const cargo = componentCargoV1("semio-hub-procedural", "release");
       expect(cargo.command).toBe("build");
-      expect(cargo.args).toEqual(["-p", "semio-hub-procedural", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"]);
+      expect(cargo.args).toEqual(["-p", "semio-hub-procedural", "--lib", "--target", "wasm32-wasip2", "--profile", "release"]);
       expect(cargo.environment).toEqual({ CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: "package" });
       const { default: toml } = await import("@iarna/toml");
       const config = toml.parse(readFileSync(join(repoRoot, ".cargo/config.toml"), "utf8")) as any;
@@ -1303,7 +1301,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     it("can retain actor symbols for a reproducible browser trap diagnosis", () => {
       process.env.SEMIO_PLUGIN_SYMBOLS = "1";
       try {
-        const cargo = componentCargoV1("semio-hub-procedural", "wasm-prototype");
+        const cargo = componentCargoV1("semio-hub-procedural", "prototype");
         expect(cargo.command).toBe("rustc");
         expect(cargo.args.slice(-2)).toEqual(["-C", "strip=none"]);
       } finally {
@@ -1363,7 +1361,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         maxCargoActive = Math.max(maxCargoActive, cargoActive);
         await new Promise((r) => setTimeout(r, 5));
         cargoActive--;
-        return { deliverable: { profile: "wasm-prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
+        return { deliverable: { profile: "prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
       };
       const materializeFn = async (target: PluginBuildTargetV1) => {
         materializeActive++;
@@ -1389,7 +1387,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       const targets = [fakeTarget("ok"), fakeTarget("cargo-fails"), fakeTarget("materialize-fails")];
       const cargoFn = async (target: PluginBuildTargetV1) => {
         if (target.pluginId === "cargo-fails") throw new Error("boom");
-        return { deliverable: { profile: "wasm-prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
+        return { deliverable: { profile: "prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
       };
       const materialized: string[] = [];
       const materializeFn = async (target: PluginBuildTargetV1) => {

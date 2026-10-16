@@ -38,9 +38,6 @@ impl protocol::OpText for PlaybookMutation {
 //#endregion 🔖️HandcraftedOpCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 #[allow(unused_imports)]

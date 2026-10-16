@@ -853,7 +853,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
     reconcile_puzzle3d_settings(&mut ui, window_id, &law);
 
     let mut atlas = FontAtlas::builtin();
-    let icons = crate::wgpu::draw::IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
+    let icons = crate::wgpu::draw_types::IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
     let body = Rect::new(0.0, 0.0, 360.0, 480.0);
     drive_layout(&mut ui, window_id, body.w, body.h, &mut atlas);
     let mut draw = DrawList::default();
@@ -887,9 +887,9 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         assert!(bounds.w > 0.0 && bounds.h > 0.0, "{key} has accepted layout");
         assert!(hits.iter().any(|hit| hit.control_id == key && hit.kind == HitKind::NumberStepper), "{key} publishes its retained hit");
 
-        let clip = crate::wgpu::draw::ScissorRect::from_rect(bounds, body.h);
+        let clip = crate::wgpu::draw_types::ScissorRect::from_rect(bounds, body.h);
         let clipped: Vec<_> = draw.layers.iter().filter(|layer| layer.scissor == Some(clip)).flat_map(|layer| layer.ui_instances.iter()).collect();
-        let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_SOLID).collect();
+        let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_SOLID).collect();
         assert_eq!(solids.len(), 7, "{key} retains one five-quad border and two clipped dividers when neither side is hovered");
         assert!(solids.iter().any(|instance| rect_matches(instance.rect, bounds)), "{key} retains the outer background");
         let [minus, value_segment, plus] = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
@@ -898,7 +898,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         for divider in [Rect::new(minus.x + minus.w - hair, minus.y, hair, minus.h), Rect::new(plus.x, plus.y, hair, plus.h)] {
             assert!(solids.iter().any(|instance| rect_matches(instance.rect, divider)), "{key} side divider follows its button edge");
         }
-        let texture_instances: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_TEXTURED).collect();
+        let texture_instances: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_TEXTURED).collect();
         assert_eq!(texture_instances.len(), 2, "{key} retains two catalog icons");
         for (id, segment) in [("minus", minus), ("plus", plus)] {
             let size = crate::wgpu::chrome::ICON_TINY;
@@ -907,7 +907,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
             assert!(texture_instances.iter().any(|instance| instance.uv_rect == icons.icon_uv(id).unwrap() && rect_matches(instance.rect, expected)), "{key} positions the {id} catalog icon");
         }
 
-        let glyphs: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_GLYPH && rect_inside(instance.rect, bounds)).collect();
+        let glyphs: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH && rect_inside(instance.rect, bounds)).collect();
         let expected_text = control["formatted"].as_str().unwrap();
         assert_eq!(ui_contract::format_ui_number(stepper.value), expected_text);
         let thirds = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
@@ -2442,8 +2442,8 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
         }
         assert!(completed, "{label}: retained frame completes");
         let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
-        assert!(instances.iter().filter(|item| item.params[2] == crate::wgpu::draw::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
-        assert!(instances.iter().all(|item| item.params[2] == crate::wgpu::draw::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
+        assert!(instances.iter().filter(|item| item.params[2] == crate::wgpu::draw_types::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
+        assert!(instances.iter().all(|item| item.params[2] == crate::wgpu::draw_types::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
         assert!(ui.window_hit_targets("tree-paint").iter().any(|hit| hit.action.is_some()), "{label}: suppressing identity paint must retain activation");
     }
 }

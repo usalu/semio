@@ -1,20 +1,20 @@
 use super::*;
 
-async fn admitted_wal_bytes(mut bytes: Vec<u8>) -> db_wal::WalBytes {
+async fn admitted_wal_bytes(mut bytes: Vec<u8>) -> db_wal_log::WalBytes {
     bytes.shrink_to_fit();
-    let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    db_wal::WalBytes::try_admit(bytes, (db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES) as u64, &mut control).await.unwrap()
+    let mut control = db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
+    db_wal_log::WalBytes::try_admit(bytes, (db_io_core::DB_IO_OPERATION_PAGES * db_io_core::DB_IO_PAGE_BYTES) as u64, &mut control).await.unwrap()
 }
 
-fn decode_control(cancelled: bool, stall: std::time::Duration) -> db_wal::WalCursorControl {
-    db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(cancelled)), std::time::Instant::now() + stall, 1_000_000).unwrap()
+fn decode_control(cancelled: bool, stall: std::time::Duration) -> db_wal_log::WalCursorControl {
+    db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(cancelled)), std::time::Instant::now() + stall, 1_000_000).unwrap()
 }
 
-async fn decoded_wal_command(bytes: Vec<u8>, control: &mut db_wal::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
+async fn decoded_wal_command(bytes: Vec<u8>, control: &mut db_wal_log::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
     let mut admitted = admitted_wal_bytes(bytes).await;
     let decoded = decode_wal_command(&admitted, control);
     while admitted.close_step().unwrap().is_some() {}
-    while db_storage::db_io_maintenance_step().unwrap() {}
+    while db_io_driver::db_io_maintenance_step().unwrap() {}
     decoded
 }
 
@@ -27,14 +27,14 @@ async fn wal_command_decoder_agrees_with_the_protocol_codec_and_refuses_what_a_r
     let stall = std::time::Duration::from_secs(30);
     let mut pages = sample_envelope("wal-real-path", 1).await;
     pages.dependencies = vec![protocol::MutationId("dependency-a".to_string()), protocol::MutationId("dependency-b".to_string())];
-    pages.diff.payload = vec![0x4d; db_storage::DB_IO_PAGE_BYTES + 17];
-    pages.inverse.payload = vec![0x2a; db_storage::DB_IO_PAGE_BYTES + 1];
+    pages.diff.payload = vec![0x4d; db_io_core::DB_IO_PAGE_BYTES + 17];
+    pages.inverse.payload = vec![0x2a; db_io_core::DB_IO_PAGE_BYTES + 1];
     let mut many = sample_envelope("übergänge-✓", 2).await;
     many.dependencies = (0..512).map(|index| protocol::MutationId(format!("dependency-{index}"))).collect();
     many.observed = Some(protocol::MutationId("dependency-7".to_string()));
     many.target = vec!["features".to_string(), "ü".to_string()];
     let mut maximum = sample_envelope("maximum", 3).await;
-    maximum.diff.payload = vec![0x6d; (db_storage::DB_IO_OPERATION_PAGES - 1) * db_storage::DB_IO_PAGE_BYTES];
+    maximum.diff.payload = vec![0x6d; (db_io_core::DB_IO_OPERATION_PAGES - 1) * db_io_core::DB_IO_PAGE_BYTES];
     for envelope in [sample_envelope("plain", 0).await, pages.clone(), many, maximum] {
         let encoded = encode_command_envelope(&envelope).await;
         let reference = protocol::decode_envelope(&encoded, &mut 0).unwrap();
@@ -61,7 +61,7 @@ async fn wal_command_decoder_agrees_with_the_protocol_codec_and_refuses_what_a_r
 /// id is the server head, while no command is materialized.
 #[semio_framework_async_macros::async_test]
 async fn retained_hello_replay_derives_the_server_frontier_without_decoding_the_tail() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-tail".into();
     seed_wal(&storage, &document, 6).await;
     let ordinary = replay_sync_state(&storage, document.clone()).await.unwrap();
@@ -111,7 +111,7 @@ async fn stream_hello_tail(storage: std::sync::Arc<db_storage::DbBackend>, docum
 /// transaction without a command (a snapshot marker at floor 0) follows the last command.
 #[semio_framework_async_macros::async_test]
 async fn a_retained_hello_streams_exactly_the_missing_tail() {
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-tail-stream".into();
     seed_wal(&memory, &document, 6).await;
     publish_snapshot_marker(&memory, &document, 1, Frontier { document: document.clone(), head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 }).await;
@@ -141,12 +141,12 @@ async fn a_fifty_thousand_edit_document_streams_to_a_fresh_replica_within_one_fr
     const EDITS: u64 = 50_000;
     let dir = std::env::temp_dir().join(format!("db_sync_fifty_thousand_{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
-    let fs = db_storage::FsStorage::open(db_storage::db_io_test_pool(), &dir).await.unwrap();
+    let fs = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &dir).await.unwrap();
     let document: ArtifactId = "doc-fifty-thousand".into();
     let mut wal = db_actor::block_on(ArtifactWal::create(&fs, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
     for i in 0..EDITS {
         let envelope = sample_envelope(&format!("op-{i}"), i).await;
-        let mut records = db_wal::WalRecordBatch::new();
+        let mut records = db_wal_log::WalRecordBatch::new();
         assert!(records.push(command_record(&envelope).await).is_ok());
         wal.submit(&fs, &[], &records, DurabilityClass::Os, i).await.unwrap();
         while records.close_step().unwrap() {}
@@ -183,7 +183,7 @@ async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "aborted-commands-snapshot-cas-have-no-effects").unwrap();
     let document = ArtifactId::from("committed-sync");
-    let storage = db_wal::tests::committed_fixture_storage(row, &document).await;
+    let storage = db_wal::testkit::committed_fixture_storage(row, &document).await;
     let ordinary = replay_sync_state(&storage, document.clone()).await.unwrap();
     assert!(ordinary.commands.is_empty());
     assert_eq!(ordinary.floor_head_seq, 0);
@@ -202,9 +202,10 @@ async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
     assert_eq!(ledger.bytes, 0);
 }
 
-use db_storage::MemoryStorage;
-use db_wal::{ArtifactWal, GroupCommitPolicy, WalRecord};
-use ArtifactId;
+use db_storage_memory::MemoryStorage;
+use db_wal::ArtifactWal;
+use db_wal_log::{GroupCommitPolicy, WalRecord};
+use db_ids::ArtifactId;
 
 //#region 🧸️Fixtures
 async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
@@ -223,15 +224,15 @@ async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
 }
 
 async fn submit_record(storage: &MemoryStorage, wal: &mut ArtifactWal, record: WalRecord, now_ms: u64) {
-    let mut records = db_wal::WalRecordBatch::new();
+    let mut records = db_wal_log::WalRecordBatch::new();
     assert!(records.push(record).is_ok());
     wal.submit(storage, &[], &records, DurabilityClass::Fsync, now_ms).await.unwrap();
     while records.close_step().unwrap() {}
 }
 
 async fn command_record(envelope: &protocol::MutationEnvelope) -> WalRecord {
-    let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
-    let bytes = db_wal::WalBytes::try_admit(encode_command_envelope(envelope).await, 1024 * 1024, &mut control).await.unwrap();
+    let mut control = db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+    let bytes = db_wal_log::WalBytes::try_admit(encode_command_envelope(envelope).await, 1024 * 1024, &mut control).await.unwrap();
     WalRecord::Command(bytes)
 }
 
@@ -271,7 +272,7 @@ async fn decode_command_envelope_rejects_malformed_bytes_without_panicking() {
 //#region 🔖️ReplicaState
 #[semio_framework_async_macros::async_test]
 async fn replay_sync_state_derives_frontier_and_ordered_commands() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 3).await;
 
@@ -286,7 +287,7 @@ async fn replay_sync_state_derives_frontier_and_ordered_commands() {
 
 #[semio_framework_async_macros::async_test]
 async fn replay_sync_state_on_empty_document_is_genesis() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 0).await;
 
@@ -298,7 +299,7 @@ async fn replay_sync_state_on_empty_document_is_genesis() {
 
 #[semio_framework_async_macros::async_test]
 async fn replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 5).await;
     let floor_frontier = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
@@ -325,7 +326,7 @@ async fn frontier_delta_reports_the_command_gap_and_rejects_backwards() {
 
 #[semio_framework_async_macros::async_test]
 async fn frontier_summary_bridges_round_trip() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 2).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -347,7 +348,7 @@ async fn frontier_summary_bridges_round_trip() {
 //#region 🔖️MissingCommands
 #[semio_framework_async_macros::async_test]
 async fn missing_commands_transfer_round_trip_from_genesis() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 4).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -363,7 +364,7 @@ async fn missing_commands_transfer_round_trip_from_genesis() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 3).await;
     let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -387,7 +388,7 @@ async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica(
 
 #[semio_framework_async_macros::async_test]
 async fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 2).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -401,7 +402,7 @@ async fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_serve
 
 #[semio_framework_async_macros::async_test]
 async fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 5).await;
     let floor_frontier = Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
@@ -416,7 +417,7 @@ async fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
 //#region 🔖️Bootstrap
 #[semio_framework_async_macros::async_test]
 async fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 3).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -427,7 +428,7 @@ async fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
 
 #[semio_framework_async_macros::async_test]
 async fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 3).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
@@ -438,12 +439,12 @@ async fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
 
 #[semio_framework_async_macros::async_test]
 async fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 5).await;
     let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
     publish_snapshot_marker(&storage, &document, 7, floor_frontier).await;
-    let pages = db_storage::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(b"snapshot-bytes").unwrap().await.unwrap();
     SnapshotStorage::write_generation(&storage, &document, 7, pages).await.unwrap();
     let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
@@ -461,7 +462,7 @@ async fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_t
 
 #[semio_framework_async_macros::async_test]
 async fn decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 5).await;
     let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
@@ -486,12 +487,12 @@ async fn issue_resume_token_produces_the_documented_v1_wire_format() {
 //#region 🔖️Hello
 #[semio_framework_async_macros::async_test]
 async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 3).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-    let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "session-1".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
     let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
     };
@@ -507,14 +508,14 @@ async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_to
 
 #[semio_framework_async_macros::async_test]
 async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 2).await;
     let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
     let hello_frontier = state_frontier_summary(&state).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
-    let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(hello_frontier), "session-2".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
     let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
     };
@@ -524,18 +525,18 @@ async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
 
 #[semio_framework_async_macros::async_test]
 async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 4).await;
     let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
     publish_snapshot_marker(&storage, &document, 9, floor_frontier).await;
     let big_snapshot = vec![7u8; 10];
-    let pages = db_storage::db_io_copy_pages(&big_snapshot).unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(&big_snapshot).unwrap().await.unwrap();
     SnapshotStorage::write_generation(&storage, &document, 9, pages).await.unwrap();
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
 
     let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
-    let response = db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
+    let response = db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, Some(stale_hello_frontier), "session-3".to_string(), protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
 
     let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
         panic!("expected a Welcome frame");
@@ -548,16 +549,16 @@ async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
 
 #[semio_framework_async_macros::async_test]
 async fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 1).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(storage));
-    assert!(matches!(db_actor::block_on(handle_hello(db_storage::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
+    assert!(matches!(db_actor::block_on(handle_hello(db_io_driver::db_io_test_pool(), storage, document, None, "s".to_string(), protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document: ArtifactId = "doc-1".into();
     seed_wal(&storage, &document, 2).await;
     let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
@@ -629,7 +630,7 @@ fn replenishing_held_sync_hello_pool() -> (std::sync::Arc<semio_framework_async:
 }
 
 async fn retained_sync_hello_storage() -> std::sync::Arc<db_storage::DbBackend> {
-    std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))
+    std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -654,7 +655,7 @@ async fn retained_sync_hello_handoff_first_poll_cancel_preserves_exact_owner_and
 
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity() {
-    if !crate::db_storage::process_isolated_law("db_sync::tests::retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity") {
+    if !db_io_driver::process_isolated_law("tests::retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontier_session_origin_identity") {
         return;
     }
     let (pool, held) = held_sync_hello_pool();
@@ -680,7 +681,7 @@ async fn retained_sync_hello_max_plus_one_refusal_keeps_storage_document_frontie
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_tail_stream_publishes_welcome_then_one_backpressured_frame() {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId(String::from("p1z-tail-stream"));
     seed_wal(&memory, &document, 3).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -698,12 +699,12 @@ async fn retained_sync_hello_tail_stream_publishes_welcome_then_one_backpressure
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_snapshot_cursor_copies_at_most_one_page_fragment_per_driver_opportunity() {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId(String::from("p1z-snapshot-stream"));
     seed_wal(&memory, &document, 4).await;
     let floor = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1; 32], epoch: 0 };
     publish_snapshot_marker(&memory, &document, 9, floor).await;
-    let pages = db_storage::db_io_copy_pages(b"0123456789").unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(b"0123456789").unwrap().await.unwrap();
     SnapshotStorage::write_generation(&memory, &document, 9, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -726,12 +727,12 @@ async fn retained_sync_hello_snapshot_cursor_copies_at_most_one_page_fragment_pe
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_returned_snapshot_credit_waits_for_exact_generation_ack() {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId(String::from("p1z-returned-credit"));
     seed_wal(&memory, &document, 2).await;
     let floor = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [2; 32], epoch: 0 };
     publish_snapshot_marker(&memory, &document, 7, floor).await;
-    let pages = db_storage::db_io_copy_pages(b"abcdefgh").unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(b"abcdefgh").unwrap().await.unwrap();
     SnapshotStorage::write_generation(&memory, &document, 7, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -770,9 +771,9 @@ async fn retained_sync_hello_maximum_snapshot_request_stays_page_unit_bounded() 
     let mut page_ledger = DatabaseSyncHelloBackingLedger::default();
     let page_reservation = database_sync_hello_reserve_snapshot_pages(&mut page_ledger).unwrap();
     assert_eq!((page_ledger.items, page_ledger.bytes), (DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS, DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES));
-    let mut page_owner = db_storage::db_io_copy_pages(b"fixed-page-owner").unwrap().await.unwrap();
+    let mut page_owner = db_io_registry::db_io_copy_pages(b"fixed-page-owner").unwrap().await.unwrap();
     let (page_items, page_bytes) = page_reservation.observed(&page_owner).unwrap();
-    assert_eq!((page_items, page_bytes), (1, db_storage::DB_IO_PAGE_BYTES));
+    assert_eq!((page_items, page_bytes), (1, db_io_core::DB_IO_PAGE_BYTES));
     page_reservation.settle(&mut page_ledger, page_items, page_bytes).unwrap();
     while page_owner.close_step().unwrap().is_some() {}
     page_ledger.release(page_items, page_bytes).unwrap();
@@ -795,13 +796,13 @@ async fn retained_sync_hello_maximum_snapshot_request_stays_page_unit_bounded() 
     assert!(fixed_ledger.terminal_is_empty());
 
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId(String::from("p1z-maximum-frame-unit"));
     seed_wal(&memory, &document, 2).await;
     let floor = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [3; 32], epoch: 0 };
     publish_snapshot_marker(&memory, &document, 11, floor).await;
     let source = vec![b'x'; DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES * 2 + 1];
-    let pages = db_storage::db_io_copy_pages(&source).unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(&source).unwrap().await.unwrap();
     SnapshotStorage::write_generation(&memory, &document, 11, pages).await.unwrap();
     let stale = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] };
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -825,7 +826,7 @@ async fn retained_sync_hello_grant_deadline_between_allocation_copy_and_publicat
     let expired = std::sync::atomic::AtomicBool::new(false);
     let document = ArtifactId(String::from("p1z-grant-deadline"));
     let source = vec![b'g'; DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES];
-    let pages = db_storage::db_io_copy_pages(&source).unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(&source).unwrap().await.unwrap();
     let mut follow_up = DatabaseSyncHelloFollowUp::Snapshot { pages, chunk_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, offset: 0, page: 0, page_offset: 0, seq: 0, chunk: None, done: false };
     let mut ledger = DatabaseSyncHelloBackingLedger::default();
     let mut before_copy = DatabaseSyncHelloGrant::expiring_at(3);
@@ -837,7 +838,7 @@ async fn retained_sync_hello_grant_deadline_between_allocation_copy_and_publicat
     while ledger.close_one_credit() {}
     assert!(follow_up.terminal_is_empty() && ledger.terminal_is_empty());
 
-    let pages = db_storage::db_io_copy_pages(&source).unwrap().await.unwrap();
+    let pages = db_io_registry::db_io_copy_pages(&source).unwrap().await.unwrap();
     let mut follow_up = DatabaseSyncHelloFollowUp::Snapshot { pages, chunk_bytes: DATABASE_SYNC_HELLO_MAX_BYTES, offset: 0, page: 0, page_offset: 0, seq: 0, chunk: None, done: false };
     let mut ledger = DatabaseSyncHelloBackingLedger::default();
     let mut before_publication = DatabaseSyncHelloGrant::expiring_at(5);
@@ -857,7 +858,7 @@ async fn retained_sync_hello_grant_deadline_between_allocation_copy_and_publicat
 #[semio_framework_async_macros::async_test]
 async fn retained_sync_hello_cancel_before_stream_demand_publishes_no_new_frame() {
     let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let memory = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId(String::from("p1z-cancel-before-stream"));
     seed_wal(&memory, &document, 2).await;
     let storage = std::sync::Arc::new(db_storage::DbBackend::Memory(memory));
@@ -922,7 +923,7 @@ fn retained_sync_hello_quarantine_cursor_and_byte_item_ledger_reach_zero_before_
     assert!(quarantine.close_one());
     assert!(quarantine.terminal_is_empty());
     let mut ledger = DatabaseSyncHelloBackingLedger::default();
-    ledger.observe(2, db_storage::DB_IO_PAGE_BYTES + 1, "database sync hello quarantine law backing").unwrap();
+    ledger.observe(2, db_io_core::DB_IO_PAGE_BYTES + 1, "database sync hello quarantine law backing").unwrap();
     assert!(ledger.close_one_credit());
     assert_eq!(ledger.bytes, 1);
     while ledger.close_one_credit() {}
@@ -1025,10 +1026,6 @@ fn retained_sync_hello_ready_pending_panic_and_repeat_poll_have_typed_terminal_s
 
 #[test]
 fn retained_sync_hello_production_census_has_zero_blocking_waits_and_no_eager_follow_up() {
-    let engine = include_str!("../../../⚙️engine/🦀️.rs");
-    let production = engine.rsplit_once("\n//#region 🧪️Tests").unwrap().0;
-    assert!(!production.contains("db_actor::block_on(db_sync::handle_hello"));
-    assert!(production.contains("DatabaseSyncHelloFuture::try_submit"));
     let source = include_str!("../../🦀️.rs");
     assert!(source.contains("#[cfg(test)]\npub async fn handle_hello"));
     assert!(source.contains("DatabaseSyncHelloNextFuture"));

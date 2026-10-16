@@ -1,11 +1,15 @@
+//! 🧱️ Handles_quick of the foundation crate: Gateway vocabulary: errors, handles, audit lane, reports, local session files and delegated credentials.
 
-use super::*;
+use crate::errors::GatewayErrorCode;
+use crate::handles::{Attachment, HandleKind, HandleTable, IDEMPOTENCY_TTL_MS, IdempotencyStore, SessionHandle};
+use crate::reports::{InvocationReport, InvocationStatus};
 
 fn session(id: &str) -> SessionHandle {
     SessionHandle::new(id.to_string())
 }
 
 //#region 🔖️MintResolve
+
 #[test]
 fn mint_then_resolve_by_the_owning_session_succeeds() {
     let table = HandleTable::new();
@@ -27,9 +31,11 @@ fn every_kind_mints_with_its_frozen_prefix() {
         assert!(id.starts_with(prefix), "{kind:?} minted `{id}`, expected prefix `{prefix}`");
     }
 }
+
 //#endregion 🔖️MintResolve
 
 //#region 🔖️AuthorizationSecurity
+
 /// 🔐️ THE security property: possession of the handle string is not enough — a session that never
 /// minted/owns it must be refused even though the handle is real and unexpired.
 #[test]
@@ -48,9 +54,11 @@ fn resolving_an_unknown_handle_is_not_found() {
     let error = table.resolve("prep_does_not_exist", &session("sess_a"), 0).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::NotFound);
 }
+
 //#endregion 🔖️AuthorizationSecurity
 
 //#region 🔖️Expiry
+
 #[test]
 fn a_handle_past_its_ttl_is_not_found_and_removed() {
     let table = HandleTable::new();
@@ -102,9 +110,11 @@ fn mark_terminal_rejects_a_non_job_handle() {
     let error = table.mark_terminal(&id, 0).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
 }
+
 //#endregion 🔖️Expiry
 
 //#region 🔖️Idempotency
+
 #[test]
 fn idempotent_replay_reuses_the_cached_report_and_flags_it() {
     let store = IdempotencyStore::new();
@@ -114,7 +124,7 @@ fn idempotent_replay_reuses_the_cached_report_and_flags_it() {
         InvocationReport {
             invocation_id: "inv-1".into(),
             capability_id: "cad.viewport.translateSelection".into(),
-            status: crate::schema::InvocationStatus::Succeeded,
+            status: InvocationStatus::Succeeded,
             affected_resources: vec![],
             revision_before: None,
             revision_after: None,
@@ -139,7 +149,7 @@ fn different_idempotency_keys_never_collide() {
     let a = store.get_or_insert_with("agent:local", "key-a", 0, || InvocationReport {
         invocation_id: "inv-a".into(),
         capability_id: "x".into(),
-        status: crate::schema::InvocationStatus::Succeeded,
+        status: InvocationStatus::Succeeded,
         affected_resources: vec![],
         revision_before: None,
         revision_after: None,
@@ -152,7 +162,7 @@ fn different_idempotency_keys_never_collide() {
     let b = store.get_or_insert_with("agent:local", "key-b", 0, || InvocationReport {
         invocation_id: "inv-b".into(),
         capability_id: "x".into(),
-        status: crate::schema::InvocationStatus::Succeeded,
+        status: InvocationStatus::Succeeded,
         affected_resources: vec![],
         revision_before: None,
         revision_after: None,
@@ -175,7 +185,7 @@ fn expired_idempotency_entry_recomputes() {
         InvocationReport {
             invocation_id: id.into(),
             capability_id: "x".into(),
-            status: crate::schema::InvocationStatus::Succeeded,
+            status: InvocationStatus::Succeeded,
             affected_resources: vec![],
             revision_before: None,
             revision_after: None,
@@ -194,4 +204,5 @@ fn expired_idempotency_entry_recomputes() {
     assert_eq!(second.invocation_id, "inv-2");
     assert_eq!(calls.get(), 2);
 }
+
 //#endregion 🔖️Idempotency

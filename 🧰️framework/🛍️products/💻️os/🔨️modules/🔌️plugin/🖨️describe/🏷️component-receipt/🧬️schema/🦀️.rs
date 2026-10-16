@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 pub const COMPONENT_RECEIPT_SCHEMA: &str = "semio.plugin.component-receipt/v1";
 /// 🎯️ The one component target triple (`ComponentReceiptV1.target`).
 pub const COMPONENT_TARGET: &str = "wasm32-wasip2";
-/// 🧱️ The 256 MiB bound of the one shipped profile (`ComponentProfilePolicies.wasm-release.maximumBytes`).
+/// 🧱️ The 256 MiB bound of the one shipped profile (`ComponentProfilePolicies.release.maximumBytes`).
 pub const SHIPPED_COMPONENT_MAX_BYTES: u64 = 268_435_456;
-/// 🧯️ The local-only 512 MiB cap of `wasm-prototype` (`ComponentProfilePolicies.wasm-prototype.maximumBytes`).
+/// 🧯️ The local-only 512 MiB cap of `prototype` (`ComponentProfilePolicies.prototype.maximumBytes`).
 pub const ITERATE_COMPONENT_MAX_BYTES: u64 = 536_870_912;
 /// 🪶️ The fewest bytes a component can have (`ComponentReceiptV1.wasmBytes.minimum`).
 pub const COMPONENT_RECEIPT_MIN_WASM_BYTES: u64 = 8;
@@ -22,29 +22,29 @@ pub const COMPONENT_RECEIPT_MAX_BYTES: usize = 4096;
 /// 🗂️ The receipt's file name beside the bytes it names, in a deliverable directory and in a plugin module.
 pub const COMPONENT_RECEIPT_FILE: &str = "🧾️receipt.json";
 
-/// 🎚️ `ComponentProfile`: `wasm-release` ships; `wasm-prototype` is the local single-plugin loop whose bytes never ship.
+/// 🎚️ `ComponentProfile`: `release` ships; `prototype` is the local single-plugin loop whose bytes never ship.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 pub enum ComponentProfileV1 {
-    #[serde(rename = "wasm-release")]
-    #[value(rename = "wasm-release")]
-    WasmRelease,
-    #[serde(rename = "wasm-prototype")]
-    #[value(rename = "wasm-prototype")]
-    WasmIterate,
+    #[serde(rename = "release")]
+    #[value(rename = "release")]
+    Release,
+    #[serde(rename = "prototype")]
+    #[value(rename = "prototype")]
+    Prototype,
 }
 
 impl ComponentProfileV1 {
     /// 📐️ The profile's byte cap from `ComponentProfilePolicies`.
     pub const fn maximum_bytes(self) -> u64 {
         match self {
-            Self::WasmRelease => SHIPPED_COMPONENT_MAX_BYTES,
-            Self::WasmIterate => ITERATE_COMPONENT_MAX_BYTES,
+            Self::Release => SHIPPED_COMPONENT_MAX_BYTES,
+            Self::Prototype => ITERATE_COMPONENT_MAX_BYTES,
         }
     }
 
     /// 🚢️ Whether bytes of this profile may ship (`ComponentProfilePolicies.<profile>.shipped`).
     pub const fn shipped(self) -> bool {
-        matches!(self, Self::WasmRelease)
+        matches!(self, Self::Release)
     }
 }
 
@@ -129,7 +129,7 @@ impl ComponentReceiptV1 {
     pub fn binds(&self, plugin_id: &str, package_id: &str, wasm_sha256: &str, semantic_descriptor_sha256: &str) -> Result<(), ComponentReceiptRefusalV1> {
         self.validate()?;
         if !self.profile.shipped() {
-            return Err(ComponentReceiptRefusalV1("does not name shipped wasm-release bytes"));
+            return Err(ComponentReceiptRefusalV1("does not name shipped release bytes"));
         }
         if self.plugin_id != plugin_id || self.package_id != package_id {
             return Err(ComponentReceiptRefusalV1("names another package"));

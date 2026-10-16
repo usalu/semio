@@ -4,6 +4,7 @@ import {resolve} from "node:path";
 import {cargoDependencyFetchArgumentsV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
+import "./📥️consumption/🟦️.ts";
 
 test("neutral dependency acquisition preserves closed network grants and fetches the complete platform set planning reads",()=>{
  const validate=new Ajv({strict:false}).compile(schema),manifest=resolve(process.cwd(),fixture.manifest);

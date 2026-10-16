@@ -1,5 +1,5 @@
 use super::*;
-use crate::preferences::keymap::{Keymap, Scope};
+use dashboard_preferences::keymap::{Keymap, Scope};
 
 fn collect(labels: &DashboardLabels) -> Vec<(&'static str, &'static str)> {
     let mut rows = Vec::new();
@@ -44,7 +44,7 @@ fn the_catalogue_follows_the_chosen_language() {
 #[test]
 fn command_line_messages_follow_the_language_of_the_preference() {
     let root = std::path::Path::new("workspace-without-preferences");
-    let by_flag = |language: &str| labels(crate::preferences::cli_locale(root, &crate::args::parse(&["daemon".to_string(), "--language".to_string(), language.to_string()])));
+    let by_flag = |language: &str| labels(dashboard_preferences::cli_locale(root, &dashboard_core::args::parse(&["daemon".to_string(), "--language".to_string(), language.to_string()])));
     let (english, german) = (by_flag("en"), by_flag("de"));
     assert_eq!(english.cli_daemon_usage.as_str(), "usage: semio daemon start|stop|status|attach|serve");
     assert_eq!(german.cli_daemon_usage.as_str(), "Verwendung: semio daemon start|stop|status|attach|serve");
@@ -56,11 +56,21 @@ fn command_line_messages_follow_the_language_of_the_preference() {
 
 #[test]
 fn every_scenario_of_the_labels_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../../🧪️tests/🌐️labels/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../🧪️tests/🔬️unit/🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/🌐️labels/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../🧪️tests/🔬️unit/🦀️.rs")], &[
         ("Every label is complete in every language with the same placeholders", &["every_label_is_complete_in_every_language_with_the_same_placeholders"]),
         ("Every keymap action has a text in every language", &["every_keymap_action_has_a_text_in_every_language"]),
         ("The catalogue follows the chosen language", &["the_catalogue_follows_the_chosen_language"]),
         ("No visible text is hard-coded outside the catalogue", &["p1_11_no_user_visible_text_is_hard_coded_outside_the_catalogue"]),
         ("The messages of the command line follow the preference", &["command_line_messages_follow_the_language_of_the_preference"]),
     ]);
+}
+
+#[test]
+fn tab_text_keeps_the_verb_and_elides_the_subject_in_the_middle() {
+    let label = TaskLabel { verb: "dev".into(), owner: vec![], subject: "a-very-long-subject-name-indeed".into(), qualifier: "react".into(), parameters: vec![], members: 0 };
+    let text = tab_text(&label, Locale::En, TAB_CELLS);
+    assert!(text.starts_with("dev ") && text.contains('…') && cells(&text) <= TAB_CELLS, "{text}");
+    assert_eq!(tab_text(&TaskLabel { subject: "hub".into(), ..label.clone() }, Locale::En, TAB_CELLS), "dev hub react");
+    assert_eq!(tab_texts(&[&label, &label], Locale::En, TAB_CELLS).iter().filter(|text| text.ends_with(" ·2")).count(), 1);
+    assert_eq!(window_title(&TaskLabel { subject: "hub".into(), owner: vec!["hub".into()], members: 2, parameters: vec![("backend".into(), "pg".into())], ..label }, Locale::De), "entwickeln · hub ×2 · react · backend=pg");
 }

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:native-image-operation-lifetime",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumPendingOperations": 32
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "accepted",
+        "completed",
+        "topOpen",
+        "nestedLive",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "accepted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "topOpen": {
+          "type": "boolean"
+        },
+        "nestedLive": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "accepts",
+            "mustDrain"
+          ],
+          "properties": {
+            "accepts": {
+              "type": "boolean"
+            },
+            "mustDrain": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pending",
+        "topOpen",
+        "nestedLive"
+      ],
+      "properties": {
+        "pending": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 32
+        },
+        "topOpen": {
+          "type": "boolean"
+        },
+        "nestedLive": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

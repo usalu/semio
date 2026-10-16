@@ -177,7 +177,7 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = layerWeightSliderIdsJson)]
     pub fn layer_weight_slider_ids_json(&self, lod_id: &str, render_mode: &str) -> String {
-        gis_map_layer_weight_slider_ids_json(lod_id, render_mode)
+        map_layer_weight_slider_ids_json(self.state.borrow().host.policy(), lod_id, render_mode)
     }
 
     #[wasm_bindgen(js_name = setMapThemeJson)]
@@ -193,11 +193,6 @@ impl MapSession {
     #[wasm_bindgen(js_name = drainEventsJson)]
     pub fn drain_events_json(&mut self) -> String {
         self.state.borrow_mut().host.drain_events_json()
-    }
-
-    #[wasm_bindgen(js_name = positionScreenJson)]
-    pub fn position_screen_json_wasm(&self, id: &str) -> String {
-        self.state.borrow().host.position_screen_json(id)
     }
 
     #[wasm_bindgen(js_name = hitTestFeatureJson)]
@@ -221,7 +216,7 @@ impl MapSession {
     }
 
     /// 🕹️ Replaces the deleted `setSelectionJson`/`setHoverJson` — `granularity` is the domain's active
-    /// granularity (`"position"`|`"route"`), `selectedIdsJson`/`hoveredId` the caller's resolved
+    /// granularity (an overlay layer granularity the policy declares), `selectedIdsJson`/`hoveredId` the caller's resolved
     /// `DomainSelection.ids`/`DomainHover.ids.first()`, read from `InteractionState` at render time.
     #[wasm_bindgen(js_name = syncInteraction)]
     pub fn sync_interaction_wasm(&mut self, granularity: &str, selected_ids_json: &str, hovered_id: Option<String>) -> Result<(), JsValue> {
@@ -278,12 +273,12 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = lodScaleJson)]
     pub fn lod_scale_json_wasm(&self) -> String {
-        gis_map_lod_scale_json()
+        map_lod_scale_json(self.state.borrow().host.policy())
     }
 
     #[wasm_bindgen(js_name = cameraLimitsJson)]
     pub fn camera_limits_json_wasm(&self) -> String {
-        gis_map_camera_limits_json_for_viewport(&self.state.borrow().host.viewport)
+        map_camera_limits_json_for_viewport(&self.state.borrow().host.viewport)
     }
 
     #[wasm_bindgen(js_name = reclampCamera)]

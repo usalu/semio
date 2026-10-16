@@ -1,6 +1,7 @@
 //! 🧪️ Laws of the empty procedure parent vocabulary (design §20.15): content edits are child-lane leaves only.
 
-use super::*;
+use crate::ProcedureSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 
 /// ⚖️ LAW: the parent vocabulary declares no kind and no descriptor, and refuses every operation line and record.
 #[test]

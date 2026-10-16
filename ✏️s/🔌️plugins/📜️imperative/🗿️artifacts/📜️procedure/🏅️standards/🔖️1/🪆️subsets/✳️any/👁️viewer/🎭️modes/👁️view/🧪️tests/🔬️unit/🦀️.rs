@@ -1,4 +1,5 @@
-use super::*;
+use crate::{viewer::procedure::modes::view::windows::main, viewer::procedure::modes::view::windows::script};
+use crate::viewer::procedure::modes::view::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_view_layout_lists_both_read_only_windows() {

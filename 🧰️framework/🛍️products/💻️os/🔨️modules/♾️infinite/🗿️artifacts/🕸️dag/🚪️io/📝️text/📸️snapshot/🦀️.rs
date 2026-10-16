@@ -1,5 +1,5 @@
 //! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+use super::*;
 
 /// 📜️ The actual persisted owner uses its own literal record factories.
 impl pack::snapshot::ArtifactDsl for DagSnapshot {

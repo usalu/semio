@@ -29,18 +29,54 @@
     "sealOwner": "🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs",
     "oldSealOwner": "🎮️mutation/🧵️canonical/🔏️seal/🦀️.rs",
     "borrowedTrees": [
-      "Edit",
-      "MutationMeta",
-      "HybridLogicalTimestamp",
-      "ForeignTarget",
-      "TransactionRef",
-      "MutationId",
-      "ActorId",
-      "ArtifactId",
-      "SchemaId",
-      "PayloadHash",
-      "UndoPolicy",
-      "MutationOrigin"
+      {
+        "type": "Edit",
+        "owner": "🚪️io/📝️text/🧵️canonical/🦀️.rs"
+      },
+      {
+        "type": "MutationMeta",
+        "owner": "🚪️io/📝️text/🧵️canonical/🦀️.rs"
+      },
+      {
+        "type": "HybridLogicalTimestamp",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "ForeignTarget",
+        "owner": "🚪️io/📝️text/🧵️canonical/🌐️foreign/🦀️.rs"
+      },
+      {
+        "type": "TransactionRef",
+        "owner": "🚪️io/📝️text/🧵️canonical/🦀️.rs"
+      },
+      {
+        "type": "MutationId",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "ActorId",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "ArtifactId",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "SchemaId",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "PayloadHash",
+        "owner": "🚪️io/📝️text/🧵️canonical/🆔️ids/🦀️.rs"
+      },
+      {
+        "type": "UndoPolicy",
+        "owner": "🚪️io/📝️text/🧵️canonical/🧾️policy/🦀️.rs"
+      },
+      {
+        "type": "MutationOrigin",
+        "owner": "🚪️io/📝️text/🧵️canonical/🦀️.rs"
+      }
     ]
   },
   "causal": {

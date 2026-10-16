@@ -21,7 +21,7 @@ mod tests {
         assert_eq!(fixture["expectations"]["lateJoinerCatchesUp"], true);
         assert_eq!(fixture["expectations"]["presenceLeaveDropsPeer"], true);
         assert_eq!(fixture["expectations"]["presenceLeaseExpiryStripsA"], true);
-        assert_eq!(fixture["presence"]["leaseTtlMs"], super::super::PRESENCE_LEASE_TTL_MS);
+        assert_eq!(fixture["presence"]["leaseTtlMs"], semio_hub_runtime::presence::PRESENCE_LEASE_TTL_MS);
         assert_eq!(fixture["expectations"]["reconnectDeliversMissedOrRebootstrap"], true);
         assert_eq!(fixture["expectations"]["restartPreservesArtifactAndFrontier"], true);
         assert_eq!(fixture["expectations"]["frontierDocumentIdIsPlainArtifactId"], true);
@@ -31,7 +31,7 @@ mod tests {
         assert_eq!(fixture["agent"]["closeCode"], 4401);
         assert_eq!(fixture["agent"]["refusedStatus"], 401);
         assert!(fixture["agent"]["revocationWithinMs"].as_u64().unwrap_or(u64::MAX) <= 5_000);
-        assert_eq!(fixture["shutdown"]["closeCode"], super::super::HUB_SHUTDOWN_CLOSE_CODE);
-        assert!(fixture["shutdown"]["gracefulExitWithinMs"].as_u64().unwrap_or(0) >= (super::super::SOCKET_DRAIN_DEADLINE + super::super::DATABASE_SHUTDOWN_DEADLINE).as_millis() as u64);
+        assert_eq!(fixture["shutdown"]["closeCode"], semio_hub_runtime::lifecycle::HUB_SHUTDOWN_CLOSE_CODE);
+        assert!(fixture["shutdown"]["gracefulExitWithinMs"].as_u64().unwrap_or(0) >= (semio_hub_runtime::lifecycle::SOCKET_DRAIN_DEADLINE + semio_hub_runtime::lifecycle::DATABASE_SHUTDOWN_DEADLINE).as_millis() as u64);
     }
 }

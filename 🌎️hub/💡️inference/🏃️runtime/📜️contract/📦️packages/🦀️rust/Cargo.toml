@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-inference-runtime-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Inference runtime contract: approval ports, composed-map binding and job vocabulary"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-runtime-contract"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-inference/testkit"]
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-inference = { workspace = true }
+semio-hub-inference-ledger = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-hub-inference-binding = { workspace = true }
+semio-framework-plugin = { workspace = true }
+protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+
+[dev-dependencies]

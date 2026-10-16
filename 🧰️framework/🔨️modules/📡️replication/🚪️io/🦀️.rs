@@ -10,6 +10,3 @@ pub use text::{DiffText, OpText};
 /// 🧬️ Requires both native diff representations.
 pub trait DiffCodec: DiffText + DiffBinary {}
 impl<T: DiffText + DiffBinary> DiffCodec for T {}
-
-#[path = "👥️presence/🔍️borrowed/🦀️.rs"]
-pub mod presence;

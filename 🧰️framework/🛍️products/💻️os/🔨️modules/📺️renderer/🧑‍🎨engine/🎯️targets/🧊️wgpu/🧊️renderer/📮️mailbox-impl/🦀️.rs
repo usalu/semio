@@ -2,7 +2,7 @@
 use super::*;
 
 //#region 📮️RuntimeMailbox
-impl RuntimeMailbox {
+impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// 🏘️ Event closure observes the actual mailbox, checked-out workers and held runtime bodies.
     pub(crate) fn original_event_terminal_is_empty(&self)->bool{
         if !self.0.completions.try_lock().is_ok_and(|queue|queue.len()==0){return false}
@@ -10,11 +10,11 @@ impl RuntimeMailbox {
         if self.0.frame_maintenance.state.load(Ordering::Acquire)!=0||self.0.frame_maintenance_executions.state.load(Ordering::Acquire)!=0||self.0.frame_deferred_executions.state.load(Ordering::Acquire)!=0{return false}
         self.try_lock().is_ok_and(|runtime|{
             #[cfg(not(target_arch="wasm32"))]
-            if runtime.pending_frame_maintenance_refusal.is_some(){return false}
-            runtime.interaction_available()&&runtime.pending_frame_deferred.is_none()
+            if runtime.pending_frame_maintenance_refusal().is_some(){return false}
+            runtime.interaction_available()&&runtime.pending_frame_deferred().is_none()
         })
     }
-    pub(crate) fn new(runtime: AppRuntime) -> Self {
+    pub(crate) fn new(runtime: R) -> Self {
         let presentation_authority = RuntimePresentationAuthority::new();
         let raster_operation_authority = RuntimeRasterOperationAuthority::new();
         #[cfg(not(target_arch = "wasm32"))]
@@ -38,7 +38,7 @@ impl RuntimeMailbox {
             waker: Mutex::new(None),
             next_revision: AtomicU64::new(1),
             applied_revisions: Mutex::new(std::collections::HashMap::new()),
-            frame_inputs: Mutex::new(frame_job::FrameBuildInputs::default()),
+            frame_inputs: Mutex::new(FrameBuildInputs::default()),
             retained_control_deadline_us: AtomicU64::new(u64::MAX),
             shell_clock_deadline_us: AtomicU64::new(u64::MAX),
             frame_fault: Mutex::new(None),
@@ -78,26 +78,45 @@ impl RuntimeMailbox {
         }))
     }
 
-    pub(crate) fn downgrade(&self) -> AppHandle {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn submit_interaction<F, Fut>(runtime: &mut R, handle: &RuntimeHandle<R>, key: Option<&'static str>, work: F) -> bool
+    where
+        F: FnOnce(AppInteractionState) -> Fut,
+        Fut: Future<Output = AppInteractionState> + Send + 'static,
+    {
+        let Some(interaction) = runtime.check_out_interaction("submit-interaction") else { return false };
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+            runtime.return_interaction(interaction);
+            return false;
+        };
+        if !mailbox.reserve_interaction_future() {
+            runtime.return_interaction(interaction);
+            return false;
+        }
+        mailbox.spawn_interaction_reserved(key, work(interaction));
+        true
+    }
+
+    pub(crate) fn downgrade(&self) -> RuntimeHandle<R> {
         Arc::downgrade(&self.0)
     }
 
-    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, AppRuntime>> {
+    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
         self.0.try_lock()
     }
 
     pub(crate) fn publish_hub_document_status(&self, document_key: String, remote: crate::shell::ShellHubRemoteV1) -> bool {
         let Ok(mut runtime) = self.try_lock() else { return false };
-        let Some(interaction) = runtime.interaction.as_mut() else { return false };
-        interaction.shell.publish_hub_document_status(document_key, remote);
+        let Some(interaction) = runtime.interaction_mut() else { return false };
+        interaction.shell.sync.publish_hub_document_status(document_key, remote);
         self.0.presentation_authority.mark_scene_changed();
         true
     }
 
     pub(crate) fn retire_hub_document_status(&self, document_key: &str) -> bool {
         let Ok(mut runtime) = self.try_lock() else { return false };
-        let Some(interaction) = runtime.interaction.as_mut() else { return false };
-        interaction.shell.retire_hub_document_status(document_key);
+        let Some(interaction) = runtime.interaction_mut() else { return false };
+        interaction.shell.sync.retire_hub_document_status(document_key);
         self.0.presentation_authority.mark_scene_changed();
         true
     }
@@ -130,66 +149,14 @@ impl RuntimeMailbox {
         self.0.world_cursor_wake.acknowledge(token)
     }
 
-    fn close_world_cursor_wake_step(&self) -> bool {
+    pub(crate) fn close_world_cursor_wake_step(&self) -> bool {
         self.0.world_cursor_wake.close_step() && self.0.world_cursor_wake.terminal_is_empty()
-    }
-
-    pub(crate) fn close_world3d_dynamic_step(&self,presenter:&mut AppPresenter,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
-        if cx.retirement_should_yield(){return Ok(false)}
-        if !self.close_renderer_asset_step() {
-            return Ok(false);
-        }
-        let Ok(mut runtime) = self.try_lock() else {
-            return Ok(false);
-        };
-        let Some(interaction) = runtime.interaction.as_mut() else {
-            drop(runtime);
-            return Ok(self.close_world_cursor_wake_step());
-        };
-        if !interaction.shell.close_icon_export_step(cx)? {
-            return Ok(false);
-        }
-        if interaction.shell.advance_world3d_retirement_step() {
-            if let Some(fault)=interaction.shell.world3d_retirement_fault() {self.record_frame_fault(&format!("retired terrain owner refused: {fault:?}"));}
-            return Ok(false);
-        }
-        let Ok(mut cursor) = self.0.world3d_close_cursor.try_lock() else {
-            return Ok(false);
-        };
-        let Some(state) = interaction.shell.world3d_states.get_mut_at(*cursor) else {
-            drop(cursor);
-            drop(runtime);
-            return Ok(self.close_world_cursor_wake_step());
-        };
-        if world3d_dynamic_retirement_terminal_is_empty(state) {
-            *cursor += 1;
-            return Ok(false);
-        }
-        if state.dynamic_retirement_is_idle() {
-            begin_world3d_dynamic_retirement(state);
-            return Ok(false);
-        }
-        let terrain_grant=cx.retained_grant();
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,cx);
-        if !terrain.ownership.fits(terrain_grant) {return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"world3d terrain retirement receipt exceeded caller grant").with_retained_progress(terrain.ownership),cx));}
-        cx.consume_retained(terrain.ownership)?;
-        match terrain.step {
-            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
-            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
-            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{self.record_frame_fault(&format!("world3d terrain retirement refused: {fault:?}"));return Ok(false);}
-        }
-        let gpu_return=infinite_world::world::world3d_return_native_mesh_gpu_step(state,cx.retained_grant(),|key,source|presenter.gpu.retire_original_mesh_source_step(key,source)).map_err(|_|semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original World GPU source return refused")))?;
-        cx.consume_retained(gpu_return)?;if gpu_return.copied_items!=0{cx.consume_fuel(1);return Ok(false)}
-        if step_world3d_dynamic_retirement(state, cx) && world3d_dynamic_retirement_terminal_is_empty(state) {
-            *cursor += 1;
-        }
-        Ok(false)
     }
 
     pub(crate) fn close_component_world_step(&self, target: &crate::element_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         let Ok(mut runtime)=self.try_lock() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
-        let Some(interaction)=runtime.interaction.as_mut() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
-        interaction.shell.close_component_world_step(target,grant,context)
+        let Some(interaction)=runtime.interaction_mut() else {return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress::default()));};
+        interaction.shell.surfaces.close_component_world_step(target,grant,context)
     }
 
     pub(crate) fn begin_engine_surface_close(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
@@ -200,7 +167,7 @@ impl RuntimeMailbox {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
-        let Some(interaction) = runtime.interaction.as_mut() else {
+        let Some(interaction) = runtime.interaction_mut() else {
             return false;
         };
         let now = semio_framework_job::default_now_us();
@@ -238,29 +205,29 @@ impl RuntimeMailbox {
             index.and_then(|index| queue.take_at(index).map(|completion| (index, completion)))
         };
         if let Some((index, mut completion)) = returned {
-            let original=completion.apply.close_returned_interaction_step(&mut runtime,cx);completion.restores_interaction=completion.apply.restores_interaction();if !matches!(original,Ok(true)){self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index,completion)}return original.map(|_|false);
+            let original=completion.apply.close_returned_interaction_step(&mut *runtime,cx);completion.restores_interaction=completion.apply.restores_interaction();if !matches!(original,Ok(true)){self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index,completion)}return original.map(|_|false);
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if !runtime.interaction_available() && runtime.pending_frame_deferred.is_none() {
+        if !runtime.interaction_available() && runtime.pending_frame_deferred().is_none() {
             if let Some(mut owner) = self.try_take_abandoned_frame_deferred() {
                 owner.cancel_current();
                 let Some((interaction, cursor)) = owner.take_pair() else { return Ok(false) };
                 runtime.return_interaction(interaction);
-                runtime.pending_frame_deferred = Some(cursor);
+                *runtime.pending_frame_deferred_mut() = Some(cursor);
                 return Ok(false);
             }
         }
-        if let Some(cursor) = runtime.pending_frame_deferred.as_mut() {
+        if let Some(cursor) = runtime.pending_frame_deferred_mut().as_mut() {
             cursor.begin_close();
             if cursor.close_step() {
-                runtime.pending_frame_deferred = None;
+                *runtime.pending_frame_deferred_mut() = None;
             }
             return Ok(false);
         }
-        if !runtime.frame_actions.close_step() {
+        if !runtime.frame_actions_mut().close_step() {
             return Ok(false);
         }
-        let Some(interaction) = runtime.interaction.as_mut() else { return Ok(true) };
+        let Some(interaction) = runtime.interaction_mut() else { return Ok(true) };
         if !interpreter::close_clipboard_io_step(&mut interaction.input,cx)?{return Ok(false)}
         Ok(interaction
             .input
@@ -276,15 +243,16 @@ impl RuntimeMailbox {
             return Some(RendererAssetFetchOwner::Shared(owner));
         }
         let Ok(mut runtime) = self.try_lock() else { return None };
-        let interaction = runtime.interaction.as_mut()?;
+        let interaction = runtime.interaction_mut()?;
         let Ok(mut cursor) = self.0.world3d_asset_cursor.try_lock() else { return None };
-        let Some(surface_id) = interaction.shell.world3d_states.id_at(*cursor).map(str::to_owned) else {
+        let Some(surface_id) = interaction.shell.surfaces.world3d_states.id_at(*cursor).map(str::to_owned) else {
             *cursor = 0;
             return None;
         };
         *cursor += 1;
-        let surface_token = interaction.shell.world3d_states.token(&surface_id)?;
-        let owner = take_next_world3d_asset(interaction.shell.world3d_states.get_token_mut(surface_token)?)?;
+        let surface_token = interaction.shell.surfaces.world3d_states.token(&surface_id)?;
+        let world = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token)?;
+        let owner = take_next_world3d_asset(&mut world.assets)?;
         let surface = WorldAssetMetadataId::try_from_str(&surface_id).ok()?;
         Some(RendererAssetFetchOwner::World { surface, surface_token, owner })
     }
@@ -303,9 +271,9 @@ impl RuntimeMailbox {
             }
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
-                let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
-                match reserve_world3d_asset_response(state, owner, byte_credits) {
+                let Some(interaction) = runtime.interaction_mut() else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
+                match reserve_world3d_asset_response(&mut state.assets, owner, byte_credits) {
                     Ok(()) => RendererAssetSealStep::Granted,
                     Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the response credits"),
                 }
@@ -318,15 +286,16 @@ impl RuntimeMailbox {
             return Some(RendererAssetFetchOwner::Shared(owner));
         }
         let Ok(mut runtime) = self.try_lock() else { return None };
-        let interaction = runtime.interaction.as_mut()?;
+        let interaction = runtime.interaction_mut()?;
         let Ok(mut cursor) = self.0.world3d_asset_decode_cursor.try_lock() else { return None };
-        let Some(surface_id) = interaction.shell.world3d_states.id_at(*cursor).map(str::to_owned) else {
+        let Some(surface_id) = interaction.shell.surfaces.world3d_states.id_at(*cursor).map(str::to_owned) else {
             *cursor = 0;
             return None;
         };
         *cursor += 1;
-        let surface_token = interaction.shell.world3d_states.token(&surface_id)?;
-        let owner = take_next_completed_world3d_asset_step(interaction.shell.world3d_states.get_token_mut(surface_token)?)?;
+        let surface_token = interaction.shell.surfaces.world3d_states.token(&surface_id)?;
+        let world = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token)?;
+        let owner = take_next_completed_world3d_asset_step(&mut world.assets)?;
         let surface = WorldAssetMetadataId::try_from_str(&surface_id).ok()?;
         Some(RendererAssetFetchOwner::World { surface, surface_token, owner })
     }
@@ -343,17 +312,17 @@ impl RuntimeMailbox {
             }
             RendererAssetFetchOwner::World { surface, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                if let Some((_, kind, url)) = rejection.filter(|_| !world3d_asset_cancellation_requested(state, owner.token())) {
+                let Some(interaction) = runtime.interaction_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                if let Some((_, kind, url)) = rejection.filter(|_| !world3d_asset_cancellation_requested(&state.assets, owner.token())) {
                     match kind {
                         WorldAssetRequestKind::Terrain { z, x, y } => {
-                            apply_world3d_terrain_tile_bytes(state, z, x, y, &[]);
+                            apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &[]);
                         }
-                        _ => mark_world3d_asset_miss(state, &url),
+                        _ => mark_world3d_asset_miss(&mut state.assets, &url),
                     }
                 }
-                finish_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
+                finish_world3d_asset(&mut state.assets, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
             }
         }
     }
@@ -430,7 +399,7 @@ impl RuntimeMailbox {
             let cancelled = if let Some(surface_token) = active.surface_token {
                 self.try_lock()
                     .ok()
-                    .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.get_token(surface_token).is_none_or(|state| world3d_asset_cancellation_requested(state, active.request_token))))
+                    .and_then(|runtime| runtime.interaction().map(|interaction| interaction.shell.surfaces.world3d_states.get_token(surface_token).is_none_or(|state| world3d_asset_cancellation_requested(&state.assets, active.request_token))))
                     .unwrap_or(false)
             } else {
                 renderer_asset_io().try_lock().is_ok_and(|authority| authority.cancellation_requested(active.request_token))
@@ -542,8 +511,8 @@ impl RuntimeMailbox {
             };
             let generation_is_live = {
                 let Ok(runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
-                let Some(interaction) = runtime.interaction.as_ref() else { return RendererAssetDecodeTurnKind::Pending };
-                interaction.shell.world3d_states.get_token(surface_token).is_some()
+                let Some(interaction) = runtime.interaction() else { return RendererAssetDecodeTurnKind::Pending };
+                interaction.shell.surfaces.world3d_states.get_token(surface_token).is_some()
             };
             if !generation_is_live {
                 probe.begin_close();
@@ -562,18 +531,18 @@ impl RuntimeMailbox {
                 let Ok(mut runtime) = self.try_lock() else {
                     return RendererAssetDecodeTurnKind::Pending;
                 };
-                let Some(interaction) = runtime.interaction.as_mut() else {
+                let Some(interaction) = runtime.interaction_mut() else {
                     return RendererAssetDecodeTurnKind::Pending;
                 };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                     probe.begin_close();
                     return RendererAssetDecodeTurnKind::Pending;
                 };
-                if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                     probe.begin_close();
                     return RendererAssetDecodeTurnKind::Cancelled;
                 }
-                apply_world3d_terrain_tile_bytes(state, z, x, y, &bytes);
+                apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &bytes);
                 probe.begin_close();
                 return RendererAssetDecodeTurnKind::Published;
             }
@@ -587,35 +556,35 @@ impl RuntimeMailbox {
                         self.restore_staged_reference_image(token, url, lease);
                         return RendererAssetDecodeTurnKind::Pending;
                     };
-                    let Some(interaction) = runtime.interaction.as_mut() else {
+                    let Some(interaction) = runtime.interaction_mut() else {
                         self.restore_staged_reference_image(token, url, lease);
                         return RendererAssetDecodeTurnKind::Pending;
                     };
-                    let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                    let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
                         return RendererAssetDecodeTurnKind::Pending;
                     };
-                    if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                    if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                         probe.begin_close();
                         return RendererAssetDecodeTurnKind::Cancelled;
                     }
-                    let _ = apply_decoded_reference_raster(state, &url, lease);
+                    let _ = apply_decoded_reference_raster(&mut state.session, &mut state.authority, &mut state.scene, &mut state.assets, &url, lease);
                     probe.begin_close();
                     return RendererAssetDecodeTurnKind::Published;
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
                     let Ok(mut runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
-                    let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetDecodeTurnKind::Pending };
-                    let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                    let Some(interaction) = runtime.interaction_mut() else { return RendererAssetDecodeTurnKind::Pending };
+                    let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
                         return RendererAssetDecodeTurnKind::Pending;
                     };
-                    if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                    if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                         probe.begin_close();
                         return RendererAssetDecodeTurnKind::Cancelled;
                     }
-                    mark_world3d_asset_miss(state, &url);
+                    mark_world3d_asset_miss(&mut state.assets, &url);
                     probe.begin_close();
                     return RendererAssetDecodeTurnKind::Published;
                 }
@@ -629,21 +598,21 @@ impl RuntimeMailbox {
                 probe.restore_ready_mesh_asset(asset);
                 return RendererAssetDecodeTurnKind::Pending;
             };
-            let Some(interaction) = runtime.interaction.as_mut() else {
+            let Some(interaction) = runtime.interaction_mut() else {
                 probe.restore_ready_mesh_asset(asset);
                 return RendererAssetDecodeTurnKind::Pending;
             };
-            let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+            let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                 probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
                 return RendererAssetDecodeTurnKind::Pending;
             };
-            if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+            if world3d_asset_cancellation_requested(&state.assets, probe.owner().owner().token()) {
                 probe.restore_ready_mesh_asset(asset);
                 probe.begin_close();
                 return RendererAssetDecodeTurnKind::Cancelled;
             }
-            match publish_world3d_asset_mesh(state, probe.owner().url(), asset) {
+            match publish_world3d_asset_mesh(&mut state.session, &mut state.interaction, &mut state.scene, &mut state.assets, probe.owner().url(), asset) {
                 Ok(()) => {
                     log_debug_diagnostic(&format!("[TRACE] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
@@ -701,9 +670,9 @@ impl RuntimeMailbox {
             RendererAssetFetchOwner::Shared(owner) => return_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
             RendererAssetFetchOwner::World { surface, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                return_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
+                let Some(interaction) = runtime.interaction_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                return_world3d_asset(&mut state.assets, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
             }
         }
     }
@@ -732,9 +701,9 @@ impl RuntimeMailbox {
             }
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.0.runtime.try_lock() else { return RendererAssetSealStep::Busy };
-                let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
-                match seal_world3d_asset_response(state, owner) {
+                let Some(interaction) = runtime.interaction_mut() else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
+                match seal_world3d_asset_response(&mut state.assets, owner) {
                     Ok(()) => RendererAssetSealStep::Granted,
                     Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the seal witness"),
                 }
@@ -763,10 +732,10 @@ impl RuntimeMailbox {
         }
         let surface_token = {
             let Ok(mut runtime) = self.try_lock() else { return false };
-            let Some(interaction) = runtime.interaction.as_mut() else { return false };
-            let Some(token) = interaction.shell.world3d_states.token(&target.host_id) else { return true };
-            let Some(state) = interaction.shell.world3d_states.get_token_mut(token) else { return false };
-            infinite_world::world::begin_world3d_asset_close(state);
+            let Some(interaction) = runtime.interaction_mut() else { return false };
+            let Some(token) = interaction.shell.surfaces.world3d_states.token(&target.host_id) else { return true };
+            let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(token) else { return false };
+            infinite_world::world::begin_world3d_asset_close(&mut state.assets);
             token
         };
         #[cfg(not(target_arch = "wasm32"))]
@@ -805,9 +774,9 @@ impl RuntimeMailbox {
         }
         drop(probe_slot);
         let Ok(mut runtime) = self.try_lock() else { return false };
-        let Some(interaction) = runtime.interaction.as_mut() else { return false };
-        let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return false };
-        infinite_world::world::close_world3d_asset_step(state)
+        let Some(interaction) = runtime.interaction_mut() else { return false };
+        let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else { return false };
+        infinite_world::world::close_world3d_asset_step(&mut state.assets)
     }
 
     pub(crate) fn close_renderer_asset_step(&self) -> bool {
@@ -842,8 +811,8 @@ impl RuntimeMailbox {
             RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().try_lock().ok().map(|authority| !authority.cancellation_requested(owner.token())),
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(runtime) = self.try_lock() else { return None };
-                let interaction = runtime.interaction.as_ref()?;
-                Some(interaction.shell.world3d_states.get_token(*surface_token).is_some_and(|state| !world3d_asset_cancellation_requested(state, owner.token())))
+                let interaction = runtime.interaction()?;
+                Some(interaction.shell.surfaces.world3d_states.get_token(*surface_token).is_some_and(|state| !world3d_asset_cancellation_requested(&state.assets, owner.token())))
             }
         }
     }
@@ -860,10 +829,10 @@ impl RuntimeMailbox {
         match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_mut() else { return false };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return true };
-                if !world3d_asset_cancellation_requested(state, owner.token()) {
-                    mark_world3d_asset_miss(state, owner.url());
+                let Some(interaction) = runtime.interaction_mut() else { return false };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else { return true };
+                if !world3d_asset_cancellation_requested(&state.assets, owner.token()) {
+                    mark_world3d_asset_miss(&mut state.assets, owner.url());
                 }
             }
             RendererAssetFetchOwner::Shared(owner) => {
@@ -997,11 +966,11 @@ impl RuntimeMailbox {
                     job.restore_output(output);
                     return RendererAssetDecodeTurnKind::Pending;
                 };
-                let Some(interaction) = runtime.interaction.as_mut() else {
+                let Some(interaction) = runtime.interaction_mut() else {
                     job.restore_output(output);
                     return RendererAssetDecodeTurnKind::Pending;
                 };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(surface_token) else {
                     drop(runtime);
                     job.restore_output(output);
                     job.cancel();
@@ -1012,10 +981,10 @@ impl RuntimeMailbox {
                     return RendererAssetDecodeTurnKind::Pending;
                 };
                 let cancelled = job.cancelled.load(Ordering::Acquire);
-                let stale = !world3d_reference_url_is_current(state, &url);
+                let stale = !world3d_reference_url_is_current(&state.scene, &url);
                 if cancelled || stale {
                     if stale && !cancelled {
-                        mark_world3d_asset_miss(state, &url);
+                        mark_world3d_asset_miss(&mut state.assets, &url);
                     }
                     drop(runtime);
                     job.restore_output(output);
@@ -1028,9 +997,9 @@ impl RuntimeMailbox {
                 }
                 match output {
                     NativeReferenceDecodeOutput::Ready(lease) => {
-                        let _ = apply_decoded_reference_raster(state, &url, lease);
+                        let _ = apply_decoded_reference_raster(&mut state.session, &mut state.authority, &mut state.scene, &mut state.assets, &url, lease);
                     }
-                    NativeReferenceDecodeOutput::Failed => mark_world3d_asset_miss(state, &url),
+                    NativeReferenceDecodeOutput::Failed => mark_world3d_asset_miss(&mut state.assets, &url),
                     NativeReferenceDecodeOutput::Waiting(_) => unreachable!("waiting decode was rearmed above"),
                 }
                 drop(runtime);
@@ -1134,7 +1103,7 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard {
+    pub(crate) fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard<R> {
         let surface_token = match fetch {
             RendererAssetFetchOwner::World { surface: _, surface_token, owner: _ } => Some(*surface_token),
             RendererAssetFetchOwner::Shared(_) => None,
@@ -1279,7 +1248,7 @@ impl RuntimeMailbox {
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn has_pending_text_work(&self) -> bool {
-        self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
+        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(AppInteractionState::has_pending_text_work)).unwrap_or(false)
     }
 
     /// 🌍️ Whether any World3d surface still owes its own frame.
@@ -1299,7 +1268,7 @@ impl RuntimeMailbox {
         self.try_lock()
             .ok()
             .and_then(|runtime| {
-                runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(|state| infinite_world::world::world3d_cursor_work_pending(state) || infinite_world::world::world3d_brush_mesh_announce_pending(state)))
+                runtime.interaction().map(|interaction| interaction.shell.surfaces.world3d_states.values().any(|state| infinite_world::world::world3d_cursor_work_pending(state) || infinite_world::world::world3d_brush_mesh_announce_pending(&state.scene, &state.assets)))
             })
             .unwrap_or(false)
     }
@@ -1315,7 +1284,7 @@ impl RuntimeMailbox {
         if renderer_asset_io().try_lock().map_or(true, |authority| authority.has_completed_step()) {
             return true;
         }
-        self.try_lock().map_or(true, |runtime| runtime.interaction.as_ref().is_some_and(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_asset_decode_pending)))
+        self.try_lock().map_or(true, |runtime| runtime.interaction().is_some_and(|interaction| interaction.shell.surfaces.world3d_states.values().any(|world| infinite_world::world::world3d_asset_decode_pending(&world.assets))))
     }
 
     /// 🫀️ Whether the shell's settle lane still owes a step — the per-frame predicate that keeps an
@@ -1332,12 +1301,12 @@ impl RuntimeMailbox {
     /// [`Self::has_pending_applies`] already owes the frame.
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn has_pending_settle(&self) -> bool {
-        self.try_lock().ok().and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.settle_pump_pending())).unwrap_or(false)
+        self.try_lock().ok().and_then(|runtime| runtime.interaction().map(|interaction| crate::shell::PointerCtx::of(&mut interaction.shell).settle_pump_pending())).unwrap_or(false)
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn take_text_fault(&self) -> Option<String> {
-        self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
+        self.try_lock().ok()?.interaction_mut()?.text_fault.take()
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -1345,7 +1314,7 @@ impl RuntimeMailbox {
         if let Some(fault) = self.0.frame_fault.lock().expect("runtime frame fault lock").take() {
             return Some(fault);
         }
-        self.try_lock().ok()?.interaction.as_mut()?.frame_fault.take()
+        self.try_lock().ok()?.interaction_mut()?.frame_fault.take()
     }
 
     pub(crate) fn record_frame_fault(&self, fault: &'static str) {
@@ -1356,7 +1325,7 @@ impl RuntimeMailbox {
         }
     }
 
-    pub(crate) fn frame_inputs(&self, now_ms: f64) -> frame_job::FrameBuildInputs {
+    pub(crate) fn frame_inputs(&self, now_ms: f64) -> FrameBuildInputs {
         let mut inputs = self.0.frame_inputs.try_lock().map(|inputs| inputs.clone()).unwrap_or_default();
         inputs.now_ms = now_ms;
         inputs
@@ -1381,11 +1350,11 @@ impl RuntimeMailbox {
         crate::deadlines::retained_control_deadline(self.control_deadline_us(), semio_framework_job::default_now_us(), host_seconds)
     }
 
-    pub(crate) fn update_frame_inputs(&self, runtime: &AppRuntime) {
-        if !runtime.interaction_available() {
+    pub(crate) fn update_frame_inputs(&self, runtime: &R) {
+        let Some(interaction) = runtime.interaction() else {
             return;
-        }
-        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = frame_job::FrameBuildInputs { wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
+        };
+        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = FrameBuildInputs { wheel_zoom_deadline_ms: interaction.wheel_zoom_deadline_ms, now_ms: app_now_ms() };
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -1461,7 +1430,7 @@ impl RuntimeMailbox {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    interaction.shell.pump_sync_events().await;
+                    crate::shell::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if action.cancelled {
@@ -1471,7 +1440,7 @@ impl RuntimeMailbox {
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
                         let result = {
                             let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                            interaction.shell.dispatch_gesture_action(action.descriptor).await
+                            crate::shell::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await
                         };
                         match result {
                             Ok(()) => receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Accepted),
@@ -1485,7 +1454,7 @@ impl RuntimeMailbox {
                                 }
                                 if let Some(interaction) = owner.interaction.as_mut() {
                                     log_debug(&format!("[TRACE] frame deferred action failed: {error}"));
-                                    interaction.shell.note_dispatch_fault(&error);
+                                    interaction.shell.prefs.note_dispatch_fault(&error, &mut interaction.shell.chrome);
                                 }
                             }
                         }
@@ -1493,11 +1462,11 @@ impl RuntimeMailbox {
                 }
                 FrameDeferredWork::FlushTutorial => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    interaction.shell.tutorial_flush_pending_document_ops().await;
+                    crate::shell::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await;
                 }
                 FrameDeferredWork::Settle => {
                     let Some(interaction) = execution.owner_mut().and_then(|owner| owner.interaction.as_mut()) else { return };
-                    interaction.shell.settle_pump_step().await;
+                    crate::shell::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
                 }
             }
             if !execution.finish() {
@@ -1548,7 +1517,7 @@ impl RuntimeMailbox {
                     cursor.begin_close();
                     interaction.frame_fault = Some(fault.to_string());
                 } else {
-                    cursor.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
+                    cursor.shell_maintenance = crate::shell::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor.shell_maintenance {
                         cursor.phase = 0;
                     }

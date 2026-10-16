@@ -434,8 +434,6 @@ impl Default for Mp4Snapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 //#endregion 🔖️Tests

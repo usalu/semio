@@ -10,11 +10,11 @@ fn hex(value: &str) -> Vec<u8> {
 }
 
 async fn actual_bytes(fixture: &serde_json::Value) -> Vec<u8> {
-    let options = super::super::WriteOptions { required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: crate::OPTIONAL_CANONICAL };
+    let options = super::super::WriteOptions { required_flags: semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN, optional_flags: semio_framework_replication_wire_core::OPTIONAL_CANONICAL };
     let mut writer = super::super::SprWriter::begin(Vec::new(), &options).await.unwrap();
     for commit in fixture["commits"].as_array().unwrap() {
         for record in commit["records"].as_array().unwrap() {
-            writer.write_record(record["kind"].as_u64().unwrap() as u8, true, &hex(record["payloadHex"].as_str().unwrap()), crate::codec::ids::CodecId(0)).await.unwrap();
+            writer.write_record(record["kind"].as_u64().unwrap() as u8, true, &hex(record["payloadHex"].as_str().unwrap()), semio_framework_replication_codec::CodecId(0)).await.unwrap();
         }
         assert_eq!(writer.commit().await.unwrap(), commit["offset"].as_u64().unwrap());
         assert_eq!(writer.position().await, commit["end"].as_u64().unwrap());
@@ -50,7 +50,7 @@ async fn retained_spr_resume_preserves_exact_prefix_and_commit_chain() {
         let previous_chain = *span.chain();
         let mut writer = super::super::SprWriter::resume_verified(bytes[..end].to_vec(), span).await.unwrap();
         assert_eq!(writer.position().await, end as u64);
-        writer.write_record(record["kind"].as_u64().unwrap() as u8, true, &hex(record["payloadHex"].as_str().unwrap()), crate::codec::ids::CodecId(0)).await.unwrap();
+        writer.write_record(record["kind"].as_u64().unwrap() as u8, true, &hex(record["payloadHex"].as_str().unwrap()), semio_framework_replication_codec::CodecId(0)).await.unwrap();
         let offset = writer.commit().await.unwrap() as usize;
         let resumed = writer.into_sink().await;
         assert_eq!(&resumed[..end], &bytes[..end]);
@@ -85,9 +85,9 @@ async fn verify_compressed_fixture(fixture: &serde_json::Value) {
         let mut body = vec![kind, flags];
         body.extend_from_slice(payload);
         let mut bytes = Vec::new();
-        crate::codec::write_varint_u64(&mut bytes, body.len() as u64);
+        semio_framework_replication_codec::write_varint_u64(&mut bytes, body.len() as u64);
         bytes.extend_from_slice(&body);
-        bytes.extend_from_slice(&crate::codec::crc32c(&body).to_le_bytes());
+        bytes.extend_from_slice(&semio_framework_replication_codec::crc32c(&body).to_le_bytes());
         let length = bytes.len() as u32 + 4;
         bytes.extend_from_slice(&length.to_le_bytes());
         bytes
@@ -109,7 +109,7 @@ async fn verify_compressed_fixture(fixture: &serde_json::Value) {
         commit[32..].copy_from_slice(chain.finalize().as_bytes());
         let mut bytes = header.clone();
         bytes.extend_from_slice(&record);
-        bytes.extend_from_slice(&frame(crate::REC_COMMIT, crate::wire::FRAME_FLAG_CRITICAL, &commit));
+        bytes.extend_from_slice(&frame(semio_framework_replication_wire_core::REC_COMMIT, semio_framework_replication_wire_core::FRAME_FLAG_CRITICAL, &commit));
         for grant in [1, 7, 4096] {
             let result = scan(&bytes, grant, RetainedSprLimits::default());
             match row["error"].as_str() {
@@ -202,7 +202,7 @@ async fn retained_spr_verification_rejects_hostile_frames_without_publication() 
                         "second-commit-xor" => (181, 247),
                         _ => (92, 158),
                     };
-                    let crc = crate::codec::crc32c(&mutated[start..end]);
+                    let crc = semio_framework_replication_codec::crc32c(&mutated[start..end]);
                     mutated[end..end + 4].copy_from_slice(&crc.to_le_bytes());
                 }
             }

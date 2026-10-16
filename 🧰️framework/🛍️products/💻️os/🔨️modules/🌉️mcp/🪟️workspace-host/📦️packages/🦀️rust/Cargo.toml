@@ -1,0 +1,54 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-workspace"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The headless workspace and its gateway backend."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-workspace"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" }
+semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
+semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-framework-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-framework-os-mcp-probe-document = { path = "../../../🔬️probe-document/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../../⚙️plugin-runtime/📦️packages/🦀️rust" }
+semio-framework-os-mcp-inference-hub = { path = "../../../🌐️inference-hub/📦️packages/🦀️rust" }
+semio-framework-os-mcp-hub-remote = { path = "../../../🌍️hub-remote/📦️packages/🦀️rust" }
+semio-framework-os-mcp-shell-channel = { path = "../../../🎛️shell-channel/📦️packages/🦀️rust" }
+semio-framework-os-mcp-routing = { path = "../../../🧲️channel-routing/📦️packages/🦀️rust" }
+semio-framework-os-mcp-dispatch = { path = "../../../🪝️action-dispatch/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+
+[dev-dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-os-mcp-capabilities = { path = "../../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-framework-os-mcp-routing = { path = "../../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }

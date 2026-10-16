@@ -1,48 +1,40 @@
 //! 📤️ Frame-pumped icon export batches with request-owned cleanup before delivery.
-use super::{present_media_export_bytes_cancellable, shell_chrome_string, ShellDetached, ShellState};
+use super::*;
 use crate::scenes::icon_export::{asset::IconExportAssetRequest, IconExportFault, IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected, IconGpuPngExport, IconGpuPngRejected, IconSvgExport, IconSvgRejected};
 use semio_framework::kernel::IconRenderExportItem;
 use semio_framework_async::CancelToken;
 use std::collections::LinkedList;
-use ui_wgpu::wgpu::GpuContext;
+use ui_gpu::GpuContext;
 
 pub(super) const CONTROL_ID: &str = "shell.icon-export.cancel";
 
-struct IconExportItems {
-    items: std::vec::IntoIter<IconRenderExportItem>,
-    cancel: CancelToken,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Phase { Next, Load, Prepare, Device, Render, Vector, Retire, Save, Complete, Cancelled, Failed }
-
 pub(super) struct IconExportBatch {
-    items: LinkedList<IconExportItems>,
-    total: usize,
-    completed: usize,
-    failed: usize,
-    discarded: usize,
-    current: usize,
-    filename: String,
-    request: String,
-    format: IconExportFormat,
-    phase: Phase,
-    asset: Option<IconExportAssetRequest>,
+    pub(super) items: LinkedList<IconExportItems>,
+    pub(super) total: usize,
+    pub(super) completed: usize,
+    pub(super) failed: usize,
+    pub(super) discarded: usize,
+    pub(super) current: usize,
+    pub(super) filename: String,
+    pub(super) request: String,
+    pub(super) format: IconExportFormat,
+    pub(super) phase: Phase,
+    pub(super) asset: Option<IconExportAssetRequest>,
     preparing: Option<Box<IconExportScenePreparation>>,
     scene_rejected: Option<IconExportSceneRejected>,
-    scene: Option<Box<IconExportPreparedScene>>,
+    pub(super) scene: Option<Box<IconExportPreparedScene>>,
     initializing: Option<ShellDetached<Result<GpuContext, String>>>,
-    source: Option<Box<GpuContext>>,
-    rendering: Option<Box<IconGpuPngExport>>,
+    pub(super) source: Option<Box<GpuContext>>,
+    pub(super) rendering: Option<Box<IconGpuPngExport>>,
     gpu_rejected: Option<IconGpuPngRejected>,
-    vector: Option<IconSvgExport>,
+    pub(super) vector: Option<IconSvgExport>,
     vector_rejected: Option<IconSvgRejected>,
     saving: Option<ShellDetached<Result<bool, String>>>,
-    bytes: Option<Vec<u8>>,
+    pub(super) bytes: Option<Vec<u8>>,
     item_fault: Option<IconExportFault>,
     last_fault: Option<IconExportFault>,
-    cancelled: bool,
-    cancel: CancelToken,
+    pub(super) cancelled: bool,
+    pub(super) cancel: CancelToken,
     admission_cancel: CancelToken,
 }
 
@@ -81,7 +73,7 @@ impl IconExportBatch {
     fn fail(&mut self, fault: impl Into<IconExportFault>) {
         let fault=fault.into();
         if self.item_fault.is_none() {
-            ShellState::debug_log(&format!("[TRACE] wgpu icon export refused name={} reason={fault}", self.filename));
+            debug_log(&format!("[TRACE] wgpu icon export refused name={} reason={fault}", self.filename));
             self.item_fault = Some(fault.into());
         }
         self.bytes = None;
@@ -158,7 +150,7 @@ impl IconExportBatch {
                 match answer {
                     Ok(true) => {
                         self.completed += 1;
-                        ShellState::debug_log(&format!("[TRACE] wgpu icon export delivered name={} completed={}/{}", self.filename, self.completed, self.total));
+                        debug_log(&format!("[TRACE] wgpu icon export delivered name={} completed={}/{}", self.filename, self.completed, self.total));
                     }
                     Ok(false) => self.cancel(),
                     Err(fault) => { self.item_fault = Some(fault.into()); }
@@ -170,7 +162,7 @@ impl IconExportBatch {
         Ok(())
     }
 
-    fn next(&mut self) {
+    pub(super) fn next(&mut self) {
         let Some(group) = self.items.front_mut() else {
             self.source = None;
             self.phase = if self.cancelled { Phase::Cancelled } else if self.failed > 0 { Phase::Failed } else { Phase::Complete };
@@ -216,7 +208,7 @@ impl IconExportBatch {
         }
     }
 
-    fn retire(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    pub(super) fn retire(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         if let Some(vector) = self.vector.as_mut() {
             if !vector.close_step() { return Ok(false); }
             self.vector = None;
@@ -312,7 +304,7 @@ impl IconExportBatch {
             && self.gpu_rejected.is_none() && self.vector.is_none() && self.vector_rejected.is_none() && self.saving.is_none() && self.bytes.is_none()
     }
 
-    fn mime(&self) -> &'static str {
+    pub(super) fn mime(&self) -> &'static str {
         match self.format { IconExportFormat::Png => "image/png", IconExportFormat::Svg => "image/svg+xml" }
     }
 
@@ -352,89 +344,6 @@ impl IconExportBatch {
     pub(super) fn counts(&self) -> (usize, usize) { (self.completed + self.failed + self.discarded, self.total) }
 }
 
-
-impl ShellState {
-    pub(super) fn enqueue_icon_export(&mut self, items: Vec<IconRenderExportItem>) {
-        if items.is_empty() { return; }
-        if let Some(batch) = self.icon_export.as_mut().filter(|batch| batch.running()) {
-            batch.append(items);
-        } else {
-            self.icon_export = Some(IconExportBatch::new(items));
-        }
-    }
-
-    pub(super) fn advance_icon_export(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
-        if let Some(batch) = self.icon_export.as_mut().filter(|batch| batch.running()) {
-            let started = super::chrome_now_ms();
-            for _ in 0..32 {
-                batch.advance(cx)?;
-                if cx.should_yield() || !batch.running() || super::chrome_now_ms() - started >= 2.0 { break; }
-            }
-        }
-        Ok(())
-    }
-
-    pub(super) fn cancel_icon_export(&mut self) {
-        if let Some(batch) = self.icon_export.as_mut() {
-            if batch.running() { batch.cancel(); } else { self.icon_export = None; }
-        }
-    }
-
-    pub(crate) fn close_icon_export_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
-        let Some(batch) = self.icon_export.as_mut() else { return Ok(true) };
-        batch.cancel();
-        batch.advance(cx)?;
-        if !batch.terminal_is_empty() { return Ok(false); }
-        self.icon_export = None;
-        Ok(true)
-    }
-
-    pub(super) fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, input: &mut ui_wgpu::wgpu::InputState<ui_wgpu::wgpu::ActionDescriptor>, theme: &ui_wgpu::wgpu::Theme, width: f32) -> bool {
-        let Some(batch) = self.icon_export.as_ref() else { return true };
-        let is_de = self.locale_id == "de";
-        let action_label = shell_chrome_string(if batch.running() { "icon.export.cancel" } else { "common.close" }, is_de);
-        let message = batch.message(is_de);
-        let severity = if batch.phase == Phase::Failed { semio_framework::Severity::Error } else { semio_framework::Severity::Info };
-        let (border, fill, text) = super::transient_notice_tone(severity, theme);
-        let mut band = super::document_opening_rect(&message, action_label, width, theme);
-        band.y += band.h + super::PLUGIN_INSTALL_TOP_GAP;
-        let action = super::plugin_install_action_rect(band, action_label, theme);
-        let hair = theme.stroke_hairline;
-        match cursor.scalar {
-            0 => overlay.push_rounded([band.x, band.y, band.w, band.h], fill, theme.border_radius),
-            1..=4 => {
-                let edge = match cursor.scalar {
-                    1 => [band.x, band.y, band.w, hair],
-                    2 => [band.x, band.y + band.h - hair, band.w, hair],
-                    3 => [band.x, band.y, hair, band.h],
-                    _ => [band.x + band.w - hair, band.y, hair, band.h],
-                };
-                overlay.push_solid(edge, border);
-            }
-            5 | 6 => {
-                let (value, x, max_width) = if cursor.scalar == 5 {
-                    (message.as_str(), band.x + theme.padding_standard, (action.x - band.x - theme.padding_standard * 2.0).max(1.0))
-                } else { (action_label, action.x, action.w.max(1.0)) };
-                let baseline = band.y + (band.h + theme.font_size_small) * 0.5 - 1.0;
-                match super::chrome_text_complete_step(overlay, atlas, value, x, baseline, max_width, theme.font_size_small, text, &mut cursor.glyph) {
-                    Ok(false) => return false,
-                    Ok(true) => {}
-                    Err(()) => cursor.glyph.reset(),
-                }
-            }
-            7 => {
-                super::note_chrome_control_name(CONTROL_ID, Some(action_label));
-                input.register_hit(ui_wgpu::wgpu::HitTarget { rect: action, event: None, control_id: Some(CONTROL_ID.into()), kind: ui_wgpu::wgpu::HitKind::Button, drag_axis: None, drag_data: None });
-            }
-            8 => {
-                if self.chrome_build.clicked_this_frame && action.contains(input.pointer_x, input.pointer_y) { self.cancel_icon_export(); }
-            }
-            _ => return true,
-        }
-        cursor.scalar += 1;
-        false
-    }
-}
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../../🖼️IconRenderHost/🧪️tests/📤️export-batch/🦀️.rs"]

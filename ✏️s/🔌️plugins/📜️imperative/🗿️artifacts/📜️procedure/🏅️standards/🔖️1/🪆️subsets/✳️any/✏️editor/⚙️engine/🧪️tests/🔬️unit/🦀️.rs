@@ -1,4 +1,5 @@
-use super::*;
+use crate::PathRef;
+use crate::editor::procedure::engine::*;
 
 /// 🎬️ A host over the bundled demo program (two steps, empty seed) — the composed scene a fresh demo document reads.
 fn demo_host() -> ImperativeHost {

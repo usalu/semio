@@ -16,7 +16,7 @@ type Fixture = {
   laws: string[];
   fixture: { path: string; digest: string };
   closure: ClosureRow[];
-  paths: { entry: string; manifest: string; neutralTests: string };
+  paths: { entry: string; manifest: string; facadeManifest: string; neutralTests: string };
 };
 
 const root = resolve(import.meta.dir, "../../../../../../../.."), owner = "🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress", digest = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -58,19 +58,24 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
     for (const constant of ownerAst.namedChildren.filter(node => node.type === "const_item" && fixture.exports.constants.includes(node.childForFieldName("name")!.text))) expect(tokens(constant.childForFieldName("value")!)).toBe(fixture.bounds[constant.childForFieldName("name")!.text]);
     const entryAst = ast(fixture.paths.entry);
     expect(entryAst.hasError()).toBe(false);
-    const mounts = nodes(entryAst).filter(node => node.type === "mod_item" && node.childForFieldName("name")?.text === "command_ingress");
+    const wires = nodes(entryAst).filter(node => node.type === "mod_item" && node.childForFieldName("name")?.text === "wire");
+    expect(wires).toHaveLength(1);
+    executable(wires[0]!);
+    expect(wires[0]!.namedChildren.some(node => node.type === "visibility_modifier" && node.text === "pub")).toBe(true);
+    const mounts = nodes(wires[0]!).filter(node => node.type === "mod_item" && node.childForFieldName("name")?.text === "command_ingress");
     expect(mounts).toHaveLength(1);
     executable(mounts[0]!);
     expect(mounts[0]!.namedChildren.some(node => node.type === "visibility_modifier" && node.text === "pub")).toBe(true);
-    expect(mounts[0]!.parent?.parent?.childForFieldName("name")?.text).toBe("wire");
-    expect(attributes(mounts[0]!).map(attribute => attribute.namedChildren[0]!.text)).toEqual(["path"]);
-    expect(modulePath(mounts[0]!)).toBe("../../📡️wire/🎮️command/📥️ingress/🦀️.rs");
-    const facades = nodes(entryAst).filter(node => node.type === "use_declaration" && tokens(node.childForFieldName("argument")!.childForFieldName("path") ?? node) === "wire::command_ingress");
-    expect(facades).toHaveLength(1);
-    executable(facades[0]!);
-    expect(facades[0]!.namedChildren.some(node => node.type === "visibility_modifier" && node.text === "pub")).toBe(true);
-    expect(attributes(facades[0]!)).toEqual([]);
-    expect(facades[0]!.childForFieldName("argument")!.childForFieldName("list")!.namedChildren.map(node => node.text)).toEqual([...fixture.exports.types, ...fixture.exports.constants]);
+    expect(attributes(mounts[0]!)).toEqual([]);
+    const facades = nodes(entryAst).filter(node => node.type === "use_declaration" && tokens(node.childForFieldName("argument")!.childForFieldName("path") ?? node) === "semio_framework_replication_command_ingress");
+    expect(facades).toHaveLength(2);
+    expect(facades.filter(node => { for (let parent = node.parent; parent; parent = parent.parent) if (parent.id === mounts[0]!.id) return true; return false; })).toHaveLength(1);
+    for (const facade of facades) {
+      executable(facade);
+      expect(facade.namedChildren.some(node => node.type === "visibility_modifier" && node.text === "pub")).toBe(true);
+      expect(attributes(facade)).toEqual([]);
+      expect(facade.childForFieldName("argument")!.childForFieldName("list")!.namedChildren.map(node => node.text).sort()).toEqual([...fixture.exports.types, ...fixture.exports.constants].sort());
+    }
     const testMounts = ownerAst.namedChildren.filter(node => node.type === "mod_item" && node.childForFieldName("name")?.text === "unit_tests");
     expect(testMounts).toHaveLength(1);
     expect(modulePath(testMounts[0]!)).toBe("🧪️tests/🔬️unit/🦀️.rs");
@@ -95,7 +100,9 @@ export async function inspectPagedCommandIngressOwnership(repository: string, re
     expect([...closure.values()].sort((a, b) => a.manifest.localeCompare(b.manifest))).toEqual(fixture.closure);
     expect([...closure.values()].filter(row => !row.manifest.startsWith("🧰️framework/🔨️modules/"))).toEqual([]);
     expect(workspace.workspace.members).toContain(dirname(fixture.paths.manifest));
-    expect(manifest(fixture.paths.manifest).lib.name).toBe("protocol");
+    expect(manifest(fixture.paths.manifest).package.name).toBe("semio-framework-replication-command-ingress");
+    expect(resolve(repository, dirname(fixture.paths.manifest), manifest(fixture.paths.manifest).lib.path)).toBe(resolve(repository, owner, "🦀️.rs"));
+    expect(manifest(fixture.paths.facadeManifest).dependencies["semio-framework-replication-command-ingress"]).toBeDefined();
     const lawAst = ast(fixture.paths.neutralTests);
     expect(lawAst.hasError()).toBe(false);
     const functions = nodes(lawAst).filter(node => node.type === "function_item"), laws = functions.filter(node => fixture.laws.includes(node.childForFieldName("name")?.text ?? ""));
@@ -146,7 +153,7 @@ test("canonical package membership and executable routes retain the complete nat
     expect(inputs.filter(value => value.includes("🛍️products/") || value.includes("🔨️modules/🎠️kernel/") || value.includes("🧰️framework/📦️packages/"))).toEqual([]);
   }
   expect(script).toContain('extraArgs:["--lib","--no-fail-fast"]');
-  expect(script).toContain('packages:["semio-framework-replication"]');
+  expect(script).toContain('packages:["semio-framework-replication-command-ingress"]');
   expect(script).toContain('if(rest.length)throw Error("test-command-ingress-native accepts only an execution level")');
 });
 
@@ -157,14 +164,14 @@ test("schema-authored source witnesses admit private evolution and reject public
     if (row.id === "private-extension") changes.set(componentPath, component + "\nfn ownership_private_extension(value: usize) -> usize { value }\n");
     else if (row.id === "formatting") {
       for (const path of [componentPath, fixture.paths.entry, fixture.paths.neutralTests]) changes.set(path, readFileSync(join(root, path), "utf8").replaceAll("#[path =", "#[ path  =").replaceAll("#[test]", "#[ test ]").replaceAll("pub mod command_ingress;", "pub  mod\n command_ingress ;").replaceAll("mod unit_tests;", "mod\n unit_tests ;"));
-    } else if (row.id === "public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("../../📡️wire/🎮️command/📥️ingress/🦀️.rs", "../../../../🛍️products/💻️os/🦀️.rs"));
+    } else if (row.id === "public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("semio_framework_replication_command_ingress", "semio_framework_os_hostile"));
     else if (row.id === "public-type") changes.set(componentPath, component.replace("pub struct FixedCommandPage", "pub struct UnownedCommandPage"));
     else if (row.id === "constant") changes.set(componentPath, component.replace("usize = 4_096", "usize = 8_192"));
     else if (row.id === "missing-law") changes.set(fixture.paths.neutralTests, readFileSync(join(root, fixture.paths.neutralTests), "utf8").replace("fn " + fixture.laws[0] + "(", "fn absent_native_ownership_law("));
     else if (row.id === "disabled-law") changes.set(fixture.paths.neutralTests, readFileSync(join(root, fixture.paths.neutralTests), "utf8").replace("#[test]", "#[test]\n#[cfg(any())]"));
     else if (row.id === "disabled-test-mount") changes.set(componentPath, component.replace("#[cfg(test)]", "#[cfg(test)]\n#[cfg(any())]"));
-    else if (row.id === "disabled-public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("pub mod command_ingress;", "#[cfg(any())]\npub mod command_ingress;"));
-    else if (row.id === "disabled-public-facade") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("pub use wire::command_ingress::{", "#[cfg(any())]\npub use wire::command_ingress::{"));
+    else if (row.id === "disabled-public-owner") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("pub mod command_ingress {", "#[cfg(any())]\npub mod command_ingress {"));
+    else if (row.id === "disabled-public-facade") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("pub use semio_framework_replication_command_ingress::{", "#[cfg(any())]\npub use semio_framework_replication_command_ingress::{"));
     else if (row.id === "disabled-public-type") changes.set(componentPath, component.replace("pub struct FixedCommandPage", "#[cfg(any())]\npub struct FixedCommandPage"));
     else if (row.id === "disabled-constant") changes.set(componentPath, component.replace("pub const COMMAND_PAGE_MAXIMUM_BYTES", "#[cfg(any())]\npub const COMMAND_PAGE_MAXIMUM_BYTES"));
     else if (row.id === "disabled-parent-wire") changes.set(fixture.paths.entry, readFileSync(join(root, fixture.paths.entry), "utf8").replace("pub mod wire {", "#[cfg(any())]\npub mod wire {"));

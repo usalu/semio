@@ -38,14 +38,14 @@ fn find_select<'a>(node: &'a UiNode, id: &str) -> Option<&'a UiSelectNode> {
 }
 
 fn dispatch(shell: &mut ShellState, action: &str, args: Value) {
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(args)) })).expect("driver editor action");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(args)) })).expect("driver editor action");
 }
 
 #[test]
 fn settings_general_publishes_all_react_driver_controls_and_localized_dirty_state() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let fixture = fixture();
-    let ui = shell.build_settings_general_ui();
+    let ui = shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs);
     let value = serde_json::to_value(&ui).expect("settings ui");
     for id in fixture["controls"].as_array().unwrap().iter().filter_map(Value::as_str) {
         if id == "framework.settings.driver.delete" {
@@ -62,8 +62,8 @@ fn settings_general_publishes_all_react_driver_controls_and_localized_dirty_stat
     }
     assert_eq!(find_id(&value, "framework.settings.driver.editor").unwrap()["defaultOpen"], false);
     dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labels", "value": "icons" }));
-    shell.locale_id = "de".into();
-    let dirty = serde_json::to_value(shell.build_settings_general_ui()).unwrap();
+    shell.prefs.locale_id = "de".into();
+    let dirty = serde_json::to_value(shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs)).unwrap();
     let section = find_id(&dirty, "framework.settings.driver.editor").expect("driver editor section");
     assert!(section.to_string().contains("Geändert"));
 }
@@ -73,36 +73,36 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let fixture = fixture();
     dispatch(&mut shell, "setDriverField", fixture["transitions"]["edit"].clone());
-    assert!(shell.driver_draft.is_some());
-    assert_eq!(shell.driver_document().config["labels"], "icons");
-    assert_eq!(shell.chrome_build.driver.labels, ui_wgpu::wgpu::UiDriverLabels::Icons, "draft changes live chrome");
-    assert!(shell.chrome_build.preferences.custom_drivers.is_empty(), "draft never persists");
+    assert!(shell.prefs.driver_draft.is_some());
+    assert_eq!(shell.prefs.driver_document(&shell.chrome).config["labels"], "icons");
+    assert_eq!(shell.chrome.chrome_build.driver.labels, ui_wgpu::wgpu::UiDriverLabels::Icons, "draft changes live chrome");
+    assert!(shell.chrome.chrome_build.preferences.custom_drivers.is_empty(), "draft never persists");
 
     dispatch(&mut shell, "setDriver", serde_json::json!({ "value": fixture["transitions"]["select"]["selected"] }));
-    assert!(shell.driver_draft.is_none(), "selection clears draft");
-    assert_eq!(shell.driver_id, "compact");
-    assert_eq!(shell.chrome_build.driver.tooltips, ui_wgpu::wgpu::UiDriverTooltips::None);
-    assert_eq!(shell.chrome_build.driver.drag, ui_wgpu::wgpu::chrome::UiDriverDrag::Surface);
+    assert!(shell.prefs.driver_draft.is_none(), "selection clears draft");
+    assert_eq!(shell.prefs.driver_id, "compact");
+    assert_eq!(shell.chrome.chrome_build.driver.tooltips, ui_wgpu::wgpu::UiDriverTooltips::None);
+    assert_eq!(shell.chrome.chrome_build.driver.drag, ui_wgpu::wgpu::chrome::UiDriverDrag::Surface);
 
     dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labelTier", "value": "beginner" }));
     dispatch(&mut shell, "setDriverSaveLabel", serde_json::json!({ "value": fixture["transitions"]["save"]["label"] }));
     dispatch(&mut shell, "saveDriver", serde_json::json!({}));
     let saved_id = fixture["transitions"]["save"]["id"].as_str().unwrap();
-    let saved = shell.chrome_build.preferences.custom_drivers.get(saved_id).expect("saved driver");
+    let saved = shell.chrome.chrome_build.preferences.custom_drivers.get(saved_id).expect("saved driver");
     assert_eq!(saved.driver_id, saved_id);
     assert_eq!(saved.label, "Focus Flow");
     assert_eq!(saved.config["labelTier"], "beginner");
-    assert_eq!(shell.driver_id, saved_id);
-    assert!(shell.driver_draft.is_none());
-    assert!(shell.driver_save_label.is_empty());
-    let custom_ui = serde_json::to_value(shell.build_settings_general_ui()).unwrap();
+    assert_eq!(shell.prefs.driver_id, saved_id);
+    assert!(shell.prefs.driver_draft.is_none());
+    assert!(shell.prefs.driver_save_label.is_empty());
+    let custom_ui = serde_json::to_value(shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs)).unwrap();
     assert!(find_id(&custom_ui, "framework.settings.driver.delete").is_some());
 
     dispatch(&mut shell, "deleteDriver", serde_json::json!({ "value": saved_id }));
-    assert!(!shell.chrome_build.preferences.custom_drivers.contains_key(saved_id));
-    assert_eq!(shell.driver_id, "default");
-    assert!(shell.driver_draft.is_none());
-    assert_eq!(shell.chrome_build.driver, ui_wgpu::wgpu::UiDriverChrome::DEFAULT);
+    assert!(!shell.chrome.chrome_build.preferences.custom_drivers.contains_key(saved_id));
+    assert_eq!(shell.prefs.driver_id, "default");
+    assert!(shell.prefs.driver_draft.is_none());
+    assert_eq!(shell.chrome.chrome_build.driver, ui_wgpu::wgpu::UiDriverChrome::DEFAULT);
 }
 
 #[test]
@@ -114,8 +114,8 @@ fn driver_rows_localize_only_closed_builtins_and_preserve_authored_custom_labels
     dispatch(&mut shell, "saveDriver", serde_json::json!({}));
 
     for locale in ["en", "de"] {
-        shell.locale_id = locale.into();
-        let rows = shell.driver_rows().into_iter().collect::<std::collections::HashMap<_, _>>();
+        shell.prefs.locale_id = locale.into();
+        let rows = shell.prefs.driver_rows(&shell.chrome).into_iter().collect::<std::collections::HashMap<_, _>>();
         for expected in fixture["displayLabels"].as_array().expect("display label rows") {
             let id = expected["id"].as_str().expect("driver id");
             assert_eq!(rows.get(id).map(String::as_str), expected[locale].as_str(), "{locale}:{id}");

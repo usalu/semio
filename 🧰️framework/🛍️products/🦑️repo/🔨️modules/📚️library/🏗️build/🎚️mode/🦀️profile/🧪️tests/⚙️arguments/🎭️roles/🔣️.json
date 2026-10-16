@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "contexts": ["host", "dual"],
+  "cases": ["prototype-off", "prototype-incremental", "release-thin", "release-fat"],
+  "maximumSourceBytes": 16384,
+  "maximumArtifactBytes": 2097152,
+  "hostBaseline": {"optLevel": "0", "codegenUnits": 256, "debug": 0}
+}

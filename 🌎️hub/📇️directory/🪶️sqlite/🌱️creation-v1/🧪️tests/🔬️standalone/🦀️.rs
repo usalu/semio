@@ -1,13 +1,23 @@
 //! 🧪️ Neutral genesis transaction cuts run against real SQLite writers and independent row reads.
 
-use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
-use super::*;
-use crate::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
-use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
-use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
-use crate::directory::{DirectoryService, HubDirectories, published_artifact_checkpoint};
+use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
+
+use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, FsArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationPreparedV1};
+use semio_hub_artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
+use semio_hub_directory_service::DirectoryService;
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::published_artifact_checkpoint;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use semio_framework_hash::Sha256;
+use std::sync::Arc;
+use semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation;
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody};
+use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1};
+use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind};
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
+use semio_hub_directory_sqlite::{SqliteDirectory, now_ms};
+use directory::os_identity::time_ordered_id;
 
 struct GenesisFixture {
     backend: Arc<HubDirectories>,
@@ -92,7 +102,7 @@ impl GenesisFixture {
     }
 
     async fn operation(&self) -> ArtifactCreationOperationV1 {
-        crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&self.sqlite().read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
+        semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&self.sqlite().read_artifact_creation(&self.intent.actor.user_id, &self.intent.request.request_id).await.unwrap()).unwrap()
     }
 
     async fn accepted() -> (SqliteDirectory, ArtifactCreationIntentV1, ArtifactCreationPreparedV1) {
@@ -106,7 +116,7 @@ impl GenesisFixture {
             .issue_auth_session(&AuthSessionIssue {
                 user_id: "seed".into(),
                 identity_provider: "genesis-test".into(),
-                identity_subject_digest: crate::directory::identity_subject_digest("genesis-test", "seed").unwrap(),
+                identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("genesis-test", "seed").unwrap(),
                 ttl_secs: 60,
                 device_instance_id: "genesis-device".into(),
                 session_kind: AuthSessionKind::DevelopmentLocal,
@@ -128,7 +138,7 @@ impl GenesisFixture {
         prepared.checkpoint.descriptor_digest_v1 = directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1(&prepared.descriptor).unwrap();
         prepared.checkpoint.published_at_ms = intent.accepted_at_ms;
         prepared.checkpoint.checkpoint_id = ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&prepared.checkpoint).unwrap()));
-        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
+        semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).unwrap();
         assert!(matches!(sqlite.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Accepted(_)));
         assert!(matches!(sqlite.claim_artifact_creation(&intent).await.unwrap(), ArtifactCreationClaimV1::Existing(_)));
         (sqlite, intent, prepared)
@@ -181,7 +191,7 @@ impl AuthorityOperationControl for GenesisControl {
 
 #[tokio::test]
 async fn genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt() {
-    let generated = crate::test_artifact_root::test_artifact_root();
+    let generated = semio_hub_testing::test_artifact_root();
     let root = generated.join(format!("genesis-restart-{}", time_ordered_id()));
     std::fs::create_dir_all(&root).unwrap();
     let db_path = root.join("directory.sqlite");
@@ -216,7 +226,7 @@ async fn genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt() {
         }
         assert_eq!(sqlite.artifact_cas_ledger_generation().await.unwrap(), generation, "{stage}");
         let facts = sqlite.read_artifact_creation(&intent.actor.user_id, &intent.request.request_id).await.unwrap();
-        assert_eq!(crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).unwrap(), operation, "{stage}");
+        assert_eq!(semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts).unwrap(), operation, "{stage}");
         assert_eq!(sqlite.head_seq().await.unwrap(), head + 3, "{stage}");
         let events = sqlite.events_since(head, 3).await.unwrap();
         assert_eq!(events.iter().map(|event| event.id.clone()).collect::<Vec<_>>(), receipt.event_ids, "{stage}");
@@ -257,16 +267,19 @@ async fn genesis_delivery_lease_serializes_invalidation_and_requires_replay() {
     assert!(f.service.acquire_delivery_lease(Some("other"), 0).await.is_some());
     let current = f.service.delivery_epoch(Some("default"));
     assert!(f.service.acquire_delivery_lease(Some("default"), current).await.is_some());
-    for index in 0..crate::directory::DIRECTORY_DELIVERY_SCOPE_MAX {
+    for index in 0..semio_hub_directory_service::DIRECTORY_DELIVERY_SCOPE_MAX {
         f.service.invalidate_delivery_locked(&clock, &format!("space-{index}")).await;
     }
-    assert!(f.service.delivery_epochs.lock().unwrap().2.len() <= crate::directory::DIRECTORY_DELIVERY_SCOPE_MAX);
+    assert!(f.service.delivery_epochs.lock().unwrap().2.len() <= semio_hub_directory_service::DIRECTORY_DELIVERY_SCOPE_MAX);
     assert!(f.service.delivery_epoch(Some("other")) > current);
     assert!(f.service.acquire_delivery_lease(Some("other"), 0).await.is_none());
 }
 
 mod quick {
     use super::*;
+use semio_hub_artifact_creation::{ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, DocumentGenesisCommitV1};
+use directory::os_directory::{ArtifactHash, DirectoryEventBody};
+use semio_hub_directory_sqlite::now_ms;
 
     #[tokio::test]
     async fn genesis_neutral_transactions_are_atomic_replayable_and_authorized() {
@@ -411,6 +424,7 @@ mod quick {
 
 mod long {
     use super::*;
+use semio_hub_directory_sqlite::now_ms;
 
     #[tokio::test]
     async fn genesis_accepted_only_recovery_has_no_prepared_or_public_side_effects() {
@@ -435,7 +449,7 @@ mod long {
             let result = sqlite.artifact_creation_terminate_uncommitted(&intent, now_ms() as u64).await;
             assert_eq!(result.is_err(), kind == "live", "{kind}");
             let facts = sqlite.read_artifact_creation(&intent.actor.user_id, &intent.request.request_id).await.unwrap();
-            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts).unwrap();
+            let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts).unwrap();
             assert_eq!(facts.len() as u64, row["facts"].as_u64().unwrap(), "{kind}");
             assert_eq!(format!("{:?}", operation.phase).to_lowercase(), row["terminal"].as_str().unwrap(), "{kind}");
             assert!(operation.prepared.is_none() && operation.receipt.is_none());

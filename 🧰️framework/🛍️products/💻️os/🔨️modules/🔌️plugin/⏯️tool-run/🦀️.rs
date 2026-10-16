@@ -24,6 +24,7 @@ use semio_framework_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
+//#region 🔖️Limits
 /// ⏱️ Wall budget of one driver turn; every job step inside it keeps its own interactive-lane slice.
 pub const TOOL_RUN_TURN_WALL_US: u64 = 4_000;
 /// 🧮️ Folded ops between two wall-clock checks of a bounded refold.
@@ -79,11 +80,10 @@ mod original_port_retirement_tests;
 #[path="📮️port/🎟️admission/🧪️tests/🦀️.rs"]
 mod original_port_admission_tests;
 
-/// 🔖️ True for the seven framework-reserved tool run action ids (§2.5).
-pub fn is_tool_run_action_id(action: &str) -> bool {
-    TOOL_RUN_ACTION_IDS.contains(&action)
-}
-//#endregion 🔖️Request
+#[path="🧵️instance/🦀️.rs"]
+mod instance_turns;
+pub(crate) use instance_turns::ToolRunExtension;
+//#endregion 🔖️Selection
 
 //#region 🔖️Job
 pub(crate) enum ToolRunJobHandle<C> {
@@ -1679,3 +1679,7 @@ fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_
 #[cfg(test)]
 #[path="♻️retirement/🧪️tests/🦀️.rs"]
 mod granted_ledger_retirement_tests;
+
+#[path = "../👷️job/🛬️lifted/⏯️tool-run/🦀️.rs"]
+mod lifted_job;
+pub use lifted_job::*;

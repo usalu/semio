@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-repo-dashboard-wire"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard daemon wire: frames, workspace paths, transport, readiness, replay, journal, lease and the connection a view holds"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-wire"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_core = { path = "../../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_launch = { path = "../../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ui_tui = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }

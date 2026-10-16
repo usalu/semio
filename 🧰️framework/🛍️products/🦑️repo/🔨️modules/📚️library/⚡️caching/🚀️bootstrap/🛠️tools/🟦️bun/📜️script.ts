@@ -1,3 +1,6 @@
+import{withRepositoryToolingOperationV1}from"../🔒️scope/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ToolingHeadroomRefusalV1}from"../🧹️retention/📏️headroom/🟦️.ts";
 import {withManagedToolingProvisionV1,type ManagedToolingPublisherV1} from "../🧹️retention/📥️physical/🟦️.ts";
 import retentionSchema from "../🧹️retention/📥️physical/🧬️schema/🔣️.json";
 import type {RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
@@ -8,7 +11,7 @@ import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync,
 import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {nativeCallerPhaseV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import manifest from "./🔣️.json" with {type:"json"};
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
@@ -46,8 +49,9 @@ export function bunArchiveExecutable(archive: Buffer, member: string): Buffer {
 }
 
 /** 🔐️ Acquires and atomically publishes a pinned workspace-owned installer with cancellation. */
-export async function prepareBun(workspace: string, version: string, store:RepositoryToolingStoreV1,publisher?:ManagedToolingPublisherV1): Promise<string> {
-  requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=store.control.signal;signal.throwIfAborted();
+export function prepareBun(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{return withRepositoryToolingOperationV1(workspace,store,control,actual=>prepareBunOwnedV1(workspace,version,store,actual,publisher));}
+async function prepareBunOwnedV1(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{
+  requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=control.signal;signal.throwIfAborted();
   if (process.versions.bun === version) return process.execPath;
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
   const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && !report?.header?.glibcVersionRuntime);
@@ -57,33 +61,33 @@ export async function prepareBun(workspace: string, version: string, store:Repos
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     if (dirname(current) === current) break;
   }
-  const lease={directory:join(workspace,".cache/b/l/m/data"),signal,control:store.control},resource=`bun-${row.sha256}`;
+  const lease={directory:join(workspace,".cache/b/l/m/data"),signal,control},resource=`bun-${row.sha256}`;
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");
-      if ((await captureOwnedCommandV1(executable,["--version"],directory,{control:store.control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun executable version mismatch");
+      if ((await captureOwnedCommandV1(executable,["--version"],directory,{control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun executable version mismatch");
       return executable;
     };
     const ready=await withResourceLeases({...lease,resources:[{resource,mode:"shared"}]},async()=>{try{lstatSync(directory);return await validate();}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}});if(ready)return ready;
-    if(nativeCallerPhaseV1(store.invocation,workspace).authority.network.offline)throw Error("Original offline pinned Bun parser absent");
-    const publish:ManagedToolingPublisherV1=publisher??((job,quote)=>withManagedToolingProvisionV1(workspace,store,{version:1,minimumAvailableBytes:retentionSchema.definitions.Protocol.const.minimumInstallerAvailableBytes},original=>original(job,quote)));
+    if(readNativeCallerAuthorityV1(store.invocation.capabilities).network.offline)throw Error("Original offline pinned Bun parser absent");
+    const publish:ManagedToolingPublisherV1=publisher??((job,quote)=>withManagedToolingProvisionV1(workspace,store,control,{version:1,minimumAvailableBytes:retentionSchema.definitions.Protocol.const.minimumInstallerAvailableBytes},(original,control)=>original(job,quote)));
     return publish(()=>withResourceLeases({...lease,resources:[{resource,mode:"exclusive"}]},async()=>{
     try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     await store.recheck();mkdirSync(base,{recursive:true});
-    const staging = mkdtempSync(join(base, ".prepare-")), progress = setInterval(() => console.log(`Acquiring pinned Bun ${version}…`), 10000);
+    const staging=mkdtempSync(join(base,".prepare-")),deadline=new AbortController(),watch=setInterval(()=>{try{checkResourceLeaseControl(control);}catch(error){deadline.abort(error);}},25),progress = setInterval(() => console.log(`Acquiring pinned Bun ${version}…`), 10000);
     try {
       console.log(`Acquiring pinned Bun ${version} for ${row.platform}/${row.arch}…`);
-      const response = await fetch(`${manifest.release}/${row.archive}`, { signal });
+      const response = await fetch(`${manifest.release}/${row.archive}`, { signal:AbortSignal.any([signal,deadline.signal]) });
       if (!response.ok || !response.body) throw new Error(`Bun download failed: ${response.status}`);
       const chunks: Buffer[] = [], hash = createHash("sha256"), reader = response.body.getReader(); let size = 0;
-      try { for (let read = await reader.read(); !read.done; read = await reader.read()) { signal.throwIfAborted(); size += read.value.length; if (size > row.bytes) throw new Error("Bun archive exceeds its pinned size"); const chunk = Buffer.from(read.value); chunks.push(chunk); hash.update(chunk); } }
+      try { for (let read = await reader.read(); !read.done; read = await reader.read()) { checkResourceLeaseControl(control); size += read.value.length; if (size > row.bytes) throw new Error("Bun archive exceeds its pinned size"); const chunk = Buffer.from(read.value); chunks.push(chunk); hash.update(chunk); } }
       catch (error) { await reader.cancel().catch(() => undefined); throw error; }
       if (size !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Bun archive checksum mismatch");
       const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/bun${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? "bun.exe" : "bun");
       writeFileSync(staged, payload, { flag: "wx" }); chmodSync(staged, 0o755);
-      if ((await captureOwnedCommandV1(staged,["--version"],staging,{control:store.control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun release version mismatch");
+      if ((await captureOwnedCommandV1(staged,["--version"],staging,{control,env:store.environment,output:{maximumBytes:65536,maximumLines:1024}})).trim() !== version) throw new Error("Bun release version mismatch");
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));
-      signal.throwIfAborted(); renameSync(staging, directory); return executable;
-    } finally { clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }
+      checkResourceLeaseControl(control); renameSync(staging, directory); return executable;
+    } finally { clearInterval(watch);clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }
   }));
 }

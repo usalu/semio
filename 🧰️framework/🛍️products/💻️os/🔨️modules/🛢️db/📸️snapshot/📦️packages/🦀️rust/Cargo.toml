@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-snapshot"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db pack-file based document snapshots"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-snapshot"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_snapshot"
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-os-kernel-db-io-core/testkit"]
+
+[dependencies]
+semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-state = { path = "../../../🔘️state/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-pack-source = { path = "../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel-db-actor = { path = "../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-registry = { path = "../../../🗄️storage/📇️io-registry/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../../🗄️storage/🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

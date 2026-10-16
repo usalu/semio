@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "files",
+    "invalidPaths",
+    "tarFailures",
+    "zipFailures",
+    "descriptorSignaturePayload",
+    "tarFooterBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "$ref": "bounded-archive-policy"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 32768
+          }
+        }
+      }
+    },
+    "invalidPaths": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "maxLength": 256
+      }
+    },
+    "tarFailures": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "checksum",
+          "padding",
+          "missing-footer",
+          "unaligned",
+          "link",
+          "hardlink",
+          "sparse",
+          "duplicate",
+          "case-collision",
+          "normalized-collision",
+          "file-ancestor",
+          "truncated"
+        ]
+      }
+    },
+    "zipFailures": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "checksum",
+          "local-name",
+          "local-method",
+          "encrypted",
+          "zip64",
+          "symlink",
+          "disk",
+          "central-count",
+          "central-offset",
+          "truncated",
+          "duplicate",
+          "case-collision",
+          "normalized-collision",
+          "file-ancestor",
+          "directory-mode",
+          "needed-version",
+          "metadata",
+          "trailing-deflate",
+          "local-overlap",
+          "local-gap",
+          "extra-name"
+        ]
+      }
+    },
+    "descriptorSignaturePayload": {
+      "const": [
+        172,
+        10,
+        122,
+        213
+      ]
+    },
+    "tarFooterBytes": {
+      "const": 2097152
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "files"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "count",
+          "failures",
+          "expectedAccepted",
+          "expectedFailure"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 25
+          },
+          "failures": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "reason"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 24
+                },
+                "reason": {
+                  "enum": [
+                    "marker",
+                    "undefined",
+                    "cancel"
+                  ]
+                }
+              }
+            }
+          },
+          "expectedAccepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 25
+          },
+          "expectedFailure": {
+            "enum": [
+              "none",
+              "marker",
+              "undefined",
+              "cancel"
+            ]
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "bytes",
+          "time"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1024
+          },
+          "time": {
+            "type": "integer",
+            "minimum": 1700000000,
+            "maximum": 1700009999
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumAcceptedMetadata": 8,
+        "orderedReduction": true,
+        "failureOrder": "input",
+        "drainAccepted": true,
+        "noNextBatchAfterFailure": true
+      }
+    }
+  }
+}

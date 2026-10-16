@@ -2,8 +2,6 @@
 
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::binary::snapshot;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_space_space_diff::standards::v1::subsets::any::io::binary::diff;

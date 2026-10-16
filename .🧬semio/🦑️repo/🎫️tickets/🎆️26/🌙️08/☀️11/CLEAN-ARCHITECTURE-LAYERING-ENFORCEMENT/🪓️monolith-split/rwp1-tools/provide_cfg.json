@@ -1,0 +1,8 @@
+{
+"CANCELLED_KERNEL_TURNS": "#[cfg(test)]",
+"ProgramFixtureDocument": "#[cfg(test)]",
+"collect_tree_slots": "#[cfg(test)]",
+"fixture_scene_pointer_target": "#[cfg(test)]",
+"resource_matches_owner": "#[cfg(test)]",
+"test_worker_cell": "#[cfg(test)]"
+}

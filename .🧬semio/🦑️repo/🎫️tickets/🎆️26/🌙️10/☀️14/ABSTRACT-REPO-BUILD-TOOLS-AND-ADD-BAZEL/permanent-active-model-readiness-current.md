@@ -1,0 +1,21 @@
+# Active Permanent Models — Current Phase/API Readiness
+
+Update: the concrete reader-completion model below was subsequently fixed and qualified Source-only; see `derivative-reader-completion-current.md`. The discovery record is retained as history.
+
+Read-only bounded Source review only. No model/test/TypeScript/public command, SDK, Native, store or graph producer was executed. No production or test Source was edited. Eighteen inspected current input files are bound by nofollow descriptor/named SHA+stamps in `🗑️generated/permanent-active-model-readiness-current-source.json`.
+
+One concrete active stale binding was found. `tools/📦sdk/📥source/🔗derivative/🧪tests/🟦ts`, law **derivative reader completion preserves the original body failure across rechecks**, extracts the tail from the actual `withNxSdkDerivativeReaderV1` lease callback. Current production tail calls `requireNxSdkSourceControlV1(store,control)` immediately after initial awaited `store.recheck`, and again after final recheck. The model Function signature supplies neither that canonical function nor `control`. The newly free names therefore cannot resolve in its isolated Function global scope; the body/value/error-precedence corpus cannot reach its intended boundary. This is Source-proven unbound model input, not a newly run runtime failure.
+
+The same derivative entry is imported directly by **toolkit-retention** and via **sdk-snapshot → capacity derivative**, so this is an active future public gate risk. The production Source check is correct and must stay. Minimal future authorized correction: actual Source-only RED; wrap this law in existing `withBuildTestInvocationV1`, issue a genuine owner phase and a requested child, bind actual `requireNxSdkSourceControlV1` plus the child phase to the extracted function, and give its modeled store that exact owner control. Preserve all nine completion rows, SQLite oracle, two actual modeled rechecks, arbitrary undefined/frozen primary assertions, and current final index-byte check. No real store/SDK is necessary. Do not insert a fake structural control or bypass the actual check.
+
+Other inspected active Source boundaries did not show a concrete stale callback arity/unbound phase port:
+
+- Existing compiler phase-order model now accepts `phaseControl` and binds canonical `createRequestedIssuedResourceControlV1`; it follows current caching dispatcher phases.
+- Output negative ledger model supplies five-argument cache store port, genuine operation admission, same unchanged wire and phase; actual `withOutputCustodyV1` still matches those bindings. Actual products/waiter qualification is separate.
+- Toolkit-use positive/purpose calls currently supply explicit phase3 and body4. Its handled refusal remains owned same-wire child isolation, not failed accepted parent work.
+- SDK binary verifier model binds issued invocation/refinement+actual control; byte-loop model supplies its current lexical ports. Empty receipt coverage remains explicitly modeled and does not prove all nonempty-object paths.
+- Current derivative copy/seal phase laws already pass explicit actual phase to Source/destination trees and seal; those are separate from the stale reader-completion extraction above.
+- Tools-partition scope entry still imports canonical parent law; inspected callback-scope schema law is pure and has no migrated callback API.
+- Selected graph watcher tests extract installed SDK code under their existing scopes, not the just-migrated Core Cargo/Inputs functions. No new concrete model binding defect was identified from this bounded read. Current SDK/frozen guard behavior remains runtime evidence only.
+
+The permanent caching dispatcher still routes selected-graph to one Bun suite, outputs/publication/use to Bun then their authored strict/noUncheckedIndexedAccess tail, toolkit-retention to the combined derivative+physical entry, SDK snapshot to its five authored stages, and tools-partition to the scope entry. No previously passed model/runtime result is relabeled as current public acceptance. This is not an exhaustive static program/typecheck of every transitive test path; only the concrete stale active model above is proposed for correction after Root releases Source-only work.

@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-surface-terrain"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Surface terrain: Terrarium DEM decode, chunked heightfield meshing and the target-neutral TerrainSessionCore"
+
+[package.metadata.semio]
+role = "framework"
+id = "surface-terrain"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+
+[dev-dependencies]

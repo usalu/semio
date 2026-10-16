@@ -23,7 +23,7 @@
 use super::{HitKind, HitTarget, InputState};
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiComponentSceneNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use crate::wgpu::draw::{DrawList, IconAtlas};
+use crate::wgpu::draw_types::{DrawList, IconAtlas};
 use crate::wgpu::engine::{Ui, UiFrameStep, UiLayoutStep};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};

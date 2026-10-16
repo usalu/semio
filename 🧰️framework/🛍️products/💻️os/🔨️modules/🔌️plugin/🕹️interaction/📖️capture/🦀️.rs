@@ -195,32 +195,40 @@ impl LocalInteractionCaptureCursor {
         Self { identity: identity.clone(), reader: ArtifactCanonicalJsonReader::new(Arc::new(CapturedRoot::new(read, identity)), Arc::new(CapturedRootRetirementFactory)) }
     }
 
-    pub(super) fn identity(&self) -> &LocalInteractionIdentity {
+    #[doc(hidden)]
+    pub fn identity(&self) -> &LocalInteractionIdentity {
         &self.identity
     }
     pub(super) fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
         self.reader.encode_chunk(grant, output)
     }
-    pub(super) fn completed_bytes(&self) -> u64 {
+    #[doc(hidden)]
+    pub fn completed_bytes(&self) -> u64 {
         self.reader.completed_bytes()
     }
-    pub(super) fn complete(&self) -> bool {
+    #[doc(hidden)]
+    pub fn complete(&self) -> bool {
         self.reader.is_complete()
     }
-    pub(super) fn cancel(&mut self) {
+    #[doc(hidden)]
+    pub fn cancel(&mut self) {
         self.reader.cancel();
         self.reader.begin_close();
     }
-    pub(super) fn begin_close(&mut self) {
+    #[doc(hidden)]
+    pub fn begin_close(&mut self) {
         self.reader.begin_close();
     }
-    pub(super) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.reader.retirement_demands(body)
     }
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.reader.close_step(grant)
     }
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.reader.terminal_is_empty()
     }
 }

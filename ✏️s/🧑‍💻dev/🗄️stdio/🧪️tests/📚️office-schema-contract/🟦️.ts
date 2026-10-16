@@ -33,16 +33,18 @@ const publicCases: readonly PublicOfficeCase[] = [
 ];
 
 const json = (path: string): Json => JSON.parse(readFileSync(path, 'utf8')) as Json;
+const schemaJson = (path: string) => { const value=json(path);if(typeof value!=="boolean"&&(value===null||typeof value!=="object"||Array.isArray(value)))throw Error("Actual JSON Schema object or boolean required");return value; };
+const identifiedSchemaJson = (path: string) => { const value=schemaJson(path);if(typeof value==="boolean"||typeof value.$id!=="string")throw Error("Identified actual JSON Schema required");return {...value,$id:value.$id}; };
 const wireJson = (value: unknown): Json => JSON.parse(JSON.stringify(value, (_key, item) => typeof item === 'bigint' ? item.toString() : item)) as Json;
-const valid = (validate: ValidateFunction, value: Json, label: string): void => assert(validate(value), `${label}: ${JSON.stringify(validate.errors)}`);
-const invalid = (validate: ValidateFunction, value: Json, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
+const valid = (validate: ValidateFunction, value: unknown, label: string): void => assert(validate(value), `${label}: ${JSON.stringify(validate.errors)}`);
+const invalid = (validate: ValidateFunction, value: unknown, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
 
 /** 🧪️ Validates current OOXML snapshot/diff fixtures through Ajv and their complete TypeScript guards. */
 export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): void {
   const artifacts = join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts');
   const addressRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address');
   const addresses = json(join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🧭️xml-address/🔣️.json')) as { valid: Json[]; invalid: Json[] };
-  const validateAddress = semioSchemaAjvV1().compile(json(join(addressRoot, '🔣️.json')));
+  const validateAddress = semioSchemaAjvV1().compile(schemaJson(join(addressRoot, '🔣️.json')));
   for (const address of addresses.valid) {
     valid(validateAddress, address, 'DOCX canonical XML address');
     assert.deepEqual(parseDocxXmlAddress(address), address);
@@ -51,10 +53,10 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
     invalid(validateAddress, address, 'DOCX malformed XML address');
     assert.throws(() => parseDocxXmlAddress(address));
   }
-  const xmlSnapshotSchema = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json'));
-  const xmlDiffSchema = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json'));
+  const xmlSnapshotSchema = schemaJson(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json'));
+  const xmlDiffSchema = schemaJson(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🔣️.json'));
   const mutationRoot = join(addressRoot, '..');
-  const addressAjv = semioSchemaAjvV1().addSchema(json(join(addressRoot, '🔣️.json'))).addSchema(xmlSnapshotSchema);
+  const addressAjv = semioSchemaAjvV1().addSchema(schemaJson(join(addressRoot, '🔣️.json'))).addSchema(xmlSnapshotSchema);
   const addressedLeaves: { leaf: string; field: string; payload: { [key: string]: Json } }[] = [
     { leaf: '🔤set-run-text', field: 'address', payload: { mutation: 'setRunText', text: 'changed' } },
     { leaf: '🧩️replace-xml-node', field: 'address', payload: { mutation: 'replaceXmlNode', node: { kind: 'text', text: 'restored' } } },
@@ -66,15 +68,15 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
     { leaf: '🧹️remove-xml-node', field: 'parent', payload: { mutation: 'removeXmlNode', index: 0, expectedName: '#text', revision: '0123456789abcdef' } },
   ];
   for (const row of addressedLeaves) {
-    const validate = addressAjv.compile(json(join(mutationRoot, row.leaf, '🧬️schema/🔣️.json')));
+    const validate = addressAjv.compile(schemaJson(join(mutationRoot, row.leaf, '🧬️schema/🔣️.json')));
     for (const address of addresses.valid) valid(validate, { ...row.payload, [row.field]: address }, `DOCX ${row.leaf} shared address`);
     for (const address of addresses.invalid) invalid(validate, { ...row.payload, [row.field]: address }, `DOCX ${row.leaf} malformed address`);
-    if ('index' in row.payload) for (const index of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1]) invalid(validate, { ...row.payload, [row.field]: addresses.valid[0], index }, `DOCX ${row.leaf} invalid index`);
+    if ('index' in row.payload) for (const index of [-1, 0.5, Number.MAX_SAFE_INTEGER + 1]) invalid(validate, { ...row.payload, [row.field]: addresses.valid[0]!, index }, `DOCX ${row.leaf} invalid index`);
   }
   const docxTableRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧭️table-run-projection');
   const docxTable = json(join(docxTableRoot, '🔣️.json')) as { blocks: Json[][]; paths: Json[][] } & { [key: string]: Json };
   assert.equal(docxTable.blocks.length, docxTable.paths.length);
-  for (const [index, runs] of docxTable.blocks.entries()) assert.equal(runs.length, docxTable.paths[index].length);
+  for (const [index, runs] of docxTable.blocks.entries()) assert.equal(runs.length, docxTable.paths[index]!.length);
   const sparse = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔺️diff/🌿️sparse-triples/🔣️.json')) as { valid: Json[]; invalid: Json[] };
   const validateXmlDiff = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).compile(xmlDiffSchema);
   for (const diff of sparse.valid) {
@@ -87,8 +89,8 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
   }
   for (const row of cases) {
     const base = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
-    const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
-    const diffSchema = json(join(base, '🧬️schema/🔺️diff/🔣️.json'));
+    const snapshotSchema = schemaJson(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
+    const diffSchema = schemaJson(join(base, '🧬️schema/🔺️diff/🔣️.json'));
     const fixture = contractFixture.snapshots[row.artifact as keyof typeof contractFixture.snapshots];
     const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema);
     const validateSnapshot = ajv.compile(snapshotSchema);
@@ -102,17 +104,17 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
   }
   for (const row of publicCases) {
     const subsets = join(artifacts, row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets');
-    const schemas = row.subsets.map((subset) => json(join(subsets, subset, '🧬️schema/🔣️.json')));
+    const schemas = row.subsets.map((subset) => schemaJson(join(subsets, subset, '🧬️schema/🔣️.json')));
     const fixture = contractFixture.snapshots[row.artifact as keyof typeof contractFixture.snapshots]['⬅️before'];
     const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(xmlSnapshotSchema);
-    const validators = [ajv.compile(schemas[0]), ...schemas.slice(1).map((schema) => ajv.compile(schema))];
+    const validators = [ajv.compile(schemas[0]!), ...schemas.slice(1).map((schema) => ajv.compile(schema))];
     for (const [index, validate] of validators.entries()) {
       valid(validate, fixture, `${row.artifact} ${row.subsets[index]} public artifact`);
       invalid(validate, { schema: `s.stdio.${row.artifact}`, entries: [] }, `${row.artifact} ${row.subsets[index]} legacy public artifact`);
     }
   }
   const docx = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
-  const docxDiffSchema = json(join(docx, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
+  const docxDiffSchema = identifiedSchemaJson(join(docx, '🧬️schema/🔺️diff/🔣️.json'));
   const optionalClear = json(join(artifacts, '📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🔺️diff/🏳️optional-clear/🔣️.json')) as { cases: { name: string; diff: Json }[] };
   const docxAjv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(docxDiffSchema);
   const validateDocxDiff = docxAjv.getSchema(docxDiffSchema.$id)!;
@@ -134,9 +136,9 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
   }
   invalid(validateDocxDiff, { document: { body: {} } }, 'DOCX semantic shadow diff');
   const base = join(artifacts, '📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base');
-  const schema = json(join(base, '🧬️schema/🔺️diff/🔣️.json')) as { $id: string } & Json;
+  const schema = identifiedSchemaJson(join(base, '🧬️schema/🔺️diff/🔣️.json'));
   const placeholderDiff = { xmlParts: { modified: [{ id: 'ppt/slides/slide1.xml', patch: { document: { root: { kind: 'element', attributes: { modified: [{ name: 'type', value: 'title' }] } } } } }] } };
-  const snapshotSchema = json(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
+  const snapshotSchema = schemaJson(join(base, '🧬️schema/📸️snapshot/🔣️.json'));
   const ajv = semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(xmlDiffSchema).addSchema(snapshotSchema).addSchema(schema);
   valid(ajv.getSchema(schema.$id)!, placeholderDiff, 'PPTX canonical placeholder kind diff');
   assert.deepEqual(wireJson(parsePptxDiff(placeholderDiff)), placeholderDiff);
@@ -145,11 +147,11 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
   const boundary = json(join(base, '🧪️tests/🧫️fixtures/🧭️xml-document-boundaries/🔣️.json')) as { snapshot: Json; invalidXmlAttribute: Json };
   const validatePptxSnapshot = ajv.compile(snapshotSchema);
   const mutations = join(base, '🧬️schema/🧬️mutations');
-  const mutationAjv = addSemioMutationLeafSchemasV1(semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(snapshotSchema).addSchema(json(join(mutations, '🧭️xml-address/🔣️.json'))), pathToFileURL(mutations));
-  const validatePptxMutation = mutationAjv.compile(json(join(mutations, '🔣️.json')));
+  const mutationAjv = addSemioMutationLeafSchemasV1(semioSchemaAjvV1().addSchema(xmlSnapshotSchema).addSchema(snapshotSchema).addSchema(schemaJson(join(mutations, '🧭️xml-address/🔣️.json'))), pathToFileURL(mutations));
+  const validatePptxMutation = mutationAjv.compile(schemaJson(join(mutations, '🔣️.json')));
   assert.equal(contractFixture.pptx.mutations.length, 12);
   for (const mutation of contractFixture.pptx.mutations) { valid(validatePptxMutation, mutation, 'PPTX canonical mutation'); assert.deepEqual(wireJson(parsePptxMutation(mutation)), mutation); }
-  for (const address of contractFixture.pptx.invalidAddresses) { const mutation = { mutation: 'replaceXmlNode', address, node: contractFixture.pptx.mutations[7].node }; invalid(validatePptxMutation, mutation, 'PPTX malformed revision address'); assert.throws(() => parsePptxMutation(mutation)); }
+  for (const address of contractFixture.pptx.invalidAddresses) { const mutation = { mutation: 'replaceXmlNode', address, node: contractFixture.pptx.mutations[7]!.node }; invalid(validatePptxMutation, mutation, 'PPTX malformed revision address'); assert.throws(() => parsePptxMutation(mutation)); }
   assert.throws(() => parsePptxMutation({ mutation: 'setSnapshot', snapshot: boundary.snapshot }));
   valid(validatePptxSnapshot, boundary.snapshot, 'PPTX XML document boundary snapshot');
   const typedBoundary = parsePptxSnapshotJson(boundary.snapshot);
@@ -158,12 +160,12 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
   assert.deepEqual(wireJson(parsePptxSnapshot(typedBoundary)), boundary.snapshot);
   assert.deepEqual(wireJson(parsePptxDiff(boundaryDiff)), wireJson(boundaryDiff));
   const invalidBoundary = parsePptxSnapshot(typedBoundary);
-  invalidBoundary.xmlParts[0].document.doctype!.prologPosition = -1n;
+  invalidBoundary.xmlParts[0]!.document.doctype!.prologPosition = -1n;
   invalid(validatePptxSnapshot, wireJson(invalidBoundary), 'PPTX unsigned doctype position');
   assert.throws(() => parsePptxSnapshot(invalidBoundary));
   assert.throws(() => parsePptxDiff({ xmlParts: { inserted: [{ index: 0, row: invalidBoundary.xmlParts[0] }] } }));
   const baseline = parsePptxSnapshot(typedBoundary);
-  const invalidPart = { ...baseline.xmlParts[0], document: { ...baseline.xmlParts[0].document, root: { kind: 'element', name: 'p:presentation', attrs: [boundary.invalidXmlAttribute], children: [] } } };
+  const invalidPart = { ...baseline.xmlParts[0], document: { ...baseline.xmlParts[0]!.document, root: { kind: 'element', name: 'p:presentation', attrs: [boundary.invalidXmlAttribute], children: [] } } };
   const invalidAttributeSnapshot = wireJson({ ...baseline, xmlParts: [invalidPart] });
   const invalidAttributeDiff = { xmlParts: { inserted: [{ index: 0, row: invalidPart }] } };
   const invalidAttributeReplacement = { mutation: 'replaceXmlNode', address: contractFixture.pptx.address, node: invalidPart.document.root };
@@ -178,6 +180,6 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
 /** 🧪️ Runs current schema/parser laws before the original owned TypeScript compiler checks. */
 export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = getWorkspaceRoot()): Promise<void> {
   testStdioOfficeSchemaFixtures(repoRoot);
-  for (const row of cases) await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts', row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
-  await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), ['--noEmit', '--allowImportingTsExtensions'], invocation);
+  for (const row of cases) await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts', row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), invocation);
+  await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), invocation);
 }

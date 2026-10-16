@@ -1,7 +1,8 @@
-use super::*;
+use semio_framework_os_store_space_schema::space_history_mutations::set_active_space_alternative::SetActiveSpaceAlternative;
+use semio_framework_os_store_space_schema::space_history_mutations::SpaceHistoryMutation;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use crate::os_spr::{MutationLeaf, OpBinary, OpText};
+use semio_framework_os_spr::{MutationLeaf, OpBinary, OpText};
 
 #[test]
 fn metadata_and_explicit_nullable_wire_are_canonical() {

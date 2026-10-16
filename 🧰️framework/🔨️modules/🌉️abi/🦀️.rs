@@ -1,20 +1,34 @@
-//! 🌉️ Owned, domain-neutral byte/message ABI and retained paged-transfer kernel.
+//! 🌉️ Language-neutral component ABI: handles, pages, messages, ledgers and ports.
 
-use std::fmt::{Display, Formatter};
+use std::error::Error;
+use std::fmt;
+use std::fmt::Display;
+use std::fmt::Formatter;
+
 pub use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 //#region 🧬️Schema
 
 pub const ABI_VERSION: u8 = 1;
+
 pub const ABI_MAX_OPERATION_CODE: u16 = 4_095;
+
 pub const ABI_MAX_EVENT_CODE: u16 = 4_095;
+
 pub const ABI_MAX_BODY_BYTES: usize = 1_048_576;
+
 pub const ABI_MAX_PAGE_BYTES: usize = 65_536;
+
 pub const ABI_MAX_MESSAGE_BYTES: usize = 1_024;
+
 pub const ABI_MAX_PAGES_PER_TRANSFER: u32 = 256;
+
 pub const ABI_MAX_TRANSFER_BYTES: usize = ABI_MAX_PAGE_BYTES * ABI_MAX_PAGES_PER_TRANSFER as usize;
+
 pub const ABI_MAX_IN_FLIGHT_HANDLES: usize = 64;
+
 pub const ABI_MAX_IN_FLIGHT_REQUESTS: usize = 256;
+
 pub const ABI_SCHEMA_JSON: &str = include_str!("🧬️schema/🔣️.json");
 
 /// 🔢 Valid, non-zero domain operation code.
@@ -366,8 +380,8 @@ pub enum AbiMessage {
 }
 
 //#endregion 🧬️Schema
-
 //#region 🧱️Codec
+
 
 /// 🧱 Encodes the canonical versioned, little-endian structural ledger.
 pub fn encode_abi_message(message: &AbiMessage) -> Vec<u8> {
@@ -597,8 +611,8 @@ impl<'a> Decoder<'a> {
 }
 
 //#endregion 🧱️Codec
-
 //#region ⏳️RetainedTransfer
+
 
 /// ⏱️ Independent transport copy and retained ownership allowances preserve caller admission.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -909,8 +923,8 @@ fn classify_handle(expected: AbiHandle, actual: AbiHandle) -> Result<(), AbiErro
 }
 
 //#endregion ⏳️RetainedTransfer
-
 //#region 🗃️Ledgers
+
 
 struct HandleSlot<T> {
     generation: u32,
@@ -1072,8 +1086,8 @@ fn reply_slot_index(request_id: AbiRequestId) -> usize {
 }
 
 //#endregion 🗃️Ledgers
-
 //#region 🔌️Port
+
 
 /// 💤 Result of polling the future generated host shim through an owned port.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1099,9 +1113,7 @@ pub trait AbiPort {
 //#endregion 🔌️Port
 
 //#region 🧪️Tests
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
 //#endregion 🧪️Tests

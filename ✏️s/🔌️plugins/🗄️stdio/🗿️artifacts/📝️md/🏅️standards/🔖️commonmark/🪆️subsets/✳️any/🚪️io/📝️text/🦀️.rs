@@ -1,13 +1,10 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_md_snapshot::standards::v_commonmark::subsets::any::io::text::snapshot;
 
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_stdio_md_diff::standards::v_commonmark::subsets::any::io::text::diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

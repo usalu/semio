@@ -111,7 +111,7 @@ async fn route_view(app: &mut ToyApp) -> RouteView {
                 .collect(),
         })
         .collect();
-    let envelope = app.store.envelope();
+    let envelope = app.stores.store.envelope();
     let alternatives: Vec<String> = envelope.vcs.alternatives.iter().map(|alternative| alternative.name.clone()).collect();
     let line = patch.active_alternative_id.as_deref().and_then(|active| envelope.vcs.alternatives.iter().find(|alternative| alternative.id == active)).map(|alternative| alternative.name.clone()).unwrap_or_default();
     RouteView { head: head(app), line, alternatives, rows }
@@ -175,13 +175,13 @@ async fn bind_document_port(app: &mut ToyApp, uri: &str) -> MemoryBackbone {
 /// 🧩️ A fresh registered program of the toy app authoring as `actor`.
 async fn fresh_program(actor: &str) -> ToyApp {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    assert_eq!(app.store.local_actor_id().0.as_str(), actor);
+    assert_eq!(app.stores.store.local_actor_id().0.as_str(), actor);
     app
 }
 
 /// ✏️ One document edit authored through the program's store, as a committed gesture leaves it.
 async fn author_edit(app: &mut ToyApp, op: &Value) {
-    crate::with_authoring_identity!(|identity| app.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
+    crate::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![seed_op(op)], transaction: None }, &mut identity).await).expect("the edit applies");
     app.refresh_cache().await.expect("the history backfills the edit");
 }
 
@@ -249,7 +249,7 @@ async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, to: &
         port.send(message).await.expect("a batch reaches the reader");
     }
     to.tick_backbone(&mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
-    pump_until(to, "the reader adopts the batch", |app| app.store.reprojection_progress().is_none()).await;
+    pump_until(to, "the reader adopts the batch", |app| app.stores.store.reprojection_progress().is_none()).await;
     to.refresh_cache().await.expect("the reader's history backfills");
 }
 
@@ -298,7 +298,7 @@ async fn load_through_the_host(app: &mut ToyApp, archive: protocol::DocumentArch
 async fn merge_through_the_host(app: &mut ToyApp, folder: &RouteFolder) -> (protocol::DocumentArchiveLoadOutcome, u64, u64) {
     let archive = protocol::decode_document_archive_bytes(folder.archive.as_ref().expect("the folder holds an archive")).await.expect("the folder's archive decodes");
     let (outcome, _, terminal) = drive_archive_host(app, protocol::DocumentArchiveLoadHost::merging(archive)).await;
-    pump_until(app, "the merged events are adopted", |app| app.store.reprojection_progress().is_none()).await;
+    pump_until(app, "the merged events are adopted", |app| app.stores.store.reprojection_progress().is_none()).await;
     app.refresh_cache().await.expect("the history backfills the merged events");
     let terminal = terminal.expect("a merge is polled to its terminal status");
     (outcome, terminal.completed, terminal.ahead)
@@ -535,17 +535,17 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
     findings.holds(matches!(first.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running), || format!("the load ended within one poll ({:?}), so the cancel has nothing to cancel", first.state));
     findings.holds(target.reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
-    let cancelled = verb(&mut target, &fixture, semio_framework::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
+    let cancelled = verb(&mut target, &fixture, semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
     findings.holds(rejected(&cancelled).is_none(), || format!("the cancel was refused: {:?}", cancelled.output));
     findings.holds(target.reprojection_status().is_none(), || format!("the cancelled load still reads as loading: {:?}", target.reprojection_status()));
-    findings.holds(target.document_loading_refusal("undo").is_none(), || "a verb still waits for the cancelled load".to_string());
+    findings.holds(target.ingest.document_loading_refusal(&target.tools, "undo").is_none(), || "a verb still waits for the cancelled load".to_string());
     let mut turns = 0usize;
-    while target.document_archive_loads.get(62).is_some_and(|load| !load.terminal()) && turns < 100_000 {
+    while target.ingest.document_archive_loads.get(62).is_some_and(|load| !load.terminal()) && turns < 100_000 {
         let demand = PluginApp::maintenance_retirement_demands(&target, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("a quoted maintenance demand");
         PluginApp::maintenance_step(&mut target, plugin_demand_grant(demand)).expect("a maintenance turn");
         turns += 1;
     }
-    findings.holds(target.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));
+    findings.holds(target.ingest.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));
     let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the host's next poll");
     findings.same(&status.state, &protocol::DocumentArchiveLoadState::Cancelled, "what the host's next poll finds");
     PluginApp::acknowledge_document_archive_load(&mut target, 62).expect("the cancelled load is acknowledged");

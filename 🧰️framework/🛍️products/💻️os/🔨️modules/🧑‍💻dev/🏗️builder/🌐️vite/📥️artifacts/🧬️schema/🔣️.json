@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "renderer",
+    "command",
+    "engines"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "renderer": {
+      "enum": [
+        "react",
+        "wgpu"
+      ]
+    },
+    "command": {
+      "enum": [
+        "build",
+        "serve"
+      ]
+    },
+    "engines": {
+      "enum": [
+        "none",
+        "renderer",
+        "play",
+        "distribution"
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-runtime-mailbox-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,0 +1,1 @@
+{"type": "object", "additionalProperties": false, "required": ["version", "values"], "properties": {"version": {"const": 1}, "values": {"type": "array", "minItems": 79, "maxItems": 79, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 78}}}}

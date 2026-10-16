@@ -330,7 +330,7 @@ pub(super) mod retained_turn_fixtures {
                     schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                     plugin_id: "fixture-plugin".into(),
                     package_id: "semio:fixture-plugin".into(),
-                    profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                    profile: crate::os_component_receipt::ComponentProfileV1::Release,
                     target: crate::os_component_receipt::COMPONENT_TARGET.into(),
                     wasm_sha256: "33".repeat(32),
                     wasm_bytes: 1024,

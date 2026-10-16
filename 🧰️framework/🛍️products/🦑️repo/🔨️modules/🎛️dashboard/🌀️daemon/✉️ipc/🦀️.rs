@@ -3,7 +3,7 @@
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🌀️daemon/🔣️.json
 
-use crate::registry::{Launch, LaunchProcess, Stop};
+use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -71,30 +71,7 @@ pub enum ServerMsg {
     Shutdown {},
 }
 
-/// 🏷️ What a running task is called; the registry computes it at launch and it travels with the session.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub struct TaskLabel {
-    pub verb: String,
-    pub owner: Vec<String>,
-    pub subject: String,
-    pub qualifier: String,
-    pub parameters: Vec<(String, String)>,
-    pub members: u16,
-}
 
-/// 🟢 Ready when the output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>`; the ready URL is that match
-/// plus `path`, or with `printed` the whole printed address.
-///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🟢️ready/🦀️.rs
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub struct Ready {
-    pub port: u16,
-    pub path: String,
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub printed: bool,
-}
 
 /// 🚨 The kinds of failure an error message names; the schema lists the same words.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -397,9 +374,9 @@ pub fn log_dir(root: &Path) -> PathBuf { daemon_dir(root).join("logs") }
 /// #️⃣ The hash every persistent name of the dashboard derives from: XXH3 with the default secret, which is the
 /// same value on every platform, toolchain and run, unlike the standard library's randomised hasher.
 ///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️core/🦀️.rs
 pub fn stable_hash(bytes: &[u8]) -> u64 {
-    crate::registry::xxh3_64(bytes)
+    dashboard_core::xxh3_64(bytes)
 }
 
 /// 🔑 The stable name of a workspace in endpoint names: sixteen hexadecimal digits of its canonical path, and of the

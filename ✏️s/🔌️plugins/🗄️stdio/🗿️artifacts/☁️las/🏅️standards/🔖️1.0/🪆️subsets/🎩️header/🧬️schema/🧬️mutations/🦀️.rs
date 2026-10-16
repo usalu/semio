@@ -195,9 +195,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
 //#endregion 🔖️SharedFixtures
 
 //#region Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion Tests
 
 /// 📍️ A point as the decoder yields it under the default header (`scale 0.01`, `offset 0`):

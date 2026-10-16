@@ -10,6 +10,7 @@
 import { parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
 import { type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
 import { createContext } from "react";
+import { installPageRuntimeAssets } from "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️wasm-session-loader
@@ -33,6 +34,7 @@ export function createWasmModuleLoader<T>(load: () => Promise<T>): () => Promise
 const loadSurfaceSessionModule = createWasmModuleLoader<SurfaceSessionModule>(async () => {
   const module = await import("@semio-tech/framework-surface-rs");
   await module.default();
+  await installPageRuntimeAssets(module);
   return module;
 });
 
@@ -45,7 +47,7 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 
 //#region GraphSession
 type GraphSessionModule=typeof import("@semio-tech/framework-os-node-graph-rs");
-const loadGraphSessionModule=createWasmModuleLoader<GraphSessionModule>(async()=>{const module=await import("@semio-tech/framework-os-node-graph-rs");await module.default();return module;});
+const loadGraphSessionModule=createWasmModuleLoader<GraphSessionModule>(async()=>{const module=await import("@semio-tech/framework-os-node-graph-rs");await module.default();await installPageRuntimeAssets(module);return module;});
 export async function createGraphSession():Promise<WasmCanvasSession>{const module=await loadGraphSessionModule();return new module.GraphSession();}
 //#endregion GraphSession
 
@@ -63,6 +65,7 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
       import("@semio-tech/flow-core/🌐️flow-browser.js"),
     ]).then(async ([core, browser]) => {
       const exports = await core.default();
+      await installPageRuntimeAssets(core);
       // 🖼️ `core` (not `exports`) carries the wasm-bindgen wrappers, the only ones that can take an
       // `HtmlCanvasElement` — that is how a flow surface reaches its own WebGPU presenter.
       return browser.createFlowBrowserRuntime({ source: exports, bindings: core });
@@ -117,6 +120,7 @@ type EditorSessionModule = typeof import("@semio-tech/framework-editor-rs");
 const loadEditorSessionModule = createWasmModuleLoader<EditorSessionModule>(async () => {
   const module = await import("@semio-tech/framework-editor-rs");
   await module.default();
+  await installPageRuntimeAssets(module);
   return module;
 });
 
@@ -197,7 +201,6 @@ export type MapWasmSession = {
   featuresInPolygonJson(pointsJson: string, crossing: boolean): string;
   hitTestFeatureJson(sx: number, sy: number): string;
   featureScreenJson(kind: string, id: string): string;
-  positionScreenJson(id: string): string;
   currentLodJson(): string;
   setMapThemeJson(json: string): void;
   gpuReady(): boolean;
@@ -277,6 +280,8 @@ export type Board2dWasmSession = {
   interactionJson?(): string;
   /** 🖍️ World extent one area-brush CLICK paints; a click-drag states its own rectangle. */
   setAreaBrushExtent?(width: number, height: number): void;
+  /** 🏷️ Installs (a string) or clears (`null`) the scene's brush placement prefixes in the board's wire form (`Board2dScene.placementNaming`). */
+  setPlacementNamingJson?(json: string | null): void;
   /** 🩺️ Every target region the board holds (`[{id,x,y,width,height,label?,hidden,locked,selected}]`). */
   targetRegionsJson?(): string;
   /** 🩺️ On-screen handle vitals (`{total,onScreen,published,capped,rows:[[id,x,y,nodeId,handleKind,open]]}`) — the only DOM channel that names a handle. */

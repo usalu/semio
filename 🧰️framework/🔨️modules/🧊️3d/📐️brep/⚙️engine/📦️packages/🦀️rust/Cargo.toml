@@ -16,6 +16,7 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-mesh-component-references = { path = "../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
 semio-framework-3d-brep-vector.workspace = true
 semio-framework-3d-brep-tolerance.workspace = true
 semio-framework-3d-brep-surface.workspace = true

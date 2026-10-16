@@ -1,6 +1,17 @@
+//! 🧱️ Catalog_quick of the capabilities crate: Gateway capability declarations and the core catalog.
 
-use super::*;
+use semio_framework::manifest;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::Terminology;
+#[cfg(any(test, feature = "testkit"))]
 use crate::source_builders;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, CapabilityOwner, CatalogError, DescribedVerb, DescriptionFinding, DescriptionProblem, compile, description_findings, description_problems, ui_dialog_open_capability};
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 #[test]
 fn compiling_the_same_source_twice_is_byte_identical() {
@@ -39,7 +50,7 @@ fn cad_translate_selection_compiles_with_the_dxyz_input_schema() {
     let capability = catalog.get("cad.editor.translateSelection").expect("translateSelection present");
     assert_eq!(capability.kind, CapabilityKind::Mutation);
     let properties = capability.input_schema["properties"].as_object().expect("object schema");
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     assert_eq!(capability.id.as_str(), fixture["catalog"]["capabilityId"].as_str().expect("fixture capability id"));
     assert_eq!(properties, fixture["catalog"]["properties"].as_object().expect("fixture properties"));
 }
@@ -72,7 +83,7 @@ fn duplicate_capability_id_is_rejected() {
 /// exactly the declared `(verb, problem)` list — the TypeScript twin replays the same file with AJV.
 #[test]
 fn description_problems_match_the_language_agnostic_fixture() {
-    let rows: Vec<serde_json::Value> = serde_json::from_str(include_str!("../🧫️fixtures/💬️capability-description.json")).expect("the fixture is JSON");
+    let rows: Vec<serde_json::Value> = serde_json::from_str(fixture_text("../../../🗂️catalog/🧪️tests/🧫️fixtures/💬️capability-description.json")).expect("the fixture is JSON");
     assert!(rows.len() >= 10);
     for row in rows {
         let verbs: Vec<DescribedVerb> = row["verbs"]

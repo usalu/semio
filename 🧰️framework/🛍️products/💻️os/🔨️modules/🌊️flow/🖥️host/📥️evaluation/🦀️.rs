@@ -6,8 +6,8 @@ use protocol::causal::transition::HistoryFoldIndexInsert;
 use std::mem::{ManuallyDrop,size_of};
 const KEYS:[&str;6]=["done","cancellable","phase","unitsDone","unitsTotal","output"];
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
-fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
-fn rows(source:&DslValue)->Result<&[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original evaluation reply requires an object"))}}
+pub fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
+pub fn rows(source:&DslValue)->Result<&[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original evaluation reply requires an object"))}}
 fn rows_mut(source:&mut DslValue)->Result<&mut[(String,DslValue)],ValueError>{match source{DslValue::Object(rows)=>Ok(rows),_=>Err(invalid("original evaluation reply requires an object"))}}
 fn number_demand(_: &u64,_:&u64,_:usize,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:2*size_of::<u64>(),depth:1,..Default::default()})}
 fn number_step(left:&u64,right:&u64,_:usize,g:RetainedCloneGrant)->Result<(Option<std::cmp::Ordering>,usize,RetainedCloneProgress),ValueError>{if g.maximum_copy_bytes<2*size_of::<u64>(){return Ok((None,0,Default::default()))}Ok((Some(left.cmp(right)),0,RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<u64>(),..Default::default()}))}
@@ -70,6 +70,3 @@ impl FlowEvaluationReplyReceiver{
 }
 impl Drop for FlowEvaluationReplyReceiver{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original evaluation reply requires paid full close");}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

@@ -1,7 +1,7 @@
 //! 🔌️ Verifies and regenerates the canonical plugin and playground registry.
 
-use crate::catalog::configured_catalog_root;
 use crate::proc::spawn_inherit;
+use dashboard_core::catalog::configured_catalog_root;
 use std::path::Path;
 
 // #region 🔖️Command

@@ -295,18 +295,18 @@ function parseVizApiKeyLine(line: string): VizApiKey[] {
   let fallback = "";
   let description = "";
   if (spaced !== null) {
-    [, names, type, fallback, description] = spaced as unknown as string[];
+    const[match,foundNames,foundType,foundFallback,foundDescription]=spaced;if(match===undefined||foundNames===undefined||foundType===undefined||foundFallback===undefined||foundDescription===undefined)return [];names=foundNames;type=foundType;fallback=foundFallback;description=foundDescription;
   } else if (paren !== null) {
-    const [, rawNames, inside, rest] = paren as unknown as string[];
-    names = rawNames!;
-    const parts = inside!.split(",").map((part) => part.trim());
+    const [,rawNames,inside,rest]=paren;if(rawNames===undefined||inside===undefined)return [];
+    names=rawNames;
+    const parts=inside.split(",").map((part) => part.trim());
     type = parts[0] ?? "";
     fallback = parts.slice(1).join(", ");
     description = rest ?? "";
   } else {
     const plain = /^([A-Za-z0-9@_,\s-]+?)\s+default\s+(\S+)\s{2,}(.*)$/.exec(body);
     if (plain === null) return [];
-    [, names, fallback, description] = plain as unknown as string[];
+    const[,foundNames,foundFallback,foundDescription]=plain;if(foundNames===undefined||foundFallback===undefined||foundDescription===undefined)return [];names=foundNames;fallback=foundFallback;description=foundDescription;
   }
   const trailing = /,?\s*default\s+([^.,]+)[.,]?\s*$/.exec(description ?? "");
   if (trailing !== null && (fallback ?? "").length === 0) {

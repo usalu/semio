@@ -2,7 +2,7 @@
 // #region host
 
 use crate::instance::{create_os_id, OsInstanceState};
-use crate::registry::{os_app_registration, resolve_os_app_definition, PluginRegistry};
+use crate::registry::{os_app_registration, resolve_kernel_future, resolve_os_app_definition, PluginRegistry};
 use crate::space;
 use crate::workflow;
 use protocol::Mutation;
@@ -17,34 +17,6 @@ use std::sync::{Arc, LazyLock, Mutex};
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::document_backbone_ref, os_store::document_materialize::materialize_document_snapshot, os_store::store_schema::ArtifactBackboneRef, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
 use vcs::{ArtifactVcs, VcsError};
-
-/// 🌉️ Synchronous bridge for the kernel/`semio_framework` calls this crate's already-published
-/// sync API (`BackboneDocument` codecs, `OsBackbonePort`'s in-memory/localStorage bridge, media
-/// negotiation, the `io_dialects_for`/`io_route`/`io_run`/`io_dispatch` mechanism, workflow node/
-/// parameter/validation helpers, `AppIo`/`CommandGrammar` reconstruction) still depend on, now
-/// that those crates made them `async fn` for their own pooled-actor substrate. Every caller of
-/// this helper is over a documented-immediate operation — pure data transforms and registry
-/// lookups, never the file/folder host ports (which stay behind their own genuinely-async
-/// `crate::backbone::SpaceBackbonePort` path) — so a single poll always resolves `Ready`. Not a
-/// second executor entry point: it holds no runtime, spawns nothing, and never parks — it is one
-/// bare `Future::poll`, same shape and same justification as this crate's existing test-only
-/// bridge just below (`ExtensionInstall`'s `block_on`), lifted out of `#[cfg(test)]` because this
-/// crate's sync surface needs it in production too.
-pub(crate) fn resolve_kernel_future<F: std::future::Future>(future: F) -> F::Output {
-    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
-    fn no_op(_: *const ()) {}
-    fn clone(_: *const ()) -> RawWaker {
-        RawWaker::new(std::ptr::null(), &VTABLE)
-    }
-    static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, no_op, no_op, no_op);
-    let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
-    let mut cx = Context::from_waker(&waker);
-    let mut future = std::pin::pin!(future);
-    match future.as_mut().poll(&mut cx) {
-        Poll::Ready(value) => value,
-        Poll::Pending => panic!("resolve_kernel_future: this call site is documented immediate"),
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

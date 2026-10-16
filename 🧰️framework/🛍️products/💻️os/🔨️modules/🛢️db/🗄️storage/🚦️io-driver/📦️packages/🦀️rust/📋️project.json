@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-db-io-driver-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

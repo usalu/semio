@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
+use semio_framework_ui_locale::Locale;
+use crate::viewer::wav::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

@@ -4,7 +4,8 @@
 //! `TrustedCatalogPublicationCommandV1`, `TrustedCatalogPublicationReceiptV1` and
 //! `TrustedCatalogCurrentPointerV1`; these types are its Rust projection.
 
-use super::{catalog, catalog_error, decode_digest, AuthorityError, TRUSTED_IDENTITY_MAX_BYTES};
+use super::{catalog, catalog_error, decode_digest, TRUSTED_IDENTITY_MAX_BYTES};
+use semio_hub_artifact_authority::AuthorityError;
 use semio_framework::PackageRole;
 use serde::{Deserialize, Serialize};
 

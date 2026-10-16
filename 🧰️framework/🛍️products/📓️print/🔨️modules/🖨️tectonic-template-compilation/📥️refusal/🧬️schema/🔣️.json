@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "requestSha256",
+    "status",
+    "signal",
+    "log"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "compiler-refusal"
+    },
+    "requestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255
+    },
+    "signal": {
+      "const": null
+    },
+    "log": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 262144
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumLogBytes": 262144,
+        "maximumRequestBytes": 4194304,
+        "maximumResultBytes": 2097152,
+        "maximumResultLines": 8192,
+        "prefix": "SEMIO_PRINT_REFUSAL_V1 "
+      }
+    },
+    "Protocol": {
+      "const": {
+        "steps": [
+          "parent-authenticates-paid-scratch",
+          "parent-writes-finite-request",
+          "child-receives-parent-original",
+          "child-authenticates-owned-request",
+          "actual-compiler-nonzero-without-signal",
+          "capture-bounded-log-before-cleanup",
+          "rethrow-exact-primary",
+          "child-original-fails",
+          "emit-terminal-diagnostic-data",
+          "parent-joins-and-verifies-status-hash-data"
+        ],
+        "refusals": [
+          "success",
+          "cancellation",
+          "deadline",
+          "signal",
+          "missing-log",
+          "foreign-request",
+          "changed-request"
+        ]
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "intent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "intent": {
+          "type": "object"
+        }
+      }
+    },
+    "TerminalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "originalCancelled",
+        "compilerCancelled",
+        "remainingMilliseconds"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "originalCancelled": {
+          "type": "boolean"
+        },
+        "compilerCancelled": {
+          "type": "boolean"
+        },
+        "remainingMilliseconds": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          ]
+        }
+      }
+    }
+  }
+}

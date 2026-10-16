@@ -8,7 +8,8 @@
         "version",
         "root",
         "maximumBytes",
-        "remainingFiles"
+        "remainingFiles",
+        "expectedBytes"
       ],
       "properties": {
         "version": {
@@ -28,6 +29,18 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "expectedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -76,7 +89,8 @@
       "const": {
         "version": 1,
         "maximumChunkBytes": 65536,
-        "verification": "descriptor-byte-replay"
+        "verification": "descriptor-byte-replay",
+        "maximumAncestors": 64
       }
     }
   }

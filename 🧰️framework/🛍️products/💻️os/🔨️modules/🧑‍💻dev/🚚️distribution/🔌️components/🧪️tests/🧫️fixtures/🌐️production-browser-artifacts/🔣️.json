@@ -33,6 +33,12 @@
     "🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
     "🔌️plugin-modules/🧵️shard",
     "🔌️plugin-modules/🪞️vendor",
+    "renderer-modules/compiler-fonts",
+    "renderer-modules/canvas-fonts",
+    "renderer-modules/icon-pack",
+    "renderer-modules/package-assets/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts",
+    "renderer-modules/package-assets/🧰️framework/🔨️modules/🖼️canvas/🖼️assets",
+    "renderer-modules/package-assets/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes",
     "🔌️plugin-modules/📐️cad",
     "🧩️extension-modules/🏢️cad-extension-aec-building"
   ],

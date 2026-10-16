@@ -1293,7 +1293,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs"), "utf8");
+      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
       const shader = (name: string) => shaderSource.match(new RegExp(`pub const ${name}: &str = r#"([\\s\\S]*?)"#;`))?.[1];
       const texturedShader = shader("WORLD3D_TEXTURED_SHADER");
       const lineShader = shader("WORLD3D_LINES_SHADER");
@@ -1549,7 +1549,7 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const source = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs"), "utf8");
+      const source = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
       const shader = source.match(/pub const WORLD3D_GRID_SHADER: &str = r#"([\s\S]*?)"#;/)?.[1];
       if (!shader) throw new Error("Production WORLD3D_GRID_SHADER constant not found");
       shaderSha256 = createHash("sha256").update(shader).digest("hex");
@@ -1640,7 +1640,7 @@ export async function runSceneShadingOracle(
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs"), "utf8");
+      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
       const shaderName = command === "shading-s2-celebration" ? "WORLD3D_CELEBRATION_SHADER" : "WORLD3D_SHADER";
       const shader = shaderSource.match(new RegExp(`pub const ${shaderName}: &str = r#"([\\s\\S]*?)"#;`))?.[1];
       if (!shader) throw new Error(`Production ${shaderName} constant not found`);

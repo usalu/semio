@@ -14,8 +14,8 @@ use semio_framework_plugin::ExampleSourceBody;
 fn every_registered_example_builds_its_document() {
     assert!(!examples().is_empty(), "puzzle 5d registers examples");
     for source in examples() {
-        let ExampleSourceBody::Deferred { source: authored, .. } = source.body() else { panic!("{} is a deferred DSL example", source.id()) };
-        let text = std::str::from_utf8(authored).unwrap_or_else(|error| panic!("{} is UTF-8: {error}", source.id()));
+        let ExampleSourceBody::Deferred { source_suffix, source: authored, .. } = source.body() else { panic!("{} is a deferred DSL example", source.id()) };
+        let text = if source_suffix.ends_with(".digest") { crate::examples::puzzle5d::capsule_dream::dsl_text() } else { std::str::from_utf8(authored).unwrap_or_else(|error| panic!("{} is UTF-8: {error}", source.id())) };
         let parsed = parse_dsl(text).unwrap_or_else(|error| panic!("{} example DSL parses: {error}", source.id()));
         let built: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&source.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} document decodes: {error:?}", source.id()));
         assert!(built == parsed, "{} document equals its authored DSL", source.id());

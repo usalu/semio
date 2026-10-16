@@ -31,8 +31,5 @@ pub fn compute_las_bounds(snapshot: &LasSnapshot) -> LasBounds {
 }
 //#endregion 🔖️Bounds
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

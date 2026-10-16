@@ -314,8 +314,7 @@ export function parseGisMapInferencePreviewV1(value: unknown): GisMapInferencePr
   const ring = row.ring;
   if (row.schema !== "semio.hub.gis-map-inference-preview/v1" || !hex(row.jobId, 32) || !hex(row.proposalHash, 64) || typeof row.regionId !== "string" || !/^inference-[0-9a-f]{32}$/.test(row.regionId)
     || !Array.isArray(ring) || ring.length !== 5
-    || !ring.every((point) => Array.isArray(point) && point.length === 2 && point.every((axis) => typeof axis === "number" && Number.isFinite(axis)))
-    || !ring.every((point) => (point as number[])[0] >= -180 && (point as number[])[0] <= 180 && (point as number[])[1] >= -90 && (point as number[])[1] <= 90)) return fail(name);
+    || !ring.every((point) => Array.isArray(point) && point.length === 2 && typeof point[0] === "number" && Number.isFinite(point[0]) && point[0] >= -180 && point[0] <= 180 && typeof point[1] === "number" && Number.isFinite(point[1]) && point[1] >= -90 && point[1] <= 90)) return fail(name);
   return { schema: "semio.hub.gis-map-inference-preview/v1", jobId: row.jobId as string, proposalHash: row.proposalHash as string, regionId: row.regionId, ring: (ring as number[][]).map((point) => [...point]) };
 }
 

@@ -1,0 +1,9 @@
+# Print Native Emission Ownership
+
+The old main grammar launches ambient `bun x repo run @semio-tech/print-rs:test` and passes three free output paths via PRINT_NATIVE_CHART_TIKZ, PRINT_NATIVE_SPATIAL_TIKZ and PRINT_NATIVE_GEO_PLANAR_TIKZ. The actual writers are three fixture functions in Print chart-mutations Rust Source. The current full native branch refuses before that spawn; this is a remaining implementation gap, not completion.
+
+The replacement being authored is a fixed actual Print Rust Script command, run by Core's owned command under the actual accepted Print scratch phase and exact carried Original environment. It invokes the existing canonical Cargo command owner with exact authored tests. It returns bounded prefixed JSON emission DATA, never file-path authority. Actual TeX files are materialized only by the parent under its retained paid scratch and consumed within the same Print execution. No new Original, namespace, capacity or runtime dependency is introduced.
+
+The closed protocol has at most512 records,2MiB total captured transcript and128KiB UTF8 per source, with only main/spatial/planar roles and portable TeX names. Exactly one main source is required, and both subordinate roles must be present. Names are distinct within role. The parser completes validation before any filesystem effect. Missing/invalid/duplicate/over-cap records refuse; ordinary Cargo diagnostic lines carry no output meaning.
+
+Schema/corpus and independent Ajv/SQLite roster law were authored first. `print-native-emission-red1.log` is a genuine missing-owner RED. The Source parser is now authored; this report does not claim its successor or any Rust/compiler/child runtime has passed. The Rust producer, fixed Script entry and owned capture integration remain pending Root's contract coordination. Existing failed gates and all prior raw-output frontiers remain recorded.

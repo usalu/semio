@@ -1,6 +1,7 @@
 //! 🧪️ Original source loans and opaque producer results share one portable corpus.
 use super::*;
-use crate::{artifact::{FlowHostSnapshot,Widget},vcs::forms_bridge::flow_host_snapshot_to_form_spec};
+use crate::forms_bridge::flow_host_snapshot_to_form_spec;
+use semio_framework_artifact_flow_flow::artifact::{FlowHostSnapshot,Widget};
 use std::cell::RefCell;
 struct InputProducer {loans:RefCell<Vec<usize>>}
 impl InputProducer {fn field(&self,id:&str,kind:&str)->(String,String){self.loans.borrow_mut().push(id.as_ptr() as usize);(id.to_owned(),kind.to_owned())}}

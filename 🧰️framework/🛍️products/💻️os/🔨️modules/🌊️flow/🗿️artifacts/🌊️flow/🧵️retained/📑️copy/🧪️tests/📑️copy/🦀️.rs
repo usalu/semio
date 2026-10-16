@@ -152,7 +152,7 @@ fn flow_selected_copy_rejects_actual_root_overgrant_and_keeps_owner_for_recovery
 
 #[test]
 fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_payload_pages() {
-    let(root,drops)=source();let pointer=Arc::as_ptr(&root);let mut denied=FlowWidgetCopy::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),Arc::new(RootFactory),[1;32]);let demand=denied.next_normal_demands(64).unwrap();assert!(demand.capacity_bytes>0);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes-1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(result,born,freed)=crate::retained::field_tests::observe(||denied.cursor.advance(grant));assert_eq!(result.unwrap(),None);assert_eq!((born,freed),(0,0));assert_eq!(Arc::as_ptr(denied.cursor.owned.source.as_ref().unwrap()),pointer);assert_eq!(denied.allocations().reserved_bytes(),0);close(&mut denied.cursor,1);assert_eq!(drops.load(Ordering::SeqCst),1);
+    let(root,drops)=source();let pointer=Arc::as_ptr(&root);let mut denied=FlowWidgetCopy::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),Arc::new(RootFactory),[1;32]);let demand=denied.next_normal_demands(64).unwrap();assert!(demand.capacity_bytes>0);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes-1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(result,born,freed)=crate::retained_laws::field_tests::observe(||denied.cursor.advance(grant));assert_eq!(result.unwrap(),None);assert_eq!((born,freed),(0,0));assert_eq!(Arc::as_ptr(denied.cursor.owned.source.as_ref().unwrap()),pointer);assert_eq!(denied.allocations().reserved_bytes(),0);close(&mut denied.cursor,1);assert_eq!(drops.load(Ordering::SeqCst),1);
     let (root, drops) = source();
     let mut cursor = FlowHostSnapshotCopy::new(root, 0, |root, _| root.host_snapshot.as_ref(), Arc::new(RootFactory),[1;32]);
     assert_eq!(cursor.allocations().reservation_count(), 0);
@@ -203,7 +203,7 @@ fn flow_selected_copy_close_refuses_subexact_capacity_and_release_without_false_
 
 #[test]
 fn flow_selected_copy_preserves_original_factory_through_erased_handoff(){
- fn observe<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){let(value,born,freed)=crate::retained::field_tests::observe(operation);(value,(born,freed))}
+ fn observe<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){let(value,born,freed)=crate::retained_laws::field_tests::observe(operation);(value,(born,freed))}
  let text=include_str!("../🧫️fixtures/🔣️.json");let fixture:serde_json::Value=serde_json::from_str(text).unwrap();
  for copy in fixture["factoryCustody"]["copyGrants"].as_array().unwrap(){
   let copy=copy.as_u64().unwrap()as usize;let(root,drops)=source();let factory:Arc<dyn SnapshotRetirementFactory<Root>>=Arc::new(RootFactory);let address=Arc::as_ptr(&factory)as *const();let mut cursor=CopyCursor::<Root,Widget>::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),factory,[1;32]);cursor.begin_close();let mut handoff=false;
@@ -261,16 +261,16 @@ fn flow_selected_copy_retains_actual_failed_factory_ticket_and_receipt(){
  for copy in fixture["factoryCustody"]["copyGrants"].as_array().unwrap(){
   let copy=copy.as_u64().unwrap()as usize;let(root,drops)=source();let factory:Arc<dyn SnapshotRetirementFactory<Root>>=Arc::new(RefusedFactory(std::sync::atomic::AtomicBool::new(false)));let address=Arc::as_ptr(&factory)as*const();let mut cursor=CopyCursor::<Root,Widget>::new(root,0,|root,index|root.host_snapshot.as_ref()?.widgets.get(index),factory,[1;32]);cursor.begin_close();let mut refused=false;
   for turn in 0..1_048_576{
-   if cursor.terminal_is_empty(){break}assert!(turn<1_048_575,"original failed factory ticket must close");let grant=paid(&cursor,copy);let(result,born,freed)=crate::retained::field_tests::observe(||cursor.close_step(grant));let progress=match result{Ok(step)=>step.progress(),Err(error)=>{assert!(!refused);refused=true;assert_eq!(error.kind,ValueRefusalKind::AllocationFailed);assert_eq!(Arc::as_ptr(cursor.owned.factory_source.as_ref().unwrap())as*const(),address);assert!(cursor.owned.factory_close.is_some());assert!(fixture["factoryCustody"]["partialTicketPreserved"].as_bool().unwrap());assert!(fixture["factoryCustody"]["refusedOriginalPreserved"].as_bool().unwrap());error.retained_progress()}};assert!(progress.fits(grant));assert_eq!((born,freed),(progress.retained_capacity_bytes,progress.released_bytes));
+   if cursor.terminal_is_empty(){break}assert!(turn<1_048_575,"original failed factory ticket must close");let grant=paid(&cursor,copy);let(result,born,freed)=crate::retained_laws::field_tests::observe(||cursor.close_step(grant));let progress=match result{Ok(step)=>step.progress(),Err(error)=>{assert!(!refused);refused=true;assert_eq!(error.kind,ValueRefusalKind::AllocationFailed);assert_eq!(Arc::as_ptr(cursor.owned.factory_source.as_ref().unwrap())as*const(),address);assert!(cursor.owned.factory_close.is_some());assert!(fixture["factoryCustody"]["partialTicketPreserved"].as_bool().unwrap());assert!(fixture["factoryCustody"]["refusedOriginalPreserved"].as_bool().unwrap());error.retained_progress()}};assert!(progress.fits(grant));assert_eq!((born,freed),(progress.retained_capacity_bytes,progress.released_bytes));
   }
-  assert!(refused&&cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,born,freed)=crate::retained::field_tests::observe(||drop(cursor));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] original selected-copy failed factory copy={copy} actualPartialTicket=true sameArc=true exactReceipt=true terminalDrop0");
+  assert!(refused&&cursor.terminal_is_empty());assert_eq!(drops.load(Ordering::SeqCst),1);let(_,born,freed)=crate::retained_laws::field_tests::observe(||drop(cursor));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] original selected-copy failed factory copy={copy} actualPartialTicket=true sameArc=true exactReceipt=true terminalDrop0");
  }
 }
 
 #[test]
 fn flow_selected_copy_normal_frames_and_cancel_match_physical_receipts(){
     struct Heap{requested_bytes:usize,released_bytes:usize}
-    fn observe<T>(operation:impl FnOnce()->T)->(T,Heap){let(value,requested_bytes,released_bytes)=crate::retained::field_tests::observe(operation);(value,Heap{requested_bytes,released_bytes})}
+    fn observe<T>(operation:impl FnOnce()->T)->(T,Heap){let(value,requested_bytes,released_bytes)=crate::retained_laws::field_tests::observe(operation);(value,Heap{requested_bytes,released_bytes})}
     for body in [1,3,64]{
         let(root,drops)=source();let pointer=Arc::as_ptr(&root);
         let mut cursor=FlowHostSnapshotCopy::new(root,0,|root,_|root.host_snapshot.as_ref(),Arc::new(RootFactory),[1;32]);

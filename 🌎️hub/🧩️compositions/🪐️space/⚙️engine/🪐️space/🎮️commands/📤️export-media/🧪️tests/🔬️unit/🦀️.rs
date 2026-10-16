@@ -1,15 +1,18 @@
 
-use super::*;
+
 use crate::demo_space_projection;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::unit_tests::context::{apply_config, studio_emit};
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_app::unit_tests::context::{apply_config, studio_emit};
 use serde_json::json;
+use semio_framework_plugin::Effect;
+use semio_hub_space_commands_media::export_media::ExportMedia;
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into(), document_json: "{\"schema\":\"draw.document\"}".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(semio_hub_space_commands_media::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(semio_hub_space_commands_media::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
 }
 
 /// 🪪️ A neutral format id keeps this command law about typed effects rather than linking an
@@ -18,7 +21,7 @@ const DWG_FORMAT_ID: &str = "s.stdio.dwg.standard.ac1018.representation.document
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_emits_download_effect_and_import_requests_file_open() {
-    crate::engine::space::unit_tests::context::seed_draw_plugin().await;
+    semio_hub_space_app::unit_tests::context::seed_draw_plugin().await;
     directory::io::register_format_descriptors([directory::io::FormatDescriptor {
         kind_id: DWG_FORMAT_ID.into(),
         short_id: DWG_FORMAT_ID.into(),
@@ -67,12 +70,12 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
     assert!(!data.is_empty());
     assert_eq!(encoding.as_deref(), Some("base64"));
 
-    let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into() })).await.expect("handle");
+    let import = studio_emit(&projection, &config, &SpaceCommand::ImportMedia(semio_hub_space_commands_media::import_media::ImportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into() })).await.expect("handle");
     assert!(import.effects.iter().any(|effect| matches!(effect, Effect::RequestFileOpen { import_action, accept, .. } if import_action == "importMediaPayload" && accept.contains(".dwg"))));
     assert_eq!(import.config_mutations, vec![SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: Some(node.id), format: Some(DWG_FORMAT_ID.into()) })]);
 
     let pending_config = apply_config(&config, &import.config_mutations).await;
-    let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");
+    let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(semio_hub_space_commands_media::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");
     assert!(payload.artifact_mutations.is_empty());
 }
 

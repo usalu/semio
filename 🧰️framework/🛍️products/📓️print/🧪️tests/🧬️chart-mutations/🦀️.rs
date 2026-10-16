@@ -198,14 +198,28 @@ fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
     assert_eq!(inferred.tikz.matches("\\SemioVizChart{").count(), kinds.len());
 }
 
+/// 📤️ Emits bounded chart Source DATA only for the actual owned native grammar child.
+fn emit_native_grammar_source(kind: &str, name: &str, source: &str) {
+    if std::env::var("SEMIO_PRINT_NATIVE_EMISSION").as_deref() != Ok("1") { return; }
+    static BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    static RECORDS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    assert!(matches!(kind, "main" | "spatial" | "planar"));
+    assert!(source.len() <= 131_072 && name.len() <= 160);
+    let row = serde_json::json!({"version":1,"kind":kind,"name":name,"source":source}).to_string();
+    let bytes = row.len() + "SEMIO_PRINT_NATIVE_V1 ".len() + 1;
+    assert!(RECORDS.fetch_add(1, std::sync::atomic::Ordering::SeqCst) < 512);
+    assert!(BYTES.fetch_add(bytes, std::sync::atomic::Ordering::SeqCst) <= 2_097_152 - bytes);
+    println!("SEMIO_PRINT_NATIVE_V1 {row}");
+}
+
 #[test]
 fn native_chart_source_can_be_compiled_by_the_print_toolchain(){
-    let Some(path)=std::env::var_os("PRINT_NATIVE_CHART_TIKZ") else{return;};
+    if std::env::var("SEMIO_PRINT_NATIVE_EMISSION").as_deref() != Ok("1") { return; }
     let authored=include_str!("../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
     let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(authored,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let inference=ChartTextOutput::render(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
-    std::fs::write(path,inference.tikz).unwrap();
+    emit_native_grammar_source("main", "native-chart.tex", &inference.tikz);
 }
 
 /// 🪡️ Neutral authored option mutations emit actual canonical Rust grammar for native compilation.
@@ -303,7 +317,7 @@ fn canonical_spatial_data_mutation_vectors(){
   for value in mutations.iter().chain(if bad.is_none(){Some(&case["mutation"])}else{None}).chain(bad.map(|bad|&bad["mutation"])) {let mutation=ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap();let outcome=mutation.diff(&current);if !outcome.messages().is_empty(){failures.push(format!("{id}: structured mutation refused {:?}",outcome.messages()));setup=false;break;}let next=protocol::apply_diff(outcome.diff(),&current).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&current),&next).unwrap(),current);current=next;}
   if !setup{continue;}let result=ChartTextOutput::render(&current).unwrap();let valid=bad.is_none();if result.complete!=valid{failures.push(format!("{id}: inferred {}, expected {valid}, {:?}",result.complete,result.diagnostics));}
   if valid&&result.complete{let mut seen=Vec::new();let controlled=crate::io::text::inferences::render_chart_controlled(&current,&mut |work|{seen.push(work);Ok(())}).unwrap();assert_eq!(controlled,result.tikz);assert!(seen.windows(2).all(|pair|pair[0]<=pair[1]));let boundary=current.chart.get("tables").unwrap().as_array().unwrap()[0].get("rows").unwrap().as_array().unwrap().len()as u64+1;let mut last=0;let stopped=crate::io::text::inferences::render_chart_controlled(&current,&mut |work|{last=work;if work>=boundary{Err("spatial-registry-stop".into())}else{Ok(())}});assert_eq!(stopped.unwrap_err(),"spatial-registry-stop");assert_eq!(last,boundary);}
-  if valid&&result.complete{if let Some(root)=std::env::var_os("PRINT_NATIVE_SPATIAL_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("{id}.tex")),result.tikz).unwrap();}}
+  if valid&&result.complete{emit_native_grammar_source("spatial", &format!("{id}.tex"), &result.tikz);}
   assert_eq!(before.chart.get("tables"),None);
  }}
  assert!(failures.is_empty(),"{}",failures.join("\n"));eprintln!("[DEBUG] Native spatial Rust: {} valid and{} invalid carriers in en/de and light/dark passed canonical mutation/inverse/inference/progress/cancellation; emitted valid source awaits native D3/PDF adjudication",source["cases"].as_array().unwrap().len(),source["badCases"].as_array().unwrap().len());
@@ -316,7 +330,7 @@ fn canonical_planar_frame_mutation_vectors(){
   let mut authored=source["snapshot"].clone();authored["chart"]["language"]=case["language"].clone();authored["chart"]["theme"]=serde_json::json!({"appearance":appearance});let mut table=source["table"].clone();table["rows"]=serde_json::Value::Array(case["points"].as_array().unwrap().iter().map(|point|serde_json::json!({"x":point[0].clone(),"y":point[1].clone()})).collect());authored["chart"]["tables"]=serde_json::json!([table]);authored["chart"]["presets"]=serde_json::json!([{"kind":case["kind"].clone(),"options":{"points":source["table"]["name"].clone(),"radius":case["radius"].clone(),"bandwidth":case["bandwidth"].clone(),"gridWidth":16,"gridHeight":11,"gridOrigin":"0,0","gridCell":5,"hexScale":0.92,"heatOpacity":0.3,"thresholds":"","levels":case["levels"].clone(),"width":case["width"].clone(),"height":case["height"].clone(),"opacity":1,"lineWidth":".1mm"}}]);
   let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mut current=before.clone();for key in ["gridWidth","gridHeight","gridOrigin","gridCell","hexScale","heatOpacity","thresholds","opacity","lineWidth"]{let value=if ["gridOrigin","thresholds"].contains(&key){serde_json::Value::String(case[key].as_array().unwrap().iter().map(|item|item.to_string()).collect::<Vec<_>>().join(","))}else{case[key].clone()};let options=current.chart.get("presets").unwrap().as_array().unwrap()[0].get("options").unwrap();if options.get(key)==Some(&DslValue::from(value.clone())){continue;}let mutation=ChangeChartValue::from_value(DslValue::from(serde_json::json!({"path":["presets","0","options",key],"value":value}))).unwrap();let outcome=mutation.diff(&current);assert!(outcome.messages().is_empty());let next=protocol::apply_diff(outcome.diff(),&current).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&current),&next).unwrap(),current);current=next;}
   let result=ChartTextOutput::render(&current).unwrap();if !result.complete{failures.push(format!("{}-{appearance}: {:?}",case["id"],result.diagnostics));continue;}let mut progress=Vec::new();let controlled=crate::io::text::inferences::render_chart_controlled(&current,&mut|work|{progress.push(work);Ok(())}).unwrap();assert_eq!(controlled,result.tikz);assert!(progress.windows(2).all(|pair|pair[0]<=pair[1]));assert_eq!(crate::io::text::inferences::render_chart_controlled(&current,&mut|work|if work>=1{Err("planar-stop".into())}else{Ok(())}).unwrap_err(),"planar-stop");
-  if let Some(root)=std::env::var_os("PRINT_NATIVE_GEO_PLANAR_TIKZ"){std::fs::create_dir_all(&root).unwrap();std::fs::write(std::path::Path::new(&root).join(format!("geo-planar-{}-{appearance}.tex",case["id"].as_str().unwrap())),result.tikz).unwrap();}
+  emit_native_grammar_source("planar", &format!("geo-planar-{}-{appearance}.tex",case["id"].as_str().unwrap()), &result.tikz);
   assert_eq!(before.chart.get("presets").unwrap().as_array().unwrap()[0].get("options").unwrap().get("opacity").unwrap().as_u64(),Some(1));
  }}
  for case in source["admissionCases"].as_array().unwrap(){let mut authored=source["snapshot"].clone();authored["chart"]["language"]=case["language"].clone();authored["chart"]["tables"]=serde_json::json!([source["table"].clone()]);authored["chart"]["presets"]=serde_json::json!([{"kind":"hexbin-map","options":{"points":source["table"]["name"].clone(),"width":60,"height":30,"radius":5,"bandwidth":5,"lineWidth":".3mm","opacity":0.5}}]);let before=ChartSnapshot::from_value(DslValue::from(authored)).unwrap();let mutation=ChangeChartValue::from_value(DslValue::from(case["mutation"].clone())).unwrap();let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());let current=protocol::apply_diff(outcome.diff(),&before).unwrap();assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&before),&current).unwrap(),before);let result=ChartTextOutput::render(&current).unwrap();let valid=case["valid"].as_bool().unwrap();if result.complete!=valid{failures.push(format!("{} owned={} expected={valid}: {:?}",case["id"],result.complete,result.diagnostics));}if !valid&&!result.complete{assert!(result.tikz.is_empty());assert!(!result.diagnostics.is_empty());}}

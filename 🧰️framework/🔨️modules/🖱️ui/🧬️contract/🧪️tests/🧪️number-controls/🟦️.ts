@@ -14,8 +14,8 @@ import { scaleLinear, scaleLog } from "d3-scale";
 import type { UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
 import { dialAngle, dialPosition, SLIDER_PAGE_STEPS, sliderAdjacentSnap, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧩️component/🟦️.ts";
 import { numberRangeIsValid, snapsAreValid } from "../../🛡️limits/🟦️.ts";
-import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../🔢️number-format/🟦️.ts";
-import { uiAccessibilityValueV1 } from "../../♿️accessibility/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../🖼️presentation/🔢️number-format/🟦️.ts";
+import { uiAccessibilityValueV1 } from "../../🖼️presentation/♿️accessibility/🟦️.ts";
 import type { Component } from "../../../../🛂️manifest/🟦️.ts";
 
 type Fixture = {
@@ -31,7 +31,7 @@ type Fixture = {
   readonly keys: readonly { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly precision?: number | null; readonly factor?: number | null; readonly expected: number }[];
   readonly fieldKeys: readonly { readonly case: string; readonly key: string; readonly shift: boolean; readonly min: number | null; readonly max: number | null; readonly expected: { readonly key: SliderKey; readonly large: boolean } | null }[];
   readonly fixed: readonly { readonly case: string; readonly value: number; readonly precision: number; readonly expected: string; readonly rounded: number }[];
-  readonly valueTexts: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly valueText: string; readonly valueNow?: number | null; readonly valueMin?: number | null; readonly valueMax?: number | null }[];
+  readonly valueTexts: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly valueText: string; readonly valueNow?: number | null; readonly valueMin?: number | null; readonly valueMax?: number | null; readonly valueStep?: number | null }[];
 };
 
 /** 🚧️ A sparse fixture limit object as the typed wire decodes it (absent sides `null`, absent flags `false`). */

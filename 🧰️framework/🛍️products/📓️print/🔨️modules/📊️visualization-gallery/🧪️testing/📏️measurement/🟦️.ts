@@ -1,66 +1,27 @@
-/** 🔏️ The PDF measurement tool of the gallery cases: it expands a document's compressed streams,
- * strips the metadata a second run of the same source rewrites (dates, ids, producer, XMP), and
- * digests what is left, so two renders can be compared for sameness and two kinds for distinctness.
- * It lives here because a digest is evidence a test gathers — the gallery module itself neither
- * hashes nor inflates anything.
- */
-import type { GalleryRenderEvidence, GalleryVariantMeasurement } from "./🧬️schema/🟦️.ts";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
-import { join } from "node:path";
-import { inflateRawSync, inflateSync } from "node:zlib";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { VIZ_GALLERY_THEMES, VIZ_LANGUAGES, type VizGalleryTheme, type VizLanguage } from "../../../../🧬️schema/🟦️.ts";
-import { compilePrintTexOnce } from "../../../🖨️tectonic-template-compilation/🟦️.ts";
-import { loadVizCatalog, visualizationTemplates } from "../../🟦️.ts";
-
-
-function inflatePdfStreamBody(body: Buffer): Buffer {
-  try {
-    return inflateSync(body);
-  } catch {
-    return inflateRawSync(body);
-  }
-}
-
-/** 🔏️ Hashes PDF bytes after removing volatile document metadata and expanding streams. */
-export function pdfStableHash(pdfPath: string): string {
-  const raw = readFileSync(pdfPath).toString("binary");
-  const inflated = raw.replace(/stream\r?\n([\s\S]*?)\r?\nendstream/g, (_all, body: string) => {
-    try {
-      return `stream\n${inflatePdfStreamBody(Buffer.from(body, "binary")).toString("binary")}\nendstream`;
-    } catch {
-      return `stream\n${body}\nendstream`;
-    }
-  });
-  const text = inflated
-    .replace(/\/CreationDate\s*\([^)]*\)/g, "")
-    .replace(/\/ModDate\s*\([^)]*\)/g, "")
-    .replace(/\/ID\s*\[[^\]]*\]/g, "")
-    .replace(/\(D:[0-9+\-'Z]+\)/g, "")
-    .replace(/\/Producer\s*\([^)]*\)/g, "")
-    .replace(/\/Creator\s*\([^)]*\)/g, "")
-    .replace(/<x:xmpmeta[\s\S]*?<\/x:xmpmeta>/g, "");
-  return createHash("sha256").update(text, "binary").digest("hex");
-}
-
-//#region 🖼️GalleryMatrix
-const workspaceRoot = getWorkspaceRoot();
-const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
-
-/** 🖼️ The committed evidence file of the `🖼️gallery-render` case. */
-export const PRINT_GALLERY_EVIDENCE_PATH = join(productRoot, "🧪️tests/🧫️fixtures", "🖼️gallery-render", "🖼️gallery-render.json");
-
-
-
-
+import type{GalleryRenderEvidence,GalleryVariantMeasurement}from"./🧬️schema/🟦️.ts";
+import{createHash}from"node:crypto";
+import{join}from"node:path";
+import{writeFile}from"node:fs/promises";
+import{VIZ_GALLERY_THEMES,VIZ_LANGUAGES,type VizGalleryTheme,type VizLanguage}from"../../../../🧬️schema/🟦️.ts";
+import{loadVizCatalog,visualizationTemplates}from"../../🟦️.ts";
+import{withCompiledPrintProbeV1}from"../../../🖨️tectonic-template-compilation/🟦️.ts";
+import{withPrintScratchV1,withPrintStorageTaskV1,type PrintExecutionV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
+import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
+import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
+import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{measurePrintPdfV1}from"./📥️pdf/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import intentSchema from"../../../🖨️tectonic-template-compilation/📋️intent/🧬️schema/🔣️.json"with{type:"json"};
+const product="🧰️framework/🛍️products/📓️print",compilerPolicy=intentSchema.definitions.Policy.const,measurementPolicy=schema.$defs.GalleryMeasurementPolicy.const,maximumEvidenceBytes=measurementPolicy.maximumEvidenceBytes;
 /** 🧭️ One cell of the gallery matrix: a generated section rendered in one theme and one language. */
 export type PrintGalleryVariant = Readonly<{ id: string; section: string; texPath: string; theme: VizGalleryTheme; language: VizLanguage }>;
 
 /** 🧭️ Every generated gallery section x {light, dark} x {en, de}, optionally narrowed to the named sections. */
 export function printGalleryMatrix(sections?: readonly string[]): readonly PrintGalleryVariant[] {
-  const galleries = visualizationTemplates().filter(({ texPath }) => texPath.startsWith("🧾️template/📊️viz-gallery/"));
+  const definitions=visualizationTemplates();if(definitions.length>measurementPolicy.maximumSections||(sections?.length??0)>measurementPolicy.maximumSections)throw Error("Finite gallery matrix required");
+  const galleries = definitions.filter(({ texPath }) => texPath.startsWith("🧾️template/📊️viz-gallery/"));
   const unknown = (sections ?? []).filter((section) => !galleries.some(({ id }) => id === section));
   if (unknown.length > 0) throw new Error(`unknown gallery section(s): ${unknown.join(", ")}`);
   return galleries
@@ -69,8 +30,8 @@ export function printGalleryMatrix(sections?: readonly string[]): readonly Print
 }
 
 /** 📝️ The section source with its document class naming this variant's theme and language, so no default ever applies. */
-export function printGallerySource(variant: PrintGalleryVariant): string {
-  const source = readFileSync(join(productRoot, variant.texPath), "utf8");
+export function printGallerySource(variant: PrintGalleryVariant, source:string): string {
+  if(Buffer.byteLength(source)>compilerPolicy.maximumProbeBytes)throw Error("Bounded gallery TeX Source required");
   const options = /\\documentclass\[([^\]]*)\]\{semio\}/.exec(source);
   if (options === null) throw new Error(`${variant.texPath}: no \\documentclass[…]{semio} line to derive the variant from`);
   const kept = options[1]!.split(",").map((option) => option.trim()).filter((option) => option !== "" && !/^(theme|language)=/.test(option));
@@ -79,77 +40,14 @@ export function printGallerySource(variant: PrintGalleryVariant): string {
 
 /** 🏷️ The catalogue kinds a section draws, in document order, with their titles in the variant's language. */
 function sectionKinds(source: string, language: VizLanguage): readonly { slug: string; title: string }[] {
-  const titles = new Map(loadVizCatalog().kinds.map((kind) => [kind.slug, kind.title[language]]));
-  return [...source.matchAll(/\\SemioVizChart\{([^}]+)\}/g)].map((match) => {
-    const title = titles.get(match[1]!);
-    if (title === undefined) throw new Error(`gallery draws kind ${match[1]} that the catalogue does not declare`);
-    return { slug: match[1]!, title };
-  });
+  const kinds=loadVizCatalog().kinds;if(kinds.length>measurementPolicy.maximumKinds)throw Error("Finite gallery kind catalogue required");const titles=new Map(kinds.map(kind=>[kind.slug,kind.title[language]])),rows:{slug:string;title:string}[]=[];for(const match of source.matchAll(/\\SemioVizChart\{([^}]+)\}/gu)){if(rows.length>=measurementPolicy.maximumKinds)throw Error("Finite gallery kind projection required");const slug=match[1],title=slug===undefined?undefined:titles.get(slug);if(slug===undefined||title===undefined)throw Error(`Undeclared gallery kind ${slug}`);rows.push({slug,title});}return Object.freeze(rows);
 }
 
 function normalizedText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/** 📖️ The text of every page, read through PDF.js — a reader independent of the renderer. */
-async function pdfPageTexts(pdfPath: string): Promise<readonly string[]> {
-  const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
-  (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
-  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const pdf = await getDocument({ data: new Uint8Array(readFileSync(pdfPath)) }).promise;
-  try {
-    const texts: string[] = [];
-    for (let index = 1; index <= pdf.numPages; index++) {
-      const page = await pdf.getPage(index);
-      texts.push(normalizedText((await page.getTextContent()).items.map((item) => ("str" in item ? item.str : "")).join(" ")));
-      page.cleanup();
-    }
-    return texts;
-  } finally {
-    await pdf.destroy();
-  }
-}
-
-/** 📏️ Renders one variant in a cache-local work directory and measures it: page count, the page and page text of every kind the
- * section draws (a kind whose title appears on no page fails the measurement), and the rebuild-stable hash of the PDF. */
-export async function measurePrintGalleryVariant(variant: PrintGalleryVariant, signal?: AbortSignal): Promise<GalleryVariantMeasurement> {
-  const workDirectory = join(workspaceRoot, ".🧬semio", "🦑️repo", "⚡️cache", "tests", "gallery-render", variant.id.replaceAll("/", "-"));
-  const outDirectory = join(workDirectory, "out");
-  const jobName = variant.id.replaceAll("/", "-");
-  rmSync(workDirectory, { recursive: true, force: true });
-  mkdirSync(outDirectory, { recursive: true });
-  const source = printGallerySource(variant);
-  const texPath = join(workDirectory, `${jobName}.tex`);
-  writeFileSync(texPath, source);
-  await compilePrintTexOnce(texPath, outDirectory, workDirectory, signal);
-  const pdfPath = join(outDirectory, `${jobName}.pdf`);
-  const pages = await pdfPageTexts(pdfPath);
-  const kinds: Record<string, { page: number; text: string }> = {};
-  for (const { slug, title } of sectionKinds(source, variant.language)) {
-    const index = pages.findIndex((text) => text.includes(normalizedText(title)));
-    if (index < 0) throw new Error(`${variant.id}: kind ${slug} ("${title}") appears on no page`);
-    kinds[slug] = { page: index + 1, text: pages[index]! };
-  }
-  const measurement = { pages: pages.length, kinds, hash: pdfStableHash(pdfPath) };
-  rmSync(workDirectory, { recursive: true, force: true });
-  return measurement;
-}
-
-/** 🖼️ Regenerates the committed evidence: measures the matrix (or the named sections of it, keeping every other committed
- * variant) and writes the fixture with sorted keys. Progress is one line per measured variant; the signal cancels between
- * and inside compilations. */
-export async function writePrintGalleryEvidence(sections: readonly string[], signal?: AbortSignal): Promise<GalleryRenderEvidence> {
-  const committed = JSON.parse(readFileSync(PRINT_GALLERY_EVIDENCE_PATH, "utf8")) as GalleryRenderEvidence;
-  const matrix = printGalleryMatrix(sections);
-  const variants: Record<string, GalleryVariantMeasurement> = sections.length === 0 ? {} : { ...committed.variants };
-  for (const [index, variant] of matrix.entries()) {
-    signal?.throwIfAborted();
-    variants[variant.id] = await measurePrintGalleryVariant(variant, signal);
-    console.log(`[gallery] ${index + 1}/${matrix.length} ${variant.id}: ${variants[variant.id]!.pages} pages`);
-  }
-  const fixture: GalleryRenderEvidence = { schemaVersion: 1, generatedBy: committed.generatedBy, variants: Object.fromEntries(Object.keys(variants).sort().map((id) => [id, variants[id]!])) };
-  writeFileSync(PRINT_GALLERY_EVIDENCE_PATH, `${JSON.stringify(fixture, null, 2)}\n`);
-  return fixture;
-}
-//#endregion 🖼️GalleryMatrix
-
+/** 📏️ Measures one declared variant while actual compiler, input readers, PDF worker and scratch remain held. */
+export function measurePrintGalleryVariant(execution:PrintExecutionV1,variant:PrintGalleryVariant):Promise<GalleryVariantMeasurement>{const selected=printGalleryMatrix().find(row=>row.id===variant.id);if(!selected||JSON.stringify(selected)!==JSON.stringify({id:variant.id,section:variant.section,texPath:variant.texPath,theme:variant.theme,language:variant.language}))throw Error("Declared immutable gallery variant required");const captured=Object.freeze(selected);return withPrintScratchV1(execution,"gallery/"+captured.section,async scratch=>{const path=join(scratch.workspace,product,captured.texPath),original=await readPrintMaterialFileV1(path,compilerPolicy.maximumProbeBytes,scratch.control),identity=createHash("sha256").update(original).digest("hex"),source=printGallerySource(captured,new TextDecoder("utf-8",{fatal:true}).decode(original));return withCompiledPrintProbeV1(scratch.execution,{version:1,kind:"probe",name:"gallery.tex",source},async probe=>{const measured=await measurePrintPdfV1({operation:scratch.execution.operation,phaseControl:probe.control},scratch.destination,await probe.read("gallery.pdf",67108864)),kinds:Record<string,{page:number;text:string}>={};let bytes=0;let processed=0;for(const{slug,title}of sectionKinds(source,captured.language)){checkResourceLeaseControl(probe.control);if(++processed%16===0)await probe.control.yieldContinuation();const index=measured.pages.findIndex(text=>text.includes(normalizedText(title))),text=measured.pages[index];if(index<0||text===undefined)throw Error(`${captured.id}: kind ${slug} (${title}) appears on no page`);bytes+=Buffer.byteLength(JSON.stringify({slug,page:index+1,text}));if(bytes>maximumEvidenceBytes)throw Error("Gallery variant report aggregate exceeded");kinds[slug]={page:index+1,text};}if(createHash("sha256").update(await readPrintMaterialFileV1(path,compilerPolicy.maximumProbeBytes,probe.control)).digest("hex")!==identity)throw Error("Consumed gallery Source changed");await probe.recheck();return Object.freeze({pages:measured.pages.length,kinds:Object.freeze(kinds),hash:measured.hash});});});}
+/** 🖼️ Publishes bounded selected-mode evidence while keeping the committed oracle as read-only Source DATA. */
+export function writePrintGalleryEvidence(execution:PrintExecutionV1,sections:readonly string[]):Promise<GalleryRenderEvidence>{if(sections.length>measurementPolicy.maximumSections)throw Error("Finite gallery section selection required");const selected=Object.freeze([...sections]),matrix=printGalleryMatrix(selected);return withPrintScratchV1(execution,"gallery-report/evidence",async scratch=>{const source=await readPrintMaterialFileV1(join(scratch.workspace,product,"🧪️tests/🧫️fixtures/🖼️gallery-render/🖼️gallery-render.json"),2097152,scratch.control),committed:unknown=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(source));if(validateJsonSchemaSubset({$defs:schema.$defs,$ref:"#/$defs/GalleryRenderEvidence"},committed).length)throw Error("Closed committed gallery evidence required");const oracle=committed as GalleryRenderEvidence,variants:Record<string,GalleryVariantMeasurement>=selected.length?{...oracle.variants}:{};let bytes=Buffer.byteLength(JSON.stringify(variants));const started=performance.now();for(const[index,variant]of matrix.entries()){checkResourceLeaseControl(scratch.control);const measured=await measurePrintGalleryVariant(scratch.execution,variant),old=variants[variant.id],delta=Buffer.byteLength(JSON.stringify(measured))-(old?Buffer.byteLength(JSON.stringify(old)):0)+Buffer.byteLength(variant.id)+4;if(delta>maximumEvidenceBytes-bytes)throw Error("Gallery evidence aggregate exceeded");bytes+=delta;variants[variant.id]=measured;await scratch.control.publish({resource:`print:gallery:${index+1}/${matrix.length}`,mode:"exclusive",elapsedMs:performance.now()-started});}const fixture:GalleryRenderEvidence={schemaVersion:1,generatedBy:oracle.generatedBy,variants:Object.fromEntries(Object.keys(variants).sort().map(id=>[id,variants[id]!] ))},data=JSON.stringify(fixture)+"\n";if(Buffer.byteLength(data)>maximumEvidenceBytes)throw Error("Finite serialized gallery evidence required");const file=join(scratch.directory,"gallery-evidence.json");await writeFile(file,data,{flag:"wx"});await withPrintStorageTaskV1(scratch.execution.operation,scratch.control,async(_operation,context)=>{const products=context.store("products"),directory=printArtifactLayoutV1(products.root,{version:1,kind:"measurement",mode:context.mode,id:"gallery-evidence"}).directory;await withRepositoryArtifactDestinationV1({workspace:context.workspace,invocation:context.invocation,storage:products.storage,control:products.control,phaseControl:context.phaseControl,directory},destination=>stageRepositoryArtifacts(destination,"@semio-tech/print:gallery-evidence",new Map([["gallery-evidence.json",file]])));});return fixture;});}

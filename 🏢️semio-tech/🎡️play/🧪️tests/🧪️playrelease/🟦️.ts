@@ -34,7 +34,7 @@ describe("published Play verification", () => {
       mkdirSync(dirname(file), { recursive: true });
       writeFileSync(file, row.body);
     }
-    const service = servePublishedPlay(root), oracle = await request.newContext();
+    const service = servePublishedPlay(root,["play","map","media","modules"]), oracle = await request.newContext();
     try {
       for (const row of fixture.requests) {
         const url = new URL(row.path, service.origins[`https://${playPageHost(row.page, "play.semio-tech.com")}`]);
@@ -44,7 +44,7 @@ describe("published Play verification", () => {
         expect(native.headers.get("content-type")).toContain(row.mime);
         expect(native.headers.get("access-control-allow-origin")).toBe(row.cors);
         expect(native.headers.get("cache-control")).toBe(row.cacheControl);
-        expect(native.headers.get("cache-control")).toBe(reference.headers()["cache-control"]);
+        expect(native.headers.get("cache-control")).toBe(reference.headers()["cache-control"]??null);
         const body = await native.text();
         expect(body).toBe(await reference.text());
         if (row.status === 200) expect(body).toBe(fixture.files.find(file => file.page === row.page && `/${file.path}` === (row.path === "/" ? "/index.html" : row.path))!.body);

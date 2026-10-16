@@ -1,19 +1,19 @@
 //! 🧩️ 🧩️ S Studio app command — `duplicate-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DuplicateAndPaste
 /// 🔁️ Shared body for `duplicate_app_instance` (sources = selection) and `paste_app_instance` (sources
 /// = clipboard) — both mint a fresh node per source id, offset from the original.
-pub(crate) async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let mut artifact_mutations = Vec::new();
     let mut new_active_node_id = None;
     for node_id in source_ids {
         let Some(node) = projection.graph.nodes.iter().find(|row| row.id == node_id) else { continue };
         let label = format!("{} Copy", node.label);
-        if let Some((operation, new_id)) = crate::engine::space::engine::add_workflow_node_operation(&node.plugin_id, &node.app_id, Some(&label), node.x + 40.0, node.y + 40.0).await {
+        if let Some((operation, new_id)) = semio_hub_space_operations::add_workflow_node_operation(&node.plugin_id, &node.app_id, Some(&label), node.x + 40.0, node.y + 40.0).await {
             new_active_node_id = Some(new_id);
             artifact_mutations.push(operation);
         }
@@ -24,7 +24,6 @@ pub(crate) async fn duplicate_nodes(source_ids: Vec<String>, projection: &Workfl
 
 //#endregion 🔖️DuplicateAndPaste
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "duplicate-app-instance")]
 pub struct DuplicateAppInstance {}
@@ -34,7 +33,7 @@ pub struct DuplicateAppInstance {}
 /// only through that macro-generated path (`SpaceApp::handle` always routes this command through
 /// `apply` below instead), so it degrades to treating the selection as empty (duplicates nothing).
 pub fn handle(_payload: &DuplicateAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(duplicate_nodes(Vec::new(), doc.snapshot)))
+    Ok(semio_hub_space_operations::resolve_future(duplicate_nodes(Vec::new(), doc.snapshot)))
 }
 
 pub async fn apply(_payload: &DuplicateAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {

@@ -1,4 +1,4 @@
-fn test_command_context()->crate::os_pack::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=crate::os_pack::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();crate::os_pack::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
+fn test_command_context()->semio_framework_os_pack_tools::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=semio_framework_os_pack_tools::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();semio_framework_os_pack_tools::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -10,13 +10,13 @@ async fn temp_path(name: &str) -> PathBuf {
     std::env::temp_dir().join(format!("protocol_cli_test_{}_{counter}_{name}", std::process::id()))
 }
 
-async fn sample_edit(id: &str, actor: Option<&str>) -> crate::os_spr::HistoryEdit {
-    crate::os_spr::HistoryEdit { line: None,
+async fn sample_edit(id: &str, actor: Option<&str>) -> semio_framework_os_spr::HistoryEdit {
+    semio_framework_os_spr::HistoryEdit { line: None,
         id: id.to_string(),
         actor: actor.map(Into::into),
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
         finished_at: None, verb: None,
-        ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
+        ops: vec![semio_framework_os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
         inverse: Vec::new(),
         meta: None,
         lane: None,
@@ -27,7 +27,7 @@ async fn sample_edit(id: &str, actor: Option<&str>) -> crate::os_spr::HistoryEdi
 /// commit generation), an optional checkpoint landing on the last edit, and an alternative
 /// pointing at that checkpoint. Returns the file path and the raw bytes written.
 async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_alternative: bool) -> (PathBuf, Vec<u8>) {
-    let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+    let mut appender = semio_framework_os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &semio_framework_os_spr::WriteOptions::default()).await.unwrap();
     let mut edit_ids = Vec::new();
     for i in 0..edit_count {
         let id = format!("e{i:02}");
@@ -37,11 +37,11 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
         edit_ids.push(id);
     }
     if with_checkpoint_and_alternative && !edit_ids.is_empty() {
-        let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+        let commit = semio_framework_os_spr::HistoryTransition::Commit(semio_framework_os_spr::TransitionCheckpoint {
             checkpoint_id: "cp0".to_string(),
             parent_id: None,
             change_id: "c0".to_string(),
-            mutation_ids: edit_ids.iter().map(|id| crate::os_spr::MutationId(format!("{id}#0"))).collect(),
+            mutation_ids: edit_ids.iter().map(|id| semio_framework_os_spr::MutationId(format!("{id}#0"))).collect(),
             description: None,
             saved_at: "2026-07-27T00:01:00Z".to_string(),
             authors: Vec::new(),
@@ -49,10 +49,10 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
             timestamp: "2026-07-27T00:02:00Z".to_string(),
             line_id: None,
         });
-        let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-main".to_string(), name: "main".to_string(), checkpoint_id: "cp0".to_string() };
+        let branch = semio_framework_os_spr::HistoryTransition::Branch { alternative_id: "alt-main".to_string(), name: "main".to_string(), checkpoint_id: "cp0".to_string() };
         for (logical, transition) in [commit, branch].iter().enumerate() {
-            let envelope = crate::os_spr::history_transition_envelope(transition, &crate::os_spr::ArtifactId("doc-1".to_string()), &crate::os_spr::ActorId("actor-a".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
-            appender.append_transition(&crate::os_spr::HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
+            let envelope = semio_framework_os_spr::history_transition_envelope(transition, &semio_framework_os_spr::ArtifactId("doc-1".to_string()), &semio_framework_os_spr::ActorId("actor-a".into()), Vec::new(), semio_framework_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: logical as u64 });
+            appender.append_transition(&semio_framework_os_spr::HistoryTransitionRecord::from_envelope(&envelope)).await.unwrap();
         }
         appender.commit().await.unwrap();
     }
@@ -66,11 +66,11 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
 /// ground-truth `.ops` text without hand-writing the grammar (see the module's design note on
 /// why `parse_ops_text`/`print_ops_text` are not directly reachable from this crate).
 async fn sample_ops_text() -> String {
-    let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+    let mut appender = semio_framework_os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &semio_framework_os_spr::WriteOptions::default()).await.unwrap();
     appender.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
     appender.commit().await.unwrap();
     let bytes = appender.into_sink();
-    crate::os_spr::decompile_ops(&bytes.await, &crate::os_spr::DecodeOptions::default()).await.unwrap()
+    semio_framework_os_spr::decompile_ops(&bytes.await, &semio_framework_os_spr::DecodeOptions::default()).await.unwrap()
 }
 //#endregion 🔖️Fixtures
 
@@ -105,9 +105,9 @@ async fn parse_repair_args_extracts_both_boolean_flags() {
 #[semio_framework_async_macros::async_test]
 async fn parse_level_accepts_known_values_and_rejects_unknown() {
     let mut flags = HashMap::new();
-    assert!(matches!(parse_level(&flags).await, Ok(crate::os_spr::VerificationLevel::Standard)));
+    assert!(matches!(parse_level(&flags).await, Ok(semio_framework_os_spr::VerificationLevel::Standard)));
     flags.insert("level".to_string(), "full".to_string());
-    assert!(matches!(parse_level(&flags).await, Ok(crate::os_spr::VerificationLevel::Full)));
+    assert!(matches!(parse_level(&flags).await, Ok(semio_framework_os_spr::VerificationLevel::Full)));
     flags.insert("level".to_string(), "bogus".to_string());
     assert!(parse_level(&flags).await.is_err());
 }
@@ -133,7 +133,7 @@ async fn kind_name_covers_every_frozen_kind_byte() {
         (REC_SEALED, "sealed"),
         (REC_COMPACTION, "compaction"),
         (REC_PADDING, "padding"),
-        (crate::os_spr::REC_TRANSITION, "transition"),
+        (semio_framework_os_spr::REC_TRANSITION, "transition"),
     ] {
         assert_eq!(kind_name(kind), name);
     }
@@ -143,7 +143,7 @@ async fn kind_name_covers_every_frozen_kind_byte() {
 #[semio_framework_async_macros::async_test]
 async fn parse_commit_fields_matches_a_real_commit_frame() {
     let (_path, bytes) = build_history_file("commit_fields", 1, false).await;
-    let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
+    let mut cursor = semio_framework_os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
     // 🚫️async: R10 shape 1 — `next_frame` is async but `Iterator::from_fn`'s closure is sync;
     // rewritten as a plain loop so it can be awaited.
     let commit_frame = loop {
@@ -298,13 +298,13 @@ async fn cli_diff_reports_identical_and_divergent_files() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
-    let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+    let mut appender_a = semio_framework_os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &semio_framework_os_spr::WriteOptions::default()).await.unwrap();
     appender_a.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
     appender_a.append_edit(&sample_edit("e01", Some("actor-a")).await).await.unwrap();
     appender_a.commit().await.unwrap();
     let bytes_a = appender_a.into_sink();
 
-    let mut appender_b = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
+    let mut appender_b = semio_framework_os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &semio_framework_os_spr::WriteOptions::default()).await.unwrap();
     appender_b.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
     appender_b.commit().await.unwrap();
     let bytes_b = appender_b.into_sink();

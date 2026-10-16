@@ -70,6 +70,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts",
@@ -87,8 +88,8 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
@@ -577,7 +578,7 @@
         "^nativeSources"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-{options.env.SEMIO_BUILD_MODE}"
+        "{workspaceRoot}/.cache/b/p/m/renderer/513017abe154c7333be5/{options.env.SEMIO_BUILD_MODE}/wasm"
       ],
       "dependsOn": [
         "workspace:deps-trunk",

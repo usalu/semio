@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "owner": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+  "function": "stdioCargoMetadata",
+  "phases": ["entry", "tools", "cargo"],
+  "cases": [
+    {"name": "live", "cancelAtRecheck": false, "capture": true},
+    {"name": "cancelled-generation", "cancelAtRecheck": true, "capture": false}
+  ]
+}

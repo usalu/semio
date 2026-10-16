@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "cases": [
+    {"name": "direct", "parent": ["watch", "--projects=app", "--", "bun", "repo", "run", "app:build"], "child": ["run", "app:build"]},
+    {"name": "convenience", "parent": ["run", "@semio-tech/mit-bestand-bericht:watch"], "child": ["run", "@semio-tech/mit-bestand-bericht:build", "--output=stream"]}
+  ],
+  "refused": [["run", "foreign:build"], ["run", "app:build", "--forged"]],
+  "watchGrammar": [
+    {"name":"missing-boundary","args":["watch","--projects=app"],"valid":false},
+    {"name":"missing-program","args":["watch","--projects=app","--"],"valid":false},
+    {"name":"empty-program","args":["watch","--projects=app","--",""],"valid":false},
+    {"name":"neutral-help","args":["watch","--projects=app","--","bun","repo","--help"],"valid":true},
+    {"name":"literal-option","args":["watch","--","node","--forged"],"valid":true},
+    {"name":"empty-argument","args":["watch","--","node","-e",""],"valid":true}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumManifestBytes": 262144,
+        "maximumAggregateBytes": 4194304,
+        "maximumDocuments": 64,
+        "maximumObservations": 4096,
+        "maximumPending": 32,
+        "maximumPathUnits": 256
+      }
+    }
+  }
+}

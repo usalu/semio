@@ -1,11 +1,14 @@
+import{PRINT_PDF_OPS_V1 as OPS,printPdfPageV1,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,type PrintPdfPageV1}from"../../../📦️artifacts/📖️pdf/🟦️.ts";
+import{basename}from"node:path";
+import printProbeLimits from"../../../🔨️modules/🖨️tectonic-template-compilation/📋️intent/🧬️schema/🔣️.json";
+import{withPrintScratchV1,type PrintExecutionV1}from"../../../📦️artifacts/🎛️operation/🟦️.ts";
 /** 🫧️ Checks native proportional circles against independent D3, polygon clipping and actual PDF paths. */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getDocument, OPS, Util } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { scaleLinear, scaleSqrt } from "d3-scale";
 import { polygonArea } from "d3-polygon";
 import polygonClipping from "polygon-clipping";
-import { compileVizProbeDocument } from "../../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocument,withCompiledVizProbeDocumentV1 } from "../../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "./🔣️.json";
 
 type Point = [number, number];
@@ -18,7 +21,7 @@ function circleBounds(path: number[], matrix: number[]): number[] {
     const curve = [start, [path[offset + 1]!, path[offset + 2]!], [path[offset + 3]!, path[offset + 4]!], [path[offset + 5]!, path[offset + 6]!]];
     for (let index = 0; index <= 128; index++) {
       const t = index / 128, u = 1 - t, point = [0, 1].map(axis => u ** 3 * curve[0]![axis]! + 3 * u * u * t * curve[1]![axis]! + 3 * u * t * t * curve[2]![axis]! + t ** 3 * curve[3]![axis]!);
-      Util.applyTransform(point, matrix); points.push(point);
+      printPdfApplyV1(point, matrix); points.push(point);
     }
     start = curve[3]!;
   }
@@ -28,7 +31,7 @@ function circleBounds(path: number[], matrix: number[]): number[] {
 /** 🧭️ Independently projects the expected circular geometry to an ellipse in final page coordinates. */
 function expectedBounds(circle: number[], matrix: number[]): number[] {
   const project = scaleLinear([0, 1], [0, 72 / 25.4]), centre = [project(circle[0]!), project(circle[1]!)], radius = project(circle[2]!);
-  Util.applyTransform(centre, matrix);
+  printPdfApplyV1(centre, matrix);
   const x = radius * Math.hypot(matrix[0]!, matrix[2]!), y = radius * Math.hypot(matrix[1]!, matrix[3]!);
   return [centre[0]! - x, centre[1]! - y, centre[0]! + x, centre[1]! + y];
 }
@@ -58,12 +61,12 @@ function reference(entry: typeof fixture.cases[number]) {
 }
 
 /** 🔬️ Compiles declared boundary, size, canvas and policy controls in both print themes. */
-export async function compileNativeSetContainment(workDir: string): Promise<void> {
+export async function compileNativeSetContainment(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/set-containment",async({directory:workDir,execution})=>{
   const cases = process.env.PRINT_NATIVE_SET_PHASE === "baseline" ? fixture.cases.filter(entry => entry.id === "set-stock") : fixture.cases;
   const expected = new Map(cases.map(entry => [entry.id, reference(entry)])), failures: string[] = [];
   for (const theme of ["light", "dark"]) {
     const body = cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{set-containment}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=${entry.canvas[0]},height=${entry.canvas[1]}]\\draw[opacity=0.05,line width=0.01mm] (0,0) rectangle (${entry.canvas[0]},${entry.canvas[1]});\\begin{scope}[local bounding box=set-result]\\SetMeasure\\SemioVizChart{area-proportional-venn-diagram}[${entry.options}]\\end{scope}\\ExplSyntaxOn\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{set-result}{south~west}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{set-result}{south~west}}\\semio_viz_probe_values:nx{set/min}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{set-result}{north~east}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{set-result}{north~east}}\\semio_viz_probe_values:nx{set/max}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\ExplSyntaxOff\\end{VizFigure}` }));
-    const root = join(workDir, theme), records = await compileVizProbeDocument({ case: "set-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\SetMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Set Containment}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    const root = join(workDir, theme);await withCompiledVizProbeDocumentV1({ case: "set-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\SetMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Set Containment}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     let values = 0, paths = 0, pages = 0;
     for (const entry of cases) {
       const own = records.filter(record => record.scenario === entry.id), circles = own.filter(record => record.key === "geometry/set/circle").map(record => record.values.map(Number)), distance = Number(own.find(record => record.key === "geometry/set/distance")?.values[0]), oracle = expected.get(entry.id)!;
@@ -83,33 +86,33 @@ export async function compileNativeSetContainment(workDir: string): Promise<void
       }
       values += 2;
     }
-    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise, seen = new Set<string>();
-    try {
-      for (let index = 1; index <= pdf.numPages; index++) {
-        const page = await pdf.getPage(index), text = (await page.getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" "), entry = cases.find(entry => text.includes(entry.id));
+    const out = join(root, "🧪️probe-out"), pdf = await probe.inspect(), seen = new Set<string>();
+    {
+      for (let index = 1; index <= pdf.pages.length; index++) {
+        const page = printPdfPageV1(pdf,index), text = (await page).items.flatMap(item => "str" in item ? [item.str] : []).join(" "), entry = cases.find(entry => text.includes(entry.id));
         if (/[\uFFFD\uFFFF]/u.test(text)) failures.push(`${theme}/page${index}: invalid published glyph`);
         if (entry) {
           if (seen.has(entry.id)) failures.push(`${theme}/${entry.id}: duplicate actual case page`);
           seen.add(entry.id);
-          const operators = await page.getOperatorList(), circles: { path: number[]; matrix: number[]; width: number }[] = [], stack: { matrix: number[]; width: number }[] = [], project = scaleLinear([0, 1], [0, 72 / 25.4]);
+          const operators = await page.operators, circles: { path: number[]; matrix: number[]; width: number }[] = [], stack: { matrix: number[]; width: number }[] = [], project = scaleLinear([0, 1], [0, 72 / 25.4]);
           let matrix = [1, 0, 0, 1, 0, 0], width = 1, canvasMatrix: number[] | undefined;
           for (const [operation, id] of operators.fnArray.entries()) {
-            const args = operators.argsArray[operation];
+            const args=printPdfArrayV1(operators.argsArray[operation]);
             if (id === OPS.save || id === OPS.paintFormXObjectBegin) {
               stack.push({ matrix: [...matrix], width });
-              if (id === OPS.paintFormXObjectBegin && args[0]) matrix = Util.transform(matrix, args[0]);
+              if (id === OPS.paintFormXObjectBegin && args[0]) matrix = printPdfTransformV1(matrix,printPdfVectorV1(args[0],6));
             } else if (id === OPS.restore || id === OPS.paintFormXObjectEnd) {
               const saved = stack.pop();
               if (!saved) failures.push(`${theme}/${entry.id}: invalid PDF graphics stack`);
               else { matrix = saved.matrix; width = saved.width; }
             }
-            else if (id === OPS.transform) matrix = Util.transform(matrix, args);
+            else if (id === OPS.transform) matrix = printPdfTransformV1(matrix,printPdfVectorV1(args,6));
             else if (id === OPS.setLineWidth) width = Number(args[0]);
             else if (id === OPS.setGState) {
-              for (const state of args[0]) if (state[0] === "LW") width = Number(state[1]);
+              for (const state of printPdfArrayV1(args[0]).map(printPdfArrayV1)) if (state[0] === "LW") width = Number(state[1]);
             }
             else if (id === OPS.constructPath && args[2]) {
-              const path = args[1]?.[0], bounds = Array.from(args[2], Number);
+              const path = printPdfVectorV1(printPdfArrayV1(args[1])[0]), bounds = printPdfVectorV1(args[2]);
               if (args[0] === OPS.stroke && path?.length === 38 && [6, 13, 20, 27].every(position => path[position] === 2) && path[34] === 4) circles.push({ path: Array.from(path, Number), matrix: [...matrix], width });
               if (path?.length === 19 && [6, 9, 12].every(position => path[position] === 1) && path[15] === 4 && bounds.every((value, axis) => Math.abs(value - [0, 0, project(entry.canvas[0]!), project(entry.canvas[1]!)][axis]!) < project(fixture.geometryTolerance))) {
                 if (canvasMatrix) failures.push(`${theme}/${entry.id}: duplicate independent PDF canvas reference`);
@@ -125,19 +128,19 @@ export async function compileNativeSetContainment(workDir: string): Promise<void
             if (bounds.some((value, axis) => Math.abs(value - target[axis]!) > tolerance)) failures.push(`${theme}/${entry.id}: actual PDF circle ${index} differs from independent final-page D3 projection`);
             if (Math.abs(circle.width - fixture.strokeWidthPt * 72 / 72.27) > 0.002) failures.push(`${theme}/${entry.id}: actual PDF stroke differs from neutral theme token`);
             if (entry.fit && canvasMatrix) {
-              const relative = Util.transform(Util.inverseTransform(canvas), circle.matrix), local = circleBounds(circle.path, relative), half = [circle.width / 2 * Math.hypot(relative[0]!, relative[2]!), circle.width / 2 * Math.hypot(relative[1]!, relative[3]!)];
+              const relative = printPdfTransformV1(printPdfInverseV1(canvas), circle.matrix), local = circleBounds(circle.path, relative), half = [circle.width / 2 * Math.hypot(relative[0]!, relative[2]!), circle.width / 2 * Math.hypot(relative[1]!, relative[3]!)];
               for (let axis = 0; axis < 2; axis++) if (local[axis]! - half[axis]! < project(entry.padding - fixture.geometryTolerance) || local[axis + 2]! + half[axis]! > project(entry.canvas[axis]! - entry.padding + fixture.geometryTolerance)) failures.push(`${theme}/${entry.id}: actual transformed PDF stroke exceeds padded canvas`);
             }
             paths++;
           }
           if (stack.length) failures.push(`${theme}/${entry.id}: unbalanced PDF graphics stack`);
         }
-        page.cleanup(); pages++;
+         pages++;
       }
-    } finally { await pdf.destroy(); }
+    }
     for (const entry of cases) if (!seen.has(entry.id)) failures.push(`${theme}/${entry.id}: missing actual PDF case`);
     console.log(`[native-sets] ${theme}: ${cases.length} cases, ${values} independent values, ${paths} actual PDF circle strokes, ${pages} PDF.js pages consumed`);
-  }
+  });}
   if (failures.length) throw Error(`${failures.length} proportional set failures:\n${failures.join("\n")}`);
   console.log("[native-sets] D3 radii, polygon-clipping overlap/distance and actual PDF containment PASS");
-}
+});}

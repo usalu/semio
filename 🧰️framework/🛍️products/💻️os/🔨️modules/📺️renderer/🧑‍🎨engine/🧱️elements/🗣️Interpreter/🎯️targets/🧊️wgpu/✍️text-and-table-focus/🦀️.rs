@@ -2,11 +2,12 @@
 //!
 //! Focus and caret state of the text editor, the node graph caret, the editable table text and the table steppers.
 
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
-use super::ink_and_vfs_focus::queue_text_editor_clipboard_read;
-use super::retained_ui_engine::{
-    apply_presented_scene_caret, ui_document_close_pending_for, write_owned_os_clipboard, UI_ENGINE,
-};
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
+use crate::ink_and_vfs_focus::queue_text_editor_clipboard_read;
+use crate::scene_intents_and_clipboard::{apply_presented_scene_caret, write_owned_os_clipboard};
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+use crate::scene_intents_and_clipboard::read_os_clipboard;
+use semio_framework_os_renderer_wgpu_contracts::{ui_document_close_pending_for, UI_ENGINE};
 use crate::element_contracts::ScenePointerTarget;
 use ui_wgpu::wgpu::{ActionDescriptor, NodeId, UiComponentSceneNode, UiNode};
 
@@ -18,20 +19,20 @@ use ui_wgpu::wgpu::{ActionDescriptor, NodeId, UiComponentSceneNode, UiNode};
  *
  * @see `🧱️elements/✏️TextEditor/🟦️.tsx` — `onKeyDown` */
 #[derive(Clone)]
-pub(super) struct FocusedTextEditor {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
-    pub(super) surface: ui_wgpu::wgpu::UiSurfaceToken,
-    pub(super) document_id: ui_contract::UiNodeId,
+pub struct FocusedTextEditor {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+    pub surface: ui_wgpu::wgpu::UiSurfaceToken,
+    pub document_id: ui_contract::UiNodeId,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_TEXT_EDITOR: std::cell::RefCell<Option<FocusedTextEditor>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_TEXT_EDITOR: std::cell::RefCell<Option<FocusedTextEditor>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn text_editor_focus_in(engine: &ui_wgpu::wgpu::Ui, window_id: &str, window_generation: u64, node: NodeId, host_id: &str) -> Option<FocusedTextEditor> {
+pub fn text_editor_focus_in(engine: &ui_wgpu::wgpu::Ui, window_id: &str, window_generation: u64, node: NodeId, host_id: &str) -> Option<FocusedTextEditor> {
     if engine.surface_generation(window_id) != Some(window_generation) {
         return None;
     }
@@ -44,11 +45,11 @@ pub(super) fn text_editor_focus_in(engine: &ui_wgpu::wgpu::Ui, window_id: &str, 
     (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.host_id == host_id).then(|| FocusedTextEditor { window_id: window_id.to_string(), window_generation, node, host_id: host_id.to_string(), surface, document_id })
 }
 
-pub(super) fn install_text_editor_focus(focus: FocusedTextEditor) {
+pub fn install_text_editor_focus(focus: FocusedTextEditor) {
     FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = Some(focus));
 }
 
-pub(super) fn reset_text_editor_caret(focus: &FocusedTextEditor) -> bool {
+pub fn reset_text_editor_caret(focus: &FocusedTextEditor) -> bool {
     let Some(seconds) = semio_framework_job::default_now_us().map(|now| now as f64 / 1_000_000.0) else { return false };
     let caret = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
@@ -61,17 +62,17 @@ pub(super) fn reset_text_editor_caret(focus: &FocusedTextEditor) -> bool {
 }
 
 /// 🫥️ The editor lost keyboard focus: its open typing run ends as ONE edit (`blur`, design §13.2) and its caret clears.
-pub(super) fn blur_text_editor(focus: &FocusedTextEditor) -> bool {
-    crate::engine_canvas::end_text_editor_typing(&focus.host_id, crate::engine_canvas::TextEditorTypingEnd::Blur);
+pub fn blur_text_editor(focus: &FocusedTextEditor) -> bool {
+    semio_framework_os_renderer_wgpu_engine_text::text_editor::end_text_editor_typing(&focus.host_id, semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::TextEditorTypingEnd::Blur);
     let caret = UI_ENGINE.with(|cell| cell.borrow_mut().clear_presented_scene_caret(&focus.window_id, focus.surface, focus.document_id));
     caret.is_some_and(|caret| apply_presented_scene_caret(&focus.window_id, caret))
 }
 
-pub(super) fn focused_text_editor() -> Option<FocusedTextEditor> {
+pub fn focused_text_editor() -> Option<FocusedTextEditor> {
     FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().clone())
 }
 
-pub(super) fn focused_text_editor_matches(expected: &FocusedTextEditor) -> bool {
+pub fn focused_text_editor_matches(expected: &FocusedTextEditor) -> bool {
     FOCUSED_TEXT_EDITOR.with(|cell| {
         cell.borrow().as_ref().is_some_and(|focus| {
             focus.window_id == expected.window_id
@@ -84,7 +85,7 @@ pub(super) fn focused_text_editor_matches(expected: &FocusedTextEditor) -> bool 
     })
 }
 
-pub(super) fn with_live_text_editor<T>(focus: &FocusedTextEditor, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
+pub fn with_live_text_editor<T>(focus: &FocusedTextEditor, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         if engine.surface_generation(&focus.window_id) != Some(focus.window_generation) || engine.surface_token(&focus.window_id) != Some(focus.surface) || ui_document_close_pending_for(&focus.window_id) {
@@ -96,15 +97,15 @@ pub(super) fn with_live_text_editor<T>(focus: &FocusedTextEditor, apply: impl Fn
         }
         let retained = tree.node(focus.node)?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.host_id == focus.host_id && !crate::scenes::scene_host_retiring(&focus.host_id)).then(|| apply(scene))
+        (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.host_id == focus.host_id && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)).then(|| apply(scene))
     })
 }
 
-pub(super) fn apply_text_editor_text_at(focus: &FocusedTextEditor, text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn apply_text_editor_text_at(focus: &FocusedTextEditor, text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     if !focused_text_editor_matches(focus) {
         return false;
     }
-    let outcome = with_live_text_editor(focus, |scene| crate::engine_canvas::text_editor_replace_selection_into(scene, text, input));
+    let outcome = with_live_text_editor(focus, |scene| semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_replace_selection_into(scene, text, input));
     match outcome {
         Some(Ok(consumed)) => consumed,
         Some(Err(fault)) => {
@@ -131,21 +132,21 @@ fn apply_focused_text_editor_clipboard_key(key: &ui_wgpu::wgpu::KeyAction, modif
             FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
             return Some(false);
         }
-        #[cfg(all(not(target_arch = "wasm32"), test))]
+        #[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
         if let Some(text) = read_os_clipboard() {
             apply_text_editor_text_at(&focus, &text, input);
         }
-        #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+        #[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
         if let Err(fault) = queue_text_editor_clipboard_read(focus,input) {
             input.record_action_fault(fault);
         }
         return Some(true);
     }
     let outcome = with_live_text_editor(&focus, |scene| {
-        let Some(text) = crate::engine_canvas::text_editor_selection_text(scene) else { return Ok(false) };
+        let Some(text) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_selection_text(scene) else { return Ok(false) };
         write_owned_os_clipboard(text, input);
         if cut {
-            crate::engine_canvas::text_editor_replace_selection_into(scene, "", input)
+            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_replace_selection_into(scene, "", input)
         } else {
             Ok(true)
         }
@@ -198,13 +199,13 @@ pub fn blur_focused_text_editor_for_pointer(target: Option<&ScenePointerTarget>,
 }
 
 #[derive(Clone)]
-pub(super) struct FocusedNodeGraphCaret {
-    pub(super) target: ScenePointerTarget,
-    pub(super) surface: ui_wgpu::wgpu::UiSurfaceToken,
+pub struct FocusedNodeGraphCaret {
+    pub target: ScenePointerTarget,
+    pub surface: ui_wgpu::wgpu::UiSurfaceToken,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_NODE_GRAPH_CARET: std::cell::RefCell<Option<FocusedNodeGraphCaret>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_NODE_GRAPH_CARET: std::cell::RefCell<Option<FocusedNodeGraphCaret>> = const { std::cell::RefCell::new(None) };
 }
 
 fn node_graph_caret_focus_in(engine: &ui_wgpu::wgpu::Ui, target: &ScenePointerTarget) -> Option<FocusedNodeGraphCaret> {
@@ -240,7 +241,7 @@ fn reset_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
     caret.is_some_and(|caret| apply_presented_scene_caret(&focus.target.window_id, caret))
 }
 
-pub(super) fn clear_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
+pub fn clear_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
     let caret = UI_ENGINE.with(|cell| cell.borrow_mut().clear_presented_scene_caret(&focus.target.window_id, focus.surface, focus.target.document_id));
     caret.is_some_and(|caret| apply_presented_scene_caret(&focus.target.window_id, caret))
 }
@@ -248,7 +249,7 @@ pub(super) fn clear_node_graph_caret(focus: &FocusedNodeGraphCaret) -> bool {
 /// 📝 Arms cadence only after the exact accepted NodeGraph enters note editing.
 pub fn refresh_node_graph_caret_after_pointer(target: &ScenePointerTarget) -> bool {
     let focus = UI_ENGINE.with(|cell| node_graph_caret_focus_in(&cell.borrow(), target));
-    let editable = focus.as_ref().is_some_and(|focus| with_live_node_graph_caret(focus, crate::engine_canvas::component_scene_has_editable_caret).unwrap_or(false));
+    let editable = focus.as_ref().is_some_and(|focus| with_live_node_graph_caret(focus, semio_framework_os_renderer_wgpu_engine_graph::node_graph::component_scene_has_editable_caret).unwrap_or(false));
     if editable {
         let focus = focus.expect("editable NodeGraph focus");
         FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = Some(focus.clone()));
@@ -277,7 +278,7 @@ pub fn blur_focused_node_graph_caret_for_pointer(target: Option<&ScenePointerTar
 /// ⌨️ Routes note editing to one exact accepted NodeGraph and resets its solid caret phase.
 pub fn apply_focused_node_graph_note_key(action: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers) -> bool {
     let Some(focus) = FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().clone()) else { return false };
-    let applied = with_live_node_graph_caret(&focus, |scene| crate::engine_canvas::component_scene_apply_note_edit_key(scene, action.clone(), modifiers)).unwrap_or(false);
+    let applied = with_live_node_graph_caret(&focus, |scene| semio_framework_os_renderer_wgpu_engine_graph::node_graph::component_scene_apply_note_edit_key(scene, action.clone(), modifiers)).unwrap_or(false);
     if !applied {
         if with_live_node_graph_caret(&focus, |_| ()).is_none() {
             FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = None);
@@ -285,7 +286,7 @@ pub fn apply_focused_node_graph_note_key(action: &ui_wgpu::wgpu::KeyAction, modi
         }
         return false;
     }
-    if with_live_node_graph_caret(&focus, crate::engine_canvas::component_scene_has_editable_caret).unwrap_or(false) {
+    if with_live_node_graph_caret(&focus, semio_framework_os_renderer_wgpu_engine_graph::node_graph::component_scene_has_editable_caret).unwrap_or(false) {
         reset_node_graph_caret(&focus);
     } else {
         FOCUSED_NODE_GRAPH_CARET.with(|cell| *cell.borrow_mut() = None);
@@ -325,15 +326,15 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
         let UiNode::ComponentScene(scene) = &retained.spec.0 else {
             return None;
         };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.host_id != focus.host_id || crate::scenes::scene_host_retiring(&focus.host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::TextEditor || scene.host_id != focus.host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id) {
             return None;
         }
-        match crate::scenes::text_editor_popup_key(scene, key, modifiers, input) {
+        match semio_framework_os_renderer_wgpu_scene_text_vfs::text_editor_popup_key(scene, key, modifiers, input) {
             Ok(true) => return Some(Ok(true)),
             Ok(false) => {}
             Err(fault) => return Some(Err(fault)),
         }
-        Some(crate::engine_canvas::text_editor_apply_key_into(scene, key, modifiers, input))
+        Some(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_key_into(scene, key, modifiers, input))
     });
     match outcome {
         Some(Ok(consumed)) => {
@@ -359,27 +360,27 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
 
 //#region ✏️TableEditableTextFocus
 struct FocusedTableEditableText {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
-    pub(super) row_id: String,
-    pub(super) column_id: String,
-    pub(super) base: String,
-    pub(super) draft: String,
-    pub(super) awaiting_echo: Option<String>,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+    pub row_id: String,
+    pub column_id: String,
+    pub base: String,
+    pub draft: String,
+    pub awaiting_echo: Option<String>,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_TABLE_EDITABLE_TEXT: std::cell::RefCell<Option<FocusedTableEditableText>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_TABLE_EDITABLE_TEXT: std::cell::RefCell<Option<FocusedTableEditableText>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn focused_table_editable_text_address() -> Option<(String, u64, NodeId, String, String, String, String, String, Option<String>)> {
+pub fn focused_table_editable_text_address() -> Option<(String, u64, NodeId, String, String, String, String, String, Option<String>)> {
     FOCUSED_TABLE_EDITABLE_TEXT
         .with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone(), focus.row_id.clone(), focus.column_id.clone(), focus.base.clone(), focus.draft.clone(), focus.awaiting_echo.clone())))
 }
 
-pub(crate) fn sync_focused_table_editable_text_draft(input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+pub fn sync_focused_table_editable_text_draft(input: &ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
         if let Some(focus) = cell.borrow_mut().as_mut() {
             focus.draft = input.text_view().to_owned();
@@ -387,12 +388,12 @@ pub(crate) fn sync_focused_table_editable_text_draft(input: &ui_wgpu::wgpu::Inpu
     });
 }
 
-pub(super) fn focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str) -> Option<String> {
+pub fn focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str) -> Option<String> {
     FOCUSED_TABLE_EDITABLE_TEXT
         .with(|cell| cell.borrow().as_ref().filter(|focus| focus.window_id == window_id && focus.node == node && focus.host_id == host_id && focus.row_id == row_id && focus.column_id == column_id).map(|focus| focus.draft.clone()))
 }
 
-pub(super) fn set_focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str, draft: &str) {
+pub fn set_focused_table_editable_text_draft(window_id: &str, node: NodeId, host_id: &str, row_id: &str, column_id: &str, draft: &str) {
     FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
         if let Some(focus) = cell.borrow_mut().as_mut().filter(|focus| focus.window_id == window_id && focus.node == node && focus.host_id == host_id && focus.row_id == row_id && focus.column_id == column_id) {
             focus.draft = draft.to_owned();
@@ -400,29 +401,29 @@ pub(super) fn set_focused_table_editable_text_draft(window_id: &str, node: NodeI
     });
 }
 
-pub(super) fn commit_focused_table_editable_text_with_engine(engine: &ui_wgpu::wgpu::Ui, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<crate::scenes::TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn commit_focused_table_editable_text_with_engine(engine: &ui_wgpu::wgpu::Ui, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
     let (window_id, window_generation, node, host_id, row_id, column_id, base, draft, awaiting_echo) = focused_table_editable_text_address()?;
     if engine.surface_generation(&window_id) != Some(window_generation) || ui_document_close_pending_for(&window_id) {
         return None;
     }
     let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
     let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-    if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::Table || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+    if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::Table || scene.host_id != host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
         return None;
     }
-    let outcome = crate::scenes::table_editable_text_commit_owned(scene, &row_id, &column_id, &base, draft.clone(), awaiting_echo.as_deref(), input);
+    let outcome = semio_framework_os_renderer_wgpu_scene_tables::table_editable_text_commit_owned(scene, &row_id, &column_id, &base, draft.clone(), awaiting_echo.as_deref(), input);
     if let Some(Ok(outcome)) = &outcome {
         FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
             let mut focus = cell.borrow_mut();
             let Some(focus) = focus.as_mut().filter(|focus| focus.window_id == window_id && focus.window_generation == window_generation && focus.node == node && focus.host_id == host_id && focus.row_id == row_id && focus.column_id == column_id) else { return };
             match outcome {
-                crate::scenes::TableEditableTextCommitOutcome::Publishing => {
+                semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Publishing => {
                     if let Some(accepted) = focus.awaiting_echo.take() {
                         focus.base = accepted;
                     }
                     focus.awaiting_echo = Some(draft);
                 }
-                crate::scenes::TableEditableTextCommitOutcome::Unchanged => {
+                semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Unchanged => {
                     if let Some(accepted) = focus.awaiting_echo.take() {
                         focus.base = accepted;
                     }
@@ -434,18 +435,18 @@ pub(super) fn commit_focused_table_editable_text_with_engine(engine: &ui_wgpu::w
     outcome
 }
 
-pub(super) fn clear_focused_table_editable_text(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+pub fn clear_focused_table_editable_text(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| *cell.borrow_mut() = None);
     input.blur_input();
 }
 
-pub(super) fn focus_table_editable_text(
+pub fn focus_table_editable_text(
     engine: &ui_wgpu::wgpu::Ui,
     window_id: &str,
     window_generation: u64,
     node: NodeId,
     host_id: &str,
-    target: crate::scenes::TableEditableTextFocusTarget,
+    target: semio_framework_os_renderer_wgpu_scene_state::TableEditableTextFocusTarget,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let same = focused_table_editable_text_address().is_some_and(|(focused_window, focused_generation, focused_node, focused_host, focused_row, focused_column, _, _, _)| {
@@ -455,7 +456,7 @@ pub(super) fn focus_table_editable_text(
         return Ok(());
     }
     if let Some(outcome) = commit_focused_table_editable_text_with_engine(engine, input).transpose()? {
-        if matches!(outcome, crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing | crate::scenes::TableEditableTextCommitOutcome::AwaitingEcho) {
+        if matches!(outcome, semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Conflict | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Publishing | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::AwaitingEcho) {
             return Ok(());
         }
     }
@@ -480,7 +481,7 @@ pub fn blur_focused_table_editable_text_for_pointer(target: Option<&ScenePointer
     }
     let outcome = UI_ENGINE.with(|cell| commit_focused_table_editable_text_with_engine(&cell.borrow(), input));
     match outcome {
-        Some(Ok(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing | crate::scenes::TableEditableTextCommitOutcome::AwaitingEcho)) => true,
+        Some(Ok(semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Conflict | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Publishing | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::AwaitingEcho)) => true,
         Some(Err(fault)) => {
             input.record_action_fault(fault);
             true
@@ -510,7 +511,7 @@ pub fn apply_focused_table_editable_text_key(key: &ui_wgpu::wgpu::KeyAction, mod
         ui_wgpu::wgpu::KeyAction::Enter => {
             let outcome = UI_ENGINE.with(|cell| commit_focused_table_editable_text_with_engine(&cell.borrow(), input));
             match outcome {
-                Some(Ok(crate::scenes::TableEditableTextCommitOutcome::Conflict | crate::scenes::TableEditableTextCommitOutcome::Publishing | crate::scenes::TableEditableTextCommitOutcome::AwaitingEcho)) => true,
+                Some(Ok(semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Conflict | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::Publishing | semio_framework_os_renderer_wgpu_scene_tables::TableEditableTextCommitOutcome::AwaitingEcho)) => true,
                 Some(Err(fault)) => {
                     input.record_action_fault(fault);
                     true
@@ -528,19 +529,19 @@ pub fn apply_focused_table_editable_text_key(key: &ui_wgpu::wgpu::KeyAction, mod
 
 //#region 📊️TableStepperFocus
 struct FocusedTableStepper {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
-    pub(super) row_id: String,
-    pub(super) column_id: String,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+    pub row_id: String,
+    pub column_id: String,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_TABLE_STEPPER: std::cell::RefCell<Option<FocusedTableStepper>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_TABLE_STEPPER: std::cell::RefCell<Option<FocusedTableStepper>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn focus_table_stepper(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, target: crate::scenes::TableStepperFocusTarget) {
+pub fn focus_table_stepper(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, target: semio_framework_os_renderer_wgpu_scene_state::TableStepperFocusTarget) {
     FOCUSED_TABLE_STEPPER.with(|cell| {
         *cell.borrow_mut() = Some(FocusedTableStepper { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned(), row_id: target.row_id, column_id: target.column_id });
     });
@@ -567,14 +568,14 @@ pub fn apply_focused_table_stepper_key(key: &ui_wgpu::wgpu::KeyAction, input: &m
         }
         let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::Table || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::Table || scene.host_id != host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
             return None;
         }
-        crate::scenes::table_stepper_apply_key(scene, &row_id, &column_id, key, input)
+        semio_framework_os_renderer_wgpu_scene_tables::table_stepper_apply_key(scene, &row_id, &column_id, key, input)
     });
     match outcome {
-        Some(Ok(crate::scenes::TableStepperKeyOutcome::Consumed)) => true,
-        Some(Ok(crate::scenes::TableStepperKeyOutcome::Unhandled)) => false,
+        Some(Ok(semio_framework_os_renderer_wgpu_scene_tables::TableStepperKeyOutcome::Consumed)) => true,
+        Some(Ok(semio_framework_os_renderer_wgpu_scene_tables::TableStepperKeyOutcome::Unhandled)) => false,
         Some(Err(fault)) => {
             input.record_action_fault(fault);
             true

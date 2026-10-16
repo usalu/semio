@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/replication-local-interaction-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -70,7 +70,7 @@ async function distributionStaticSourcePaths(workspace: string, entries: readonl
     }
     if (!/\.[cm]?[jt]sx?$/u.test(path)) return;
     const loader = path.endsWith("tsx") ? "tsx" : /\.[mc]?ts$/u.test(path) ? "ts" : path.endsWith("jsx") ? "jsx" : "js";
-    const source = new Bun.Transpiler({ loader, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true, minifySyntax: true }).transformSync(readFileSync(canonical, "utf8"));
+    const source = new Bun.Transpiler({ loader, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true }).transformSync(readFileSync(canonical, "utf8"));
     for (const specifier of registryStaticImports(source, path)) {
       if (specifier.startsWith("node:") || specifier.startsWith("bun:") || builtinModules.includes(specifier)) continue;
       const resolved = Bun.resolveSync(specifier, dirname(canonical));

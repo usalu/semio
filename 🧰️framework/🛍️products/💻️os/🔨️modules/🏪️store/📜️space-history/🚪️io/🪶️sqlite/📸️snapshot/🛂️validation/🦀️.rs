@@ -1,9 +1,10 @@
 //! 🛂️ Complete history equality borrows both sources and retains only original paid relational indexes.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SpaceHistorySnapshot,S_SPACE_HISTORY_SCHEMA,ArtifactSqliteSnapshotHost,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
-use crate::sqlite_snapshot::{SqliteTable,SqliteRow,SqliteValue,artifact::receiving::{Port,ReceivingWallet,Direction,integer,ordinal,sort,identity_position,parent_range,validate_schema_sql,check_database}};
-use crate::io_schema::{IoResult,IoOutcome,IoError};
-use crate::io::io_mechanism::TypedFileSettlement;
+use semio_framework_io_sqlite_snapshot::{SqliteTable, SqliteRow, SqliteValue};
+use semio_framework_io_sqlite_snapshot::artifact::receiving::{Port, ReceivingWallet, Direction, integer, ordinal, sort, identity_position, parent_range, validate_schema_sql, check_database};
+use semio_framework_io_schema::{IoResult, IoOutcome, IoError};
+use super::settlement::TypedFileSettlement;
 type Result<T>=std::result::Result<T,ValueError>;
 pub(super) const TABLES:[(&str,usize);7]=[("space_history_document",2),("space_history_checkpoint",6),("space_history_timestamp",7),("space_history_author",6),("space_history_member_pin",6),("space_history_alternative",5),("space_history_alternative_checkpoint",4)];
 const ORDERED:[usize;5]=[1,3,4,5,6];
@@ -47,7 +48,7 @@ fn check<W:ReceivingWallet>(source:&SpaceHistorySnapshot,dialect:&semio_framewor
 }
 macro_rules! receive{
  ($name:ident,$owner:ident,$progress:path,$direction:ident,$phase:ident)=>{
- pub(super) fn $name(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut crate::os_store::$owner<'_,'_>)->IoResult<()>{
+ pub(super) fn $name(source:&SpaceHistorySnapshot,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_io_control::$owner<'_,'_>)->IoResult<()>{
   let result=(||->IoResult<()>{let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history validation original SQL ceiling overflow")))?;let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
    let received=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Frame,IoResult<()>>(|slot,native,body|{
     let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;let mut port=Port{control,native:Direction::$direction(native),body};port.work(1,size_of::<Frame>())?;*slot=Some(Frame::new());let frame=slot.as_mut().unwrap();port.work(1,size_of::<IoResult<()>>())?;frame.result=Some(check(source,dialect,database,frame,&mut port).map(|()|IoOutcome::clean(())).map_err(IoError::from_value_error));let owned=port.owned();drop(port);drop(borrowed);settlement.finish_body(owned)?;Ok(frame.result.take().unwrap())

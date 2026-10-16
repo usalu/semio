@@ -1,37 +1,48 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { lstat, readFile } from "node:fs/promises";
+import { join, resolve, relative } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 
+import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withScriptInvocationSignalV1, scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
+
+import fontStorageSchema from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
+const fontProtocol = fontStorageSchema.definitions.Protocol.const;
 const ROOT = import.meta.dir;
 const FONT_TOOL = "pack-typst-font-assets";
 
 class FontsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("fonts takes no arguments");
-    const binary = join(ROOT, "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build", FONT_TOOL + (process.platform === "win32" ? ".exe" : ""));
-    if (!existsSync(binary)) throw new Error("Missing font tool prerequisite; run fonts through Nx");
-    mkdirSync(join(ROOT, "dist"), { recursive: true });
-    const temporary = mkdtempSync(join(ROOT, "dist/.fonts-")), asset = join(temporary, FONT_ASSET);
-    let cancelled = false;
-    const cancel = (): void => { cancelled = true; };
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    try {
-      await runRepositoryCommand(this.invocation,binary,[asset],ROOT,"font-assets:publish",{version:1,maximumElapsedMilliseconds:60_000,output:{maximumBytes:134217728,maximumLines:65536}});
-      if (cancelled) throw new Error("Font dump cancelled");
-      const bytes = readFileSync(asset), count = validateFontAsset(bytes);
-      await stageRepositoryArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));
-      console.log(`Staged ${count} fonts (${bytes.byteLength} bytes)`);
-    } finally {
-      process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);
-      rmSync(temporary, { recursive: true, force: true });
-    }
+    const workspace = this.repoRoot, mode = readBuildMode(process.env.SEMIO_BUILD_MODE), authority = readNativeCallerAuthorityV1(this.invocation.capabilities), phaseControl = scriptCompilerAdmissionControlV1(this.invocation, "font-assets:publication", fontProtocol.maximumElapsedMilliseconds), manifest = resolve(workspace, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml"), owner = relative(workspace, ROOT).replaceAll("\\", "/");
+    if (mode !== authority.original.buildMode) throw Error("Original font asset build mode required");
+    await withRepositoryCacheStoreV1(workspace, "products", this.invocation, phaseControl,products => withRepositoryCacheStoreV1(workspace, "diagnostics", this.invocation, products.control,diagnostics => withArtifactScratchV1({ workspace, invocation: this.invocation, storage: diagnostics.storage, control: diagnostics.control, phaseControl, request: { version: 1, mode, owner } }, destination => withArtifactDestinationTaskV1(destination, this.invocation, async sink => {
+      const asset = join(sink.directory, FONT_ASSET);
+      await withScriptInvocationSignalV1(this.invocation, sink.control.signal, narrowed => withRepositoryPublishedCargoExecutableV1(manifest, FONT_TOOL + (process.platform === "win32" ? ".exe" : ""), workspace, mode, narrowed, async artifact => {
+        const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment }), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: sink.control, environment, requestedParallelism: 1 });
+        try {
+          const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control: sink.control, env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
+          if (result.status !== 0 || result.signal !== null) throw Error("Font asset tool failed: " + result.stderr.slice(-65536));
+        } finally { lease.release(); }
+      }));
+      const facts = await lstat(asset);
+      if (!facts.isFile() || facts.isSymbolicLink() || facts.nlink !== 1 || facts.size > fontProtocol.maximumAssetBytes) throw Error("Finite physical font output required");
+      const bytes = await readFile(asset, { signal: sink.control.signal }), count = validateFontAsset(bytes);
+      await withRepositoryArtifactDestinationV1({ workspace, invocation: this.invocation, storage: products.storage, control: products.control, phaseControl: sink.control, directory: fontAssetPublicationRootV1(products.root, mode) }, target => stageRepositoryArtifacts(target, fontProtocol.owner, new Map([[FONT_ASSET, asset]])));
+      console.log(`[DEBUG] Staged ${count} bounded fonts (${bytes.byteLength} bytes) mode=${mode}`);
+    }))));
   }
 }
 

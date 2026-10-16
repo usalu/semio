@@ -1,6 +1,13 @@
 //! 🧭️ The directory command decider: one command in, events and a result out.
 
-use super::*;
+use semio_hub_directory_contract::{ARTIFACT_CHECKPOINT_LINEAGE_MAX, ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES, AUTH_TEXT_MAX_BYTES, HubClock, NewDirectoryEvent, actor_user_id, role_from_wire, validate_bounded_auth_text};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentScope};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory_contract::model::{SpaceRecord, SpaceRole};
+use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
+use semio_hub_directory::{frontier_strictly_advances, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape};
+use directory::os_identity::time_ordered_id;
 
 //#region 🔖️Decider
 /// 🎁️ The extra payload a `decide`d command can carry alongside its events — today only
@@ -20,7 +27,7 @@ pub struct Decision {
     pub result: Option<CommandResult>,
 }
 
-pub(super) fn new_event(clock: &mut HubClock, actor: &DirectoryActor, space_id: Option<String>, user_id: Option<String>, body: DirectoryEventBody) -> NewDirectoryEvent {
+pub fn new_event(clock: &mut HubClock, actor: &DirectoryActor, space_id: Option<String>, user_id: Option<String>, body: DirectoryEventBody) -> NewDirectoryEvent {
     NewDirectoryEvent { hlc: clock.tick(), actor: actor.clone(), space_id, user_id, body }
 }
 
@@ -30,17 +37,6 @@ fn single(clock: &mut HubClock, actor: &DirectoryActor, space_id: Option<String>
 
 pub(super) async fn require_space(dir: &HubDirectories, space_id: &str) -> DirectoryResult<SpaceRecord> {
     dir.get_space(space_id).await?.ok_or_else(|| DirectoryError::NotFound(format!("space '{space_id}' not found")))
-}
-
-/// 🎭️ Extracts the plain user id out of a `User`-kind actor's `user:{user_id}#{shell_session_id}`
-/// grammar (contract-freeze.md §C0) — directory events denormalize the plain id, never the
-/// per-tab/process actor string. `Admin`/`System` actors have no owning user, so `create-space`
-/// (the only command that needs one) rejects them.
-pub(super) fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
-    match actor.kind {
-        DirectoryActorKind::User => actor.id.strip_prefix("user:").and_then(|rest| rest.split('#').next()).ok_or_else(|| DirectoryError::Backend(format!("malformed user actor id '{}'", actor.id))),
-        _ => Err(DirectoryError::Backend("operation requires a user actor".into())),
-    }
 }
 
 /// 🧠️ Decides what a `DirectoryCommand` means: reads projections through `dir` (`get_space`,

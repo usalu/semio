@@ -1,5 +1,5 @@
 //! 🔢️ Exact IEEE words across owned DSL, pack and field-width boundaries.
-use crate::os_dsl::self;
+use semio_framework_os_kernel::os_dsl::self;
 use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
@@ -11,7 +11,7 @@ use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::DslValue;
-use crate::os_pack::{self,EncodeOptions,DecodeOptions};
+use semio_framework_os_kernel::os_pack::{self,EncodeOptions,DecodeOptions};
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn words64()->Vec<u64>{corpus()["binary64Bits"].as_array().unwrap().iter().map(|value|u64::from_str_radix(value.as_str().unwrap(),16).unwrap()).collect()}
 fn words32()->Vec<u32>{corpus()["binary32Bits"].as_array().unwrap().iter().map(|value|u32::from_str_radix(value.as_str().unwrap(),16).unwrap()).collect()}

@@ -25,6 +25,8 @@ import { testRuntimeTreeRetirement } from "../../♻️retirement/🌲️tree/�
 import { surfaceOwnershipSelfTests } from "../../🧪️tests/🔬️surface-ownership/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+/** 🧠️ The headless runtime crates, bottom up: exchange and presentation, the reconcile primitives, the cursor, the reconcile authority, then the facade. */
+const UI_RUNTIME_PACKAGES = ["semio-framework-ui-runtime-exchange", "semio-framework-ui-runtime-presentation", "semio-framework-ui-runtime-reconcile-primitives", "semio-framework-ui-runtime-reconcile-cursor", "semio-framework-ui-runtime-reconcile", "semio-framework-ui-runtime"];
 
 
 //#region 🔖️test
@@ -32,11 +34,14 @@ class TreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testRuntimeTreeRetirement();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
-        "runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads",
+    const manifest = (node: string) => resolve(this.root, `../../${node}/📦️packages/🦀️rust/Cargo.toml`);
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-runtime-reconcile-primitives": manifest("🧱️primitives"), "semio-framework-ui-runtime-reconcile": manifest("♻️reconcile") },cwd: this.repoRoot,cargoArgs: segments,groups: [
+      { package: "semio-framework-ui-runtime-reconcile-primitives", target: { kind: "lib" }, laws: ["runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads"] },
+      { package: "semio-framework-ui-runtime-reconcile", target: { kind: "lib" }, laws: [
         "runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmission",
         "runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission",
-      ] }]});
+      ] },
+    ]});
     console.log(`runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
@@ -50,7 +55,7 @@ class NativeResourceScript extends BundleScript {
     if (segments.length) throw Error("Native resource custody requires its exact original selection");
     const left = this.invocation.control.remainingMilliseconds();
     if (left === null || left <= 0) throw Error("Native resource custody requires finite original caller authority");
-    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-ui-runtime", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close","native_mesh_receiver_same_canonical_pages_all_labels_and_paid_destination_close","native_mesh_receiver_cancelled_ready_destination_cannot_escape_its_paid_close","native_mesh_message_fixed_windows_bind_patch_resource_and_original_donor_before_lifting","native_mesh_message_receiver_preserves_whole_donor_and_returns_source_with_live_destination"] }]});
+    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-ui-runtime-presentation": resolve(this.root, "../../🖼️presentation/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-ui-runtime-presentation", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close","native_mesh_receiver_same_canonical_pages_all_labels_and_paid_destination_close","native_mesh_receiver_cancelled_ready_destination_cannot_escape_its_paid_close","native_mesh_message_fixed_windows_bind_patch_resource_and_original_donor_before_lifting","native_mesh_message_receiver_preserves_whole_donor_and_returns_source_with_live_destination"] }]});
   }
 }
 
@@ -58,7 +63,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     console.log(`surface-ownership-oracle checks=${surfaceOwnershipSelfTests()}`);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: UI_RUNTIME_PACKAGES, cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 //#endregion 🔖️test

@@ -1,4 +1,8 @@
 //! 🧫️ Test-only cumulative allocation requests with inclusive, stack-owned observation scopes.
+//!
+//! 🧷️ The single owner of the requested-byte observer. A test binary installs [`RequestedAllocator`] explicitly with
+//! `#[global_allocator] static OBSERVER: RequestedAllocator = RequestedAllocator;` (exactly once per binary) and reads the
+//! requests through [`observe`], [`observe_backing`] and [`observed_requested_bytes`].
 use std::{alloc::{GlobalAlloc, Layout}, cell::Cell, ptr::null_mut};
 use semio_framework_trace::HeapWitness;
 
@@ -32,7 +36,7 @@ fn release(bytes: usize) {
 }
 
 /// 🧮️ Preserves cumulative requested-byte measurement while reusing the first-party [`HeapWitness`].
-pub(crate) struct RequestedAllocator;
+pub struct RequestedAllocator;
 unsafe impl GlobalAlloc for RequestedAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record(layout.size()); unsafe { HeapWitness.alloc(layout) } }
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record(layout.size()); unsafe { HeapWitness.alloc_zeroed(layout) } }
@@ -41,13 +45,13 @@ unsafe impl GlobalAlloc for RequestedAllocator {
 }
 
 /// 📏️ Measures this thread's requests, includes nested scopes, and restores the parent during unwind.
-pub(crate) fn observe<T>(operation: impl FnOnce() -> T) -> (T, usize) {
+pub fn observe<T>(operation: impl FnOnce() -> T) -> (T, usize) {
     let (result, requested, _) = observe_backing(operation);
     (result, requested)
 }
 
 /// 👁️ Reads the active request counter without allocating or changing the observation scope.
-pub(crate) fn observed_requested_bytes() -> Option<usize> {
+pub fn observed_requested_bytes() -> Option<usize> {
     ACTIVE.with(|active| {
         let scope = active.get();
         if scope.is_null() { None } else { Some(unsafe { (*scope).requested }) }
@@ -55,7 +59,7 @@ pub(crate) fn observed_requested_bytes() -> Option<usize> {
 }
 
 /// ♻️ Measures actual request and released layout bytes with the same inclusive observation stack.
-pub(crate) fn observe_backing<T>(operation: impl FnOnce() -> T) -> (T, usize, usize) {
+pub fn observe_backing<T>(operation: impl FnOnce() -> T) -> (T, usize, usize) {
     let parent = ACTIVE.with(Cell::get);
     let mut scope = Scope { parent, requested: 0, released: 0, overflow: false };
     let restore = Restore(parent);
@@ -66,5 +70,6 @@ pub(crate) fn observe_backing<T>(operation: impl FnOnce() -> T) -> (T, usize, us
     (result, scope.requested, scope.released)
 }
 
+#[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

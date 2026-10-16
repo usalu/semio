@@ -95,6 +95,7 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
             reason: "puzzle5d's copy/cut interception writes fragments to the system clipboard (Effect::ClipboardWrite)".into(),
             optional: false,
         })
+        .asset(semio_s_artifact_puzzle_5d::examples::puzzle5d::capsule_dream::dsl_asset_declaration())
         .try_build()
 }
 

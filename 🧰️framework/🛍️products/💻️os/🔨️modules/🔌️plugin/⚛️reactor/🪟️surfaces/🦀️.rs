@@ -3,8 +3,8 @@
 use semio_framework::{UiRefreshSection, ViewModel};
 
 pub(crate) struct SurfaceContext {
-    pub(crate) body_key: String,
-    pub(crate) view_state: ViewModel,
+    pub body_key: String,
+    pub view_state: ViewModel,
 }
 
 /// 🎭️ What a mounted surface IS, fixed at mount and replayed on every later host refresh: one
@@ -40,9 +40,9 @@ impl SurfaceRole {
 /// projected host view.
 struct SurfaceBinding {
     surface: String,
-    pub(crate) body_key: String,
+    pub body_key: String,
     role: SurfaceRole,
-    pub(crate) view_state: ViewModel,
+    pub view_state: ViewModel,
 }
 
 pub(crate) struct SurfaceContexts {
@@ -76,7 +76,7 @@ impl SurfaceContexts {
     /// admitting the synthetic name again would remount the surface whose reconcile reservation refusal
     /// starved every real one (wave B54 §6.4). An app that genuinely authors a window instance called
     /// `window` still mounts it — the refusal is about a name no instance claims.
-    pub(crate) fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
+    pub fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
         if synthetic_window_surface(&surface, &view_state) {
             return Err("a surface named `window` is synthetic: an app with window instances is addressed by instance");
         }
@@ -101,7 +101,7 @@ impl SurfaceContexts {
         Ok(())
     }
 
-    pub(crate) fn get(&self, surface: &str) -> Option<SurfaceContext> {
+    pub fn get(&self, surface: &str) -> Option<SurfaceContext> {
         let binding = self.slots.iter().flatten().find(|context| context.surface == surface)?;
         Some(SurfaceContext { body_key: binding.body_key.clone(), view_state: binding.view_state.clone() })
     }
@@ -109,14 +109,14 @@ impl SurfaceContexts {
     /// 🪟️ The last host view this instance was refreshed or mounted with — the attached-window
     /// roster an app needs to address window-scoped background work outside a render pass
     /// (`ArtifactApp::pending_effects`). `None` until the first surface is mounted.
-    pub(crate) fn view(&self) -> Option<&ViewModel> {
+    pub fn view(&self) -> Option<&ViewModel> {
         self.view_state.as_ref()
     }
 
     /// 🔄️ Replays one fresh host view onto EVERY live binding through that binding's own role, so a
     /// locale switch or a rearmed tool reaches every mounted surface without any of them borrowing a
     /// sibling's window identity. Reserved sections are deliberately untouched (see [`SurfaceRole`]).
-    pub(crate) fn update_view(&mut self, view: &ViewModel) {
+    pub fn update_view(&mut self, view: &ViewModel) {
         self.prune_windows(view);
         for binding in self.slots.iter_mut().flatten() {
             if matches!(binding.role, SurfaceRole::Section) {
@@ -145,7 +145,7 @@ impl SurfaceContexts {
     /// never saw the update at all. Every mounted window instance is dirtied now; an instance with no
     /// mounted window falls back to its app-level panels, which is the document scope such work belongs
     /// to when there is no window to address (ticket 26/09/02/PUZZLE-3D-END-TO-END).
-    pub(crate) fn background_surfaces(&self) -> Vec<String> {
+    pub fn background_surfaces(&self) -> Vec<String> {
         let windows: Vec<String> = self.slots.iter().flatten().filter(|binding| binding.role.window_id().is_some()).map(|binding| binding.surface.clone()).collect();
         if !windows.is_empty() {
             return windows;
@@ -156,11 +156,11 @@ impl SurfaceContexts {
     /// 📡️ Every surface bound to the instance — windows, panels and sections. A remote edit merged
     /// into the document changes what all of them project (the canvas, the inspector, the history
     /// ledger), so none may keep its pre-merge tree.
-    pub(crate) fn document_surfaces(&self) -> Vec<String> {
+    pub fn document_surfaces(&self) -> Vec<String> {
         self.slots.iter().flatten().map(|binding| binding.surface.clone()).collect()
     }
 
-    pub(crate) fn remove(&mut self, surface: &str) {
+    pub fn remove(&mut self, surface: &str) {
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
             *slot = None;
         }
@@ -170,7 +170,7 @@ impl SurfaceContexts {
     }
 
     #[cfg(test)]
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.slots.iter().flatten().count()
     }
 

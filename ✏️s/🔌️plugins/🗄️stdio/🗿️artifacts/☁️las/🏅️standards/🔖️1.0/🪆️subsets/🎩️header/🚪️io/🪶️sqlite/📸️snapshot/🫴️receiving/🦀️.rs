@@ -16,8 +16,8 @@ fn empty()->LasSnapshot{LasSnapshot{schema:String::new(),header:LasHeader::defau
 #[derive(semio_framework_value::RetireOwned)]
 struct Frame{projection:Projection,snapshot:LasSnapshot,ids:[Vec<usize>;8],ordered:[Vec<usize>;4],status:Option<Result<()>>}
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),status:None}}}
-fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
-fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
+pub fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
+pub fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
 fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
 fn number(row:&SqliteRow,column:usize,minimum:i64,maximum:i64)->Result<i64>{let value=integer(row,column)?;if value<minimum||value>maximum{return Err(invalid())}Ok(value)}
 fn equal(left:&str,right:&str,port:&mut Paid<'_,'_,'_>)->Result<()>{port.work(2,0)?;if left.len()!=right.len(){return Err(invalid())}port.control.checkpoint(port.phase(),0,left.len())?;for(index,(a,b))in left.as_bytes().chunks(256).zip(right.as_bytes().chunks(256)).enumerate(){port.work(2,0)?;if a!=b{return Err(invalid())}port.control.checkpoint(port.phase(),index*256+a.len(),left.len())?}Ok(())}
@@ -60,6 +60,3 @@ pub(super)fn project_receiving(source:&LasSnapshot,control:&mut SqliteSnapshotCo
 pub(super)fn reconstruct_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<LasSnapshot>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,None,port),|frame|Ok(std::mem::replace(&mut frame.snapshot,empty())))}
 pub(super)fn validate_decoding(source:&LasSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
 pub(super)fn validate_encoding(source:&LasSnapshot,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<()>{owner.receive_sqlite_snapshot(control,Frame::new,|frame,port|read(database,frame,Some(source),port),|_|Ok(()))}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

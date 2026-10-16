@@ -6,7 +6,7 @@
 //! point), so the only thing that must be true is transactional all-or-nothing visibility: if any step
 //! fails, `self.presented` is left completely untouched and the caller still holds the previous,
 //! fully-formed [`FrameSnapshot`]. An `Rc` is enough to make that snapshot cheaply shareable with
-//! whoever dispatches input against it without cloning the [`crate::scene::RenderPacket`] itself.
+//! whoever dispatches input against it without cloning the [`crate::RenderPacket`] itself.
 //! **The invariant this exists to guarantee: input is always dispatched against the presented
 //! generation** — a click lands on the element the user actually saw, never on a half-built successor,
 //! because there is no such thing as a "half-built successor" visible from outside `build_frame`.
@@ -18,24 +18,20 @@
 //! [`crate::DispatchTree`] is constructed fresh each `build_frame` call and handed to the prepaint walk
 //! via [`crate::PrepaintCx::register`]/[`crate::PrepaintCx::with_children`] — every registration an
 //! [`Element`] makes during its own `prepaint` call appends one node, carrying real parent/flags/
-//! listeners, not a geometry-only [`crate::element::Hitbox`] reconstructed after the fact. The former
+//! listeners, not a geometry-only [`crate::Hitbox`] reconstructed after the fact. The former
 //! `crate::DispatchTree: From<Vec<Hitbox>>` hand-off (this packet's own earlier report flagged it as
 //! known-lossy — no parent link, no overlay bit, no listeners) is deleted, not left behind:
-//! [`crate::element::Hitbox`] stays geometry-only and now lives inside [`crate::DispatchTree`] itself
+//! [`crate::Hitbox`] stays geometry-only and now lives inside [`crate::DispatchTree`] itself
 //! (spatial-index material, see `dispatch.rs::DispatchTree::hitboxes`), never the tree's structural
 //! source.
 
-use crate::element::{Bounds, ElementId};
 #[cfg(test)]
-use crate::element::{Element, FrameArena, PaintCx, PrepaintCx, ReconciliationKey, RetainedStore, SharedFrameCx};
+use crate::element::{Element, FrameArena, PaintCx, PrepaintCx, RetainedStore, SharedFrameCx};
 #[cfg(test)]
 use crate::layout::LayoutCx;
-use crate::scene::RenderPacket;
+use crate::{Bounds, Deadline, ElementId, FrameScheduler, RenderPacket};
 #[cfg(test)]
-use crate::scene::{FinishParams, Scene, SceneBuilder, SceneError};
-use crate::schedule::{Deadline, FrameScheduler};
-#[cfg(test)]
-use crate::schedule::InvalidationReason;
+use crate::{FinishParams, InvalidationReason, ReconciliationKey, Scene, SceneBuilder, SceneError};
 use std::rc::Rc;
 #[cfg(test)]
 use ui_contract::UiRevision;
@@ -92,7 +88,7 @@ pub struct AccessibilityNode {
     pub spec: ui_contract::AccessibilitySpec,
 }
 
-/// ♿️ Every accessibility node in this frame, flat — mirrors [`crate::element::Hitbox`]'s flat
+/// ♿️ Every accessibility node in this frame, flat — mirrors [`crate::Hitbox`]'s flat
 /// list-plus-interpretation-elsewhere shape rather than a tree, since nothing here needs tree walk
 /// order beyond what `element` + `bounds` already encode.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -124,10 +120,10 @@ pub struct FrameSnapshot {
 
 /// 📥️ Everything [`FrameEngine::build_frame`] needs but does not itself own — resources/text/the
 /// scheduler are long-lived across frames and owned by whatever host constructs a window, not by
-/// [`FrameEngine`] (compare [`crate::resource::ResourceRegistry`]'s own docstring: "one registry is
+/// [`FrameEngine`] (compare [`crate::ResourceRegistry`]'s own docstring: "one registry is
 /// long-lived across frames").
 pub struct FrameInputs<'a> {
-    pub resources: &'a mut crate::resource::ResourceRegistry,
+    pub resources: &'a mut crate::ResourceRegistry,
     pub text: &'a mut crate::TextSystem,
     pub scheduler: &'a mut FrameScheduler,
     pub viewport: [f32; 2],

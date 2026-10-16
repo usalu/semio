@@ -1,0 +1,58 @@
+[
+ {
+  "id": "resolution",
+  "invocation": "issued",
+  "consumption": {
+   "kind": "resolution"
+  },
+  "cancelled": false,
+  "effects": 1
+ },
+ {
+  "id": "compiler",
+  "invocation": "issued",
+  "consumption": {
+   "kind": "compiler",
+   "producer": "artifact",
+   "operation": "test"
+  },
+  "cancelled": false,
+  "effects": 1
+ },
+ {
+  "id": "copied-invocation",
+  "invocation": "copied",
+  "consumption": {
+   "kind": "resolution"
+  },
+  "cancelled": false,
+  "effects": 0
+ },
+ {
+  "id": "missing-consumption",
+  "invocation": "issued",
+  "consumption": null,
+  "cancelled": false,
+  "effects": 0
+ },
+ {
+  "id": "foreign-consumption",
+  "invocation": "issued",
+  "consumption": {
+   "kind": "compiler",
+   "producer": "artifact",
+   "operation": "unknown"
+  },
+  "cancelled": false,
+  "effects": 0
+ },
+ {
+  "id": "cancelled",
+  "invocation": "issued",
+  "consumption": {
+   "kind": "resolution"
+  },
+  "cancelled": true,
+  "effects": 0
+ }
+]

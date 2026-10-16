@@ -14,10 +14,10 @@ fn create_ink_host_id(prefix: &str) -> String {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct InkCameraF {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) zoom: f64,
+pub struct InkCameraF {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
 }
 
 impl From<InkCameraJson> for InkCameraF {
@@ -28,11 +28,11 @@ impl From<InkCameraJson> for InkCameraF {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct InkCameraJson {
+pub struct InkCameraJson {
     #[serde(default)]
-    pub(crate) x: f64,
+    pub x: f64,
     #[serde(default)]
-    pub(crate) y: f64,
+    pub y: f64,
     #[serde(default = "ink_default_zoom")]
     pub(crate) zoom: f64,
 }
@@ -49,15 +49,15 @@ impl Default for InkCameraJson {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub(crate) struct InkDocumentJson {
-    pub(crate) schema: String,
-    pub(crate) id: String,
-    pub(crate) camera: InkCameraJson,
-    pub(crate) blocks: Vec<Value>,
-    pub(crate) active_utility: Option<String>,
-    pub(crate) snap_enabled: Option<bool>,
-    pub(crate) snap_grid_spacing: Option<f64>,
-    pub(crate) eraser_radius: Option<f64>,
+pub struct InkDocumentJson {
+    pub schema: String,
+    pub id: String,
+    pub camera: InkCameraJson,
+    pub blocks: Vec<Value>,
+    pub active_utility: Option<String>,
+    pub snap_enabled: Option<bool>,
+    pub snap_grid_spacing: Option<f64>,
+    pub eraser_radius: Option<f64>,
     pub(crate) grid_visible: Option<bool>,
     pub(crate) grid_spacing: Option<f64>,
     pub(crate) grid_subdivisions: Option<f64>,
@@ -85,41 +85,23 @@ impl Default for InkDocumentJson {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct InkBoundsF {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) w: f64,
-    pub(crate) h: f64,
-}
-
-impl InkBoundsF {
-    pub(crate) fn contains_point(&self, x: f64, y: f64) -> bool {
-        x >= self.x && x <= self.x + self.w && y >= self.y && y <= self.y + self.h
-    }
-
-    pub(crate) fn intersects(&self, other: &InkBoundsF) -> bool {
-        self.x < other.x + other.w && self.x + self.w > other.x && self.y < other.y + other.h && self.y + self.h > other.y
-    }
-}
-
 pub(crate) fn ink_item_str<'a>(block: &'a Value, key: &str) -> &'a str {
     block.get(key).and_then(Value::as_str).unwrap_or("")
 }
 
-pub(crate) fn ink_item_id(block: &Value) -> &str {
+pub fn ink_item_id(block: &Value) -> &str {
     ink_item_str(block, "id")
 }
 
-pub(crate) fn ink_item_kind(block: &Value) -> &str {
+pub fn ink_item_kind(block: &Value) -> &str {
     ink_item_str(block, "kind")
 }
 
-pub(crate) fn ink_item_locked(block: &Value) -> bool {
+pub fn ink_item_locked(block: &Value) -> bool {
     block.get("locked").and_then(Value::as_bool).unwrap_or(false)
 }
 
-pub(crate) fn ink_item_num(block: &Value, key: &str) -> f64 {
+pub fn ink_item_num(block: &Value, key: &str) -> f64 {
     block.get(key).and_then(Value::as_f64).unwrap_or(0.0)
 }
 
@@ -157,7 +139,7 @@ fn ink_scale_value(v: f64, from_min: f64, from_size: f64, to_min: f64, to_size: 
     to_min + ((v - from_min) / from_size) * to_size
 }
 
-pub(crate) fn scale_ink_item(block: &Value, from: InkBoundsF, to: InkBoundsF) -> Value {
+pub fn scale_ink_item(block: &Value, from: InkBoundsF, to: InkBoundsF) -> Value {
     let bounds = ink_item_bounds(block);
     let next_x = ink_scale_value(bounds.x, from.x, from.w, to.x, to.w);
     let next_y = ink_scale_value(bounds.y, from.y, from.h, to.y, to.h);
@@ -188,7 +170,7 @@ pub(crate) fn scale_ink_item(block: &Value, from: InkBoundsF, to: InkBoundsF) ->
     cloned
 }
 
-pub(crate) fn ink_resize_bounds(from: InkBoundsF, handle: &str, dx: f64, dy: f64, min_size: f64) -> InkBoundsF {
+pub fn ink_resize_bounds(from: InkBoundsF, handle: &str, dx: f64, dy: f64, min_size: f64) -> InkBoundsF {
     let mut x = from.x;
     let mut y = from.y;
     let mut w = from.w;
@@ -224,7 +206,7 @@ fn ink_snap_point(x: f64, y: f64, spacing: f64) -> (f64, f64) {
     (ink_snap_coordinate(x, spacing), ink_snap_coordinate(y, spacing))
 }
 
-pub(crate) fn ink_maybe_snap_fields(snap_enabled: Option<bool>, snap_grid_spacing: Option<f64>, x: f64, y: f64) -> (f64, f64) {
+pub fn ink_maybe_snap_fields(snap_enabled: Option<bool>, snap_grid_spacing: Option<f64>, x: f64, y: f64) -> (f64, f64) {
     if snap_enabled.unwrap_or(false) {
         ink_snap_point(x, y, snap_grid_spacing.unwrap_or(8.0))
     } else {
@@ -241,7 +223,7 @@ fn ink_item_with_position(block: &Value, x: f64, y: f64) -> Value {
     cloned
 }
 
-pub(crate) fn create_ink_item(kind: &str, x: f64, y: f64) -> Value {
+pub fn create_ink_item(kind: &str, x: f64, y: f64) -> Value {
     let id = create_ink_host_id(kind);
     match kind {
         "image" => json!({
@@ -306,7 +288,7 @@ pub(crate) fn ink_points(block: &Value) -> Vec<(f64, f64)> {
         .unwrap_or_default()
 }
 
-pub(crate) fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> bool {
+pub fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> bool {
     let points = ink_points(block);
     let stroke_width = ink_item_num(block, "strokeWidth");
     if points.len() < 2 {
@@ -315,7 +297,7 @@ pub(crate) fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> b
     points.windows(2).any(|w| point_segment_distance(x, y, w[0].0, w[0].1, w[1].0, w[1].1) <= threshold + stroke_width / 2.0)
 }
 
-pub(crate) fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, radius: f64) -> Vec<Value> {
+pub fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, radius: f64) -> Vec<Value> {
     let bx = ink_item_num(block, "x");
     let by = ink_item_num(block, "y");
     let points = block.get("points").and_then(Value::as_array).cloned().unwrap_or_default();
@@ -365,7 +347,7 @@ pub(crate) fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, rad
         .collect()
 }
 
-pub(crate) fn ink_screen_to_world(camera: InkCameraF, inner: Rect, sx: f32, sy: f32) -> (f64, f64) {
+pub fn ink_screen_to_world(camera: InkCameraF, inner: Rect, sx: f32, sy: f32) -> (f64, f64) {
     let lx = (sx - inner.x) as f64;
     let ly = (sy - inner.y) as f64;
     ((lx - camera.x) / camera.zoom, (ly - camera.y) / camera.zoom)
@@ -453,22 +435,22 @@ fn ink_double_click_edit(surface_id: &str, block: &Value, camera: InkCameraF, in
 //#endregion InkCanvasModel
 
 //#region InkCanvasState
-pub(crate) const INK_INTERACTION_DOCUMENT_BYTE_CAPACITY: usize = 16 * 1024;
-pub(crate) const INK_INTERACTION_ITEM_CAPACITY: usize = 256;
+pub const INK_INTERACTION_DOCUMENT_BYTE_CAPACITY: usize = 16 * 1024;
+pub const INK_INTERACTION_ITEM_CAPACITY: usize = 256;
 const INK_SELECTION_ITEM_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 2;
-pub(crate) const INK_EVENT_JSON_BYTE_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY;
+pub const INK_EVENT_JSON_BYTE_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY;
 
-pub(crate) struct InkInteractionDocument {
-    pub(crate) source: String,
+pub struct InkInteractionDocument {
+    pub source: String,
     pub(crate) spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
     pub(crate) span_len: usize,
-    pub(crate) schema: String,
-    pub(crate) id: String,
-    pub(crate) camera: InkCameraJson,
-    pub(crate) active_utility: Option<String>,
-    pub(crate) snap_enabled: Option<bool>,
-    pub(crate) snap_grid_spacing: Option<f64>,
-    pub(crate) eraser_radius: Option<f64>,
+    pub schema: String,
+    pub id: String,
+    pub camera: InkCameraJson,
+    pub active_utility: Option<String>,
+    pub snap_enabled: Option<bool>,
+    pub snap_grid_spacing: Option<f64>,
+    pub eraser_radius: Option<f64>,
 }
 
 impl InkInteractionDocument {
@@ -624,7 +606,7 @@ fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16
     Ok(end)
 }
 
-pub(crate) fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let mut index = ink_skip_ws(bytes, 0);
     if bytes.get(index) != Some(&b'{') {
         return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
@@ -653,19 +635,19 @@ pub(crate) fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option
     }
 }
 
-pub(crate) struct InkEventJsonPages {
+pub struct InkEventJsonPages {
     pub(crate) bytes: Box<[u8; INK_EVENT_JSON_BYTE_CAPACITY]>,
-    pub(crate) len: usize,
-    pub(crate) items: usize,
+    pub len: usize,
+    pub items: usize,
     sealed: bool,
 }
 
-pub(crate) struct InkRawPages {
+pub struct InkRawPages {
     pub(crate) bytes: Box<[u8; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]>,
     pub(crate) spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
-    pub(crate) byte_len: usize,
+    pub byte_len: usize,
     pub(crate) head: usize,
-    pub(crate) len: usize,
+    pub len: usize,
 }
 
 struct InkOwnedRaw {
@@ -695,7 +677,7 @@ impl Default for InkRawPages {
 }
 
 impl InkRawPages {
-    pub(crate) fn push(&mut self, raw: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn push(&mut self, raw: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
         if self.len == self.spans.len() {
             return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
         }
@@ -711,14 +693,14 @@ impl InkRawPages {
         Ok(())
     }
 
-    pub(crate) fn front(&self) -> Result<Option<&str>, ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn front(&self) -> Result<Option<&str>, ui_wgpu::wgpu::BoundedActionFault> {
         let Some((start, end)) = self.spans[self.head] else {
             return Ok(None);
         };
         std::str::from_utf8(&self.bytes[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
     }
 
-    pub(crate) fn pop_front(&mut self) -> bool {
+    pub fn pop_front(&mut self) -> bool {
         if self.len == 0 {
             return false;
         }
@@ -758,7 +740,7 @@ impl std::io::Write for InkEventJsonPages {
 }
 
 impl InkEventJsonPages {
-    pub(crate) fn push(&mut self, value: &Value) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn push(&mut self, value: &Value) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
         if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
             return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
         }
@@ -798,7 +780,7 @@ impl InkEventJsonPages {
         Ok(())
     }
 
-    pub(crate) fn seal(&mut self) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn seal(&mut self) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
         if self.sealed {
             return Ok(());
         }
@@ -807,7 +789,7 @@ impl InkEventJsonPages {
         Ok(())
     }
 
-    pub(crate) fn as_str(&self) -> Result<&str, ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn as_str(&self) -> Result<&str, ui_wgpu::wgpu::BoundedActionFault> {
         if !self.sealed {
             return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
         }
@@ -869,7 +851,7 @@ fn write_ink_events_action(
 /// aborted with ONE `inkApplyEvents` (`phase: "abort"`, `reason: "captureLost"`), so the plugin drops it with zero trace;
 /// a press that never streamed publishes nothing. Answers whether an abort was published; runs before
 /// [`ink_pointer_cancel_into`] clears the local drag.
-pub(crate) fn ink_gesture_abort_into(controller_id: &str, surface_id: &str, host_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_gesture_abort_into(controller_id: &str, surface_id: &str, host_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     if !SCENE_STATE.with(|cell| cell.borrow().get(host_id).is_some_and(|state| state.ink_gesture_open)) {
         return Ok(false);
     }
@@ -1000,7 +982,7 @@ fn ink_publish_edit(scene: &UiComponentSceneNode, edit: InkEditState, advance: b
     Ok(())
 }
 
-pub(crate) fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(mut edit) = scene_state(&scene.host_id).ink_edit else { return Ok(false) };
     if modifiers.ctrl_or_meta() {
         return Ok(false);
@@ -1051,7 +1033,7 @@ pub(crate) fn ink_edit_key_into(scene: &UiComponentSceneNode, key: &KeyAction, m
     Ok(true)
 }
 
-pub(crate) fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(edit) = scene_state(&scene.host_id).ink_edit else { return Ok(false) };
     if edit.screen_rect.contains(x, y) {
         return Ok(false);
@@ -1060,19 +1042,19 @@ pub(crate) fn ink_edit_blur_into(scene: &UiComponentSceneNode, x: f32, y: f32, i
     Ok(true)
 }
 
-pub(crate) fn cancel_ink_edit(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+pub fn cancel_ink_edit(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     mutate_scene_state(surface_id, |state| state.ink_edit = None);
     if input.focused_id.as_deref().is_some_and(|id| id.starts_with(&format!("{surface_id}.ink."))) {
         input.blur_input();
     }
 }
 
-pub(crate) fn ink_edit_active(surface_id: &str) -> bool {
+pub fn ink_edit_active(surface_id: &str) -> bool {
     scene_state(surface_id).ink_edit.is_some()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum InkClipboardContentKind {
+pub enum InkClipboardContentKind {
     Text,
     ImageDataUrl,
 }
@@ -1091,7 +1073,7 @@ fn find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
     None
 }
 
-pub(crate) fn ink_clipboard_copy_text(scene: &UiComponentSceneNode) -> Result<Option<String>, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_clipboard_copy_text(scene: &UiComponentSceneNode) -> Result<Option<String>, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(ink) = scene.ink_canvas.as_ref() else { return Ok(None) };
     if ink.document_json.len() >= INK_INTERACTION_DOCUMENT_BYTE_CAPACITY || ink.selection_json.len() > INK_EVENT_JSON_BYTE_CAPACITY {
         return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
@@ -1112,7 +1094,7 @@ pub(crate) fn ink_clipboard_copy_text(scene: &UiComponentSceneNode) -> Result<Op
     Ok(Some(text))
 }
 
-pub(crate) fn ink_clipboard_target(scene: &UiComponentSceneNode, inner: Rect) -> Result<(f64, f64), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_clipboard_target(scene: &UiComponentSceneNode, inner: Rect) -> Result<(f64, f64), ui_wgpu::wgpu::BoundedActionFault> {
     let document = checked_ink_document(scene)?.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let camera = ink_camera_checked(scene)?;
     let (x, y) = ink_screen_to_world(camera, inner, inner.x + inner.w / 2.0, inner.y + inner.h / 2.0);
@@ -1189,7 +1171,7 @@ fn ink_clipboard_image_events(content: &str, target: (f64, f64)) -> Result<(InkE
     Ok((events, vec![id]))
 }
 
-pub(crate) fn ink_clipboard_paste_into(scene: &UiComponentSceneNode, target: (f64, f64), kind: InkClipboardContentKind, content: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_clipboard_paste_into(scene: &UiComponentSceneNode, target: (f64, f64), kind: InkClipboardContentKind, content: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     if content.is_empty() || content.len() >= INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
         return if content.is_empty() { Ok(false) } else { Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits) };
     }
@@ -1248,7 +1230,7 @@ pub(crate) fn ink_clipboard_paste_into(scene: &UiComponentSceneNode, target: (f6
     Ok(true)
 }
 
-pub(crate) fn ink_edit_paste_into(scene: &UiComponentSceneNode, text: &str) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_edit_paste_into(scene: &UiComponentSceneNode, text: &str) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     if text.len() > INK_EVENT_JSON_BYTE_CAPACITY {
         return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
     }
@@ -1263,7 +1245,7 @@ pub(crate) fn ink_edit_paste_into(scene: &UiComponentSceneNode, text: &str) -> R
     Ok(true)
 }
 
-pub(crate) fn ink_pointer_cancel_into(surface_id: &str) {
+pub fn ink_pointer_cancel_into(surface_id: &str) {
     mutate_scene_state(surface_id, |state| {
         state.drag = None;
         state.pointer_was_down = false;
@@ -1274,7 +1256,7 @@ pub(crate) fn ink_pointer_cancel_into(surface_id: &str) {
 }
 
 #[cfg(test)]
-pub(crate) fn ink_pointer_state_is_clear(surface_id: &str) -> bool {
+pub fn ink_pointer_state_is_clear(surface_id: &str) -> bool {
     let state = scene_state(surface_id);
     !state.pointer_was_down && state.drag.is_none() && !state.ink_gesture_open && state.ink_marquee_points.is_empty() && state.ink_overrides.is_empty()
 }
@@ -1318,7 +1300,7 @@ fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Option<InkIntera
     }))
 }
 
-pub(crate) fn validate_ink_value(value: &Value, depth: usize, nodes: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn validate_ink_value(value: &Value, depth: usize, nodes: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if depth > ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
         return Err(ui_wgpu::wgpu::BoundedActionFault::DepthCredits);
     }
@@ -1368,7 +1350,7 @@ fn write_ink_camera_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescripto
     reservation.publish_with(mutate)
 }
 
-pub(crate) fn ink_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn ink_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(ink) = scene.ink_canvas.as_ref() else {
         return Ok(false);
     };
@@ -1389,7 +1371,7 @@ pub(crate) fn ink_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, 
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum InkInteractionEvent {
+pub enum InkInteractionEvent {
     PointerDown { x: f32, y: f32, button: i16, shift: bool },
     PointerUp { x: f32, y: f32 },
     PointerMove { x: f32, y: f32 },
@@ -1402,18 +1384,18 @@ enum InkInteractionStage {
     Complete,
 }
 
-pub(crate) enum InkInteractionStep {
+pub enum InkInteractionStep {
     Pending,
     Complete,
 }
 
 #[derive(Default)]
-pub(crate) struct InkBlockCursor {
+pub struct InkBlockCursor {
     pub(crate) index: usize,
 }
 
 impl InkBlockCursor {
-    pub(crate) fn next(&mut self, document: &InkInteractionDocument) -> Result<Option<Value>, ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn next(&mut self, document: &InkInteractionDocument) -> Result<Option<Value>, ui_wgpu::wgpu::BoundedActionFault> {
         let block = document.block(self.index)?;
         if block.is_some() {
             self.index += 1;
@@ -1422,12 +1404,12 @@ impl InkBlockCursor {
     }
 }
 
-pub(crate) struct InkInteractionJob {
-    pub(crate) generation: u64,
+pub struct InkInteractionJob {
+    pub generation: u64,
     surface_generation: u64,
-    pub(crate) pointer_id: Option<ui_render::PointerId>,
-    pub(crate) event: InkInteractionEvent,
-    pub(crate) stage: InkInteractionStage,
+    pub pointer_id: Option<ui_render::PointerId>,
+    pub event: InkInteractionEvent,
+    pub stage: InkInteractionStage,
     document: Option<InkInteractionDocument>,
     pub(crate) selected_ids: Vec<String>,
     result_ids: Vec<String>,
@@ -1438,8 +1420,8 @@ pub(crate) struct InkInteractionJob {
     hit_origin: Option<(f64, f64)>,
     hit_block: Option<Value>,
     opened_edit: bool,
-    pub(crate) events: InkEventJsonPages,
-    pub(crate) utility: String,
+    pub events: InkEventJsonPages,
+    pub utility: String,
     pub(crate) camera: InkCameraF,
     pub(crate) drag: Option<SceneDragMode>,
     stroke_update: Option<(String, InkOwnedRaw)>,
@@ -1484,7 +1466,7 @@ fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, ui_wgpu::
 }
 
 impl InkInteractionJob {
-    pub(crate) fn new(generation: u64, surface_generation: u64, pointer_id: Option<ui_render::PointerId>, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn new(generation: u64, surface_generation: u64, pointer_id: Option<ui_render::PointerId>, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, ui_wgpu::wgpu::BoundedActionFault> {
         if generation == 0 || surface_generation == 0 {
             return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
         }
@@ -1543,7 +1525,7 @@ impl InkInteractionJob {
         }))
     }
 
-    pub(crate) fn step(&mut self, generation: u64, scene: &UiComponentSceneNode, inner: Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<InkInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
+    pub fn step(&mut self, generation: u64, scene: &UiComponentSceneNode, inner: Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<InkInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
         if generation != self.generation {
             return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
         }
@@ -1561,11 +1543,11 @@ impl InkInteractionJob {
         Ok(InkInteractionStep::Complete)
     }
 
-    pub(crate) fn opened_edit(&self) -> bool {
+    pub fn opened_edit(&self) -> bool {
         self.opened_edit
     }
 
-    pub(crate) fn matches_pointer_owner(&self, surface_generation: u64, pointer_id: ui_render::PointerId) -> bool {
+    pub fn matches_pointer_owner(&self, surface_generation: u64, pointer_id: ui_render::PointerId) -> bool {
         self.surface_generation == surface_generation && self.pointer_id == Some(pointer_id)
     }
 
@@ -1969,7 +1951,7 @@ impl InkInteractionJob {
         }
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if self.selected_ids.pop().is_some() {
             return false;
         }
@@ -2054,4 +2036,4 @@ impl InkInteractionJob {
 //#endregion InkCanvasState
 //#endregion InkCanvas
 
-pub(crate) const INK_RESIZE_HANDLES: [&str; 8] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+pub const INK_RESIZE_HANDLES: [&str; 8] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];

@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-http-transport"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The Streamable HTTP and bridge websocket transport."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-http-transport"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" }
+semio-framework-os-mcp-bridge-codec = { path = "../../../🧶️bridge-codec/📦️packages/🦀️rust" }
+semio-framework-os-mcp-bridge = { path = "../../../🪢️bridge-session/📦️packages/🦀️rust" }
+semio-framework-os-mcp-consent = { path = "../../../🙋️consent/📦️packages/🦀️rust" }
+semio-framework-os-mcp-server = { path = "../../../🎯️server/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+futures = "0.3"
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+tokio = { workspace = true, features = ["full"] }
+tokio-tungstenite = "0.26"
+semio-framework-os-mcp-workspace = { path = "../../../🪟️workspace-host/📦️packages/🦀️rust" }

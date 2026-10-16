@@ -35,7 +35,5 @@ pub fn imperative_labels(view_state: &semio_framework_plugin::ViewModel) -> &'st
 //#endregion 🔖️Resolvers
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

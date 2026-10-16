@@ -201,6 +201,7 @@ impl Default for BmpSnapshot { fn default() -> Self { Self { schema: STDIO_BMP_D
 
 impl BmpSnapshot { pub fn validate(&self) -> Result<(), String> { if self.schema != STDIO_BMP_DOCUMENT_SCHEMA { return Err("bmp: undeclared semantic schema".into()); } self.image.validate() } }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧬️owned-native-contract/🦀️.rs"]
-mod owned_native_contract_tests;
+
+
+#[path="🔏️canonical/🦀️.rs"]
+pub mod canonical;

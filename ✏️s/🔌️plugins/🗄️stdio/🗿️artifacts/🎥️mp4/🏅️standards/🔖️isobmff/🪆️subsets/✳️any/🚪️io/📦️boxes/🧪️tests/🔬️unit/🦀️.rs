@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::isobmff::subsets::any::io::boxes::*;
 
 #[semio_framework_async_macros::async_test]
 async fn iterates_two_sibling_boxes_and_resolves_sizes() {

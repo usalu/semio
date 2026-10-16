@@ -1,5 +1,5 @@
 //! 🌲️ Canonical native JSON trees of mesh payloads keep their camelCase wire shape and skip empty optional members.
-use super::{ComponentReferenceTable,MeshAttribute,MeshAttributeDomain,MeshAttributeInterpolation,MeshAttributeSemantic,MeshData,MeshTexture};
+use super::{MeshAttribute,MeshAttributeDomain,MeshAttributeInterpolation,MeshAttributeSemantic,MeshData,MeshTexture};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,ArtifactCanonicalJsonTree as Tree};
 use pack::value::{ValueError,ValueRefusalKind};
 fn absent(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
@@ -19,11 +19,7 @@ impl Tree for MeshTexture {
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn Tree,ValueError>{match ordinal{0=>Ok(&self.mime),1=>Ok(&self.bytes),_=>Err(absent("canonical mesh texture ordinal is absent"))}}
  fn canonical_tree_key(&self,ordinal:usize)->Result<Text<'_>,ValueError>{match ordinal{0=>Ok("mime".into()),1=>Ok("bytes".into()),_=>Err(absent("canonical mesh texture key is absent"))}}
 }
-impl Tree for ComponentReferenceTable {
- fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Object(self.len()))}
- fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn Tree,ValueError>{self.iter().nth(ordinal).map(|(_,labels)|labels as&dyn Tree).ok_or_else(||absent("canonical component reference ordinal is absent"))}
- fn canonical_tree_key(&self,ordinal:usize)->Result<Text<'_>,ValueError>{self.iter().nth(ordinal).map(|(key,_)|Text::from(key.as_str())).ok_or_else(||absent("canonical component reference key is absent"))}
-}
+
 impl MeshData {
  fn canonical_member(&self,ordinal:usize)->Option<(&'static str,&dyn Tree)>{
   fn non_empty<'a,T>(key:&'static str,values:&'a Vec<T>)->Option<(&'static str,&'a dyn Tree)> where Vec<T>:Tree {(!values.is_empty()).then_some((key,values as&dyn Tree))}

@@ -9,7 +9,7 @@
 #[path = "🧾️record/🦀️.rs"]
 pub mod record;
 
-use crate::codec::Crc32cCursor;
+use semio_framework_replication_codec::Crc32cCursor;
 use semio_framework_hash::Hasher;
 
 /// 📏️ Allocation-independent ceilings applied before frame traversal.
@@ -160,12 +160,12 @@ impl RetainedSprVerification {
                 self.crc.update_page(&[byte]); self.frame_hash.update(&[byte]);
                 if self.body_read == 0 { self.kind = byte; }
                 else if self.body_read == 1 {
-                    self.flags = byte; self.raw_len_pending = byte & crate::wire::FRAME_FLAG_COMPRESSED != 0;
-                    if self.kind == crate::REC_COMMIT && byte != crate::wire::FRAME_FLAG_CRITICAL { return Err(RetainedSprDiagnostic::Commit); }
+                    self.flags = byte; self.raw_len_pending = byte & semio_framework_replication_wire_core::FRAME_FLAG_COMPRESSED != 0;
+                    if self.kind == semio_framework_replication_wire_core::REC_COMMIT && byte != semio_framework_replication_wire_core::FRAME_FLAG_CRITICAL { return Err(RetainedSprDiagnostic::Commit); }
                     if byte & !31 != 0 || (byte & 1 != 0) != (byte & 28 != 0) { return Err(RetainedSprDiagnostic::Frame); }
                 } else {
                     if self.raw_len_pending && Self::varint_byte(&mut self.raw_len, &mut self.raw_len_bytes, byte)? { self.raw_len_pending = false; }
-                    if self.kind == crate::REC_COMMIT && self.body_read < 66 { self.commit[self.body_read as usize - 2] = byte; }
+                    if self.kind == semio_framework_replication_wire_core::REC_COMMIT && self.body_read < 66 { self.commit[self.body_read as usize - 2] = byte; }
                 }
                 self.body_read += 1;
                 if self.body_read == self.body_len {
@@ -187,9 +187,9 @@ impl RetainedSprVerification {
         let header = &self.header;
         if header[..8] != super::MAGIC || u16::from_le_bytes([header[8], header[9]]) != 1
             || u16::from_le_bytes([header[10], header[11]]) != 0
-            || u32::from_le_bytes(header[12..16].try_into().unwrap()) != crate::REQUIRED_HASH_CHAIN
+            || u32::from_le_bytes(header[12..16].try_into().unwrap()) != semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN
             || header[24..32].iter().any(|byte| *byte != 0)
-            || crate::codec::crc32c(&header[..20]) != u32::from_le_bytes(header[20..24].try_into().unwrap()) {
+            || semio_framework_replication_codec::crc32c(&header[..20]) != u32::from_le_bytes(header[20..24].try_into().unwrap()) {
             return Err(RetainedSprDiagnostic::Header);
         }
         self.chain = *semio_framework_hash::hash(header).as_bytes(); self.pending_hash.update(&self.chain);
@@ -216,7 +216,7 @@ impl RetainedSprVerification {
         }
         self.frames = self.frames.checked_add(1).ok_or(RetainedSprDiagnostic::Capacity)?;
         if self.frames > self.limits.records { return Err(RetainedSprDiagnostic::Capacity); }
-        if self.kind == crate::REC_COMMIT { self.commit_complete(frame_len)?; }
+        if self.kind == semio_framework_replication_wire_core::REC_COMMIT { self.commit_complete(frame_len)?; }
         else {
             self.pending_hash.update(self.frame_hash.finalize().as_bytes());
             self.pending_bytes = self.pending_bytes.checked_add(frame_len).ok_or(RetainedSprDiagnostic::Capacity)?;
@@ -229,7 +229,7 @@ impl RetainedSprVerification {
     }
 
     fn commit_complete(&mut self, frame_len: u64) -> Result<(), RetainedSprDiagnostic> {
-        if self.flags != crate::wire::FRAME_FLAG_CRITICAL || self.body_len != 66 || frame_len != super::COMMIT_FRAME_LEN {
+        if self.flags != semio_framework_replication_wire_core::FRAME_FLAG_CRITICAL || self.body_len != 66 || frame_len != super::COMMIT_FRAME_LEN {
             return Err(RetainedSprDiagnostic::Commit);
         }
         let sequence = self.sequence.checked_add(1).ok_or(RetainedSprDiagnostic::Capacity)?;

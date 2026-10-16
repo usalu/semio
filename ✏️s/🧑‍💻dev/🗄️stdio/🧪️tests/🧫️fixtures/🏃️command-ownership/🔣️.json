@@ -10,7 +10,7 @@
     ],
     "capture": "captureOwnedCommandResultV1",
     "program": "generation.cargo",
-    "control": "control",
+    "control": "cargoPhase",
     "maximumBytes": 16777216,
     "maximumLines": 65536
   },

@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "lawMilliseconds": 2000,
+  "fallbackMilliseconds": 3500,
+  "drainMilliseconds": 120,
+  "cases": [
+    {
+      "name": "timeout",
+      "status": 1
+    },
+    {
+      "name": "error",
+      "status": 1
+    },
+    {
+      "name": "undefined",
+      "status": 1
+    },
+    {
+      "name": "detached",
+      "status": 1
+    },
+    {
+      "name": "normal",
+      "status": 0
+    },
+    {
+      "name": "funded",
+      "status": 1
+    },
+    {
+      "name": "registered-error",
+      "status": 1
+    },
+    {
+      "name": "registered-undefined",
+      "status": 1
+    }
+  ],
+  "order": [
+    "lease-held",
+    "lease-released",
+    "cleanup",
+    "late-birth-refused"
+  ],
+  "suiteCases": [
+    {
+      "name": "normal",
+      "status": 0
+    },
+    {
+      "name": "error",
+      "status": 1
+    },
+    {
+      "name": "undefined",
+      "status": 1
+    },
+    {
+      "name": "detached",
+      "status": 1
+    },
+    {
+      "name": "early",
+      "status": 1
+    }
+  ]
+}

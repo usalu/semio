@@ -32,7 +32,7 @@ fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut Sqlit
 fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
 fn read_actions(rows:Vec<FloatRow<'_>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<MemberAction>, ValueError>{let mut out=Vec::new();for r in ordered(rows,parent,c)?{checkpoint(c,out.len(),0)?;out.push(MemberAction{id:text(r,3,c)?,kind:text(r,4,c)?,category:text(r,5,c)?,source:text(r,6,c)?,g_k_line:r.real(7)?,q_k_line:r.real(8)?,n_k:r.real(9)?,v_y_k:r.real(10)?,v_z_k:r.real(11)?,m_y_k:r.real(12)?,m_z_k:r.real(13)?});}Ok(out)}
 /// 🪝️ Explicit optional native-codec capability owned by EN1999's derived record.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1999Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1999Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 
 impl En1999Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

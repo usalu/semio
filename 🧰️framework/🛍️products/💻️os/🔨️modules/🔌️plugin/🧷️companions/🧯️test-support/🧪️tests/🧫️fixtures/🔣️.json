@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "children": [
+    {
+      "id": "plain-path-mount",
+      "source": "#[path = \"alpha/🦀️.rs\"]\nmod alpha;\n",
+      "expected": [
+        {
+          "path": "alpha/🦀️.rs",
+          "modules": [],
+          "via": "path"
+        }
+      ]
+    },
+    {
+      "id": "attributes-and-visibility-in-any-order",
+      "source": "#[cfg(test)]\n#[path = \"a/🦀️.rs\"]\npub(crate) mod a;\n#[path = \"b/🦀️.rs\"]\n#[cfg(not(test))]\npub mod b;\n#[doc = \"x\"] #[path = \"c/🦀️.rs\"] #[allow(dead_code)] pub(super) mod c;\n",
+      "expected": [
+        {
+          "path": "a/🦀️.rs",
+          "modules": [],
+          "via": "path"
+        },
+        {
+          "path": "b/🦀️.rs",
+          "modules": [],
+          "via": "path"
+        },
+        {
+          "path": "c/🦀️.rs",
+          "modules": [],
+          "via": "path"
+        }
+      ]
+    },
+    {
+      "id": "inline-module-nesting-is-kept",
+      "source": "mod outer {\n    #[path = \"gamma/🦀️.rs\"]\n    pub(crate) mod gamma;\n    mod inner {\n        #[path = \"delta.rs\"]\n        mod delta;\n    }\n}\n#[path = \"renamed\"]\nmod relocated {\n    #[path = \"epsilon.rs\"]\n    mod epsilon;\n}\n",
+      "expected": [
+        {
+          "path": "gamma/🦀️.rs",
+          "modules": [
+            "outer"
+          ],
+          "via": "path"
+        },
+        {
+          "path": "delta.rs",
+          "modules": [
+            "outer",
+            "inner"
+          ],
+          "via": "path"
+        },
+        {
+          "path": "epsilon.rs",
+          "modules": [
+            "renamed"
+          ],
+          "via": "path"
+        }
+      ]
+    },
+    {
+      "id": "decoys-are-not-mounts",
+      "source": "// #[path = \"comment.rs\"] mod comment;\n/* #[path = \"block.rs\"] mod block; */\nconst TEXT: &str = \"#[path = \\\"string.rs\\\"] mod string;\";\nmod without_path;\nmacro_rules! m { () => { #[path = \"macro.rs\"] mod from_macro; }; }\nfn body() {\n    #[path = \"function.rs\"]\n    mod in_function {}\n}\nstruct Holder {\n    field: u8,\n}\n#[path = \"real.rs\"]\nmod real;\n",
+      "expected": [
+        {
+          "path": "real.rs",
+          "modules": [],
+          "via": "path"
+        }
+      ]
+    },
+    {
+      "id": "include-literal-items-are-children",
+      "source": "include!(\"hub-one/🦀️.rs\");\n#[cfg(test)]\ninclude!(\"../../../tests/standalone/🦀️.rs\");\ninclude!(concat!(env!(\"OUT_DIR\"), \"/x.rs\"));\nstatic NAMES: &[&str] = &[\"a\", \"b\"];\n#[path = \"after.rs\"]\nmod after;\n",
+      "expected": [
+        {
+          "path": "hub-one/🦀️.rs",
+          "modules": [],
+          "via": "include"
+        },
+        {
+          "path": "../../../tests/standalone/🦀️.rs",
+          "modules": [],
+          "via": "include"
+        },
+        {
+          "path": "after.rs",
+          "modules": [],
+          "via": "path"
+        }
+      ]
+    },
+    {
+      "id": "items-between-mounts-are-skipped-whole",
+      "source": "use std::fmt;\nconst TABLE: [u8; 3] = [1, 2, 3];\nimpl Holder {\n    fn f(&self) -> u8 { 1 }\n}\n#[path = \"first.rs\"]\nmod first;\nstruct Holder { a: u8 }\n#[derive(Debug)]\nenum Kind { A, B }\n#[path = \"second.rs\"]\npub mod second;\n",
+      "expected": [
+        {
+          "path": "first.rs",
+          "modules": [],
+          "via": "path"
+        },
+        {
+          "path": "second.rs",
+          "modules": [],
+          "via": "path"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "id": "ambiguous-path-attributes",
+      "source": "#[path = \"a.rs\"]\n#[path = \"b.rs\"]\nmod both;\n",
+      "error": "Ambiguous Rust path mount: both"
+    }
+  ],
+  "trees": [
+    {
+      "id": "nested-children-in-declaration-order",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "#[path = \"alpha/🦀️.rs\"]\nmod alpha;\npub(crate) use alpha::*;\n#[cfg(any(test, not(test)))]\n#[path = \"🌱️seed/🦀️.rs\"]\npub mod beta;\nmod outer {\n    #[path = \"gamma/🦀️.rs\"]\n    pub(crate) mod gamma;\n}\n#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod unit;\n",
+        "owner/alpha/🦀️.rs": "#[path = \"deep/🦀️.rs\"]\nmod deep;\npub fn alpha() {}\n",
+        "owner/alpha/deep/🦀️.rs": "pub fn deep() {}",
+        "owner/🌱️seed/🦀️.rs": "pub fn seed() {}\n",
+        "owner/outer/gamma/🦀️.rs": "pub fn gamma() {}\n",
+        "owner/🧪️tests/🔬️unit/🦀️.rs": "pub fn unit() {}\n"
+      },
+      "expected": [
+        "owner/🦀️.rs",
+        "owner/alpha/🦀️.rs",
+        "owner/alpha/deep/🦀️.rs",
+        "owner/🌱️seed/🦀️.rs",
+        "owner/outer/gamma/🦀️.rs"
+      ]
+    },
+    {
+      "id": "hub-include-keeps-the-includer-directory",
+      "root": "renderer/🦀️.rs",
+      "files": {
+        "renderer/🦀️.rs": "include!(\"📥️mounts/one/🦀️.rs\");\ninclude!(\"📥️mounts/two/🦀️.rs\");\n",
+        "renderer/📥️mounts/one/🦀️.rs": "#[path = \"../../🛎️first/🦀️.rs\"]\nmod first;\n",
+        "renderer/📥️mounts/two/🦀️.rs": "#[path = \"../../🛎️first/🦀️.rs\"]\nmod again;\n#[path = \"../../📮️second/🦀️.rs\"]\nmod second;\n#[path = \"../../../outside/🦀️.rs\"]\nmod outside;\n",
+        "renderer/🛎️first/🦀️.rs": "pub fn first() {}\n",
+        "renderer/📮️second/🦀️.rs": "pub fn second() {}",
+        "outside/🦀️.rs": "pub fn outside() {}\n"
+      },
+      "expected": [
+        "renderer/🦀️.rs",
+        "renderer/📥️mounts/one/🦀️.rs",
+        "renderer/🛎️first/🦀️.rs",
+        "renderer/📥️mounts/two/🦀️.rs",
+        "renderer/📮️second/🦀️.rs"
+      ]
+    },
+    {
+      "id": "mount-leaving-the-module-directory-is-not-followed",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "#[path = \"alpha/🦀️.rs\"]\nmod alpha;\n#[path = \"../🛬️lifted/🧩️other/🦀️.rs\"]\nmod lifted_other;\npub use lifted_other::*;\n#[path = \"📥️staging/🦀️.rs\"]\nmod staging;\n",
+        "owner/alpha/🦀️.rs": "pub fn alpha() {}\n",
+        "owner/📥️staging/🦀️.rs": "include!(\"../../🛬️lifted/🧬️outside/🦀️.rs\");\npub fn staging() {}\n",
+        "🛬️lifted/🧩️other/🦀️.rs": "pub fn other() {}\n",
+        "🛬️lifted/🧬️outside/🦀️.rs": "pub fn outside() {}\n"
+      },
+      "expected": [
+        "owner/🦀️.rs",
+        "owner/alpha/🦀️.rs",
+        "owner/📥️staging/🦀️.rs"
+      ]
+    }
+  ],
+  "treeRefusals": [
+    {
+      "id": "missing-mount",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "#[path = \"absent/🦀️.rs\"]\nmod absent;\n"
+      },
+      "error": "Rust module tree mount missing"
+    }
+  ]
+}

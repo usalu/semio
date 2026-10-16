@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v87a::subsets::any::schema::diff::GifDiff;
+use crate::{standards::v87a::subsets::any::schema::snapshot::GifColorTable, standards::v87a::subsets::any::schema::snapshot::GifImage, standards::v87a::subsets::any::schema::snapshot::GifSnapshot};
+use crate::standards::v87a::subsets::any::schema::mutations::*;
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

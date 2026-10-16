@@ -1,10 +1,11 @@
 //! 🧊️ Accepted-packet PNG export with bounded presentation, readback and retirement.
 use super::png::IconPngExport;
-use ui_wgpu::wgpu::{GpuContext, PreparedGpuPresentCursor, PreparedGpuReadback, PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderPacket};
-use ui_wgpu::wgpu::draw::{RasterTextureCleanupStep, RasterTextureWitness};
+use ui_wgpu::wgpu::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderPacket};
+use ui_gpu::{GpuContext, PreparedGpuPresentCursor, PreparedGpuReadback};
+use ui_gpu::{RasterTextureCleanupStep, RasterTextureWitness};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Phase {
+pub enum Phase {
     Ownership,
     Upload,
     Render,
@@ -20,7 +21,7 @@ enum Phase {
     Complete,
 }
 
-pub(crate) struct IconGpuPngExport {
+pub struct IconGpuPngExport {
     gpu: GpuContext,
     packet: Option<PreparedRenderPacket>,
     witness: RasterTextureWitness,
@@ -35,13 +36,13 @@ pub(crate) struct IconGpuPngExport {
     cancelled: bool,
 }
 
-pub(crate) struct IconGpuPngRejected {
-    pub(crate) fault: String,
+pub struct IconGpuPngRejected {
+    pub fault: String,
     packet: PreparedRenderPacket,
 }
 
 impl IconGpuPngRejected {
-    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,super::IconExportFault> {
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,super::IconExportFault> {
         let copy=cx.retained_grant().maximum_copy_bytes;
         super::scene::close_prepared(cx,self.packet.next_close_demands(copy),|grant|self.packet.close_step(grant))
     }
@@ -49,7 +50,7 @@ impl IconGpuPngRejected {
 
 impl IconGpuPngExport {
     #[expect(clippy::result_large_err, reason = "Refusal returns the exact packet for bounded retirement.")]
-    pub(crate) fn new(source: &GpuContext, width: u32, height: u32, packet: PreparedRenderPacket) -> Result<Self, IconGpuPngRejected> {
+    pub fn new(source: &GpuContext, width: u32, height: u32, packet: PreparedRenderPacket) -> Result<Self, IconGpuPngRejected> {
         let mut gpu = match source.offscreen(width, height) {
             Ok(gpu) => gpu,
             Err(fault) => return Err(IconGpuPngRejected { fault, packet }),
@@ -72,7 +73,7 @@ impl IconGpuPngExport {
         })
     }
 
-    pub(crate) fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, super::IconExportFault> {
+    pub fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, super::IconExportFault> {
         if self.phase == Phase::Complete {
             return self.fault.as_ref().map_or(Ok(true), |fault| Err(fault.clone().into()));
         }
@@ -205,7 +206,7 @@ impl IconGpuPngExport {
         self.bytes = None;
     }
 
-    pub(crate) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.cancelled = true;
         self.discard_candidate();
         if matches!(self.phase, Phase::Ownership | Phase::Upload | Phase::Render | Phase::Readback | Phase::Encode) {
@@ -213,7 +214,7 @@ impl IconGpuPngExport {
         }
     }
 
-    pub(crate) fn phase(&self) -> &'static str {
+    pub fn phase(&self) -> &'static str {
         match self.phase {
             Phase::Ownership => "ownership",
             Phase::Upload => "upload",
@@ -225,7 +226,7 @@ impl IconGpuPngExport {
         }
     }
 
-    pub(crate) fn progress(&self) -> (u8, usize, usize, usize) {
+    pub fn progress(&self) -> (u8, usize, usize, usize) {
         let (completed, total, detail) = match self.phase {
             Phase::Upload => {
                 let inner = self.gpu.prepared_upload_progress();
@@ -248,11 +249,11 @@ impl IconGpuPngExport {
         (self.phase as u8, completed, total, detail)
     }
 
-    pub(crate) fn take_png(&mut self) -> Option<Vec<u8>> {
+    pub fn take_png(&mut self) -> Option<Vec<u8>> {
         if self.phase == Phase::Complete && !self.cancelled && self.fault.is_none() { self.bytes.take() } else { None }
     }
 
-    pub(crate) fn terminal(&self) -> bool {
+    pub fn terminal(&self) -> bool {
         self.phase == Phase::Complete
     }
 }

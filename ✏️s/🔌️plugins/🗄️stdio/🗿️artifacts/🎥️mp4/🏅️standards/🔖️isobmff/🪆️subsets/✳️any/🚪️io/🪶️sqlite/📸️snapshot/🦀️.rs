@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::isobmff::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn ownership(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::OwnershipLimit,message)}
 fn allocation(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::AllocationFailed,message)}
@@ -20,7 +20,7 @@ fn groups<'a>(rows:&Entities<'a>,parents:&Entities<'_>,control:&mut SqliteSnapsh
 fn number<T:TryFrom<i64>>(row:&SqliteRow,column:usize)->Result<T,ValueError>{T::try_from(row.integer(column)?).map_err(|_|invalid("MP4 integer exceeds native width"))}
 fn u64_value(row:&SqliteRow,column:usize)->Result<u64,ValueError>{let text=row.text(column)?;if text.len()>20{return Err(invalid("MP4 unsigned decimal exceeds native width"));}let value=text.parse::<u64>().map_err(|error|invalid(error.to_string()))?;if text.is_empty()||(text.len()>1&&text.starts_with('0'))||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(invalid("MP4 unsigned decimal must be canonical"));}Ok(value)}
 fn boolean(row:&SqliteRow,column:usize)->Result<bool,ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("MP4 requires boolean integer"))}}
-fn text(row:&SqliteRow,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<String,ValueError>{reconstruct_text(control,row.text(column)?)}
+pub fn text(row:&SqliteRow,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<String,ValueError>{reconstruct_text(control,row.text(column)?)}
 fn optional_text(row:&SqliteRow,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Option<String>,ValueError>{if matches!(row.values.get(column),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(text(row,column,control)?))}}
 fn optional_cell(value:&Option<String>)->Cell<'_>{value.as_deref().map_or(Cell::Null,Cell::Text)}
 fn ordinal(value:usize)->Result<Cell<'static>,ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|error|work(error.to_string()))?))}
@@ -68,6 +68,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

@@ -33,7 +33,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for MoveNode {
         vec!["nodes".into(), self.id.clone()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

@@ -598,7 +598,7 @@ impl GlbSchemaOutput {
     }
 }
 
-pub(crate) struct GlbSchemaCursor {
+pub struct GlbSchemaCursor {
     page: RendererAssetPageCursor,
     header: [u8; 20],
     header_len: u8,
@@ -625,12 +625,12 @@ pub(crate) struct GlbSchemaCursor {
     pbr_depth: Option<u16>,
     base_color_texture_depth: Option<u16>,
     material_texture_role: usize,
-    pub(crate) output: GlbSchemaOutput,
+    pub output: GlbSchemaOutput,
     terminal: bool,
 }
 
 impl GlbSchemaCursor {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             page: RendererAssetPageCursor::new(),
             header: [0; 20],
@@ -663,7 +663,7 @@ impl GlbSchemaCursor {
         }
     }
 
-    pub(crate) fn step(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<bool, &'static str> {
+    pub fn step(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1238,7 +1238,7 @@ fn exact_u16(value: f32, detail: &'static str) -> Result<u16, &'static str> {
     Ok(value as u16)
 }
 
-pub(crate) type GlbMatrix = [[f32; 4]; 4];
+pub type GlbMatrix = [[f32; 4]; 4];
 
 #[derive(Clone, Copy)]
 struct GlbInstanceOutput {
@@ -1517,7 +1517,7 @@ fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     }
 }
 
-pub(crate) const GLB_OUTLINE_SCALE: f32 = 1.001;
+pub const GLB_OUTLINE_SCALE: f32 = 1.001;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct GlbOutlineEdgeKey {
@@ -1534,16 +1534,16 @@ struct GlbOutlineEdgeRecord {
     live: bool,
 }
 
-pub(crate) struct GlbOutlineAccumulator {
+pub struct GlbOutlineAccumulator {
     lookup: HashMap<GlbOutlineEdgeKey, usize>,
     records: Vec<GlbOutlineEdgeRecord>,
-    pub(crate) segments: Vec<[[f32; 3]; 2]>,
+    pub segments: Vec<[[f32; 3]; 2]>,
     maximum_edges: usize,
     flush: usize,
 }
 
 impl GlbOutlineAccumulator {
-    pub(crate) fn new(maximum_edges: usize) -> Result<Self, &'static str> {
+    pub fn new(maximum_edges: usize) -> Result<Self, &'static str> {
         let mut lookup = HashMap::new();
         let mut records = Vec::new();
         let mut segments = Vec::new();
@@ -1576,7 +1576,7 @@ impl GlbOutlineAccumulator {
         Ok(())
     }
 
-    pub(crate) fn push_triangle(&mut self, instance: u16, matrix: GlbMatrix, points: [[f32; 3]; 3]) -> Result<(), &'static str> {
+    pub fn push_triangle(&mut self, instance: u16, matrix: GlbMatrix, points: [[f32; 3]; 3]) -> Result<(), &'static str> {
         let keys = [Self::point_key(points[0])?, Self::point_key(points[1])?, Self::point_key(points[2])?];
         if keys[0] == keys[1] || keys[1] == keys[2] || keys[2] == keys[0] {
             return Ok(());
@@ -1606,7 +1606,7 @@ impl GlbOutlineAccumulator {
         Ok(())
     }
 
-    pub(crate) fn flush_step(&mut self) -> Result<bool, &'static str> {
+    pub fn flush_step(&mut self) -> Result<bool, &'static str> {
         let Some(record) = self.records.get(self.flush).copied() else { return Ok(true) };
         self.flush += 1;
         if record.live {
@@ -1617,7 +1617,7 @@ impl GlbOutlineAccumulator {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum GlbMaterializePhase {
+pub enum GlbMaterializePhase {
     Plan,
     Header,
     TextureBytes,
@@ -1640,12 +1640,12 @@ pub(crate) enum GlbMaterializePhase {
     Closing,
 }
 
-pub(crate) struct GlbMaterializeCursor {
+pub struct GlbMaterializeCursor {
     schema: GlbSchemaOutput,
     plan: GlbInstancePlanCursor,
     write: Option<Mesh3dWriteToken>,
-    pub(crate) lease: Option<Mesh3dLease>,
-    pub(crate) appearance: Option<infinite_world::world::World3dMeshAppearance>,
+    pub lease: Option<Mesh3dLease>,
+    pub appearance: Option<infinite_world::world::World3dMeshAppearance>,
     textures: Vec<(String, SceneRasterLease)>,
     texture_bytes: Vec<u8>,
     decoded_texture: Option<DecodedReferenceImage>,
@@ -1659,7 +1659,7 @@ pub(crate) struct GlbMaterializeCursor {
     uv_role:usize,
     texture_role: u8,
     outline: Option<GlbOutlineAccumulator>,
-    pub(crate) phase: GlbMaterializePhase,
+    pub phase: GlbMaterializePhase,
     bin_start: usize,
     bin_bytes: usize,
     instance: u16,
@@ -1671,12 +1671,12 @@ pub(crate) struct GlbMaterializeCursor {
 }
 
 impl GlbMaterializeCursor {
-    pub(crate) fn new(schema: GlbSchemaOutput) -> Self {
+    pub fn new(schema: GlbSchemaOutput) -> Self {
         let plan = GlbInstancePlanCursor::new(&schema);
         Self { schema, plan, write: None, lease: None, appearance: None, textures: Vec::new(), texture_bytes: Vec::new(), decoded_texture: None,texture_hash:Default::default(),texture_digest:[0;2],texture_png:None,texture_submission:None,texture_worker:None,texture_cancelled:Arc::new(AtomicBool::new(false)), texture: 0, uv_role:0, texture_role: 0, outline: None, phase: GlbMaterializePhase::Plan, bin_start: 0, bin_bytes: 0, instance: 0, item: 0, normal_substep: 0, normal_indices: [0; 3], normal_positions: [[0.0; 3]; 3], normal_face: [0.0; 3] }
     }
 
-    pub(crate) fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
+    pub fn step(&mut self, owner: &RendererAssetFetchOwner, pages: &RendererAssetPageIndex) -> Result<bool, &'static str> {
         match self.phase {
             GlbMaterializePhase::Plan => {
                 if self.plan.step(&self.schema)? {
@@ -2246,11 +2246,11 @@ impl GlbMaterializeCursor {
         self.write.ok_or("GLB materializer lost its mesh write claim")
     }
 
-    pub(crate) fn take_asset(&mut self) -> Option<World3dMeshAsset> {
+    pub fn take_asset(&mut self) -> Option<World3dMeshAsset> {
         Some(World3dMeshAsset { mesh: self.lease.take()?, appearance: self.appearance.take()? })
     }
 
-    pub(crate) fn restore_asset(&mut self, asset: World3dMeshAsset) {
+    pub fn restore_asset(&mut self, asset: World3dMeshAsset) {
         assert!(self.lease.replace(asset.mesh).is_none(), "GLB publication restores exactly one retained mesh lease");
         assert!(self.appearance.replace(asset.appearance).is_none(), "GLB publication restores exactly one retained appearance owner");
     }
@@ -2268,12 +2268,12 @@ impl GlbMaterializeCursor {
         self.normal_substep = 0;
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.texture_cancelled.store(true,Ordering::Release);
         self.phase = GlbMaterializePhase::Closing;
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.begin_close();
         if self.texture_submission.take().is_some(){self.texture_worker=None;return false}
         if let Some(worker)=self.texture_worker.as_ref(){let Ok(mut output)=worker.try_lock()else{return false};let Some(image)=output.take()else{return false};self.decoded_texture=image.map(|image|DecodedReferenceImage{width:image.width,height:image.height,pixels:image.pixels,source_digest:self.texture_digest});drop(output);self.texture_worker=None;return false}

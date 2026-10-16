@@ -11,17 +11,17 @@ pub struct Board2dSurface {
     pub window_id: String,
 }
 
-pub fn puzzle_board_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    engine_canvas::puzzle_board_pointer_down_into(surface_id, inner, x, y, button, shift, ctrl_or_meta, input)
+pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_down_into(surface_id, inner, x, y, button, shift, ctrl_or_meta, input)
 }
 
 /// 🤏️ Transfers a board's first-touch lane to pinch ownership when contact two lands.
-pub fn puzzle_board_touch_pointer_down_into(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+pub fn board2d_touch_pointer_down_into(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     match touch_pointer_down(surface_id, pointer_id, sx, sy) {
         GestureVerdict::Single => Ok(false),
         GestureVerdict::PinchBegin(_) => {
-            engine_canvas::puzzle_board_yield_to_pinch_into(surface_id, sx, sy, input)?;
+            semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_yield_to_pinch_into(surface_id, sx, sy, input)?;
             Ok(true)
         }
         _ => Ok(true),
@@ -29,19 +29,19 @@ pub fn puzzle_board_touch_pointer_down_into(surface_id: &str, inner: Rect, point
 }
 
 /// 🤏️ Applies one silent board pinch step; the single-pointer lane stays suppressed while latched.
-pub fn puzzle_board_touch_pointer_move(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+pub fn board2d_touch_pointer_move(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+    let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     match touch_pointer_move(surface_id, pointer_id, sx, sy) {
         GestureVerdict::Single => false,
         GestureVerdict::Pinch(step) => {
-            if let Some(current) = engine_canvas::puzzle_board_camera(surface_id) {
+            if let Some(current) = semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_camera(surface_id) {
                 let next = pinch_camera(
                     current,
                     step,
                     [inner.w as f64, inner.h as f64],
                     ZoomBounds { min: infinite_canvas::BOARD_CAMERA_ZOOM_MIN, max: infinite_canvas::BOARD_CAMERA_ZOOM_MAX },
                 );
-                engine_canvas::puzzle_board_set_camera_silent(surface_id, next);
+                semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_set_camera_silent(surface_id, next);
             }
             true
         }
@@ -50,7 +50,7 @@ pub fn puzzle_board_touch_pointer_move(surface_id: &str, inner: Rect, pointer_id
 }
 
 /// 🏁️ Suppresses pinch lifts and publishes exactly one settled board camera on the final lift.
-pub fn puzzle_board_touch_pointer_up_into(
+pub fn board2d_touch_pointer_up_into(
     surface_id: &str,
     controller_id: &str,
     pointer_id: ui_render::PointerId,
@@ -58,12 +58,12 @@ pub fn puzzle_board_touch_pointer_up_into(
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     match touch_pointer_up(surface_id, pointer_id) {
         GestureVerdict::Single => Ok(false),
-        GestureVerdict::PinchEnd => engine_canvas::puzzle_board_publish_camera_into(surface_id, controller_id, input).map(|_| true),
+        GestureVerdict::PinchEnd => semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_publish_camera_into(surface_id, controller_id, input).map(|_| true),
         _ => Ok(true),
     }
 }
 
-pub fn puzzle_board_pointer_move_into(
+pub fn board2d_pointer_move_into(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -74,10 +74,10 @@ pub fn puzzle_board_pointer_move_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    engine_canvas::puzzle_board_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
 }
 
-pub fn puzzle_board_pointer_up_into(
+pub fn board2d_pointer_up_into(
     surface_id: &str,
     controller_id: &str,
     inner: Rect,
@@ -88,23 +88,23 @@ pub fn puzzle_board_pointer_up_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    engine_canvas::puzzle_board_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
 }
 
-pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    engine_canvas::puzzle_board_pointer_leave_into(surface_id, controller_id, alt, input)
+pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_leave_into(surface_id, controller_id, alt, input)
 }
 
 pub fn board2d_drag_active(surface_id: &str) -> bool {
-    engine_canvas::board_drag_active(surface_id)
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board_drag_active(surface_id)
 }
 
-pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    engine_canvas::puzzle_board_wheel_into(surface_id, controller_id, inner, x, y, delta, input)
+pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_wheel_into(surface_id, controller_id, inner, x, y, delta, input)
 }
 
-//#region Puzzle2dSelectionMenu
-pub struct Puzzle2dSelectionMenuItem {
+//#region Board2dSelectionMenu
+pub struct Board2dSelectionMenuItem {
     pub id: String,
     pub label: String,
     pub icon: String,
@@ -114,15 +114,15 @@ pub struct Puzzle2dSelectionMenuItem {
     pub destructive: bool,
 }
 
-fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
+fn board2d_entity_flag(entity: &Value, key: &str) -> bool {
     entity.get(key).and_then(Value::as_bool).unwrap_or(false)
 }
 
-/// 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildPuzzle2dSelectionMenuItems` in the React host.
-pub fn build_puzzle2d_selection_menu_items(snapshot_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
+/// 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildBoard2dSelectionMenuItems` in the React host.
+pub fn build_board2d_selection_menu_items(snapshot_json: &str, selection_ids: &[String]) -> Vec<Board2dSelectionMenuItem> {
     let fixture: Value = serde_json::from_str(snapshot_json).unwrap_or(Value::Null);
     if selection_ids.is_empty() {
-        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), icon: "maximize-2".into(), action: "selectAll".into(), args: None, disabled: false, destructive: false }];
+        return vec![Board2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), icon: "maximize-2".into(), action: "selectAll".into(), args: None, disabled: false, destructive: false }];
     }
     let selected: HashSet<&str> = selection_ids.iter().map(String::as_str).collect();
     let nodes = fixture.get("nodes").and_then(Value::as_array).cloned().unwrap_or_default();
@@ -153,10 +153,10 @@ pub fn build_puzzle2d_selection_menu_items(snapshot_json: &str, selection_ids: &
             }
         }
     }
-    let any_visible = selected_entities.iter().any(|entity| !puzzle2d_entity_flag(entity, "hidden"));
-    let any_unlocked = selected_entities.iter().any(|entity| !puzzle2d_entity_flag(entity, "locked"));
+    let any_visible = selected_entities.iter().any(|entity| !board2d_entity_flag(entity, "hidden"));
+    let any_unlocked = selected_entities.iter().any(|entity| !board2d_entity_flag(entity, "locked"));
     vec![
-        Puzzle2dSelectionMenuItem {
+        Board2dSelectionMenuItem {
             id: "toggleHidden".into(),
             label: (if any_visible { "Hide" } else { "Show" }).into(),
             icon: (if any_visible { "eye-off" } else { "eye" }).into(),
@@ -165,7 +165,7 @@ pub fn build_puzzle2d_selection_menu_items(snapshot_json: &str, selection_ids: &
             disabled: false,
             destructive: false,
         },
-        Puzzle2dSelectionMenuItem {
+        Board2dSelectionMenuItem {
             id: "toggleLocked".into(),
             label: (if any_unlocked { "Lock" } else { "Unlock" }).into(),
             icon: (if any_unlocked { "lock" } else { "lock-open" }).into(),
@@ -174,13 +174,13 @@ pub fn build_puzzle2d_selection_menu_items(snapshot_json: &str, selection_ids: &
             disabled: false,
             destructive: false,
         },
-        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), icon: "copy".into(), action: "duplicateSelection".into(), args: None, disabled: !has_selected_node, destructive: false },
-        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), icon: "layers".into(), action: "selectSameKind".into(), args: None, disabled: false, destructive: false },
-        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), icon: "crosshair".into(), action: "focusSelection".into(), args: None, disabled: false, destructive: false },
-        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), icon: "trash".into(), action: "deleteSelection".into(), args: None, disabled: false, destructive: true },
+        Board2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), icon: "copy".into(), action: "duplicateSelection".into(), args: None, disabled: !has_selected_node, destructive: false },
+        Board2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), icon: "layers".into(), action: "selectSameKind".into(), args: None, disabled: false, destructive: false },
+        Board2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), icon: "crosshair".into(), action: "focusSelection".into(), args: None, disabled: false, destructive: false },
+        Board2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), icon: "trash".into(), action: "deleteSelection".into(), args: None, disabled: false, destructive: true },
     ]
 }
-//#endregion Puzzle2dSelectionMenu
+//#endregion Board2dSelectionMenu
 
 /// 🧩️ Pushes board-2d context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
 
@@ -335,7 +335,7 @@ fn vfs_children_by_parent(rows: &[Value]) -> HashMap<String, Vec<Value>> {
 /// carries `hasChildren: true` and stays a visible row).
 const VFS_ROOT_FILE_NODE_KIND: &str = "root";
 
-pub(crate) fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &BTreeSet<String>) -> Vec<VfsVisibleRow> {
+pub fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &BTreeSet<String>) -> Vec<VfsVisibleRow> {
     let children_by_parent = vfs_children_by_parent(rows);
     let mut visible = Vec::new();
     fn visit(node: &Value, level: u32, out: &mut Vec<VfsVisibleRow>, children_by_parent: &HashMap<String, Vec<Value>>, expanded_ids: &BTreeSet<String>) {
@@ -462,23 +462,17 @@ struct VfsMetrics {
     pub(crate) body: Rect,
 }
 
-pub(crate) fn vfs_metrics(inner: Rect, theme: &Theme) -> VfsMetrics {
+pub fn vfs_metrics(inner: Rect, theme: &Theme) -> VfsMetrics {
     let header_h = theme.control_height * 1.33;
     VfsMetrics { header_h, row_h: theme.control_height, pad: theme.padding_standard, body: Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h) }
 }
 
-pub(crate) fn vfs_row_id(row: &Value) -> String {
+pub fn vfs_row_id(row: &Value) -> String {
     row.get("id").and_then(Value::as_str).unwrap_or_default().to_string()
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct VfsAccessibilityFocusTarget {
-    pub(crate) row_id: String,
-    pub(crate) kind: VfsAccessibilityControlKind,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum VfsAccessibilityKeyOutcome {
+pub enum VfsAccessibilityKeyOutcome {
     Unhandled,
     Consumed,
 }
@@ -487,7 +481,7 @@ fn accepted_vfs_control(host_id: &str, target: &VfsAccessibilityFocusTarget) -> 
     accepted_vfs_accessibility_controls(host_id).into_iter().find(|control| control.row_id == target.row_id && control.kind == target.kind)
 }
 
-pub(crate) fn vfs_accessibility_focus_target(scene: &UiComponentSceneNode, x: f32, y: f32) -> Option<VfsAccessibilityFocusTarget> {
+pub fn vfs_accessibility_focus_target(scene: &UiComponentSceneNode, x: f32, y: f32) -> Option<VfsAccessibilityFocusTarget> {
     if scene.component_kind != SurfaceKind::VirtualFileSystem {
         return None;
     }
@@ -499,7 +493,7 @@ pub(crate) fn vfs_accessibility_focus_target(scene: &UiComponentSceneNode, x: f3
         .map(|control| VfsAccessibilityFocusTarget { row_id: control.row_id.clone(), kind: control.kind })
 }
 
-pub(crate) fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAccessibilityFocusTarget, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAccessibilityFocusTarget, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
     let _control = accepted_vfs_control(&scene.host_id, target)?;
     match target.kind {
         VfsAccessibilityControlKind::Chevron => {
@@ -520,7 +514,7 @@ pub(crate) fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &
     }
 }
 
-pub(crate) fn vfs_accessibility_apply_key(
+pub fn vfs_accessibility_apply_key(
     scene: &UiComponentSceneNode,
     target: &VfsAccessibilityFocusTarget,
     key: &ui_wgpu::wgpu::KeyAction,
@@ -536,7 +530,7 @@ pub(crate) fn vfs_accessibility_apply_key(
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::VirtualFileSystem`: a row's expand chevron, or
 /// the row itself. A row press sends `selectRows` with `{ surfaceId, ids }`, the payload
 /// `VirtualFileSystemHost`'s `onSelectionChange` sends.
-pub(crate) fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers) -> Option<SceneListHit> {
+pub fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers) -> Option<SceneListHit> {
     let vfs = scene.virtual_file_system.as_ref()?;
     let metrics = vfs_metrics(inner, theme);
     if y < metrics.body.y {
@@ -566,7 +560,7 @@ pub(crate) fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32,
 
 /// 🖱️ The double-click band a press landed in, keyed by the surface's OWN row ordering so a repeat
 /// press resolves the same row the first one did.
-pub(crate) fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect, _x: f32, y: f32) -> Option<String> {
+pub fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect, _x: f32, y: f32) -> Option<String> {
     if scene.component_kind != SurfaceKind::VirtualFileSystem {
         return None;
     }
@@ -578,7 +572,7 @@ pub(crate) fn hit_double_click_target(scene: &UiComponentSceneNode, inner: Rect,
 
 /// 🚪️ What a double-click on a virtual file system row opens — `navigateUri`'s own scheme decides
 /// between `openInstance`, `exportMedia` and `navigateVirtualFileSystemNode`.
-pub(crate) fn double_click_action(scene: &UiComponentSceneNode, _target: &str, inner: Rect, _x: f32, y: f32) -> Option<ActionDescriptor> {
+pub fn double_click_action(scene: &UiComponentSceneNode, _target: &str, inner: Rect, _x: f32, y: f32) -> Option<ActionDescriptor> {
     let vfs = scene.virtual_file_system.as_ref()?;
     let metrics = vfs_metrics(inner, &scene_input_theme());
     let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).ok()?;
@@ -592,7 +586,7 @@ pub(crate) fn double_click_action(scene: &UiComponentSceneNode, _target: &str, i
 /// 🗂️ Renders `SurfaceKind::VirtualFileSystem`: a header band of descriptor columns over an
 /// expansion-aware, multi-selectable row tree — the port of `VirtualFileSystemHost` in
 /// `🗣️Interpreter/🟦️.tsx` plus `@semio-tech/ui-react`'s own `VirtualFileSystem`.
-pub(crate) fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, labels: VirtualFileSystemChromeLabels) {
+pub fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, labels: VirtualFileSystemChromeLabels) {
     let theme = ctx.theme;
     let Some(vfs) = &scene.virtual_file_system else {
         return render_placeholder("virtual-file-system", bounds, ctx);
@@ -693,7 +687,7 @@ pub(crate) fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
                     ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, size * 0.5);
                     let image = icon.and_then(|icon| {
                         let image_id = format!("{}.vfs.avatar.{}.{}", scene.host_id, row_id, column_id);
-                        crate::interpreter::current_ui_image_key(&image_id, icon)
+                        semio_framework_os_renderer_wgpu_scene_canvas2d::current_ui_image_key(&image_id, icon)
                     });
                     let inside = [rect.x + 1.0, rect.y + 1.0, rect.w - 2.0, rect.h - 2.0];
                     if let Some(key) = image {

@@ -69,7 +69,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     let app = crate::editor::dag::create_dag_app();
     assert!(app.tools.iter().any(|declared| declared.id == TOOL_ID && declared.run.is_some()));
     assert!(app.modes.iter().all(|mode| mode.tools.iter().any(|reference| reference.as_str() == TOOL_ID)));
-    let injected = semio_framework::tool_run_action_definitions(&app);
+    let injected = semio_framework::tool_run::tool_run_action_definitions(&app);
     for action in TOOL_RUN_ACTION_IDS {
         assert!(injected.iter().any(|definition| definition.id == action), "{action} is injected");
     }
@@ -234,7 +234,7 @@ fn demo_app() -> DagApp {
 }
 
 fn start(app: &mut DagApp) {
-    assert_eq!(tool_run_action(app, semio_framework_plugin::TOOL_RUN_START_ACTION_ID, &[("toolId", DslValue::String(TOOL_ID.into()))]).get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
+    assert_eq!(tool_run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, &[("toolId", DslValue::String(TOOL_ID.into()))]).get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
 }
 
 fn run_arguments() -> [(&'static str, DslValue); 2] {
@@ -254,7 +254,7 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!(node_positions(&app), before, "a complete run has committed nothing");
     assert_eq!(history_len(&mut app), history);
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty()), "the run published trace pages");
-    assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
+    assert_eq!(tool_run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "reorganize finalizes", |app| run_state(app) == Some("finalized"));
     let after = node_positions(&app);
     assert_eq!(after.keys().collect::<Vec<_>>(), before.keys().collect::<Vec<_>>());
@@ -275,7 +275,7 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     start(&mut app);
     let iterations = law["abortAfterIterations"].as_u64().expect("iterations");
     pump_until(&mut app, "provisional moves exist", |app| app.tool_run_presence().is_some_and(|presence| presence.completed >= iterations));
-    assert_eq!(tool_run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
+    assert_eq!(tool_run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, &run_arguments()).get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     pump_until(&mut app, "abort settles", |app| run_state(app) == Some("aborted"));
     let after = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");

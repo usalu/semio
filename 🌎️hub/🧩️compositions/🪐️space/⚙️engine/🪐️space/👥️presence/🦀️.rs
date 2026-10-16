@@ -4,7 +4,7 @@
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — see `create_space_app`'s `.interaction(...)`
 //! declaration for the `graph` domain.
 
-use crate::engine::space::config::SpaceWindowCamera;
+use crate::config::SpaceWindowCamera;
 use protocol::Mutation;
 use std::collections::BTreeMap;
 use pack::snapshot::ArtifactPack;
@@ -23,7 +23,6 @@ pub struct SpacePresence {
     pub collapsed_node_ids: Vec<String>,
     pub preview_off_node_ids: Vec<String>,
 }
-
 
 impl store::ArtifactPresenceSnapshot for SpacePresence {}
 

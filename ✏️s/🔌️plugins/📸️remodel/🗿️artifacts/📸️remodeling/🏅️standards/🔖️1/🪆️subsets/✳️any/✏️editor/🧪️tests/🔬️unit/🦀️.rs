@@ -164,7 +164,7 @@ pub(crate) mod context {
 
     /// ▶️ Starts the reconstruction tool run.
     pub async fn start_reconstruction(app: &mut RemodelingApp) {
-        let output = run_action(app, semio_framework_plugin::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(model::tools::reconstruction::TOOL_ID.into()))]).await;
+        let output = run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, vec![("toolId".into(), semio_framework_plugin::DslValue::String(model::tools::reconstruction::TOOL_ID.into()))]).await;
         assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("spawnJob"), "the framework starts the reconstruction run");
     }
 

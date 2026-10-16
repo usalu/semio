@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
+use crate::standards::v_utf_8::subsets::any::schema::diff::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn lines(v: &[&str]) -> Vec<String> {

@@ -144,8 +144,8 @@
     },
     {
       "name": "brushPlace flushes",
-      "rows": [{ "name": "brushPlace", "payload": { "nodeId": "puzzle2d.brush.1", "edgeId": "puzzle2d.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }],
-      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "brushPlace", "payload": { "nodeId": "puzzle2d.brush.1", "edgeId": "puzzle2d.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }] }
+      "rows": [{ "name": "brushPlace", "payload": { "nodeId": "board.brush.1", "edgeId": "board.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }],
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "brushPlace", "payload": { "nodeId": "board.brush.1", "edgeId": "board.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }] }
     },
     {
       "name": "edgeDelete flushes",

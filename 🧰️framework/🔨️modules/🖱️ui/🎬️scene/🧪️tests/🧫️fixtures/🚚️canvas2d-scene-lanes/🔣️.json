@@ -1,5 +1,5 @@
 {
-  "$comment": "🚚️ The one language-neutral declaration of the canvas-2d scene lane carrier — the 2d twin of 🚚️world3d-scene-lanes. Rust pins Canvas2dSceneLane / CANVAS2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins CANVAS2D_SCENE_LANES / canvas2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
+  "$comment": "🚚️ The one language-neutral declaration of the canvas-2d scene lane carrier — the 2d twin of 🚚️world3d-scene-lanes. Rust pins Canvas2dSceneLane / CANVAS2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/🦀️.rs) against it; TypeScript pins CANVAS2D_SCENE_LANES / canvas2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
   "schema": "canvas-2d@1",
   "laneKeyPrefix": "framework.scene.canvas2d.",
   "spineFields": [

@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-replication-ids"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Replication identifiers: mutation, actor, artifact, schema ids, payload hash and the hybrid logical timestamp."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-ids"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]

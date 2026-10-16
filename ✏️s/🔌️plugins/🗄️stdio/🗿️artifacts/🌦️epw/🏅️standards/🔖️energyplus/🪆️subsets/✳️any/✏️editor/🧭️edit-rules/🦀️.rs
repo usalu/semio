@@ -18,3 +18,18 @@ pub const EDIT_RULES: EditRules = EditRules {
     inserts: &[InsertRule::new("/records", "insert-record", "record").at("index")],
     removes: &[RemoveRule::by_index("/records", "remove-record", "index")],
 };
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const EPW_ARTIFACT_SCHEMA_ID: &str = "s.stdio.epw";
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    Vec::new()
+}
+}
+//#endregion 🧩️ArtifactItems8

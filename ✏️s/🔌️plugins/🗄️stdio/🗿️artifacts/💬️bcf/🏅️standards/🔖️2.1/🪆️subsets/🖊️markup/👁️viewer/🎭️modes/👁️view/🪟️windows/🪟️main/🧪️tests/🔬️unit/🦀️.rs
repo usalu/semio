@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use semio_framework_plugin::app::TableWindowKit;
+use crate::viewer::bcf::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_shared_table_window_kit() {

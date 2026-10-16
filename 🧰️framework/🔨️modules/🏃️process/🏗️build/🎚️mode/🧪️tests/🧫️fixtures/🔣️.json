@@ -5,7 +5,6 @@
       "mode": "prototype",
       "policy": {
         "cargoProfile": "prototype",
-        "wasmProfile": "wasm-prototype",
         "cmakeConfiguration": "Debug",
         "dotnetConfiguration": "Debug",
         "optimize": false,
@@ -16,7 +15,6 @@
       "mode": "release",
       "policy": {
         "cargoProfile": "release",
-        "wasmProfile": "wasm-release",
         "cmakeConfiguration": "Release",
         "dotnetConfiguration": "Release",
         "optimize": true,

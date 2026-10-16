@@ -10,9 +10,27 @@ use semio_framework_artifact_flow_flow::*;
 
 
 #[path="♻️retirement/🦀️.rs"]
-mod original_retirement;
+pub mod original_retirement;
+
 pub use original_retirement::{FlowVcsCloseDemands,FlowVcsCloseFailure};
 use original_retirement::{FlowVcsClosingOwner,FlowVcsRetirement,owner_demands,owner_step,admit_turn,retain_owner};
+
+#[path = "../📝️forms/🧬️schema/🦀️.rs"]
+pub mod forms;
+
+//// 🪪️ Admits one caller-owned identity authority over the plugin observer and runs `operation` under it; the receipt returns only after the call finished.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! history_identity {
+    (|$identity:ident| $operation:expr) => {{
+        let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+        let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
+        let mut $identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).unwrap_or_else(|_| unreachable!("flow authoring identity ceiling is a declared nonzero constant"));
+        let result = $operation;
+        drop($identity.pause().unwrap_or_else(|_| unreachable!("identity authority retains its receipt through one authoring call")));
+        result
+    }};
+}
 
 //#region 🌊️RetainedVcs
 
@@ -60,7 +78,7 @@ pub struct FlowVcsResourceFingerprint {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-struct FlowVcsCensus {
+pub struct FlowVcsCensus {
     items: usize,
     bytes: usize,
     depth: usize,
@@ -224,7 +242,7 @@ pub struct FlowSurfaceOwner {
 }
 
 impl FlowSurfaceOwner {
-    fn from_host_snapshot(surface: u64, host: u64, generation: u64, host_snapshot: &FlowHostSnapshot) -> Self {
+    pub fn from_host_snapshot(surface: u64, host: u64, generation: u64, host_snapshot: &FlowHostSnapshot) -> Self {
         let widget_slots = host_snapshot.widgets.len();
         Self { surface, host, generation, document: 1, widgets: widget_slots, synapses: host_snapshot.synapses.len(), previews: widget_slots, expanded: widget_slots, layout: host_snapshot.layout.len(), history: 1, edit: 1, conflict: 1, control: 1, output: 1 }
     }
@@ -273,7 +291,7 @@ fn flow_vcs_release_count(owner: &mut usize) -> bool {
 }
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
-enum FlowVcsAction {
+pub enum FlowVcsAction {
     InsertWidget { index: usize, item: Widget },
     RemoveWidget { id: String },
     RemoveWidgetAt { index: usize },
@@ -293,7 +311,7 @@ enum FlowVcsAction {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowVcsStage {
+pub enum FlowVcsStage {
     Admitted,
     Ready,
     PublishReady,
@@ -305,7 +323,7 @@ enum FlowVcsStage {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowVcsCursorPhase {
+pub enum FlowVcsCursorPhase {
     LoadHistory,
     Scan,
     Mutate,
@@ -329,7 +347,7 @@ enum FlowVcsCursorPhase {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowVcsCursorKind {
+pub enum FlowVcsCursorKind {
     None,
     InsertWidget,
     RemoveWidget,
@@ -347,20 +365,20 @@ enum FlowVcsCursorKind {
 struct FlowVcsCursor {
     phase: FlowVcsCursorPhase,
     kind: FlowVcsCursorKind,
-    scan: usize,
+    pub scan: usize,
     origin: usize,
     current: usize,
     target: usize,
     history_mode: u8,
-    history_loaded: bool,
-    redo_retired: usize,
-    history_transferred: bool,
-    surface_transferred: bool,
-    visibility_published: bool,
+    pub history_loaded: bool,
+    pub redo_retired: usize,
+    pub history_transferred: bool,
+    pub surface_transferred: bool,
+    pub visibility_published: bool,
     prior_generation: u64,
     prior_digest: u64,
-    owns_edit: bool,
-    mutated: bool,
+    pub owns_edit: bool,
+    pub mutated: bool,
 }
 
 impl FlowVcsCursor {
@@ -417,15 +435,15 @@ struct FlowVcsOperation {
     retirement: FlowVcsRetirement,
     cursor: FlowVcsCursor,
     page: Option<FlowVcsPage>,
-    page_leased: bool,
+    pub page_leased: bool,
     delivery_held: bool,
     stage: FlowVcsStage,
-    close_phase: u8,
+    pub close_phase: u8,
 }
 
-struct FlowFixedOwners<T, const N: usize> {
-    slots: [Option<T>; N],
-    length: usize,
+pub struct FlowFixedOwners<T, const N: usize> {
+    pub slots: [Option<T>; N],
+    pub length: usize,
 }
 
 impl<T, const N: usize> FlowFixedOwners<T, N> {
@@ -445,7 +463,7 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
         self.length == N
     }
 
-    fn remaining(&self) -> usize {
+    pub fn remaining(&self) -> usize {
         N - self.length
     }
 
@@ -480,14 +498,14 @@ impl<T, const N: usize> FlowFixedOwners<T, N> {
 }
 
 struct FlowVcsDocument {
-    versions: FlowFixedOwners<FlowHostSnapshot, FLOW_VCS_MAX_HISTORY>,
+    pub versions: FlowFixedOwners<FlowHostSnapshot, FLOW_VCS_MAX_HISTORY>,
     active: usize,
     revision: u64,
     parent_revision: u64,
     generation: u64,
     committed_digest: u64,
     edit_owner: Option<u64>,
-    surface: Option<FlowSurfaceOwner>,
+    pub surface: Option<FlowSurfaceOwner>,
 }
 
 impl FlowVcsDocument {
@@ -498,7 +516,7 @@ impl FlowVcsDocument {
         Self { versions, active: 0, revision, parent_revision, generation: 1, committed_digest, edit_owner: None, surface: None }
     }
 
-    fn host_snapshot(&self) -> &FlowHostSnapshot {
+    pub fn host_snapshot(&self) -> &FlowHostSnapshot {
         self.versions.get(self.active).expect("active Flow VCS document version")
     }
 
@@ -508,19 +526,19 @@ impl FlowVcsDocument {
 }
 
 pub struct FlowRetainedVcs {
-    session_generation: u32,
-    document: Option<FlowVcsDocument>,
-    operations: [Option<FlowVcsOperation>; FLOW_VCS_MAX_OPERATIONS],
+    pub session_generation: u32,
+    pub document: Option<FlowVcsDocument>,
+    pub operations: [Option<FlowVcsOperation>; FLOW_VCS_MAX_OPERATIONS],
     slot_generations: [u32; FLOW_VCS_MAX_OPERATIONS],
     next_operation: u64,
     next_page: u64,
-    credits: FlowVcsCredits,
-    undo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
-    redo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
-    retired_actions: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
-    retired_surfaces: FlowFixedOwners<FlowSurfaceOwner, FLOW_VCS_MAX_HISTORY>,
+    pub credits: FlowVcsCredits,
+    pub undo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
+    pub redo: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
+    pub retired_actions: FlowFixedOwners<FlowVcsAction, FLOW_VCS_MAX_HISTORY>,
+    pub retired_surfaces: FlowFixedOwners<FlowSurfaceOwner, FLOW_VCS_MAX_HISTORY>,
     retirement: FlowVcsRetirement,
-    closing: bool,
+    pub closing: bool,
 }
 
 impl FlowRetainedVcs {
@@ -996,7 +1014,7 @@ impl FlowRetainedVcs {
         self.closing && self.document.is_none() && self.credits.operations == 0 && self.credits == FlowVcsCredits::default() && self.undo.is_empty() && self.redo.is_empty() && self.retired_actions.is_empty() && self.retired_surfaces.is_empty() && self.retirement.is_none() && self.operations.iter().all(Option::is_none)
     }
 
-    fn preflight(&self, census: FlowVcsCensus) -> Result<(), FlowVcsFault> {
+    pub fn preflight(&self, census: FlowVcsCensus) -> Result<(), FlowVcsFault> {
         if self.closing || self.document.is_none() {
             return Err(FlowVcsFault::Closed);
         }
@@ -1015,7 +1033,7 @@ impl FlowRetainedVcs {
         Ok(())
     }
 
-    fn admit(&mut self, authority: FlowVcsAuthority, source: FlowVcsCensus, action: FlowVcsAction) -> Result<FlowVcsHandle, FlowVcsFault> {
+    pub fn admit(&mut self, authority: FlowVcsAuthority, source: FlowVcsCensus, action: FlowVcsAction) -> Result<FlowVcsHandle, FlowVcsFault> {
         let slot = if self.operations[0].is_none() {
             0
         } else if self.operations[1].is_none() {
@@ -1067,7 +1085,7 @@ impl FlowRetainedVcs {
         }
     }
 
-    fn slot(&self, handle: FlowVcsHandle) -> Result<usize, FlowVcsFault> {
+    pub fn slot(&self, handle: FlowVcsHandle) -> Result<usize, FlowVcsFault> {
         let slot = usize::from(handle.slot);
         let operation = self.operations.get(slot).and_then(Option::as_ref).ok_or(FlowVcsFault::StaleHandle)?;
         if operation.handle.operation != handle.operation {
@@ -1795,7 +1813,7 @@ fn flow_vcs_synapse_census(synapse: &SynapseSpec) -> FlowVcsCensus {
     FlowVcsCensus::leaf(synapse.id.len() + synapse.from.len() + synapse.to.len() + synapse.from_port.len() + synapse.to_port.len())
 }
 
-fn flow_vcs_host_snapshot_scalar_digest(host_snapshot: &FlowHostSnapshot) -> u64 {
+pub fn flow_vcs_host_snapshot_scalar_digest(host_snapshot: &FlowHostSnapshot) -> u64 {
     14_695_981_039_346_656_037
         ^ u64::try_from(host_snapshot.schema.len()).unwrap_or(u64::MAX).rotate_left(3)
         ^ u64::try_from(host_snapshot.widgets.len()).unwrap_or(u64::MAX).rotate_left(11)
@@ -1891,10 +1909,6 @@ pub mod forms_bridge {
     }
 }
 // #endregion 🔖️FormsBridge
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️flow-vcs/🦀️.rs"]
-mod flow_vcs_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️flow-canonical/🦀️.rs"]

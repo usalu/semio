@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "input": {
+        "version": 1,
+        "kind": "toolkit-refusal",
+        "directory": "/owned/generated/n"
+      },
+      "accepted": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "kind": "ledger-refusal",
+        "directory": "/owned/generated/n"
+      },
+      "accepted": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "kind": "foreign",
+        "directory": "/owned/generated/n"
+      },
+      "accepted": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "kind": "ledger-refusal",
+        "directory": "/owned/generated/n",
+        "capabilities": {}
+      },
+      "accepted": false
+    }
+  ]
+}

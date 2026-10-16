@@ -8,12 +8,10 @@
 
 pub use protocol::causal::{HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldSet,HistoryFoldSetIntoIter};
 
-#[path="🎯️component-references/🦀️.rs"]
-mod component_references;
-pub use component_references::ComponentReferenceTable;
+pub use semio_framework_mesh_component_references::ComponentReferenceTable;
 
 #[cfg(test)]
-#[path="🎯️component-references/🧪️tests/🦀️.rs"]
+#[path="🧪️allocation/🦀️.rs"]
 mod component_reference_custody_tests;
 // 🔬️ `serde`/`serde_json` survive ONLY as a `#[cfg(test)]` differential oracle (see
 // `mesh_data_json_oracle_tests`/`mesh_data_from_value_oracle_tests` below) now that `MeshData` has

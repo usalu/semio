@@ -96,7 +96,4 @@ pub async fn print_step(step: &RecipeStep) -> String {
 //#endregion 🔖️Step
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

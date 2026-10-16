@@ -62,7 +62,7 @@ test("actual native isolated law admits explicit owner registration and generic 
   expect(lawTree.rootNode.hasError()).toBe(false);
   const law = lawTree.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === corpus.nativeLaw);
   expect(law).toBeDefined();
-  const names = calls(law!), registration = names.filter(node => node.name === "store::space_history::io::sqlite::snapshot::register_sqlite_snapshot");
+  const names = calls(law!), registration = names.filter(node => node.name === "store::space_history_registration::register_sqlite_snapshot");
   expect(registration.length).toBe(1);
   const before = names.filter(node => node.start < registration[0].start), after = names.filter(node => node.start > registration[0].start);
   for (const operation of ["io_export_sqlite_snapshot", "io_import_sqlite_snapshot"]) {
@@ -83,7 +83,7 @@ test("actual native isolated law admits explicit owner registration and generic 
   expect(constructors.map(node => node.childForFieldName("name")?.text).sort()).toEqual(["construct", "from_initialized_runtime_with_owners", "new"]);
   const hydration = parse(join(store, "🧾️document/📜️history/💧️hydration/🦀️.rs"));
   for (const node of [...constructors, hydration.rootNode]) expect(calls(node).filter(node => /(?:register_sqlite_snapshot|register_native_snapshot_codec|register_native_document_codec)(?:<|$)/.test(node.name))).toEqual([]);
-  const binding = parse(join(snapshot,"🦀️.rs")), ownerRegistration = binding.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "register_sqlite_snapshot");
+  const binding = parse(join(store,"📜️space-history/🏠️space/📣️registration/🦀️.rs")), ownerRegistration = binding.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "register_sqlite_snapshot");
   expect(calls(ownerRegistration!).some(node => node.name === "crate::io::register_native_snapshot_codec")).toBe(true);
   expect(ownerRegistration!.text.includes("SQLITE_SNAPSHOT_DIALECT")).toBe(true); expect(containsRust(ownerRegistration!, ["SpaceHistorySnapshot", ",", "SpaceHistoryMutation"])).toBe(true);
   console.log("[DEBUG] actual tree-sitter owner admission: isolated exact selector; both typed refusals before owner publication; complete same-owner roundtrips after; generic Store/hydration unchanged");

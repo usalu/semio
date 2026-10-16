@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::ObjFace, schema::snapshot::ObjGroup, schema::snapshot::ObjSmoothingRange, schema::snapshot::ObjUnknownStatement, schema::snapshot::ObjUsemtlRange, schema::snapshot::ObjVertex};
+use crate::{ObjSnapshot, STDIO_OBJ_DOCUMENT_SCHEMA};
+use crate::standards::v3_0::subsets::any::io::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {

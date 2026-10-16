@@ -72,6 +72,4 @@ impl protocol::DiffAlgebra<ProcedureSnapshot> for ProcedureDiff {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

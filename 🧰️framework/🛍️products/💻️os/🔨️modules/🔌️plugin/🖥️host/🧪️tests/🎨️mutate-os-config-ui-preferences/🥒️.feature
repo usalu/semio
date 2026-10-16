@@ -11,9 +11,8 @@ Feature: Apply every typed UI-preferences mutation to its committed specificatio
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ This case lives beside its opening-preferences, merge-policy and identity siblings under
-  `🔌️plugin/🖥️host`, whose package re-exports `semio_framework_os_config::opening_config` — the
-  production mount through which the host applies every os.config vocabulary — so all four
-  vocabularies are claimed side by side through the one subject path the host itself uses.
+  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `../../🔮️oracles/🔣️.json`.
 
   Nine kinds close this vocabulary because `UiPreferences` holds nine preferences and each kind
   owns exactly one of them: six optional scalars replaced whole, and three keyed maps (custom

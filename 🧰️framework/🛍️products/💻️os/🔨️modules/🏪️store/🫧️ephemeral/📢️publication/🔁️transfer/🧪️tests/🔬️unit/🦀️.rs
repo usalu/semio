@@ -1,7 +1,7 @@
 //! 🧪️ Transfer retains payload identity under independently funded physical grants.
 
 use super::*;
-use crate::os_store::test_support;
+
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -27,7 +27,7 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
     preparation.begin_close();
     let grant = physical_grant();
     for _ in 0..32_768 {
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| preparation.close_step(grant).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.close_step(grant).unwrap());
         assert!(step.progress().fits(grant.retained_grant()));
         assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         if preparation.terminal_is_empty() { return; }
@@ -45,7 +45,7 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         let request = ArtifactEphemeralOneItemPreparationRequest {
             operation: semio_framework_job::OperationId(1),
             generation: semio_framework_job::Generation(1),
-            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(payload.clone()))),
+            base: ArtifactEphemeralBaseRead(semio_framework_os_store_ephemeral::ArtifactEphemeralBaseOwner::Transient(Arc::new(payload.clone()))),
             mutation: payload.clone(),
         };
         let mut preparation = factory.begin(request).unwrap_or_else(|_| panic!("admitted string transfer"));
@@ -61,7 +61,7 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         let mut cleanup = ReturnedSnapshotReadRetirement::new(retained, retirement.clone());
         for _ in 0..32_768 {
             let grant = physical_grant().retained_grant();
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| cleanup.close_step(grant).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cleanup.close_step(grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if cleanup.terminal_is_empty() { break; }
@@ -74,13 +74,13 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
 fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
     let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, std::convert::identity, retirement.clone(), retirement);
-    let mut mutation = String::with_capacity(super::super::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+    let mut mutation = String::with_capacity(semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
     mutation.push_str("retained rejection");
     let pointer = mutation.as_ptr();
     let request = ArtifactEphemeralOneItemPreparationRequest {
         operation: semio_framework_job::OperationId(1),
         generation: semio_framework_job::Generation(1),
-        base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
+        base: ArtifactEphemeralBaseRead(semio_framework_os_store_ephemeral::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
         mutation,
     };
     let returned = match factory.begin(request) {
@@ -104,7 +104,7 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
         let request = ArtifactEphemeralOneItemPreparationRequest {
             operation: semio_framework_job::OperationId(1),
             generation: semio_framework_job::Generation(1),
-            base: ArtifactEphemeralBaseRead(super::super::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
+            base: ArtifactEphemeralBaseRead(semio_framework_os_store_ephemeral::ArtifactEphemeralBaseOwner::Transient(Arc::new(String::new()))),
             mutation,
         };
         TRANSFERS.store(0, Ordering::Relaxed);
@@ -113,7 +113,7 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
             preparation.cancel();
         }
         let grant = ArtifactStoreOneItemGrant { maximum_items: row["items"].as_u64().unwrap() as usize, maximum_copy_bytes: row["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["capacityBytes"].as_u64().unwrap() as usize, ..physical_grant() };
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| preparation.advance(grant).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.advance(grant).unwrap());
         let progress = step.ownership_progress();
         assert!(progress.fits(grant.retained_grant()));
         assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));

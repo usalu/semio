@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v89a::subsets::any::schema::diff::GifDiff;
+use crate::{standards::v89a::subsets::any::schema::snapshot::GifAppExtension, standards::v89a::subsets::any::schema::snapshot::GifColorTable, standards::v89a::subsets::any::schema::snapshot::GifDisposal, standards::v89a::subsets::any::schema::snapshot::GifFrame, standards::v89a::subsets::any::schema::snapshot::GifSnapshot};
+use crate::standards::v89a::subsets::any::schema::mutations::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_frame(seed: u8) -> GifFrame {

@@ -12,15 +12,11 @@ import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🏷️component-receipt/🟦
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
 import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭️fresh-component/🎛️control/🟦️.ts";
 import { setImmediate } from "node:timers/promises";
-import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedScriptInvocationV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
 
-/** 🧪️ Authors the original fixture owner whose actual signal bounds every owned fresh process. */
-function freshOwner(owner: string, controller: AbortController): ScriptInvocation {
-  return { policy: { version: 1, owner, maximumElapsedMilliseconds: 0 }, capabilities: {}, control: { signal: controller.signal, remainingMilliseconds: () => null, publish() {}, async yieldContinuation() { await setImmediate(); } } };
-}
-
-export function createFreshComponentTests() {
+export function createFreshComponentTests(original:ScriptInvocation) {
+  requireIssuedScriptInvocationV1(original);
   const source = { directory: resolve(import.meta.dir, "../../📦️packages/🦀️rust") };
   function testArtifactRoot(repoRoot: string): string {
     const root = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(repoRoot, "tests", "fresh-component", "🗑️generated");
@@ -76,10 +72,12 @@ export function createFreshComponentTests() {
     }
     assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array([0xff, 0x0a]), () => {}), "lossy UTF-8");
     assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array(depInfo.maximumBytes + 1), () => {}), "dep-info byte bound");
-    assert.throws(() => parseFreshRustDepInfoV1(Buffer.from(depInfo.cases[0].text), () => { throw new Error("dep-info cancelled"); }), /dep-info cancelled/);
+    const firstCase=depInfo.cases[0];assert(firstCase,"neutral dep-info corpus requires a first case");
+    assert.throws(() => parseFreshRustDepInfoV1(Buffer.from(firstCase.text), () => { throw new Error("dep-info cancelled"); }), /dep-info cancelled/);
     const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "fresh-source-epoch-"));
+    const firstFixtureLeg=fixture.legs[0];assert(firstFixtureLeg,"source epoch corpus requires its actual first leg");
     const legs: FreshSourceEpochLegV1[] = fixture.legs.map(({ id, package: cargoPackage, args }) => ({ id, package: cargoPackage, args }));
     const environment = [["CARGO_INCREMENTAL", "0"], ["RUSTC_WRAPPER", ""], ["RUSTFLAGS", null]] as const;
     const plan: FreshSourceEpochPlanV1 = { toolchain: { cargo: "cargo fixture", rustc: "rustc fixture" }, environment, legs, files: fixture.files.map((file) => file.path) };
@@ -100,7 +98,7 @@ export function createFreshComponentTests() {
       assert(Object.isFrozen(owner) && Object.isFrozen(owner.record) && owner.record.files.every(Object.isFrozen));
       const mutate = (): void => writeFileSync(join(root, "artifacts/🦀️.rs"), "pub const CHANNEL_VERSION: u32 = 15;\n");
       const start = (index: number): void => owner.start(legs[index]!, environment);
-      const complete = (index: number): void => owner.complete(legs[index]!.id, fixture.legs[index].inputs);
+      const complete = (index: number): void => {const leg=legs[index],expected=fixture.legs[index];assert(leg&&expected,"actual finite source leg required");owner.complete(leg.id,expected.inputs);};
       const run = (index: number): void => { start(index); complete(index); };
       if (name === "shared-epoch") {
         assert.equal(freshSourceOrderedJson(owner.record), stableStringify(owner.record));
@@ -120,7 +118,7 @@ export function createFreshComponentTests() {
           if (name === "changed-before-first") { mutate(); start(0); }
           else if (name === "changed-between-legs") { run(0); mutate(); start(1); }
           else if (name === "changed-after-last") { run(0); run(1); mutate(); owner.finish(); }
-          else if (name === "unknown-compiler-input") { start(0); owner.complete(legs[0]!.id, [...fixture.legs[0].inputs, "unknown/🦀️.rs"]); }
+          else if (name === "unknown-compiler-input") { start(0); owner.complete(legs[0]!.id, [...firstFixtureLeg.inputs,"unknown/🦀️.rs"]); }
           else if (name === "missing-input") { rmSync(join(root, "Cargo.lock")); start(0); }
           else if (name === "same-bytes-name-replacement") { const path = join(root, "Cargo.lock"); renameSync(path, path + ".retained"); writeFileSync(path, readFileSync(path + ".retained")); start(0); }
           else if (name === "linked-parent") { const path = join(root, "assets"); renameSync(path, path + "-retained"); symlinkSync(path + "-retained", path, process.platform === "win32" ? "junction" : "dir"); start(0); }
@@ -179,7 +177,7 @@ export function createFreshComponentTests() {
     const descriptorBytes = semanticBytes;
     const semanticSha256 = createHash("sha256").update(semanticBytes).digest("hex");
     const binding = { wasmSha256: fixture.componentSha256, coreWasmSha256: "2".repeat(64), descriptorSha256: "3".repeat(64) };
-    const componentReceipt = { schema: "semio.plugin.component-receipt/v1" as const, pluginId: "gis", packageId: "semio:gis", profile: "wasm-release" as const, target: "wasm32-wasip2" as const, wasmSha256: fixture.componentSha256, wasmBytes: component.byteLength, semanticDescriptorSha256: semanticSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+    const componentReceipt = { schema: "semio.plugin.component-receipt/v1" as const, pluginId: "gis", packageId: "semio:gis", profile: "release" as const, target: "wasm32-wasip2" as const, wasmSha256: fixture.componentSha256, wasmBytes: component.byteLength, semanticDescriptorSha256: semanticSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
     const paths = { component: join(evidence, "component.wasm"), descriptorPack: join(evidence, "descriptor.semio"), descriptorJson: join(evidence, "descriptor.json") };
     for (const [key, bytes] of [
       ["component", component],
@@ -383,7 +381,7 @@ export function createFreshComponentTests() {
       if (row.mode === "cancel") setTimeout(() => owner.abort(), 150);
       const control: FreshProcessControlV1 = {
         process:processPolicy,
-        invocation: freshOwner(row.name, owner),
+        invocation:original,
         diagnosticsRoot: root,
         cancelled: () => row.mode === "pre-cancel" || (row.mode === "cancel" && Date.now() - started >= 150),
         remainingMs: () => deadline - Date.now(),
@@ -454,7 +452,7 @@ export function createFreshComponentTests() {
       try {
         await assert.rejects(freshRun("cargo", ["build", "--manifest-path", join(root, "Cargo.toml")], root,
           { ...process.env, CARGO_BUILD_BUILD_DIR: buildDirectory, CARGO_TARGET_DIR:join(root,"target") },
-          { process:processPolicy,invocation: freshOwner(row.name, owner),diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1),error=>{refusal=error;return true;});
+          { process:processPolicy,invocation:original,diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1),error=>{refusal=error;return true;});
         assert(Date.now() - started < 2000, row.name + " bounded queue retirement");
         assert(stages.includes("wait-build-lease"),row.name+" requires the actual held compiler queue; refusal="+String(refusal));
         const traces = readdirSync(root).filter(name => name.startsWith("fresh-process-")); assert.equal(traces.length, 1);
@@ -467,7 +465,7 @@ export function createFreshComponentTests() {
     for(const row of ownerRows){const path=join(ownerRoot,row.directory);mkdirSync(path,{recursive:true});writeFileSync(join(path,"Cargo.toml"),`[package]\nname=${JSON.stringify(row.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(row.name)}\npath="main.rs"\n`);writeFileSync(join(path,"main.rs"),ownership.source);}
     writeFileSync(join(ownerRoot,"Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["root-package"]\nexclude=["nested"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=["nested/Cargo.toml"]\nmember-manifests=["root-package/Cargo.toml"]\nexclude-patterns=["nested"]\n');
     writeFileSync(join(ownerRoot,"nested/Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["package"]\n[workspace.metadata.semio.repository]\nschema-version=1\nmember-manifests=["package/Cargo.toml"]\nexclude-patterns=[]\n');
-    const ownerCompiler=join(ownerRoot,"c"),ownerTarget=join(ownerRoot,"t"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerStarted=performance.now(),ownerSignal=new AbortController(),ownerProgress:string[]=[],ownerControl={process:processPolicy,invocation:freshOwner("owner",ownerSignal),cancelled:()=>ownerSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-ownerStarted)),checkpoint:(stage:string)=>{ownerProgress.push(stage);}};
+    const ownerCompiler=join(ownerRoot,"c"),ownerTarget=join(ownerRoot,"t"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerStarted=performance.now(),ownerSignal=new AbortController(),ownerProgress:string[]=[],ownerControl={process:processPolicy,invocation:original,cancelled:()=>ownerSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-ownerStarted)),checkpoint:(stage:string)=>{ownerProgress.push(stage);}};
     const ownerManifest=join(ownerRoot,"nested/package/Cargo.toml"), ownerLock=join(ownerRoot,"nested/Cargo.lock"), ownerArgs=[...ownership.consumerArguments,"-p",ownership.nestedName];
     const unprepared=Bun.spawnSync(["cargo",...ownership.consumerArguments,"--manifest-path",ownerManifest],{cwd:ownerRoot,env:ownerEnv});assert.notEqual(unprepared.exitCode,0,"independent locked/offline Cargo must refuse a missing owner lock");assert(!existsSync(ownerLock),"refusal must not publish the lock");
     const {acquireQueuedResourceLease}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts");
@@ -475,7 +473,7 @@ export function createFreshComponentTests() {
     for(const row of fixture.queuedPreparationCases){
       const root=join(evidence,row.name);mkdirSync(root);let observedAt:number|undefined,progress=0;
       const holder=await acquireQueuedResourceLease({directory:preparationDirectory,resource:preparationResource,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:new AbortController().signal});
-      const started=Date.now(),owner=new AbortController(),control:FreshProcessControlV1={process:processPolicy,invocation:freshOwner(row.name,owner),diagnosticsRoot:root,cancelled:()=>row.mode==="cancel"&&observedAt!==undefined&&Date.now()-observedAt>=150,remainingMs:()=>(row.mode==="timeout"?2000:10000)-(Date.now()-started),checkpoint(stage){if(stage==="prepare-cargo"){progress++;if(readdirSync(preparationQueue).length>1&&observedAt===undefined){observedAt=Date.now();if(row.mode==="cancel")setTimeout(()=>owner.abort(),150);}}}};
+      const started=Date.now(),owner=new AbortController(),control:FreshProcessControlV1={process:processPolicy,invocation:original,diagnosticsRoot:root,cancelled:()=>row.mode==="cancel"&&observedAt!==undefined&&Date.now()-observedAt>=150,remainingMs:()=>(row.mode==="timeout"?2000:10000)-(Date.now()-started),checkpoint(stage){if(stage==="prepare-cargo"){progress++;if(readdirSync(preparationQueue).length>1&&observedAt===undefined){observedAt=Date.now();if(row.mode==="cancel")setTimeout(()=>owner.abort(),150);}}}};
       try{
         await assert.rejects(freshRun("cargo",ownerArgs,ownerRoot,ownerEnv,control,row.name,0,1),/preparation (cancelled|timeout)/);
         assert(observedAt!==undefined,"actual selected preparation child must enter the held preparation queue");assert(progress>1,"progress must continue during actual preparation wait");assert(Date.now()-started<5000,"preparation cancellation must retire within its own control");
@@ -505,7 +503,7 @@ export function createFreshComponentTests() {
     writeFileSync(join(cargoRoot,"main.rs"), neutral.source);writeFileSync(join(cargoRoot,"b.rs"),neutral.buildSource);
     const compiler = artifactRoot, target = join(cargoRoot,"t");
     const nativeStarted=performance.now(),nativeSignal=new AbortController(),nativeProgress:string[]=[];
-    const invocation = await freshRun("cargo",["build","--manifest-path",manifest],cargoRoot,{...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:compiler},{process:processPolicy,invocation:freshOwner("neutral-build",nativeSignal),cancelled:()=>nativeSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-nativeStarted)),checkpoint:stage=>{nativeProgress.push(stage);}},"neutral-build",0,1);
+    const invocation = await freshRun("cargo",["build","--manifest-path",manifest],cargoRoot,{...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:compiler},{process:processPolicy,invocation:original,cancelled:()=>nativeSignal.signal.aborted,remainingMs:()=>Math.floor(60_000-(performance.now()-nativeStarted)),checkpoint:stage=>{nativeProgress.push(stage);}},"neutral-build",0,1);
     assert(invocation, "actual fresh Cargo must retain completed producer observation without diagnostic opt-in");assert(nativeProgress.includes("compiler-provenance"));assert(ownerProgress.includes("compiler-provenance"));
     const observed = decodeCargoProvenanceV1(readFileSync(invocation!,"utf8"));
     assert.equal(observed.status,0); assert.equal(observed.command,"cargo");

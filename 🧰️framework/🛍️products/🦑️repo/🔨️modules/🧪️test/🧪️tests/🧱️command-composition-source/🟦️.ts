@@ -155,9 +155,9 @@ test("preserves native host parsing and separates build and scenario budgets", a
     ),
   ).toBe("/portable/target/host");
   const execution = readFileSync(executionPath, "utf8");
-  expect(execution).toContain("budgetMs: buildBudgetMs()");
-  expect(execution).toContain("budgetMs: testLevelBudgetMs(level)");
-  expect(execution.indexOf("budgetMs: buildBudgetMs()")).toBeLessThan(execution.indexOf("budgetMs: testLevelBudgetMs(level)"));
+  expect(execution).toContain("host.preparation.args,buildBudgetMs()");
+  expect(execution).toContain("host.args,testLevelBudgetMs(level)");
+  expect(execution.indexOf("host.preparation.args,buildBudgetMs()")).toBeLessThan(execution.indexOf("host.args,testLevelBudgetMs(level)"));
   expect(execution).toContain("host preparation emitted no executable");
   expect(execution).toContain("rmSync(plan.resultsPath");
   expect(execution.indexOf("rmSync(plan.resultsPath")).toBeLessThan(execution.indexOf("materializeHost(repoRoot"));

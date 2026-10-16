@@ -1,0 +1,11 @@
+# Selected Glob Compilation
+
+The live dispatcher profile measured 8.966 seconds of self time in the input-pattern compiler. Selected-owner discovery previously invoked that compiler for each candidate and reached exclusion. The root target already declares explicit inputs; this change preserves those inputs and all physical Source observation.
+
+The language-neutral discovery corpus lives in the existing input fixture. Four cases cover overlapping and repeated positive patterns, exclusions, empty candidates and unreachable malformed patterns. The test extracts the actual selected-owner discovery loop using the independent TypeScript parser and executes it with a finite virtual directory inventory. It compares output against independent minimatch, validates vectors with Ajv and observes actual RegExp construction. It is pure discovery-loop proof; it does not claim native filesystem admission.
+
+The actual semantic RED exited one: the repeated-pattern case compiled 47 expressions where four reached patterns require four compilations (one passing existing test, one failed new test, 42 assertions, 928 ms). The implementation now exposes a pure predicate constructor using the existing compiler and keeps a lazy Map inside each selected-source operation. Repeated paths and duplicate patterns reuse that predicate; later operations recompile their own predicates. Positive/exclusion order, short-circuit errors, directory walking, Original checkpoints and Source fact collection remain unchanged. No physical facts or observations are cached by this Map.
+
+Actual full input gate18922 exited zero: two tests, 62 assertions, 1.158 seconds. The old compaction law also passes. Independent Source review found the cache local and lazy, without altered evidence collection. The changed input and inference modules invalidate the prior Nx SDK Source identity; a new SDK setup and public runtime qualification remain necessary. This focused gate makes no whole-target speed claim.
+
+The existing input test entry is already imported by the permanent graph owner. No permanent executable command or external runtime dependency was introduced. The four Source/fixture paths are explicitly retained in the root inventory.

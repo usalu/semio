@@ -11,14 +11,8 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
-use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 use semio_framework_dispatch_macros::dyn_enum_close;
-use semio_framework_plugin::__semio_dispatch_PluginApp;
+
 use semio_framework_plugin::plugin_app_close_prelude::*;
 
 dyn_enum_close! {
@@ -33,110 +27,22 @@ pub use schema::mutations::TxtMutation;
 pub use schema::snapshot::TxtSnapshot;
 pub use schema::TxtArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_TXT_DOCUMENT_SCHEMA: &str = "stdio.txt";
+pub use semio_s_artifact_stdio_txt_schema::{STDIO_TXT_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const TXT_ARTIFACT_SCHEMA_ID: &str = "s.stdio.txt";
+pub use semio_s_artifact_stdio_txt_examples::{TXT_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_txt_tests::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_txt_tests::{artifact, artifact_kind, assembly, declaration, definition, native_codecs};
 
-pub fn formats() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_txt_tests::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::artifact_codec::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA);
-    codec.extension = "txt";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
-    codec
-}
+pub use semio_s_artifact_stdio_txt_tests::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.txt.v1", artifact: "txt", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_txt_tests::{contribution};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "txt", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("txt", definition()?, declaration)
-}
-
-/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
-/// and the `stdio.txt` document codec the linked `stdio.native.txt.v1` receipt instantiates.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
-    let formats = formats()?;
-    ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") }).try_build()
-}
-
-//#region 🔖️ArtifactDeclaration
-/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot): the whole
-/// `s.stdio.txt` artifact through the declaration tree — one standard, `utf-8`, one subset,
-/// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs`'s `artifact()` doc
-/// comment for the `localization: &[]` deferral rationale (identical here).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![standards::v_utf_8::standard()] }
-}
-//#endregion 🔖️ArtifactDeclaration
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.txt".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Txt", "Txt"),
-        source_format: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-        schema: STDIO_TXT_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v_utf_8::subsets::any::io::io_registry as v_utf_8;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_utf_8::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("TxtComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v_utf_8::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_txt_tests::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -145,9 +51,7 @@ pub mod standards {
     pub mod v_utf_8 {
         // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
         // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
-        #[path = "🏅️standards/🔖️utf-8/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::*;
 
         // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // `TxtEngine` (zero construction sites) deleted outright; `empty_txt_snapshot`/
@@ -157,9 +61,7 @@ pub mod standards {
         // (`crate::engine::register()` in `🗄️stdio/🦀️.rs`, reached via
         // this artifact's own top-level `pub mod engine` shim) — left callable at this exact
         // path via a pure re-export of `subsets::any::io::register` (itself unchanged).
-        pub mod engine {
-            pub use super::subsets::any::io::register;
-        }
+        pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -167,95 +69,36 @@ pub mod standards {
                 // 🪆️ Subset root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM,
                 // W2-P pilot): `subset() -> SubsetDeclaration` — see `💾️binary`'s mirrored
                 // mount above for the shared reasoning.
-                #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::subsets::any::*;
 
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔨️modules/🧬️mutation-support/🦀️.rs"]
-                    pub mod mutation_support;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_txt_schema::standards::v_utf_8::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_stdio_txt_inferences::standards::v_utf_8::subsets::any::schema::mutation_support;
+                    pub use semio_s_artifact_stdio_txt_schema::standards::v_utf_8::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_txt_inferences::standards::v_utf_8::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_txt_inferences::standards::v_utf_8::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_txt_mutations::standards::v_utf_8::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_txt_examples::standards::v_utf_8::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_txt_examples::standards::v_utf_8::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_stdio_txt_schema::standards::v_utf_8::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_txt_tests::standards::v_utf_8::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_txt_examples::standards::v_utf_8::subsets::any::io::text::inferences;
+}
+
+                    pub use semio_s_artifact_stdio_txt_inferences::standards::v_utf_8::subsets::any::io::import;
+                    pub use semio_s_artifact_stdio_txt_inferences::standards::v_utf_8::subsets::any::io::export;
                 }
             }
         }
@@ -270,52 +113,24 @@ pub mod engine {
     pub use super::standards::v_utf_8::engine::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_txt_examples::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod txt {
-        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_txt_tests::editor::txt::*;
+
+        pub use semio_s_artifact_stdio_txt_examples::editor::txt::edit_rules;
+        pub use semio_s_artifact_stdio_txt_examples::editor::txt::presence;
+        pub use semio_s_artifact_stdio_txt_examples::editor::txt::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_txt_inferences::editor::txt::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_txt_inferences::editor::txt::modes::edit::windows;
             }
         }
     }
@@ -325,38 +140,24 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod txt {
-        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_txt_tests::viewer::txt::*;
+
+        pub use semio_s_artifact_stdio_txt_examples::viewer::txt::presence;
+        pub use semio_s_artifact_stdio_txt_examples::viewer::txt::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_txt_inferences::viewer::txt::modes::view::*;
+
+                pub use semio_s_artifact_stdio_txt_inferences::viewer::txt::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v_utf_8::subsets::any::io::{TxtBuilderConstruction, TxtParts, TxtAnalyzerAnalysis, TxtBuilderFacets, TxtBuilder, TxtAnalyzer, TxtComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

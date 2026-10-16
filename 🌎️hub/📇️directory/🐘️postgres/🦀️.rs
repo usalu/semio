@@ -10,20 +10,14 @@
 //! — folding it into a string literal is a zero-behavior-change mechanical transform (see
 //! `📋️TEMPLATE-FAMILY.md`'s "non-source assets" section for the general rule this establishes).
 
-use crate::artifact_authority::creation::io::{decide_artifact_creation_fact_append_v1};
+use semio_hub_artifact_creation::io::decide_artifact_creation_fact_append_v1;
 use directory::os_directory::io::text::validate_directory_event_page_event;
-use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
-use crate::artifact_authority::creation::{
-    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
-use crate::directory::error::{DirectoryError, DirectoryResult};
-use crate::directory::model::*;
-use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1,
-    HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, UNCONTROLLED_PROJECTION_REBUILD,
-    active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
-    directory_projection_space_v1, document_genesis_completion_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
-    validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim,
-    validate_document_genesis_append_v1, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
-};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
+use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+
+use semio_hub_directory_contract::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, HubClock, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, SessionCapability, ShareCapability, active_capability, admin_operation_effect_receipt_v1, auth_audit, directory_command_result_kind_from_str, directory_command_result_kind_str, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str};
+use semio_hub_directory::{ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubDirectory, ProjectionRebuildControl, UNCONTROLLED_PROJECTION_REBUILD, bounded_event_read, checkpoint_projection_rebuild, directory_projection_rejection_v1, directory_projection_space_v1, document_genesis_completion_v1, validate_document_genesis_append_v1, validate_verified_checkpoint_append};
 use directory::os_directory::{
     ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, Hlc, PublishedArtifactCheckpoint,
     };
@@ -31,6 +25,8 @@ use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
 use semio_framework_hash::Sha256;
 use sqlx_postgres::{PgPool, PgPoolOptions};
+use semio_hub_directory_contract::model::{AdminDirectoryOverviewCounts, AdminEffectCommitV1, AdminOperationAuditRecord, AdminOperationEffectReceiptV1, AdminSpaceSummaryRecord, AuthAuditRecord, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, CheckpointPublicationReceiptRecordV1, CredentialAuditFactV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, InviteRecord, InviteRedemptionCommit, IssuedAuthSession, IssuedInvite, IssuedShareToken, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, RevokedAuthSession, ShareTokenRecord, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceAdministrationInviteRow, SpaceAdministrationMemberRow, SpaceRecord, SpaceRole, SyncSessionRecord, UserRecord};
+use directory::os_directory::DocumentScope;
 
 //#region 🔖️Schema
 // 🛢️ os-hub directory Postgres schema (identity/tenancy only) — idempotent bootstrap
@@ -396,7 +392,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_operation_audit_operation ON hub_admin_oper
 ";
 //#endregion 🔖️Schema
 
-fn now_ms() -> i64 {
+pub fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
@@ -705,9 +701,9 @@ async fn cas_project_release(tx: &mut sqlx_core::transaction::Transaction<'_, sq
 
 /// 🐘️ PostgreSQL-backed `HubDirectory`, pooled via `PgPool`.
 pub struct PostgresDirectory {
-    pool: PgPool,
+    pub pool: PgPool,
     #[cfg(test)]
-    genesis_test_control: std::sync::Arc<ArtifactGenesisTestControlV1>,
+    pub genesis_test_control: std::sync::Arc<ArtifactGenesisTestControlV1>,
 }
 
 #[cfg(test)]
@@ -999,7 +995,7 @@ impl PostgresDirectory {
                     .await
                     .map_err(backend)?;
                 let descriptor = DocumentDescriptor::from_value(DslValue::from(descriptor.ok_or_else(|| DirectoryError::NotFound("indexed document descriptor".into()))?.0)).map_err(backend)?;
-                let row = crate::directory::document_index_projection_v1(event, &descriptor)?;
+                let row = semio_hub_directory::document_index_projection_v1(event, &descriptor)?;
                 let payload = semio_framework_pack_json::to_json_string(&row);
                 let previous: Option<(String,)> =
                     sqlx_core::query_as::query_as("SELECT payload FROM hub_document_index WHERE space_id = $1 AND document_id = $2").bind(&scope.space_id).bind(&scope.document_id).fetch_optional(&mut **tx).await.map_err(backend)?;
@@ -1030,7 +1026,7 @@ impl PostgresDirectory {
                     .await
                     .map_err(backend)?;
                 let index = index.map(|(payload,)| semio_framework_pack_json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>(&payload, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(backend)).transpose()?;
-                crate::directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
+                semio_hub_directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
                 let active: Option<(serde_json::Value,)> = sqlx_core::query_as::query_as("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = $1 AND document_id = $2 AND active FOR UPDATE")
                     .bind(&checkpoint.scope.space_id)
                     .bind(&checkpoint.scope.document_id)
@@ -1044,7 +1040,7 @@ impl PostgresDirectory {
                     .fetch_one(&mut **tx)
                     .await
                     .map_err(backend)?;
-                crate::directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
+                semio_hub_directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
                 let payload = serde_json::Value::from(&checkpoint.to_value());
                 sqlx_core::query::query("UPDATE hub_artifact_checkpoint SET active = FALSE WHERE space_id = $1 AND document_id = $2 AND checkpoint_id <> $3")
                     .bind(&checkpoint.scope.space_id)
@@ -1110,7 +1106,7 @@ impl PostgresDirectory {
 
 impl HubDirectory for PostgresDirectory {
     async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut tx, &intent.actor, &intent.scope.space_id, None).await?;
@@ -1119,7 +1115,7 @@ impl HubDirectory for PostgresDirectory {
         }
         let facts = artifact_creation_facts(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         if !facts.is_empty() {
-            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+            let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
             if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
                 return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
             }
@@ -1143,7 +1139,7 @@ impl HubDirectory for PostgresDirectory {
             recorded_at_ms: intent.accepted_at_ms,
             body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
         };
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
         insert_artifact_creation_fact(&mut tx, intent, &fact).await?;
         tx.commit().await.map_err(backend)?;
         Ok(ArtifactCreationClaimV1::Accepted(operation))
@@ -1166,7 +1162,7 @@ impl HubDirectory for PostgresDirectory {
         lock_artifact_creation_request(&mut tx, &append.actor.user_id, &append.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut tx, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut tx, &append.actor.user_id, &append.request_id).await?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -1174,17 +1170,17 @@ impl HubDirectory for PostgresDirectory {
             insert_artifact_creation_fact(&mut tx, &operation.intent, &next).await?;
             facts.push(next);
         }
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         tx.commit().await.map_err(backend)?;
         Ok(operation)
     }
 
     async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
         let mut facts = artifact_creation_facts(&mut tx, &intent.actor.user_id, &intent.request.request_id).await?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != *intent {
             return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
         }
@@ -1210,7 +1206,7 @@ impl HubDirectory for PostgresDirectory {
         }
         let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
         facts.push(next.clone());
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         insert_artifact_creation_fact(&mut tx, intent, &next).await?;
         tx.commit().await.map_err(backend)?;
         Ok(operation)
@@ -1234,7 +1230,7 @@ impl HubDirectory for PostgresDirectory {
                 let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                     return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
                 };
-                crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+                semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
                 Ok(intent)
             })
             .collect()
@@ -1246,7 +1242,7 @@ impl HubDirectory for PostgresDirectory {
     /// 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
     /// terminal and `validate_document_genesis_append_v1` refuses a publication on it.
     async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&append.intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&append.intent)?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
         cas_lock_space(&mut tx, &append.intent.scope.space_id).await?;
@@ -1257,7 +1253,7 @@ impl HubDirectory for PostgresDirectory {
         let observed_now_override = None;
         let observed_now = validate_artifact_creation_authority(&mut tx, &append.intent.actor, &append.intent.scope.space_id, observed_now_override).await?;
         let mut facts = artifact_creation_facts(&mut tx, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != append.intent {
             return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
         }
@@ -1378,7 +1374,7 @@ impl HubDirectory for PostgresDirectory {
         let completion = document_genesis_completion_v1(&operation, append, &events)?;
         insert_artifact_creation_fact(&mut tx, &append.intent, &completion).await?;
         facts.push(completion);
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         match tx.commit().await {
             Ok(()) => {
                 #[cfg(test)]
@@ -1653,8 +1649,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let rows: Vec<(String, String, String, i64, String, String, i64, i64, i64, i64)> = sqlx_core::query_as::query_as(
             "SELECT s.id, s.name, s.owner_user_id, s.created_at, s.kind, s.visibility,
@@ -1714,8 +1710,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let rows: Vec<(String, String, String, Option<String>, Option<String>, Option<String>, i64, String)> = sqlx_core::query_as::query_as(
             "SELECT u.id, u.email, u.display_name, u.password_hash, u.sso_subject, u.sso_provider, u.created_at, m.role
@@ -1756,8 +1752,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>> {
-        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={}", semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
         }
         let rows: Vec<(String, String, String, String)> = sqlx_core::query_as::query_as(
             "SELECT u.id, u.email, u.display_name, m.role
@@ -1787,8 +1783,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let limit = i64::try_from(limit).map_err(backend)?;
         let offset = i64::try_from(offset).map_err(backend)?;
@@ -1921,7 +1917,7 @@ impl HubDirectory for PostgresDirectory {
             }
             None => None,
         };
-        super::capped_socket_session_binding(self, &record, space_id, role).await
+        semio_hub_directory::capped_socket_session_binding(self, &record, space_id, role).await
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
@@ -2469,8 +2465,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_space_administration_invites_page(&self, space_id: &str, after: Option<(i64, &str)>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationInviteRow>> {
-        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={}", semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
         }
         let rows: Vec<(String, String, i64, i64, bool, bool)> = sqlx_core::query_as::query_as(
             "SELECT id, role, created_at, expires_at, revoked_at IS NOT NULL, accepted_at IS NOT NULL
@@ -2564,8 +2560,8 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn list_active_sync_sessions_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<SyncSessionRecord>> {
-        if limit == 0 || limit > super::ACTIVE_SYNC_SESSION_READ_MAX {
-            return Err(DirectoryError::Conflict(format!("active sync-session limit must be 1..={}", super::ACTIVE_SYNC_SESSION_READ_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ACTIVE_SYNC_SESSION_READ_MAX {
+            return Err(DirectoryError::Conflict(format!("active sync-session limit must be 1..={}", semio_hub_directory_contract::ACTIVE_SYNC_SESSION_READ_MAX)));
         }
         let limit = i64::try_from(limit).map_err(backend)?;
         let offset = i64::try_from(offset).map_err(backend)?;
@@ -3449,12 +3445,6 @@ fn event_from_row(row: (i64, String, i64, i64, String, String, Option<String>, O
     })
 }
 
-#[cfg(test)]
-#[path = "🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs"]
-mod creation_tests;
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+#[cfg(any(test, feature = "testkit"))]
+#[path = "🧪️tests/🧰️testkit/🦀️.rs"]
+pub mod testkit;

@@ -16,7 +16,7 @@
       "const": 1
     },
     "profile": {
-      "const": "wasm-release"
+      "const": "release"
     },
     "original": {
       "type": "string",

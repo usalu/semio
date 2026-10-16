@@ -54,10 +54,10 @@ fn message_ledger_retirement_nested_edits_release_original_scaffolds_under_separ
         for copy in law["copyGrants"].as_array().unwrap() {
             for release in law["releaseGrants"].as_array().unwrap() {
                 let mut entries=Vec::with_capacity(row["capacity"].as_u64().unwrap() as usize);
-                let mut held=entries.capacity()*size_of::<crate::EditMessages>();
+                let mut held=entries.capacity()*size_of::<semio_framework_replication_conflict::EditMessages>();
                 for index in row["rows"].as_array().unwrap() {
                     let(context,messages,bytes)=owners(&law["cases"][index.as_u64().unwrap() as usize]);
-                    held+=bytes;entries.push(crate::EditMessages{edit_id:context,messages});
+                    held+=bytes;entries.push(semio_framework_replication_conflict::EditMessages{edit_id:context,messages});
                 }
                 let original=entries.as_ptr();
                 let(mut cursor,heap)=observe_heap_allocations_on_this_thread(||EditMessageLedgerRetirement::new(entries));
@@ -95,7 +95,7 @@ fn message_ledger_retirement_replay_outcome_releases_both_original_identities() 
         let(context,messages,bytes)=owners(row);
         let mut identity=String::with_capacity(law["outcomeIdentity"]["capacity"].as_u64().unwrap() as usize);identity.push_str(law["outcomeIdentity"]["text"].as_str().unwrap());
         let held=bytes+identity.capacity();
-        let outcome=crate::MutationReplayOutcome{mutation_id:crate::ids::MutationId(identity),edit_id:context,op_index:7,worst:Some(Severity::Fatal),messages,superseded:true,withdrawn:false};
+        let outcome=semio_framework_replication_conflict::MutationReplayOutcome{mutation_id:semio_framework_replication_ids::MutationId(identity),edit_id:context,op_index:7,worst:Some(Severity::Fatal),messages,superseded:true,withdrawn:false};
         let(mut cursor,heap)=observe_heap_allocations_on_this_thread(||MutationMessageLedgerRetirement::from_replay_outcome(outcome));
         assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let mut returned=0;

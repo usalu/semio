@@ -1,6 +1,6 @@
 //! 🌊️ Original contributed metadata and input custody through physical wave serialization.
 use super::*;
-use super::super::{PendingExtensionEval,OperatorPendingPlan};
+use super::{PendingExtensionEval,OperatorPendingPlan};
 #[path="🔑️hash/🦀️.rs"]
 mod hash;
 use hash::NodeHashCursor;

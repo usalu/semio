@@ -2,7 +2,7 @@
 use crate::{GuestInstance,GuestRuntime,GuestRuntimes};
 use semio_framework_plugin_guest_contract::{PluginHostError,TurnFault};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
-use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
+use semio_framework_os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
 use std::pin::Pin;
 
 /// 🎟️ Explicit independent receiving policy authored before the shard starts.

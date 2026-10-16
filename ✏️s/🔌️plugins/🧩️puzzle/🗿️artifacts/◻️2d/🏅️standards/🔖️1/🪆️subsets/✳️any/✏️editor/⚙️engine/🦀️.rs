@@ -12,14 +12,11 @@
 //! `📐️layout/🦀️.rs` (the redraw layout dispatcher), `🔣️icons/🦀️.rs` (the
 //! build-script-generated metabolism icon table and the SVG icon codec laws).
 //!
-//! 🌉️ Externally reachable at `puzzle::editor::puzzle2d::engine::*` (ticket
-//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET moved this module here from the retired
-//! `puzzle::apps::puzzle2d::engine::*`; the framework OS renderer's own call sites were the one real
-//! cross-crate compile dependency on the old path and were repointed at this module in the same
-//! ticket's W2-FIX lane) — the framework OS renderer
-//! (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`)
-//! holds a `BoardHost` and calls `board_host::puzzle_board_host()` directly, so this module and its
-//! `board_host` child must both stay `pub`.
+//! 🌉️ Externally reachable at `puzzle::editor::puzzle2d::engine::*`. The framework OS renderer never links
+//! this module: its wgpu `Board2d` surface holds a bare `BoardHost` and receives this plugin's brush naming as
+//! scene data (`Board2dScene::placement_naming`, published from `board_host::PUZZLE_2D_BOARD_NAMING`). The
+//! module and its `board_host` child stay `pub` for the plugin's own wasm session and the compositions that
+//! re-export it.
 //!
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here.

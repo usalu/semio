@@ -5,11 +5,14 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 
 use crate::command_tree::LauncherRow;
-use crate::registry::{graph_file, segment_key, Facts, Fingerprint, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
+use dashboard_registry::{graph_file, segment_key, Facts, Fingerprint, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::{atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering}, mpsc::{self, Receiver}, Arc, Mutex};
+
+#[path = "../🌳️command-tree/🦀️.rs"]
+pub mod command_tree;
 
 // #region 🔖️Snapshot
 const SNAPSHOT_VERSION: u32 = 7;
@@ -219,7 +222,7 @@ fn read_graph(root: &Path, cancelled: &AtomicBool) -> (Sourced<Vec<ProjectFacts>
 
 fn read_playgrounds(publication:Option<&Path>) -> Sourced<Vec<PlaygroundFacts>> {
     let fingerprint = publication.and_then(|root|Fingerprint::of(&root.join("🚀️playgrounds.json")));
-    let rows: Vec<serde_json::Value> = serde_json::from_str(&crate::catalog::playgrounds_json_text_from_catalog(publication).expect("Configured command catalog refused")).expect("Configured command catalog JSON refused");
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&dashboard_core::catalog::playgrounds_json_text_from_catalog(publication).expect("Configured command catalog refused")).expect("Configured command catalog JSON refused");
     let ports = |row: &serde_json::Value, pointer: &str| row.pointer(pointer).and_then(serde_json::Value::as_array).map(|ports| ports.iter().filter_map(|port| u16::try_from(port.as_u64()?).ok()).collect::<Vec<_>>()).unwrap_or_default();
     let text = |row: &serde_json::Value, key: &str| row.get(key).and_then(serde_json::Value::as_str).map(str::to_string);
     let port = |row: &serde_json::Value, pointer: &str| row.pointer(pointer).and_then(serde_json::Value::as_u64).and_then(|port| u16::try_from(port).ok());
@@ -232,7 +235,7 @@ fn read_playgrounds(publication:Option<&Path>) -> Sourced<Vec<PlaygroundFacts>> 
 fn read_tickets(root: &Path, cancelled: &AtomicBool) -> (Vec<TicketSource>, BTreeMap<String, Option<Fingerprint>>) {
     let mut folders = BTreeMap::new();
     let mut tickets = Vec::new();
-    for ticket in crate::repo_domain::ticket_index(root) {
+    for ticket in dashboard_repo_domain::ticket_index(root) {
         if cancelled.load(Ordering::Relaxed) { break; }
         let folder = relative(root, Path::new(&ticket.folder_path));
         let open = ticket.status == "open";
@@ -339,13 +342,13 @@ fn gather(root: &Path, previous: Option<&Snapshot>, cancelled: &AtomicBool, prog
 
 /// 🧭️ Discovers the registry of a workspace from its sources alone: nothing is read from or
 /// written to the snapshot.
-pub fn discover(root:&Path,cancelled:&AtomicBool)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");discover_with_catalog(root,cancelled,publication.as_deref())}
+pub fn discover(root:&Path,cancelled:&AtomicBool)->Registry{let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");discover_with_catalog(root,cancelled,publication.as_deref())}
 /// 📥️ Discovers using exactly the supplied publication owner.
 pub fn discover_with_catalog(root:&Path,cancelled:&AtomicBool,publication:Option<&Path>)->Registry{gather(root,None,cancelled,&Progress::default(),&mut |_,_|{},publication).map_or_else(||seed_with_catalog(root,publication),|snapshot|snapshot.registry())}
 
 /// 🌱️ The commands known without the graph, the walk or the ticket index: the playgrounds and
 /// what the root manifest declares.
-pub fn seed(root:&Path)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");seed_with_catalog(root,publication.as_deref())}
+pub fn seed(root:&Path)->Registry{let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");seed_with_catalog(root,publication.as_deref())}
 /// 🌱️ Seeds the root commands and explicitly supplied playground contribution.
 pub fn seed_with_catalog(root:&Path,publication:Option<&Path>)->Registry{
     let mut snapshot = Snapshot { version: SNAPSHOT_VERSION, root: root.to_path_buf(), playgrounds: read_playgrounds(publication),catalog_path:publication.map(|root|root.join("🚀️playgrounds.json")), ..Default::default() };
@@ -358,7 +361,7 @@ pub fn seed_with_catalog(root:&Path,publication:Option<&Path>)->Registry{
 pub fn registry(root: &Path) -> Registry { registry_at(root, &cache_path(root)) }
 
 /// 🗄️ [`registry`] with the snapshot at an explicit place.
-pub fn registry_at(root:&Path,snapshot_path:&Path)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");registry_at_with_catalog(root,snapshot_path,publication.as_deref())}
+pub fn registry_at(root:&Path,snapshot_path:&Path)->Registry{let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");registry_at_with_catalog(root,snapshot_path,publication.as_deref())}
 /// 🔏️ Binds snapshot freshness to the actual supplied catalog file and its fingerprint.
 pub fn registry_at_with_catalog(root:&Path,snapshot_path:&Path,publication:Option<&Path>)->Registry{
     let previous = read_snapshot(snapshot_path, root);
@@ -415,7 +418,7 @@ pub fn start_at(root: PathBuf, snapshot_path: PathBuf, refresh: bool) -> Job {
         };
         let previous = if refresh { None } else { read_snapshot(&snapshot_path, &root) };
         if !publish(previous.as_ref().map_or_else(|| seed(&root), Snapshot::registry), Phase::Known) { return; }
-        let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");
+        let publication=dashboard_core::catalog::configured_catalog_root().expect("Command catalog location refused");
         let gathered = gather(&root, previous.as_ref(), &signal, &observed, &mut |snapshot, phase| { if phase == Phase::Complete || !previous.as_ref().is_some_and(|previous| previous.same_sources(snapshot)) { publish(snapshot.registry(), phase); } },publication.as_deref());
         if let Some(snapshot) = gathered.filter(|snapshot| previous.as_ref() != Some(snapshot)) {
             if signal.load(Ordering::Relaxed) { let _ = sender.send(Update::Finished); return; }
@@ -428,7 +431,7 @@ pub fn start_at(root: PathBuf, snapshot_path: PathBuf, refresh: bool) -> Job {
 // #endregion 🔖️Job
 
 // #region 🔖️RunPolicy
-pub use crate::registry::GRAPH_REUSE;
+pub use dashboard_registry::GRAPH_REUSE;
 
 /// ⏱️ Whether a launcher entry is a finite task, by the registry's fact about it.
 pub fn starts_from_published_graph(label: &str) -> bool {
@@ -446,4 +449,8 @@ pub fn graph_is_current(root: &Path) -> bool { published(root).is_some_and(|regi
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../🎮️registry/🧪️tests/🔬️unit/🦀️.rs"]
+mod registry_tests;
 // #endregion 🔖️Tests

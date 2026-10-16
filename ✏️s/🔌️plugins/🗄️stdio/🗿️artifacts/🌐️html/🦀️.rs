@@ -11,113 +11,29 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
 pub use standards::v5::subsets::any::schema::diff::HtmlDiff;
 pub use standards::v5::subsets::any::schema::mutations::HtmlMutation;
 pub use standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 pub use standards::v5::subsets::any::schema::HtmlArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
+pub use semio_s_artifact_stdio_html_mutations::{STDIO_HTML_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const HTML_ARTIFACT_SCHEMA_ID: &str = "s.stdio.html";
+pub use semio_s_artifact_stdio_html_schema::{HTML_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_html_mutations::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_html_mutations::{artifact_kind, assembly, declaration, definition, native_codecs};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_html_mutations::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::artifact_codec::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA);
-    codec.extension = "html";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
-    codec
-}
+pub use semio_s_artifact_stdio_html_mutations::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.html.v1", artifact: "html", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_html_mutations::{contribution};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "html", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_html_mutations::{HTML_DIALECT};
 
-//#region 🔖️Dialect
-/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
-/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
-/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
-/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
-/// sibling `editor` module.
-pub const HTML_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
-//#endregion 🔖️Dialect
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("html", definition()?, declaration)
-}
-
-/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
-/// and the `stdio.html` document codec the linked `stdio.native.html.v1` receipt instantiates.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }).try_build()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.html".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Html", "Html"),
-        source_format: STDIO_HTML_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v5::subsets::any::io::io_registry as std_composer;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("HtmlComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(std_composer::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_html_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -130,96 +46,56 @@ pub mod standards {
         // imperative plugin-root calls (`crate::standards::v5::engine::
         // register()` in `🗄️stdio/🦀️.rs`) — left callable at this exact path via a
         // pure re-export of `subsets::any::io::register` (itself unchanged).
-        pub mod engine {
-            pub use super::subsets::any::io::register;
-        }
+        pub use semio_s_artifact_stdio_html_io_registry::standards::v5::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                pub mod io;
+                pub mod io {
+    pub use semio_s_artifact_stdio_html_io_registry::standards::v5::subsets::any::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::io::binary::*;
+        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::binary::diff;
+        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::binary::inferences;
+        pub use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::io::binary::mutations;
+        pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::binary::snapshot;
+    }
+    pub mod sqlite {
+        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::sqlite::*;
+        pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot;
+    }
+}
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod outline {
-                            #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::*;
+                    
+                    pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations;
                 }
             }
         }
     }
 }
-#[path = "."]
-pub mod examples {
-    #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod demo;
-}
+pub use semio_s_artifact_stdio_html_inferences::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod html {
-        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_html_mutations::editor::html::*;
+        
+        pub use semio_s_artifact_stdio_html_mutations::editor::html::edit_rules;
+        pub use semio_s_artifact_stdio_html_inferences::editor::html::presence;
+        pub use semio_s_artifact_stdio_html_inferences::editor::html::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_html_mutations::editor::html::modes::edit::*;
+                
+                pub use semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows;
             }
         }
     }
@@ -229,38 +105,24 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod html {
-        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_html_mutations::viewer::html::*;
+        
+        pub use semio_s_artifact_stdio_html_inferences::viewer::html::presence;
+        pub use semio_s_artifact_stdio_html_inferences::viewer::html::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_html_mutations::viewer::html::modes::view::*;
+                
+                pub use semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v5::subsets::any::io::{HtmlBuilderConstruction, HtmlParts, HtmlAnalyzerAnalysis, HtmlBuilderFacets, HtmlBuilder, HtmlAnalyzer, HtmlComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

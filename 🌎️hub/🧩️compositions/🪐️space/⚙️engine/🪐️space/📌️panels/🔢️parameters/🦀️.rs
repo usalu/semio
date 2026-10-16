@@ -15,9 +15,10 @@
 //! changed, only the +/- click affordance is gone (a plain number input still supports the browser's
 //! native up/down spinner, which fires the same `change` event).
 
-use crate::engine::space::engine::parameter_entity_id;
-use crate::engine::space::terminology::SStudioLabels;
-use crate::engine::space::{ui_value_map, ui_value_text, S_PLAY_PARAMETERS_TAB_ID};
+use semio_hub_space_operations::parameter_entity_id;
+use semio_hub_space_foundation::terminology::SStudioLabels;
+use crate::{ui_value_map, ui_value_text};
+use semio_hub_space_foundation::S_PLAY_PARAMETERS_TAB_ID;
 use semio_framework_os::{WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
     tree_window_item, ui_node_list, ActionId, BuiltNode, Buildable, HasBase, HasChildren, IconName, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
@@ -31,7 +32,7 @@ pub async fn definition() -> PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()),
         label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
         group: PanelGroup::Workbench,
-        body_key: Some(crate::engine::space::S_PLAY_PARAMETERS_BODY_KEY.into()),
+        body_key: Some(semio_hub_space_foundation::S_PLAY_PARAMETERS_BODY_KEY.into()),
         children: Vec::new(),
     }
 }
@@ -57,7 +58,7 @@ fn bind_action<B: HasBase>(builder: B, trigger: Trigger, action: (ActionId, Opti
 }
 
 fn patch_parameter_action(entries: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<(ActionId, Option<UiValue>)> {
-    crate::engine::space::s_play_action("patchParameter", Some(ui_value_map(entries)?))
+    crate::s_play_action("patchParameter", Some(ui_value_map(entries)?))
 }
 
 fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
@@ -177,7 +178,7 @@ fn add_option_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNod
 }
 
 fn remove_parameter_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
-    let remove_action = crate::engine::space::s_play_action("removeParameter", Some(ui_value_map([("parameterId", ui_value_text(id)?)])?))?;
+    let remove_action = crate::s_play_action("removeParameter", Some(ui_value_map([("parameterId", ui_value_text(id)?)])?))?;
     let remove_button = semio_framework_ui_contract::button(fixed_label(labels.remove.as_str(), "ui.parameters.remove-label")?)
         .icon(fixed_text(IconName::Trash2.as_str(), "ui.parameters.remove-icon")?)
         .try_id(format!("s-play-parameters.{id}.remove"))
@@ -215,7 +216,7 @@ fn parameter_field_row(parameter: &WorkflowParameter, id: &str, field: &Paramete
 /// tree stays U1-sync (matches the contract builder's own sync-only ruling, `📌️important.md`), so it
 /// is bridged the same way `🎮️commands/🔍️open-instance/🦀️.rs`'s `handle` bridges its own callee.
 fn parameter_id(parameter: &WorkflowParameter) -> String {
-    crate::engine::space::engine::resolve_future(parameter_entity_id(parameter)).to_string()
+    semio_hub_space_operations::resolve_future(parameter_entity_id(parameter)).to_string()
 }
 
 /// 🪟️ The node key the host addresses this panel's one open-ended container by.
@@ -230,7 +231,7 @@ pub const S_PLAY_PARAMETERS_LIST_KEY: &str = "s-play-parameters.list";
 /// on scroll; the old `column` of `Component::Container(Section)` nodes (which had no `window` carrier
 /// and hard-failed past the 32nd child) is gone.
 pub fn render(projection: &WorkflowSnapshot, labels: &SStudioLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let add_action = crate::engine::space::s_play_action("addParameter", Some(ui_value_map([("type", ui_value_text("numeric")?)])?))?;
+    let add_action = crate::s_play_action("addParameter", Some(ui_value_map([("type", ui_value_text("numeric")?)])?))?;
     let add_button = semio_framework_ui_contract::button(fixed_label(labels.add_parameter.as_str(), "ui.parameters.add-label")?)
         .icon(fixed_text(IconName::Plus.as_str(), "ui.parameters.add-icon")?)
         .try_id("s-play-parameters.add")

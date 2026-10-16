@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/pack-http-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

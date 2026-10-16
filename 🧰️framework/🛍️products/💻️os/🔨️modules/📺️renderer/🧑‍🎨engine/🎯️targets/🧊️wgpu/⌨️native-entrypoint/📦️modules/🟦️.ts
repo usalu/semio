@@ -1,52 +1,50 @@
-import { open } from "node:fs/promises";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
-import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { fileDigest } from "../../../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
-import { COMPONENT_RECEIPT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1 } from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-
-/** 🧩️ One native component input: its shipped bytes, the JSON projection of its semantic descriptor, the semantic descriptor pack and
- * the `ComponentReceiptV1` binding that pack to those bytes. */
-export type NativeModuleSource = { readonly pluginId: string; readonly wasm: string; readonly descriptor: string; readonly descriptorPack: string; readonly receipt: string };
-
-/** 📂️ Isolates a completed native runtime by variant and compilation profile. */
-export function nativeRuntimeDirectory(packageRoot: string, variant: string, profile: string): string {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant) || !["prototype", "release"].includes(profile)) throw new Error("Select a native runtime variant and prototype/release profile");
-  return join(packageRoot, "dist/runtime/native", profile, variant);
+import {withArtifactDescriptorSlotV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
+import nativeSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json" with {type:"json"};
+import {withRepositoryCacheStoreV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withRepositoryArtifactGroupV1,withRepositoryArtifactGroupTaskV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📚️group/🟦️.ts";
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {componentModelLayoutV1,readComponentModelIntentV1} from "../../../../../../🔌️plugin/📦️model/📋️contract/🟦️.ts";
+import {fileDigest,readArtifactBytesV1,readArtifactPrefixV1,artifactFiles} from "../../../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import {COMPONENT_RECEIPT_MAX_BYTES,parseComponentReceiptV1,componentReceiptBindsV1} from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import {CATALOG_DESCRIPTOR_MAX_BYTES,verifySemanticDescriptorPairBytesV1} from "../../../../../../🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
+import publicationSchema from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import modelSchema from "../../../../../../🔌️plugin/📦️model/🧬️schema/🔣️.json" with {type:"json"};
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {readNativeRuntimeManifestV1,type NativeRuntimeManifestV1} from "./📋️contract/🟦️.ts";
+import {join,resolve} from "node:path";
+import {copyFile,mkdir,writeFile,lstat} from "node:fs/promises";
+const policy=publicationSchema.definitions.Protocol.const,names=modelSchema.definitions.Protocol.const,protocol=schema.definitions.Protocol.const,roster=Object.freeze(Object.values(names).sort());
+export type NativeModuleSource=Readonly<{pluginId:string;cratePath:string}>;
+/** 📂️ Computes selected-mode Native product DATA only. */
+export function nativeRuntimeDirectory(workspace:string,variant:string,mode:string):string{
+ if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)||variant.length>64||!(mode==="prototype"||mode==="release"))throw Error("Exact Native variant and mode required");const path=join(repositoryCachePartitionRootDataV1(workspace,"products"),"browser",mode,protocol.namespace,variant);if(path.length>224)throw Error("Finite Native product root required");return path;
 }
-
-/** 📦️ Publishes portable references to verified component-model WASM and matching descriptors. */
-export async function publishNativeRuntime(packageRoot: string, variant: string, profile: string, modules: readonly NativeModuleSource[], signal: AbortSignal): Promise<void> {
-  signal.throwIfAborted();
-  const output = nativeRuntimeDirectory(packageRoot, variant, profile), files = new Map<string, string>(), entries: { pluginId: string; wasmSha256: string; wasmPath: string; descriptorPath: string }[] = [];
-  if (!modules.length || modules.length > 1024) throw new Error("Native runtime requires between 1 and 1024 components");
-  for (const module of [...modules].sort((a, b) => a.pluginId.localeCompare(b.pluginId))) {
-    signal.throwIfAborted();
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(module.pluginId) || entries.some(entry => entry.pluginId === module.pluginId)) throw new Error("Invalid or duplicate native plugin ID");
-    for (const path of [module.wasm, module.descriptor, module.descriptorPack, module.receipt]) if (!lstatSync(path).isFile()) throw new Error("Native runtime inputs must be regular files");
-    const handle = await open(module.wasm, "r");
-    try {
-      const header = Buffer.alloc(8), read = await handle.read(header, 0, 8, 0);
-      if (read.bytesRead !== 8 || header.toString("hex") !== "0061736d0d000100") throw new Error("Native runtime requires component-model WASM");
-    } finally { await handle.close(); }
-    const wasmSha256 = await fileDigest(module.wasm, signal), descriptor = JSON.parse(readFileSync(module.descriptor, "utf8"));
-    if (lstatSync(module.receipt).size > COMPONENT_RECEIPT_MAX_BYTES) throw new Error("Native component receipt exceeds its bound");
-    const receipt = parseComponentReceiptV1(readFileSync(module.receipt, "utf8"));
-    const binding = { pluginId: module.pluginId, packageId: receipt.packageId, wasmSha256, semanticDescriptorSha256: await fileDigest(module.descriptorPack, signal) };
-    if (descriptor.manifest?.pluginId !== module.pluginId || "hashes" in descriptor || !componentReceiptBindsV1(receipt, binding) || receipt.wasmBytes !== lstatSync(module.wasm).size) throw new Error("Native component descriptor identity or digest mismatch");
-    const paths = { wasmPath: relative(output, module.wasm).split(sep).join("/"), descriptorPath: relative(output, module.descriptor).split(sep).join("/") };
-    if (Object.values(paths).some(path => !path || [...path].length > 4096 || path.startsWith("/") || /[\\:<>"|?*\u0000-\u001f]/.test(path) || path.split("/").some(part => !part || part === "."))) throw new Error("Native runtime inputs must have portable relative paths");
-    entries.push({ pluginId: module.pluginId, wasmSha256, ...paths });
-  }
-  signal.throwIfAborted();
-  const content = JSON.stringify({ version: 1, variant, profile, modules: entries }) + "\n";
-  if (Buffer.byteLength(content) > 1024 * 1024) throw new Error("Native runtime manifest exceeds 1 MiB");
-  mkdirSync(dirname(output), { recursive: true });
-  const temporary = mkdtempSync(output + ".manifest-");
-  try {
-    const manifest = join(temporary, "🔣️runtime.json");
-    writeFileSync(manifest, content);
-    files.set("🔣️runtime.json", manifest);
-    await stageRepositoryArtifacts(output, `native-runtime:${variant}:${profile}`, files, { signal });
-  } finally { rmSync(temporary, { recursive: true, force: true }); }
+function actual(workspace:string,invocation:ScriptInvocation,control:ResourceLeaseControl){requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities);if(resolve(workspace)!==authority.repositoryRoot)throw Error("Actual Native product workspace required");return authority.original.buildMode;}
+async function verifyModel(root:string,pluginId:string,mode:"prototype"|"release",control:ResourceLeaseControl){
+ const expectedHeader=Buffer.from(nativeSchema.definitions.Policy.const.componentHeader),header=await readArtifactPrefixV1(join(root,names.component),expectedHeader.length,policy.maximumOutputBytes,control.signal);if(!Buffer.from(header).equals(expectedHeader))throw Error("Actual component-model Wasm required");const json=await readArtifactBytesV1(join(root,names.descriptor),CATALOG_DESCRIPTOR_MAX_BYTES,control.signal),pack=await readArtifactBytesV1(join(root,names.descriptorPack),CATALOG_DESCRIPTOR_MAX_BYTES,control.signal),receipt=parseComponentReceiptV1(new TextDecoder("utf-8",{fatal:true}).decode(await readArtifactBytesV1(join(root,names.receipt),COMPONENT_RECEIPT_MAX_BYTES,control.signal))),pair=verifySemanticDescriptorPairBytesV1(json,pack),wasm=join(root,names.component),digest=await fileDigest(wasm,control.signal),size=(await lstat(wasm)).size;
+ if(pair.pluginId!==pluginId||pair.packageId!==receipt.packageId||receipt.profile!=="wasm-"+mode||!componentReceiptBindsV1(receipt,{pluginId,packageId:pair.packageId,wasmSha256:digest,semanticDescriptorSha256:pair.semanticSha256})||receipt.wasmBytes!==size)throw Error("Actual model bytes, descriptor and receipt must agree");return digest;
+}
+/** 📦️ Copies genuine retained model products into one bounded self-contained Native publication. */
+export function publishNativeRuntime(workspace:string,invocation:ScriptInvocation,variant:string,modules:readonly NativeModuleSource[],control:ResourceLeaseControl):Promise<void>{
+ const mode=actual(workspace,invocation,control),output=nativeRuntimeDirectory(workspace,variant,mode);if(!modules.length||modules.length>schema.properties.modules.maxItems||new Set(modules.map(row=>row.pluginId)).size!==modules.length)throw Error("Finite distinct Native model set required");const declarations=Object.freeze(modules.map(row=>readComponentModelIntentV1({version:1,mode,...row}))),owner="native-runtime:"+variant+":"+mode;
+ return withRepositoryCacheStoreV1(workspace,"products",invocation,control,store=>withRepositoryArtifactGroupV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:control,requests:declarations.map(intent=>({version:1,...componentModelLayoutV1(store.root,intent),maximumBytes:policy.maximumOutputBytes+policy.maximumManifestBytes,maximumFiles:roster.length}))},group=>withRepositoryArtifactGroupTaskV1(group,invocation,async input=>{
+  return withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:input.control,request:{version:1,mode,owner:"browser/native/"+variant}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{
+   let bytes=0;const entries:NativeRuntimeManifestV1["modules"][number][]=[];
+   for(const declaration of declarations){checkResourceLeaseControl(sink.control);const layout=componentModelLayoutV1(store.root,declaration),member=input.artifacts.find(row=>row.path===layout.path);if(!member||JSON.stringify([...member.files].sort())!==JSON.stringify(roster))throw Error("Exact retained model product roster required");const directory=join(sink.directory,declaration.pluginId);await mkdir(directory);for(const name of roster){const source=join(member.path,name),destination=join(directory,name),extent=(await lstat(source)).size;if(destination.length>policy.maximumPathUnits||extent>policy.maximumOutputBytes-bytes)throw Error("Native runtime exceeds unchanged publisher extent");bytes+=extent;await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}const digest=await verifyModel(directory,declaration.pluginId,mode,sink.control);entries.push({pluginId:declaration.pluginId,wasmSha256:digest,wasmPath:declaration.pluginId+"/"+names.component,descriptorPath:declaration.pluginId+"/"+names.descriptor});}
+   const manifest=readNativeRuntimeManifestV1({version:1,variant,profile:mode,modules:entries},variant,mode),encoded=JSON.stringify(manifest)+"\n";if(Buffer.byteLength(encoded)>policy.maximumManifestBytes||Buffer.byteLength(encoded)>policy.maximumOutputBytes-bytes)throw Error("Finite Native runtime manifest required");await writeFile(join(sink.directory,protocol.manifest),encoded,{flag:"wx",signal:sink.control.signal});await input.recheck();
+   await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:output},destination=>stageRepositoryArtifacts(destination,owner,artifactFiles(sink.directory)));
+  }));
+ })));
+}
+/** 👓️ Retains the exact Native product, verified manifest and every copied model through actual consumer settlement. */
+export function withNativeRuntimeV1<T>(workspace:string,invocation:ScriptInvocation,variant:string,control:ResourceLeaseControl,body:(root:string,manifest:NativeRuntimeManifestV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ const mode=actual(workspace,invocation,control),path=nativeRuntimeDirectory(workspace,variant,mode);return withRepositoryCacheStoreV1(workspace,"products",invocation,control,store=>withRepositoryArtifactV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:control,request:{version:1,path,owner:"native-runtime:"+variant+":"+mode,maximumBytes:policy.maximumOutputBytes+policy.maximumManifestBytes,maximumFiles:policy.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,invocation,async artifact=>{
+  const manifest=readNativeRuntimeManifestV1(JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(await readArtifactBytesV1(join(path,protocol.manifest),policy.maximumManifestBytes,artifact.control.signal))),variant,mode),expected=[protocol.manifest,...manifest.modules.flatMap(row=>roster.map(name=>row.pluginId+"/"+name))].sort();if(JSON.stringify([...artifact.files].sort())!==JSON.stringify(expected))throw Error("Exact self-contained Native runtime roster required");for(const row of manifest.modules)if(await verifyModel(join(path,row.pluginId),row.pluginId,mode,artifact.control)!==row.wasmSha256)throw Error("Native runtime digest changed");await artifact.recheck();return body(path,manifest,artifact.control);
+ })));
 }

@@ -1,7 +1,9 @@
+import{withPrintExecutionV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+import{withCompiledPrintProbeV1}from"../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
 /** 📐️ Authored layouts compile in place and publish columns adjudicated by independent D3. */
 import {mkdirSync,writeFileSync} from "node:fs";
 import {join,resolve} from "node:path";
-import {compileVizProbe} from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import {parseProbeJsonLines} from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import {defineTestAdapter} from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import fixtures from "./🔣️.json";
 import customization from "./⚙️.json";
@@ -93,16 +95,15 @@ async function reference():Promise<Record<string,readonly number[]>> {
     else{
       const contour=(await import("d3-contour")).contours();let values=rows.map(row=>Number(row[String(opt.value??"value")])),nx=Number(opt.columns),ny=Number(opt.rows),cell=1,x0=0,y0=0;
       if(name==="density"){cell=Number(opt.cellSize);x0=Number(opt.x0??0);y0=Number(opt.y0??0);nx=Math.ceil((Number(opt.x1??width)-x0)/cell)+1;ny=Math.ceil((Number(opt.y1??height)-y0)/cell)+1;const bandwidth=Number(opt.bandwidth);values=Array.from({length:nx*ny},(_,i)=>array.mean(points,([x,y])=>opt.kernel==="uniform"?Math.abs(x0+i%nx*cell-x)<=bandwidth&&Math.abs(y0+Math.floor(i/nx)*cell-y)<=bandwidth?.25/bandwidth**2:0:Math.exp(-((x0+i%nx*cell-x)**2+(y0+Math.floor(i/nx)*cell-y)**2)/(2*bandwidth**2))/(2*Math.PI*bandwidth**2))!);}
-      put(name,contour.size([nx,ny]).thresholds(Number(opt.thresholds))(values).flatMap(entry=>entry.coordinates.flatMap(polygon=>polygon.flatMap(ring=>ring.map(([x,y])=>({x:x0+x*cell,y:y0+y*cell,value:entry.value}))))));
+      put(name,contour.size([nx,ny]).thresholds(Number(opt.thresholds))(values).flatMap(entry=>entry.coordinates.flatMap(polygon=>polygon.flatMap(ring=>ring.map(([x,y])=>({x:x0+x!*cell,y:y0+y!*cell,value:entry.value}))))));
     }
   }
   return result;
 }
 
 /** ⚖️ Compiles all authored algorithms in place, then checks numeric geometry columns. */
-export async function nativeLayoutGrammarChecks(workDir:string):Promise<readonly Check[]> {
-  workDir=resolve(workDir);mkdirSync(workDir,{recursive:true});const input=join(workDir,"chart-layout-grammar.tex");writeFileSync(input,source());
-  const [records,oracle]=await Promise.all([compileVizProbe(input,{workDir:join(workDir,"compiled"),keepWorkDir:true,caseName:"chart-layout-grammar",scenario:"all-layout-kinds"}),reference()]);
+export async function nativeLayoutGrammarChecks(execution:PrintExecutionV1):Promise<readonly Check[]> {
+  const [records,oracle]=await Promise.all([withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"probe.tex",source:source()},async probe=>parseProbeJsonLines(new TextDecoder("utf-8",{fatal:true}).decode(await probe.read("probe.probe.jsonl",1048576)))),reference()]);
   const expected=projection(oracle),actual=projection(Object.fromEntries(Object.keys(oracle).map(key=>[key,records.filter(record=>record.key===key).flatMap(record=>record.values.map(Number))])));
   return Object.entries(expected).map(([key,values])=>({module:"native-layout",name:key,subject:()=>actual[key]!,oracle:()=>values,tolerance:2e-5}));
 }
@@ -117,4 +118,4 @@ function projection(raw:Record<string,readonly number[]>):Record<string,readonly
   }
   return result;
 }
-export default defineTestAdapter({implementation:"typescript",scenarios:{"all-layout-kinds":{subject:async context=>({projection:Object.fromEntries((await nativeLayoutGrammarChecks(context.workDir)).map(check=>[check.name,check.subject() as number[]]))}),oracle:async()=>({projection:projection(await reference())})}}});
+export default defineTestAdapter({implementation:"typescript",scenarios:{"all-layout-kinds":{subject:async context=>withPrintExecutionV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl:context.phaseControl,kind:"probe"},async execution=>({projection:Object.fromEntries((await nativeLayoutGrammarChecks(execution)).map(check=>[check.name,check.subject() as number[]]))})),oracle:async()=>({projection:projection(await reference())})}}});

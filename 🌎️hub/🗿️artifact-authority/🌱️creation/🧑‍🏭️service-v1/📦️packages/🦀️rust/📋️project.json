@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-artifact-creation-service-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

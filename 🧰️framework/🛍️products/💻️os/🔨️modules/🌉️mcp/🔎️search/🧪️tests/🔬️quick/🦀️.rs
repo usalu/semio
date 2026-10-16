@@ -1,9 +1,11 @@
+//! 🧱️ Search_quick of the capabilities crate: Gateway capability declarations and the core catalog.
 
-use super::*;
-use crate::catalog::compile;
-use crate::source_builders;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
+#[cfg(any(test, feature = "testkit"))]
+use crate::source_builders;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityKind, CapabilityOwner, CatalogAuditFinding, audit_source, compile};
+use semio_framework_os_mcp_catalog::search::{RankedHit, SearchFilters, search, tokenize};
 
 #[test]
 fn tokenizer_splits_camel_case_and_kebab_case_and_drops_stopwords() {
@@ -34,11 +36,11 @@ fn search_is_deterministic_across_repeated_calls() {
 fn kind_filter_excludes_non_matching_capabilities() {
     let source = source_builders::note_and_cad_source();
     let catalog = compile(&source, Locale::En, Terminology::Native).expect("compiles");
-    let filters = SearchFilters { kind: vec![crate::catalog::CapabilityKind::Shell], ..Default::default() };
+    let filters = SearchFilters { kind: vec![CapabilityKind::Shell], ..Default::default() };
     let hits = search(&catalog, "move the selection", &filters);
     for hit in &hits {
         let capability = catalog.get(&hit.capability_id).expect("hit resolves");
-        assert_eq!(capability.kind, crate::catalog::CapabilityKind::Shell);
+        assert_eq!(capability.kind, CapabilityKind::Shell);
     }
 }
 
@@ -62,6 +64,7 @@ fn empty_query_returns_no_hits() {
 }
 
 //#region 🧪️M5aAgentUsabilityLaws
+
 /// 🎯️ M5a law 1 — an agent's query DISCRIMINATES. Before this slice `"draw rectangle"` returned 20
 /// draw verbs at two distinct BM25 scores (only the plugin id/title matched, every description was
 /// empty); the intent verb had to win on its own text.
@@ -98,7 +101,7 @@ fn input_events_are_never_published_to_agents() {
     for query in ["draw rectangle", "canvas pointer", "move the pointer on the canvas", "escape"] {
         for hit in search(&catalog, query, &SearchFilters::default()) {
             let capability = catalog.get(&hit.capability_id).expect("hit resolves");
-            assert_eq!(capability.audience, crate::catalog::CapabilityAudience::Agent, "{} leaked into a `{query}` result", hit.capability_id);
+            assert_eq!(capability.audience, CapabilityAudience::Agent, "{} leaked into a `{query}` result", hit.capability_id);
         }
     }
 }
@@ -138,9 +141,11 @@ fn plugin_display_name_is_searchable() {
     assert!(matches!(&capability.owner, CapabilityOwner::Plugin { label, .. } if label.as_deref() == Some("Draw")));
     assert_eq!(capability.artifact_kind.as_deref(), Some("s.draw.drawing"));
 }
+
 //#endregion 🧪️M5aAgentUsabilityLaws
 
 //#region 🧪️M5aApprovalAndAuditLaws
+
 /// ⚠️ M5a law 7 — a delete-class verb published to an agent carries `effects.destructive` AND the
 /// `WhenDestructive` approval mode, which is the single fact `🛡️policy::requires_approval` reads.
 /// Without it the gateway commits a deletion on an agent's word alone.
@@ -162,7 +167,7 @@ fn a_delete_class_verb_is_marked_destructive_and_gates_on_approval() {
 #[test]
 fn the_capability_audit_catches_an_undeclared_gesture_route_and_an_unmarked_destructive_verb() {
     let clean = source_builders::note_cad_and_draw_source();
-    assert_eq!(crate::catalog::audit_source(&clean), Vec::new(), "the annotated fixture must audit clean");
+    assert_eq!(audit_source(&clean), Vec::new(), "the annotated fixture must audit clean");
 
     let mut regressed = clean.clone();
     for descriptor in regressed.descriptors.iter_mut().filter(|descriptor| descriptor.manifest.plugin_id == "draw") {
@@ -180,17 +185,17 @@ fn the_capability_audit_catches_an_undeclared_gesture_route_and_an_unmarked_dest
             }
         }
     }
-    let findings = crate::catalog::audit_source(&regressed);
+    let findings = audit_source(&regressed);
     assert!(
-        findings.contains(&crate::catalog::CatalogAuditFinding::UndeclaredGestureRoute { capability_id: "draw.s.draw.drawing@1/*#editor.canvasPointerDown".into(), matched: "pointerdown" }),
+        findings.contains(&CatalogAuditFinding::UndeclaredGestureRoute { capability_id: "draw.s.draw.drawing@1/*#editor.canvasPointerDown".into(), matched: "pointerdown" }),
         "the undeclared pointer route must be a finding: {findings:?}"
     );
     assert!(
-        findings.contains(&crate::catalog::CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id: "draw.s.draw.drawing@1/*#editor.deleteLayer".into(), matched: "delete" }),
+        findings.contains(&CatalogAuditFinding::UnmarkedDestructiveVerb { capability_id: "draw.s.draw.drawing@1/*#editor.deleteLayer".into(), matched: "delete" }),
         "the unmarked destructive verb must be a finding: {findings:?}"
     );
     assert!(
-        findings.contains(&crate::catalog::CatalogAuditFinding::UnmarkedUserPathWrite { capability_id: "draw.s.draw.drawing@1/*#editor.exportDocument".into(), matched: "export" }),
+        findings.contains(&CatalogAuditFinding::UnmarkedUserPathWrite { capability_id: "draw.s.draw.drawing@1/*#editor.exportDocument".into(), matched: "export" }),
         "an export to a user path that asks nobody must be a finding: {findings:?}"
     );
 }
@@ -209,4 +214,5 @@ fn user_path_writes_and_document_replacement_gate_on_approval() {
     assert!(!load.effects.destructive, "an import that adds content must not ask");
     assert_ne!(load.policy.approval, semio_framework::manifest::ApprovalMode::Always);
 }
+
 //#endregion 🧪️M5aApprovalAndAuditLaws

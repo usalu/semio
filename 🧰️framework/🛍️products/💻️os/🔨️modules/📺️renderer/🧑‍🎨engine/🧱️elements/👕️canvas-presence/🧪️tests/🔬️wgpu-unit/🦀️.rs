@@ -1,6 +1,6 @@
 //! 🧪️ The wgpu canvas-presence twin against the shared fixture `🧫️fixtures/👕️canvas-presence/🔣️.json`
 //! (schema `🧬️schema/👕️canvas-presence`). Its TypeScript runner (`🧪️tests/👕️canvas-presence/🟦️.ts`) holds
-//! React's `puzzle2dScreenToWorld`, `peersForWindow` and `PEER_OVERLAY_LABELS` to the same rows and checks
+//! React's `boardScreenToWorld`, `peersForWindow` and `PEER_OVERLAY_LABELS` to the same rows and checks
 //! the publish transform against gl-matrix's `mat2d` inverse as the third-party oracle.
 
 use super::*;

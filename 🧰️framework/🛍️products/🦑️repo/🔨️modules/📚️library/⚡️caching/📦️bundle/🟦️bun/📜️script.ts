@@ -4,7 +4,7 @@ import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️mo
 import { withWholeHostCompilerCapacity } from "../🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
-import { readFileSync, lstatSync, realpathSync, writeFileSync, mkdirSync, mkdtempSync, renameSync } from "node:fs";
+import { readFileSync, lstatSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -20,11 +20,11 @@ export type BunBundleResult = Readonly<{ source: string; sourceMap?: string; inp
 async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleResult> {
   if (validateJsonSchemaSubset(schema, request).length || Buffer.byteLength(JSON.stringify(request)) > 16 * 1024 * 1024) throw Error("Invalid Bun bundle request");
   readBuildMode(request.mode);
-  console.log(`[bun-worker] compiling pid=${process.pid} kind=${request.kind}`);
+  console.error(`[bun-worker] compiling pid=${process.pid} kind=${request.kind}`);
   if (request.kind === "snapshot") {
     const roots = request.roots.map(root => ({ ...root, path: realpathSync(root.path) })), snapshots = new Map<string, { bytes: Buffer; logicalPath: string; sha256: string; byteLength: number }>();
     let remaining = 8 * 1024 * 1024;
-    const result = await Bun.build({ entrypoints: [request.entrypoint], root: roots[0].path, target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
+    const result = await Bun.build({ entrypoints: [request.entrypoint], root: roots[0]!.path, target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
       build.onLoad({ filter: /.*/, namespace: "file" }, args => {
         const path = realpathSync(args.path), root = roots.find(root => path.startsWith(root.path + sep));
         if (!root || !path.endsWith(".js")) throw Error("Browser compiler source root or type refused");
@@ -35,7 +35,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
           const bytes = readFileSync(path), after = lstatSync(path);
           if (["dev", "ino", "size", "mtimeMs", "ctimeMs"].some(key => before[key as keyof typeof before] !== after[key as keyof typeof after]) || bytes.byteLength !== before.size) throw Error("Browser compiler source changed during capture");
           remaining -= bytes.byteLength;
-          captured = { bytes, logicalPath: root.name + "/" + relative(root.path, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength }; snapshots.set(path, captured); if (request.observe) console.log("[bun-worker] captured " + JSON.stringify(path));
+          captured = { bytes, logicalPath: root.name + "/" + relative(root.path, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength }; snapshots.set(path, captured); if (request.observe) console.error("[bun-worker] captured " + JSON.stringify(path));
         }
         return { contents: captured.bytes, loader: "js" };
       });
@@ -44,7 +44,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
     const observed = Object.keys(result.metafile.inputs).map(path => isAbsolute(path) ? path : resolve(path)).sort();
     if (JSON.stringify(observed) !== JSON.stringify([...snapshots.keys()].sort())) throw Error("Browser compiler source coverage or output bytes refused");
     const physicalInputs = [...snapshots].map(([path, value]) => ({ path, logicalPath: value.logicalPath, sha256: value.sha256, byteLength: value.byteLength })).sort((left, right) => left.logicalPath < right.logicalPath ? -1 : left.logicalPath > right.logicalPath ? 1 : 0);
-    return { source: await result.outputs[0].text(), physicalInputs, inputs: physicalInputs.map(({ path, ...value }) => value), loadedRuntime: 0 };
+    return { source: await result.outputs[0]!.text(), physicalInputs, inputs: physicalInputs.map(({ path, ...value }) => value), loadedRuntime: 0 };
   }
   if (request.kind === "bun-package") {
     const workspace = findWorkspaceRoot(import.meta.dir), physicalInputs = new Map<string, BunBundleResult["physicalInputs"][number]>();
@@ -70,7 +70,7 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
       build.onResolve({ filter: /.*/ }, args => request.external.includes(args.path) ? { path: args.path, external: true } : undefined);
     } }] });
     if (!result.success || result.outputs.length !== 1) throw Error("Browser module binding failed");
-    return { source: await result.outputs[0].text(), inputs: [], physicalInputs: [], loadedRuntime: 0 };
+    return { source: await result.outputs[0]!.text(), inputs: [], physicalInputs: [], loadedRuntime: 0 };
   }
   const loaded = new Set<string>();
   const result = await Bun.build({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", treeShaking: buildModePolicy(request.mode).optimize, splitting: false, minify: buildModePolicy(request.mode).optimize, plugins: [{ name: "semio-closed-browser-actor", setup(build) {
@@ -85,31 +85,10 @@ async function compileBunBundle(request: BunBundleRequest): Promise<BunBundleRes
     });
   } }] });
   if (!result.success || result.outputs.length !== 1) throw Error("Browser actor closure failed");
-  return { source: await result.outputs[0].text(), inputs: [], physicalInputs: [], loadedRuntime: loaded.size };
+  return { source: await result.outputs[0]!.text(), inputs: [], physicalInputs: [], loadedRuntime: loaded.size };
 }
 
-if (import.meta.main) {
-  const [command, first, second] = process.argv.slice(2);
-  if ((command !== "compile" && command !== "debug") || !first || (command === "debug" && !second)) throw Error("Usage: compile <response-path> | debug <request-path> <response-path>");
-  const bytes = command === "debug" ? readFileSync(first) : await (async () => { let size = 0; const chunks: Buffer[] = []; for await (const chunk of process.stdin) { size += chunk.byteLength; if (size > 16 * 1024 * 1024) throw Error("Bun compiler request bytes refused"); chunks.push(chunk); } return Buffer.concat(chunks); })();
-  if (bytes.byteLength > 16 * 1024 * 1024) throw Error("Bun compiler request bytes refused");
-  const request = JSON.parse(new TextDecoder().decode(bytes));
-  if (readBuildMode(process.env.SEMIO_BUILD_MODE) !== request.mode) throw Error("Bun compiler request contradicts the selected build mode");
-  await receiveScriptProcessInvocation(process.env, async invocation => {
-    const workspace = findWorkspaceRoot(import.meta.dir);
-    const result = await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "bun:compile", 120_000), () => compileBunBundle(request));
-    invocation.control.signal.throwIfAborted();
-    const response = resolve(command === "debug" ? second! : first); if (response.length > 256) throw Error("Bun compiler response path exceeds 256 characters");
-    const root = resolve(response, ".."); mkdirSync(root, { recursive: true });
-    const directory = mkdtempSync(join(root, `bundle-${request.mode}-`));
-    const capture = (name: string, bytes: string) => {
-      const path = join(directory, name); if (path.length > 256) throw Error("Bun compiler artifact path exceeds 256 characters");
-      writeFileSync(path, bytes);
-      return { path: relative(root, path).split(sep).join("/"), sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: Buffer.byteLength(bytes) };
-    };
-    const manifest = { version: 1, requestSha256: createHash("sha256").update(JSON.stringify(request)).digest("hex"), kind: request.kind, mode: request.mode, source: capture("source.js", result.source), ...(result.sourceMap !== undefined ? { sourceMap: capture("source.js.map", result.sourceMap) } : {}), metadata: capture("metadata.json", JSON.stringify({ inputs: result.inputs, physicalInputs: result.physicalInputs, loadedRuntime: result.loadedRuntime })) };
-    if (validateJsonSchemaSubset(schema.definitions.Response, manifest).length || Buffer.byteLength(JSON.stringify(manifest)) > 4096) throw Error("Bun compiler file manifest refused");
-    const temporary = join(directory, "manifest.json"); if (temporary.length > 256) throw Error("Bun compiler manifest path exceeds 256 characters");
-    writeFileSync(temporary, JSON.stringify(manifest)); renameSync(temporary, response);
-  });
+if(import.meta.main){
+ if(process.argv.length!==3||process.argv[2]!=="compile")throw Error("Usage: compile (bounded request stdin; output data stdout)");let size=0;const chunks:Buffer[]=[];for await(const chunk of process.stdin){size+=chunk.byteLength;if(size>16*1024*1024)throw Error("Bun compiler request bytes refused");chunks.push(chunk);}const request=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks)))as BunBundleRequest;if(readBuildMode(process.env.SEMIO_BUILD_MODE)!==request.mode)throw Error("Bun compiler request contradicts the selected build mode");
+ await receiveScriptProcessInvocation(process.env,async invocation=>{const workspace=findWorkspaceRoot(import.meta.dir),control=scriptCompilerAdmissionControlV1(invocation,"bun:compile",120000),result=await withWholeHostCompilerCapacity(join(workspace,".cache/b/l/m/data"),control,()=>compileBunBundle(request)),{bunBundleStreamFramesV1}=await import("./📤️stream/🟦️.ts"),{writeOwnedCommandOutputV1}=await import("../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),files=[{name:"source.js",bytes:Buffer.from(result.source)},...(result.sourceMap!==undefined?[{name:"source.js.map",bytes:Buffer.from(result.sourceMap)}]:[]),{name:"metadata.json",bytes:Buffer.from(JSON.stringify({inputs:result.inputs,physicalInputs:result.physicalInputs,loadedRuntime:result.loadedRuntime}))}];for(const frame of bunBundleStreamFramesV1(createHash("sha256").update(JSON.stringify(request)).digest("hex"),files))await writeOwnedCommandOutputV1(process.stdout,frame,control);});
 }

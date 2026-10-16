@@ -2,7 +2,7 @@
 //! at app level: `Config`/`ConfigMutation` are inherently app-scoped, and this app owns no
 //! document-side artifact — see `🦀️.rs`'s module doc for why).
 
-use crate::engine::space::S_PLAY_CATALOGUE_TAB_ID;
+use crate::S_PLAY_CATALOGUE_TAB_ID;
 use semio_framework_os::OsWorkflowCamera;
 use std::collections::BTreeMap;
 

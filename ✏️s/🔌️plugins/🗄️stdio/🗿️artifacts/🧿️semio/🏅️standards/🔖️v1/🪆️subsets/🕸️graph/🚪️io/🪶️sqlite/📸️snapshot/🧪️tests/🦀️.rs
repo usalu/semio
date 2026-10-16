@@ -114,7 +114,7 @@ fn graph_hex_float_decode(body:&str,limits:SqliteDatabaseLimits)->Result<SemioGr
 }
 #[test]
 fn sqlite_snapshot_semio_graph_hex_float_original_grammar_and_complete_class_extent(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎚️hex-float.json")).unwrap();
+ let contract:serde_json::Value=serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎚️hex-float.json")).expect("the committed fixture is readable")).unwrap();
  for case in contract["valid"].as_array().unwrap(){
   let body=graph_hex_float_body(case["hex"].as_str().unwrap());let value=graph_hex_float_decode(&body,SqliteDatabaseLimits::default()).unwrap();let scalar=value.nodes[0].position.x;let class=if scalar.is_nan(){"nan"}else if scalar.is_infinite(){"infinity"}else{"finite"};assert_eq!(class,case["class"].as_str().unwrap(),"{}",case["id"]);
   let extent=norm_independent_complete_extent(&value);assert_eq!(extent["rows"],19);assert_eq!(extent["valueBytes"],case["graphValueBytes"]);assert_eq!(extent["schemaBytes"],3039);
@@ -124,7 +124,7 @@ fn sqlite_snapshot_semio_graph_hex_float_original_grammar_and_complete_class_ext
 }
 #[test]
 fn sqlite_snapshot_semio_graph_hex_float_complete_cells_precede_original_typed_producer(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎚️hex-float.json")).unwrap();
+ let contract:serde_json::Value=serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎚️hex-float.json")).expect("the committed fixture is readable")).unwrap();
  for case in contract["valid"].as_array().unwrap(){
   let body=graph_hex_float_body(case["hex"].as_str().unwrap());let limits=SqliteDatabaseLimits{max_rows:19,max_value_bytes:case["graphValueBytes"].as_u64().unwrap()as usize,max_schema_bytes:3039,max_tables:10,max_columns:18,..SqliteDatabaseLimits::default()};
   graph_hex_float_decode(&body,limits).unwrap();

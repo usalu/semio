@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-command-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

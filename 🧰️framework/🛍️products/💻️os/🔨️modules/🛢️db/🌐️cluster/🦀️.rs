@@ -21,9 +21,13 @@
 //! Every genuinely content-addressed hash in the family (payloads, snapshots, WAL chains) already
 //! flows through `db_storage`/`db_wal`/`db_sync`, which this crate reuses via their public APIs
 //! rather than re-deriving.
-use crate::db_durability::Frontier;
-use crate::*;
-use db_storage::{SnapshotStorage as _, WalStorage as _};
+#![allow(async_fn_in_trait)]
+
+use db_durability::Frontier;
+use db_durability::{DurabilityClass, EpochFence};
+use db_ids::{ActorId, ArtifactId, DbError};
+use db_policy::{MailboxCapacities, Priority};
+use db_io_core::{SnapshotStorage as _, WalStorage as _};
 /// 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -136,19 +140,19 @@ pub struct ShardOwnership {
 impl ShardOwnership {
     /// 🤝️ Claims (or idempotently reaffirms) ownership of `shard` for `holder` — thin
     /// wrapper over `LeaseStorage::acquire` that also remembers the resulting fence locally.
-    pub async fn acquire(storage: &impl db_storage::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
+    pub async fn acquire(storage: &impl db_io_core::LeaseStorage, shard: &str, holder: NodeId, ttl_ms: u64, now_ms: u64) -> Result<ShardOwnership, DbError> {
         let fence = storage.acquire(shard, &holder.0, ttl_ms, now_ms).await?;
         Ok(ShardOwnership { shard: shard.to_string(), holder, fence })
     }
 
     /// ♻️ Extends this ownership's TTL without changing its epoch. Errors `Fenced` if
     /// another node has since won the shard (see `LeaseStorage::renew`'s doc).
-    pub async fn renew(&self, storage: &impl db_storage::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub async fn renew(&self, storage: &impl db_io_core::LeaseStorage, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&self.shard, &self.holder.0, self.fence, ttl_ms, now_ms).await
     }
 
     /// 🕊️ Voluntarily releases this ownership (e.g. graceful shutdown / planned handoff).
-    pub async fn release(&self, storage: &impl db_storage::LeaseStorage) -> Result<(), DbError> {
+    pub async fn release(&self, storage: &impl db_io_core::LeaseStorage) -> Result<(), DbError> {
         storage.release(&self.shard, &self.holder.0, self.fence).await
     }
 
@@ -168,7 +172,7 @@ pub enum OwnershipStatus {
 }
 
 /// 👀️ Reads `shard`'s current ownership from `storage` as of `now_ms`.
-pub async fn ownership_status(storage: &impl db_storage::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
+pub async fn ownership_status(storage: &impl db_io_core::LeaseStorage, shard: &str, now_ms: u64) -> Result<OwnershipStatus, DbError> {
     Ok(match storage.current(shard, now_ms).await? {
         Some(mut info) => {
             let status = OwnershipStatus::Held { holder: NodeId(info.holder.as_str().to_string()), fence: info.fence, expires_at_ms: info.expires_at_ms };
@@ -247,10 +251,10 @@ impl std::fmt::Debug for ReplicationRejected {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, ReplicationRejected> {
+pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal_log::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, ReplicationRejected> {
     let follower_storage = follower.wal().await;
     let writer = follower_storage.acquire_writer(&document).await.map_err(ReplicationRejected::BeforeWriter)?;
-    let mut open_control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).map_err(ReplicationRejected::BeforeWriter)?;
+    let mut open_control = db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).map_err(ReplicationRejected::BeforeWriter)?;
     let (mut wal, _report) = db_wal::ArtifactWal::open_acquired(&follower_storage, writer, policy, now_ms, &mut open_control).await.map_err(ReplicationRejected::WalOpen)?;
     let outcome = async {
         let follower_state = db_sync::replay_sync_state(&follower_storage, document.clone()).await?;
@@ -263,10 +267,10 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
             db_sync::BootstrapPlan::None => Ok(ReplicationOutcome::UpToDate { frontier: follower_state.frontier }),
             db_sync::BootstrapPlan::Tail { envelopes } => {
                 let count = envelopes.len();
-                let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+                let mut control = db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
                 for envelope in &envelopes {
                     let bytes = db_sync::encode_command_envelope(envelope).await;
-                    let bytes = match db_wal::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
+                    let bytes = match db_wal_log::WalBytes::try_admit(bytes, 1024 * 1024, &mut control).await {
                         Ok(bytes) => bytes,
                         Err(mut rejected) => {
                             while rejected.close_step()? {
@@ -275,8 +279,8 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
                             return Err(rejected.into_error());
                         }
                     };
-                    let mut records = db_wal::WalRecordBatch::new();
-                    if let Err(mut record) = records.push(db_wal::WalRecord::Command(bytes)) {
+                    let mut records = db_wal_log::WalRecordBatch::new();
+                    if let Err(mut record) = records.push(db_wal_log::WalRecord::Command(bytes)) {
                         while record.close_step()? {
                             semio_framework_async::yield_once().await;
                         }
@@ -311,8 +315,8 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
 }
 
 /// 📑️ Copies the admitted read result into an independent write owner before retiring its source task.
-async fn replication_snapshot_input(mut pages: db_storage::DbIoPages) -> Result<db_storage::DbIoPages, DbError> {
-    let copied = async { db_storage::db_io_copy_page_owner(&pages)?.await }.await;
+async fn replication_snapshot_input(mut pages: db_io_core::DbIoPages) -> Result<db_io_core::DbIoPages, DbError> {
+    let copied = async { db_io_registry::db_io_copy_page_owner(&pages)?.await }.await;
     let retired = close_replication_pages(&mut pages).await;
     match (copied, retired) {
         (Ok(input), Ok(())) => Ok(input),
@@ -321,7 +325,7 @@ async fn replication_snapshot_input(mut pages: db_storage::DbIoPages) -> Result<
     }
 }
 
-async fn close_replication_pages(pages: &mut db_storage::DbIoPages) -> Result<(), DbError> {
+async fn close_replication_pages(pages: &mut db_io_core::DbIoPages) -> Result<(), DbError> {
     while pages.close_step()?.is_some() {
         semio_framework_async::yield_once().await;
     }
@@ -465,7 +469,7 @@ pub async fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> Split
 /// `storage`'s actual current state, since another node may have already won a failover while it
 /// was partitioned. A still-matching holder+fence is confirmed as `LocalWins` (not a `Tie` — it's
 /// not actually contested); anything else is decided by `resolve_split_brain` on the two fences.
-pub async fn reconcile_shard_owner(storage: &impl db_storage::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
+pub async fn reconcile_shard_owner(storage: &impl db_io_core::LeaseStorage, shard: &str, claimed: &ShardOwnership, now_ms: u64) -> Result<SplitBrainOutcome, DbError> {
     match ownership_status(storage, shard, now_ms).await? {
         OwnershipStatus::Vacant => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { holder, fence, .. } if holder == claimed.holder && fence == claimed.fence => Ok(SplitBrainOutcome::LocalWins),

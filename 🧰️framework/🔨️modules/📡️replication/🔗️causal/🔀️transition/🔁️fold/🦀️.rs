@@ -7,10 +7,9 @@ use semio_framework_value::retirement::{RetireOwned, admit_owned_retirement, own
 use std::mem::{ManuallyDrop,size_of,size_of_val};
 use semio_framework_value::retirement::controlled::{ControlledRetirement, admit_typed_controlled_retirement};
 use std::{collections::VecDeque, future::Future, ops::{Deref, DerefMut}, pin::Pin, sync::{Arc, atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering}}, task::{Context, Poll, Wake, Waker}};
+use semio_framework_replication_history_index as index;
 
-#[path = "🗂️index/🦀️.rs"]
-mod index;
-pub use index::{HistoryFoldIndexInsert,HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldIndexIter,HistoryFoldSet,HistoryFoldSetIter,HistoryFoldSetIntoIter};
+pub use semio_framework_replication_history_index::{HistoryFoldIndexInsert,HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldIndexIter,HistoryFoldSet,HistoryFoldSetIter,HistoryFoldSetIntoIter};
 
 struct FoldRetirementQueue { locked:AtomicBool, values:std::cell::UnsafeCell<VecDeque<Box<dyn ErasedSnapshotRetirement>>> }
 unsafe impl Send for FoldRetirementQueue {}
@@ -64,7 +63,7 @@ impl HistoryFoldControl {
         Ok(HistoryFoldAdmission { value: Some(value), control: self.clone() })
     }
     /// ⏭️ One pulse before each bounded work unit; cancellation is checked before publication.
-    pub async fn pulse(&self) -> Result<(), crate::ProtocolError> { FoldPulse { control: self, yielded: false }.await }
+    pub async fn pulse(&self) -> Result<(), semio_framework_replication_error::ProtocolError> { FoldPulse { control: self, yielded: false }.await }
     fn page_bytes(&self) -> usize { self.0.page_bytes.load(Ordering::Relaxed).clamp(1, 4096) }
     fn retire<T: RetireOwned>(&self, value: T) {
         let bytes=owned_retirement_birth_bytes::<T>();
@@ -139,7 +138,7 @@ impl<T: RetireOwned> Drop for HistoryFoldAdmission<T> { fn drop(&mut self) { if 
 
 struct FoldPulse<'a> { control: &'a HistoryFoldControl, yielded: bool }
 impl Future for FoldPulse<'_> {
-    type Output = Result<(), crate::ProtocolError>;
+    type Output = Result<(), semio_framework_replication_error::ProtocolError>;
     fn poll(mut self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<Self::Output> {
         if self.control.0.cancelled.load(Ordering::Acquire) { return Poll::Ready(Err(fold_error("history fold cancelled"))); }
         if !self.yielded { self.yielded = true; return Poll::Pending; }
@@ -157,8 +156,8 @@ pub enum HistoryFoldJobStep<T = HistoryFold> { Pending { completed: u64, release
 /// 🧮️ A pinned fold state machine; its immutable input is captured by the caller-owned runner.
 pub struct HistoryFoldJob<'a, T: RetireOwned = HistoryFold> {
     control: ManuallyDrop<HistoryFoldControl>,
-    future: Option<Pin<Box<dyn Future<Output = Result<T, crate::ProtocolError>> + Send + 'a>>>,
-    result: Option<Result<T, crate::ProtocolError>>,
+    future: Option<Pin<Box<dyn Future<Output = Result<T, semio_framework_replication_error::ProtocolError>> + Send + 'a>>>,
+    result: Option<Result<T, semio_framework_replication_error::ProtocolError>>,
     waker: Option<Waker>,
     future_finished: bool,
     control_closed: bool,
@@ -168,7 +167,7 @@ pub struct HistoryFoldJob<'a, T: RetireOwned = HistoryFold> {
 
 impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     /// 🌱️ Captures immutable owners without scanning their contents.
-    pub fn new<F: Future<Output = Result<T, crate::ProtocolError>> + Send + 'a>(runner: impl FnOnce(HistoryFoldControl) -> F) -> Self {
+    pub fn new<F: Future<Output = Result<T, semio_framework_replication_error::ProtocolError>> + Send + 'a>(runner: impl FnOnce(HistoryFoldControl) -> F) -> Self {
         let control = HistoryFoldControl::new();
         let future = Box::pin(runner(control.clone()));
         Self { control:ManuallyDrop::new(control), future: Some(future), result: None, waker: Some(Waker::from(Arc::new(FoldWake))), future_finished:false,control_closed:false,completed_final:0,terminal: false }
@@ -203,7 +202,7 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         if self.control_closed {
             if self.result.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
             let Some(Err(error)) = self.result.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "closed fold retained an unhanded successful result")); };
-            let step = crate::close_protocol_cause_one(error, grant)?;
+            let step = semio_framework_replication_error::close_protocol_cause_one(error, grant)?;
             if matches!(step, RetainedCloneStep::Complete(_)) { drop(self.result.take()); }
             return Ok(step);
         }
@@ -213,13 +212,13 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         if self.control.empty()&&self.future.is_some()&&grant.maximum_items<self.control.0.pending_retirement_items.load(Ordering::Relaxed){return Ok(RetainedCloneStep::Progress(empty));}
         if !self.control.empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return self.control.close_one(child);}
         if self.future.is_some(){self.control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);self.control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);self.control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);self.control.0.admitted_retirement_items.store(0,Ordering::Relaxed);drop(self.future.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:self.control.0.admitted_retirement_items.load(Ordering::Relaxed).max(1),retained_capacity_bytes:self.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:release,..empty}));}
-        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{unreachable!()};match result{Ok(value)=>{match admit_owned_retirement(value,grant){Ok((owner,progress))=>{let mut queue=self.control.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold result retirement requires reserved slot");queue.push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Err((error,value))=>{self.result=Some(Ok(value));return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{unreachable!()};let step=crate::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
+        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{unreachable!()};match result{Ok(value)=>{match admit_owned_retirement(value,grant){Ok((owner,progress))=>{let mut queue=self.control.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold result retirement requires reserved slot");queue.push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Err((error,value))=>{self.result=Some(Ok(value));return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{unreachable!()};let step=semio_framework_replication_error::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
         let mut queue=self.control.0.retirements.lock();if queue.capacity()!=0{drop(std::mem::take(&mut*queue));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}drop(queue);
         if self.waker.is_some(){drop(self.waker.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}
         self.completed_final=self.control.completed();unsafe{ManuallyDrop::drop(&mut self.control)};self.control_closed=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}))
     }
     /// 🧊️ Runs the same cursor to completion for explicit cold callers; interactive owners grant individual turns.
-    pub fn finish_cold(mut self) -> Result<T, crate::ProtocolError> {
+    pub fn finish_cold(mut self) -> Result<T, semio_framework_replication_error::ProtocolError> {
         loop {
             match self.step(self.next_step_grant(64,4096).expect("registered fold demands"), &mut || false).expect("registered history owners must retire within their grants") {
                 HistoryFoldJobStep::Pending { .. } => {},
@@ -230,10 +229,10 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
     }
 
     /// 🔎️ Borrows the original rejected result without copying or disposing it.
-    pub fn rejection(&self) -> Option<&crate::ProtocolError> { match self.result.as_ref() { Some(Err(error)) => Some(error), _ => None } }
+    pub fn rejection(&self) -> Option<&semio_framework_replication_error::ProtocolError> { match self.result.as_ref() { Some(Err(error)) => Some(error), _ => None } }
 
     /// 📤️ Transfers the original closed result into an explicit cold caller.
-    pub fn take_rejection(&mut self) -> Option<crate::ProtocolError> {
+    pub fn take_rejection(&mut self) -> Option<semio_framework_replication_error::ProtocolError> {
         if !self.control_closed || !matches!(self.result, Some(Err(_))) { return None; }
         let Some(Err(error)) = self.result.take() else { unreachable!() };
         self.terminal = true;
@@ -246,19 +245,19 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
 }
 
 impl<T:RetireOwned> ErasedSnapshotRetirement for HistoryFoldJob<'_,T>{
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.control_closed{self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>crate::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))})}else if self.control.empty()&&self.future.is_none()&&self.control.0.cancelled.load(Ordering::Acquire){match self.result.as_ref(){Some(Err(error))=>crate::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),_=>Ok(0)}}else{self.control.demands(0).map(|demand|demand.copy_bytes)}}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>crate::protocol_cause_retirement_demand(error).map(|demand|demand.capacity_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}if !self.control.empty(){return Ok(self.control.demands(copy)?.capacity_bytes);}if self.future.is_some(){return Ok(self.control.0.pending_retirement_birth.load(Ordering::Relaxed));}Ok(if self.control.0.cancelled.load(Ordering::Acquire)&&matches!(self.result,Some(Ok(_))){owned_retirement_birth_bytes::<T>()}else{0})}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0), |result| match result { Err(error) => crate::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes), Ok(_) => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result")) });}if !self.control.empty(){return Ok(self.control.demands(0)?.release_bytes);}if let Some(future)=self.future.as_ref(){return Ok(size_of_val(future.as_ref().get_ref()));}if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(0),Err(error)=>crate::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes)};}}let queue=self.control.0.retirements.lock();if queue.capacity()!=0{return Ok(queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>());}drop(queue);if self.waker.is_some(){return Ok(size_of::<[usize;2]>());}Ok(self.control_frame_bytes())}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>crate::protocol_cause_retirement_demand(error).map(|demand|demand.depth),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}let depth=if self.control.empty(){0}else{self.control.demands(0)?.depth};depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"fold nested retirement depth overflow"))}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.control_closed{self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))})}else if self.control.empty()&&self.future.is_none()&&self.control.0.cancelled.load(Ordering::Acquire){match self.result.as_ref(){Some(Err(error))=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.copy_bytes),_=>Ok(0)}}else{self.control.demands(0).map(|demand|demand.copy_bytes)}}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.capacity_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}if !self.control.empty(){return Ok(self.control.demands(copy)?.capacity_bytes);}if self.future.is_some(){return Ok(self.control.0.pending_retirement_birth.load(Ordering::Relaxed));}Ok(if self.control.0.cancelled.load(Ordering::Acquire)&&matches!(self.result,Some(Ok(_))){owned_retirement_birth_bytes::<T>()}else{0})}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0), |result| match result { Err(error) => semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes), Ok(_) => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result")) });}if !self.control.empty(){return Ok(self.control.demands(0)?.release_bytes);}if let Some(future)=self.future.as_ref(){return Ok(size_of_val(future.as_ref().get_ref()));}if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(0),Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes)};}}let queue=self.control.0.retirements.lock();if queue.capacity()!=0{return Ok(queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>());}drop(queue);if self.waker.is_some(){return Ok(size_of::<[usize;2]>());}Ok(self.control_frame_bytes())}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.depth),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}let depth=if self.control.empty(){0}else{self.control.demands(0)?.depth};depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"fold nested retirement depth overflow"))}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.request_cancel();let step=self.cleanup_one(grant,true)?;if self.control_closed&&matches!(step,RetainedCloneStep::Complete(_)){self.terminal=true;}semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"fold job closure")}
     fn terminal_is_empty(&self)->bool{self.terminal&&self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none()}
 }
 impl<T: RetireOwned> Drop for HistoryFoldJob<'_, T> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "history fold job released before exact handoff or retirement"); } }
 
 /// 📝️ Copies verified UTF-8 in fixed pages, yielding before each page allocation or write.
-pub async fn copy_history_text(text: &str, control: &HistoryFoldControl) -> Result<String, crate::ProtocolError> { copy_history_text_parts(&[text], control).await }
+pub async fn copy_history_text(text: &str, control: &HistoryFoldControl) -> Result<String, semio_framework_replication_error::ProtocolError> { copy_history_text_parts(&[text], control).await }
 
-pub async fn copy_history_text_parts(parts: &[&str], control: &HistoryFoldControl) -> Result<String, crate::ProtocolError> {
+pub async fn copy_history_text_parts(parts: &[&str], control: &HistoryFoldControl) -> Result<String, semio_framework_replication_error::ProtocolError> {
     let mut copied = control.track(String::with_capacity(parts.iter().map(|part| part.len()).sum())).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
 
     let mut scalar = [0;4];
@@ -281,9 +280,9 @@ pub async fn copy_history_text_parts(parts: &[&str], control: &HistoryFoldContro
     Ok(copied.take())
 }
 
-async fn read_fold_string(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<String, crate::ProtocolError> {
+async fn read_fold_string(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<String, semio_framework_replication_error::ProtocolError> {
     control.pulse().await?;
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
+    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, pos)?;
     let length = usize::try_from(count).map_err(|_| malformed(*pos, "string length exceeds address space"))?;
     let end = pos.checked_add(length).filter(|end| *end <= bytes.len()).ok_or_else(|| malformed(*pos, "truncated string"))?;
     let mut text = control.track(String::with_capacity(length)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -306,23 +305,23 @@ async fn read_fold_string(bytes: &[u8], pos: &mut usize, control: &HistoryFoldCo
     Ok(text.take())
 }
 
-async fn read_fold_optional(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Option<String>, crate::ProtocolError> {
+async fn read_fold_optional(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Option<String>, semio_framework_replication_error::ProtocolError> {
     control.pulse().await?;
     match read_u8(bytes, pos)? { 0 => Ok(None), 1 => read_fold_string(bytes, pos, control).await.map(Some), other => Err(malformed(*pos, format!("invalid option tag {other}"))) }
 }
 
-async fn read_fold_ids(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Vec<MutationId>, crate::ProtocolError> {
+async fn read_fold_ids(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Vec<MutationId>, semio_framework_replication_error::ProtocolError> {
     control.pulse().await?;
-    let count = crate::wire::read_varint_u64(bytes, pos)?;
+    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, pos)?;
     if count > bytes.len().saturating_sub(*pos) as u64 { return Err(malformed(*pos, "id count exceeds payload")); }
     let mut ids = control.track(Vec::with_capacity(count as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     for _ in 0..count { ids.push(MutationId(read_fold_string(bytes, pos, control).await?)); }
     Ok(ids.take())
 }
 
-async fn read_fold_payload(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Vec<u8>, crate::ProtocolError> {
+async fn read_fold_payload(bytes: &[u8], pos: &mut usize, control: &HistoryFoldControl) -> Result<Vec<u8>, semio_framework_replication_error::ProtocolError> {
     control.pulse().await?;
-    let length = crate::wire::read_varint_u64(bytes, pos)?;
+    let length = semio_framework_replication_wire_core::read_varint_u64(bytes, pos)?;
     if length > SUPERSEDE_PAYLOAD_MAX_BYTES as u64 { return Err(malformed(*pos, format!("supersede payload exceeds {SUPERSEDE_PAYLOAD_MAX_BYTES} bytes"))); }
     let end = pos.checked_add(length as usize).filter(|end| *end <= bytes.len()).ok_or_else(|| malformed(*pos, "truncated replacement payload"))?;
     let mut payload = control.track(Vec::with_capacity(length as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -331,10 +330,10 @@ async fn read_fold_payload(bytes: &[u8], pos: &mut usize, control: &HistoryFoldC
 }
 
 /// 🔀️ Decodes every transition field and repeated member cooperatively; malformed and cancelled partial owners retire.
-pub async fn decode_history_transition_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<HistoryTransition, crate::ProtocolError> {
+pub async fn decode_history_transition_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<HistoryTransition, semio_framework_replication_error::ProtocolError> {
     let mut pos = 0;
     control.pulse().await?;
-    let transition = match crate::wire::read_varint_u64(bytes, &mut pos)? {
+    let transition = match semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)? {
         0 => HistoryTransition::Revert { mutation_ids: read_fold_ids(bytes, &mut pos, control).await? },
         1 => HistoryTransition::Reinstate { mutation_ids: read_fold_ids(bytes, &mut pos, control).await? },
         2 => {
@@ -344,7 +343,7 @@ pub async fn decode_history_transition_controlled(bytes: &[u8], control: &Histor
             let mutation_ids = control.track(read_fold_ids(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             let description = control.track(read_fold_optional(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             let saved_at = control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-            let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
+            let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
             if count > bytes.len().saturating_sub(pos) as u64 { return Err(malformed(pos, "author count exceeds payload")); }
             let mut authors = control.track(Vec::with_capacity(count as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             for _ in 0..count {
@@ -368,7 +367,7 @@ pub async fn decode_history_transition_controlled(bytes: &[u8], control: &Histor
         5 => {
             let checkpoint_id = control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             let pinned_checkpoint_id = control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-            let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
+            let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
             if count > bytes.len().saturating_sub(pos) as u64 { return Err(malformed(pos, "pin count exceeds payload")); }
             let mut pins = control.track(Vec::with_capacity(count as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             for _ in 0..count { let child_uri = control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; let checkpoint_id = read_fold_string(bytes, &mut pos, control).await?; pins.push(TransitionPin { child_uri: child_uri.take(), checkpoint_id }); }
@@ -377,7 +376,7 @@ pub async fn decode_history_transition_controlled(bytes: &[u8], control: &Histor
         6 => {
             let scope = control.track(read_fold_optional(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
             if scope.as_ref().is_some_and(|scope| scope.len() > SUPERSEDE_SCOPE_MAX_BYTES) { return Err(malformed(pos, format!("supersede scope exceeds {SUPERSEDE_SCOPE_MAX_BYTES} bytes"))); }
-            let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
+            let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
             if count == 0 { return Err(malformed(pos, "supersede names no input")); }
             if count > bytes.len().saturating_sub(pos) as u64 { return Err(malformed(pos, "input count exceeds payload")); }
             let mut inputs = control.track(Vec::with_capacity(count as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -401,7 +400,7 @@ pub async fn decode_history_transition_controlled(bytes: &[u8], control: &Histor
     Ok(transition.take())
 }
 
-async fn owned_positions(ids: &[MutationId], owners: &HistoryFoldIndex<String, usize>, control: &HistoryFoldControl) -> Result<Vec<usize>, crate::ProtocolError> {
+async fn owned_positions(ids: &[MutationId], owners: &HistoryFoldIndex<String, usize>, control: &HistoryFoldControl) -> Result<Vec<usize>, semio_framework_replication_error::ProtocolError> {
     let mut positions = control.track(Vec::with_capacity(ids.len())).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let mut seen = control.track(HistoryFoldSet::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     for id in ids { control.pulse().await?; let position = *owners.get(&id.0).ok_or_else(|| fold_error(format!("transition references unknown operation {}", id.0)))?; if seen.insert(position) { positions.push(position); } }
@@ -409,7 +408,7 @@ async fn owned_positions(ids: &[MutationId], owners: &HistoryFoldIndex<String, u
 }
 
 /// 🧮️ The shared semantic fold, cooperatively ordered and indexed without whole-history collect, sort or retain.
-pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::super::MutationEnvelope], excluded: &(impl Fn(&str) -> bool + Sync), head: &ViewerHead, control: &HistoryFoldControl) -> Result<HistoryFold, crate::ProtocolError> {
+pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &(impl Fn(&str) -> bool + Sync), head: &ViewerHead, control: &HistoryFoldControl) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     let mut owners = control.track(HistoryFoldIndex::<String, usize>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let mut identities = control.track(HistoryFoldSet::<String>::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let mut events = control.track(HistoryFoldIndex::new()).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -565,7 +564,7 @@ pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[Fold
 }
 
 /// 📄️ Copies immutable protocol bytes through the same granted decoder pages.
-pub async fn copy_history_bytes(bytes: &[u8], control: &HistoryFoldControl) -> Result<Vec<u8>, crate::ProtocolError> {
+pub async fn copy_history_bytes(bytes: &[u8], control: &HistoryFoldControl) -> Result<Vec<u8>, semio_framework_replication_error::ProtocolError> {
     let mut copied = control.track(Vec::with_capacity(bytes.len())).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let mut at = 0;
     control.pulse().await?;
@@ -574,27 +573,27 @@ pub async fn copy_history_bytes(bytes: &[u8], control: &HistoryFoldControl) -> R
 }
 
 /// 🪪️ Validates an opaque quarantined envelope while copying only its operation identity.
-pub async fn history_envelope_id_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<MutationId, crate::ProtocolError> {
+pub async fn history_envelope_id_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<MutationId, semio_framework_replication_error::ProtocolError> {
     let mut pos = 0;
     let identity = control.track(MutationId(read_fold_string(bytes, &mut pos, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
+    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
     if count > bytes.len().saturating_sub(pos) as u64 { return Err(malformed(pos, "dependency count exceeds envelope")); }
     for _ in 0..count { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }
-    match crate::wire::read_varint_u64(bytes, &mut pos)? { 0 => {}, 1 => { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }, flag => return Err(malformed(pos, format!("observed flag {flag}"))) }
-    let count = crate::wire::read_varint_u64(bytes, &mut pos)?;
+    match semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)? { 0 => {}, 1 => { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }, flag => return Err(malformed(pos, format!("observed flag {flag}"))) }
+    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
     if count > bytes.len().saturating_sub(pos) as u64 { return Err(malformed(pos, "target count exceeds envelope")); }
     for _ in 0..count { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }
     for _ in 0..2 {
         control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
         control.pulse().await?;
-        let length = crate::wire::read_varint_u64(bytes, &mut pos)?;
+        let length = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
         pos = usize::try_from(length).ok().and_then(|length| pos.checked_add(length)).filter(|end| *end <= bytes.len()).ok_or_else(|| malformed(pos, "truncated envelope payload"))?;
     }
     control.pulse().await?;
-    crate::io::binary::causal::decode_hlc(bytes, &mut pos)?;
-    let flags = crate::wire::read_varint_u64(bytes, &mut pos)?;
+    semio_framework_replication_causal::binary::decode_hlc(bytes, &mut pos)?;
+    let flags = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
     if flags > 0b111 { return Err(malformed(pos, "invalid envelope flags")); }
     if flags & 1 != 0 { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }
     if flags & 2 != 0 { control.track(read_fold_string(bytes, &mut pos, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await; }
@@ -603,9 +602,9 @@ pub async fn history_envelope_id_controlled(bytes: &[u8], control: &HistoryFoldC
     Ok(identity.take())
 }
 
-async fn read_fold_blob(bytes: &[u8], position: &mut usize, control: &HistoryFoldControl) -> Result<Vec<u8>, crate::ProtocolError> {
+async fn read_fold_blob(bytes: &[u8], position: &mut usize, control: &HistoryFoldControl) -> Result<Vec<u8>, semio_framework_replication_error::ProtocolError> {
     control.pulse().await?;
-    let length = usize::try_from(crate::wire::read_varint_u64(bytes, position)?).map_err(|_| malformed(*position, "envelope payload length exceeds address space"))?;
+    let length = usize::try_from(semio_framework_replication_wire_core::read_varint_u64(bytes, position)?).map_err(|_| malformed(*position, "envelope payload length exceeds address space"))?;
     let end = position.checked_add(length).filter(|end| *end <= bytes.len()).ok_or_else(|| malformed(*position, "truncated envelope payload"))?;
     let copied = copy_history_bytes(&bytes[*position..end], control).await?;
     *position = end;
@@ -613,7 +612,7 @@ async fn read_fold_blob(bytes: &[u8], position: &mut usize, control: &HistoryFol
 }
 
 /// 📦️ Decodes quarantined envelopes in byte pages, preserving every opaque payload and exact header fact.
-pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<super::super::MutationEnvelope, crate::ProtocolError> {
+pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryFoldControl) -> Result<semio_framework_replication_causal::MutationEnvelope, semio_framework_replication_error::ProtocolError> {
     let mut position = 0;
     let mutation_id = control.track(MutationId(read_fold_string(bytes, &mut position, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let document_id = control.track(ArtifactId(read_fold_string(bytes, &mut position, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
@@ -622,8 +621,8 @@ pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryF
     let actor=control.track(ActorId(shared_actor)).unwrap_or_else(|_|unreachable!("fold actor declares shared original ownership")).await;
     let dependencies = control.track(read_fold_ids(bytes, &mut position, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     control.pulse().await?;
-    let observed = control.track(match crate::wire::read_varint_u64(bytes, &mut position)? { 0 => None, 1 => Some(MutationId(read_fold_string(bytes, &mut position, control).await?)), other => return Err(malformed(position, format!("invalid observed flag {other}"))) }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
-    let count = crate::wire::read_varint_u64(bytes, &mut position)?;
+    let observed = control.track(match semio_framework_replication_wire_core::read_varint_u64(bytes, &mut position)? { 0 => None, 1 => Some(MutationId(read_fold_string(bytes, &mut position, control).await?)), other => return Err(malformed(position, format!("invalid observed flag {other}"))) }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut position)?;
     if count > bytes.len().saturating_sub(position) as u64 { return Err(malformed(position, "target count exceeds envelope")); }
     let mut target = control.track(Vec::with_capacity(count as usize)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     for _ in 0..count { target.push(read_fold_string(bytes, &mut position, control).await?); }
@@ -632,18 +631,18 @@ pub async fn decode_history_envelope_controlled(bytes: &[u8], control: &HistoryF
     let inverse_schema = control.track(SchemaId(read_fold_string(bytes, &mut position, control).await?)).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let inverse_payload = control.track(read_fold_blob(bytes, &mut position, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     control.pulse().await?;
-    let timestamp = crate::io::binary::causal::decode_hlc(bytes, &mut position)?;
-    let flags = crate::wire::read_varint_u64(bytes, &mut position)?;
+    let timestamp = semio_framework_replication_causal::binary::decode_hlc(bytes, &mut position)?;
+    let flags = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut position)?;
     if flags > 0b111 { return Err(malformed(position, "invalid envelope flags")); }
     let transaction = control.track(if flags & 1 != 0 {
         let id = control.track(read_fold_string(bytes, &mut position, control).await?).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
         let tool = read_fold_string(bytes, &mut position, control).await?;
-        Some(crate::TransactionRef { id: id.take(), tool })
+        Some(semio_framework_replication_edit::TransactionRef { id: id.take(), tool })
     } else { None }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let verb = control.track(if flags & 2 != 0 { Some(read_fold_string(bytes, &mut position, control).await?) } else { None }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     let line = control.track(if flags & 4 != 0 { Some(read_fold_string(bytes, &mut position, control).await?) } else { None }).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
     if position != bytes.len() { return Err(malformed(position, "quarantined envelope has trailing bytes")); }
-    Ok(super::super::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: target.take(), diff: super::super::ArtifactDiff { schema: diff_schema.take(), payload: diff_payload.take() }, inverse: super::super::InverseMutation { schema: inverse_schema.take(), payload: inverse_payload.take() }, timestamp, transaction: transaction.take(), verb: verb.take(), line: line.take() })
+    Ok(semio_framework_replication_causal::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: target.take(), diff: semio_framework_replication_causal::ArtifactDiff { schema: diff_schema.take(), payload: diff_payload.take() }, inverse: semio_framework_replication_causal::InverseMutation { schema: inverse_schema.take(), payload: inverse_payload.take() }, timestamp, transaction: transaction.take(), verb: verb.take(), line: line.take() })
 }
 
 #[cfg(test)]

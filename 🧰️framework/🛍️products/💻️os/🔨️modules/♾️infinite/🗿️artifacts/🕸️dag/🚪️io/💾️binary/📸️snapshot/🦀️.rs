@@ -1,5 +1,5 @@
 //! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+use super::*;
 
 /// 📦️ Direct actual persisted fields provide ordinary and paid native endpoints.
 impl pack::snapshot::ArtifactPack for DagSnapshot {
@@ -23,5 +23,5 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, crate::os_store::serialization::ArtifactCodec)> {
      Some((semio_framework_artifact_reference::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::bare_artifact_codec::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))
  }
-fn sqlite_snapshot_codec()->Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+fn sqlite_snapshot_codec()->Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

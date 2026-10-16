@@ -22,4 +22,5 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0", features = ["float_roundtrip"] }

@@ -27,14 +27,18 @@ semio-framework-diagnostic = { path = "../../../../../🔨️modules/⚠️diagn
 semio-framework-dsl = { path = "../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-artifact-workflow-workflow = { workspace = true }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 semio-framework = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-os-host-codec-abi = { path = "../../📡️codec-abi/📦️packages/🦀️rust" }
+semio-framework-os-host-instance = { path = "../../🧱️instance/📦️packages/🦀️rust" }
+semio-framework-os-host-media-raster = { path = "../../🖼️media-export-raster/📦️packages/🦀️rust" }
+semio-framework-os-host-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
+semio-framework-os-host-space = { path = "../../../🔨️modules/🪐️space/📦️packages/🦀️rust" }
+semio-framework-os-host-workflow = { path = "../../🔀️workflow/📦️packages/🦀️rust" }
 ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 # 🚪️ `semio-framework-3d` dependency REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
 # wave IO1): the only references to it in this crate were `register_solid_exporter`/`register_solid_importer`
@@ -51,13 +55,7 @@ serde_json = "1.0.140"
 # (`os-kernel-host-crates-split.md`).
 base64_codec = { path = "../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 
-# 🖼️ SVG parsing/rasterization is a native-host capability.  Keep its renderer stack out of a
-# wasm32-wasip2 guest while retaining the target-neutral media registry.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-pixels = { path = "../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
-resvg = "0.45.1"
-tiny-skia = "0.11.4"
-usvg = "0.45.1"
 # 🗜️ `semio-framework-deflate` (its first-party `zip_archive`) backs `🔨️modules/🪐️space/🦀️.rs`'s `//#region 🔖️Zip`
 # (`export_collection_zip`/`import_collection_zip`), a host-only archive format a WASI guest never bundles.
 semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
@@ -77,5 +75,4 @@ semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/�
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }
-png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

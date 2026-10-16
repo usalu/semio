@@ -4,7 +4,7 @@ use crate::FlowHostSnapshot;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
 
 thread_local! {static OBSERVATION:std::cell::Cell<Option<(usize,usize)>>=const {std::cell::Cell::new(None)};}
-pub(super) fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize) {OBSERVATION.with(|state|assert!(state.replace(Some((0,0))).is_none()));let value=operation();let (born,freed)=OBSERVATION.with(|state|state.replace(None).unwrap());(value,born,freed)}
+pub(crate) fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize) {OBSERVATION.with(|state|assert!(state.replace(Some((0,0))).is_none()));let value=operation();let (born,freed)=OBSERVATION.with(|state|state.replace(None).unwrap());(value,born,freed)}
 struct ObservedSystem;
 unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
     unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8 {let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){let _=OBSERVATION.try_with(|state|if let Some((born,freed))=state.get(){state.set(Some((born+layout.size(),freed)));});}pointer}

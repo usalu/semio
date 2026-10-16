@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-daemon"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard daemon: the supervisor of a workspace, the views it serves, the control surface without a terminal and the lifecycle"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-daemon"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_labels = { path = "../../../🖥️terminal/🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_wire = { path = "../../🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
+ui_tui = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
+
+[dev-dependencies]
+dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
+dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
+serde_json = { workspace = true }

@@ -69,8 +69,9 @@ export type PlaygroundEntry = {
  * start of a line). */
 export function parseTomlInlineNumberArray(text: string, key: string): number[] {
   const match = text.match(new RegExp(`${key}\\s*=\\s*\\[([^\\]]*)\\]`));
-  if (!match) return [];
-  return [...match[1].matchAll(/\d+/g)].map((m) => Number(m[0]));
+  const body = match?.[1];
+  if (body === undefined) return [];
+  return [...body.matchAll(/\d+/g)].map((m) => Number(m[0]));
 }
 
 
@@ -210,8 +211,7 @@ export function generatePlaygroundRegistry(repoRoot = getWorkspaceRoot(), option
       playgrounds.push({ ...playground, examples: discoverExamplesForPlayground(repoRoot, entry.cratePath, declared, view), assets });
     }
   }
-  for (let i = 0; i < playgrounds.length; i++) {
-    const row = playgrounds[i];
+  for (const [i, row] of playgrounds.entries()) {
     if (!row.brand || row.examples.length > 0) continue;
     const donor = playgrounds.find((other) => other !== row && other.cratePath === row.cratePath && other.app === row.app && other.examples.length > 0);
     if (donor) playgrounds[i] = { ...row, examples: donor.examples, engines: row.engines.length > 0 ? row.engines : donor.engines };

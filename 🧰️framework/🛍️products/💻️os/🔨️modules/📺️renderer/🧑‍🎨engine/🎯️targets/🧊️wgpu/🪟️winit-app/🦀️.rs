@@ -22,6 +22,7 @@
 
 use crate::os_host::OsHost;
 use crate::AppInteractionState;
+use crate::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
 use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton, PointerInfo, TextEditTarget};
 
@@ -282,7 +283,7 @@ impl OsHost {
     /// took seconds, during which `admit_next_frame` refuses to build the next frame at all, so
     /// the shell advanced roughly one frame every two seconds. Every prepared GPU opportunity
     /// inside the loop is still priced by its own two-millisecond ceiling
-    /// (`🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
+    /// (`🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
     /// hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn pump_frame_inputs(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if !self.presenter.holds_presented_input_publication(){let _=self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS,cx)?;}
@@ -362,195 +363,9 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
     }
 }
 
-/// 🔀️ One normalized `ui_host::DispatchEvent` → the existing `AppRuntime` pointer/keyboard entry
-/// points, unchanged from before this packet (`handle_pointer_move`/`handle_pointer_button`/
-/// `handle_key`). `PointerButton::{Primary,Secondary,Middle}` → `{0,2,1}` matches the DOM
-/// `MouseEvent.button` convention `AppRuntime`'s own `i16` button parameter already assumed
-/// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
-/// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
-pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mut DispatchEvent) {
-    crate::log_debug(&format!("[TRACE] os_host dispatch_normalized_event {event:?}"));
-    match event {
-        DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
-            let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(*modifiers));
-            app.handle_pointer_move(*pointer, *x, *y, down, button, modifiers).await;
-        }
-        DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => {
-            let modifiers = event_modifiers_to_pointer(*modifiers);
-            app.handle_pointer_button(*pointer, *x, *y, true, pointer_button_to_i16(*button), modifiers).await;
-        }
-        DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => {
-            let modifiers = event_modifiers_to_pointer(*modifiers);
-            app.handle_pointer_button(*pointer, *x, *y, false, pointer_button_to_i16(*button), modifiers).await;
-        }
-        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer),
-        DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
-            app.handle_pointer_wheel(*x, *y, *delta_x, *delta_y, event_modifiers_to_pointer(*modifiers));
-        }
-        DispatchEvent::KeyDown { key, modifiers } => {
-            app.modifiers = event_modifiers_to_pointer(*modifiers);
-            if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
-                return;
-            }
-            if key.as_str() == "Escape" {
-                app.cancel_text_operations();
-            }
-            if let Some(action) = key_action_from_dispatch(key, true) {
-                app.handle_key(action, event_modifiers_to_pointer(*modifiers)).await;
-            }
-        }
-        DispatchEvent::KeyUp { key, modifiers } => {
-            app.modifiers = event_modifiers_to_pointer(*modifiers);
-            if let Some(action) = key_action_from_dispatch(key, false) {
-                app.handle_key(action, event_modifiers_to_pointer(*modifiers)).await;
-            }
-        }
-        DispatchEvent::Paste { text } => {
-            if crate::interpreter::apply_focused_ink_paste(text, false, &mut app.input) {
-                return;
-            }
-            if crate::interpreter::apply_focused_text_editor_text(text, &mut app.input) {
-                return;
-            }
-            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
-                app.text_fault = Some(error);
-            }
-        }
-        DispatchEvent::TextInput { text } => {
-            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
-                app.text_fault = Some(error);
-            }
-        }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } if matches!(*target, TextEditTarget::Paste | TextEditTarget::PasteImageDataUrl) => {
-            match crate::interpreter::start_focused_ink_clipboard_stream(*stream, *target == TextEditTarget::PasteImageDataUrl, *declared_bytes) {
-                Ok(true) => {}
-                Ok(false) => {
-                    let text_editor = if *target == TextEditTarget::Paste { crate::interpreter::start_focused_text_editor_stream(*stream, *declared_bytes) } else { Ok(false) };
-                    match text_editor {
-                        Ok(true) => {}
-                        Ok(false) => {
-                            if let Err(error) = app.start_text_operation(*stream, *declared_bytes) {
-                                app.text_fault = Some(error);
-                            }
-                        }
-                        Err(error) => app.text_fault = Some(error.to_string()),
-                    }
-                }
-                Err(error) => app.text_fault = Some(error.to_string()),
-            }
-        }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match crate::interpreter::start_focused_text_editor_stream(*stream, *declared_bytes) {
-            Ok(true) => {}
-            Ok(false) => {
-                if let Err(error) = app.start_text_operation(*stream, *declared_bytes) {
-                    app.text_fault = Some(error);
-                }
-            }
-            Err(error) => app.text_fault = Some(error.to_string()),
-        },
-        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(*stream, text) {
-            Ok(true) => {}
-            Ok(false) => match crate::interpreter::push_focused_text_editor_stream(*stream, text) {
-                Ok(true) => {}
-                Ok(false) => {
-                    if let Err(error) = app.push_text_operation(*stream, std::mem::take(text)) {
-                        app.text_fault = Some(error)
-                    }
-                }
-                Err(error) => app.text_fault = Some(error.to_string()),
-            },
-            Err(error) => app.text_fault = Some(error.to_string()),
-        },
-        DispatchEvent::TextEditCommit { stream } => {
-            if crate::interpreter::commit_focused_ink_clipboard_stream(*stream, &mut app.input) {
-                return;
-            }
-            if crate::interpreter::commit_focused_text_editor_stream(*stream, &mut app.input) {
-                return;
-            }
-            if let Err(error) = app.commit_text_operation(*stream) {
-                app.text_fault = Some(error);
-            }
-        }
-        DispatchEvent::TextEditAbort { stream } => {
-            if crate::interpreter::abort_focused_ink_clipboard_stream(*stream) {
-                return;
-            }
-            if crate::interpreter::abort_focused_text_editor_stream(*stream) {
-                return;
-            }
-            if let Err(error) = app.abort_text_operation(*stream) {
-                app.text_fault = Some(error);
-            }
-        }
-        DispatchEvent::Ime(ImeEvent::Commit { text }) => {
-            if crate::interpreter::apply_focused_text_editor_text(text, &mut app.input) {
-                return;
-            }
-            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
-                app.text_fault = Some(error);
-            }
-        }
-        DispatchEvent::Ime(_) => {}
-        DispatchEvent::Accessibility { target, event } => {
-            if let Err(error) = app.shell.handle_accessibility_event(target, event, &mut app.input).await {
-                app.frame_fault = Some(error);
-            }
-        }
-    }
-}
-
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn pointer_button_to_i16(button: PointerButton) -> i16 {
-    match button {
-        PointerButton::Primary => 0,
-        PointerButton::Middle => 1,
-        PointerButton::Secondary => 2,
-    }
-}
-
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-winit-app-p3c/🦀️.rs"]
 mod p3c_tests;
-
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn event_modifiers_to_pointer(modifiers: EventModifiers) -> ui_wgpu::wgpu::PointerModifiers {
-    ui_wgpu::wgpu::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
-}
-
-/// ⌨️ DOM-`KeyboardEvent.key`-shaped strings (`ui_host::logical_key_to_dispatch_string`'s own output
-/// vocabulary) → `AppRuntime`'s `KeyAction`. Space is the one level-triggered key (`Space(bool)`
-/// tracks press/release for the context-menu-hold gesture `AppRuntime::handle_key` already branches
-/// on); everything else is edge-triggered on `KeyDown` only, matching the old raw-winit dispatch path
-/// this replaces (`ui_wgpu::wgpu::dispatch_window_event`, never consulted for `KeyUp` beyond Space).
-// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::KeyAction> {
-    use ui_wgpu::wgpu::KeyAction as K;
-    if key == " " {
-        return Some(K::Space(pressed));
-    }
-    if !pressed {
-        return None;
-    }
-    match key {
-        "Backspace" => Some(K::Backspace),
-        "Delete" => Some(K::Delete),
-        "Enter" => Some(K::Enter),
-        "Escape" => Some(K::Escape),
-        "ArrowLeft" => Some(K::ArrowLeft),
-        "ArrowRight" => Some(K::ArrowRight),
-        "ArrowUp" => Some(K::ArrowUp),
-        "ArrowDown" => Some(K::ArrowDown),
-        "Home" => Some(K::Home),
-        "End" => Some(K::End),
-        "PageUp" => Some(K::PageUp),
-        "PageDown" => Some(K::PageDown),
-        "Tab" => Some(K::Tab),
-        _ if key.len() >= 2 && key.starts_with('F') && key[1..].chars().all(|c| c.is_ascii_digit()) => key[1..].parse::<u8>().ok().map(K::Function),
-        _ if key.chars().count() == 1 => Some(K::Char(key.to_string())),
-        _ => None,
-    }
-}
 
 #[cfg(not(target_arch = "wasm32"))]
 fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
@@ -568,7 +383,7 @@ fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
 mod native {
     use super::{advance_frame_generation, collect_scheduler_redraw, ime_event_from_winit, invalidate_scheduler_redraw, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
     use crate::os_host::OsHostRetirement;
-    use crate::RuntimeMailbox;
+    use crate::AppMailbox;
     use std::sync::Arc;
     use ui_render::{PhysicalSize, PointerInfo};
     #[cfg(target_arch = "wasm32")]
@@ -588,7 +403,7 @@ mod native {
     /// `dispatch_normalized_event` path above, so `boot_runtime` returns only the runtime.
     pub(crate) enum HostUserEvent {
         RuntimeReady {
-            runtime: RuntimeMailbox,
+            runtime: AppMailbox,
             presenter: crate::AppPresenter,
         },
         FrameReady,
@@ -941,7 +756,7 @@ mod native {
             let plugin_modules_root = self.plugin_modules_root.clone();
             #[cfg(not(target_arch = "wasm32"))]
             let services=self.services.clone();
-            let gpu = crate::GpuContext::from_window(window.clone()).expect("native GPU surface capture");
+            let gpu = ui_gpu::platform::NativeSurfaceCapture::capture(window.clone()).expect("native GPU surface capture").prepare();
             crate::spawn_app_task(async move {
                 let result = crate::boot_runtime(
                     window,

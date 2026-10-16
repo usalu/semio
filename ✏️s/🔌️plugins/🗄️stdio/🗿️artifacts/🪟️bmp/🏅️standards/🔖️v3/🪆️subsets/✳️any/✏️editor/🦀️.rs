@@ -49,8 +49,7 @@ use semio_s_artifact_stdio_contract::editing;
 #[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs"]
 pub(crate) mod paint_region;
 
-#[path="🧬️publication/🦀️.rs"]
-pub(crate) mod publication;
+pub(crate) use semio_s_artifact_stdio_bmp_editor::editor::bmp::publication;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -108,7 +107,7 @@ fn bmp_editor_native_command_from_action(action: &str, args: Option<&semio_frame
         _ => Err(Fault::from(format!("action '{action}' is not a BMP editor action"))),
     }
 }
-fn bmp_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpEditCommand, Fault> {
+pub fn bmp_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpEditCommand, Fault> {
     editing::snapshot_editing_command_from_action(action, args, bmp_editor_native_command_from_action)
 }
 fn bmp_editor_retained_extent(command: &BmpEditCommand, _snapshot: &BmpSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -501,3 +500,110 @@ pub fn create_bmp_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_BMP_DOCUMENT_SCHEMA};
+use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+pub use crate::schema::mutations::BmpMutation;
+pub use crate::schema::snapshot::BmpSnapshot;
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("bmp", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `bmp` declares: its schema, format, inference descriptor, composers and document codec.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::schema::bmp_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor()])
+        .composers(crate::standards::v_v3::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") })
+        .try_build()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.bmp".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Bmp", "Bmp"),
+        source_format: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_BMP_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "bmp", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems8
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems9

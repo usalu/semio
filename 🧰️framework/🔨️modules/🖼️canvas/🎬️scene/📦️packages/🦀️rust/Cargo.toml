@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-canvas-scene"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canvas scene: the first-party command list and paint types, the portable draw list, SVG icon painting, shaped labels, theme paints and the GPU sessions that rasterize a scene"
+
+[package.metadata.semio]
+role = "framework"
+id = "canvas-scene"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-async = { workspace = true }
+geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+serde_json = { workspace = true }
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+vello = { version = "0.9.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.10.0", default-features = true, features = ["wgpu"] }
+kurbo = "0.13.1"
+peniko = "0.6.1"
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+semio-framework-intrinsic-size = { path = "../../../../📏️intrinsic-size/📦️packages/🦀️rust" }
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = "0.3.83"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[dev-dependencies]
+semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+
+[[test]]
+name="original_scene_retirement"
+path="../../../♻️retirement/🎬️scene/🧪️tests/🦀️.rs"

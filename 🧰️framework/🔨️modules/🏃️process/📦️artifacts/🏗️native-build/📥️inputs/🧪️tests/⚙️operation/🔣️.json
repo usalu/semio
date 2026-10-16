@@ -1,0 +1,212 @@
+{
+  "cases": [
+    {
+      "name": "plain",
+      "failed": false,
+      "preserved": "value",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "narrow",
+      "failed": false,
+      "preserved": "value",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "duplicate",
+      "failed": true,
+      "preserved": "continuation",
+      "facts": {
+        "attempts": 66,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "late",
+      "failed": true,
+      "preserved": "continuation",
+      "facts": {
+        "attempts": 3,
+        "late": true,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "detached-descendant",
+      "failed": false,
+      "preserved": "value",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "body-error",
+      "failed": true,
+      "preserved": "marker",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "body-undefined",
+      "failed": true,
+      "preserved": "undefined",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "port-primary",
+      "failed": true,
+      "preserved": "primary",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": true,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "cancelled",
+      "failed": true,
+      "preserved": "cancelled",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": true
+      }
+    },
+    {
+      "name": "foreign",
+      "failed": true,
+      "preserved": "refinement",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": false,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "missing",
+      "failed": true,
+      "preserved": "continuation",
+      "facts": {
+        "attempts": 0,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "copied",
+      "failed": true,
+      "preserved": "issuance",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": false,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "descendant-error",
+      "failed": true,
+      "preserved": "marker",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "descendant-undefined",
+      "failed": true,
+      "preserved": "undefined",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "detached-continuation",
+      "failed": false,
+      "preserved": "value",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": false,
+        "portFault": false,
+        "validControl": true,
+        "cancelled": false
+      }
+    },
+    {
+      "name": "port-undefined",
+      "failed": true,
+      "preserved": "undefined",
+      "facts": {
+        "attempts": 1,
+        "late": false,
+        "consumerFault": true,
+        "portFault": true,
+        "validControl": true,
+        "cancelled": false
+      }
+    }
+  ]
+}

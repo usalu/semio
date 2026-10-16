@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "linux",
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "platform": "linux",
+        "layers": [
+          {
+            "VITE_FEATURE": "alpha",
+            "TMPDIR": "/old/a",
+            "TMP": "/old/b",
+            "TEMP": "/old/c",
+            "SEMIO_VITE_CACHE_DIRECTORY": "/old/cache",
+            "SEMIO_BUILD_MODE": "release",
+            "NODE_DISABLE_COMPILE_CACHE": "0",
+            "UNICODE": "Grüße 🌍",
+            "SEMIO_SCRIPT_PROCESS_INVOCATION": "first-wire",
+            "SEMIO_COMPILER_CAPACITY_HELD": "true",
+            "SEMIO_COMPILER_PARALLELISM": "999",
+            "GOMAXPROCS": "999"
+          }
+        ]
+      },
+      "directory": "/owned/state/compiler/linux-x64/prototype/abc"
+    },
+    {
+      "name": "windows",
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "platform": "win32",
+        "layers": [
+          {
+            "VITE_FEATURE": "alpha",
+            "Temp": "C:\\old",
+            "tmpdir": "C:\\old2",
+            "Path": "C:\\tools"
+          }
+        ]
+      },
+      "directory": "C:\\owned\\state\\compiler\\win32-x64\\release\\abc"
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "mode": "debug",
+      "platform": "linux",
+      "layers": [
+        {}
+      ]
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "platform": "linux",
+      "minimumBytes": 1,
+      "layers": [
+        {}
+      ]
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "platform": "linux",
+      "layers": [
+        {
+          "BAD=KEY": "x"
+        }
+      ]
+    }
+  ]
+}

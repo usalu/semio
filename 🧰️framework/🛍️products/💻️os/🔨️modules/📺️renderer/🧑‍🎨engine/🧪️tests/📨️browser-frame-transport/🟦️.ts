@@ -968,7 +968,7 @@ describe("browser frame worker transport", () => {
   it("carries the resolved shell brand row on the boot descriptor", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const serveSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"), "utf8");
-    const rendererSource = readModuleTreeSource(join(root, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
+    const rendererSource = readModuleTreeSource(join(root, "../../🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs"));
 
     const unbranded = resolveWgpuBootDescriptor({ defaultVariant: "s" });
     expect(unbranded.brandId).toBe("");

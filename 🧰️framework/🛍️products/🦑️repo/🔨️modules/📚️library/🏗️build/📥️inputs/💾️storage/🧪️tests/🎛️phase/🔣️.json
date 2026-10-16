@@ -1,0 +1,26 @@
+[
+  {
+    "phase": "narrow",
+    "accepted": true
+  },
+  {
+    "phase": "forged",
+    "accepted": false
+  },
+  {
+    "phase": "cancelled",
+    "accepted": false
+  },
+  {
+    "phase": "sibling",
+    "accepted": false
+  },
+  {
+    "phase": "undefined-primary",
+    "accepted": true
+  },
+  {
+    "phase": "frozen-primary",
+    "accepted": true
+  }
+]

@@ -1,10 +1,9 @@
 //! 🧩️ 🧩️ S Studio app command — `remove-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
 use semio_framework_os::workflow::RemoveNode;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "remove-app-instance")]
@@ -12,10 +11,10 @@ pub struct RemoveAppInstance {
     pub node_id: Option<String>,
 }
 
-pub(crate) async fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub async fn remove_with_selection(payload: &RemoveAppInstance, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let resolved_node_id = match payload.node_id.clone() {
         Some(node_id) => Some(node_id),
-        None => crate::engine::space::primary_selected_node_id(selected, config).await,
+        None => semio_hub_space_operations::primary_selected_node_id(selected, config).await,
     };
     match resolved_node_id {
         Some(node_id) => {
@@ -38,7 +37,7 @@ pub(crate) async fn remove_with_selection(payload: &RemoveAppInstance, config: &
 /// `apply` below instead); `payload.node_id` (when set) is unaffected, and the fallback still honors
 /// `config.active_node_id` — only the "fall back to the live selection" step degrades to empty.
 pub fn handle(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(remove_with_selection(payload, cfg.snapshot, &[])))
+    Ok(semio_hub_space_operations::resolve_future(remove_with_selection(payload, cfg.snapshot, &[])))
 }
 
 pub async fn apply(payload: &RemoveAppInstance, _doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {

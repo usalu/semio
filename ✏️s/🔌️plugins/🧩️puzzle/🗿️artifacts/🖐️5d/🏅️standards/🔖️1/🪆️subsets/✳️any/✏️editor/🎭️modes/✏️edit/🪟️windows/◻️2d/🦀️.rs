@@ -16,6 +16,7 @@ use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target
 use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use semio_framework_pack_json::{json, Value};
+use semio_framework_os_infinite::BoardPlacementNaming;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "puzzle5d-2d";
@@ -171,6 +172,12 @@ fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
     json!({ "nodeWeights": runtime.object_kind_weights, "handleWeights": runtime.vortex_kind_weights }).to_string()
 }
 
+/// 🪧️ The ids a 5d board's brush placements are minted under, owned by this plugin: 5d parts placed on the board have
+/// always carried the puzzle board's `puzzle2d.brush.<serial>` / `puzzle2d.brush.edge.<serial>` ids, kept byte-identical.
+pub fn puzzle5d_board_placement_naming() -> BoardPlacementNaming {
+    BoardPlacementNaming { brush_node_prefix: "puzzle2d.brush.".into(), brush_edge_prefix: "puzzle2d.brush.edge.".into() }
+}
+
 /// 🎬️ The board host's whole scene payload for one render — `pub` so the cross-pane interaction law
 /// can assert the board and world projections of ONE snapshot against each other.
 pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
@@ -202,6 +209,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
         area_brush_size: None,
         domain_id: Some(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN.into()),
+        placement_naming: Some(puzzle5d_board_placement_naming().to_json()),
         suggestion_menu_json: None,
         tool_run_trace: None,
         lanes: Vec::new(),

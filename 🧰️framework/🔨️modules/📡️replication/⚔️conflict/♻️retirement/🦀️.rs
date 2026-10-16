@@ -1,5 +1,6 @@
 //! 🧯️ Original typed conflicts and causal envelopes keep all native fields through granted closure.
-use crate::{Conflict,MutationEnvelope};
+use crate::Conflict;
+use semio_framework_replication_causal::MutationEnvelope;
 use semio_framework_value::{ErasedSnapshotRetirement,ValueError,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
 struct OriginalProtocolOwner<T:RetireOwned>(ControlledRetirement<T>);

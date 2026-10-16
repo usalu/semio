@@ -10,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, UiComponentSceneNode};
+use semio_framework_os_renderer_wgpu_scene_state::{GUMBALL, GumballConfig, GumballGesture, GumballHandle, GumballMotion, GumballSlot, GumballView, MOVE_EPSILON, ModelToLayer, TURN_EPSILON, pivot_screen, total};
 
 //#region 📐️Geometry
 /// 📏️ Screen pixels from the pivot to the move knobs; the scale knobs sit at three quarters of it on the diagonals.
@@ -20,25 +21,6 @@ pub(crate) const ROTATE_RADIUS: f64 = 44.0;
 pub(crate) const HIT_RADIUS: f64 = 10.0;
 /// 💍️ Screen half-width of the turn ring's press band.
 pub(crate) const RING_HIT_BAND: f64 = 4.0;
-const MOVE_EPSILON: f64 = 1e-9;
-const TURN_EPSILON: f64 = 1e-6;
-
-/// 🎛️ The handle set a gumball arms.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct GumballConfig {
-    pub move_axes: bool,
-    pub rotate: bool,
-    pub scale_axes: bool,
-    pub scale_uniform: bool,
-}
-
-/// 🗺️ The affine map from model to layer units per axis: `layer = model × scale + offset`.
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
-pub(crate) struct ModelToLayer {
-    pub scale: [f64; 2],
-    pub offset: [f64; 2],
-}
 
 const IDENTITY_MAP: ModelToLayer = ModelToLayer { scale: [1.0, 1.0], offset: [0.0, 0.0] };
 
@@ -70,71 +52,6 @@ pub(crate) fn parse_meta(layers_json: &str) -> Option<GumballMeta> {
     layers.into_iter().filter(|layer| layer.role.as_deref() == Some("meta")).find_map(|layer| layer.gumball.filter(|gumball| gumball.active))
 }
 
-/// 🔭️ The host view the gumball is painted and measured in: the camera and the canvas's logical size, points local to
-/// the canvas's top-left corner (`Canvas2dHost`'s `worldToScreenLogical`).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct GumballView {
-    pub camera_x: f64,
-    pub camera_y: f64,
-    pub zoom: f64,
-    pub width: f64,
-    pub height: f64,
-}
-
-impl GumballView {
-    fn zoom(&self) -> f64 {
-        if self.zoom == 0.0 || self.zoom.is_nan() {
-            1.0
-        } else {
-            self.zoom
-        }
-    }
-
-    fn world_to_screen(&self, x: f64, y: f64) -> (f64, f64) {
-        ((x - self.camera_x) * self.zoom() + self.width * 0.5, (y - self.camera_y) * self.zoom() + self.height * 0.5)
-    }
-
-    fn screen_to_world(&self, x: f64, y: f64) -> (f64, f64) {
-        ((x - self.width * 0.5) / self.zoom() + self.camera_x, (y - self.height * 0.5) / self.zoom() + self.camera_y)
-    }
-}
-
-/// ✋️ One gumball handle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum GumballHandle {
-    MoveX,
-    MoveY,
-    Rotate,
-    ScaleX,
-    ScaleY,
-    ScaleUniform,
-}
-
-impl GumballHandle {
-    /// 🎚️ The verb the handle drags with.
-    pub(crate) fn verb(self) -> &'static str {
-        match self {
-            Self::MoveX | Self::MoveY => "translateSelection",
-            Self::Rotate => "rotateSelection",
-            Self::ScaleX | Self::ScaleY | Self::ScaleUniform => "scaleSelection",
-        }
-    }
-
-    fn enabled(self, config: &GumballConfig) -> bool {
-        match self {
-            Self::MoveX | Self::MoveY => config.move_axes,
-            Self::ScaleX | Self::ScaleY => config.scale_axes,
-            Self::ScaleUniform => config.scale_uniform,
-            Self::Rotate => config.rotate,
-        }
-    }
-}
-
-/// 📍️ The pivot in local screen pixels under `view`.
-pub(crate) fn pivot_screen(pivot_layer: [f64; 2], view: &GumballView) -> (f64, f64) {
-    view.world_to_screen(pivot_layer[0], pivot_layer[1])
-}
-
 /// 🔘️ Every knob's screen centre about `pivot`, topmost first — the order a press resolves them in.
 pub(crate) fn knobs(pivot: (f64, f64)) -> [(GumballHandle, f64, f64); 5] {
     let diagonal = HANDLE_LENGTH * 0.75;
@@ -162,15 +79,6 @@ pub(crate) fn handle_at(meta: &GumballMeta, view: &GumballView, x: f64, y: f64) 
         .or_else(|| (meta.config.rotate && ((x - pivot.0).hypot(y - pivot.1) - ROTATE_RADIUS).abs() <= RING_HIT_BAND).then_some(GumballHandle::Rotate))
 }
 //#endregion 📐️Geometry
-
-//#region 🧮️Algebra
-/// 🎬️ A pose delta in model units: an offset, a turn or a pair of factors.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum GumballMotion {
-    Translate { dx: f64, dy: f64 },
-    Rotate { angle: f64 },
-    Scale { sx: f64, sy: f64 },
-}
 
 /// 🚦️ Where a dispatch sits in a streamed gesture; absent = a one-shot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -230,67 +138,9 @@ impl GumballDispatch {
     }
 }
 
-/// 🤏️ One gumball gesture in flight: the handle, the local press point, the pivot, the map, the pinned ids, whether it
-/// streams, the last cumulative pose delta and whether a stream tick went out.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct GumballGesture {
-    pub kind: GumballHandle,
-    pub start: (f64, f64),
-    pub pivot_layer: [f64; 2],
-    pub model_to_layer: ModelToLayer,
-    pub ids: Vec<String>,
-    pub live: bool,
-    pub total: Option<GumballMotion>,
-    pub streamed: bool,
-}
-
 /// ✊️ The gesture a press of `kind` at local `(x, y)` opens.
-pub(crate) fn begin(meta: &GumballMeta, kind: GumballHandle, x: f64, y: f64) -> GumballGesture {
+pub fn begin(meta: &GumballMeta, kind: GumballHandle, x: f64, y: f64) -> GumballGesture {
     GumballGesture { kind, start: (x, y), pivot_layer: meta.pivot_layer, model_to_layer: meta.model_to_layer.unwrap_or(IDENTITY_MAP), ids: meta.selection_ids.clone(), live: meta.live_dispatch, total: None, streamed: false }
-}
-
-fn layer_to_model(map: &ModelToLayer, (x, y): (f64, f64)) -> (f64, f64) {
-    ((x - map.offset[0]) / map.scale[0], (y - map.offset[1]) / map.scale[1])
-}
-
-fn wrap_angle(angle: f64) -> f64 {
-    angle - 2.0 * std::f64::consts::PI * (angle / (2.0 * std::f64::consts::PI)).round()
-}
-
-/// 🧮️ The cumulative pose delta from the press to local `(x, y)` — a turn unwrapped against the last total; `None` when
-/// it moves nothing.
-pub(crate) fn total(gesture: &GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballMotion> {
-    let pivot = pivot_screen(gesture.pivot_layer, view);
-    let (start_x, start_y) = gesture.start;
-    match gesture.kind {
-        GumballHandle::MoveX | GumballHandle::MoveY => {
-            let before = layer_to_model(&gesture.model_to_layer, view.screen_to_world(start_x, start_y));
-            let after = layer_to_model(&gesture.model_to_layer, view.screen_to_world(x, y));
-            let dx = if gesture.kind == GumballHandle::MoveX { after.0 - before.0 } else { 0.0 };
-            let dy = if gesture.kind == GumballHandle::MoveY { after.1 - before.1 } else { 0.0 };
-            (dx.abs() >= MOVE_EPSILON || dy.abs() >= MOVE_EPSILON).then_some(GumballMotion::Translate { dx, dy })
-        }
-        GumballHandle::Rotate => {
-            let raw = (y - pivot.1).atan2(x - pivot.0) - (start_y - pivot.1).atan2(start_x - pivot.0);
-            let previous = match gesture.total {
-                Some(GumballMotion::Rotate { angle }) => angle,
-                _ => 0.0,
-            };
-            let angle = previous + wrap_angle(raw - previous);
-            (angle.abs() >= TURN_EPSILON).then_some(GumballMotion::Rotate { angle })
-        }
-        GumballHandle::ScaleX | GumballHandle::ScaleY | GumballHandle::ScaleUniform => {
-            let reach0 = (start_x - pivot.0).hypot(start_y - pivot.1);
-            let reach1 = (x - pivot.0).hypot(y - pivot.1);
-            let ratio = if reach0 > 1e-6 { reach1 / reach0 } else { 1.0 };
-            let (sx, sy) = match gesture.kind {
-                GumballHandle::ScaleUniform => (ratio, ratio),
-                GumballHandle::ScaleX => (ratio, 1.0),
-                _ => (1.0, ratio),
-            };
-            ((ratio - 1.0).abs() >= TURN_EPSILON).then_some(GumballMotion::Scale { sx, sy })
-        }
-    }
 }
 
 /// ➖️ The increment from `previous` to `current` — offsets and angles subtract, factors divide; `None` when it moves
@@ -313,7 +163,7 @@ pub(crate) fn increment(previous: Option<GumballMotion>, current: GumballMotion)
     }
 }
 
-fn identity(kind: GumballHandle) -> GumballMotion {
+pub fn identity(kind: GumballHandle) -> GumballMotion {
     match kind {
         GumballHandle::MoveX | GumballHandle::MoveY => GumballMotion::Translate { dx: 0.0, dy: 0.0 },
         GumballHandle::Rotate => GumballMotion::Rotate { angle: 0.0 },
@@ -321,13 +171,13 @@ fn identity(kind: GumballHandle) -> GumballMotion {
     }
 }
 
-fn dispatch(gesture: &GumballGesture, motion: Option<GumballMotion>, phase: Option<GumballPhase>) -> GumballDispatch {
+pub fn dispatch(gesture: &GumballGesture, motion: Option<GumballMotion>, phase: Option<GumballPhase>) -> GumballDispatch {
     GumballDispatch { verb: gesture.kind.verb(), ids: gesture.ids.clone(), motion, phase }
 }
 
 /// 🌊️ A pointer move: a live gesture streams the increment since its last tick; a non-live one records its total for the
 /// ghost.
-pub(crate) fn drag(gesture: &mut GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
+pub fn drag(gesture: &mut GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
     let current = total(gesture, view, x, y)?;
     if !gesture.live {
         gesture.total = Some(current);
@@ -341,7 +191,7 @@ pub(crate) fn drag(gesture: &mut GumballGesture, view: &GumballView, x: f64, y: 
 
 /// 💾️ The release at local `(x, y)`: a live gesture commits its ONE transaction with the remaining tail (the identity
 /// when nothing is left; nothing when it never moved); a non-live one dispatches its whole pose delta as ONE one-shot.
-pub(crate) fn release(gesture: &GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
+pub fn release(gesture: &GumballGesture, view: &GumballView, x: f64, y: f64) -> Option<GumballDispatch> {
     let current = total(gesture, view, x, y);
     if !gesture.live {
         return current.map(|motion| dispatch(gesture, Some(motion), None));
@@ -351,46 +201,25 @@ pub(crate) fn release(gesture: &GumballGesture, view: &GumballView, x: f64, y: f
 }
 
 /// 🧯️ A host cancel: a live gesture that streamed drops its open transaction with zero trace; anything else sends nothing.
-pub(crate) fn cancel(gesture: &GumballGesture, reason: &'static str) -> Option<GumballDispatch> {
+pub fn cancel(gesture: &GumballGesture, reason: &'static str) -> Option<GumballDispatch> {
     (gesture.live && gesture.streamed).then(|| dispatch(gesture, None, Some(GumballPhase::Abort(reason))))
 }
 //#endregion 🧮️Algebra
-
-//#region 🖱️Input
-/// 🪪️ The one gumball gesture the canvas owns: its pointer, window, host and document generation, the scene's address,
-/// the gesture and the last local pointer (the ghost's anchor).
-#[derive(Clone, Debug)]
-struct GumballSlot {
-    pointer_id: ui_render::PointerId,
-    window_id: String,
-    host_id: String,
-    document_generation: u64,
-    controller_id: String,
-    surface_id: String,
-    view: GumballView,
-    gesture: GumballGesture,
-    pointer: (f64, f64),
-    cancellation_requested: bool,
-}
-
-thread_local! {
-    static GUMBALL: RefCell<Option<GumballSlot>> = const { RefCell::new(None) };
-}
 
 fn view_of(inner: Rect, camera: (f64, f64, f64)) -> GumballView {
     GumballView { camera_x: camera.0, camera_y: camera.1, zoom: camera.2, width: f64::from(inner.w), height: f64::from(inner.h) }
 }
 
-fn local(inner: Rect, x: f32, y: f32) -> (f64, f64) {
+pub fn local(inner: Rect, x: f32, y: f32) -> (f64, f64) {
     (f64::from(x - inner.x), f64::from(y - inner.y))
 }
 
 /// 🟢️ Whether the scene's Transform utility is armed — React shows the overlay under exactly this utility.
-fn armed(scene: &UiComponentSceneNode) -> bool {
-    crate::scenes::canvas_active_utility(scene).as_deref() == Some("transform")
+pub fn armed(scene: &UiComponentSceneNode) -> bool {
+    semio_framework_os_renderer_wgpu_scene_state::canvas_active_utility(scene).as_deref() == Some("transform")
 }
 
-fn publish(slot: &GumballSlot, dispatch: Option<GumballDispatch>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn publish(slot: &GumballSlot, dispatch: Option<GumballDispatch>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let Some(dispatch) = dispatch else {
         commit();
         return Ok(());
@@ -400,7 +229,7 @@ fn publish(slot: &GumballSlot, dispatch: Option<GumballDispatch>, input: &mut ui
         entries.insert("surfaceId".into(), json!(slot.surface_id));
     }
     let action = ActionDescriptor { controller_id: slot.controller_id.clone(), action: dispatch.verb.into(), args: Some(semio_framework::DslValue::from(&args)) };
-    crate::scenes::write_scene_action_batch(input, &[action], commit)
+    semio_framework_os_renderer_wgpu_scene_state::write_scene_action_batch(input, &[action], commit)
 }
 
 fn clear_slot() {
@@ -417,7 +246,7 @@ fn owns(slot: &GumballSlot, pointer_id: ui_render::PointerId, window_id: &str, h
 /// nothing — the press never reaches the document, as in React) and the release ends the gesture it owns. `None` leaves
 /// the event to the canvas's own gestures (middle-button pan, other utilities).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pointer_button_into(
+pub fn pointer_button_into(
     scene: &UiComponentSceneNode,
     inner: Rect,
     pointer_id: ui_render::PointerId,
@@ -465,7 +294,7 @@ pub(crate) fn pointer_button_into(
 /// 🐾️ The Canvas2d pointer move seam: the gesture this pointer owns follows it anywhere (pointer capture), streaming a
 /// live tick or moving the local ghost. `None` when the pointer owns no gumball gesture.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn pointer_move_into(
+pub fn pointer_move_into(
     scene: &UiComponentSceneNode,
     inner: Rect,
     pointer_id: ui_render::PointerId,
@@ -487,9 +316,9 @@ pub(crate) fn pointer_move_into(
 
 /// 🛑️ Cancels the gumball gesture `pointer_id` owns (any, when `None`): a live gesture that streamed sends its abort with
 /// `reason`; the slot clears either way. `true` when a gesture was cancelled.
-pub(crate) fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'static str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'static str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(slot) = GUMBALL.with(|cell| cell.borrow().clone().filter(|slot| pointer_id.is_none_or(|pointer_id| slot.pointer_id == pointer_id))) else { return Ok(false) };
-    if crate::interpreter::ui_document_close_pending_for(&slot.window_id) || crate::scenes::scene_host_retiring(&slot.host_id) {
+    if crate::element_contracts::ui_document_close_pending_for(&slot.window_id) || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&slot.host_id) {
         clear_slot();
         return Ok(true);
     }
@@ -498,7 +327,7 @@ pub(crate) fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'st
 }
 
 /// 🥀️ Cancels a gesture of `window_id`/`host_id` opened on another document generation than the live one.
-pub(crate) fn cancel_stale_into(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn cancel_stale_into(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let stale = GUMBALL.with(|cell| cell.borrow().as_ref().filter(|slot| slot.window_id == window_id && slot.host_id == host_id && slot.document_generation != document_generation).map(|slot| slot.pointer_id));
     if let Some(pointer_id) = stale {
         cancel_into(Some(pointer_id), "captureLost", input)?;
@@ -506,22 +335,13 @@ pub(crate) fn cancel_stale_into(window_id: &str, host_id: &str, document_generat
     Ok(())
 }
 
-/// 🚩️ Asks the next terminal step to cancel the gesture `matches(window_id, host_id, document_generation)` selects.
-pub(crate) fn request_cancel(mut matches: impl FnMut(&str, &str, u64) -> bool) {
-    GUMBALL.with(|cell| {
-        if let Some(slot) = cell.borrow_mut().as_mut().filter(|slot| matches(&slot.window_id, &slot.host_id, slot.document_generation)) {
-            slot.cancellation_requested = true;
-        }
-    });
-}
-
 /// ⏰️ The pointer whose gesture a terminal step must cancel now.
-pub(crate) fn cancel_due() -> Option<ui_render::PointerId> {
+pub fn cancel_due() -> Option<ui_render::PointerId> {
     GUMBALL.with(|cell| cell.borrow().as_ref().filter(|slot| slot.cancellation_requested).map(|slot| slot.pointer_id))
 }
 
 /// 🧹️ Drops the gesture of a window entering close (the app's `retiring` host event aborts its transaction).
-pub(crate) fn retire_window(window_id: &str) -> bool {
+pub fn retire_window(window_id: &str) -> bool {
     GUMBALL.with(|cell| {
         let mut slot = cell.borrow_mut();
         if slot.as_ref().is_some_and(|slot| slot.window_id == window_id) {
@@ -545,7 +365,7 @@ fn disc(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color
     draw.push_triangle_fan(&circle_points(cx, cy, radius, CIRCLE_SEGMENTS), color);
 }
 
-fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32, dashed: bool) {
+pub fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32, dashed: bool) {
     let points = circle_points(cx, cy, radius, if dashed { RING_DASHES * 2 } else { CIRCLE_SEGMENTS });
     for index in (0..points.len()).step_by(if dashed { 2 } else { 1 }) {
         let (a, b) = (points[index], points[(index + 1) % points.len()]);
@@ -555,7 +375,7 @@ fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color
 
 /// 🎨️ Paints the armed gumball of `scene` over its canvas `inner` under `camera` — the handles of
 /// `🧭️gumball/🟦️.tsx`, the press marker while a gesture is open and the ghost of a non-live gesture.
-pub(crate) fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &ui_wgpu::wgpu::Theme, draw: &mut ui_wgpu::wgpu::DrawList) {
+pub fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &ui_wgpu::wgpu::Theme, draw: &mut ui_wgpu::wgpu::DrawList) {
     if !armed(scene) || inner.w <= 0.0 || inner.h <= 0.0 {
         return;
     }

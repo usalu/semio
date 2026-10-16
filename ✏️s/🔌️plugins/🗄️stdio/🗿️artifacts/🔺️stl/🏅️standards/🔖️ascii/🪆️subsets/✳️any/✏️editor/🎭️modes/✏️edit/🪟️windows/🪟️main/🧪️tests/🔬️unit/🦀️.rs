@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
+use semio_framework_plugin::MeshWindowKit;
+use crate::editor::stl::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_editable_mesh_window_kit() {

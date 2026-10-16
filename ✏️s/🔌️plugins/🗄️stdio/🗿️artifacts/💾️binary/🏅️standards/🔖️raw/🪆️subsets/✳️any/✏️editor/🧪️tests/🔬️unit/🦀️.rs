@@ -1,4 +1,11 @@
-use super::*;
+use crate::editor::binary::modes::edit::windows::main;
+use crate::schema::mutations::replace_byte_range;
+use crate::{BinaryMutation, BinarySnapshot};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::Emit;
+use crate::editor::binary::{parse_hex_dump, binary_text_emit};
+use crate::editor::binary::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_binary_editor_builds_a_definition_for_the_editor_role() {
@@ -57,7 +64,7 @@ fn text_edit_requires_an_explicit_change_set_and_allows_intentional_empty_bytes(
 /// corpus's `replace-byte-range` per touched byte run (last first), or refused; applying them lands on the bytes the digits mean.
 #[test]
 fn an_applied_change_set_is_exactly_the_corpus_byte_ranges() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✂️hex-splices/🔣️.json")).expect("hex-splices corpus");
+    let corpus: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/✂️hex-splices/🔣️.json")).expect("hex-splices corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("id");
         let source = BinarySnapshot { bytes: parse_hex_dump(case["before"].as_str().expect("before")).expect("corpus hex"), ..BinarySnapshot::default() };
@@ -111,4 +118,9 @@ fn a_document_details_edit_is_one_byte_splice() {
     assert_eq!((range(&moved, 0), range(&moved, 1)), ((0, 1, vec![]), (2, 0, vec![0xde])));
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::BinaryEditor, || semio_framework_plugin::App { definition: super::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::binary::BinaryEditor, || semio_framework_plugin::App { definition: crate::editor::binary::create_binary_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️raw/🪆️subsets/✳️any");
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

@@ -8,18 +8,13 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use futures::StreamExt;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord, Tracer};
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::observability::HubRouteMetricsV1;
-use semio_hub::auth::rate_limit::{RateLimitClassV1, RateLimitDecisionV1, RateLimitRefusalV1, RateLimitSubjectV1};
-use semio_hub::auth::AuthErrorCodeV1;
-use semio_hub::directory::SessionCapability;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_observability::HubRouteMetricsV1;
+use semio_hub_auth::rate_limit::{RateLimitClassV1, RateLimitDecisionV1, RateLimitRefusalV1};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use crate::startup::HubError;
-use crate::support::bearer;
-use crate::state::HubState;
-use crate::session_agent::auth_error_response;
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 🔖️AdminAuth
@@ -33,7 +28,7 @@ use server::storage::SessionStore as _;
 /// is a decision an operator must take out loud, because anyone who can reach the socket directly
 /// can also set it: it is only meaningful when nothing but the proxy can reach the port.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ForwardedTlsTrustV1 {
+pub enum ForwardedTlsTrustV1 {
     /// 🚪️ Forwarding headers are ignored entirely. The hub is reachable only on loopback, so the
     /// transport is as private as the machine is.
     Untrusted,
@@ -45,7 +40,7 @@ pub(crate) enum ForwardedTlsTrustV1 {
 impl ForwardedTlsTrustV1 {
     /// 🔐️ `OS_HUB_TRUSTED_FORWARDING=none|proxy`, default `none`. An unrecognized value
     /// fails the boot rather than silently choosing the permissive answer.
-    pub(crate) fn from_environment() -> Result<Self, HubError> {
+    pub fn from_environment() -> Result<Self, HubError> {
         match std::env::var("OS_HUB_TRUSTED_FORWARDING").as_deref() {
             Err(std::env::VarError::NotPresent) | Ok("") | Ok("none") => Ok(Self::Untrusted),
             Ok("proxy") => Ok(Self::TerminatingProxy),
@@ -55,7 +50,7 @@ impl ForwardedTlsTrustV1 {
     }
 
     /// 🏷️ The stable word the startup line reports.
-    pub(crate) fn label(self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             Self::Untrusted => "none",
             Self::TerminatingProxy => "proxy",
@@ -72,7 +67,7 @@ impl ForwardedTlsTrustV1 {
 /// `X-Forwarded-Proto` value must be exactly `https`; a proxy that reports cleartext is reporting
 /// that this request's bearer token crossed the network in the clear, and the hub refuses it rather
 /// than participating.
-pub(crate) fn forwarded_request_is_secure(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> bool {
+pub fn forwarded_request_is_secure(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> bool {
     match trust {
         ForwardedTlsTrustV1::Untrusted => true,
         ForwardedTlsTrustV1::TerminatingProxy => headers
@@ -86,7 +81,7 @@ pub(crate) fn forwarded_request_is_secure(headers: &HeaderMap, trust: ForwardedT
 /// 🌐️ The host the *client* used, for anything that has to name this deployment back to it.
 /// `X-Forwarded-Host` is read only under [`ForwardedTlsTrustV1::TerminatingProxy`]; otherwise the
 /// request's own `Host` is the whole truth.
-pub(crate) fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> Option<String> {
+pub fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> Option<String> {
     let forwarded = match trust {
         ForwardedTlsTrustV1::TerminatingProxy => headers.get("x-forwarded-host").and_then(|value| value.to_str().ok()).and_then(|value| value.split(',').next()).map(str::trim).filter(|host| !host.is_empty()),
         ForwardedTlsTrustV1::Untrusted => None,
@@ -101,7 +96,7 @@ pub(crate) fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTr
 /// panics answers a typed `500 internal` instead of dropping the connection, and the panic is traced.
 /// The handler is polled in place, never spawned: it stays owned by its request, so a client that
 /// disconnects still drops it at its next await (`canonical_pair_route_disconnect_deadline_and_progress_are_request_owned`).
-pub(crate) async fn refusal_middleware(State(tracer): State<Tracer>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+pub async fn refusal_middleware(State(tracer): State<Tracer>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let mut handler = std::pin::pin!(next.run(request));
     let answered = std::future::poll_fn(|context| match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| std::future::Future::poll(handler.as_mut(), context))) {
         Ok(std::task::Poll::Ready(response)) => std::task::Poll::Ready(Some(response)),
@@ -120,9 +115,9 @@ pub(crate) async fn refusal_middleware(State(tracer): State<Tracer>, request: ax
 
 /// 🏷️ Stamps one response as a typed refusal (see [`refusal_middleware`]); a success passes unchanged.
 fn typed_refusal(mut response: Response) -> Response {
-    if let Some(code) = semio_hub::refusal::refusal_code(response.status().as_u16()) {
-        if !response.headers().contains_key(semio_hub::refusal::HUB_REFUSAL_HEADER) {
-            response.headers_mut().insert(semio_hub::refusal::HUB_REFUSAL_HEADER, axum::http::HeaderValue::from_static(code));
+    if let Some(code) = semio_hub_refusal::refusal_code(response.status().as_u16()) {
+        if !response.headers().contains_key(semio_hub_refusal::HUB_REFUSAL_HEADER) {
+            response.headers_mut().insert(semio_hub_refusal::HUB_REFUSAL_HEADER, axum::http::HeaderValue::from_static(code));
         }
     }
     response
@@ -132,7 +127,7 @@ fn typed_refusal(mut response: Response) -> Response {
 ///
 /// Router-wide and outside every other layer: a hub whose transport is compromised must not answer
 /// at all, not answer differently per route.
-pub(crate) async fn transport_security_middleware(State(trust): State<ForwardedTlsTrustV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+pub async fn transport_security_middleware(State(trust): State<ForwardedTlsTrustV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     if !forwarded_request_is_secure(request.headers(), trust) {
         let mut response = Response::builder().status(StatusCode::FORBIDDEN).body(axum::body::Body::empty()).unwrap_or_default();
         response.headers_mut().insert("x-semio-refusal", axum::http::HeaderValue::from_static("insecure-transport"));
@@ -143,39 +138,10 @@ pub(crate) async fn transport_security_middleware(State(trust): State<ForwardedT
 //#endregion 🔖️AdminAuth
 
 //#region 🔖️Directory
-/// 🚦️ Charges every rate-limited route family before its handler runs: credential sign-in
-/// and sign-out, directory commands, invite redemption and socket-grant issuance. Each request is
-/// charged to its remote address and, when it carries one, to its session capability's public
-/// selector; the handler for `POST /auth/sessions` adds the claimed identity's own bucket, which
-/// only exists after the body is decoded. Every other route passes through untouched.
-pub(crate) async fn rate_limit_middleware(State(state): State<HubState>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
-    let Some(class) = rate_limit_class(request.method(), request.uri().path()) else { return next.run(request).await };
-    let mut subjects = Vec::with_capacity(2);
-    match request.extensions().get::<axum::extract::ConnectInfo<SocketAddr>>() {
-        Some(axum::extract::ConnectInfo(peer)) => subjects.push(RateLimitSubjectV1::remote_address(&peer.ip())),
-        None => subjects.push(RateLimitSubjectV1::principal("connect-info-absent")),
-    }
-    if let Some(selector) = bearer(request.headers()).and_then(|token| SessionCapability::parse(&token).ok()).map(|capability| capability.selector().to_string()) {
-        subjects.push(RateLimitSubjectV1::principal(&selector));
-    }
-    match state.rate_limits.admit(class, &subjects) {
-        RateLimitDecisionV1::Admitted => next.run(request).await,
-        RateLimitDecisionV1::Refused { retry_after_ms } => match class {
-            RateLimitClassV1::Auth => {
-                state.note("server.rate-limit", TraceOutcome::Refused, "auth");
-                auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms))
-            }
-            _ => {
-                state.note("server.rate-limit", TraceOutcome::Refused, class.as_str());
-                rate_limit_refusal_response(RateLimitRefusalV1::new(class, retry_after_ms))
-            }
-        },
-    }
-}
 
 /// 🚦️ The `429` of every non-auth rate-limited route family and of every stream-limited one: the typed refusal body, never
 /// cached, with its wait also as `retry-after` in whole seconds.
-pub(crate) fn rate_limit_refusal_response(refusal: RateLimitRefusalV1) -> Response {
+pub fn rate_limit_refusal_response(refusal: RateLimitRefusalV1) -> Response {
     let retry_after_ms = refusal.retry_after_ms;
     let mut response = (StatusCode::TOO_MANY_REQUESTS, Json(refusal)).into_response();
     response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
@@ -186,9 +152,9 @@ pub(crate) fn rate_limit_refusal_response(refusal: RateLimitRefusalV1) -> Respon
 }
 
 /// 🏷️ Which rate-limit family a request belongs to, by method and path alone.
-fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimitClassV1> {
+pub fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimitClassV1> {
     match (method, path) {
-        (&axum::http::Method::POST, semio_hub::auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::CREDENTIAL_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::SESSION_SIGN_OUT_ROUTE) => Some(RateLimitClassV1::Auth),
+        (&axum::http::Method::POST, semio_hub_auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub_auth::CREDENTIAL_ROUTE) | (&axum::http::Method::POST, semio_hub_auth::SESSION_SIGN_OUT_ROUTE) => Some(RateLimitClassV1::Auth),
         (&axum::http::Method::POST, "/directory/commands") => Some(RateLimitClassV1::DirectoryCommand),
         (&axum::http::Method::POST, path) if path.starts_with("/directory/invites/") && path.ends_with("/redeem") => Some(RateLimitClassV1::InviteRedemption),
         (&axum::http::Method::POST, path) if path.ends_with("/socket-grants") => Some(RateLimitClassV1::SocketGrant),
@@ -208,7 +174,7 @@ fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimit
 ///
 /// See {@link CrossOriginPolicyV1::from_environment} for the exact precedence.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum CrossOriginPolicyV1 {
+pub enum CrossOriginPolicyV1 {
     /// 🏠️ Any `http`/`https` origin whose host is `localhost` or a loopback address, on any port.
     LoopbackDevelopment,
     /// 📋️ Exactly the origins a deployer named, compared whole and ASCII-case-insensitively.
@@ -222,7 +188,7 @@ impl CrossOriginPolicyV1 {
     /// whenever it is set and non-empty. With it unset the policy follows `OS_HUB_BIND`: loopback
     /// (the default *development* posture, and what `OS_HUB_BIND` must be for `OS_HUB_MODE=production`
     /// to boot at all) admits loopback origins, and any other bind admits none.
-    pub(crate) fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
+    pub fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
         const ALLOWED_ORIGINS_MAX: usize = 32;
         let Some(encoded) = std::env::var("OS_HUB_ALLOWED_ORIGINS").ok().filter(|value| !value.trim().is_empty()) else {
             return Ok(if bind.is_loopback() { Self::LoopbackDevelopment } else { Self::Closed });
@@ -250,7 +216,7 @@ impl CrossOriginPolicyV1 {
     }
 
     /// ✅️ Whether one request's `Origin` header value earns the credentialed grant.
-    pub(crate) fn admits(&self, origin: &str) -> bool {
+    pub fn admits(&self, origin: &str) -> bool {
         match self {
             Self::LoopbackDevelopment => is_loopback_origin(origin),
             Self::Allowlist(origins) => origins.iter().any(|allowed| allowed.eq_ignore_ascii_case(origin)),
@@ -259,7 +225,7 @@ impl CrossOriginPolicyV1 {
     }
 
     /// 🏷️ The stable word the startup line and the report use for this posture.
-    pub(crate) fn label(&self) -> &'static str {
+    pub fn label(&self) -> &'static str {
         match self {
             Self::LoopbackDevelopment => "loopback-development",
             Self::Allowlist(_) => "allowlist",
@@ -270,7 +236,7 @@ impl CrossOriginPolicyV1 {
 
 /// 🌐️ A serialized origin: `scheme://host[:port]` with no userinfo, path, query, fragment or
 /// wildcard. Anything else in an allowlist is a deployer's mistake, not a pattern to interpret.
-pub(crate) fn is_browser_origin(value: &str) -> bool {
+pub fn is_browser_origin(value: &str) -> bool {
     let Some((scheme, rest)) = value.split_once("://") else { return false };
     if !scheme.eq_ignore_ascii_case("http") && !scheme.eq_ignore_ascii_case("https") {
         return false;
@@ -303,7 +269,7 @@ fn is_origin_port(suffix: &str) -> bool {
 }
 
 /// 🏠️ Whether an origin's host is this machine — `localhost`, `127.0.0.0/8` or `[::1]`.
-pub(crate) fn is_loopback_origin(value: &str) -> bool {
+pub fn is_loopback_origin(value: &str) -> bool {
     if !is_browser_origin(value) {
         return false;
     }
@@ -322,7 +288,7 @@ pub(crate) fn is_loopback_origin(value: &str) -> bool {
 /// route is `POST /auth/sessions`, which a deployment must enable explicitly and which is rate
 /// limited per remote address and per claimed identity; every protected route still requires its
 /// own typed capability.
-pub(crate) async fn cors_middleware(State(policy): State<CrossOriginPolicyV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+pub async fn cors_middleware(State(policy): State<CrossOriginPolicyV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let origin = request.headers().get(axum::http::header::ORIGIN).cloned();
     if request.method() == axum::http::Method::OPTIONS {
         let mut response = Response::builder().status(StatusCode::NO_CONTENT).body(axum::body::Body::empty()).unwrap_or_default();
@@ -356,7 +322,7 @@ fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::Heade
 /// route took to answer — the per-route table of `GET /admin/api/observability`. It runs inside routing
 /// (`route_layer`), so the template is known and a concrete path never becomes a key, and outside
 /// [`rate_limit_middleware`], so an address-bucket refusal is counted as the route's `rateLimited`.
-pub(crate) async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+pub async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let method = request.method().as_str().to_string();
     let route = request.extensions().get::<axum::extract::MatchedPath>().map_or_else(|| "unmatched".to_string(), |matched| matched.as_str().to_string());
     let started = std::time::Instant::now();

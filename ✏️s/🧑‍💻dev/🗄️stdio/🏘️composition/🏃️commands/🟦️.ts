@@ -4,7 +4,7 @@ import { buildStdioComposition, checkStdioComposition } from "../🏗️build/�
 /** 📦️ Builds the Stdio composition package. */
 export class StdioCompositionBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildStdioComposition(this.root, undefined, this.invocation);
+    await buildStdioComposition(this.root, this.invocation);
   }
 }
 

@@ -3,8 +3,8 @@
 use super::*;
 use crate::os_spr::Identified;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use crate::retained::{FlowOwner,FlowRetirement};
-use super::super::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowHostSnapshot, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use crate::{AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowHostSnapshot, FlowLayoutEntry, FlowMutation, MoveSynapse, MoveWidget, RemoveSynapse, RemoveWidget};
 
 //#region 🧭️Fixtures
 fn fixture() -> FlowHostSnapshot {
@@ -45,7 +45,7 @@ fn retained_fixture_has_dictionary_and_set() {
 #[test]
 fn direct_leaf_retirement_requires_independent_grants_and_reaches_terminal_empty() {
     for (index,mutation) in mutations().into_iter().enumerate() {
-        let mut retirement=FlowRetirement::from_owner(FlowOwner::Mutation(mutation));
+        let mut retirement=ControlledRetirement::new(mutation).map_err(|(error,_)|error).unwrap();
         let mut total=RetainedCloneProgress::default();
         for turn in 0..200_000 {
             if retirement.terminal_is_empty(){break;}

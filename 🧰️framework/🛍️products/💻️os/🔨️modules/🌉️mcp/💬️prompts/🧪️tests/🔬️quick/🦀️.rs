@@ -1,6 +1,8 @@
+//! 🧱️ Prompts_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
-use super::*;
-use crate::protocol::PromptRegistry;
+use crate::prompts::{DEFINITIONS, GATEWAY_PROMPT_NAMES, PromptLocale, build_prompt_registry, prompt_body};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_wire::protocol::{ContentBlock, PromptRegistry};
 
 #[test]
 fn the_prompt_census_matches_the_registry_exactly() {

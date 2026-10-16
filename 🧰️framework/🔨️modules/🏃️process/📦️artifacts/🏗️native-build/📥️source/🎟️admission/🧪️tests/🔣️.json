@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "source": "pub const VALUE:u8=1;\n",
+  "cases": [
+    {
+      "id": "equivalent-variants",
+      "flags": [
+        "first",
+        "first"
+      ]
+    },
+    {
+      "id": "different-cfg-variants",
+      "flags": [
+        "first",
+        "second"
+      ]
+    }
+  ]
+}

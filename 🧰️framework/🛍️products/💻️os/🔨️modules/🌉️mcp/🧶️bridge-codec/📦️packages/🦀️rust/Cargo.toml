@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-bridge-codec"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shell bridge frame codecs and bounded decode machines."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-bridge-codec"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

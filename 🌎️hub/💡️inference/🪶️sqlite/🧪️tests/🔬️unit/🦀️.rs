@@ -1,5 +1,6 @@
 use super::*;
 use std::sync::{Arc, Barrier};
+use semio_hub_inference::schema::{INPUT_MAX_BYTES, InferenceIdentityV1, InferenceJobReconcileApprovalStateV1, InferenceJobReconcileResultV1, InferenceJobStateV1, InferenceRequestV1, JOB_CAPACITY, PROPOSAL_MAX_BYTES, REQUEST_MAX_BYTES, RESULT_MAX_BYTES, SAFE_INTEGER_MAX, decode_inference_job_reconcile_request_v1};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗺️gis-inference-job-v1/🔣️.json")).unwrap()
@@ -152,7 +153,7 @@ fn gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounde
     assert!(matches!(InferencePrivateBytesV1::new(vec![0; INPUT_MAX_BYTES + 1], INPUT_MAX_BYTES), Err(InferenceErrorV1::Bounds)));
     assert!(matches!(InferencePrivateBytesV1::new(vec![0; RESULT_MAX_BYTES + 1], RESULT_MAX_BYTES), Err(InferenceErrorV1::Bounds)));
     assert!(matches!(InferencePrivateBytesV1::new(vec![0; PROPOSAL_MAX_BYTES + 1], PROPOSAL_MAX_BYTES), Err(InferenceErrorV1::Bounds)));
-    let control = crate::inference::InferenceOperationControlV1::new(1000, 2).unwrap();
+    let control = semio_hub_inference::InferenceOperationControlV1::new(1000, 2).unwrap();
     control.checkpoint(2).unwrap();
     control.checkpoint(1).unwrap();
     assert_eq!(control.progress(), (2, 2));
@@ -264,7 +265,7 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     trailing.push(0);
     let trailing = InferencePrivateBytesV1::new(trailing, 8192).unwrap();
     assert!(matches!(ledger.prepare_approval(&receipt.job_id, &selected, &hash, &trailing, 1003), Err(InferenceErrorV1::Invalid)));
-    let empty = ledger.pending_approvals(None, &super::super::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap();
+    let empty = ledger.pending_approvals(None, &semio_hub_inference::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap();
     assert!(empty.rows.is_empty(), "prefix-valid trailing bytes never create a prepared outbox row");
     let prepared = ledger.prepare_approval(&receipt.job_id, &selected, &hash, &command, 1003).unwrap();
     assert_eq!(prepared.job_id, outbox["jobId"].as_str().unwrap());
@@ -280,10 +281,10 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     assert_eq!(ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &"0".repeat(64), &prepared.proposal_hash), Err(InferenceErrorV1::Conflict),);
     assert!(ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).unwrap());
     assert!(!ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).unwrap());
-    assert!(ledger.pending_approvals(None, &super::super::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap().rows.is_empty());
+    assert!(ledger.pending_approvals(None, &semio_hub_inference::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap().rows.is_empty());
     drop(ledger);
     let reopened = InferenceJobLedgerV1::open(&path).unwrap();
-    let control = || super::super::InferenceOperationControlV1::new(1000, 5).unwrap();
+    let control = || semio_hub_inference::InferenceOperationControlV1::new(1000, 5).unwrap();
     assert!(reopened.pending_approvals(None, &control()).unwrap().rows.is_empty(), "an abandoned request survives restart without blocking the document");
     let revived = reopened.prepare_approval(&receipt.job_id, &selected, &hash, &command, 1006).unwrap();
     assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (prepared.mutation_id.as_str(), prepared.command_hash.as_str(), prepared.proposal_hash.as_str()));
@@ -297,7 +298,7 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     assert_eq!(prepared_events, 1, "reviving the exact abandoned row never fabricates a second prepared event");
     assert!(matches!(reopened.read(&receipt.job_id, &reader(&selected), receipt.expires_at_ms), Err(InferenceErrorV1::Expired)));
     {
-        let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
+        let (witness, fence) = semio_hub_inference_contract_laws::wal_tests::committed_fixture_witness().await;
         let frontier = directory::os_directory::EditedArtifactFrontierV1 {
             document_id: selected.document_id.clone(),
             head_edit_ordinal: selected.head_ordinal + 1,
@@ -310,7 +311,7 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
         let reconciled = reopened
             .reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms)
-            .unwrap_or_else(|error| panic!("the reopened ledger reconciles its own prepared approval exactly once, got {error:?} refused as {:?} / {:?}", last_approval_reconciliation_conflict(), super::super::wal::last_committed_witness_mismatch()));
+            .unwrap_or_else(|error| panic!("the reopened ledger reconciles its own prepared approval exactly once, got {error:?} refused as {:?} / {:?}", last_approval_reconciliation_conflict(), semio_hub_inference::wal::last_committed_witness_mismatch()));
         assert!(reconciled.applied);
         let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();
         assert!(recovered.page.expired);

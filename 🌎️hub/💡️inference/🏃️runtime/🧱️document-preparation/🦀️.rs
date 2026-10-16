@@ -1,8 +1,15 @@
 //! 🧱️ Retained document preparation: mounting the three-store assembly and restoring the stores.
 
-use super::*;
+use std::sync::Arc;
+use semio_hub_inference::command::CanonicalInferenceCommandV1;
+use semio_hub_inference_binding::{ComposedMapCommitBindingV1, MapBindingRefusalV1};
+use directory::os_directory::DocumentScope;
+use semio_hub_inference_runtime_contract::{GisMapApprovalCommitErrorV1, GisMapApprovalRequestTokenV1, GisMapCommitIdentityV1, GisMapCommitOperationV1, GisMapDocumentStoresV1, GisMapDocumentWriteAuthorityV1, GisMapDocumentWriteLeaseV1, GisMapDrawingStoreV1, GisMapParentSnapshotV1, GisMapParentStoreV1, GisMapValueStoreV1, InferenceMapBaseV1, approval_mutation_id, document_key, gis_map_storage_refusal, record_prepare_conflict};
+use semio_hub_inference::wal::InferenceDocumentFenceV1;
+use crate::{RetainedGisMapApprovalCommitterV1, RetainedGisMapDocumentStateV1};
+use semio_hub_inference::sha256;
 
-impl RetainedGisMapApprovalCommitterV1 {
+impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
     pub(super) async fn prepare_retained_document(&self, scope: &DocumentScope, base: &InferenceMapBaseV1, gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>, actor: &str) -> Result<(), GisMapApprovalCommitErrorV1> {
         let key = document_key(scope);
         let mut state_changes = self.state_epoch.subscribe();
@@ -29,7 +36,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         }
                     }
                     Some(RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. }) => {
-                        let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                        let snapshot = B::decode_parent(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
                         if owners.scope != *scope {
                             record_prepare_conflict("Ready/scope");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
@@ -60,7 +67,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         if identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
                             let advanced = Self::publication_result_base(identity, &base.frontier, &base.digest(), &base.descriptor_digest) && Self::stores_consistent(owners);
                             if !advanced {
-                                let snapshot = <GisMapParentSnapshotV1 as pack::snapshot::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                                let snapshot = B::decode_parent(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
                                 if !Self::stores_match(owners, &snapshot) {
                                     record_prepare_conflict(&format!(
                                         "Published/stores_match base_frontier={} base_digest={} published_result={} stores_consistent={}",
@@ -181,43 +188,25 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     pub(super) fn build_assembly(
         &self,
-        mut owners: GisMapDocumentStoresV1,
+        mut owners: GisMapDocumentStoresV1<B>,
         identity: GisMapCommitIdentityV1,
-        snapshot: &GisMapParentSnapshotV1,
+        snapshot: &GisMapParentSnapshotV1<B>,
         document_write: GisMapDocumentWriteLeaseV1,
-    ) -> Result<RetainedGisMapDocumentStateV1, (GisMapApprovalCommitErrorV1, GisMapDocumentStoresV1)> {
+    ) -> Result<RetainedGisMapDocumentStateV1<B>, (GisMapApprovalCommitErrorV1, GisMapDocumentStoresV1<B>)> {
         use directory::os_store::durable_group::{DurableOwnedMapMemberAdmissionV1, DurableOwnedThreeStoreMapAssemblyV1};
-        use directory::Inference as _;
-        use semio_s_artifact_gis_gismap::editor::gis2d::{gis_map_drawing_stamped_one_item_preparation_factory, gis_map_parent_stamped_one_item_preparation_factory, gis_map_value_stamped_one_item_preparation_factory, GisMapOneItemStampV1};
-        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let work = match &identity.operation {
-            GisMapCommitOperationV1::Approval => GisMapInference::infer(snapshot).create_region_group_work(snapshot, &identity.job_id),
+            GisMapCommitOperationV1::Approval => B::approval_work(snapshot, &identity.job_id),
             GisMapCommitOperationV1::Undo { original_job_id, original_command, .. } => {
-                use semio_s_artifact_gis_gismap::mutations::GisMapMutation;
-        use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
                 let command = match CanonicalInferenceCommandV1::decode(original_command.as_slice()) {
                     Ok(command) => command,
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
                 };
-                let inverse_text = match std::str::from_utf8(command.inverse_payload()) {
-                    Ok(value) => value,
-                    Err(_) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
-                };
-                let inverses = match semio_framework_pack_json::from_json_str::<Vec<GisMapMutation>>(inverse_text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-                    Ok(value) if value.len() == 1 => value,
-                    _ => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
-                };
-                let mut before = snapshot.clone();
-                if apply_gis_map_mutation(&mut before, &inverses[0]).is_err() {
-                    return Err((GisMapApprovalCommitErrorV1::Conflict, owners));
-                }
-                let work = match GisMapInference::infer(&before).create_region_group_work(&before, original_job_id) {
-                    Ok(work) => work,
+                let work = match B::undo_work(snapshot, command.inverse_payload(), original_job_id) {
+                    Ok(undo) => undo.work,
+                    Err(MapBindingRefusalV1::Undecodable | MapBindingRefusalV1::Arity) => return Err((GisMapApprovalCommitErrorV1::Rejected, owners)),
                     Err(_) => return Err((GisMapApprovalCommitErrorV1::Conflict, owners)),
                 };
-                let expected_inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
-                let expected_forward = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
-                if !command.matches_fixed_three_parent(&approval_mutation_id(original_job_id, &sha256(&expected_forward)), &document_key(&identity.scope), &identity.actor, &expected_forward, &expected_inverse) {
+                if !command.matches_fixed_three_parent(&approval_mutation_id(original_job_id, &sha256(&work.parent_json)), &document_key(&identity.scope), &identity.actor, &work.parent_json, &work.parent_inverse_json) {
                     return Err((GisMapApprovalCommitErrorV1::Conflict, owners));
                 }
                 Ok(work)
@@ -246,7 +235,6 @@ impl RetainedGisMapApprovalCommitterV1 {
         let parent_admission = DurableOwnedMapMemberAdmissionV1::new(operations[0], parent.generation_now(), parent.content_revision_now(), identity.actor.clone(), parent_mutation);
         let drawing_admission = DurableOwnedMapMemberAdmissionV1::new(operations[1], drawing.generation_now(), drawing.content_revision_now(), identity.actor.clone(), drawing_mutation);
         let value_admission = DurableOwnedMapMemberAdmissionV1::new(operations[2], value.generation_now(), value.content_revision_now(), identity.actor.clone(), value_mutation);
-        let stamp = |mutation_id: String| GisMapOneItemStampV1 { mutation_id: protocol::MutationId(mutation_id), timestamp: identity.timestamp };
         let sink = owners.handle.durable_group_journal_sink(identity.journal_now_ms);
         let handle = owners.handle;
         let scope = owners.scope;
@@ -260,9 +248,9 @@ impl RetainedGisMapApprovalCommitterV1 {
                 parent_admission,
                 drawing_admission,
                 value_admission,
-                gis_map_parent_stamped_one_item_preparation_factory(stamp(identity.mutation_id.clone())),
-                gis_map_drawing_stamped_one_item_preparation_factory(stamp(format!("{}:drawing", identity.mutation_id))),
-                gis_map_value_stamped_one_item_preparation_factory(stamp(format!("{}:value", identity.mutation_id))),
+                B::parent_preparation_factory(identity.mutation_id.clone(), identity.timestamp),
+                B::drawing_preparation_factory(format!("{}:drawing", identity.mutation_id), identity.timestamp),
+                B::value_preparation_factory(format!("{}:value", identity.mutation_id), identity.timestamp),
                 sink,
             ),
             handle,
@@ -275,15 +263,15 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     pub(super) fn restored_stores(
-        parent: GisMapParentStoreV1,
-        drawing: GisMapDrawingStoreV1,
-        value: GisMapValueStoreV1,
+        parent: GisMapParentStoreV1<B>,
+        drawing: GisMapDrawingStoreV1<B>,
+        value: GisMapValueStoreV1<B>,
         handle: db::ArtifactHandle,
         scope: DocumentScope,
         generation: u64,
         document_write: Arc<tokio::sync::Mutex<()>>,
         fence: Arc<InferenceDocumentFenceV1>,
-    ) -> GisMapDocumentStoresV1 {
+    ) -> GisMapDocumentStoresV1<B> {
         GisMapDocumentStoresV1 { parent: Some(parent), drawing: Some(drawing), value: Some(value), handle, scope, generation, document_write, fence }
     }
 }

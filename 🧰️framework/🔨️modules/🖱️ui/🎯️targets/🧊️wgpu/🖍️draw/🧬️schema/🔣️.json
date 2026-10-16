@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Rect": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 64
+      }
+    },
+    "Trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "events",
+        "valid"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "enum": [
+              "source-borrow",
+              "vertex-acquire",
+              "index-acquire",
+              "step-accept",
+              "cancel",
+              "step-settle",
+              "vertex-close",
+              "index-close",
+              "source-return",
+              "terminal"
+            ]
+          }
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "StageFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "disposition",
+        "original",
+        "caller",
+        "retained",
+        "valid"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "disposition": {
+          "enum": [
+            "Returned",
+            "Retained"
+          ]
+        },
+        "original": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "admission",
+              "renderer",
+              "texture",
+              "view"
+            ]
+          }
+        },
+        "caller": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "admission",
+              "renderer",
+              "texture",
+              "view"
+            ]
+          }
+        },
+        "retained": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "admission",
+              "renderer",
+              "texture",
+              "view"
+            ]
+          }
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "semantics",
+    "traces",
+    "stageFailures",
+    "sourceAssertions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "semantics": {
+      "const": "observation-only-no-resource-authority"
+    },
+    "traces": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/Trace"
+      }
+    },
+    "stageFailures": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/definitions/StageFailure"
+      }
+    },
+    "sourceAssertions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "law",
+          "variable",
+          "source",
+          "symbols"
+        ],
+        "properties": {
+          "law": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "variable": {
+            "enum": [
+              "source",
+              "draw_source"
+            ]
+          },
+          "source": {
+            "const": "🔧️pipeline/🏭️factory/🦀️.rs"
+          },
+          "symbols": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      }
+    }
+  }
+}

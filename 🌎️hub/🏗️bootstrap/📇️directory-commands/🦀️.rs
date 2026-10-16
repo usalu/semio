@@ -14,48 +14,31 @@ use directory::os_directory::{ConnectionView, DirectoryActor, DirectoryActorKind
 use futures::{SinkExt, StreamExt};
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::TraceOutcome;
-use semio_hub::artifact_authority::creation::ArtifactCreationCommitAuthorityV1;
+use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
 use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryAccessRoleV1};
-use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::model::{AuthSessionKind, DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, DocumentScope, NewDirectoryCommandReceipt, SpaceRole, SyncSessionRecord};
-use semio_hub::directory::{directory_command_result_kind, DirectoryCommandExecutionV1, HubDirectory, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, InviteCapability, SessionCapability};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_directory_contract::model::{DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, NewDirectoryCommandReceipt, SyncSessionRecord};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_service::{directory_command_result_kind, DirectoryCommandExecutionV1};
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::{SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, InviteCapability, SessionCapability};
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::collections::BTreeSet;
 use std::net::SocketAddr;
-use crate::support::{DirectoryJson, now_ms, bearer, directory_error_status};
-use crate::presence::{document_scope_key_v1, db_artifact_id};
-use crate::state::HubState;
-use crate::socket_grants::{SocketBindingKeyV1, SocketBindingModeV1, SocketBindingGuardV1};
-use crate::guard::{session_access_roles, is_admin};
-#[cfg(test)]
+use semio_hub_runtime::support::{DirectoryJson, now_ms, bearer, directory_error_status};
+use semio_hub_runtime::presence::{document_scope_key_v1, db_artifact_id};
+use semio_hub_state::HubState;
+use semio_hub_ledgers::socket_grants::{SocketBindingKeyV1, SocketBindingModeV1, SocketBindingGuardV1};
+use semio_hub_ledgers::guard::session_access_roles;
+use crate::guard::is_admin;
+#[cfg(any(test, feature = "testkit"))]
 use crate::access_grants::{pause_directory_command_authority, pause_directory_command_membership_fence};
-use crate::admin::admin_space_summary_view;
-use db::db_storage::PayloadStorage as _;
+use semio_hub_route_models::admin::admin_space_summary_view;
+use db::storage::PayloadStorage as _;
+use semio_hub_route_models::directory_commands::{AuthedUser, CredentialOptionalRefusalV1, DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS, DirectorySpaceAccessDecisionV1, FencedDirectoryCommandErrorV1, SpaceAdministrationWindows, directory_command_access_action, directory_command_space, directory_command_trace_kind, directory_command_trace_space, directory_space_access_decision, member_space_view, public_space_view, role_wire, space_administration_cursor_decode, space_administration_cursor_encode, space_administration_document_key, space_administration_invite_key, space_administration_invite_payload, space_administration_member_key, space_administration_request_admission, space_administration_session_binding_v1};
 
 //#region 🔖️Directory
-/// 🙋️ A bearer token resolved to a live, unexpired `AuthSessionRecord`'s user — every
-/// `/directory/*`/`/auth/sessions/me` route that needs a caller identity resolves through this
-/// (distinct from `AuthOutcome`, which can also carry an exact document share; the directory
-/// control plane has no such fallback — a command with no valid session is unauthenticated).
-#[derive(Clone)]
-pub(crate) struct AuthedUser {
-    pub(crate) user_id: String,
-    pub(crate) session_id: String,
-    pub(crate) expires_at: i64,
-    pub(crate) authorization_generation: u64,
-    pub(crate) capability: SessionCapability,
-    pub(crate) session_kind: AuthSessionKind,
-    pub(crate) device_instance_id: String,
-}
 
-impl AuthedUser {
-    /// 🎚️ Who this caller asks every space-role question as.
-    pub(crate) fn principal(&self) -> DirectoryPrincipalV1<'_> {
-        DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
-    }
-}
-
-pub(crate) async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<AuthedUser> {
+pub async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<AuthedUser> {
     let capability = SessionCapability::parse(token?).ok()?;
     let session = state.directory.authenticate_session(&capability).await.ok().flatten()?;
     Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id })
@@ -65,7 +48,7 @@ pub(crate) async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -
 /// caller, and a presented credential must authenticate. A malformed, forged, expired or revoked
 /// credential is refused `401` — never downgraded to the anonymous view — so a client whose session
 /// ended learns it at once instead of silently reading as a stranger.
-pub(crate) async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> Result<Option<AuthedUser>, StatusCode> {
+pub async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> Result<Option<AuthedUser>, StatusCode> {
     if !headers.contains_key(axum::http::header::AUTHORIZATION) {
         return Ok(None);
     }
@@ -74,29 +57,8 @@ pub(crate) async fn resolve_optional_bearer_user(state: &HubState, headers: &Hea
     Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id }))
 }
 
-/// 🚪️ The refusal of a route that also answers anonymously ([`resolve_optional_bearer_user`]): its `401` means a
-/// PRESENTED credential did not authenticate, so it answers the typed, localized `HubCredentialRefusalV1` body with the
-/// RFC 6750 `invalid_token` challenge (audit s13 os-frontend §4.17) — the client learns its session ended instead of
-/// reading the anonymous view. Every other status stays a bare, signed refusal.
-pub(crate) struct CredentialOptionalRefusalV1(pub(crate) StatusCode);
-
-impl From<StatusCode> for CredentialOptionalRefusalV1 {
-    fn from(status: StatusCode) -> Self {
-        Self(status)
-    }
-}
-
-impl IntoResponse for CredentialOptionalRefusalV1 {
-    fn into_response(self) -> Response {
-        if self.0 != StatusCode::UNAUTHORIZED {
-            return self.0.into_response();
-        }
-        (StatusCode::UNAUTHORIZED, [(axum::http::header::WWW_AUTHENTICATE, semio_hub::refusal::HUB_CREDENTIAL_REFUSAL_CHALLENGE)], Json(semio_hub::refusal::HUB_CREDENTIAL_REFUSAL)).into_response()
-    }
-}
-
 /// 🪪️ An admitted command keeps the exact authenticated session, not a reusable user identity.
-pub(crate) async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> Result<(), StatusCode> {
+pub async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> Result<(), StatusCode> {
     let session = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&caller.capability))
         .await
         .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?
@@ -108,17 +70,10 @@ pub(crate) async fn revalidate_directory_caller(state: &HubState, caller: &Authe
     Ok(())
 }
 
-pub(crate) fn role_wire(role: SpaceRole) -> DirectorySpaceRole {
-    match role {
-        SpaceRole::Author => DirectorySpaceRole::Author,
-        SpaceRole::Spectator => DirectorySpaceRole::Spectator,
-    }
-}
-
 /// 🔴️ `ConnectionView` for one live `SyncSessionRecord` — `presenceKnown` cross-references
 /// `state.presence` (contract: "connections = `list_active_sync_sessions()` joined with the
 /// in-memory presence map").
-pub(crate) async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> ConnectionView {
+pub async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> ConnectionView {
     let email = match &session.user_id {
         Some(id) => state.directory.get_user(id).await.ok().flatten().map(|user| user.email),
         None => None,
@@ -145,7 +100,7 @@ fn connection_view_with_email(state: &HubState, session: &SyncSessionRecord, ema
 
 /// 📄️ One durable directory descriptor enriched with its opened DB handle's current frontier; an unopened
 /// document retains the descriptor's authoritative bootstrap frontier.
-pub(crate) async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> DocumentView {
+pub async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> DocumentView {
     let db_id = db_artifact_id(&DocumentScope::new(&descriptor.space_id, &descriptor.document_id));
     let frontier = match state.db.document(&db_id).await {
         Ok(handle) => handle.frontier().await.ok().map(|frontier| (frontier.head_seq, frontier.commit_seq, frontier.epoch)),
@@ -155,85 +110,12 @@ pub(crate) async fn document_view(state: &HubState, descriptor: DocumentDescript
     DocumentView { descriptor, head_seq: frontier.0, commit_seq: frontier.1, epoch: frontier.2 }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DirectorySpaceAccessDecisionV1 {
-    Hidden,
-    Public,
-    Member,
-    Author,
-}
-
-impl DirectorySpaceAccessDecisionV1 {
-    pub(crate) fn is_member(self) -> bool {
-        matches!(self, Self::Member | Self::Author)
-    }
-}
-
-/// 🛡️ The single public/member/author decision used by REST reads and both stream paths.
-pub(crate) fn directory_space_access_decision(public: bool, role: Option<DirectorySpaceRole>) -> DirectorySpaceAccessDecisionV1 {
-    match role {
-        Some(DirectorySpaceRole::Author) => DirectorySpaceAccessDecisionV1::Author,
-        Some(DirectorySpaceRole::Spectator) => DirectorySpaceAccessDecisionV1::Member,
-        None if public => DirectorySpaceAccessDecisionV1::Public,
-        None => DirectorySpaceAccessDecisionV1::Hidden,
-    }
-}
-
-fn public_space_view(space: SpaceView) -> PublicSpaceViewV1 {
-    PublicSpaceViewV1 {
-        id: space.id,
-        name: space.name,
-        kind: space.kind,
-        visibility: space.visibility,
-        member_count: space.member_count,
-        document_count: space.document_count,
-        created_at_ms: space.created_at_ms,
-        updated_at_ms: space.updated_at_ms,
-    }
-}
-
-fn member_space_view(space: SpaceView, role: DirectorySpaceRole) -> MemberSpaceViewV1 {
-    MemberSpaceViewV1 {
-        id: space.id,
-        name: space.name,
-        kind: space.kind,
-        visibility: space.visibility,
-        owner_user_id: space.owner_user_id,
-        role,
-        member_count: space.member_count,
-        document_count: space.document_count,
-        active_connections: space.active_connections,
-        created_at_ms: space.created_at_ms,
-        updated_at_ms: space.updated_at_ms,
-    }
-}
-
-/// ⚖️ Contract §C2's command authorization matrix: `create-space` any session; `delete-space`/
-/// `archive-space` owner or admin; everything else any AUTHOR of the named space or admin. `decide`
-/// itself performs zero authorization (its own doc) — this is that check, run before `execute`.
-/// 🎬️ The declared-policy action one directory command asks for.
-fn directory_command_access_action(command: &DirectoryCommand) -> DirectoryAccessActionV1 {
-    match command {
-        DirectoryCommand::CreateSpace { .. } => DirectoryAccessActionV1::SpaceCreate,
-        DirectoryCommand::RenameSpace { .. } => DirectoryAccessActionV1::SpaceRename,
-        DirectoryCommand::SetVisibility { .. } => DirectoryAccessActionV1::SpaceVisibility,
-        DirectoryCommand::ArchiveSpace { .. } => DirectoryAccessActionV1::SpaceArchive,
-        DirectoryCommand::DeleteSpace { .. } => DirectoryAccessActionV1::SpaceDelete,
-        DirectoryCommand::UpsertMember { .. } => DirectoryAccessActionV1::MemberUpsert,
-        DirectoryCommand::RemoveMember { .. } => DirectoryAccessActionV1::MemberRemove,
-        DirectoryCommand::CreateInvite { .. } => DirectoryAccessActionV1::InviteCreate,
-        DirectoryCommand::RevokeInvite { .. } => DirectoryAccessActionV1::InviteRevoke,
-        DirectoryCommand::AnnounceDocument { .. } => DirectoryAccessActionV1::DocumentAnnounce,
-        DirectoryCommand::RecordUserPreference { .. } => DirectoryAccessActionV1::PreferenceRecord,
-    }
-}
-
 /// 🛡️ A directory command is admitted exactly when the declared access policy permits its action to
 /// the actor's roles in the command's space: operator subject, space owner (a human session only — a
 /// delegation never carries administration authority) and the session's own roles
 /// ([`session_access_roles`] of its [`HubDirectory::principal_role`]). A space-scoped command naming a
 /// space that does not exist is `404`.
-pub(crate) async fn authorize_directory_command(state: &HubState, principal: DirectoryPrincipalV1<'_>, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
+pub async fn authorize_directory_command(state: &HubState, principal: DirectoryPrincipalV1<'_>, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
     let mut roles = if admin { vec![DirectoryAccessRoleV1::Admin] } else { Vec::new() };
     let space_kind = match directory_command_space(command) {
         None => {
@@ -253,30 +135,6 @@ pub(crate) async fn authorize_directory_command(state: &HubState, principal: Dir
         Ok(())
     } else {
         Err(StatusCode::FORBIDDEN)
-    }
-}
-
-#[derive(Debug)]
-pub(crate) enum FencedDirectoryCommandErrorV1 {
-    Directory(DirectoryError),
-    Denied(StatusCode),
-    Unavailable,
-}
-
-/// 🛡️ Command scope is derived from the closed command, never from a second client claim.
-fn directory_command_space(command: &DirectoryCommand) -> Option<&str> {
-    match command {
-        DirectoryCommand::CreateSpace { .. } => None,
-        DirectoryCommand::RenameSpace { space_id, .. }
-        | DirectoryCommand::SetVisibility { space_id, .. }
-        | DirectoryCommand::ArchiveSpace { space_id }
-        | DirectoryCommand::DeleteSpace { space_id }
-        | DirectoryCommand::UpsertMember { space_id, .. }
-        | DirectoryCommand::RemoveMember { space_id, .. }
-        | DirectoryCommand::CreateInvite { space_id, .. }
-        | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id),
-        DirectoryCommand::AnnounceDocument { descriptor } => Some(&descriptor.space_id),
-        DirectoryCommand::RecordUserPreference { .. } => None,
     }
 }
 
@@ -307,7 +165,7 @@ pub(crate) async fn acquire_directory_command_fence(state: &HubState, caller: Ve
 }
 
 /// 🔒️ Durable role and space transitions retire only the authority they changed.
-pub(crate) fn invalidate_directory_event_authority(state: &HubState, events: &[DirectoryEvent]) {
+pub fn invalidate_directory_event_authority(state: &HubState, events: &[DirectoryEvent]) {
     let mut bindings = BTreeSet::new();
     for event in events {
         let binding = match &event.body {
@@ -325,14 +183,14 @@ pub(crate) fn invalidate_directory_event_authority(state: &HubState, events: &[D
     }
 }
 
-#[cfg(not(test))]
-pub(crate) async fn pause_directory_command_authority(_state: &HubState, _user_id: &str, _fenced: bool) {}
+#[cfg(not(any(test, feature = "testkit")))]
+pub async fn pause_directory_command_authority(_state: &HubState, _user_id: &str, _fenced: bool) {}
+
+#[cfg(not(any(test, feature = "testkit")))]
+pub async fn pause_directory_command_membership_fence(_state: &HubState) {}
 
 #[cfg(not(test))]
-pub(crate) async fn pause_directory_command_membership_fence(_state: &HubState) {}
-
-#[cfg(not(test))]
-pub(crate) async fn pause_admin_effect_started(_state: &HubState) {}
+pub async fn pause_admin_effect_started(_state: &HubState) {}
 
 /// 🆔️ Reauthenticates inside the mutation fence before consulting any durable receipt.
 async fn execute_directory_command_receipt_fenced(
@@ -365,51 +223,10 @@ async fn execute_directory_command_receipt_fenced(
     Ok(execution)
 }
 
-/// 🧾️ `POST /directory/commands` — the closed request/receipt command wire. Authentication and the
-/// full §C2 authorization matrix run BEFORE any stored completion is returned, so knowing a request
-/// id never resurrects a result for an expired, revoked, or differently-scoped session. The one-shot
-/// invite capability is returned to this live call alone; every later resolution of the same id is
-/// redacted, proving no duplicate invitation was minted.
-/// 🏷️ The stable label one directory command is reported under. The variant name only —
-/// never a field, because every payload field of this enum is user data.
-fn directory_command_trace_kind(command: &DirectoryCommand) -> &'static str {
-    match command {
-        DirectoryCommand::CreateSpace { .. } => "create-space",
-        DirectoryCommand::RenameSpace { .. } => "rename-space",
-        DirectoryCommand::SetVisibility { .. } => "set-visibility",
-        DirectoryCommand::ArchiveSpace { .. } => "archive-space",
-        DirectoryCommand::DeleteSpace { .. } => "delete-space",
-        DirectoryCommand::UpsertMember { .. } => "upsert-member",
-        DirectoryCommand::RemoveMember { .. } => "remove-member",
-        DirectoryCommand::CreateInvite { .. } => "create-invite",
-        DirectoryCommand::RevokeInvite { .. } => "revoke-invite",
-        DirectoryCommand::AnnounceDocument { .. } => "announce-document",
-        DirectoryCommand::RecordUserPreference { .. } => "record-user-preference",
-    }
-}
-
-/// 🪐️ The space a directory command acts in, when it names one. `CreateSpace` has none yet
-/// — the id is minted by the decider — and `AnnounceDocument` carries its own descriptor's.
-fn directory_command_trace_space(command: &DirectoryCommand) -> Option<String> {
-    match command {
-        DirectoryCommand::CreateSpace { .. } => None,
-        DirectoryCommand::RenameSpace { space_id, .. }
-        | DirectoryCommand::SetVisibility { space_id, .. }
-        | DirectoryCommand::ArchiveSpace { space_id }
-        | DirectoryCommand::DeleteSpace { space_id }
-        | DirectoryCommand::UpsertMember { space_id, .. }
-        | DirectoryCommand::RemoveMember { space_id, .. }
-        | DirectoryCommand::CreateInvite { space_id, .. }
-        | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id.clone()),
-        DirectoryCommand::AnnounceDocument { descriptor } => Some(descriptor.space_id.clone()),
-        DirectoryCommand::RecordUserPreference { .. } => None,
-    }
-}
-
 /// 📝️ The directory command path's span (`server.directory.command`). The record names the
 /// command kind rather than its payload — a command body carries space names, invite addresses and
 /// member ids, none of which belong in an operator's log.
-pub(crate) async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, body: Bytes) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
+pub async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, body: Bytes) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
     let span = state.span("server.directory.command");
     if body.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
         span.refused("payload-too-large");
@@ -474,7 +291,7 @@ pub(crate) async fn post_directory_commands(headers: HeaderMap, axum::extract::C
 /// events. It used to fold the whole directory event log and then, per visible space, list its documents (mounting
 /// each one for its frontier just to count them) and its sessions — 25–58 s for a member of 82 spaces on hub 7800
 /// (ticket 26/09/23 WG8). Counts and `updatedAtMs` are the space administration route's own (the same summary row).
-pub(crate) async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, CredentialOptionalRefusalV1> {
+pub async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, CredentialOptionalRefusalV1> {
     let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let summaries = state.directory.list_visible_space_summaries(caller.as_ref().map(|caller| caller.user_id.as_str())).await.map_err(directory_error_status)?;
     let ceiling = match &caller {
@@ -492,121 +309,6 @@ pub(crate) async fn get_directory_spaces(headers: HeaderMap, State(state): State
         }
     }
     Ok(DirectoryJson(views))
-}
-
-const DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS: u64 = 5_000;
-
-/// 🛂️ Strict query admission: nothing, or exactly one opaque `cursor` token.
-fn space_administration_request_admission(uri: &axum::http::Uri) -> Result<Option<String>, StatusCode> {
-    let Some(query) = uri.query() else { return Ok(None) };
-    if query.is_empty() {
-        return Ok(None);
-    }
-    if query.contains('&') || query.contains('%') || query.contains('+') {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    let (name, value) = query.split_once('=').ok_or(StatusCode::BAD_REQUEST)?;
-    if name != "cursor" || value.is_empty() || value.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')) {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    Ok(Some(value.to_owned()))
-}
-
-/// 🔐️ Session binding of one administration page — the client only ever receives this digest.
-fn space_administration_session_binding_v1(caller: Option<&AuthedUser>, space_id: &str) -> Result<[u8; 32], StatusCode> {
-    let Some(caller) = caller else { return Ok([0u8; 32]) };
-    let mut hash = Sha256::new();
-    hash.update(b"semio/hub/directory-space-administration/session-binding/v1\0");
-    hash.update(&u32::try_from(caller.session_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?.to_be_bytes());
-    hash.update(caller.session_id.as_bytes());
-    hash.update(&u32::try_from(caller.user_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?.to_be_bytes());
-    hash.update(caller.user_id.as_bytes());
-    hash.update(&caller.authorization_generation.to_be_bytes());
-    hash.update(&caller.expires_at.to_be_bytes());
-    hash.update(&u32::try_from(space_id.len()).map_err(|_| StatusCode::BAD_REQUEST)?.to_be_bytes());
-    hash.update(space_id.as_bytes());
-    Ok(hash.finalize().into())
-}
-
-fn space_administration_cursor_mac(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, section: DirectorySpaceAdministrationSectionV1, payload: &[u8]) -> [u8; 32] {
-    let (session_id, user_id, generation) = caller.map_or(("", "", 0u64), |caller| (caller.session_id.as_str(), caller.user_id.as_str(), caller.authorization_generation));
-    let mut hash = Sha256::new();
-    hash.update(b"semio/hub/space-administration-cursor/v1\0");
-    hash.update(key);
-    hash.update(&(session_id.len() as u32).to_be_bytes());
-    hash.update(session_id.as_bytes());
-    hash.update(&(user_id.len() as u32).to_be_bytes());
-    hash.update(user_id.as_bytes());
-    hash.update(&generation.to_be_bytes());
-    hash.update(&(space_id.len() as u32).to_be_bytes());
-    hash.update(space_id.as_bytes());
-    hash.update(section.as_str().as_bytes());
-    hash.update(&(payload.len() as u32).to_be_bytes());
-    hash.update(payload);
-    hash.finalize().into()
-}
-
-fn space_administration_cursor_encode(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, section: DirectorySpaceAdministrationSectionV1, payload: &[u8]) -> Result<String, StatusCode> {
-    let cursor = format!("{}.{}.{}", section.as_str(), os_directory::io::binary::artifact_hash::hex_lower(payload), os_directory::io::binary::artifact_hash::hex_lower(&space_administration_cursor_mac(key, caller, space_id, section, payload)));
-    if cursor.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES {
-        return Err(StatusCode::PAYLOAD_TOO_LARGE);
-    }
-    Ok(cursor)
-}
-
-fn space_administration_cursor_decode(key: &[u8; 32], caller: Option<&AuthedUser>, space_id: &str, cursor: &str) -> Result<(DirectorySpaceAdministrationSectionV1, Vec<u8>), StatusCode> {
-    let mut parts = cursor.split('.');
-    let (Some(section), Some(payload), Some(mac), None) = (parts.next(), parts.next(), parts.next(), parts.next()) else {
-        return Err(StatusCode::BAD_REQUEST);
-    };
-    let section = DirectorySpaceAdministrationSectionV1::parse(section).ok_or(StatusCode::BAD_REQUEST)?;
-    let payload = decode_lower_hex(payload).ok_or(StatusCode::BAD_REQUEST)?;
-    let mac: [u8; 32] = decode_lower_hex(mac).ok_or(StatusCode::BAD_REQUEST)?.try_into().map_err(|_| StatusCode::BAD_REQUEST)?;
-    if !semio_hub::directory::constant_time_digest_eq(&space_administration_cursor_mac(key, caller, space_id, section, &payload), &mac) {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    Ok((section, payload))
-}
-
-fn decode_lower_hex(value: &str) -> Option<Vec<u8>> {
-    if value.len() % 2 != 0 || !value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')) {
-        return None;
-    }
-    (0..value.len() / 2).map(|index| u8::from_str_radix(&value[index * 2..index * 2 + 2], 16).ok()).collect()
-}
-
-fn space_administration_member_key(payload: &[u8]) -> Result<String, StatusCode> {
-    String::from_utf8(payload.to_vec()).map_err(|_| StatusCode::BAD_REQUEST)
-}
-
-fn space_administration_invite_key(payload: &[u8]) -> Result<(i64, String), StatusCode> {
-    if payload.len() < 8 {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    let created_at = i64::from_be_bytes(payload[..8].try_into().map_err(|_| StatusCode::BAD_REQUEST)?);
-    Ok((created_at, String::from_utf8(payload[8..].to_vec()).map_err(|_| StatusCode::BAD_REQUEST)?))
-}
-
-fn space_administration_document_key(payload: &[u8]) -> Result<usize, StatusCode> {
-    let bytes: [u8; 8] = payload.try_into().map_err(|_| StatusCode::BAD_REQUEST)?;
-    usize::try_from(u64::from_be_bytes(bytes)).map_err(|_| StatusCode::BAD_REQUEST)
-}
-
-fn space_administration_invite_payload(row: &DirectorySpaceAdministrationInviteRowV1) -> Vec<u8> {
-    let mut payload = row.created_at_ms.to_be_bytes().to_vec();
-    payload.extend_from_slice(row.invite_id.as_bytes());
-    payload
-}
-
-struct SpaceAdministrationWindows {
-    members: Vec<DirectorySpaceAdministrationMemberRowV1>,
-    member_storage_more: bool,
-    invites: Vec<DirectorySpaceAdministrationInviteRowV1>,
-    invite_storage_more: bool,
-    documents: Vec<DocumentView>,
-    public_documents: Vec<PublicDocumentCatalogEntryV1>,
-    document_storage_more: bool,
-    document_offset: usize,
 }
 
 /// 🧾️ Seals one candidate page over the retained window prefixes and stamps its canonical receipt.
@@ -735,7 +437,7 @@ fn seal_space_administration_page_v1(
 /// 🏛️ One bounded, receipt-bound administration projection of exactly one space. Every row is read
 /// through a safe backend projection; the caller's role is re-read after the page reads and before
 /// the response is handed out, so a revocation or downgrade answers 401/403 instead of a stale page.
-pub(crate) async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceAdministrationPageV1>, CredentialOptionalRefusalV1> {
+pub async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceAdministrationPageV1>, CredentialOptionalRefusalV1> {
     let cursor = space_administration_request_admission(&uri)?;
     let operation = build_directory_space_administration_page_v1(&state, &space_id, cursor.as_deref(), &headers);
     match tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS), operation).await {
@@ -850,7 +552,7 @@ async fn revalidate_space_administration_caller(state: &HubState, caller: Option
     }
 }
 
-pub(crate) async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
+pub async fn post_redeem_invite(Path(token): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let capability = InviteCapability::parse(&token).map_err(directory_error_status)?;
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hub-rest", user.user_id) };
@@ -870,7 +572,7 @@ pub(crate) async fn post_redeem_invite(Path(token): Path<String>, headers: Heade
     revalidate_directory_caller(&state, &user).await?;
     pause_directory_command_authority(&state, &user.user_id, true).await;
     let committed = state.directory_service.redeem_invite(actor, &capability, &user.user_id).await.map_err(directory_error_status)?;
-    if matches!(committed, semio_hub::directory::model::InviteRedemptionCommit::NewlyCommitted { .. }) {
+    if matches!(committed, semio_hub_directory_contract::model::InviteRedemptionCommit::NewlyCommitted { .. }) {
         invalidate_directory_event_authority(&state, std::slice::from_ref(committed.event()));
     }
     revalidate_directory_caller(&state, &user).await?;

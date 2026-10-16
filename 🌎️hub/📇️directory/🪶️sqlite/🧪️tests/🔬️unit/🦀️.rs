@@ -1,4 +1,11 @@
-use super::*;
+
+use semio_hub_directory_contract::{ACTIVE_SYNC_SESSION_READ_MAX, AUTH_AUDIT_PAGE_MAX, HubClock, NewDirectoryEvent};
+use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind, CredentialAuditFactV1, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole};
+use rusqlite::Connection;
+use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope, Hlc};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_sqlite::{SqliteDirectory, now_ms};
+use directory::os_identity::time_ordered_id;
 
 #[derive(serde::Deserialize)]
 struct ShareTokenVectors {
@@ -200,7 +207,7 @@ fn share_token_vectors_match_sqlite_hex_oracle() {
     let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔑️share-token-vectors/🔣️.json")).expect("share-token vectors");
     let oracle = Connection::open_in_memory().expect("sqlite oracle");
     for vector in vectors.encoding {
-        let actual = crate::directory::encode_capability_bytes(&vector.bytes);
+        let actual = semio_hub_directory_contract::encode_capability_bytes(&vector.bytes);
         let sqlite_hex: String = oracle.query_row("SELECT lower(hex(?1))", rusqlite::params![vector.bytes], |row| row.get(0)).expect("sqlite hex");
         assert_eq!(actual, vector.hex);
         assert_eq!(actual, sqlite_hex);
@@ -281,7 +288,7 @@ async fn share_issuance_atomically_requires_the_persisted_scope_and_preserves_ar
         .expect("postcondition counts");
     assert_eq!(after, before);
 
-    let root = crate::test_artifact_root::test_artifact_root();
+    let root = semio_hub_testing::test_artifact_root();
     std::fs::create_dir_all(&root).expect("share race artifact root");
     let path = root.join(format!("share-issuance-race-{}.sqlite", time_ordered_id()));
     let issuer = SqliteDirectory::connect(path.to_str().expect("share race path")).await.expect("race issuer");
@@ -313,7 +320,7 @@ async fn socket_binding_reads_are_exact_id_generation_selector_scope_and_status(
     let issue = AuthSessionIssue {
         user_id: "seed".into(),
         identity_provider: "socket-test".into(),
-        identity_subject_digest: crate::directory::identity_subject_digest("socket-test", "seed").expect("subject digest"),
+        identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("socket-test", "seed").expect("subject digest"),
         ttl_secs: 60,
         device_instance_id: "socket-device".into(),
         session_kind: AuthSessionKind::DevelopmentLocal,
@@ -359,7 +366,7 @@ async fn auth_session_storage_is_digest_only_and_revoke_returns_generation() {
     let issue = AuthSessionIssue {
         user_id: "seed".into(),
         identity_provider: "oidc.example".into(),
-        identity_subject_digest: crate::directory::identity_subject_digest("oidc.example", "sub-123").expect("subject digest"),
+        identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("oidc.example", "sub-123").expect("subject digest"),
         ttl_secs: 60,
         device_instance_id: "device-a".into(),
         session_kind: AuthSessionKind::External,
@@ -377,7 +384,7 @@ async fn auth_session_storage_is_digest_only_and_revoke_returns_generation() {
     let (selector, digest_hex): (String, String) =
         directory.lock().expect("sqlite lock").query_row("SELECT selector, lower(hex(secret_digest)) FROM hub_auth_session WHERE id = ?1", [&issued.record.id], |row| Ok((row.get(0)?, row.get(1)?))).expect("stored session authority");
     assert_eq!(selector, issued.capability.selector());
-    assert_eq!(digest_hex, crate::directory::encode_capability_bytes(&issued.capability.secret_digest()));
+    assert_eq!(digest_hex, semio_hub_directory_contract::encode_capability_bytes(&issued.capability.secret_digest()));
     assert_ne!(digest_hex, secret_hex);
     assert!(!format!("{:?}", issued.capability).contains(secret_hex));
     let share_raw = share.capability.expose_once();
@@ -413,7 +420,7 @@ async fn projection_rebuild_preserves_live_credential_invite_and_session_binding
         .issue_auth_session(&AuthSessionIssue {
             user_id: "seed".into(),
             identity_provider: "rebuild-test".into(),
-            identity_subject_digest: crate::directory::identity_subject_digest("rebuild-test", "seed").expect("subject digest"),
+            identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("rebuild-test", "seed").expect("subject digest"),
             ttl_secs: 60,
             device_instance_id: "rebuild-device".into(),
             session_kind: AuthSessionKind::DevelopmentLocal,
@@ -522,7 +529,7 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
 async fn share_scope_corpus_v1_holds_on_sqlite() {
     let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
 }
 
 // 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over SQLite.
@@ -530,5 +537,5 @@ async fn share_scope_corpus_v1_holds_on_sqlite() {
 async fn space_administration_read_surface_v1_holds_on_sqlite() {
     let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
     directory.seed().await.expect("seed");
-    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+    semio_hub_directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
 }

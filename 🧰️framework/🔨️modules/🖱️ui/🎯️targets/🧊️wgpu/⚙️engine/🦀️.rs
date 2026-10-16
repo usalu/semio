@@ -13,7 +13,7 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
-use crate::wgpu::draw::{DrawList, IconAtlas};
+use crate::wgpu::draw_types::{DrawList, IconAtlas};
 use crate::wgpu::events::{resolve_overlay_placement_side, AccessibilityUiEvent, CaretSource, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::input::{retained_hit_registration, retained_tree_chevron_registration, retained_tree_drag_handle_registration, HitKind, RetainedHitRegistration};

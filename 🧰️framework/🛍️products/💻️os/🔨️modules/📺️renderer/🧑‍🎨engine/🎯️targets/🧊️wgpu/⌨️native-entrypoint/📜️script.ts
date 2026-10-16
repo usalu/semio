@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import {readNativeCallerAuthorityV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {withPlaygroundSessionV1} from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
+import {createRequestedIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
@@ -12,11 +15,10 @@ import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runTool} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { COMPILER_FONTS_DIRECTORY } from "../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
-import { nativeRuntimeDirectory } from "./📦️modules/🟦️.ts";
+import { nativeRuntimeDirectory,withNativeRuntimeV1 } from "./📦️modules/🟦️.ts";
 
 const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
@@ -45,18 +47,15 @@ export async function runNativeBinary(executable: string, args: readonly string[
 /** 🌐️ Starts one ready asset listener, runs the native consumer and closes all owned connections. */
 export async function runNativeSession(executable: string, args: readonly string[], environment: NodeJS.ProcessEnv, cwd: string, signal: AbortSignal, startAssets?: () => Server): Promise<void> {
   signal.throwIfAborted();
-  const server = startAssets?.();
+  const server=startAssets?.();let failed=false;
   try {
     if (server && !server.listening) await once(server, "listening", { signal });
     const address = server?.address();
     if (server && (!address || typeof address === "string")) throw new Error("Native asset server needs a TCP address");
     const env = { ...environment, ...(address && typeof address !== "string" ? { SEMIO_ASSET_BASE_URL: `http://127.0.0.1:${address.port}` } : {}) };
     await runNativeBinary(executable, args, env, cwd, signal);
-  } finally {
-    if (server) {
-      server.closeAllConnections();
-      await new Promise<void>(accept => server.close(() => accept()));
-    }
+  }catch(error){failed=true;throw error;}finally{
+    const failures:unknown[]=[];if(server){try{server.closeAllConnections();}catch(error){failures.push(error);}try{await new Promise<void>((accept,refuse)=>server.close(error=>error?refuse(error):accept()));}catch(error){failures.push(error);}}if(!failed&&failures.length)throw failures[0];
   }
 }
 
@@ -70,7 +69,7 @@ const BOOT_AXIS_FLAGS = ["--app", "--role", "--mode", "--example", "--brand", "-
  * boot axes as `--flag value` pairs so one invocation can open the document a url opens. */
 function selection(args: string[], smoke = false): { variant: string; profile: "prototype" | "release"; axes: string[] } {
   const [variant, profile, ...rest] = args;
-  nativeRuntimeDirectory(".", variant, profile);
+  if(!variant||variant.length>64||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)||!(profile==="prototype"||profile==="release"))throw Error("Exact Native variant and mode required");
   const axes: string[] = [];
   for (let index = 0; index < rest.length; index++) {
     const flag = rest[index]!;
@@ -84,10 +83,10 @@ function selection(args: string[], smoke = false): { variant: string; profile: "
 /** 🖥️ Runs completed native artifacts without compiling or invoking another Nx graph. */
 class RunScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const { variant, profile, axes } = selection(args, true), repo = this.repoRoot, runtime = nativeRuntimeDirectory(join(repo, ownerPath), variant, profile);
-    const manifest = JSON.parse(readFileSync(join(runtime, "🔣️runtime.json"), "utf8"));
-    if (manifest.version !== 1 || manifest.variant !== variant || manifest.profile !== profile || !existsSync(join(runtime, ".semio-artifact.json"))) throw new Error("Missing or mismatched native runtime artifact");
-    const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).playgrounds;
+    const {variant,profile,axes}=selection(args,true),repo=this.repoRoot;if(profile!==readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode)throw Error("Native run must match actual Original mode");
+    await withPlaygroundSessionV1(repo,this.invocation,variant,async(_session,projection,control)=>{
+    return withNativeRuntimeV1(repo,this.invocation,variant,control,async(runtime,_manifest,runtimeControl)=>{
+    const catalog=projection.playgrounds;
     const row = catalog.find((entry: { variant: string }) => entry.variant === variant);
     if (!row) throw new Error(`Unknown native playground: ${variant}`);
     const controller = new AbortController(), cancel = () => controller.abort();
@@ -98,15 +97,17 @@ class RunScript extends BundleScript {
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
-      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_COMPILER_FONTS: join(repo, COMPILER_FONTS_DIRECTORY) }, repo, controller.signal, row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+      await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, repo,createRequestedIssuedResourceControlV1(runtimeControl,0,controller.signal).signal,row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
+    });
+    });
   }
 }
 
 /** 🌉 Runs the exact caller-declared MCP producer with its authored service inventory. */
 class McpScript extends BundleScript {
   async run([variant,profile,transport,...args]:string[]):Promise<void> {
-    if(!["prototype","release"].includes(profile) || !["stdio","http"].includes(transport))throw new Error("MCP owner selection requires a variant, exact profile and transport");
+    if(!variant||(profile!=="prototype"&&profile!=="release")||(transport!=="stdio"&&transport!=="http"))throw new Error("MCP owner selection requires a variant, exact profile and transport");
     const catalog=JSON.parse(readFileSync(join(this.repoRoot,registryPath,"🤖️generated/🎠️playgrounds.json"),"utf8"));
     const row=catalog.find((entry:{variant:string})=>entry.variant===variant);
     if(!row?.mcpHost)throw new Error(`Playground does not declare an MCP producer: ${variant}`);
@@ -122,10 +123,10 @@ class McpScript extends BundleScript {
 /** ⚖️ Runs the native scale consumer with only its binary and fixture prerequisites. */
 class ScaleScript extends BundleScript {
   async run([profile, ...args]: string[]): Promise<void> {
-    nativeRuntimeDirectory(".", "scale", profile);
+    if(profile!=="prototype"&&profile!=="release")throw Error("Exact Native scale mode required");nativeRuntimeDirectory(this.repoRoot,"scale",profile);
     if (!args.length || args.length % 2 !== 0 || args.some((value, index) => index % 2 === 0 && !["--scale", "--scale-wasm", "--shards", "--report"].includes(value))) throw new Error("Native scale accepts --scale, --scale-wasm, --shards and --report value pairs");
     for (const flag of ["--scale", "--scale-wasm", "--report"]) if (args.filter(value => value === flag).length !== 1) throw new Error(`Native scale requires exactly one ${flag}`);
-    mkdirSync(dirname(resolve(this.repoRoot, args[args.indexOf("--report") + 1])), { recursive: true });
+    const report=args[args.indexOf("--report")+1];if(!report)throw Error("Finite scale report required");mkdirSync(dirname(resolve(this.repoRoot,report)),{recursive:true});
     const controller = new AbortController(), cancel = () => controller.abort();
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try { await runNativeBinary(nativeRendererBinary(resolve(import.meta.dir, "../📦️packages/🦀️rust"), profile), args, process.env, this.repoRoot, controller.signal); }

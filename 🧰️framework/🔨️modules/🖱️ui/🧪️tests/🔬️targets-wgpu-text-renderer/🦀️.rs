@@ -4,7 +4,7 @@ include!("../../🧪️testing/🔤️text-reference/🦀️.rs");
 
 #[test]
 fn the_retained_painter_pens_the_kerned_caret_and_breaks_where_the_kerned_wrap_does() {
-    use crate::wgpu::draw::{DrawList, KIND_GLYPH};
+    use crate::wgpu::draw_types::{DrawList, KIND_GLYPH};
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
     use crate::wgpu::theme::Rgba;
@@ -46,11 +46,11 @@ fn the_retained_painter_pens_the_kerned_caret_and_breaks_where_the_kerned_wrap_d
 async fn a_semibold_run_strikes_twice_at_the_regular_faces_own_advances() {
     let mut atlas = FontAtlas::builtin();
     let size = 19.2;
-    let mut regular = crate::wgpu::draw::DrawList::default();
+    let mut regular = crate::wgpu::draw_types::DrawList::default();
     crate::wgpu::widgets::draw_text_weighted(&mut regular, &mut atlas, "Ab", 10.0, 20.0, size, crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0), crate::wgpu::text::TextWeight::Regular);
-    let mut semibold = crate::wgpu::draw::DrawList::default();
+    let mut semibold = crate::wgpu::draw_types::DrawList::default();
     crate::wgpu::widgets::draw_text_weighted(&mut semibold, &mut atlas, "Ab", 10.0, 20.0, size, crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0), crate::wgpu::text::TextWeight::Semibold);
-    let count = |draw: &crate::wgpu::draw::DrawList| draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
+    let count = |draw: &crate::wgpu::draw_types::DrawList| draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
     assert_eq!(count(&semibold), count(&regular) * 2, "the second strike is the whole synthetic weight");
     let widths: Vec<f32> = semibold.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect[0]).collect();
     assert!(widths.iter().any(|x| (*x - 10.0).abs() < 0.001), "the first strike sits at the authored origin");
@@ -59,7 +59,7 @@ async fn a_semibold_run_strikes_twice_at_the_regular_faces_own_advances() {
 
 #[test]
 fn the_retained_painter_breaks_where_the_measure_says() {
-    use crate::wgpu::draw::DrawList;
+    use crate::wgpu::draw_types::DrawList;
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
     use crate::wgpu::theme::Rgba;

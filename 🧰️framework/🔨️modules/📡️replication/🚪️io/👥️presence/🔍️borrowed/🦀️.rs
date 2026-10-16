@@ -1,6 +1,6 @@
 //! 👥️ Borrowed projections validating the complete original presence wire.
-use crate::wire::{PresencePeerWireLimitsV1, PRESENCE_PEER_WIRE_LIMITS_V1, PRESENCE_TYPING_EXCERPT_BYTES};
-use crate::value::{ValueError, ValueRefusalKind};
+use crate::{PresencePeerWireLimitsV1, PRESENCE_PEER_WIRE_LIMITS_V1, PRESENCE_TYPING_EXCERPT_BYTES};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 
 fn invalid() -> ValueError { ValueError::literal(ValueRefusalKind::InvalidValue, "invalid original presence wire") }
 fn limited() -> ValueError { ValueError::literal(ValueRefusalKind::WorkLimit, "original presence wire exceeds its declared limit") }
@@ -116,7 +116,7 @@ impl<'a> Reader<'a> {
     fn units(&mut self) -> Result<u64, ValueError> { let value = self.varint()?; if value > self.limits.maximum_tool_run_units { Err(limited()) } else { Ok(value) } }
     fn tool_run(&mut self) -> Result<(), ValueError> {
         self.text()?;
-        if usize::from(self.byte()?) >= crate::wire::PresenceToolRunState::ALL.len() { return Err(invalid()); }
+        if usize::from(self.byte()?) >= crate::PresenceToolRunState::ALL.len() { return Err(invalid()); }
         u16::try_from(self.varint()?).map_err(|_| limited())?;
         let completed = self.units()?;
         if self.boolean()? && completed > self.units()? { return Err(invalid()); }
@@ -124,7 +124,7 @@ impl<'a> Reader<'a> {
     }
     fn history_edit(&mut self) -> Result<(), ValueError> {
         self.text()?;
-        if usize::from(self.byte()?) >= crate::wire::PresenceHistoryEditStage::ALL.len() { return Err(invalid()); }
+        if usize::from(self.byte()?) >= crate::PresenceHistoryEditStage::ALL.len() { return Err(invalid()); }
         u32::try_from(self.varint()?).map_err(|_| limited())?;
         Ok(())
     }
@@ -157,7 +157,7 @@ pub fn borrow_presence_metadata(bytes: &[u8]) -> Result<BorrowedPresenceMetadata
     if flags & (1 << 8) != 0 { reader.views()?; }
     if flags & (1 << 9) != 0 { for _ in 0..3 { reader.optional_text()?; } }
     if flags & (1 << 10) != 0 { reader.tool_run()?; }
-    if flags & (1 << 11) != 0 && usize::from(reader.byte()?) >= crate::wire::PresencePrincipalKind::ALL.len() { return Err(invalid()); }
+    if flags & (1 << 11) != 0 && usize::from(reader.byte()?) >= crate::PresencePrincipalKind::ALL.len() { return Err(invalid()); }
     if flags & (1 << 12) != 0 { reader.text()?; }
     if flags & (1 << 13) != 0 { reader.history_edit()?; }
     if flags & (1 << 14) != 0 { reader.typing()?; }

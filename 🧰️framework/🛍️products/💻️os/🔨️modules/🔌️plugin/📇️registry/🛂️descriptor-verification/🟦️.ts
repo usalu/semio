@@ -70,7 +70,7 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
 }
 
 
-/** 🧾️ One committed semantic descriptor against the shipped component it was verified with: the `wasm-release`
+/** 🧾️ One committed semantic descriptor against the shipped component it was verified with: the `release`
  * deliverable's `🧾️receipt.json` must name exactly this pack (`semanticDescriptorSha256`) and exactly the bytes beside it
  * (`wasmSha256`, `wasmBytes`). No shipped deliverable yet is a warning ("not built"); a receipt that names other bytes or
  * another descriptor is an error — the committed declaration moved past its last shipped build (ticket 26/09/23 wave A2). */

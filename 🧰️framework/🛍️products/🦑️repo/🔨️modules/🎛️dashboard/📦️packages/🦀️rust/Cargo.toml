@@ -20,17 +20,14 @@ name = "semio"
 path = "../../🚪️entrypoint/🦀️.rs"
 
 [dependencies]
-ui_locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
-ui_tui = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }
-ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-serde = { workspace = true }
+dashboard_cli = { path = "../../🧭️cli/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-cli" }
+dashboard_core = { path = "../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_daemon = { path = "../../🌀️daemon/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-daemon" }
+dashboard_inventory = { path = "../../📚️inventory/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-inventory" }
+dashboard_labels = { path = "../../🖥️terminal/🌐️labels/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-labels" }
+dashboard_preferences = { path = "../../⚙️preferences/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-preferences" }
+dashboard_repo_domain = { path = "../../🏛️repo-domain/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-repo-domain" }
+dashboard_terminal = { path = "../../🖥️terminal/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-terminal" }
+dashboard_wire = { path = "../../🌀️daemon/🧵️wire/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-wire" }
 serde_json = { workspace = true }
 semio-framework-repo-workspace = { path = "../../../🏠️workspace/📦️packages/🦀️rust" }
-semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
-semio-framework-repo-events = { path = "../../../📡️events/📦️packages/🦀️rust" }
-semio-framework-repo-providers = { path = "../../../🧩️providers/📦️packages/🦀️rust" }
-semio-framework-repo-codebase = { path = "../../../🗂️codebase/📦️packages/🦀️rust" }
-semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }
-semio-framework-repo-tree = { path = "../../../🌳️tree/📦️packages/🦀️rust" }
-semio-framework-repo-tickets = { path = "../../../🎫️tickets/📦️packages/🦀️rust" }
-semio-framework-repo-goals = { path = "../../../🎯️goals/📦️packages/🦀️rust" }

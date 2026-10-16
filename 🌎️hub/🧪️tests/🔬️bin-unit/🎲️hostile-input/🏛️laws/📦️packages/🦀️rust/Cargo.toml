@@ -1,0 +1,67 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-hostile-input-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hostile input laws: the generative hostile-input suites and the held count lease"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-hostile-input-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+integration-fixtures = []
+testkit = ["semio-hub-artifact-authority/testkit", "semio-hub-document-routes/testkit", "semio-hub-ledgers/testkit", "semio-hub-route-models/testkit", "semio-hub-runtime/testkit", "semio-hub-session-routes/testkit", "semio-hub-state/testkit"]
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+semio-hub-artifact-checkin = { workspace = true }
+semio-hub-artifact-creation = { workspace = true }
+semio-hub-artifact-creation-service = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-document-routes = { workspace = true, features = ["testkit"] }
+semio-hub-lag-rebootstrap = { workspace = true }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-native-openable = { workspace = true }
+semio-hub-refusal = { workspace = true }
+semio-hub-route-models = { workspace = true, features = ["testkit"] }
+semio-hub-route-testkit = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-state = { workspace = true, features = ["testkit"] }
+semio-hub-testing = { workspace = true }
+semio-hub-trusted-catalog-fixtures = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-framework-os-mcp = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
+tokio = { version = "1", features = ["full", "test-util"] }
+tokio-tungstenite = "0.26"
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+serde_json = { workspace = true }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-hub-stdio-catalog = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+axum = { version = "0.8", features = ["ws"] }
+semio-framework-trace = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+futures = "0.3"

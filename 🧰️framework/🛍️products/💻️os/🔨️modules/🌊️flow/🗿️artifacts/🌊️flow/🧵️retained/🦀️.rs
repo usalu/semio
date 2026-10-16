@@ -1,13 +1,9 @@
 //! 🧵️ Shared typed Flow ownership frontiers for resumable copying and retirement.
 
-use crate::{neural, FlowArtifact, FlowHostSnapshot, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
+use crate::{neural, FlowArtifact, FlowHostComponents, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_value::{ValueError,retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement,queue::RetirementQueue},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 //#region 📑️SelectedCopy
-#[path = "📑️copy/🦀️.rs"]
-pub mod copy;
-pub use copy::{FlowSnapshotIntakeProducer,FlowSnapshotCopyIntakeSource,FlowCopyAllocations, FlowHostSnapshotCopy, FlowSynapseCopy, FlowWidgetCopy};
-
 #[path = "🧬️fields/🦀️.rs"]
 mod fields;
 //#endregion 📑️SelectedCopy
@@ -16,9 +12,9 @@ mod fields;
 pub enum FlowOwner {
     Spec(SynapseSpec),Neuron(neural::Neuron),Synapse(neural::Synapse),Preview(FlowPreviewGui),Channel(crate::FlowChannelRef),
     Bytes(Vec<u8>),Strings(Vec<String>),Set(OrderedSet),Dictionary(neural::Dictionary),Value(neural::Value),
-    HostSnapshot(FlowHostSnapshot),Widget(Widget),Widgets(Vec<Widget>),Specs(Vec<SynapseSpec>),Layouts(OrderedMap<WidgetLayout>),
+    HostSnapshot(FlowHostComponents),Widget(Widget),Widgets(Vec<Widget>),Specs(Vec<SynapseSpec>),Layouts(OrderedMap<WidgetLayout>),
     Tree(neural::Tree),Neurons(Vec<neural::Neuron>),Synapses(Vec<neural::Synapse>),Gui(FlowGui),Nodes(OrderedMap<FlowNodeGui>),
-    Previews(Vec<FlowPreviewGui>),Layout(Vec<FlowLayoutEntry>),Chrome(NodeChrome),Mutation(crate::FlowMutation),
+    Previews(Vec<FlowPreviewGui>),Layout(Vec<FlowLayoutEntry>),Chrome(NodeChrome),
 }
 macro_rules! owned_variant {
     ($($variant:ident),+)=>{impl RetireOwned for FlowOwner {
@@ -27,7 +23,7 @@ macro_rules! owned_variant {
         fn controlled_retirement_supported()->bool {true}
     }};
 }
-owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget,Widgets,Specs,Layouts,Tree,Neurons,Synapses,Gui,Nodes,Previews,Layout,Chrome,Mutation);
+owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget,Widgets,Specs,Layouts,Tree,Neurons,Synapses,Gui,Nodes,Previews,Layout,Chrome);
 
 #[must_use="Flow ownership must close every original owner and admitted scaffold"]
 pub struct FlowRetirement {root:Option<ControlledRetirement<FlowOwner>>,queue:RetirementQueue}
@@ -62,24 +58,6 @@ impl FlowRetirement {
 }
 impl Drop for FlowRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Flow retirement abandoned original ownership");}}
 
-impl FlowHostSnapshot {
-    /// 🧊️ Explicit cold-only disposal of a detached fixture.
-    pub fn retire_cold(self) {
-        FlowRetirement::from_owner(FlowOwner::HostSnapshot(self)).retire_cold();
-    }
-
-    /// 🧊️ Installs a whole widget roster AND retires the one it displaces. A bare
-    /// `fixture.widgets = vec![…]` drops every displaced `Widget` — each of which owns a
-    /// `Dictionary`/`OrderedSet`/`Tree` that refuses a bare drop — so the assignment panics with
-    /// `final Dictionary ownership must be explicitly retired or owned by a cold boundary` at the
-    /// END of the caller, naming nothing that points back at the assignment. This is the paid form,
-    /// the twin of the `std::mem::replace(&mut self.fixture, fixture).retire_cold()` the flow host's
-    /// own `apply_fixture` already pays (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn replace_widgets(&mut self, widgets: Vec<Widget>) {
-        FlowRetirement::from_owner(FlowOwner::Widgets(std::mem::replace(&mut self.widgets, widgets))).retire_cold();
-    }
-}
-
 impl Widget {
     /// 🧊️ Explicit cold-only disposal of a detached widget.
     pub fn retire_cold(self) {
@@ -106,13 +84,3 @@ impl FlowArtifact {
         self.ui.retire_cold();
     }
 }
-
-//#region 🧪️RetirementLaws
-#[cfg(test)]
-#[path = "🧪️tests/🧵️retained/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧬️fields/🦀️.rs"]
-mod field_tests;
-//#endregion 🧪️RetirementLaws

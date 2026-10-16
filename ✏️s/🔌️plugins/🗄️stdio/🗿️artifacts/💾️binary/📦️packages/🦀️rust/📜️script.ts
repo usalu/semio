@@ -34,4 +34,4 @@ class OriginalBinaryReceivingScript extends BundleScript {
  }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-binary", { commands: { "test-original-receiving": OriginalBinaryReceivingScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-binary", { packages: ["semio-s-artifact-stdio-binary", "semio-s-artifact-stdio-binary-io-registry", "semio-s-artifact-stdio-binary-mutations", "semio-s-artifact-stdio-binary-schema", "semio-s-artifact-stdio-binary-snapshot"], commands: { "test-original-receiving": OriginalBinaryReceivingScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

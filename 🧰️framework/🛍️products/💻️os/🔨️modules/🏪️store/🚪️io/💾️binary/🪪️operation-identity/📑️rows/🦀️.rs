@@ -1,13 +1,13 @@
 //! 🧺️ Owned physical operation rows retain partial output until explicitly funded retirement.
 use semio_framework_value::{ErasedSnapshotRetirement,NativeEncodeControl,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 
-pub(crate) struct OperationWireRows{rows:Option<Vec<Vec<u8>>>,active:Option<Vec<u8>>}
+pub struct OperationWireRows{pub rows:Option<Vec<Vec<u8>>>,pub active:Option<Vec<u8>>}
 impl OperationWireRows{
     pub(crate) fn new()->Self{Self{rows:None,active:None}}
-    pub(crate) fn initialize(&mut self,count:usize,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{self.rows=Some(control.allocate_vec(count)?);Ok(())}
-    pub(crate) fn active(&mut self)->&mut Vec<u8>{self.active.get_or_insert_with(Vec::new)}
-    pub(crate) fn append(&mut self){self.rows.as_mut().expect("admitted wire rows").push(self.active.take().expect("admitted active wire row"));}
-    pub(crate) fn take(&mut self)->Vec<Vec<u8>>{self.rows.take().expect("admitted wire rows")}
+    pub fn initialize(&mut self,count:usize,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{self.rows=Some(control.allocate_vec(count)?);Ok(())}
+    pub fn active(&mut self)->&mut Vec<u8>{self.active.get_or_insert_with(Vec::new)}
+    pub fn append(&mut self){self.rows.as_mut().expect("admitted wire rows").push(self.active.take().expect("admitted active wire row"));}
+    pub fn take(&mut self)->Vec<Vec<u8>>{self.rows.take().expect("admitted wire rows")}
 }
 impl ErasedSnapshotRetirement for OperationWireRows{
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

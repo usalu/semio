@@ -7,141 +7,15 @@ use super::*;
  * `fillStyleToPaint` in `canvas-2d-host.tsx`. Coordinates (`x1/y1/x2/y2`, `cx/cy/r`) are in the same
  * local space as the owning layer's `x`/`y` (this renderer has no per-layer transform matrix yet, so
  * they are treated as offsets from the layer's own `x`/`y` origin). */
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CanvasFillJson {
-    #[serde(default)]
-    pub(crate) kind: Option<String>,
-    #[serde(default)]
-    pub(crate) color: Option<Vec<f64>>,
-    #[serde(default)]
-    pub(crate) x1: f64,
-    #[serde(default)]
-    pub(crate) y1: f64,
-    #[serde(default)]
-    pub(crate) x2: f64,
-    #[serde(default)]
-    pub(crate) y2: f64,
-    #[serde(default)]
-    pub(crate) cx: f64,
-    #[serde(default)]
-    pub(crate) cy: f64,
-    #[serde(default)]
-    pub(crate) r: f64,
-    #[serde(default)]
-    pub(crate) stops: Vec<CanvasGradientStopJson>,
-}
 
 /** 🎨️ One `CanvasGradientStop` — `offset` in `[0,1]`, `color` an `[r,g,b,a?]` channel array in `0..1`. */
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CanvasGradientStopJson {
-    #[serde(default)]
-    pub(crate) offset: f64,
-    #[serde(default)]
-    pub(crate) color: Option<Vec<f64>>,
-}
 
 /** 🖊️ A `CanvasLayerRecord["stroke"]` mirror. */
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct CanvasStrokeJson {
-    #[serde(default)]
-    pub(crate) color: Option<Vec<f64>>,
-    #[serde(default)]
-    pub(crate) width: Option<f64>,
-    #[serde(default)]
-    dash: Option<Vec<f64>>,
-    #[serde(default)]
-    cap: Option<String>,
-    #[serde(default)]
-    pub(crate) join: Option<String>,
-}
 
 /** 🖼️ A `CanvasLayerRecord["image"]` mirror — the nested per-node image field (as opposed to the
  * legacy top-level `dataUrl` used by `kind === "image"` records). */
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct CanvasImageFieldJson {
-    #[serde(default)]
-    src: Option<String>,
-    #[serde(default)]
-    pub(crate) width: Option<f64>,
-    #[serde(default)]
-    pub(crate) height: Option<f64>,
-}
 
 /** 📝️ A `CanvasLayerRecord["text"]` mirror. */
-#[derive(Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct CanvasTextFieldJson {
-    #[serde(default)]
-    pub(crate) content: Option<String>,
-    #[serde(default)]
-    pub(crate) size: Option<f64>,
-    font_family: TextFace,
-}
-
-#[derive(Deserialize)]
-pub(crate) struct CanvasLayer {
-    #[serde(default)]
-    pub(crate) kind: String,
-    #[serde(default)]
-    pub(crate) id: String,
-    #[serde(default)]
-    pub(crate) name: String,
-    #[serde(default)]
-    pub(crate) x: f64,
-    #[serde(default)]
-    pub(crate) y: f64,
-    #[serde(default)]
-    pub(crate) width: f64,
-    #[serde(default)]
-    pub(crate) height: f64,
-    #[serde(default)]
-    pub(crate) x0: Option<f64>,
-    #[serde(default)]
-    pub(crate) y0: Option<f64>,
-    #[serde(default)]
-    pub(crate) x1: Option<f64>,
-    #[serde(default)]
-    pub(crate) y1: Option<f64>,
-    #[serde(default, rename = "dataUrl")]
-    data_url: Option<String>,
-    #[serde(default)]
-    pub(crate) points: Option<Vec<[f64; 2]>>,
-    #[serde(default)]
-    seams: Option<Vec<u8>>,
-    /** 🗒️ `role === "meta"` marks a non-visual bookkeeping record (e.g. carries the host's active
-     * pointer-tool id) — filtered from rendering, matches `JsonLayersCanvasSession.renderFrame`'s
-     * `records.find(role === "meta")` / `layers.filter(role !== "meta")` split. */
-    #[serde(default)]
-    pub(crate) role: Option<String>,
-    #[serde(default)]
-    pub(crate) utility: Option<String>,
-    #[serde(default)]
-    pub(crate) visible: Option<bool>,
-    #[serde(default)]
-    pub(crate) opacity: Option<f32>,
-    #[serde(default, rename = "blendMode")]
-    blend_mode: Option<String>,
-    #[serde(default)]
-    pub(crate) selected: Option<bool>,
-    #[serde(default)]
-    pub(crate) fill: Option<CanvasFillJson>,
-    #[serde(default)]
-    pub(crate) stroke: Option<CanvasStrokeJson>,
-    #[serde(default)]
-    image: Option<CanvasImageFieldJson>,
-    #[serde(default)]
-    pub(crate) text: Option<CanvasTextFieldJson>,
-    #[serde(default)]
-    segments: Option<Vec<crate::canvas2d_paint::ScenePathSegment>>,
-    #[serde(default)]
-    transform: Option<Vec<f64>>,
-    #[serde(default, rename = "fillRule")]
-    fill_rule: Option<String>,
-}
 
 #[derive(Deserialize)]
 struct Canvas2dPacketText<'a> {
@@ -181,7 +55,7 @@ fn canvas2d_packet_text_size() -> f64 {
     11.0
 }
 
-pub(crate) fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
+pub fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
     layer.role.as_deref() != Some("meta") && layer.visible.unwrap_or(true)
 }
 
@@ -197,7 +71,7 @@ fn decode_canvas_image_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
     Some((rgba.into_raw(), width, height))
 }
 
-pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Result<String, RasterUploadRefusal>, Option<(u32, u32)>) {
+pub fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, data_url: &str) -> (Result<String, RasterUploadRefusal>, Option<(u32, u32)>) {
     let dimensions = std::cell::Cell::new(None);
     let key = queue_canvas_image_upload_with(
         surface_id,
@@ -217,11 +91,11 @@ pub(crate) fn queue_canvas_image_upload_sized(surface_id: &str, layer_id: &str, 
     (key, dimensions.get())
 }
 
-pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
+pub fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
     queue_canvas_image_upload_sized(surface_id, layer_id, data_url).0.ok()
 }
 
-pub(crate) fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
+pub fn draw_checkerboard(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &Theme, extent: f32) {
     let cell = 16.0;
     let half = extent * 0.5;
     let light = theme.checker_light;
@@ -332,7 +206,7 @@ fn canvas_mix_rgba(a: Rgba, b: Rgba, t: f32) -> Rgba {
     Rgba::new(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
 }
 
-pub(crate) fn canvas_gradient_color_at(stops: &[CanvasGradientStopJson], t: f32, opacity: f32) -> Rgba {
+pub fn canvas_gradient_color_at(stops: &[CanvasGradientStopJson], t: f32, opacity: f32) -> Rgba {
     if stops.is_empty() {
         return Rgba::new(0.58, 0.64, 0.72, 0.95 * opacity);
     }
@@ -401,7 +275,7 @@ fn canvas_blend_channel(mode: &str, cb: f32, cs: f32) -> f32 {
     }
 }
 
-pub(crate) fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> Rgba {
+pub fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> Rgba {
     let mode = match mode {
         None | Some("") | Some("normal") => return source,
         Some(m) => m,
@@ -456,7 +330,7 @@ fn push_shape_outline(draw: &mut ui_wgpu::wgpu::DrawList, rect: Rect, color: Rgb
     }
 }
 
-pub(crate) fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+pub fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (sx1, sy1) = viewport.world_to_screen((origin_x + fill.x1) as f32, (origin_y + fill.y1) as f32, inner);
     let (sx2, sy2) = viewport.world_to_screen((origin_x + fill.x2) as f32, (origin_y + fill.y2) as f32, inner);
     let dx = sx2 - sx1;
@@ -490,7 +364,7 @@ pub(crate) fn push_linear_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, view
     draw.pop_scissor();
 }
 
-pub(crate) fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
+pub fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, clip: Rect, origin_x: f64, origin_y: f64, fill: &CanvasFillJson, opacity: f32, blend: Option<&str>, backdrop: Rgba) {
     let (scx, scy) = viewport.world_to_screen((origin_x + fill.cx) as f32, (origin_y + fill.cy) as f32, inner);
     let sr = (fill.r as f32 * viewport.zoom).max(0.5);
     draw.push_scissor(clip);
@@ -505,7 +379,7 @@ pub(crate) fn push_radial_gradient_fill(draw: &mut ui_wgpu::wgpu::DrawList, view
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per resolved paint/geometry input; grouping into a struct is a T2 restructure, out of scope")]
-pub(crate) fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, fallback_stroke: Rgba, backdrop: Rgba, is_circle: bool) {
+pub fn render_canvas_shape_fill(draw: &mut ui_wgpu::wgpu::DrawList, viewport: &Viewport, inner: Rect, shape_rect: Rect, layer: &CanvasLayer, opacity: f32, fallback_fill: Rgba, fallback_stroke: Rgba, backdrop: Rgba, is_circle: bool) {
     let blend = layer.blend_mode.as_deref();
     match &layer.fill {
         Some(fill) if fill.kind.as_deref() == Some("linearGradient") && !fill.stops.is_empty() => {
@@ -588,7 +462,7 @@ fn apply_canvas_framing(scene: &UiComponentSceneNode, bounds: Rect) -> bool {
 /// 🫙️ `layers.length === 0 → ctx.fillText("Empty canvas", -36, 0)` in
 /// `🧱️elements/📐️Canvas2dHost/🟦️.tsx`'s `renderFrame` — React counts the same `role !== "meta"`
 /// records this loop iterates, so the emptiness verdict matches without a second parse.
-pub(crate) fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
         return render_placeholder("canvas-2d", bounds, ctx);
@@ -618,7 +492,7 @@ pub(crate) fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
                 }
             });
         }
-        crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+        semio_framework_os_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
         order.close(ctx.draw);
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
         return;
@@ -720,7 +594,7 @@ pub(crate) fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
         order.quad(ctx.draw);
         draw_text(ctx, CANVAS_2D_EMPTY_LABEL, inner.x + inner.w * 0.5 - 36.0, inner.y + inner.h * 0.5, theme.font_size_small, theme.text_muted);
     }
-    crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
+    semio_framework_os_renderer_wgpu_canvas2d_host::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.theme, ctx.draw);
     order.close(ctx.draw);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
 }
@@ -768,7 +642,7 @@ fn scene_rgba(color: Option<&[f64]>, opacity: f32) -> Rgba {
     canvas_color_channels(color.filter(|channels| channels.len() >= 3).unwrap_or(&[]), opacity)
 }
 
-pub(crate) fn screen_points(points: &[[f64; 2]]) -> Vec<[f32; 2]> {
+pub fn screen_points(points: &[[f64; 2]]) -> Vec<[f32; 2]> {
     points.iter().map(|point| [point[0] as f32, point[1] as f32]).collect()
 }
 
@@ -888,7 +762,7 @@ const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";
 /// `ui_wgpu::wgpu::take_ui_image_upload`: `admit_ui_image` already decoded that `data:` PNG in
 /// first-party code (`semio-framework-pixels`) and the retained paint keys its `KIND_RASTER` quad by
 /// the image `src` itself, so the key must survive unchanged or the quad finds no texture.
-pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, height: u32, mut pixels: Vec<u8>) -> Option<String> {
+pub fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, height: u32, mut pixels: Vec<u8>) -> Option<String> {
     if scene_host_retiring(surface_id) {
         return None;
     }
@@ -968,7 +842,7 @@ pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: 
 /// retiring) and the caller offers the source again later; `Invalid` is the SOURCE's own refusal (undecodable, oversized) — a
 /// per-image outcome the caller keeps instead of re-offering. Every refused owner is parked in the surface's refusal ring and retired
 /// by the upload cursor without faulting the frame, so one bad image never blocks the next image on the same surface.
-pub(crate) fn queue_canvas_image_upload_with(
+pub fn queue_canvas_image_upload_with(
     surface_id: &str,
     layer_id: &str,
     source_identity: &[u8],
@@ -1063,7 +937,6 @@ fn refuse_raster_admission(surface_id: &str, reject: impl FnOnce(PreparedRasterR
         surface.park_refusal(reject(reservation))
     })
 }
-
 
 /** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
  * (intersected with the full `±extent/2` grid) instead of always walking the whole grid — a

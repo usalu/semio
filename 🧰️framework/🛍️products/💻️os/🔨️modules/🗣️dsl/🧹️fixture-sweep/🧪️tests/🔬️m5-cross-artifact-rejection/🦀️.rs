@@ -4,7 +4,7 @@ use super::pilot_resolve;
 use semio_framework_dsl::parse_grammar;
 use semio_framework_dsl::Recognizer;
 use semio_framework_dsl::SemioDialect;
-use crate::os_store::semio_format::split_text_preamble;
+use semio_framework_os_kernel::os_store::semio_format::split_text_preamble;
 
 async fn dsl_body_from_host_snapshot(text: &str) -> String {
     if text.trim_start().starts_with("semio ") {
@@ -36,7 +36,7 @@ async fn all_non_stdio_grammars_reject_each_others_shipped_fixtures() {
         if grammar.dialect != SemioDialect::Grammar {
             continue;
         }
-        usable.push((facet.label.clone(), Recognizer::compile(&grammar, &crate::os_dsl::grammar::family_fragments().expect("OS family grammar"), crate::os_dsl::grammar::product_macros()).expect("selected grammar fragments"), dsl_body_from_host_snapshot(&fixture_text).await));
+        usable.push((facet.label.clone(), Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments"), dsl_body_from_host_snapshot(&fixture_text).await));
     }
 
     if usable.len() < 2 {

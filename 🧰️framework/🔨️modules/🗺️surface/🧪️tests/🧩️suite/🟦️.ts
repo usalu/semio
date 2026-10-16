@@ -17,13 +17,14 @@ test("surface neutral owner survives deleting each specific graph composition",(
   const owner=resolve(import.meta.dir,"../.."),source=readFileSync(join(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8");
   const manifest=Bun.TOML.parse(source);expect(manifest).toEqual(parseToml(source));
   const visit=(value:unknown):void=>{if(value&&typeof value==="object"){for(const[key,child]of Object.entries(value)){expect(ownership.specificDependencies).not.toContain(key);if(child&&typeof child==="object"&&"package"in child)expect(ownership.specificDependencies).not.toContain(child.package);visit(child);}}};visit(manifest);
+  const graphSource=readFileSync(join(owner,"🕸️node-graph/📦️packages/🦀️rust/Cargo.toml"),"utf8"),graphManifest=Bun.TOML.parse(graphSource);expect(graphManifest).toEqual(parseToml(graphSource));visit(graphManifest);
   const graph=readFileSync(join(owner,"🕸️node-graph/🦀️.rs"),"utf8");
   for(const name of ownership.neutralTypes)expect(graph).toContain(name);
   expect(graph).not.toContain("semio_framework_os_");expect(graph).not.toContain("semio_framework_artifact_infinite_dag");expect(graph).not.toContain("pub struct GraphHost");
 });
 
 test("surface retained refusal interfaces use the defining General Value owner",()=>{
- const owner=resolve(import.meta.dir,"../.."),manifestSource=readFileSync(join(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8"),manifestValue=Bun.TOML.parse(manifestSource);expect(manifestValue).toEqual(parseToml(manifestSource));const manifest=manifestValue as CargoManifest;const path=manifest.dependencies["semio-framework-value"]!.path!;expect(path).toBe("../../../🌱️value/📦️packages/🦀️rust");const text=readFileSync(resolve(owner,"📦️packages/🦀️rust",path,"Cargo.toml"),"utf8"),provider=Bun.TOML.parse(text)as CargoManifest;expect(provider).toEqual(parseToml(text));expect(provider.package.name).toBe("semio-framework-value");
+ const owner=resolve(import.meta.dir,"../.."),graphPackage=join(owner,"🕸️node-graph/📦️packages/🦀️rust"),manifestSource=readFileSync(join(graphPackage,"Cargo.toml"),"utf8"),manifestValue=Bun.TOML.parse(manifestSource);expect(manifestValue).toEqual(parseToml(manifestSource));const manifest=manifestValue as CargoManifest;const path=manifest.dependencies["semio-framework-value"]!.path!;expect(path).toBe("../../../../🌱️value/📦️packages/🦀️rust");const text=readFileSync(resolve(graphPackage,path,"Cargo.toml"),"utf8"),provider=Bun.TOML.parse(text)as CargoManifest;expect(provider).toEqual(parseToml(text));expect(provider.package.name).toBe("semio-framework-value");
  const cursor=readFileSync(join(owner,"🕸️node-graph/📡️scene/🦀️.rs"),"utf8");expect(cursor).toContain("Result<SceneDecodeStep,ValueError>");expect(cursor).toContain("ValueError::literal");expect(cursor).not.toContain("serde_json::Error");expect(cursor).not.toContain("store::");
 });
 
@@ -37,14 +38,14 @@ test("surface vector tile fixtures belong to their owner and agree with independ
     const tile = type.toObject(type.decode(bytes), {defaults: true, arrays: true}) as TileInventory;
     expect(tile.layers.map(layer => ({name: layer.name, extent: layer.extent, features: layer.features.length, geometryTypes: [0, 1, 2, 3].map(kind => layer.features.filter(feature => feature.type === kind).length)}))).toEqual(row.layers);
   }
-  const source = readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const source = readFileSync(join(owner, "🧱️vector-tiles/📦️mvt-decoder/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   expect(source.includes("MAP-VECTOR-TILES")).toBe(false);
   expect(source.includes("#[ignore")).toBe(false);
   console.log("[DEBUG] Owned vector tile bytes and layer/feature/geometry inventories agree with Protobuf.js across all six original tiles");
 });
 
 test("surface neutral interaction interfaces come directly from their defining packages", () => {
-  const packageRoot = resolve(import.meta.dir, "../../📦️packages/🦀️rust");
+  const packageRoot = resolve(import.meta.dir, "../../🕸️node-graph/📦️packages/🦀️rust");
   const parse = (path: string): CargoManifest => { const source = readFileSync(path, "utf8"), value = Bun.TOML.parse(source); expect(value).toEqual(parseToml(source)); return value as CargoManifest; };
   const manifest = parse(join(packageRoot, "Cargo.toml"));
   const source = readFileSync(resolve(import.meta.dir, "../../🕸️node-graph/🦀️.rs"), "utf8");

@@ -1,31 +1,22 @@
-//! 🕹️ First-class hover/selection mechanism: declarative `InteractionDefinition` types (mirroring
-//! the manifest's action/utility/tool/command family) — the human-facing declaration layer.
-//!
-//! 🧬️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (crate-layering blocker fix): the
-//! pure, render-independent hover/selection state machine (`next_selection`/`next_hover`/
-//! `validate_state`), its runtime/topology state, and the `PresenceInteraction` broadcast payload
-//! now live in `semio-framework-replication` (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`,
-//! `🔖️Interaction` region) so kernel-side code (`store`, `sync`, wire codec) can name
-//! `InteractionState`/`PresenceInteraction` without a `semio-framework` → os-kernel → `semio-framework`
-//! cargo cycle (`semio-framework` depends on the kernel crate, never the reverse). `HierarchyProvider`/
-//! `HoverSpec`/`SelectionSpec`/`SelectionMode`/`SelectionMethod`/`MergeMode` moved with it — only
-//! `InteractionDefinition`/`GranularityDefinition` stay here, since their `label`/`icon_id` fields pull
-//! in `ui_wgpu::LocalizedLabel`/`IconName`, which the wasm-safe kernel crate does not depend on. This
-//! module `pub use`s the moved surface below so every existing consumer (`crate::InteractionState`
-//! etc., re-exported crate-root-wide via `🦀️.rs`'s `pub use interaction::*;`) keeps resolving
-//! unchanged. Handcrafted TS parity lives in `🟦️.ts` (unmoved — TypeScript has no crate
-//! graph); schema leaves live in `🧬️schema/`.
+//! 🕹️ Hover and selection interaction declarations, gesture recognizer and schema exports.
 
-use serde::{Deserialize, Serialize};
+use semio_framework_schema_registry::FacetLeaves;
+use semio_framework_schema_registry::SchemaExport;
+use semio_framework_schema_registry::ScopeSchemaExports;
+use semio_framework_schema_registry::register_scope_schema_exports as register_exports;
 use semio_framework_ui_locale::LocalizedLabel;
-
-use crate::IconName;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use serde::Deserialize;
+use serde::Serialize;
+use ui_wgpu::wgpu::IconName;
 
 #[path = "👆️gesture/🦀️.rs"]
 pub mod gesture;
 
 //#region 🔖️Definition
 pub use ::replication::{next_hover, next_selection, validate_state, HoverInput, PresenceDomain, PresenceInteraction, SelectionInput};
+
 pub use ::replication::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 
 /// 🕹️ One interaction domain an app declares (e.g. "graph", "mesh", "ast", "world"): the target
@@ -111,7 +102,11 @@ impl From<String> for InteractionRef {
         Self(value)
     }
 }
+
 //#endregion 🔖️Definition
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

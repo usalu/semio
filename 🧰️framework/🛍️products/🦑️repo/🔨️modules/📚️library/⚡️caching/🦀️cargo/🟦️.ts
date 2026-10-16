@@ -1,3 +1,4 @@
+import {bindHostPlatformJobArgumentsV1} from "../../🏗️build/🎯️host-platform/🟦️.ts";
 import { canonicalArchitectureEnvironment, type CanonicalExecutionEnvironment } from "./🌿️environment/🟦️.ts";
 export { canonicalArchitectureEnvironment, type CanonicalExecutionEnvironment } from "./🌿️environment/🟦️.ts";
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -66,9 +67,9 @@ export function componentPassPlanV1(repoRoot: string, pluginIds?: ReadonlySet<st
   const workspaces = componentWorkspacesV1(repoRoot), known = new Set(workspaces.flatMap((workspace) => Object.values(workspace.pluginIds)));
   const unknown = [...pluginIds ?? []].filter((id) => !known.has(id));
   if (unknown.length) throw Error(`Release plan names no discovered component: ${unknown.join(", ")}`);
-  return admitNativeBuildPlanV1({ version: 1, passes: [buildModePolicy(mode).wasmProfile].flatMap((profile) => workspaces.flatMap((workspace, index) => {
+  return admitNativeBuildPlanV1({ version: 1, passes: [buildModePolicy(mode).cargoProfile].flatMap((profile) => workspaces.flatMap((workspace, index) => {
     const packages = workspace.packages.filter((name) => !pluginIds || pluginIds.has(workspace.pluginIds[name]!));
-    return packages.length ? [{ id: `${profile}-${String(index).padStart(2, "0")}`, manifest: workspace.manifest, packages: packages.map((name) => ({ name, manifest: workspace.manifests[name]! })), target: "wasm32-wasip2", profile, output: COMPONENT_PROFILE_POLICIES[profile].directory }] : [];
+    return packages.length ? [{ id: `${profile}-${String(index).padStart(2, "0")}`, manifest: workspace.manifest, packages: packages.map((name) => ({ name, manifest: workspace.manifests[name]! })), target: "wasm32-wasip2", profile }] : [];
   })) });
 }
 
@@ -76,7 +77,7 @@ export function componentPassPlanV1(repoRoot: string, pluginIds?: ReadonlySet<st
  * pipeline's jobs with absolute working directories, plus the hook that gives each job its owner policies inside the driver's generation. */
 export function nativeBuildPipelinePlanV1(repoRoot: string, pipeline: NativeBuildPipelineV1, components?: ReadonlySet<string>): Readonly<{ plan: NativeBuildPlanV1; jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>> }> {
   const admitted = admitNativeBuildPipelineV1(pipeline), passes = componentPassPlanV1(repoRoot, components).passes, policies = new Map(admitted.jobs.map((job) => [job.id, job.policies]));
-  const policy = buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)), profile = (value: string): string => value === "wasm-release" || value === "wasm-prototype" ? policy.wasmProfile : value === "release" || value === "prototype" ? policy.cargoProfile : value;
-  const jobs: NativeBuildJobV1[] = admitted.jobs.map((job) => ({ id: job.id, cwd: resolve(repoRoot, job.root), command: job.command, after: job.after, profile: profile(job.profile), target: job.target, workerProtocol: job.workerProtocol, ...(job.lane === undefined ? {} : { lane: profile(job.lane) }) }));
-  return Object.freeze({ plan: admitNativeBuildPlanV1({ version: 1, passes, jobs, ...(admitted.stageAfter ? { stageAfter: admitted.stageAfter } : {}) }), jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => ownerEnvironmentV1(job.cwd, policies.get(job.id) ?? [], generation.build, { ...process.env, SEMIO_BUILD_MODE: job.profile === "prototype" || job.profile === "wasm-prototype" ? "prototype" : "release" }) });
+  const policy = buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)), profile = (value: string): string => {readBuildMode(value);return policy.cargoProfile;};
+  const jobs: NativeBuildJobV1[] = admitted.jobs.map((job) => ({ id: job.id, cwd: resolve(repoRoot, job.root), command: bindHostPlatformJobArgumentsV1(job.command,process.platform), after: job.after, profile: profile(job.profile), target: job.target, workerProtocol: job.workerProtocol, ...(job.lane === undefined ? {} : { lane: profile(job.lane) }) }));
+  return Object.freeze({ plan: admitNativeBuildPlanV1({ version: 1, passes, jobs, ...(admitted.stageAfter ? { stageAfter: admitted.stageAfter } : {}) }), jobEnvironment: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => ownerEnvironmentV1(job.cwd, policies.get(job.id) ?? [], generation.build, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(job.profile) }) });
 }

@@ -10,7 +10,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ts from "typescript";
 import { GestureRecognizer } from "@semio-tech/framework";
-import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, resolveMapInteractionSync } from "../../🟦️.tsx";
+import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, parseMapOverlayIndex, resolveMapInteractionSync } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
 import lifecycleFixture from "../../../../🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
@@ -174,14 +174,35 @@ describe("feature interaction dispatch args", () => {
   });
 
   it("publishes interactionHover on the pointer channel, and an empty targets list clears it", () => {
-    expect(mapFeatureHoverActionArgs("route-2")).toEqual({ domainId: "features", channel: "pointer", targets: JSON.stringify([{ granularity: "feature", id: "route-2" }]) });
+    expect(mapFeatureHoverActionArgs("path-2")).toEqual({ domainId: "features", channel: "pointer", targets: JSON.stringify([{ granularity: "feature", id: "path-2" }]) });
     expect(mapFeatureHoverActionArgs(null)).toEqual({ domainId: "features", channel: "pointer", targets: "[]" });
   });
 
-  it("syncs the guest's published selection back into the wasm session under the right granularity", () => {
-    expect(resolveMapInteractionSync('{"positions":["pos-1"],"routes":[]}', "null")).toEqual({ granularity: "position", selectedIdsJson: '["pos-1"]' });
-    expect(resolveMapInteractionSync('{"positions":[],"routes":["route-2"]}', '{"kind":"route","id":"route-2"}')).toEqual({ granularity: "route", selectedIdsJson: '["route-2"]', hoveredId: "route-2" });
-    expect(resolveMapInteractionSync('{"positions":[],"routes":[]}', '{"kind":"position","id":"pos-1"}')).toEqual({ granularity: "position", selectedIdsJson: "[]", hoveredId: "pos-1" });
+  const layers = [
+    { id: "zones", geometry: "area" },
+    { id: "paths", geometry: "line", granularity: "path" },
+    { id: "pins", geometry: "point", granularity: "pin" },
+  ];
+
+  it("syncs the guest's published selection back into the wasm session under the declared granularity", () => {
+    expect(resolveMapInteractionSync('{"pins":["pin-1"],"paths":[]}', "null", layers)).toEqual({ granularity: "pin", selectedIdsJson: '["pin-1"]' });
+    expect(resolveMapInteractionSync('{"pins":["pin-1"],"paths":["path-2"]}', '{"kind":"path","id":"path-2"}', layers)).toEqual({ granularity: "path", selectedIdsJson: '["path-2"]', hoveredId: "path-2" });
+    expect(resolveMapInteractionSync('{"pins":[],"paths":[]}', '{"kind":"pin","id":"pin-1"}', layers)).toEqual({ granularity: "pin", selectedIdsJson: "[]", hoveredId: "pin-1" });
+    expect(resolveMapInteractionSync('{"zones":["zone-1"]}', "null", layers)).toEqual({ granularity: "path", selectedIdsJson: "[]" });
+    expect(resolveMapInteractionSync("{}", "null", [])).toEqual({ granularity: "feature", selectedIdsJson: "[]" });
+  });
+
+  it("indexes the policy's overlay layers and the popup facts of pickable features only", () => {
+    const index = parseMapOverlayIndex(
+      JSON.stringify({
+        overlays: { pins: [{ id: "pin-1", label: "Pin", icon: "crosshair", link: "https://example.org" }, { id: 7 }], zones: [{ id: "zone-1", label: "Zone" }] },
+        policy: { overlays: [{ id: "zones", geometry: "area" }, { id: "pins", geometry: "point", granularity: "pin" }] },
+      }),
+    );
+    expect(index.layers).toEqual([{ id: "zones", geometry: "area" }, { id: "pins", geometry: "point", granularity: "pin" }]);
+    expect([...index.meta.keys()]).toEqual(["pin"]);
+    expect(index.meta.get("pin")?.get("pin-1")).toEqual({ label: "Pin", icon: "crosshair", link: "https://example.org" });
+    expect(parseMapOverlayIndex("not json")).toEqual({ layers: [], meta: new Map() });
   });
 });
 //#endregion 🔖️InteractionDispatch

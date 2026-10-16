@@ -1,4 +1,7 @@
 //! 🪐️ OS host orchestration for space drafts and collection archives.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
 
 pub use semio_framework_artifact_space_collection::{
     artifact_backbone_uri, collection_backbone_uri, empty_collection_snapshot, entry_path, folder_path,
@@ -12,6 +15,7 @@ pub use semio_framework_artifact_space_space::{
     SpaceMutation, SpaceOptionalAvatar, SpacePackageError, SpaceProgramsDelta, SpaceUsersModification, SpaceCollectionsModification, SpaceExtensionsModification, SpaceUserRemoval, SpaceUserInsertion, SpaceUserRelocation, SpaceCollectionRemoval, SpaceCollectionInsertion, SpaceCollectionRelocation, SpaceProgramRemoval, SpaceProgramInsertion, SpaceProgramRelocation, SpaceExtensionRemoval, SpaceExtensionInsertion, SpaceExtensionRelocation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, S_SPACE_SCHEMA,
 };
 
+use semio_framework_os_host_registry::resolve_kernel_future;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -67,11 +71,11 @@ pub trait SpaceBackbonePort: Send + Sync {
 impl<T: store::os_store::backbone::BackbonePort + Send + Sync> SpaceBackbonePort for T {
     fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
         // 🌉️ `store::os_store::backbone::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
-        // sweep; `crate::host::resolve_kernel_future` (`🖥️host/🦀️.rs`) resolves them
+        // sweep; `resolve_kernel_future` (`🖥️host/🗂️registry/🦀️.rs`) resolves them
         // synchronously here, same justification as its own doc comment: every real backbone port
         // this crate wraps (`store::os_store::backbone::MemoryBackbonePort`/`store::os_store::backbone::LocalStorageBackbonePort`, the host
         // file/folder ports) is an in-memory/local lookup, never a park-worthy network await.
-        let text = crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::read(self, uri))?;
+        let text = resolve_kernel_future(store::os_store::backbone::BackbonePort::read(self, uri))?;
         if text.is_empty() {
             return Ok(Vec::new());
         }
@@ -80,9 +84,9 @@ impl<T: store::os_store::backbone::BackbonePort + Send + Sync> SpaceBackbonePort
 
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError> {
         if payload.is_empty() {
-            return crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, ""));
+            return resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, ""));
         }
-        crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
+        resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
     }
 }
 //#endregion 🔖️DraftBackbone
@@ -429,10 +433,10 @@ pub fn real_artifact_reader(pack_files: &HashMap<String, store::os_store::serial
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
     move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
-        // 🌉️ Resolved synchronously via `crate::host::resolve_kernel_future`, same justification as
+        // 🌉️ Resolved synchronously via `resolve_kernel_future`, same justification as
         // `SpaceBackbonePort`'s blanket impl above — `export_collection_zip`'s injected
         // `read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>` callback shape stays sync.
-        crate::host::resolve_kernel_future(blob_store.get(hash)).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
+        resolve_kernel_future(blob_store.get(hash)).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
     }
 }
 
@@ -459,7 +463,7 @@ where
 /// tampered with or corrupted in transit).
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn import_blob<B: store::BlobStore>(blob_store: &B, blob: &store::BlobRef, bytes: &[u8]) -> Result<(), SpaceZipError> {
-    let stored = crate::host::resolve_kernel_future(blob_store.put(bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let stored = resolve_kernel_future(blob_store.put(bytes, &blob.media_type)).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     if stored.hash != blob.hash {
         return Err(SpaceZipError::Pack(format!("blob hash mismatch on import: expected {}, got {}", blob.hash, stored.hash)));
     }

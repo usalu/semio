@@ -1,5 +1,5 @@
 //! 🪆️ Original retained clone of a composed child handle: the identity fields are copied, the local-only owner is aliased.
-use super::ArtifactChild;
+use crate::ArtifactChild;
 use semio_framework_artifact_reference::ArtifactRef;
 use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress, close_retained_binding, RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedFieldCursor};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};

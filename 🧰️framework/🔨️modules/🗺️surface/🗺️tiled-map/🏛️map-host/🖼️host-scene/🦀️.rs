@@ -47,7 +47,7 @@ impl MapHost {
         map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy))
     }
 
-    pub(in crate::tiled_map) fn tile_rect_intersects_viewport(&self, rect: Rect) -> bool {
+    pub(crate) fn tile_rect_intersects_viewport(&self, rect: Rect) -> bool {
         let w = self.viewport.width as f64;
         let h = self.viewport.height as f64;
         let corners = [
@@ -69,7 +69,7 @@ impl MapHost {
         min_x < w && max_x > 0.0 && min_y < h && max_y > 0.0
     }
 
-    pub(in crate::tiled_map) fn tile_raster_affine(&self, rect: Rect, img_w: u32, img_h: u32) -> Affine {
+    pub(crate) fn tile_raster_affine(&self, rect: Rect, img_w: u32, img_h: u32) -> Affine {
         let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1()));
         let ne = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y1()));
         let sw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y0()));
@@ -246,26 +246,20 @@ impl MapHost {
         }
     }
 
-    /// 🔢️ Packs `MapLayerVisibility`'s 11 gates into one bitmask for the cache key.
-    fn layer_visibility_bits(v: MapLayerVisibility) -> u64 {
-        (v.raster as u64)
-            | (v.water as u64) << 1
-            | (v.land as u64) << 2
-            | (v.roads as u64) << 3
-            | (v.buildings as u64) << 4
-            | (v.borders as u64) << 5
-            | (v.labels as u64) << 6
-            | (v.positions as u64) << 7
-            | (v.position_labels as u64) << 8
-            | (v.routes as u64) << 9
-            | (v.regions as u64) << 10
+    /// 🔢️ Mixes the per-toggle visibility and weights (key bytes plus exact value bits) into the cache key.
+    fn layer_switches_hash(switches: &MapLayerSwitches) -> u64 {
+        let visibility = switches.visibility.iter().fold(REVISION_FNV_OFFSET, |h, (key, visible)| fnv1a_mix(fnv1a_bytes(h, key.as_bytes()), *visible as u64));
+        switches.weights.iter().fold(visibility, |h, (key, weight)| fnv1a_mix(fnv1a_bytes(h, key.as_bytes()), weight.to_bits()))
     }
 
-    /// 🔢️ Mixes `MapLayerStrokeScale`'s 11 weights (exact bits) into the cache key.
-    fn layer_stroke_scale_hash(s: MapLayerStrokeScale) -> u64 {
-        [s.raster, s.water, s.land, s.roads, s.buildings, s.borders, s.labels, s.positions, s.position_labels, s.routes, s.regions]
-            .into_iter()
-            .fold(REVISION_FNV_OFFSET, |h, w| fnv1a_mix(h, w.to_bits()))
+    /// 👀️ Whether vector paint role `role` is switched on.
+    fn role_on(&self, role: MapLayerRole) -> bool {
+        self.layer_visible(&MapLayerTarget::Role(role))
+    }
+
+    /// ⚖️ The weight vector paint role `role` paints with.
+    fn role_weight(&self, role: MapLayerRole) -> f64 {
+        self.layer_weight(&MapLayerTarget::Role(role))
     }
 
     /// 🔢️ Mixes the 12-color theme palette into the cache key via its 8-bit-per-channel form.
@@ -290,13 +284,13 @@ impl MapHost {
         h = fnv1a_mix(h, self.visible_vector_tiles_revision());
         h = fnv1a_mix(h, self.tiles.vector_tiles.len() as u64);
         h = fnv1a_mix(h, self.render_mode as u64);
-        h = fnv1a_mix(h, self.vector_style as u64);
-        h = fnv1a_bytes(h, self.forced_lod_id.as_deref().unwrap_or("").as_bytes());
-        h = fnv1a_mix(h, Self::layer_visibility_bits(self.layer_visibility));
-        h = fnv1a_mix(h, Self::layer_stroke_scale_hash(self.layer_stroke_scale));
+        h = fnv1a_bytes(h, self.style_preset().id.as_bytes());
+        h = fnv1a_mix(h, self.policy_revision);
+        h = fnv1a_bytes(h, self.pinned_band_id().unwrap_or("").as_bytes());
+        h = fnv1a_mix(h, Self::layer_switches_hash(&self.layer_switches));
         h = fnv1a_mix(h, Self::theme_hash(&self.theme));
         // 🚫️ `interaction_revision` deliberately absent: `append_vector_tiles` never reads selection or
-        // hover (those belong to the regions/routes/positions layers, which are drawn fresh outside this
+        // hover (those belong to the overlay layers, which are drawn fresh outside this
         // cache), while `pointer_move_screen`/`set_camera` bump the revision on *every* frame of a pan —
         // keying on it invalidated the cache once per frame and left a drag at the uncached 35 ms.
         h
@@ -335,24 +329,21 @@ impl MapHost {
     /// to paint themselves. It approximates "everything visible is backdrop-colored" rather than
     /// tracking any world position, so it MUST stay screen-pinned — [`Self::append_vector_tiles_cached`]
     /// draws it fresh every frame outside the translate-cached tile content, never inside it.
-    fn vector_tile_backdrop_fill(&self, span: f64, render_z: u32, forced_lod: Option<&str>) -> Option<Color> {
-        let vis = self.layer_visibility;
-        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
-        match self.vector_style {
-            MapVectorStyle::Colored => {
-                let lod_idx = resolve_detail_lod_index(span, forced_lod);
-                let fine_land_canvas = profile.draw_land_backdrop && vis.land;
-                let coarse_lod = lod_idx <= 2;
-                (vis.land && (fine_land_canvas || coarse_lod)).then(|| vector_tiles::weighted_opaque_fill(self.theme.land_fill, self.layer_stroke_scale.land))
+    fn vector_tile_backdrop_fill(&self, span: f64, render_z: u32, pinned: Option<&str>) -> Option<Color> {
+        let policy = self.policy();
+        let preset = self.style_preset();
+        let land_on = self.role_on(MapLayerRole::LandCover);
+        let band = policy.band_for_span(span, pinned);
+        let gates = policy.layer_gates(band, span, render_z);
+        match preset.technique {
+            MapPaintTechnique::Colored => {
+                let fine_land_canvas = gates.land_backdrop && land_on;
+                (land_on && (fine_land_canvas || policy.band(band).land_wash)).then(|| weighted_opaque_fill(self.theme.land_fill, self.role_weight(MapLayerRole::LandCover)))
             }
-            MapVectorStyle::FigureGround | MapVectorStyle::InvertedFigure => {
-                let (ink, paper) = if self.vector_style == MapVectorStyle::FigureGround {
-                    (self.theme.label_fill, self.theme.surface_clear)
-                } else {
-                    (self.theme.surface_clear, self.theme.label_fill)
-                };
-                let draw_buildings = profile.draw_buildings && vis.buildings;
-                let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
+            MapPaintTechnique::FigureGround => {
+                let (ink, paper) = (self.theme.slot(preset.ink), self.theme.slot(preset.paper));
+                let draw_buildings = gates.buildings && self.role_on(MapLayerRole::Building);
+                let draw_land_backdrop = gates.land_backdrop && land_on;
                 Some(if draw_buildings {
                     paper
                 } else if draw_land_backdrop {
@@ -375,7 +366,7 @@ impl MapHost {
         if vector_tiles_available_at_camera_zoom(self.camera.zoom) {
             if let Some(render_z) = self.vector_tile_render_z() {
                 let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-                if let Some(fill) = self.vector_tile_backdrop_fill(span, render_z, self.forced_lod_id.as_deref()) {
+                if let Some(fill) = self.vector_tile_backdrop_fill(span, render_z, self.pinned_band_id()) {
                     self.append_viewport_fill(out, fill);
                 }
             }
@@ -406,7 +397,7 @@ impl MapHost {
             return;
         }
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-        let forced_lod = self.forced_lod_id.as_deref();
+        let forced_lod = self.pinned_band_id();
 
         let mut draw: Vec<(u32, u32, u32, &vector_tiles::VectorTile)> = Vec::new();
         for (key, tile) in &self.tiles.vector_tiles {
@@ -427,66 +418,52 @@ impl MapHost {
         draw.retain(|(tz, _, _, _)| *tz == render_z);
         draw.sort_by_key(|(tz, tx, ty, _)| (*tz, *tx, *ty));
 
-        match self.vector_style {
-            MapVectorStyle::Colored => self.append_vector_tiles_colored(scene, &draw, render_z, span, forced_lod),
-            MapVectorStyle::FigureGround => {
-                let ink = self.theme.label_fill;
-                let paper = self.theme.surface_clear;
-                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, MapFigurePalette { ink, paper });
-            }
-            MapVectorStyle::InvertedFigure => {
-                let ink = self.theme.surface_clear;
-                let paper = self.theme.label_fill;
-                self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, MapFigurePalette { ink, paper });
-            }
+        let preset = self.style_preset();
+        match preset.technique {
+            MapPaintTechnique::Colored => self.append_vector_tiles_colored(scene, &draw, render_z, span, forced_lod),
+            MapPaintTechnique::FigureGround => self.append_vector_tiles_figure(scene, &draw, render_z, span, forced_lod, MapFigurePalette { ink: self.theme.slot(preset.ink), paper: self.theme.slot(preset.paper) }),
         }
-        if self.layer_visibility.labels {
-            let (label_fill, label_halo) = match self.vector_style {
-                MapVectorStyle::Colored => (self.theme.label_fill, self.theme.label_halo),
-                MapVectorStyle::FigureGround => (self.theme.label_fill, self.theme.surface_clear),
-                MapVectorStyle::InvertedFigure => (self.theme.surface_clear, self.theme.label_fill),
-            };
-            self.append_vector_tile_labels(scene, &draw, span, forced_lod, label_fill, label_halo);
+        if [MapLayerRole::RoadLabel, MapLayerRole::PointLabel, MapLayerRole::PlaceLabel].into_iter().any(|role| self.role_on(role)) {
+            self.append_vector_tile_labels(scene, &draw, span, self.theme.slot(preset.label_fill), self.theme.slot(preset.label_halo));
         }
     }
 
-    fn append_vector_tile_labels(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], span: f64, _forced_lod: Option<&str>, label_fill: Color, label_halo: Color) {
+    fn append_vector_tile_labels(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], span: f64, label_fill: Color, label_halo: Color) {
         struct LabelCandidate {
             label: String,
             screen: Point,
             rank: u16,
+            px: f64,
         }
 
-        let px = vector_tiles::vector_label_px(span, self.layer_stroke_scale.labels);
+        let policy = self.policy();
+        let band = policy.band_for_span(span, None);
+        let role_px = |role: MapLayerRole| policy.label_px(band, span, self.role_weight(role));
+        let px = [MapLayerRole::RoadLabel, MapLayerRole::PointLabel, MapLayerRole::PlaceLabel].into_iter().filter(|role| self.role_on(*role)).map(role_px).fold(0.0, f64::max);
         let mut candidates: Vec<LabelCandidate> = Vec::new();
         for (tz, tx, ty, tile) in draw {
             let mut layers: Vec<_> = tile.layers.iter().collect();
-            layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
+            layers.sort_by_key(|l| policy.draw_rank(l.name.as_str()));
             for layer in layers {
                 let extent = layer.extent.max(1);
                 let lname = layer.name.as_str();
+                let Some(role @ (MapLayerRole::RoadLabel | MapLayerRole::PointLabel | MapLayerRole::PlaceLabel)) = policy.layer_role(lname) else {
+                    continue;
+                };
+                if !self.role_on(role) {
+                    continue;
+                }
+                let layer_px = role_px(role);
                 for feat in &layer.features {
-                    let (rank, visible) = match lname {
-                        "transportation_name" => {
-                            let class = vector_tiles::property_class(&feat.properties);
-                            (vector_tiles::transportation_name_rank(class), vector_tiles::transportation_name_visible(class, span))
-                        }
-                        "poi" => (vector_tiles::place_label_rank("", lname), vector_tiles::poi_label_visible(span)),
-                        "place" | "centroids" | "water_name" => {
-                            let class = vector_tiles::property_class(&feat.properties);
-                            (vector_tiles::place_label_rank(class, lname), vector_tiles::place_label_visible(class, span))
-                        }
-                        _ => continue,
-                    };
-                    if !visible {
+                    let Some(rank) = policy.label_gate_and_rank(lname, policy.feature_facts(&feat.properties).class, span) else {
                         continue;
-                    }
-                    let Some(label) = vector_tiles::feature_label(&feat.properties) else {
+                    };
+                    let Some(label) = policy.feature_label(&feat.properties) else {
                         continue;
                     };
                     let anchor = vector_tiles::feature_label_anchor(feat, extent);
                     let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
-                    candidates.push(LabelCandidate { label, screen: s, rank });
+                    candidates.push(LabelCandidate { label, screen: s, rank, px: layer_px });
                 }
             }
         }
@@ -500,109 +477,111 @@ impl MapHost {
         let max_labels = max_labels.clamp(48, 140);
         let mut declutter = LabelDeclutter::for_viewport(&self.viewport, cell, max_labels);
         for candidate in candidates {
-            if declutter.try_place(&candidate.label, candidate.screen, px) {
-                text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+            if declutter.try_place(&candidate.label, candidate.screen, candidate.px) {
+                text::append_label(scene, &candidate.label, candidate.screen, candidate.px, label_fill, label_halo);
             }
         }
     }
 
-    fn append_vector_tiles_colored(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>) {
-        let weights = self.layer_stroke_scale;
-        let land_fill = vector_tiles::weighted_opaque_fill(self.theme.land_fill, weights.land);
+    fn append_vector_tiles_colored(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, pinned: Option<&str>) {
+        let policy = self.policy();
+        let land_weight = self.role_weight(MapLayerRole::LandCover);
+        let building_weight = self.role_weight(MapLayerRole::Building);
+        let land_fill = weighted_opaque_fill(self.theme.land_fill, land_weight);
         let border_stroke = self.theme.land_stroke;
         let road_stroke = self.theme.route_stroke;
         let region_stroke = self.theme.region_stroke;
-        let water_fill = vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.water);
-        let building_fill = vector_tiles::color_with_alpha(land_fill, (220.0 * weights.buildings).clamp(32.0, 255.0) as u8);
-        let line_scale = vector_tiles::vector_line_scale(span);
-        let road_lod_scale = vector_tiles::transportation_stroke_lod_scale(span, forced_lod);
+        let water_fill = weighted_opaque_fill(self.theme.region_fill, self.role_weight(MapLayerRole::WaterArea));
+        let waterway_fill = weighted_opaque_fill(self.theme.region_fill, self.role_weight(MapLayerRole::Waterway));
+        let building_fill = color_with_alpha(land_fill, (220.0 * building_weight).clamp(32.0, 255.0) as u8);
+        let line_scale = policy.line_scale(span);
+        let band = policy.band_for_span(span, pinned);
+        let band_row = policy.band(band);
+        let road_lod_scale = band_row.road_stroke_scale;
 
-        let vis = self.layer_visibility;
-        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
-        let lod_idx = resolve_detail_lod_index(span, forced_lod);
-        let fine_land_canvas = profile.draw_land_backdrop && vis.land;
-        let draw_coastline = profile.draw_coastline && vis.water;
-        let park_fill = if fine_land_canvas { vector_tiles::weighted_opaque_fill(self.theme.land_fill, (weights.land * 0.94).clamp(0.25, 1.0)) } else { vector_tiles::weighted_opaque_fill(self.theme.region_fill, weights.land) };
+        let land_on = self.role_on(MapLayerRole::LandCover);
+        let green_weight = self.role_weight(MapLayerRole::GreenArea);
+        let gates = policy.layer_gates(band, span, render_z);
+        let fine_land_canvas = gates.land_backdrop && land_on;
+        let draw_coastline = gates.coastline && self.role_on(MapLayerRole::Coastline);
+        let park_fill = if fine_land_canvas { weighted_opaque_fill(self.theme.land_fill, (green_weight * 0.94).clamp(0.25, 1.0)) } else { weighted_opaque_fill(self.theme.region_fill, green_weight) };
+        let draw_water = gates.water && self.role_on(MapLayerRole::WaterArea);
+        let draw_waterways = gates.water && self.role_on(MapLayerRole::Waterway) && policy.waterway_visible(band);
+        let draw_land = gates.land_cover && land_on;
+        let draw_green = gates.land_cover && self.role_on(MapLayerRole::GreenArea);
+        let draw_admin = gates.land_cover && self.role_on(MapLayerRole::AdminArea);
+        let draw_buildings = gates.buildings && self.role_on(MapLayerRole::Building);
+        let draw_roads = gates.roads && self.role_on(MapLayerRole::Road);
+        let draw_borders = gates.boundaries && self.role_on(MapLayerRole::Boundary) && !fine_land_canvas;
+        let (road_weight, border_weight, coastline_weight, waterway_weight) = (self.role_weight(MapLayerRole::Road), self.role_weight(MapLayerRole::Boundary), self.role_weight(MapLayerRole::Coastline), self.role_weight(MapLayerRole::Waterway));
         for (tz, tx, ty, tile) in draw {
-            let tile_has_countries = tile.layers.iter().any(|l| l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty()));
-            let draw_water = profile.draw_water && vis.water;
-            let draw_land = profile.draw_landcover && vis.land;
-            let draw_tile_countries = draw_land && !fine_land_canvas && tile_has_countries;
-            let draw_landcover = draw_land && !fine_land_canvas && (!draw_tile_countries || lod_idx == 1);
-            let draw_buildings = profile.draw_buildings && vis.buildings;
-            let draw_roads = profile.draw_transportation && vis.roads;
-            let draw_borders = profile.draw_boundary && vis.borders && !fine_land_canvas;
+            let tile_has_admin_areas = tile.layers.iter().any(|l| policy.layer_role(l.name.as_str()) == Some(MapLayerRole::AdminArea) && l.features.iter().any(|f| !f.rings.is_empty()));
+            let draw_tile_admin_areas = draw_admin && !fine_land_canvas && tile_has_admin_areas;
+            let draw_land_cover = draw_land && !fine_land_canvas && (!draw_tile_admin_areas || band_row.land_cover_over_admin_areas);
             let mut layers: Vec<_> = tile.layers.iter().collect();
-            layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
+            layers.sort_by_key(|l| policy.draw_rank(l.name.as_str()));
 
             for layer in layers {
                 let extent = layer.extent.max(1);
-                let lname = layer.name.as_str();
+                let role = policy.layer_role(layer.name.as_str());
 
                 for feat in &layer.features {
-                    match lname {
-                        "water" if draw_water => {
-                            if !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) {
+                    match role {
+                        Some(MapLayerRole::WaterArea) if draw_water => {
+                            if !feat.rings.is_empty() && policy.water_area_visible(band, policy.feature_facts(&feat.properties).class) {
                                 self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, water_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
-                        "landcover" | "landuse" if draw_landcover => {
+                        Some(MapLayerRole::LandCover) if draw_land_cover => {
                             if !feat.rings.is_empty() {
                                 self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
-                        "park" if draw_land => {
+                        Some(MapLayerRole::GreenArea) if draw_green => {
                             if !feat.rings.is_empty() {
                                 self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, park_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
                             }
                         }
-                        "building" if draw_buildings => {
+                        Some(MapLayerRole::Building) if draw_buildings => {
                             if !feat.rings.is_empty() {
-                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, building_fill, border_stroke, 0.5 * weights.buildings);
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, building_fill, border_stroke, 0.5 * building_weight);
                             }
                         }
-                        "transportation" if draw_roads => {
-                            let class = vector_tiles::property_class(&feat.properties);
-                            if vector_tiles::transportation_visible(class, span, *tz, forced_lod) && !feat.lines.is_empty() {
-                                let w = vector_tiles::transportation_stroke_width(class, line_scale) * road_lod_scale * weights.roads;
+                        Some(MapLayerRole::Road) if draw_roads => {
+                            let facts = policy.feature_facts(&feat.properties);
+                            if policy.road_visible(facts.class, span, band) && !feat.lines.is_empty() {
+                                let w = policy.stroke_width(MapLayerRole::Road, &facts, line_scale) * road_lod_scale * road_weight;
                                 self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, road_stroke, w);
                             }
                         }
-                        "boundary" | "geolines" if draw_borders || draw_coastline => {
-                            let maritime = vector_tiles::property_flag(&feat.properties, "maritime");
-                            if maritime {
+                        Some(role @ (MapLayerRole::Boundary | MapLayerRole::Coastline)) if draw_borders || draw_coastline => {
+                            let facts = policy.feature_facts(&feat.properties);
+                            if facts.maritime || role == MapLayerRole::Coastline {
                                 if draw_coastline && !feat.lines.is_empty() {
-                                    let w = vector_tiles::coastline_stroke_width(line_scale) * weights.water;
+                                    let w = policy.stroke_width(MapLayerRole::Coastline, &facts, line_scale) * coastline_weight;
                                     self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, border_stroke, w);
                                 }
                                 continue;
                             }
-                            if lname == "geolines" {
-                                if draw_coastline && !feat.lines.is_empty() {
-                                    let w = vector_tiles::coastline_stroke_width(line_scale) * weights.water;
-                                    self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, border_stroke, w);
-                                }
-                                continue;
-                            }
-                            let Some(admin) = vector_tiles::property_u64(&feat.properties, "admin_level") else {
+                            let Some(admin) = facts.admin_level else {
                                 continue;
                             };
-                            if vector_tiles::boundary_visible(admin, span, *tz, forced_lod) && !feat.lines.is_empty() {
-                                let w = vector_tiles::boundary_stroke_width(admin, line_scale) * weights.borders;
+                            if policy.boundary_visible(admin, &gates) && !feat.lines.is_empty() {
+                                let w = policy.stroke_width(MapLayerRole::Boundary, &facts, line_scale) * border_weight;
                                 self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, region_stroke, w);
                             }
                         }
-                        "waterway" if draw_water && vector_tiles::waterway_visible_for_lod(lod_idx) => {
+                        Some(MapLayerRole::Waterway) if draw_waterways => {
                             if !feat.lines.is_empty() {
-                                self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, water_fill, (1.0 * line_scale * weights.water).clamp(0.5, 6.0));
+                                self.append_vector_tile_lines(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.lines, waterway_fill, (1.0 * line_scale * waterway_weight).clamp(0.5, 6.0));
                             }
                         }
-                        "countries" if draw_tile_countries && !feat.rings.is_empty() => {
-                                if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
-                                    self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
-                                } else {
-                                    self.append_vector_tile_polygon_filled_rings(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill);
-                                }
+                        Some(MapLayerRole::AdminArea) if draw_tile_admin_areas && !feat.rings.is_empty() => {
+                            if policy.admin_area_holes(band) {
+                                self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill, Color::from_rgba8(0, 0, 0, 0), 0.0);
+                            } else {
+                                self.append_vector_tile_polygon_filled_rings(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, land_fill);
+                            }
                         }
                         _ => {}
                     }
@@ -611,29 +590,31 @@ impl MapHost {
         }
     }
 
-    fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, forced_lod: Option<&str>, palette: MapFigurePalette) {
+    fn append_vector_tiles_figure(&self, scene: &mut Scene, draw: &[(u32, u32, u32, &vector_tiles::VectorTile)], render_z: u32, span: f64, pinned: Option<&str>, palette: MapFigurePalette) {
         let MapFigurePalette { ink, paper } = palette;
-        let vis = self.layer_visibility;
+        let policy = self.policy();
         let transparent_stroke = Color::from_rgba8(0, 0, 0, 0);
-        let profile = vector_tiles::vector_detail_profile(span, render_z, forced_lod);
-        let lod_idx = resolve_detail_lod_index(span, forced_lod);
-        let draw_land_backdrop = profile.draw_land_backdrop && vis.land;
-        let draw_coastline = profile.draw_coastline && vis.water;
-        let draw_buildings = profile.draw_buildings && vis.buildings;
+        let band = policy.band_for_span(span, pinned);
+        let gates = policy.layer_gates(band, span, render_z);
+        let land_on = self.role_on(MapLayerRole::LandCover);
+        let draw_land_backdrop = gates.land_backdrop && land_on;
+        let draw_coastline = gates.coastline && self.role_on(MapLayerRole::Coastline);
+        let draw_buildings = gates.buildings && self.role_on(MapLayerRole::Building);
+        let draw_water = gates.water && self.role_on(MapLayerRole::WaterArea);
+        let draw_land = gates.land_cover && land_on;
+        let draw_green = gates.land_cover && self.role_on(MapLayerRole::GreenArea);
+        let draw_admin_areas = gates.land_cover && self.role_on(MapLayerRole::AdminArea) && !draw_land_backdrop;
 
         for (tz, tx, ty, tile) in draw {
-            let draw_water = profile.draw_water && vis.water;
-            let draw_land = profile.draw_landcover && vis.land;
-            let draw_countries = draw_land && !draw_land_backdrop;
-            let has_countries = tile.layers.iter().any(|l| l.name == "countries" && l.features.iter().any(|f| !f.rings.is_empty()));
-            let use_land_mass_silhouette = draw_land_backdrop || (draw_coastline && !has_countries && draw_water && !draw_buildings);
+            let has_admin_areas = tile.layers.iter().any(|l| policy.layer_role(l.name.as_str()) == Some(MapLayerRole::AdminArea) && l.features.iter().any(|f| !f.rings.is_empty()));
+            let use_land_mass_silhouette = draw_land_backdrop || (draw_coastline && !has_admin_areas && draw_water && !draw_buildings);
 
             let mut layers: Vec<_> = tile.layers.iter().collect();
-            layers.sort_by_key(|l| vector_tiles::layer_draw_rank(l.name.as_str()));
+            layers.sort_by_key(|l| policy.draw_rank(l.name.as_str()));
 
             if draw_buildings {
                 for layer in &layers {
-                    if layer.name.as_str() != "building" {
+                    if policy.layer_role(layer.name.as_str()) != Some(MapLayerRole::Building) {
                         continue;
                     }
                     let extent = layer.extent.max(1);
@@ -652,24 +633,24 @@ impl MapHost {
 
             for layer in &layers {
                 let extent = layer.extent.max(1);
-                let lname = layer.name.as_str();
+                let role = policy.layer_role(layer.name.as_str());
                 for feat in &layer.features {
-                    match lname {
-                        "landcover" | "landuse" | "park" if draw_land && !use_land_mass_silhouette => {
+                    match role {
+                        Some(role @ (MapLayerRole::LandCover | MapLayerRole::GreenArea)) if !use_land_mass_silhouette && (if role == MapLayerRole::LandCover { draw_land } else { draw_green }) => {
                             if !feat.rings.is_empty() {
                                 self.append_vector_tile_polygon_rings_nonzero(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                             }
                         }
-                        "countries" if draw_countries => {
+                        Some(MapLayerRole::AdminArea) if draw_admin_areas => {
                             if !feat.rings.is_empty() {
-                                if vector_tiles::country_polygon_holes_visible_for_lod(lod_idx) {
+                                if policy.admin_area_holes(band) {
                                     self.append_vector_tile_polygon_rings_nonzero(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                                 } else {
                                     self.append_vector_tile_polygon_filled_rings(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, ink);
                                 }
                             }
                         }
-                        "water" if draw_water && !feat.rings.is_empty() && vector_tiles::water_polygon_visible_for_lod(lod_idx, &feat.properties) => {
+                        Some(MapLayerRole::WaterArea) if draw_water && !feat.rings.is_empty() && policy.water_area_visible(band, policy.feature_facts(&feat.properties).class) => {
                             self.append_vector_tile_polygon(scene, VectorTileCoordinates { z: *tz, x: *tx, y: *ty, extent }, &feat.rings, paper, transparent_stroke, 0.0);
                         }
                         _ => {}
@@ -680,7 +661,7 @@ impl MapHost {
     }
 
     fn append_tiles(&self, scene: &mut Scene) {
-        if !self.layer_visibility.raster {
+        if !self.layer_visible(&MapLayerTarget::Raster) {
             return;
         }
         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
@@ -703,20 +684,42 @@ impl MapHost {
         }
     }
 
-    fn append_regions(&self, scene: &mut Scene) {
-        if !self.layer_visibility.regions {
-            return;
+    /// 🕹️ Whether one overlay feature is selected or hovered under its layer's granularity.
+    fn overlay_marks(&self, layer: &MapOverlayLayer, id: &str) -> (bool, bool) {
+        let Some(granularity) = layer.granularity.as_deref() else {
+            return (false, false);
+        };
+        let selected = self.selected.get(granularity).is_some_and(|ids| ids.contains(id));
+        let hovered = self.hovered_kind.as_deref() == Some(granularity) && self.hovered_id.as_deref() == Some(id);
+        (selected, hovered)
+    }
+
+    /// 🗺️ Every overlay layer the policy declares, in declaration order, each behind its layer toggle.
+    fn append_overlays(&self, scene: &mut Scene) {
+        for layer in self.policy().overlay_layers() {
+            if !self.layer_visible(&MapLayerTarget::Overlay(layer.id.clone())) {
+                continue;
+            }
+            match layer.geometry {
+                MapOverlayGeometry::Area => self.append_overlay_areas(scene, layer),
+                MapOverlayGeometry::Line => self.append_overlay_lines(scene, layer),
+                MapOverlayGeometry::Point => self.append_overlay_points(scene, layer),
+            }
         }
-        let fill = self.theme.region_fill;
-        let stroke = self.theme.region_stroke;
+    }
+
+    fn append_overlay_areas(&self, scene: &mut Scene, layer: &MapOverlayLayer) {
+        let fill = self.theme.slot(layer.fill);
+        let stroke = self.theme.slot(layer.stroke);
+        let width = layer.line_width * self.layer_weight(&MapLayerTarget::Overlay(layer.id.clone()));
         let jump = self.screen_segment_jump_limit();
-        for reg in self.features.regions.values() {
-            if reg.ring.len() < 3 {
+        for feature in self.overlays.features(&layer.id) {
+            if feature.coordinates.len() < 3 {
                 continue;
             }
             let mut path = BezPath::new();
-            let ring: Vec<(f64, f64)> = reg
-                .ring
+            let ring: Vec<(f64, f64)> = feature
+                .coordinates
                 .iter()
                 .map(|[lon, lat]| {
                     let w = projection::lonlat_to_world(*lon, *lat);
@@ -725,25 +728,22 @@ impl MapHost {
                 .collect();
             Self::append_screen_ring(&mut path, &ring, |wx, wy| map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy)), jump);
             scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
-            scene.stroke(&Stroke::new(2.0 * self.layer_stroke_scale.regions), Affine::IDENTITY, stroke, None, &path);
+            scene.stroke(&Stroke::new(width), Affine::IDENTITY, stroke, None, &path);
         }
     }
 
-    fn append_routes(&self, scene: &mut Scene) {
-        if !self.layer_visibility.routes {
-            return;
-        }
-        let stroke_color = self.theme.route_stroke;
+    fn append_overlay_lines(&self, scene: &mut Scene, layer: &MapOverlayLayer) {
+        let stroke_color = self.theme.slot(layer.stroke);
         let selection_color = self.theme.selection_stroke;
         let hover_color = self.theme.hover_stroke;
-        for route in self.features.routes.values() {
-            if route.points.len() < 2 {
+        let weight = self.layer_weight(&MapLayerTarget::Overlay(layer.id.clone()));
+        for feature in self.overlays.features(&layer.id) {
+            if feature.coordinates.len() < 2 {
                 continue;
             }
-            let selected = self.selected_routes.contains(&route.id);
-            let hovered = self.hovered_kind.as_deref() == Some("route") && self.hovered_id.as_deref() == Some(route.id.as_str());
+            let (selected, hovered) = self.overlay_marks(layer, &feature.id);
             let mut path = BezPath::new();
-            for (i, [lon, lat]) in route.points.iter().enumerate() {
+            for (i, [lon, lat]) in feature.coordinates.iter().enumerate() {
                 let w = projection::lonlat_to_world(*lon, *lat);
                 let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
                 if i == 0 {
@@ -752,7 +752,7 @@ impl MapHost {
                     path.line_to(s);
                 }
             }
-            let width = route.stroke_width * self.layer_stroke_scale.routes;
+            let width = feature.width.unwrap_or(layer.line_width) * weight;
             if selected || hovered {
                 let halo = if selected { selection_color } else { hover_color };
                 scene.stroke(&Stroke::new(width * 2.4), Affine::IDENTITY, halo, None, &path);
@@ -768,48 +768,44 @@ impl MapHost {
         }
     }
 
-    fn append_positions(&self, scene: &mut Scene) {
-        if !self.layer_visibility.positions {
-            return;
-        }
+    fn append_overlay_points(&self, scene: &mut Scene, layer: &MapOverlayLayer) {
         let label_fill = self.theme.label_fill;
         let label_halo = self.theme.label_halo;
         let span = viewport_lon_span_degrees(&self.camera, &self.viewport);
-        let lod_idx = resolve_map_lod_index_from_span(span);
-        let pos_scale = self.layer_stroke_scale.positions;
-        let pos_label_px = vector_tiles::vector_label_px_for_lod(lod_idx, span, self.layer_stroke_scale.position_labels);
-        for pos in self.features.positions.values() {
-            let selected = self.selected_positions.contains(&pos.id);
-            let hovered = self.hovered_kind.as_deref() == Some("position") && self.hovered_id.as_deref() == Some(pos.id.as_str());
-            let fill = match pos.kind.as_deref() {
-                Some("donor") => self.theme.route_stroke,
-                _ => self.theme.position_fill,
+        let policy = self.policy();
+        let weight = self.layer_weight(&MapLayerTarget::Overlay(layer.id.clone()));
+        let labels = MapLayerTarget::OverlayLabels(layer.id.clone());
+        let labels_on = self.layer_visible(&labels);
+        let label_px = policy.label_px(policy.band_for_span(span, None), span, self.layer_weight(&labels));
+        for feature in self.overlays.features(&layer.id) {
+            let Some([lon, lat]) = feature.coordinates.first().copied() else {
+                continue;
             };
+            let (selected, hovered) = self.overlay_marks(layer, &feature.id);
+            let fill_slot = feature.style.as_deref().and_then(|style| layer.style_fills.iter().find(|row| row.style == style)).map_or(layer.fill, |row| row.fill);
+            let fill = self.theme.slot(fill_slot);
             let stroke = if selected {
                 self.theme.selection_stroke
             } else if hovered {
                 self.theme.hover_stroke
             } else {
-                self.theme.position_stroke
+                self.theme.slot(layer.stroke)
             };
-            let w = projection::lonlat_to_world(pos.lon, pos.lat);
-            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let r = ui_styling::radii::MAP_POSITION_MARKER * pos_scale;
+            let s = map_viewport::world_to_screen(&self.camera, &self.viewport, projection::lonlat_to_world(lon, lat));
+            let r = layer.point_radius * weight;
             let circle = Circle::new(s, r);
             if selected || hovered {
-                let halo_r = r * 1.75;
-                let halo = Circle::new(s, halo_r);
+                let halo = Circle::new(s, r * 1.75);
                 let halo_color = if selected { self.theme.selection_stroke } else { self.theme.hover_stroke };
                 scene.fill(FillRule::NonZero, Affine::IDENTITY, halo_color, None, &halo);
             }
             scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &circle);
-            let stroke_width = if selected || hovered { ui_styling::strokes::MAP_POSITION_MULT * pos_scale * 1.5 } else { ui_styling::strokes::MAP_POSITION_MULT * pos_scale };
+            let stroke_width = if selected || hovered { layer.point_stroke * weight * 1.5 } else { layer.point_stroke * weight };
             scene.stroke(&Stroke::new(stroke_width), Affine::IDENTITY, stroke, None, &circle);
-            if self.layer_visibility.position_labels {
-                let label = pos.name.as_deref().or(pos.label.as_deref()).map(str::trim).filter(|t| !t.is_empty());
-                if let Some(label) = label {
-                    let anchor = Point::new(s.x, s.y - r - ui_styling::radii::MAP_LABEL_ANCHOR_OFFSET);
-                    text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+            if labels_on {
+                if let Some(label) = feature.label.as_deref().map(str::trim).filter(|t| !t.is_empty()) {
+                    let anchor = Point::new(s.x, s.y - r - layer.label_offset_px);
+                    text::append_label(scene, label, anchor, label_px, label_fill, label_halo);
                 }
             }
         }
@@ -825,9 +821,7 @@ impl MapHost {
             MapTileMode::Vector | MapTileMode::Combined => self.append_vector_tiles_cached(&mut scene),
             MapTileMode::Image => {}
         }
-        self.append_regions(&mut scene);
-        self.append_routes(&mut scene);
-        self.append_positions(&mut scene);
+        self.append_overlays(&mut scene);
         scene
     }
 

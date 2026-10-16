@@ -10,8 +10,8 @@
 //! genuine architectural change, not a mechanical strip: whole-string shaping via `parley::Layout`
 //! replaces the old per-character single-glyph `parley::Layout` build (real shaping, bidi and UAX#14
 //! line breaking instead of a whitespace-split hack); `Measurement::{Ready,Pending,Failed}` (this
-//! crate's own type, `crate::layout::Measurement`) replaces the old `(f32, f32)` tuple; atlas uploads
-//! go through `crate::resource::ResourceRegistry` instead of raw `pixels`/`take_dirty` fields; cursor
+//! crate's own type, [`Measurement`]) replaces the old `(f32, f32)` tuple; atlas uploads
+//! go through [`ResourceRegistry`] instead of raw `pixels`/`take_dirty` fields; cursor
 //! movement and selection geometry are new, built on parley's own `Cursor`/`Selection`/`Cluster` API
 //! (grapheme-cluster-safe by construction — see the `🔖️Measure` region docstring); and `fetch_font_bytes`
 //! is gone (host I/O does not belong in this crate — see `FontSource` in `🔖️Font`).
@@ -20,6 +20,10 @@
 //! every such type is either wrapped (`FontHandle`, `GlyphEntry`, `ShapedGlyph`) or converted at the
 //! boundary (`kurbo::Rect` → `[f32; 4]` in `selection_geometry`). This is what lets a future shaping
 //! engine swap without touching a single call site outside this file.
+//!
+//! No font is compiled into this crate: the four built-in families arrive at run time as a
+//! [`TextFontSet`] the host builds from the `🖼️assets/🔤️fonts` catalog (native hosts read it with
+//! `TextFontFiles`; `wasm32` hosts fetch each [`TextFontRole::asset_path`] themselves).
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -33,8 +37,7 @@ use swash::scale::{Render, ScaleContext, Source, StrikeWith};
 use swash::zeno::Format as SwashFormat;
 use swash::FontRef as SwashFontRef;
 
-use crate::layout::Measurement;
-use crate::resource::{AtlasId, ResourceRegistry};
+use semio_framework_ui_render_packet::{AtlasId, ResourceRegistry};
 
 //#region 🔖️Font
 
@@ -46,23 +49,169 @@ const FAMILY_SERIF: &str = "Kelly Slab";
 const FAMILY_MONO: &str = "Share Tech Mono";
 const FAMILY_EMOJI: &str = "Noto Emoji";
 
-static ANTA_LATIN: &[u8] = include_bytes!("../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf");
-static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf");
-static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf");
-static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"),
-];
+/// 🧩️ One built-in font file of the text system, named by its identity in the runtime asset channel
+/// instead of by compiled-in bytes. A host resolves [`Self::asset_path`] (relative to the
+/// `🖼️assets/🔤️fonts` catalog directory) through its own channel — file system, fetch, packaged asset —
+/// and hands the bytes over as a [`TextFontSet`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum TextFontRole {
+    Sans,
+    Serif,
+    Mono,
+    EmojiRegions,
+    EmojiFlags,
+    EmojiSymbols,
+    EmojiObjects,
+    EmojiActivities,
+    EmojiTravel,
+    EmojiFood,
+    EmojiNature,
+    EmojiPeople,
+    EmojiFaces,
+    EmojiJoinedForms,
+    EmojiSupplement,
+}
+
+impl TextFontRole {
+    pub const ALL: [Self; 15] = [
+        Self::Sans,
+        Self::Serif,
+        Self::Mono,
+        Self::EmojiRegions,
+        Self::EmojiFlags,
+        Self::EmojiSymbols,
+        Self::EmojiObjects,
+        Self::EmojiActivities,
+        Self::EmojiTravel,
+        Self::EmojiFood,
+        Self::EmojiNature,
+        Self::EmojiPeople,
+        Self::EmojiFaces,
+        Self::EmojiJoinedForms,
+        Self::EmojiSupplement,
+    ];
+    const EMOJI: [Self; 12] =
+        [Self::EmojiRegions, Self::EmojiFlags, Self::EmojiSymbols, Self::EmojiObjects, Self::EmojiActivities, Self::EmojiTravel, Self::EmojiFood, Self::EmojiNature, Self::EmojiPeople, Self::EmojiFaces, Self::EmojiJoinedForms, Self::EmojiSupplement];
+
+    pub const fn asset_path(self) -> &'static str {
+        match self {
+            Self::Sans => "🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+            Self::Serif => "🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+            Self::Mono => "⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+            Self::EmojiRegions => "😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+            Self::EmojiFlags => "😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+            Self::EmojiSymbols => "😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+            Self::EmojiObjects => "😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+            Self::EmojiActivities => "😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+            Self::EmojiTravel => "😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+            Self::EmojiFood => "😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+            Self::EmojiNature => "😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+            Self::EmojiPeople => "😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+            Self::EmojiFaces => "😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+            Self::EmojiJoinedForms => "😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+            Self::EmojiSupplement => "😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+        }
+    }
+
+    const fn family(self) -> &'static str {
+        match self {
+            Self::Sans => FAMILY_SANS,
+            Self::Serif => FAMILY_SERIF,
+            Self::Mono => FAMILY_MONO,
+            _ => FAMILY_EMOJI,
+        }
+    }
+
+    const fn slot(self) -> usize {
+        self as usize
+    }
+}
+
+/// 📦️ The bytes of every [`TextFontRole`], borrowed from whatever the host loaded them into. Only read
+/// while [`TextSystem::new`] registers them; the system copies what it keeps.
+#[derive(Clone, Copy, Debug)]
+pub struct TextFontSet<'a> {
+    fonts: [&'a [u8]; 15],
+}
+
+impl<'a> TextFontSet<'a> {
+    /// 🔌️ Host-neutral constructor: asks `load` for every role in [`TextFontRole::ALL`] order and stops
+    /// at the first failure.
+    pub fn try_from_loader<E>(mut load: impl FnMut(TextFontRole) -> Result<&'a [u8], E>) -> Result<Self, E> {
+        let mut fonts: [&'a [u8]; 15] = [&[]; 15];
+        for role in TextFontRole::ALL {
+            fonts[role.slot()] = load(role)?;
+        }
+        Ok(Self { fonts })
+    }
+
+    pub fn get(&self, role: TextFontRole) -> &'a [u8] {
+        self.fonts[role.slot()]
+    }
+}
+
+/// ⚠️ A built-in font whose bytes fontique refused to register as a font.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TextFontError {
+    pub role: TextFontRole,
+}
+
+impl std::fmt::Display for TextFontError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "built-in text font {:?} ({}) is not a registrable font", self.role, self.role.asset_path())
+    }
+}
+
+impl std::error::Error for TextFontError {}
+
+/// 💾️ Native delivery of the built-in fonts: the fifteen files read from a catalog directory into
+/// buffers this value owns. Absent on `wasm32`, where a host fetches the files itself and builds a
+/// [`TextFontSet`] through [`TextFontSet::try_from_loader`] — this crate never links a file system into
+/// a guest.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct TextFontFiles {
+    buffers: Vec<Vec<u8>>,
+}
+
+/// ⚠️ The first font file [`TextFontFiles::read`] could not read.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug)]
+pub struct TextFontReadError {
+    pub role: TextFontRole,
+    pub path: std::path::PathBuf,
+    pub cause: std::io::Error,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::fmt::Display for TextFontReadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "cannot read built-in text font {:?} at {}: {}", self.role, self.path.display(), self.cause)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::error::Error for TextFontReadError {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl TextFontFiles {
+    pub fn read(fonts_root: &std::path::Path) -> Result<Self, TextFontReadError> {
+        let mut buffers = Vec::with_capacity(TextFontRole::ALL.len());
+        for role in TextFontRole::ALL {
+            let path = fonts_root.join(role.asset_path());
+            match std::fs::read(&path) {
+                Ok(bytes) => buffers.push(bytes),
+                Err(cause) => return Err(TextFontReadError { role, path, cause }),
+            }
+        }
+        Ok(Self { buffers })
+    }
+
+    pub fn set(&self) -> TextFontSet<'_> {
+        match TextFontSet::try_from_loader::<std::convert::Infallible>(|role| Ok(self.buffers[role.slot()].as_slice())) {
+            Ok(set) => set,
+        }
+    }
+}
 
 /// 🧭️ Which family a [`TextStyle`] resolves to. `Custom` names a host-provided font requested via
 /// [`TextSystem::request_font`] — never a `parley`/`fontique` type, so a caller never needs those
@@ -184,37 +333,48 @@ pub struct TextSystem {
     glyph_cache: HashMap<GlyphCacheKey, GlyphEntry>,
 }
 
-impl Default for TextSystem {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl TextSystem {
-    /// 🏗️ Registers the four embedded families (Anta/Kelly Slab/Share Tech Mono/Noto Emoji) and wires
-    /// `GenericFamily::{SansSerif,Serif,Monospace,Emoji}` to them — deterministic and dependency-free
-    /// (no network, no system-font scan: `CollectionOptions { system_fonts: false, .. }`), same
-    /// guarantee the wgpu-old target's `FontAtlas::builtin()`/`shaped()` merge gave. Infallible: the
-    /// embedded assets are checked into the repo, so registration failing here is a build-time asset
-    /// defect, not a runtime condition — hence the `expect`s.
+    /// 🏗️ Registers the four built-in families (Anta/Kelly Slab/Share Tech Mono/Noto Emoji) from the
+    /// bytes the host supplied and wires `GenericFamily::{SansSerif,Serif,Monospace,Emoji}` to them —
+    /// deterministic and dependency-free (no network, no system-font scan:
+    /// `CollectionOptions { system_fonts: false, .. }`), same guarantee the wgpu-old target's
+    /// `FontAtlas::builtin()`/`shaped()` merge gave. Fails naming the role whose bytes are not a font.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new() -> Self {
-        let mut collection = Collection::new(CollectionOptions { shared: false, system_fonts: false });
-        let sans_id = Self::register_embedded(&mut collection, ANTA_LATIN, FAMILY_SANS).expect("embedded Anta font asset must register");
-        let serif_id = Self::register_embedded(&mut collection, KELLY_SLAB_LATIN, FAMILY_SERIF).expect("embedded Kelly Slab font asset must register");
-        let mono_id = Self::register_embedded(&mut collection, SHARE_TECH_MONO_LATIN, FAMILY_MONO).expect("embedded Share Tech Mono font asset must register");
+    pub fn new(fonts: &TextFontSet<'_>) -> Result<Self, TextFontError> {
+        let mut collection = Self::empty_collection();
+        let sans_id = Self::register_builtin(&mut collection, fonts, TextFontRole::Sans)?;
+        let serif_id = Self::register_builtin(&mut collection, fonts, TextFontRole::Serif)?;
+        let mono_id = Self::register_builtin(&mut collection, fonts, TextFontRole::Mono)?;
         let mut emoji_id: Option<FamilyId> = None;
-        for bucket in NOTO_EMOJI_BUCKETS {
-            if let Some(id) = Self::register_embedded(&mut collection, bucket, FAMILY_EMOJI) {
+        for role in TextFontRole::EMOJI {
+            if let Some(id) = Self::register_font(&mut collection, fonts.get(role), role.family()) {
                 emoji_id.get_or_insert(id);
             }
         }
-        let emoji_id = emoji_id.expect("embedded Noto Emoji font assets must register");
+        let emoji_id = emoji_id.ok_or(TextFontError { role: TextFontRole::EmojiRegions })?;
         collection.set_generic_families(GenericFamily::Emoji, std::iter::once(emoji_id));
         collection.set_generic_families(GenericFamily::SansSerif, std::iter::once(sans_id));
         collection.set_generic_families(GenericFamily::Serif, std::iter::once(serif_id));
         collection.set_generic_families(GenericFamily::Monospace, std::iter::once(mono_id));
+        Ok(Self::with_collection(collection))
+    }
+
+    /// 🕳️ A text system with no built-in family: only fonts a host later provides through
+    /// [`Self::request_font`]/[`Self::provide_font_bytes`] shape. `FontFamilyChoice::{SansSerif,Serif,
+    /// Monospace}` and every generic fallback resolve to nothing, so a glyph the provided font lacks
+    /// shapes as that font's own `.notdef`.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn without_builtin_fonts() -> Self {
+        Self::with_collection(Self::empty_collection())
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn empty_collection() -> Collection {
+        Collection::new(CollectionOptions { shared: false, system_fonts: false })
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn with_collection(collection: Collection) -> Self {
         Self {
             font_cx: FontContext { collection, source_cache: SourceCache::default() },
             layout_cx: LayoutContext::new(),
@@ -234,7 +394,12 @@ impl TextSystem {
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn register_embedded(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
+    fn register_builtin(collection: &mut Collection, fonts: &TextFontSet<'_>, role: TextFontRole) -> Result<FamilyId, TextFontError> {
+        Self::register_font(collection, fonts.get(role), role.family()).ok_or(TextFontError { role })
+    }
+
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn register_font(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
         let over = FontInfoOverride { family_name: Some(family), width: None, style: None, weight: None, axes: None };
         collection.register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id)
     }
@@ -269,7 +434,7 @@ impl TextSystem {
     }
 
     /// 📥️ Registers `bytes` under `id`'s requested key and marks it `Ready`, forcing the family name
-    /// exactly like [`Self::register_embedded`]. Returns `false` (no-op) for an unknown id, an already
+    /// exactly like the built-in fonts [`Self::new`] registers. Returns `false` (no-op) for an unknown id, an already
     /// -resolved id, or empty/unparseable bytes (marked `Failed` in the last case) — never panics on a
     /// bad host response. On success, `id` is queued for [`Self::take_ready_dependencies`] so whoever
     /// owns this window's `FrameScheduler` can invalidate it with `InvalidationReason::RESOURCE_READY`.
@@ -703,6 +868,25 @@ impl TextSystem {
 
 //#region 🔖️Measure
 
+//#region 📏️Measurement
+
+/// 📏️ The outcome of measuring one leaf's intrinsic content against the available space taffy offers
+/// it. `Pending`/`Failed` are how master.md's decision #1 ("a dependency that is not ready is reported
+/// as a pending measurement with a placeholder size — never awaited") is expressed in this crate: an
+/// unshaped `TextSystem` run or an undecoded image resource is a `Pending` result carrying whatever
+/// placeholder size the caller judges reasonable (e.g. the last known size, or a fixed minimum), never
+/// a blocked call. Whoever completes that dependency (the text system's shaping, the resource
+/// registry's decode) is responsible for invalidating the window once it lands — this type only
+/// records that the frame just built proceeded on a placeholder.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Measurement {
+    Ready { width: f32, height: f32 },
+    Pending { placeholder_width: f32, placeholder_height: f32 },
+    Failed,
+}
+
+//#endregion 📏️Measurement
+
 /// 🧮️ `measure`/`measure_wrapped`/`wrap` are the layout-phase surface `layout.rs`'s `MeasureFn` calls
 /// into. `next_grapheme`/`previous_grapheme`/`selection_geometry` are the input/edit-phase surface —
 /// all three funnel through `parley::Cursor`/`Selection`/`Cluster`, which are grapheme-cluster-safe by
@@ -817,7 +1001,7 @@ pub fn utf16_to_utf8(text: &str, utf16_index: u32) -> usize {
 
 //#region Tests
 
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../🧪️tests/🔬️text-unit/🦀️.rs"]
 mod tests;
 

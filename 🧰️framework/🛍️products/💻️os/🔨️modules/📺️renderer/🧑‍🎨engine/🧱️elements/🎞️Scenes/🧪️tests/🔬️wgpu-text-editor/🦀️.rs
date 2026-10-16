@@ -52,7 +52,7 @@ fn text_editor_scene_payload(buffer: &str, completions_json: Option<&str>, renam
     }
 }
 
-fn text_editor_scene(surface_id: &str, buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> UiComponentSceneNode {
+pub fn text_editor_scene(surface_id: &str, buffer: &str, completions_json: Option<&str>, rename_json: Option<&str>) -> UiComponentSceneNode {
     let mut scene = test_scene(surface_id, SurfaceKind::TextEditor);
     scene.text_editor = Some(text_editor_scene_payload(buffer, completions_json, rename_json));
     scene
@@ -60,7 +60,7 @@ fn text_editor_scene(surface_id: &str, buffer: &str, completions_json: Option<&s
 
 /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
 /// (private to that module, so duplicated here rather than reused).
-struct Fixture {
+pub struct Fixture {
     draw: ui_wgpu::wgpu::DrawList,
     atlas: ui_wgpu::wgpu::FontAtlas,
     theme: Theme,
@@ -163,7 +163,7 @@ fn text_editor_rename_info_parses_name_and_occurrences() {
 
 /// 🧪️ Drains the bounded action authority — the only way out of an `InputState`, since an action is
 /// taken (not read) and materializes through `into_descriptor`.
-fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority remains live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));

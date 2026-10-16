@@ -1,20 +1,20 @@
 //! 📦️ Operation octets with independently admitted and returned physical backing.
 
-use crate::value::list::{PagedList, PagedListRefusalKind};
-use crate::value::ValueRefusalKind;
+use semio_framework_value::list::{PagedList, PagedListRefusalKind};
+use semio_framework_value::ValueRefusalKind;
 use std::mem::ManuallyDrop;
 
 const MAXIMUM_BYTES: usize = isize::MAX as usize;
 
 /// ✍️ Writes source octets into caller-owned backing while retaining every accepted prefix.
 pub trait OperationByteOutput {
-    fn write_bytes(&mut self, bytes: &[u8], control: &mut crate::value::native_encoding::NativeEncodeControl<'_>) -> Result<(), crate::PackRefusal>;
+    fn write_bytes(&mut self, bytes: &[u8], control: &mut semio_framework_value::native_encoding::NativeEncodeControl<'_>) -> Result<(), semio_framework_pack_error::PackRefusal>;
 }
 
 /// 🧾 Applies the caller's cumulative allocation ceiling before any original operation work, restoring its control on every result.
-pub fn with_operation_encode_policy<T,E:From<crate::PackRefusal>>(options:&crate::codec::PackEncodeOptions,control:&mut crate::value::NativeEncodeControl<'_>,operation:impl FnOnce(&mut crate::value::NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
+pub fn with_operation_encode_policy<T,E:From<semio_framework_pack_error::PackRefusal>>(options:&crate::PackEncodeOptions,control:&mut semio_framework_value::NativeEncodeControl<'_>,operation:impl FnOnce(&mut semio_framework_value::NativeEncodeControl<'_>)->Result<T,E>)->Result<T,E>{
     let maximum=options.limits.max_total_alloc.min(usize::MAX as u64)as usize;
-    control.scoped_maximum(maximum,|control|Ok::<_,crate::PackRefusal>(operation(control))).map_err(E::from)?
+    control.scoped_maximum(maximum,|control|Ok::<_,semio_framework_pack_error::PackRefusal>(operation(control))).map_err(E::from)?
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -133,7 +133,7 @@ impl OwnedOperationBytes {
     }
 
     /// 🏡️ Transfers source backing to the actual parent while retaining separate physical disposal responsibility.
-    pub fn return_one<const P:usize>(&mut self,parent:&mut crate::value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<OperationByteReturnStep,crate::value::ValueError>{
+    pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<OperationByteReturnStep,semio_framework_value::ValueError>{
         if maximum_items==0||maximum_bytes==0{return Ok(OperationByteReturnStep::Pending{returned_items:0,returned_bytes:0});}
         if self.closed{return Ok(OperationByteReturnStep::Complete);}
         self.closing=true;
@@ -156,40 +156,40 @@ impl OwnedOperationBytes {
     pub fn terminal_is_empty(&self) -> bool { self.closed }
 }
 
-impl crate::value::ErasedSnapshotRetirement for OwnedOperationBytes{
-    fn close_step(&mut self,grant:crate::value::retained_clone::RetainedCloneGrant)->Result<crate::value::retained_clone::RetainedCloneStep,crate::value::ValueError>{
-        use crate::value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
-        let empty=RetainedCloneProgress::default();if self.closed{return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}if grant.maximum_depth<1{return Err(crate::value::ValueError::literal(ValueRefusalKind::DepthLimit,"original operation source retirement requires admitted depth"))}
+impl semio_framework_value::ErasedSnapshotRetirement for OwnedOperationBytes{
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let empty=RetainedCloneProgress::default();if self.closed{return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}if grant.maximum_depth<1{return Err(semio_framework_value::ValueError::literal(ValueRefusalKind::DepthLimit,"original operation source retirement requires admitted depth"))}
         let logical=self.len()!=0;
         if logical&&grant.maximum_copy_bytes==0{return Ok(RetainedCloneStep::Progress(empty))}
-        let release=if logical||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|crate::value::ValueError::new(fault.kind,fault.reason))?};
+        let release=if logical||self.allocated_bytes()==0{0}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?};
         if release>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
-        let step=self.close_one(1,if logical{grant.maximum_copy_bytes}else if release!=0{grant.maximum_release_bytes}else{1}).map_err(|fault|crate::value::ValueError::new(fault.kind,fault.reason))?;
+        let step=self.close_one(1,if logical{grant.maximum_copy_bytes}else if release!=0{grant.maximum_release_bytes}else{1}).map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))?;
         match step{OperationByteCloseStep::Complete=>Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty})),OperationByteCloseStep::Pending{released_items,released_bytes}=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,copied_bytes:usize::from(logical&&released_items!=0),released_bytes,..empty}))}
     }
     fn terminal_is_empty(&self)->bool{self.closed}
-    fn next_copy_byte_demand(&self)->Result<usize,crate::value::ValueError>{Ok(usize::from(!self.closed&&self.len()!=0))}
-    fn next_capacity_byte_demand(&self,_:usize)->Result<usize,crate::value::ValueError>{Ok(0)}
-    fn next_release_byte_demand(&self)->Result<usize,crate::value::ValueError>{if self.closed||self.len()!=0||self.allocated_bytes()==0{Ok(0)}else{self.next_close_byte_demand().map_err(|fault|crate::value::ValueError::new(fault.kind,fault.reason))}}
-    fn next_depth_demand(&self)->Result<usize,crate::value::ValueError>{Ok(usize::from(!self.closed))}
+    fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.closed&&self.len()!=0))}
+    fn next_capacity_byte_demand(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.closed||self.len()!=0||self.allocated_bytes()==0{Ok(0)}else{self.next_close_byte_demand().map_err(|fault|semio_framework_value::ValueError::new(fault.kind,fault.reason))}}
+    fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.closed))}
 }
 impl Drop for OwnedOperationBytes {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.closed, "operation byte owner requires explicit bounded terminal retirement"); }
 }
 
 impl OperationByteOutput for OwnedOperationBytes {
-    fn write_bytes(&mut self, bytes: &[u8], control: &mut crate::value::native_encoding::NativeEncodeControl<'_>) -> Result<(), crate::PackRefusal> {
-        let refusal = |fault: OperationByteFault| crate::PackRefusal::from(crate::value::ValueError::new(fault.kind, fault.reason));
+    fn write_bytes(&mut self, bytes: &[u8], control: &mut semio_framework_value::native_encoding::NativeEncodeControl<'_>) -> Result<(), semio_framework_pack_error::PackRefusal> {
+        let refusal = |fault: OperationByteFault| semio_framework_pack_error::PackRefusal::from(semio_framework_value::ValueError::new(fault.kind, fault.reason));
         control.scoped_stage(|control| {
             control.begin_stage(bytes.len())?;
             for &byte in bytes {
                 while !self.has_reserved_slot() {
                     let required = self.next_allocation_bytes().map_err(refusal)?;
-                    if required > 4096 { return Err(crate::PackRefusal::from(crate::value::ValueError::new(ValueRefusalKind::OwnershipLimit, "operation byte allocation exceeds its fixed page grant"))); }
+                    if required > 4096 { return Err(semio_framework_pack_error::PackRefusal::from(semio_framework_value::ValueError::new(ValueRefusalKind::OwnershipLimit, "operation byte allocation exceeds its fixed page grant"))); }
                     control.checkpoint()?;
                     control.charge(required)?;
                     let progress = self.reserve_one(4096).map_err(refusal)?;
-                    if !progress.progressed { return Err(crate::PackRefusal::from(crate::value::ValueError::new(ValueRefusalKind::InvariantViolated, "operation byte admitted allocation made no progress"))); }
+                    if !progress.progressed { return Err(semio_framework_pack_error::PackRefusal::from(semio_framework_value::ValueError::new(ValueRefusalKind::InvariantViolated, "operation byte admitted allocation made no progress"))); }
                 }
                 self.push_reserved(byte).map_err(|error| refusal(error.fault))?;
                 control.step()?;
@@ -209,20 +209,20 @@ impl serde::Serialize for OwnedOperationBytes {
 }
 
 /// 🪞️ Compares controlled producer octets with one exact immutable source span.
-pub struct OperationByteComparison<'source> { source:crate::codec::ByteSpan<'source>, position:usize, refused:bool }
+pub struct OperationByteComparison<'source> { source:crate::ByteSpan<'source>, position:usize, refused:bool }
 
 impl<'source> OperationByteComparison<'source> {
-    pub fn new(source:crate::codec::ByteSpan<'source>)->Self{Self{source,position:0,refused:false}}
+    pub fn new(source:crate::ByteSpan<'source>)->Self{Self{source,position:0,refused:false}}
     pub fn position(&self)->usize{self.position}
-    pub fn finish(self)->Result<(),crate::PackRefusal>{
+    pub fn finish(self)->Result<(),semio_framework_pack_error::PackRefusal>{
         if self.refused||self.position!=self.source.len(){return Err(Self::mismatch(self.position));}
         Ok(())
     }
-    fn mismatch(offset:usize)->crate::PackRefusal{crate::PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"operation canonical encoding",offset:offset as u64,detail:"producer octets differ from the exact immutable source"}}
+    fn mismatch(offset:usize)->semio_framework_pack_error::PackRefusal{semio_framework_pack_error::PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"operation canonical encoding",offset:offset as u64,detail:"producer octets differ from the exact immutable source"}}
 }
 
 impl OperationByteOutput for OperationByteComparison<'_> {
-    fn write_bytes(&mut self,bytes:&[u8],control:&mut crate::value::native_encoding::NativeEncodeControl<'_>)->Result<(),crate::PackRefusal>{
+    fn write_bytes(&mut self,bytes:&[u8],control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<(),semio_framework_pack_error::PackRefusal>{
         if self.refused{return Err(Self::mismatch(self.position));}
         control.scoped_stage(|control|{
         if let Err(error)=control.begin_stage(bytes.len()){self.refused=true;return Err(error.into());}
@@ -244,11 +244,11 @@ pub struct OperationByteLimitedOutput<'output>{output:&'output mut dyn Operation
 impl<'output> OperationByteLimitedOutput<'output>{
     pub fn new(output:&'output mut dyn OperationByteOutput,maximum_bytes:u64)->Self{Self{output,maximum_bytes,completed_bytes:0,refused:false}}
     pub fn completed_bytes(&self)->u64{self.completed_bytes}
-    fn refusal(&self)->crate::PackRefusal{crate::PackRefusal::RetainedMalformed{kind:ValueRefusalKind::OwnershipLimit,what:"operation output byte length",offset:self.completed_bytes,detail:"complete operation output exceeds caller policy or follows a refused handoff"}}
+    fn refusal(&self)->semio_framework_pack_error::PackRefusal{semio_framework_pack_error::PackRefusal::RetainedMalformed{kind:ValueRefusalKind::OwnershipLimit,what:"operation output byte length",offset:self.completed_bytes,detail:"complete operation output exceeds caller policy or follows a refused handoff"}}
 }
 
 impl OperationByteOutput for OperationByteLimitedOutput<'_>{
-    fn write_bytes(&mut self,bytes:&[u8],control:&mut crate::value::NativeEncodeControl<'_>)->Result<(),crate::PackRefusal>{
+    fn write_bytes(&mut self,bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_pack_error::PackRefusal>{
         if self.refused{return Err(self.refusal());}
         let Some(next)=self.completed_bytes.checked_add(bytes.len()as u64).filter(|length|*length<=self.maximum_bytes)else{self.refused=true;return Err(self.refusal());};
         if let Err(error)=control.checkpoint(){self.refused=true;return Err(error.into());}
@@ -276,12 +276,12 @@ impl OperationBytePreparation{
     }
     pub fn allocated_bytes(&self)->usize{self.source.as_ref().map_or(0,OwnedOperationBytes::allocated_bytes)}
     pub fn is_funded(&self)->bool{!self.refused&&self.source.as_ref().is_some_and(|source|!source.closing&&!source.closed&&source.len()==self.exact_length)}
-    pub fn accepted_prefix(&self)->Option<crate::codec::ByteSpan<'_>>{
+    pub fn accepted_prefix(&self)->Option<crate::ByteSpan<'_>>{
         let source=self.source.as_ref()?;
-        crate::codec::ByteSpan::from_source(source).slice(0,self.completed.min(source.len())).ok()
+        crate::ByteSpan::from_source(source).slice(0,self.completed.min(source.len())).ok()
     }
-    fn invalid(what:&'static str,kind:ValueRefusalKind,offset:usize)->crate::PackRefusal{
-        crate::PackRefusal::RetainedMalformed{kind,what,offset:offset as u64,detail:"operation preparation retains its exact backing and prefix"}
+    fn invalid(what:&'static str,kind:ValueRefusalKind,offset:usize)->semio_framework_pack_error::PackRefusal{
+        semio_framework_pack_error::PackRefusal::RetainedMalformed{kind,what,offset:offset as u64,detail:"operation preparation retains its exact backing and prefix"}
     }
     pub fn next_funding_byte_demand(&self)->Result<usize,OperationByteFault>{
         if self.is_funded(){return Ok(0);}
@@ -290,7 +290,7 @@ impl OperationBytePreparation{
         if source.has_reserved_slot(){return Ok(1);}
         source.next_allocation_bytes()
     }
-    pub fn fund_one(&mut self,maximum_items:usize,maximum_bytes:usize,control:&mut crate::value::NativeEncodeControl<'_>)->Result<OperationByteFundingStep,crate::PackRefusal>{
+    pub fn fund_one(&mut self,maximum_items:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<OperationByteFundingStep,semio_framework_pack_error::PackRefusal>{
         if maximum_items==0||maximum_bytes==0{return Ok(OperationByteFundingStep::Pending{prepared_items:0,allocated_bytes:0});}
         if self.is_funded(){return Ok(OperationByteFundingStep::Ready);}
         let required=self.next_funding_byte_demand().map_err(|error|Self::invalid(error.reason,error.kind,self.completed))?;
@@ -324,7 +324,7 @@ impl OperationBytePreparation{
     pub fn terminal_is_empty(&self)->bool{self.source.as_ref().is_none_or(OwnedOperationBytes::terminal_is_empty)}
 }
 impl OperationByteOutput for OperationBytePreparation{
-    fn write_bytes(&mut self,bytes:&[u8],control:&mut crate::value::NativeEncodeControl<'_>)->Result<(),crate::PackRefusal>{
+    fn write_bytes(&mut self,bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_pack_error::PackRefusal>{
         if !self.is_funded(){return Err(Self::invalid("operation preparation funding",ValueRefusalKind::InvariantViolated,self.completed));}
         if self.completed.checked_add(bytes.len()).is_none_or(|end|end>self.exact_length){self.refused=true;return Err(Self::invalid("operation preparation measured byte length",ValueRefusalKind::OwnershipLimit,self.completed));}
         let result=control.scoped_stage(|control|{
@@ -346,21 +346,21 @@ impl OperationByteOutput for OperationBytePreparation{
 pub struct OperationByteMeasurement{maximum_length:u64,length:u64,refused:bool}
 impl OperationByteMeasurement{
     pub fn new(maximum_length:u64)->Self{Self{maximum_length,length:0,refused:false}}
-    fn refusal(&self,kind:ValueRefusalKind,detail:&'static str)->crate::PackRefusal{
-        crate::PackRefusal::RetainedMalformed{kind,what:"operation output measurement",offset:self.length,detail}
+    fn refusal(&self,kind:ValueRefusalKind,detail:&'static str)->semio_framework_pack_error::PackRefusal{
+        semio_framework_pack_error::PackRefusal::RetainedMalformed{kind,what:"operation output measurement",offset:self.length,detail}
     }
-    pub fn exact_length(&self)->Result<usize,crate::PackRefusal>{
+    pub fn exact_length(&self)->Result<usize,semio_framework_pack_error::PackRefusal>{
         if self.refused{return Err(self.refusal(ValueRefusalKind::InvariantViolated,"refused measurement cannot issue a funding length"));}
         usize::try_from(self.length).ok().filter(|length|*length<=MAXIMUM_BYTES).ok_or_else(||self.refusal(ValueRefusalKind::OwnershipLimit,"operation measurement exceeds source container authority"))
     }
 }
 impl OperationByteOutput for OperationByteMeasurement{
-    fn write_bytes(&mut self,bytes:&[u8],control:&mut crate::value::NativeEncodeControl<'_>)->Result<(),crate::PackRefusal>{
+    fn write_bytes(&mut self,bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),semio_framework_pack_error::PackRefusal>{
         if self.refused{return Err(self.refusal(ValueRefusalKind::InvariantViolated,"operation measurement is refused"));}
         let Some(next)=self.length.checked_add(bytes.len()as u64).filter(|length|*length<=self.maximum_length&&*length<=MAXIMUM_BYTES as u64)else{
             self.refused=true;return Err(self.refusal(ValueRefusalKind::OwnershipLimit,"complete operation exceeds measured byte authority"));
         };
-        let result=control.scoped_stage(|control|{control.begin_stage(bytes.len())?;control.advance(bytes.len())?;Ok::<_,crate::PackRefusal>(())});
+        let result=control.scoped_stage(|control|{control.begin_stage(bytes.len())?;control.advance(bytes.len())?;Ok::<_,semio_framework_pack_error::PackRefusal>(())});
         if let Err(error)=result{self.refused=true;return Err(error);}
         self.length=next;Ok(())
     }
@@ -372,11 +372,11 @@ pub enum OperationByteReturnStep{Pending{returned_items:usize,returned_bytes:usi
 /// 🧭️ Reads original operation sources without materializing another payload owner.
 pub trait OperationSourceCollection:Send+Sync{
     fn len(&self)->usize;
-    fn source_at(&self,index:usize)->Option<crate::codec::ByteSpan<'_>>;
+    fn source_at(&self,index:usize)->Option<crate::ByteSpan<'_>>;
     fn is_empty(&self)->bool{self.len()==0}
 }
 impl<const N:usize> OperationSourceCollection for PagedList<OwnedOperationBytes,N>{
     fn len(&self)->usize{PagedList::len(self)}
-    fn source_at(&self,index:usize)->Option<crate::codec::ByteSpan<'_>>{self.get(index).map(crate::codec::ByteSpan::from_source)}
+    fn source_at(&self,index:usize)->Option<crate::ByteSpan<'_>>{self.get(index).map(crate::ByteSpan::from_source)}
 }
 

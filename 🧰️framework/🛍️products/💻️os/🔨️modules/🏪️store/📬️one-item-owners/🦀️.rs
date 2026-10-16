@@ -1,6 +1,26 @@
 //! 📬️ The original owners of one one-item Store preparation and the grant-based ladder that closes them.
 
-use crate::{os_store::snapshot_read::artifact_retirement_admit_owned, os_store::snapshot_read::artifact_retirement_box_close_step, os_store::snapshot_read::artifact_retirement_box_demands, os_store::snapshot_read::artifact_retirement_owned_birth_demands, ArtifactOwnedValueRetirementFactory, os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, os_store::one_item_publication::ArtifactStoreOneItemPrepared, os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest, Edit, ErasedSnapshotRetirement, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory};
+#[cfg(test)]
+#[path = "../📦️prepared/♻️retirement/🧪️tests/🦀️.rs"]
+pub mod tests;
+#[path = "../📬️paged-one-item/🦀️.rs"]
+pub mod paged_one_item;
+#[path = "../🧩️composition/📨️emission/📦️owned/🦀️.rs"]
+pub mod member_owned_batch;
+#[path = "../🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
+pub mod ephemeral_transfer;
+#[path = "../🫧️ephemeral/📢️publication/🧩️preparation/🦀️.rs"]
+pub mod ephemeral_preparation;
+#[path = "📥️lifted/📬️publication/🦀️.rs"]
+pub mod lifted_one_item_publication;
+#[path = "📥️lifted/🚦️native/🦀️.rs"]
+pub mod lifted_native;
+#[path = "📥️lifted/🤝️group/🦀️.rs"]
+pub mod lifted_member_group;
+use semio_framework_value_snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, SnapshotRead};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPreparationRequest};
+use semio_framework_os_spr::Edit;
 use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind};
@@ -23,11 +43,11 @@ pub struct OneItemOwners<P: 'static, M: 'static> {
     pub failure: ManuallyDrop<Option<ValueError>>,
     pub authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
     pub prepared: ManuallyDrop<Option<ArtifactStoreOneItemPrepared<P, M>>>,
-    mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
-    snapshot_retirement: ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,
-    active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    factories: ManuallyDrop<[Option<FactoryAuthority>; 2]>,
-    closing: bool,
+    pub mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
+    pub snapshot_retirement: ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,
+    pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub factories: ManuallyDrop<[Option<FactoryAuthority>; 2]>,
+    pub closing: bool,
 }
 
 impl<P: 'static, M: 'static> OneItemOwners<P, M> {

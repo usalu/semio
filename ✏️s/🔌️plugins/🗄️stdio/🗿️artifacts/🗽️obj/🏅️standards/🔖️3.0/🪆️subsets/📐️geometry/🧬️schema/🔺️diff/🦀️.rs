@@ -28,12 +28,6 @@
 //! (`hex_encode`/`split_top_level`/`encode_option`/…) verbatim per artifact convention; `f64` fields
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
-#[cfg(test)]
-use crate::standards::v3_0::subsets::any::io::text::diff::{dec_unknown, enc_unknown};
-#[cfg(test)]
-use crate::standards::v3_0::subsets::any::io::binary::diff::dec_unknown_bin;
-#[cfg(test)]
-use crate::standards::v3_0::subsets::any::io::binary::diff::enc_unknown_bin;
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
@@ -1257,15 +1251,6 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
 
 
 
-#[cfg(test)]
-#[test]
-fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_diff_twins() {
-    let value = ObjUnknownStatement { line_index: u64::MAX, raw: "# Quelle 🎨".into() };
-    assert_eq!(dec_unknown(&enc_unknown(&value)).unwrap(), value);
-    let mut bytes = Vec::new();
-    enc_unknown_bin(&value, &mut bytes);
-    assert_eq!(dec_unknown_bin(&mut store::ByteReader::new(&bytes)).unwrap(), value);
-}
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs

@@ -338,7 +338,7 @@ async fn a_generation_command_carries_the_run_start_and_the_run_publishes_the_sh
             return Err(format!("addGeneration must publish its artifact and selection lanes only, got {lanes:?}"));
         }
         let carried = context::run_actions(&receipt.effects);
-        if carried != vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()] {
+        if carried != vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()] {
             return Err(format!("addGeneration must carry exactly one run start, got {carried:?} (the boot run settled as {settled:?})"));
         }
         if app.ephemeral_snapshot().await.transient_generation != before_transient {
@@ -414,7 +414,7 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         }
         let view = app.tool_run_ledger().view().ok_or("the gesture's run start must open a run")?;
         app.handle_action(
-            semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID,
+            semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID,
             Some(&semio_framework_value::DslValue::object([
                 (semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(view.identity.id.run.to_string())),
                 (semio_framework_tool_run::TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::uint(u64::from(view.identity.generation))),

@@ -1,0 +1,6 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "type":"object","additionalProperties":false,"required":["version","mode","pluginId","cratePath"],
+ "properties":{"version":{"const":1},"mode":{"enum":["prototype","release"]},"pluginId":{"type":"string","minLength":1,"maxLength":64,"pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"cratePath":{"type":"string","minLength":1,"maxLength":256}},
+ "definitions":{"Protocol":{"const":{"namespace":"packages","file":"📦️extension.sxt","maximumFiles":1}}}
+}

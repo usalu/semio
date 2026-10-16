@@ -6,7 +6,7 @@ use store::io_schema::IoPayload;
 use std::mem::size_of;
 const TOKEN:&[u8]=b"stdio.txt.pack v1";
 fn refused(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::literal(kind,message)}
-fn extent(body:usize,encoding:SnapshotEncoding)->Result<usize,ValueError>{body.checked_add(if encoding==SnapshotEncoding::Binary{12+TOKEN.len()}else{0}).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||refused(ValueRefusalKind::OwnershipLimit,"TXT original output extent exceeds address space"))}
+pub fn extent(body:usize,encoding:SnapshotEncoding)->Result<usize,ValueError>{body.checked_add(if encoding==SnapshotEncoding::Binary{12+TOKEN.len()}else{0}).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||refused(ValueRefusalKind::OwnershipLimit,"TXT original output extent exceeds address space"))}
 fn work(body:&mut NativeSnapshotBodyWallet,bytes:usize)->Result<(),ValueError>{body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:2})?;body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
 fn append(output:&mut Vec<u8>,bytes:&[u8],native:&mut NativeEncodeControl<'_>,body:&mut NativeSnapshotBodyWallet)->Result<(),ValueError>{
  body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes.len(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:2})?;
@@ -14,7 +14,7 @@ fn append(output:&mut Vec<u8>,bytes:&[u8],native:&mut NativeEncodeControl<'_>,bo
  output.extend_from_slice(bytes);body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes.len(),..Default::default()})?;native.advance(bytes.len())
 }
 /// 🫴️ Installs the typed Vec before allocation and records every canceled byte prefix.
-pub(super) fn receive_into(source:&TxtSnapshot,encoding:SnapshotEncoding,body_bytes:usize,slot:&mut Option<Vec<u8>>,native:&mut NativeEncodeControl<'_>,body:&mut NativeSnapshotBodyWallet)->Result<IoPayload,ValueError>{
+pub fn receive_into(source:&TxtSnapshot,encoding:SnapshotEncoding,body_bytes:usize,slot:&mut Option<Vec<u8>>,native:&mut NativeEncodeControl<'_>,body:&mut NativeSnapshotBodyWallet)->Result<IoPayload,ValueError>{
  if slot.is_some(){return Err(refused(ValueRefusalKind::InvariantViolated,"TXT original receiving slot must be empty"))}
  let physical=extent(body_bytes,encoding)?;let separators=source.lines.len().saturating_sub(1).checked_add(usize::from(source.trailing_newline)).ok_or_else(||refused(ValueRefusalKind::WorkLimit,"TXT original separator census overflow"))?;
  let mut items=3usize.checked_add(separators).and_then(|items|items.checked_add(if encoding==SnapshotEncoding::Binary{3}else{0})).ok_or_else(||refused(ValueRefusalKind::WorkLimit,"TXT original copy census overflow"))?;

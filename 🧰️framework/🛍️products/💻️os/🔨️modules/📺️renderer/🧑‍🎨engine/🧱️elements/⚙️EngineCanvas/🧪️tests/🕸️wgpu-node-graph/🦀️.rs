@@ -176,21 +176,21 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
     let painted = paint_scene_into_draw_list(&scene, bounds);
     let host_id = painted.owner.host_id.clone();
     let points = [
-        semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: 0.0, y: 0.0 },
-        semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "radius".into(), offset: Some([0.5, 0.5]) },
-        semio_framework::IntroductionPoint::Curve { id: surface_id.into(), domain: "edge".into(), entity: "e2".into(), t: 0.5 },
-        semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 },
+        semio_framework::onboarding::IntroductionPoint::Canvas { id: surface_id.into(), x: 0.0, y: 0.0 },
+        semio_framework::onboarding::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "radius".into(), offset: Some([0.5, 0.5]) },
+        semio_framework::onboarding::IntroductionPoint::Curve { id: surface_id.into(), domain: "edge".into(), entity: "e2".into(), t: 0.5 },
+        semio_framework::onboarding::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 },
     ];
     for point in points {
         let resolved = resolve_tutorial_surface_point(&host_id, &point).unwrap_or_else(|| panic!("known graph semantic point resolves: {point:?}"));
         assert!(resolved.0 >= 0.0 && resolved.0 <= bounds.w && resolved.1 >= 0.0 && resolved.1 <= bounds.h, "resolved point remains inside the live surface: {resolved:?}");
     }
     for point in [
-        semio_framework::IntroductionPoint::Canvas { id: "another-graph".into(), x: 0.0, y: 0.0 },
-        semio_framework::IntroductionPoint::Canvas { id: host_id.clone(), x: 0.0, y: 0.0 },
-        semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "height".into(), offset: None },
-        semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "height".into(), value: 0.0 },
-        semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: -1_000_000.0, y: 0.0 },
+        semio_framework::onboarding::IntroductionPoint::Canvas { id: "another-graph".into(), x: 0.0, y: 0.0 },
+        semio_framework::onboarding::IntroductionPoint::Canvas { id: host_id.clone(), x: 0.0, y: 0.0 },
+        semio_framework::onboarding::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "height".into(), offset: None },
+        semio_framework::onboarding::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "height".into(), value: 0.0 },
+        semio_framework::onboarding::IntroductionPoint::Canvas { id: surface_id.into(), x: -1_000_000.0, y: 0.0 },
     ] {
         assert_eq!(resolve_tutorial_surface_point(&host_id, &point), None, "off-surface semantic point is not targetable: {point:?}");
     }
@@ -203,9 +203,9 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
         let ratio = (1.5 - slider["min"].as_f64().unwrap()) / (slider["max"].as_f64().unwrap() - slider["min"].as_f64().unwrap());
         tutorial_graph_world_to_screen(engine, slider["x"].as_f64().unwrap() + (ratio - 0.5) * slider["w"].as_f64().unwrap(), slider["y"].as_f64().unwrap())
     });
-    let actual = resolve_tutorial_surface_point(&host_id, &semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
+    let actual = resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
     assert!((actual.0 - expected[0]).abs() < 0.001 && (actual.1 - expected[1]).abs() < 0.001, "slider domain must use the same zoomed track as React: {actual:?} vs {expected:?}");
-    assert_eq!(resolve_tutorial_surface_point(&host_id, &semio_framework::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
+    assert_eq!(resolve_tutorial_surface_point(&host_id, &semio_framework::onboarding::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
     super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
 }
 

@@ -6,7 +6,7 @@ use wit_bindgen::generate;
 
 generate!({
     world: "actor",
-    path: "../../🧬️schema",
+    path: "../../../🧬️schema",
     async: [
         "-import:semio:framework/pure@1.0.0#operation-begin",
         "-import:semio:framework/pure@1.0.0#operation-progress",

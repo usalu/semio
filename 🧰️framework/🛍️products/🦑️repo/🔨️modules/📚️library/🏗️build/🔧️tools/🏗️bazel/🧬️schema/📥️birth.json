@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Private Bazel Action Birth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "task",
+    "manifestSha256",
+    "parameters"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "action",
+        "launcher",
+        "launch"
+      ]
+    },
+    "task": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "manifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "parameters": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\u0000]+$"
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumManifestBytes": 1048576,
+        "maximumRuntimeBytes": 1048576,
+        "maximumHandshakeMilliseconds": 10000,
+        "readChunkBytes": 65536,
+        "cooperativeCancellationRole": "execution"
+      }
+    },
+    "ParameterGrants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/properties/parameters"
+      }
+    },
+    "ControlRole": {
+      "enum": [
+        "birth",
+        "execution"
+      ]
+    }
+  }
+}

@@ -7,6 +7,9 @@
 //!
 //! See the `## protocol_cli` section (plus the amendment's workspace-wide notes) of the frozen
 //! contract at `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`.
+//!
+//! 🌉️ Native tooling: the crate is empty on wasm32, where there is no file layer.
+#![cfg(not(target_arch = "wasm32"))]
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write as _;
@@ -66,7 +69,7 @@ fn kind_name(kind: u8) -> &'static str {
         REC_SEALED => "sealed",
         REC_COMPACTION => "compaction",
         REC_PADDING => "padding",
-        crate::os_spr::REC_TRANSITION => "transition",
+        semio_framework_os_spr::REC_TRANSITION => "transition",
         _ => "extension",
     }
 }
@@ -130,12 +133,12 @@ async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     (positional, flags)
 }
 
-async fn parse_level(flags: &HashMap<String, String>) -> Result<crate::os_spr::VerificationLevel, String> {
+async fn parse_level(flags: &HashMap<String, String>) -> Result<semio_framework_os_spr::VerificationLevel, String> {
     match flags.get("level").map(String::as_str) {
-        None => Ok(crate::os_spr::VerificationLevel::Standard),
-        Some("trusted") => Ok(crate::os_spr::VerificationLevel::Trusted),
-        Some("standard") => Ok(crate::os_spr::VerificationLevel::Standard),
-        Some("full") => Ok(crate::os_spr::VerificationLevel::Full),
+        None => Ok(semio_framework_os_spr::VerificationLevel::Standard),
+        Some("trusted") => Ok(semio_framework_os_spr::VerificationLevel::Trusted),
+        Some("standard") => Ok(semio_framework_os_spr::VerificationLevel::Standard),
+        Some("full") => Ok(semio_framework_os_spr::VerificationLevel::Full),
         Some(other) => Err(format!("unknown --level '{other}' (expected trusted|standard|full)")),
     }
 }
@@ -189,7 +192,7 @@ fn hex32(bytes: &[u8; 32]) -> String {
 /// as a cryptographic digest (labelled `fp=` in output, never `hash=`).
 // 🚫️async: R9 pure accessor — only consumer is a `println!` argument position, which cannot
 // await; no suspension point exists in the body either.
-fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
+fn fingerprint(edit: &semio_framework_os_spr::HistoryEdit) -> String {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     edit.id.hash(&mut hasher);
@@ -208,13 +211,13 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
 /// 🔍️ `protocol inspect <file>` — header, commit chain (all generations), record counts by kind,
 /// and dictionary/snapshot/index record tallies. Never panics on corrupt input: a malformed
 /// frame simply stops the walk early and the summary prints whatever was scanned so far.
-async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_inspect(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol inspect <file>");
         return 2;
     };
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
@@ -234,7 +237,7 @@ async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::Command
 
     let mut counts: BTreeMap<u8, u64> = BTreeMap::new();
     let mut commits: Vec<(u64, CommitFields)> = Vec::new();
-    let mut cursor = crate::os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
+    let mut cursor = semio_framework_os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
     loop {
         match cursor.next_frame().await {
             Ok(Some(frame)) => {
@@ -282,8 +285,8 @@ async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::Command
 /// is async, so it cannot be chained through `Result::and_then`'s sync closure (R10 shape 1).
 /// Shared by `cmd_verify`/`cmd_diff`/`cmd_frontier` — every `.spr` inspection command opens the
 /// same way.
-async fn open_and_log(bytes: &[u8], options: &crate::os_spr::DecodeOptions) -> Result<crate::os_spr::HistoryLog, crate::os_spr::ProtocolError> {
-    match crate::os_spr::HistoryReader::open(bytes, options).await {
+async fn open_and_log(bytes: &[u8], options: &semio_framework_os_spr::DecodeOptions) -> Result<semio_framework_os_spr::HistoryLog, semio_framework_os_spr::ProtocolError> {
+    match semio_framework_os_spr::HistoryReader::open(bytes, options).await {
         Ok(reader) => reader.log().await,
         Err(error) => Err(error),
     }
@@ -293,7 +296,7 @@ async fn open_and_log(bytes: &[u8], options: &crate::os_spr::DecodeOptions) -> R
 /// requested `VerificationLevel` and forces a full decode; `full` additionally recomputes the
 /// commit hash chain (see `crate::os_spr::history::decode_history_from`'s `VerificationLevel::Full`
 /// branch). Prints `OK`/`FAIL: <reason>`, never panics on corrupt input.
-async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_verify(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol verify <file> [--level=trusted|standard|full]");
@@ -306,14 +309,14 @@ async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandC
             return 2;
         }
     };
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             println!("FAIL: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let options = crate::os_spr::DecodeOptions { verification: level, limits: crate::os_spr::ProtocolLimits::default() };
+    let options = semio_framework_os_spr::DecodeOptions { verification: level, limits: semio_framework_os_spr::ProtocolLimits::default() };
     match open_and_log(&bytes, &options).await {
         Ok(log) => {
             println!("OK");
@@ -333,20 +336,20 @@ async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandC
 //#region 🔖️Hash
 /// #⃣ `protocol hash <file>` — prints `(commit_seq, chain_hash)`, the file's current commit
 /// identity, via `crate::os_spr::content_frontier`.
-async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_hash(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol hash <file>");
         return 2;
     };
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
             return 1;
         }
     };
-    match crate::os_spr::content_frontier(&bytes).await {
+    match semio_framework_os_spr::content_frontier(&bytes).await {
         Ok(frontier) => {
             println!("{} {}", frontier.last_commit_seq, hex32(&frontier.chain_hash));
             0
@@ -363,7 +366,7 @@ async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandCon
 /// 📜️ `protocol log <file> [--limit N] [--actor ID] [--alternative ID] [--reverse]` — a timeline
 /// text dump: one line per edit (ordinal, id, actor column, op count, description), annotated with
 /// `[checkpoint ...]` lane markers where a checkpoint's reachable edits top out.
-async fn cmd_log(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_log(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, flags, reverse) = parse_log_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol log <file> [--limit N] [--actor ID] [--alternative ID] [--reverse]");
@@ -382,14 +385,14 @@ async fn cmd_log(rest: &[String], context: &crate::os_pack::control::CommandCont
     let actor_filter = flags.get("actor");
     let alternative_filter = flags.get("alternative");
 
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let options = crate::os_spr::DecodeOptions::default();
+    let options = semio_framework_os_spr::DecodeOptions::default();
     let log = match open_and_log(&bytes, &options).await {
         Ok(log) => log,
         Err(error) => {
@@ -469,20 +472,20 @@ async fn cmd_log(rest: &[String], context: &crate::os_pack::control::CommandCont
 //#region 🔖️Compile
 /// 🔨️ `protocol compile <doc.ops> [--out doc.spr]` — ops text -> `.spr` binary via
 /// `crate::os_spr::compile_ops`. Writes to `--out` when given, else emits the raw bytes to stdout.
-async fn cmd_compile(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_compile(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compile <doc.ops> [--out doc.spr]");
         return 2;
     };
-    let text = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
+    let text = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await.and_then(|bytes|bytes.into_text()) {
         Ok(text) => text,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let bytes = match crate::os_spr::compile_ops(&text, &crate::os_spr::EncodeOptions::default()).await {
+    let bytes = match semio_framework_os_spr::compile_ops(&text, &semio_framework_os_spr::EncodeOptions::default()).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: compile failed: {error}");
@@ -490,7 +493,7 @@ async fn cmd_compile(rest: &[String], context: &crate::os_pack::control::Command
         }
     };
     match flags.get("out") {
-        Some(out_path) => match crate::os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
+        Some(out_path) => match semio_framework_os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
             Ok(()) => {
                 println!("wrote {out_path} ({} bytes)", bytes.len());
                 0
@@ -514,20 +517,20 @@ async fn cmd_compile(rest: &[String], context: &crate::os_pack::control::Command
 //#region 🔖️Decompile
 /// 🔧️ `protocol decompile <doc.spr> [--out doc.ops]` — `.spr` binary -> ops text via
 /// `crate::os_spr::decompile_ops`. Writes to `--out` when given, else prints the text to stdout.
-async fn cmd_decompile(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_decompile(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol decompile <doc.spr> [--out doc.ops]");
         return 2;
     };
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let text = match crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).await {
+    let text = match semio_framework_os_spr::decompile_ops(&bytes, &semio_framework_os_spr::DecodeOptions::default()).await {
         Ok(text) => text,
         Err(error) => {
             eprintln!("protocol: decompile failed: {error}");
@@ -535,7 +538,7 @@ async fn cmd_decompile(rest: &[String], context: &crate::os_pack::control::Comma
         }
     };
     match flags.get("out") {
-        Some(out_path) => match crate::os_pack::io::write_atomic(Path::new(out_path), text.as_bytes(), context.transport()) {
+        Some(out_path) => match semio_framework_os_pack::io::write_atomic(Path::new(out_path), text.as_bytes(), context.transport()) {
             Ok(()) => {
                 println!("wrote {out_path} ({} bytes)", text.len());
                 0
@@ -558,7 +561,7 @@ async fn cmd_decompile(rest: &[String], context: &crate::os_pack::control::Comma
 /// `only-in-a`/`only-in-b` by `(ordinal, id)` and content-mismatch lines (see `fingerprint`'s doc
 /// comment for why these are labelled `fp=`, not `hash=`) for edits present on both sides past the
 /// prefix. Exit `0` when identical, `1` when they differ, `2` on a usage/read/decode error.
-async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_diff(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: protocol diff <a.spr> <b.spr>");
@@ -566,21 +569,21 @@ async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandCon
     }
     let path_a = &positional[0];
     let path_b = &positional[1];
-    let bytes_a = match crate::os_pack::control::read_command_file(Path::new(path_a), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes_a = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path_a), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path_a}': {error}");
             return 1;
         }
     };
-    let bytes_b = match crate::os_pack::control::read_command_file(Path::new(path_b), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes_b = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path_b), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path_b}': {error}");
             return 1;
         }
     };
-    let options = crate::os_spr::DecodeOptions::default();
+    let options = semio_framework_os_spr::DecodeOptions::default();
     let log_a = match open_and_log(&bytes_a, &options).await {
         Ok(log) => log,
         Err(error) => {
@@ -605,7 +608,7 @@ async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandCon
 
     let remaining_a=||log_a.edits.iter().skip(common_prefix);
     let remaining_b=||log_b.edits.iter().skip(common_prefix);
-    let by_id_b: HashMap<&str, (usize, &crate::os_spr::HistoryEdit)> = remaining_b().enumerate().map(|(i, edit)| (edit.id.as_str(), (common_prefix + i, edit))).collect();
+    let by_id_b: HashMap<&str, (usize, &semio_framework_os_spr::HistoryEdit)> = remaining_b().enumerate().map(|(i, edit)| (edit.id.as_str(), (common_prefix + i, edit))).collect();
     let ids_a: HashSet<&str> = remaining_a().map(|edit| edit.id.as_str()).collect();
 
     let mut differs = false;
@@ -640,7 +643,7 @@ async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandCon
 /// rewrite). `--out`, when given, first copies `<file>` to `FIXED` and compacts the copy, leaving
 /// the original untouched; without it, `<file>` is compacted in place (matching `compact`'s own
 /// in-place-only signature).
-async fn cmd_compact(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_compact(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol compact <file> [--out FIXED]");
@@ -648,8 +651,8 @@ async fn cmd_compact(rest: &[String], context: &crate::os_pack::control::Command
     };
     let target: PathBuf = match flags.get("out") {
         Some(out_path) => {
-            let bytes=match crate::os_pack::control::read_command_file(Path::new(path),crate::os_spr::ProtocolLimits::default().max_file_len,context).await{Ok(bytes)=>bytes,Err(error)=>{eprintln!("protocol: cannot read for compaction: {error}");return 1}};
-            if let Err(error) = crate::os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
+            let bytes=match semio_framework_os_pack_tools::control::read_command_file(Path::new(path),semio_framework_os_spr::ProtocolLimits::default().max_file_len,context).await{Ok(bytes)=>bytes,Err(error)=>{eprintln!("protocol: cannot read for compaction: {error}");return 1}};
+            if let Err(error) = semio_framework_os_pack::io::write_atomic(Path::new(out_path), &bytes, context.transport()) {
                 eprintln!("protocol: cannot copy '{path}' to '{out_path}': {error}");
                 return 1;
             }
@@ -657,8 +660,8 @@ async fn cmd_compact(rest: &[String], context: &crate::os_pack::control::Command
         }
         None => PathBuf::from(path),
     };
-    let options = crate::os_spr::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::os_spr::KeepSnapshots::All };
-    match crate::os_spr::compact(&target, &options, &crate::os_spr::ProtocolLimits::default(), context).await {
+    let options = semio_framework_os_spr::CompactOptions { drop_ephemeral: true, keep_snapshots: semio_framework_os_spr::KeepSnapshots::All };
+    match semio_framework_os_spr::compact(&target, &options, &semio_framework_os_spr::ProtocolLimits::default(), context).await {
         Ok(()) => {
             println!("compacted {}", target.display());
             0
@@ -680,14 +683,14 @@ async fn cmd_compact(rest: &[String], context: &crate::os_pack::control::Command
 /// needs `crate::os_spr::history::IndexBuilder`/`IndexReader`, which are not part of the facade's
 /// re-export surface (this crate's sole dependency) — same rationale as `upgrade`'s "hook exists,
 /// v1 passthrough" note in the contract.
-async fn cmd_repair(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_repair(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, truncate_torn_tail, rebuild_indexes) = parse_repair_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol repair <file> [--truncate-torn-tail] [--rebuild-indexes]");
         return 2;
     };
-    let limits = crate::os_spr::ProtocolLimits::default();
-    let report = match crate::os_spr::recover_file(Path::new(path), &limits, crate::os_spr::RecoveryMode::LastCommit, context).await {
+    let limits = semio_framework_os_spr::ProtocolLimits::default();
+    let report = match semio_framework_os_spr::recover_file(Path::new(path), &limits, semio_framework_os_spr::RecoveryMode::LastCommit, context).await {
         Ok(report) => report,
         Err(error) => {
             eprintln!("protocol: recovery failed: {error}");
@@ -700,14 +703,14 @@ async fn cmd_repair(rest: &[String], context: &crate::os_pack::control::CommandC
     println!("torn_tail_bytes: {}", report.torn_tail_bytes);
 
     if truncate_torn_tail && report.torn_tail_bytes > 0 {
-        let file = match context.transport().operation(crate::os_pack::PackTransportCategory::NativeIo, crate::os_pack::PackRetryDisposition::Never, 0, ||std::fs::OpenOptions::new().write(true).open(path).map(|file|(file,0))) {
+        let file = match context.transport().operation(semio_framework_os_pack::PackTransportCategory::NativeIo, semio_framework_os_pack::PackRetryDisposition::Never, 0, ||std::fs::OpenOptions::new().write(true).open(path).map(|file|(file,0))) {
             Ok(file) => file,
             Err(error) => {
                 eprintln!("protocol: cannot open '{path}' for truncation: {error}");
                 return 1;
             }
         };
-        if let Err(error) = context.transport().operation(crate::os_pack::PackTransportCategory::NativeIo, crate::os_pack::PackRetryDisposition::Never, 0, ||file.set_len(report.bytes_recovered).map(|value|(value,0))) {
+        if let Err(error) = context.transport().operation(semio_framework_os_pack::PackTransportCategory::NativeIo, semio_framework_os_pack::PackRetryDisposition::Never, 0, ||file.set_len(report.bytes_recovered).map(|value|(value,0))) {
             eprintln!("protocol: truncate failed: {error}");
             return 1;
         }
@@ -724,20 +727,20 @@ async fn cmd_repair(rest: &[String], context: &crate::os_pack::control::CommandC
 /// ⬆️ `protocol upgrade <file>` — v1 `RecordUpcaster`-driven rewrite hook: no upcaster exists yet
 /// in this family, so `upgrade` validates the file decodes cleanly (Full verification) and passes
 /// it through unmodified, exactly as the contract's "no-op passthrough, hook exists" note specifies.
-async fn cmd_upgrade(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_upgrade(rest: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: protocol upgrade <file>");
         return 2;
     };
-    let bytes = match crate::os_pack::control::read_command_file(Path::new(path), crate::os_spr::ProtocolLimits::default().max_file_len, context).await {
+    let bytes = match semio_framework_os_pack_tools::control::read_command_file(Path::new(path), semio_framework_os_spr::ProtocolLimits::default().max_file_len, context).await {
         Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("protocol: cannot read '{path}': {error}");
             return 1;
         }
     };
-    let options = crate::os_spr::DecodeOptions { verification: crate::os_spr::VerificationLevel::Full, limits: crate::os_spr::ProtocolLimits::default() };
+    let options = semio_framework_os_spr::DecodeOptions { verification: semio_framework_os_spr::VerificationLevel::Full, limits: semio_framework_os_spr::ProtocolLimits::default() };
     match open_and_log(&bytes, &options).await {
         Ok(_) => {
             println!("no upgrade needed (v1 passthrough; RecordUpcaster hook not yet wired to any schema)");
@@ -771,7 +774,7 @@ async fn print_help() {
 /// around this. Never panics on malformed input; every subcommand handler maps errors to a
 /// printed message and a non-zero exit code instead. Exit codes: `0` success, `1` runtime/decode
 /// failure, `2` usage error.
-pub async fn main_impl(args: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+pub async fn main_impl(args: &[String], context: &semio_framework_os_pack_tools::control::CommandContext) -> i32 {
     let Some((command, rest)) = args.split_first() else {
         print_help().await;
         return 2;

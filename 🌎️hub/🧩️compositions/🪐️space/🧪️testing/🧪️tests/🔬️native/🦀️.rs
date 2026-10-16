@@ -39,8 +39,10 @@ fn malformed_original_source_and_unknown_codec_fail_before_any_admission() {
 
 #[semio_framework_async_macros::async_test]
 async fn actual_export_command_forwards_original_demo_content_to_the_media_handler() {
-    use crate::engine::space::{commands::export_media::ExportMedia, config::SpaceConfig, SpaceCommand};
-    use crate::engine::space::unit_tests::context::studio_emit;
+    use semio_hub_space_commands_media::export_media::ExportMedia;
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_hub_space_app::SpaceCommand;
+    use semio_hub_space_app::unit_tests::context::studio_emit;
     const FORMAT: &str = "test.space.fixture.source";
     const PROBE_KIND: &str = "test.space.fixture.document";
     directory::io::register_format_descriptors([directory::io::FormatDescriptor {

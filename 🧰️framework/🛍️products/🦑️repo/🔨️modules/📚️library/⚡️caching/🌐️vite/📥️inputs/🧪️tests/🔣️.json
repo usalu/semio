@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "entryPoints": [
+    "buildViteArtifact",
+    "serveVite",
+    "serveViteCommandV1"
+  ],
+  "property": "artifactInputs",
+  "requiredCall": "withViteArtifactInputsV1",
+  "intentCall": "requireViteBuildIntentV1",
+  "validCounts": [
+    0,
+    1,
+    8,
+    9,
+    80,
+    128
+  ],
+  "invalidCounts": [
+    129,
+    256
+  ],
+  "invalidRequests": [
+    {
+      "maximumBytes": 0
+    },
+    {
+      "maximumFiles": 0
+    },
+    {
+      "extra": true
+    },
+    {
+      "path": "relative"
+    }
+  ],
+  "maximumPendingTransforms": 32,
+  "serviceCalls": [
+    "pending.add",
+    "pending.delete"
+  ],
+  "admission": "repository-artifact-group"
+}

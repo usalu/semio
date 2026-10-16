@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "mode": "plan",
+  "generated": "🗑️generated",
+  "maximumMountBytes": 8388608,
+  "maximumMountEntries": 16384,
+  "maximumAncestorEntries": 32,
+  "maximumElapsedMilliseconds": 60000,
+  "execution": "final-mac-session; explicit Root release and all ticket writers closed required",
+  "maximumCensusEntries": 262144
+}

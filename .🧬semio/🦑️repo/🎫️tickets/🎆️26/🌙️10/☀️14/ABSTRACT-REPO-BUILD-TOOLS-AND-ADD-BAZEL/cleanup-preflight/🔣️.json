@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "fixture": "🗑️generated/initial-authority",
+  "filesystemBytes": 66060288,
+  "maximumPhysicalBytes": 67108864,
+  "expectedImage": {
+    "dev": 16777232,
+    "ino": 336463257,
+    "size": 66060288
+  },
+  "maximumLeaseDatabaseBytes": 16384,
+  "retirement": {
+    "version": 1,
+    "mode": "final-retire",
+    "platform": "darwin",
+    "request": {
+      "version": 1,
+      "wait": false,
+      "expectedImage": {
+        "receiptSha256": "cbf4906714eab0e828f8a98400c39e94508c0eab916150490813c9ec3b6c60e3",
+        "dev": 16777232,
+        "ino": 336463257,
+        "size": 66060288,
+        "allocatedBytes": 66060288
+      }
+    }
+  }
+}

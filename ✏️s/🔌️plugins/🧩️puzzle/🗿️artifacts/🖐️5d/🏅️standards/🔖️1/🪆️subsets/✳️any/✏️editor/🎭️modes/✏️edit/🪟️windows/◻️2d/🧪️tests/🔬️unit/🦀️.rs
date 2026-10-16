@@ -123,3 +123,11 @@ fn a_board_handle_hit_is_the_grips_menu() {
     assert!(selection.part_ids.is_empty(), "the handle under the pointer is the whole subject");
 }
 //#endregion 🎣️Suggestions
+
+/// 🪧️ Law: the 5d board publishes its own placement naming on the scene, so the wgpu and React hosts mint the ids 5d parts
+/// have always carried (`puzzle2d.brush.<serial>`), byte for byte.
+#[test]
+fn board_scene_publishes_the_plugin_placement_naming() {
+    let scene = board_scene_with(crate::editor::puzzle5d::Puzzle5dInteractionSnapshot::default(), Puzzle5dRuntime::default());
+    assert_eq!(scene.placement_naming.as_deref(), Some(r#"{"brushNodePrefix":"puzzle2d.brush.","brushEdgePrefix":"puzzle2d.brush.edge."}"#));
+}

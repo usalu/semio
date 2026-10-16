@@ -1,0 +1,120 @@
+{
+ "parent": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
+ "sha1": "246f14ece73565c52b3f8678f52af7749458024d",
+ "near_scan": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧪️tests/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️preview/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/**/*.rs",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🚪️io/**/*.rs"
+ ],
+ "children": [
+  {
+   "folder": "⚠️errors",
+   "mod": "errors",
+   "doc": "⚠️ Flow host errors: the `FlowCoreError` taxonomy and the content-addressed shared payload registry.",
+   "lo": 80,
+   "hi": 262,
+   "chk_lo": "// #region ⚠️ Errors",
+   "chk_hi": "// #endregion ⚠️ Errors"
+  },
+  {
+   "folder": "🏠️flow-host",
+   "mod": "flow_host",
+   "doc": "🏠️ The retained `FlowHost` value: wheel plan, baseline publication custody and every field of the host.",
+   "lo": 264,
+   "hi": 419,
+   "chk_lo": "#[derive(Clone, Copy, Debug)]",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "✏️host-authoring",
+   "mod": "host_authoring",
+   "doc": "✏️ `FlowHost` construction, snapshot and catalogue intake, evaluation baseline publication, camera and pointer interaction and graph editing.",
+   "lo": 419,
+   "hi": 1668,
+   "chk_lo": "impl FlowHost {",
+   "chk_hi": "}",
+   "wrap_header": "impl FlowHost {",
+   "wrap_start": false,
+   "wrap_end": true
+  },
+  {
+   "folder": "🌳️host-evaluation-history",
+   "mod": "host_evaluation_history",
+   "doc": "🌳️ `FlowHost` evaluation steps, tree building, dag synchronisation, node editing, clusters and the undo/redo history.",
+   "lo": 1668,
+   "hi": 3020,
+   "chk_lo": "fn evaluate_internal",
+   "chk_hi": "}",
+   "wrap_header": "impl FlowHost {",
+   "wrap_start": true,
+   "wrap_end": false
+  },
+  {
+   "folder": "🏁️host-close",
+   "mod": "host_close",
+   "doc": "🏁️ Physical close ladder of a retained `FlowHost` and its cold disposal helpers.",
+   "lo": 3021,
+   "hi": 3114,
+   "chk_lo": "/// 🏠️ Retains the whole original host",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🧾️eval-session-state",
+   "mod": "eval_session_state",
+   "doc": "🧾️ The flow evaluation session: tick budgets, ledgers, session state, retirement owners and the `FlowEvalSession` value.",
+   "lo": 3121,
+   "hi": 3681,
+   "chk_lo": "/// ⏱️ Max cache-missed neuron dispatches",
+   "chk_hi": "const FLOW_EVAL_SESSION_COLD_CLOSE_STEPS"
+  },
+  {
+   "folder": "⏱️eval-session",
+   "mod": "eval_session",
+   "doc": "⏱️ Behaviour of `FlowEvalSession`: baseline capture, ticks, window latches, preview retention and close steps.",
+   "lo": 3681,
+   "hi": 4755,
+   "chk_lo": "impl FlowEvalSession {",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🔭️preview-status",
+   "mod": "preview_status",
+   "doc": "🔭️ Preview tessellation and evaluation phases, progress, status and outcome values.",
+   "lo": 4756,
+   "hi": 5104,
+   "chk_lo": "/// ⏱️ Where one preview tessellation",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🚦️eval-status",
+   "mod": "eval_status",
+   "doc": "🚦️ Evaluation publication decisions, session-wired host construction, unserved kinds and per-node status JSON.",
+   "lo": 5105,
+   "hi": 5279,
+   "chk_lo": "/// 🧬 Stable `nodeHash`",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "🔌️ports",
+   "mod": "ports",
+   "doc": "🔌️ Port value types: side, declared types, compatibility and synapse port resolution.",
+   "lo": 5281,
+   "hi": 5371,
+   "chk_lo": "fn dedupe_host_snapshot_widgets",
+   "chk_hi": "}"
+  },
+  {
+   "folder": "📐️widget-size",
+   "mod": "widget_size",
+   "doc": "📐️ Node size of one widget from its display metadata and port layout.",
+   "lo": 5379,
+   "hi": 5410,
+   "chk_lo": "fn widget_node_size",
+   "chk_hi": "}"
+  }
+ ]
+}

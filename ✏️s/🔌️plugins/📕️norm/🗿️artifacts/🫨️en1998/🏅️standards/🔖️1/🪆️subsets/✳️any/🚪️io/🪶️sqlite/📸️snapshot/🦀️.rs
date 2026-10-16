@@ -99,5 +99,5 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
   control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
  }
 }
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1998Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1998Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 

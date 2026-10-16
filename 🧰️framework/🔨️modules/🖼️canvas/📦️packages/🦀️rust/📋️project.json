@@ -12,6 +12,42 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "stage-runtime-assets": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf",
+        {
+          "dependentTasksOutputFiles": "**/🔤️shortcodes/🔣️.json"
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/🌍️world/🟦️.ts"
+      ],
+      "dependsOn": [
+        "@semio-tech/assets:build"
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/port-assets",
+        "{workspaceRoot}/.cache/b/p/m/canvas/{options.env.SEMIO_BUILD_MODE}/guest-assets"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts stage-runtime-assets"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     }
   }
 }

@@ -1063,7 +1063,7 @@ async fn shipped_examples_parse_in_the_board_engine() {
     for (name, json) in [("concrete-forest", concrete_forest_example_json()), ("nakagin", nakagin_example_json())] {
         let snapshot: Value = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("example json");
         let mut host = BoardHost::default();
-        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&snapshot.to_string(),&mut control)};
+        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)};
         if !parsed {
             let nodes = board_snapshot_nodes(&snapshot).to_vec();
             let edges = board_snapshot_edges(&snapshot).to_vec();
@@ -1148,7 +1148,7 @@ async fn deleting_an_edged_handle_keeps_the_board_parseable() {
     let after = fixture_of(&app);
     assert!(!board_snapshot_edges(&after).iter().any(|edge| edge.get("id").and_then(Value::as_str) == Some(edge_id.as_str())), "the edge on the deleted handle must go with it");
     let mut host = BoardHost::default();
-    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&after.to_string(),&mut control)};
+    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&after.to_string(),&mut control)};
     close_app(&mut app);
     assert!(parsed, "the board engine must still parse the document after a handle delete");
 }
@@ -1250,6 +1250,15 @@ fn a_closed_suggestion_popup_publishes_no_menu() {
     let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
     let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
     assert!(edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).suggestion_menu_json.is_none());
+}
+
+/// 🏷️ LAW: every board pane publishes the plugin's placement naming, so the os wgpu host and the React session mint the
+/// same `puzzle2d.brush.<serial>` ids as the plugin's own boards.
+#[test]
+fn board_scene_publishes_the_plugin_placement_naming() {
+    let snapshot: Value = semio_framework_pack_json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("concrete forest json");
+    let envelope = Puzzle2dScene { board_snapshot: snapshot, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
+    assert_eq!(edit::puzzle2d_board_scene("{}", &envelope, crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID).placement_naming.as_deref(), Some(r#"{"brushNodePrefix":"puzzle2d.brush.","brushEdgePrefix":"puzzle2d.brush.edge."}"#));
 }
 
 /// 💡️ LAW: the context menu offers the popup on ONE selected handle and on nothing else — the entry

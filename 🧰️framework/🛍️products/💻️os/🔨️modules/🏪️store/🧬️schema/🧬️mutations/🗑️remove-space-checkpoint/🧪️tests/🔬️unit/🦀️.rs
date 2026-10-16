@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_spr::{MutationKind, MutationLeaf};
+use semio_framework_os_spr::{MutationKind, MutationLeaf};
 #[test]
 fn metadata_and_target_subregion_are_leaf_owned() {
     let payload = RemoveSpaceCheckpoint { checkpoint_id: "cp".into() };

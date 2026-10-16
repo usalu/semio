@@ -3,10 +3,8 @@
 //! Node graph camera, catalogue drag and drop, wheel, pointer, connection cursor, published interaction,
 //! labels and overlays of an engine surface.
 
-use super::engine_surface_registry::{
-    engine_surface_wire_id, EngineSurface, EngineSurfaceRegistry, NodeGraphEngine, ENGINE_SURFACES,
-};
-use super::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect};
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, EngineSurface, EngineSurfaceRegistry, NodeGraphEngine, PublishedGraphInteraction, engine_canvas_debug_log, engine_surface_wire_id, published_graph_interaction};
+use semio_framework_os_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect};
 use crate::element_contracts::FrameworkWidgetContext;
 use flow::dag::dag_screen_to_world;
 use flow::FlowHost;
@@ -19,6 +17,7 @@ use ui_wgpu::wgpu::{
     draw_text_overlay, ActionDescriptor, FontAtlas, KeyAction, PointerModifiers, Rect, Rgba,
     SurfaceKind, Theme, UiComponentSceneNode,
 };
+use dag::dag_set_wheel_zoom_active;
 
 //#region NodeGraph
 
@@ -28,14 +27,14 @@ pub fn component_scene_has_editable_caret(scene: &UiComponentSceneNode) -> bool 
         let Some(entry) = surfaces.get(&scene.host_id) else { return false };
         entry.surface_id.as_ref().is_some_and(|surface| surface.as_str() == scene.surface_id)
             && match (&scene.component_kind, entry.node_graph.as_ref()) {
-                (SurfaceKind::NodeGraph, Some(NodeGraphEngine::Flow(host))) => host.dag.editing_note_id().is_some(),
+                (SurfaceKind::NodeGraph, Some(NodeGraphEngine::Flow(host))) => host.dag.notes.editing_note_id().is_some(),
                 _ => false,
             }
     })
 }
 
 #[cfg(test)]
-pub(crate) fn component_scene_begin_note_edit_fixture(scene: &UiComponentSceneNode, widget_id: &str) -> bool {
+pub fn component_scene_begin_note_edit_fixture(scene: &UiComponentSceneNode, widget_id: &str) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut surfaces = cell.borrow_mut();
         let Some(entry) = surfaces.get_mut(&scene.host_id) else { return false };
@@ -44,7 +43,7 @@ pub(crate) fn component_scene_begin_note_edit_fixture(scene: &UiComponentSceneNo
         }
         let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
         host.begin_note_edit(widget_id, 0.0, 0.0);
-        host.dag.editing_note_id() == Some(widget_id)
+        host.dag.notes.editing_note_id() == Some(widget_id)
     })
 }
 
@@ -57,7 +56,7 @@ pub fn component_scene_apply_note_edit_key(scene: &UiComponentSceneNode, action:
                 return false;
             }
             let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
-            if host.dag.editing_note_id().is_none() {
+            if host.dag.notes.editing_note_id().is_none() {
                 return false;
             }
             match action {
@@ -100,7 +99,7 @@ pub fn component_scene_set_caret_visible(host_id: &str, surface_id: &str, kind: 
                 }
                 SurfaceKind::NodeGraph => {
                     let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else { return false };
-                    if host.dag.editing_note_id().is_none() {
+                    if host.dag.notes.editing_note_id().is_none() {
                         return false;
                     }
                     host.set_note_caret_visible(visible);
@@ -129,7 +128,7 @@ pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
         let engine = surfaces.get_mut(surface_id)?.node_graph.as_mut()?;
         match engine {
             NodeGraphEngine::Flow(host) => host.fit_camera_to_content().then(|| host.camera()),
-            NodeGraphEngine::Dag(host) => host.dag.fit_camera_to_content().then(|| [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom]),
+            NodeGraphEngine::Dag(host) => fit_camera_to_content(&mut host.dag.viewport, &mut host.dag.graph).then(|| [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom]),
         }
     })
 }
@@ -167,8 +166,8 @@ fn node_graph_pan_gesture(button: i16, alt: bool, space_pressed: bool) -> bool {
 
 fn node_graph_set_wheel_zoom_active(entry: &mut EngineSurface, active: bool) {
     match entry.node_graph.as_mut() {
-        Some(NodeGraphEngine::Flow(host)) => host.dag.set_wheel_zoom_active(active),
-        Some(NodeGraphEngine::Dag(host)) => host.dag.set_wheel_zoom_active(active),
+        Some(NodeGraphEngine::Flow(host)) => dag_set_wheel_zoom_active(&mut host.dag.viewport, &mut host.dag.graph, active),
+        Some(NodeGraphEngine::Dag(host)) => dag_set_wheel_zoom_active(&mut host.dag.viewport, &mut host.dag.graph, active),
         None => {}
     }
 }
@@ -181,8 +180,8 @@ pub fn node_graph_clear_wheel_zoom_active() {
     });
 }
 
-const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
-const CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+pub const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
+pub const CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 
 /// 🧩️ Parses a Puzzle 3D catalogue drag payload (`objectKind`, optional `meshUrl`) — mirrors React `parsePuzzle3dCatalogueDragPayload`.
 pub fn puzzle3d_catalogue_drag_payload_json(raw: &str) -> Option<(String, Option<String>)> {
@@ -209,7 +208,7 @@ pub fn catalogue_ghost_descriptor_json(raw: &str) -> Option<String> {
     Some(json!({ "kind": "neuron", "neuronKind": neuron_kind }).to_string())
 }
 
-fn node_graph_drag_ghost_descriptor(drag_data: &HashMap<String, String>) -> Option<String> {
+pub fn node_graph_drag_ghost_descriptor(drag_data: &HashMap<String, String>) -> Option<String> {
     if let Some(raw) = drag_data.get(FLOW_WIDGET_DRAG_MIME) {
         return Some(raw.clone());
     }
@@ -224,7 +223,7 @@ fn node_graph_world_at(surface_id: &str, bounds: &Rect, x: f32, y: f32) -> Optio
             let NodeGraphEngine::Flow(host) = entry.node_graph.as_ref()? else {
                 return None;
             };
-            Some(dag_screen_to_world(&host.dag, sx, sy))
+            Some(dag_screen_to_world(&host.dag.viewport, &host.dag.graph, sx, sy))
         })
     })
 }
@@ -254,7 +253,7 @@ pub fn node_graph_sync_flow_widget_ghost(x: f32, y: f32, drag_data: &HashMap<Str
         ENGINE_SURFACES.with(|cell| {
             if let Some(entry) = cell.borrow_mut().get_mut(*surface_id) {
                 if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
-                    let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
+                    let (world_x, world_y) = dag_screen_to_world(&host.dag.viewport, &host.dag.graph, sx, sy);
                     let _ = host.set_ghost_widget(&descriptor, world_x, world_y);
                     over_graph = true;
                 }
@@ -268,7 +267,7 @@ pub fn node_graph_sync_flow_widget_ghost(x: f32, y: f32, drag_data: &HashMap<Str
 }
 
 /// 🖱️ `addWidget` args for a flow-widget drop, including format and action when the descriptor has them.
-fn flow_widget_drop_args(descriptor: &Value, x: f64, y: f64) -> Option<semio_framework::DslValue> {
+pub fn flow_widget_drop_args(descriptor: &Value, x: f64, y: f64) -> Option<semio_framework::DslValue> {
     crate::action_args_json!({
         "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
         "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
@@ -321,10 +320,6 @@ pub fn node_graph_catalogue_drop_action(x: f32, y: f32, drag_data: &HashMap<Stri
     None
 }
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-catalogue-workflow-drop/🦀️.rs"]
-mod catalogue_workflow_drop_tests;
-
 pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -362,14 +357,14 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
                     if !host.commit_wheel(plan) {
                         return false;
                     }
-                    host.dag.set_wheel_zoom_active(true);
+                    dag_set_wheel_zoom_active(&mut host.dag.viewport, &mut host.dag.graph, true);
                     true
                 }
                 (NodeGraphEngine::Dag(host), NodeGraphWheelPlan::Dag(plan)) => {
                     if !host.commit_wheel(plan) {
                         return false;
                     }
-                    host.dag.set_wheel_zoom_active(true);
+                    dag_set_wheel_zoom_active(&mut host.dag.viewport, &mut host.dag.graph, true);
                     true
                 }
                 _ => false,
@@ -454,8 +449,8 @@ fn plan_node_graph_edits(surface_id: &str, plan: &NodeGraphPointerPlan) -> Vec<f
             return Vec::new();
         };
         match (engine, plan) {
-            (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.dag.plan_graph_edits(plan),
-            (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.dag.plan_graph_edits(plan),
+            (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.dag.graph.plan_graph_edits(plan),
+            (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.dag.graph.plan_graph_edits(plan),
             _ => Vec::new(),
         }
     })
@@ -491,15 +486,15 @@ pub fn node_graph_pointer_cancel_into(surface_id: &str) -> bool {
     })
 }
 
-pub(super) struct GraphInteractionSnapshot {
-    pub(super) node_ids: Vec<String>,
-    pub(super) hovered_id: Option<String>,
+pub struct GraphInteractionSnapshot {
+    pub node_ids: Vec<String>,
+    pub hovered_id: Option<String>,
     /// 🔌️ The `"{nodeId}@{portId}"` channel under the pointer, when the pick landed on a port rather
     /// than a node body. React qualifies its hover target the same way — `nodeGraphHoverActionArgs`
     /// emits `granularity: "handle"` with exactly this id — which is what makes hover bidirectional
     /// between the graph and a `World3d` preview keyed by the same channel id.
-    pub(super) hovered_handle: Option<String>,
-    pub(super) viewport: semio_framework_os_kernel::Viewport2d,
+    pub hovered_handle: Option<String>,
+    pub viewport: semio_framework_os_kernel::Viewport2d,
 }
 
 enum NodeGraphWheelPlan {
@@ -529,7 +524,7 @@ fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> ui_wgpu::wgpu:
     }
 }
 
-pub(super) fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
     let viewport = semio_framework_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
     viewport.validate().map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let mut parts = Vec::with_capacity(node_ids.len() + 2);
@@ -560,8 +555,8 @@ pub fn node_graph_connection_cursor_active(surface_id: &str, sx: f64, sy: f64) -
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         match map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) {
-            Some(NodeGraphEngine::Flow(host)) => host.dag.connection_cursor_active_at_screen(sx, sy),
-            Some(NodeGraphEngine::Dag(host)) => host.dag.connection_cursor_active_at_screen(sx, sy),
+            Some(NodeGraphEngine::Flow(host)) => connection_cursor_active_at_screen(&host.dag.viewport, &host.dag.graph, &host.dag.minimap, sx, sy),
+            Some(NodeGraphEngine::Dag(host)) => connection_cursor_active_at_screen(&host.dag.viewport, &host.dag.graph, &host.dag.minimap, sx, sy),
             None => false,
         }
     })
@@ -591,24 +586,6 @@ pub fn node_graph_connection_cursor_active(surface_id: &str, sx: f64, sy: f64) -
 // re-publishing the WHOLE snapshot after every gesture (`commitFixture`); a snapshot JSON does not fit
 // a 16 KiB bounded action, and it does not have to — `FlowNodeGraphEditOp` already declares the
 // narrow `connect` operation, four ids wide.
-
-/// 🚨️ Console ERROR line for a refusal at the engine edge — a scene the editor engine would not take, a member this
-/// host could not read. `eprintln!` is a no-op inside a `wasm32-unknown-unknown` Worker.
-pub(super) fn engine_canvas_fault_log(line: &str) {
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(line));
-    #[cfg(not(target_arch = "wasm32"))]
-    eprintln!("{line}");
-}
-
-/// 🩺️ Console line for a screen-path gesture. `eprintln!` is a no-op inside a
-/// `wasm32-unknown-unknown` Worker, so a wire drawn there would otherwise leave no trace at all.
-pub(super) fn engine_canvas_debug_log(line: &str) {
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
-    #[cfg(not(target_arch = "wasm32"))]
-    eprintln!("{line}");
-}
 
 /// 🖱️ Whether this surface's gesture belongs to the screen pointer path: one is already in flight, or
 /// the point itself is one only `pointer_*_screen` can describe.
@@ -643,8 +620,8 @@ fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f64, f64)>) -
             return false;
         }
         let Some((sx, sy)) = at else { return false };
-        let hit = dag.screen_hit(sx, sy);
-        let trace = dag.screen_hit_json(sx, sy);
+        let hit = screen_hit(&dag.viewport, &dag.graph, &dag.minimap, sx, sy);
+        let trace = screen_hit_json(&dag.viewport, &dag.graph, &dag.minimap, sx, sy);
         let digest = graph_payload_digest(&[trace.as_str()]);
         if entry.published_graph_hit != digest {
             entry.published_graph_hit = digest;
@@ -695,17 +672,17 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
         let (edits, node_ids, hovered_id, camera) = match engine {
             NodeGraphEngine::Flow(host) => {
                 host.resync_interaction_projection();
-                let edits = host.dag.take_graph_edits();
-                let _ = host.dag.take_journal_refusal();
-                let camera = &host.dag.host_snapshot.camera;
-                (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
+                let edits = host.dag.graph.take_graph_edits();
+                let _ = host.dag.graph.take_journal_refusal();
+                let camera = &host.dag.graph.host_snapshot.camera;
+                (edits, host.dag.graph.selected_node_ids(), hovered_node_id_ref(&host.dag.viewport, &host.dag.graph).map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
             NodeGraphEngine::Dag(host) => {
                 host.resync_interaction_projection();
-                let edits = host.dag.take_graph_edits();
-                let _ = host.dag.take_journal_refusal();
-                let camera = &host.dag.host_snapshot.camera;
-                (edits, host.dag.selected_node_ids(), host.dag.hovered_node_id_ref().map(str::to_owned), [camera.x, camera.y, camera.zoom])
+                let edits = host.dag.graph.take_graph_edits();
+                let _ = host.dag.graph.take_journal_refusal();
+                let camera = &host.dag.graph.host_snapshot.camera;
+                (edits, host.dag.graph.selected_node_ids(), hovered_node_id_ref(&host.dag.viewport, &host.dag.graph).map(str::to_owned), [camera.x, camera.y, camera.zoom])
             }
         };
         mark_engine_scene_repaint(&mut map, surface_id);
@@ -858,12 +835,12 @@ fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointerPlan) -> bo
 }
 
 fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Option<String>), ui_wgpu::wgpu::BoundedActionFault> {
-    if dag.selected_node_count() > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 2 {
+    if dag.graph.selected_node_count() > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 2 {
         return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
     }
-    let hovered = dag.hovered_node_id_ref();
+    let hovered = hovered_node_id_ref(&dag.viewport, &dag.graph);
     let mut bytes = 0usize;
-    for id in dag.selected_node_id_refs().chain(hovered) {
+    for id in dag.graph.selected_node_id_refs().chain(hovered) {
         if id.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
             return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
         }
@@ -872,7 +849,7 @@ fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Opt
             return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
         }
     }
-    Ok((dag.selected_node_id_refs().map(str::to_owned).collect(), hovered.map(str::to_owned)))
+    Ok((dag.graph.selected_node_id_refs().map(str::to_owned).collect(), hovered.map(str::to_owned)))
 }
 
 fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
@@ -883,7 +860,7 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
         }
         Some(NodeGraphEngine::Dag(host)) => {
             let (selected, hovered) = bounded_graph_selection(&host.dag)?;
-            (selected, hovered, [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom])
+            (selected, hovered, [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom])
         }
         None => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
     };
@@ -907,14 +884,6 @@ fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -
 // in which case no reservation is taken at all and the plan is simply committed. React reaches the
 // same end structurally: `emitIntent` answers `undefined` for an unchanged intent, and
 // `NodeGraphHost`'s hover effect is keyed on the hovered id rather than on the pointer.
-
-/// 📌️ The fingerprints of the three interaction actions a node-graph surface last dispatched.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct PublishedGraphInteraction {
-    pub(super) select: u64,
-    pub(super) hover: u64,
-    pub(super) viewport: u64,
-}
 
 /// 🔢️ FNV-1a over a payload's own bytes — the change witness is the dispatched payload itself,
 /// never a hand-maintained shadow of the fields that feed it.
@@ -961,12 +930,12 @@ fn node_graph_target_prefix<'a>(domain: &'a ui_wgpu::wgpu::NodeGraphInteractionD
     }
 }
 
-pub(super) fn node_graph_domain_targets_json(domain: &ui_wgpu::wgpu::NodeGraphInteractionDomain, granularity: &str, ids: &[String]) -> Result<String, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn node_graph_domain_targets_json(domain: &ui_wgpu::wgpu::NodeGraphInteractionDomain, granularity: &str, ids: &[String]) -> Result<String, ui_wgpu::wgpu::BoundedActionFault> {
     let prefix = node_graph_target_prefix(domain, granularity).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": format!("{prefix}{id}") })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
 }
 
-pub(super) fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&ui_wgpu::wgpu::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&ui_wgpu::wgpu::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, ui_wgpu::wgpu::BoundedActionFault> {
     let select_targets = match domain {
         Some(domain) => node_graph_domain_targets_json(domain, "node", &snapshot.node_ids)?,
         None => "[]".into(),
@@ -998,14 +967,14 @@ pub(super) fn graph_interaction_dispatch(published: PublishedGraphInteraction, s
 /// 🗺️ One line naming where every node and port of a graph surface IS, emitted once per CHANGE of
 /// that geometry rather than once per frame — the census a browser probe needs so that finding the
 /// graph costs nothing, instead of costing the host's whole pointer budget in a hover sweep.
-pub(super) fn log_graph_geometry_census(surface_id: &str) {
+pub fn log_graph_geometry_census(surface_id: &str) {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else { return };
         let Some(engine) = entry.node_graph.as_ref() else { return };
         let census = match engine {
-            NodeGraphEngine::Flow(host) => host.dag.screen_geometry_census_json(),
-            NodeGraphEngine::Dag(host) => host.dag.screen_geometry_census_json(),
+            NodeGraphEngine::Flow(host) => screen_geometry_census_json(&host.dag.viewport, &host.dag.graph, &host.dag.minimap),
+            NodeGraphEngine::Dag(host) => screen_geometry_census_json(&host.dag.viewport, &host.dag.graph, &host.dag.minimap),
         };
         let digest = graph_payload_digest(&[census.as_str()]);
         if entry.published_graph_geometry == digest {
@@ -1014,10 +983,6 @@ pub(super) fn log_graph_geometry_census(surface_id: &str) {
         entry.published_graph_geometry = digest;
         engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph geometry surface={surface_id} entities={census}"));
     });
-}
-
-pub(super) fn published_graph_interaction(surface_id: &str) -> PublishedGraphInteraction {
-    ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).map(|entry| entry.published_graph_interaction).unwrap_or_default())
 }
 
 fn record_graph_interaction(surface_id: &str, digest: PublishedGraphInteraction) {
@@ -1104,11 +1069,11 @@ fn label_chrome_from_flow(host: &FlowHost) -> LabelInteractionChrome {
 }
 
 fn label_chrome_from_graph(host: &GraphHost) -> LabelInteractionChrome {
-    let selected = host.dag.selected_node_ids();
-    let pre_ids = host.dag.preselect_widget_ids();
-    let removed = host.dag.preselect_removed_widget_ids();
+    let selected = host.dag.graph.selected_node_ids();
+    let pre_ids = host.dag.graph.preselect_widget_ids();
+    let removed = host.dag.graph.preselect_removed_widget_ids();
     let (selected_ids, highlighted_ids) = if pre_ids.is_empty() && removed.is_empty() { (selected.into_iter().collect(), HashSet::new()) } else { (pre_ids.into_iter().collect(), removed.into_iter().collect()) };
-    LabelInteractionChrome { selected_ids, highlighted_ids, hovered_id: host.dag.hovered_node_id(), dimmed_ids: Vec::new() }
+    LabelInteractionChrome { selected_ids, highlighted_ids, hovered_id: hovered_node_id(&host.dag.viewport, &host.dag.graph), dimmed_ids: Vec::new() }
 }
 
 /// 🔠️ Smallest font an overlay label is allowed to shrink to. Below this a caption is a smudge, not
@@ -1261,10 +1226,10 @@ fn node_graph_overlay_snapshot(surface_id: &str) -> Option<NodeGraphOverlaySnaps
                 selection_bounds_json: host.selection_union_bounds_screen_json(),
             }),
             Some(NodeGraphEngine::Dag(host)) => Some(NodeGraphOverlaySnapshot {
-                preview_points_json: host.dag.selection_preview_points_json(),
-                preview_crossing: host.dag.selection_preview_crossing(),
-                preview_method: host.dag.selection_preview_method().to_string(),
-                selection_bounds_json: host.dag.selection_union_bounds_screen_json(),
+                preview_points_json: host.dag.graph.selection_preview_points_json(),
+                preview_crossing: host.dag.graph.selection_preview_crossing(),
+                preview_method: host.dag.graph.selection_preview_method().to_string(),
+                selection_bounds_json: selection_union_bounds_screen_json(&host.dag.viewport, &host.dag.graph),
             }),
             None => None,
         }

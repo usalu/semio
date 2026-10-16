@@ -8,8 +8,7 @@ pub use semio_framework_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
 pub use semio_framework_os_kernel::{io, os_pack};
 pub use semio_framework_os_kernel::os_pack::codec;
 
-#[path = "../../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
 

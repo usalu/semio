@@ -518,7 +518,7 @@ export function isTransparentWorldBackground(background?: string): boolean {
 }
 
 /** 🎯️ The headroom a framing leaves around the bounds, as a multiple of the EXACT fitting distance —
- * the twin of `WORLD_FRAME_BOUNDS_MARGIN` (`🖱️ui/🎬️scene/📐️math/🦀️.rs`). */
+ * the twin of `WORLD_FRAME_BOUNDS_MARGIN` (`🖱️ui/🎬️scene/📐️math/🎥️camera/🦀️.rs`). */
 export const WORLD3D_FRAME_BOUNDS_MARGIN = 1.12;
 
 /** 📐️ How far a perspective eye must stand off a bounding sphere of `radius` for the WHOLE sphere to
@@ -530,7 +530,7 @@ export const WORLD3D_FRAME_BOUNDS_MARGIN = 1.12;
  * field, which is exactly how a converged example arrived clipped at the corner of the preview
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
  *
- * @see ../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs — `frame_distance_for_radius`, the Rust twin. */
+ * @see ../../../../../../🔨️modules/🖱️ui/🎬️scene/📐️math/🎥️camera/🦀️.rs — `frame_distance_for_radius`, the Rust twin. */
 export function world3dFrameDistanceForRadius(radius: number, fovDeg: number, aspect: number, margin: number = WORLD3D_FRAME_BOUNDS_MARGIN): number {
   const vertical = Math.min(Math.max((((Number.isFinite(fovDeg) ? fovDeg : 45) * Math.PI) / 180) * 0.5, 0.02), 1.5);
   const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(Number.isFinite(aspect) ? aspect : 1, 0.05)), 0.02), 1.5);

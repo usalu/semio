@@ -9,5 +9,5 @@ impl pack::snapshot::ArtifactPack for ChartSnapshot{
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(K::InvalidValue,"Chart logical Pack envelope mismatch")))}Self::__dsl_from_record(&store::os_pack::value::decode_document(&body,&Self::__dsl_spec(),options).map_err(store::PackError::from)?.0).map_err(store::PackError::from)}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ChartSnapshot {
-fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

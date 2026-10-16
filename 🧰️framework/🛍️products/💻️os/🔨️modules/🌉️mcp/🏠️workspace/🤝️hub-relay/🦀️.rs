@@ -1,10 +1,13 @@
 //! 🤝️ Installed artifact kinds, session document pairs and the hub relay with its inbound planning.
 
-use super::{AppCommand, Fault, Mutex};
 #[cfg(not(target_arch = "wasm32"))]
-use super::{AppFrame, Arc};
+use std::sync::Arc;
+use std::sync::Mutex;
+use semio_framework_os_mcp_port::channel_port::{AppCommand, Fault, HubRelayOutcome};
 #[cfg(not(target_arch = "wasm32"))]
-use super::headless_workspace_state::PluginArtifactBinding;
+use crate::routing_and_shell_routed::PluginArtifactBinding;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_port::channel_port::{AppFrame, HUB_EDIT_UNBOUND_FAULT_CODE, VIEWER_READ_ONLY_FAULT_CODE};
 
 /// 🗂️ One artifact kind an installed plugin really declares — the row `artifact_create{kind}`
 /// validates against and `artifact_export` routes through.
@@ -41,9 +44,9 @@ pub struct SessionDocumentPair {
 /// terminal. [`HubRelay::await_acknowledged`] is how a commit learns whether the hub HAS the edit.
 #[derive(Default, Debug)]
 pub struct HubRelay {
-    pub(super) state: Mutex<HubRelayState>,
+    pub state: Mutex<HubRelayState>,
     changed: std::sync::Condvar,
-    pub(super) inbound: Mutex<std::collections::VecDeque<HubInbound>>,
+    pub inbound: Mutex<std::collections::VecDeque<HubInbound>>,
 }
 
 /// 📥️ What a hub document's actor delivered FOR the guest, in the order it delivered it: the hub's
@@ -60,16 +63,16 @@ pub enum HubInbound {
 /// back to it), whether the binding's pair was just replaced by a new baseline, and the batches after it.
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Debug)]
-pub(super) struct HubInboundDelivery {
-    pub(super) relay: Arc<HubRelay>,
-    pub(super) reseeded: bool,
-    pub(super) backbone: Vec<Vec<u8>>,
+pub(crate) struct HubInboundDelivery {
+    pub relay: Arc<HubRelay>,
+    pub(crate) reseeded: bool,
+    pub backbone: Vec<Vec<u8>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl HubInboundDelivery {
     /// ↩️ Hands every batch of this take back to its relay, untouched, for the next command.
-    pub(super) fn restore(self) {
+    pub(crate) fn restore(self) {
         self.relay.restore_inbound(self.backbone.into_iter().map(HubInbound::Backbone).collect());
     }
 }
@@ -122,10 +125,10 @@ pub fn carries_hub_inbound(commands: &[AppCommand]) -> bool {
 
 #[derive(Default, Clone, Debug)]
 pub(super) struct HubRelayState {
-    pub(super) version: u64,
-    pub(super) status: Option<store::sync::ArtifactSyncStatus>,
-    pub(super) fault: Option<String>,
-    pub(super) terminal: Option<String>,
+    pub version: u64,
+    pub status: Option<store::sync::ArtifactSyncStatus>,
+    pub fault: Option<String>,
+    pub terminal: Option<String>,
 }
 
 /// 🚦️ Why a hub session's edit may not run, decided before any guest executes it — `None` when it may. In order: the
@@ -142,20 +145,20 @@ pub fn hub_edit_refusal(role: Result<semio_framework_os_kernel::os_directory::Di
     }
     match role {
         Ok(DirectorySpaceRole::Spectator) => {
-            return Some(Fault { code: crate::actions::VIEWER_READ_ONLY_FAULT_CODE.to_string(), message: "this agent session is a spectator of its space (its delegation's audience is read): it reads documents and never edits them".to_string() });
+            return Some(Fault { code: VIEWER_READ_ONLY_FAULT_CODE.to_string(), message: "this agent session is a spectator of its space (its delegation's audience is read): it reads documents and never edits them".to_string() });
         }
         Ok(DirectorySpaceRole::Author) => {}
         Err(detail) => return Some(Fault { code: "plugin.unavailable".to_string(), message: format!("the hub's authority for this session is not ready, so no edit may run: {detail}") }),
     }
     let Some((artifact_id, binding)) = bound else {
         return Some(Fault {
-            code: crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
+            code: HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
             message: format!("no single hub document of plugin `{plugin_id}` is open in this session — open exactly one with artifact_open; a hub session never edits a plugin's own genesis document"),
         });
     };
     if binding.backbone.is_none() {
         return Some(Fault {
-            code: crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
+            code: HUB_EDIT_UNBOUND_FAULT_CODE.to_string(),
             message: format!("`{artifact_id}` has no live link to the hub, so no edit of it could reach the hub: {}", binding.backbone_blocked_by.as_deref().unwrap_or("this document has no open document actor")),
         });
     }
@@ -165,12 +168,12 @@ pub fn hub_edit_refusal(role: Result<semio_framework_os_kernel::os_directory::Di
 /// 📮️ A hub-bound exchange whose guest committed yet published nothing for the hub: the commit is not acknowledged,
 /// so the invoke reverts it and never reports it as a write.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn commits_with_nothing_relayed(frames: Vec<AppFrame>) -> Vec<AppFrame> {
+pub fn commits_with_nothing_relayed(frames: Vec<AppFrame>) -> Vec<AppFrame> {
     frames
         .into_iter()
         .map(|frame| match frame {
             AppFrame::TransactionCommitted { txn_id, edit_id, relay: None } => {
-                AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(crate::actions::HubRelayOutcome { acknowledged: false, detail: "the guest committed without publishing an envelope for the hub".to_string(), refused: None }) }
+                AppFrame::TransactionCommitted { txn_id, edit_id, relay: Some(HubRelayOutcome { acknowledged: false, detail: "the guest committed without publishing an envelope for the hub".to_string(), refused: None }) }
             }
             other => other,
         })
@@ -246,7 +249,7 @@ pub fn document_link_terminal_code(code: &str) -> bool {
 pub const HUB_RELAY_ACK_WAIT_MS: u64 = 10_000;
 
 impl HubRelay {
-    pub(super) fn record(&self, status: Option<store::sync::ArtifactSyncStatus>, fault: Option<String>) {
+    pub fn record(&self, status: Option<store::sync::ArtifactSyncStatus>, fault: Option<String>) {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.version += 1;
         if status.is_some() {
@@ -260,7 +263,7 @@ impl HubRelay {
 
     /// 🚫️ Records that the actor's link turned terminal (`code`, `message`): no later edit of this session
     /// reaches the hub, and a commit waiting for its acknowledgement learns so at once.
-    pub(super) fn record_terminal(&self, code: &str, message: &str) {
+    pub fn record_terminal(&self, code: &str, message: &str) {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.version += 1;
         state.fault = Some(format!("{code}: {message}"));
@@ -279,7 +282,7 @@ impl HubRelay {
     }
 
     /// 📥️ Queues one delivery of the document actor for the guest, in arrival order.
-    pub(super) fn deliver(&self, item: HubInbound) {
+    pub fn deliver(&self, item: HubInbound) {
         self.inbound.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push_back(item);
     }
 
@@ -317,19 +320,19 @@ impl HubRelay {
     /// ✅️ Waits, at most `wait_ms`, for a status reported after `since` that says the hub holds every
     /// local mutation (live link, nothing pending, an acknowledged head). Answers the outcome either way,
     /// and at once with the refusal when the link is or turns terminal: the hub will never take the edit.
-    pub fn await_acknowledged(&self, since: u64, wait_ms: u64) -> crate::actions::HubRelayOutcome {
+    pub fn await_acknowledged(&self, since: u64, wait_ms: u64) -> HubRelayOutcome {
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(wait_ms);
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         loop {
             if let Some(code) = state.terminal.clone() {
-                return crate::actions::HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: Some(code) };
+                return HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: Some(code) };
             }
             if state.version > since && state.status.as_ref().is_some_and(|status| status.pending_mutations == 0 && matches!(status.remote, store::sync::RemoteState::Live { .. }) && status.acknowledged_head.is_some()) {
-                return crate::actions::HubRelayOutcome { acknowledged: true, detail: "the hub acknowledged every relayed envelope".to_string(), refused: None };
+                return HubRelayOutcome { acknowledged: true, detail: "the hub acknowledged every relayed envelope".to_string(), refused: None };
             }
             let now = std::time::Instant::now();
             if now >= deadline {
-                return crate::actions::HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: None };
+                return HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: None };
             }
             state = self.changed.wait_timeout(state, deadline - now).unwrap_or_else(std::sync::PoisonError::into_inner).0;
         }
@@ -357,4 +360,3 @@ fn hub_relay_detail(state: &HubRelayState) -> String {
     let fault = state.fault.as_deref().map(|fault| format!("; last fault: {fault}")).unwrap_or_default();
     format!("the hub has not acknowledged it yet: link {}, {} local mutation(s) pending{fault}", remote_state_word(&status.remote), status.pending_mutations)
 }
-

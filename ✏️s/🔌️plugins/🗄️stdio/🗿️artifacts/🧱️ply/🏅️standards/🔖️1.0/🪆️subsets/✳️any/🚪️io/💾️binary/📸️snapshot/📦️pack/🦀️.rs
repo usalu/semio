@@ -42,7 +42,7 @@ impl pack::snapshot::ArtifactPack for PlySnapshot{
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PlySnapshot {
-fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 
 pub(crate) fn retire_value(value:PlyValue){let mut pending=vec![value];while let Some(value)=pending.pop(){if let PlyValue::List(values)=value{pending.extend(values);}}}

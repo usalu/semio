@@ -12,7 +12,7 @@ fn visit(s:&PlaybookSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
 }
 fn admit(s:&PlaybookSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit(s,&mut p)?;p.finish_borrowed()}
 fn shape(record:&RecordValue,count:u16)->Result<(),ValueError>{if record.fields.keys().copied().eq(0..count){Ok(())}else{Err(invalid("Playbook native record field map differs"))}}
-fn text(record:&RecordValue,id:u16)->Result<&str,ValueError>{match record.fields.get(&id){Some(FieldValue::Text(value))=>Ok(value),_=>Err(invalid("Playbook required native text role differs"))}}
+pub fn text(record:&RecordValue,id:u16)->Result<&str,ValueError>{match record.fields.get(&id){Some(FieldValue::Text(value))=>Ok(value),_=>Err(invalid("Playbook required native text role differs"))}}
 fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{match value{Some(FieldValue::Record(value))=>Ok(value),_=>Err(invalid("Playbook required native record role differs"))}}
 fn admit_record(source:&RecordValue,limits:SqliteDatabaseLimits,n:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
  extent(limits)?;n.step()?;shape(source,5)?;let child=record(source.fields.get(&4))?;shape(child,2)?;let target=record(child.fields.get(&1))?;shape(target,4)?;
@@ -41,6 +41,3 @@ fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteData
 fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let p=d.table("playbook_document")?.single_row()?;let f=d.table("playbook_flow_child")?.single_row()?;if p.rowid!=1||f.rowid!=1||p.integer(0)?!=1||f.integer(0)?!=1||p.values.len()!=5||f.values.len()!=6{return Err(invalid("Playbook requires exact identity-1 parent and child rows"))}let mut r=Reconstruction::new(c)?;let schema=r.text(p.text(1)?)?;let id=r.text(p.text(2)?)?;let version=r.text(p.text(3)?)?;let title=p.optional_text(4)?.map(|s|r.text(s)).transpose()?;let flow=store::os_store::artifact_child::ArtifactChild::new(r.text(f.text(1)?)?,semio_framework_artifact_reference::ArtifactRef{artifact_id:r.text(f.text(2)?)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:r.text(f.text(3)?)?,standard:r.text(f.text(4)?)?,subset:r.text(f.text(5)?)?}});r.checkpoint()?;Ok(Self{schema,id,version,title,flow})}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

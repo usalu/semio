@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "exact-posix",
+      "platform": "linux",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/generated",
+      "mounts": [
+        "/",
+        "/repo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "sibling",
+      "platform": "darwin",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/generated-peer",
+      "mounts": [],
+      "expected": false
+    },
+    {
+      "name": "global",
+      "platform": "darwin",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/.cache",
+      "mounts": [],
+      "expected": false
+    },
+    {
+      "name": "same-device-bind",
+      "platform": "linux",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/generated",
+      "mounts": [
+        "/repo/ticket/generated/a"
+      ],
+      "expected": false
+    },
+    {
+      "name": "equal-mount",
+      "platform": "darwin",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/generated",
+      "mounts": [
+        "/repo/ticket/generated"
+      ],
+      "expected": false
+    },
+    {
+      "name": "prefix-sibling-mount",
+      "platform": "linux",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/generated",
+      "mounts": [
+        "/repo/ticket/generated-peer"
+      ],
+      "expected": true
+    },
+    {
+      "name": "dot-path",
+      "platform": "linux",
+      "generated": "/repo/ticket/generated",
+      "candidate": "/repo/ticket/a/../generated",
+      "mounts": [],
+      "expected": false
+    },
+    {
+      "name": "relative",
+      "platform": "linux",
+      "generated": "/repo/ticket/generated",
+      "candidate": "ticket/generated",
+      "mounts": [],
+      "expected": false
+    },
+    {
+      "name": "windows-exact",
+      "platform": "win32",
+      "generated": "C:\\repo\\ticket\\generated",
+      "candidate": "C:\\repo\\ticket\\generated",
+      "mounts": [
+        "C:\\"
+      ],
+      "expected": true
+    },
+    {
+      "name": "windows-descendant-case",
+      "platform": "win32",
+      "generated": "C:\\repo\\ticket\\generated",
+      "candidate": "C:\\repo\\ticket\\generated",
+      "mounts": [
+        "c:\\REPO\\ticket\\generated\\volume"
+      ],
+      "expected": false
+    },
+    {
+      "name": "unicode",
+      "platform": "darwin",
+      "generated": "/repo/🎫️/🗑️generated",
+      "candidate": "/repo/🎫️/🗑️generated",
+      "mounts": [
+        "/repo/🎫️/🗑️generated/initial-authority/.cache/b/l/m"
+      ],
+      "expected": false
+    }
+  ],
+  "inventoryCases": [
+    {
+      "name": "darwin-unicode",
+      "platform": "darwin",
+      "text": "/dev/disk14s1 on /repo/🎫️/🗑️generated/initial-authority/.cache/b/l/m (apfs, local, nodev)\n",
+      "paths": [
+        "/repo/🎫️/🗑️generated/initial-authority/.cache/b/l/m"
+      ]
+    },
+    {
+      "name": "darwin-system-and-spaces",
+      "platform": "darwin",
+      "text": "/dev/disk1 on / (apfs, local, read-only)\nmap auto_home on /System/Volumes/Data/home (autofs, automounted)\n/dev/disk2 on /Volumes/Fixture Mount (apfs, local)\n",
+      "paths": [
+        "/",
+        "/System/Volumes/Data/home",
+        "/Volumes/Fixture Mount"
+      ]
+    },
+    {
+      "name": "linux-bind-and-escaped-space",
+      "platform": "linux",
+      "text": "21 1 8:1 / / rw - ext4 /dev/sda rw\n22 21 8:1 /source /repo/generated/bind rw - ext4 /dev/sda rw\n23 21 8:2 / /media/with\\040space rw - ext4 /dev/sdb rw\n",
+      "paths": [
+        "/",
+        "/repo/generated/bind",
+        "/media/with space"
+      ]
+    }
+  ],
+  "rejectedInventories": [
+    {
+      "platform": "win32",
+      "text": "C:\\\n"
+    },
+    {
+      "platform": "darwin",
+      "text": "not a full mount row\n"
+    },
+    {
+      "platform": "darwin",
+      "text": "/dev/disk2 on /Volumes/with\\040escape (apfs, local)\n"
+    },
+    {
+      "platform": "linux",
+      "text": "21 1 8:1 / /bad\\777escape rw - ext4 /dev/sda rw\n"
+    },
+    {
+      "platform": "darwin",
+      "text": "/dev/disk14s1 on /repo/ticket/generated/foo on /bar (apfs, local)\n"
+    }
+  ],
+  "ownerCases": [
+    {
+      "name": "owned",
+      "managedProtected": false,
+      "protected": false,
+      "live": false,
+      "dry": false,
+      "exists": true,
+      "admitted": true,
+      "removed": true
+    },
+    {
+      "name": "dry",
+      "managedProtected": false,
+      "protected": false,
+      "live": false,
+      "dry": true,
+      "exists": true,
+      "admitted": true,
+      "removed": false
+    },
+    {
+      "name": "managed-global",
+      "managedProtected": true,
+      "protected": false,
+      "live": false,
+      "dry": false,
+      "exists": true,
+      "admitted": false,
+      "removed": false
+    },
+    {
+      "name": "protected",
+      "managedProtected": false,
+      "protected": true,
+      "live": false,
+      "dry": false,
+      "exists": true,
+      "admitted": false,
+      "removed": false
+    },
+    {
+      "name": "active-output",
+      "managedProtected": false,
+      "protected": false,
+      "live": true,
+      "dry": false,
+      "exists": true,
+      "admitted": false,
+      "removed": false
+    },
+    {
+      "name": "already-absent",
+      "managedProtected": false,
+      "protected": false,
+      "live": false,
+      "dry": false,
+      "exists": false,
+      "admitted": true,
+      "removed": false
+    }
+  ]
+}

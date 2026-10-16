@@ -17,6 +17,14 @@
       "coversMutations": false
     }
   ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-framework-os-config",
+      "path": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
+      "rationale": "🎚️ The os.config mutation cases under this owner drive the opening, identity, merge-policy, ui-preferences, local-catalog and local-folders dispatch the os-config crate owns."
+    }
+  ],
   "migrationStatus": {
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host": "protocol-v2"
   }

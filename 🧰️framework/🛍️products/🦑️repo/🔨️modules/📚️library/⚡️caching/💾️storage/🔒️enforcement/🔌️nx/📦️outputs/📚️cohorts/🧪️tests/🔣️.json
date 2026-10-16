@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {"root": "/cache/products", "mode": "prototype", "platform": "posix", "output": "play/prototype/pages", "groups": ["prototype"]},
+    {"root": "/cache/products", "mode": "release", "platform": "posix", "output": "play/release/pages/play/assets/file.js", "groups": ["release"]},
+    {"root": "/cache/products", "mode": "prototype", "platform": "posix", "output": "play/prototype/pages/cohort", "groups": ["prototype"]},
+    {"root": "/cache/products", "mode": "prototype", "platform": "posix", "output": "play/prototype/pages-other", "groups": []},
+    {"root": "C:\\cache\\products", "mode": "release", "platform": "windows", "output": "play/release/pages/map", "groups": ["release"]},
+    {"root": "/cache/products", "mode": "prototype", "platform": "posix", "output": "browser/prototype/modules/component", "groups": []}
+  ],
+  "invalid": [
+    {"version": 1, "productsRoot": "relative", "mode": "prototype", "platform": "posix"},
+    {"version": 1, "productsRoot": "/cache/../products", "mode": "prototype", "platform": "posix"},
+    {"version": 1, "productsRoot": "/cache/products", "mode": "debug", "platform": "posix"},
+    {"version": 1, "productsRoot": "/cache/products", "mode": "prototype", "platform": "posix", "authority": {}}
+  ]
+}

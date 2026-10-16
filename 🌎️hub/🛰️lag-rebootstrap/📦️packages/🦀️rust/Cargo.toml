@@ -1,0 +1,38 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-lag-rebootstrap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Verified lag rebootstrap source and canonical checkpoint pair"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-lag-rebootstrap"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-directory = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+protocol = { path = "../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+semio-hub-directory = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

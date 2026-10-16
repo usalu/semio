@@ -1,4 +1,5 @@
-use super::*;
+use crate::CsvSnapshot;
+use crate::standards::v_rfc4180::subsets::any::schema::inferences::outline::*;
 use crate::schema::snapshot::{CsvField, CsvRecord};
 
 #[semio_framework_async_macros::async_test]

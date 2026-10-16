@@ -6,14 +6,18 @@
 //! existing `crate::icon_atlas::...` call site elsewhere in the crate keeps resolving with zero
 //! other changes.
 //! 🖼️ CPU-rasterized Lucide icon atlas for native and web wgpu shells.
+//!
+//! 🔌️ The catalog SVG sources are not compiled in: they come from the icon pack the host installs through Canvas's runtime asset
+//! port (`semio_framework_canvas::icon_pack`), in byte order of the public icon id, followed by the 682 byte engine logo.
 
+use semio_framework_canvas::{icon_pack, IconPack};
 use ui_wgpu::wgpu::IconAtlas;
 
 const ICON_SIZE: u32 = 24;
 const ATLAS_COLS: u32 = 16;
 const ICON_ATLAS_TEXTURE_SIZE: u32 = 2048;
 
-include!(concat!(env!("OUT_DIR"), "/🧩️icons.rs"));
+pub const SEMIO_LOGO_SVG: &str = include_str!("../../../../🔣️.svg");
 
 /// 📐️ Device-pixel cell edge for a surface scale factor. The atlas is a fixed
 /// [`ICON_ATLAS_TEXTURE_SIZE`]-normalised UV space, so the cell may grow but the 16-column grid must
@@ -72,13 +76,22 @@ pub struct IconAtlasRebuild {
     scale_factor: f32,
     cell: u32,
     next: usize,
+    pack: Option<&'static IconPack>,
     loaded: Vec<(&'static str, Vec<u8>)>,
+    ids: Vec<&'static str>,
 }
 
 impl IconAtlasRebuild {
-    /// 🔁️ A rebuild for `scale_factor`, with nothing rasterised yet.
+    /// 🔁️ A rebuild for `scale_factor`, with nothing rasterised yet. The catalog sources are those of the pack installed now;
+    /// without an installed pack only the logo is rasterised.
     pub fn new(scale_factor: f32) -> Self {
-        Self { scale_factor, cell: icon_cell_size(scale_factor), next: 0, loaded: Vec::with_capacity(icon_atlas_source_count()) }
+        let pack = icon_pack();
+        let ids = pack.map_or_else(Vec::new, IconPack::plain_ids);
+        Self { scale_factor, cell: icon_cell_size(scale_factor), next: 0, pack, loaded: Vec::with_capacity(ids.len() + 1), ids }
+    }
+
+    fn total(&self) -> usize {
+        self.ids.len() + 1
     }
 
     /// 📐️ The device-pixel cell edge this rebuild rasterises at.
@@ -91,26 +104,24 @@ impl IconAtlasRebuild {
         self.scale_factor
     }
 
-    /// 📊️ Sources rasterised so far, out of [`icon_atlas_source_count`].
+    /// 📊️ Sources rasterised so far, out of the sources this rebuild started with ([`icon_atlas_source_count`] at its creation).
     pub fn progress(&self) -> (usize, usize) {
-        (self.next, icon_atlas_source_count())
+        (self.next, self.total())
     }
 
     /// 🔁️ Rasterises at most `budget` more sources, then packs and answers the atlas once every
     /// source has been through. A source that fails to rasterise is skipped exactly as the one-shot
     /// build skips it, so a rebuild can never stall on a malformed SVG.
     pub fn step(&mut self, budget: usize) -> IconAtlasRebuildStep {
-        let total = icon_atlas_source_count();
+        let total = self.total();
         let mut done = 0;
         while done < budget.max(1) && self.next < total {
             let index = self.next;
             self.next += 1;
             done += 1;
-            let rasterized = if index < ICON_SVGS.len() {
-                let (id, svg) = ICON_SVGS[index];
-                rasterize_svg(svg, id != "semio-logo", self.cell).map(|pixels| (id, pixels))
-            } else {
-                rasterize_svg(SEMIO_LOGO_SVG, false, self.cell).map(|pixels| ("semio-logo", pixels))
+            let rasterized = match self.ids.get(index).copied().zip(self.pack) {
+                Some((id, pack)) => pack.plain(id).and_then(|svg| rasterize_svg(svg, id != "semio-logo", self.cell)).map(|pixels| (id, pixels)),
+                None => rasterize_svg(SEMIO_LOGO_SVG, false, self.cell).map(|pixels| ("semio-logo", pixels)),
             };
             if let Some(entry) = rasterized {
                 self.loaded.push(entry);
@@ -167,8 +178,9 @@ fn pack_icon_atlas(loaded: Vec<(&'static str, Vec<u8>)>, cell: u32) -> IconAtlas
     IconAtlas::from_packed(width, height, pixels, entries)
 }
 
+/// 🔢️ How many sources an atlas built now rasterises: the installed pack's catalog icons plus the logo.
 pub fn icon_atlas_source_count() -> usize {
-    ICON_SVGS.len() + 1
+    icon_pack().map_or(0, IconPack::plain_len) + 1
 }
 
 #[cfg(test)]

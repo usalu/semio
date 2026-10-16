@@ -1,14 +1,33 @@
 //! ⏱️ Source custody and continuation of the original budgeted channel evaluation.
 
-use super::{BudgetedEval,Dictionary,EvalChannels,EvalError,EvalStepBudget,OperatorInfo,OperatorJob,OperatorJobStep,OperatorPlanAdmission,OperatorPlanCursor,OperatorPlanStep,OperatorFinishCursor,SharedRegistry,Tree,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use super::{input::{BudgetedInputMerge,BudgetedOwnedEntry},topology::BudgetedEvalTopology};
+use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
+use std::sync::atomic::{AtomicU64, Ordering};
+use semio_framework_os_kernel_neural_engine_model::{Atom, ColdRetire, Dictionary, EvalChannels, EvalError, INPUT_KIND, Neuron, OUTPUT_KIND, OperatorInfo, OperatorJob, OperatorJobStep, OperatorPendingPlan, OperatorPlanAdmission, OperatorWorkFailure, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, Synapse, Tree, Value, node_hash};
+#[cfg(test)]
+use semio_framework_os_kernel_neural_engine_model::{Cardinality, ChannelSpec, Operator, PendingOperatorMetadata};
+use semio_framework_os_kernel_neural_engine_registry::{OperatorFinishCursor, OperatorPlanCursor, OperatorPlanStep, SharedRegistry};
+#[cfg(test)]
+use semio_framework_os_kernel_neural_engine_registry::{OperatorImpl, Registry};
+
+#[path = "../📥️input/🦀️.rs"]
+pub mod input;
+pub use input::{BudgetedInputMerge,BudgetedOwnedEntry};
+#[path = "../🧭️topology/🦀️.rs"]
+pub mod topology;
+#[path = "../🌱️cache/🦀️.rs"]
+pub mod cache_insert;
+pub use cache_insert::NeuralCacheInsert;
+#[path = "../🌳️tree/📋️copy/🦀️.rs"]
+pub mod tree_copy;
+pub use tree_copy::BudgetedTreeCopy;
+
+use {topology::BudgetedEvalTopology};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::{SharedControlledRetirement,shared_retirement_birth_bytes}};
 use std::{mem::ManuallyDrop,sync::Arc};
 use protocol::value::ordered::SharedOwner;
-use super::{Value,Atom};
-use super::OperatorWorkFailure;
 use semio_framework_job::StepContext;
 #[path="🌊️wave/🦀️.rs"]
 pub mod wave;
@@ -33,7 +52,7 @@ impl RetireOwned for ChannelsLease{
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct EvalOwners{
- topology:Option<BudgetedEvalTopology>,seeds:SeedsLease,dirty:HistoryFoldIndex<String,()>,infos:InfosLease,registry:SharedRegistry,previous:Option<ChannelsLease>,channels:Option<EvalChannels>,input:Option<Dictionary>,seed:Option<Dictionary>,merge:Option<BudgetedInputMerge>,displaced:Option<ControlledRetirement<EvalDisplaced>>,entry:Option<BudgetedOwnedEntry>,port_value:Option<SharedOwner<Value>>,staged_value:Option<Value>,staged_key:Option<String>,staged_dictionary:Option<Dictionary>,buffer:Vec<u8>,plan:OperatorPlanCursor,finish:OperatorFinishCursor,wave:Option<wave::PendingWaveCursor>,pending_stage:Option<super::PendingExtensionEval>,pending:Vec<super::PendingExtensionEval>,remaining:Vec<String>,remaining_key:Option<String>,
+ topology:Option<BudgetedEvalTopology>,seeds:SeedsLease,dirty:HistoryFoldIndex<String,()>,infos:InfosLease,registry:SharedRegistry,previous:Option<ChannelsLease>,channels:Option<EvalChannels>,input:Option<Dictionary>,seed:Option<Dictionary>,merge:Option<BudgetedInputMerge>,displaced:Option<ControlledRetirement<EvalDisplaced>>,entry:Option<BudgetedOwnedEntry>,port_value:Option<SharedOwner<Value>>,staged_value:Option<Value>,staged_key:Option<String>,staged_dictionary:Option<Dictionary>,buffer:Vec<u8>,plan:OperatorPlanCursor,finish:OperatorFinishCursor,wave:Option<wave::PendingWaveCursor>,pending_stage:Option<crate::PendingExtensionEval>,pending:Vec<crate::PendingExtensionEval>,remaining:Vec<String>,remaining_key:Option<String>,
 }
 pub enum BudgetedEvalStep{Working,Complete(BudgetedEval)}
 
@@ -51,7 +70,7 @@ impl BudgetedEvalState{
   if matches!(self.phase,5|11){return body.merge.as_ref().unwrap().next_demands(copy)}if matches!(self.phase,6|12){return body.merge.as_ref().unwrap().next_close_demands(copy)}
   if self.phase==8{let id=&tree.neurons[self.node].id;return Ok(RetirementDemand{copy_bytes:usize::from(body.buffer.len()<id.len()&&body.buffer.capacity()>=id.len()),capacity_bytes:if body.buffer.capacity()<id.len(){id.len()}else{0},depth:1,..Default::default()})}
   if self.phase==9{let index=if self.column==0{&body.channels.as_ref().unwrap().inputs}else{&body.channels.as_ref().unwrap().outputs};let key=body.staged_key.as_ref().unwrap();return Ok(RetirementDemand{copy_bytes:index.next_insert_copy_byte_demand(key)?,capacity_bytes:index.next_insert_capacity_byte_demand(key,copy)?,release_bytes:index.next_insert_release_byte_demand(key)?,depth:index.next_insert_depth_demand(key)?})}
-  if self.phase==48{return Ok(RetirementDemand{capacity_bytes:if body.pending.capacity()<tree.neurons.len(){tree.neurons.len()*size_of::<super::PendingExtensionEval>()}else{0},depth:1,..Default::default()})}
+  if self.phase==48{return Ok(RetirementDemand{capacity_bytes:if body.pending.capacity()<tree.neurons.len(){tree.neurons.len()*size_of::<crate::PendingExtensionEval>()}else{0},depth:1,..Default::default()})}
   if self.phase==49{return Ok(RetirementDemand{capacity_bytes:if body.remaining.capacity()<tree.neurons.len(){tree.neurons.len()*size_of::<String>()}else{0},depth:1,..Default::default()})}
   if self.phase==51{return Ok(RetirementDemand{copy_bytes:body.remaining.get(self.park_rank).map_or(0,|id|usize::from(self.offset<id.len().min(tree.synapses[self.synapse].from.len()))),depth:1,..Default::default()})}
   if self.phase==52{let id=&tree.neurons[self.node].id;return Ok(RetirementDemand{copy_bytes:usize::from(body.buffer.len()<id.len()&&body.buffer.capacity()>=id.len()),capacity_bytes:if body.buffer.capacity()<id.len(){id.len()}else{0},depth:1,..Default::default()})}
@@ -91,28 +110,28 @@ impl BudgetedEvalState{
    4=>{let index=&body.channels.as_ref().unwrap().outputs;if self.slot==index.slot_count(){self.synapse+=1;self.slot=0;self.phase=3;}else if let Some((key,value))=index.slot_entry(self.slot){match Self::compare(&mut self.offset,key,&tree.synapses[self.synapse].from,grant,&mut self.progress){Some(true)=>{let edge=&tree.synapses[self.synapse];if edge.from_port.is_empty()&&edge.to_port.is_empty(){body.merge=Some(BudgetedInputMerge::new(body.input.take().unwrap(),value.clone()));self.phase=5;}else{self.offset=0;self.port_out=edge.from_port.len()==3;self.phase=24;}},Some(false)=>self.slot+=1,None=>{}}}else{self.slot+=1;}},
    5|11=>{let owner=body.merge.as_mut().unwrap();let result=owner.step(grant);self.progress=owner.step_progress();result?;if owner.is_complete(){self.phase=if self.phase==5{19}else{20};}},
    19|20=>{let owner=body.merge.as_mut().unwrap();let(output,progress)=owner.take_output(grant)?;self.progress=progress;if let Some(output)=output{body.input=Some(output);owner.begin_close();self.phase=if self.phase==19{6}else{12};}},
-   6|12=>{let owner=body.merge.as_mut().unwrap();let result=owner.close_step(grant);self.progress=owner.step_progress();result?;if owner.terminal_is_empty(){body.merge=None;if self.phase==6{self.synapse+=1;self.phase=3;}else{self.phase=13;self.offset=0;self.kind_input=tree.neurons[self.node].kind.len()==super::INPUT_KIND.len();self.kind_output=tree.neurons[self.node].kind.len()==super::OUTPUT_KIND.len();}}},
+   6|12=>{let owner=body.merge.as_mut().unwrap();let result=owner.close_step(grant);self.progress=owner.step_progress();result?;if owner.terminal_is_empty(){body.merge=None;if self.phase==6{self.synapse+=1;self.phase=3;}else{self.phase=13;self.offset=0;self.kind_input=tree.neurons[self.node].kind.len()==crate::INPUT_KIND.len();self.kind_output=tree.neurons[self.node].kind.len()==crate::OUTPUT_KIND.len();}}},
    7=>{body.staged_dictionary=Some(body.input.as_ref().unwrap().clone());self.column=0;self.return_phase=10;self.phase=8;},
    8=>{let source=&tree.neurons[self.node].id;if body.buffer.capacity()<source.len(){body.buffer.try_reserve_exact(source.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original channel key allocation refused"))?;self.progress.retained_capacity_bytes=source.len();}else if body.buffer.len()<source.len(){let start=body.buffer.len();let count=(source.len()-start).min(grant.maximum_copy_bytes);body.buffer.extend_from_slice(&source.as_bytes()[start..start+count]);self.progress.copied_bytes=count;}else{body.staged_key=Some(unsafe{String::from_utf8_unchecked(std::mem::take(&mut body.buffer))});self.phase=9;}},
    9=>{let index=if self.column==0{&mut body.channels.as_mut().unwrap().inputs}else{&mut body.channels.as_mut().unwrap().outputs};let key=body.staged_key.as_ref().unwrap();if index.next_insert_capacity_byte_demand(key,grant.maximum_copy_bytes)?!=0{match index.reserve_insert_step(key,grant){Ok(progress)=>self.progress=progress,Err((error,progress))=>{self.progress=progress;return Err(error.into())}}}else{match index.insert_reserved(body.staged_key.take().unwrap(),body.staged_dictionary.take().unwrap(),grant){Ok((previous,progress))=>{self.progress=progress;if let Some(previous)=previous{body.displaced=Some(ControlledRetirement::new(EvalDisplaced::Dictionary(previous)).unwrap_or_else(|_|unreachable!("original channel dictionary declares retirement")));}self.phase=self.return_phase;},Err((error,key,value))=>{body.staged_key=Some(key);body.staged_dictionary=Some(value);return Err(error.into())}}}},
    10=>{self.param_rank=0;self.phase=30;},
-   13=>{let kind=tree.neurons[self.node].kind.as_bytes();let count=(kind.len()-self.offset).min(grant.maximum_copy_bytes);for offset in self.offset..self.offset+count{self.kind_input&=super::INPUT_KIND.as_bytes().get(offset)==Some(&kind[offset]);self.kind_output&=super::OUTPUT_KIND.as_bytes().get(offset)==Some(&kind[offset]);}self.offset+=count;self.progress.copied_bytes=count;if self.offset==kind.len(){self.phase=14;}},
+   13=>{let kind=tree.neurons[self.node].kind.as_bytes();let count=(kind.len()-self.offset).min(grant.maximum_copy_bytes);for offset in self.offset..self.offset+count{self.kind_input&=crate::INPUT_KIND.as_bytes().get(offset)==Some(&kind[offset]);self.kind_output&=crate::OUTPUT_KIND.as_bytes().get(offset)==Some(&kind[offset]);}self.offset+=count;self.progress.copied_bytes=count;if self.offset==kind.len(){self.phase=14;}},
    14=>{if let Some(seed)=body.seed.take(){body.staged_dictionary=Some(seed);body.displaced=Some(ControlledRetirement::new(EvalDisplaced::Dictionary(body.input.take().unwrap())).unwrap_or_else(|_|unreachable!("original seed input declares retirement")));self.phase=18;}else if self.kind_input||self.kind_output{body.staged_dictionary=body.input.take();self.phase=18;}else if tree.neurons[self.node].tree.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original cluster requires its retained invocation cursor").into())}else{self.phase=15;}},
    24=>{let port=tree.synapses[self.synapse].from_port.as_bytes();let count=(port.len()-self.offset).min(grant.maximum_copy_bytes);for index in self.offset..self.offset+count{self.port_out&=b"out".get(index)==Some(&port[index]);}self.offset+=count;self.progress.copied_bytes=count;if self.offset==port.len(){self.offset=0;self.port_rank=0;self.phase=if port.is_empty(){26}else{25};}},
-   25=>{let output=body.channels.as_ref().unwrap().outputs.slot_entry(self.slot).unwrap().1;if let Some((key,_))=output.entry_at_rank(self.port_rank){match Self::compare(&mut self.offset,key,&tree.synapses[self.synapse].from_port,grant,&mut self.progress){Some(true)=>{body.port_value=Some(output.pairs.value_shared_at_rank(self.port_rank).unwrap());self.phase=23;},Some(false)=>self.port_rank+=1,None=>{}}}else if self.port_out{if output.len()==1{body.port_value=Some(output.pairs.value_shared_at_rank(0).unwrap());self.phase=23;}else{self.phase=26;}}else{self.phase=43;}},
+   25=>{let output=body.channels.as_ref().unwrap().outputs.slot_entry(self.slot).unwrap().1;if let Some((key,_))=output.entry_at_rank(self.port_rank){match Self::compare(&mut self.offset,key,&tree.synapses[self.synapse].from_port,grant,&mut self.progress){Some(true)=>{body.port_value=Some(output.pairs().value_shared_at_rank(self.port_rank).unwrap());self.phase=23;},Some(false)=>self.port_rank+=1,None=>{}}}else if self.port_out{if output.len()==1{body.port_value=Some(output.pairs().value_shared_at_rank(0).unwrap());self.phase=23;}else{self.phase=26;}}else{self.phase=43;}},
    26=>{let value=if let Some(dictionary)=body.staged_dictionary.take(){Value::Dictionary(dictionary)}else{Value::Dictionary(body.channels.as_ref().unwrap().outputs.slot_entry(self.slot).unwrap().1.clone())};match SharedOwner::admit(value,grant){Ok((owner,progress))=>{body.port_value=Some(owner);self.progress=progress;self.phase=23;},Err((error,value))=>{if let Value::Dictionary(dictionary)=value{body.staged_dictionary=Some(dictionary)}self.progress=error.retained_progress();return Err(error.into())}}},
    23=>{if tree.synapses[self.synapse].to_port.is_empty(){if let Value::Dictionary(dictionary)=&**body.port_value.as_ref().unwrap(){body.merge=Some(BudgetedInputMerge::new(body.input.take().unwrap(),dictionary.clone()));self.phase=5;}else{self.synapse+=1;self.phase=3;}body.displaced=Some(ControlledRetirement::new(EvalDisplaced::Port(body.port_value.take().unwrap())).unwrap_or_else(|_|unreachable!("original channel value lease declares closure")));}else{self.phase=27;}},
    27|43|44=>{let length=match self.phase{27=>tree.synapses[self.synapse].to_port.len(),43=>b"missing channel ".len()+tree.synapses[self.synapse].from_port.len(),_=>5};if body.buffer.capacity()<length{body.buffer.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original port text allocation refused"))?;self.progress.retained_capacity_bytes=body.buffer.capacity();}else if body.buffer.len()<length{let start=body.buffer.len();let count=(length-start).min(grant.maximum_copy_bytes);for index in start..start+count{let byte=match self.phase{27=>tree.synapses[self.synapse].to_port.as_bytes()[index],43=>if index<b"missing channel ".len(){b"missing channel "[index]}else{tree.synapses[self.synapse].from_port.as_bytes()[index-b"missing channel ".len()]},_=>b"error"[index]};body.buffer.push(byte);}self.progress.copied_bytes=count;}else{let text=unsafe{String::from_utf8_unchecked(std::mem::take(&mut body.buffer))};if self.phase==43{body.staged_value=Some(Value::Atom(Atom::String(text)));self.phase=44;}else{body.staged_key=Some(text);self.phase=if self.phase==27{28}else{45};}}},
    28=>{body.entry=Some(BudgetedOwnedEntry::from_shared_value(body.input.take().unwrap(),body.staged_key.take().unwrap(),body.port_value.take().unwrap()));self.entry_return=3;self.phase=29;},
    29|33=>{let owner=body.entry.as_mut().unwrap();let result=owner.step(grant);self.progress=owner.step_progress();if let Some(input)=result?{body.input=Some(input);owner.begin_close();self.phase=34;}},
-   30=>{if self.param_rank==tree.neurons[self.node].params.len(){self.phase=13;self.offset=0;self.kind_input=tree.neurons[self.node].kind.len()==super::INPUT_KIND.len();self.kind_output=tree.neurons[self.node].kind.len()==super::OUTPUT_KIND.len();}else{self.scan_edge=0;self.offset=0;self.phase=31;}},
-   31=>{if let Some(edge)=tree.synapses.get(self.scan_edge){match Self::compare(&mut self.offset,&edge.to,&tree.neurons[self.node].id,grant,&mut self.progress){Some(true) if !edge.to_port.is_empty()=>self.phase=32,Some(_)=>self.scan_edge+=1,None=>{}}}else{let(key,value)=tree.neurons[self.node].params.pairs.entry_shared_at_rank(self.param_rank).unwrap();body.entry=Some(BudgetedOwnedEntry::from_shared(body.input.take().unwrap(),key,value));self.entry_return=30;self.phase=33;}},
+   30=>{if self.param_rank==tree.neurons[self.node].params.len(){self.phase=13;self.offset=0;self.kind_input=tree.neurons[self.node].kind.len()==crate::INPUT_KIND.len();self.kind_output=tree.neurons[self.node].kind.len()==crate::OUTPUT_KIND.len();}else{self.scan_edge=0;self.offset=0;self.phase=31;}},
+   31=>{if let Some(edge)=tree.synapses.get(self.scan_edge){match Self::compare(&mut self.offset,&edge.to,&tree.neurons[self.node].id,grant,&mut self.progress){Some(true) if !edge.to_port.is_empty()=>self.phase=32,Some(_)=>self.scan_edge+=1,None=>{}}}else{let(key,value)=tree.neurons[self.node].params.pairs().entry_shared_at_rank(self.param_rank).unwrap();body.entry=Some(BudgetedOwnedEntry::from_shared(body.input.take().unwrap(),key,value));self.entry_return=30;self.phase=33;}},
    32=>{let key=tree.neurons[self.node].params.entry_at_rank(self.param_rank).unwrap().0;match Self::compare(&mut self.offset,&tree.synapses[self.scan_edge].to_port,key,grant,&mut self.progress){Some(true)=>{self.param_rank+=1;self.phase=30;},Some(false)=>{self.scan_edge+=1;self.phase=31;},None=>{}}},
    34=>{let owner=body.entry.as_mut().unwrap();let result=owner.close_step(grant);self.progress=owner.step_progress();result?;if owner.terminal_is_empty(){body.entry=None;if self.entry_return==3{self.synapse+=1;}else{self.param_rank+=1;}self.phase=self.entry_return;}},
    45=>{body.entry=Some(BudgetedOwnedEntry::new(Dictionary::new(),body.staged_key.take().unwrap(),body.staged_value.take().unwrap()));self.phase=46;},
    46=>{let owner=body.entry.as_mut().unwrap();let result=owner.step(grant);self.progress=owner.step_progress();if let Some(dictionary)=result?{body.staged_dictionary=Some(dictionary);owner.begin_close();self.phase=47;}},
    47=>{let owner=body.entry.as_mut().unwrap();let result=owner.close_step(grant);self.progress=owner.step_progress();result?;if owner.terminal_is_empty(){body.entry=None;self.phase=26;}},
-   48=>{let bytes=tree.neurons.len()*size_of::<super::PendingExtensionEval>();if bytes>0&&body.pending.capacity()<tree.neurons.len(){body.pending.try_reserve_exact(tree.neurons.len()-body.pending.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original wave roster reservation refused"))?;self.progress.retained_capacity_bytes=body.pending.capacity()*size_of::<super::PendingExtensionEval>();}self.phase=49;},
+   48=>{let bytes=tree.neurons.len()*size_of::<crate::PendingExtensionEval>();if bytes>0&&body.pending.capacity()<tree.neurons.len(){body.pending.try_reserve_exact(tree.neurons.len()-body.pending.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original wave roster reservation refused"))?;self.progress.retained_capacity_bytes=body.pending.capacity()*size_of::<crate::PendingExtensionEval>();}self.phase=49;},
    49=>{let bytes=tree.neurons.len()*size_of::<String>();if bytes>0&&body.remaining.capacity()<tree.neurons.len(){body.remaining.try_reserve_exact(tree.neurons.len()-body.remaining.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original remaining roster reservation refused"))?;self.progress.retained_capacity_bytes=body.remaining.capacity()*size_of::<String>();}self.phase=56;},
    51=>{if let Some(id)=body.remaining.get(self.park_rank){match Self::compare(&mut self.offset,id,&tree.synapses[self.synapse].from,grant,&mut self.progress){Some(true)=>self.phase=52,Some(false)=>self.park_rank+=1,None=>{}}}else{self.phase=4;self.slot=0;}},
    52=>{let id=&tree.neurons[self.node].id;if body.buffer.capacity()<id.len(){body.buffer.try_reserve_exact(id.len()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original remaining node text reservation refused"))?;self.progress.retained_capacity_bytes=body.buffer.capacity();}else if body.buffer.len()<id.len(){let start=body.buffer.len();let count=(id.len()-start).min(grant.maximum_copy_bytes);body.buffer.extend_from_slice(&id.as_bytes()[start..start+count]);self.progress.copied_bytes=count;}else{body.remaining_key=Some(unsafe{String::from_utf8_unchecked(std::mem::take(&mut body.buffer))});self.phase=53;}},
@@ -163,3 +182,250 @@ impl RetireOwned for BudgetedEvalState{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+// #region 🔖️Cache
+
+/// 🧠️ Epoch-bounded in-process cache retaining actual original outputs and displaced roots.
+pub struct NeuralCache {
+    state:ManuallyDrop<semio_framework_value::retirement::controlled::RetainedOwnerGate<NeuralCacheState>>,
+    epoch:AtomicU64,
+}
+#[derive(Default,semio_framework_value::RetireOwned)]
+struct NeuralCacheState {entries:HistoryFoldIndex<u64,(u64,Dictionary)>,displaced:Vec<Dictionary>}
+impl NeuralCacheState {fn terminal_is_empty(&self)->bool {self.entries.terminal_is_empty()&&self.displaced.capacity()==0}}
+impl Default for NeuralCache {
+    fn default()->Self {Self {state:ManuallyDrop::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(NeuralCacheState::default())),epoch:AtomicU64::new(0)}}
+}
+/// 🧹️ Keeps the original Arc and every final cache allocation until admitted physical closure.
+pub struct NeuralCacheRetirement {owner:semio_framework_value::retirement::shared::SharedControlledRetirement<NeuralCache>}
+impl NeuralCacheRetirement {
+    pub fn new(cache:Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::shared::SharedControlledRetirement::lease(cache)}}
+    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_copy_byte_demand()}
+    pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owner.next_capacity_byte_demand(copy)}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_release_byte_demand()}
+    pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.owner.next_depth_demand()}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        let step=self.owner.step(grant)?;
+        semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.owner.terminal_is_empty(),"Neural original cache root")
+    }
+    pub fn terminal_is_empty(&self)->bool {self.owner.terminal_is_empty()}
+}
+impl semio_framework_value::retirement::RetireOwned for NeuralCache {
+    fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        let state=std::mem::replace(&mut *self.state,semio_framework_value::retirement::controlled::RetainedOwnerGate::new(NeuralCacheState::default())).into_inner();
+        semio_framework_value::retirement::RetireOwned::retirement(state)
+    }
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&*self.state.try_lock().ok()?)}
+    fn controlled_retirement_supported()->bool {true}
+}
+impl Drop for NeuralCache {
+    fn drop(&mut self) {
+        let empty=self.state.get_mut().terminal_is_empty();
+        assert!(std::thread::panicking()||empty,"final NeuralCache must be explicitly retired");
+        if empty {unsafe {ManuallyDrop::drop(&mut self.state);}}
+    }
+}
+impl NeuralCache {
+    pub fn new()->Self {Self::default()}
+    pub fn begin_epoch(&self) {self.epoch.fetch_add(1,Ordering::Relaxed);}
+    pub fn current_epoch(&self)->u64 {self.epoch.load(Ordering::Relaxed)}
+    pub fn len(&self)->usize {self.state.try_lock().map_or(0,|state|state.entries.len())}
+    pub fn is_empty(&self)->bool {self.state.try_lock().is_ok_and(|state|state.entries.is_empty())}
+    pub fn contains(&self,key:u64)->bool {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return false;};
+        let Some(entry)=state.entries.get_mut(&key) else {return false;};
+        entry.0=epoch;
+        true
+    }
+    /// 🌱️ Cold cache construction retains displaced original outputs; contention returns the exact input.
+    pub fn seed(&self,key:u64,value:Dictionary)->Result<(),Dictionary> {
+        let Ok(mut state)=self.state.try_lock() else {return Err(value);};
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        if let Some((_,value))=state.entries.insert(key,(epoch,value)) {state.displaced.push(value);}
+        Ok(())
+    }
+    /// 🔎️ Reads the original cached Dictionary without manufacturing an alias or payload copy.
+    pub fn inspect_original<R>(&self,key:u64,read:impl FnOnce(&Dictionary)->R)->Option<R>{let state=self.state.try_lock().ok()?;state.entries.get(&key).map(|(_,value)|read(value))}
+    pub fn get(&self,key:u64)->Option<Dictionary> {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return None;};
+        let entry=state.entries.get_mut(&key)?;
+        entry.0=epoch;
+        Some(entry.1.clone())
+    }
+    pub fn get_or_insert_with<F>(&self,key:u64,compute:F)->Result<Dictionary,EvalError> where F:FnOnce()->Result<Dictionary,EvalError> {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        if let Ok(mut state)=self.state.try_lock() {if let Some(entry)=state.entries.get_mut(&key) {entry.0=epoch;return Ok(entry.1.clone());}}
+        let value=compute()?;
+        if let Err(original)=self.seed(key,value.clone()) {original.retire_cold();}
+        Ok(value)
+    }
+    /// 🧊️ Epoch sweep is a cold source mutation and retains every removed original until retirement.
+    pub fn sweep(&self) {
+        let epoch=self.epoch.load(Ordering::Relaxed);
+        let Ok(mut state)=self.state.try_lock() else {return;};
+        let expired:Vec<_>=state.entries.iter().filter(|(_,entry)|entry.0!=epoch).map(|(key,_)|*key).collect();
+        for key in expired {if let Some((_,value))=state.entries.remove(&key) {state.displaced.push(value);}}
+    }
+}
+
+pub fn eval_error_dictionary(err: &EvalError) -> Dictionary {
+    Dictionary::new().insert("error", Value::Atom(Atom::String(err.to_string())))
+}
+
+pub fn evaluate_cached_output<F>(cache: &NeuralCache, kind: &str, merged: &Dictionary, dispatch: F) -> Dictionary
+where
+    F: FnOnce() -> Result<Dictionary, EvalError>,
+{
+    let key = node_hash(kind, merged);
+    match cache.get_or_insert_with(key, dispatch) {
+        Ok(dict) => dict,
+        Err(err) => eval_error_dictionary(&err),
+    }
+}
+// #endregion 🔖️Cache
+// #region 🔖️Evaluator
+/// ⏳️ Topo-ordered neuron ids still needing work when a budgeted walk stops at `from_index` having
+/// `parked` the extension requests of one wave.
+///
+/// ⛓️ A parked neuron sits BEFORE `from_index` — the walk went past it to gather the rest of its
+/// wave — so it is named explicitly and unconditionally: a neuron whose answer has not landed is
+/// still owed whatever the dirty set says about it, and dropping it here would make the chain call
+/// itself converged while an answer is still crossing.
+pub fn budgeted_remaining(order: &[String], from_index: usize, parked: &HashSet<String>, dirty: &HashSet<String>) -> Vec<String> {
+    order
+        .iter()
+        .enumerate()
+        .filter(|(index, id)| parked.contains(id.as_str()) || (*index >= from_index && (dirty.is_empty() || dirty.contains(id.as_str()))))
+        .map(|(_, id)| id.clone())
+        .collect()
+}
+
+/// ⛓️ Whether `neuron_id` draws an input from a neuron THIS walk could not produce — one whose
+/// extension request is parked, or one already blocked behind such a request.
+///
+/// 🚨️ [`collect_neuron_input`] SILENTLY SKIPS a source with no output (`else { continue }`), so a
+/// neuron downstream of a parked request would otherwise be dispatched against a half-built input
+/// and cache a wrong answer under a hash that claims to describe the real one. Waiting is not an
+/// optimisation here; it is the only correct answer.
+pub fn waits_on_parked(tree: &Tree, parked: &HashSet<String>, neuron_id: &str) -> bool {
+    !parked.is_empty() && tree.synapses.iter().any(|synapse| synapse.to == neuron_id && parked.contains(&synapse.from))
+}
+
+/// ⏳️ Result of a budget-limited evaluation pass — `remaining` (in topo order) is empty once the
+/// whole dirty set has been walked; a non-empty `remaining` means resume with another budgeted call.
+///
+/// 🌊️ `pending_extensions` is ONE TOPOLOGICAL WAVE: every neuron whose inputs were ready in this
+/// walk and whose operator lives in a plugin, not in this process. They are gathered together
+/// because they are independent by construction — no member of a wave consumes another member's
+/// output — so they can all be in flight at once and the chain costs ONE round trip per
+/// dependency LEVEL instead of one per node (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct BudgetedEval {
+    pub channels: EvalChannels,
+    pub remaining: Vec<String>,
+    pub pending_extensions: Vec<PendingExtensionEval>,
+}
+
+/// ⏱️ A wall-clock guard a budgeted walk consults BETWEEN neurons. Carried as a plain `fn` pointer
+/// rather than a clock trait or an `Instant`: this crate is a leaf evaluator with no dependency on
+/// the tracing module that owns the process clock, and `std::time::Instant` is not usable on every
+/// wasm target the guest builds for.
+#[derive(Clone, Copy, Debug)]
+pub struct EvalStepDeadline {
+    pub now_us: fn() -> Option<u64>,
+    pub deadline_us: u64,
+}
+
+impl PartialEq for EvalStepDeadline {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::fn_addr_eq(self.now_us, other.now_us) && self.deadline_us == other.deadline_us
+    }
+}
+
+impl EvalStepDeadline {
+    /// ⌛️ Whether the walk has run past its wall-clock allowance. A clock that answers nothing (bare
+    /// wasm with no host clock installed) never expires the walk — the node count stays the only cap.
+    fn expired(&self) -> bool {
+        (self.now_us)().is_some_and(|now_us| now_us >= self.deadline_us)
+    }
+}
+
+/// ⏳️ What ONE budgeted walk may spend. `dispatches` is the historical cache-missed-neuron count;
+/// `deadline` is the preemption point a NODE count alone cannot provide — one expensive operator
+/// (a `brep.bool.fuse` on a complex solid) runs to completion inside a single non-preemptible
+/// reactor step regardless of how few nodes it is, which is what parked the browser's main thread
+/// for 3.5-18.4 s per hop (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️audit-guest-tick-cost-2026-09-12.md` §1.3). The deadline is consulted only AFTER at least one
+/// dispatch, so a walk that starts already over budget still makes progress instead of re-arming
+/// forever.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EvalStepBudget {
+    pub dispatches: usize,
+    pub deadline: Option<EvalStepDeadline>,
+}
+
+impl EvalStepBudget {
+    /// 🔍️ A pure probe: dispatches nothing, reports every neuron that would still need work.
+    pub const PROBE: EvalStepBudget = EvalStepBudget { dispatches: 0, deadline: None };
+    /// ♾️ Walks the whole dirty set in one call, however long it takes.
+    pub const UNBOUNDED: EvalStepBudget = EvalStepBudget { dispatches: usize::MAX, deadline: None };
+
+    /// 🔢️ A node-count-only budget — no wall-clock preemption.
+    pub const fn dispatches(dispatches: usize) -> EvalStepBudget {
+        EvalStepBudget { dispatches, deadline: None }
+    }
+
+    /// ⏱️ The same node count, preempted at `deadline_us` on `now_us`'s clock.
+    pub const fn until(dispatches: usize, now_us: fn() -> Option<u64>, deadline_us: u64) -> EvalStepBudget {
+        EvalStepBudget { dispatches, deadline: Some(EvalStepDeadline { now_us, deadline_us }) }
+    }
+
+    /// ⏱️ The wall instant this budget preempts at, if any.
+    ///
+    /// 🔁️ Readable because a guest TURN may now run more than one dag walk — a fold that continues
+    /// its chain inline runs the next wave inside the answer's own turn — and the rule that keeps
+    /// the 8 ms interactive hold is that every walk of one turn shares ONE deadline instead of
+    /// opening a fresh allowance apiece. A law can only state that if the deadline is observable
+    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    pub const fn deadline_us(&self) -> Option<u64> {
+        match self.deadline {
+            Some(deadline) => Some(deadline.deadline_us),
+            None => None,
+        }
+    }
+
+    /// 🛑️ Whether the walk must yield before dispatching another cache-missed neuron.
+    fn exhausted(&self, spent: usize) -> bool {
+        spent >= self.dispatches || (spent != 0 && self.deadline.is_some_and(|deadline| deadline.expired()))
+    }
+}
+
+/// ⏳️ One contributed operator that must be evaluated in its owning plugin before the graph can resume.
+///
+/// 🪪️ `neuron_id` names the node the request BELONGS to, so a census can say which nodes of a wave
+/// are actually outstanding at their plugin instead of guessing from the head of a remaining list.
+#[derive(Clone, Debug, PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub struct PendingExtensionEval {
+    pub neuron_id: String,
+    pub extension_id: String,
+    pub operator_id: String,
+    pub node_hash: u64,
+    pub input_json: String,
+}
+// #endregion 🔖️Evaluator
+
+//#region 🧬️DomainOwners
+impl ColdRetire for BudgetedEval { fn retire_cold(self) { self.channels.retire_cold(); } }
+impl ColdRetire for NeuralCache {
+    fn retire_cold(self) {
+        let mut retirement = NeuralCacheRetirement::new(Arc::new(self));
+        while !retirement.terminal_is_empty() {
+            let copy=4096.max(retirement.next_copy_byte_demand().expect("cold cache copy demand"));
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold cache capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold cache release demand"),maximum_depth:retirement.next_depth_demand().expect("cold cache depth demand")};
+            retirement.close_step(grant).expect("cold Neural cache retirement");
+        }
+    }
+}
+//#endregion 🧬️DomainOwners

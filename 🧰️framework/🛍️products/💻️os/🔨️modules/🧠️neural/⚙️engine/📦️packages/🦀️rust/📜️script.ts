@@ -20,7 +20,7 @@ class TestScript extends BundleScript {
       if(segments[0]==="original-registry-admission-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original registry admission deadline expired");await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-os-kernel-neural-engine":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-os-kernel-neural-engine",target:{kind:"test",name:"registry_admission"},laws:["original_registry_issuer_reserves_two_shells_before_same_source_donation","original_registry_issuer_cancellation_returns_same_payload_after_born_shell_close"]}]});}return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runCargo(["test", "-p", "semio-framework-os-kernel-neural-engine", ...rest], this.repoRoot);
+    for (const crate of ["model", "registry", "budgeted", ""]) await runCargo(["test", "-p", `semio-framework-os-kernel-neural-engine${crate === "" ? "" : `-${crate}`}`, ...rest], this.repoRoot);
   }
 }
 class SourceTestScript extends BundleScript {

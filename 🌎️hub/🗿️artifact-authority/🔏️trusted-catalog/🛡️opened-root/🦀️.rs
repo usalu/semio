@@ -1,13 +1,14 @@
 //! 🛡️ Descriptor-rooted, no-link trusted catalog file ownership.
 
-use super::{catalog, catalog_error, AuthorityError, OperationContext, TRUSTED_RELATIVE_PATH_MAX_BYTES};
+use super::{catalog, catalog_error, TRUSTED_RELATIVE_PATH_MAX_BYTES};
+use semio_hub_artifact_authority::{AuthorityError, OperationContext};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Component, Path};
 use tokio::io::AsyncReadExt;
 
 const TRUSTED_RELATIVE_PATH_MAX_SEGMENTS: usize = 64;
-pub(super) const TRUSTED_READ_CHUNK_BYTES: usize = 64 * 1024;
+pub const TRUSTED_READ_CHUNK_BYTES: usize = 64 * 1024;
 
 /// 🧭 One parsed bundle-relative path whose segments can be opened without reparsing.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -16,7 +17,7 @@ pub struct TrustedCatalogRelativePathV1 {
 }
 
 impl TrustedCatalogRelativePathV1 {
-    pub(super) fn parse(value: &str) -> Result<Self, AuthorityError> {
+    pub fn parse(value: &str) -> Result<Self, AuthorityError> {
         let segments = value.split('/').collect::<Vec<_>>();
         if value.is_empty()
             || value.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES
@@ -37,8 +38,8 @@ impl TrustedCatalogRelativePathV1 {
 }
 
 /// 🏠️ Opened server-owned data root used as the sole catalog startup authority.
-pub(super) struct TrustedCatalogDataRoot {
-    directory: File,
+pub struct TrustedCatalogDataRoot {
+    pub directory: File,
 }
 
 impl TrustedCatalogDataRoot {
@@ -47,14 +48,14 @@ impl TrustedCatalogDataRoot {
     /// `TMPDIR` lives under `/var`, a link to `/private/var`, so an unresolved walk rejects every default
     /// temporary data root with `ENOTDIR` before the hub can bind. The configured root and everything below
     /// it stay link-refusing, which is what `trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors` holds.
-    pub(super) fn open_server_owned(path: &Path) -> Result<Self, AuthorityError> {
+    pub fn open_server_owned(path: &Path) -> Result<Self, AuthorityError> {
         let parent = path.parent().ok_or_else(|| catalog("server-owned data root has no resolvable parent"))?;
         let leaf = path.file_name().ok_or_else(|| catalog("server-owned data root is not a named directory"))?;
         let resolved = std::fs::canonicalize(parent).map_err(catalog_error)?.join(leaf);
         Ok(Self { directory: platform::open_server_owned(&resolved).map_err(catalog_error)? })
     }
 
-    pub(super) fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {
+    pub fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {
         let path = TrustedCatalogRelativePathV1::parse("trusted-catalog/current.json")?;
         match platform::open_regular_at(&self.directory, path.os_segments()) {
             Ok(file) => TrustedCatalogOpenedFile::new(file).map(Some),
@@ -63,18 +64,18 @@ impl TrustedCatalogDataRoot {
         }
     }
 
-    pub(super) fn open_generation(&self, generation_id: &str) -> Result<TrustedCatalogGenerationRoot, AuthorityError> {
+    pub fn open_generation(&self, generation_id: &str) -> Result<TrustedCatalogGenerationRoot, AuthorityError> {
         let path = TrustedCatalogRelativePathV1::parse(&format!("trusted-catalog/generations/{generation_id}"))?;
         Ok(TrustedCatalogGenerationRoot { directory: platform::open_directory_at(&self.directory, path.os_segments()).map_err(catalog_error)? })
     }
 
-    pub(super) async fn acquire_publication(&self, context: &OperationContext<'_>) -> Result<TrustedCatalogPublicationOwner, AuthorityError> {
+    pub async fn acquire_publication(&self, context: &OperationContext<'_>) -> Result<TrustedCatalogPublicationOwner, AuthorityError> {
         context.checkpoint()?;
         let directory = platform::open_directory_at(&self.directory, std::iter::once(OsStr::new("trusted-catalog"))).map_err(catalog_error)?;
         loop {
             context.checkpoint()?;
             let attempt_root = directory.try_clone().map_err(catalog_error)?;
-            let acquired = tokio::task::spawn_blocking(move || super::super::file_fence::try_acquire(platform::open_lock(&attempt_root)?)).await.map_err(catalog_error)?.map_err(catalog_error)?;
+            let acquired = tokio::task::spawn_blocking(move || semio_hub_artifact_authority::try_acquire(platform::open_lock(&attempt_root)?)).await.map_err(catalog_error)?.map_err(catalog_error)?;
             if let Some(fence) = acquired {
                 context.checkpoint()?;
                 return Ok(TrustedCatalogPublicationOwner { directory, _fence: fence });
@@ -87,12 +88,12 @@ impl TrustedCatalogDataRoot {
 /// 📤️ One exclusive publication window bound to the already-opened catalog directory.
 pub(super) struct TrustedCatalogPublicationOwner {
     directory: File,
-    _fence: super::super::file_fence::FileFence,
+    _fence: semio_hub_artifact_authority::FileFence,
 }
 
 /// 💾️ Separates visible replacement from confirmed directory synchronization.
 #[derive(Debug, PartialEq, Eq)]
-pub(super) enum TrustedPublicationSync {
+pub enum TrustedPublicationSync {
     Durable,
     Unconfirmed,
 }
@@ -134,21 +135,21 @@ impl TrustedCatalogPublicationOwner {
 }
 
 /// 🗂️ Retained immutable generation directory descriptor.
-pub(super) struct TrustedCatalogGenerationRoot {
+pub struct TrustedCatalogGenerationRoot {
     directory: File,
 }
 
 impl TrustedCatalogGenerationRoot {
     #[cfg(any(test, feature = "integration-fixtures"))]
-    pub(super) fn open_fixture_owned(path: &Path) -> Result<Self, AuthorityError> {
+    pub fn open_fixture_owned(path: &Path) -> Result<Self, AuthorityError> {
         Ok(Self { directory: platform::open_server_owned(path).map_err(catalog_error)? })
     }
 
-    pub(super) fn open_regular(&self, path: &TrustedCatalogRelativePathV1) -> Result<TrustedCatalogOpenedFile, AuthorityError> {
+    pub fn open_regular(&self, path: &TrustedCatalogRelativePathV1) -> Result<TrustedCatalogOpenedFile, AuthorityError> {
         TrustedCatalogOpenedFile::new(platform::open_regular_at(&self.directory, path.os_segments()).map_err(catalog_error)?)
     }
 
-    pub(super) async fn read_regular(&self, path: &TrustedCatalogRelativePathV1, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
+    pub async fn read_regular(&self, path: &TrustedCatalogRelativePathV1, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
         self.open_regular(path)?.read_bounded(maximum, context).await
     }
 }
@@ -203,14 +204,14 @@ impl TrustedCatalogOpenedFile {
     }
 }
 
-#[cfg(all(test, unix))]
+#[cfg(all(any(test, feature = "testkit"), unix))]
 /// 🧪️ Creates a native FIFO used to prove final-leaf admission cannot block before type rejection.
-pub(super) fn create_fifo_fixture(path: &Path) -> Result<(), AuthorityError> {
+pub fn create_fifo_fixture(path: &Path) -> Result<(), AuthorityError> {
     platform::create_fifo(path).map_err(catalog_error)
 }
 
 #[cfg(unix)]
-mod platform {
+pub mod platform {
     use super::*;
     use std::ffi::CString;
     use std::os::fd::{AsRawFd, FromRawFd};
@@ -247,16 +248,16 @@ mod platform {
         fn openat(directory: i32, path: *const std::ffi::c_char, flags: i32, ...) -> i32;
         fn renameat(source: i32, source_path: *const std::ffi::c_char, destination: i32, destination_path: *const std::ffi::c_char) -> i32;
         fn unlinkat(directory: i32, path: *const std::ffi::c_char, flags: i32) -> i32;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         fn mkfifo(path: *const std::ffi::c_char, mode: ModeT) -> i32;
     }
 
-    #[cfg(all(test, any(target_os = "macos", target_os = "ios")))]
+    #[cfg(all(any(test, feature = "testkit"), any(target_os = "macos", target_os = "ios")))]
     type ModeT = u16;
-    #[cfg(all(test, any(target_os = "linux", target_os = "android")))]
+    #[cfg(all(any(test, feature = "testkit"), any(target_os = "linux", target_os = "android")))]
     type ModeT = u32;
 
-    pub(super) fn open_server_owned(path: &Path) -> std::io::Result<File> {
+    pub fn open_server_owned(path: &Path) -> std::io::Result<File> {
         let mut components = path.components();
         let mut current = if path.is_absolute() { File::open("/")? } else { File::open(".")? };
         for component in &mut components {
@@ -306,7 +307,7 @@ mod platform {
         Ok(metadata.len())
     }
 
-    pub(super) fn open_lock(parent: &File) -> std::io::Result<File> {
+    pub fn open_lock(parent: &File) -> std::io::Result<File> {
         let file = open_writable(parent, OsStr::new(".publication.lock"), false)?;
         if fstat_regular_length(&file)? != 0 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "publication lock is not empty"));
@@ -367,7 +368,7 @@ mod platform {
         }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub(super) fn create_fifo(path: &Path) -> std::io::Result<()> {
         let path = CString::new(path.as_os_str().as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "FIFO path contains NUL"))?;
         if unsafe { mkfifo(path.as_ptr(), 0o600) } != 0 {
@@ -633,6 +634,3 @@ mod platform {
 #[cfg(not(any(unix, windows)))]
 compile_error!("trusted catalog opened-root owner requires Unix or Windows descriptor support");
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️publication/🦀️.rs"]
-mod publication_tests;

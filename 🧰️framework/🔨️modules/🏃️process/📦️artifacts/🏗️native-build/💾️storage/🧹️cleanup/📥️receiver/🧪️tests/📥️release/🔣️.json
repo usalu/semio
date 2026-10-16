@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "location": "probe",
+      "primary": "undefined",
+      "expected": "primary"
+    },
+    {
+      "location": "probe",
+      "primary": "frozen",
+      "expected": "primary"
+    },
+    {
+      "location": "cleanup",
+      "primary": "undefined",
+      "expected": "primary"
+    },
+    {
+      "location": "cleanup",
+      "primary": "frozen",
+      "expected": "primary"
+    }
+  ]
+}

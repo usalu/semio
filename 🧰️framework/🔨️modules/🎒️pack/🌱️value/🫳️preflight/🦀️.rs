@@ -1,7 +1,19 @@
 //! 🫳️ Exact canonical Pack demand from immutable typed fields and static schema views.
-use super::*;
-use semio_framework_dsl_record::{BorrowedRecordSpec as R,BorrowedShape as H,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind as K};
+
+use semio_framework_dsl_record::{BorrowedRecordSpec as R, BorrowedShape as H};
+use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind as K, Number};
+use semio_framework_replication_codec::PackEncodeOptions as EncodeOptions;
+use semio_framework_pack_record_schema::{ELEM_BOOL, ELEM_ENUM, ELEM_F64, ELEM_FALLBACK, ELEM_INT, ELEM_STR, ELEM_UINT, TAG_ABSENT, TAG_BLOCK, TAG_BYTES, TAG_ENUM, TAG_F64, TAG_FALSE, TAG_INT, TAG_LIST, TAG_MAP, TAG_NULL, TAG_PACKED_F64, TAG_PACKED_VARINT, TAG_RECORD, TAG_STATEMENTS, TAG_STR, TAG_STR_INLINE, TAG_TABLE_SOA, TAG_TRUE, TAG_TUPLE, TAG_UINT, TAG_VALUE, controlled_schema};
+
+#[cfg(test)]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
+#[cfg(test)]
+use semio_framework_dsl_record::RecordLayout;
 #[path="🏭️schema/🦀️.rs"]
 mod schema;
 fn error(kind:K,message:&str)->ValueError{ValueError::new(kind,message)}
@@ -75,7 +87,7 @@ fn collect_intrinsic<'a,T:FieldProjectionSource>(source:&'a T,path:&mut[usize;13
  }
 }
 fn collect_record<'a,T:FieldProjectionSource>(source:&'a T,spec:R,symbols:&mut Symbols<'a>,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{collect_bare(source,spec,&mut[0;130],0,0,symbols,maximum,control)}
-struct Segment<'a>{cursor:&'a mut crate::codec::DeflateMeasure,codec:u8,raw:usize}
+struct Segment<'a>{cursor:&'a mut semio_framework_replication_codec::DeflateMeasure,codec:u8,raw:usize}
 impl Segment<'_>{
  fn finish(&mut self,control:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{let stored=if self.codec==0{self.raw}else{self.cursor.finish(&mut||control.step())?};segment_size(self.raw,stored,self.codec)}
 }
@@ -120,16 +132,16 @@ fn emit_intrinsic<T:FieldProjectionSource>(source:&T,path:&mut[usize;130],depth:
   _=>Err(error(K::InvalidValue,"borrowed intrinsic byte visitor disagrees with Value owner"))
  }
 }
-pub(super) fn borrowed_schema_hash(spec:R,control:&mut NativeEncodeControl<'_>)->Result<[u8;32],ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;schema::hash(spec,control)})}
+pub fn borrowed_schema_hash(spec:R,control:&mut NativeEncodeControl<'_>)->Result<[u8;32],ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;schema::hash(spec,control)})}
 
 /// 📏️ Measures the complete canonical producer without constructing its output or source metadata.
 pub fn measure_document_borrowed<T:FieldProjectionSource>(source:&T,spec:&R,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{
  if options.codec.0>1{return Err(error(K::UnsupportedOwner,"borrowed Pack codec is not authored"))}
  control.scoped_stage(|control|{control.begin_stage(0)?;control.checkpoint()?;let mut symbols=Symbols::new();collect_record(source,*spec,&mut symbols,options.limits.max_depth,control)?;symbols.finish(options.limits.max_symbols as u64,control)?;
- let hash=schema::hash(*spec,control)?;let mut cursor=crate::codec::DeflateMeasure::new();let mut symbol_segment=Segment{cursor:&mut cursor,codec:options.codec.0,raw:0};symbol_segment.varint(symbols.length as u64,control)?;for symbol in symbols.entries(){symbol_segment.varint(symbol.text.len()as u64,control)?;symbol_segment.bytes(symbol.text.as_bytes(),control)?;}let symbol_size=symbol_segment.finish(control)?;cursor.reset();
- let doc_start=crate::format::HEADER_SIZE.checked_add(symbol_size).ok_or_else(||error(K::WorkLimit,"borrowed Pack document offset overflow"))?;
+ let hash=schema::hash(*spec,control)?;let mut cursor=semio_framework_replication_codec::DeflateMeasure::new();let mut symbol_segment=Segment{cursor:&mut cursor,codec:options.codec.0,raw:0};symbol_segment.varint(symbols.length as u64,control)?;for symbol in symbols.entries(){symbol_segment.varint(symbol.text.len()as u64,control)?;symbol_segment.bytes(symbol.text.as_bytes(),control)?;}let symbol_size=symbol_segment.finish(control)?;cursor.reset();
+ let doc_start=semio_framework_pack_format::HEADER_SIZE.checked_add(symbol_size).ok_or_else(||error(K::WorkLimit,"borrowed Pack document offset overflow"))?;
  let frame=usize::try_from(options.frame_size.max(1)).map_err(|_|error(K::WorkLimit,"borrowed Pack frame exceeds address space"))?;let mut document=Document{segment:Segment{cursor:&mut cursor,codec:options.codec.0,raw:0},frame,total:0,raw:0,frames:0};let field_count=emit_record(source,*spec,&mut[0;130],0,0,&symbols,options,&mut document,control)?;document.flush(control)?;let(doc_span,raw,frames)=(document.total,document.raw,document.frames);cursor.reset();
- let mut manifest=Segment{cursor:&mut cursor,codec:options.codec.0,raw:0};manifest.varint(0,control)?;manifest.bytes(&hash,control)?;for value in [doc_start,doc_span,frames,crate::format::HEADER_SIZE,symbol_size,0,0,0,0,raw,field_count,0,symbols.length]{manifest.varint(value as u64,control)?;}let manifest_size=manifest.finish(control)?;
- let total=doc_start.checked_add(doc_span).and_then(|n|n.checked_add(manifest_size)).and_then(|n|n.checked_add(7+crate::format::FOOTER_SIZE)).ok_or_else(||error(K::WorkLimit,"borrowed Pack file size overflow"))?;if total as u64>options.limits.max_file_len{return Err(error(K::WorkLimit,"borrowed Pack file exceeds declared exact allowance"))}control.checkpoint()?;Ok(total)
+ let mut manifest=Segment{cursor:&mut cursor,codec:options.codec.0,raw:0};manifest.varint(0,control)?;manifest.bytes(&hash,control)?;for value in [doc_start,doc_span,frames,semio_framework_pack_format::HEADER_SIZE,symbol_size,0,0,0,0,raw,field_count,0,symbols.length]{manifest.varint(value as u64,control)?;}let manifest_size=manifest.finish(control)?;
+ let total=doc_start.checked_add(doc_span).and_then(|n|n.checked_add(manifest_size)).and_then(|n|n.checked_add(7+semio_framework_pack_format::FOOTER_SIZE)).ok_or_else(||error(K::WorkLimit,"borrowed Pack file size overflow"))?;if total as u64>options.limits.max_file_len{return Err(error(K::WorkLimit,"borrowed Pack file exceeds declared exact allowance"))}control.checkpoint()?;Ok(total)
  })
 }

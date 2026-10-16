@@ -1,5 +1,11 @@
 //! 🧫️ Full current byte-owner SQL laws and independent image meaning.
-use crate::standards::v_v3::subsets::any::io::sqlite::snapshot::tests::*;
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use crate::standards::v_v3::subsets::any::io::sqlite::snapshot::*;
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteValue};
+fn fixture() -> BmpSnapshot {
+    semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+}
 fn sources() -> [(&'static str, &'static [u8]); 9] {
  [
   ("direct-rgb24-padding-gap-trailer",include_bytes!("../../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")),

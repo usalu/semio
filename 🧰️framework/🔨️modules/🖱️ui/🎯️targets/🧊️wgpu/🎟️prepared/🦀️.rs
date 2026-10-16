@@ -1655,8 +1655,8 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 };
-                let next = if value.viewport_mask == semio_framework_ui_scene::math::SceneViewportMask3d::Ellipse { DrawMeasureCursor::PassBackdropSnapshot { pass } } else { Self::next_after_scene_prelude(draw, pass) };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
+                let next = if value.viewport_mask == semio_framework_ui_scene_pass::SceneViewportMask3d::Ellipse { DrawMeasureCursor::PassBackdropSnapshot { pass } } else { Self::next_after_scene_prelude(draw, pass) };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassBackdropSnapshot { pass } => (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, Self::next_after_scene_prelude(draw, pass)),
             DrawMeasureCursor::PassSceneClear { pass } => {
@@ -1675,14 +1675,14 @@ impl PreparedRenderJob {
                 let draw_value = &draw.scene_passes[pass].shadow_draws[draw_index];
                 let instance_value = &draw_value.instances[instance];
                 let next = Self::next_shadow_instance(draw, pass, draw_index, instance);
-                let draw_bytes = size_of::<semio_framework_ui_scene::math::Instance3d>() + instance_value.id.len() + if instance == 0 { size_of::<semio_framework_ui_scene::math::SceneDraw3d>() + draw_value.mesh_key.len() } else { 0 };
+                let draw_bytes = size_of::<semio_framework_ui_scene_mesh::Instance3d>() + instance_value.id.len() + if instance == 0 { size_of::<semio_framework_ui_scene_pass::SceneDraw3d>() + draw_value.mesh_key.len() } else { 0 };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassDraw { pass, draw: draw_index, translucent } => {
                 let pass_value = &draw.scene_passes[pass];
                 let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
                 let value = &draws[draw_index];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::SceneDraw3d>(), ..PreparedRenderUsage::default() };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::SceneDraw3d>(), ..PreparedRenderUsage::default() };
                 let next = if !value.mesh_key.is_empty() {
                     DrawMeasureCursor::PassDrawKey { pass, draw: draw_index, byte: 0, translucent }
                 } else if value.instances.is_empty() {
@@ -1709,7 +1709,7 @@ impl PreparedRenderJob {
                 let pass_value = &draw.scene_passes[pass];
                 let draws = if translucent { &pass_value.translucent_draws } else { &pass_value.draws };
                 let value = &draws[draw_index].instances[instance];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::Instance3d>(), ..PreparedRenderUsage::default() };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_mesh::Instance3d>(), ..PreparedRenderUsage::default() };
                 let next = if value.id.is_empty() { Self::next_pass_instance(draw, pass, draw_index, instance, translucent) } else { DrawMeasureCursor::PassInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent } };
                 (usage, next)
             }
@@ -1723,20 +1723,20 @@ impl PreparedRenderJob {
             DrawMeasureCursor::PassLine { pass, draw: draw_index } => {
                 let pass_value = &draw.scene_passes[pass];
                 let next = if pass_value.line_draws[draw_index].vertices.is_empty() { Self::next_pass_line(draw, pass, draw_index) } else { DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex: 0 } };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::LineDraw3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::LineDraw3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } => {
                 let next = if vertex + 1 < draw.scene_passes[pass].line_draws[draw_index].vertices.len() { DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex: vertex + 1 } } else { Self::next_pass_line(draw, pass, draw_index) };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::LineVertex3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::LineVertex3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassTextured { pass, draw: draw_index } => {
                 let value = &draw.scene_passes[pass].textured_draws[draw_index];
                 let next = if value.instances.is_empty() { Self::next_textured_draw(draw, pass, draw_index) } else { DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: 0 } };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::TexturedDraw3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::TexturedDraw3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance } => {
                 let value = &draw.scene_passes[pass].textured_draws[draw_index].instances[instance];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::TexturedInstance3d>(), ..PreparedRenderUsage::default() };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::TexturedInstance3d>(), ..PreparedRenderUsage::default() };
                 let next = if value.texture_key.is_empty() { Self::next_textured_instance(draw, pass, draw_index, instance) } else { DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte: 0 } };
                 (usage, next)
             }
@@ -1747,12 +1747,12 @@ impl PreparedRenderJob {
             }
             DrawMeasureCursor::PassGrid { pass } => {
                 let next = Self::next_after_grid(draw, pass);
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::ProceduralGrid3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::ProceduralGrid3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterial { pass, draw: draw_index, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index];
                 let next = if !value.mesh_key.is_empty() { DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: 0, translucent } } else { Self::next_material_after_keys(draw, pass, draw_index, translucent) };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::SceneMaterialDraw3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::SceneMaterialDraw3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index];
@@ -1773,7 +1773,7 @@ impl PreparedRenderJob {
             DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index].instances[instance];
                 let next = if value.id.is_empty() { Self::next_material_instance(draw, pass, draw_index, instance, translucent) } else { DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent } };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::Instance3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_mesh::Instance3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte, translucent } => {
                 let key = &draw.scene_passes[pass].material_draws[draw_index].instances[instance].id;
@@ -1782,7 +1782,7 @@ impl PreparedRenderJob {
             }
             DrawMeasureCursor::PassPostprocess { pass } => {
                 let next = Self::next_after_scene_pass_content(draw, pass);
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene::math::SceneCurvilinear3d>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<semio_framework_ui_scene_pass::SceneCurvilinear3d>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::Glass(index) => {
                 let region = draw.glass_regions.get(index)?;
@@ -1849,7 +1849,7 @@ impl PreparedRenderJob {
     }
 
     fn next_after_scene_pass(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if draw.scene_passes.get(pass).is_some_and(|value| value.curvilinear.is_some() || value.viewport_mask == semio_framework_ui_scene::math::SceneViewportMask3d::Ellipse) {
+        if draw.scene_passes.get(pass).is_some_and(|value| value.curvilinear.is_some() || value.viewport_mask == semio_framework_ui_scene_pass::SceneViewportMask3d::Ellipse) {
             return DrawMeasureCursor::PassPostprocess { pass };
         }
         Self::next_after_scene_pass_content(draw, pass)

@@ -1,3 +1,4 @@
+import{readPhysicalCargoSourceV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {createHash} from "node:crypto";
 import {lstatSync,readFileSync,readdirSync} from "node:fs";
 import {join,resolve,relative,dirname} from "node:path";
@@ -11,8 +12,8 @@ function ownedFile(root:string,path:string):string {
  const ancestors=[];for(let directory=dirname(file);;directory=dirname(directory)){ancestors.push(directory);if(directory===root)break;if(directory===dirname(directory))throw Error("Rust unit file has no physical owner");}for(const directory of ancestors.reverse()){const facts=lstatSync(directory);if(facts.isSymbolicLink()||!facts.isDirectory())throw Error("Rust unit source ancestry refused");}const facts=lstatSync(file);if(facts.isSymbolicLink()||!facts.isFile())throw Error("Rust unit physical file refused");return file;
 }
 /** 🔎️ Checks current physical input bytes before a compiler unit can acquire output custody. */
-export function verifyRustUnitInputsV1(root:string,plan:RustUnitPlanV1,control:ResourceLeaseControl):void {
- for(const input of plan.unit.inputs){checkResourceLeaseControl(control);const bytes=readFileSync(ownedFile(resolve(root),input.path));if(bytes.length!==input.bytes||createHash("sha256").update(bytes).digest("hex")!==input.digest)throw Error("Rust unit original source changed: "+input.path);}checkResourceLeaseControl(control);
+export async function verifyRustUnitInputsV1(root:string,plan:RustUnitPlanV1,control:ResourceLeaseControl):Promise<void> {
+ root=resolve(root);const inputs=plan.unit.inputs.map(input=>Object.freeze({path:input.path,bytes:input.bytes,digest:input.digest}));for(const input of inputs){checkResourceLeaseControl(control);const bytes=await readPhysicalCargoSourceV1(resolve(root,input.path),{version:1,root,maximumBytes:input.bytes,expectedBytes:input.bytes,remainingFiles:1},control);if(bytes===null||createHash("sha256").update(bytes).digest("hex")!==input.digest)throw Error("Rust unit original source changed: "+input.path);}checkResourceLeaseControl(control);
 }
 /** 🧾️ Captures only exact immutable output files, excluding mutable compiler trees and undeclared artifacts. */
 export function captureRustUnitReceiptV1(directory:string,plan:RustUnitPlanV1,control:ResourceLeaseControl,storedReceipt?:RustUnitReceiptV1):RustUnitReceiptV1 {

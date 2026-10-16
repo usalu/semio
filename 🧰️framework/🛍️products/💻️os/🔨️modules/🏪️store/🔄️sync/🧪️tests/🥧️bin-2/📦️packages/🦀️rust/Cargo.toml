@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-store-sync-tests-2"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion test bin 2 of the Store sync: actor, backbone parity and link laws"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-sync-tests-2"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-test-support = { path = "../../../../../🧰️test-support/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-fixtures = { path = "../../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os-store-sync = { path = "../../../../📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-store-sync-native = { path = "../../../../🖥️native/📦️packages/🦀️rust" }
+
+[dev-dependencies]

@@ -1,9 +1,8 @@
 //! 💬️ 💬️ S Studio app command — `workflow-engagement-input`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, WorkflowEngagementInputSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, WorkflowEngagementInputSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "workflow-engagement-input")]

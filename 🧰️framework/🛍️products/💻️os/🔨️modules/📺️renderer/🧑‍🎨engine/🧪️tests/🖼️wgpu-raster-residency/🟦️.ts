@@ -174,9 +174,9 @@ describe("wgpu prepared raster residency", () => {
 
   it("wires complete packet ownership before every raster allocation", () => {
     const drawTypes = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs"), "utf8");
-    const draw = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs"), "utf8");
+    const draw = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs"), "utf8");
     const prepared = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs"), "utf8");
-    const gpu = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs"), "utf8");
+    const gpu = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs"), "utf8");
     const renderer = readModuleTreeSource(resolve(engineRoot, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
     const canvas = readModuleTreeSource(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     for (const source of ["pass.textured_draws", "layer.raster_instances", "layer.overlay_raster_instances"]) expect(drawTypes).toContain(source);
@@ -193,9 +193,12 @@ describe("wgpu prepared raster residency", () => {
     expect(prepared).toContain("pages.content_identity.mix_bytes(start, &self.source[start..end])");
     expect(draw).toContain("raster_content_is_reusable(&self.live, &self.staged");
     expect(draw.indexOf("if raster_content_is_reusable")).toBeLessThan(draw.indexOf("let admitted = raster_admission_fits"));
-    expect(canvas.indexOf("gpu.prepare_raster_admission_step")).toBeLessThan(canvas.indexOf("gpu.reserve_engine_texture"));
+    expect(canvas.indexOf("gpu.prepare_raster_admission_step")).toBeLessThan(canvas.indexOf("gpu.begin_engine_raster"));
     expect(canvas).toContain("gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)");
-    expect(canvas.match(/create_target_texture\(gpu\.device\(\), build\.width, build\.height\)/g)).toHaveLength(1);
+    expect(canvas.match(/gpu\.begin_engine_raster\(/g)).toHaveLength(1);
+    expect(canvas).toContain("gpu.engine_raster_step(owner,&packet.scene,packet.clear,expected)");
+    expect(canvas).not.toContain("gpu.device()");
+    expect(canvas).not.toContain("gpu.queue()");
     expect(canvas).not.toContain("replacement_texture");
     expect(capacityFixture.scenarios[5]?.expected).toMatchObject({ presenterTargets: 0, tableTargets: 1 });
   });

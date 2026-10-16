@@ -1,5 +1,6 @@
 //! 🛂️ Native semantic authority validates original fields through retained immutable projections.
-use crate::{Edit,HybridLogicalTimestamp};
+use crate::Edit;
+use semio_framework_replication_ids::HybridLogicalTimestamp;
 use semio_framework_pack_json::ArtifactCanonicalJsonText;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,paged::Utf8Text,retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;

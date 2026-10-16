@@ -62,7 +62,7 @@ fn sequence_owners(at_press: PointerHitOwner, under_pointer: PointerHitOwner) ->
 fn every_chrome_press_of_the_journey_owns_its_whole_pointer_sequence() {
     for (step, kind, control_id) in CHROME_PRESS_STEPS {
         let target = hit(*kind, control_id);
-        assert_eq!(ShellState::pointer_hit_owner(Some(&target)), PointerHitOwner::Chrome, "🎯️ {step}: {control_id} is chrome, not the pane painted under it");
+        assert_eq!(pointer_hit_owner(Some(&target)), PointerHitOwner::Chrome, "🎯️ {step}: {control_id} is chrome, not the pane painted under it");
         let owners = sequence_owners(PointerHitOwner::Chrome, PointerHitOwner::Surface);
         assert_eq!(owners.len(), 11, "🎯️ the probe's gesture is a move, a press, eight moves and a release");
         assert!(owners.iter().all(|owner| *owner == PointerHitOwner::Chrome), "🎯️ {step}: every phase belongs to the chrome the press landed on: {owners:?}");
@@ -120,10 +120,10 @@ fn fixed_pointer_captures_keep_independent_positions_and_release_only_their_owne
 /// ownership model, not a claim on everything.
 #[test]
 fn the_surface_body_and_the_empty_canvas_are_never_chrome() {
-    assert_eq!(ShellState::pointer_hit_owner(Some(&hit(HitKind::World3d, "puzzle3d-main-perspective"))), PointerHitOwner::Surface);
-    assert_eq!(ShellState::pointer_hit_owner(Some(&hit(HitKind::Generic, "puzzle3d-main-perspective.node.7"))), PointerHitOwner::Surface, "🌍️ a scene's own per-element target is the scene's");
-    assert_eq!(ShellState::pointer_hit_owner(None), PointerHitOwner::Surface);
-    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "🌍️ the bool this replaces answers the same");
+    assert_eq!(pointer_hit_owner(Some(&hit(HitKind::World3d, "puzzle3d-main-perspective"))), PointerHitOwner::Surface);
+    assert_eq!(pointer_hit_owner(Some(&hit(HitKind::Generic, "puzzle3d-main-perspective.node.7"))), PointerHitOwner::Surface, "🌍️ a scene's own per-element target is the scene's");
+    assert_eq!(pointer_hit_owner(None), PointerHitOwner::Surface);
+    assert!(!pointer_press_belongs_to_shell_chrome(None), "🌍️ the bool this replaces answers the same");
 }
 
 //#endregion 🎯️SequenceOwnership
@@ -138,28 +138,28 @@ fn an_open_overlay_owns_every_pointer_until_it_closes() {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert!(!shell.pointer_input_is_modal(), "🚧️ a shell with no overlay open is not modal");
-    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "an empty registry publishes no scene owner");
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert!(!shell.input.pointer_input_is_modal(), "🚧️ a shell with no overlay open is not modal");
+    assert_eq!(shell.input.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "an empty registry publishes no scene owner");
 
-    shell.context_menu = Some(ContextMenuState::default());
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert!(shell.pointer_input_is_modal(), "🚧️ an open context menu is modal");
-    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "🚧️ even where the menu paints nothing");
-    assert!(!shell.wheel_reaches_scene_surface(400.0, 400.0, &input, &theme), "🚧️ and a wheel notch over it never zooms the world");
-    shell.context_menu = None;
+    shell.input.context_menu = Some(ContextMenuState::default());
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert!(shell.input.pointer_input_is_modal(), "🚧️ an open context menu is modal");
+    assert_eq!(shell.input.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "🚧️ even where the menu paints nothing");
+    assert!(!shell.input.wheel_reaches_scene_surface(400.0, 400.0, &input, &theme), "🚧️ and a wheel notch over it never zooms the world");
+    shell.input.context_menu = None;
 
-    shell.open_selects.insert("playground.navbar.fixture".into(), true);
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert!(shell.pointer_input_is_modal(), "🚧️ an open dropdown is modal — `example-switch` presses its option list");
-    shell.open_selects.clear();
+    shell.input.open_selects.insert("playground.navbar.fixture".into(), true);
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert!(shell.input.pointer_input_is_modal(), "🚧️ an open dropdown is modal — `example-switch` presses its option list");
+    shell.input.open_selects.clear();
 
-    shell.chrome_build.start_introduction();
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert!(shell.pointer_input_is_modal(), "🚧️ the tour owns every pointer it covers while it plays");
-    shell.chrome_build.skip_introduction();
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert!(!shell.pointer_input_is_modal());
+    shell.chrome.chrome_build.start_introduction();
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert!(shell.input.pointer_input_is_modal(), "🚧️ the tour owns every pointer it covers while it plays");
+    shell.chrome.chrome_build.skip_introduction();
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert!(!shell.input.pointer_input_is_modal());
 }
 
 /// 📑️ **The panel-box law.** An open anchored panel is an opaque LAYER, not a set of controls: its
@@ -171,25 +171,25 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.screen_w = 1594.0;
-    shell.screen_h = 936.0;
-    let body = shell.body_rect(&theme);
+    shell.chrome.screen_w = 1594.0;
+    shell.chrome.screen_h = 936.0;
+    let body = SessionCtx::of(&mut shell).body_rect(&theme);
     let centre = [body.x + body.w / 2.0, body.y + body.h / 2.0];
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    assert_eq!(shell.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Chrome, "folded anchors do not mint an unregistered scene");
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    assert_eq!(shell.input.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Chrome, "folded anchors do not mint an unregistered scene");
 
-    *shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft) = vec![DockTabNode::leaf("framework.panel.artifact", "Artifact", "circle-dot", 0)];
-    shell.anchor_state_mut(PanelAnchor::TopLeft).visible = true;
-    assert!(shell.anchor_open(PanelAnchor::TopLeft), "📑️ the anchor paints a panel now");
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    let panel = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    *shell.dock.dock_tabs.tabs_mut(PanelAnchor::TopLeft) = vec![DockTabNode::leaf("framework.panel.artifact", "Artifact", "circle-dot", 0)];
+    shell.dock.anchor_state_mut(PanelAnchor::TopLeft).visible = true;
+    assert!(shell.dock.anchor_open(PanelAnchor::TopLeft), "📑️ the anchor paints a panel now");
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    let panel = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
     let inside = [panel.x + panel.w / 2.0, panel.y + panel.h / 2.0];
-    assert!(shell.pointer_is_over_open_panel(inside[0], inside[1], &theme));
-    assert_eq!(shell.pointer_owner_at(inside[0], inside[1], &input, &theme), PointerHitOwner::Chrome, "📑️ a point inside the panel's box is the panel's, hit row or no hit row");
-    assert!(!shell.wheel_reaches_scene_surface(inside[0], inside[1], &input, &theme), "📑️ and the wheel scrolls the panel, never the world under it");
+    assert!(shell.input.pointer_is_over_open_panel(inside[0], inside[1], &theme));
+    assert_eq!(shell.input.pointer_owner_at(inside[0], inside[1], &input, &theme), PointerHitOwner::Chrome, "📑️ a point inside the panel's box is the panel's, hit row or no hit row");
+    assert!(!shell.input.wheel_reaches_scene_surface(inside[0], inside[1], &input, &theme), "📑️ and the wheel scrolls the panel, never the world under it");
     let outside = [body.x + body.w - 4.0, body.y + body.h - 4.0];
-    assert!(!shell.pointer_is_over_open_panel(outside[0], outside[1], &theme), "📑️ the pane beside the panel still owns its own points");
-    assert_eq!(shell.pointer_owner_at(outside[0], outside[1], &input, &theme), PointerHitOwner::Chrome, "outside a panel still requires published scene provenance");
+    assert!(!shell.input.pointer_is_over_open_panel(outside[0], outside[1], &theme), "📑️ the pane beside the panel still owns its own points");
+    assert_eq!(shell.input.pointer_owner_at(outside[0], outside[1], &input, &theme), PointerHitOwner::Chrome, "outside a panel still requires published scene provenance");
 }
 
 //#endregion 🚧️OverlayLayers

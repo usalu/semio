@@ -1,0 +1,89 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-infinite-world-host"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "World3d host: the composed `World3dState`, frame sync and render orchestration"
+
+[package.metadata.semio]
+role = "product"
+id = "os-infinite-world-host"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-os-infinite-world-model/testkit", "semio-framework-os-infinite-world-components/testkit", "semio-framework-os-infinite-world-cursors/testkit", "semio-framework-os-infinite-world-scene/testkit", "semio-framework-os-infinite-world-bridge/testkit", "semio-framework-os-infinite-world-interaction/testkit"]
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-ui-viewport = { path = "../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-components = { path = "../../../🧩️components/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-cursors = { path = "../../../🧲️cursors/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-interaction = { path = "../../../🧵️interaction/📦️packages/🦀️rust" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
+ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+
+[dev-dependencies]
+semio-framework-os-infinite-world-host = { path = ".", features = ["testkit"] }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+base64_codec = { path = "../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-hash = { workspace = true }
+
+[[test]]
+name = "world_host_bridge_empty_build"
+path = "../../🧪️tests/🌉️bridge-empty-build/🦀️.rs"
+
+[[test]]
+name = "world_host_surface_verbs"
+path = "../../🧪️tests/📇️surface-verbs/🦀️.rs"
+
+[[test]]
+name = "world_host_journal_sequences"
+path = "../../🧪️tests/📜️journal-sequences/🦀️.rs"
+
+[[test]]
+name = "world_host_unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "world_host_unit_2"
+path = "../../🧪️tests/🔭️unit-2/🦀️.rs"
+
+[[test]]
+name = "world_host_unit_3"
+path = "../../🧪️tests/🧪️unit-3/🦀️.rs"
+
+[[test]]
+name = "world_host_pointer_gestures"
+path = "../../🧪️tests/🖱️pointer-gestures/🦀️.rs"
+
+[[test]]
+name = "world_host_scene_input_residency"
+path = "../../🧪️tests/🧲️scene-input-residency/🦀️.rs"

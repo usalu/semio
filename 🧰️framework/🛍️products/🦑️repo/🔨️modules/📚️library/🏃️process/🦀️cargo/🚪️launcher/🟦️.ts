@@ -1,3 +1,5 @@
+import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
+import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1}from"../⏱️timing/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -86,6 +88,7 @@ export function readRepositoryCargoCapturePolicyV1(value:unknown):RepositoryCarg
 export type RepositoryCargoGeneratedCapturePolicyV1=Readonly<{version:1;maximumBytes:number}>;
 /** 🔒️ Admits generated output custody before compiler/store admission. */
 export function readRepositoryCargoGeneratedCapturePolicyV1(value:unknown):RepositoryCargoGeneratedCapturePolicyV1{return Object.freeze({...admit<RepositoryCargoGeneratedCapturePolicyV1>("GeneratedCapturePolicy",value)});}
+let cargoTimingBytes=0,cargoTimingSequence=0;
 type StreamOptions=Readonly<{maximumMilliseconds:number;output:"stream"}>;
 type CaptureOptions<T>=Readonly<{maximumMilliseconds:number;output:"capture";limits:RepositoryCargoCapturePolicyV1;generated?:RepositoryCargoGeneratedCapturePolicyV1;consume(result:OwnedCommandCaptureV1,context:RepositoryCargoCaptureContextV1):Promise<T>}>;
 
@@ -99,50 +102,58 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,wor
  request=admit<RepositoryCargoLaunchV1>("Request",request);checkScriptInvocation(invocation);
  if(options.output==="capture"){readRepositoryCargoCapturePolicyV1(options.limits);if(typeof options.consume!=="function")throw Error("Actual retained Cargo result consumer required");}
  const generatedPolicy=options.output==="capture"&&options.generated?readRepositoryCargoGeneratedCapturePolicyV1(options.generated):undefined;if(generatedPolicy&&(request.kind!=="compile"||environment.SEMIO_TYPEGEN_OUT!==undefined))throw Error("Generated capture requires compiler execution without an external publication path");
- const args=request.cargo,label="cargo:"+args[0],admission=scriptCompilerAdmissionControlV1(invocation,label,options.maximumMilliseconds);let publishedAtMs=0;
- const control:ResourceLeaseControl={...admission,publish:async progress=>{const now=Date.now();if(now-publishedAtMs<policy.progressMilliseconds)return;publishedAtMs=now;await admission.publish(progress);}},network=repositoryCargoNetworkV1(invocation,workspace),configuration=join(workspace,".cargo/config.toml");
- return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async store=>{
-  const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{
+ const args=request.cargo,label="cargo:"+args[0],admission=scriptCompilerAdmissionControlV1(invocation,label,options.maximumMilliseconds);
+ const control=admission,network=repositoryCargoNetworkV1(invocation,workspace),configuration=join(workspace,".cargo/config.toml");
+ const timing=environment.SEMIO_CARGO_TIMING==="1",scope=timing?++cargoTimingSequence:0,started=timing?performance.now():0;let timingEvents=0,resourceEvents=0;
+ const clock=()=>{const now=Math.floor(performance.now());let remaining:number|null;try{const value=control.remainingMilliseconds();remaining=value===null?null:Math.max(0,Math.floor(value));}catch{remaining=0;}return{at:now,elapsed:Math.max(0,Math.floor(now-started)),remaining};};
+ const emit=(kind:string,event:object)=>{const line="[DEBUG] Original Cargo owned timing "+JSON.stringify({pid:process.pid,scope,command:label,kind,...event})+"\n",bytes=Buffer.byteLength(line);if(bytes>cargoTimingPolicyV1.maximumRecordBytes||bytes>cargoTimingPolicyV1.maximumLogBytes-cargoTimingBytes)return;cargoTimingBytes+=bytes;process.stderr.write(line);};
+ const mark=(phase:string,point:string)=>{if(!timing||timingEvents>=cargoTimingPolicyV1.maximumPhaseEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();timingEvents++;emit("phase",cargoTimingEventV1(phase,point,value.at,value.elapsed,value.remaining));};
+ const reportResource=(progress:Parameters<ResourceLeaseControl["publish"]>[0])=>{if(!timing||resourceEvents>=cargoTimingPolicyV1.maximumResourceEvents||cargoTimingBytes>=cargoTimingPolicyV1.maximumLogBytes)return;const value=clock();resourceEvents++;let event:object;try{event=cargoResourceWaitEventV1(progress.resource,progress.mode,Math.floor(progress.elapsedMs));}catch{event={version:1,status:"unavailable",reason:"unsupported progress data"};}emit("resource",{...event,atMonotonicMilliseconds:value.at,elapsedMilliseconds:value.elapsed,remainingMilliseconds:value.remaining});};mark("store","begin");
+ return withRepositoryCompilerStoreV1(workspace,request.configuration,control,scriptInvocationEnvironment(invocation,{...environment,SEMIO_BUILD_MODE:request.configuration}),async (store,control)=>{
+  mark("store","ready");
+  const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{
    const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");
+   mark("child","begin");
    if(options.output==="capture"){
     const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,env),output:options.limits});
-    if(result.status===0&&result.signal===null)beforeConsume?.();
+    mark("child",result.status===0&&result.signal===null?"end":"error");if(result.status===0&&result.signal===null)beforeConsume?.();
     await store.storage.recheck();await control.publish({resource:"cargo:consume",mode:"shared",elapsedMs:0});await control.yieldContinuation();
-    const generated=generatedPolicy&&result.status===0&&result.signal===null&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&result.status===0&&result.signal===null&&!generated)throw Error("Actual generated Cargo output absent");
+    const generated=generatedPolicy&&result.status===0&&result.signal===null&&generatedFile?await readPhysicalCargoSourceV1(generatedFile,{expectedBytes:null,version:1,root:store.root,maximumBytes:generatedPolicy.maximumBytes,remainingFiles:1},control):undefined;if(generatedPolicy&&result.status===0&&result.signal===null&&!generated)throw Error("Actual generated Cargo output absent");
     const value=await options.consume(result,Object.freeze({store,environment:Object.freeze({...env}),control,...(generated?{generated}:{})}));
     checkResourceLeaseControl(control);await store.storage.recheck();checkScriptInvocation(invocation);return value;
    }
    let status:number;
    try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptInvocationEnvironment(invocation,env),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}
-   catch(error){if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}
-   if(status===0)beforeConsume?.();return status;
+   catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}
+   if(status===0){mark("child","end");beforeConsume?.();}return status;
   };
-  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
-   const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});
+  const admitted=async(compilerArgs:readonly string[],env:Readonly<Record<string,string|undefined>>,selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string}>,control:ResourceLeaseControl,beforeConsume?:()=>void,generatedFile?:string):Promise<number|T>=>{mark("writer","begin");return withCompilerWorkspaceWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,async()=>{
+   mark("writer","ready");mark("profile","begin");
+   const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:compilerArgs,signal:control.signal,control});mark("profile","ready");
    try{
-    if(env.SEMIO_COMPILER_CAPACITY_HELD==="true")return await execute(compilerArgs,env,beforeConsume,generatedFile);
-    const capacity=await acquireCompilerCapacityLeaseV1({directory:join(workspace,policy.capacityLeaseDirectory),control,environment:env,requestedParallelism:request.parallelism});
-    try{
-     const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;
+    if(env.SEMIO_COMPILER_CAPACITY_HELD==="true")return await execute(compilerArgs,env,control,beforeConsume,generatedFile);
+    mark("capacity","begin");const capacity=await acquireCompilerCapacityLeaseV1({directory:join(workspace,policy.capacityLeaseDirectory),control,environment:env,requestedParallelism:request.parallelism});mark("capacity","ready");
+    try{mark("scheduler","begin");
+     const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
      const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);
      try{
       const broker=await startAdmissionBrokerV1({physicalBytes:ADMISSION_POLICY_V1.reserveBytes+Math.floor((totalmem()-ADMISSION_POLICY_V1.reserveBytes)*tokens/availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined;
       const sampler=setInterval(()=>{void memoryCountersV1().then(counters=>{const atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},error=>{clearInterval(sampler);process.stderr.write(`[repo cargo] memory sampling stopped: ${error instanceof Error?error.message:String(error)}\n`);});},policy.swapSampleMilliseconds);
-      try{broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);return await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(tokens)},beforeConsume,generatedFile);}
+      try{broker.registerPass({id:policy.pass,profile:cargoRequestedProfileV1(compilerArgs)!,target:cargoTargetV1(compilerArgs)});process.stderr.write(`[repo cargo] ${request.store} store, ${tokens} of ${availableParallelism()} cores admitted, rustc memory budget ${(broker.stats().budgetBytes/1024**3).toFixed(1)} GiB\n`);mark("scheduler","end");return await execute(compilerArgs,{...env,...jobserver.environment(),RUSTC_WRAPPER:scheduler,[ADMISSION_POLICY_V1.brokerEnvironment]:broker.endpoint,[ADMISSION_POLICY_V1.passEnvironment]:policy.pass,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(tokens)},control,beforeConsume,generatedFile);}
       finally{clearInterval(sampler);await broker.close();}
      }finally{jobserver.close();rmSync(jobserverDirectory,{recursive:true,force:true});}
     }finally{capacity.release();}
    }finally{lease.release();}
-  });
+  });};
   const run=async(selected:RepositoryCargoIsolatedStoreV1|Readonly<{target:string;build:string;temporary:string}>):Promise<number|T>=>{
-   const inputs={workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
-   const resolved=async(env:Readonly<Record<string,string|undefined>>):Promise<number|T>=>{const command=cargoConfigurationArgumentsV1(args,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await execute(command,env);}finally{lease.release();}};
+   const inputs={invocation,consumption:request.kind==="compile"?cargoProfileCompilerConsumptionV1("artifact",args[0]??""):{kind:"resolution" as const},workspace,cwd,manifest:cargoManifestV1(args,cwd),args,network,control,storage:store.storage,environment:{...store.environment,CARGO_TARGET_DIR:selected.target,CARGO_BUILD_BUILD_DIR:selected.build,TMPDIR:selected.temporary,TMP:selected.temporary,TEMP:selected.temporary}};
+   const resolved=async(input:import("../📥️dependencies/🟦️.ts").RepositoryCargoInputsViewV1):Promise<number|T>=>{const control=input.control,env=input.environment,command=cargoConfigurationArgumentsV1(input.selections[0]!.arguments,configuration,selected.build),lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/b/l/m/data"),buildDirectory:selected.build,targetDirectory:selected.target,args:command,signal:control.signal,control});try{return await execute(command,env,control);}finally{lease.release();}};
    if(request.kind==="lock")return withRepositoryCargoResolutionV1(inputs,resolved);
-   return withRepositoryCargoInputsV1(inputs,async env=>{
-    if(request.kind==="resolve")return resolved(env);
-    const generated=env.SEMIO_TYPEGEN_OUT||generatedPolicy?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...env,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})},compilerArgs=cargoArtifactArgumentsV1(args,{mode:request.configuration,compilerConfiguration:configuration,buildDirectory:selected.build});
-    const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd,store.storage));await store.storage.recheck();
-    try{return await admitted(compilerArgs,compilerEnvironment,selected,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
+   mark("inputs","begin");return withRepositoryCargoInputsV1(inputs,async input=>{const control=input.control,env=input.environment;mark("inputs","ready");
+    if(request.kind==="resolve")return resolved(input);
+    const generated=env.SEMIO_TYPEGEN_OUT||generatedPolicy?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...env,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})},compilerArgs=cargoArtifactArgumentsV1(input.selections[0]!.arguments,{mode:request.configuration,compilerConfiguration:configuration,buildDirectory:selected.build});
+    mark("graph","begin");const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());mark("graph","end");mark("source","begin");await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd,store.storage));mark("source","end");await store.storage.recheck();
+    try{return await admitted(compilerArgs,compilerEnvironment,selected,control,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
   return request.store==="shared"?run({target:store.environment.CARGO_TARGET_DIR!,build:store.buildDirectory,temporary:store.environment.TMPDIR!}):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);

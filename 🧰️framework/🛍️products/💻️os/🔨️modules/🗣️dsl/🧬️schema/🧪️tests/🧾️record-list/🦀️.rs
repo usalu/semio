@@ -30,7 +30,7 @@ fn list_record_optional_block_controlled_projection_preserves_absence(){
         let mut accept=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accept);let controlled=source.__dsl_to_record_controlled(&mut control).unwrap();assert_eq!(controlled,ordinary);
         let spec=OptionalBlockOwner::__dsl_spec();assert_eq!(print(&ordinary,&spec,JoinMode::Inline),case["source"].as_str().unwrap());
         for mode in [JoinMode::Inline,JoinMode::Document]{let actual=print_controlled(&controlled,&spec,mode,65536,&mut control).unwrap();assert_eq!(actual,print(&ordinary,&spec,mode));assert_eq!(parse_exact(&actual,&spec,&ParseOptions::default()).unwrap(),ordinary);}
-        let bytes=crate::os_pack::encode_record_body_controlled(&spec,&controlled,&crate::PackEncodeOptions::default(),&mut control).unwrap();assert_eq!(crate::os_pack::decode_record_body_exact(&bytes,&spec,&crate::PackDecodeOptions::default()).unwrap(),ordinary);
+        let bytes=semio_framework_os_kernel::os_pack::encode_record_body_controlled(&spec,&controlled,&semio_framework_os_kernel::PackEncodeOptions::default(),&mut control).unwrap();assert_eq!(semio_framework_os_kernel::os_pack::decode_record_body_exact(&bytes,&spec,&semio_framework_os_kernel::PackDecodeOptions::default()).unwrap(),ordinary);
     }
 }
 

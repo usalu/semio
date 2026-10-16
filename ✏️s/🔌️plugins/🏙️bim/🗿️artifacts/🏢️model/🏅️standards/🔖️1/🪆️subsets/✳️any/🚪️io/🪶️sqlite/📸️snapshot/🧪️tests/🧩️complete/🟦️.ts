@@ -40,7 +40,7 @@ test("BIM actual semantic projection and reconstruction conserve every original 
 test("BIM actual public pack declares its owning SQLite capability",()=>{
  const provider=readFileSync(new URL("../../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs",import.meta.url),"utf8");
  expect(provider.includes("fn sqlite_snapshot_codec()")).toBe(true);
- expect(provider.includes("Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())")).toBe(true);
+ expect(provider.includes("Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())")).toBe(true);
 });
 
 

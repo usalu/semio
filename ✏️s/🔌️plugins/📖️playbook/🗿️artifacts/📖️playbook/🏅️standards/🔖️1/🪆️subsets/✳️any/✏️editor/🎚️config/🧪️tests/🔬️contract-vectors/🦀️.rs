@@ -1,10 +1,10 @@
-use super::*;
+use crate::editor::playbook::config::*;
 use dsl::os_pack as pack;
 use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔁️mutation-contracts.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../✏️editor/🎚️config/🧪️tests/🧫️fixtures/🔁️mutation-contracts.json")).unwrap();
     let base: PlaybookConfig = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(<PlaybookConfigMutation as Mutation<PlaybookConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
     for vector in vectors["cases"].as_array().unwrap() {
@@ -18,4 +18,9 @@ fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
         let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base);
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

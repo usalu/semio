@@ -1,0 +1,8 @@
+{
+  "$id": "semio:process:cargo-input-continuation-policy:v1",
+  "const": {
+    "version": 1,
+    "maximumContinuations": 1,
+    "maximumRejectedAttemptPromises": 1
+  }
+}

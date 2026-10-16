@@ -65,6 +65,160 @@
       ],
       "source": "#![cfg_attr(unix, allow(dead_code))] mod child;",
       "expected": "#![allow(dead_code)] mod child;"
+    },
+    {
+      "name": "cfg-false last struct literal field before the closing brace",
+      "cfg": [],
+      "source": "struct S{a:u8,b:u8} fn f()->S{ S{a:1, #[cfg(test)] b:2 } }",
+      "expected": "struct S{a:u8,b:u8} fn f()->S{ S{a:1, } }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false last struct literal field before a statement terminator",
+      "cfg": [],
+      "source": "struct S{a:u8,b:u8} fn f()->S{ let s = S{a:1, #[cfg(test)] b:2 }; s }",
+      "expected": "struct S{a:u8,b:u8} fn f()->S{ let s = S{a:1, }; s }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false last struct literal field without comma keeps the enclosing statement",
+      "cfg": [],
+      "source": "struct S{a:u8,b:u8} fn f()->S{ let s = S{a:1, #[cfg(test)] b:2}; s } fn g(){}",
+      "expected": "struct S{a:u8,b:u8} fn f()->S{ let s = S{a:1, }; s } fn g(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false tail expression ends at the enclosing brace",
+      "cfg": [
+        "feature=durable"
+      ],
+      "source": "fn sync(f:&Fl)->u8{ f.flush(); #[cfg(not(feature = \"durable\"))] f.sync_all().map_err(io) } struct Fl; fn after(){}",
+      "expected": "fn sync(f:&Fl)->u8{ f.flush(); } struct Fl; fn after(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false tail expression in nested blocks stays inside its own block",
+      "cfg": [],
+      "source": "fn f(){ { { #[cfg(test)] g() } } h(); } fn g(){} fn h(){}",
+      "expected": "fn f(){ { { } } h(); } fn g(){} fn h(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false tail statement block ends at the enclosing brace",
+      "cfg": [],
+      "source": "fn f(){ h(); #[cfg(test)] { g() } } fn g(){} fn h(){}",
+      "expected": "fn f(){ h(); } fn g(){} fn h(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false last call argument and last array element",
+      "cfg": [],
+      "source": "fn g(a:u8,b:u8){} fn f(){ g(1, #[cfg(test)] 2); let _a = [1, #[cfg(test)] 2]; }",
+      "expected": "fn g(a:u8,b:u8){} fn f(){ g(1, ); let _a = [1, ]; }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false last match arm without comma",
+      "cfg": [],
+      "source": "fn f(x:u8)->u8{ match x { 0 => 1, #[cfg(test)] _ => 2 } }",
+      "expected": "fn f(x:u8)->u8{ match x { 0 => 1, } }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false match arm with a struct pattern is removed whole",
+      "cfg": [],
+      "source": "struct P{a:u8} fn f(p:P)->u8{ match p { #[cfg(test)] P{a} => a, P{..} => 2 } }",
+      "expected": "struct P{a:u8} fn f(p:P)->u8{ match p { P{..} => 2 } }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false last enum variant and last struct field with generic commas",
+      "cfg": [],
+      "source": "enum E{A, #[cfg(test)] B(u8,u8)} struct T{a:u8, #[cfg(test)] pub b: std::collections::HashMap<u8,u8>} struct U{ #[cfg(test)] m: std::collections::HashMap<u8,u8>, n:u8 }",
+      "expected": "enum E{A, } struct T{a:u8, } struct U{ n:u8 }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false item with generic commas is removed whole",
+      "cfg": [],
+      "source": "#[cfg(test)] fn f<A, B>(){} #[cfg(test)] struct K<A, B>(A, B); #[cfg(test)] type M = std::collections::HashMap<u8, u8>; fn live(){}",
+      "expected": "fn live(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false let statement with generic commas is removed whole",
+      "cfg": [],
+      "source": "fn f(){ #[cfg(test)] let m: std::collections::HashMap<u8, u8> = Default::default(); let k = 1; }",
+      "expected": "fn f(){ let k = 1; }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false let statement keeps its else branch",
+      "cfg": [],
+      "source": "fn f(){ #[cfg(test)] let v = if true { 1 } else { 2 }; let k = 1; }",
+      "expected": "fn f(){ let k = 1; }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false expression statement keeps method chains after a block",
+      "cfg": [],
+      "source": "fn f(){ #[cfg(test)] match 1 { _ => 2 }.max(3); let k = 1; }",
+      "expected": "fn f(){ let k = 1; }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false removal ignores delimiters inside strings, chars, raw strings and comments",
+      "cfg": [],
+      "source": "fn f()->u8{ let a = \"}\"; let _b = '}'; /* } { */ let _c = r#\"}\"{\"#; #[cfg(test)] let _d = \"}; {\"; // } {\n 1 } fn after(){}",
+      "expected": "fn f()->u8{ let a = \"}\"; let _b = '}'; /* } { */ let _c = r#\"}\"{\"#; // } { 1 } fn after(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false item with raw string and braces in its body",
+      "cfg": [],
+      "source": "#[cfg(test)] const X: &str = r##\"} \"# {\"##; #[cfg(test)] fn t(){ let _ = \"}\"; let _c = '{'; } fn live(){}",
+      "expected": "fn live(){}",
+      "oracle": true
+    },
+    {
+      "name": "lifetimes in cfg-false items do not open character literals",
+      "cfg": [],
+      "source": "#[cfg(test)] fn f<'a, 'b>(x: &'a str, y: &'b str) -> &'a str { let _ = 'x'; x } fn live<'a>(x:&'a str)->&'a str{ x }",
+      "expected": "fn live<'a>(x:&'a str)->&'a str{ x }",
+      "oracle": true
+    },
+    {
+      "name": "attributes with nested parentheses select against the full predicate",
+      "cfg": [
+        "test",
+        "feature=a"
+      ],
+      "source": "#[cfg(all(test, any(feature = \"a\", not(feature = \"b\"))))] fn on(){} #[cfg(all(test, any(feature = \"b\", not(feature = \"a\"))))] fn off(){} #[cfg_attr(all(test, feature = \"a\"), derive(Debug, Clone))] struct S;",
+      "expected": "fn on(){} #[derive(Debug, Clone)] struct S;",
+      "oracle": true
+    },
+    {
+      "name": "cfg-true last struct literal field only drops the attribute",
+      "cfg": [
+        "test"
+      ],
+      "source": "struct S{a:u8,b:u8} fn f()->S{ S{a:1, #[cfg(test)] b:2 } }",
+      "expected": "struct S{a:u8,b:u8} fn f()->S{ S{a:1, b:2 } }",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false inline module as last item of an enclosing module",
+      "cfg": [],
+      "source": "mod m { pub fn live(){} #[cfg(test)] mod tests { fn t(){ let _ = \"}\"; } } } fn after(){}",
+      "expected": "mod m { pub fn live(){} } fn after(){}",
+      "oracle": true
+    },
+    {
+      "name": "cfg-false match arm with alternated struct patterns is removed whole",
+      "cfg": [],
+      "source": "struct P{a:u8} struct Q{a:u8} fn f(p:P)->u8{ match p { #[cfg(test)] P{a} | P{a:_} => 1, _ => 2 } }",
+      "expected": "struct P{a:u8} struct Q{a:u8} fn f(p:P)->u8{ match p { _ => 2 } }",
+      "oracle": true
     }
   ],
   "closures": [
@@ -138,6 +292,46 @@
         "lib.rs": "mod gate { #![cfg(test)] mod missing; pub struct Inactive; } pub struct Active;"
       },
       "expected": [
+        {
+          "path": "lib.rs",
+          "kind": "source"
+        }
+      ]
+    },
+    {
+      "name": "cfg-false last struct literal field keeps the enclosing inline module balanced",
+      "cfg": [],
+      "entry": "lib.rs",
+      "files": {
+        "lib.rs": "mod inline { pub fn f() -> S { let s = S { a: 1, #[cfg(test)] owner: 2 }; s } mod child; }",
+        "inline/child.rs": "pub struct Child;"
+      },
+      "expected": [
+        {
+          "path": "inline/child.rs",
+          "kind": "source"
+        },
+        {
+          "path": "lib.rs",
+          "kind": "source"
+        }
+      ]
+    },
+    {
+      "name": "cfg-false tail expression keeps the enclosing inline module balanced",
+      "cfg": [
+        "feature=durable"
+      ],
+      "entry": "lib.rs",
+      "files": {
+        "lib.rs": "mod inline { pub fn sync(file: &File) -> Res { #[cfg(not(feature = \"durable\"))] file.sync_all().map_err(io_err) } mod child; }",
+        "inline/child.rs": "pub struct Child;"
+      },
+      "expected": [
+        {
+          "path": "inline/child.rs",
+          "kind": "source"
+        },
         {
           "path": "lib.rs",
           "kind": "source"

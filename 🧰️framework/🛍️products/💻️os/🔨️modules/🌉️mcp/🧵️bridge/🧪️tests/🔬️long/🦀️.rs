@@ -1,12 +1,18 @@
+//! 🧱️ Bridge_long of the http-transport crate: The Streamable HTTP and bridge websocket transport.
 
-use super::server::bridge_router;
-use super::*;
-use futures::{SinkExt, StreamExt};
+use futures::SinkExt;
+use futures::StreamExt;
+use std::sync::Arc;
 use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use crate::transport::HttpAdmission;
+use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
+#[cfg(test)]
+use crate::bridge_server::bridge_router;
 
 async fn boot(token: &str, allowed_origins: Vec<String>) -> (std::net::SocketAddr, BridgeHandle, tokio::task::JoinHandle<()>) {
-    let admission = crate::transport::HttpAdmission::Fixture(Arc::from(token.as_bytes()));
+    let admission = HttpAdmission::Fixture(Arc::from(token.as_bytes()));
     let (router, handle) = bridge_router(admission, allowed_origins);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();

@@ -139,7 +139,7 @@ async fn ops_protocol_bidirectional_on_generated_logs() {
     for (seed, profile) in [(12u64, tiny_profile().await), (13, typical_profile().await)] {
         let log = HistoryLogGen::new(seed).await.generate(&profile).await;
         let bytes = write_history_log(&log, false).await;
-        let ops_text = crate::os_spr::decompile_ops(&bytes, &crate::os_spr::DecodeOptions::default()).await.expect("decompile_ops");
+        let ops_text = semio_framework_os_spr::decompile_ops(&bytes, &semio_framework_os_spr::DecodeOptions::default()).await.expect("decompile_ops");
         assert_ops_protocol_bidirectional(&ops_text).await;
     }
 }
@@ -202,8 +202,8 @@ mod exhaustive {
 //#region 🧸️Fixtures
 use super::mutation_law_fixture::{AddCounter, AddMissingCounter, AddObservedCounter, AddRejectedCounter, AddUncheckedCounter, CounterDiff, CounterMutation};
 
-async fn sample_conflict(id: &str, kind: crate::os_spr::ConflictKind) -> crate::os_spr::Conflict {
-    crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100) }
+async fn sample_conflict(id: &str, kind: semio_framework_os_spr::ConflictKind) -> semio_framework_os_spr::Conflict {
+    semio_framework_os_spr::Conflict { id: semio_framework_os_spr::ConflictId(id.to_string()), kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(1, 100) }
 }
 //#endregion 🧸️Fixtures
 
@@ -216,13 +216,13 @@ async fn op_text_round_trip_holds_and_rejects_a_broken_impl() {
 
 #[semio_framework_async_macros::async_test]
 async fn operation_diff_apply_matches_backwards_inverse() {
-    use crate::os_spr::{Mutation, MutationDiff};
+    use semio_framework_os_spr::{Mutation, MutationDiff};
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
-    let forward = crate::os_spr::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
+    let forward = semio_framework_os_spr::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(forward, 15);
     let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
-    assert_eq!(crate::os_spr::apply_diff(undo.diff(&forward).diff(), &forward), Ok(base));
+    assert_eq!(semio_framework_os_spr::apply_diff(undo.diff(&forward).diff(), &forward), Ok(base));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -285,21 +285,21 @@ impl protocol::value::FromValue for ColdCounterMutation {
     }
 }
 
-impl crate::os_spr::Mutation<i64> for ColdCounterMutation {
+impl semio_framework_os_spr::Mutation<i64> for ColdCounterMutation {
     type Diff = CounterDiff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <CounterMutation as crate::os_spr::Mutation<i64>>::DESCRIPTORS;
+    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = <CounterMutation as semio_framework_os_spr::Mutation<i64>>::DESCRIPTORS;
 
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
-        crate::os_spr::Mutation::<i64>::descriptor(&self.inner)
+    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
+        semio_framework_os_spr::Mutation::<i64>::descriptor(&self.inner)
     }
 
-    fn diff(&self, base: &i64) -> crate::os_spr::MutationOutcome<Self::Diff> {
-        crate::os_spr::Mutation::<i64>::diff(&self.inner, base)
+    fn diff(&self, base: &i64) -> semio_framework_os_spr::MutationOutcome<Self::Diff> {
+        semio_framework_os_spr::Mutation::<i64>::diff(&self.inner, base)
     }
 
     fn inverse(&self, base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok({
-        crate::os_spr::Mutation::<i64>::inverse(&self.inner, base)?.into_iter().map(Self::wrap).collect()
+        semio_framework_os_spr::Mutation::<i64>::inverse(&self.inner, base)?.into_iter().map(Self::wrap).collect()
     
     })
 }
@@ -320,16 +320,16 @@ impl crate::os_spr::Mutation<i64> for ColdCounterMutation {
 async fn mutation_inverse_law_retires_every_operation_it_mints() {
     COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
     let operation = ColdCounterMutation::add(5);
-    let minted = crate::os_spr::Mutation::<i64>::inverse(&operation, &10i64).expect("valid retained mutation inverse fixture");
+    let minted = semio_framework_os_spr::Mutation::<i64>::inverse(&operation, &10i64).expect("valid retained mutation inverse fixture");
     let minted_count = minted.len();
     assert!(minted_count > 0, "the fixture operation must mint at least one inverse for this law to mean anything");
     for undo in minted {
-        crate::os_spr::Mutation::<i64>::retire_cold(undo);
+        semio_framework_os_spr::Mutation::<i64>::retire_cold(undo);
     }
     COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
     assert_mutation_inverse_law(&10i64, &operation).await;
     assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), minted_count, "the inverse law must retire every inverse operation it minted, never drop it");
-    crate::os_spr::Mutation::<i64>::retire_cold(operation);
+    semio_framework_os_spr::Mutation::<i64>::retire_cold(operation);
 }
 
 /// ✅️ LAW: the `_cold` twin retires the minted inverses too — the same seam, with the projection
@@ -340,7 +340,7 @@ async fn mutation_inverse_law_cold_retires_every_operation_it_mints() {
     let operation = ColdCounterMutation::add(5);
     assert_mutation_inverse_law_cold(&10i64, &operation, |projection: i64| drop(projection), |delta: CounterDiff| drop(delta)).await;
     assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), 1, "the cold inverse law must retire the inverse operation it minted");
-    crate::os_spr::Mutation::<i64>::retire_cold(operation);
+    semio_framework_os_spr::Mutation::<i64>::retire_cold(operation);
 }
 //#endregion 🧊️ColdOperationOwnership
 
@@ -353,7 +353,7 @@ struct SumLawProbe {
     inverse: u8,
 }
 
-const SUM_LAW_PROBE_DESCRIPTOR: crate::os_spr::MutationLeafDescriptor = crate::os_spr::MutationLeafDescriptor {
+const SUM_LAW_PROBE_DESCRIPTOR: semio_framework_os_spr::MutationLeafDescriptor = semio_framework_os_spr::MutationLeafDescriptor {
     schema_version: 1,
     owner: "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws-unit",
     semantic_kind: "sum-law-probe",
@@ -363,23 +363,23 @@ const SUM_LAW_PROBE_DESCRIPTOR: crate::os_spr::MutationLeafDescriptor = crate::o
     payload_schema: "🦀️.rs#SumLawProbe",
     text_opcode: None,
     binary_tag: None,
-    invertibility: crate::os_spr::MutationInvertibility::ExplicitMutation,
-    diff_participation: crate::os_spr::MutationDiffParticipation::ApplyOnly,
-    outcome_classes: &[crate::os_spr::MutationOutcomeClass::Applied],
-    composition: crate::os_spr::MutationComposition::Atomic,
-    required_language_surfaces: &[crate::os_spr::MutationLanguageSurface::Rust],
+    invertibility: semio_framework_os_spr::MutationInvertibility::ExplicitMutation,
+    diff_participation: semio_framework_os_spr::MutationDiffParticipation::ApplyOnly,
+    outcome_classes: &[semio_framework_os_spr::MutationOutcomeClass::Applied],
+    composition: semio_framework_os_spr::MutationComposition::Atomic,
+    required_language_surfaces: &[semio_framework_os_spr::MutationLanguageSurface::Rust],
 };
 
-impl crate::os_spr::Mutation<i64> for SumLawProbe {
+impl semio_framework_os_spr::Mutation<i64> for SumLawProbe {
     type Diff = CounterDiff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = &[SUM_LAW_PROBE_DESCRIPTOR];
+    const DESCRIPTORS: &'static [semio_framework_os_spr::MutationLeafDescriptor] = &[SUM_LAW_PROBE_DESCRIPTOR];
 
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+    fn descriptor(&self) -> &'static semio_framework_os_spr::MutationLeafDescriptor {
         &SUM_LAW_PROBE_DESCRIPTOR
     }
 
-    fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<CounterDiff> {
-        crate::os_spr::MutationOutcome::new(CounterDiff::delta(self.delta))
+    fn diff(&self, _base: &i64) -> semio_framework_os_spr::MutationOutcome<CounterDiff> {
+        semio_framework_os_spr::MutationOutcome::new(CounterDiff::delta(self.delta))
     }
 
     fn inverse(&self, _base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -444,9 +444,9 @@ struct ProbeConfig {
     note: Option<String>,
 }
 
-crate::sparse_record_diff! { record: ProbeConfig, diff: ProbeConfigDiff, fields: { label: String, count: u32, note: Option<String> } }
+semio_framework_os_kernel::sparse_record_diff! { record: ProbeConfig, diff: ProbeConfigDiff, fields: { label: String, count: u32, note: Option<String> } }
 
-crate::field_set_mutations! {
+semio_framework_os_kernel::field_set_mutations! {
     record: ProbeConfig,
     diff: ProbeConfigDiff,
     set: ProbeConfigSet,
@@ -490,13 +490,13 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
         assert_eq!(mutation.print_op(),row["text"].as_str().unwrap());
         assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&mutation)),row["value"]);
         let bytes=mutation.encode_op().unwrap();
-        assert_eq!(bytes,crate::os_pack::pack_rt::encode_json_value(&row["value"]));
+        assert_eq!(bytes,semio_framework_os_pack::pack_rt::encode_json_value(&row["value"]));
         assert_ne!(bytes,serde_json::to_vec(&row["value"]).unwrap());
         assert_eq!(ProbeConfigSet::decode_op(&bytes).unwrap(),mutation);
     }
     eprintln!("[DEBUG] authored field-set text and structured Pack bytes preserve schema vectors against serde_json value and text oracles");
 
-    use crate::os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
+    use semio_framework_os_spr::{apply_diff, DiffAlgebra, Mutation, MutationDiff, OpBinary, OpText};
     let base = probe_config();
     let set = ProbeConfigSet::SetCount(9);
     assert_eq!(*set.diff(&base).diff(), ProbeConfigDiff { count: Some(9), ..Default::default() });
@@ -521,13 +521,13 @@ fn generated_diffs_are_sparse_and_the_wire_round_trips() {
     assert_eq!(ProbeConfigSet::SetLabel("a".into()).print_op(), r#"{"kind":"set-label","value":"a"}"#);
 }
 
-crate::sparse_record_diff! { record: ProbeConfig, diff: ProbeConfigWholeDiff, whole }
+semio_framework_os_kernel::sparse_record_diff! { record: ProbeConfig, diff: ProbeConfigWholeDiff, whole }
 
 /// ⚖️ LAW: the `whole` arm carries the indivisible record in one `replacement` slot — set only when it differs from the base — and
 /// its algebra, absorb, apply and wire hold.
 #[test]
 fn the_whole_diff_replaces_an_indivisible_record() {
-    use crate::os_spr::{apply_diff, DiffAlgebra, MutationDiff};
+    use semio_framework_os_spr::{apply_diff, DiffAlgebra, MutationDiff};
     let base = probe_config();
     let other = ProbeConfig { count: 7, ..base.clone() };
     assert!(DiffAlgebra::<ProbeConfig>::is_empty(&ProbeConfigWholeDiff::changing(&base, &base)), "an identical record changes nothing");
@@ -549,15 +549,15 @@ struct KeyedProbe {
     cameras: std::collections::BTreeMap<String, u32>,
 }
 
-crate::sparse_record_diff! { record: KeyedProbe, diff: KeyedProbeDiff, fields: { name: String }, keyed: { cameras: u32 } }
+semio_framework_os_kernel::sparse_record_diff! { record: KeyedProbe, diff: KeyedProbeDiff, fields: { name: String }, keyed: { cameras: u32 } }
 
 /// ⚖️ LAW: a keyed field's diff is rows per key — insert, replace, remove — never the whole map: `changing` builds exactly the differing
 /// rows, `apply` refuses a duplicate insert and a missing replace/remove, the inverse undoes each row from the base, `absorb` composes
 /// per key (insert then remove cancels, remove then insert is a replace), and the wire round trips.
 #[semio_framework_async_macros::async_test]
 async fn keyed_rows_replace_the_whole_map_slot() {
-    use crate::os_spr::{apply_diff, DiffAlgebra, MutationDiff};
-    use crate::KeyedRow;
+    use semio_framework_os_spr::{apply_diff, DiffAlgebra, MutationDiff};
+    use semio_framework_mutation_diff::KeyedRow;
     let base = KeyedProbe { name: "n".into(), cameras: [("a".to_string(), 1), ("b".to_string(), 2)].into() };
     let next = KeyedProbe { name: "n".into(), cameras: [("b".to_string(), 5), ("c".to_string(), 3)].into() };
     let diff = KeyedProbeDiff::changing(&base, &next);
@@ -591,7 +591,7 @@ async fn op_text_round_trip_panics_on_a_lossy_impl() {
     struct LossyOp {
         delta: i64,
     }
-    impl crate::os_spr::OpText for LossyOp {
+    impl semio_framework_os_spr::OpText for LossyOp {
         fn print_op(&self) -> String {
             "lossy".to_string()
         }
@@ -604,22 +604,22 @@ async fn op_text_round_trip_panics_on_a_lossy_impl() {
 
 #[semio_framework_async_macros::async_test]
 async fn wire_frame_round_trip_holds_for_client_and_server_samples() {
-    assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::Bye, crate::os_spr::Lane::Command)).await;
-    assert_wire_frame_round_trip(&WireFrameSample::Client(crate::os_spr::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, crate::os_spr::Lane::Preview)).await;
-    let frontier = crate::os_spr::RuntimeFrontierSummary { document_id: crate::os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
+    assert_wire_frame_round_trip(&WireFrameSample::Client(semio_framework_os_spr::ClientFrame::Bye, semio_framework_os_spr::Lane::Command)).await;
+    assert_wire_frame_round_trip(&WireFrameSample::Client(semio_framework_os_spr::ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, semio_framework_os_spr::Lane::Preview)).await;
+    let frontier = semio_framework_os_spr::RuntimeFrontierSummary { document_id: semio_framework_os_spr::ArtifactId("doc-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] };
     assert_wire_frame_round_trip(&WireFrameSample::Server(
-        crate::os_spr::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: crate::os_spr::Bootstrap::Tail },
-        crate::os_spr::Lane::Command,
+        semio_framework_os_spr::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: semio_framework_os_spr::Bootstrap::Tail },
+        semio_framework_os_spr::Lane::Command,
     ))
     .await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn channel_frame_round_trip_holds_for_command_and_frame_samples() {
-    assert_channel_frame_round_trip(&ChannelFrameSample::Command(&crate::os_spr::AppCommand::ReadConflicts { seq: 1 })).await;
-    assert_channel_frame_round_trip(&ChannelFrameSample::Command(&crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] })).await;
-    assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&crate::os_spr::AppFrame::Done { in_reply_to: 1 })).await;
-    assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&crate::os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() })).await;
+    assert_channel_frame_round_trip(&ChannelFrameSample::Command(&semio_framework_os_spr::AppCommand::ReadConflicts { seq: 1 })).await;
+    assert_channel_frame_round_trip(&ChannelFrameSample::Command(&semio_framework_os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] })).await;
+    assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&semio_framework_os_spr::AppFrame::Done { in_reply_to: 1 })).await;
+    assert_channel_frame_round_trip(&ChannelFrameSample::Frame(&semio_framework_os_spr::AppFrame::Error { in_reply_to: None, fault: b"e:m".to_vec(), report: Vec::new() })).await;
 }
 //#endregion 🔖️Laws (continued)
 
@@ -637,14 +637,14 @@ async fn missing_target_is_error_panics_on_a_buggy_impl() {
 
 #[semio_framework_async_macros::async_test]
 async fn fatal_never_applies_holds_for_a_correct_outcome() {
-    let outcome: crate::os_spr::MutationOutcome<CounterDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
+    let outcome: semio_framework_os_spr::MutationOutcome<CounterDiff> = semio_framework_os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
     assert_fatal_never_applies(&outcome).await;
 }
 
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "Fatal outcome must carry diff == D::default()")]
 async fn fatal_never_applies_panics_on_a_non_empty_diff() {
-    let outcome = crate::os_spr::MutationOutcome::new(CounterDiff::delta(3)).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
+    let outcome = semio_framework_os_spr::MutationOutcome::new(CounterDiff::delta(3)).absorb_messages([semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
     assert_fatal_never_applies(&outcome).await;
 }
 
@@ -661,12 +661,12 @@ async fn outcome_deterministic_panics_on_a_nondeterministic_impl() {
 //#endregion 🔖️Outcome
 
 //#region 🔖️Policy
-async fn message_at_level(level: semio_framework_diagnostic::Severity) -> crate::os_spr::MutationMessage {
+async fn message_at_level(level: semio_framework_diagnostic::Severity) -> semio_framework_os_spr::MutationMessage {
     match level {
-        semio_framework_diagnostic::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
-        semio_framework_diagnostic::Severity::Warning => crate::os_spr::MutationMessage::warning("mutation.no-op", "probe"),
-        semio_framework_diagnostic::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
-        semio_framework_diagnostic::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
+        semio_framework_diagnostic::Severity::Info => semio_framework_os_spr::MutationMessage::info("mutation.cascade", "probe"),
+        semio_framework_diagnostic::Severity::Warning => semio_framework_os_spr::MutationMessage::warning("mutation.no-op", "probe"),
+        semio_framework_diagnostic::Severity::Error => semio_framework_os_spr::MutationMessage::error("mutation.target-missing", "probe"),
+        semio_framework_diagnostic::Severity::Fatal => semio_framework_os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
     }
 }
 
@@ -675,7 +675,7 @@ async fn policy_matrix_holds_for_the_real_apis() {
     assert_policy_matrix(
         async |policy, level| policy.rejects(level),
         async |policy, level| {
-            let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).absorb_messages([message_at_level(level).await]);
+            let outcome: semio_framework_os_spr::MutationOutcome<()> = semio_framework_os_spr::MutationOutcome::new(()).absorb_messages([message_at_level(level).await]);
             outcome.is_applicable(policy)
         },
     )
@@ -716,9 +716,9 @@ async fn merge_convergence_panics_for_an_order_dependent_fold() {
 async fn modify_vs_delete_holds_for_normal_quarantine() {
     let pre = Some("part".to_string());
     let post = pre.clone();
-    let conflict = sample_conflict("c1", crate::os_spr::ConflictKind::Quarantined { envelopes: Vec::new() }).await;
-    let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(semio_framework_diagnostic::Severity::Error), conflict: Some(conflict.id.clone()) };
-    assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
+    let conflict = sample_conflict("c1", semio_framework_os_spr::ConflictKind::Quarantined { envelopes: Vec::new() }).await;
+    let report = semio_framework_os_spr::MergeReport { policy: semio_framework_os_spr::MergePolicy::Normal, accepted: false, insertion_index: 0, replayed: Vec::new(), worst: Some(semio_framework_diagnostic::Severity::Error), conflict: Some(conflict.id.clone()) };
+    assert_modify_vs_delete(semio_framework_os_spr::MergePolicy::Normal, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -726,24 +726,24 @@ async fn modify_vs_delete_holds_for_normal_quarantine() {
 async fn modify_vs_delete_panics_when_normal_wrongly_accepts() {
     let pre = Some("part".to_string());
     let post = pre.clone();
-    let report = crate::os_spr::MergeReport { policy: crate::os_spr::MergePolicy::Normal, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: None };
-    assert_modify_vs_delete(crate::os_spr::MergePolicy::Normal, &pre, &post, &report, &[], |state| state.is_some()).await;
+    let report = semio_framework_os_spr::MergeReport { policy: semio_framework_os_spr::MergePolicy::Normal, accepted: true, insertion_index: 0, replayed: Vec::new(), worst: None, conflict: None };
+    assert_modify_vs_delete(semio_framework_os_spr::MergePolicy::Normal, &pre, &post, &report, &[], |state| state.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn modify_vs_delete_holds_for_laissez_faire_apply() {
     let pre = Some("part".to_string());
     let post: Option<String> = None;
-    let conflict = sample_conflict("c2", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
-    let report = crate::os_spr::MergeReport {
-        policy: crate::os_spr::MergePolicy::LaissezFaire,
+    let conflict = sample_conflict("c2", semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
+    let report = semio_framework_os_spr::MergeReport {
+        policy: semio_framework_os_spr::MergePolicy::LaissezFaire,
         accepted: true,
         insertion_index: 0,
-        replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+        replayed: vec![semio_framework_os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![semio_framework_os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
         worst: Some(semio_framework_diagnostic::Severity::Error),
         conflict: Some(conflict.id.clone()),
     };
-    assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
+    assert_modify_vs_delete(semio_framework_os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -751,16 +751,16 @@ async fn modify_vs_delete_holds_for_laissez_faire_apply() {
 async fn modify_vs_delete_panics_when_laissez_faire_part_still_present() {
     let pre = Some("part".to_string());
     let post = pre.clone();
-    let conflict = sample_conflict("c3", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
-    let report = crate::os_spr::MergeReport {
-        policy: crate::os_spr::MergePolicy::LaissezFaire,
+    let conflict = sample_conflict("c3", semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
+    let report = semio_framework_os_spr::MergeReport {
+        policy: semio_framework_os_spr::MergePolicy::LaissezFaire,
         accepted: true,
         insertion_index: 0,
-        replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
+        replayed: vec![semio_framework_os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![semio_framework_os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
         worst: Some(semio_framework_diagnostic::Severity::Error),
         conflict: Some(conflict.id.clone()),
     };
-    assert_modify_vs_delete(crate::os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
+    assert_modify_vs_delete(semio_framework_os_spr::MergePolicy::LaissezFaire, &pre, &post, &report, std::slice::from_ref(&conflict), |state| state.is_some()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -810,7 +810,7 @@ async fn quarantine_discard_preserves_state_panics_when_state_changes() {
 #[semio_framework_async_macros::async_test]
 async fn ledger_matches_replay_holds_when_equal() {
     let mut ledger = std::collections::HashMap::new();
-    ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
+    ledger.insert("e1".to_string(), vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "note")]);
     let replayed = ledger.clone();
     assert_ledger_matches_replay(&ledger, &replayed).await;
 }
@@ -819,7 +819,7 @@ async fn ledger_matches_replay_holds_when_equal() {
 #[should_panic(expected = "must equal a fresh replay")]
 async fn ledger_matches_replay_panics_when_unequal() {
     let mut ledger = std::collections::HashMap::new();
-    ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
+    ledger.insert("e1".to_string(), vec![semio_framework_os_spr::MutationMessage::info("mutation.cascade", "note")]);
     let mut replayed = std::collections::HashMap::new();
     replayed.insert("e1".to_string(), Vec::new());
     assert_ledger_matches_replay(&ledger, &replayed).await;
@@ -829,7 +829,7 @@ async fn ledger_matches_replay_panics_when_unequal() {
 //#region 🔖️Conflict
 #[semio_framework_async_macros::async_test]
 async fn conflict_spr_round_trip_holds_for_an_identity_codec() {
-    let conflict = sample_conflict("c4", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
+    let conflict = sample_conflict("c4", semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] }).await;
     let for_decode = conflict.clone();
     assert_conflict_spr_round_trip(&conflict, async |_c| Vec::new(), async move |_bytes| for_decode.clone()).await;
 }
@@ -837,23 +837,23 @@ async fn conflict_spr_round_trip_holds_for_an_identity_codec() {
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "must equal conflict")]
 async fn conflict_spr_round_trip_panics_for_a_lossy_codec() {
-    let conflict = sample_conflict("c5", crate::os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
-    assert_conflict_spr_round_trip(&conflict.await, async |_c| Vec::new(), async |_bytes| sample_conflict("different", crate::os_spr::ConflictKind::Degraded { edit_ids: Vec::new() }).await).await;
+    let conflict = sample_conflict("c5", semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec!["e1".to_string()] });
+    assert_conflict_spr_round_trip(&conflict.await, async |_c| Vec::new(), async |_bytes| sample_conflict("different", semio_framework_os_spr::ConflictKind::Degraded { edit_ids: Vec::new() }).await).await;
 }
 //#endregion 🔖️Conflict
 
 //#region 🔖️Channel
 #[semio_framework_async_macros::async_test]
 async fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
-    let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }, crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }];
+    let corpus = vec![semio_framework_os_spr::AppCommand::ReadConflicts { seq: 1 }, semio_framework_os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }];
     assert_channel_frame_corpus(
         &corpus,
         async |command| {
-            let encoded = crate::os_spr::encode_app_command(command).await.unwrap();
+            let encoded = semio_framework_os_spr::encode_app_command(command).await.unwrap();
             assert_eq!(encoded.page_len(), 1);
             encoded.front_page().unwrap().as_slice().to_vec()
         },
-        async |bytes| crate::os_spr::channel::decode_app_command(bytes).await.unwrap(),
+        async |bytes| semio_framework_os_spr::channel::decode_app_command(bytes).await.unwrap(),
     )
     .await;
 }
@@ -861,8 +861,8 @@ async fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "must equal sample")]
 async fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
-    let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }];
-    assert_channel_frame_corpus(&corpus, async |_command| Vec::new(), async |_bytes| crate::os_spr::AppCommand::ReadConflicts { seq: 0 }).await;
+    let corpus = vec![semio_framework_os_spr::AppCommand::ReadConflicts { seq: 1 }];
+    assert_channel_frame_corpus(&corpus, async |_command| Vec::new(), async |_bytes| semio_framework_os_spr::AppCommand::ReadConflicts { seq: 0 }).await;
 }
 //#endregion 🔖️Channel
 
@@ -871,7 +871,7 @@ async fn frame_corpus_round_trip_panics_for_a_lossy_codec() {
 async fn fuzz_truncation_never_panics_history_reader_open() {
     let log = HistoryLogGen::new(23).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
-    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
+    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &semio_framework_os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a truncated buffer: {:?}", report.cases_panicked);
 }
 
@@ -879,7 +879,7 @@ async fn fuzz_truncation_never_panics_history_reader_open() {
 async fn fuzz_bit_flips_never_panics_history_reader_open() {
     let log = HistoryLogGen::new(24).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
-    let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &crate::os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
+    let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(open_and_log(candidate, &semio_framework_os_spr::DecodeOptions::default())).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "HistoryReader::open must never panic on a bit-flipped buffer: {:?}", report.cases_panicked);
 }
 
@@ -887,8 +887,8 @@ async fn fuzz_bit_flips_never_panics_history_reader_open() {
 async fn fuzz_truncation_never_panics_recover() {
     let log = HistoryLogGen::new(25).await.generate(&typical_profile().await).await;
     let bytes = write_history_log(&log, true).await;
-    let limits = crate::os_spr::ProtocolLimits::default();
-    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(crate::os_spr::format::recover(&candidate, &limits, crate::os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
+    let limits = semio_framework_os_spr::ProtocolLimits::default();
+    let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, |candidate| ::semio_framework_async::poll::resolve_ready(semio_framework_os_spr::format::recover(&candidate, &limits, semio_framework_os_spr::RecoveryMode::LastCommit)).map(|_| ()).map_err(|error| error.to_string()));
     assert!(report.cases_panicked.is_empty(), "crate::os_spr::format::recover must never panic on a truncated buffer: {:?}", report.cases_panicked);
 }
 //#endregion 🔖️Corrupt

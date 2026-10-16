@@ -1,6 +1,9 @@
 //! 🔌️ The HubDirectory port every persistence backend implements.
 
 use super::*;
+use semio_hub_directory_contract::model::{AdminDirectoryOverviewCounts, AdminEffectCommitV1, AdminOperationAuditRecord, AdminOperationEffectReceiptV1, AdminSpaceSummaryRecord, AgentDelegationRecord, AgentDelegationRow, AuthAuditRecord, AuthSessionIssue, AuthSessionRecord, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CredentialAuditFactV1, DirectoryCommandClaimV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, InviteRecord, InviteRedemptionCommit, IssuedAgentDelegation, IssuedAuthSession, IssuedInvite, IssuedShareToken, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, RevokedAuthSession, ShareTokenRecord, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceAdministrationInviteRow, SpaceAdministrationMemberRow, SpaceRecord, SpaceRole, SyncSessionRecord, UserRecord};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::{InviteCapability, InviteRedemptionScopeHintV1, NewDirectoryEvent, SessionCapability, ShareCapability, now_ms};
 
 //#region 🔖️Trait
 /// 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend

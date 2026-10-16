@@ -546,3 +546,16 @@ fn sniff_recognizes_real_magic_and_rejects_garbage() {
     assert_eq!(sniff_zip_bytes(b"not a zip at all, just prose"), SniffConfidence::Low);
     assert_eq!(sniff_zip_bytes(b""), SniffConfidence::Low);
 }
+
+#[test]
+fn logical_diff_does_not_require_native_comment_encoding(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
+    let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
+    let diff=crate::standards::v2_0::subsets::base::schema::diff::ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..crate::standards::v2_0::subsets::base::schema::diff::ZipDiff::default()};
+    let after=protocol::apply_diff(&diff,&base).expect("logical comment edit must not materialize native ZIP");
+    let actual=serde_json::json!({"comment":after.comment,"commentUtf8":after.comment_utf8});
+    let mut reference=fixture["before"].clone();reference["comment"]=fixture["mutation"]["comment"].clone();
+    assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);
+    assert_eq!(crate::standards::v2_0::subsets::base::io::encode_zip(&after).is_ok(),fixture["nativeEncode"].as_bool().unwrap());
+    eprintln!("[DEBUG] ZIP logical diff and separate native admission oracle=serde_json");
+}

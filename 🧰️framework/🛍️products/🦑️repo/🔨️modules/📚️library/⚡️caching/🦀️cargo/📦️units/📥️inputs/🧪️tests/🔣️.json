@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "name": "exact",
+      "actualBytes": 4,
+      "expectedBytes": 4,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": true
+    },
+    {
+      "name": "grow",
+      "actualBytes": 8,
+      "expectedBytes": 4,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "shrink",
+      "actualBytes": 3,
+      "expectedBytes": 4,
+      "maximumBytes": 8,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "bound",
+      "actualBytes": 8,
+      "expectedBytes": null,
+      "maximumBytes": 4,
+      "remainingFiles": 1,
+      "accepted": false
+    },
+    {
+      "name": "files",
+      "actualBytes": 4,
+      "expectedBytes": null,
+      "maximumBytes": 8,
+      "remainingFiles": 0,
+      "accepted": false
+    },
+    {
+      "name": "empty",
+      "actualBytes": 0,
+      "expectedBytes": 0,
+      "maximumBytes": 0,
+      "remainingFiles": 1,
+      "accepted": true
+    }
+  ]
+}

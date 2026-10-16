@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-manifest-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "manifest-plugin"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-kernel-identity = { path = "../../../../🎠️kernel/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-manifest-actions = { path = "../../../🕹️actions/📦️packages/🦀️rust" }
+semio-framework-manifest-app-surface = { path = "../../../🧱️app-surface/📦️packages/🦀️rust" }
+semio-framework-manifest-arg-schema = { path = "../../../🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-manifest-contribution = { path = "../../../🧩️contribution/📦️packages/🦀️rust" }
+semio-framework-manifest-media = { path = "../../../🎞️media/📦️packages/🦀️rust" }
+replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

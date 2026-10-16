@@ -1,6 +1,7 @@
 //! 🎒️ Neutral preview mesh record codec and bounded transport envelope.
 use base64::Engine;
 use neural_engine::EvalError;
+use semio_framework_os_kernel::os_pack;
 // #region 🎒️MeshPackCodec
 
 /// 🎒️ Field ids of the mesh record body — stable wire identity shared by the Rust encoder, the

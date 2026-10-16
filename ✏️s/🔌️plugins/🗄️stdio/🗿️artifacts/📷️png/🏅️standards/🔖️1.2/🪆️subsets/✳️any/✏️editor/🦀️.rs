@@ -51,8 +51,7 @@ pub(crate) mod patch_pixel_region;
 #[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-native-region/🦀️.rs"]
 pub(crate) mod paint_native_region;
 
-#[path="🧬️publication/🦀️.rs"]
-pub(crate) mod publication;
+pub(crate) use semio_s_artifact_stdio_png_editor::editor::png::publication;
 
 //#region 🔖️Command
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -110,7 +109,7 @@ fn png_editor_native_command_id(command: &PngNativeEditCommand) -> &'static str 
         PngNativeEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
-fn png_editor_command_id(command: &PngEditCommand) -> &'static str {
+pub fn png_editor_command_id(command: &PngEditCommand) -> &'static str {
     editing::snapshot_editing_command_id(command, png_editor_native_command_id)
 }
 fn png_editor_native_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngNativeEditCommand, Fault> {
@@ -121,7 +120,7 @@ fn png_editor_native_command_from_action(action: &str, args: Option<&semio_frame
         _ => Err(Fault::from(format!("action '{action}' is not a PNG editor action"))),
     }
 }
-fn png_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngEditCommand, Fault> {
+pub fn png_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngEditCommand, Fault> {
     editing::snapshot_editing_command_from_action(action, args, png_editor_native_command_from_action)
 }
 fn png_editor_retained_extent(command: &PngEditCommand, _snapshot: &PngSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -163,7 +162,7 @@ const STDIO_PNG_PIXEL_REGION_CONTRACT: ArtifactToolPublicationContract = Artifac
 const fn png_editor_pixel_region_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(patch_pixel_region::MAXIMUM_RAW_BYTES, 64, patch_pixel_region::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
-struct PngPixelRegionFactory { keys: Vec<ToolFactoryKey> }
+pub struct PngPixelRegionFactory { keys: Vec<ToolFactoryKey> }
 impl PngPixelRegionFactory {
     fn new(controller_id: &str) -> Self { Self { keys: vec![ToolFactoryKey::new(controller_id, patch_pixel_region::ACTION_ID)] } }
 }
@@ -405,3 +404,225 @@ pub fn create_png_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{STDIO_PNG_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.png".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Png", "Png"),
+        source_format: STDIO_PNG_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_PNG_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind};
+use crate::{native_codec};
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.png.v1", artifact: "png", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{native_codecs};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_PNG_DOCUMENT_SCHEMA};
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+pub use crate::schema::mutations::PngMutation;
+pub use crate::schema::snapshot::PngSnapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6) —
+/// replaces the old side-effecting `crate::standards::v1_2::subsets::any::io::register()`, previously called
+/// unconditionally from `🗄️stdio`'s plugin root. Mirrors `🗒️note`/`🔋️model`'s own `declaration()`
+/// exemplars: `.composers(...)` reaches `⚙️engine`'s OWN `io_registry` (the real `ComposerEntry`
+/// row — png has no baseline/tiny/basic subset here, just the single ✳️any entry) by its FULLY
+/// QUALIFIED path, never the bare `io_registry::entries()` shortcut that would silently rebind to
+/// this file's own shadowing `io_registry` module below (repo-wide "silent rebind" hazard this
+/// ticket tracks — that module returns `&[&ComposerEntry]`, a different type, and is left in place
+/// as orphaned dead code, matching `🔋️model`'s own precedent for its orphaned wrapper). Unlike
+/// `🖼️tiff`/`📸️jpg`/`🎨️svg`, png's `register()` never registered a subset validator (no baseline
+/// subset here) and never called `register_schema_specs()` — nothing left uncovered. `⚙️engine`
+/// itself is untouched — this only REFERENCES what it already exposes.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("png", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
+        .composers(crate::standards::v1_2::subsets::any::io::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") })
+        .try_build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
+/// here verbatim from `⚙️engine::register_pilot_languages` (same 5-role Document/Ops/Diff/Pack/Spr
+/// shape every stdio artifact uses), leaked to a `&'static` slice since `dsl::passthrough_hooks`
+/// isn't `const fn`, mirroring the `🗒️note`/`🔋️model` exemplars' own helper of the same shape.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.png",
+                    extension: Some("png"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v1_2::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1_2::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1_2::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1_2::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.png"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.png.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v1_2::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1_2::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1_2::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1_2::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.png.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.png.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v1_2::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1_2::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.png.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.png.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v1_2::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1_2::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.png.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.png.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v1_2::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1_2::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.png.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems9
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "png", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems10
+
+//#region 🧩️ArtifactItems11
+pub mod artifact_items_11 {
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems11
+
+//#region 🧩️ArtifactItems12
+pub mod artifact_items_12 {
+use crate::{pilot_languages};
+use crate::{artifact_kind};
+use crate::{STDIO_PNG_DOCUMENT_SCHEMA};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+pub use crate::schema::mutations::PngMutation;
+pub use crate::schema::snapshot::PngSnapshot;
+
+//#region 🔖️ImperativeRegister
+/// 🌉️ Relocated from `⚙️engine::register` (ticket
+/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `declaration()` above is what stdio's
+/// own plugin-host boot path now uses, but external plugins (`🖨️raster`'s own
+/// `ensure_stdio_semio_and_png_registered`) call this imperative entry point directly for
+/// standalone `cargo test` runs that never execute the declarative plugin-host boot. Behavior
+/// preserved verbatim — only the module path changed (`engine::register` → `png::register`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
+    crate::io_registry::register();
+    ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor()).expect("schema descriptor publication");
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()).expect("schema descriptor publication");
+    for lang in pilot_languages() {
+        semio_framework_dsl::register_language(*lang);
+    }
+    semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") }, store::artifact_codec::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+}
+//#endregion 🔖️ImperativeRegister
+}
+//#endregion 🧩️ArtifactItems12

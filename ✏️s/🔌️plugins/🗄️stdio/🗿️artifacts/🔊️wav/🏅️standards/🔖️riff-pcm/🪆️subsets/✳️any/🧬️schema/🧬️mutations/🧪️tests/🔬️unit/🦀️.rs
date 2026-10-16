@@ -1,5 +1,6 @@
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk, standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef, standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavFmt, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::riff_pcm::subsets::any::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -123,7 +124,7 @@ async fn text_descriptor_recognizes_every_printer_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧭️serialization-boundaries/🔣️.json")).expect("serialization boundary fixture is JSON");
     let invalid_even_pad = fixture["invalidEvenPadByte"].as_u64().expect("invalidEvenPadByte") as u8;
     let overflow_ext = fixture["overflowFmtExtensionBytes"].as_u64().expect("overflowFmtExtensionBytes") as usize;
     let valid_fourcc = fixture["validFourcc"].as_str().expect("validFourcc");
@@ -170,4 +171,9 @@ async fn wav_mutation_inverse_sum_law_holds_for_every_leaf() {
     for mutation in [WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0x11, data_pad_byte: 0x22 }), WavMutation::SetPadBytes(set_pad_bytes::SetPadBytes { fmt_pad_byte: 0, data_pad_byte: 0x33 })] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &odd).await;
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

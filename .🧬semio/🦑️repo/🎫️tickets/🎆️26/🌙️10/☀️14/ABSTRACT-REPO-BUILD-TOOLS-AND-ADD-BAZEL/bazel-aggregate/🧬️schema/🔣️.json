@@ -1,0 +1,4 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["mode"],"properties":{"mode":{"enum":["--prepare","--execute","--receive-proof"]}},
+ "definitions":{"Policy":{"const":{"version":1,"owner":"repository:build","maximumElapsedMilliseconds":0}},"Selection":{"const":["run","workspace:test-build-tool-bazel"]},"Dispatcher":{"const":["test","bazel"]},"Phases":{"const":["cache","nested","uncached","birth","services","refusals","cancellation","configuration","offline"]},"Forbidden":{"const":["SEMIO_SCRIPT_PROCESS_INVOCATION","SEMIO_SCRIPT_POLICY","SEMIO_SCRIPT_CAPABILITIES","SEMIO_BUILD_TOOL","SEMIO_BUILD_MODE","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST","SEMIO_BUILD_REUSE_GRAPH","SEMIO_SCRIPT_MAX_ELAPSED_MS","SEMIO_BUILD_INVOCATION_PID","SEMIO_TASK_PROJECT","SEMIO_TASK_TARGET","SEMIO_BAZEL_FIXTURE_PHASE","SEMIO_BAZEL_INTEGRATION"]}}
+}

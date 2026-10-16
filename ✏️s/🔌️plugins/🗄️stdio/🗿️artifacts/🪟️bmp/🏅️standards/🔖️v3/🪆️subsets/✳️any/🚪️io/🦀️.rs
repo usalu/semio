@@ -276,9 +276,7 @@ pub fn register_artifact_inferences() {
 //#endregion 🔖️Register
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
@@ -299,11 +297,15 @@ pub mod io_registry {
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_bmp_schema::standards::v_v3::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::io::text::diff;
+    pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_stdio_bmp_mutations::standards::v_v3::subsets::any::io::text::mutations;
+    pub use semio_s_artifact_stdio_bmp_snapshot::standards::v_v3::subsets::any::io::text::snapshot;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_stdio_bmp_inferences::standards::v_v3::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{BmpDiff, BmpMutation, BmpSnapshot};

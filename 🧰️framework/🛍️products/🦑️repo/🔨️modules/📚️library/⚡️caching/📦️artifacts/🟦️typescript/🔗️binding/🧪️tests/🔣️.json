@@ -1,0 +1,17 @@
+{
+  "workspace": "/repo",
+  "products": "/generated/products",
+  "package": "/repo/owners/example/📦️packages/🟦️typescript",
+  "name": "@semio-tech/fixture",
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "foreignPackage": "/foreign/📦️packages/🟦️typescript",
+  "fixedBindings": [
+    "dist",
+    "📤️dist/prototype",
+    "📤️dist/release"
+  ],
+  "history": 0
+}

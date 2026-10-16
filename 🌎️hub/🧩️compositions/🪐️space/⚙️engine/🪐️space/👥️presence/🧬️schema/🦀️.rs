@@ -21,5 +21,5 @@ pub struct SpacePresence {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::engine::space::config::SpaceWindowCamera;
+pub use crate::config::SpaceWindowCamera;
 //#endregion 🔁️Re-exports

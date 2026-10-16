@@ -2,8 +2,8 @@
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_dsl_record::RecordSpecProducer;
 use semio_framework_dsl_record::RecordValue;
-use crate::sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase};
-use crate::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_framework_io_sqlite_snapshot::{SnapshotEncoding, SqliteSnapshotControl, SqliteSnapshotPhase};
+use semio_framework_io_sqlite_snapshot::{ValueError, ValueRefusalKind};
 use semio_framework_value::native_encoding::NativeEncodeProgress;
 
 /// 🧮️ Projects and emits only the owner's declared controlled record factories.
@@ -13,22 +13,22 @@ pub fn encode_sqlite_snapshot_record_native(
     spec: RecordSpecProducer,
     construct: impl FnOnce(&mut NativeEncodeControl<'_>) -> Result<RecordValue, ValueError>,
     control: &mut SqliteSnapshotControl<'_>,
-    native_owner: &mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>,
-) -> Result<crate::io_schema::IoPayload, ValueError> {
+    native_owner: &mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>,
+) -> Result<semio_framework_io_schema::IoPayload, ValueError> {
     let limits = control.limits();
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
     let component = match encoding {
-        SnapshotEncoding::Binary => super::semio_format::Component::Pack,
-        SnapshotEncoding::Text => super::semio_format::Component::Dsl,
+        SnapshotEncoding::Binary => semio_framework_os_semio::Component::Pack,
+        SnapshotEncoding::Text => semio_framework_os_semio::Component::Dsl,
     };
     let body_limit =
-        limits.max_file_bytes.checked_sub(super::semio_format::declared_envelope_prefix_len(envelope_id, component, 1)?).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native file ceiling cannot contain its declared envelope"))?;
+        limits.max_file_bytes.checked_sub(semio_framework_os_semio::declared_envelope_prefix_len(envelope_id, component, 1)?).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native file ceiling cannot contain its declared envelope"))?;
     let before=native_owner.native().owned_bytes();
     let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot cumulative allowance overflow"))?;
     let mut refused=None;
     let mut observer=|event:NativeEncodeProgress|match control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
-    let result=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<(Option<semio_framework_dsl_record::RecordSpec>,Option<RecordValue>,Option<crate::io_schema::IoPayload>,Option<crate::io_schema::IoPayload>),crate::io_schema::IoPayload>(|intermediate,native,_body|{
-        let result = (|| -> Result<crate::io_schema::IoPayload, ValueError> {
+    let result=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<(Option<semio_framework_dsl_record::RecordSpec>,Option<RecordValue>,Option<semio_framework_io_schema::IoPayload>,Option<semio_framework_io_schema::IoPayload>),semio_framework_io_schema::IoPayload>(|intermediate,native,_body|{
+        let result = (|| -> Result<semio_framework_io_schema::IoPayload, ValueError> {
             *intermediate=Some((None,None,None,None));
             intermediate.as_mut().unwrap().0=Some(spec.encode(native)?);
             intermediate.as_mut().unwrap().1=Some(construct(native)?);
@@ -37,18 +37,18 @@ pub fn encode_sqlite_snapshot_record_native(
                 SnapshotEncoding::Binary => {
                     let mut options = pack::record::EncodeOptions::default();
                     options.limits.max_file_len = body_limit as u64;
-                    *body=Some(crate::io_schema::IoPayload::Binary(pack::record::encode_document_controlled(spec, record, &options, native).map_err(super::PackRefusal::into_value_error)?));
-                    let Some(crate::io_schema::IoPayload::Binary(bytes))=body.as_ref()else{unreachable!()};crate::io_schema::IoPayload::Binary(super::semio_format::wrap_binary_controlled(envelope_id, component, 1, bytes, native)?)
+                    *body=Some(semio_framework_io_schema::IoPayload::Binary(pack::record::encode_document_controlled(spec, record, &options, native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?));
+                    let Some(semio_framework_io_schema::IoPayload::Binary(bytes))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Binary(semio_framework_os_semio::wrap_binary_controlled(envelope_id, component, 1, bytes, native)?)
                 }
                 SnapshotEncoding::Text => {
-                    *body=Some(crate::io_schema::IoPayload::Text(semio_framework_dsl_record::print_controlled(record, spec, semio_framework_dsl_record::JoinMode::Document, body_limit, native).map_err(|error| ValueError::new(error.kind, error.message))?));
-                    let Some(crate::io_schema::IoPayload::Text(text))=body.as_ref()else{unreachable!()};crate::io_schema::IoPayload::Text(super::semio_format::wrap_text_controlled(envelope_id, component, 1, text, native)?)
+                    *body=Some(semio_framework_io_schema::IoPayload::Text(semio_framework_dsl_record::print_controlled(record, spec, semio_framework_dsl_record::JoinMode::Document, body_limit, native).map_err(|error| ValueError::new(error.kind, error.message))?));
+                    let Some(semio_framework_io_schema::IoPayload::Text(text))=body.as_ref()else{unreachable!()};semio_framework_io_schema::IoPayload::Text(semio_framework_os_semio::wrap_text_controlled(envelope_id, component, 1, text, native)?)
                 }
             };
             *candidate=Some(output);
             let length = match candidate.as_ref().unwrap() {
-                crate::io_schema::IoPayload::Binary(bytes) => bytes.len(),
-                crate::io_schema::IoPayload::Text(text) => text.len(),
+                semio_framework_io_schema::IoPayload::Binary(bytes) => bytes.len(),
+                semio_framework_io_schema::IoPayload::Text(text) => text.len(),
             };
             if length > limits.max_file_bytes {
                 return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot output exceeds file byte limit"));

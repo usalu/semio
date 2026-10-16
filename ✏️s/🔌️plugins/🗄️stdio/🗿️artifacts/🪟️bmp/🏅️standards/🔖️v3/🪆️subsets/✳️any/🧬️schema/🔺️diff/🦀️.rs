@@ -80,3 +80,6 @@ pub(crate) fn demo_diff_cases() -> Vec<BmpDiff> {
         BmpDiff { image: None, rects: vec![BmpSampleRect { region: BmpRegion { x: 0, y: 0, width: 1, height: 1 }, indices: Vec::new(), samples: vec![BmpNativeSample { red: 1, green: 2, blue: 3, alpha: 0, reserved: 0 }] }] },
     ]
 }
+
+#[path="🔏️canonical/🦀️.rs"]
+mod canonical;

@@ -203,7 +203,7 @@ async fn a_late_contributions_install_re_arms_the_viewer_evaluation_the_empty_re
         if index + 1 < pages.len() {
             assert!(carried.is_empty(), "page {index} installs nothing yet, so it carries nothing");
         } else {
-            assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
+            assert_eq!(carried, vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
             install_effects = receipt.effects.clone();
         }
     }

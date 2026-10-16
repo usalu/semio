@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-trusted-catalog-fixtures-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

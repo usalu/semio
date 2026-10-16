@@ -1,5 +1,8 @@
+//! 🧱️ Audit_quick of the foundation crate: Gateway vocabulary: errors, handles, audit lane, reports, local session files and delegated credentials.
 
-use super::*;
+use std::fs;
+use std::path::PathBuf;
+use crate::audit::{AgentAuditEvent, AuditDecision, AuditSink, ClientInfo, FileAuditSink, InMemoryAuditSink, SENSITIVE_KEYS, default_audit_dir, hash_input, redact_input};
 
 fn sample_event(input_redacted: serde_json::Value) -> AgentAuditEvent {
     AgentAuditEvent {
@@ -25,6 +28,7 @@ fn sample_event(input_redacted: serde_json::Value) -> AgentAuditEvent {
 }
 
 //#region 🔖️Redaction
+
 #[test]
 fn redact_input_replaces_only_sensitive_keys_case_insensitively() {
     let raw = serde_json::json!({ "Password": "hunter2", "dx": 1.0, "nested": { "API_KEY": "sk-live-xyz", "safe": "ok" } });
@@ -62,9 +66,11 @@ fn hash_input_is_deterministic_for_the_same_value() {
     let other = serde_json::json!({ "a": 2 });
     assert_ne!(hash_input(&value), hash_input(&other));
 }
+
 //#endregion 🔖️Redaction
 
 //#region 🔖️InMemorySink
+
 #[test]
 fn in_memory_sink_preserves_append_order() {
     let sink = InMemoryAuditSink::new();
@@ -77,9 +83,11 @@ fn in_memory_sink_preserves_append_order() {
     assert_eq!(events[0].invocation_id, "inv-1");
     assert_eq!(events[1].invocation_id, "inv-2");
 }
+
 //#endregion 🔖️InMemorySink
 
 //#region 🔖️FileSink
+
 fn scratch_dir(label: &str) -> PathBuf {
     std::env::temp_dir().join(format!("semio-mcp-audit-test-{label}-{}-{}", std::process::id(), framework_hash::hash_bytes(label.as_bytes())))
 }
@@ -108,4 +116,5 @@ fn default_audit_dir_ends_with_the_frozen_path_suffix() {
     let dir = default_audit_dir();
     assert!(dir.ends_with(std::path::Path::new(".semio").join("agent").join("audit")));
 }
+
 //#endregion 🔖️FileSink

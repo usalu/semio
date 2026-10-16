@@ -137,7 +137,7 @@ fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Iso16
  reader.finish()?;c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;build.0.take().ok_or_else(|| invalid("ISO missing completed owner"))
 }
 /// 🪪️ Exact optional capability authored by the catalogue owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Iso16757Snapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Iso16757Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Iso16757Snapshot{
  

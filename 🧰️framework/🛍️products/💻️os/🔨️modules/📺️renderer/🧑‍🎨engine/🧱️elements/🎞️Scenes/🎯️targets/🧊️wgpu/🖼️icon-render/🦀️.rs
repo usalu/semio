@@ -309,7 +309,7 @@ fn icon_render_world_component_scene(
 }
 
 /** 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
-pub(crate) fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
+pub fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, hosts: &mut SceneEngineHosts<'_>) {
     let Some(icon_render) = &scene.icon_render else {
         return render_icon_render_empty(bounds, ctx, hosts.chrome_labels.icon_render.empty_scene);
     };
@@ -373,7 +373,7 @@ fn icon_render_status(mesh_resident: bool, faulted: bool) -> IconRenderStatus {
 }
 
 fn icon_render_subject_status(state: &infinite_world::world::World3dState, mesh_id: &str, url: &str) -> IconRenderStatus {
-    icon_render_status(state.mesh_lease(mesh_id).is_some(), state.snapshot_fault().is_some() || infinite_world::world::world3d_asset_url_missed(state, url))
+    icon_render_status(state.mesh_lease(mesh_id).is_some(), state.snapshot_fault().is_some() || infinite_world::world::world3d_asset_url_missed(&state.assets, url))
 }
 
 fn icon_render_status_message(status: IconRenderStatus, labels: IconRenderChromeLabels) -> Option<&'static str> {
@@ -447,7 +447,7 @@ fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, 
 
 //#region IconRenderTests
 #[path = "../../../../🖼️IconRenderHost/🎯️targets/🧊️wgpu/📤️export/🦀️.rs"]
-pub(crate) mod icon_export;
+pub mod icon_export;
 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-icon-render/🦀️.rs"]

@@ -1,10 +1,10 @@
 use super::*;
 
 /// 🧫️ The corpus React's `coalesceBoard2dEvents` replays too (`🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing`).
-const BOARD_EVENT_COALESCING_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json"));
+const BOARD_EVENT_COALESCING_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️board-event-coalescing/🔣️.json"));
 
 /// 🧫️ The corpus React's `board2dFloat32Decimal` replays too (`🖥️Board2dHost/🧪️tests/🧪️float32-decimal`).
-const BOARD_FLOAT32_DECIMAL_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧫️fixtures/🧫️float32-decimal/🔣️.json"));
+const BOARD_FLOAT32_DECIMAL_CORPUS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️float32-decimal/🔣️.json"));
 
 fn typed_queue(rows: &[Value]) -> infinite_canvas::BoardEventQueue {
     let mut queue = infinite_canvas::BoardEventQueue::default();
@@ -63,7 +63,7 @@ fn the_wgpu_coalescer_replays_the_shared_corpus() {
 }
 
 /// ⚖️ Law: the transient and flush-now tables name exactly what React's two sets name
-/// (`PUZZLE2D_TRANSIENT_EVENT_NAMES`/`PUZZLE2D_FLUSH_NOW_EVENT_NAMES`, `🖥️Board2dHost/🟦️.tsx`), and every kind
+/// (`BOARD_TRANSIENT_EVENT_NAMES`/`BOARD_FLUSH_NOW_EVENT_NAMES`, `🖥️Board2dHost/🟦️.tsx`), and every kind
 /// the engine publishes is exactly one of transient, terminal, `camera` or a waiting companion row.
 #[test]
 fn transient_and_flush_now_tables_match_the_react_sets() {
@@ -108,14 +108,31 @@ fn a_draft_reference_highlight_reaches_the_wgpu_board_engine() {
     board.highlighted_ids_json = json!(["mid", "left"]).to_string();
     let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "the first scene syncs");
-    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#);
+    assert_eq!(host.focus.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#);
     assert!(!sync_board_engine(&mut host, &mut cache, &board, 800, 600), "an unchanged scene re-applies nothing");
     board.snapshot_json = fixture(80.0);
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "a new preview syncs");
-    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#, "a new preview keeps what the draft references");
+    assert_eq!(host.focus.highlighted_ids_json().expect("highlighted ids"), r#"["left","mid"]"#, "a new preview keeps what the draft references");
     board.highlighted_ids_json = "[]".into();
     assert!(sync_board_engine(&mut host, &mut cache, &board, 800, 600), "a closed draft syncs");
-    assert_eq!(host.highlighted_ids_json().expect("highlighted ids"), "[]", "a closed draft highlights nothing");
+    assert_eq!(host.focus.highlighted_ids_json().expect("highlighted ids"), "[]", "a closed draft highlights nothing");
+}
+
+/// 🏷️ Law: the owning domain's placement naming reaches the wgpu board engine through the scene, so a brush placement on
+/// the wgpu lane mints the domain's ids exactly like the domain's own boards; an unchanged naming re-applies nothing and an
+/// absent one restores the engine's installed naming.
+#[test]
+fn the_scene_placement_naming_reaches_the_wgpu_board_engine() {
+    let naming = r#"{"brushNodePrefix":"domain.brush.","brushEdgePrefix":"domain.brush.edge."}"#;
+    let mut board = ui_wgpu::wgpu::Board2dScene::base(json!({ "schema": "board.ports.directed.v1", "nodes": [], "edges": [] }).to_string(), json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 }).to_string(), true);
+    board.placement_naming = Some(naming.into());
+    let (mut host, mut cache) = (infinite_canvas::BoardHost::default(), BoardSyncCache::default());
+    sync_board_engine(&mut host, &mut cache, &board, 800, 600);
+    assert_eq!(host.style.brush_placement_naming().to_json(), naming, "the scene's naming is the one the wgpu host mints with");
+    assert!(!sync_board_engine(&mut host, &mut cache, &board, 800, 600), "an unchanged scene re-applies nothing");
+    board.placement_naming = None;
+    sync_board_engine(&mut host, &mut cache, &board, 800, 600);
+    assert_eq!(host.style.brush_placement_naming(), infinite_canvas::NEUTRAL_BOARD_NAMING.placement_naming(), "an absent naming restores the installed one");
 }
 
 /// 🎛️ Law: the rotate ring runs on wgpu as it runs on React — the press opens the engine's direct lane, every move turns the
@@ -129,33 +146,33 @@ fn the_wgpu_rotate_ring_publishes_one_rotate_record() {
     let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let fixture = json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", -40.0), node("node-b", 40.0)], "edges": [] }).to_string();
     let mut host = infinite_canvas::BoardHost::default();
-    host.set_size(800, 600, 1.0);
-    host.set_camera_silent(0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture,&mut control)}, "the ring fixture parses");
-    host.set_selection_ids_silent(&["node-a".to_string(), "node-b".to_string()]);
+    host.scene.set_size(800, 600, 1.0);
+    set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the ring fixture parses");
+    set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["node-a".to_string(), "node-b".to_string()]);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).expect("surface").board_host = Some(ManuallyDrop::new(host)));
     while board_drain_into_buffer(board_id) {}
     board_retire_pending_events(board_id);
     let ring = |degrees: f64| {
         with_board_host(board_id, |host| {
             let (pivot, radius) = host.transform_gumball_geometry().expect("the rotate ring is armed");
-            let point = host.world_to_screen(canvas::Point::new(pivot.x + radius * degrees.to_radians().cos(), pivot.y + radius * degrees.to_radians().sin()));
+            let point = host.scene.world_to_screen(canvas::Point::new(pivot.x + radius * degrees.to_radians().cos(), pivot.y + radius * degrees.to_radians().sin()));
             (point.x as f32, point.y as f32)
         })
         .expect("board host")
     };
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let (gx, gy) = ring(0.0);
-    puzzle_board_pointer_down_into(board_id, inner, gx, gy, 0, false, false, &mut input).expect("an idle board takes the press");
-    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_lane_is_direct), Some(true), "the press on the ring opens the direct lane");
+    board2d_pointer_down_into(board_id, inner, gx, gy, 0, false, false, &mut input).expect("an idle board takes the press");
+    assert_eq!(with_board_host(board_id, |__h| pointer_lane_is_direct(&__h.focus, &__h.gestures)), Some(true), "the press on the ring opens the direct lane");
     for degrees in [30.0, 60.0, 90.0] {
         let (x, y) = ring(degrees);
-        assert_eq!(puzzle_board_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a ring frame at {degrees}° dispatches nothing");
+        assert_eq!(board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a ring frame at {degrees}° dispatches nothing");
         assert!(matches!(input.take_action_step(), Ok(None)), "a ring frame at {degrees}° leaves no action");
     }
-    assert_ne!(with_board_host(board_id, |host| host.nodes.get("node-a").map(|node| (node.x, node.y))).flatten(), Some((-40.0, 0.0)), "the frames turned the selection");
+    assert_ne!(with_board_host(board_id, |host| host.scene.nodes.get("node-a").map(|node| (node.x, node.y))).flatten(), Some((-40.0, 0.0)), "the frames turned the selection");
     let (x, y) = ring(90.0);
-    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(true), "the release dispatches");
+    assert_eq!(board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(true), "the release dispatches");
     let action = input.take_action_step().expect("the release publishes").expect("one action").into_descriptor().expect("an action descriptor");
     assert_eq!((action.controller_id.as_str(), action.action.as_str()), ("controller", "applyBoardEvents"));
     let rows: Value = serde_json::from_str(Value::from(action.args.as_ref().expect("args"))["eventsJson"].as_str().expect("eventsJson")).expect("rows parse");
@@ -164,7 +181,7 @@ fn the_wgpu_rotate_ring_publishes_one_rotate_record() {
     assert_eq!((record["kind"].as_str(), &record["targets"]), (Some("rotate"), &json!(["node-a", "node-b"])));
     assert!(record["angle"].as_f64().is_some_and(|angle| (angle - std::f64::consts::FRAC_PI_2).abs() < 1e-6), "a quarter turn: {record}");
     assert!(matches!(input.take_action_step(), Ok(None)), "ONE dispatch");
-    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_lane_is_direct), Some(false), "the release closes the lane");
+    assert_eq!(with_board_host(board_id, |__h| pointer_lane_is_direct(&__h.focus, &__h.gestures)), Some(false), "the release closes the lane");
     assert_eq!(publish_board_event_step(board_id, "controller", &mut input), Ok(false), "nothing is left for the frame pump");
     ENGINE_SURFACES.with(|cell| {
         cell.borrow_mut().remove(board_id);
@@ -179,10 +196,10 @@ fn install_click_board(board_id: &str) -> (f32, f32) {
     let node = |id: &str, x: f64| json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let fixture = json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", -40.0), node("node-b", 40.0)], "edges": [] }).to_string();
     let mut host = infinite_canvas::BoardHost::default();
-    host.set_size(800, 600, 1.0);
-    host.set_camera_silent(0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&fixture,&mut control)}, "the click fixture parses");
-    let at = host.world_to_screen(canvas::Point::new(-40.0, 0.0));
+    host.scene.set_size(800, 600, 1.0);
+    set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the click fixture parses");
+    let at = host.scene.world_to_screen(canvas::Point::new(-40.0, 0.0));
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).expect("surface").board_host = Some(ManuallyDrop::new(host)));
     while board_drain_into_buffer(board_id) {}
     board_retire_pending_events(board_id);
@@ -225,7 +242,7 @@ fn a_direct_press_under_a_pending_pointer_commit_faults_the_engine() {
             .ok()
             .expect("the idle move plans");
         assert!(plan.requires_retained_commit(), "an idle move is a retained hover commit, never an idle plan");
-        assert!(host.begin_pointer_commit(plan).is_ok(), "the hover commit begins");
+        assert!(begin_pointer_commit(&mut host.scene, &mut host.commit, plan).is_ok(), "the hover commit begins");
         host.pointer_down_screen(f64::from(x), f64::from(y), 0, false, false);
         let mut step = infinite_canvas::BoardAuthorityStep::Pending;
         for _ in 0..64 {
@@ -252,18 +269,18 @@ fn a_click_dispatched_in_one_input_drain_selects_the_node() {
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    puzzle_board_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
-    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_authority_terminal_is_empty), Some(false), "the move's hover commit is pending and unstepped");
-    puzzle_board_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press settles the pending commit, then presses");
-    assert_eq!(with_board_host(board_id, |host| host.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the hover was committed, not lost");
+    board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
+    assert_eq!(with_board_host(board_id, |__h| __h.commit.pointer_authority_terminal_is_empty()), Some(false), "the move's hover commit is pending and unstepped");
+    board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press settles the pending commit, then presses");
+    assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the hover was committed, not lost");
     let before_release = published_board_actions(board_id, &mut input);
     assert!(before_release.iter().all(|(_, rows)| rows.iter().all(|name| name != "hover")), "the settled hover is no board row: {before_release:?}");
-    puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
+    board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
     settle_board_pointer_authority_into(board_id, &mut input).expect("the release's commit reaches its terminal without a fault");
     let after_release = published_board_actions(board_id, &mut input);
     assert!(after_release.iter().any(|(_, rows)| rows.iter().any(|name| name == "select")), "the click publishes its selection: {after_release:?}");
-    assert_eq!(with_board_host(board_id, |host| host.selection.iter().cloned().collect::<Vec<_>>()), Some(vec!["node-a".to_string()]), "the node is selected");
-    assert_eq!(with_board_host(board_id, |host| (host.pointer_authority_terminal_is_empty(), host.pointer_lane_in_flight())), Some((true, false)), "the authority is idle and the click's lane is closed");
+    assert_eq!(with_board_host(board_id, |host| host.focus.selection.iter().cloned().collect::<Vec<_>>()), Some(vec!["node-a".to_string()]), "the node is selected");
+    assert_eq!(with_board_host(board_id, |host| (host.commit.pointer_authority_terminal_is_empty(), pointer_lane_in_flight(&host.focus, &host.gestures))), Some((true, false)), "the authority is idle and the click's lane is closed");
     remove_click_board(board_id);
 }
 
@@ -277,12 +294,12 @@ fn a_double_click_dispatched_in_one_input_drain_keeps_the_authority() {
     let (x, y) = install_click_board(board_id);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     for click in 0..2 {
-        puzzle_board_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).unwrap_or_else(|fault| panic!("press {click} is admitted: {fault:?}"));
-        puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).unwrap_or_else(|fault| panic!("release {click} is admitted: {fault:?}"));
+        board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).unwrap_or_else(|fault| panic!("press {click} is admitted: {fault:?}"));
+        board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).unwrap_or_else(|fault| panic!("release {click} is admitted: {fault:?}"));
     }
     settle_board_pointer_authority_into(board_id, &mut input).expect("the last release's commit reaches its terminal without a fault");
-    assert_eq!(with_board_host(board_id, |host| host.selection.iter().cloned().collect::<Vec<_>>()), Some(vec!["node-a".to_string()]), "the node is selected");
-    assert_eq!(with_board_host(board_id, |host| (host.pointer_authority_terminal_is_empty(), host.pointer_lane_in_flight())), Some((true, false)), "the authority is idle and no lane is left open");
+    assert_eq!(with_board_host(board_id, |host| host.focus.selection.iter().cloned().collect::<Vec<_>>()), Some(vec!["node-a".to_string()]), "the node is selected");
+    assert_eq!(with_board_host(board_id, |host| (host.commit.pointer_authority_terminal_is_empty(), pointer_lane_in_flight(&host.focus, &host.gestures))), Some((true, false)), "the authority is idle and no lane is left open");
     remove_click_board(board_id);
 }
 
@@ -295,15 +312,15 @@ fn a_wheel_after_a_move_in_one_input_drain_keeps_the_authority() {
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    puzzle_board_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
-    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_authority_terminal_is_empty), Some(false), "the move's hover commit is pending and unstepped");
-    assert_eq!(puzzle_board_wheel_into(board_id, "controller", inner, x, y, -12.0, &mut input), Ok(true), "the wheel settles the pending commit, then zooms");
+    board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the move onto the node is admitted");
+    assert_eq!(with_board_host(board_id, |__h| __h.commit.pointer_authority_terminal_is_empty()), Some(false), "the move's hover commit is pending and unstepped");
+    assert_eq!(board2d_wheel_into(board_id, "controller", inner, x, y, -12.0, &mut input), Ok(true), "the wheel settles the pending commit, then zooms");
     settle_board_pointer_authority_into(board_id, &mut input).expect("nothing faults");
     let published = published_board_actions(board_id, &mut input);
-    assert_eq!(with_board_host(board_id, |host| host.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the pending hover was committed before the wheel");
+    assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the pending hover was committed before the wheel");
     assert_eq!(published.iter().map(|(action, _)| action.as_str()).collect::<Vec<_>>(), ["setCamera"], "the wheel publishes its camera and a hover no board row: {published:?}");
-    assert!(with_board_host(board_id, |host| (host.camera.zoom - 1.0).abs() > 1e-9).unwrap_or(false), "the wheel zoomed");
-    assert_eq!(with_board_host(board_id, infinite_canvas::BoardHost::pointer_authority_terminal_is_empty), Some(true), "the authority is idle");
+    assert!(with_board_host(board_id, |host| (host.scene.camera.zoom - 1.0).abs() > 1e-9).unwrap_or(false), "the wheel zoomed");
+    assert_eq!(with_board_host(board_id, |__h| __h.commit.pointer_authority_terminal_is_empty()), Some(true), "the authority is idle");
     remove_click_board(board_id);
 }
 //#endregion 🚦️OneDrainInputLaws
@@ -353,13 +370,13 @@ fn a_hover_and_a_click_publish_one_board_batch_and_no_transient_row() {
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert_eq!(puzzle_board_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a hover claims no action");
+    assert_eq!(board2d_pointer_move_into(board_id, "controller", inner, x, y, false, false, false, &mut input), Ok(false), "a hover claims no action");
     settle_board_pointer_authority_into(board_id, &mut input).expect("the hover commit reaches its terminal");
-    assert_eq!(with_board_host(board_id, |host| host.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the hover is committed in the engine");
+    assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the hover is committed in the engine");
     assert_eq!(published_board_actions(board_id, &mut input), Vec::new(), "a hover dispatches nothing");
-    puzzle_board_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
+    board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
     assert_eq!(published_board_actions(board_id, &mut input), Vec::new(), "the press stages its selection and dispatches nothing");
-    puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
+    board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
     settle_board_pointer_authority_into(board_id, &mut input).expect("the release's commit reaches its terminal");
     let published = published_board_actions(board_id, &mut input);
     let batches: Vec<&Vec<String>> = published.iter().filter(|(action, _)| action == "applyBoardEvents").map(|(_, rows)| rows).collect();
@@ -377,13 +394,13 @@ fn the_frame_pump_drops_the_transient_rows_a_press_queues() {
     let inner = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let (x, y) = install_click_board(board_id);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    puzzle_board_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
-    assert_eq!(with_board_host(board_id, |host| host.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the press hovers its node");
+    board2d_pointer_down_into(board_id, inner, x, y, 0, false, false, &mut input).expect("the press is admitted");
+    assert_eq!(with_board_host(board_id, |host| host.focus.hovered_id.clone()).flatten().as_deref(), Some("node-a"), "the press hovers its node");
     assert_eq!(publish_board_event_step(board_id, "controller", &mut input), Ok(false), "the press's hover row is not a board batch");
     assert!(crate::collect_fixture_actions(&mut input).is_empty(), "nothing was dispatched");
-    assert_eq!(with_board_host(board_id, |host| host.peek_owned_event().is_none()), Some(true), "the engine's queue was drained");
+    assert_eq!(with_board_host(board_id, |host| host.outbox.peek_owned_event().is_none()), Some(true), "the engine's queue was drained");
     assert_eq!(ENGINE_SURFACES.with(|cell| cell.borrow().get(board_id).map(|entry| entry.board_pending_events.is_empty())), Some(true), "and the buffer holds no transient row");
-    puzzle_board_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
+    board2d_pointer_up_into(board_id, "controller", inner, x, y, false, false, false, &mut input).expect("the release is admitted");
     settle_board_pointer_authority_into(board_id, &mut input).expect("the release's commit reaches its terminal");
     remove_click_board(board_id);
 }

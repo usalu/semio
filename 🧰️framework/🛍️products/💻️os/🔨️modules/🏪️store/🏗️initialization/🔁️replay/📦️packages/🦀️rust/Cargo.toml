@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-initialization-replay"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Store initialization replay: the ArtifactStoreReplayInitializer state machine"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-initialization-replay"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-codec-registry = { path = "../../../../📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-owners = { path = "../../../🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-runtime = { path = "../../../🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-fields = { path = "../../../../📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]

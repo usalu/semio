@@ -911,7 +911,7 @@ async fn refresh_pending_effects_starts_the_preview_eval_run() {
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let effects = app.pending_effects(Some(&preview_view)).await;
-    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(semio_framework_value::DslValue::as_str) == Some(semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
+    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(semio_framework_value::DslValue::as_str) == Some(semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
     let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
     assert_eq!(receipt.state.as_deref(), Some("finalized"), "the read-only run settles and finalizes itself: {receipt:?}");
 }
@@ -2225,7 +2225,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
         if index + 1 < pages.len() {
             assert!(carried.is_empty(), "page {index} installs nothing yet, so it carries nothing: {carried:?}");
         } else {
-            assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
+            assert_eq!(carried, vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the last page carries the attached preview exactly one run start");
             install_effects = receipt.effects.clone();
         }
     }
@@ -2282,7 +2282,7 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
         context::drive_preview_run(&mut app, &flow_view, &carried).await;
     }
     assert!(generations[0] > before, "a closure the registry did not hold must burn a registry replacement");
-    assert_eq!(owed_per_run[0], vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "a changed closure carries the settled preview one restart");
+    assert_eq!(owed_per_run[0], vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "a changed closure carries the settled preview one restart");
     assert_eq!(generations[0], generations[1], "an unchanged closure must not burn a registry replacement");
     assert!(owed_per_run[1].is_empty(), "an unchanged closure must owe the settled run nothing on the second push: {:?}", owed_per_run[1]);
     println!("[STATS] re-push generations={before} -> {generations:?} owed={owed_per_run:?}");

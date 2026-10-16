@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "maximumArtifactBytes": 2097152,
+  "contexts": [
+    "single",
+    "dependency"
+  ],
+  "cases": [
+    {
+      "name": "prototype-off",
+      "profile": "prototype",
+      "settings": {
+        "opt-level": 0,
+        "lto": "off",
+        "codegen-units": 4,
+        "debug": 1,
+        "split-debuginfo": "off",
+        "incremental": false,
+        "panic": "abort",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "rpath": false,
+        "strip": "none"
+      }
+    },
+    {
+      "name": "prototype-incremental",
+      "profile": "prototype",
+      "settings": {
+        "opt-level": 0,
+        "lto": "off",
+        "codegen-units": 4,
+        "debug": 0,
+        "split-debuginfo": "off",
+        "incremental": true,
+        "panic": "unwind",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "rpath": false,
+        "strip": "none"
+      }
+    },
+    {
+      "name": "release-thin",
+      "profile": "release",
+      "settings": {
+        "opt-level": 3,
+        "lto": "thin",
+        "codegen-units": 1,
+        "debug": 0,
+        "split-debuginfo": "off",
+        "incremental": false,
+        "panic": "abort",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "rpath": false,
+        "strip": "symbols"
+      }
+    },
+    {
+      "name": "release-fat",
+      "profile": "release",
+      "settings": {
+        "opt-level": 3,
+        "lto": "fat",
+        "codegen-units": 1,
+        "debug": 2,
+        "split-debuginfo": "packed",
+        "incremental": false,
+        "panic": "unwind",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "rpath": true,
+        "strip": "debuginfo"
+      }
+    },
+    {
+      "name": "prototype-local",
+      "profile": "prototype",
+      "settings": {
+        "opt-level": 0,
+        "lto": false,
+        "codegen-units": 256,
+        "debug": 1,
+        "split-debuginfo": "off",
+        "incremental": true,
+        "panic": "unwind",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "rpath": false,
+        "strip": "none"
+      }
+    },
+    {
+      "name": "release-local",
+      "profile": "release",
+      "settings": {
+        "opt-level": 3,
+        "lto": false,
+        "codegen-units": 16,
+        "debug": 0,
+        "split-debuginfo": "off",
+        "incremental": false,
+        "panic": "unwind",
+        "debug-assertions": false,
+        "overflow-checks": false,
+        "rpath": false,
+        "strip": "debuginfo"
+      }
+    }
+  ]
+}

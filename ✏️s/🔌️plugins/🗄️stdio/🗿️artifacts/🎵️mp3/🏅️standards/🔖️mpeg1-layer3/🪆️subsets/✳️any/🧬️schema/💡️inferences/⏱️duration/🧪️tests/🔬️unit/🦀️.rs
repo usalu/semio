@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::standards::mpeg1_layer3::subsets::any::schema::inferences::duration::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -41,6 +41,9 @@ function compileBuildInputPatternV1(pattern) {
 /** 🧵️ Matches portable source globs consistently across Node and Bun without build-tool imports. */
 export function buildInputPathMatchesV1(path,pattern) { return compileBuildInputPatternV1(pattern).test(path); }
 
+/** 🎯️ Compiles one portable predicate for an operation-owned input pattern. */
+export function createBuildInputPathMatcherV1(pattern){const expression=compileBuildInputPatternV1(pattern);return path=>expression.test(path);}
+
 /** 🧮️ Interns equivalent project/workspace coordinates before backends compile native glob sets. */
 export function deduplicateProjectInputs(inputs, root) {
   const keys = new Set(), projectRoot = root === "." ? "{workspaceRoot}" : `{workspaceRoot}/${root}`;

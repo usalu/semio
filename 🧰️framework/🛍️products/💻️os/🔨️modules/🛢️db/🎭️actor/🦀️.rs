@@ -23,8 +23,10 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
 
-use crate::db_ids::GenerationId;
-use crate::*;
+use db_ids::GenerationId;
+use db_ids::DbError;
+use db_observe::{EmitEvent, EmitField, NullEmit};
+use db_policy::{DbConfig, MailboxCapacities, Priority, Profile};
 
 //#region 🔖️Envelope
 /// ✉️ One message in flight through a `Mailbox`: its admitted lane, an ever-increasing
@@ -346,15 +348,15 @@ impl<M: Send + 'static> Address<M> {
     /// 🔔️ Installs the finite-turn scheduler wake used by pool-hosted actors. Admission
     /// and close call it after releasing mailbox locks, so scheduling can never recurse under the
     /// mailbox mutex.
-    pub(crate) fn set_consumer_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
+    pub fn set_consumer_wake(&self, wake: Arc<dyn Fn() + Send + Sync>) {
         self.inner.set_consumer_wake(wake);
     }
 
-    pub(crate) fn has_messages(&self) -> bool {
+    pub fn has_messages(&self) -> bool {
         self.inner.has_messages()
     }
 
-    pub(crate) fn is_idle_and_closed(&self) -> bool {
+    pub fn is_idle_and_closed(&self) -> bool {
         self.inner.is_idle_and_closed()
     }
 }
@@ -484,7 +486,7 @@ pub struct ReplySender<R> {
 /// 📭️ The read-once half; also a `Future` (`Output = Result<R, DbError>`) so it can be
 /// ``ed directly or driven through `block_on`.
 pub struct ReplyReceiver<R> {
-    inner: Arc<Mutex<OneshotState<R>>>,
+    pub inner: Arc<Mutex<OneshotState<R>>>,
 }
 
 /// ✂️ A fresh `Reply` pair, unconnected to any particular message shape — `Address::ask`
@@ -526,7 +528,7 @@ impl<R> Drop for ReplySender<R> {
 impl<R> ReplyReceiver<R> {
     /// ⚡️ Non-blocking peek, used by `Supervisor::reap` to check a child's terminal outcome
     /// without parking.
-    fn try_recv(&self) -> Option<R> {
+    pub fn try_recv(&self) -> Option<R> {
         self.inner.lock().unwrap().value.take()
     }
 }
@@ -558,7 +560,7 @@ enum AskState<M, R> {
 }
 
 pub struct AskFuture<M, R> {
-    state: AskState<M, R>,
+    pub state: AskState<M, R>,
 }
 
 // 🩹️ Same `Unpin` justification as `SendFuture`'s impl — `AskFuture` embeds a `SendFuture<M>`

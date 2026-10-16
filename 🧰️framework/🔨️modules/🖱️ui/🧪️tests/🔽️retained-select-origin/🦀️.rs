@@ -3,7 +3,7 @@
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiControlNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use crate::wgpu::draw::KIND_GLYPH;
+use crate::wgpu::draw_types::KIND_GLYPH;
 use crate::wgpu::events::PointerButton;
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};

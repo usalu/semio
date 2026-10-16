@@ -1,0 +1,438 @@
+{
+  "cases": [
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "format",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "activate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "information",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "inactive",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "body",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "format",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "activate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "information",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "inactive",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "format",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "activate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "information",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "inactive",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "body",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "allocate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "format",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "activate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "information",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "inactive",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": true
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": false,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": false,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "unknown",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "ambiguous",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "changed",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": false,
+        "mapping": "exact-active",
+        "commands": 0
+      },
+      "expected": false
+    },
+    {
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "action": "deactivate",
+        "writer": true,
+        "accepted": true,
+        "activationAccepted": true,
+        "mapping": "exact-active",
+        "commands": 3
+      },
+      "expected": false
+    }
+  ]
+}

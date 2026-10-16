@@ -41,7 +41,7 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  let authority=publication.authority.as_ref().unwrap();
  let mut stage=super::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_stage(authority);stage.edit=Some(Box::new(super::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_edit(authority)));
  let id=fixture["edit"].as_str().unwrap();stage.applied_edit_id=id.into();stage.tail_edit_id=id.into();stage.post=Some(Arc::new(DemoSnapshot{n:Some(after)}));stage.local_actor=Some(authority.actor().into());stage.folded=1;stage.completed_items=1;stage.digest=[7;32];
- stage.mutation_retirement=(*store.mutation_retirement_factory).clone();stage.snapshot_retirement=(*store.snapshot_retirement_factory).clone();stage.unit_flags.reserve_exact(2);
+ stage.mutation_retirement=(*store.owners.mutation_retirement_factory).clone();stage.snapshot_retirement=(*store.owners.snapshot_retirement_factory).clone();stage.unit_flags.reserve_exact(2);
  let edit=stage.edit.as_mut().unwrap();edit.id=id.into();edit.actor=Some(authority.actor_utf8().clone());edit.forwards.push(mutation);edit.inverse.push(DemoMutation::SetN(SetN{n:before}));edit.mutation_meta.push(MutationMeta{mutation_id:Some(MutationId(fixture["mutation"].as_str().unwrap().into())),dependencies:Vec::new(),base_version:0,author_id:Some(ActorId(authority.actor_utf8().clone().into())),timestamp:authority.next_clock(),undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:protocol::MutationOrigin::Owner,transaction:None});
  publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
  let original_stage=std::ptr::from_ref(publication.stage.as_ref().unwrap().as_ref());let original_flags=publication.stage.as_ref().unwrap().unit_flags.as_ptr();
@@ -1933,7 +1933,7 @@ impl ArtifactPack for DemoSnapshot {
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DemoSnapshot {
 fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 //#endregion 🔖️ArtifactCodec
@@ -2087,21 +2087,21 @@ async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_clos
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "root-close", DemoSnapshot { n: Some(7) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid empty-history store");
     store.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    *store.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.current)));
-    let original = store.tail_undo_cache.as_ref().unwrap().0.as_ptr();
+    *store.live.tail_undo_cache = Some(("tail-owner".repeat(64), Arc::clone(&*store.live.current)));
+    let original = store.live.tail_undo_cache.as_ref().unwrap().0.as_ptr();
     let phase = ArtifactStoreCursorDisposerPhase::RuntimeOwners(5);
     let demand = store.close_cursor_demands(phase, 7).unwrap();
     let grant = RetainedCloneGrant { maximum_copy_bytes: 7, maximum_release_bytes: 0, ..physical_test_close_grant() };
     let (denied, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(phase, RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }));
     assert!(denied.is_err());
     assert_eq!((requested, released), (0, 0));
-    assert_eq!(store.tail_undo_cache.as_ref().unwrap().0.as_ptr(), original);
+    assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.as_ptr(), original);
     let (admitted, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(phase, grant));
     let (tail_id, receipt) = admitted.unwrap();
     assert_eq!((requested, released), (receipt.retained_capacity_bytes, receipt.released_bytes));
     assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
     drive_retirement_terminal(tail_id.expect("original tail id retires before snapshot"));
-    assert_eq!(store.tail_undo_cache.as_ref().unwrap().0.capacity(), 0);
+    assert_eq!(store.live.tail_undo_cache.as_ref().unwrap().0.capacity(), 0);
     let (tail, requested, released) = crate::test_allocation::observe_backing(|| store.close_cursor_admit(ArtifactStoreCursorDisposerPhase::TailSnapshot, grant));
     assert!(tail.unwrap().0.is_none());
     assert_eq!((requested, released), (0, 0));
@@ -2115,7 +2115,7 @@ async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_clos
         drive_retirement_terminal(owner.expect("current and whole envelope transfer exactly once"));
         assert!(store.close_cursor_admit(phase, grant).unwrap().0.is_none());
     }
-    assert!(store.current_detached && store.envelope_detached);
+    assert!(store.live.current_detached && store.log.envelope_detached);
     close_test_store(&mut store);
 }
 
@@ -5397,8 +5397,8 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     assert_eq!(publication.admitted_items(), ITEMS);
     assert_eq!(store.snapshot_ref().n, Some(ITEMS as i32), "every admitted mutation folded against the running post root");
     assert_eq!(store.applied_edit_ids().len(), 1, "one gesture consumes exactly one applied-edit slot");
-    assert_eq!(store.envelope.vcs.edits.len(), 1, "one gesture consumes exactly one history ledger slot");
-    let staged = store.envelope.vcs.edits.last().expect("staged gesture edit").clone();
+    assert_eq!(store.log.envelope.vcs.edits.len(), 1, "one gesture consumes exactly one history ledger slot");
+    let staged = store.log.envelope.vcs.edits.last().expect("staged gesture edit").clone();
     assert_eq!(staged.forwards.len(), ITEMS);
     assert_eq!(staged.mutation_meta.len(), ITEMS);
     assert_eq!(staged.inverse.len(), ITEMS);
@@ -5445,7 +5445,7 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     receipt.expect("a single-item gesture publishes");
     assert_eq!(publication.admitted_items(), 1);
     assert_eq!(store.snapshot_ref().n, Some(7));
-    let staged = store.envelope.vcs.edits.last().expect("staged edit");
+    let staged = store.log.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards, vec![DemoMutation::SetN(SetN { n: 7 })]);
     assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
     assert_eq!(staged.mutation_meta[0].mutation_id, Some(MutationId(staged.id.clone())), "a one-mutation gesture names its mutation after its edit on the batched route as on every other");
@@ -5453,7 +5453,7 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     close_durable_publication(&mut publication);
     let (mut pair, receipt) = publish_demo_batch(&mut store, 3, vec![DemoMutation::SetN(SetN { n: 8 }), DemoMutation::SetN(SetN { n: 9 })]).await;
     receipt.expect("a two-item gesture publishes");
-    let staged = store.envelope.vcs.edits.last().expect("staged two-item edit");
+    let staged = store.log.envelope.vcs.edits.last().expect("staged two-item edit");
     assert_eq!(staged.mutation_meta.iter().map(|meta| meta.mutation_id.clone()).collect::<Vec<_>>(), vec![Some(MutationId(format!("{}#0", staged.id))), Some(MutationId(format!("{}#1", staged.id)))], "a genuine multi-mutation gesture keeps its positional ids");
     assert!(pair.acknowledge());
     close_durable_publication(&mut pair);
@@ -5562,7 +5562,7 @@ async fn artifact_store_batch_rejection_mid_batch_leaves_no_partial_edit_and_sti
     assert_eq!(store.content_revision_now(), revision);
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()), "a rejected gesture never replaces the root");
     assert!(store.applied_edit_ids().is_empty(), "a rejected gesture leaves no partial applied edit");
-    assert!(store.envelope.vcs.edits.is_empty(), "a rejected gesture consumes no history ledger slot");
+    assert!(store.log.envelope.vcs.edits.is_empty(), "a rejected gesture consumes no history ledger slot");
     publication.begin_close();
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut store);
@@ -5589,7 +5589,7 @@ async fn artifact_store_batch_cancel_mid_flight_retires_every_staged_owner_witho
     close_durable_publication(&mut publication);
     assert_eq!(store.generation_now(), generation, "a cancelled gesture never publishes");
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
-    assert!(store.envelope.vcs.edits.is_empty());
+    assert!(store.log.envelope.vcs.edits.is_empty());
     close_demo_artifact_store(&mut store);
 }
 //#endregion 🧺️BatchedPublication
@@ -5599,9 +5599,9 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔌️plugin/🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "cold-retained-rebase", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    let capacity = store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
+    let capacity = store.log.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity();
     test_support::dispatch_test_command(&mut store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 13 })], transaction: None }).await.unwrap();
-    assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
+    assert_eq!(store.log.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
     assert_eq!(serde_json::json!(store.generation_now()), fixture["rebase"]["afterGeneration"]);
     let revision = store.content_revision_now();
     let factory: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
@@ -5614,7 +5614,7 @@ async fn retained_latest_wins_cold_rebase_preserves_admitted_cursor_capacity_for
     }
     assert_eq!(serde_json::to_value(store.snapshot_root().as_ref()).unwrap(), serde_json::json!({ "n": 97 }));
     assert_eq!(store.generation_now(), 2);
-    assert_eq!(store.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
+    assert_eq!(store.log.envelope.cursor.as_ref().unwrap().applied_edit_ids.capacity(), capacity);
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut store);
@@ -5699,7 +5699,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let revision = store.content_revision_now();
-    let stamp = HybridLogicalTimestamp { actor: 7, physical_ms: store.clock.physical_ms + 1_000, logical: 0 };
+    let stamp = HybridLogicalTimestamp { actor: 7, physical_ms: store.log.clock.physical_ms + 1_000, logical: 0 };
     let ahead: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], HistoryLane::Document, Some(&ahead), None)
@@ -5711,8 +5711,8 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
         }
     };
     assert_eq!(receipt, LaneItemReceipt { generation_before: generation, generation_after: generation + 1 });
-    assert_eq!(store.clock, stamp, "the committed Store clock is the stamp the committer hashed into its command");
-    let published = store.envelope.vcs.edits.last().expect("one published stamped edit");
+    assert_eq!(store.log.clock, stamp, "the committed Store clock is the stamp the committer hashed into its command");
+    let published = store.log.envelope.vcs.edits.last().expect("one published stamped edit");
     assert_eq!(published.mutation_meta.first().expect("stamped authority metadata").timestamp, stamp);
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
@@ -5724,7 +5724,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
         .expect("a stamp at or behind the Store clock is refused");
     assert_eq!(refused.reason, "stamped publication clock is not strictly after this Store's own last published edit");
     assert_eq!(store.generation_now(), generation + 1, "a refused stamp never publishes");
-    assert_eq!(store.clock, stamp);
+    assert_eq!(store.log.clock, stamp);
 
     let same_millisecond = HybridLogicalTimestamp { actor: 7, physical_ms: stamp.physical_ms, logical: stamp.logical + 1 };
     let tied: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(same_millisecond));
@@ -5737,7 +5737,7 @@ async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_
         }
     };
     assert_eq!(tied_receipt, LaneItemReceipt { generation_before: generation + 1, generation_after: generation + 2 });
-    assert_eq!(store.clock, same_millisecond, "the same-millisecond stamp is the committed clock, so the command hash still rebuilds");
+    assert_eq!(store.log.clock, same_millisecond, "the same-millisecond stamp is the committed clock, so the command hash still rebuilds");
     assert!(tied_publication.acknowledge());
     close_durable_publication(&mut tied_publication);
     close_demo_artifact_store(&mut store);
@@ -5754,7 +5754,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
     store.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     let generation = store.generation_now();
     let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
-    assert!(store.clock.physical_ms > stamp.physical_ms, "the construction seed is a wall-clock tick far ahead of the minted stamp");
+    assert!(store.log.clock.physical_ms > stamp.physical_ms, "the construction seed is a wall-clock tick far ahead of the minted stamp");
     let genesis: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
     let mut publication = store
         .begin_apply_batch(semio_framework_job::OperationId(21), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 3 })], HistoryLane::Document, Some(&genesis), None)
@@ -5765,7 +5765,7 @@ async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behi
             break;
         }
     }
-    assert_eq!(store.clock, stamp, "the committed clock is the stamp, never the construction seed");
+    assert_eq!(store.log.clock, stamp, "the committed clock is the stamp, never the construction seed");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
 
@@ -5805,10 +5805,10 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
             break;
         }
     }
-    let published = store.envelope.vcs.edits.last().expect("one published stamped edit");
+    let published = store.log.envelope.vcs.edits.last().expect("one published stamped edit");
     assert_eq!(published.id, approval, "the published edit publishes under the identity the durable decision hashed");
     assert_eq!(published.mutation_meta.first().expect("stamped authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.as_str()), Some(approval), "the folded item keeps the approval's mutation id, never the store's `#position` rewrite");
-    assert_eq!(store.applied_edit_ids.last().map(String::as_str), Some(approval), "the applied cursor names the stamped identity, so the actor frontier's head edit is the approval");
+    assert_eq!(store.log.applied_edit_ids.last().map(String::as_str), Some(approval), "the applied cursor names the stamped identity, so the actor frontier's head edit is the approval");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
 
@@ -5821,7 +5821,7 @@ async fn artifact_store_stamped_publication_carries_its_committed_identity_into_
             break;
         }
     }
-    let gestured = store.envelope.vcs.edits.last().expect("one published local edit");
+    let gestured = store.log.envelope.vcs.edits.last().expect("one published local edit");
     assert_ne!(gestured.id, approval, "an unstamped gesture keeps the identity its own preparation minted, never a stamped one, got {}", gestured.id);
     assert!(gestured.id.starts_with("retained-one-item-"), "the preparation factory mints the unstamped identity, got {}", gestured.id);
     assert_eq!(gestured.mutation_meta.first().expect("local authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.clone()), Some(gestured.id.clone()), "an unstamped one-mutation gesture names its mutation after its edit");
@@ -10127,7 +10127,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     let dialect = demo_child_dialect();
 
     let mut child = create_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", "child-round-trip", &dialect, &DemoSnapshot { n: Some(7) }.encode_pack(), ActorId(crate::os_spr::LOCAL_ACTOR_ID.into()), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("create");
-    assert!(child.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
+    assert!(child.owners.snapshot_retirement_factory.is_some(), "generated member creation must install the exact snapshot retirement factory before returning ownership");
     assert!(child.owned_disposer_installed(), "generated member creation must install the exact whole-store bounded disposer before returning ownership");
     child.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], transaction: None }, &mut identity).await.expect("apply");
     child.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo");
@@ -10138,7 +10138,7 @@ async fn typed_child_store_factory_round_trips_a_child_through_create_persist_op
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "child-round-trip".into(), dialect };
     let mut reopened = open_member_store::<DemoSnapshot, DemoMutation, _,_>("demo/v1", &expected, None, &persisted, child.local_actor_id().clone(), &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer, &crate::os_store::tests::DemoMemberStoreProducer::<DemoMutation>::new()).await.expect("open");
 
-    assert!(reopened.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
+    assert!(reopened.owners.snapshot_retirement_factory.is_some(), "generated member reopen must install the exact snapshot retirement factory before returning ownership");
     assert!(reopened.owned_disposer_installed(), "generated member reopen must install the exact whole-store bounded disposer before returning ownership");
     assert_eq!(reopened.envelope().id, "child-round-trip");
     assert_eq!(reopened.snapshot().expect("head snapshot"), child.snapshot().expect("head snapshot"), "reopened child's live content diverged from the persisted one");
@@ -10184,9 +10184,9 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "wrapped-member".into(), dialect };
     let mut reopened = <Wrapped as MemberFactory>::open(&expected, None, &persisted, created.local_actor_id().clone()).await.expect("wrapper open");
-    assert!(reopened.snapshot_retirement_factory.is_some());
-    assert!(reopened.initial_snapshot_retirement_factory.is_some());
-    assert!(reopened.mutation_retirement_factory.is_some());
+    assert!(reopened.owners.snapshot_retirement_factory.is_some());
+    assert!(reopened.owners.initial_snapshot_retirement_factory.is_some());
+    assert!(reopened.owners.mutation_retirement_factory.is_some());
     assert!(reopened.owned_disposer_installed());
     close_member_dialect_fixture(&mut reopened);
     close_member_dialect_fixture(&mut created);
@@ -11433,7 +11433,7 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
                 .collect();
             store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut identity).await.expect("fixture gesture applies");
         }
-        let edits = &store.envelope.vcs.edits;
+        let edits = &store.log.envelope.vcs.edits;
         assert_eq!(edits.len() as u64, fixture["expect"]["editsPerReplica"].as_u64().expect("edits per replica"));
         let operations: Vec<String> = edits.iter().flat_map(|edit| crate::os_spr::mutation_ids_for_edit::<DemoSnapshot, DemoMutation>(edit)).map(|id| id.0).collect();
         assert_eq!(operations.len() as u64, fixture["expect"]["operationIdsPerReplica"].as_u64().expect("operations per replica"));
@@ -11538,7 +11538,7 @@ async fn opened_actor_ownership_obeys_the_neutral_law() {
     let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "actor-genesis-law", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut real = super::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor.clone()).await.unwrap();
     real.install_document_store_owners_exact(complete_test_catalog(crate::os_store::tests::DemoMemberStoreProducer::<_>::new().member_store_owners(physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
-    assert!(Arc::ptr_eq(&*real.current, &real.envelope().vcs.genesis.facts().share_snapshot()));
+    assert!(Arc::ptr_eq(&*real.live.current, &real.envelope().vcs.genesis.facts().share_snapshot()));
     let mut live = ArtifactStore(real, Some(close_test_store::<DemoSnapshot, DemoMutation>));
     live.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 1 })], transaction: None }, &mut identity).await.unwrap();
     let first = live.envelope().vcs.edits.iter().next().unwrap();
@@ -12020,8 +12020,8 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         assert!(cursor.active.is_none());
         eprintln!("[DEBUG] Store nested cursor extent={N} demand={nested_demand} caller={caller} actual={nested_actual} reported={nested_report}");
         if nested_demand != N || nested_actual != expected || nested_report != nested_actual { failures.push((N, nested_demand, nested_actual, nested_report)); }
-        *store.owned_disposer = Some(Box::new(TerminalDisposer::<N>([0; N])));
-        store.owned_disposer_terminal = false;
+        *store.owners.owned_disposer = Some(Box::new(TerminalDisposer::<N>([0; N])));
+        store.owners.owned_disposer_terminal = false;
         let demand = store.close_owned_demands(0).unwrap().release_bytes;
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
         let (step, _, actual) = crate::test_allocation::observe_backing(|| store.close_owned_step(grant_for(1, caller)).unwrap());
@@ -12045,7 +12045,7 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rows"].as_array().unwrap() {
         let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "birth-refusal", DemoSnapshot { n: Some(0) }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
-        member.envelope.active_alternative_id = row["line"].as_str().map(str::to_owned);
+        member.log.envelope.active_alternative_id = row["line"].as_str().map(str::to_owned);
         let mut factory = DemoOneItemPreparationFactory::admissible();
         factory.stamped_mutation_id = row["stampedId"].as_str().map(|id| MutationId(id.into()));
         member.install_document_store_owners_exact(complete_test_catalog(demo_base_store_owners().with_one_item_preparation(Arc::new(factory),physical_test_close_grant()))).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));

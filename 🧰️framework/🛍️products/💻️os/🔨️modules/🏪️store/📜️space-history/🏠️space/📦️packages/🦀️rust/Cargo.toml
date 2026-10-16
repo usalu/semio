@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-space"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "SpaceHost, member store creation and opening, and the SQLite snapshot registration glue"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-space"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
+semio-framework-os-store-codec-factory = { path = "../../../../📦️codec/🏭️factory/📦️packages/🦀️rust" }
+semio-framework-os-store-codec-registry = { path = "../../../../📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-replay = { path = "../../../../🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-space-history = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-store-space-member = { path = "../../../../🧩️composition/👥️space-member/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]

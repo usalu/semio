@@ -1,4 +1,17 @@
-use super::*;
+use semio_framework_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, CANONICAL_EDIT_MAXIMUM_BYTES, CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES, invalid_path};
+use std::sync::Arc;
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree, ArtifactCanonicalJsonScalarBytes as ScalarBytes};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, SnapshotRetirementFactory, ToValue, ValueError};
+use semio_framework_os_store_one_item_publication::native_source::ArtifactStoreCanonicalSource;
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
+use semio_framework_os_store_one_item_publication::lifted_canonical_edit::{ArtifactStoreOneItemSealCheckpoint, ArtifactStoreOneItemSealer};
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use serde::{Deserialize, Serialize};
+use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, SchemaId};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_os_store_ephemeral::test_allocation;
+use super::{test_support, canonical_edit_tests as tests};
 
 #[test]
 fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_work() {
@@ -356,8 +369,8 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             let FixtureMutation::Replace(FixtureReplace { text, .. }) = &mut edit.forwards[0];
             *text = "x".repeat(length.as_u64().unwrap() as usize);
             edit.finished_at = Some("finished".into());
-            edit.mutation_meta[0].origin = crate::os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
-            edit.mutation_meta[0].payload_hash = Some(crate::os_spr::PayloadHash([23; 32]));
+            edit.mutation_meta[0].origin = semio_framework_os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
+            edit.mutation_meta[0].payload_hash = Some(semio_framework_os_spr::PayloadHash([23; 32]));
             edit.mutation_meta[0].semantic_kind = Some(SchemaId("fixture#replace".into()));
             let expected = serde_json::to_vec(&test_support::SerdeValue(&CursorRevisionAccumulator::revision_value(&edit))).unwrap();
             let mut actual = Vec::new();
@@ -393,11 +406,11 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };
     for refusal in law["refusals"].as_array().unwrap() {
         let denied = match refusal.as_str().unwrap() { "items" => RetainedCloneGrant { maximum_items: 0, ..grant }, "capacity" => RetainedCloneGrant { maximum_capacity_bytes: birth.capacity_bytes - 1, ..grant }, "depth" => RetainedCloneGrant { maximum_depth: 0, ..grant }, _ => unreachable!() };
-        let (result, allocated, released) = crate::test_allocation::observe_backing(|| authority.retire(denied));
+        let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| authority.retire(denied));
         let (_, returned) = result.err().unwrap(); authority = returned;
         assert_eq!((allocated, released), (0, 0)); assert_eq!(Arc::as_ptr(&authority), pointer);
     }
-    let (result, allocated, released) = crate::test_allocation::observe_backing(|| authority.retire(grant));
+    let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| authority.retire(grant));
     let (owner, receipt) = result.unwrap_or_else(|_| panic!("original authority frame admission"));
     assert_eq!((allocated, released), (receipt.retained_capacity_bytes, 0)); assert!(receipt.fits(grant));
     let mut owner = Some(owner); let mut physical_release = 0;
@@ -405,14 +418,14 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
         if owner.is_none() { assert!(physical_release >= payload_bytes + birth.capacity_bytes); eprintln!("[DEBUG] original authority birth/refusal preserves Arc custody; one-byte copy and whole physical releases match System"); return; }
         let demand = factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap();
         let actual = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).unwrap());
         assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
         if demand.release_bytes > 0 {
-            let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..actual }).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..actual }).unwrap());
             assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!(factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap(), demand);
         }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| close_factory_ticket(&mut owner, actual).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, actual).unwrap());
         assert!(step.progress().fits(actual)); assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); physical_release += released;
     }
     panic!("final authority strings did not retire");
@@ -436,15 +449,15 @@ fn edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally() {
         }
     };
     for case in fixture["cases"].as_array().unwrap() {
-        let digest = super::super::CursorRevisionAccumulator::edit_digest(&edit_of(case));
+        let digest = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest(&edit_of(case));
         assert_eq!(semio_framework_hash::hex_lower(&digest), case["expectedDigest"].as_str().unwrap(), "edit digest vector {}", case["name"]);
     }
     let mut grown = edit_of(&fixture["cases"][1]);
-    let (_, chains) = super::super::CursorRevisionAccumulator::edit_digest_extending(&grown, None);
+    let (_, chains) = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, None);
     grown.forwards.push(serde_json::json!({ "SetN": { "n": 3 } }).into());
     grown.inverse.push(serde_json::json!({ "SetN": { "n": 2 } }).into());
-    let (extended, _) = super::super::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
-    assert_eq!(extended, super::super::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
+    let (extended, _) = semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest_extending(&grown, chains);
+    assert_eq!(extended, semio_framework_os_store_ledger::CursorRevisionAccumulator::edit_digest(&grown), "an amend's incremental digest equals the from-scratch digest");
 }
 
 #[test]

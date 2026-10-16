@@ -134,10 +134,10 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 2_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
         semio_framework_job::OperationId(200 + ordinal),
-        semio_framework_job::Generation(store.generation),
-        store.content_revision,
-        store.applied_edit_ids.len(),
-        store.edit_sequence + 1,
+        semio_framework_job::Generation(store.cursor.generation),
+        store.cursor.content_revision,
+        store.log.applied_edit_ids.len(),
+        store.log.edit_sequence + 1,
         next_clock,
         actor.clone(),
         None,
@@ -154,7 +154,7 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         mutation_meta: vec![crate::os_spr::MutationMeta {
             mutation_id: Some(crate::os_spr::MutationId(format!("{edit_id}#0"))),
             dependencies: Vec::new(),
-            base_version: store.generation,
+            base_version: store.cursor.generation,
             author_id: Some(crate::os_spr::ActorId(actor)),
             timestamp: next_clock,
             undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
@@ -166,7 +166,7 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
             transaction: None,
         }],
         verb: None,
-        sequence_number: store.edit_sequence + 1,
+        sequence_number: store.log.edit_sequence + 1,
         started_at: format!("2026-09-05T00:01:0{ordinal}Z"),
         finished_at: Some(format!("2026-09-05T00:01:1{ordinal}Z")),
     };
@@ -200,7 +200,7 @@ async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot
     let revision = store.content_revision();
     let read = crate::os_store::SpaceMember::snapshot_read_erased(store).await.expect("erased group read publishes its selected authority");
     assert_eq!(read.typed::<DemoSnapshot>().expect("erased group read retains the exact snapshot type").n, Some(expected));
-    assert!(store.snapshot_read_leases.authority_matches(generation, revision));
+    assert!(store.owners.snapshot_read_leases.authority_matches(generation, revision));
     let mut read = Some(read);
     let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: 4096, maximum_depth: 64 };
     let (retirement, _) = crate::os_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
@@ -776,7 +776,7 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingParent));
     assert!(matches!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Progress(_)), "committed parent stages before a recoverable drawing dependency fault");
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
-    let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.snapshot_retirement_factory.take());
+    let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.owners.snapshot_retirement_factory.take());
     assert_eq!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidFrontier));
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
     let all_old = host.capture_snapshot().expect("pre-visibility recovery fault keeps one complete old triple visible");
@@ -785,7 +785,7 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
     let mut observed_post_visibility_retry = false;
     for _ in 0..128 {
         if !observed_post_visibility_retry && host.phase() == Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing) {
-            let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.snapshot_retirement_factory.take());
+            let drawing_retirement_factory = host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).and_then(|drawing| drawing.owners.snapshot_retirement_factory.take());
             assert_eq!(host.advance(grant), DurableOwnedMapRecoveryAdvanceV1::Fault(DurableOwnedGroupDecisionError::InvalidOutcome));
             assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing));
             let all_new = host.capture_snapshot().expect("post-visibility recovery fault keeps one complete new triple visible");
@@ -891,23 +891,23 @@ async fn durable_store_group_journal_commit_flips_one_shared_root_then_adopts_ex
         ) {
             assert_eq!([read.parent.n, read.drawing.n, read.value.n], [Some(7), Some(11), Some(13)]);
             if !rejected_partial_committed_root {
-                let retained_value_root = value.durable_group_root.take().expect("committed value root");
+                let retained_value_root = value.wire.durable_group_root.take().expect("committed value root");
                 assert!(capture_store_owned_three_snapshot(&parent, &drawing, &value).is_err());
-                *value.durable_group_root = Some(retained_value_root);
+                *value.wire.durable_group_root = Some(retained_value_root);
                 rejected_partial_committed_root = true;
             }
             if !rejected_foreign_visibility {
                 let foreign_owner = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
-                let original_visibility = std::mem::replace(&mut value.durable_group_root.as_mut().expect("committed value root").visibility, foreign_owner.view());
+                let original_visibility = std::mem::replace(&mut value.wire.durable_group_root.as_mut().expect("committed value root").visibility, foreign_owner.view());
                 assert!(capture_store_owned_three_snapshot(&parent, &drawing, &value).is_err());
-                value.durable_group_root.as_mut().expect("committed value root").visibility = original_visibility;
+                value.wire.durable_group_root.as_mut().expect("committed value root").visibility = original_visibility;
                 drop(foreign_owner);
                 rejected_foreign_visibility = true;
             }
             if !rejected_structurally_false_adoption && coordinator.phase() == DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease {
-                parent.durable_group_root.as_mut().expect("committed parent root").adopted = true;
+                parent.wire.durable_group_root.as_mut().expect("committed parent root").adopted = true;
                 assert!(capture_store_owned_three_snapshot(&parent, &drawing, &value).is_err());
-                parent.durable_group_root.as_mut().expect("committed parent root").adopted = false;
+                parent.wire.durable_group_root.as_mut().expect("committed parent root").adopted = false;
                 rejected_structurally_false_adoption = true;
             }
             assert_erased_snapshot_authority(&mut parent, 7).await;
@@ -976,10 +976,10 @@ async fn durable_store_group_stage_error_retains_abort_owner_until_every_root_is
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("parent stages before injected drawing failure");
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing);
-    let drawing_retirement_factory = drawing.snapshot_retirement_factory.take();
+    let drawing_retirement_factory = drawing.owners.snapshot_retirement_factory.take();
     assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant), Err(DurableOwnedGroupDecisionError::InvalidFrontier));
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::AbortingValue);
-    *drawing.snapshot_retirement_factory = drawing_retirement_factory;
+    *drawing.owners.snapshot_retirement_factory = drawing_retirement_factory;
     for _ in 0..64 {
         coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("retained stage-error owner continues abort cleanup");
         if coordinator.terminal_is_empty() {
@@ -987,7 +987,7 @@ async fn durable_store_group_stage_error_retains_abort_owner_until_every_root_is
         }
     }
     assert!(coordinator.terminal_is_empty());
-    assert!(parent.durable_group_root.is_none() && drawing.durable_group_root.is_none() && value.durable_group_root.is_none());
+    assert!(parent.wire.durable_group_root.is_none() && drawing.wire.durable_group_root.is_none() && value.wire.durable_group_root.is_none());
     assert_eq!([parent.generation(), drawing.generation(), value.generation()], [0, 0, 0]);
     let journal = state.lock().unwrap();
     assert_eq!((journal.begins, journal.close_count), (0, 0));

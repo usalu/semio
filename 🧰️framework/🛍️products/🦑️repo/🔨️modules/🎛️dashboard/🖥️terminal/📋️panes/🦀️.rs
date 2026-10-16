@@ -4,10 +4,9 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/⚙️preferences/🦀️.rs
 
 use super::windows::{Body, Dashboard, Kind};
-use crate::ipc::SessionStatus;
-use crate::preferences::keymap::{Scope, SEND_PREFIX};
-use crate::preferences::Change;
-use crate::registry;
+use dashboard_preferences::Change;
+use dashboard_preferences::keymap::{Scope, SEND_PREFIX};
+use dashboard_wire::ipc::SessionStatus;
 use ui_tui::tui::engine::Tui;
 use ui_tui::tui::widget::WidgetState;
 
@@ -62,7 +61,7 @@ impl Dashboard {
         }
     }
 
-    fn session_row(&self, session: &crate::ipc::SessionInfo) -> String {
+    fn session_row(&self, session: &dashboard_wire::ipc::SessionInfo) -> String {
         let text = self.text();
         let word = match session.status {
             SessionStatus::Pending => text.status_pending,
@@ -76,7 +75,7 @@ impl Dashboard {
         let code = session.code.map(|code| format!(" · {}", text.exit_code.fill(&[("code", &code.to_string())]).as_str())).unwrap_or_default();
         let url = session.ready_url.as_deref().map(|url| format!(" · {url}")).unwrap_or_default();
         let label = &session.command.label;
-        let name = if label.verb.is_empty() && label.subject.is_empty() { session.command.cmd.clone() } else { registry::tab_text(label, self.locale, 48) };
+        let name = if label.verb.is_empty() && label.subject.is_empty() { session.command.cmd.clone() } else { dashboard_labels::tab_text(label, self.locale, 48) };
         format!("{name}   {}{code}{url}", word.as_str())
     }
 
@@ -152,9 +151,9 @@ impl Dashboard {
     /// 💾️ Publishes one preference event off the UI thread; the projection follows when it is durable.
     pub fn queue_preference(&mut self, change: Change) {
         if self.saving_preferences.is_some() { self.notice = Some(self.text().prefs_busy.as_str().into()); return; }
-        let path = if self.shared_preferences { crate::preferences::shared_path(&self.root) } else { self.preference_path.clone() };
+        let path = if self.shared_preferences { dashboard_preferences::shared_path(&self.root) } else { self.preference_path.clone() };
         let (sender, receiver) = std::sync::mpsc::channel();
-        std::thread::spawn(move || { let result = crate::preferences::append(&path, &change); let _ = sender.send((change, result)); });
+        std::thread::spawn(move || { let result = dashboard_preferences::append(&path, &change); let _ = sender.send((change, result)); });
         self.saving_preferences = Some(receiver);
         self.notice = Some(self.text().prefs_saving.as_str().into());
     }

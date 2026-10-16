@@ -237,13 +237,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️KindsLaw
-/// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
-/// `print_bcf_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
-/// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself (see
-/// `KINDS`'s own doc comment), so this test is the one thing that does. `KINDS` is also kept
-/// textually identical, by hand, to `../../🔣️oracle.json`'s own `kinds` array.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds/🦀️.rs"]
-mod kinds_tests;
+
 //#endregion 🧪️KindsLaw
 

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "_comment": "🌍️ Language-agnostic band-selection vectors of the GIS map policy (`gis_map_policy_descriptor`): for a viewport longitude span in degrees, the automatic band index and its raster tile z. Repository-owned specification vectors; no third party defines this band scheme. Moved with the policy from the framework tiled-map web-mercator fixture.",
+  "lodBands": [
+    {
+      "spanDeg": 180.0,
+      "lodIndex": 0,
+      "tileZ": 0
+    },
+    {
+      "spanDeg": 99.9,
+      "lodIndex": 1,
+      "tileZ": 1
+    },
+    {
+      "spanDeg": 50.0,
+      "lodIndex": 1,
+      "tileZ": 1
+    },
+    {
+      "spanDeg": 34.9,
+      "lodIndex": 2,
+      "tileZ": 2
+    },
+    {
+      "spanDeg": 20.0,
+      "lodIndex": 2,
+      "tileZ": 2
+    },
+    {
+      "spanDeg": 11.9,
+      "lodIndex": 3,
+      "tileZ": 3
+    },
+    {
+      "spanDeg": 8.0,
+      "lodIndex": 3,
+      "tileZ": 3
+    },
+    {
+      "spanDeg": 3.9,
+      "lodIndex": 4,
+      "tileZ": 4
+    },
+    {
+      "spanDeg": 2.0,
+      "lodIndex": 4,
+      "tileZ": 4
+    },
+    {
+      "spanDeg": 1.19,
+      "lodIndex": 5,
+      "tileZ": 5
+    },
+    {
+      "spanDeg": 0.6,
+      "lodIndex": 5,
+      "tileZ": 5
+    },
+    {
+      "spanDeg": 0.34,
+      "lodIndex": 6,
+      "tileZ": 7
+    },
+    {
+      "spanDeg": 0.2,
+      "lodIndex": 6,
+      "tileZ": 7
+    },
+    {
+      "spanDeg": 0.099,
+      "lodIndex": 7,
+      "tileZ": 10
+    },
+    {
+      "spanDeg": 0.05,
+      "lodIndex": 7,
+      "tileZ": 10
+    },
+    {
+      "spanDeg": 0.0,
+      "lodIndex": 7,
+      "tileZ": 10
+    }
+  ]
+}

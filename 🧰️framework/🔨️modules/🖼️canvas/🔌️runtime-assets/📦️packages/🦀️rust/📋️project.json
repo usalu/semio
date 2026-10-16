@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-canvas-assets-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/replication-history-index-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

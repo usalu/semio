@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-manifest-actions"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "manifest-actions"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-kernel-identity = { path = "../../../../🎠️kernel/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-kernel-ui = { path = "../../../../🎠️kernel/🖼️ui/📦️packages/🦀️rust" }
+semio-framework-manifest-address = { path = "../../../🧭️address/📦️packages/🦀️rust" }
+semio-framework-manifest-arg-schema = { path = "../../../🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-tool-run = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true }
+ui_wgpu = { path = "../../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }

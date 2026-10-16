@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-durability"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db durability classes, frontiers and epoch fences"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-durability"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_durability"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

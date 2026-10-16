@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "url": "https://github.com/tectonic/releases/tool.tar.gz",
+      "location": "https://objects.githubusercontent.com/tool",
+      "expected": "https://objects.githubusercontent.com/tool"
+    },
+    {
+      "url": "https://example.test/parent/tool",
+      "location": "../archive",
+      "expected": "https://example.test/archive"
+    }
+  ],
+  "invalid": [
+    "http://example.test/a",
+    "https://user:password@example.test/a",
+    "file:///tmp/a",
+    "https://example.test/a#part"
+  ]
+}

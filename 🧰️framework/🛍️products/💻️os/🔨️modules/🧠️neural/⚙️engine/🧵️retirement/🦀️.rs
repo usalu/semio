@@ -10,7 +10,6 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 use std::collections::VecDeque;
 use std::mem::size_of;
 use std::sync::Arc;
-
 //#region 🧵️DomainRetirement
 #[derive(semio_framework_value::RetireOwned)]
 enum Owner {
@@ -134,9 +133,6 @@ impl RetireOwned for SnapshotSeedLease{fn retirement(self)->Box<dyn RetirementCu
 struct SnapshotSources{tree:SnapshotTreeLease,seeds:SnapshotSeedLease}
 impl RetireOwned for TreeSnapshot{fn retirement(self)->Box<dyn RetirementCursor>{SnapshotSources{tree:SnapshotTreeLease(self.tree),seeds:SnapshotSeedLease(self.seeds)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<super::Tree>(),semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>()])}fn controlled_retirement_supported()->bool{true}}
 semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
-semio_framework_value::artifact_retire_struct!(super::OperatorImpl {schemas,operator});
-semio_framework_value::artifact_retire_struct!(super::OperatorRecord {info,implementations});
-semio_framework_value::artifact_retire_struct!(super::Registry {schemas,operators,operator_produces,schema_providers,finalized});
 impl RetireOwned for super::VariadicSpec {
     fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(self.slot_key)}
     fn retirement_birth_bytes(&self)->Option<usize> {RetireOwned::retirement_birth_bytes(&self.slot_key)}
@@ -148,7 +144,6 @@ impl RetireOwned for super::Cardinality {
     fn controlled_retirement_supported()->bool {true}
 }
 //#endregion 🧵️DomainRetirement
-
 //#region 🧊️ColdOwners
 /// 🧊️ Explicit synchronous boundary; never used by retained advance or close operations.
 pub fn retire_value_cold(mut owner: ValueRetirement) {

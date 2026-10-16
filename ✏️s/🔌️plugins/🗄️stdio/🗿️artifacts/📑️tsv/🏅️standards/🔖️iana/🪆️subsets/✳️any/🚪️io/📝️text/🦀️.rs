@@ -1,13 +1,9 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_tsv_snapshot::standards::iana::subsets::any::io::text::snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::io::text::diff;
+
+

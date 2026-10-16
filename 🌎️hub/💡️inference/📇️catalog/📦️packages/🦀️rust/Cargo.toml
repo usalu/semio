@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-inference-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Frozen inference binding verification and live author authorization"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-catalog"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-directory = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+semio-hub-inference = { workspace = true }
+semio-hub-trusted-catalog = { workspace = true }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-hub-inference-binding = { workspace = true }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]
+semio-hub-directory-service = { workspace = true }
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+semio-hub-directory = { workspace = true, features = ["testkit"] }
+semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-hub-trusted-catalog = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-s-artifact-gis-gismap = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

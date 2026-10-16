@@ -293,9 +293,7 @@ pub fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
 }
 //#endregion 🔖️RiffWalk
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️codec/🦀️.rs"]
-mod codec_tests;
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::riff_pcm::subsets::any::io::WavComposer as WavRawAnyComposer;
@@ -311,14 +309,16 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_stdio_wav_schema::standards::riff_pcm::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::text::diff;
+    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::text::snapshot;
+}
+
+
 
 pub mod derived_construction {
     use crate::standards::riff_pcm::subsets::any::schema::diff::WavDiff;

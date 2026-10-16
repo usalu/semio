@@ -1,5 +1,6 @@
+import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withNextStorageV1} from "../../../../🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts";
-import {withRepositoryArtifactV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
@@ -14,7 +15,7 @@ import { scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocat
 /** 🌐️ Runs the assembled Next artifact with outside-module resolution refused by an independent Node guard. */
 export async function proveNextRuntime(workspace: string, output: string, invocation: ScriptInvocation): Promise<void> {
   const mode=readBuildMode(process.env.SEMIO_BUILD_MODE);
-  return withNextStorageV1(workspace,mode,invocation,async(store,layout)=>withRepositoryArtifactV1(workspace,{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:2147483648,maximumFiles:131072},invocation,async artifactReader=>{await artifactReader.recheck();
+  return withNextStorageV1(workspace,mode,invocation,createIssuedResourceControlV1(invocation,"cache:entry",0),async(store,layout)=>withRepositoryArtifactV1({workspace,invocation,storage:store.storage,control:store.control,request:{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:2147483648,maximumFiles:131072}},reader=>withRepositoryArtifactTaskV1(reader,invocation,async artifactReader=>{await artifactReader.recheck();
   const fixture = JSON.parse(await readFile(join(import.meta.dir, "../🏗️web-build/🧫️cases.json"), "utf8")), artifact = join(layout.output,"standalone"), manifest = JSON.parse(await readFile(join(artifact, "node_modules/next/package.json"), "utf8"));
   const packageRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"), require = createRequire(join(packageRoot, "package.json"));
   assert.equal(manifest.version, require("next/package.json").version);
@@ -27,7 +28,7 @@ export async function proveNextRuntime(workspace: string, output: string, invoca
   try {
     await Promise.race([started, completed]);
     const address = `http://127.0.0.1:${port}`, response = await fetch(address, { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status);
-    const html = await response.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => match[1].replaceAll("&amp;", "&")))];
+    const html = await response.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => { const asset=match[1];assert.ok(asset!==undefined,"Matched Next static asset capture required");return asset.replaceAll("&amp;", "&"); }))];
     assert.ok(assets.length > 0); let bytes = 0;
     for (const asset of assets) { const response = await fetch(new URL(asset, address), { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status, asset); bytes += (await response.arrayBuffer()).byteLength; }
     assert.ok(lines.some(line => line.includes("Next.js " + manifest.version)));
@@ -35,7 +36,7 @@ export async function proveNextRuntime(workspace: string, output: string, invoca
     console.log(`[DEBUG] Next ${mode} standalone SDK=${manifest.version} HTTP=${response.status} HTML=${html.length} assets=${assets.length} assetBytes=${bytes}`);
   } finally { controller.abort(); await completed; }
   assert.ok(lines.some(line => line.includes("local modules without ancestor fallback")));
-  }));
+  })));
 }
 
 /** 🔥️ Proves actual lazy Next compilation, cached serving during another graph and owned child cancellation. */
@@ -49,7 +50,7 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
   try {
     await Promise.race([started, completed]); assert.ok(port > 0);
     const address = `http://127.0.0.1:${port}`, initial = await fetch(address, { signal: invocation.control.signal }); assert.equal(initial.status, fixture.nextRuntime.status);
-    const html = await initial.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => match[1].replaceAll("&amp;", "&")))];
+    const html = await initial.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => { const asset=match[1];assert.ok(asset!==undefined,"Matched Next static asset capture required");return asset.replaceAll("&amp;", "&"); }))];
     for (const asset of assets) { const response = await fetch(new URL(asset, address), { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status); await response.arrayBuffer(); }
     let cold!: Promise<Response>, coldCompleted = false;
     await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:idle-probe", 600_000), async () => {

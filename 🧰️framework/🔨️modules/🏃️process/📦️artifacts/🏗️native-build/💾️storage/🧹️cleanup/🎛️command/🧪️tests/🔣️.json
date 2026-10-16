@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "initial-observation",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "observe"
+    },
+    {
+      "id": "no-effects",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "none",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "settled-no-effects"
+    },
+    {
+      "id": "joined-before-reconcile",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 1,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "join-accepted"
+    },
+    {
+      "id": "body-must-stop",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "body",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "stop-body"
+    },
+    {
+      "id": "exact-active",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "exact-active",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "deactivate"
+    },
+    {
+      "id": "joined-deactivation",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "exact-active",
+        "pending": 0,
+        "deactivations": 1,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "verify-inactive"
+    },
+    {
+      "id": "verified-inactive",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "inactive",
+        "pending": 0,
+        "deactivations": 1,
+        "observations": 2,
+        "persistent": false
+      },
+      "expected": "remove-created"
+    },
+    {
+      "id": "inactive-without-deactivation",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "inactive",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "remove-created"
+    },
+    {
+      "id": "still-active",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "exact-active",
+        "pending": 0,
+        "deactivations": 1,
+        "observations": 2,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "unknown-after-observation",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "unknown-creator",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "unknown",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "changed-creator",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "changed",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "ambiguous-mapping",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "ambiguous",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "changed-mapping",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "changed",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": false
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "accepted-persistent",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "exact-active",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 1,
+        "persistent": true
+      },
+      "expected": "persistent-transfer"
+    },
+    {
+      "id": "unverified-persistent",
+      "input": {
+        "version": 1,
+        "platform": "darwin",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": true
+      },
+      "expected": "retain-unresolved"
+    },
+    {
+      "id": "linux-not-qualified",
+      "input": {
+        "version": 1,
+        "platform": "linux",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "refuse-platform"
+    },
+    {
+      "id": "windows-not-qualified",
+      "input": {
+        "version": 1,
+        "platform": "win32",
+        "phase": "cleanup",
+        "creator": "exact",
+        "mapping": "unknown",
+        "pending": 0,
+        "deactivations": 0,
+        "observations": 0,
+        "persistent": false
+      },
+      "expected": "refuse-platform"
+    }
+  ]
+}

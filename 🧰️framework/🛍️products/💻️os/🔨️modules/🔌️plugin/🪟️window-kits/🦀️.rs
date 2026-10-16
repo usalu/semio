@@ -1,4 +1,5 @@
 //! 🪟️ Window kit contract, form panels, label axes and the UI command value producer.
+extern crate semio_framework_os_kernel as dsl;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework::AppDefinition;
 use semio_framework::CommandDefinition;
@@ -34,8 +35,8 @@ use serde_json::Value;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use ui_wgpu::wgpu::ContextMenuItemSpec;
-use ui_wgpu::wgpu::ContextMenuSurfaceTarget;
+use semio_framework_ui_layout::layout::ContextMenuItemSpec;
+use semio_framework_ui_layout::layout::ContextMenuSurfaceTarget;
 /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
 /// the React host spends the same number from the other side of the wire
 /// (`🌳️Tree/🟦️.tsx`'s `capTreeWindowRequests`). See
@@ -55,22 +56,10 @@ use semio_framework_ui_locale::AppLabels;
 #[cfg(test)]
 use semio_framework_ui_locale::app_labels;
 
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::ui_assembly_error;
-use crate::window_surface::ui_label;
-use crate::window_surface::ui_text;
-#[cfg(test)]
-use crate::app_testing::artifact_app_laws;
-#[cfg(test)]
-use crate::document_kit::DocumentPage;
-#[cfg(test)]
-use crate::document_kit::DocumentView;
-#[cfg(test)]
-use crate::document_kit::DocumentWindowKit;
-#[cfg(test)]
-use crate::document_kit::EditableDocumentPage;
-#[cfg(test)]
-use crate::document_kit::EditableDocumentView;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_interaction::ui_assembly_error;
+use semio_framework_plugin_window_transient::ui_label;
+use semio_framework_plugin_window_transient::ui_text;
 #[cfg(test)]
 use crate::image_kit::IMAGE_WINDOW_PAGED_NODE_KEY;
 #[cfg(test)]
@@ -98,47 +87,11 @@ use crate::mesh_kit::MeshView;
 #[cfg(test)]
 use crate::mesh_kit::MeshWindowKit;
 #[cfg(test)]
-use crate::table_kit::EditableTableCell;
-#[cfg(test)]
-use crate::table_kit::TableView;
-#[cfg(test)]
-use crate::table_kit::TableWindowKit;
-#[cfg(test)]
-use crate::table_kit::WindowedEditableTableCell;
-#[cfg(test)]
-use crate::table_kit::editable_table_window_row;
-#[cfg(test)]
-use crate::table_kit::editable_table_window_row_at;
-#[cfg(test)]
-use crate::table_kit::row_action;
-#[cfg(test)]
-use crate::table_kit::row_target;
-#[cfg(test)]
-use crate::table_kit::table_column_window_key;
-#[cfg(test)]
-use crate::table_kit::table_window_row;
-#[cfg(test)]
 use crate::text_kit::TextEditView;
 #[cfg(test)]
 use crate::text_kit::TextView;
 #[cfg(test)]
 use crate::text_kit::TextWindowKit;
-#[cfg(test)]
-use crate::tree_kit::EditableTreeNode;
-#[cfg(test)]
-use crate::tree_kit::TREE_WINDOW_BODY_ITEM_BUDGET;
-#[cfg(test)]
-use crate::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
-#[cfg(test)]
-use crate::tree_kit::TREE_WINDOW_FIXED_NODE_ITEMS;
-#[cfg(test)]
-use crate::tree_kit::TreeNodeView;
-#[cfg(test)]
-use crate::tree_kit::TreeView;
-#[cfg(test)]
-use crate::tree_kit::TreeWindowKit;
-#[cfg(test)]
-use crate::tree_kit::TreeWindows;
 
 
 
@@ -317,14 +270,16 @@ fn dsl_object_insert(entries: &mut Vec<(String, DslValue)>, key: String, value: 
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum UiCommandJsonStep {
+#[doc(hidden)]
+pub enum UiCommandJsonStep {
     MoreWork,
     Ready,
     Cancelled,
     Fault,
 }
 
-pub(crate) struct UiCommandJsonProducer {
+#[doc(hidden)]
+pub struct UiCommandJsonProducer {
     stack: UiFixedList<UiCommandJsonFrame, UI_COMMAND_VALUE_DEPTH>,
     pending: Option<UiValue>,
     ready: Option<DslValue>,
@@ -443,7 +398,8 @@ impl UiCommandJsonProducer {
     }
 }
 
-pub(crate) async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue, Fault> {
+#[doc(hidden)]
+pub async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue, Fault> {
     let mut producer = UiCommandJsonProducer::try_new(value)?;
     loop {
         match producer.drive_one(false, false) {
@@ -464,7 +420,8 @@ pub(crate) async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue
 /// e.g. `Trigger::Delta`'s signed step count, has no field to merge INTO). `None` when neither is
 /// set, matching `command_from_action`'s existing `None` (no-args) call shape.
 // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
-pub(crate) async fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Result<Option<DslValue>, Fault> {
+#[doc(hidden)]
+pub async fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Result<Option<DslValue>, Fault> {
     let args = match args {
         Some(value) => Some(ui_value_to_dsl_retained(value).await?),
         None => None,
@@ -504,8 +461,6 @@ pub trait WindowKit {
     fn render(view: &Self::ViewModel) -> UiAssemblyResult<BuiltNode>;
 }
 
-#[cfg(test)]
-include!("../🧪️tests/🔬️app-window-kits/🦀️.rs");
 
 /// 🎯️ Constructs [`ActionId`]s bound to one controller id (renamed `scope`, per
 /// `📓️recipe-plugin.md` §1's direct `ActionId::v1(scope, name)` mapping). ⚠️ Decision: the old
@@ -517,7 +472,8 @@ include!("../🧪️tests/🔬️app-window-kits/🦀️.rs");
 /// (`UiValue`), just returned alongside the id rather than folded into one struct — call
 /// `.on_with(trigger, id, args)` when `args.is_some()`, `.on(trigger, id)` otherwise.
 pub struct ActionFactory {
-    pub(crate) controller_id: &'static str,
+    #[doc(hidden)]
+    pub controller_id: &'static str,
 }
 
 impl ActionFactory {
@@ -537,13 +493,15 @@ impl ActionFactory {
 /// An empty registry is a store-only construction path; command dispatch rejects every key.
 #[derive(Clone, Default)]
 pub struct AppActionRegistry {
-    pub(crate) actions: HashMap<String, ActionDefinition>,
+    #[doc(hidden)]
+    pub actions: HashMap<String, ActionDefinition>,
     window_actions: HashMap<String, HashMap<String, ActionDefinition>>,
     app_commands: HashMap<String, CommandDefinition>,
     mode_commands: HashMap<String, HashMap<String, CommandDefinition>>,
     /// 📇️ The app's `controller_id` — addresses `ActionDescriptor.controller_id` for the
     /// framework-built history panel. Empty for the registry-less test path.
-    pub(crate) controller_id: String,
+    #[doc(hidden)]
+    pub controller_id: String,
     /// 🕹️ The app's declared `InteractionDefinition`s indexed by domain id — `dispatch_interaction_action`'s
     /// sole source of domain declarations (granularities, hierarchy, hover/selection specs). Empty
     /// for the registry-less test path, exactly like `actions`/`commands` — an app constructed via
@@ -552,7 +510,7 @@ pub struct AppActionRegistry {
     interactions: HashMap<String, InteractionDefinition>,
     /// ⏯️ Every tool and utility that declares a `ToolRunDefinition`, with its label, keyed by id —
     /// the manifest is the run's source of record (tool run contract §2.4).
-    tool_runs: HashMap<String, (LocalizedLabel, semio_framework::ToolRunDefinition)>,
+    tool_runs: HashMap<String, (LocalizedLabel, semio_framework_tool_run::ToolRunDefinition)>,
     /// 🪟️ Every declared window kind's body key — how a run's declared `windows` resolve to the bodies a tick dirties.
     window_body_keys: HashMap<String, String>,
     /// 🕹️ Every declared window body key indexed by the interaction domain that window kind
@@ -565,7 +523,8 @@ pub struct AppActionRegistry {
     retiring: Vec<Vec<u8>>,
 }
 
-pub(crate) fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
+#[doc(hidden)]
+pub fn validate_ui_dispatch_classification(owner: &str, id: &str, classification: semio_framework::InteractiveJobClassification) -> Result<(), Fault> {
     if classification == semio_framework::InteractiveJobClassification::Migrated {
         Ok(())
     } else {
@@ -575,7 +534,8 @@ pub(crate) fn validate_ui_dispatch_classification(owner: &str, id: &str, classif
 
 impl AppActionRegistry {
     #[cfg(test)]
-    pub(crate) fn test_with_controller_id(controller_id: String) -> Self {
+    #[doc(hidden)]
+    pub fn test_with_controller_id(controller_id: String) -> Self {
         Self { controller_id, ..Self::default() }
     }
 
@@ -628,7 +588,8 @@ impl AppActionRegistry {
     }
 
     /// 📏️ Quotes the next catalog close turn: releasing the newest detached identifier allocation whole, or detaching one row.
-    pub(crate) fn retirement_demands(&self) -> RetirementDemand {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self) -> RetirementDemand {
         if self.terminal_is_empty() {
             return RetirementDemand::default();
         }
@@ -638,7 +599,8 @@ impl AppActionRegistry {
     /// 🧹 Detaches one catalog row or one empty nested catalog owner whole (one handed-off item), then
     /// releases each detached identifier allocation whole on the release axis; a turn granted below the quoted
     /// release demand yields instead of refusing the row for ever.
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -703,7 +665,8 @@ impl AppActionRegistry {
     }
 
     /// 🧺 Proves that every catalog row and nested catalog owner was retired.
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.actions.is_empty()
             && self.window_actions.is_empty()
             && self.app_commands.is_empty()
@@ -718,54 +681,65 @@ impl AppActionRegistry {
     }
 
     /// 🪟️ The body key of a declared window kind.
-    pub(crate) fn window_body_key(&self, window_kind_id: &str) -> Option<&str> {
+    #[doc(hidden)]
+    pub fn window_body_key(&self, window_kind_id: &str) -> Option<&str> {
         self.window_body_keys.get(window_kind_id).map(String::as_str)
     }
 
     /// 🐢️ The refresh scope the app's OWN surface declarations owe one reserved interaction verb —
     /// `None` when no declared window paints a touched domain, which is the framework's signal to
     /// keep its widest `UiDirtyScope::Full`.
-    pub(crate) fn interaction_declared_refresh_scope(&self, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+    #[doc(hidden)]
+    pub fn interaction_declared_refresh_scope(&self, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
         semio_framework::interaction_declared_refresh_scope(verb, domains, &self.interaction_window_bodies, &self.panel_body_keys)
     }
 
     /// ⏯️ The declared label and `ToolRunDefinition` of one tool or utility.
-    pub(crate) fn tool_run(&self, id: &str) -> Option<&(LocalizedLabel, semio_framework::ToolRunDefinition)> {
+    #[doc(hidden)]
+    pub fn tool_run(&self, id: &str) -> Option<&(LocalizedLabel, semio_framework_tool_run::ToolRunDefinition)> {
         self.tool_runs.get(id)
     }
 
-    pub(crate) fn get(&self, id: &str) -> Option<&ActionDefinition> {
+    #[doc(hidden)]
+    pub fn get(&self, id: &str) -> Option<&ActionDefinition> {
         self.actions.get(id)
     }
 
-    pub(crate) async fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
+    #[doc(hidden)]
+    pub async fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
         self.window_actions.get(window_kind_id)?.get(action_id)
     }
 
-    pub(crate) async fn has_mode(&self, mode_id: &str) -> bool {
+    #[doc(hidden)]
+    pub async fn has_mode(&self, mode_id: &str) -> bool {
         self.mode_commands.contains_key(mode_id)
     }
 
-    pub(crate) fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
+    #[doc(hidden)]
+    pub fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
         self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
     }
 
-    pub(crate) async fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
+    #[doc(hidden)]
+    pub async fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
         self.app_commands.get(id)
     }
 
-    pub(crate) async fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
+    #[doc(hidden)]
+    pub async fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
         self.mode_commands.get(mode_id)?.get(id)
     }
 
     /// 🫙️ Whether this registry declares NOTHING — the registry-less path `AppActionRegistry::default()`
     /// builds (see `controller_id`'s doc). It has no controller, no action and no command, so it joins no
     /// tool to any factory and every dispatch through it fails closed at its own key lookup.
-    pub(crate) fn is_registry_less(&self) -> bool {
+    #[doc(hidden)]
+    pub fn is_registry_less(&self) -> bool {
         self.controller_id.is_empty() && self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty()
     }
 
-    pub(crate) fn migrated_tool_ids(&self) -> BTreeSet<String> {
+    #[doc(hidden)]
+    pub fn migrated_tool_ids(&self) -> BTreeSet<String> {
         let mut ids = BTreeSet::new();
         ids.extend(self.actions.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
         ids.extend(self.app_commands.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
@@ -786,23 +760,27 @@ impl AppActionRegistry {
     }
 
     #[cfg(test)]
-    pub(crate) fn test_set_action_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
+    #[doc(hidden)]
+    pub fn test_set_action_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.actions.get_mut(id).expect("test action declaration").semantics.execution.interactive_job = classification;
     }
 
     #[cfg(test)]
-    pub(crate) fn test_set_app_command_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
+    #[doc(hidden)]
+    pub fn test_set_app_command_classification(&mut self, id: &str, classification: semio_framework::InteractiveJobClassification) {
         self.app_commands.get_mut(id).expect("test app command declaration").semantics.execution.interactive_job = classification;
     }
 
     /// 🕹️ `domain_id`'s declared `InteractionDefinition`, `None` when undeclared.
-    pub(crate) async fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
+    #[doc(hidden)]
+    pub async fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
         self.interactions.get(domain_id)
     }
 
     /// 🕹️ Every declared interaction domain, in no particular order — `clearSelection`/`selectAll`
     /// (which carry no `domainId` arg, applying to every declared domain at once) iterate this.
-    pub(crate) async fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
+    #[doc(hidden)]
+    pub async fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
         self.interactions.values()
     }
 
@@ -820,3 +798,14 @@ impl AppActionRegistry {
 #[cfg(test)]
 #[path = "🧪️tests/📤️json-bridge/🦀️.rs"]
 mod command_json_bridge_tests;
+
+#[path = "🎬️media/🦀️.rs"]
+pub mod media_kit;
+#[path = "📝️text/🦀️.rs"]
+pub mod text_kit;
+#[path = "🖼️image/🦀️.rs"]
+pub mod image_kit;
+#[path = "🧊️mesh/🦀️.rs"]
+pub mod mesh_kit;
+#[path = "🌍️world3d/☀️sun/🦀️.rs"]
+pub mod world3d_sun;

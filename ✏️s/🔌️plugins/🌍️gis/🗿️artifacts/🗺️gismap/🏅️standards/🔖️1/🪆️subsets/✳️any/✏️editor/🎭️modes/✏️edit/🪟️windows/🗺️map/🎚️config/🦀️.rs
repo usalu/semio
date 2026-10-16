@@ -106,7 +106,7 @@ impl Default for MapWindowConfig {
             camera_json: default_gis2d_camera_json(),
             render_mode: default_gis2d_render_mode(),
             vector_style: default_gis2d_vector_style(),
-            // 🔽️ Mirrors `semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC`, spelled out here so
+            // 🔽️ Mirrors `semio_framework_surface::tiled_map::MAP_LOD_MODE_AUTOMATIC`, spelled out here so
             // the config type stays independent of the tiled-map surface crate.
             lod_mode: "automatic".into(),
             layer_stroke_scale: BTreeMap::new(),

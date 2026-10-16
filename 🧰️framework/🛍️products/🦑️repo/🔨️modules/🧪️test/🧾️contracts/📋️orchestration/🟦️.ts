@@ -41,6 +41,6 @@ export class RunScript extends Script {
       console.error(formatBreachReport(breaches, "(not cached — contract phase failed inside run)"));
       process.exitCode=1;return;
     }
-    process.exitCode=runPhases(this.repoRoot, segments, ["oracle", "subject"]);
+    process.exitCode=await runPhases(this.repoRoot, segments, ["oracle", "subject"],this.invocation);
   }
 }

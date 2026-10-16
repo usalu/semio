@@ -8,16 +8,14 @@ import { join, resolve } from "node:path";
 import { runCargo, runRepositoryTestCommand, runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { bundleFlowBrowserModule, previewFlowBrowserPackage, publishFlowBrowserDeclarations, publishFlowBrowserPackage } from "../../../🕸️wasm/🌐️browser/📦️publication/🟦️.ts";
+import { bundleFlowBrowserModule, previewFlowBrowserPackage, withFlowBrowserPackageV1, publishFlowBrowserPackage } from "../../../🕸️wasm/🌐️browser/📦️publication/🟦️.ts";
 
 const FAMILY_RS_DIR = join(import.meta.dir, "../../../📦️packages/🦀️rust");
-const CORE_PKG_DIR = join(import.meta.dir, "../../🕸️bindings");
 
 class BrowserDeclarationsScript extends BundleScript {
   async run(): Promise<void> {
-    publishFlowBrowserDeclarations();
     const { testFlowBrowserDeclaration } = await import("../../../🧪️tests/🌐️browser-declaration/🟦️.ts");
-    await testFlowBrowserDeclaration(CORE_PKG_DIR);
+    await withFlowBrowserPackageV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"flow:declarations",0),async artifact=>{await testFlowBrowserDeclaration(artifact.path);});
   }
 }
 
@@ -30,12 +28,11 @@ class BrowserOwnershipScript extends BundleScript {
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({ control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
+    await buildRepositoryWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:capture=>publishFlowBrowserPackage(capture,this.invocation), control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: FAMILY_RS_DIR,
       componentDir: resolve(FAMILY_RS_DIR, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "os/flow/core",
       wasmBaseName: "flow_core",
-      outputDirectory: "🕸️bindings",
       pkg: {
         name: "@semio-tech/flow-core",
         files: ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"],
@@ -44,13 +41,12 @@ class WasmScript extends BundleScript {
         types: "flow_core.d.ts",
       },
     });
-    await publishFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"), this.invocation);
   }
 }
 
 class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    const preview = await previewFlowBrowserPackage(join(FAMILY_RS_DIR, "🕸️bindings"), this.invocation);
+    const preview = await previewFlowBrowserPackage(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"flow:preview",0));
     console.log(`Flow browser package preview: ${preview.files.length} files, ${preview.browserBytes} browser bytes, ${preview.declarationBytes} declaration bytes`);
   }
 }
@@ -64,7 +60,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-flow"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(["semio-framework-os-flow-geometry","semio-framework-os-flow-drawing","semio-framework-os-flow-operators","semio-framework-os-flow-vcs","semio-framework-os-flow-vcs-laws","semio-framework-os-flow-extensions-laws","semio-framework-os-flow-host-source","semio-framework-os-flow-host-read","semio-framework-os-flow-host-laws","semio-framework-os-flow-host","semio-framework-os-flow-wasm"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -114,9 +110,8 @@ class BrowserTestScript extends BundleScript {
   async run(): Promise<void> {
     await import("../../../🕸️wasm/🧪️tests/🖥️host/🟨️.js");
     await import("../../../🕸️wasm/🧪️tests/🎬️draw-list/🟨️.js");
-    const outputs = await bundleFlowBrowserModule(false, this.invocation);
-    const module = await outputs[0]?.text();
-    if (outputs.length !== 1 || !module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
+    const {source:module} = await bundleFlowBrowserModule(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"flow:browser-source-test",0));
+    if (!module?.includes('import("../flow_core.js")') || !module.includes('from "../🖥️host/🟨️.js"') || module.includes("../../🕸️bindings")) throw new Error("Flow browser package lost its exact sibling module bindings");
     console.log("Flow packaged browser entry preserves its generated initializer and owned host sibling without external source-tree paths");
   }
 }

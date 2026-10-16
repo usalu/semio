@@ -5,29 +5,48 @@
 //! `ArtifactStore` engine, so the engine and every facet above it depend on it in one direction.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-#[cfg(test)] use super::hot_path_census;
+#[path = "📥️lifted/🏪️store/🦀️.rs"]
+pub mod lifted_store;
+#[path = "📥️lifted/♻️retirement/🦀️.rs"]
+pub mod lifted_retirement;
+#[cfg(any(test, feature = "hot-path-census"))]
+#[path = "🧮️hot-path-census/🦀️.rs"]
+pub mod hot_path_census;
+#[path = "♻️retirement/🦀️.rs"]
+pub mod edit_retirement;
+#[path = "../📨️messages/✂️clamp/🦀️.rs"]
+pub mod edit_message_clamp;
+#[path = "📥️lifted/📝️text/🦀️.rs"]
+pub mod lifted_text_format;
+#[path = "📥️lifted/🔁️replay/🦀️.rs"]
+pub mod lifted_replay;
+#[path = "📥️lifted/🔗️read/🦀️.rs"]
+pub mod lifted_snapshot_read;
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use crate::os_spr::command::ArtifactMessageSource;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::os_spr::{ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
-use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary};
+use semio_framework_os_spr::{ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
+use semio_framework_os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary};
 use std::collections::{HashMap, HashSet};
 use std::marker::PhantomData;
-use crate::os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
-use crate::os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
+use semio_framework_os_spr::command::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
+use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use crate::os_vcs::VcsError;
-use crate::os_vcs::{
-    ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, Identified,
-};
-use crate::os_pack::pack_rt;
-use super::{ArtifactEnvelope, ArtifactEnvelopeOwners, ArtifactStoreDisplacedOwnerReservation, ArtifactStoreStringRetirement, EffectiveSupersessions, FoldProjection, SupersedeInput, artifact_retirement_box_close_step, artifact_retirement_box_demands, retirement_owner_close, retirement_owner_demands, edit_supersession_digest};
+use semio_framework_os_vcs::VcsError;
+use semio_framework_os_vcs::{ArtifactHistoryKey, ArtifactHistoryLedger, ArtifactHistoryReservation, Identified};
+use semio_framework_os_pack::pack_rt;
+use semio_framework_os_store_envelope::{ArtifactEnvelope, ArtifactEnvelopeOwners};
+use crate::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreStringRetirement};
+use crate::lifted_replay::{EffectiveSupersessions, FoldProjection, edit_supersession_digest};
+use semio_framework_os_store_command::SupersedeInput;
+use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_owner_demands};
 
 #[derive(Clone)]
-pub(crate) struct CursorRevisionRecord {
+pub struct CursorRevisionRecord {
     pub(crate) ledger_key: Option<ArtifactHistoryKey>,
     pub(crate) id_digest: [u8; 32],
     pub(crate) edit_digest: [u8; 32],
@@ -35,10 +54,10 @@ pub(crate) struct CursorRevisionRecord {
 }
 
 #[derive(Clone)]
-pub(crate) struct CursorRevisionAccumulator {
+pub struct CursorRevisionAccumulator {
     pub(crate) identity_digest: [u8; 32],
-    pub(crate) applied: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
-    pub(crate) redo: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub(crate) applied: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    pub(crate) redo: semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
     pub(crate) applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
     pub(crate) mutation_positions: protocol::HistoryFoldIndex<MutationId, (usize, usize, [u8; 32])>,
     pub(crate) indexed_edits: protocol::HistoryFoldIndex<[u8; 32], (usize, usize)>,
@@ -48,7 +67,7 @@ pub(crate) struct CursorRevisionAccumulator {
 /// 📍️ The first applied and redo positions whose ids changed since [`ArtifactStore::bump`] last mirrored both stacks into the
 /// persisted cursor and the revision records — what keeps both mirrors O(change) per mutation. `usize::MAX` is clean.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct StackMirrorDirt {
+pub struct StackMirrorDirt {
     pub(crate) applied: usize,
     pub(crate) redo: usize,
 }
@@ -61,7 +80,7 @@ impl StackMirrorDirt {
 /// 🔗️ Running per-list digests of a coalesced edit's operations: what lets an amend extend its edit's revision identity by
 /// the operations it appended instead of re-encoding the whole run (a typing run amends one edit per key).
 #[derive(Clone, Copy, Default)]
-pub(crate) struct EditDigestChains {
+pub struct EditDigestChains {
     pub(crate) forwards: usize,
     pub(crate) inverse: usize,
     pub(crate) meta: usize,
@@ -108,7 +127,7 @@ impl CursorRevisionAccumulator {
 
     pub(crate) fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
-        Self { identity_digest, applied: crate::os_vcs::HistoryPageStack::new(), redo: crate::os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }
+        Self { identity_digest, applied: semio_framework_os_vcs::HistoryPageStack::new(), redo: semio_framework_os_vcs::HistoryPageStack::new(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }
     }
 
     /// 🥽️ What an edit's revision identity covers: its value without `sequenceNumber`. That member is where the edit stands
@@ -128,7 +147,7 @@ impl CursorRevisionAccumulator {
     /// value's canonical JSON (exactly what the one-item byte sealer streams); a coalesced edit that grew past one operation
     /// hashes its header fields and one running chain per operation list ([`EditDigestChains`]), which an amend extends in
     /// O(appended).
-    pub(crate) fn edit_digest<Mutation: ToValue>(edit: &Edit<Mutation>) -> [u8; 32] {
+    pub fn edit_digest<Mutation: ToValue>(edit: &Edit<Mutation>) -> [u8; 32] {
         Self::edit_digest_extending(edit, None).0
     }
 
@@ -182,8 +201,8 @@ impl CursorRevisionAccumulator {
     /// the ids still match. Answers the position of a regrown tail record.
     #[allow(clippy::too_many_arguments)]
     fn reconcile_stack<P, Mutation: ToValue + self::Mutation<P>>(
-        records: &mut crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
-        ids: &crate::os_vcs::HistoryPageStack<String>,
+        records: &mut semio_framework_os_vcs::HistoryPageStack<CursorRevisionRecord>,
+        ids: &semio_framework_os_vcs::HistoryPageStack<String>,
         edits: &ArtifactHistoryLedger<Edit<Mutation>>,
         domain: &[u8],
         identity_digest: [u8; 32],
@@ -217,7 +236,7 @@ impl CursorRevisionAccumulator {
             }
         }
         let regrown_at = regrown.is_some().then_some(common);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "hot-path-census"))]
         hot_path_census::count(|census| census.rebuilt += ids.len() - common);
         for id in ids.iter_from(common) {
             let id_digest = Self::hash_record(b"edit-id", &[id.as_bytes()]);
@@ -240,10 +259,10 @@ impl CursorRevisionAccumulator {
 
     /// 🧮️ Reconciles both cursor stacks ([`Self::reconcile_stack`]); a replay rewrite rebuilds the whole redo stack. Answers
     /// the position of a regrown applied tail record.
-    pub(crate) fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(
+    pub fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(
         &mut self,
-        applied_ids: &crate::os_vcs::HistoryPageStack<String>,
-        redo_ids: &crate::os_vcs::HistoryPageStack<String>,
+        applied_ids: &semio_framework_os_vcs::HistoryPageStack<String>,
+        redo_ids: &semio_framework_os_vcs::HistoryPageStack<String>,
         edits: &ArtifactHistoryLedger<Edit<Mutation>>,
         supersessions: &EffectiveSupersessions,
         dirty: StackMirrorDirt,
@@ -259,22 +278,22 @@ impl CursorRevisionAccumulator {
         regrown
     }
 
-    pub(crate) fn index_applied_edit<P, Mu: Mutation<P>>(&mut self, position: usize, edit: &Edit<Mu>) {
+    pub fn index_applied_edit<P, Mu: Mutation<P>>(&mut self, position: usize, edit: &Edit<Mu>) {
         let digest = Self::hash_record(b"edit-id", &[edit.id.as_bytes()]);
         let mut from = self.indexed_edits.get(&digest).filter(|(known, _)| *known == position).map_or(0, |(_, count)| *count).min(edit.forwards.len());
         if from > 0 {
-            let first = crate::os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, 0).expect("indexed operation exists");
+            let first = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, 0).expect("indexed operation exists");
             if self.mutation_positions.get(&first).is_none_or(|(known, _, _)| *known != position) { from = 0; }
         }
         for index in from..edit.forwards.len() {
-            let mutation = crate::os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, index).expect("indexed operation exists");
+            let mutation = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mu>(edit, index).expect("indexed operation exists");
             self.mutation_positions.insert(mutation, (position, index, digest));
             if edit.forwards[index].may_emit_foreign_steps() && !self.unit_flags.contains_key(&(digest, index)) { self.unit_flags.insert((digest, index), false); }
         }
         self.indexed_edits.insert(digest, (position, edit.forwards.len()));
     }
 
-    pub(crate) fn revision(&self, checkpoint_id: Option<&str>) -> [u8; 32] {
+    pub fn revision(&self, checkpoint_id: Option<&str>) -> [u8; 32] {
         let applied = self.applied.last().map_or(self.identity_digest, |record| record.prefix_digest);
         let redo = self.redo.last().map_or(self.identity_digest, |record| record.prefix_digest);
         let checkpoint = checkpoint_id.unwrap_or_default().as_bytes();
@@ -284,33 +303,33 @@ impl CursorRevisionAccumulator {
 
 pub use semio_framework_os_store_message_ledger::*;
 
-pub(crate) struct ArtifactStoreHistoryCommitReservation {
-    pub(crate) history: ArtifactHistoryReservation,
-    pub(crate) rejected_owner: ArtifactStoreDisplacedOwnerReservation,
+pub struct ArtifactStoreHistoryCommitReservation {
+    pub history: ArtifactHistoryReservation,
+    pub rejected_owner: ArtifactStoreDisplacedOwnerReservation,
 }
 
 /// 📨️ See `ArtifactStore::pending_report`'s doc.
 #[derive(Default)]
-pub(crate) struct PendingCommandReport {
+pub struct PendingCommandReport {
     /// 🎯️ Overrides `dispatch`'s tail-diff `edit_ids` guess — needed once a merge can insert
     /// mid-history (`ingest_remote`/`resolve_conflict`), where "everything past `before`" no longer
     /// names only the newly-landed edits.
     pub(crate) edit_ids: Option<Vec<String>>,
-    pub(crate) messages: Vec<crate::os_spr::EditMessages>,
+    pub(crate) messages: Vec<semio_framework_os_spr::EditMessages>,
     pub(crate) worst: Option<semio_framework_diagnostic::Severity>,
     /// 📤️ Every event this command authored (edit operations, history transitions), in authoring
     /// order — announced outbound as one `BackboneMessage::Mutations` batch when the command ends.
-    pub(crate) outbound: Vec<crate::os_spr::MutationEnvelope>,
+    pub(crate) outbound: Vec<semio_framework_os_spr::MutationEnvelope>,
 }
 
-pub(crate) struct ArtifactStorePendingReportRetirement {
-    report: std::mem::ManuallyDrop<Option<PendingCommandReport>>,
-    active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+pub struct ArtifactStorePendingReportRetirement {
+    pub report: std::mem::ManuallyDrop<Option<PendingCommandReport>>,
+    pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl ArtifactStorePendingReportRetirement {
     pub(crate) fn new(report: PendingCommandReport) -> Self { Self { report: std::mem::ManuallyDrop::new(Some(report)), active: std::mem::ManuallyDrop::new(None) } }
-    fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         let Some(report) = self.report.as_ref() else { return Ok(Default::default()); };
@@ -318,8 +337,8 @@ impl ArtifactStorePendingReportRetirement {
         else if !report.messages.is_empty() { size_of::<ArtifactStoreMessageLedgerRetirement>() }
         else if report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty()) { size_of::<ArtifactStoreStringRetirement>() } else { 0 };
         if capacity_bytes != 0 { return Ok(RetirementDemand { capacity_bytes, depth: 2, ..Default::default() }); }
-        let release_bytes = if report.outbound.capacity() != 0 { std::alloc::Layout::array::<crate::os_spr::MutationEnvelope>(report.outbound.capacity()) }
-        else if report.messages.capacity() != 0 { std::alloc::Layout::array::<crate::os_spr::EditMessages>(report.messages.capacity()) }
+        let release_bytes = if report.outbound.capacity() != 0 { std::alloc::Layout::array::<semio_framework_os_spr::MutationEnvelope>(report.outbound.capacity()) }
+        else if report.messages.capacity() != 0 { std::alloc::Layout::array::<semio_framework_os_spr::EditMessages>(report.messages.capacity()) }
         else { std::alloc::Layout::array::<String>(report.edit_ids.as_ref().map_or(0, Vec::capacity)) }
         .map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "pending report original backing layout overflow"))?.size();
         Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() })
@@ -375,7 +394,7 @@ impl Drop for ArtifactStorePendingReportRetirement {
     }
 }
 
-pub(crate) async fn validate_composition_pins(pins: &[crate::os_vcs::CompositionPin]) -> Result<(), VcsError> {
+pub async fn validate_composition_pins(pins: &[semio_framework_os_vcs::CompositionPin]) -> Result<(), VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut children = HashSet::new();
@@ -407,7 +426,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// MutationEnvelope` carries no undo_policy at all (only the local `Edit`/`MutationMeta` shape
 /// does), and a remote edit is always foreign, so this field is never consulted for it anyway
 /// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
-pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
+pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
     let forward = Mutation::decode_op(&envelope.diff.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let inverse = if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![Mutation::decode_op(&envelope.inverse.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?] };
     Ok(Edit {
@@ -450,11 +469,11 @@ pub use semio_framework_os_store_projection::retire_replayed_projection;
 /// (measured 2026-09-20).
 /// Holding the intermediate here makes the retirement STRUCTURAL — a fold that grows a new early
 /// return cannot silently miss it, and no technology has to override anything extra to be safe.
-pub(crate) struct ReplayProjection<P, Mutation>
+pub struct ReplayProjection<P, Mutation>
 where
     Mutation: self::Mutation<P>,
 {
-    projection: Option<P>,
+    pub projection: Option<P>,
     technology: PhantomData<fn() -> Mutation>,
 }
 
@@ -468,13 +487,13 @@ where
     }
 
     /// ▶️ Installs the next projection and retires the one it displaces.
-    fn advance(&mut self, next: P) {
+    pub fn advance(&mut self, next: P) {
         let displaced = self.projection.replace(next).expect("a live replay projection is present until it is handed out");
         retire_replayed_projection::<P, Mutation>(displaced);
     }
 
     /// 🎁️ Hands the finished projection to the caller, who owns its retirement from here on.
-    pub(crate) fn into_inner(mut self) -> P {
+    pub fn into_inner(mut self) -> P {
         self.projection.take().expect("a live replay projection is handed out exactly once")
     }
 }
@@ -505,7 +524,7 @@ pub use semio_framework_os_store_command::{retire_scratch_operations, retire_scr
 /// 🧮️ Folds an envelope's complete event log — its edits and its history transitions — into
 /// the history projection (`crate::os_spr::fold_history`). Quarantined edits (every edit owning an
 /// operation of a quarantined conflict that was not accepted) stay inactive.
-pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<crate::os_spr::HistoryFold, VcsError>
+pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -515,48 +534,48 @@ where
 
 /// 👁 The head [`fold_history_for`] projects: this replica's alternative and explicit checkpoint.
 /// Absent alternative is the canonical trunk. `viewer_checkpoint_id` of `None` is that line's tip.
-pub(crate) fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> crate::os_spr::ViewerHead {
+pub fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> semio_framework_os_spr::ViewerHead {
     let document_id = ArtifactId(envelope.id.clone());
-    let trunk = crate::os_spr::trunk_alternative_id(&document_id);
-    crate::os_spr::ViewerHead { line_id: envelope.active_alternative_id.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: envelope.viewer_checkpoint_id.clone() }
+    let trunk = semio_framework_os_spr::trunk_alternative_id(&document_id);
+    semio_framework_os_spr::ViewerHead { line_id: envelope.active_alternative_id.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: envelope.viewer_checkpoint_id.clone() }
 }
 
 /// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
-pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict], head: &crate::os_spr::ViewerHead) -> Result<crate::os_spr::HistoryFold, VcsError>
+pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[semio_framework_os_spr::MutationEnvelope], conflicts: &[semio_framework_os_spr::Conflict], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
     let mut folded = Vec::with_capacity(edits.len());
     let mut owners: HashMap<String, String> = HashMap::new();
     for edit in edits.iter().copied() {
-        let mutation_ids = crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
+        let mutation_ids = semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit);
         for mutation_id in &mutation_ids {
             owners.insert(mutation_id.0.clone(), edit.id.clone());
         }
-        folded.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids, line: edit.line.clone() });
+        folded.push(semio_framework_os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids, line: edit.line.clone() });
     }
     let mut excluded = HashSet::new();
     for conflict in conflicts {
-        if conflict.status == crate::os_spr::ConflictStatus::Accepted {
+        if conflict.status == semio_framework_os_spr::ConflictStatus::Accepted {
             continue;
         }
-        if let crate::os_spr::ConflictKind::Quarantined { envelopes, .. } = &conflict.kind {
+        if let semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. } = &conflict.kind {
             excluded.extend(envelopes.iter().filter_map(|quarantined| owners.get(&quarantined.mutation_id.0).cloned()));
         }
     }
-    crate::os_spr::fold_history_for(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded, head).map_err(|error| VcsError::ValidationFailed(error.to_string()))
+    semio_framework_os_spr::fold_history_for(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded, head).map_err(|error| VcsError::ValidationFailed(error.to_string()))
 }
 
 /// 🗣️ `<document schema>#<semantic kind>` of the leaf `operation` is — what `MutationMeta.semantic_kind` records.
-pub(crate) fn operation_semantic_kind<P, Mutation: self::Mutation<P>>(operation: &Mutation, schema: &str) -> SchemaId {
+pub fn operation_semantic_kind<P, Mutation: self::Mutation<P>>(operation: &Mutation, schema: &str) -> SchemaId {
     SchemaId(format!("{schema}#{}", operation.descriptor().semantic_kind))
 }
 
 /// 🗣️ Stamps every metadata record of `edit` with its operation's semantic kind and descriptor name — derived facts no
 /// persisted form carries, so every load and ingest path re-derives them.
-pub(crate) fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Edit<Mutation>, schema: &str) {
+pub fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Edit<Mutation>, schema: &str) {
     for (meta, operation) in edit.mutation_meta.iter_mut().zip(edit.forwards.iter()) {
         meta.semantic_kind = Some(operation_semantic_kind::<P, Mutation>(operation, schema));
         meta.label = Some(operation.descriptor().display_name.to_string());
@@ -564,7 +583,7 @@ pub(crate) fn stamp_edit_semantics<P, Mutation: self::Mutation<P>>(edit: &mut Ed
 }
 
 /// ⏰️ An edit's HLC: its first operation's stamped timestamp (the order key every fold uses).
-pub(crate) fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
+pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
 }
 

@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/neural-engine-registry-rs",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:neural"
+  ]
+}

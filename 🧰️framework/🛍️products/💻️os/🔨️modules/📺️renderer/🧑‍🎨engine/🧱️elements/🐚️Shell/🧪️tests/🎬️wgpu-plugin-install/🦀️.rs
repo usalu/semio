@@ -50,10 +50,10 @@ fn the_host_plugin_is_not_the_owner_of_every_kind() {
 #[test]
 fn installing_without_a_resident_program_is_refused() {
     let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(shell.plugin_install.is_none());
-    let outcome = semio_framework_async::block_on(shell.install_plugin("foreign"));
+    assert!(shell.plugins.plugin_install.is_none());
+    let outcome = semio_framework_async::block_on(shell.plugins.install_plugin("foreign"));
     assert_eq!(outcome, Err("plugin modules root is unavailable".to_string()));
-    assert!(shell.plugin_install.is_none(), "a refusal before any step boundary retains no install record");
+    assert!(shell.plugins.plugin_install.is_none(), "a refusal before any step boundary retains no install record");
 }
 
 /// 🧪️ Cancelling with nothing in flight is inert, and cancelling a settled record clears it — the
@@ -63,15 +63,15 @@ fn installing_without_a_resident_program_is_refused() {
 #[test]
 fn cancelling_clears_only_a_settled_install_record() {
     let mut shell = ShellState::new(Vec::new(), "s".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.cancel_plugin_install();
-    assert!(shell.plugin_install.is_none());
-    shell.plugin_install = Some(ShellPluginInstall { plugin_id: "foreign".into(), phase: ShellPluginInstallPhase::Failed("boom".into()), cancel: CancelToken::root_now() });
-    shell.cancel_plugin_install();
-    assert!(shell.plugin_install.is_none());
+    shell.plugins.cancel_plugin_install();
+    assert!(shell.plugins.plugin_install.is_none());
+    shell.plugins.plugin_install = Some(ShellPluginInstall { plugin_id: "foreign".into(), phase: ShellPluginInstallPhase::Failed("boom".into()), cancel: CancelToken::root_now() });
+    shell.plugins.cancel_plugin_install();
+    assert!(shell.plugins.plugin_install.is_none());
     let cancel = CancelToken::root_now();
-    shell.plugin_install = Some(ShellPluginInstall { plugin_id: "foreign".into(), phase: ShellPluginInstallPhase::Loading, cancel: cancel.clone() });
-    shell.cancel_plugin_install();
-    assert!(shell.plugin_install.is_some(), "an in-flight install stays retained until its own next step boundary settles it");
+    shell.plugins.plugin_install = Some(ShellPluginInstall { plugin_id: "foreign".into(), phase: ShellPluginInstallPhase::Loading, cancel: cancel.clone() });
+    shell.plugins.cancel_plugin_install();
+    assert!(shell.plugins.plugin_install.is_some(), "an in-flight install stays retained until its own next step boundary settles it");
     assert!(cancel.is_cancelled_now());
 }
 

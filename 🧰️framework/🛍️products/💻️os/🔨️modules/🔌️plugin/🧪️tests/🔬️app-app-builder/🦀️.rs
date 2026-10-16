@@ -2,7 +2,7 @@ mod app_builder_tests {
     use super::*;
     use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
-    use ui_wgpu::wgpu::create_default_layout;
+    use semio_framework_ui_layout::layout::create_default_layout;
 
     /// 🧭️ Executes neutral owner placements through the actual action disposition join and independent serde projection.
     #[semio_framework_async_macros::async_test]
@@ -267,14 +267,14 @@ mod app_builder_tests {
         let editor = surface_app("history-edit", AppRole::Editor).await;
         let editor_ids: HashSet<&str> = declared_actions(&editor).map(|action| action.id.as_str()).collect();
         let viewer_ids: HashSet<&str> = declared_actions(&viewer).map(|action| action.id.as_str()).collect();
-        for verb in semio_framework::HISTORY_EDIT_ACTION_IDS {
+        for verb in semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS {
             assert!(editor_ids.contains(verb), "the editor declares {verb}");
             assert!(!viewer_ids.contains(verb), "a viewer never declares {verb}");
             assert!(editor.keybindings.iter().all(|binding| binding.action.action != verb), "{verb} carries no framework chord");
         }
         assert!(declared_actions(&editor).filter(|action| is_time_travel_action_id(&action.id)).all(|action| !action.in_palette && action.kind == ActionKind::History));
-        assert!(editor.dialogs.iter().any(|dialog| dialog.id == semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID), "the editor declares the finalize prompt");
-        assert!(viewer.dialogs.iter().all(|dialog| dialog.id != semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID), "a viewer declares no finalize prompt");
+        assert!(editor.dialogs.iter().any(|dialog| dialog.id == semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID), "the editor declares the finalize prompt");
+        assert!(viewer.dialogs.iter().all(|dialog| dialog.id != semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID), "a viewer declares no finalize prompt");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -308,7 +308,7 @@ mod app_builder_tests {
         for tab in definition.panel_tabs.iter() {
             history_panel_tab_ids.push(tab.id());
         }
-        assert!(history_panel_tab_ids.iter().any(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
+        assert!(history_panel_tab_ids.iter().any(|id| *id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID));
         let action_ids: HashSet<&str> = declared_actions(&definition).map(|a| a.id.as_str()).collect();
         assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
         assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
@@ -322,13 +322,13 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
-        let definition = minimal_app("manual-history-app").await.panel_tab(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
+        let definition = minimal_app("manual-history-app").await.panel_tab(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, LocalizedLabel::data("Custom History"), PanelGroup::Settings, "custom.history").await.build_definition();
         let mut manual_history_tab_ids: Vec<&str> = Vec::new();
         for t in definition.panel_tabs.iter() {
             manual_history_tab_ids.push(t.id());
         }
-        assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
-        let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
+        assert_eq!(manual_history_tab_ids.iter().filter(|id| **id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
+        let manual_history_tab_idx = manual_history_tab_ids.iter().position(|id| *id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
         let tab = &definition.panel_tabs[manual_history_tab_idx];
         assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
     }
@@ -445,7 +445,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_a_tool_run_injects_the_reserved_actions_and_their_chords_without_stealing_escape() {
-        use semio_framework::{JobKindId, ToolDefinition, ToolRef, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
+        use semio_framework::{ToolDefinition, ToolRef};
+        use semio_framework_tool_run::{JobKindId, ToolRunDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
         let run = ToolRunDefinition { receiving: semio_framework_tool_run::ToolRunReceivingLimits::REPORTS,
             mutating: true,
             rebase: ToolRunRebasePolicy::Revalidate,
@@ -476,7 +477,7 @@ mod app_builder_tests {
         assert_eq!(bound("mod+shift+enter").as_deref(), Some("toolRunFinalize"));
         assert!(interactive.keybindings.iter().all(|binding| binding.action.action != "toolRunDismiss" && binding.action.action != "toolRunResume"));
         assert_ne!(bound("escape").as_deref(), Some("toolRunDismiss"), "escape dismisses only with the run panel focused");
-        let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
+        let tool_run_tab = |definition: &AppDefinition| definition.panel_tabs.iter().find(|tab| matches!(&tab.kind, PanelTabKind::App(id) if id == semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID)).map(|tab| (tab.group, tab.body_key.clone()));
         assert_eq!(tool_run_tab(&plain), None, "an app without a tool run gets no ToolRun panel tab");
         assert_eq!(tool_run_tab(&interactive), Some((PanelGroup::Details, Some(crate::FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()))), "an app declaring a tool run mounts the framework ToolRun panel as a details tab");
     }
@@ -573,7 +574,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_introduction_injects_start_introduction_action() {
-        use semio_framework::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
+        use semio_framework::ActionKind;
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("intro-app")
@@ -588,14 +590,14 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn no_introduction_means_no_start_introduction_action() {
-        use semio_framework::START_INTRODUCTION_ACTION_ID;
+        use semio_framework::onboarding::START_INTRODUCTION_ACTION_ID;
         let definition = minimal_app("no-intro-app").await.build_definition();
         assert!(!declared_actions(&definition).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_with_no_steps() {
-        use semio_framework::IntroductionDefinition;
+        use semio_framework::onboarding::IntroductionDefinition;
         let __base = minimal_app("empty-intro-app").await;
         let __chain = __base.introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![] }).await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -604,7 +606,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_duplicate_introduction_step_ids() {
-        use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("dupe-step-app").await;
@@ -620,7 +622,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
-        use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, window_element_id};
+        use semio_framework::window_element_id;
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-window-app").await;
@@ -633,7 +636,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
-        use semio_framework::{IntroductionDefinition, IntroductionStepDefinition, panel_tab_element_id, panel_tab_first_draggable_element_id};
+        use semio_framework::{panel_tab_element_id, panel_tab_first_draggable_element_id};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-panel-tab-app").await;
@@ -655,7 +659,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
-        use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-element-app").await;
@@ -672,7 +676,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
-        use semio_framework::{IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-escape-hatch-app")
@@ -686,7 +690,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
-        use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-utility-app").await;
@@ -702,7 +706,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
-        use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let __base = minimal_app("bad-interaction-window-app").await;
@@ -718,7 +722,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
-        use semio_framework::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition, window_element_id};
+        use semio_framework::window_element_id;
+        use semio_framework::onboarding::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework::InteractiveJobClassification;
         let definition = minimal_app("good-intro-app")
@@ -750,7 +755,7 @@ mod app_builder_tests {
     }
 
     async fn minimal_tutorial(id: &str) -> TutorialDefinition {
-        use semio_framework::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
+        use semio_framework::onboarding::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
         TutorialDefinition {
             id: id.into(),
             title: LocalizedLabel::data("Tutorial"),
@@ -765,7 +770,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn declaring_tutorial_injects_start_tutorial_action() {
-        use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
+        use semio_framework::ActionKind;
+        use semio_framework::onboarding::START_TUTORIAL_ACTION_ID;
         let definition = minimal_app("tutorial-app").await.tutorial(minimal_tutorial("welcome-tour").await).await.build_definition();
         let start_tutorial = declared_actions(&definition).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
         assert_eq!(start_tutorial.kind, ActionKind::View);
@@ -774,7 +780,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
-        use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
+        use semio_framework::onboarding::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
         let definition = minimal_app("no-tutorial-app").await.build_definition();
         assert!(!declared_actions(&definition).any(|action| action.id == START_TUTORIAL_ACTION_ID));
         assert!(declared_actions(&definition).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
@@ -784,7 +790,7 @@ mod app_builder_tests {
     async fn build_definition_rejects_tutorial_failing_structural_validation() {
         let mut tutorial = minimal_tutorial("out-of-range-tour").await;
         tutorial.duration_ms = 100;
-        tutorial.chapters.push(semio_framework::TutorialChapter { id: "late".into(), at: 999_999, title: LocalizedLabel::data("Late"), body: None });
+        tutorial.chapters.push(semio_framework::onboarding::TutorialChapter { id: "late".into(), at: 999_999, title: LocalizedLabel::data("Late"), body: None });
         let base = minimal_app("bad-structural-tutorial-app").await;
         let __chain = base.tutorial(tutorial).await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -803,7 +809,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
-        use semio_framework::{TutorialEvent, TutorialEventKind};
+        use semio_framework::onboarding::{TutorialEvent, TutorialEventKind};
         let mut tutorial = minimal_tutorial("bad-event-tour").await;
         tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "missingAction".into(), args: None } }];
         let base = minimal_app("bad-tutorial-event-app").await;
@@ -814,7 +820,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
-        use semio_framework::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
+        use semio_framework::onboarding::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
         let mut tutorial = minimal_tutorial("bad-ui-change-tour").await;
         tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 10, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("missing".into()) }] } }];
         let base = minimal_app("bad-tutorial-ui-app").await;
@@ -825,7 +831,7 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
-        use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
+        use semio_framework::onboarding::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
         let mut tutorial = minimal_tutorial("bad-gesture-tour").await;
         tutorial.tracks.gestures = vec![TutorialGestureCue { at: 10, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: "not-camel-case".into(), offset: None } }, cursor: None }];
         let base = minimal_app("bad-tutorial-gesture-app").await;
@@ -836,7 +842,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
-        use semio_framework::{IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, window_element_id};
+        use semio_framework::window_element_id;
+        use semio_framework::onboarding::{IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
         let mut tutorial = minimal_tutorial("good-tour").await;
         tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
         tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
@@ -851,7 +858,7 @@ mod app_builder_tests {
     async fn declaring_dialog_appends_to_definition() {
         use semio_framework::{ActionRef, DialogDefinition};
         let definition = minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await.build_definition();
-        assert_eq!(definition.dialogs.iter().map(|dialog| dialog.id.as_str()).collect::<Vec<_>>(), ["addLayer", semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID], "the app's own dialog, then the framework-injected finalize prompt");
+        assert_eq!(definition.dialogs.iter().map(|dialog| dialog.id.as_str()).collect::<Vec<_>>(), ["addLayer", semio_framework::history_edit::HISTORY_EDIT_FINALIZE_DIALOG_ID], "the app's own dialog, then the framework-injected finalize prompt");
         assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
     }
 
@@ -1003,7 +1010,7 @@ mod app_builder_tests {
     /// (ticket 26/09/18, slice F1).
     #[semio_framework_async_macros::async_test]
     async fn a_stack_default_layout_is_one_stack_root_of_window_leaves() {
-        use ui_wgpu::wgpu::{WindowLayoutRoot, create_stack_layout};
+        use semio_framework_ui_layout::layout::{WindowLayoutRoot, create_stack_layout};
         let layout = create_default_layout(&["tile-editor".into()], "stack", None, Some(&["Tile editor".into()]));
         let WindowLayoutRoot::Stack(root) = &layout.root else {
             panic!("a stack request must mint a stack ROOT, not an axis wearing the stack discriminator");

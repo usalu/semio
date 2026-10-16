@@ -11,9 +11,17 @@
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3
 //! before argv parsing and never enters argv or workspace state. HTTP and bridge admission reuse
 //! that protected authority without copying it into argv, a URL, a file, logs, or protocol output.
-use crate::{AgentCredentialSource, AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
+
+use crate::root::{HttpOptions, HubOptions, StdioOptions, run_http, run_stdio};
+use semio_framework_os_mcp_capabilities::catalog_source_discovery::discover_catalog_source;
+use semio_framework_os_mcp_catalog::catalog::{audit_source, description_findings};
+use semio_framework_os_mcp_foundation::agent_credential::{AgentCredentialSource, CredentialExchangeProtocolV1, install_credential_exchange_protocols_v1};
+use semio_framework_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
+use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
+use semio_framework_os_mcp_schema::schema::schema_mirror_json;
 
 //#region 🔖️Args
+
 enum Mode {
     Stdio(StdioOptions),
     Http(HttpOptions),
@@ -48,8 +56,8 @@ fn parse_auto_approve(raw: &str) -> Result<AutoApprovePolicy, String> {
 /// client config.
 #[derive(Default)]
 struct HubArgs {
-    base_url: Option<String>,
-    space_id: Option<String>,
+    pub(crate) base_url: Option<String>,
+    pub(crate) space_id: Option<String>,
     credential_file: Option<String>,
     credential_fd: Option<i32>,
 }
@@ -92,7 +100,7 @@ fn parse_credential_fd(raw: &str, stdio_mode: bool) -> Result<i32, String> {
 /// 🎟️ Reads the required independently authored Host policies without scalar conversion or renewal.
 fn read_host_driver_policy(path:&str)->Result<semio_framework_plugin_host::GuestRelayDriverPolicy,String>{let original=std::fs::read_to_string(path).map_err(|error|error.to_string())?;semio_framework_pack_json::from_json_str(&original,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())}
 
-fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
+pub(crate) fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
     let mut host_driver_policy = None;
     let mut options_folder = None;
     let mut options_principal = None;
@@ -122,7 +130,7 @@ fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOpti
     Ok(StdioOptions { host_driver_policy: host_driver_policy.ok_or("--host-driver-policy is required")?, folder:options_folder, hub, principal:options_principal, scopes:options_scopes, auto_approve:options_auto_approve, no_bridge:options_no_bridge })
 }
 
-fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOptions, String> {
+pub(crate) fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOptions, String> {
     let mut host_driver_policy = None;
     let mut port: u16 = 6300;
     let mut bind = "127.0.0.1".to_string();
@@ -185,6 +193,7 @@ fn parse_args() -> Result<Mode, String> {
         other => Err(format!("unknown mode `{other}` — only `stdio`/`http`/`audit`/`schemas` are implemented by this binary")),
     }
 }
+
 //#endregion 🔖️Args
 
 /// 🏷️ Exact hub-authority carriers the OS/hub processes export by name — `S_USER`/`VITE_S_USER`
@@ -209,7 +218,7 @@ const PROTECTED_CREDENTIAL_MARKERS: [&str; 7] = ["TOKEN", "SESSION", "CREDENTIAL
 /// variables `CLAUDE_CODE_SESSION_ID`, `TMUX_SESSION`, `GH_TOKEN` or `VSCODE_SESSION_ID` carries no
 /// hub credential, and rejecting those made this binary unusable as the child of every session
 /// oriented client — which is the one client `.mcp.json` exists for.
-fn protected_credential_environment_name(key: &str) -> bool {
+pub(crate) fn protected_credential_environment_name(key: &str) -> bool {
     PROTECTED_CREDENTIAL_NAMES.contains(&key)
         || PROTECTED_CREDENTIAL_HEADER_NAMES.contains(&key)
         || PROTECTED_CREDENTIAL_NAMESPACES
@@ -275,11 +284,11 @@ fn compile_component_worker() -> Result<(), String> {
 /// on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
 /// compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
 /// reads no credential and serves nothing, so it runs before the process-entry seal too.
-pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocolV1>, credentials: Vec<crate::agent_credential::CredentialExchangeProtocolV1>) {
-    if let Err(error) = crate::agent_credential::install_credential_exchange_protocols_v1(credentials) { eprintln!("MCP credential protocol inventory refused: {}", error.message); std::process::exit(1); }
-    if let Err(error)=crate::inference::install_remote_inference_protocols_v1(services) {eprintln!("MCP installed service inventory refused: {}",error.message);std::process::exit(1);}
+pub fn run_mcp_entrypoint(services:Vec<RemoteInferenceProtocolV1>, credentials: Vec<CredentialExchangeProtocolV1>) {
+    if let Err(error) = install_credential_exchange_protocols_v1(credentials) { eprintln!("MCP credential protocol inventory refused: {}", error.message); std::process::exit(1); }
+    if let Err(error)=install_remote_inference_protocols_v1(services) {eprintln!("MCP installed service inventory refused: {}",error.message);std::process::exit(1);}
     if std::env::args().nth(1).as_deref() == Some("schemas") {
-        print!("{}", crate::schema_mirror_json());
+        print!("{}", schema_mirror_json());
         return;
     }
     if std::env::args().nth(1).as_deref() == Some("compile-component") {
@@ -331,12 +340,12 @@ pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocol
         }
     };
     if let Mode::Audit { folder } = &mode {
-        let source = crate::registry::discover_catalog_source(Some(std::path::Path::new(folder)));
-        let findings = crate::catalog::audit_source(&source);
+        let source = discover_catalog_source(Some(std::path::Path::new(folder)));
+        let findings = audit_source(&source);
         for finding in &findings {
             println!("{}", finding.message());
         }
-        let undescribed = crate::catalog::description_findings(&source);
+        let undescribed = description_findings(&source);
         for finding in &undescribed {
             println!("{}", finding.message());
         }
@@ -344,8 +353,8 @@ pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocol
         std::process::exit(if findings.is_empty() && undescribed.is_empty() { 0 } else { 1 });
     }
     let result = match mode {
-        Mode::Stdio(options) => crate::run_stdio(options),
-        Mode::Http(options) => crate::run_http(options),
+        Mode::Stdio(options) => run_stdio(options),
+        Mode::Http(options) => run_http(options),
         Mode::Audit { .. } => unreachable!("handled above"),
     };
     if let Err(error) = result {
@@ -353,7 +362,3 @@ pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocol
         std::process::exit(1);
     }
 }
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️bin-quick/🦀️.rs"]
-mod quick;

@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-replication-presence"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Peer presence: window views, typing, tool runs, history edits, the borrowed presence reader, interaction roster and peer overlay."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-presence"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-io-base64 = { path = "../../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-replication-error = { path = "../../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

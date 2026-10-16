@@ -1310,7 +1310,7 @@ export type ToolDefinition = { id: string,
 label: unknown, iconId: IconName, keys?: string,
 /**
  * ⏯️ Declares that this tool runs a visible, abortable, finalizable algorithm (tool run contract §2.4);
- * injects [`tool_run_action_definitions`].
+ * reserves the tool run actions through [`crate::tool_run::RESERVED`].
  */
 run?: ToolRunDefinition, };"####,
         },
@@ -1936,7 +1936,7 @@ cursor?: string, category?: UtilityCategory,
 allowsActionsWhileActive: boolean,
 /**
  * ⏯️ Declares that activating this utility runs a visible, abortable algorithm (tool run contract §2.4);
- * injects [`tool_run_action_definitions`].
+ * reserves the tool run actions through [`crate::tool_run::RESERVED`].
  */
 run?: ToolRunDefinition, };"####,
         },

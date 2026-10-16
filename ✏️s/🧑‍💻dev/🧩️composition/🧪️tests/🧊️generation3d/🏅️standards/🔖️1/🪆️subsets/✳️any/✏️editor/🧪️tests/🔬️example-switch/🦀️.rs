@@ -101,7 +101,7 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
     // 🔒️ The switch carries the run start on its OWN emit, and the link's one-request latch is what
     // keeps the following refresh poll from asking for a SECOND run on top of it.
     let polled = app.pending_effects(Some(&flow_view)).await;
-    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
     assert!(context::run_actions(&polled).is_empty(), "the refresh poll must ask for no second run, got {polled:?}");
     context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
     let after = app
@@ -125,7 +125,7 @@ async fn set_active_example_starts_the_run_that_evaluates_every_attached_preview
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &action_meta).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
-    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
+    assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries exactly one run start");
     let run = context::drive_preview_run(&mut app, &flow_view, &receipt.effects).await;
     assert_eq!(run_windows(&run), vec![edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string()], "the run must evaluate the attached preview window");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);

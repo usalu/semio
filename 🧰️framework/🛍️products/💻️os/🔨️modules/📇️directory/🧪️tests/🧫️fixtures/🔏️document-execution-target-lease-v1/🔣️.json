@@ -40,7 +40,7 @@
         "schema": "semio.plugin.component-receipt/v1",
         "pluginId": "gis",
         "packageId": "semio:gis",
-        "profile": "wasm-release",
+        "profile": "release",
         "target": "wasm32-wasip2",
         "wasmSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
         "wasmBytes": 1024,
@@ -161,7 +161,7 @@
         "schema": "semio.plugin.component-receipt/v1",
         "pluginId": "gis",
         "packageId": "semio:gis",
-        "profile": "wasm-release",
+        "profile": "release",
         "target": "wasm32-wasip2",
         "wasmSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
         "wasmBytes": 1024,
@@ -961,7 +961,7 @@
       "path": [
         "profile"
       ],
-      "value": "wasm-prototype",
+      "value": "prototype",
       "accepted": false
     },
     {

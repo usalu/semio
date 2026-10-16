@@ -2,11 +2,13 @@ import corpus from "./🧫️fixtures/🔣️.json";
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { runInNewContext } from "node:vm";
-import { URL as OracleURL } from "whatwg-url";
+import {createRequire} from "node:module";
+const {URL:OracleURL}:{URL:typeof URL}=createRequire(import.meta.url)("whatwg-url");
 import { Request as OracleRequest } from "undici";
 import { globSync } from "glob";
 import { init, parse } from "es-module-lexer";
-import CachePolicy from "http-cache-semantics";
+type CacheOracleRequest={url:string;method:string;headers:Readonly<Record<string,string>>};
+const CachePolicy:{new(request:CacheOracleRequest,response:{status:number;headers:Readonly<Record<string,string>>}):{satisfiesWithoutRevalidation(request:CacheOracleRequest):boolean}}=createRequire(import.meta.url)("http-cache-semantics");
 
 export async function registerTests1(
   vitest: NonNullable<ImportMeta["vitest"]>,

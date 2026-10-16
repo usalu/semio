@@ -1,9 +1,10 @@
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import dependencySchema from "../🧬️schema/📥️dependencies.json";
 import authoringSchema from "../🧬️schema/📥️authoring.json";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join,resolve,isAbsolute} from "node:path";
-import {checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildInvocationGraphSelectionV1,type BuildGraphSelectionV1} from "../🕸️graph/🚪️admission/🟦️.ts";
 import type {BuildGraphV1} from "../🕸️graph/🟦️.ts";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -160,15 +161,15 @@ export function readBuildGraphAncestorSelectionV1(root:string,value:unknown):Bui
 }
 
 /** 🪆️ Validates an inherited original pin before genuinely publishing a different nested selection. */
-export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,reuse:boolean,read?:(root:string,invocation:ScriptInvocation,options:{selection:BuildGraphSelectionV1;reuse:boolean})=>Promise<BuildGraphV1>):Promise<BuildGraphV1>{
- checkScriptInvocation(original);if(current.control!==original.control||current.policy!==original.policy)throw Error("Original nested build process control changed");
+export async function loadBuildInvocationGraphV1(root:string,args:readonly string[],original:ScriptInvocation,current:ScriptInvocation,phaseControl:ResourceLeaseControl,reuse:boolean,read?:(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse:boolean})=>Promise<BuildGraphV1>):Promise<BuildGraphV1>{
+ requireIssuedResourceControlInvocationV1(phaseControl,current);checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);if(current.control!==original.control||current.policy!==original.policy)throw Error("Original nested build process control changed");
  const selection=buildInvocationGraphSelectionV1(args),load=read??(await import("../🕸️graph/🟦️.ts")).loadBuildGraphV1,ancestor=reuse?readBuildGraphAncestorSelectionV1(root,original.capabilities):undefined;
  if(ancestor&&JSON.stringify(ancestor)!==JSON.stringify(selection)){
   if((current.capabilities as {native?:unknown}).native!==(original.capabilities as {native?:unknown}).native)throw Error("Original nested build native resources changed");
-  await load(root,original,{selection:ancestor,reuse:true});checkScriptInvocation(original);await advanceScriptInvocation(original,"build:nested-selection","running");checkScriptInvocation(original);
-  return load(root,current,{selection,reuse:false});
+  await load(root,original,phaseControl,{selection:ancestor,reuse:true});checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);await advanceScriptInvocation(original,"build:nested-selection","running");checkResourceLeaseControl(phaseControl);checkScriptInvocation(original);
+  const graph=await load(root,current,phaseControl,{selection,reuse:false});checkResourceLeaseControl(phaseControl);return graph;
  }
- return load(root,current,{selection,reuse});
+ const graph=await load(root,current,phaseControl,{selection,reuse});checkResourceLeaseControl(phaseControl);return graph;
 }
 
 

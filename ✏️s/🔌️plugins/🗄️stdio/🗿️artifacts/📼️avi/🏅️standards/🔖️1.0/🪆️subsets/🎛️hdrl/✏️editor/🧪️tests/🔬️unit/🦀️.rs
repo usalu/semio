@@ -1,5 +1,12 @@
+use crate::standards::v1_0::subsets::any::schema::mutations::AviMutation;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_s_artifact_stdio_contract::editing;
 use crate::apply_mutation;
-use super::*;
+use crate::editor::avi::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -74,7 +81,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     assert!(app.close_terminal_is_empty());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::AviEditor, || semio_framework_plugin::App { definition: super::create_avi_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::avi::AviEditor, || semio_framework_plugin::App { definition: crate::editor::avi::create_avi_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {

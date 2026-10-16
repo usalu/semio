@@ -4,24 +4,24 @@ use super::*;
 
 //#region SceneRuntime
 const RASTER_SURFACE_CAPACITY: usize = 256;
-pub(crate) const RASTER_UPLOADS_PER_SURFACE_CAPACITY: usize = 16;
-pub(crate) const RASTER_UPLOAD_KEY_BYTE_CAPACITY: usize = 256;
-pub(crate) const RASTER_UPLOAD_BYTE_CAPACITY: usize = 1024 * 1024;
+pub const RASTER_UPLOADS_PER_SURFACE_CAPACITY: usize = 16;
+pub const RASTER_UPLOAD_KEY_BYTE_CAPACITY: usize = 256;
+pub const RASTER_UPLOAD_BYTE_CAPACITY: usize = 1024 * 1024;
 /// 🖼️ Per-image refusals one surface parks for silent retirement between two upload-cursor passes; admission keeps room for one.
 const RASTER_REFUSALS_PER_SURFACE: usize = 4;
 
-pub(crate) struct PendingRasterQueue {
-    pub(crate) slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>,
+pub struct PendingRasterQueue {
+    pub slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>,
     pub(crate) epochs: [u64; RASTER_UPLOADS_PER_SURFACE_CAPACITY],
-    pub(crate) head: u8,
-    pub(crate) len: u8,
+    pub head: u8,
+    pub len: u8,
     pub(crate) checked_out: Option<PendingRasterQueueToken>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct PendingRasterQueueToken {
-    pub(crate) slot: u8,
-    pub(crate) epoch: u64,
+pub struct PendingRasterQueueToken {
+    pub slot: u8,
+    pub epoch: u64,
 }
 
 impl Default for PendingRasterQueue {
@@ -31,7 +31,7 @@ impl Default for PendingRasterQueue {
 }
 
 impl PendingRasterQueue {
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         usize::from(self.len)
     }
 
@@ -39,7 +39,7 @@ impl PendingRasterQueue {
         self.len() == RASTER_UPLOADS_PER_SURFACE_CAPACITY
     }
 
-    pub(crate) fn push_back(&mut self, producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
+    pub fn push_back(&mut self, producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
         if self.is_full() {
             return Err(producer);
         }
@@ -50,7 +50,7 @@ impl PendingRasterQueue {
         Ok(())
     }
 
-    pub(crate) fn checkout_front(&mut self) -> Option<PendingRasterQueueToken> {
+    pub fn checkout_front(&mut self) -> Option<PendingRasterQueueToken> {
         if self.len == 0 || self.checked_out.is_some() {
             return None;
         }
@@ -61,7 +61,7 @@ impl PendingRasterQueue {
         Some(token)
     }
 
-    pub(crate) fn take_checked_out(&mut self, token: PendingRasterQueueToken) -> Option<PreparedRasterProducer> {
+    pub fn take_checked_out(&mut self, token: PendingRasterQueueToken) -> Option<PreparedRasterProducer> {
         if self.checked_out != Some(token) || self.head != token.slot || self.epochs[usize::from(token.slot)] != token.epoch {
             return None;
         }
@@ -73,7 +73,7 @@ impl PendingRasterQueue {
         Some(producer)
     }
 
-    pub(crate) fn hand_back(&mut self, token: PendingRasterQueueToken) -> bool {
+    pub fn hand_back(&mut self, token: PendingRasterQueueToken) -> bool {
         if self.checked_out != Some(token) || self.head != token.slot || self.epochs[usize::from(token.slot)] != token.epoch || self.slots[usize::from(token.slot)].is_none() {
             return false;
         }
@@ -90,7 +90,7 @@ impl PendingRasterQueue {
     }
 
     #[cfg(test)]
-    pub(crate) fn close_all(&mut self) {
+    pub fn close_all(&mut self) {
         while let Some(mut producer) = self.pop_front_for_close() {
             producer.begin_close();
             while !producer.close_step() {}
@@ -99,12 +99,12 @@ impl PendingRasterQueue {
 }
 
 #[derive(Default)]
-pub(crate) struct PendingRasterSurface {
-    pub(crate) queue: PendingRasterQueue,
-    pub(crate) admission: Option<PreparedRasterReservation>,
-    pub(crate) rejected: Option<PreparedRasterRejected>,
+pub struct PendingRasterSurface {
+    pub queue: PendingRasterQueue,
+    pub admission: Option<PreparedRasterReservation>,
+    pub rejected: Option<PreparedRasterRejected>,
     pub(crate) retiring: Option<PreparedRasterRejected>,
-    pub(crate) closing: Option<PreparedRasterProducer>,
+    pub closing: Option<PreparedRasterProducer>,
     /// 🖼️ Per-image refusals awaiting silent bounded retirement ([`PendingRasterSurface::park_refusal`]).
     pub(crate) refused: [Option<PreparedRasterRejected>; RASTER_REFUSALS_PER_SURFACE],
 }
@@ -112,13 +112,13 @@ pub(crate) struct PendingRasterSurface {
 impl PendingRasterSurface {
     /// 🚦️ Whether one more image may be admitted: a free FIFO slot, no admission in flight, no authority owner retained or
     /// retiring, and room in the refusal ring for the refusal the admission could end in.
-    pub(crate) fn admits_upload(&self) -> bool {
+    pub fn admits_upload(&self) -> bool {
         !self.queue.is_full() && self.admission.is_none() && self.rejected.is_none() && self.retiring.is_none() && self.closing.is_none() && self.refused.iter().any(Option::is_none)
     }
 
     /// 🖼️ Parks one refused owner for silent retirement and answers the typed outcome; admission reserved the ring slot (a full
     /// ring falls back to the authority slot).
-    pub(crate) fn park_refusal(&mut self, refusal: PreparedRasterRejected) -> RasterUploadRefusal {
+    pub fn park_refusal(&mut self, refusal: PreparedRasterRejected) -> RasterUploadRefusal {
         let outcome = if refusal.is_content_refusal() { RasterUploadRefusal::Invalid(refusal.fault()) } else { RasterUploadRefusal::Busy };
         match self.refused.iter_mut().find(|slot| slot.is_none()) {
             Some(slot) => *slot = Some(refusal),
@@ -173,7 +173,7 @@ impl Drop for PendingRasterCheckedOut {
 #[derive(Default)]
 pub struct PendingRasterUploadCursor {
     surface_index: usize,
-    pub(crate) closing: Option<PreparedRasterProducer>,
+    pub closing: Option<PreparedRasterProducer>,
 }
 
 impl PendingRasterUploadCursor {

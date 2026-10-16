@@ -24,7 +24,7 @@ const STORE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️
 const TWIN = "🧰️framework/🛍️products/💻️os/🟦️.ts";
 const FIXTURE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/📤️outbound-announcement/🔣️.json";
 const ACTOR = "🧰️framework/🔨️modules/🎭️actor/🦀️.rs";
-const NEGATIVE = "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json";
+const NEGATIVE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/🖐️gumball-audience/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json";
 
 /** 🧫️ A closure-conforming miniature repo: a plugin editor minting edits through the Store authority with a derived footprint, its test building an edit literally, the Store owning the footprint type, a TS twin, a fixture, an actor mailbox key and the bracket negative case. */
 const CLEAN: Readonly<Record<string, string>> = {

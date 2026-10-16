@@ -1,7 +1,7 @@
 //! 🪢 Hub-private static native openable catalog provider.
 
-use super::trusted_catalog::{NativeCodecBinding, NativeCodecProviderPackageV1, NativeCodecProviderSourceV1};
-use super::{AuthorityError, OperationContext};
+use semio_hub_trusted_catalog_descriptor::{NativeCodecBinding, NativeCodecProviderPackageV1, NativeCodecProviderSourceV1};
+use semio_hub_artifact_authority::{AuthorityError, OperationContext};
 use semio_hub_stdio_catalog::NativeCodecFactoryReceipt;
 use std::collections::BTreeSet;
 
@@ -38,7 +38,7 @@ impl NativeCodecProviderSetV1 {
     /// refusing here is what made a fourth package structurally unloadable); and a claim that pairs
     /// one linked half with another entry's half is refused, because that is a corrupted owner
     /// identity rather than an unlinked package.
-    pub(crate) fn preview(&self, plugin_id: &str, package_id: &str, version: &str, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
+    pub fn preview(&self, plugin_id: &str, package_id: &str, version: &str, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
         context.checkpoint()?;
         let mut matches = self.entries.iter().filter(|entry| entry.plugin_id == plugin_id && entry.package_id == package_id);
         let Some(selected) = matches.next() else {

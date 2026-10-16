@@ -9,6 +9,7 @@
     "baselineSha": "a8d1caf41f68204e73ff5e47ce40c5f543ed442d"
   },
   "$defs": {
+    "AdapterInvocationProtocol": {"const":{"version":1,"ports":["invocation","phaseControl"],"construction":"explicit-issued","childBirth":"parent-envelope","join":"accepted-operations"}},
     "Slug": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"

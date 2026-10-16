@@ -5,55 +5,55 @@ use super::*;
 static RENDERER_ASSET_IO: OnceLock<Mutex<WorldAssetIoAuthority>> = OnceLock::new();
 static RENDERER_ASSET_GENERATION: AtomicU64 = AtomicU64::new(1);
 
-pub(crate) fn renderer_asset_io() -> &'static Mutex<WorldAssetIoAuthority> {
+pub fn renderer_asset_io() -> &'static Mutex<WorldAssetIoAuthority> {
     RENDERER_ASSET_IO.get_or_init(|| Mutex::new(WorldAssetIoAuthority::default()))
 }
 
-pub(crate) fn reserve_renderer_asset_request(kind: WorldAssetRequestKind, url: &str) -> Result<WorldAssetRequestToken, WorldAssetFault> {
+pub fn reserve_renderer_asset_request(kind: WorldAssetRequestKind, url: &str) -> Result<WorldAssetRequestToken, WorldAssetFault> {
     let generation = RENDERER_ASSET_GENERATION.fetch_add(1, Ordering::Relaxed).max(1);
     renderer_asset_io().lock().expect("renderer asset authority lock").reserve_request(generation, 0, kind, url)
 }
 
-pub(crate) fn take_next_renderer_asset() -> Option<WorldAssetFetchOwner> {
+pub fn take_next_renderer_asset() -> Option<WorldAssetFetchOwner> {
     renderer_asset_io().lock().ok()?.take_next()
 }
 
-pub(crate) fn reserve_renderer_asset_response(owner: &mut WorldAssetFetchOwner, byte_credits: usize) -> bool {
+pub fn reserve_renderer_asset_response(owner: &mut WorldAssetFetchOwner, byte_credits: usize) -> bool {
     renderer_asset_io().lock().is_ok_and(|mut authority| authority.reserve_response(owner, byte_credits).is_ok())
 }
 
 /// 📡️ How one response seal ended. See [`RuntimeMailbox::seal_renderer_asset_response`] for why
 /// `Busy` is not a refusal.
-pub(crate) enum RendererAssetSealStep {
+pub enum RendererAssetSealStep {
     Granted,
     Busy,
     Refused(&'static str),
 }
 
-pub(crate) fn seal_renderer_asset_response(owner: &mut WorldAssetFetchOwner) -> bool {
+pub fn seal_renderer_asset_response(owner: &mut WorldAssetFetchOwner) -> bool {
     renderer_asset_io().lock().is_ok_and(|mut authority| authority.seal_response(owner).is_ok())
 }
 
-pub(crate) fn return_renderer_asset(owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
+pub fn return_renderer_asset(owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     let Ok(mut authority) = renderer_asset_io().lock() else { return Err(owner) };
     authority.return_owner(owner)
 }
 
-pub(crate) fn take_next_completed_renderer_asset_step() -> Option<WorldAssetFetchOwner> {
+pub fn take_next_completed_renderer_asset_step() -> Option<WorldAssetFetchOwner> {
     renderer_asset_io().lock().ok()?.take_next_completed_step()
 }
 
-pub(crate) fn finish_renderer_asset(owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
+pub fn finish_renderer_asset(owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
     let Ok(mut authority) = renderer_asset_io().lock() else { return Err(owner) };
     authority.finish(owner)
 }
 
-pub(crate) fn retire_cancelled_renderer_asset_step() -> bool {
+pub fn retire_cancelled_renderer_asset_step() -> bool {
     renderer_asset_io().lock().is_ok_and(|mut authority| authority.retire_cancelled_step())
 }
 
-pub(crate) fn close_renderer_asset_step() -> bool {
-    if !scenes::icon_export::asset::close_all_step() {
+pub fn close_renderer_asset_step() -> bool {
+    if !crate::icon_export_asset::close_all_step() {
         return false;
     }
     let Ok(mut authority) = renderer_asset_io().lock() else { return false };
@@ -62,7 +62,7 @@ pub(crate) fn close_renderer_asset_step() -> bool {
 }
 
 /// 🗺️ Returns every pending `MapTile` claim for one closed engine surface to the shared lane.
-pub(crate) fn cancel_renderer_map_tile_assets(surface: &str) {
+pub fn cancel_renderer_map_tile_assets(surface: &str) {
     let Ok(mut authority) = renderer_asset_io().lock() else { return };
     authority.cancel_map_tiles_for_surface(surface);
     for _ in 0..WORLD_ASSET_REQUEST_CAPACITY {
@@ -72,53 +72,53 @@ pub(crate) fn cancel_renderer_map_tile_assets(surface: &str) {
     }
 }
 
-pub(crate) enum RendererAssetFetchOwner {
+pub enum RendererAssetFetchOwner {
     World { surface: WorldAssetMetadataId, surface_token: AdmittedSurfaceToken, owner: WorldAssetFetchOwner },
     Shared(WorldAssetFetchOwner),
 }
 
 impl RendererAssetFetchOwner {
-    pub(crate) fn url(&self) -> &str {
+    pub fn url(&self) -> &str {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner.url(),
         }
     }
 
-    pub(crate) fn kind(&self) -> WorldAssetRequestKind {
+    pub fn kind(&self) -> WorldAssetRequestKind {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner.kind(),
         }
     }
 
-    pub(crate) fn owner_mut(&mut self) -> &mut WorldAssetFetchOwner {
+    pub fn owner_mut(&mut self) -> &mut WorldAssetFetchOwner {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner,
         }
     }
 
-    pub(crate) fn owner(&self) -> &WorldAssetFetchOwner {
+    pub fn owner(&self) -> &WorldAssetFetchOwner {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner,
         }
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.owner_mut().begin_close();
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.owner_mut().close_step()
     }
 
-    pub(crate) fn generation(&self) -> u64 {
+    pub fn generation(&self) -> u64 {
         self.owner().generation()
     }
 
-    pub(crate) fn revision(&self) -> u64 {
+    pub fn revision(&self) -> u64 {
         self.owner().revision()
     }
 
-    pub(crate) fn decode_page(&self) -> Result<Option<&WorldAssetResponsePage>, WorldAssetFault> {
+    pub fn decode_page(&self) -> Result<Option<&WorldAssetResponsePage>, WorldAssetFault> {
         self.owner().decode_page()
     }
 
@@ -126,21 +126,21 @@ impl RendererAssetFetchOwner {
         self.owner().decode_page_at(index)
     }
 
-    pub(crate) fn advance_decode_page(&mut self) -> Result<(), WorldAssetFault> {
+    pub fn advance_decode_page(&mut self) -> Result<(), WorldAssetFault> {
         self.owner_mut().advance_decode_page()
     }
 
-    pub(crate) fn rewind_decode_pages(&mut self) -> Result<(), WorldAssetFault> {
+    pub fn rewind_decode_pages(&mut self) -> Result<(), WorldAssetFault> {
         self.owner_mut().rewind_decode_pages()
     }
 
-    pub(crate) fn received_bytes(&self) -> usize {
+    pub fn received_bytes(&self) -> usize {
         self.owner().received_bytes()
     }
 }
 
-pub(crate) const RENDERER_ASSET_PROBE_BYTES: usize = 64;
-pub(crate) const RENDERER_ASSET_PARSE_BLOCK_BYTES: usize = 256;
+pub const RENDERER_ASSET_PROBE_BYTES: usize = 64;
+pub const RENDERER_ASSET_PARSE_BLOCK_BYTES: usize = 256;
 
 /// 🖼️ The straight-RGBA ceiling ONE decoded image asset may claim — 16 megapixels, i.e. the 4096²
 /// surface every graphics backend in `🖌️render/🔌️backend` guarantees (`max_texture_dimension` 8192 on
@@ -154,21 +154,21 @@ pub(crate) const RENDERER_ASSET_PARSE_BLOCK_BYTES: usize = 256;
 /// the browser decoder and paints it, so on wgpu the scene lost its reference plane — and, because
 /// the refusal was escalated to a frame fault, the whole surface was quarantined ~3 s into every boot
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
-pub(crate) const RENDERER_ASSET_PIXEL_BYTES: usize = 64 * 1024 * 1024;
+pub const RENDERER_ASSET_PIXEL_BYTES: usize = 64 * 1024 * 1024;
 
-pub(crate) struct RendererAssetPageIndex {
+pub struct RendererAssetPageIndex {
     starts: Box<[usize; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]>,
     lengths: Box<[u16; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]>,
-    pub(crate) len: u16,
-    pub(crate) total: usize,
+    pub len: u16,
+    pub total: usize,
 }
 
 impl RendererAssetPageIndex {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { starts: Box::new([0; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]), lengths: Box::new([0; WORLD_ASSET_RESPONSE_PAGE_CAPACITY]), len: 0, total: 0 }
     }
 
-    pub(crate) fn admit(&mut self, bytes: usize) -> Result<(), &'static str> {
+    pub fn admit(&mut self, bytes: usize) -> Result<(), &'static str> {
         let slot = usize::from(self.len);
         if slot == WORLD_ASSET_RESPONSE_PAGE_CAPACITY || bytes == 0 || bytes > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err("asset response page index exceeded fixed credits");
@@ -202,7 +202,7 @@ impl RendererAssetPageIndex {
         Ok((slot as u16, offset))
     }
 
-    pub(crate) fn read<const N: usize>(&self, owner: &RendererAssetFetchOwner, absolute: usize) -> Result<[u8; N], &'static str> {
+    pub fn read<const N: usize>(&self, owner: &RendererAssetFetchOwner, absolute: usize) -> Result<[u8; N], &'static str> {
         let mut result = [0; N];
         for (delta, output) in result.iter_mut().enumerate() {
             let at = absolute.checked_add(delta).ok_or("asset semantic byte address overflowed")?;
@@ -214,17 +214,17 @@ impl RendererAssetPageIndex {
     }
 }
 
-pub(crate) struct RendererAssetPageCursor {
+pub struct RendererAssetPageCursor {
     offset: u16,
-    pub(crate) absolute: usize,
+    pub absolute: usize,
 }
 
 impl RendererAssetPageCursor {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { offset: 0, absolute: 0 }
     }
 
-    pub(crate) fn read_block(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<Option<([u8; RENDERER_ASSET_PARSE_BLOCK_BYTES], u16)>, &'static str> {
+    pub fn read_block(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<Option<([u8; RENDERER_ASSET_PARSE_BLOCK_BYTES], u16)>, &'static str> {
         let Some(page) = owner.decode_page().map_err(|_| "asset structure cursor lost its response page")? else { return Ok(None) };
         let start = usize::from(self.offset);
         if start >= page.bytes().len() {
@@ -242,7 +242,7 @@ impl RendererAssetPageCursor {
         Ok(Some((block, count as u16)))
     }
 
-    pub(crate) fn read_byte(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<Option<u8>, &'static str> {
+    pub fn read_byte(&mut self, owner: &mut RendererAssetFetchOwner) -> Result<Option<u8>, &'static str> {
         let Some(page) = owner.decode_page().map_err(|_| "asset semantic cursor lost its response page")? else { return Ok(None) };
         let offset = usize::from(self.offset);
         let byte = page.bytes().get(offset).copied().ok_or("asset semantic cursor exceeded its response page")?;
@@ -256,7 +256,7 @@ impl RendererAssetPageCursor {
     }
 }
 
-pub(crate) enum RendererAssetFormatCursor {
+pub enum RendererAssetFormatCursor {
     Glb(GlbStructureCursor),
     Png(PngStructureCursor),
     Jpeg(JpegStructureCursor),
@@ -266,7 +266,7 @@ pub(crate) enum RendererAssetFormatCursor {
 }
 
 impl RendererAssetFormatCursor {
-    pub(crate) fn new(kind: WorldAssetRequestKind, prefix: &[u8], total_bytes: usize) -> Result<Self, &'static str> {
+    pub fn new(kind: WorldAssetRequestKind, prefix: &[u8], total_bytes: usize) -> Result<Self, &'static str> {
         match kind {
             WorldAssetRequestKind::Glb => Ok(Self::Glb(GlbStructureCursor::new(total_bytes))),
             WorldAssetRequestKind::ReferenceImage => {
@@ -296,7 +296,7 @@ impl RendererAssetFormatCursor {
         }
     }
 
-    pub(crate) fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
+    pub fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
         match self {
             Self::Glb(cursor) => cursor.feed(bytes),
             Self::Png(cursor) => cursor.feed(bytes),
@@ -306,7 +306,7 @@ impl RendererAssetFormatCursor {
         }
     }
 
-    pub(crate) fn finish(&self) -> Result<(), &'static str> {
+    pub fn finish(&self) -> Result<(), &'static str> {
         match self {
             Self::Glb(cursor) => cursor.finish(),
             Self::Png(cursor) => cursor.finish(),
@@ -401,20 +401,20 @@ enum PngStructurePhase {
     Terminal,
 }
 
-pub(crate) struct PngStructureCursor {
+pub struct PngStructureCursor {
     total_bytes: usize,
     consumed: usize,
     ihdr: bool,
     idat: bool,
-    pub(crate) phase: PngStructurePhase,
+    pub phase: PngStructurePhase,
 }
 
 impl PngStructureCursor {
-    pub(crate) fn new(total_bytes: usize) -> Self {
+    pub fn new(total_bytes: usize) -> Self {
         Self { total_bytes, consumed: 0, ihdr: false, idat: false, phase: PngStructurePhase::Signature { bytes: [0; 8], len: 0 } }
     }
 
-    pub(crate) fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
+    pub fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
         for &byte in bytes {
             self.consumed = self.consumed.checked_add(1).ok_or("PNG byte count overflowed")?;
             if self.consumed > self.total_bytes {
@@ -481,7 +481,7 @@ impl PngStructureCursor {
         Ok(())
     }
 
-    pub(crate) fn finish(&self) -> Result<(), &'static str> {
+    pub fn finish(&self) -> Result<(), &'static str> {
         if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
             Ok(())
         } else {
@@ -501,19 +501,19 @@ enum JpegStructurePhase {
     Terminal,
 }
 
-pub(crate) struct JpegStructureCursor {
+pub struct JpegStructureCursor {
     total_bytes: usize,
     consumed: usize,
-    pub(crate) dimensions: bool,
-    pub(crate) phase: JpegStructurePhase,
+    pub dimensions: bool,
+    pub phase: JpegStructurePhase,
 }
 
 impl JpegStructureCursor {
-    pub(crate) fn new(total_bytes: usize) -> Self {
+    pub fn new(total_bytes: usize) -> Self {
         Self { total_bytes, consumed: 0, dimensions: false, phase: JpegStructurePhase::Start { bytes: [0; 2], len: 0 } }
     }
 
-    pub(crate) fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
+    pub fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
         for &byte in bytes {
             self.consumed = self.consumed.checked_add(1).ok_or("JPEG byte count overflowed")?;
             if self.consumed > self.total_bytes {
@@ -592,7 +592,7 @@ impl JpegStructureCursor {
         Ok(())
     }
 
-    pub(crate) fn finish(&self) -> Result<(), &'static str> {
+    pub fn finish(&self) -> Result<(), &'static str> {
         if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
             Ok(())
         } else {
@@ -664,19 +664,19 @@ enum ProtobufStructurePhase {
     Bytes { remaining: u64 },
 }
 
-pub(crate) struct ProtobufStructureCursor {
+pub struct ProtobufStructureCursor {
     total_bytes: usize,
     consumed: usize,
     fields: usize,
-    pub(crate) phase: ProtobufStructurePhase,
+    pub phase: ProtobufStructurePhase,
 }
 
 impl ProtobufStructureCursor {
-    pub(crate) fn new(total_bytes: usize) -> Self {
+    pub fn new(total_bytes: usize) -> Self {
         Self { total_bytes, consumed: 0, fields: 0, phase: ProtobufStructurePhase::Key { value: 0, shift: 0 } }
     }
 
-    pub(crate) fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
+    pub fn feed(&mut self, bytes: &[u8]) -> Result<(), &'static str> {
         for &byte in bytes {
             self.consumed = self.consumed.checked_add(1).ok_or("protobuf byte count overflowed")?;
             if self.consumed > self.total_bytes {
@@ -734,7 +734,7 @@ impl ProtobufStructureCursor {
         Ok(())
     }
 
-    pub(crate) fn finish(&self) -> Result<(), &'static str> {
+    pub fn finish(&self) -> Result<(), &'static str> {
         if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
             Ok(())
         } else {
@@ -752,5 +752,30 @@ fn protobuf_varint_byte(value: &mut u64, shift: &mut u8, byte: u8) -> Result<(),
         *shift += 7;
     }
     Ok(())
+}
+
+pub fn renderer_asset_svg_prefix_is_valid(prefix: &[u8]) -> bool {
+    std::str::from_utf8(prefix).ok().is_some_and(|text| {
+        let text = text.trim_start_matches(|character: char| character.is_ascii_whitespace());
+        text.starts_with("<svg") || text.starts_with("<?xml")
+    })
+}
+
+pub fn renderer_asset_ui_image_prefix_is_valid(prefix: &[u8]) -> bool {
+    prefix.starts_with(b"\x89PNG\r\n\x1a\n") || prefix.starts_with(&[0xff, 0xd8, 0xff]) || renderer_asset_svg_prefix_is_valid(prefix)
+}
+
+pub fn renderer_asset_reference_prefix_is_valid(prefix: &[u8]) -> bool {
+    renderer_asset_ui_image_prefix_is_valid(prefix)
+        || prefix.starts_with(b"GIF87a")
+        || prefix.starts_with(b"GIF89a")
+        || (prefix.len() >= 12 && &prefix[..4] == b"RIFF" && &prefix[8..12] == b"WEBP")
+        || prefix.starts_with(b"BM")
+        || prefix.starts_with(b"II*\0")
+        || prefix.starts_with(b"MM\0*")
+        || prefix.starts_with(b"II+\0")
+        || prefix.starts_with(b"MM\0+")
+        || prefix.starts_with(b"%PDF-")
+        || (prefix.len() >= 12 && &prefix[4..8] == b"ftyp")
 }
 //#endregion 📡️RendererAssetAuthority

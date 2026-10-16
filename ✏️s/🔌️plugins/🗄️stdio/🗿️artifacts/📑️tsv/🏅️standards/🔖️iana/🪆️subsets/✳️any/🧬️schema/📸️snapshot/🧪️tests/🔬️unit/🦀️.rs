@@ -1,6 +1,6 @@
 use crate::standards::iana::subsets::any::io::text::snapshot::encode_tsv;
 use crate::standards::iana::subsets::any::io::text::snapshot::decode_tsv;
-use super::*;
+use crate::standards::iana::subsets::any::schema::snapshot::*;
 
 const REAL_FIXTURE: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/📊️.tsv");
 

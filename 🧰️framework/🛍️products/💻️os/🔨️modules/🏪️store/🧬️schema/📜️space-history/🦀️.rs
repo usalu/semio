@@ -5,14 +5,10 @@
 #[cfg(test)] use serde::{Deserialize, Serialize};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use crate::os_spr::HybridLogicalTimestamp;
-use crate::os_spr::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
-use crate::os_vcs::Author;
-use crate::os_vcs::Identified;
-#[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
+use semio_framework_os_spr::HybridLogicalTimestamp;
+use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, TouchedPaths};
+use semio_framework_os_vcs::Author;
+use semio_framework_os_vcs::Identified;
 
 /// 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
 /// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
@@ -133,37 +129,37 @@ impl SpaceHistoryStep {
         }
     }
 
-    fn step_into(&self, next: &mut SpaceHistorySnapshot) -> crate::os_spr::MutationApplyResult<()> {
+    fn step_into(&self, next: &mut SpaceHistorySnapshot) -> semio_framework_os_spr::MutationApplyResult<()> {
         match self {
             Self::AddCheckpoint(checkpoint) => {
                 if next.checkpoints.iter().any(|existing| existing.id == checkpoint.id) {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("checkpoint {} already exists", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("checkpoint {} already exists", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
                 }
                 next.checkpoints.push(checkpoint.clone());
             }
             Self::RemoveCheckpoint { checkpoint_id } => {
                 if !next.checkpoints.iter().any(|checkpoint| checkpoint.id == *checkpoint_id) {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
                 }
                 next.checkpoints.retain(|checkpoint| checkpoint.id != *checkpoint_id);
             }
             Self::AddAlternative(alternative) => {
                 if next.alternatives.iter().any(|existing| existing.id == alternative.id) {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("alternative {} already exists", alternative.id)).at(["alternatives", alternative.id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.duplicate-target", format!("alternative {} already exists", alternative.id)).at(["alternatives", alternative.id.as_str()]));
                 }
                 let position = next.alternatives.partition_point(|existing| existing.id < alternative.id);
                 next.alternatives.insert(position, alternative.clone());
             }
             Self::RemoveAlternative { alternative_id } => {
                 if !next.alternatives.iter().any(|alternative| alternative.id == *alternative_id) {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("alternative {alternative_id} does not exist")).at(["alternatives", alternative_id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("alternative {alternative_id} does not exist")).at(["alternatives", alternative_id.as_str()]));
                 }
                 next.alternatives.retain(|alternative| alternative.id != *alternative_id);
             }
             Self::SetActive { alternative_id } => {
                 if let Some(alternative_id) = alternative_id {
                     if !next.alternatives.iter().any(|alternative| alternative.id == *alternative_id) {
-                        return Err(crate::os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("active alternative {alternative_id} does not exist")).at(["activeAlternativeId"]));
+                        return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("active alternative {alternative_id} does not exist")).at(["activeAlternativeId"]));
                     }
                 }
                 next.active_alternative_id = alternative_id.clone();
@@ -173,7 +169,7 @@ impl SpaceHistoryStep {
     }
 }
 
-impl crate::os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+impl semio_framework_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Self {
         let rows: Vec<Vec<SpaceHistoryStep>> = self.steps.iter().enumerate().map(|(index, step)| step.undo_rows(base, &self.steps[..index])).collect();
         Self { steps: rows.into_iter().rev().flatten().collect() }
@@ -185,7 +181,7 @@ impl crate::os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
 }
 
 impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
-    fn apply(&self, snapshot: &SpaceHistorySnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<SpaceHistorySnapshot> {
+    fn apply(&self, snapshot: &SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<SpaceHistorySnapshot> {
         let mut next = snapshot.clone();
         for step in &self.steps {
             step.step_into(&mut next)?;

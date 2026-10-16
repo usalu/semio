@@ -6,10 +6,12 @@
 //! nondeterminism into the ranking is a `Vec`/`BTreeMap`/`BTreeSet`, and every tie is broken by
 //! capability id (`Ord` on `String`) so two searches over the same catalog always agree byte-for-byte.
 
-use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, Catalog};
 
 //#region 🔖️Tokenizer
+
 /// 🌐️ English + German stopwords — short, closed, deliberately conservative (a false-positive
 /// stopword would silently swallow a real query term; missing one just costs a little precision).
 const STOPWORDS: &[&str] = &[
@@ -42,14 +44,16 @@ pub fn tokenize(text: &str) -> Vec<String> {
     }
     raw_tokens.into_iter().map(|token| token.to_lowercase()).filter(|token| !token.is_empty() && !STOPWORDS.contains(&token.as_str())).collect()
 }
+
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️Filters
+
 /// 🎛️ `capabilities_search` structural filters — `📋️master.md` §3.2: `kind[]`, `owner`,
 /// `artifactKind`, `requiresScope`.
 #[derive(Clone, Debug, Default)]
 pub struct SearchFilters {
-    pub kind: Vec<crate::catalog::CapabilityKind>,
+    pub kind: Vec<CapabilityKind>,
     pub owner: Option<String>,
     pub artifact_kind: Option<String>,
     pub requires_scope: Option<String>,
@@ -94,20 +98,25 @@ fn passes_filters(capability: &CapabilityDefinition, filters: &SearchFilters) ->
     }
     true
 }
+
 //#endregion 🔖️Filters
 
 //#region 🔖️RankedHit
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct RankedHit {
     pub capability_id: String,
     pub score: f64,
 }
+
 //#endregion 🔖️RankedHit
 
 //#region 🔖️Bm25
+
 /// 🏷️ Field weights, in the order every document's field vector is built — `id ×3, title ×3,
 /// use_when ×2, description ×1, category/owner ×0.5`.
 const K1: f64 = 1.2;
+
 const B: f64 = 0.75;
 
 struct WeightedField {
@@ -207,14 +216,8 @@ pub fn search(catalog: &Catalog, query: &str, filters: &SearchFilters) -> Vec<Ra
     scored.sort_by(|left, right| right.1.partial_cmp(&left.1).unwrap_or(std::cmp::Ordering::Equal).then_with(|| left.0.cmp(&right.0)));
     scored.into_iter().map(|(capability_id, score)| RankedHit { capability_id, score }).collect()
 }
+
 //#endregion 🔖️Bm25
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️long/🦀️.rs"]
-mod long;
 //#endregion 🧪️Tests

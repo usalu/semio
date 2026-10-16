@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-pack-http"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "HTTP range-request access layer for pack files."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-http"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-pack-async = { path = "../../../⏳️async/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

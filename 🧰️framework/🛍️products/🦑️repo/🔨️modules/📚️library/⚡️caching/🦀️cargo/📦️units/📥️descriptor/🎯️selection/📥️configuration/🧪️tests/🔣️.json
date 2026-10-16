@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "packages": [
+    "base",
+    "consumer",
+    "sibling"
+  ],
+  "edges": [
+    [
+      "base",
+      "consumer"
+    ]
+  ],
+  "cases": [
+    {
+      "name": "baseline",
+      "affected": []
+    },
+    {
+      "name": "workspace-member",
+      "affected": []
+    },
+    {
+      "name": "lock-comment",
+      "affected": []
+    },
+    {
+      "name": "lock-row",
+      "affected": []
+    },
+    {
+      "name": "unused-config",
+      "affected": []
+    },
+    {
+      "name": "unconsumed-manifest",
+      "affected": []
+    },
+    {
+      "name": "profile",
+      "affected": [
+        "base",
+        "consumer",
+        "sibling"
+      ]
+    },
+    {
+      "name": "package-env",
+      "affected": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "name": "sibling-env",
+      "affected": [
+        "sibling"
+      ]
+    },
+    {
+      "name": "source",
+      "affected": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "name": "manifest-included",
+      "affected": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "name": "cfg",
+      "affected": [
+        "base",
+        "consumer",
+        "sibling"
+      ]
+    },
+    {
+      "name": "feature",
+      "affected": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "name": "compiler",
+      "affected": [
+        "base",
+        "consumer",
+        "sibling"
+      ]
+    }
+  ]
+}

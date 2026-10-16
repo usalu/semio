@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -18,7 +19,7 @@ const BINARY = process.platform === "win32" ? "repo.exe" : "repo";
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
     const mode=readBuildMode(process.env.SEMIO_BUILD_MODE);
-    await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),["-p",CRATE,"--profile",buildModePolicy(mode).cargoProfile],this.repoRoot,{network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:devToolingEnv(buildModeEnvironment(mode)),});
+    await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),["-p",CRATE,"--profile",buildModePolicy(mode).cargoProfile],this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:devToolingEnv(buildModeEnvironment(mode)),});
   }
 }
 
@@ -33,7 +34,7 @@ class TestScript extends BundleScript {
 class RunScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const owner=resolve(this.root,"../../../⌨️cli/📦️packages/🦀️rust"), environment=devToolingEnv(buildModeEnvironment("prototype"));
-    await buildRepositoryCargoArtifacts(join(owner,"Cargo.toml"),["-p",SERVER_CRATE,"--bin","repo","--profile","prototype"],this.repoRoot,{network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment,});
+    await buildRepositoryCargoArtifacts(join(owner,"Cargo.toml"),["-p",SERVER_CRATE,"--bin","repo","--profile","prototype"],this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment,});
     const profile = segments[0]?.trim();
     if (profile) environment.SEMIO_REPO_MCP_CLIENT = profile;
     process.exit(runCmdStatus(join(owner, "dist/build/prototype", BINARY), [], { cwd: this.repoRoot, env: environment }));

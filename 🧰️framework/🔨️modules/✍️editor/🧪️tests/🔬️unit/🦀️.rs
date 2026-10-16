@@ -210,6 +210,7 @@ fn backspace_inside_a_keyword_removes_one_character() {
 
 #[test]
 fn label_span_world_x_matches_scaled_render() {
+    canvas::testkit::install_repository_assets();
     let line = "MATCH (a:Piece)";
     let origin = DEFAULT_GUTTER_WIDTH + PAD_X;
     let (x0, x5) = canvas_text::label_span_world_x(line, 0, 5, origin, DEFAULT_FONT_PX);
@@ -843,6 +844,7 @@ fn token_span_at_offset_returns_none_outside_tokens() {
 /// ~85 ms re-parsing the font face and reshaping every glyph run).
 #[test]
 fn an_unchanged_frame_reshapes_no_label() {
+    canvas::testkit::install_repository_assets();
     let mut host = EditorHost::new();
     host.set_size(640, 360, 2.0);
     host.set_text("MATCH (n:Person)\nRETURN n.name".into());

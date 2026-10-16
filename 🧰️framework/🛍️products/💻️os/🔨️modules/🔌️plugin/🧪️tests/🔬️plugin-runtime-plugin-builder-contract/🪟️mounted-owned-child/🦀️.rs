@@ -49,7 +49,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         assert_eq!(emit.owned_child_emits.len(), count);
         assert!(emit.child_emits.is_empty());
         let (mutations, inverse_group, operation,mut caller) = crate::child_content::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
-            let TestMembers::Child(child) = &app.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
+            let TestMembers::Child(child) = &app.child_composition.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
             child.snapshot_ref().count != 0
         }).collect()).await;
         assert!(operation != 0);
@@ -67,7 +67,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
             for inverse in inverses { assert!(<TestMutation as protocol::OpBinary>::decode_op(&inverse).is_ok()); }
         }
         for index in 0..count {
-            let TestMembers::Child(child) = &app.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
+            let TestMembers::Child(child) = &app.child_composition.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
             assert_eq!(child.snapshot_ref().count, row["childCounts"][index].as_i64().unwrap() as i32);
             assert_eq!(child.snapshot_ref().label, row["childLabel"].as_str().unwrap());
         }

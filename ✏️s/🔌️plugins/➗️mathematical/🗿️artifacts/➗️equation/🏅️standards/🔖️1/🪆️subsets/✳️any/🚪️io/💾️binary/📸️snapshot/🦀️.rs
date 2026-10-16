@@ -52,7 +52,7 @@ impl pack::snapshot::ArtifactPack for EquationSnapshot{
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(EquationPackRecord::__dsl_spec())}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EquationSnapshot {
-fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
+fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 /// 📦️ Encode the owned logical Equation record.
 pub fn encode(snapshot:&EquationSnapshot)->Vec<u8>{pack::snapshot::ArtifactPack::encode_pack(snapshot)}

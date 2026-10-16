@@ -6,7 +6,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -19,8 +19,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           }
         ]
       },
@@ -28,7 +27,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -41,8 +40,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           }
         ],
         "jobs": [
@@ -101,7 +99,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ]
@@ -110,7 +108,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "relative/Cargo.toml",
             "packages": [
               {
@@ -123,7 +121,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ]
@@ -132,7 +130,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -145,7 +143,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "../escape"
           }
         ]
@@ -154,7 +152,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -167,7 +165,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ]
@@ -176,7 +174,7 @@
         "version": 2,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -189,7 +187,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ]
@@ -198,7 +196,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -211,7 +209,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ],
@@ -235,7 +233,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -248,7 +246,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
+            "profile": "release",
             "output": "dist/components/release"
           }
         ],
@@ -274,7 +272,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -298,7 +296,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -311,11 +309,10 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           },
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -328,8 +325,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           }
         ]
       },
@@ -337,7 +333,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -350,8 +346,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           }
         ]
       },
@@ -359,7 +354,7 @@
         "version": 1,
         "passes": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "manifest": "/w/Cargo.toml",
             "packages": [
               {
@@ -372,8 +367,7 @@
               }
             ],
             "target": "wasm32-wasip2",
-            "profile": "wasm-release",
-            "output": "dist/components/release"
+            "profile": "release"
           }
         ],
         "jobs": [
@@ -433,7 +427,7 @@
   },
   "args": {
     "pass": {
-      "id": "wasm-release-00",
+      "id": "release-00",
       "manifest": "/w/Cargo.toml",
       "packages": [
         {
@@ -446,8 +440,7 @@
         }
       ],
       "target": "wasm32-wasip2",
-      "profile": "wasm-release",
-      "output": "dist/components/release"
+      "profile": "release"
     },
     "args": [
       "build",
@@ -462,7 +455,7 @@
       "--target",
       "wasm32-wasip2",
       "--profile",
-      "wasm-release",
+      "release",
       "--keep-going",
       "--message-format=json-render-diagnostics"
     ]
@@ -479,8 +472,8 @@
           ]
         },
         "filenames": [
-          "/b/wasm32-wasip2/wasm-release/deps/comp_a-1f.wasm",
-          "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+          "/b/wasm32-wasip2/release/deps/comp_a-1f.wasm",
+          "/t/wasm32-wasip2/release/comp_a.wasm"
         ]
       },
       "targetDirectory": "/t",
@@ -489,7 +482,7 @@
           "name": "comp-a",
           "manifest": "/w/comp-a/Cargo.toml"
         },
-        "wasm": "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+        "wasm": "/t/wasm32-wasip2/release/comp_a.wasm"
       }
     },
     {
@@ -520,7 +513,7 @@
           ]
         },
         "filenames": [
-          "/t/wasm32-wasip2/wasm-release/other.wasm"
+          "/t/wasm32-wasip2/release/other.wasm"
         ]
       },
       "targetDirectory": "/t",
@@ -545,8 +538,8 @@
   "real": {
     "tokens": 4,
     "profiles": [
-      "wasm-release",
-      "wasm-prototype"
+      "release",
+      "prototype"
     ],
     "components": [
       "comp-a",
@@ -555,7 +548,7 @@
   },
   "unitGraph": {
     "pass": {
-      "id": "wasm-release-00",
+      "id": "release-00",
       "manifest": "/w/Cargo.toml",
       "packages": [
         {
@@ -568,8 +561,7 @@
         }
       ],
       "target": "wasm32-wasip2",
-      "profile": "wasm-release",
-      "output": "dist/components/release"
+      "profile": "release"
     },
     "graph": {
       "version": 1,
@@ -705,7 +697,7 @@
             "std"
           ],
           "filenames": [
-            "/b/wasm32-wasip2/wasm-release/deps/libbase-1.rlib"
+            "/b/wasm32-wasip2/release/deps/libbase-1.rlib"
           ]
         },
         "target": "wasm32-wasip2",
@@ -724,7 +716,7 @@
             "std"
           ],
           "filenames": [
-            "/b/wasm-release/deps/libbase-1.rlib"
+            "/b/release/deps/libbase-1.rlib"
           ]
         },
         "target": "wasm32-wasip2",
@@ -734,7 +726,7 @@
     "runs": [
       {
         "packageId": "path+file:///w/base#base@0.1.0",
-        "outDir": "/b/wasm-release/build/base/1/out",
+        "outDir": "/b/release/build/base/1/out",
         "target": "wasm32-wasip2",
         "identity": "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]"
       }
@@ -757,8 +749,8 @@
             "std"
           ],
           "filenames": [
-            "/t/wasm32-wasip2/wasm-release/deps/libbase-1a.rlib",
-            "/t/wasm32-wasip2/wasm-release/deps/libbase-1a.rmeta"
+            "/t/wasm32-wasip2/release/deps/libbase-1a.rlib",
+            "/t/wasm32-wasip2/release/deps/libbase-1a.rmeta"
           ]
         },
         {
@@ -771,8 +763,8 @@
           },
           "features": [],
           "filenames": [
-            "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rlib",
-            "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rmeta"
+            "/t/wasm32-wasip2/release/deps/libextra-2b.rlib",
+            "/t/wasm32-wasip2/release/deps/libextra-2b.rmeta"
           ]
         },
         {
@@ -785,16 +777,16 @@
           },
           "features": [],
           "filenames": [
-            "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+            "/t/wasm32-wasip2/release/comp_a.wasm"
           ]
         }
       ],
       "files": [
-        "/t/wasm32-wasip2/wasm-release/comp_a.d",
-        "/t/wasm32-wasip2/wasm-release/comp_a.wasm",
-        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.d",
-        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rlib",
-        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rmeta"
+        "/t/wasm32-wasip2/release/comp_a.d",
+        "/t/wasm32-wasip2/release/comp_a.wasm",
+        "/t/wasm32-wasip2/release/deps/libextra-2b.d",
+        "/t/wasm32-wasip2/release/deps/libextra-2b.rlib",
+        "/t/wasm32-wasip2/release/deps/libextra-2b.rmeta"
       ]
     }
   },
@@ -844,11 +836,11 @@
       "mode": "release"
     },
     {
-      "profile": "wasm-prototype",
+      "profile": "prototype",
       "mode": "prototype"
     },
     {
-      "profile": "wasm-release",
+      "profile": "release",
       "mode": "release"
     }
   ],
@@ -867,7 +859,7 @@
   },
   "unlanedStateOrder": {
     "tokens": 1,
-    "profile": "wasm-prototype",
+    "profile": "prototype",
     "deadlineMs": 15000,
     "oracle": "held",
     "expectedParticipants": [
@@ -908,7 +900,7 @@
   },
   "batches": {
     "pass": {
-      "id": "wasm-release-00",
+      "id": "release-00",
       "manifest": "/w/Cargo.toml",
       "packages": [
         {
@@ -921,8 +913,7 @@
         }
       ],
       "target": "wasm32-wasip2",
-      "profile": "wasm-release",
-      "output": "dist/components/release"
+      "profile": "release"
     },
     "graph": {
       "version": 1,
@@ -1040,10 +1031,10 @@
       ]
     },
     "keys": [
-      "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib",
-      "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib",
-      "base@base|wasm32-wasip2|wasm-release|lib",
-      "extra@extra|wasm32-wasip2|wasm-release|lib",
+      "comp-a@comp_a|wasm32-wasip2|release|cdylib",
+      "comp-b@comp_b|wasm32-wasip2|release|cdylib",
+      "base@base|wasm32-wasip2|release|lib",
+      "extra@extra|wasm32-wasip2|release|lib",
       null
     ],
     "cases": [
@@ -1052,7 +1043,7 @@
         "budgetBytes": 1000000,
         "expected": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "packages": [
               "comp-a",
               "comp-b"
@@ -1067,7 +1058,7 @@
         "budgetBytes": 460,
         "expected": [
           {
-            "id": "wasm-release-00-b0",
+            "id": "release-00-b0",
             "packages": [
               "comp-a"
             ],
@@ -1075,7 +1066,7 @@
             "measured": false
           },
           {
-            "id": "wasm-release-00-b1",
+            "id": "release-00-b1",
             "packages": [
               "comp-b"
             ],
@@ -1089,7 +1080,7 @@
         "budgetBytes": 20000,
         "expected": [
           {
-            "id": "wasm-release-00",
+            "id": "release-00",
             "packages": [
               "comp-a",
               "comp-b"
@@ -1104,7 +1095,7 @@
         "budgetBytes": 7000,
         "expected": [
           {
-            "id": "wasm-release-00-b0",
+            "id": "release-00-b0",
             "packages": [
               "comp-a"
             ],
@@ -1112,7 +1103,7 @@
             "measured": false
           },
           {
-            "id": "wasm-release-00-b1",
+            "id": "release-00-b1",
             "packages": [
               "comp-b"
             ],
@@ -1133,10 +1124,10 @@
     },
     "histories": {
       "warm": {
-        "base@base|wasm32-wasip2|wasm-release|lib": [
+        "base@base|wasm32-wasip2|release|lib": [
           {
             "v": 1,
-            "key": "base@base|wasm32-wasip2|wasm-release|lib",
+            "key": "base@base|wasm32-wasip2|release|lib",
             "peakRssBytes": 1,
             "outputBytes": 90,
             "wallMs": 1,
@@ -1146,7 +1137,7 @@
           },
           {
             "v": 1,
-            "key": "base@base|wasm32-wasip2|wasm-release|lib",
+            "key": "base@base|wasm32-wasip2|release|lib",
             "peakRssBytes": 1,
             "outputBytes": 100,
             "wallMs": 1,
@@ -1155,10 +1146,10 @@
             "atMs": 1
           }
         ],
-        "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib": [
+        "comp-a@comp_a|wasm32-wasip2|release|cdylib": [
           {
             "v": 1,
-            "key": "comp-a@comp_a|wasm32-wasip2|wasm-release|cdylib",
+            "key": "comp-a@comp_a|wasm32-wasip2|release|cdylib",
             "peakRssBytes": 1,
             "outputBytes": 50,
             "wallMs": 1,
@@ -1167,10 +1158,10 @@
             "atMs": 1
           }
         ],
-        "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib": [
+        "comp-b@comp_b|wasm32-wasip2|release|cdylib": [
           {
             "v": 1,
-            "key": "comp-b@comp_b|wasm32-wasip2|wasm-release|cdylib",
+            "key": "comp-b@comp_b|wasm32-wasip2|release|cdylib",
             "peakRssBytes": 1,
             "outputBytes": 70,
             "wallMs": 1,

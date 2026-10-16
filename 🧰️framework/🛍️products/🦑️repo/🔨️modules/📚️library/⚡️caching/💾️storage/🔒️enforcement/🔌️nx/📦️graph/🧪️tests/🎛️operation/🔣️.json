@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "request": {
+    "version": 1,
+    "kind": "law"
+  },
+  "cases": [
+    {
+      "name": "same",
+      "accepted": true
+    },
+    {
+      "name": "descendant",
+      "accepted": true
+    },
+    {
+      "name": "copy",
+      "accepted": false
+    },
+    {
+      "name": "foreign",
+      "accepted": false
+    },
+    {
+      "name": "reverse",
+      "accepted": false
+    }
+  ],
+  "filesystemBytes": 33554432,
+  "capacityBytes": 41943040,
+  "allocationBytes": 8388608,
+  "invalidRequests": [
+    {
+      "version": 2,
+      "kind": "law"
+    },
+    {
+      "version": 1,
+      "kind": "law",
+      "maximumElapsedMilliseconds": 999999
+    }
+  ],
+  "taskPhase": {
+    "maximumElapsedMilliseconds": 5000,
+    "phaseSame": true,
+    "descendant": true,
+    "drained": true
+  }
+}

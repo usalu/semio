@@ -119,8 +119,7 @@
         "manifest",
         "packages",
         "target",
-        "profile",
-        "output"
+        "profile"
       ],
       "properties": {
         "id": {
@@ -145,14 +144,8 @@
         "profile": {
           "enum": [
             "prototype",
-            "release",
-            "wasm-prototype",
-            "wasm-release"
+            "release"
           ]
-        },
-        "output": {
-          "type": "string",
-          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$"
         }
       }
     },
@@ -200,9 +193,7 @@
         "profile": {
           "enum": [
             "prototype",
-            "release",
-            "wasm-prototype",
-            "wasm-release"
+            "release"
           ]
         },
         "target": {
@@ -272,9 +263,7 @@
         "profile": {
           "enum": [
             "prototype",
-            "release",
-            "wasm-prototype",
-            "wasm-release"
+            "release"
           ]
         },
         "target": {
@@ -362,6 +351,24 @@
         "publisher": "awaited-original",
         "continuation": "awaited-original",
         "finalizer": "cleanup-without-renewal"
+      }
+    },
+    "ObservationDeliveryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maximumBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 134217728
+        }
       }
     }
   }

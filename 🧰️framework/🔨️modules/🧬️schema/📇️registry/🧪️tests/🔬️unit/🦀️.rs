@@ -81,3 +81,48 @@ fn entries_dump_renders_the_declared_contract_and_escapes_the_generator() {
         "{\n  \"contractId\": \"schema-export-registry-entries-v1\",\n  \"generator\": \"cargo test \\\"quoted\\\"\\n\",\n  \"entries\": [\n    { \"scope\": \"test.dump\", \"export\": \"Thing\", \"format\": \"jsonschema\" }\n  ]\n}\n"
     );
 }
+
+struct MemoryLeaves;
+
+impl SchemaLeafReader for MemoryLeaves {
+    fn read(&self, path: &str) -> Option<&'static str> {
+        (path == "memory/leaf.ts").then_some("export type Served = {};")
+    }
+}
+
+static MEMORY_LEAVES: MemoryLeaves = MemoryLeaves;
+
+#[test]
+fn served_leaf_documents_resolve_when_the_registering_crate_embeds_no_body() {
+    let _ = install_schema_leaf_reader(&MEMORY_LEAVES);
+    let document = SchemaLeafDocument { scope: "test.served", export: "artifact", format: SchemaFormat::Typescript, path: "memory/leaf.ts" };
+    register_schema_leaf_documents(&[document]);
+    register_schema_leaf_documents(&[document]);
+    let embedded = FacetLeaves { rust: "pub struct Thing;", typescript: "", graphql: "", json_schema: "{}", proto: "" };
+    let mut registry = SchemaExportRegistry::new();
+    registry.register_facet_leaves("test.served", [embedded, EMPTY_LEAVES, EMPTY_LEAVES, EMPTY_LEAVES]).expect("served facets");
+    assert_eq!(registry.resolve("test.served", "artifact", SchemaFormat::Typescript), Ok("export type Served = {};"));
+    assert_eq!(registry.resolve("test.served", "artifact", SchemaFormat::Rust), Ok("pub struct Thing;"));
+    assert_eq!(
+        registry.resolve("test.served", "artifact", SchemaFormat::Graphql),
+        Err(SchemaResolveError::FormatAbsent { scope: "test.served".to_string(), export: "artifact".to_string(), format: SchemaFormat::Graphql })
+    );
+    assert!(registry.entries().any(|entry| entry.scope == "test.served" && entry.format == SchemaFormat::Typescript));
+}
+
+fn delivered_package_asset(name: &str) -> Option<&'static [u8]> {
+    match name {
+        "memory/delivered.json" => Some(br#"{"$id":"delivered"}"#),
+        "memory/not-utf8.json" => Some(&[0xff, 0xfe]),
+        _ => None,
+    }
+}
+
+#[test]
+fn package_asset_leaves_answer_delivered_documents_and_refuse_everything_else() {
+    let reader = PackageAssetSchemaLeaves::new(delivered_package_asset);
+    assert_eq!(reader.read("memory/delivered.json"), Some(r#"{"$id":"delivered"}"#));
+    assert_eq!(reader.read("memory/delivered.json"), Some(r#"{"$id":"delivered"}"#));
+    assert_eq!(reader.read("memory/never-delivered.json"), None, "a host that delivered nothing under the name answers none");
+    assert_eq!(reader.read("memory/not-utf8.json"), None, "a document that is not text is refused, not guessed");
+}

@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::{DeflateSnapshot,DeflateLevelHint};
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,ValueError,ValueRefusalKind,artifact::RowWriter}};
 #[path="💰️backing/🦀️.rs"] mod backing;
-#[path="🫴️receiving/🦀️.rs"] mod receiving;
+#[path="🫴️receiving/🦀️.rs"] pub mod receiving;
 impl ArtifactSqliteSnapshotHost for DeflateSnapshot{
  fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(Some(self),None,control,owner)}
  fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(None,Some(database),control,owner)}

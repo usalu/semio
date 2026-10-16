@@ -1,5 +1,10 @@
+//! 🧱️ Protocol_long of the server crate: The MCP server dispatcher and the stdio transport.
 
-use super::*;
+use crate::mcp_server::McpServer;
+use semio_framework_os_mcp_wire::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcOutcome, JsonRpcRequest, METHOD_NOTIFICATIONS_CANCELLED, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_RESOURCES_LIST, METHOD_RESOURCES_READ, METHOD_RESOURCES_SUBSCRIBE, NullBackend, ProtocolEra, Resource, ResourceContent};
+use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+#[cfg(test)]
+use crate::protocol_tests_support::request_with;
 
 #[test]
 fn a_full_modern_session_lists_reads_and_subscribes_resources_end_to_end() {
@@ -11,15 +16,15 @@ fn a_full_modern_session_lists_reads_and_subscribes_resources_end_to_end() {
     let mut server = McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
 
     let meta = serde_json::json!({ "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
-    let list = server.dispatch(&tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+    let list = server.dispatch(&request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
     let JsonRpcOutcome::Result { result } = list.outcome else { panic!("expected a result") };
     assert_eq!(result["resources"].as_array().unwrap().len(), 1);
 
-    let read = server.dispatch(&tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+    let read = server.dispatch(&request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
     let JsonRpcOutcome::Result { result } = read.outcome else { panic!("expected a result") };
     assert_eq!(result["contents"][0]["text"], "hello");
 
-    let subscribed = server.dispatch(&tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+    let subscribed = server.dispatch(&request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
     assert!(!subscribed.is_error());
     assert_eq!(server.era(), Some(ProtocolEra::Modern));
 }

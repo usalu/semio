@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "body",
+    "cleanup",
+    "diagnostic",
+    "expected"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "body": {
+      "enum": [
+        "undefined",
+        "frozen",
+        "primitive",
+        "resolve"
+      ]
+    },
+    "cleanup": {
+      "enum": [
+        "throw",
+        "resolve"
+      ]
+    },
+    "diagnostic": {
+      "enum": [
+        "throw",
+        "resolve"
+      ]
+    },
+    "expected": {
+      "enum": [
+        "body",
+        "cleanup",
+        "value"
+      ]
+    }
+  }
+}

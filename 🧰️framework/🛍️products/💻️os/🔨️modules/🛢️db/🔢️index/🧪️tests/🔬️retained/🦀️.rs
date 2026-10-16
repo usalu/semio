@@ -2,15 +2,15 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn exact_backing_handback_cancel_close_and_fragment_order_are_deterministic() {
-    let _pool = db_storage::db_io_test_pool();
+    let _pool = db_io_driver::db_io_test_pool();
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let mut control = IndexCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
-    let mut one = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+    let mut one = Vec::with_capacity(db_io_core::DB_IO_PAGE_BYTES + 1);
     one.push(b'a');
-    let mut retained = IndexBytes::try_admit(one, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
-    let mut second_source = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+    let mut retained = IndexBytes::try_admit(one, (db_io_core::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+    let mut second_source = Vec::with_capacity(db_io_core::DB_IO_PAGE_BYTES + 1);
     second_source.push(b'b');
-    let mut second = IndexBytes::try_admit(second_source, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+    let mut second = IndexBytes::try_admit(second_source, (db_io_core::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
     assert_eq!(index_bytes_cmp(&retained, &second), std::cmp::Ordering::Less);
     while retained.close_step().unwrap().is_some() {}
     while second.close_step().unwrap().is_some() {}

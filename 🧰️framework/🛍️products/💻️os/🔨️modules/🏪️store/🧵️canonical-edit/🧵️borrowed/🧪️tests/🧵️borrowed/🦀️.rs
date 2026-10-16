@@ -1,6 +1,19 @@
 //! 🌳️ Language-neutral borrowed-map, lifetime, and worker replay laws.
 
-use super::*;
+use semio_framework_os_store_canonical_json::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, value};
+use std::sync::Arc;
+use semio_framework_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonObject, ArtifactCanonicalJsonValue};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, FromValue, RetirementDemand, ToValue, ValueError};
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use serde::{Deserialize, Serialize};
+use semio_framework_os_spr::Edit;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
+use semio_framework_os_store_ledger as ledger;
+use super::{test_support, canonical_edit_tests as tests};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 🪪️LifetimeOracle
@@ -231,7 +244,7 @@ fn retire_fixture_owned<T: semio_framework_value::retirement::RetireOwned>(origi
     assert!(progress.fits(grant)); assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
     let mut owner = Some(owner);
     for _ in 0..100_000 {
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| super::super::artifact_retirement_box_close_step(&mut owner, grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner, grant).unwrap());
         assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         if owner.is_none() { return; }
     }
@@ -299,10 +312,10 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
         let mut owner=Some(owner);let mut released=birth.released_bytes;
         for turn in 0..100_000 {
             if turn==cancel_cut {
-                let (step,heap)=observe_heap_allocations_on_this_thread(||super::super::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());
+                let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());
                 assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(owner.is_some());
             }
-            let (step,heap)=observe_heap_allocations_on_this_thread(||super::super::artifact_retirement_box_close_step(&mut owner,policy).unwrap());
+            let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,policy).unwrap());
             let progress=step.progress();assert!(progress.fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));released+=progress.released_bytes;
             if lifetime.root_drops.load(Ordering::SeqCst)==1 {assert!(released>=payload);}
             if owner.is_none(){break;}assert!(turn+1<100_000);
@@ -314,7 +327,7 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
 }
 /// 📏️ The canonical bytes the original edit must seal to, projected independently through serde.
 fn expected_json(edit: &Edit<MapMutation>) -> Vec<u8> {
-    serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::ledger::CursorRevisionAccumulator::revision_value(edit))).unwrap()
+    serde_json::to_vec(&test_support::SerdeValue(&semio_framework_os_store_ledger::CursorRevisionAccumulator::revision_value(edit))).unwrap()
 }
 
 /// 🎟️ Funds exactly the next quoted preparation turn: one item and the sealer's own five quoted currencies.

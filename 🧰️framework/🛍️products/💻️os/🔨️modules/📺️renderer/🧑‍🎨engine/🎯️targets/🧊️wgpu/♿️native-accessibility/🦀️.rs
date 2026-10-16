@@ -24,7 +24,7 @@ const NODE_ID_DOMAIN: &[u8] = b"semio.native-accessibility.node.v1\0";
 
 /// ♿️ One window's accessibility projection as the shell publishes it.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct NativeAccessibilityWindow {
+pub struct NativeAccessibilityWindow {
     pub window_id: String,
     pub window_generation: u64,
     pub nodes: Vec<ui_contract::AccessibilityProjectionNode>,
@@ -32,7 +32,7 @@ pub(crate) struct NativeAccessibilityWindow {
 
 /// ♿️ What one presented frame publishes: the application's name and every announced window, in announcement order.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub(crate) struct NativeAccessibilityPublication {
+pub struct NativeAccessibilityPublication {
     pub title: String,
     pub windows: Vec<NativeAccessibilityWindow>,
 }
@@ -48,7 +48,7 @@ fn published() -> &'static Mutex<PublishedAccessibility> {
 }
 
 /// 📣️ Publishes one presented frame's projection; the platform tree follows only when it changed.
-pub(crate) fn publish_native_accessibility(publication: NativeAccessibilityPublication) {
+pub fn publish_native_accessibility(publication: NativeAccessibilityPublication) {
     let mut published = published().lock().unwrap_or_else(PoisonError::into_inner);
     if *published.publication != publication {
         published.version = published.version.wrapping_add(1);
@@ -62,7 +62,7 @@ fn published_snapshot() -> (u64, Arc<NativeAccessibilityPublication>) {
 }
 
 /// 📋️ What the latest presented frame published — the tree an assistive technology is handed next.
-pub(crate) fn published_native_accessibility() -> Arc<NativeAccessibilityPublication> {
+pub fn published_native_accessibility() -> Arc<NativeAccessibilityPublication> {
     published_snapshot().1
 }
 
@@ -70,7 +70,7 @@ pub(crate) fn published_native_accessibility() -> Arc<NativeAccessibilityPublica
 /// focus, and — the two gaps a reader cannot recover from — every actionable node that has no name and every node whose
 /// role the platform does not know, by author id.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct NativeAccessibilityCensus {
+pub struct NativeAccessibilityCensus {
     pub nodes: usize,
     pub focusable: usize,
     pub unnamed_actionable: Vec<String>,
@@ -78,7 +78,7 @@ pub(crate) struct NativeAccessibilityCensus {
 }
 
 /// 🧮️ Counts [`NativeAccessibilityCensus`] over the platform tree one publication projects to.
-pub(crate) fn native_accessibility_census(publication: &NativeAccessibilityPublication) -> NativeAccessibilityCensus {
+pub fn native_accessibility_census(publication: &NativeAccessibilityPublication) -> NativeAccessibilityCensus {
     let tree = native_accessibility_tree(publication);
     let mut census = NativeAccessibilityCensus::default();
     for (_, node) in &tree.update.nodes {
@@ -99,7 +99,7 @@ pub(crate) fn native_accessibility_census(publication: &NativeAccessibilityPubli
 
 /// 🌳️ One publication as a platform tree, with the shell address behind every node an assistive technology can act on.
 #[derive(Clone, Debug)]
-pub(crate) struct NativeAccessibilityTree {
+pub struct NativeAccessibilityTree {
     update: accesskit::TreeUpdate,
     addresses: HashMap<accesskit::NodeId, ui_render::AccessibilityTarget>,
 }
@@ -240,7 +240,7 @@ fn platform_node(window_id: &str, projected: &ui_contract::AccessibilityProjecti
 /// 🌳️ Projects one publication into one full platform tree: a `Window` root named after the application, one pane per
 /// announced window (the chrome is a `Group`), and each window's flat, depth-ordered projection rebuilt into nesting. The
 /// focused node is the platform focus; a publication with none focuses the root.
-pub(crate) fn native_accessibility_tree(publication: &NativeAccessibilityPublication) -> NativeAccessibilityTree {
+pub fn native_accessibility_tree(publication: &NativeAccessibilityPublication) -> NativeAccessibilityTree {
     let mut used = HashSet::from([ROOT_NODE.0]);
     let mut nodes = Vec::new();
     let mut addresses = HashMap::new();
@@ -346,7 +346,7 @@ impl accesskit::DeactivationHandler for BridgeDeactivation {
 }
 
 /// ♿️ The one platform accessibility adapter of the native shell's window. Created before the window is first shown.
-pub(crate) struct NativeAccessibilityBridge {
+pub struct NativeAccessibilityBridge {
     adapter: accesskit_winit::Adapter,
     shared: Arc<Mutex<BridgeShared>>,
     version: u64,
@@ -355,19 +355,19 @@ pub(crate) struct NativeAccessibilityBridge {
 impl NativeAccessibilityBridge {
     /// ♿️ Attaches the platform adapter to `window`, which must not have been shown yet; `wake` asks the event loop for a
     /// turn when an assistive technology acts.
-    pub(crate) fn new(event_loop: &winit::event_loop::ActiveEventLoop, window: &winit::window::Window, wake: Arc<dyn Fn() + Send + Sync>) -> Self {
+    pub fn new(event_loop: &winit::event_loop::ActiveEventLoop, window: &winit::window::Window, wake: Arc<dyn Fn() + Send + Sync>) -> Self {
         let shared = Arc::new(Mutex::new(BridgeShared::default()));
         let adapter = accesskit_winit::Adapter::with_direct_handlers(event_loop, window, BridgeActivation { shared: shared.clone() }, BridgeActions { shared: shared.clone(), wake }, BridgeDeactivation);
         Self { adapter, shared, version: 0 }
     }
 
     /// 🪟️ Lets the adapter see one window event before the shell handles it (focus, resize, activation).
-    pub(crate) fn process_window_event(&mut self, window: &winit::window::Window, event: &winit::event::WindowEvent) {
+    pub fn process_window_event(&mut self, window: &winit::window::Window, event: &winit::event::WindowEvent) {
         self.adapter.process_event(window, event);
     }
 
     /// 🔄️ Pushes the latest publication to the platform when it changed since the last push.
-    pub(crate) fn refresh(&mut self) {
+    pub fn refresh(&mut self) {
         let (version, publication) = published_snapshot();
         if version == self.version {
             return;
@@ -380,7 +380,7 @@ impl NativeAccessibilityBridge {
     }
 
     /// 📨️ Every queued assistive-technology action as the shell event it is, oldest first.
-    pub(crate) fn take_dispatch_events(&mut self) -> Vec<ui_render::DispatchEvent> {
+    pub fn take_dispatch_events(&mut self) -> Vec<ui_render::DispatchEvent> {
         let mut shared = self.shared.lock().unwrap_or_else(PoisonError::into_inner);
         let BridgeShared { tree, actions } = &mut *shared;
         let Some(tree) = tree.as_ref() else {

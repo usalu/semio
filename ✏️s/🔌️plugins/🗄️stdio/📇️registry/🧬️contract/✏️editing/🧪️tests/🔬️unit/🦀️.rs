@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_stdio_contract_wire::snapshot_edit_source;
 
 #[test]
 fn retained_copy_original_backing_uses_shared_four_axis_allocator_law(){

@@ -1,7 +1,7 @@
 //! 📡️ The original invocation source remains leased until every nested response has been admitted.
 use super::*;
 #[path="🪪️identity/🦀️.rs"]
-mod identity;
+pub mod identity;
 pub use identity::FlowInvocationIdentity;
 #[derive(semio_framework_value::RetireOwned)]
 pub struct FlowInvocationOrigin{
@@ -28,6 +28,3 @@ impl FlowInvocationOrigin{
  /// 🧊️ The genuine pending row supplies its identity and input; its caller supplies the original context.
  pub fn pending_origin_cold(&self,pending:neural::PendingExtensionEval)->Self{Self{window_id:self.window_id.clone(),window_kind_id:self.window_kind_id.clone(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:pending.node_hash,input_json:pending.input_json,dependency_json:self.dependency_json.clone(),operator_version:self.operator_version.clone(),outer_node_hash:Some(self.node_hash),preview_source:None}}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

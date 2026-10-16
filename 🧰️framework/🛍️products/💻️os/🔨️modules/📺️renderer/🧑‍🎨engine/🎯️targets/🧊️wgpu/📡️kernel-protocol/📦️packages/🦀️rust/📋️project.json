@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-kernel-protocol-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -6,23 +6,27 @@ use axum::Router;
 use directory::os_directory::DocumentDescriptor;
 use futures::StreamExt;
 use semio_framework_trace::record::{TraceLevel, TraceOutcome, TraceRecord, Tracer};
-use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStores};
-use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog, TrustedCatalogLoadProgressCellV1};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStores};
+use semio_hub_trusted_catalog_descriptor::{NativeCodecProviderSourceV1, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets};
+use semio_hub_trusted_catalog::{TrustedCatalogLoader, VerifiedTrustedCatalog, TrustedCatalogLoadProgressCellV1};
 #[cfg(test)]
-use semio_hub::artifact_authority::ImmutableArtifactBlobStore;
-use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CheckpointPublicationOrchestrator, OperationContext, ValidatingCanonicalArtifactAuthority};
-use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::{ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, DirectoryService, HubDirectories, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, IdentityVerificationControl, LocalBootstrapTransport};
-use semio_hub::inference::runtime::GisMapApprovalCommitErrorV1;
-use semio_hub::lag_rebootstrap::RebootstrapTransferControl;
-use semio_hub::stores::{HubAuthModule, HubDirectoryModule, HubInstance, HubModules};
+use semio_hub_artifact_authority::ImmutableArtifactBlobStore;
+use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CheckpointPublicationOrchestrator, OperationContext, ValidatingCanonicalArtifactAuthority};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_service::{ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, DirectoryService, HubVerifiedCheckpointPublisher};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::ProjectionRebuildControl;
+use semio_hub_directory_contract::{IdentityVerificationControl, LocalBootstrapTransport};
+use semio_hub_inference_runtime_contract::GisMapApprovalCommitErrorV1;
+use semio_hub_lag_rebootstrap::RebootstrapTransferControl;
+use semio_hub_stores::{HubAuthModule, HubDirectoryModule, HubInstance, HubModules};
 use server::gateway::ServerState;
 use server::storage::StorageProfile;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::support::now_ms;
 use crate::readiness::HubStartupProgressV1;
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::gateway::Server as FrameworkServer;
 
 //#region ⚠️ Errors
@@ -30,12 +34,12 @@ use server::gateway::Server as FrameworkServer;
 /// opening `db::Database`'s storage backend, connecting the directory backend, and binding the
 /// HTTP listener.
 #[derive(Debug)]
-pub(crate) enum HubError {
+pub enum HubError {
     ArtifactAuthority(AuthorityError),
     Directory(DirectoryError),
     Db(db::DbError),
     DatabaseOpen(db::engine::DatabaseOpenAtRejected),
-    StorageOpen(db::db_storage::DbStorageOpenRejected),
+    StorageOpen(db::storage::DbStorageOpenRejected),
     InferenceShutdown(GisMapApprovalCommitErrorV1),
     Io(std::io::Error),
     UnknownStorageBackend(String),
@@ -101,8 +105,8 @@ impl From<db::engine::DatabaseOpenAtRejected> for HubError {
     }
 }
 
-impl From<db::db_storage::DbStorageOpenRejected> for HubError {
-    fn from(error: db::db_storage::DbStorageOpenRejected) -> Self {
+impl From<db::storage::DbStorageOpenRejected> for HubError {
+    fn from(error: db::storage::DbStorageOpenRejected) -> Self {
         Self::StorageOpen(error)
     }
 }
@@ -116,10 +120,10 @@ impl From<std::io::Error> for HubError {
 
 /// 📚️ Carries the tracer the trusted-catalog load reports its progress onto. A unit struct
 /// would have had nowhere to send that progress, which is the only reason this holds a value.
-pub(crate) struct StartupCatalogControl {
-    pub(crate) tracer: Tracer,
+pub struct StartupCatalogControl {
+    pub tracer: Tracer,
     pub(crate) cancellation: StartupCancellationV1,
-    pub(crate) progress: StartupProgressCellV1,
+    pub progress: StartupProgressCellV1,
     /// 🕰️ When the last IN-FLIGHT progress record was emitted, so a long load reports that it
     /// is advancing without turning a 16 k-unit catalog into 16 k trace lines.
     last_in_flight_ms: std::sync::atomic::AtomicU64,
@@ -131,13 +135,13 @@ const STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS: u64 = 1_000;
 
 impl StartupCatalogControl {
     /// 📚️ Reporting onto `tracer` and into `progress`, cancelled with `cancellation`.
-    pub(crate) fn new(tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) -> Self {
+    pub fn new(tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) -> Self {
         Self { tracer, cancellation, progress, last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 
     /// 🤫️ Reporting nowhere — for a caller that runs before this process has configured
     /// observability, and for every law that is not about the catalog's progress.
-    pub(crate) fn silent() -> Self {
+    pub fn silent() -> Self {
         Self { tracer: Tracer::disabled(), cancellation: StartupCancellationV1::default(), progress: StartupProgressCellV1::default(), last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 }
@@ -147,17 +151,17 @@ impl StartupCatalogControl {
 /// catalog's per-package progress, which the loaded catalog keeps reporting into for its background
 /// verification.
 #[derive(Clone, Default)]
-pub(crate) struct StartupProgressCellV1 {
-    pub(crate) latest: Arc<Mutex<Option<AuthorityProgress>>>,
-    pub(crate) catalog: Arc<TrustedCatalogLoadProgressCellV1>,
+pub struct StartupProgressCellV1 {
+    pub latest: Arc<Mutex<Option<AuthorityProgress>>>,
+    pub catalog: Arc<TrustedCatalogLoadProgressCellV1>,
 }
 
 impl StartupProgressCellV1 {
-    pub(crate) fn observe(&self, progress: AuthorityProgress) {
+    pub fn observe(&self, progress: AuthorityProgress) {
         *self.latest.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(progress);
     }
 
-    pub(crate) fn latest(&self) -> Option<HubStartupProgressV1> {
+    pub fn latest(&self) -> Option<HubStartupProgressV1> {
         let latest = *self.latest.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let catalog = Some(self.catalog.snapshot()).filter(|catalog| !catalog.packages.is_empty());
         latest.map(|progress| HubStartupProgressV1 { stage: progress.stage.code(), completed_units: progress.completed_units, total_units: progress.total_units, catalog })
@@ -168,7 +172,7 @@ impl StartupProgressCellV1 {
 /// memory pinned at load is pinned against its component, smallest first, reporting into the same progress the
 /// admin observability route reads; a codec call that reaches a package first verifies it itself. One
 /// `server.catalog.publication` record names the outcome.
-pub(crate) async fn verify_pending_catalog_guests(catalog: Arc<VerifiedTrustedCatalog>, tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) {
+pub async fn verify_pending_catalog_guests(catalog: Arc<VerifiedTrustedCatalog>, tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) {
     let control = StartupCatalogControl::new(tracer.clone(), cancellation, progress);
     let started = std::time::Instant::now();
     let outcome = match OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control) {
@@ -187,14 +191,14 @@ pub(crate) async fn verify_pending_catalog_guests(catalog: Arc<VerifiedTrustedCa
 /// the trusted-catalog load above all — observes it, so a hub whose launcher left stops loading and
 /// exits instead of outliving it.
 #[derive(Clone, Default)]
-pub(crate) struct StartupCancellationV1(pub(crate) Arc<std::sync::atomic::AtomicBool>);
+pub struct StartupCancellationV1(pub Arc<std::sync::atomic::AtomicBool>);
 
 impl StartupCancellationV1 {
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.0.store(true, std::sync::atomic::Ordering::Release);
     }
 
-    pub(crate) fn is_cancelled(&self) -> bool {
+    pub fn is_cancelled(&self) -> bool {
         self.0.load(std::sync::atomic::Ordering::Acquire)
     }
 }
@@ -234,22 +238,18 @@ impl AuthorityOperationControl for StartupCatalogControl {
         record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
         self.tracer.emit(record);
     }
-
-    fn catalog_progress(&self) -> Option<Arc<TrustedCatalogLoadProgressCellV1>> {
-        Some(Arc::clone(&self.progress.catalog))
-    }
 }
 
-pub(crate) struct HubBootstrapControl {
+pub struct HubBootstrapControl {
     pub(crate) cancelled: std::sync::atomic::AtomicBool,
 }
 
 impl HubBootstrapControl {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { cancelled: std::sync::atomic::AtomicBool::new(false) }
     }
 
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }
 }
@@ -263,12 +263,12 @@ impl IdentityVerificationControl for HubBootstrapControl {
         self.cancelled.load(std::sync::atomic::Ordering::Acquire)
     }
 
-    fn report(&self, _progress: semio_hub::directory::IdentityVerificationProgress) {}
+    fn report(&self, _progress: semio_hub_directory_contract::IdentityVerificationProgress) {}
 }
 
-pub(crate) type HubArtifactAuthority = ValidatingCanonicalArtifactAuthority<Arc<VerifiedTrustedCatalog>>;
+pub type HubArtifactAuthority = ValidatingCanonicalArtifactAuthority<Arc<VerifiedTrustedCatalog>>;
 
-pub(crate) type HubArtifactPublication = CheckpointPublicationOrchestrator<ArtifactChunkBlobStore<Arc<ArtifactChunkCasStores>>, HubVerifiedCheckpointPublisher<ArtifactChunkCasStores>>;
+pub type HubArtifactPublication = CheckpointPublicationOrchestrator<ArtifactChunkBlobStore<Arc<ArtifactChunkCasStores>>, HubVerifiedCheckpointPublisher<ArtifactChunkCasStores>>;
 
 struct ArtifactCasMaintenanceControl {
     cancelled: Arc<std::sync::atomic::AtomicBool>,
@@ -293,24 +293,24 @@ impl AuthorityOperationControl for ArtifactCasMaintenanceControl {
     }
 }
 
-pub(crate) struct ArtifactCasMaintenanceSupervisor {
+pub struct ArtifactCasMaintenanceSupervisor {
     pub(crate) cancelled: Arc<std::sync::atomic::AtomicBool>,
     pub(crate) healthy: Arc<std::sync::atomic::AtomicBool>,
     pub(crate) wake: Arc<tokio::sync::Notify>,
-    pub(crate) task: Mutex<Option<tokio::task::JoinHandle<()>>>,
+    pub task: Mutex<Option<tokio::task::JoinHandle<()>>>,
 }
 
 #[derive(Default)]
-pub(crate) struct ArtifactCasMaintenanceCheckpoint {
+pub struct ArtifactCasMaintenanceCheckpoint {
     continuation: Option<ArtifactCasSweepContinuation>,
 }
 
 impl ArtifactCasMaintenanceCheckpoint {
-    pub(crate) fn request(&self, execute: bool, max_objects: usize) -> ArtifactCasSweepRequest {
+    pub fn request(&self, execute: bool, max_objects: usize) -> ArtifactCasSweepRequest {
         ArtifactCasSweepRequest { execute, max_objects, continuation: self.continuation }
     }
 
-    pub(crate) fn accept(&mut self, result: &ArtifactCasSweepResult) -> bool {
+    pub fn accept(&mut self, result: &ArtifactCasSweepResult) -> bool {
         self.continuation = result.continuation;
         self.continuation.is_none()
     }
@@ -323,7 +323,7 @@ impl ArtifactCasMaintenanceCheckpoint {
 }
 
 impl ArtifactCasMaintenanceSupervisor {
-    pub(crate) fn start(service: Arc<DirectoryService>, storage: Arc<ArtifactChunkCasStores>, execute: bool, tracer: Tracer) -> Arc<Self> {
+    pub fn start(service: Arc<DirectoryService>, storage: Arc<ArtifactChunkCasStores>, execute: bool, tracer: Tracer) -> Arc<Self> {
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let healthy = Arc::new(std::sync::atomic::AtomicBool::new(true));
         let wake = Arc::new(tokio::sync::Notify::new());
@@ -352,7 +352,7 @@ impl ArtifactCasMaintenanceSupervisor {
                         return;
                     }
                     let context = OperationContext::new(run_deadline_ms, AuthorityLimits::maximum(), &control);
-                    match service.sweep_artifact_cas(storage.as_ref(), checkpoint.request(execute, semio_hub::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX), &context).await {
+                    match service.sweep_artifact_cas(storage.as_ref(), checkpoint.request(execute, semio_hub_directory_contract::ARTIFACT_CAS_SWEEP_OBJECT_MAX), &context).await {
                         Ok(result) => {
                             task_healthy.store(true, std::sync::atomic::Ordering::Release);
                             let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Ok);
@@ -387,7 +387,7 @@ impl ArtifactCasMaintenanceSupervisor {
     }
 
     #[cfg(test)]
-    pub(crate) fn disabled() -> Arc<Self> {
+    pub fn disabled() -> Arc<Self> {
         Arc::new(Self { cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)), healthy: Arc::new(std::sync::atomic::AtomicBool::new(true)), wake: Arc::new(tokio::sync::Notify::new()), task: std::sync::Mutex::new(None) })
     }
 
@@ -395,7 +395,7 @@ impl ArtifactCasMaintenanceSupervisor {
         self.healthy.load(std::sync::atomic::Ordering::Acquire)
     }
 
-    pub(crate) async fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.wake.notify_waiters();
         let task = self.task.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -419,7 +419,7 @@ impl Drop for ArtifactCasMaintenanceSupervisor {
 }
 
 /// 🚰️ How often the hub hands its instance's committed outbox rows to the saga runner.
-pub(crate) const SAGA_DRAIN_INTERVAL: std::time::Duration = std::time::Duration::from_millis(500);
+pub const SAGA_DRAIN_INTERVAL: std::time::Duration = std::time::Duration::from_millis(500);
 
 /// 🚰️ How many outbox rows one drain may move. Bounded so a backlog is worked off over
 /// several turns instead of one unbounded pass holding both store locks.
@@ -438,16 +438,16 @@ const SAGA_DRAIN_BATCH: usize = 64;
 /// two records a second forever and bury the ones that matter; a drain that moved rows is a fact
 /// worth a line, so only that is reported (`server.saga.drain`, `ok` when every follow-up turn
 /// succeeded, `failed` with the count when some did not).
-pub(crate) struct SagaDrainSupervisor {
+pub struct SagaDrainSupervisor {
     pub(crate) cancelled: Arc<std::sync::atomic::AtomicBool>,
     pub(crate) wake: Arc<tokio::sync::Notify>,
     pub(crate) task: Mutex<Option<tokio::task::JoinHandle<()>>>,
-    pub(crate) instance: ServerState<HubInstance>,
-    pub(crate) tracer: Tracer,
+    pub instance: ServerState<HubInstance>,
+    pub tracer: Tracer,
 }
 
 impl SagaDrainSupervisor {
-    pub(crate) fn start(instance: ServerState<HubInstance>, tracer: Tracer, interval: std::time::Duration) -> Arc<Self> {
+    pub fn start(instance: ServerState<HubInstance>, tracer: Tracer, interval: std::time::Duration) -> Arc<Self> {
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let wake = Arc::new(tokio::sync::Notify::new());
         let task_cancelled = cancelled.clone();
@@ -473,7 +473,7 @@ impl SagaDrainSupervisor {
     /// the requests that were still in flight when the router stopped accepting may have committed
     /// outbox rows after the final tick, and leaving those to the next boot is exactly the
     /// acknowledged-but-never-delivered window the outbox exists to close.
-    pub(crate) async fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.wake.notify_waiters();
         let task = self.task.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -499,7 +499,7 @@ impl Drop for SagaDrainSupervisor {
 
 /// 🚰️ One drain pass, reported only when it moved rows. Returns how many follow-up turns ran
 /// so a law can assert on the pass itself without owning the supervisor's clock.
-pub(crate) async fn drain_instance_sagas(instance: &ServerState<HubInstance>, tracer: &Tracer) -> usize {
+pub async fn drain_instance_sagas(instance: &ServerState<HubInstance>, tracer: &Tracer) -> usize {
     let span = tracer.span("server.saga.drain").request(tracer.allocate_request_id());
     let outcomes = instance.drain_sagas(SAGA_DRAIN_BATCH).await;
     if outcomes.is_empty() {
@@ -514,7 +514,7 @@ pub(crate) async fn drain_instance_sagas(instance: &ServerState<HubInstance>, tr
     outcomes.len()
 }
 
-pub(crate) fn artifact_cas_sweep_execute_from_env() -> Result<bool, HubError> {
+pub fn artifact_cas_sweep_execute_from_env() -> Result<bool, HubError> {
     match std::env::var("OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE").as_deref() {
         Err(std::env::VarError::NotPresent) | Ok("") | Ok("false") | Ok("0") => Ok(false),
         Ok("true") | Ok("1") => Ok(true),
@@ -528,7 +528,7 @@ pub(crate) struct ConfiguredArtifactAuthority {
     pub(crate) authority: Arc<HubArtifactAuthority>,
 }
 
-pub(crate) trait DocumentOpenCatalogAuthorityV1: Send + Sync {
+pub trait DocumentOpenCatalogAuthorityV1: Send + Sync {
     fn generation_id(&self) -> &str;
     fn resolve_document_open(&self, descriptor: &DocumentDescriptor, requested_surface_id: Option<&str>, writable: bool) -> Option<VerifiedDocumentOpenSelectionV1>;
     /// 🧱 Exact-selection asset accessor. It never accepts a package, digest, path or receipt
@@ -561,14 +561,14 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
 /// with a three-package catalog whose largest component is ≈ 48 MB). Thirty seconds therefore named
 /// a busy scheduler as a wedged load. Five minutes is still a no-progress bound: a load that reaches
 /// no checkpoint for that long has genuinely stopped, and eight stall-retries still apply above.
-pub(crate) const TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS: u64 = 300_000;
+pub const TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS: u64 = 300_000;
 
 /// 📚️ What the startup trusted-catalog load produced. Three outcomes, not two, because "the load
 /// ran out of budget" and "this data root has no catalog" are different facts and the hub owes an
 /// operator the difference. A structural refusal — a corrupt catalog, a missing provider, a
 /// signature that does not verify — stays an `Err` and still aborts the boot: that one IS a
 /// statement about the data root.
-pub(crate) enum StartupArtifactAuthority {
+pub enum StartupArtifactAuthority {
     Configured(ConfiguredArtifactAuthority),
     Absent,
     /// ⏳️ The load reached no checkpoint for [`TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS`]. Before this
@@ -581,14 +581,14 @@ pub(crate) enum StartupArtifactAuthority {
 impl StartupArtifactAuthority {
     /// 📚️ The loaded authority, or `None` for either of the two "no authority" outcomes — the shape
     /// every reader that only cares whether a catalog is live wants.
-    pub(crate) fn configured(self) -> Option<ConfiguredArtifactAuthority> {
+    pub fn configured(self) -> Option<ConfiguredArtifactAuthority> {
         match self {
             Self::Configured(configured) => Some(configured),
             Self::Absent | Self::Stalled => None,
         }
     }
 
-    pub(crate) fn is_none(&self) -> bool {
+    pub fn is_none(&self) -> bool {
         matches!(self, Self::Absent | Self::Stalled)
     }
 }
@@ -608,7 +608,7 @@ pub fn artifact_authority_closed_reason(native_artifact_execution: bool, trusted
     }
 }
 
-pub(crate) async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer, cancellation: &StartupCancellationV1, progress: &StartupProgressCellV1) -> Result<StartupArtifactAuthority, AuthorityError> {
+pub async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer, cancellation: &StartupCancellationV1, progress: &StartupProgressCellV1) -> Result<StartupArtifactAuthority, AuthorityError> {
     if providers.is_none() && data_dir.join("trusted-catalog/current.json").try_exists().map_err(|error| AuthorityError::Catalog(error.to_string()))? {
         return Err(AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()));
     }
@@ -619,7 +619,7 @@ pub(crate) async fn configured_artifact_authority(data_dir: &std::path::Path, pr
     for attempt in 0..8u8 {
         let control = StartupCatalogControl::new(tracer.clone(), cancellation.clone(), progress.clone());
         let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
-        match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
+        match TrustedCatalogLoader::load_current_observed(data_dir, providers, &progress.catalog, &context).await {
             Ok(value) => {
                 loaded = Some(value);
                 break;
@@ -654,7 +654,7 @@ pub(crate) async fn configured_artifact_authority(data_dir: &std::path::Path, pr
 /// that makes writing to them exactly-once.
 /// Auth and directory modules register on the framework gateway; the document socket is not a
 /// framework route here, because hub's own router owns `/scopes/{scope}/document/ws`.
-pub(crate) async fn compose_hub_server(data_dir: &std::path::Path, directory: Arc<HubDirectories>) -> Result<(ServerState<HubInstance>, Router), HubError> {
+pub async fn compose_hub_server(data_dir: &std::path::Path, directory: Arc<HubDirectories>) -> Result<(ServerState<HubInstance>, Router), HubError> {
     let root = data_dir.join("instance");
     let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
     let server = FrameworkServer::<HubInstance>::builder(profile)
@@ -667,7 +667,7 @@ pub(crate) async fn compose_hub_server(data_dir: &std::path::Path, directory: Ar
     Ok((server.state().clone(), server.router()))
 }
 
-pub(crate) async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubInstance>, HubError> {
+pub async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubInstance>, HubError> {
     let root = data_dir.join("instance");
     let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
     let server = FrameworkServer::<HubInstance>::builder(profile)
@@ -682,7 +682,7 @@ pub(crate) async fn instance_state(data_dir: &std::path::Path) -> Result<ServerS
 /// startup into `HubState.merge_policy` (see its own doc). An unrecognized value is a non-fatal
 /// misconfiguration (logged, falls back to the default) rather than refusing to boot, matching this
 /// crate's generally-forgiving stance on env parsing elsewhere in `main`.
-pub(crate) fn merge_policy_from_env(tracer: &Tracer) -> protocol::MergePolicy {
+pub fn merge_policy_from_env(tracer: &Tracer) -> protocol::MergePolicy {
     match std::env::var("OS_HUB_MERGE_POLICY").ok().as_deref() {
         None => protocol::MergePolicy::default(),
         Some("laissez-faire") => protocol::MergePolicy::LaissezFaire,

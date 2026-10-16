@@ -1,10 +1,11 @@
 
 use super::*;
+use semio_framework_replication_wire_core::Blake3Hasher;
 
 //#region 🔖️Header
 #[semio_framework_async_macros::async_test]
 async fn header_round_trips_via_begin_and_validate() {
-    let options = WriteOptions { required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: crate::OPTIONAL_CANONICAL };
+    let options = WriteOptions { required_flags: semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN, optional_flags: semio_framework_replication_wire_core::OPTIONAL_CANONICAL };
     let writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
     let bytes = writer.into_sink().await;
     assert_eq!(bytes.len(), HEADER_SIZE);
@@ -35,9 +36,9 @@ async fn header_rejects_corrupted_crc() {
 
 #[semio_framework_async_macros::async_test]
 async fn read_header_exposes_decoded_fields_to_downstream_crates() {
-    let bytes = build_header_bytes(crate::REQUIRED_HASH_CHAIN, crate::OPTIONAL_CANONICAL).to_vec();
+    let bytes = build_header_bytes(semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN, semio_framework_replication_wire_core::OPTIONAL_CANONICAL).to_vec();
     let header = read_header(&bytes).await.unwrap();
-    assert_eq!(header, Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: crate::OPTIONAL_CANONICAL });
+    assert_eq!(header, Header { version_major: FORMAT_VERSION_MAJOR, version_minor: FORMAT_VERSION_MINOR, required_flags: semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN, optional_flags: semio_framework_replication_wire_core::OPTIONAL_CANONICAL });
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,8 +53,8 @@ async fn read_header_propagates_validation_failures() {
 async fn build_small_file() -> Vec<u8> {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(crate::REC_DOC, true, b"doc-payload", crate::codec::ids::CodecId(0)).await.unwrap();
-    writer.write_record(crate::REC_EDIT, true, b"edit-payload", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"doc-payload", semio_framework_replication_codec::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"edit-payload", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     writer.commit().await.unwrap();
     writer.into_sink().await
 }
@@ -63,17 +64,17 @@ async fn frame_round_trips_kind_flags_and_payload() {
     let bytes = build_small_file().await;
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
     let doc = cursor.next_frame().await.unwrap().unwrap();
-    assert_eq!(doc.kind, crate::REC_DOC);
+    assert_eq!(doc.kind, semio_framework_replication_wire_core::REC_DOC);
     assert_eq!(doc.payload().await, b"doc-payload");
     assert_eq!(doc.flags & FRAME_FLAG_CRITICAL, FRAME_FLAG_CRITICAL);
     assert_eq!(doc.offset, HEADER_SIZE as u64);
 
     let edit = cursor.next_frame().await.unwrap().unwrap();
-    assert_eq!(edit.kind, crate::REC_EDIT);
+    assert_eq!(edit.kind, semio_framework_replication_wire_core::REC_EDIT);
     assert_eq!(edit.payload().await, b"edit-payload");
 
     let commit = cursor.next_frame().await.unwrap().unwrap();
-    assert_eq!(commit.kind, crate::REC_COMMIT);
+    assert_eq!(commit.kind, semio_framework_replication_wire_core::REC_COMMIT);
     assert_eq!(commit.stored.len(), 64);
 
     assert!(cursor.next_frame().await.unwrap().is_none());
@@ -157,8 +158,8 @@ async fn cursor_surfaces_unrecognized_extension_kind_transparently() {
     // (see the module doc). This proves the cursor never special-cases `kind`.
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(0x50, false, b"extension-payload", crate::codec::ids::CodecId(0)).await.unwrap();
-    writer.write_record(crate::REC_DOC, true, b"doc-payload", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(0x50, false, b"extension-payload", semio_framework_replication_codec::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"doc-payload", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let bytes = writer.into_sink().await;
 
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
@@ -168,7 +169,7 @@ async fn cursor_surfaces_unrecognized_extension_kind_transparently() {
     assert_eq!(ext.payload().await, b"extension-payload");
 
     let doc = cursor.next_frame().await.unwrap().unwrap();
-    assert_eq!(doc.kind, crate::REC_DOC);
+    assert_eq!(doc.kind, semio_framework_replication_wire_core::REC_DOC);
     assert!(cursor.next_frame().await.unwrap().is_none());
 }
 
@@ -178,7 +179,7 @@ async fn compressed_frame_round_trips_stored_and_raw_len() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
     let payload = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    writer.write_record(crate::REC_DOC, true, payload, crate::codec::ids::CodecId(1)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, payload, semio_framework_replication_codec::CodecId(1)).await.unwrap();
     let bytes = writer.into_sink().await;
 
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
@@ -187,7 +188,7 @@ async fn compressed_frame_round_trips_stored_and_raw_len() {
     assert_eq!(frame.raw_len, Some(payload.len() as u64));
     assert!(frame.stored.len() < payload.len());
 
-    let decompressed = crate::codec::DeflateCodec.decompress(frame.stored, frame.raw_len.unwrap(), 1024).unwrap();
+    let decompressed = semio_framework_replication_codec::DeflateCodec.decompress(frame.stored, frame.raw_len.unwrap(), 1024).unwrap();
     assert_eq!(decompressed, payload);
 }
 //#endregion 🔖️Frame
@@ -205,7 +206,7 @@ async fn commit_chain_verifies_by_recomputation_on_a_hand_built_file() {
     let mut concat = chain_0.to_vec();
     let mut commit_frame: Option<RecordFrame<'_>> = None;
     while let Some(frame) = cursor.next_frame().await.unwrap() {
-        if frame.kind == crate::REC_COMMIT {
+        if frame.kind == semio_framework_replication_wire_core::REC_COMMIT {
             commit_frame = Some(frame);
             break;
         }
@@ -225,9 +226,9 @@ async fn commit_chain_verifies_by_recomputation_on_a_hand_built_file() {
 async fn commit_chain_links_prev_commit_offset_across_multiple_commits() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(crate::REC_DOC, true, b"a", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"a", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let commit_1_offset = writer.commit().await.unwrap();
-    writer.write_record(crate::REC_EDIT, true, b"b", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"b", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let commit_2_offset = writer.commit().await.unwrap();
     let bytes = writer.into_sink().await;
 
@@ -248,7 +249,7 @@ async fn parse_commit_payload_is_public_for_downstream_frontier_summaries() {
     let mut commit_frame = None;
     loop {
         match cursor.next_frame().await.unwrap() {
-            Some(frame) if frame.kind == crate::REC_COMMIT => {
+            Some(frame) if frame.kind == semio_framework_replication_wire_core::REC_COMMIT => {
                 commit_frame = Some(frame);
                 break;
             }
@@ -279,7 +280,7 @@ async fn recover_fast_path_walks_multi_commit_chain_to_genesis() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
     for i in 0..5u8 {
-        writer.write_record(crate::REC_EDIT, true, &[i], crate::codec::ids::CodecId(0)).await.unwrap();
+        writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, &[i], semio_framework_replication_codec::CodecId(0)).await.unwrap();
         writer.commit().await.unwrap();
     }
     let bytes = writer.into_sink().await;
@@ -294,9 +295,9 @@ async fn recover_fast_path_walks_multi_commit_chain_to_genesis() {
 async fn recover_forward_scan_truncates_to_last_commit_on_torn_tail() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(crate::REC_DOC, true, b"a", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"a", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let commit_end = writer.commit().await.unwrap() + COMMIT_FRAME_LEN;
-    writer.write_record(crate::REC_EDIT, true, b"uncommitted", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"uncommitted", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let mut bytes = writer.into_sink().await;
     bytes.truncate(bytes.len() - 3); // tear the tail mid-record, after the commit
 
@@ -310,9 +311,9 @@ async fn recover_forward_scan_truncates_to_last_commit_on_torn_tail() {
 async fn recover_last_valid_record_mode_trusts_past_the_last_commit() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(crate::REC_DOC, true, b"a", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"a", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     writer.commit().await.unwrap();
-    writer.write_record(crate::REC_EDIT, true, b"uncommitted-but-well-formed", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"uncommitted-but-well-formed", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let bytes = writer.into_sink().await;
 
     let last_commit_report = recover(&bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
@@ -342,10 +343,10 @@ async fn recover_never_panics_on_truncation_at_every_byte() {
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
     for i in 0..4u8 {
-        writer.write_record(crate::REC_EDIT, true, &[i; 5], crate::codec::ids::CodecId(0)).await.unwrap();
+        writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, &[i; 5], semio_framework_replication_codec::CodecId(0)).await.unwrap();
     }
     writer.commit().await.unwrap();
-    writer.write_record(crate::REC_EDIT, true, b"tail-record-after-commit", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"tail-record-after-commit", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let bytes = writer.into_sink().await;
 
     for len in 0..=bytes.len() {
@@ -382,7 +383,7 @@ async fn begin_rejects_unknown_required_flags() {
 async fn position_tracks_sink_length_across_writes() {
     let mut writer = SprWriter::begin(Vec::new(), &WriteOptions::default()).await.unwrap();
     assert_eq!(writer.position().await, HEADER_SIZE as u64);
-    writer.write_record(crate::REC_DOC, true, b"x", crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_DOC, true, b"x", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     assert_eq!(writer.position().await, writer.into_sink().await.len() as u64);
 }
 //#endregion 🔖️Writer

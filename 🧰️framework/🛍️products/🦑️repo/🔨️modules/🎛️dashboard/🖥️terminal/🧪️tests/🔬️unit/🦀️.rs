@@ -1,10 +1,11 @@
 use super::controls::{Action, Flow};
 use super::sessions::Link;
 use super::windows::{Body, Dashboard, Effect, LinkState};
-use crate::daemon::client::Message;
-use crate::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
-use crate::preferences::{Change, Preferences};
-use crate::registry::{Facts, Registry, TaskLabel};
+use dashboard_launch::TaskLabel;
+use dashboard_preferences::{Change, Preferences};
+use dashboard_registry::{Facts, Registry};
+use dashboard_wire::client::Message;
+use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
 use std::sync::Arc;
 use ui_styling::appearance::AppearanceName;
 use ui_tui::tui::chrome::ChromeState;
@@ -113,8 +114,8 @@ fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
     let keymap = Preferences::default().keymap().0;
     let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { super::controls::spec_of(key) } else { None }).map(|spec| spec.to_string()).collect();
     assert_eq!(specs, ["ctrl+b", "p", "ctrl+r", "Ü", "ctrl+space"]);
-    assert!(keymap.is_prefix(&crate::preferences::keymap::KeySpec::parse(&specs[0]).unwrap()));
-    assert_eq!(keymap.resolve(crate::preferences::keymap::Scope::Prefix, &crate::preferences::keymap::KeySpec::parse(&specs[1]).unwrap()), Some("show-settings"));
+    assert!(keymap.is_prefix(&dashboard_preferences::keymap::KeySpec::parse(&specs[0]).unwrap()));
+    assert_eq!(keymap.resolve(dashboard_preferences::keymap::Scope::Prefix, &dashboard_preferences::keymap::KeySpec::parse(&specs[1]).unwrap()), Some("show-settings"));
 }
 
 #[test]
@@ -133,7 +134,7 @@ fn terminal_bytes_become_the_keymaps_canonical_spellings() {
 #[test]
 fn every_default_action_is_implemented_by_the_view() {
     let keymap = Preferences::default().keymap().0;
-    for scope in [crate::preferences::keymap::Scope::Prefix, crate::preferences::keymap::Scope::Window] {
+    for scope in [dashboard_preferences::keymap::Scope::Prefix, dashboard_preferences::keymap::Scope::Window] {
         for action in keymap.actions(scope) { assert!(Action::parse(&action).is_some(), "{action} is bound but the view does not implement it"); }
     }
     let (mut dashboard, mut tui) = view();
@@ -583,21 +584,21 @@ fn a_compound_opens_one_tab_per_member_each_with_its_own_task_label() {
 #[test]
 fn daemon_errors_reach_the_user_in_their_language_and_never_the_terminal() {
     let (mut dashboard, mut tui) = view();
-    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "no such task".into(), code: Some(crate::ipc::ErrorCode::UnknownSession), session_id: None }));
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "no such task".into(), code: Some(dashboard_wire::ipc::ErrorCode::UnknownSession), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("that task no longer exists"));
     let (mut dashboard, mut tui) = dashboard_with(Preferences { language: "de".into(), ..Default::default() });
-    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "x".into(), code: Some(crate::ipc::ErrorCode::NotRunning), session_id: None }));
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "x".into(), code: Some(dashboard_wire::ipc::ErrorCode::NotRunning), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("Diese Aufgabe läuft nicht"));
 }
 
 #[test]
 fn a_refused_view_says_so_in_its_language_and_retries_instead_of_showing_an_empty_daemon() {
     let (mut dashboard, mut tui) = view();
-    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16 views".into(), code: Some(crate::ipc::ErrorCode::ViewLimit), session_id: None }));
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16 views".into(), code: Some(dashboard_wire::ipc::ErrorCode::ViewLimit), session_id: None }));
     assert_eq!(dashboard.notice.as_deref(), Some("the daemon serves as many views as it allows; close another view and try again"));
     assert!(dashboard.link.connection.is_none() && matches!(dashboard.state, LinkState::Failed(_)), "the refused connection is dropped so that the retry loop runs");
     let (mut dashboard, mut tui) = dashboard_with(Preferences { language: "de".into(), ..Default::default() });
-    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16".into(), code: Some(crate::ipc::ErrorCode::ViewLimit), session_id: None }));
+    dashboard.apply(&mut tui, Message::Control(ServerMsg::Error { message: "16".into(), code: Some(dashboard_wire::ipc::ErrorCode::ViewLimit), session_id: None }));
     assert!(dashboard.notice.as_deref().is_some_and(|text| text.contains("Ansichten")));
 }
 
@@ -785,7 +786,7 @@ fn p2_7_reconnecting_backs_off_and_starts_over_after_a_success() {
 #[test]
 fn every_scenario_of_the_window_view_features_is_proved_by_a_test() {
     let source = include_str!("🦀️.rs");
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🪟️windows/🥒️.feature"), &[source], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🪟️windows/🥒️.feature"), &[source], &[
         ("Tabs and titles come from the task label", &["tabs_and_titles_come_from_the_task_label_with_status_as_a_glyph"]),
         ("Terminals follow the rectangle of their widget", &["terminal_sizes_follow_their_widget_rectangles_through_every_layout_change"]),
         ("Clicking a window moves the keyboard focus there", &["clicking_a_window_moves_the_keyboard_focus_there"]),
@@ -796,7 +797,7 @@ fn every_scenario_of_the_window_view_features_is_proved_by_a_test() {
         ("A compound opens one tab per member", &["a_compound_opens_one_tab_per_member_each_with_its_own_task_label"]),
         ("An unchanged screen is neither dirty nor repainted", &["p1_7_an_unchanged_screen_is_neither_dirty_nor_repainted_and_nothing_renders_in_full", "repainting_is_incremental_and_follows_typing"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/📡️sessions/🥒️.feature"), &[source], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/📡️sessions/🥒️.feature"), &[source], &[
         ("A selection before the connection is an owned, cancellable start", &["selection_before_connection_retains_an_owned_cancellable_start"]),
         ("The limit is checked before a window exists and a failed send is kept", &["p2_7_the_limit_is_checked_before_a_window_exists_and_a_failed_send_is_kept_for_the_reconnect"]),
         ("Reconnecting backs off and starts over after a success", &["p2_7_reconnecting_backs_off_and_starts_over_after_a_success"]),
@@ -805,7 +806,7 @@ fn every_scenario_of_the_window_view_features_is_proved_by_a_test() {
         ("Daemon errors reach the user in their language and never the terminal", &["daemon_errors_reach_the_user_in_their_language_and_never_the_terminal"]),
         ("Shutdown waits for the confirmation of the daemon", &["shutdown_waits_for_the_daemons_confirmation"]),
     ]);
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/📋️panes/🥒️.feature"), &[source], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/📋️panes/🥒️.feature"), &[source], &[
         ("The tasks list keeps its selection on the same task and shows status per row", &["p1_6_the_tasks_list_keeps_its_selection_on_the_same_task_and_shows_status_per_row"]),
         ("The keyboard help lists every binding of the effective keymap", &["the_keyboard_help_lists_every_binding_of_the_effective_keymap"]),
         ("The usage text is generated from the keymap in both languages", &["the_usage_text_is_generated_from_the_keymap_in_both_languages"]),

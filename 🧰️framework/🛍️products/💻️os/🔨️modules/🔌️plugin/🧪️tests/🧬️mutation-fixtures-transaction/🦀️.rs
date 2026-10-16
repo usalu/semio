@@ -100,7 +100,7 @@ impl pack::snapshot::ArtifactPack for TxnSnapshot {
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TxnSnapshot {
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -465,8 +465,8 @@ async fn command_cache_inputs_share_immutable_arcs() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     app.refresh_cache().await.expect("refresh cache");
-    let (_, cached_snapshot, cached_config, cached_history) = app.cache.as_ref().expect("cache");
-    let (snapshot, config, history) = app.command_cache_inputs();
+    let (_, cached_snapshot, cached_config, cached_history) = app.history.cache.as_ref().expect("cache");
+    let (snapshot, config, history) = app.history.command_cache_inputs();
     assert!(std::sync::Arc::ptr_eq(cached_snapshot, &snapshot));
     assert!(std::sync::Arc::ptr_eq(cached_config, &config));
     assert!(std::sync::Arc::ptr_eq(cached_history, &history));
@@ -480,12 +480,12 @@ async fn a_streamed_tick_extends_cached_history_in_place() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local",cx).await.expect("first increment");
-    let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
+    let history_ptr = std::sync::Arc::as_ptr(&app.history.cache.as_ref().expect("first history cache").3);
     dispatch_settled(&mut app, TxnCommand::StreamedIncrement, "local",cx).await.expect("second increment");
     app.refresh_cache().await.expect("extend history cache");
-    let history = &app.cache.as_ref().expect("extended history cache").3;
+    let history = &app.history.cache.as_ref().expect("extended history cache").3;
     assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "a streamed tick must update the uniquely-owned history allocation in place");
-    assert_eq!(app.store.envelope().vcs.edits.len(), 1, "streamed increments stay one open edit");
+    assert_eq!(app.stores.store.envelope().vcs.edits.len(), 1, "streamed increments stay one open edit");
     assert_eq!(history.commands.len(), 1, "streamed increments stay one command row");
     assert_eq!(history.commands[0].op_lines.len(), 2, "only the new operation tail is appended to cached history");
     close_transaction_store_roots(&mut app,cx);

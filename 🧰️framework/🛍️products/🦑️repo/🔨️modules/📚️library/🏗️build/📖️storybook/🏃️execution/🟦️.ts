@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {createRequire} from "node:module";
 import {dirname,join,resolve} from "node:path";
@@ -8,7 +9,7 @@ import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️proces
 import {withCompilerState} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts";
 import {collectArtifactFiles} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {stageRepositoryArtifacts} from "../../../⚡️caching/📦️artifacts/🟦️.ts";
+import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../⚡️caching/📦️artifacts/🟦️.ts";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withStorybookStorageV1} from "../💾️storage/🟦️.ts";
 import schema from "../💾️storage/🧬️schema/🔣️.json" with {type:"json"};
@@ -17,18 +18,18 @@ import {assertNoOwnedStorybookMdx,assertUiStorybookDiscovery} from "../🟦️.t
 /** 📖️ Builds and publishes Storybook inside retained dependency and product filesystem owners. */
 export async function buildRepositoryStorybookV1(workspace:string,mode:string,invocation:ScriptInvocation):Promise<void>{
  if(process.env.STORYBOOK_OUTPUT_DIR!==undefined)throw Error("Storybook output belongs to the declared finite products store");assertNoOwnedStorybookMdx(workspace);const scope=process.env.STORYBOOK_SCOPE??"",control=scriptCompilerAdmissionControlV1(invocation,"storybook:build",600000);
- await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,()=>withStorybookStorageV1(workspace,mode,scope,invocation,async(store,layout,temporary)=>{
+ await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,control,()=>withStorybookStorageV1(workspace,mode,scope,invocation,control,async(store,layout,temporary)=>{
   const require=createRequire(join(workspace,"package.json")),manifest=require.resolve("storybook/package.json"),installed=require(manifest) as {version:string;bin:string};if(typeof installed.bin!=="string")throw Error("Original Storybook CLI entry required");const cli=join(dirname(manifest),installed.bin);
   await withCompilerState({root:layout.state,owner:"storybook",compiler:`storybook:${installed.version}:bun:${process.versions.bun}`,configuration:scope,mode:mode as "prototype"|"release",control,environment:store.environment,leaseDirectory:join(workspace,".cache/b/l/m/data"),files:[".semio-artifact.json"]},async(directory,compilerEnvironment)=>{
    requireNativeStoragePathV1(store.root,directory);await store.recheck();await runOwnedCommand(process.execPath,[cli,"build","-c",".storybook","--output-dir",temporary],workspace,"storybook:build",compilerAdmissionBudgetV1(control),{signal:control.signal,env:{...compilerEnvironment,SEMIO_VITE_CACHE_DIRECTORY:directory,SEMIO_STORYBOOK_BUILD:"true",STORYBOOK_DISABLE_TELEMETRY:"1"}});
-   const files=await collectArtifactFiles(temporary,control.signal);let bytes=0;for(const path of files.values()){requireNativeStoragePathV1(store.root,path);bytes+=(await lstat(path)).size;}if(files.size>schema.definitions.Protocol.const.maximumOutputFiles||bytes>schema.definitions.Protocol.const.maximumOutputBytes)throw Error("Storybook deliverable exceeds finite output boundary");await store.recheck();await stageRepositoryArtifacts(layout.output,`storybook:${mode}:${scope}`,files,{control,signal:control.signal,leaseDirectory:join(workspace,".cache/b/l/m/data")});console.log(`[DEBUG] Published finite Storybook artifact ${layout.output}`);
+   const files=await collectArtifactFiles(temporary,control.signal);let bytes=0;for(const path of files.values()){requireNativeStoragePathV1(store.root,path);bytes+=(await lstat(path)).size;}if(files.size>schema.definitions.Protocol.const.maximumOutputFiles||bytes>schema.definitions.Protocol.const.maximumOutputBytes)throw Error("Storybook deliverable exceeds finite output boundary");await store.recheck();await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:control,directory:layout.output},destination=>stageRepositoryArtifacts(destination,`storybook:${mode}:${scope}`,files));console.log(`[DEBUG] Published finite Storybook artifact ${layout.output}`);
   });
  }));assertUiStorybookDiscovery(workspace);
 }
 
 /** 🔭️ Holds the prototype development compiler and bounded cache through original server settlement. */
 export async function serveRepositoryStorybookV1(workspace:string,scope:string,args:readonly string[],invocation:ScriptInvocation):Promise<void>{
- if(args.some(arg=>!["--quiet","--debug","--ci","--no-manager-cache","--no-version-updates"].includes(arg)))throw Error("Storybook development arguments must preserve owned configuration and storage");const control=scriptCompilerAdmissionControlV1(invocation,"storybook:dev",0);await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,()=>withStorybookStorageV1(workspace,"prototype",scope,invocation,async(store,layout)=>{
+ if(args.some(arg=>!["--quiet","--debug","--ci","--no-manager-cache","--no-version-updates"].includes(arg)))throw Error("Storybook development arguments must preserve owned configuration and storage");const control=scriptCompilerAdmissionControlV1(invocation,"storybook:dev",0);await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,control,()=>withStorybookStorageV1(workspace,"prototype",scope,invocation,control,async(store,layout)=>{
   const require=createRequire(join(workspace,"package.json")),manifest=require.resolve("storybook/package.json"),installed=require(manifest) as {version:string;bin:string};if(typeof installed.bin!=="string")throw Error("Original Storybook CLI entry required");
   await withCompilerState({root:layout.state,owner:"storybook",compiler:`storybook:${installed.version}:bun:${process.versions.bun}`,configuration:scope,mode:"prototype",control,capacity:false,environment:store.environment,leaseDirectory:join(workspace,".cache/b/l/m/data"),files:[".semio-artifact.json"]},async(directory,environment)=>{
    requireNativeStoragePathV1(store.root,directory);await store.recheck();const host=process.env.DEVCONTAINER==="true"?"0.0.0.0":"127.0.0.1",port=process.env.STORYBOOK_PORT??"6010",exact=["1","true"].includes(process.env.STORYBOOK_EXACT_PORT??"");
@@ -38,7 +39,7 @@ export async function serveRepositoryStorybookV1(workspace:string,scope:string,a
 }
 
 /** 🌐️ Serves only the actual bounded built artifact and releases server custody on cancellation. */
-export async function serveRepositoryStorybookArtifactV1(workspace:string,mode:string,scope:string,invocation:ScriptInvocation):Promise<void>{return withStorybookStorageV1(workspace,mode,scope,invocation,(store,layout)=>serveStorybookArtifactInStorageV1(store,layout.output,{host:process.env.STORYBOOK_STATIC_HOST??"127.0.0.1",port:Number(process.env.STORYBOOK_PORT??"6010")}));}
+export async function serveRepositoryStorybookArtifactV1(workspace:string,mode:string,scope:string,invocation:ScriptInvocation):Promise<void>{return withStorybookStorageV1(workspace,mode,scope,invocation,createIssuedResourceControlV1(invocation,"cache:entry",0),(store,layout)=>serveStorybookArtifactInStorageV1(store,layout.output,{host:process.env.STORYBOOK_STATIC_HOST??"127.0.0.1",port:Number(process.env.STORYBOOK_PORT??"6010")}));}
 
 /** 📡️ Serves an issued original product artifact through a cancellable bounded HTTP owner. */
 export async function serveStorybookArtifactInStorageV1(store:RepositoryCacheStoreV1,output:string,options:Readonly<{host:string;port:number;signal?:AbortSignal;ready?:(port:number)=>Promise<void>}>):Promise<void>{

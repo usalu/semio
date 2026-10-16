@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "events": [
+    "active-generation",
+    "storage-enter",
+    "use-enter",
+    "bind",
+    "frozen-use-enter",
+    "frozen-graph-enter",
+    "delegate-import",
+    "frozen-graph-exit",
+    "frozen-use-exit",
+    "use-exit",
+    "storage-exit"
+  ],
+  "cases": [
+    {
+      "primary": "undefined"
+    },
+    {
+      "primary": "frozen"
+    }
+  ]
+}

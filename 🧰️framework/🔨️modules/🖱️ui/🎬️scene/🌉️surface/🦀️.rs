@@ -6,8 +6,8 @@
 //!
 //! 🚫️async: E6 sync payload encoding — no `async fn` anywhere in this module.
 
-use crate::pack::PackError;
-use crate::SceneDoc;
+use semio_framework_ui_scene_doc::SceneDoc;
+use semio_framework_ui_scene_pack::PackError;
 use ui_contract::{SurfaceDoc, SurfaceKind, SurfaceProps};
 
 //#region 🔖️SurfaceDocError

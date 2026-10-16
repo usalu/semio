@@ -1,67 +1,63 @@
-//! ⚔️ LAW: the database grades a write only against the other authors' writes committed after the operation its
-//! author observed, and only when both touch the same part (`🧬️schema/⚔️concurrent-write`, fixture
-//! `🧫️fixtures/⚔️concurrent-write`, TS twin `💻️os/🧪️tests/⚔️concurrent-write`). Every write is submitted WITHOUT
-//! dependencies: `observed` is advisory authoring context and never an ordering constraint (ticket 26/09/23 LD
-//! item 2, C10's vigilant hub that accepted a same-field write authored during a 12 s cut). A supersession (ticket
-//! 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, `📋️design.md` §2, §9.1) depends on exactly its targets, may name any
-//! author's operation the log holds, and is graded like a write by its declared target.
-
 use super::*;
+
+use db_artifact_contract::{CommandBatch, DB_PATHMAP_SCHEMA, MALFORMED_HISTORY_TRANSITION_CODE, SubmitOptions, UNKNOWN_SUPERSEDE_TARGET_CODE, encode_pathmap};
+use db_artifact_engine::{ArtifactEngine, ArtifactEngineConfig};
+use db_artifact_history::{HistoryReplayReservation, history_capacity_test_lock};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Fixture {
-    schema: String,
+    pub schema: String,
     vectors: Vec<Vector>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Vector {
-    id: String,
-    policy: String,
-    commits: Vec<Commit>,
+    pub id: String,
+    pub policy: String,
+    pub commits: Vec<Commit>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Commit {
-    write: Write,
-    outcome: String,
+    pub write: Write,
+    pub outcome: String,
     codes: Vec<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Write {
-    id: String,
-    actor: String,
-    observed: Option<String>,
+    pub id: String,
+    pub actor: String,
+    pub observed: Option<String>,
     writes: Writes,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Writes {
-    target: Option<Vec<String>>,
-    paths: Option<Vec<String>>,
-    transition: Option<bool>,
-    supersede: Option<Supersede>,
+    pub target: Option<Vec<String>>,
+    pub paths: Option<Vec<String>>,
+    pub transition: Option<bool>,
+    pub supersede: Option<Supersede>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Supersede {
     inputs: Vec<SupersededInput>,
-    target: Vec<String>,
+    pub target: Vec<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct SupersededInput {
-    target: String,
-    replacement: String,
+    pub target: String,
+    pub replacement: String,
 }
 
 /// 📜️ The fixture every law here walks.
@@ -145,7 +141,7 @@ async fn a_write_is_graded_only_against_unseen_foreign_writes_to_the_same_part()
             "normal" => protocol::MergePolicy::Normal,
             other => panic!("{}: undeclared policy {other}", vector.id),
         };
-        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.expect("memory storage")));
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.expect("memory storage")));
         let mut engine = ArtifactEngine::create(protocol::ArtifactId("doc-1".to_string()), storage, ArtifactEngineConfig::default(), 0).expect("engine");
         for (index, commit) in vector.commits.iter().enumerate() {
             let batch = CommandBatch::new(vec![fixture_envelope(&commit.write, &str::to_string).await]).await.expect("batch");
@@ -168,12 +164,12 @@ async fn a_write_is_graded_only_against_unseen_foreign_writes_to_the_same_part()
 /// `normal` a grading refusal commits; an admission refusal never does, and is skipped.
 #[semio_framework_async_macros::async_test]
 async fn the_history_replays_every_committed_write_with_its_observation_and_target() {
-    if !db_storage::process_isolated_law("db_artifact::concurrent_write_tests::the_history_replays_every_committed_write_with_its_observation_and_target") {
+    if !db_io_driver::process_isolated_law("concurrent_write_tests::the_history_replays_every_committed_write_with_its_observation_and_target") {
         return;
     }
     let _history_capacity = history_capacity_test_lock();
     let fixture = fixture();
-    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.expect("memory storage")));
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.expect("memory storage")));
     let mut engine = ArtifactEngine::create_retained(protocol::ArtifactId("doc-1".to_string()), storage, ArtifactEngineConfig::default(), 0).await.expect("retained engine");
     let mut committed: Vec<String> = Vec::new();
     for vector in &fixture.vectors {
@@ -205,7 +201,7 @@ async fn the_history_replays_every_committed_write_with_its_observation_and_targ
 /// its targets or its payload does not decode, and every refusal leaves the log untouched whatever the policy.
 #[semio_framework_async_macros::async_test]
 async fn a_supersession_is_admitted_by_its_targets_never_by_its_author() {
-    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.expect("memory storage")));
+    let storage = Arc::new(db_storage::DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.expect("memory storage")));
     let mut engine = ArtifactEngine::create(protocol::ArtifactId("doc-1".to_string()), storage, ArtifactEngineConfig::default(), 0).expect("engine");
     let write = |id: &str, actor: &str, target: &str| Write { id: id.into(), actor: actor.into(), observed: None, writes: Writes { target: Some(vec![target.into()]), paths: None, transition: None, supersede: None } };
     let supersede = |id: &str, actor: &str, targets: &[&str]| Write {

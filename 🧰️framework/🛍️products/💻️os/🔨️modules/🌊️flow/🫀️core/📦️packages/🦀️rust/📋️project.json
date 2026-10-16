@@ -167,13 +167,20 @@
         "cwd": "{projectRoot}"
       },
       "outputs": [
-        "{projectRoot}/../../🕸️bindings",
-        "{projectRoot}/../../../📦️packages/🦀️rust/🕸️bindings"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/flow"
       ],
       "cache": true,
       "inputs": [
         "flowBrowserProduction"
-      ]
+      ],
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

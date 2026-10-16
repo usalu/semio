@@ -1,4 +1,7 @@
-use super::*;
+
+use semio_hub_inference::schema::approval::InferenceApprovalRequestV1;
+use semio_hub_inference::InferenceErrorV1;
+use semio_hub_inference::schema::REQUEST_MAX_BYTES;
 
 #[test]
 fn inference_approval_request_accepts_only_job_digest_and_exact_body_bound() {

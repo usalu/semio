@@ -2,20 +2,13 @@
 //!
 //! The chrome input ledger, the world camera ledger rows, the chrome accessibility projection and the chrome dump.
 
-use super::ink_and_vfs_focus::{
-    InkClipboardAddress, FOCUSED_INK_EDITOR, FOCUSED_INK_SURFACE, FOCUSED_VFS_CONTROL,
-    INK_CLIPBOARD_STREAMS, TEXT_EDITOR_INPUT_STREAMS,
-};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{InkClipboardAddress, FOCUSED_INK_EDITOR, FOCUSED_INK_SURFACE, FOCUSED_VFS_CONTROL, INK_CLIPBOARD_STREAMS, TEXT_EDITOR_INPUT_STREAMS};
 #[cfg(not(target_arch = "wasm32"))]
-use super::ink_and_vfs_focus::{
-    PENDING_NATIVE_INK_CLIPBOARD, PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD,
-};
-use super::introspection::build_accessibility_dump;
-use super::retained_ui_engine::{SCENE_INTENTS, SCENE_POINTER_OWNERS, UI_ENGINE};
-use super::text_and_table_focus::{
-    FocusedNodeGraphCaret, FOCUSED_NODE_GRAPH_CARET, FOCUSED_TABLE_EDITABLE_TEXT,
-    FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR,
-};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{PENDING_NATIVE_INK_CLIPBOARD, PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD};
+use crate::introspection::build_accessibility_dump;
+use semio_framework_os_renderer_wgpu_ui_engine_focus::scene_intents_and_clipboard::SCENE_INTENTS;
+use semio_framework_os_renderer_wgpu_contracts::{SCENE_POINTER_OWNERS, UI_ENGINE};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::{FocusedNodeGraphCaret, FOCUSED_NODE_GRAPH_CARET, FOCUSED_TABLE_EDITABLE_TEXT, FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR};
 use crate::element_contracts::{WorkerCell, SCENE_POINTER_OWNER_CAPACITY};
 use serde_json::Value;
 use ui_wgpu::wgpu::{ActionDescriptor, NodeId, Rect, UiNode};
@@ -35,23 +28,23 @@ use ui_wgpu::wgpu::{ActionDescriptor, NodeId, Rect, UiNode};
  * registry rows per published walk, `CHROME_ACTION_CAPACITY` remembered dispatches, and
  * `CHROME_ACTION_ARGS_BYTES` of each dispatch's arguments. */
 const CHROME_HIT_CAPACITY: usize = 2_048;
-pub(super) const CHROME_ACTION_CAPACITY: usize = 128;
-pub(super) const CHROME_ACTION_ARGS_BYTES: usize = 512;
+pub const CHROME_ACTION_CAPACITY: usize = 128;
+pub const CHROME_ACTION_ARGS_BYTES: usize = 512;
 
 /// 🎯️ One registered pointer target of the last published chrome walk, at the ABSOLUTE page rect it
 /// was registered with — the rect a probe aims a pointer at, no dock-plan reconstruction needed.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpHitTarget {
-    pub(super) control_id: String,
-    pub(super) kind: String,
-    pub(super) rect: [f32; 4],
+    pub control_id: String,
+    pub kind: String,
+    pub rect: [f32; 4],
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) window_id: Option<String>,
+    pub window_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) controller_id: Option<String>,
+    pub controller_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) action: Option<String>,
+    pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     drag_axis: Option<String>,
 }
@@ -61,20 +54,20 @@ struct DumpHitTarget {
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpDispatchedAction {
-    pub(super) seq: u64,
-    pub(super) controller_id: String,
-    pub(super) action: String,
+    pub seq: u64,
+    pub controller_id: String,
+    pub action: String,
     /// 🪪️ React's `InputOriginV1` — `user` for a control press, `gesture` for a pointer/camera stream
     /// an engine surface derived from raw input. The DOM host's input ledger records it on every row
     /// (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`), and a probe that reads one shape from both renderers
     /// cannot tell a world drag from a navbar click without it: before this the parity probe stamped
     /// every wgpu row `"shell"` by hand (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
     /// `🐍️parity-interact-probe.mjs`).
-    pub(super) origin: String,
+    pub origin: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) window_id: Option<String>,
+    pub window_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) args: Option<String>,
+    pub args: Option<String>,
     at_ms: f64,
 }
 
@@ -92,17 +85,17 @@ struct DumpDispatchedAction {
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpSurface {
-    pub(super) id: String,
-    pub(super) level: String,
-    pub(super) element_id: String,
+    pub id: String,
+    pub level: String,
+    pub element_id: String,
 }
 
 #[derive(Default)]
-pub(super) struct ChromeLedger {
-    pub(super) hits: Vec<DumpHitTarget>,
-    pub(super) surfaces: Vec<DumpSurface>,
-    pub(super) generation: u64,
-    pub(super) actions: std::collections::VecDeque<DumpDispatchedAction>,
+pub struct ChromeLedger {
+    pub hits: Vec<DumpHitTarget>,
+    pub surfaces: Vec<DumpSurface>,
+    pub generation: u64,
+    pub actions: std::collections::VecDeque<DumpDispatchedAction>,
     next_seq: u64,
     /// 🩺️ The last census a PARKED chrome walk published. `generation: 0` says only "no walk ever
     /// completed"; this says WHICH phase is holding the frame, which is the whole difference
@@ -111,32 +104,11 @@ pub(super) struct ChromeLedger {
     parked: Option<String>,
 }
 
-pub(super) static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new(Default::default);
-
-/// 🎥️ The LIVE orbit of every world surface that painted this frame, keyed by surface id — the
-/// diagnostics twin of [`CHROME_LEDGER`], and for the same reason: `dumpMeshStats` reaches only
-/// `UI_ENGINE`, while the orbit lives on the shell's `world3d_states`, so the shell has to hand it
-/// over at the one point per frame where it holds both the surface id and the state.
-pub(super) static WORLD_CAMERA_LEDGER: WorkerCell<std::collections::BTreeMap<String, Value>> = WorkerCell::new(Default::default);
-
-/** 🎥️ Records ONE world surface's live orbit. Called once per surface per painted frame from
- * `🎞️Scenes/🎯️targets/🧊️wgpu`'s world3d render, gated on runtime diagnostics exactly as the chrome
- * ledger is, so a production frame pays nothing. */
-pub fn note_world3d_live_camera(surface_id: &str, camera: Value) {
-    if !semio_framework_trace::runtime_diagnostics_enabled() {
-        return;
-    }
-    WORLD_CAMERA_LEDGER.borrow_mut().insert(surface_id.to_string(), camera);
-}
-
-/// 🧹️ Transfers one exact component's diagnostic payload to its bounded retirement cursor.
-pub(crate) fn take_world_camera_diagnostic(host_id: &str) -> Option<(String, Value)> {
-    WORLD_CAMERA_LEDGER.borrow_mut().remove_entry(host_id)
-}
+pub static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new(Default::default);
 
 /// 🎥️ The live orbit this surface last recorded, if diagnostics were on when it painted.
-#[cfg(any(target_arch = "wasm32", test))]
-pub(super) fn world_camera_ledger_row(surface_id: &str) -> Option<Value> {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn world_camera_ledger_row(surface_id: &str) -> Option<Value> {
     WORLD_CAMERA_LEDGER.borrow().get(surface_id).cloned()
 }
 
@@ -155,7 +127,7 @@ fn chrome_ledger_now_ms() -> f64 {
 }
 
 /// ✂️ Args as JSON, truncated on a CHARACTER boundary so the dump is always parseable text.
-pub(super) fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
+pub fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
     let args = action.args.as_ref()?;
     let mut json = semio_framework_pack_json::from_dsl_value(args).to_string();
     if json.len() > CHROME_ACTION_ARGS_BYTES {
@@ -167,7 +139,7 @@ pub(super) fn chrome_action_args(action: &ActionDescriptor) -> Option<String> {
 
 /// 🎯️ Projects one published registry row, naming the retained body that minted its control id when
 /// `owners` knows it — chrome rows own no window and answer `None`, which is how a probe tells the two apart.
-pub(super) fn chrome_hit_row(hit: &ui_wgpu::wgpu::HitTarget<ActionDescriptor>, owners: &std::collections::HashMap<String, (String, Rect)>) -> DumpHitTarget {
+pub fn chrome_hit_row(hit: &ui_wgpu::wgpu::HitTarget<ActionDescriptor>, owners: &std::collections::HashMap<String, (String, Rect)>) -> DumpHitTarget {
     let control_id = hit.control_id.clone().unwrap_or_default();
     DumpHitTarget {
         window_id: owners.get(&control_id).map(|(window_id, _)| window_id.clone()),
@@ -198,40 +170,40 @@ pub fn note_chrome_accessibility(generation: u64, nodes: Vec<ui_contract::Access
 }
 
 /// ♿️ The window id the chrome announces under — a shell-owned surface, never one of the app's.
-pub(crate) const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
+pub const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
 
 /// ♿️ Every announced window's accessibility projection — the chrome's and each visible document window's, in reading
 /// order — for the native shell's platform bridge (`♿️native-accessibility`): the same dump the browser build's DOM
 /// mirror renders, so both shells announce one tree (ticket 26/09/23 slice WG10).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn native_accessibility_windows() -> Vec<crate::native_accessibility::NativeAccessibilityWindow> {
+pub fn native_accessibility_windows() -> Vec<semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow> {
     UI_ENGINE
         .with(|cell| build_accessibility_dump(&cell.borrow(), None))
         .windows
         .into_iter()
-        .map(|window| crate::native_accessibility::NativeAccessibilityWindow { window_id: window.window_id, window_generation: window.window_generation, nodes: window.nodes })
+        .map(|window| semio_framework_os_renderer_wgpu_native_platform::native_accessibility::NativeAccessibilityWindow { window_id: window.window_id, window_generation: window.window_generation, nodes: window.nodes })
         .collect()
 }
 
 #[derive(Clone, Default)]
 struct ChromeAccessibilityPublication {
-    pub(super) generation: u64,
-    pub(super) nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+    pub generation: u64,
+    pub nodes: Vec<ui_contract::AccessibilityProjectionNode>,
 }
 
-pub(super) static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new(Default::default);
+pub static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new(Default::default);
 
 const ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY: usize = 256;
 
 #[derive(Default)]
 struct AccessibilityVisibleWindows {
-    pub(super) published: Vec<String>,
+    pub published: Vec<String>,
     staging: Vec<String>,
 }
 
-pub(super) static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
+pub static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
 
-pub(crate) fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)> {
+pub fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)> {
     let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
@@ -240,11 +212,11 @@ pub(crate) fn staged_retained_clock_surfaces() -> Vec<(String, ui_wgpu::wgpu::Ui
 }
 
 /// 🎬️ The accepted original engine supplies its retained tree loans to the actual paid media continuation.
-pub(crate) fn drive_presented_media_slots(source:&crate::media_slots::original_collect::PresentedRosterSource<'_>,cursor:&mut crate::media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<crate::media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.advance(source,&mut cell.borrow_mut(),output,cx))}
+pub fn drive_presented_media_slots(source:&semio_framework_os_renderer_wgpu_media_slots::original_collect::PresentedRosterSource<'_>,cursor:&mut semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.advance(source,&mut cell.borrow_mut(),output,cx))}
 /// ♻️ The same original engine receives every retained accepted tree loan before media source retirement completes.
-pub(crate) fn close_presented_media_slots(cursor:&mut crate::media_slots::original_collect::OriginalPresentedRoster,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.close_step(&mut cell.borrow_mut(),cx))}
+pub fn close_presented_media_slots(cursor:&mut semio_framework_os_renderer_wgpu_media_slots::original_collect::OriginalPresentedRoster,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{UI_ENGINE.with(|cell|cursor.close_step(&mut cell.borrow_mut(),cx))}
 
-pub(crate) fn presented_retained_clock_deadline(surfaces: &[(String, ui_wgpu::wgpu::UiSurfaceToken)]) -> Option<f64> {
+pub fn presented_retained_clock_deadline(surfaces: &[(String, ui_wgpu::wgpu::UiSurfaceToken)]) -> Option<f64> {
     UI_ENGINE.with(|cell| cell.borrow().surfaces_next_clock_deadline(surfaces))
 }
 
@@ -275,10 +247,10 @@ pub fn presented_input_candidate_matches(witness: u64) -> bool {
 }
 
 struct PresentedEditorNodeRebase {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
+    pub window_id: String,
+    pub window_generation: u64,
     old_node: NodeId,
-    pub(super) host_id: String,
+    pub host_id: String,
     candidate_node: Option<NodeId>,
 }
 
@@ -288,13 +260,13 @@ struct PresentedInkClipboardRebase {
 }
 
 struct PresentedEditorRebase {
-    pub(super) text: Option<PresentedEditorNodeRebase>,
-    pub(super) node_graph: Option<PresentedEditorNodeRebase>,
+    pub text: Option<PresentedEditorNodeRebase>,
+    pub node_graph: Option<PresentedEditorNodeRebase>,
     text_streams: [Option<(u64, PresentedEditorNodeRebase)>; 32],
     #[cfg(not(target_arch = "wasm32"))]
     native_text: [Option<(u64, PresentedEditorNodeRebase)>; 32],
     table_editable: Option<PresentedEditorNodeRebase>,
-    pub(super) table: Option<PresentedEditorNodeRebase>,
+    pub table: Option<PresentedEditorNodeRebase>,
     vfs: Option<PresentedEditorNodeRebase>,
     ink: Option<PresentedEditorNodeRebase>,
     ink_surface: Option<PresentedInkClipboardRebase>,
@@ -370,7 +342,7 @@ fn prepare_presented_editor_rebase(engine: &ui_wgpu::wgpu::Ui, witness: u64) -> 
     let vfs = FOCUSED_VFS_CONTROL.with(|cell| {
         cell.borrow().as_ref().and_then(|focus| {
             let mut rebase = prepare_presented_editor_node_rebase(engine, witness, &focus.window_id, focus.window_generation, focus.node, &focus.host_id, ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem)?;
-            if rebase.candidate_node.is_some() && !crate::scenes::vfs_accessibility_control_survives_candidate(&focus.host_id, &focus.target, witness) {
+            if rebase.candidate_node.is_some() && !semio_framework_os_renderer_wgpu_scene_feeds::vfs_accessibility_control_survives_candidate(&focus.host_id, &focus.target, witness) {
                 rebase.candidate_node = None;
             }
             Some(rebase)
@@ -624,7 +596,7 @@ pub fn acknowledge_presented_input(witness: u64) -> bool {
         (acknowledged, retired_canvas_hosts)
     });
     for host_id in retired_canvas_hosts {
-        crate::scenes::request_canvas_pointer_gesture_cancel_for_host(&host_id);
+        semio_framework_os_renderer_wgpu_scene_state::request_canvas_pointer_gesture_cancel_for_host(&host_id);
     }
     acknowledged
 }
@@ -633,14 +605,14 @@ pub fn discard_presented_input_candidate(witness: u64) -> bool {
     UI_ENGINE.with(|cell| cell.borrow_mut().discard_presented_input_candidate(witness))
 }
 
-pub(super) fn accessibility_window_is_visible(window_id: &str) -> bool {
+pub fn accessibility_window_is_visible(window_id: &str) -> bool {
     ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.iter().any(|visible| visible == window_id)
 }
 
 /// 🎯️ The first node a visible retained window offers to `pick` from its accessibility projection (the one the ARIA mirror
 /// reads), addressed exactly as a reader's accessibility event addresses it — so the shell can move keyboard focus to it
 /// through [`dispatch_accessibility_event`]. Visible windows are asked in publication order; `None` when none shows it.
-pub(crate) fn visible_retained_accessibility_target(pick: impl Fn(&[ui_contract::AccessibilityProjectionNode]) -> Option<usize>) -> Option<ui_render::AccessibilityTarget> {
+pub fn visible_retained_accessibility_target(pick: impl Fn(&[ui_contract::AccessibilityProjectionNode]) -> Option<usize>) -> Option<ui_render::AccessibilityTarget> {
     let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.clone();
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
@@ -652,14 +624,14 @@ pub(crate) fn visible_retained_accessibility_target(pick: impl Fn(&[ui_contract:
     })
 }
 
-#[cfg(test)]
-pub(crate) fn published_accessibility_nodes_for_test(window_id: &str) -> Vec<ui_contract::AccessibilityProjectionNode> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn published_accessibility_nodes_for_test(window_id: &str) -> Vec<ui_contract::AccessibilityProjectionNode> {
     let dump = UI_ENGINE.with(|cell| build_accessibility_dump(&cell.borrow(), None));
     dump.windows.into_iter().find(|window| window.window_id == window_id).map(|window| window.nodes).unwrap_or_default()
 }
 
-#[cfg(test)]
-pub(crate) fn candidate_tree_item_selected_for_test(window_id: &str, key: &str) -> Option<bool> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn candidate_tree_item_selected_for_test(window_id: &str, key: &str) -> Option<bool> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         let tree = engine.candidate_tree(window_id)?;
@@ -667,16 +639,16 @@ pub(crate) fn candidate_tree_item_selected_for_test(window_id: &str, key: &str) 
     })
 }
 
-#[cfg(test)]
-pub(crate) fn published_accessibility_target_for_test(window_id: &str, key: &str) -> Option<ui_render::AccessibilityTarget> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn published_accessibility_target_for_test(window_id: &str, key: &str) -> Option<ui_render::AccessibilityTarget> {
     let dump = UI_ENGINE.with(|cell| build_accessibility_dump(&cell.borrow(), None));
     let window = dump.windows.into_iter().find(|window| window.window_id == window_id)?;
     let node = window.nodes.into_iter().find(|node| node.key == key)?;
     Some(ui_render::AccessibilityTarget { window_id: window.window_id, window_generation: window.window_generation, node_id: node.node_id, node_key: node.key })
 }
 
-#[cfg(test)]
-pub(crate) fn accessibility_visible_window_ids() -> Vec<String> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn accessibility_visible_window_ids() -> Vec<String> {
     ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.clone()
 }
 
@@ -688,7 +660,7 @@ pub fn note_chrome_hit_registry(hits: &[ui_wgpu::wgpu::HitTarget<ActionDescripto
 }
 
 /// 🎯️ The pure half of `note_chrome_hit_registry`, over a ledger a law can own.
-pub(super) fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
+pub fn ledger_publish_hits(ledger: &mut ChromeLedger, hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
     ledger.hits = hits.iter().take(CHROME_HIT_CAPACITY).map(|hit| chrome_hit_row(hit, owners)).collect();
     ledger.generation += 1;
 }
@@ -707,7 +679,7 @@ pub fn note_chrome_surfaces(surfaces: &[(String, &'static str, String)]) {
 /// 🪟️ The pure half of `note_chrome_surfaces`, bounded by the registry's own row ceiling and sorted,
 /// so a probe diffs two censuses without re-sorting them and a frame that reorders its walk does not
 /// read as a surface change.
-pub(super) fn ledger_publish_surfaces(ledger: &mut ChromeLedger, surfaces: &[(String, &'static str, String)]) {
+pub fn ledger_publish_surfaces(ledger: &mut ChromeLedger, surfaces: &[(String, &'static str, String)]) {
     let mut rows: Vec<DumpSurface> = surfaces.iter().take(CHROME_HIT_CAPACITY).map(|(id, level, element_id)| DumpSurface { id: id.clone(), level: (*level).to_string(), element_id: element_id.clone() }).collect();
     rows.sort_by(|left, right| left.level.cmp(&right.level).then_with(|| left.id.cmp(&right.id)));
     rows.dedup();
@@ -726,7 +698,7 @@ pub fn note_dispatched_action(action: &ActionDescriptor, origin: &str) {
 
 /// 🎬️ The pure half of `note_dispatched_action`: mints the next `seq` and trims the oldest entry past
 /// `CHROME_ACTION_CAPACITY`, so the ledger's footprint is fixed however long a session runs.
-pub(super) fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor, origin: &str) {
+pub fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor, origin: &str) {
     let window_id = action.args.as_ref().and_then(|args| args.get("windowId").or_else(|| args.get("surfaceId"))).and_then(semio_framework::DslValue::as_str).map(str::to_string);
     ledger.next_seq += 1;
     let entry = DumpDispatchedAction { seq: ledger.next_seq, controller_id: action.controller_id.clone(), action: action.action.clone(), origin: origin.to_string(), window_id, args: chrome_action_args(action), at_ms: chrome_ledger_now_ms() };
@@ -736,25 +708,25 @@ pub(super) fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescr
     }
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpChrome {
-    pub(super) armed: bool,
-    pub(super) generation: u64,
+    pub armed: bool,
+    pub generation: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) window_id: Option<String>,
+    pub window_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     parked: Option<String>,
-    pub(super) hits: Vec<DumpHitTarget>,
-    pub(super) surfaces: Vec<DumpSurface>,
-    pub(super) actions: Vec<DumpDispatchedAction>,
+    pub hits: Vec<DumpHitTarget>,
+    pub surfaces: Vec<DumpSurface>,
+    pub actions: Vec<DumpDispatchedAction>,
 }
 
 /// 🎯️ A named window keeps that window's body rows PLUS every chrome row (which owns no window and is
 /// what the caller is usually aiming at); an unnamed read answers the whole registry.
-#[cfg(any(target_arch = "wasm32", test))]
-pub(super) fn project_chrome_dump(ledger: &ChromeLedger, requested: Option<&str>, armed: bool) -> DumpChrome {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn project_chrome_dump(ledger: &ChromeLedger, requested: Option<&str>, armed: bool) -> DumpChrome {
     let named = requested.filter(|id| !id.is_empty()).map(str::to_string);
     let hits = match &named {
         Some(id) => ledger.hits.iter().filter(|hit| hit.window_id.as_deref().is_none_or(|owner| owner == id)).cloned().collect(),
@@ -780,3 +752,5 @@ pub fn note_chrome_walk_parked(census: &str) {
     }
 }
 //#endregion 🎯️ChromeLedger
+
+pub use semio_framework_os_renderer_wgpu_scene_state::{note_world3d_live_camera, take_world_camera_diagnostic, WORLD_CAMERA_LEDGER};

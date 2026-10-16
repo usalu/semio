@@ -1,4 +1,4 @@
-use super::*;
+use crate::viewer::procedure::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {

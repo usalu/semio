@@ -33,7 +33,7 @@ fn exact_live_pump_binding(source: &str) -> bool {
 
 #[test]
 fn cooperative_maintenance_live_host_revisits_queued_owner() {
-    let source = include_str!("../../⚛️reactor/🏃️runtime/🦀️.rs");
+    let source = semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../⚛️reactor/🏃️runtime/🦀️.rs")).expect("the runtime module tree reads");
     assert!(exact_live_pump_binding(source), "queued maintenance must retain one actual host pump opportunity");
     for hostile in [
         source.replace("pump_runtime_live_cooperative_turn(cell)?;", "other_pump(cell)?;"),

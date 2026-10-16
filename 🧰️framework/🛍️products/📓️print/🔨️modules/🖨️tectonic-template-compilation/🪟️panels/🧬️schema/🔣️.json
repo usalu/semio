@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PrintPanelRasterWork",
+  "type": "array",
+  "maxItems": 256,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "page",
+      "xPt",
+      "yPt",
+      "wPt",
+      "hPt"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]*$",
+        "maxLength": 80
+      },
+      "page": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 512
+      },
+      "xPt": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "yPt": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100000
+      },
+      "wPt": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 100000
+      },
+      "hPt": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 100000
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumManifestBytes": 65536,
+        "maximumPdfBytes": 67108864,
+        "maximumPages": 512,
+        "maximumPanels": 256,
+        "maximumPagePixels": 16777216,
+        "maximumRenderedPixels": 134217728,
+        "maximumOutputBytes": 67108864,
+        "maximumPngBytes": 16777216,
+        "maximumWorkers": 1,
+        "dpi": 200
+      }
+    }
+  }
+}

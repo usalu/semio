@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
+use crate::standards::v_raw::subsets::any::schema::inferences::extent::*;
 
 #[semio_framework_async_macros::async_test]
 async fn real_bytes_yield_a_real_nonzero_extent() {

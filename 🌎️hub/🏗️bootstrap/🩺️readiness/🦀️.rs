@@ -9,28 +9,27 @@ use axum::routing::get;
 use axum::{Json, Router};
 use futures::{SinkExt, StreamExt};
 use semio_framework_trace::record::Tracer;
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::artifact_authority::trusted_catalog::schema::TrustedCatalogLoadProgressV1;
-use semio_hub::directory::model::DocumentScope;
-use semio_hub::directory::LocalBootstrapTransport;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_trusted_catalog_contract::schema::TrustedCatalogLoadProgressV1;
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::LocalBootstrapTransport;
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use crate::startup::{HubError, StartupProgressCellV1};
-use crate::state::HubState;
 use crate::transport::{ForwardedTlsTrustV1, refusal_middleware, transport_security_middleware, CrossOriginPolicyV1, cors_middleware};
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 🔖️AdminAuth
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum HubMode {
+pub enum HubMode {
     Production,
     Development,
 }
 
 impl HubMode {
-    pub(crate) fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
+    pub fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
         match std::env::var("OS_HUB_MODE").ok().as_deref() {
             Some("production") => Ok(Self::Production),
             Some("development") => Ok(Self::Development),
@@ -43,25 +42,25 @@ impl HubMode {
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct HubReadinessV1 {
-    pub(crate) schema: &'static str,
-    pub(crate) status: &'static str,
-    pub(crate) run_id: String,
+pub struct HubReadinessV1 {
+    pub schema: &'static str,
+    pub status: &'static str,
+    pub run_id: String,
     pub(crate) mode: &'static str,
     pub(crate) bind_scope: &'static str,
-    pub(crate) authentication: HubAuthenticationReadinessV1,
-    pub(crate) directory: HubComponentReadinessV1,
-    pub(crate) storage: HubComponentReadinessV1,
+    pub authentication: HubAuthenticationReadinessV1,
+    pub directory: HubComponentReadinessV1,
+    pub storage: HubComponentReadinessV1,
     artifact_cas_barrier: HubComponentReadinessV1,
-    pub(crate) artifact_publication: HubComponentReadinessV1,
-    pub(crate) artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1,
-    pub(crate) artifact_authority: HubComponentReadinessV1,
+    pub artifact_publication: HubComponentReadinessV1,
+    pub artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1,
+    pub artifact_authority: HubComponentReadinessV1,
     admin_assets: HubComponentReadinessV1,
-    pub(crate) features: HubFeatureReadinessV1,
+    pub features: HubFeatureReadinessV1,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub(crate) blocked_by: Vec<HubClosedReadinessGateV1>,
+    pub blocked_by: Vec<HubClosedReadinessGateV1>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) startup: Option<HubStartupProgressV1>,
+    pub startup: Option<HubStartupProgressV1>,
 }
 
 /// 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
@@ -69,12 +68,12 @@ pub(crate) struct HubReadinessV1 {
 /// selected its packages. Present only while the hub starts.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct HubStartupProgressV1 {
-    pub(crate) stage: &'static str,
-    pub(crate) completed_units: u64,
-    pub(crate) total_units: u64,
+pub struct HubStartupProgressV1 {
+    pub stage: &'static str,
+    pub completed_units: u64,
+    pub total_units: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) catalog: Option<TrustedCatalogLoadProgressV1>,
+    pub catalog: Option<TrustedCatalogLoadProgressV1>,
 }
 
 /// 🧭️ One named readiness gate that is holding `status` at `not-ready`, with the stable reason code a
@@ -82,9 +81,9 @@ pub(crate) struct HubStartupProgressV1 {
 /// list entirely once every required gate is open, so a ready hub's body is unchanged.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct HubClosedReadinessGateV1 {
-    pub(crate) gate: &'static str,
-    pub(crate) reason: &'static str,
+pub struct HubClosedReadinessGateV1 {
+    pub gate: &'static str,
+    pub reason: &'static str,
 }
 
 #[derive(Clone, Serialize)]
@@ -137,23 +136,23 @@ pub(crate) struct HubFeatureReadinessV1 {
 /// document without a checkpoint could no longer be opened).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct HubCheckpointPolicyV1 {
-    pub(crate) edits: u64,
-    pub(crate) payload_bytes: u64,
+pub struct HubCheckpointPolicyV1 {
+    pub edits: u64,
+    pub payload_bytes: u64,
 }
 
 /// 📌️ The declared default policy: 1 024 edits or 512 KiB of payload, well inside a browser client's pre-activation tail
 /// retention (64 frames, 1 MiB).
-pub(crate) const HUB_CHECKPOINT_POLICY: HubCheckpointPolicyV1 = HubCheckpointPolicyV1 { edits: 1_024, payload_bytes: 512 * 1024 };
+pub const HUB_CHECKPOINT_POLICY: HubCheckpointPolicyV1 = HubCheckpointPolicyV1 { edits: 1_024, payload_bytes: 512 * 1024 };
 
-pub(crate) const CHECKPOINT_POLICY_EDITS_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_EDITS";
+pub const CHECKPOINT_POLICY_EDITS_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_EDITS";
 
-pub(crate) const CHECKPOINT_POLICY_BYTES_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_BYTES";
+pub const CHECKPOINT_POLICY_BYTES_ENV: &str = "OS_HUB_CHECKPOINT_POLICY_BYTES";
 
 impl HubCheckpointPolicyV1 {
     /// 🎚️ The operator's policy: each bound decimal within the schema's range, absent means the declared default, anything else
     /// fails boot.
-    pub(crate) fn configured(edits: Option<&str>, payload_bytes: Option<&str>) -> Result<Self, String> {
+    pub fn configured(edits: Option<&str>, payload_bytes: Option<&str>) -> Result<Self, String> {
         let bounded = |value: Option<&str>, name: &str, bounds: std::ops::RangeInclusive<u64>, default: u64| match value.map(str::trim).filter(|text| !text.is_empty()) {
             None => Ok(default),
             Some(text) => text.parse::<u64>().ok().filter(|bound| bounds.contains(bound)).ok_or_else(|| format!("{name} must be a decimal integer from {} to {}", bounds.start(), bounds.end())),
@@ -165,10 +164,10 @@ impl HubCheckpointPolicyV1 {
 /// 🧮️ What one written document committed since the hub last weighed its checkpoint policy, and whether a policy
 /// Check In of it runs.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) struct CheckpointPolicyTallyV1 {
-    pub(crate) edits: u64,
-    pub(crate) payload_bytes: u64,
-    pub(crate) running: bool,
+pub struct CheckpointPolicyTallyV1 {
+    pub edits: u64,
+    pub payload_bytes: u64,
+    pub running: bool,
 }
 
 /// 🧮️ How many documents one hub tallies at once; past it the tallies of documents with no Check In running restart.
@@ -176,14 +175,14 @@ const CHECKPOINT_POLICY_DOCUMENTS_MAX: usize = 65_536;
 
 /// 🧮️ The per-document tallies of the checkpoint policy.
 #[derive(Default)]
-pub(crate) struct CheckpointPolicyLedgerV1 {
+pub struct CheckpointPolicyLedgerV1 {
     pub(crate) documents: Mutex<std::collections::HashMap<DocumentScope, CheckpointPolicyTallyV1>>,
 }
 
 impl CheckpointPolicyLedgerV1 {
     /// ➕️ Adds one committed batch to `scope`'s tally: `true` when the tally reached `policy` and no policy Check In of the
     /// document runs — the caller starts one, the tally restarts and stays running until [`Self::finish`].
-    pub(crate) fn observe(&self, scope: &DocumentScope, edits: u64, payload_bytes: u64, policy: HubCheckpointPolicyV1) -> bool {
+    pub fn observe(&self, scope: &DocumentScope, edits: u64, payload_bytes: u64, policy: HubCheckpointPolicyV1) -> bool {
         let mut documents = self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if !documents.contains_key(scope) && documents.len() >= CHECKPOINT_POLICY_DOCUMENTS_MAX {
             documents.retain(|_, tally| tally.running);
@@ -202,14 +201,14 @@ impl CheckpointPolicyLedgerV1 {
     }
 
     /// 🏁️ Ends `scope`'s policy Check In; the edits committed meanwhile stay tallied.
-    pub(crate) fn finish(&self, scope: &DocumentScope) {
+    pub fn finish(&self, scope: &DocumentScope) {
         if let Some(tally) = self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get_mut(scope) {
             tally.running = false;
         }
     }
 
     #[cfg(test)]
-    pub(crate) fn tally(&self, scope: &DocumentScope) -> Option<CheckpointPolicyTallyV1> {
+    pub fn tally(&self, scope: &DocumentScope) -> Option<CheckpointPolicyTallyV1> {
         self.documents.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(scope).copied()
     }
 }
@@ -229,7 +228,7 @@ pub(crate) struct HubInferenceServiceReadinessV1 {
 /// well-formed space or user id, so it can never collide with a real row in any data root, and the
 /// probe's answer is therefore always the empty page — what is being read is whether the backend
 /// implements the family at all, never what it holds.
-pub(crate) const AGENT_DELEGATION_READINESS_PROBE_SCOPE: &str = "readiness-probe/mcp-workspace";
+pub const AGENT_DELEGATION_READINESS_PROBE_SCOPE: &str = "readiness-probe/mcp-workspace";
 
 /// 🤖️ Whether a headless `semio-os-mcp --hub <url> --space <id> --credential-file <path>` workspace
 /// can be served by THIS hub, as opposed to being compiled into it.
@@ -249,7 +248,7 @@ const fn mcp_workspace_ready(agent_delegation_ready: bool, open_plan_ready: bool
     agent_delegation_ready && open_plan_ready
 }
 
-pub(crate) fn hub_readiness(
+pub fn hub_readiness(
     mode: HubMode,
     bind_scope: &'static str,
     run_id: String,
@@ -263,7 +262,7 @@ pub(crate) fn hub_readiness(
     inference_ready: bool,
     artifact_authority_reason: &'static str,
 ) -> HubReadinessV1 {
-    let inference_services = if inference_ready { vec![HubInferenceServiceReadinessV1 { service_id: semio_hub::inference::schema::GIS_SERVICE_ID, route: semio_hub::inference::schema::GIS_SERVICE_ROUTE }] } else { Vec::new() };
+    let inference_services = if inference_ready { vec![HubInferenceServiceReadinessV1 { service_id: semio_hub_inference::schema::GIS_SERVICE_ID, route: semio_hub_inference::schema::GIS_SERVICE_ROUTE }] } else { Vec::new() };
     let authentication_kind = match mode {
         HubMode::Development => "local-bootstrap-pipe-v1",
         HubMode::Production => "identity-assertion-verifier",
@@ -321,7 +320,7 @@ pub(crate) fn hub_readiness(
 /// 🌅️ The readiness of a hub that has bound its socket but not yet opened its stores or loaded
 /// its trusted catalog: every component gate closed with `hub-starting`, the artifact authority with
 /// `trusted-catalog-loading`, and no feature served yet.
-pub(crate) fn hub_starting_readiness(mode: HubMode, bind_scope: &'static str, run_id: String, bootstrap_ready: bool, credential_sign_in_enabled: bool, artifact_cas_sweep_execute: bool) -> HubReadinessV1 {
+pub fn hub_starting_readiness(mode: HubMode, bind_scope: &'static str, run_id: String, bootstrap_ready: bool, credential_sign_in_enabled: bool, artifact_cas_sweep_execute: bool) -> HubReadinessV1 {
     let readiness = declare_public_session_issuance(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, false, false, false, false, false, artifact_cas_sweep_execute, false, HUB_STARTING_CATALOG_REASON), credential_sign_in_enabled);
     let mut blocked_by = vec![HubClosedReadinessGateV1 { gate: "directory", reason: HUB_STARTING_REASON }, HubClosedReadinessGateV1 { gate: "storage", reason: HUB_STARTING_REASON }];
     blocked_by.extend(readiness.blocked_by.iter().filter(|closed| closed.gate == "authentication.bootstrapReady").cloned());
@@ -360,7 +359,7 @@ const HUB_STARTING_CATALOG_REASON: &str = "trusted-catalog-loading";
 /// probe caught a hub printing `[INFO] os-hub ready at …` while its own `/readyz` answered
 /// `503 not-ready`; the two facts are now the same fact by construction, and a `not-ready` status
 /// with no named gate still warns rather than claiming readiness.
-pub(crate) fn startup_readiness_line(readiness: &HubReadinessV1, addr: &SocketAddr) -> String {
+pub fn startup_readiness_line(readiness: &HubReadinessV1, addr: &SocketAddr) -> String {
     if readiness.status == "ready" && readiness.blocked_by.is_empty() {
         return format!("[INFO] os-hub ready at http://{addr}");
     }
@@ -375,7 +374,7 @@ pub(crate) fn startup_readiness_line(readiness: &HubReadinessV1, addr: &SocketAd
 /// 📝️ The same readiness fact as [`startup_readiness_line`], in the stable-code shape a
 /// `server.readiness` record's `detail` carries: `addr`, the bind scope and each closed gate by its
 /// own reason code, never a prose sentence a collector would have to parse.
-pub(crate) fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAddr, bind_scope: &str) -> String {
+pub fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAddr, bind_scope: &str) -> String {
     let mut detail = format!("addr={addr} scope={bind_scope}");
     for closed in &readiness.blocked_by {
         let _ = std::fmt::Write::write_fmt(&mut detail, format_args!(" blocked:{}={}", closed.gate, closed.reason));
@@ -389,12 +388,12 @@ pub(crate) fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAd
 /// local-bootstrap contract (`🚀️local-bootstrap/🧬️schema/🔣️.json`) requires a development hub
 /// running the pipe to keep reporting `false`.
 /// 📌️ Declares the operator's checkpoint policy in `features.checkpointPolicy`.
-pub(crate) fn with_checkpoint_policy(mut readiness: HubReadinessV1, policy: HubCheckpointPolicyV1) -> HubReadinessV1 {
+pub fn with_checkpoint_policy(mut readiness: HubReadinessV1, policy: HubCheckpointPolicyV1) -> HubReadinessV1 {
     readiness.features.checkpoint_policy = policy;
     readiness
 }
 
-pub(crate) fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {
+pub fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {
     HubReadinessV1 { authentication: HubAuthenticationReadinessV1 { public_session_issuance: credential_sign_in_enabled, ..readiness.authentication }, ..readiness }
 }
 //#endregion 🔖️AdminAuth
@@ -415,20 +414,20 @@ pub(crate) struct HubLivenessV1 {
 }
 
 /// 💓️ The liveness body of the run `run_id` now.
-pub(crate) fn hub_liveness(run_id: &str) -> HubLivenessV1 {
+pub fn hub_liveness(run_id: &str) -> HubLivenessV1 {
     HubLivenessV1 { schema: "semio.hub.liveness/v1", status: "live", run_id: run_id.to_string(), uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64 }
 }
 
-pub(crate) static HUB_PROCESS_START: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
+pub static HUB_PROCESS_START: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
 
 /// 🌅️ What a hub answers while it boots. The listener is bound before the stores open and the trusted
 /// catalog loads; until the full router takes over the very same socket, `/healthz` answers live,
 /// `/readyz` answers `503 not-ready` with the catalog load's `startup` progress, and every other route
 /// a signed `503 unavailable` with `Retry-After` — a caller sees a starting hub, never a refused
 /// connection, and a load balancer or launcher can tell a slow boot from a dead one.
-pub(crate) struct BootReadinessServerV1 {
+pub struct BootReadinessServerV1 {
     stop: Option<tokio::sync::oneshot::Sender<()>>,
-    pub(crate) task: Option<tokio::task::JoinHandle<()>>,
+    pub task: Option<tokio::task::JoinHandle<()>>,
 }
 
 #[derive(Clone)]
@@ -440,7 +439,7 @@ struct BootReadinessStateV1 {
 impl BootReadinessServerV1 {
     /// 🌅️ Serves the booting hub on `listener` under the same transport, cross-origin and refusal
     /// layers as the full router.
-    pub(crate) fn start(listener: tokio::net::TcpListener, readiness: HubReadinessV1, progress: StartupProgressCellV1, tracer: Tracer, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Self {
+    pub fn start(listener: tokio::net::TcpListener, readiness: HubReadinessV1, progress: StartupProgressCellV1, tracer: Tracer, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Self {
         std::sync::LazyLock::force(&HUB_PROCESS_START);
         let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
         let app = Router::new()
@@ -463,7 +462,7 @@ impl BootReadinessServerV1 {
 
     /// 🤝️ Stops accepting, lets the booting answers in flight finish, and releases the socket to the
     /// full router, which accepts on the same listener next.
-    pub(crate) async fn hand_over(mut self) {
+    pub async fn hand_over(mut self) {
         if let Some(stop) = self.stop.take() {
             let _ = stop.send(());
         }
@@ -494,19 +493,4 @@ async fn boot_unavailable() -> impl IntoResponse {
     (StatusCode::SERVICE_UNAVAILABLE, [(axum::http::header::RETRY_AFTER, "5")])
 }
 
-pub(crate) async fn get_healthz(State(state): State<HubState>) -> impl IntoResponse {
-    Json(hub_liveness(&state.readiness.run_id))
-}
-
-pub(crate) async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
-    let mut readiness = (*state.readiness).clone();
-    readiness.artifact_cas_sweeper.ready = state.artifact_maintenance.healthy();
-    if !readiness.artifact_cas_sweeper.ready {
-        readiness.status = "not-ready";
-        readiness.artifact_cas_sweeper.reason = Some("artifact-cas-maintenance-supervisor-failed-closed");
-        readiness.blocked_by.push(HubClosedReadinessGateV1 { gate: "artifactCasSweeper", reason: "artifact-cas-maintenance-supervisor-failed-closed" });
-    }
-    let status = if readiness.status == "ready" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
-    (status, Json(readiness))
-}
 //#endregion 🔖️AdminPage

@@ -10,14 +10,14 @@ import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modul
 class ExtensionRegistryScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-extension-registry accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-flow"],this.root,this.invocation,["--lib","registry::contribution_tests"]);
+  await runRepositoryCargoTests(["semio-framework-os-flow-operators"],this.root,this.invocation,["--lib","registry::contribution_tests"]);
  }
 }
 /** 📝️ Runs original widget loans against the portable independent producer oracle. */
 class FormProducerScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-form-producer accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-flow"],this.root,this.invocation,["--lib","forms::tests"]);
+  await runRepositoryCargoTests(["semio-framework-os-flow-vcs"],this.root,this.invocation,["--lib","forms::tests"]);
  }
 }
 /** 🧬️ Validates the entire portable original field-loan corpus with the independent schema oracle. */

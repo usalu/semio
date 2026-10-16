@@ -34,7 +34,16 @@
         "command": "bun ./📜️script.ts wasm",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      }
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+          }
+        }
+      },
+      "outputs": []
     },
     "source-check": {
       "executor": "repo:script",
@@ -64,6 +73,14 @@
         "command": "bun ./📜️script.ts canonical-architecture",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust"
+          }
+        }
       }
     }
   },

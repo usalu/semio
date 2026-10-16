@@ -1,0 +1,95 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "failed",
+          "preserved",
+          "facts"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "plain",
+              "narrow",
+              "duplicate",
+              "late",
+              "detached-descendant",
+              "body-error",
+              "body-undefined",
+              "port-primary",
+              "cancelled",
+              "foreign",
+              "missing",
+              "copied",
+              "descendant-error",
+              "descendant-undefined",
+              "detached-continuation",
+              "port-undefined"
+            ]
+          },
+          "failed": {
+            "type": "boolean"
+          },
+          "preserved": {
+            "enum": [
+              "value",
+              "continuation",
+              "marker",
+              "undefined",
+              "primary",
+              "cancelled",
+              "refinement",
+              "issuance"
+            ]
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "attempts",
+              "late",
+              "consumerFault",
+              "portFault",
+              "validControl",
+              "cancelled"
+            ],
+            "properties": {
+              "attempts": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 66
+              },
+              "late": {
+                "type": "boolean"
+              },
+              "consumerFault": {
+                "type": "boolean"
+              },
+              "portFault": {
+                "type": "boolean"
+              },
+              "validControl": {
+                "type": "boolean"
+              },
+              "cancelled": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

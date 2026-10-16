@@ -1,14 +1,26 @@
-use super::*;
-use crate::actions::MockArtifactChannel;
-use crate::workspace::ArtifactChannels;
-use crate::audit::{AuditSinks, InMemoryAuditSink};
-use crate::catalog::{compile, Catalog};
-use crate::policy::AgentPrincipal;
-use crate::protocol::{JsonRpcId, JsonRpcRequest, McpServer};
-use crate::source_builders::note_and_cad_source;
-use crate::{build_server_from_catalog, GatewayRuntime};
+//! 🧱️ Notify_quick of the runtime crate: Gateway runtime, entrypoint and facade.
+
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::sync::Arc;
+use crate::root::{GatewayRuntime, build_server_from_catalog};
+use semio_framework_os_mcp_catalog::catalog::{Catalog, compile};
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceSubmitRequestV1, INFERENCE_REQUEST_ID_HEX_LENGTH, is_hub_inference_route};
+use semio_framework_os_mcp_port::policy::AgentPrincipal;
+use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_wire::job_registry::{JobStatus, job_registry};
+use semio_framework_os_mcp_wire::notify::{NOTIFICATION_PROGRESS, NotificationSink, ProgressBinding, RecordingSink, ResourceChange, active_progress_binding, artifact_changed, cancel_request, changes_from_tool_result, decode_cursor, encode_cursor, enter_progress_scope, enter_request_scope, job_progress_changed, jobs_for_request, notification_slot, paginate, resource_update_broker};
+use semio_framework_os_mcp_wire::protocol::{JsonRpcId, JsonRpcNotification, JsonRpcRequest, NOTIFICATION_RESOURCES_UPDATED, intercept_cancellation};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_mcp_capabilities::source_builders::note_and_cad_source;
+#[cfg(test)]
+use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
 
 //#region 🧫️Fixtures
+
 fn fixture_catalog() -> Arc<Catalog> {
     Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the note+cad fixture always compiles"))
 }
@@ -36,9 +48,11 @@ fn result_of(server: &mut McpServer, request: JsonRpcRequest) -> serde_json::Val
     let response = server.dispatch(&request).expect("a request with an id always answers");
     serde_json::to_value(&response).expect("a response always serializes").get("result").cloned().unwrap_or(serde_json::Value::Null)
 }
+
 //#endregion 🧫️Fixtures
 
 //#region 🧪️Pagination
+
 #[test]
 fn a_cursor_round_trips_through_its_opaque_form() {
     assert_eq!(decode_cursor(&encode_cursor(0)), Some(0));
@@ -120,9 +134,11 @@ fn a_tools_list_page_walk_visits_every_tool_exactly_once() {
     }
     assert_eq!(walked, names, "the page walk did not reproduce the whole, stably-ordered tool list");
 }
+
 //#endregion 🧪️Pagination
 
 //#region 🧪️ResourceRoster
+
 #[test]
 fn resources_list_never_repeats_a_uri() {
     let (mut server, _sink) = server_with_sink();
@@ -132,9 +148,11 @@ fn resources_list_never_repeats_a_uri() {
     assert_eq!(unique.len(), uris.len(), "a duplicate resource URI is back in the registry: {uris:?}");
     assert_eq!(uris.iter().filter(|uri| uri.as_str() == "semio://workspace/artifacts").count(), 1);
 }
+
 //#endregion 🧪️ResourceRoster
 
 //#region 🧪️Subscriptions
+
 #[test]
 fn subscribing_to_an_unknown_resource_is_refused_rather_than_silently_accepted() {
     let (mut server, _sink) = server_with_sink();
@@ -238,12 +256,14 @@ fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
         None => assert!(published.iter().all(|notification| notification.method != NOTIFICATION_RESOURCES_UPDATED), "a failed invocation still pushed an update: {published:?}"),
     }
 }
+
 //#endregion 🧪️Subscriptions
 
 //#region 🧪️Progress
+
 #[test]
 fn a_job_minted_outside_a_progress_scope_publishes_nothing() {
-    let job_id = crate::ui::job_registry().begin("m5b-unscoped");
+    let job_id = job_registry().begin("m5b-unscoped");
     assert!(!job_progress_changed(&job_id, 0.5, None));
 }
 
@@ -255,9 +275,9 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     slot.set(sink.clone() as Arc<dyn NotificationSink>).ok().expect("a fresh slot is empty");
     let job_id = {
         let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-1"), slot: slot.clone() }));
-        let job_id = crate::ui::job_registry().begin("m5b-scoped");
-        crate::ui::job_registry().report_progress(&job_id, 0.25, Some("quarter".to_string()));
-        crate::ui::job_registry().report_progress(&job_id, 0.75, None);
+        let job_id = job_registry().begin("m5b-scoped");
+        job_registry().report_progress(&job_id, 0.25, Some("quarter".to_string()));
+        job_registry().report_progress(&job_id, 0.75, None);
         job_id
     };
     let published = sink.taken();
@@ -267,7 +287,7 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     assert_eq!(rows[0].params.as_ref().and_then(|params| params.get("progress")), Some(&serde_json::json!(0.25)));
     assert_eq!(rows[0].params.as_ref().and_then(|params| params.get("message")), Some(&serde_json::json!("quarter")));
     assert_eq!(rows[1].params.as_ref().and_then(|params| params.get("progress")), Some(&serde_json::json!(0.75)));
-    crate::ui::job_registry().succeed(&job_id, serde_json::json!({}));
+    job_registry().succeed(&job_id, serde_json::json!({}));
     let terminal = sink.taken();
     assert_eq!(terminal.iter().filter(|notification| notification.method == NOTIFICATION_PROGRESS).count(), 1);
     assert!(!job_progress_changed(&job_id, 1.0, None), "a terminal job's binding was not released");
@@ -304,29 +324,30 @@ fn notifications_cancelled_requests_cancel_of_every_job_minted_under_that_reques
     let job_id = {
         let _request = enter_request_scope(Some(&request_id));
         let _scope = enter_progress_scope(Some(ProgressBinding { token: serde_json::json!("tok-m5b-3"), slot }));
-        let job_id = crate::ui::job_registry().begin("m5b-cancellable");
-        crate::ui::job_registry().report_progress(&job_id, 0.1, None);
+        let job_id = job_registry().begin("m5b-cancellable");
+        job_registry().report_progress(&job_id, 0.1, None);
         job_id
     };
     assert_eq!(jobs_for_request(&request_id), vec![job_id.clone()]);
-    assert!(!crate::ui::job_registry().is_cancel_requested(&job_id));
+    assert!(!job_registry().is_cancel_requested(&job_id));
     let (mut server, _sink) = server_with_sink();
     assert!(server.dispatch(&notification("notifications/cancelled", serde_json::json!({ "requestId": request_id }))).is_none(), "a notification must never be answered");
-    assert!(crate::ui::job_registry().is_cancel_requested(&job_id), "notifications/cancelled did not reach the job registry's cancel path");
-    crate::ui::job_registry().mark_cancelled(&job_id);
+    assert!(job_registry().is_cancel_requested(&job_id), "notifications/cancelled did not reach the job registry's cancel path");
+    job_registry().mark_cancelled(&job_id);
 }
+
 #[test]
 fn notifications_cancelled_reaches_a_job_minted_without_a_progress_token() {
     let request_id = serde_json::json!(4243);
     let job_id = {
         let _request = enter_request_scope(Some(&request_id));
-        let job_id = crate::ui::job_registry().begin("g4-untokened");
-        crate::ui::job_registry().report_progress(&job_id, 0.1, None);
+        let job_id = job_registry().begin("g4-untokened");
+        job_registry().report_progress(&job_id, 0.1, None);
         job_id
     };
     cancel_request(&request_id);
-    assert!(crate::ui::job_registry().is_cancel_requested(&job_id), "a call without _meta.progressToken must still be cancellable by its request id");
-    crate::ui::job_registry().mark_cancelled(&job_id);
+    assert!(job_registry().is_cancel_requested(&job_id), "a call without _meta.progressToken must still be cancellable by its request id");
+    job_registry().mark_cancelled(&job_id);
 }
 
 #[test]
@@ -334,9 +355,9 @@ fn a_cancel_that_overtakes_its_request_cancels_the_job_the_moment_it_is_minted()
     let request_id = serde_json::json!(4244);
     cancel_request(&request_id);
     let _request = enter_request_scope(Some(&request_id));
-    let job_id = crate::ui::job_registry().begin("g4-overtaken");
-    assert!(crate::ui::job_registry().is_cancel_requested(&job_id));
-    assert_eq!(crate::ui::job_registry().snapshot(&job_id).unwrap().status, crate::ui::JobStatus::Cancelled);
+    let job_id = job_registry().begin("g4-overtaken");
+    assert!(job_registry().is_cancel_requested(&job_id));
+    assert_eq!(job_registry().snapshot(&job_id).unwrap().status, JobStatus::Cancelled);
 }
 
 #[test]
@@ -344,20 +365,22 @@ fn the_stdio_reader_consumes_notifications_cancelled_out_of_band() {
     let request_id = serde_json::json!(4245);
     let job_id = {
         let _request = enter_request_scope(Some(&request_id));
-        let job_id = crate::ui::job_registry().begin("g4-out-of-band");
-        crate::ui::job_registry().report_progress(&job_id, 0.1, None);
+        let job_id = job_registry().begin("g4-out-of-band");
+        job_registry().report_progress(&job_id, 0.1, None);
         job_id
     };
-    assert!(!crate::protocol::intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"ping"}"#));
-    assert!(!crate::protocol::intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"notifications/cancelled","params":{"requestId":4245}}"#), "a REQUEST named like the notification is not the notification");
-    assert!(!crate::ui::job_registry().is_cancel_requested(&job_id));
-    assert!(crate::protocol::intercept_cancellation("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{\"requestId\":4245}}\n"));
-    assert!(crate::ui::job_registry().is_cancel_requested(&job_id));
-    crate::ui::job_registry().mark_cancelled(&job_id);
+    assert!(!intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"ping"}"#));
+    assert!(!intercept_cancellation(r#"{"jsonrpc":"2.0","id":9,"method":"notifications/cancelled","params":{"requestId":4245}}"#), "a REQUEST named like the notification is not the notification");
+    assert!(!job_registry().is_cancel_requested(&job_id));
+    assert!(intercept_cancellation("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{\"requestId\":4245}}\n"));
+    assert!(job_registry().is_cancel_requested(&job_id));
+    job_registry().mark_cancelled(&job_id);
 }
+
 //#endregion 🧪️Progress
 
 //#region 🧪️StructuredOutput
+
 /// 📐️ Every tool that declares an `outputSchema` must declare one that COMPILES with this repo's own
 /// owned JSON-Schema validator, and a representative real result of that tool must validate against
 /// it. A tool with no `outputSchema` is reported by name so the gap can never hide.
@@ -372,7 +395,7 @@ fn every_tool_declares_a_compilable_output_schema() {
         match tool.output_schema.as_ref() {
             None => without.push(tool.name.clone()),
             Some(schema) => {
-                if let Err(error) = crate::schema::compile_validator(schema) {
+                if let Err(error) = compile_validator(schema) {
                     uncompilable.push(format!("{}: {error}", tool.name));
                 }
             }
@@ -419,9 +442,9 @@ fn every_callable_tool_result_validates_against_its_own_output_schema() {
             invalid.push(format!("{}: no declared outputSchema to validate against", tool.name));
             continue;
         };
-        match crate::schema::compile_validator(schema) {
+        match compile_validator(schema) {
             Err(error) => invalid.push(format!("{}: outputSchema does not compile: {error}", tool.name)),
-            Ok(validator) => match crate::schema::validate(&validator, structured) {
+            Ok(validator) => match validate(&validator, structured) {
                 Ok(_) => validated += 1,
                 Err(error) => invalid.push(format!("{}: structuredContent does not validate: {error}", tool.name)),
             },
@@ -430,22 +453,25 @@ fn every_callable_tool_result_validates_against_its_own_output_schema() {
     assert!(invalid.is_empty(), "tool results that break their own declared contract: {invalid:?}");
     assert!(validated >= 3, "only {validated} tool(s) could be driven with no arguments (skipped: {skipped:?}) — the oracle proved almost nothing");
 }
+
 //#endregion 🧪️StructuredOutput
 
 //#region 🧪️HubInferenceRouting
+
 #[test]
 fn a_submit_request_validates_any_well_formed_service_id_and_refuses_a_malformed_one() {
-    let good = crate::inference::HubInferenceSubmitRequestV1::new("test.neutral.service", "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
+    let good = HubInferenceSubmitRequestV1::new("test.neutral.service", "0".repeat(INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
     assert!(good.validate().is_ok());
-    let hostile = crate::inference::HubInferenceSubmitRequestV1::new("../test.neutral", "0".repeat(crate::inference::INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
+    let hostile = HubInferenceSubmitRequestV1::new("../test.neutral", "0".repeat(INFERENCE_REQUEST_ID_HEX_LENGTH), 1000);
     assert!(hostile.validate().is_err(), "a service id outside the InferenceIdV1 shape must never be submittable");
 }
 
 #[test]
 fn a_published_route_family_is_relative_and_lower_case_only() {
-    assert!(crate::inference::is_hub_inference_route("operations/signal"));
+    assert!(is_hub_inference_route("operations/signal"));
     for hostile in ["", "/inference", "inference//jobs", "../escape", "operations/Host", "inference?x=1"] {
-        assert!(!crate::inference::is_hub_inference_route(hostile), "{hostile:?} must never steer a protected request");
+        assert!(!is_hub_inference_route(hostile), "{hostile:?} must never steer a protected request");
     }
 }
+
 //#endregion 🧪️HubInferenceRouting

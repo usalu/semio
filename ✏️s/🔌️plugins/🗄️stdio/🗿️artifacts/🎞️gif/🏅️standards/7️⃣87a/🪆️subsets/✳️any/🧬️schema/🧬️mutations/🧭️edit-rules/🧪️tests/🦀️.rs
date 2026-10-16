@@ -1,6 +1,8 @@
 //! 🧪️ Every details-pane pointer of the GIF87a editor resolves to the concrete kinds of its gesture, and replaying them reaches the edited document.
 
-use super::*;
+use semio_framework_value::DslValue;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::standards::v87a::subsets::any::schema::mutations::edit_rules::*;
 
 fn image(left: u32) -> GifImage {
     GifImage { left, top: 0, width: 2, height: 2, interlace: false, lct: None, indices: vec![0, 1, 1, 0] }

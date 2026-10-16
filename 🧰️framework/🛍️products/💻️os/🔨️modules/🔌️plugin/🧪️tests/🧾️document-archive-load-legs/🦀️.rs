@@ -116,7 +116,7 @@ async fn raw_single_document_archive(doc_id: &str, snapshot: &TestSnapshot) -> p
 /// id, schema, dialect and owner written into the log's composition section. `ShellHost` round-trips
 /// the effect's bytes untouched, so this is exactly what the guest's archive loader receives.
 async fn stamped_single_document_archive(app: &SingleDocumentAppUnderTest, snapshot: &TestSnapshot) -> protocol::DocumentArchivePack {
-    let envelope = app.store.envelope();
+    let envelope = app.stores.store.envelope();
     let mut archive = Box::pin(raw_single_document_archive(&envelope.id, snapshot)).await;
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     archive.parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&archive.parent_spr, &envelope.id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref()))
@@ -194,7 +194,7 @@ async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
 async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
     let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
-    let live_id = app.store.envelope().id.clone();
+    let live_id = app.stores.store.envelope().id.clone();
     let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 93, archive).expect("unstamped archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 93, &mut cx)).await;
@@ -215,7 +215,7 @@ async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
 async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
     let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
-    let envelope_id = app.store.envelope().id.clone();
+    let envelope_id = app.stores.store.envelope().id.clone();
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into(), slot: Vec::new() })).await;
     let foreign = Box::pin(store::os_store::text_format::empty_document_spr(&envelope_id, "semio.test.some-other-app/v1")).await;
@@ -250,7 +250,7 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity())).await;
-    let live_id = app.store.envelope().id.clone();
+    let live_id = app.stores.store.envelope().id.clone();
     let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>(SingleDocumentApp::DOCUMENT_SCHEMA, &live_id, TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut source = Box::pin(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
     source.install_operation_wire(store::ArtifactOperationWire::canonical());
@@ -271,14 +271,14 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     assert_eq!((expected.count, expected.label.as_str()), (5, "initial"));
     let files = Box::pin(store::os_store::text_format::print_document_pack(source.envelope())).await.expect("source pair prints");
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
-    let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&files.spr, &live_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, app.store.envelope().owner.as_ref())).await.expect("load-document identity stamp");
+    let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&files.spr, &live_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, app.stores.store.envelope().owner.as_ref())).await.expect("load-document identity stamp");
     PluginApp::begin_document_archive_load(&mut app, 95, protocol::DocumentArchivePack { parent_pack: files.pack, parent_spr, members: Vec::new() }).expect("superseded archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 95, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "a superseded archive failed to load: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut app, 95).expect("superseded archive acknowledgement");
     assert_eq!(app.snapshot().expect("replaced projection"), expected);
-    assert_eq!(app.store.supersessions(), source.supersessions());
-    let fatal = app.store.mutation_outcomes().expect("loaded outcomes").into_iter().find(|outcome| outcome.mutation_id == ids[2]).expect("the garbage-superseded operation");
+    assert_eq!(app.stores.store.supersessions(), source.supersessions());
+    let fatal = app.stores.store.mutation_outcomes().expect("loaded outcomes").into_iter().find(|outcome| outcome.mutation_id == ids[2]).expect("the garbage-superseded operation");
     assert_eq!((fatal.worst, fatal.superseded, fatal.withdrawn), (Some(semio_framework_diagnostic::Severity::Fatal), true, false));
     close_bounded_source_store(&mut source);
     close_member_admission_app(&mut app, &mut cx);

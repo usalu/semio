@@ -1,6 +1,12 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
-use crate::{kernel, value_derive};
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+use semio_framework_os_kernel as kernel;
+use semio_framework_value_derive as value_derive;
+use semio_s_artifact_stdio_contract_window_kit::load_example_effect;
 use pack::snapshot::ArtifactDsl;
 use kernel::{Mutation, MutationDiff, OpBinary};
 use semio_framework_value::{DslValue, FromValue, ToValue};
@@ -17,24 +23,11 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[path = "🧵️bytes/🦀️.rs"]
 pub mod bytes;
-#[path = "🪟️details/🦀️.rs"]
-pub mod details;
-#[path = "🩹️patch/🦀️.rs"]
-pub mod patch;
 #[path = "🖼️raster/🦀️.rs"]
 pub mod raster;
 #[path = "🧭️rules/🦀️.rs"]
 pub mod rules;
 pub use rules::{edited_subtree, Carried, EditPlan, EditRules, EntityRule, InsertRule, ItemField, RemoveRule, RowKey, Selector};
-pub use details::{
-    render_file_source_editor, render_snapshot_details, render_snapshot_details_provider_revisioned, snapshot_details_split_layout, snapshot_details_window_definition, DslSnapshotDetailsProvider,
-    SnapshotDetailPathSegment, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
-};
-pub use patch::{
-    apply_snapshot_patch, apply_snapshot_patch_checked, apply_snapshot_patch_for_dialect, inverse_snapshot_patch, inverse_snapshot_patches, inverse_snapshot_patches_within, prepare_snapshot_patch, snapshot_patch_from_bytes,
-    snapshot_patch_from_hex, snapshot_patch_from_text, snapshot_patch_hex, snapshot_patch_input_schema, snapshot_patch_input_schema_text, snapshot_patch_label, snapshot_patch_text, snapshot_schema_location, SnapshotPatch,
-    SnapshotSchemaLocation, SnapshotSchemaResolver, SNAPSHOT_PATCH_MAX_BYTES, SNAPSHOT_PATCH_MAX_INVERSE_PARTS, SNAPSHOT_PATCH_MAX_SEGMENTS,
-};
 
 pub const SET_SNAPSHOT_VALUE_ACTION_ID: &str = "setSnapshotValue";
 pub const INSERT_SNAPSHOT_VALUE_ACTION_ID: &str = "insertSnapshotValue";
@@ -141,15 +134,15 @@ fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
 #[macro_export]
 macro_rules! snapshot_editing_command_roster {
     ($native:ty, [$($native_tool:expr),* $(,)?]) => {
-        impl $crate::editing::SnapshotEditingNativeCommand for $native {
+        impl $crate::SnapshotEditingNativeCommand for $native {
             const ALL_TOOL_JOB_IDS: &'static [&'static str] = &[
                 $($native_tool,)*
-                $crate::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
-                $crate::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
-                $crate::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
-                $crate::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
-                $crate::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
-                $crate::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+                $crate::SET_SNAPSHOT_VALUE_ACTION_ID,
+                $crate::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+                $crate::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+                $crate::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+                $crate::RENAME_SNAPSHOT_KEY_ACTION_ID,
+                $crate::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
             ];
         }
     };
@@ -246,7 +239,7 @@ impl std::fmt::Display for SnapshotEditError {
 
 impl std::error::Error for SnapshotEditError {}
 
-fn decode_pointer(path: &str) -> Result<Vec<String>, SnapshotEditError> {
+pub fn decode_pointer(path: &str) -> Result<Vec<String>, SnapshotEditError> {
     if path.is_empty() {
         return Ok(Vec::new());
     }
@@ -285,7 +278,7 @@ fn object_index(entries: &[(String, DslValue)], key: &str, path: &str) -> Result
     Ok(index)
 }
 
-fn array_index(segment: &str, length: usize, path: &str, insert: bool) -> Result<usize, SnapshotEditError> {
+pub fn array_index(segment: &str, length: usize, path: &str, insert: bool) -> Result<usize, SnapshotEditError> {
     if insert && segment == "-" {
         return Ok(length);
     }
@@ -398,11 +391,6 @@ fn rename_key(root: &mut DslValue, path: &str, key: &str) -> Result<(), Snapshot
     Ok(())
 }
 
-/// 🧾️ Prints every typed snapshot detail without passing through a native file encoder.
-pub fn snapshot_edit_source<S: ToValue>(snapshot: &S) -> String {
-    semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))
-}
-
 fn json_error_offset(error: &semio_framework_pack_json::JsonError, source_len: usize) -> Option<usize> {
     match error {
         semio_framework_pack_json::JsonError::UnexpectedEof => Some(source_len),
@@ -469,7 +457,7 @@ fn validate_snapshot_value_with_validator(value: &DslValue, validator: &semio_fr
     })
 }
 
-static SNAPSHOT_SCHEMA_VALIDATORS: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, semio_framework_schema::OwnedJsonSchemaValidator>>> = std::sync::OnceLock::new();
+pub static SNAPSHOT_SCHEMA_VALIDATORS: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, semio_framework_schema::OwnedJsonSchemaValidator>>> = std::sync::OnceLock::new();
 
 fn snapshot_schema_id(value: &DslValue) -> Option<String> {
     let DslValue::Object(entries) = value else { return None };
@@ -487,7 +475,7 @@ pub fn validate_snapshot_schema_for_dialect(value: &DslValue, dialect: Dialect, 
     Err(SnapshotEditError::new("snapshot-edit.schema-identity", "$.schema", format!("snapshot schema identity '{}' does not match registered editor schema '{expected}'", actual.as_deref().unwrap_or("<missing>"))))
 }
 
-fn snapshot_schema_descriptor_for_dialect(dialect: Dialect, document_schema: &str) -> Result<String, SnapshotEditError> {
+pub fn snapshot_schema_descriptor_for_dialect(dialect: Dialect, document_schema: &str) -> Result<String, SnapshotEditError> {
     let descriptor_id = if document_schema.starts_with("s.") { document_schema.to_string() } else { format!("s.{document_schema}") };
     if descriptor_id != dialect.artifact_kind && !descriptor_id.strip_prefix(dialect.artifact_kind).is_some_and(|suffix| suffix.starts_with('.')) {
         return Err(SnapshotEditError::new("snapshot-edit.schema-owner", "$.schema", format!("native document schema '{descriptor_id}' is not owned by editor artifact '{}'", dialect.artifact_kind)));
@@ -534,7 +522,7 @@ fn validate_registered_snapshot_schema(original: &DslValue, value: &DslValue) ->
     })
 }
 
-fn validate_value(value: &DslValue, path: &str) -> Result<(), SnapshotEditError> {
+pub fn validate_value(value: &DslValue, path: &str) -> Result<(), SnapshotEditError> {
     validate_value_at_depth(value, path, 0)
 }
 
@@ -561,7 +549,7 @@ fn validate_value_at_depth(value: &DslValue, path: &str, depth: usize) -> Result
 }
 
 /// 🟰️ Whether two snapshot values denote the same JSON document: object members are unordered, integral numbers equal their exact float, and an octet string equals the JSON array of its octets (the only form JSON can spell it in).
-fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
+pub fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
     match (left, right) {
         (DslValue::Object(left), DslValue::Object(right)) => {
             fn index(entries: &[(String, DslValue)]) -> Option<BTreeMap<&str, &DslValue>> {
@@ -765,7 +753,7 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
     fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let SnapshotEditEvent::ReplaceSource { source } = event {
             let next = snapshot_from_edit_source::<Self::Snapshot>(source).map_err(snapshot_edit_fault)?;
-            return Ok(Emit { effects: vec![crate::load_example_effect(&next, Self::DOCUMENT_SCHEMA)], ..Default::default() });
+            return Ok(Emit { effects: vec![load_example_effect(&next, Self::DOCUMENT_SCHEMA)], ..Default::default() });
         }
         let mutations = match Self::snapshot_edit_special(event, snapshot)? {
             Some(mutations) => mutations,
@@ -1046,7 +1034,7 @@ macro_rules! bounded_native_editing_editor {
         $(, preparation_route: $preparation_route:path)?
         $(, checkpoint_resume: $checkpoint_resume:expr)?
         $(,)?) => {
-        impl $crate::editing::BoundedNativeEditingEditor for $editor {
+        impl $crate::BoundedNativeEditingEditor for $editor {
             const NATIVE_TOOL_IDS: &'static [&'static str] = &[$($tool),+];
             const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
                 $(semio_framework_plugin::ArtifactToolPublicationContract {
@@ -1076,7 +1064,7 @@ macro_rules! bounded_native_editing_editor {
             $(
                 fn native_edit_preparation_route(
                     prefix: &'static str,
-                ) -> Option<$crate::editing::NativeEditPreparationRoute<Self::Snapshot, Self::Mutation>> {
+                ) -> Option<$crate::NativeEditPreparationRoute<Self::Snapshot, Self::Mutation>> {
                     $preparation_route(prefix)
                 }
             )?
@@ -1365,7 +1353,7 @@ fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapsho
 }
 
 /// 📏️ Refuses a resolved edit whose mutation or exact undo cannot be carried as one native publication item.
-fn check_publication_limits<S, M: Mutation<S> + OpBinary>(snapshot: &S, mutations: &[M]) -> Result<(), Fault> {
+pub fn check_publication_limits<S, M: Mutation<S> + OpBinary>(snapshot: &S, mutations: &[M]) -> Result<(), Fault> {
     mutations.iter().try_for_each(|mutation| {
         let inverses = mutation.inverse(snapshot).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
         std::iter::once(mutation).chain(inverses.iter()).try_for_each(|operation| {
@@ -1468,7 +1456,7 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
                     $contract,
                 ))
             ),+];
-            proofs.extend($crate::editing::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
+            proofs.extend($crate::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
             proofs
         }
     };
@@ -1496,7 +1484,7 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
                     $contract,
                 ))
             ),+];
-            proofs.extend($crate::editing::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
+            proofs.extend($crate::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
             proofs
         }
     };
@@ -1510,6 +1498,98 @@ macro_rules! snapshot_editing_publication_authority {
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             Some(semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
         }
+    };
+}
+
+#[macro_export]
+macro_rules! snapshot_details_editor_support {
+    (
+        owner_file: $owner_file:literal,
+        controller: $controller:literal,
+        artifact_schema: $artifact_schema:literal,
+        preparation: $preparation:literal
+        $(, document_store_owners: $document_store_owners:path)?
+        $(, bounded_native: $bounded_native:tt)?
+        $(, native: {
+            factory_name: $native_factory_name:literal,
+            factory_type: $native_factory_type:ty,
+            contract: $native_contract:expr,
+            build: $native_build:path,
+            tools: [$($native_tool:literal),+ $(,)?]
+        })?
+        $(,)?
+    ) => {
+        fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+            let mut proofs = $crate::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema);
+            $(
+                let _ = stringify!($bounded_native);
+                proofs.extend($crate::bounded_native_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
+            )?
+            $($(
+                proofs.push(
+                    semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<semio_framework_plugin::EditorApp<Self>>(
+                        $owner_file,
+                        $controller,
+                        $native_factory_name,
+                        $native_tool,
+                        $artifact_schema,
+                        $native_contract,
+                    )
+                    .with_factory_type::<semio_framework_plugin::EditorApp<Self>, $native_factory_type>(),
+                );
+            )+)?
+            proofs
+        }
+
+        fn register_tool_job_factories(
+            registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>,
+        ) -> Result<(), semio_framework_plugin::Fault> {
+            $(
+                let _ = stringify!($bounded_native);
+                $crate::register_bounded_native_edit_tool_factory::<Self>(registry)?;
+            )?
+            $(
+                let controller = registry.controller_id().to_string();
+                registry.register(<$native_factory_type>::new(&controller))?;
+            )?
+            $crate::register_snapshot_edit_tool_factory::<Self>(registry)
+        }
+
+        fn build_tool_job(
+            request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>,
+        ) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, semio_framework_plugin::Fault> {
+            if $crate::is_snapshot_edit_action(&request.tool_id) {
+                return $crate::build_snapshot_edit_tool_job::<Self>(request);
+            }
+            $(
+                let _ = stringify!($bounded_native);
+                if <$crate::BoundedNativeEditToolJobFactory<Self> as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&request.tool_id.as_str()) {
+                    return $crate::build_bounded_native_edit_tool_job::<Self>(request);
+                }
+            )?
+            $(return $native_build(request);)?
+            Ok(None)
+        }
+
+        $(
+            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+                Some($document_store_owners(grant))
+            }
+        )?
+
+        fn build_artifact_store_one_item_preparation_factory(
+        ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            let factory = semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
+            $(
+                let _ = stringify!($bounded_native);
+                let factory = $crate::routed_native_edit_preparation_factory(
+                    <Self as $crate::BoundedNativeEditingEditor>::native_edit_preparation_route($preparation),
+                    factory,
+                );
+            )?
+            Some(semio_framework_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
+        }
+
     };
 }
 

@@ -9,7 +9,7 @@ import { registryModuleDirectories, readGeneratedCatalogProjection } from "../..
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
-import { emitSemanticDescriptorV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
+import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -136,7 +136,7 @@ function syntheticDescriptor(pluginId: string): { readonly descriptor: Record<st
 
 /** 🧾️ The shipped receipt binding `semantic` to the raw component bytes `raw` of `pluginId`. */
 async function shippedReceipt(pluginId: string, raw: Uint8Array, semantic: Uint8Array): Promise<ComponentReceiptV1> {
-  return { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId, packageId: `semio:${pluginId}`, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: await sha256(raw), wasmBytes: raw.byteLength, semanticDescriptorSha256: await sha256(semantic), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+  return { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId, packageId: `semio:${pluginId}`, profile: "release", target: "wasm32-wasip2", wasmSha256: await sha256(raw), wasmBytes: raw.byteLength, semanticDescriptorSha256: await sha256(semantic), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
 }
 
 /** 🔏️ A descriptor carrying a byte binding of its own — a shape no semantic reader admits. */
@@ -247,7 +247,7 @@ describe("strict plugin catalog completion", () => {
     writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
     const verifier = createFreshCatalogBuildVerifier(sourceRoot, buildRoot);
     expect(() => verifier.verify(source.entry)).toThrow(/commit marker/);
-    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, profile: "wasm-prototype" }));
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, profile: "prototype" }));
     expect(() => createFreshCatalogCommitMarker(source, buildRoot)).toThrow(/staged receipt does not bind/);
     writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
     const marker = createFreshCatalogCommitMarker(source, buildRoot);
@@ -346,7 +346,7 @@ describe("strict plugin catalog completion", () => {
     expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless))).toThrow(/extension host must be its first dependency/);
   });
 
-  it("preserves opt-in emission deadlines through guard and child-process budgets", async () => {
+  it("preserves finite emission input validation deadlines without claiming native execution", async () => {
     const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧪️tests/🧫️fixtures/⏱️emission-budget");
     const cases = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
     const describeSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../🖨️describe/🧬️schema/🔣️.json"), "utf8"));
@@ -367,7 +367,7 @@ describe("strict plugin catalog completion", () => {
       let now = 0;
       const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
       try {
-        await expect(emitSemanticDescriptorV1(repoRoot, { artifactRoot, component }, {
+        await expect(validateDescriptorEmissionInputV1(repoRoot, { artifactRoot, component }, {
           compiler: phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined),
           deadlineMs: row.budgetMs,
           checkpoint(stage) {
@@ -383,7 +383,7 @@ describe("strict plugin catalog completion", () => {
     }
   });
 
-  it("refuses every unusable emission input and leaves no staging behind", async () => {
+  it("refuses every unusable emission validation input and leaves no staging behind", async () => {
     const repoRoot = temporaryRoot();
     const artifactRoot = join(repoRoot, "target-emission");
     const outsideRoot = temporaryRoot();
@@ -398,7 +398,7 @@ describe("strict plugin catalog completion", () => {
     symlinkSync(component, linkedComponent);
     const request = { component, artifactRoot };
     const compiler = phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined);
-    const cases: readonly [string, Parameters<typeof emitSemanticDescriptorV1>[1], Parameters<typeof emitSemanticDescriptorV1>[2], RegExp][] = [
+    const cases: readonly [string, Parameters<typeof validateDescriptorEmissionInputV1>[1], Parameters<typeof validateDescriptorEmissionInputV1>[2], RegExp][] = [
       ["outside the artifact root", { ...request, component: outsideComponent }, { compiler }, /resolves outside the declared artifact root/],
       ["an empty artifact", { ...request, component: emptyComponent }, { compiler }, /regular non-symlink file/],
       ["a symlinked artifact", { ...request, component: linkedComponent }, { compiler }, /regular non-symlink file/],
@@ -407,11 +407,11 @@ describe("strict plugin catalog completion", () => {
       ["an exhausted deadline", request, { compiler, deadlineMs: -1 }, /deadline of -1ms exceeded/],
     ];
     for (const [label, input, control, expected] of cases) {
-      await expect(emitSemanticDescriptorV1(repoRoot, input, control), label).rejects.toThrow(expected);
+      await expect(validateDescriptorEmissionInputV1(repoRoot, input, control), label).rejects.toThrow(expected);
       expect(readdirSync(artifactRoot).sort(), label).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
     }
     const stages: string[] = [];
-    await expect(emitSemanticDescriptorV1(repoRoot, request, { compiler, checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
+    await expect(validateDescriptorEmissionInputV1(repoRoot, request, { compiler, checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
     expect(stages).toEqual(["validate", "emit"]);
     expect(readdirSync(artifactRoot).sort()).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
   });
@@ -446,14 +446,14 @@ describe("descriptor gate component identity", () => {
     const root = mkdtempSync(join(tmpdir(), "semio-shipped-component-"));
     try {
       const entry = { pluginId: "fixture", packageId: "semio:fixture", packageName: "semio-s-plugin-fixture", cratePath: "plugins/fixture/rust" };
-      const deliverable = componentDeliverableV1(join(root, entry.cratePath), entry.packageName, "wasm-release");
+      const deliverable = componentDeliverableV1(join(root, entry.cratePath), entry.packageName, "release");
       expect(deliverable.wasm).toBe(join(root, "plugins/fixture/rust/dist/components/release/semio_s_plugin_fixture.wasm"));
       const bytes = new TextEncoder().encode("\0asm\r\0\x01\0shipped component bytes");
       const pack = encodePackValue({ semantic: true });
       expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [expect.stringContaining("no shipped component and receipt")], errors: [] });
       mkdirSync(deliverable.directory, { recursive: true });
       writeFileSync(deliverable.wasm, bytes);
-      const receipt = { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId: entry.pluginId, packageId: entry.packageId, profile: "wasm-release" as const, target: "wasm32-wasip2" as const, wasmSha256: createHash("sha256").update(bytes).digest("hex"), wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+      const receipt = { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId: entry.pluginId, packageId: entry.packageId, profile: "release" as const, target: "wasm32-wasip2" as const, wasmSha256: createHash("sha256").update(bytes).digest("hex"), wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
       writeComponentReceiptV1(deliverable.receipt, receipt);
       expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [], errors: [] });
       const stale = shippedComponentFindings(root, entry, encodePackValue({ semantic: false }));

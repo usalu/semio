@@ -1,0 +1,23 @@
+// 📋️ Lists the files of one crate's census closure with bytes/lines (same stripping rules as census3.ts). usage: CRATE=<crate> ROW=test bun census_files.ts
+import {readFileSync} from "node:fs";
+import {dirname, resolve} from "node:path";
+import {execFileSync} from "node:child_process";
+import {readRustSourceClosureV1} from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const ROOT = "/Users/ueli/Documents/semio";
+const input = JSON.parse(readFileSync(import.meta.dir + "/../🗑️generated/" + (process.env.INPUT ?? "pwp3-census-input.json"), "utf8"));
+const owner = new Map<string, string>(Object.entries(input.owner as Record<string, string>).map(([p, c]) => [resolve(ROOT, p), c]));
+const rustc = execFileSync("rustup", ["which", "rustc"], {encoding: "utf8"}).trim();
+const cfgOf = () => execFileSync(rustc, ["--print", "cfg"], {encoding: "utf8"}).trim().split("\n").map(v => v.replace(/=(".*")$/u, (_, q) => "=" + JSON.parse(q)));
+const crate = process.env.CRATE!, test = (process.env.ROW ?? "test") === "test";
+const CFGS = String.raw`(?:[ \t]*#\[cfg[^\n]*\]\s*\n)*[ \t]*`;
+const MOUNT = /((?:[ \t]*\/\/[^\n]*\n)*(?:[ \t]*#\[cfg[^\n]*\]\s*\n)*)([ \t]*#\[path\s*=\s*"([^"]+)"\]\s*\n)([ \t]*(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+;[ \t]*\n(?:[ \t]*(?:pub(?:\([^)]*\))?\s+)?use\s+\w+::\*;[ \t]*\n)?)/gu;
+const INLINE = new RegExp("(" + CFGS + String.raw`#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+\w+;)`, "gu");
+const INCLUDE = new RegExp("(" + CFGS + String.raw`include!\(\s*"([^"]+\.rs)"\s*\);?)`, "gu");
+const members = [...(input.lib[crate] ?? []), ...(test ? input.test[crate] ?? [] : [])].map((f: string) => resolve(ROOT, f));
+const virtual = resolve(ROOT, "virtual-" + crate + ".rs");
+const text = members.map((m, i) => `#[path = "${m}"]\npub mod m${i};\n`).join("");
+const foreign = (p: string, rel: string) => { const o = owner.get(resolve(dirname(p), rel)); return o !== undefined && o !== crate; };
+const read = async (p: string) => { if (p === virtual) return new TextEncoder().encode(text); try { let t = readFileSync(p, "utf8"); if (p.endsWith(".rs")) { t = t.replace(MOUNT, (a, _b, _c, path) => foreign(p, path) ? "" : a).replace(INLINE, (a, _w, path) => foreign(p, path) ? "" : a).replace(INCLUDE, (a, _w, path) => foreign(p, path) ? "" : a); } return new TextEncoder().encode(t); } catch (e) { if ((e as NodeJS.ErrnoException).code === "ENOENT") return p.endsWith(".rs") ? null : new Uint8Array(0); throw e; } };
+const cfg = [...cfgOf(), "debug_assertions", ...(test ? ["test", ...["artifact-app-testing", "media-turn-testing", "reserved-producer-testing", "original-actor-context-testing"].map(f => "feature=" + f)] : [])];
+const inputs = await readRustSourceClosureV1([virtual], ROOT, cfg, read, {manifestDirectory: ROOT + "/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", generated: () => undefined});
+for (const i of inputs.slice().sort((a, b) => b.bytes - a.bytes)) console.log(String(i.bytes).padStart(8), String(i.activeLines).padStart(6), i.kind.padEnd(8), String((i as any).path).replace(ROOT + "/🧰️framework/🛍️products/💻️os/🔨️modules/", ""));

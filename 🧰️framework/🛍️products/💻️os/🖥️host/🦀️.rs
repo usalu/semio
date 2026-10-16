@@ -7,23 +7,14 @@ pub mod host;
 #[path = "🗃️document-backbone/🦀️.rs"]
 pub mod backbone;
 
-#[path = "🧱️instance/🦀️.rs"]
-pub mod instance;
-
-#[path = "🖼️media-export-raster/🦀️.rs"]
-pub mod media_export_raster;
-
 #[path = "🧾️media-export-simple/🦀️.rs"]
 pub mod media_export_simple;
 
-#[path = "🔀️workflow/🦀️.rs"]
-pub mod workflow;
-
-#[path = "📡️codec-abi/🦀️.rs"]
-pub mod codec_abi;
-
-#[path = "🗂️registry/🦀️.rs"]
-pub mod registry;
+pub use semio_framework_os_host_codec_abi as codec_abi;
+pub use semio_framework_os_host_instance as instance;
+pub use semio_framework_os_host_media_raster as media_export_raster;
+pub use semio_framework_os_host_registry as registry;
+pub use semio_framework_os_host_workflow as workflow;
 
 pub use crate::space::*;
 pub use crate::workflow::{

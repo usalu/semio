@@ -10,6 +10,7 @@
 //! `Host` is constructed per app instance (never a process-global singleton — see
 //! `important.md`'s "Replace, never wrap" list: `set_host_backbone_channel` is explicitly one of
 //! the things a pooled multi-instance actor cannot keep). Cloning is cheap (`Poll` wraps an `Rc`).
+extern crate semio_framework_os_kernel as store;
 
 use requests::RequestRegistry;
 use semio_framework_value::DslValue;
@@ -22,10 +23,18 @@ pub mod body;
 #[path = "📮️requests/🦀️.rs"]
 pub mod requests;
 pub use body::BodyReader;
+#[path = "../⚛️reactor/🧵️executor/🦀️.rs"]
+pub mod executor;
+#[path = "../📡️backbone/🔗️binding/🦀️.rs"]
+pub mod document_backbone_binding;
+#[path = "🛬️lifted/💼️jobs/🦀️.rs"]
+mod lifted_jobs;
+pub use lifted_jobs::*;
 
 /// 📦️ Encodes a fault as the ABI `pack` `completion-result.fault` and every `host-async` Err arm carry.
 /// Schema: `🔌️plugin/🧬️schema/📜️.wit` `type pack = list<u8>` — no JSON string on this data path.
-pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
+#[doc(hidden)]
+pub fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault))
 }
 
@@ -41,7 +50,8 @@ fn decode_fault_pack(bytes: &[u8]) -> Fault {
 /// resolves to. `Err` bytes are a `pack` of the fault value — the same shape the shell writes with
 /// `encodePackValue(fault)` and the native host writes with [`encode_fault_pack`].
 // 🚫️async: E1 pure decode consumed by `⚛️reactor/🦀️.rs`'s sync `world actor` boundary — R9.
-pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+#[doc(hidden)]
+pub fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),
         RequestOutcome::Err(bytes) => Err(decode_fault_pack(&bytes)),
@@ -503,7 +513,7 @@ impl Host {
 pub async fn log(level: &str, message: &str) {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::wasip2::semio::framework::pure::log(level, message);
+        semio_framework_plugin_abi::wasip2::semio::framework::pure::log(level, message);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     eprintln!("[{level}] {message}");
@@ -513,7 +523,7 @@ pub async fn log(level: &str, message: &str) {
 pub async fn now_ms() -> i64 {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::wasip2::semio::framework::pure::now_ms()
+        semio_framework_plugin_abi::wasip2::semio::framework::pure::now_ms()
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as i64)
@@ -523,7 +533,7 @@ pub async fn now_ms() -> i64 {
 pub async fn trace_span(name: &str) {
     #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
-        crate::component::wasip2::semio::framework::pure::trace_span(name);
+        semio_framework_plugin_abi::wasip2::semio::framework::pure::trace_span(name);
     }
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     let _ = name;

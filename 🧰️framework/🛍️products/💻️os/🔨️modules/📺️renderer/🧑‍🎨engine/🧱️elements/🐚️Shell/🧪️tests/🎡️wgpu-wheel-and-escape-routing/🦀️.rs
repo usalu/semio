@@ -24,9 +24,9 @@ const AIM: (f32, f32) = (PANE.0 + PANE.2 * 0.7, PANE.1 + PANE.3 * 0.45);
 
 fn shell_with_pane() -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let _ = shell.world3d_states.try_insert("puzzle3d-main-perspective".into(), World3dState::new("puzzle3d-main-perspective".into(), "app.controller".into()));
-    if let Some(state) = shell.world3d_states.get_mut("puzzle3d-main-perspective") {
-        state.bounds = Rect::new(PANE.0, PANE.1, PANE.2, PANE.3);
+    let _ = shell.surfaces.world3d_states.try_insert("puzzle3d-main-perspective".into(), World3dState::new("puzzle3d-main-perspective".into(), "app.controller".into()));
+    if let Some(state) = shell.surfaces.world3d_states.get_mut("puzzle3d-main-perspective") {
+        state.session.bounds = Rect::new(PANE.0, PANE.1, PANE.2, PANE.3);
     }
     shell
 }
@@ -46,7 +46,7 @@ fn a_wheel_over_a_live_pane_requires_the_published_scene_hit() {
         let mut input = InputState::<ActionDescriptor>::default();
         input.register_hit(row.clone());
         input.publish_hits();
-        assert!(!shell.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "{:?}/{:?} has no published scene identity", row.kind, row.control_id);
+        assert!(!shell.input.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "{:?}/{:?} has no published scene identity", row.kind, row.control_id);
     }
 }
 
@@ -63,7 +63,7 @@ fn a_wheel_over_chrome_painted_inside_the_pane_never_reaches_the_scene() {
         let mut input = InputState::<ActionDescriptor>::default();
         input.register_hit(row.clone());
         input.publish_hits();
-        assert!(!shell.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "🛑️ chrome owns the notch at {:?}/{:?}", row.kind, row.control_id);
+        assert!(!shell.input.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "🛑️ chrome owns the notch at {:?}/{:?}", row.kind, row.control_id);
     }
 }
 
@@ -76,9 +76,9 @@ fn a_wheel_outside_every_scene_rect_stays_with_the_chrome_that_owns_it() {
     let mut input = InputState::<ActionDescriptor>::default();
     input.register_hit(HitTarget::<ActionDescriptor> { rect: Rect::new(0.0, 54.4, 400.0, 913.6), event: None, control_id: Some("framework.panel.artifact".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     input.publish_hits();
-    assert!(!shell.wheel_reaches_scene_surface(60.0, 400.0, &input, &theme), "🛑️ a panel's own scroll region is not a scene");
-    assert!(!shell.scene_surface_contains(60.0, 400.0), "🛑️ and no scene surface is painted there");
-    assert!(shell.scene_surface_contains(AIM.0, AIM.1), "🎬️ while the pane's own aim point is");
+    assert!(!shell.input.wheel_reaches_scene_surface(60.0, 400.0, &input, &theme), "🛑️ a panel's own scroll region is not a scene");
+    assert!(!shell.surfaces.scene_surface_contains(60.0, 400.0), "🛑️ and no scene surface is painted there");
+    assert!(shell.surfaces.scene_surface_contains(AIM.0, AIM.1), "🎬️ while the pane's own aim point is");
 }
 
 //#endregion 🎡WheelReachesTheScene
@@ -89,7 +89,7 @@ fn shell_with_escape_binding() -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "engagementAbort".into(), args: None } }];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -98,13 +98,13 @@ fn shell_with_escape_binding() -> ShellState {
 #[test]
 fn escape_dismisses_every_open_dismissable_layer_at_once() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(!shell.dismiss_dismissable_layers(), "⎋️ nothing open, nothing dismissed");
-    shell.overlay_state = OverlayState::Dropdown("example".into());
-    shell.open_selects.insert("widget.select".into(), true);
-    assert!(shell.dismiss_dismissable_layers(), "⎋️ both layers were open");
-    assert_eq!(shell.overlay_state, OverlayState::None);
-    assert!(shell.open_selects.values().all(|open| !open));
-    assert!(shell.deferred_actions.is_empty(), "⎋️ dismissing chrome is state, never a dispatch");
+    assert!(!shell.input.dismiss_dismissable_layers(), "⎋️ nothing open, nothing dismissed");
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
+    shell.input.open_selects.insert("widget.select".into(), true);
+    assert!(shell.input.dismiss_dismissable_layers(), "⎋️ both layers were open");
+    assert_eq!(shell.input.overlay_state, OverlayState::None);
+    assert!(shell.input.open_selects.values().all(|open| !open));
+    assert!(shell.settle.deferred_actions.is_empty(), "⎋️ dismissing chrome is state, never a dispatch");
 }
 
 /// ⚖️ LAW: the quick-search and find overlays are NOT dismissable layers. They are focus-trapping
@@ -114,9 +114,9 @@ fn escape_dismisses_every_open_dismissable_layer_at_once() {
 fn the_palette_and_find_overlays_are_not_dismissable_layers() {
     for overlay in [OverlayState::Search, OverlayState::Find] {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        shell.overlay_state = overlay.clone();
-        assert!(!shell.dismiss_dismissable_layers(), "🧯️ {overlay:?} is a dialog, not a dismissable layer");
-        assert_eq!(shell.overlay_state, overlay);
+        shell.input.overlay_state = overlay.clone();
+        assert!(!shell.input.dismiss_dismissable_layers(), "🧯️ {overlay:?} is a dialog, not a dismissable layer");
+        assert_eq!(shell.input.overlay_state, overlay);
     }
 }
 
@@ -135,16 +135,16 @@ fn the_palette_and_find_overlays_are_not_dismissable_layers() {
 fn escape_under_an_open_picker_still_reaches_the_app_keybinding_rung() {
     let mut swallowed = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
-    swallowed.overlay_state = OverlayState::Search;
-    semio_framework_async::block_on(swallowed.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
-    assert!(swallowed.transient_notice().is_none(), "🧯️ a focus-trapping dialog DOES swallow the chord, which is React's editable-target rule");
+    swallowed.input.overlay_state = OverlayState::Search;
+    semio_framework_async::block_on(PointerCtx::of(&mut swallowed).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    assert!(swallowed.chrome.transient_notice().is_none(), "🧯️ a focus-trapping dialog DOES swallow the chord, which is React's editable-target rule");
 
     let mut shell = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.overlay_state = OverlayState::Dropdown("example".into());
-    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
-    assert_eq!(shell.overlay_state, OverlayState::None, "⎋️ the picker is dismissed by the same keydown");
-    assert_eq!(shell.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ and the app's own escape binding was still resolved and addressed");
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the picker is dismissed by the same keydown");
+    assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ and the app's own escape binding was still resolved and addressed");
 }
 
 //#endregion ⎋️DismissableLayers
@@ -163,13 +163,13 @@ fn an_unowned_app_chord_falls_through_to_the_framework_edit_verbs() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = vec![Keybinding { keys: "mod+z".into(), action: ActionDescriptor { controller_id: "app.controller".into(), action: "undo".into(), args: None } }];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers { meta: true, ..PointerModifiers::default() };
 
-    assert!(shell.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers).is_some(), "⌨️ the app claims the chord");
-    let outcome = semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers, &mut input));
-    assert_eq!(shell.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⌨️ the app rung ran and found no window to address");
+    assert!(shell.docs.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers, &shell.chrome).is_some(), "⌨️ the app claims the chord");
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers, &mut input));
+    assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⌨️ the app rung ran and found no window to address");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⌨️ and the framework's own undo still crossed the dispatch funnel");
 }
 
@@ -191,23 +191,23 @@ fn an_unowned_app_chord_falls_through_to_the_framework_edit_verbs() {
 #[test]
 fn a_press_inside_a_window_body_activates_that_window_and_notes_it() {
     let mut shell = shell_with_escape_binding();
-    shell.dock_window_plan = vec![("puzzle3d-main-top".into(), Rect::new(3.2, 54.4, 531.2, 913.6)), ("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
-    shell.active_window_id = Some("puzzle3d-main-top".into());
+    shell.dock.dock_window_plan = vec![("puzzle3d-main-top".into(), Rect::new(3.2, 54.4, 531.2, 913.6)), ("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
+    shell.windows.active_window_id = Some("puzzle3d-main-top".into());
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.publish_retained_input_for_test(&mut input, &Theme::light());
-    shell.arm_window_activation_note();
-    shell.deferred_actions.clear();
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::light());
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    shell.settle.deferred_actions.clear();
 
-    assert!(shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🪟️ the probe's aim point is inside the perspective pane's window box");
-    assert_eq!(shell.active_window_id.as_deref(), Some("puzzle3d-main-perspective"));
-    shell.arm_window_activation_note();
-    let notes = shell.deferred_actions.iter().filter(|action| action.action == "noteShellCommand").count();
+    assert!(shell.input.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light(), &mut shell.windows, &mut shell.dock), "🪟️ the probe's aim point is inside the perspective pane's window box");
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some("puzzle3d-main-perspective"));
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    let notes = shell.settle.deferred_actions.iter().filter(|action| action.action == "noteShellCommand").count();
     assert_eq!(notes, 1, "🪟️ one real activation arms exactly one history note");
 
-    shell.deferred_actions.clear();
-    assert!(!shell.activate_window_under_pointer(AIM.0 + 1.0, AIM.1 + 1.0, &Theme::light()), "🪟️ a second press in the SAME window changes nothing");
-    shell.arm_window_activation_note();
-    assert!(shell.deferred_actions.is_empty(), "🪟️ so it notes nothing — React's `activateWindow` returns early on an unchanged id");
+    shell.settle.deferred_actions.clear();
+    assert!(!shell.input.activate_window_under_pointer(AIM.0 + 1.0, AIM.1 + 1.0, &Theme::light(), &mut shell.windows, &mut shell.dock), "🪟️ a second press in the SAME window changes nothing");
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    assert!(shell.settle.deferred_actions.is_empty(), "🪟️ so it notes nothing — React's `activateWindow` returns early on an unchanged id");
 }
 
 /// ⚖️ LAW: a modal layer owns the press and activates no window — React's menus, dropdowns, dialogs
@@ -216,20 +216,20 @@ fn a_press_inside_a_window_body_activates_that_window_and_notes_it() {
 #[test]
 fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
     let mut shell = shell_with_escape_binding();
-    shell.dock_window_plan = vec![("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
-    shell.overlay_state = OverlayState::Dropdown("example".into());
-    shell.open_selects.insert("example".into(), true);
+    shell.dock.dock_window_plan = vec![("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
+    shell.input.open_selects.insert("example".into(), true);
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.publish_retained_input_for_test(&mut input, &Theme::light());
-    assert!(shell.pointer_input_is_modal());
-    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🚧️ a modal layer owns every pointer, wherever it lands");
-    assert!(shell.active_window_id.is_none());
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::light());
+    assert!(shell.input.pointer_input_is_modal());
+    assert!(!shell.input.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light(), &mut shell.windows, &mut shell.dock), "🚧️ a modal layer owns every pointer, wherever it lands");
+    assert!(shell.windows.active_window_id.is_none());
 
     let mut shell = shell_with_escape_binding();
-    shell.dock_window_plan = vec![(String::new(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
-    shell.publish_retained_input_for_test(&mut input, &Theme::light());
-    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🕳️ the dock's unnamed window row is not a window");
-    assert!(shell.active_window_id.is_none());
+    shell.dock.dock_window_plan = vec![(String::new(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::light());
+    assert!(!shell.input.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light(), &mut shell.windows, &mut shell.dock), "🕳️ the dock's unnamed window row is not a window");
+    assert!(shell.windows.active_window_id.is_none());
 }
 
 //#endregion 🪟️WindowActivationOnBodyPress
@@ -252,10 +252,10 @@ fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surf
 /// (`🗑️generated/w12c-parity-run-19/steps.json` step 33).
 #[test]
 fn a_modal_layer_opening_clears_every_published_hover_in_that_frame() {
-    let anchor = "if modal && world3d_hover_clear_is_owed(state) && enqueue_world3d_event(state, WorldInteractionIntent::pointer_leave(";
+    let anchor = "if modal && world3d_hover_clear_is_owed(&state.selection, &state.authority) && enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(";
     assert!(WGPU_RENDERER_SOURCE.contains(anchor), "🚧️ the world authority phase clears a published hover while a modal layer is up");
     assert!(
-        !WGPU_RENDERER_SOURCE.contains("if modal && world3d_hover_is_published(state)"),
+        !WGPU_RENDERER_SOURCE.contains("if modal && world3d_hover_is_published(&state.selection)"),
         "🚧️ and it asks the OWED predicate, never the published one — a per-FRAME caller that asks `is_published` re-enqueues one leave per frame until the bounded queue saturates and the frame faults"
     );
     assert!(WGPU_RENDERER_SOURCE.contains("let modal = shell.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-stores-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

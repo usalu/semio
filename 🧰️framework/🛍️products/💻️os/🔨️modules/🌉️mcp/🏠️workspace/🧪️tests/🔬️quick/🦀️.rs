@@ -1,5 +1,53 @@
+//! 🧱️ Workspace_quick of the runtime crate: Gateway runtime, entrypoint and facade.
 
-use super::*;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::Mutex;
+use semio_framework_os_mcp_hub_remote::remote;
+use crate::root::{GatewayRuntime, build_server_with_workspace};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::base64_codec::encode_base64;
+use semio_framework_os_mcp_foundation::clock::now_ms;
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_hub_remote::remote::{AuthorizedDescriptorSnapshot, HubRemoteBinding};
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, ArtifactDocumentBinding, HUB_EDIT_UNBOUND_FAULT_CODE, InferCommand, InferenceCancel, VIEWER_READ_ONLY_FAULT_CODE};
+use semio_framework_os_mcp_port::policy::AgentPrincipal;
+use semio_framework_os_mcp_probe_document::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, PROBE_SURFACE_ID, ProbeDiff, ProbeMutation, ProbeSnapshot, probe_record_spec};
+use semio_framework_os_mcp_routing::hub_relay::{HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubInboundPlan, HubLinkClose, HubRelay, SessionDocumentPair, carries_hub_inbound, document_link_terminal_code, hub_link_tick, hub_links_to_close, plan_hub_inbound, route_session_artifact};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{ArtifactChannels, PluginArtifactBinding, WorkspaceCatalog};
+use semio_framework_os_mcp_shell_channel::shell_channel::decode_base64;
+use semio_framework_os_mcp_tools_inference::inference::declared_inferences_for_workspace;
+use semio_framework_os_mcp_wire::protocol::GatewayBackend;
+use semio_framework_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace, base64_encode};
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_mcp_capabilities::source_builders::{catalog_contract_descriptor, note_and_cad_source, note_descriptor};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_plugin_runtime::artifact_app_frames::{bind_inference_document, child_head_dependencies, decode_guest_fault, document_backbone_payload};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_plugin_runtime::guest_document_codec::{agent_presence_moment, agent_presence_peer, guest_apply_ops_binary, guest_compile_dsl, guest_edit_text_from_envelope, guest_print_mirror};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::{PendingExchange, PendingExchangeRegistry, PendingResponsePage, VIEW_STATE_OMITTED_WARNING, begin_closing_abandoned_exchange, headless_agent_ops};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_port::channel_port::{AGENT_LANE_UNCARRIED_FAULT_CODE, PreparedOps};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_routing::hub_relay::{commits_with_nothing_relayed, hub_edit_refusal};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{AppRoute, PluginComponentSource, RoutingArtifactChannel, app_instance_slot, capability_instance_slot, distinct_plugin_ids, distinct_routes, plugin_instance_slot, route_for_slot};
+#[cfg(test)]
+use semio_framework_os_mcp_plugin_runtime::compiled_components::{ISOLATED_COMPILE_TEST_ENGINE, ISOLATED_COMPILE_TEST_OUT};
+#[cfg(test)]
+use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 #[test]
 fn repository_root_is_refused_as_a_workspace_folder() {
@@ -106,13 +154,13 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
     };
     let document = binding("no `store::os_store::serialization::ArtifactCodec` is registered for artifact schema `s.note.note`");
     let spectator = hub_edit_refusal(Ok(DirectorySpaceRole::Spectator), "note", Some(("hub-note", &document))).expect("a spectator never edits");
-    assert_eq!(spectator.code, crate::actions::VIEWER_READ_ONLY_FAULT_CODE);
+    assert_eq!(spectator.code, VIEWER_READ_ONLY_FAULT_CODE);
     let unready = hub_edit_refusal(Err("hub descriptor binding is refreshing".to_string()), "note", Some(("hub-note", &document))).expect("no role, no edit");
     assert!(unready.code == "plugin.unavailable" && unready.message.contains("refreshing"), "{unready:?}");
     let nothing_open = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", None).expect("no hub document, no edit");
-    assert!(nothing_open.code == crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE && nothing_open.message.contains("`note`") && nothing_open.message.contains("artifact_open"), "{nothing_open:?}");
+    assert!(nothing_open.code == HUB_EDIT_UNBOUND_FAULT_CODE && nothing_open.message.contains("`note`") && nothing_open.message.contains("artifact_open"), "{nothing_open:?}");
     let no_actor = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", Some(("hub-note", &document))).expect("no document actor, no edit");
-    assert!(no_actor.code == crate::actions::HUB_EDIT_UNBOUND_FAULT_CODE && no_actor.message.contains("hub-note") && no_actor.message.contains("ArtifactCodec"), "{no_actor:?}");
+    assert!(no_actor.code == HUB_EDIT_UNBOUND_FAULT_CODE && no_actor.message.contains("hub-note") && no_actor.message.contains("ArtifactCodec"), "{no_actor:?}");
     document.relay.record_terminal(store::sync::DocumentLinkStatus::AccessRevoked.code(), "access was withdrawn");
     let revoked = hub_edit_refusal(Ok(DirectorySpaceRole::Author), "note", Some(("hub-note", &document))).expect("a terminal link takes no edit");
     assert_eq!(revoked.code, store::sync::DocumentLinkStatus::AccessRevoked.code());
@@ -136,7 +184,7 @@ fn a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation() {
     let mut note = selections[0].clone();
     note.lease.package.plugin_id = "note".to_string();
     note.lease.package.descriptor_byte_sha256 = "note-descriptor".to_string();
-    note.descriptor = crate::source_builders::note_descriptor();
+    note.descriptor = note_descriptor();
     selections.push(note);
     binding.install_catalog_for_test(selections);
     let grown = catalog.current();
@@ -164,15 +212,15 @@ fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
         store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
         store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
     }
-    assert!(!include_str!("../../🦀️.rs").contains("probe_document_socket_surface"));
+    assert!(!fixture_text("../../🏠️workspace/🦀️.rs").contains("probe_document_socket_surface"));
 }
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🏠️workspace/🔗️remote/🧪️tests/🧫️fixtures/🔣️authenticated-hub-descriptor-index.json")).unwrap();
     let ready = &fixture["cases"]["memberReady"];
     let page = semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::parse_canonical_json(ready["responses"][1]["canonicalBody"].as_str().unwrap()).unwrap();
     let semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1::Author { space, members, documents, .. } = page else { panic!("author administration page fixture") };
@@ -186,10 +234,10 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     let snapshot = AuthorizedDescriptorSnapshot { authenticated_user_id: "user-a".to_string(), session_expires_at_ms: i64::MAX, space, membership: members[0].clone(), observed_event_seq: 8, documents: HashMap::from([(scope, document)]) };
     let binding = Arc::new(HubRemoteBinding::new("https://hub.invalid", "space-a").unwrap());
     binding.install_snapshot_for_test(snapshot);
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution-target corpus json");
     let mut lease: semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&corpus["manifest"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest");
     lease.scope = DocumentScope::new("space-a", "shared-doc");
-    let (descriptor, descriptor_bytes) = crate::source_builders::catalog_contract_descriptor();
+    let (descriptor, descriptor_bytes) = catalog_contract_descriptor();
     lease.package.plugin_id = descriptor.manifest.plugin_id.clone();
     lease.package.package_id = descriptor.package_id.clone();
     lease.package.version = descriptor.manifest.version.clone();
@@ -227,7 +275,7 @@ fn authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_close
     assert_eq!(schema["artifactId"], "shared-doc");
     assert_eq!(schema["spaceId"], "space-a");
     assert!(schema["schema"].is_string(), "{schema_body}");
-    let lease:serde_json::Value=serde_json::from_str(include_str!("../../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).unwrap();
+    let lease:serde_json::Value=serde_json::from_str(fixture_text("../../../📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).unwrap();
     assert_eq!(schema["artifactKind"], lease["manifest"]["parentDialect"]["artifactKind"], "the document kind follows its authenticated parent dialect: {schema_body}");
     for uri in ["semio://artifact/shared-doc", "semio://artifact/shared-doc/validation"] {
         let error = workspace.read_resource(uri).unwrap_err();
@@ -246,11 +294,11 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
     let descriptors = workspace.discovery_descriptors().expect("ready selected descriptors");
     assert_eq!(descriptors.len(), 1);
     assert_eq!(descriptors[0].manifest.plugin_id, "contract-test");
-    let roster = crate::inference::declared_inferences_for_workspace(&workspace).expect("selected inference roster");
+    let roster = declared_inferences_for_workspace(&workspace).expect("selected inference roster");
     assert_eq!(roster.len(), 1);
     assert_eq!(roster[0].owner, "contract-test");
     let principal = AgentPrincipal::from_scope_names("agent:hub-test", "hub test", &[], None);
-    let server = crate::build_server_with_workspace(principal, Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), workspace.clone(), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), crate::GatewayRuntime::default());
+    let server = build_server_with_workspace(principal, Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), workspace.clone(), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default());
     let listed = server.tools.list();
     let inference_list = listed.iter().find(|tool| tool.name == "inference_list").expect("inference_list tool");
     let selected = inference_list.meta.as_ref().expect("ready tools/list selection metadata");
@@ -264,7 +312,7 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
     let descriptor_error = workspace.discovery_descriptors().expect_err("refreshing authority must remove selected descriptors");
     assert_eq!(descriptor_error.code, GatewayErrorCode::PluginUnavailable);
     assert!(descriptor_error.retryable);
-    let inference_error = crate::inference::declared_inferences_for_workspace(&workspace).expect_err("inference discovery must not fall back to installed packages");
+    let inference_error = declared_inferences_for_workspace(&workspace).expect_err("inference discovery must not fall back to installed packages");
     assert_eq!(inference_error.code, GatewayErrorCode::PluginUnavailable);
     assert!(inference_error.retryable);
     let revoked_inference_list = server.tools.list().into_iter().find(|tool| tool.name == "inference_list").expect("revoked inference_list tool");
@@ -282,7 +330,7 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
 /// past the bound; an app's session document is the hub document opened or edited last, a folder's the single one.
 #[test]
 fn a_hub_session_keeps_one_live_link_per_app_within_its_bound_and_edits_the_document_opened_last() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️hub-live-links.json")).expect("hub-live-links fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🏠️workspace/🧪️tests/🧫️fixtures/🔗️hub-live-links.json")).expect("hub-live-links fixture parses");
     assert_eq!(fixture["limit"].as_u64(), Some(HUB_SESSION_LIVE_LINK_LIMIT as u64), "the fixture pins the session bound");
     let text = |value: &serde_json::Value| value.as_str().expect("string").to_string();
     for case in fixture["close"].as_array().expect("close cases") {
@@ -313,7 +361,7 @@ fn a_headless_agent_carries_document_operations_and_leaves_view_state_in_the_she
     assert_eq!(headless_agent_ops("p.editor.addGeneration", ops(1, 1, 0, &[])).expect("document beside view state"), (ops(1, 0, 0, &[]), vec![VIEW_STATE_OMITTED_WARNING.to_string()]));
     assert_eq!(headless_agent_ops("p.editor.addWidget", ops(0, 0, 1, &[9])).expect("children beside view state"), (ops(0, 0, 0, &[9]), vec![VIEW_STATE_OMITTED_WARNING.to_string()]));
     let refused = headless_agent_ops("p.editor.setShowMode", ops(0, 1, 1, &[])).expect_err("view state alone");
-    assert_eq!(refused.code, crate::actions::AGENT_LANE_UNCARRIED_FAULT_CODE);
+    assert_eq!(refused.code, AGENT_LANE_UNCARRIED_FAULT_CODE);
     assert!(refused.message.contains("config and draft") && refused.message.contains("p.editor.setShowMode"), "{}", refused.message);
 }
 
@@ -387,7 +435,7 @@ fn pending_response_faults_oversize_and_duplicate_and_stamps_a_silent_settlement
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let wire = semio_framework_value::DslValue::from(&fixture["guestFault"]["wire"]);
     let fault = decode_guest_fault(&store::pack_rt::encode_wire_value(&wire));
     assert_eq!(fault.code, fixture["guestFault"]["expected"]["code"].as_str().expect("fixture fault code"));
@@ -402,7 +450,7 @@ fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
 #[test]
 fn probe_codec_encodes_the_fixture_shape_and_agrees_with_the_third_party_serializer() {
     use semio_framework_value::{FromValue as _, ToValue as _};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral codec fixture parses");
     let probe = &fixture["probeCodec"];
     let value = probe["value"].clone();
     let snapshot = ProbeSnapshot(value.clone().into());
@@ -503,7 +551,7 @@ fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
 }
 
 fn note_and_cad_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::source_builders::note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("note+cad fixture source compiles"))
+    Arc::new(compile(&note_and_cad_source(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("note+cad fixture source compiles"))
 }
 
 #[test]
@@ -569,12 +617,12 @@ fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
 /// s.block.block2d@1/*#editor` (measured 2026-09-26, `wp-g10` coverage run 2).
 #[test]
 fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
-    let capability = |id: &str, app_id: Option<&str>| crate::catalog::CapabilityDefinition {
-        id: crate::catalog::CapabilityRef(id.to_string()),
+    let capability = |id: &str, app_id: Option<&str>| CapabilityDefinition {
+        id: CapabilityRef(id.to_string()),
         version: 1,
         owner: CapabilityOwner::Plugin { plugin_id: "block".to_string(), label: None, app_id: app_id.map(str::to_string), window_kind_id: None, mode_id: None },
-        kind: crate::catalog::CapabilityKind::Mutation,
-        audience: crate::catalog::CapabilityAudience::Agent,
+        kind: CapabilityKind::Mutation,
+        audience: CapabilityAudience::Agent,
         title: id.to_string(),
         description: "test".to_string(),
         artifact_kind: None,
@@ -584,10 +632,10 @@ fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
         effects: Default::default(),
         policy: Default::default(),
         execution: Default::default(),
-        exposure: crate::catalog::ToolExposure::CatalogOnly,
-        presentation: crate::catalog::CapabilityPresentation { icon_id: None, category: None, keys: None, in_palette: false, args: Vec::new() },
+        exposure: ToolExposure::CatalogOnly,
+        presentation: CapabilityPresentation { icon_id: None, category: None, keys: None, in_palette: false, args: Vec::new() },
         examples: Vec::new(),
-        source: crate::catalog::CapabilitySource::Gateway,
+        source: CapabilitySource::Gateway,
     };
     let mut entries = vec![
         capability("block.s.block.block2d@1/*#editor.addHandle", Some("s.block.block2d@1/*#editor")),
@@ -664,19 +712,19 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
         }
     }
     let descriptors = ["note", "cad"].map(|plugin_id| load_package_descriptor(&find_plugin_entry(&registry, plugin_id).expect("registered above").owner_root).expect("committed descriptor"));
-    let catalog = Arc::new(crate::compile(&crate::CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the real note+cad descriptors compile"));
+    let catalog = Arc::new(compile(&CatalogSource { descriptors: descriptors.to_vec(), ..Default::default() }, semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("the real note+cad descriptors compile"));
     let first_app_verb = |plugin_id: &str| {
         catalog
             .entries
             .iter()
-            .find(|entry| matches!(&entry.owner, CapabilityOwner::Plugin { plugin_id: owner, app_id: Some(_), .. } if owner == plugin_id) && entry.kind == crate::catalog::CapabilityKind::Mutation)
+            .find(|entry| matches!(&entry.owner, CapabilityOwner::Plugin { plugin_id: owner, app_id: Some(_), .. } if owner == plugin_id) && entry.kind == CapabilityKind::Mutation)
             .map(|entry| entry.id.as_str().to_string())
             .expect("the plugin declares an app mutation")
     };
     let (note_verb, cad_verb) = (first_app_verb("note"), first_app_verb("cad"));
     let note_instance = capability_instance_slot(&catalog, &note_verb).expect("note's verb has a route slot");
     let cad_instance = capability_instance_slot(&catalog, &cad_verb).expect("cad's verb has a route slot");
-    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(Arc::clone(&catalog))), Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None);
+    let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(Arc::clone(&catalog))), Some(PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None);
 
     let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: note_verb.clone(), input: serde_json::json!({}) }]);
     assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{note_verb} must route to a real note channel: {note_result:?}");
@@ -752,6 +800,7 @@ fn find_plugin_entry_reports_a_typed_not_found_for_an_unknown_plugin() {
 }
 
 //#region 🧵️DocumentBackboneEgress
+
 /// 🧵️ ticket 26/09/18 slice M10: a guest's committed envelopes leave the process on the DOCUMENT
 /// BACKBONE, and the only messages this channel may relay are the ones addressed at its own actor
 /// uri — the same ownership fence the wgpu shell's `route_document_backbone_effects` applies. A
@@ -806,9 +855,11 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
     assert_eq!(blocked.code, "channel.not-wired");
     assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::os_store::serialization::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
 }
+
 //#endregion 🧵️DocumentBackboneEgress
 
 //#region 🗂️GuestDocumentCodec
+
 /// 🗂️ ticket 26/09/18 slice M10: `store::os_store::serialization::ArtifactCodec`'s four operations are bare, non-capturing
 /// `fn` pointers, so a guest-backed codec's thunks resolve their route out of a process-global
 /// table. With NO route registered every one of them must refuse in a typed, countable way — a
@@ -854,9 +905,11 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
     let store::VcsError::Deserialize(message) = &printed else { panic!("edit-text must refuse by decode, got {printed:?}") };
     assert!(message.contains("prints whole pairs, not single edits"), "{message}");
 }
+
 //#endregion 🗂️GuestDocumentCodec
 
 //#region 🔗️InferenceArtifactBinding
+
 /// 🧾️ One declared inference row carrying a published contract, for the binding laws below. The
 /// shape is exactly what a re-described `🀄️wfc` commits under
 /// `contributions.inferenceServices[].payload`.
@@ -883,8 +936,8 @@ fn bound_inference_row(required: bool, encoding: &str) -> semio_framework::Contr
     }
 }
 
-fn bound_inference_command(document: Option<crate::actions::ArtifactDocumentBinding>, payload: &[u8]) -> crate::actions::InferCommand {
-    crate::actions::InferCommand { plugin_id: "wfc".into(), artifact_kind: "s.wfc.bitmap".into(), inference_schema: "s.wfc.bitmap.solve".into(), turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original binding cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13, canonical_payload: payload.to_vec(),artifact_id:String::new(), artifact_document: document,cancel:crate::actions::InferenceCancel::default() }
+fn bound_inference_command(document: Option<ArtifactDocumentBinding>, payload: &[u8]) -> InferCommand {
+    InferCommand { plugin_id: "wfc".into(), artifact_kind: "s.wfc.bitmap".into(), inference_schema: "s.wfc.bitmap.solve".into(), turn:semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2},revision:7,cancellation_id:"original binding cancellation".into(),work_units:11,maximum_elapsed_milliseconds:13, canonical_payload: payload.to_vec(),artifact_id:String::new(), artifact_document: document,cancel:InferenceCancel::default() }
 }
 
 /// 🔗️ The artifact the caller named lands under the field the PLUGIN declared, base64, and nowhere
@@ -896,11 +949,11 @@ fn bound_inference_command(document: Option<crate::actions::ArtifactDocumentBind
 #[test]
 fn a_named_artifact_is_bound_under_the_field_the_contract_declares() {
     let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
-    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: b"PACK-BYTES".to_vec(), spr: b"SPR".to_vec() }), b"{}");
+    let command = bound_inference_command(Some(ArtifactDocumentBinding { pack: b"PACK-BYTES".to_vec(), spr: b"SPR".to_vec() }), b"{}");
     let bound: serde_json::Value = serde_json::from_slice(&bind_inference_document(&declared, &command).expect("a named artifact binds")).expect("the bound body is JSON");
-    assert_eq!(bound["document"]["pack"], serde_json::Value::String(crate::shell_channel::encode_base64(b"PACK-BYTES")));
-    assert_eq!(bound["document"]["spr"], serde_json::Value::String(crate::shell_channel::encode_base64(b"SPR")));
-    assert_eq!(crate::shell_channel::decode_base64(bound["document"]["pack"].as_str().expect("a base64 string")), Some(b"PACK-BYTES".to_vec()));
+    assert_eq!(bound["document"]["pack"], serde_json::Value::String(encode_base64(b"PACK-BYTES")));
+    assert_eq!(bound["document"]["spr"], serde_json::Value::String(encode_base64(b"SPR")));
+    assert_eq!(decode_base64(bound["document"]["pack"].as_str().expect("a base64 string")), Some(b"PACK-BYTES".to_vec()));
 }
 
 /// ✍️ A caller who authored the bound field keeps it: the binding fills a GAP, it never overwrites a
@@ -908,7 +961,7 @@ fn a_named_artifact_is_bound_under_the_field_the_contract_declares() {
 #[test]
 fn a_caller_authored_binding_field_is_never_overwritten() {
     let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
-    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: b"HOST".to_vec(), spr: b"HOST".to_vec() }), br#"{"document":{"pack":"mine","spr":"mine"}}"#);
+    let command = bound_inference_command(Some(ArtifactDocumentBinding { pack: b"HOST".to_vec(), spr: b"HOST".to_vec() }), br#"{"document":{"pack":"mine","spr":"mine"}}"#);
     let bound: serde_json::Value = serde_json::from_slice(&bind_inference_document(&declared, &command).expect("the caller's body survives")).expect("JSON");
     assert_eq!(bound["document"]["pack"], serde_json::Value::String("mine".to_string()));
 }
@@ -927,7 +980,7 @@ fn a_required_binding_without_an_artifact_refuses_by_name() {
 #[test]
 fn an_unknown_binding_encoding_is_refused_rather_than_guessed() {
     let declared = bound_inference_row(true, "artifact-dsl-text");
-    let fault = bind_inference_document(&declared, &bound_inference_command(Some(crate::actions::ArtifactDocumentBinding::default()), b"{}")).expect_err("an unwritable encoding is refused");
+    let fault = bind_inference_document(&declared, &bound_inference_command(Some(ArtifactDocumentBinding::default()), b"{}")).expect_err("an unwritable encoding is refused");
     assert!(fault.message.contains("artifact-dsl-text") && fault.message.contains(semio_framework::INFERENCE_ARTIFACT_PACK_BASE64), "{}", fault.message);
 }
 
@@ -940,6 +993,7 @@ fn an_inference_without_a_published_contract_passes_its_payload_through() {
     let bound = bind_inference_document(&declared, &bound_inference_command(None, br#"{"seed":7}"#)).expect("no contract, no binding");
     assert_eq!(bound, br#"{"seed":7}"#.to_vec());
 }
+
 //#endregion 🔗️InferenceArtifactBinding
 
 /// 🪆️ LAW (design §20.15, W-b): the `ChildHeads` a session guest answers become the inference request's dependencies one per owned
@@ -966,15 +1020,15 @@ fn a_bound_document_round_trips_through_the_guest_json_decoder() {
     let pack: Vec<u8> = (0..=255u8).cycle().take(405).collect();
     let spr: Vec<u8> = (0..=255u8).rev().cycle().take(211).collect();
     let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
-    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: pack.clone(), spr: spr.clone() }), b"{}");
+    let command = bound_inference_command(Some(ArtifactDocumentBinding { pack: pack.clone(), spr: spr.clone() }), b"{}");
     let bound = bind_inference_document(&declared, &command).expect("a named artifact binds");
     let text = std::str::from_utf8(&bound).expect("the bound body is UTF-8");
     let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the guest's own JSON decoder reads what serde_json wrote");
     let document = value.get("document").expect("the declared field survives the decoder");
     let pack_text = document.get("pack").and_then(semio_framework_value::DslValue::as_str).expect("pack is a string");
     let spr_text = document.get("spr").and_then(semio_framework_value::DslValue::as_str).expect("spr is a string");
-    assert_eq!(crate::shell_channel::decode_base64(pack_text), Some(pack), "the guest decodes the EXACT pack bytes the host bound");
-    assert_eq!(crate::shell_channel::decode_base64(spr_text), Some(spr), "…and the exact spr bytes");
+    assert_eq!(decode_base64(pack_text), Some(pack), "the guest decodes the EXACT pack bytes the host bound");
+    assert_eq!(decode_base64(spr_text), Some(spr), "…and the exact spr bytes");
 }
 
 /// 🧊️ The isolated compile worker of a unit-test process (see [`ISOLATED_COMPILE_TEST_ENTRY`]): a
@@ -1022,12 +1076,11 @@ fn a_hub_commit_is_acknowledged_only_by_a_live_status_reported_after_its_relay()
     assert_eq!(relay.report()["lastFault"], "document.link.expired: the link to the hub expired");
 }
 
-
 #[test]
 fn original_probe_pack_receiving_retains_every_cancelled_owner_and_exact_allocations(){
  use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::ControlledRetirement};
  use std::cell::Cell;
- let vectors:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/📦️receiving.json")).unwrap();
+ let vectors:serde_json::Value=serde_json::from_str(fixture_text("../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🧫️fixtures/📦️receiving.json")).unwrap();
  let policy=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};
  let mut successes=0;
  for row in vectors["cases"].as_array().unwrap(){for cutoff in (0..=16).chain(std::iter::once(usize::MAX)){
@@ -1035,12 +1088,12 @@ fn original_probe_pack_receiving_retains_every_cancelled_owner_and_exact_allocat
   let mut original=|_|{let next=events.get()+1;events.set(next);next<=allowance.get()};
   let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut original);native.install_retirement_recipient(&mut recipient).unwrap();
   let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);
-  let(result,born,released)=crate::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(input,&mut owner));let accepted=owner.progress();assert!(accepted.fits(policy));assert_eq!(born,accepted.retained_capacity_bytes);assert_eq!(released,accepted.released_bytes);drop(owner);assert_eq!(input.as_ptr(),pointer);allowance.set(usize::MAX);
+  let(result,born,released)=semio_framework_os_mcp_foundation::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(input,&mut owner));let accepted=owner.progress();assert!(accepted.fits(policy));assert_eq!(born,accepted.retained_capacity_bytes);assert_eq!(released,accepted.released_bytes);drop(owner);assert_eq!(input.as_ptr(),pointer);allowance.set(usize::MAX);
   let mut terminal_born=0;let mut terminal_released=0;
-  if let Ok(snapshot)=result{successes+=1;assert_eq!(serde_json::to_value(&snapshot.0).unwrap(),row["expected"]);let mut retained=ControlledRetirement::new(snapshot).ok().unwrap();let(_,born,released)=crate::test_allocation::observe_backing(||retained.step(RetainedCloneGrant::default()).unwrap());assert_eq!((born,released),(0,0));for _ in 0..4096{if retained.terminal_is_empty(){break}let(step,born,released)=crate::test_allocation::observe_backing(||retained.step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(retained.terminal_is_empty());}
-  for _ in 0..4096{if !native.has_retirement_owner(){break}let(step,born,released)=crate::test_allocation::observe_backing(||native.close_retirement_recipient(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(!native.has_retirement_owner());assert_eq!(accepted.released_bytes+terminal_released,accepted.retained_capacity_bytes+terminal_born);
+  if let Ok(snapshot)=result{successes+=1;assert_eq!(serde_json::to_value(&snapshot.0).unwrap(),row["expected"]);let mut retained=ControlledRetirement::new(snapshot).ok().unwrap();let(_,born,released)=semio_framework_os_mcp_foundation::test_allocation::observe_backing(||retained.step(RetainedCloneGrant::default()).unwrap());assert_eq!((born,released),(0,0));for _ in 0..4096{if retained.terminal_is_empty(){break}let(step,born,released)=semio_framework_os_mcp_foundation::test_allocation::observe_backing(||retained.step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(retained.terminal_is_empty());}
+  for _ in 0..4096{if !native.has_retirement_owner(){break}let(step,born,released)=semio_framework_os_mcp_foundation::test_allocation::observe_backing(||native.close_retirement_recipient(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((born,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));terminal_born+=born;terminal_released+=released;}assert!(!native.has_retirement_owner());assert_eq!(accepted.released_bytes+terminal_released,accepted.retained_capacity_bytes+terminal_born);
  }}
  assert!(successes>=vectors["cases"].as_array().unwrap().len());
- for axis in ["items","capacity","depth"]{let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut yes=|_|true;let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,born,released)=crate::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(b"null",&mut owner));assert!(result.is_err());assert_eq!((born,released,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());}
+ for axis in ["items","capacity","depth"]{let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut yes=|_|true;let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut yes);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,born,released)=semio_framework_os_mcp_foundation::test_allocation::observe_backing(||<ProbeSnapshot as store::ArtifactPackReceiving>::receive_pack(b"null",&mut owner));assert!(result.is_err());assert_eq!((born,released,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());}
  eprintln!("[DEBUG] Original Probe Pack receiving fixed five-axis policy conserved every System allocation/release across17 original callback cuts, same borrowed pointer and prebirth denied axes");
 }

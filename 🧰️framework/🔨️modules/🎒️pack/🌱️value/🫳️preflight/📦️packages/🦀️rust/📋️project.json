@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/pack-record-preflight-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -8,7 +8,7 @@ export type FreshComponentRequestV1 = Readonly<{
   cargoPackage: string;
   componentPackageId: string;
   outputName: string;
-  componentProfile: "wasm-release";
+  componentProfile: "release";
 }>;
 
 /** 🧾️ What one fresh production staged: the component, its semantic descriptor and the shipped `ComponentReceiptV1` binding the
@@ -37,7 +37,6 @@ export type FreshComponentLeaseV1 = Readonly<{
 export type FreshComponentProducedV1<T> = Readonly<{
   receipt: FreshComponentReceiptV1;
   derived: T;
-  compilerInvocations?: readonly string[];
 }>;
 
 export type FreshSourceEpochLegV1 = Readonly<{ id: string; package: string; args: readonly string[] }>;

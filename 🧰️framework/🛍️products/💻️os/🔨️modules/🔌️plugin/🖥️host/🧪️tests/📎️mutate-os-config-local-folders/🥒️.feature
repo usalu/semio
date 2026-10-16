@@ -9,8 +9,9 @@ Feature: Apply every typed local-folder binding mutation to its committed specif
   could adjudicate it, so there is no reference implementation to register (recorded as the
   `os-config-local-folders-mutation-semantics` no-oracle decision in `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
-  ⚠️ Like its local-catalog sibling, this case lives under `🔌️plugin/🖥️host` rather than beside the vocabulary it
-  exercises, because `🖥️host/📦️packages/🦀️rust` is the ONE place `LocalFoldersConfigMutation` is mounted for these cases.
+  ⚠️ Like its local-catalog sibling, this case lives under `🔌️plugin/🖥️host`; its Rust subject
+  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `../../🔮️oracles/🔣️.json`.
 
   Two kinds close the vocabulary: an attachment is an UPSERT keyed on `documentId` (a re-attachment replaces the binding,
   a new document is inserted in id order) and a detachment forgets one document's folder without touching the folder or

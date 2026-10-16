@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-kernel-db-engine-handle"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db engine artifact handle: submit, history and query operations"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-engine-handle"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_engine_handle"
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-os-kernel-db-artifact/testkit", "semio-framework-os-kernel-db-artifact-history/testkit", "semio-framework-os-kernel-db-engine-base/testkit", "semio-framework-os-kernel-db-io-core/testkit"]
+
+[dependencies]
+semio-framework-os-kernel-db-actor = { path = "../../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact = { path = "../../../../🗿️artifact/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact-contract = { path = "../../../../🗿️artifact/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact-history = { path = "../../../../🗿️artifact/📜️history/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-compact = { path = "../../../../🗜️compact/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel-db-artifact = { path = "../../../../🗿️artifact/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-artifact-history = { path = "../../../../🗿️artifact/📜️history/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

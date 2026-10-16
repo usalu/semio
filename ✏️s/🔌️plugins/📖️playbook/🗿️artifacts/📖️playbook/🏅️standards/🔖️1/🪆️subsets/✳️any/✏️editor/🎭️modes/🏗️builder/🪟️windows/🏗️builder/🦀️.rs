@@ -66,7 +66,7 @@ fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, St
         .collect()
 }
 
-fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
+pub fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
     let builtins = builtin_palette_tuples();
     crate::playbook::build_palette(&builtins, &extension_palette_entries(config))
 }
@@ -81,7 +81,5 @@ pub fn render(spec: &PlaybookSpec, config: &PlaybookConfig) -> semio_framework_p
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

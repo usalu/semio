@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-capabilities"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Gateway capability declarations and the core catalog."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-capabilities"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
+semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

@@ -81,14 +81,20 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_tsv_schema::standards::iana::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::io::binary::inferences;
+    pub use semio_s_artifact_stdio_tsv_mutations::standards::iana::subsets::any::io::binary::mutations;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_tsv_schema::standards::iana::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_tsv_inferences::standards::iana::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_stdio_tsv_mutations::standards::iana::subsets::any::io::text::mutations;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::standards::iana::subsets::any::schema::diff::TsvDiff;
@@ -210,3 +216,36 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: TsvAnalyzer,
     composer: TsvComposer,
 );
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+//#region 🔖️Register
+/// 🗂️ Registers this artifact's IO composer + the handcrafted grammar/protocol `LanguageSpec` —
+/// dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES). `tsv` is one of stdio's 10 deliberate imperative-`register()` artifacts (never
+/// converted to the `ArtifactDeclaration` builder pattern; this package's contribution invokes it
+/// directly with the established call order and behavior).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
+    crate::standards::iana::subsets::any::io::register();
+    register_pilot_languages();
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
+    use crate::standards::iana::subsets::any::io;
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
+        id: "stdio.tsv",
+        extension: Some("tsv"),
+        role: semio_framework_dsl::LanguageRole::Document,
+        grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.tsv"),
+    });
+}
+//#endregion 🔖️Register
+}
+//#endregion 🧩️ArtifactItems8

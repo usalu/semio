@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use semio_framework_ui_locale::Locale;
+use crate::viewer::mp3::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

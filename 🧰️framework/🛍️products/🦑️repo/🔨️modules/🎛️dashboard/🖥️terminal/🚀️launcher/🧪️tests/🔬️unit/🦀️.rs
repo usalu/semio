@@ -1,5 +1,5 @@
 use super::*;
-use crate::registry::Facts;
+use dashboard_registry::Facts;
 use ui_tui::tui::widget::{TreeState, WidgetState};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
@@ -109,7 +109,7 @@ fn a_collapsed_tree_lists_only_verbs_and_expanding_reveals_children() {
 
 #[test]
 fn every_scenario_of_the_launcher_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../../🧪️tests/🚀️launcher/🥒️.feature"), &[include_str!("🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/🚀️launcher/🥒️.feature"), &[include_str!("🦀️.rs")], &[
         ("The fixture workspace offers exactly the pinned commands", &["the_fixture_workspace_offers_exactly_the_pinned_commands"]),
         ("Journeys match the shared vectors", &["journeys_match_the_shared_vectors"]),
         ("A registry update keeps the search, the selection and the open groups", &["selection_search_and_open_groups_survive_a_registry_update"]),

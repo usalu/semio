@@ -92,11 +92,20 @@ fn content_edit(before: &PdfSnapshot, after: &PdfSnapshot) -> (usize, usize, Vec
     (at, old.len() - at - tail, new[at..new.len() - tail].to_vec())
 }
 
+/// 🗂️ The committed lopdf pairs, read when a test runs so the binary vectors stay out of the compiled source closure.
+const LOPDF_FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures");
+
+/// 📥️ One committed fixture file below [`LOPDF_FIXTURES`], addressed as `<kind directory>/<file name>`.
+fn fixture(relative: &str) -> Vec<u8> {
+    let path = format!("{LOPDF_FIXTURES}/{relative}");
+    std::fs::read(&path).unwrap_or_else(|error| panic!("{path}: {error}"))
+}
+
 macro_rules! lopdf_vector {
     ($name:ident, $directory:literal, $derive:expr) => {
         #[test]
         fn $name() {
-            holds($directory, include_bytes!(concat!("../../../../🧪️tests/🧫️fixtures", $directory, "/⬅️before.pdf")), include_bytes!(concat!("../../../../🧪️tests/🧫️fixtures", $directory, "/➡️after.pdf")), $derive);
+            holds($directory, &fixture(concat!($directory, "/⬅️before.pdf")), &fixture(concat!($directory, "/➡️after.pdf")), $derive);
         }
     };
 }

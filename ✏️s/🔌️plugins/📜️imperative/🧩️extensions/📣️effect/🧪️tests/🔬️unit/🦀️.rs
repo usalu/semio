@@ -1,4 +1,7 @@
-use super::*;
+use neural_engine::{Atom, Dictionary, Value};
+use semio_framework_pack_json::Value as JsonValue;
+use crate::extensions::effect::{EXTENSION_ID};
+use crate::extensions::effect::*;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_core_module_for_imperative_play() {

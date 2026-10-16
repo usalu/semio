@@ -21,12 +21,15 @@ import type {
   BuiltNode,
   PluginViewState,
   ProgramContributionEntry,
-  WindowLayout,
   NamedLayout,
+  WindowLayout,
 } from "../🛂️manifest/🟦️.ts";
 import { faultNoticeText, fillFaultNotice, normalizeManifestExamples, type FaultNoticeDefinition } from "../🛂️manifest/🟦️.ts";
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📮️shard-client/🟦️.ts";
+import { fetchPackageAssets, readPackageAssetDeclarations, type PackageAssetDeclaration } from "./📦️package-assets/🟦️.ts";
+export { PACKAGE_ASSET_DIRECTORIES, PACKAGE_ASSET_ROUTE, fetchPackageAssets, packageAssetMounts, packageAssetUrl, readPackageAssetDeclarations, sha256Hex } from "./📦️package-assets/🟦️.ts";
+export type { PackageAssetDeclaration } from "./📦️package-assets/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
 import {TurnScheduler,type Backpressure,type CoalesceKey,type Lane} from "../🎭️actor/🧵️turn-scheduler/🟦️.ts";
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
@@ -51,6 +54,8 @@ export interface PluginPackageDescriptor {
   readonly manifest: PluginManifest;
   readonly packageId: string;
   readonly componentSha256: string;
+  /** 📦️ The package assets the descriptor declares (name, exact size, SHA-256) for the kernel to deliver on `instance-open`. */
+  readonly assets?: readonly PackageAssetDeclaration[];
 }
 
 /** 🪪️ Binds {@link fetchDescriptorManifest} to a required receipt source naming the same plugin and package. */
@@ -64,13 +69,30 @@ export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string
   catch { signal?.throwIfAborted(); throw descriptorFault(pluginId, "plugin.descriptor-invalid", "invalid package receipt identity"); }
   const packageId = "packageId" in descriptor && typeof descriptor.packageId === "string" ? descriptor.packageId : "";
   if (packageId.length === 0 || "hashes" in descriptor || receipt.pluginId !== pluginId || receipt.packageId !== packageId) throw descriptorFault(pluginId, "plugin.descriptor-invalid", "missing package identity");
-  return { manifest, packageId, componentSha256: receipt.componentSha256 };
+  let assets: readonly PackageAssetDeclaration[];
+  try { assets = readPackageAssetDeclarations(descriptor); }
+  catch { throw descriptorFault(pluginId, "plugin.descriptor-invalid", "malformed package asset declaration"); }
+  return { manifest, packageId, componentSha256: receipt.componentSha256, ...(assets.length === 0 ? {} : { assets }) };
 }
 
 /** `onProgress` is called on the response headers and on every streamed chunk — see
  * {@link readDescriptorText} for why this fetch owes its caller a heartbeat at all. */
 export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: DescriptorProgress = () => {}): Promise<PluginManifest> {
-  return (await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress)).manifest;
+  const { descriptor, manifest } = await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress);
+  let assets: readonly PackageAssetDeclaration[];
+  try { assets = readPackageAssetDeclarations(descriptor); }
+  catch { throw descriptorFault(pluginId, "plugin.descriptor-invalid", "malformed package asset declaration"); }
+  if (assets.length > 0) manifestPackageAssets.set(manifest, assets);
+  return manifest;
+}
+
+const manifestPackageAssets = new WeakMap<PluginManifest, readonly PackageAssetDeclaration[]>();
+
+/** 📦️ The package assets the descriptor behind `manifest` declared when {@link fetchDescriptorManifest} read it, so a loader that
+ * registers the manifest with the {@link ActivationRegistry} can pass them on for delivery with `instance-open`; none for a manifest
+ * that declared none or was not read by it. */
+export function descriptorPackageAssets(manifest: PluginManifest): readonly PackageAssetDeclaration[] {
+  return manifestPackageAssets.get(manifest) ?? [];
 }
 
 /** 📇️ The JSON descriptor a served plugin module carries beside its entry, read before any actor starts. */
@@ -979,6 +1001,8 @@ export type PluginCatalogTarget = {
    * {@link artifactKindActivationOwner}: the host resolves which plugin opens an artifact kind from
    * these rows alone, with no manifest and no wasm module loaded. */
   readonly activationEvents?: readonly string[];
+  /** 📦️ The package assets this plugin's descriptor declares; the registry fetches, verifies and delivers them on `instance-open`. */
+  readonly assets?: readonly PackageAssetDeclaration[];
 };
 
 /** 🗂️ Framework-owned mirror of the OS product's generated `PlaygroundBuildTarget` row — only the
@@ -2510,6 +2534,8 @@ export interface ActivationManifestEntry {
   /** 🪪️ The plugin id the program's own descriptor names, when the program id differs from it (a hub document's
    * catalog-resolved program): what an extension's activation event names as its host. */
   readonly manifestPluginId?: string;
+  /** 📦️ The package assets the plugin's descriptor declares, delivered with the activation so they reach `instance-open`. */
+  readonly assets?: readonly PackageAssetDeclaration[];
 }
 
 /** 🔐️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): the web mirror of
@@ -2537,6 +2563,13 @@ function defaultGuestSlimAssetFetcher(moduleUrl: string): Promise<readonly Shard
       return response.arrayBuffer();
     })
     .then((buffer): readonly ShardAsset[] => [["guestslim-typst-fonts", buffer]]);
+}
+
+/** 📦️ The default package asset fetch: the declared files from the page's own origin, verified before delivery; nothing where
+ * there is no page location (a worker-less test host delivers through {@link ActivationRegistryOptions.fetchPackageAssets}). */
+function defaultPackageAssetFetcher(declared: readonly PackageAssetDeclaration[]): Promise<readonly ShardAsset[]> {
+  const base = (globalThis as { readonly location?: { readonly href: string } }).location?.href;
+  return base === undefined ? Promise.resolve([]) : fetchPackageAssets(declared, base, url => fetch(url));
 }
 
 //#region 🧮️MemoryPressureCap
@@ -2627,6 +2660,9 @@ export interface ActivationRegistryOptions {
    * without a real browser (CLAUDE.md: no direct dependency on an external implementation detail). */
   readonly memoryProbe?: MemoryProbe;
   readonly fetchAssets?: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
+  /** 📦️ Fetches, verifies and returns the declared package assets of one plugin; default: from the page's own origin through
+   * {@link PACKAGE_ASSET_ROUTE} (nothing without a page location). */
+  readonly fetchPackageAssets?: (declared: readonly PackageAssetDeclaration[]) => Promise<readonly ShardAsset[]>;
   /** ⏱️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): clock for `runtimeMetricsSnapshot`'s
    * `sampledAtMs`/`startRuntimeMetricsPublisher`'s cadence gate — injectable so both are testable
    * without real timers, same pattern `ShardClient`'s own `options.now` already uses. */
@@ -2682,6 +2718,8 @@ export class ActivationRegistry {
   private readonly maxResidentActors: number;
   private readonly fetchAssets: (moduleUrl: string) => Promise<readonly ShardAsset[]>;
   private assetsPromise: Promise<readonly ShardAsset[]> | null = null;
+  private readonly fetchPackageAssets: (declared: readonly PackageAssetDeclaration[]) => Promise<readonly ShardAsset[]>;
+  private readonly packageAssets = new Map<string, Promise<readonly ShardAsset[]>>();
   private readonly now: () => number;
   private lastRuntimeMetricsPublishMs: number | null = null;
   private readonly turnScheduler: TurnScheduler<QueuedTurnPayload, ShardBudget>;
@@ -2702,6 +2740,7 @@ export class ActivationRegistry {
     this.defaultBudget = options.defaultBudget;
     this.maxResidentActors = options.maxResidentActors ?? residentActorCapFromMemory((options.memoryProbe ?? defaultMemoryProbe)());
     this.fetchAssets = options.fetchAssets ?? defaultGuestSlimAssetFetcher;
+    this.fetchPackageAssets = options.fetchPackageAssets ?? defaultPackageAssetFetcher;
     this.now = options.now ?? (() => Date.now());
     this.onTurnResult = options.onTurnResult ?? (() => {});
     const onTurnError = options.onTurnError ?? ((actorId: string, error: unknown) => undefined);
@@ -2727,9 +2766,9 @@ export class ActivationRegistry {
    * every extension by its parent (`extensionsByParent`) so `activate()`'s cascade has something to
    * walk — descriptor-driven, zero special-casing per target. */
   registerCatalog(catalog: PluginCatalog): void {
-    for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId), caps: [] });
+    for (const target of catalog.plugins) this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.moduleUrl(target.pluginId), caps: [], ...(target.assets ? { assets: target.assets } : {}) });
     for (const target of catalog.extensions) {
-      this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId), caps: [] });
+      this.registerManifest({ pluginId: target.pluginId, moduleUrl: catalog.extensionModuleUrl(target.pluginId), caps: [], ...(target.assets ? { assets: target.assets } : {}) });
       const parentId = target.dependsOn?.[0];
       if (!parentId) continue;
       const siblings = this.extensionsByParent.get(parentId) ?? [];
@@ -2758,6 +2797,23 @@ export class ActivationRegistry {
       return [];
     });
     return this.assetsPromise;
+  }
+
+  /** 📦️ The declared package assets of `manifest`'s plugin, fetched and verified once per plugin. A failed fetch or a size/hash
+   * mismatch delivers none of them (the plugin still activates, as it would on a host that delivers nothing) and is reported. */
+  private loadPackageAssets(manifest: ActivationManifestEntry): Promise<readonly ShardAsset[]> {
+    const declared = manifest.assets;
+    if (declared === undefined || declared.length === 0) return Promise.resolve([]);
+    let pending = this.packageAssets.get(manifest.pluginId);
+    if (pending === undefined) {
+      pending = this.fetchPackageAssets(declared);
+      this.packageAssets.set(manifest.pluginId, pending);
+    }
+    return pending.catch((error: unknown) => {
+      this.packageAssets.delete(manifest.pluginId);
+      console.error(`[package-assets] ${manifest.pluginId} activates without its package assets: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    });
   }
 
   private markResident(actorId: string, pluginId: string): void {
@@ -2789,7 +2845,7 @@ export class ActivationRegistry {
     const manifest = this.manifests.get(pluginId);
     if (!manifest) throw new Error(`ActivationRegistry.activate: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
-    const assets = await this.loadAssets(manifest.moduleUrl);
+    const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
     this.markResident(actorId, pluginId);
     const activation = activationEventEnvelope(reason);
@@ -2827,7 +2883,7 @@ export class ActivationRegistry {
       const childActorId = `${parentActorId}::${extensionId}`;
       try {
         const scopedCaps = intersectCapabilityGrants(parentCaps, manifest.caps);
-        const assets = await this.loadAssets(manifest.moduleUrl);
+        const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
         await this.shardClient.activate(childActorId, manifest.moduleUrl, scopedCaps, this.defaultBudget, assets);
         this.markResident(childActorId, extensionId);
         const activation = activationEventEnvelope(`${ON_EXTENSION_REQUEST_ACTIVATION_PREFIX}${this.manifests.get(pluginId)?.manifestPluginId ?? pluginId}`);
@@ -2925,7 +2981,7 @@ export class ActivationRegistry {
     const manifest = this.manifests.get(pluginId);
     if (!manifest) throw new Error(`ActivationRegistry.resume: no manifest for plugin ${pluginId}`);
     await this.evictForMemoryPressure();
-    const assets = await this.loadAssets(manifest.moduleUrl);
+    const assets = [...(await this.loadAssets(manifest.moduleUrl)), ...(await this.loadPackageAssets(manifest))];
     await this.shardClient.activate(actorId, manifest.moduleUrl, manifest.caps, this.defaultBudget, assets);
     const checkpoint = this.checkpoints.get(actorId);
     if (checkpoint) await this.shardClient.restore(actorId, checkpoint);

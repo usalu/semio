@@ -13,7 +13,7 @@ unsafe impl GlobalAlloc for Allocator{
 }
 #[global_allocator]static ALLOCATOR:Allocator=Allocator;
 fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){TRACE.with(|trace|{assert!(trace.get().is_none());trace.set(Some((0,0)));});let result=operation();let (born,released)=TRACE.with(|trace|trace.take().unwrap());(result,born,released)}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 #[test]
 fn binary_original_receiving_shapes_and_independent_authored_body_bounds(){
@@ -81,4 +81,9 @@ fn binary_original_receiving_required_pack_retains_every_cancelled_backing_and_r
   eprintln!("[DEBUG] Original required Binary raw receiver cut{cut} actual born{born}/released{released}, retained original wire, fixed-policy cleanup{extra_born}/{extra_released}");
  }
  assert!(canceled>0);
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

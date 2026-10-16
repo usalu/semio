@@ -1,13 +1,13 @@
 //! 📬️ The exact typed external completion is bound before returning to its original finish cursor.
 use super::*;
 
-pub(super) struct EvaluationExternalCompletion {
- pub(super) original:Option<EvaluationExternalResult>,
- binding:Option<neural_engine::retirement::RetainedDictionaryInput>,dictionary:Option<Dictionary>,active:Option<Box<dyn ErasedSnapshotRetirement>>,stage:u8,normal_progress:RetainedCloneProgress,
+pub struct EvaluationExternalCompletion {
+ pub original:Option<EvaluationExternalResult>,
+ pub binding:Option<neural_engine::retirement::RetainedDictionaryInput>,dictionary:Option<Dictionary>,active:Option<Box<dyn ErasedSnapshotRetirement>>,stage:u8,normal_progress:RetainedCloneProgress,
 }
 impl EvaluationExternalCompletion {
  pub(super) fn new(original:EvaluationExternalResult)->Self{Self{original:Some(original),binding:None,dictionary:None,active:None,stage:0,normal_progress:Default::default()}}
- pub(super) fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
+ pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
  pub(super) fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,EvaluationFailure>{
   self.normal_progress=Default::default();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None);}
   if self.stage==0{
@@ -25,7 +25,7 @@ impl EvaluationExternalCompletion {
   if self.original.is_some(){return evaluation_admit_original(&mut self.original,&mut self.active,grant);}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
- pub(super) fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+ pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(binding)=&self.binding{return Ok(RetirementDemand{copy_bytes:binding.next_close_copy_byte_demand()?,capacity_bytes:binding.next_close_capacity_byte_demand(copy)?,release_bytes:binding.next_close_release_byte_demand()?,depth:binding.next_close_depth_demand()?});}
   if self.active.is_some(){return evaluation_child_demands(&self.active,copy);}
   if self.original.is_some(){return Ok(evaluation_owned_birth::<EvaluationExternalResult>());}

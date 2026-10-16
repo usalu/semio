@@ -1,3 +1,5 @@
+import "../📤️exports/🧪️tests/🟦️.ts";
+import "../📥️invocation/🏃️process/🧹️cleanup/🧪️tests/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -5,10 +7,10 @@ import { tmpdir } from "node:os";
 import findUp from "find-up";
 import { findWorkspaceRoot } from "../🟦️.ts";
 import { runScriptMain } from "../🚪️entrypoint/🟦️.ts";
-import { expect, test } from "bun:test";
+import { expect, test, spyOn } from "bun:test";
 
 import { Command } from "commander";
-import { BundleScript, ScriptRouter, readScriptPolicy, type ScriptInvocation, type ScriptProgress } from "../🟦️.ts";
+import { BundleScript, ScriptRouter, readScriptPolicy, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🟦️.ts";
 import corpus from "./🧫️fixtures/🔣️.json";
 import invocationSchema from "../📥️invocation/🧬️schema/🔣️.json";
 import invocationCorpus from "../📥️invocation/🧪️tests/🧫️fixtures/🔣️.json";
@@ -25,6 +27,38 @@ test("immutable admitted policy data avoids schema replay while mutable and exec
  }
  for(const value of [Object.freeze({version:1,owner:"",maximumElapsedMilliseconds:15000}),Object.freeze({version:1,owner:"invalid-frozen",maximumElapsedMilliseconds:-1})]){let validations=0;const read=new Function("scriptPolicyContract","types",javascript+";return readScriptPolicy;")({validate(value:unknown){validations++;return contract.validate(value);}},types);expect(oracle(value)).toBe(false);expect(()=>read(value)).toThrow("Complete Script policy required");expect(()=>read(value)).toThrow("Complete Script policy required");expect(validations).toBe(2);}
  console.log("[DEBUG] Actual policy admission method agrees with independent Ajv; only exact immutable plain data avoids repeated schema work");
+});
+
+test("owned expected keysets avoid repeated sorting without caching current invocation checks",()=>{
+ const value=fixtureInvocation("compiled-keyset-count"),invocation={...value,policy:Object.freeze({...value.policy})};checkScriptInvocation(invocation);
+ const native=Array.prototype.sort;let sorts=0;const spy=spyOn(Array.prototype,"sort").mockImplementation(function(this:unknown[],...args:any[]){sorts++;return native.apply(this,args as any);});
+ try{checkScriptInvocation(invocation);checkScriptInvocation(invocation);}finally{spy.mockRestore();}
+ expect(sorts).toBe(0);console.log("[DEBUG] Actual current invocation and control checks retain enumeration without repeated expected/actual sorting");
+});
+
+test("compiled exact key plans use bounded direct membership without array callbacks",async()=>{
+ const vm=await import("node:vm"),{default:fixture}=await import("../📥️invocation/🧪️tests/🧫️fixtures/🔑️keys.json"),{Database}=await import("bun:sqlite"),source=readFileSync(new URL("../../../🧬️schema/✅️validator/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("validator.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="compileExactKeysV1");if(!node)throw Error("Actual exact key plan implementation required");const code=ts.transpileModule(node.getText(tree).replace("export function","function"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context=vm.createContext({});vm.runInContext(`const counts={enumerations:0,arrayCallbacks:0,arrayMembership:0,directMembership:0};const keys=Object.keys,some=Array.prototype.some,includes=Array.prototype.includes,has=Set.prototype.has;Object.keys=value=>{counts.enumerations++;return keys(value)};Array.prototype.some=function(...args){counts.arrayCallbacks++;return Reflect.apply(some,this,args)};Array.prototype.includes=function(...args){counts.arrayMembership++;return Reflect.apply(includes,this,args)};Set.prototype.has=function(...args){counts.directMembership++;return Reflect.apply(has,this,args)};${code};globalThis.compile=compileExactKeysV1;globalThis.counts=counts;`,context);
+ const metadata=invocationSchema.definitions.ExpectedKeys.const,compile=context.compile as(keys:readonly string[])=>(value:object,name:string)=>void,invocation=compile(metadata.invocation),control=compile(metadata.control),db=new Database(":memory:");const api:typeof import("../📥️invocation/🏃️process/🟦️.ts")=await import("../📥️invocation/🏃️process/🟦️.ts");
+ try{await api.withScriptProcessEnvelope(api.createScriptProcessEnvelope({version:1,owner:"exact-key-plan-work",maximumElapsedMilliseconds:5000},{fixture:"exact-key-plan-work"},Date.now()),async original=>{for(const key of Object.keys(fixture.work))if(key!=="iterations")context.counts[key]=0;for(let index=0;index<fixture.work.iterations;index++){api.requireIssuedScriptInvocationV1(original);invocation(original,"Script invocation");control(original.control,"Script control");}});const actual=JSON.parse(JSON.stringify(context.counts)),oracle=db.query("select (json_array_length(?1,'$.invocation')+json_array_length(?1,'$.control'))*?2 membership,2*?2 enumerations").get(JSON.stringify(metadata),fixture.work.iterations)as{membership:number;enumerations:number};expect(oracle).toEqual({membership:fixture.work.directMembership,enumerations:fixture.work.enumerations});expect(actual).toEqual({enumerations:fixture.work.enumerations,arrayCallbacks:fixture.work.arrayCallbacks,arrayMembership:fixture.work.arrayMembership,directMembership:fixture.work.directMembership});console.log("[DEBUG] Actual isolated key-plan method work "+JSON.stringify({actual,oracle,scope:"VM instrumentation is isolated from Original and test/schema prototypes"}));}finally{db.close();}
+});
+
+test("compiled exact key snapshots match SQLite and preserve current object observables",async()=>{
+ const {Database}=await import("bun:sqlite"),{compileExactKeysV1,requireExactKeys}=await import("../../../🧬️schema/✅️validator/🟦️.ts"),{default:keys}=await import("../📥️invocation/🧪️tests/🧫️fixtures/🔑️keys.json"),db=new Database(":memory:"),recordKeys=invocationSchema.definitions.ExpectedKeys.const;
+ expect(new Ajv({strict:true}).compile(invocationSchema.definitions.ExpectedKeys)(recordKeys)).toBe(true);
+ const result=(run:()=>void)=>{try{run();return{accepted:true,error:undefined};}catch(error){return{accepted:false,error:(error as Error)?.message};}};
+ try{for(const row of keys.cases){const value=Object.fromEntries(row.actual.map(key=>[key,1])),compiled=compileExactKeysV1(row.keys),expected=db.query("select json_array_length(?1)=json_array_length(?2) and not exists(select value from json_each(?1) except select value from json_each(?2)) accepted").get(JSON.stringify(row.actual),JSON.stringify(row.keys))as{accepted:number};expect(Boolean(expected.accepted)).toBe(row.accepted);expect(result(()=>compiled(value,"fixture"))).toEqual(result(()=>requireExactKeys(value,row.keys,"fixture")));expect(result(()=>compiled(value,"fixture")).accepted).toBe(row.accepted);}}
+ finally{db.close();}
+ const mutable=["a"],compiled=compileExactKeysV1(mutable);mutable[0]="b";expect(()=>requireExactKeys({b:1},mutable,"fixture")).not.toThrow();expect(()=>compiled({b:1},"fixture")).toThrow("exactly a");expect(()=>compiled({a:1},"fixture")).not.toThrow();
+ let reads=0,traps=0;const target=Object.create({inherited:1});Object.defineProperty(target,"a",{enumerable:true,configurable:true,get(){reads++;return 1;}});Object.defineProperty(target,"hidden",{value:1,enumerable:false});target[Symbol("extra")]=1;const proxy=new Proxy(target,{ownKeys(value){traps++;return Reflect.ownKeys(value);}});
+ compiled(proxy,"fixture");compiled(proxy,"fixture");expect(traps).toBe(2);expect(reads).toBe(0);Object.defineProperty(target,"a",{enumerable:false});expect(()=>compiled(proxy,"fixture")).toThrow("exactly a");expect(traps).toBe(3);expect(reads).toBe(0);
+ let caught=false,reason:unknown;try{compiled(new Proxy({},{ownKeys(){throw undefined;}}),"fixture");}catch(error){caught=true;reason=error;}expect(caught).toBe(true);expect(reason).toBeUndefined();
+ console.log("[DEBUG] Explicit owned expected snapshots match independent SQLite; generic mutable metadata and actual proxy/getter/symbol/nonenumerable/undefined failure semantics remain current");
+});
+
+test("owned expected keysets retain every current invocation value signal and deadline check",()=>{
+ const controller=new AbortController(),reason=Object.freeze(Error("current Original cancelled"));let remaining:number|null=10,capabilities:any={},reads=0;const base=fixtureInvocation("keyset-current-values"),control={...base.control,signal:controller.signal,remainingMilliseconds:()=>{reads++;return remaining;}},value:any={policy:Object.freeze({...base.policy}),control,get capabilities(){return capabilities;}};
+ checkScriptInvocation(value);expect(reads).toBe(1);remaining=0;expect(()=>checkScriptInvocation(value)).toThrow("deadline");expect(reads).toBe(2);remaining=10;capabilities=null;expect(()=>checkScriptInvocation(value)).toThrow("capabilities");expect(reads).toBe(2);capabilities={};control.publish=undefined as any;expect(()=>checkScriptInvocation(value)).toThrow("ports");control.publish=base.control.publish;value.extra=1;expect(()=>checkScriptInvocation(value)).toThrow("exactly");delete value.extra;controller.abort(reason);let error:unknown;try{checkScriptInvocation(value);}catch(caught){error=caught;}expect(error).toBe(reason);expect(reads).toBe(2);
+ console.log("[DEBUG] Actual invocation key plans recheck changed values, callable ports, added own fields, deadline and exact current cancellation on every call");
 });
 
 /** 🧫️ Supplies each original routing case its real authored 15-second control and progress ledger. */

@@ -11,7 +11,7 @@
 use super::*;
 use ui_wgpu::wgpu::{BlockListScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, InkCanvasScene, TableScene, VirtualFileSystemScene};
 
-fn scene(kind: SurfaceKind) -> UiComponentSceneNode {
+pub fn scene(kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
         host_id: "surface-1".into(),
         surface_id: "surface-1".into(),
@@ -39,7 +39,7 @@ fn scene(kind: SurfaceKind) -> UiComponentSceneNode {
     }
 }
 
-const SURFACE: Rect = Rect { x: 0.0, y: 0.0, w: 400.0, h: 300.0 };
+pub const SURFACE: Rect = Rect { x: 0.0, y: 0.0, w: 400.0, h: 300.0 };
 
 /// 📊️ A body row answers `{domain:"row", id}` and the table's own `selectedIds` — `TableHost`'s
 /// `onRowContextMenu` (`📊️Table/🟦️.tsx:240`).

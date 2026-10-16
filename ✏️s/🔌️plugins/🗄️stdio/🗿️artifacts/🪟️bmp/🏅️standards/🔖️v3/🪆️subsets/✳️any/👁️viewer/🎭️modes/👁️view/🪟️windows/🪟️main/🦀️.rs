@@ -20,7 +20,7 @@ pub fn render(snapshot: &BmpSnapshot, locale: Locale) -> semio_framework_plugin:
     }
 }
 
-fn image_view(snapshot: &BmpSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
+pub fn image_view(snapshot: &BmpSnapshot) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
     let preview = bmp_png_preview(snapshot).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.bmp.preview", message))?;
     Ok(ImageView { width: preview.width, height: preview.height, mime: "image/png".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&preview.bytes) })
 }

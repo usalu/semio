@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "request": {
+        "mode": "prototype",
+        "manifest": "/owner/component/Cargo.toml",
+        "configuration": "/repository/.cargo/config.toml",
+        "selectors": [
+          "profile.prototype.opt-level=1"
+        ],
+        "threads": false,
+        "features": [
+          "layout"
+        ],
+        "noDefaultFeatures": true
+      },
+      "cargo": [
+        "build",
+        "--locked",
+        "--lib",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--profile",
+        "prototype",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.prototype.opt-level=1"
+      ],
+      "wasmPackCargo": [
+        "--locked",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.prototype.opt-level=1"
+      ]
+    },
+    {
+      "request": {
+        "mode": "prototype",
+        "manifest": "/owner/component/Cargo.toml",
+        "configuration": "/repository/.cargo/config.toml",
+        "selectors": [
+          "profile.prototype.opt-level=1"
+        ],
+        "threads": true,
+        "features": [
+          "layout"
+        ],
+        "noDefaultFeatures": true
+      },
+      "cargo": [
+        "build",
+        "--locked",
+        "--lib",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--profile",
+        "prototype",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-Z",
+        "build-std=std,panic_abort",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.prototype.opt-level=1"
+      ],
+      "wasmPackCargo": [
+        "--locked",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.prototype.opt-level=1"
+      ]
+    },
+    {
+      "request": {
+        "mode": "release",
+        "manifest": "/owner/component/Cargo.toml",
+        "configuration": "/repository/.cargo/config.toml",
+        "selectors": [
+          "profile.release.opt-level=1"
+        ],
+        "threads": false,
+        "features": [
+          "layout"
+        ],
+        "noDefaultFeatures": true
+      },
+      "cargo": [
+        "build",
+        "--locked",
+        "--lib",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--profile",
+        "release",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.release.opt-level=1"
+      ],
+      "wasmPackCargo": [
+        "--locked",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.release.opt-level=1"
+      ]
+    },
+    {
+      "request": {
+        "mode": "release",
+        "manifest": "/owner/component/Cargo.toml",
+        "configuration": "/repository/.cargo/config.toml",
+        "selectors": [
+          "profile.release.opt-level=1"
+        ],
+        "threads": true,
+        "features": [
+          "layout"
+        ],
+        "noDefaultFeatures": true
+      },
+      "cargo": [
+        "build",
+        "--locked",
+        "--lib",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--profile",
+        "release",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-Z",
+        "build-std=std,panic_abort",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.release.opt-level=1"
+      ],
+      "wasmPackCargo": [
+        "--locked",
+        "--manifest-path",
+        "/owner/component/Cargo.toml",
+        "--target",
+        "wasm32-unknown-unknown",
+        "--config",
+        "/repository/.cargo/config.toml",
+        "--no-default-features",
+        "--features",
+        "layout",
+        "--config",
+        "profile.release.opt-level=1"
+      ]
+    }
+  ],
+  "owners": [
+    {
+      "value": {
+        "version": 1,
+        "sourceOwner": "owner",
+        "mode": "prototype"
+      },
+      "accept": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "sourceOwner": "owner",
+        "mode": "release"
+      },
+      "accept": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "sourceOwner": "../owner",
+        "mode": "release"
+      },
+      "accept": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "sourceOwner": "owner",
+        "mode": "release",
+        "output": "dist/wasm/release"
+      },
+      "accept": false
+    }
+  ]
+}

@@ -89,9 +89,7 @@ fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDif
 //#endregion OpCodecs
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases

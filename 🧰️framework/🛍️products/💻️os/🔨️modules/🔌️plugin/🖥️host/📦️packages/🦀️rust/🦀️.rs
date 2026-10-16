@@ -12,8 +12,6 @@ extern crate semio_framework_os_kernel as store;
 #[path = "../../🦀️.rs"]
 mod component;
 pub use component::*;
-/// 🌿️ Exposes the canonical first-party authority named by host operation signatures.
-pub use semio_framework_os_kernel::os_vcs;
 use semio_framework_plugin_guest_contract::operation_authority;
 pub use semio_framework_plugin_guest_contract::original_actor_context;
 
@@ -25,5 +23,3 @@ pub use semio_framework_plugin_guest_contract::original_actor_context;
 #[path = "../../🪞️schema-parity/🧪️tests/🔬️unit/🦀️.rs"]
 mod schema_parity;
 
-pub use semio_framework_os_config::opening_config;
-pub use semio_framework_os_config::io as config_io;

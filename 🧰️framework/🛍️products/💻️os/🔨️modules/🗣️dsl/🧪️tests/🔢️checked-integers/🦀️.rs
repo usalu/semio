@@ -53,8 +53,8 @@ fn index_record(value: u64) -> RecordValue {
 
 fn binary_record(ordinal: u64, record: &RecordValue) -> Vec<u8> {
     let mut bytes = vec![variants_binary::OP_BINARY_FORMAT];
-    crate::os_pack::write_varint_u64(&mut bytes, ordinal);
-    bytes.extend(crate::os_pack::encode_record_body(&IndexRecord::__dsl_spec(), record, &crate::os_pack::EncodeOptions::default()).unwrap());
+    semio_framework_os_kernel::os_pack::write_varint_u64(&mut bytes, ordinal);
+    bytes.extend(semio_framework_os_kernel::os_pack::encode_record_body(&IndexRecord::__dsl_spec(), record, &semio_framework_os_kernel::os_pack::EncodeOptions::default()).unwrap());
     bytes
 }
 //#endregion 🧬️Fixture
@@ -173,7 +173,7 @@ async fn binary_ordinals_reject_overflow_and_truncation() {
         assert_eq!(decoded.is_ok(), row.accepted, "ordinal {}", row.decimal);
         match decoded {
             Ok(value) => assert_eq!(value, IndexOperation::SetIndex(IndexRecord { index: 7 })),
-            Err(error) => assert!(matches!(error, crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, .. })),
+            Err(error) => assert!(matches!(error, semio_framework_os_kernel::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, .. })),
         }
     }
     for bytes in [vec![], vec![1], vec![1, 128], vec![1, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128], vec![2, 0]] {

@@ -108,3 +108,196 @@ pub fn create_stl_any_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{STDIO_STL_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.stl".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Stl", "Stl"),
+        source_format: STDIO_STL_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+        schema: STDIO_STL_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_STL_DOCUMENT_SCHEMA};
+pub use crate::schema::mutations::StlMutation;
+pub use crate::schema::snapshot::StlSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA);
+    codec.extension = "stl";
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{artifact_kind};
+use crate::{native_codec};
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.stl.v1", artifact: "stl", kind: artifact_kind, codec: native_codec }]
+}
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{native_codecs};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems8
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_STL_DOCUMENT_SCHEMA};
+use crate::{artifact_kind};
+pub use crate::schema::mutations::StlMutation;
+pub use crate::schema::snapshot::StlSnapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
+/// replaces the old side-effecting `crate::engine::register()`, which the plugin
+/// root used to call unconditionally before `PluginBuilder::new(...)` was even constructed. Mirrors
+/// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
+/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
+/// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<StlSnapshot, StlMutation>(...))`.
+/// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
+/// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
+/// super::standards::v_ascii::engine::*; }`) — deliberately NOT this file's own `io_registry`
+/// module below, whose `entries()` returns `&'static [&'static ComposerEntry]` (references) and
+/// would silently rebind under a bare call (this ticket's "SILENT REBIND" hazard). stl's own
+/// `register()` had no `register_schema_specs()` call, so every registration `engine::register()`
+/// performed is covered by a declaration field — no `.setup()` survivor needed.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("stl", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::schema::stl_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::schema::inferences::stl_artifact_inference_descriptor()])
+        .composers(crate::engine::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec_bare::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.stl", standard: semio_framework_artifact_reference::StandardId("ascii"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .try_build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
+/// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
+/// verbatim (five `LanguageSpec` rows, one per role) from `crate::standards::
+/// v_ascii::engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.stl",
+                    extension: Some("stl"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v_ascii::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_ascii::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v_ascii::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_ascii::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.stl"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.stl.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v_ascii::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_ascii::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v_ascii::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_ascii::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.stl.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.stl.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v_ascii::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v_ascii::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.stl.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.stl.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v_ascii::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_ascii::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.stl.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "stdio.stl.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v_ascii::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v_ascii::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("stdio.stl.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems9

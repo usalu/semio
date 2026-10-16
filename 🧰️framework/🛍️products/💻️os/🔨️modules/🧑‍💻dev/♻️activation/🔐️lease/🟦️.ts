@@ -8,7 +8,7 @@ import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚
 
 const repoRoot = getWorkspaceRoot();
 
-import { pluginOutRoot } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+
 
 
 
@@ -108,18 +108,6 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
   return false;
 }
 
-/** 🧾️ Whether the shared build outputs a follower intends to serve are actually on disk — the
- * generated playground catalog plus a non-empty `🔌️plugin-modules/`. Checked instead of trusting the
- * lease flag alone, so a follower never serves an empty module directory just because some other
- * process claimed readiness. */
-function pluginBuildOutputsPresent(): boolean {
-  try {
-    return existsSync(pluginOutRoot) && readdirSync(pluginOutRoot).length > 0;
-  } catch {
-    return false;
-  }
-}
-
 /** 🪓️ Forcibly takes the lease for this process after a follower gave up waiting, so it can do
  * the build itself. Best-effort: losing the ensuing `wx` race just means somebody else holds it and we
  * build anyway, which is wasteful but always correct. */
@@ -152,4 +140,4 @@ function releasePluginBuildLease(variant: string): void {
   }
 }
 
-export { PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS, type PluginBuildLease, acquirePluginBuildLease, isPidAlive, markPluginBuildLeaseReady, pluginBuildLeaseDir, pluginBuildLeasePath, pluginBuildOutputsPresent, readPluginBuildLease, releasePluginBuildLease, takeOverPluginBuildLease, waitForPluginBuildLeaseReady };
+export { PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS, type PluginBuildLease, acquirePluginBuildLease, isPidAlive, markPluginBuildLeaseReady, pluginBuildLeaseDir, pluginBuildLeasePath, readPluginBuildLease, releasePluginBuildLease, takeOverPluginBuildLease, waitForPluginBuildLeaseReady };

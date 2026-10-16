@@ -1,4 +1,5 @@
-use super::*;
+use crate::EpwSnapshot;
+use crate::viewer::epw::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_read_only_table_window() {

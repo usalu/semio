@@ -54,7 +54,8 @@ function descendants(paths: readonly string[], root: string): readonly string[] 
  let end = low; while (end < paths.length && paths[end]!.startsWith(prefix)) end++;
  return paths.slice(low, end);
 }
-function scopeValue(scope: FilesystemJournalScopeV1): FilesystemJournalScopeV1 {
+/** 📨️ Reads a closed immutable journal scope without granting observer or filesystem authority. */
+export function readFilesystemJournalScopeV1(scope: FilesystemJournalScopeV1): FilesystemJournalScopeV1 {
  if (!scope || Object.keys(scope).sort().join(",") !== "files,roots") throw Error("Closed filesystem journal scope required");
  const roots = pathsValue(scope.roots), files = pathsValue(scope.files);
  if (roots.length !== scope.roots.length || files.length !== scope.files.length) throw Error("Filesystem journal scope repeats a path");
@@ -153,7 +154,7 @@ export async function createLiveFilesystemJournalV1(options: FilesystemJournalOp
   const work = tail.then(async () => {
    if (abandoned) throw abandonmentReason;
    check(current); live();
-   const scope = scopeValue(requested), selected = (path: string): boolean => scope.files.includes(path) || scope.roots.some(root => path === root || path.startsWith(root + "/"));
+   const scope = readFilesystemJournalScopeV1(requested), selected = (path: string): boolean => scope.files.includes(path) || scope.roots.some(root => path === root || path.startsWith(root + "/"));
    await options.source.admitScope(scope, current); check(current); live(); if (abandoned) throw abandonmentReason;
    for (let attempt = 0; attempt < 4; attempt++) {
     await drain(current);

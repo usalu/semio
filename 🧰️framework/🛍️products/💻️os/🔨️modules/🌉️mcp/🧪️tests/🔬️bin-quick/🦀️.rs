@@ -1,5 +1,9 @@
+//! 🧱️ Entrypoint_quick of the runtime crate: Gateway runtime, entrypoint and facade.
 
-use super::*;
+use crate::entrypoint::{parse_http_args, parse_stdio_args, protected_credential_environment_name};
+use crate::root::HubOptions;
+use semio_framework_os_mcp_foundation::agent_credential::AgentCredentialSource;
+use semio_framework_os_mcp_port::policy::AutoApprovePolicy;
 
 #[test]
 fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {
@@ -71,6 +75,7 @@ fn the_process_entry_seal_rejects_hub_carriers_and_admits_host_harness_variables
 }
 
 //#region 🔖️AutoApprove
+
 // 🎫️ slice M4 (audit §6 P0.2 item 4): `AutoApprovePolicy` existed as a type with no way to reach it
 // from the command line, so every live server hardcoded `Never` and a destructive capability was
 // permanently unapprovable. These assert the real argv surface.
@@ -97,4 +102,5 @@ fn the_stdio_bridge_can_be_opted_out_of_but_is_on_by_default() {
     assert!(parse_stdio_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).unwrap().no_bridge);
     assert!(parse_http_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).is_err(), "--no-bridge is stdio-only: http always serves /bridge on its own socket");
 }
+
 //#endregion 🔖️AutoApprove

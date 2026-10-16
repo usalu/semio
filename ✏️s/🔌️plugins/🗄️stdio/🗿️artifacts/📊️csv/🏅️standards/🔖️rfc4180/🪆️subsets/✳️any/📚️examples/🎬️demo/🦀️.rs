@@ -24,6 +24,4 @@ pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio")
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️example.spr.semio");
 //#endregion 🔖️P2P1BinaryFixtures
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

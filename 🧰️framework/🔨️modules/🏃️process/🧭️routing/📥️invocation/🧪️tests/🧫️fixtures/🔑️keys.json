@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "keys": [
+        "b",
+        "a"
+      ],
+      "actual": [
+        "a",
+        "b"
+      ],
+      "accepted": true
+    },
+    {
+      "keys": [
+        "b",
+        "a"
+      ],
+      "actual": [
+        "b",
+        "a"
+      ],
+      "accepted": true
+    },
+    {
+      "keys": [
+        "a",
+        "b"
+      ],
+      "actual": [
+        "a"
+      ],
+      "accepted": false
+    },
+    {
+      "keys": [
+        "a",
+        "b"
+      ],
+      "actual": [
+        "a",
+        "b",
+        "c"
+      ],
+      "accepted": false
+    },
+    {
+      "keys": [
+        "a",
+        "a"
+      ],
+      "actual": [
+        "a",
+        "b"
+      ],
+      "accepted": false
+    },
+    {
+      "keys": [
+        "a",
+        "a"
+      ],
+      "actual": [
+        "a"
+      ],
+      "accepted": false
+    },
+    {
+      "keys": [],
+      "actual": [],
+      "accepted": true
+    },
+    {
+      "keys": [
+        "__proto__",
+        "3",
+        "ä"
+      ],
+      "actual": [
+        "ä",
+        "3",
+        "__proto__"
+      ],
+      "accepted": true
+    },
+    {
+      "keys": [
+        "a"
+      ],
+      "actual": [
+        "b"
+      ],
+      "accepted": false
+    }
+  ],
+  "work": {
+    "iterations": 2,
+    "enumerations": 4,
+    "arrayCallbacks": 0,
+    "arrayMembership": 0,
+    "directMembership": 14
+  }
+}

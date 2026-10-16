@@ -1,75 +1,28 @@
-//! 🧬️ The semantic UI contract — the single language-neutral boundary between the headless UI
-//! runtime and every renderer (React DOM, the custom GPU family, anything later).
-//!
-//! Three properties define this crate:
-//!
-//! 1. **Flat, not recursive.** A [`UiSnapshot`] is an id-keyed table of [`UiNodeRecord`]s, never a
-//!    nested tree. That is what lets one patch address one node, and what makes the whole surface
-//!    schema-projectable — the owned versioned metadata keeps recursive wire types explicit.
-//! 2. **Synchronous.** Validation and patch application are run-to-completion transactions with no
-//!    suspension point — see ruling U1 in ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`.
-//! 3. **Owned boundary.** Value codecs, styling tokens and schema registration are first-party
-//! dependencies; the existing Serde contract supplies runtime interoperability. The contract
-//! owns no rendering engine, GPU device, windowing runtime, actor kernel or OS kernel.
-
-/// 🧬️ This scope's schema leaf: `register_scope_exports()` unconditionally, the versioned
-/// TypeScript projection behind `feature = "typegen"` inside the file itself.
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema_metadata;
-
-#[path = "🔢️number-format/🦀️.rs"]
-mod number_format;
-#[path = "♿️accessibility/🦀️.rs"]
-mod accessibility;
-#[path = "🎬️action/🦀️.rs"]
-mod action;
-#[path = "🏗️builder/🦀️.rs"]
-mod builder;
-#[path = "🧩️component/🦀️.rs"]
-mod component;
-/// 🧪️ Loads and asserts against `🧪️tests/🧫️fixtures/🧪️conformance` — entirely `#[cfg(test)]` inside, so it
-/// mounts unconditionally here without affecting the wasm check targets (see the file's own header).
-#[cfg(test)]
-#[path = "🧪️tests/🔬️conformance-unit/🦀️.rs"]
-mod conformance;
-#[path = "📃️document/🦀️.rs"]
+//! 📃️ Canonical flat semantic documents, exact resident custody, assembly and paged patches.
+pub use semio_framework_ui_contract_values::*;
+pub use semio_framework_ui_contract_actions::*;
+pub use semio_framework_ui_contract_presentation::*;
+pub use semio_framework_ui_contract_components::*;
+pub use semio_framework_ui_contract_operations::*;
+pub use semio_framework_ui_contract_builder::*;
+pub use semio_framework_ui_contract_text_edit::*;
+pub use semio_framework_ui_contract_identity::*;
+#[path="📃️document/🦀️.rs"]
 mod document;
-#[path = "🕰️host-temporal-format/🦀️.rs"]
-mod host_temporal_format;
-#[path = "📐️layout/🦀️.rs"]
-mod layout;
-#[path = "🛡️limits/🦀️.rs"]
-mod limits;
-#[path = "🪟️overlay/🦀️.rs"]
-mod overlay;
-#[path = "👥️presence/🦀️.rs"]
-mod presence;
-#[path = "🎨️style/🦀️.rs"]
-mod style;
-#[path = "🗺️surface/🦀️.rs"]
-mod surface;
-#[path = "🪢️text-edit/🦀️.rs"]
-mod text_edit;
-
-#[path = "♻️retirement/👷️worker/🦀️.rs"]
+pub use document::*;
+#[path="🧾️fields/🦀️.rs"]
+mod fields;
+#[path="♻️retirement/🌳️typed/📋️fields/🦀️.rs"]
+mod typed_retirement;
+#[path="🧾️copy/🦀️.rs"]
+mod typed_copy;
+#[path="🧾️compare/🦀️.rs"]
+mod typed_compare;
+#[path="♻️retirement/👷️worker/🦀️.rs"]
 mod worker_retirement;
 pub use worker_retirement::{ui_worker_retirement_admission,ui_worker_retirement_permits,UI_WORKER_RETIREMENT_POLICY};
-
-pub use accessibility::*;
-pub use number_format::*;
-pub use action::*;
-pub use builder::*;
-pub use component::*;
-pub use document::*;
-pub use host_temporal_format::*;
-pub use layout::*;
-pub use limits::*;
-pub use overlay::*;
-pub use presence::*;
-pub use style::*;
-pub use surface::*;
-pub use text_edit::*;
-
-pub use semio_framework_ui_contract_budget::*;
-pub use semio_framework_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
-pub use semio_framework_ui_contract_identity::{SurfaceId,UiNodeId,UiRevision,UiNodeIdAllocator};
+#[path="🧬️schema/🦀️.rs"]
+pub mod schema_metadata;
+#[path="♿️accessibility/🦀️.rs"]
+mod accessibility_projection;
+pub use accessibility_projection::*;

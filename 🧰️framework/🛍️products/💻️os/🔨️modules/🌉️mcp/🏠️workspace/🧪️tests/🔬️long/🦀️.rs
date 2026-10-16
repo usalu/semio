@@ -1,5 +1,16 @@
+//! 🧱️ Workspace_long of the workspace crate: The headless workspace and its gateway backend.
 
-use super::*;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::headless_workspace_state::HeadlessWorkspace;
+use crate::workspace::workspace_worker_pool;
+use semio_framework_os_mcp_capabilities::core_capabilities::build_catalog;
+use semio_framework_os_mcp_catalog::catalog::{Catalog, CatalogSource, compile};
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, MutationOrigin, PreparedOps};
+use semio_framework_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, close_probe_store_to_terminal, probe_store_owners};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
 
 /// 🔁 How long this test waits on one `ExternalChanged` poke before poking again. A SINGLE poke is
 /// not enough: `FolderEventLogStorage::read_archive` answering `Some` proves the archive key exists,
@@ -11,7 +22,7 @@ use super::*;
 const EXTERNAL_CHANGE_REPOKE_INTERVAL: std::time::Duration = std::time::Duration::from_millis(250);
 
 fn empty_catalog() -> Arc<Catalog> {
-    Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
+    Arc::new(compile(&CatalogSource::default(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native).expect("empty catalog source compiles"))
 }
 
 /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
@@ -211,7 +222,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         vec![AppCommand::TransactionPrepare {
             txn_id: "w3-txn-1".to_string(),
             ops: PreparedOps::default(),
-            origin: crate::actions::MutationOrigin::Agent { principal: "agent:mutation-test".to_string(), invocation_id: "inv-1".to_string() },
+            origin: MutationOrigin::Agent { principal: "agent:mutation-test".to_string(), invocation_id: "inv-1".to_string() },
         }],
     );
     println!("[W3] real TransactionPrepare round trip: {prepare:?}");
@@ -326,12 +337,13 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
 }
 
 //#region 🔖️TwoPhaseTypedCommand
+
 /// 🧭️ The one mutation verb this file's two-phase laws drive, resolved out of the REAL compiled
 /// catalog rather than spelled here: a capability id is `{plugin}.{app}.{action}` and an app id is
 /// itself a dotted canonical surface ref (`s.note.note@1/*#editor`), so it cannot be written by hand
 /// without pinning a schema version this law has no business knowing.
 fn note_mutation_capability_id() -> Option<String> {
-    crate::build_catalog().entries.iter().map(|entry| entry.id.as_str().to_string()).find(|id| id.starts_with("note.") && id.ends_with(".addBlock"))
+    build_catalog().entries.iter().map(|entry| entry.id.as_str().to_string()).find(|id| id.starts_with("note.") && id.ends_with(".addBlock"))
 }
 
 /// 🧬️ The witness these laws compare on: the DOCUMENT itself, read back off the live guest.
@@ -448,7 +460,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
             vec![AppCommand::TransactionPrepare {
                 txn_id: txn.clone(),
                 ops: PreparedOps { document: ops.document.clone(), config: Vec::new(), draft: Vec::new(), children: ops.children.clone() },
-                origin: crate::actions::MutationOrigin::Agent { principal: "agent:two-phase-test".to_string(), invocation_id: "wr4-inv-1".to_string() },
+                origin: MutationOrigin::Agent { principal: "agent:two-phase-test".to_string(), invocation_id: "wr4-inv-1".to_string() },
             }],
         )
         .expect("the guest stages the prepared ops");
@@ -482,9 +494,11 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     let after_abandon = document_witness(&mut channel, 0);
     assert_eq!(settled, after_abandon, "A PREPARED HANDLE THAT IS NEVER INVOKED LEFT AN EFFECT: the document moved from {settled} to {after_abandon}");
 }
+
 //#endregion 🔖️TwoPhaseTypedCommand
 
 //#region 🔖️SteppedDocumentLoad
+
 /// 📏️ Committed transactions behind the long-history document the stepped-load law loads: enough that the guest folds it over
 /// several polls rather than inside the first one.
 const LONG_HISTORY_TRANSACTIONS: usize = 240;
@@ -534,7 +548,7 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
             other => panic!("PureCommand must answer Emit, received {other:?}"),
         };
         let txn = format!("stepped-load-{index}");
-        let origin = crate::actions::MutationOrigin::Agent { principal: "agent:stepped-load-law".to_string(), invocation_id: txn.clone() };
+        let origin = MutationOrigin::Agent { principal: "agent:stepped-load-law".to_string(), invocation_id: txn.clone() };
         channel.exchange(0, vec![AppCommand::TransactionPrepare { txn_id: txn.clone(), ops: PreparedOps { document: ops.document, config: Vec::new(), draft: Vec::new(), children: ops.children }, origin }]).expect("the guest stages");
         channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: txn }]).expect("the guest commits");
     }
@@ -579,4 +593,5 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
     channel.load_session_document(2, "stepped-load-law", &pack, &spr, &ActivationScope::detached()).expect("the cancelled operation was acknowledged, so the next load is admitted");
     assert_eq!(history_stamp(&mut channel, 2), source_head, "the reloaded head is the source head");
 }
+
 //#endregion 🔖️SteppedDocumentLoad

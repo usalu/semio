@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-scene-node-graph-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

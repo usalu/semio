@@ -30,11 +30,14 @@ const FORBIDDEN_DEPENDENCIES: ReadonlyArray<readonly [string, string]> = [
   ["memmap2", "fontique path/mmap font sources link std::fs, so every guest that shapes text would import wasi:filesystem, which no closed browser actor admits (fonts are embedded bytes)"],
 ];
 
+/** 📦️ The render crate graph: the assembly crate and the four producers it re-exports. */
+const RENDER_PACKAGES: readonly string[] = ["semio-framework-ui-render", "semio-framework-ui-render-interaction", "semio-framework-ui-render-packet", "semio-framework-ui-render-shader-contract", "semio-framework-ui-render-text"];
+
 //#region 🔖️test
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: RENDER_PACKAGES, cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
     await runOwnedCommand("bun", ["../../🧪️tests/🖼️webgpu-surface/🟨️.js"], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }

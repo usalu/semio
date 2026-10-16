@@ -21,9 +21,15 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/🕸️bindings"
-      ]
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust"
+          }
+        }
+      }
     }
   },
   "namedInputs": {

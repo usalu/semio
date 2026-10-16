@@ -1,4 +1,5 @@
-use super::*;
+use crate::LasSnapshot;
+use crate::standards::v1_0::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

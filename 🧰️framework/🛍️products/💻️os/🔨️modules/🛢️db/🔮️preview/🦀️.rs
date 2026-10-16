@@ -27,10 +27,9 @@
 //! `TouchedRegionOracle` (plain `TouchedSet::conflicts_with`, no bloom prefilter or kind matrix)
 //! remains available for callers that want to bypass `db_conflict` entirely.
 
-use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, ActorId, ArtifactId, DbError, DbLimits};
-use crate::db_state::TouchedSet;
-use crate::*;
+use db_durability::Frontier;
+use db_ids::{ActorId, ArtifactId, DbError, DbLimits, check_len};
+use db_state::TouchedSet;
 use protocol::MutationEnvelope;
 use std::collections::HashMap;
 
@@ -275,9 +274,9 @@ impl ConflictOracle for DbConflictOracle {
 /// actor alongside its durable state — never persisted, never itself a `db_wal`/`db_storage`
 /// participant.
 pub struct PreviewStore {
-    document: ArtifactId,
+    pub document: ArtifactId,
     budgets: PreviewBudgets,
-    previews: HashMap<PreviewId, Preview>,
+    pub previews: HashMap<PreviewId, Preview>,
     active_index: HashMap<PreviewKey, PreviewId>,
     sequence: u64,
 }
@@ -420,7 +419,7 @@ impl PreviewStore {
         self.transition(id, PreviewState::Rejected)
     }
 
-    fn transition(&mut self, id: &PreviewId, to: PreviewState) -> Result<(), DbError> {
+    pub fn transition(&mut self, id: &PreviewId, to: PreviewState) -> Result<(), DbError> {
         let preview = self.previews.get_mut(id).ok_or_else(|| DbError::NotFound(id.0.clone()))?;
         preview.state.validate_transition(to)?;
         preview.state = to;

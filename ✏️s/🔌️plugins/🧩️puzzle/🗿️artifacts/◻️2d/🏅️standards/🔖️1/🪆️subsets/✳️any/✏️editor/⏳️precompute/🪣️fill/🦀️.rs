@@ -10,6 +10,7 @@ use crate::editor::puzzle2d::engine::{
     BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
 };
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{};
+use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
@@ -31,8 +32,6 @@ pub(crate) const FILL_RUN_OPS_PER_PLACEMENT: usize = 2;
 /// 🎯️ Target regions one run reads as its placement constraint. A board is painted by hand, so this
 /// admits far more than any authored document holds while keeping the run's own owner fixed.
 pub(crate) const FILL_RUN_TARGET_REGION_SLOTS: usize = 256;
-/// 🆔️ Prefix of the node ids the board engine mints for fill placements (`puzzle2d.fill.<serial>`).
-pub(crate) const FILL_RUN_NODE_ID_PREFIX: &str = "puzzle2d.fill.";
 const FILL_RUN_CAPTURE_UNITS: usize = 256;
 const FILL_RUN_SEARCH_BATCH: usize = 64;
 const FILL_RUN_DEADLINE_CHECK: usize = 16;
@@ -310,7 +309,7 @@ fn fill_kind_rows(document: &Value) -> Vec<Value> {
 
 /// 🔢️ The first engine serial a run may mint without reusing a fill node id `id` already holds.
 fn fill_serial_after(id: &str) -> u64 {
-    id.strip_prefix(FILL_RUN_NODE_ID_PREFIX).and_then(|serial| serial.parse::<u64>().ok()).map_or(1, |serial| serial.saturating_add(1))
+    id.strip_prefix(PUZZLE_2D_BOARD_NAMING.fill_node_prefix).and_then(|serial| serial.parse::<u64>().ok()).map_or(1, |serial| serial.saturating_add(1))
 }
 
 /// 🧬️ The `create_node` and `connect_handles` document mutations one engine placement contributes.
@@ -582,7 +581,7 @@ struct FillCapture {
 
 impl FillCapture {
     fn new(suggestion_offset: f64) -> Self {
-        Self { capture: ArtifactFillCaptureCursor::new(), ingress: Some(BoardFillSnapshotIngress::new(suggestion_offset)), suggestion_offset, serial: 1, open_handles: 0 }
+        Self { capture: ArtifactFillCaptureCursor::new(), ingress: Some(BoardFillSnapshotIngress::new(suggestion_offset, &PUZZLE_2D_BOARD_NAMING)), suggestion_offset, serial: 1, open_handles: 0 }
     }
 
     /// 🔬️ Up to `units` capture units; the captured snapshot once the document is fully streamed.

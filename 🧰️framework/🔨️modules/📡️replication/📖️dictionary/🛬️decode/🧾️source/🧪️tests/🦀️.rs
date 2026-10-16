@@ -1,5 +1,5 @@
 use super::*;
-use crate::codec::{RetainedWireByteSource,OriginalWireSourceIdentity};
+use crate::{RetainedWireByteSource, OriginalWireSourceIdentity};
 fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(action)}
 struct Pages{pages:Vec<Vec<u8>>,extent:usize}
 struct Borrowed<'a>{owner:&'a Pages,authority:Option<(u64,u64)>}

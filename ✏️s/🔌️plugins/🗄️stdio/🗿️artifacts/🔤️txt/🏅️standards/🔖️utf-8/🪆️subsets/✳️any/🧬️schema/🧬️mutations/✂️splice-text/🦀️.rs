@@ -207,7 +207,5 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SpliceTextMutat
 //#endregion ⚙️Semantics
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "case",
+    "context",
+    "limits",
+    "phases",
+    "inventory",
+    "initialization"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "case": {
+      "const": "prototype-local"
+    },
+    "context": {
+      "const": "dependency"
+    },
+    "limits": {
+      "const": {
+        "maximumSourceBytes": 16384,
+        "maximumArtifactBytes": 2097152,
+        "maximumFiles": 4096,
+        "maximumEntries": 8192,
+        "maximumOutputBytes": 1048576,
+        "maximumLines": 65536
+      }
+    },
+    "phases": {
+      "const": [
+        {
+          "name": "cold",
+          "edits": [],
+          "affected": [
+            "profile_arguments",
+            "profile_dependency"
+          ]
+        },
+        {
+          "name": "unchanged",
+          "edits": [],
+          "affected": []
+        },
+        {
+          "name": "root-body",
+          "edits": [
+            {
+              "path": "lib.rs",
+              "before": "VALUE:u8=7",
+              "after": "VALUE:u8=8"
+            }
+          ],
+          "affected": [
+            "profile_arguments"
+          ]
+        },
+        {
+          "name": "leaf-body",
+          "edits": [
+            {
+              "path": "leaf/lib.rs",
+              "before": "{11}",
+              "after": "{12}"
+            }
+          ],
+          "affected": [
+            "profile_arguments",
+            "profile_dependency"
+          ]
+        },
+        {
+          "name": "context",
+          "edits": [
+            {
+              "path": "Cargo.toml",
+              "before": "codegen-units=256",
+              "after": "codegen-units=128"
+            },
+            {
+              "path": ".cargo/config.toml",
+              "before": "codegen-units=256",
+              "after": "codegen-units=128"
+            }
+          ],
+          "affected": [
+            "profile_arguments",
+            "profile_dependency"
+          ]
+        }
+      ]
+    },
+    "inventory": {
+      "const": {
+        "files": [
+          {
+            "path": "nested/a.json",
+            "text": "{\"x\":1}"
+          },
+          {
+            "path": "z.txt",
+            "text": "Grüß"
+          }
+        ],
+        "cases": [
+          {
+            "name": "exact",
+            "maximumEntries": 4,
+            "maximumFiles": 2,
+            "maximumBytes": 13,
+            "accept": true
+          },
+          {
+            "name": "entry-plus-one",
+            "maximumEntries": 3,
+            "maximumFiles": 2,
+            "maximumBytes": 13,
+            "accept": false
+          },
+          {
+            "name": "file-plus-one",
+            "maximumEntries": 4,
+            "maximumFiles": 1,
+            "maximumBytes": 13,
+            "accept": false
+          },
+          {
+            "name": "byte-plus-one",
+            "maximumEntries": 4,
+            "maximumFiles": 2,
+            "maximumBytes": 12,
+            "accept": false
+          }
+        ]
+      }
+    },
+    "initialization": {
+      "const": {
+        "databasePath": "missing/db.sqlite",
+        "constructorAccepted": false,
+        "fixtureRemains": false
+      }
+    }
+  },
+  "definitions": {
+    "Selection": {
+      "enum": [
+        "all",
+        "local",
+        "roles",
+        "context"
+      ]
+    },
+    "Selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 1,
+      "properties": {
+        "SEMIO_PROFILE_LOCAL_ONLY": {
+          "const": "1"
+        },
+        "SEMIO_PROFILE_ROLE_ONLY": {
+          "const": "1"
+        },
+        "SEMIO_PROFILE_CONTEXT_ONLY": {
+          "const": "1"
+        }
+      }
+    },
+    "InventoryLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumEntries",
+        "maximumFiles",
+        "maximumBytes"
+      ],
+      "properties": {
+        "maximumEntries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "maximumFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2097152
+        }
+      }
+    },
+    "InventoryProtocol": {
+      "const": {
+        "directoryBufferSize": 1,
+        "yieldEveryEntries": 64
+      }
+    }
+  }
+}

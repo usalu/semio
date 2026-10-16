@@ -1,9 +1,9 @@
 //! 🏠️ Composition and retirement of the renderer runtime, presenter, scheduler and deadline sources.
-//! RuntimeMailbox owns worker dispatch; the host presents completed frames and schedules wakeups.
+//! AppMailbox owns worker dispatch; the host presents completed frames and schedules wakeups.
 
 use crate::deadlines::HotSwapPoll;
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
-use crate::{AppPresenter, RuntimeMailbox};
+use crate::{AppMailbox, AppPresenter};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering};
 use ui_render::{CursorRequest, FrameScheduler};
 
@@ -72,7 +72,7 @@ fn performance_now_ms() -> f64 {
 pub struct OsHost {
     retained: semio_framework_job::RetainedCloneGrant,
     pub(crate) animation_clock: crate::deadlines::AcceptedAnimationClock,
-    pub(crate) runtime: RuntimeMailbox,
+    pub(crate) runtime: AppMailbox,
     pub(crate) presenter: AppPresenter,
     pub scheduler: FrameScheduler,
     pub clock: OsClock,
@@ -117,7 +117,7 @@ pub(crate) struct BrowserRedrawOutcome {
 struct OsHostRetirementState {
     retained: semio_framework_job::RetainedCloneGrant,
     camera_progress: semio_framework_job::RetainedCloneProgress,
-    runtime: Option<RuntimeMailbox>,
+    runtime: Option<AppMailbox>,
     presenter: Option<AppPresenter>,
     scheduler: Option<FrameScheduler>,
     clock: Option<OsClock>,
@@ -225,114 +225,10 @@ enum PairedEngineSurfaceClosePhase {
     Terminal,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ComponentSurfaceCloseToken(u64);
-
-#[derive(Clone)]
-struct ComponentSurfaceCloseRequest {
-    token: ComponentSurfaceCloseToken,
-    owner: crate::element_contracts::ScenePointerTarget,
-    engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ComponentSurfaceCloseBridgeState {
-    Pending,
-    Active,
-    Terminal,
-}
-
-struct ComponentSurfaceCloseBridge {
-    generation: u64,
-    request: Option<ComponentSurfaceCloseRequest>,
-    state: ComponentSurfaceCloseBridgeState,
-}
-
-impl Default for ComponentSurfaceCloseBridge {
-    fn default() -> Self {
-        Self { generation: 0, request: None, state: ComponentSurfaceCloseBridgeState::Terminal }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-thread_local! {
-    static COMPONENT_SURFACE_CLOSE_BRIDGE: std::cell::RefCell<ComponentSurfaceCloseBridge> = std::cell::RefCell::new(ComponentSurfaceCloseBridge::default());
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-static COMPONENT_SURFACE_CLOSE_BRIDGE: std::sync::OnceLock<std::sync::Mutex<ComponentSurfaceCloseBridge>> = std::sync::OnceLock::new();
-
-#[cfg(target_arch = "wasm32")]
-fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfaceCloseBridge) -> R) -> R {
-    COMPONENT_SURFACE_CLOSE_BRIDGE.with(|bridge| f(&mut bridge.borrow_mut()))
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfaceCloseBridge) -> R) -> R {
-    let mut bridge = COMPONENT_SURFACE_CLOSE_BRIDGE.get_or_init(|| std::sync::Mutex::new(ComponentSurfaceCloseBridge::default())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    f(&mut bridge)
-}
-
-pub(crate) fn request_component_surface_close(
-    owner: crate::element_contracts::ScenePointerTarget,
-    engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
-) -> Result<ComponentSurfaceCloseToken, (crate::element_contracts::ScenePointerTarget, Option<crate::engine_canvas::EngineSurfaceToken>)> {
-    with_component_surface_close_bridge(|bridge| {
-        if bridge.request.is_some() {
-            return Err((owner, engine_token));
-        }
-        let Some(generation) = bridge.generation.checked_add(1).filter(|generation| *generation != 0) else {
-            return Err((owner, engine_token));
-        };
-        bridge.generation = generation;
-        let token = ComponentSurfaceCloseToken(generation);
-        bridge.request = Some(ComponentSurfaceCloseRequest { token, owner, engine_token });
-        bridge.state = ComponentSurfaceCloseBridgeState::Pending;
-        Ok(token)
-    })
-}
-
-pub(crate) fn component_surface_close_terminal(token: ComponentSurfaceCloseToken) -> bool {
-    with_component_surface_close_bridge(|bridge| bridge.request.as_ref().is_some_and(|request| request.token == token) && bridge.state == ComponentSurfaceCloseBridgeState::Terminal)
-}
-
-pub(crate) fn acknowledge_component_surface_close(token: ComponentSurfaceCloseToken) -> bool {
-    with_component_surface_close_bridge(|bridge| {
-        if bridge.request.as_ref().is_none_or(|request| request.token != token) || bridge.state != ComponentSurfaceCloseBridgeState::Terminal {
-            return false;
-        }
-        bridge.request = None;
-        true
-    })
-}
-
-fn take_component_surface_close_request() -> Option<ComponentSurfaceCloseRequest> {
-    with_component_surface_close_bridge(|bridge| {
-        if bridge.state != ComponentSurfaceCloseBridgeState::Pending {
-            return None;
-        }
-        bridge.state = ComponentSurfaceCloseBridgeState::Active;
-        bridge.request.clone()
-    })
-}
-
-fn publish_component_surface_close_terminal(token: ComponentSurfaceCloseToken) -> bool {
-    with_component_surface_close_bridge(|bridge| {
-        if bridge.request.as_ref().is_none_or(|request| request.token != token) || bridge.state != ComponentSurfaceCloseBridgeState::Active {
-            return false;
-        }
-        bridge.state = ComponentSurfaceCloseBridgeState::Terminal;
-        true
-    })
-}
-
-pub(crate) fn component_surface_close_pending() -> bool {
-    with_component_surface_close_bridge(|bridge| bridge.request.is_some() && bridge.state != ComponentSurfaceCloseBridgeState::Terminal)
-}
-
-pub(crate) fn component_surface_close_occupied() -> bool {
-    with_component_surface_close_bridge(|bridge| bridge.request.is_some())
-}
+pub(crate) use semio_framework_os_renderer_wgpu_scene_state::{
+    acknowledge_component_surface_close, component_surface_close_occupied, component_surface_close_pending, component_surface_close_terminal, publish_component_surface_close_terminal, request_component_surface_close, take_component_surface_close_request, ComponentSurfaceCloseRequest,
+    ComponentSurfaceCloseToken,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ComponentSurfaceClosePhase {
@@ -366,7 +262,7 @@ impl ComponentSurfaceCloseOwner {
         Self { request, operation: semio_framework_trace::allocate_operation_id(), sequence: 0, cpu_present: false, gpu_present: false, phase: ComponentSurfaceClosePhase::Asset, faulted: false, world_fault:None, world_progress:None }
     }
 
-    fn close_asset_world_step(&mut self, runtime: &RuntimeMailbox) {
+    fn close_asset_world_step(&mut self, runtime: &AppMailbox) {
         if self.faulted {
             return;
         }
@@ -396,7 +292,7 @@ impl ComponentSurfaceCloseOwner {
         }
     }
 
-    fn close_step(&mut self, runtime: &RuntimeMailbox, presenter: &mut AppPresenter) -> bool {
+    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter) -> bool {
         if self.faulted {
             return false;
         }
@@ -508,7 +404,7 @@ impl PairedEngineSurfaceClose {
         Self { operation: semio_framework_trace::allocate_operation_id(), sequence: 0, scan: 0, token: None, cpu_present: false, gpu_present: false, phase: PairedEngineSurfaceClosePhase::Scan, faulted: false }
     }
 
-    fn close_step(&mut self, runtime: &RuntimeMailbox, presenter: &mut AppPresenter) -> bool {
+    fn close_step(&mut self, runtime: &AppMailbox, presenter: &mut AppPresenter) -> bool {
         if self.faulted {
             return false;
         }
@@ -630,7 +526,7 @@ impl PairedEngineSurfaceClose {
 
 impl OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> Self {
+    pub(crate) fn new(runtime: AppMailbox, presenter: AppPresenter, retained: semio_framework_job::RetainedCloneGrant) -> Self {
         crate::scenes::install_scene_camera_authority(retained).expect("host retains the same camera bootstrap authority");
         Self {
             retained,
@@ -854,7 +750,7 @@ impl OsHostRetirementState {
         }
         if let Some(runtime) = self.runtime.as_ref() {
             let Some(presenter)=self.presenter.as_mut()else{return Ok(false)};
-            if !runtime.close_world3d_dynamic_step(presenter,cx)? {
+            if !presenter.close_world3d_dynamic_step(runtime,cx)? {
                 return Ok(false);
             }
         }

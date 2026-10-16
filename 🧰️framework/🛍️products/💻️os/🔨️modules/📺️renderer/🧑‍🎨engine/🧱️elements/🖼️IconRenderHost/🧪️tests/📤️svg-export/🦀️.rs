@@ -5,7 +5,7 @@ use ui_wgpu::wgpu::{
     SceneMaterialAlpha3d,
 };
 
-fn fixture() -> serde_json::Value {
+pub fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️svg-export/🔣️.json")).expect("SVG export fixture")
 }
 
@@ -21,7 +21,7 @@ fn fixture_vec3(value: &serde_json::Value) -> Vec<[f32; 3]> {
         .collect()
 }
 
-fn asset(generation: u64, fixture: &serde_json::Value) -> World3dMeshAsset {
+pub fn asset(generation: u64, fixture: &serde_json::Value) -> World3dMeshAsset {
     let positions = fixture_vec3(&fixture["geometry"]["positions"]);
     let normals = fixture_vec3(&fixture["geometry"]["normals"]);
     let indices: Vec<u32> = fixture["geometry"]["indices"]
@@ -76,7 +76,7 @@ fn asset(generation: u64, fixture: &serde_json::Value) -> World3dMeshAsset {
     World3dMeshAsset { mesh, appearance }
 }
 
-fn request(value: &serde_json::Value) -> String {
+pub fn request(value: &serde_json::Value) -> String {
     serde_json::json!({
         "assetUrl": "fixture.glb",
         "format": "svg",

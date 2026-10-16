@@ -1,5 +1,5 @@
 use super::*;
-use db_storage::MemoryStorage;
+use db_storage_memory::MemoryStorage;
 
 //#region 🔖️Fixtures
 /// 🔢️ A trivial counting projection: state is "how many times I've actually run" —
@@ -212,7 +212,7 @@ async fn topological_order_respects_dependency_edges() {
         erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
         erase(CounterProjection { id: "c", schema_version: 1, dependencies: &["a", "b"], reads: &[] }),
     ];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
     let order = engine.topological_order().await;
     let position = |id: &str| order.iter().position(|candidate| *candidate == id).unwrap();
@@ -224,21 +224,21 @@ async fn topological_order_respects_dependency_edges() {
 #[semio_framework_async_macros::async_test]
 async fn build_rejects_duplicate_ids() {
     let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::AlreadyExists(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn build_rejects_unknown_dependency() {
     let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::NotFound(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn build_rejects_a_dependency_cycle() {
     let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::InvalidArgument(_))));
 }
 //#endregion 🔖️Graph
@@ -247,7 +247,7 @@ async fn build_rejects_a_dependency_cycle() {
 #[semio_framework_async_macros::async_test]
 async fn apply_envelope_advances_and_persists_incrementally() {
     let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
     for seq in 1..=3u64 {
@@ -264,7 +264,7 @@ async fn apply_envelope_advances_and_persists_incrementally() {
 #[semio_framework_async_macros::async_test]
 async fn apply_envelope_rejects_a_mismatched_document() {
     let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
     assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1).await, &touch(&["doc"]).await)), Err(DbError::InvalidArgument(_))));
 }
@@ -273,7 +273,7 @@ async fn apply_envelope_rejects_a_mismatched_document() {
 async fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
     let projections: Vec<AnyTestProjection> =
         vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }).into(), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into()];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
     // Step 1: count -> 1, sum sees count's *this-step* value (1): sum = 1 + 1 = 2.
@@ -289,7 +289,7 @@ async fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
 
 #[semio_framework_async_macros::async_test]
 async fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
@@ -310,7 +310,7 @@ async fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
 #[semio_framework_async_macros::async_test]
 async fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
     let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
     db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
 
@@ -328,7 +328,7 @@ async fn preview_augmented_never_persists_and_does_not_affect_canonical_state() 
 #[semio_framework_async_macros::async_test]
 async fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
     let projections = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
     // Untouched: the projection must not run, and nothing must be persisted for it.
@@ -350,7 +350,7 @@ async fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
         // "not directly triggered by anything"; it must only ever run via the dependency cascade.
         erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }).into(),
     ];
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
     // "counter" is untouched -> "cascade" has nothing to cascade from -> neither runs.
@@ -376,7 +376,7 @@ async fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
 /// steps and cascaded-to on others.
 #[semio_framework_async_macros::async_test]
 async fn rebuild_equals_incremental_after_checkpoint_resume() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let make_projections = || -> Vec<AnyTestProjection> {
         vec![
             erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into(),

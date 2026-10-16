@@ -3,12 +3,102 @@
   "$id": "urn:semio:framework:assets:build-providers:v1",
   "definitions": {
     "MeshCollectionAssetSpecV1": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "route", "catalog"],
-      "properties": { "kind": { "const": "mesh-collection" }, "route": { "type": "string", "minLength": 1 }, "catalog": { "type": "string", "minLength": 1 } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "route",
+        "catalog"
+      ],
+      "properties": {
+        "kind": {
+          "const": "mesh-collection"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalog": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "StaticDirectoryAssetSpecV1": {
-      "type": "object", "additionalProperties": false, "required": ["kind", "route", "root"],
-      "properties": { "kind": { "const": "static-dir" }, "route": { "type": "string", "minLength": 1 }, "root": { "type": "string", "minLength": 1 } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "route",
+        "root"
+      ],
+      "properties": {
+        "kind": {
+          "const": "static-dir"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "FlowWasmDeliveryV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "browser",
+            "host"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "source"
+            },
+            "browser": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "host": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "root"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "publication"
+            },
+            "root": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
     }
   }
 }

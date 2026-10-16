@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "arrays": [
+    {"body":"aliases=[]\nports={react=[],wgpu=[]}","strings":[],"numbers":[]},
+    {"body":"aliases=[\"one\"]\nports={react=[6000],wgpu=[6100]}","strings":["one"],"numbers":[6000]},
+    {"body":"aliases=[\"one\", \"two\", \"\"]\nports={react=[6000, 6001],wgpu=[6100, 6101]}","strings":["one","two",""],"numbers":[6000,6001]},
+    {"body":"aliases=[\"ä\", \"🧩️\"]\nports={react=[1,65535],wgpu=[2,65534]}","strings":["ä","🧩️"],"numbers":[1,65535]}
+  ],
+  "tables": [
+    {"lines":[],"blocks":[]},
+    {"lines":["[[items]]"],"blocks":[[]]},
+    {"lines":["[[items]]","id=\"one\""],"blocks":[["id=\"one\""]]},
+    {"lines":["# before"," [[items]] ","id=\"one\"","[other]","id=\"ignored\"","[[items]]","id=\"two\""],"blocks":[["id=\"one\""],["id=\"two\""]]},
+    {"lines":["[[items]]","[[items]]","[other]"],"blocks":[[],[]]}
+  ],
+  "components": [
+    {"body":"","kind":null},
+    {"body":"[package.metadata.semio]\ncomponent-kind=\"plugin\"","kind":"plugin"},
+    {"body":"[package.metadata.semio]\ncomponent-kind=\"extension\"\n[other]\ncomponent-kind=\"plugin\"","kind":"extension"},
+    {"body":"[other]\ncomponent-kind=\"plugin\"\n[package.metadata.semio]","kind":null}
+  ],
+  "imports": [
+    {"source":"","specs":[]},
+    {"source":"import \"one\";","specs":["one"]},
+    {"source":"import {value} from 'one'; export {other} from \"two\";","specs":["one","two"]},
+    {"source":"import type {Name} from \"🧩️module\";","specs":["🧩️module"]}
+  ],
+  "coverage":"mode: count\nmodule/a.go:2.1,4.2 2 3\nmodule/a.go:4.1,5.2 1 2\nmodule/b.go:1.1,1.2 1 0\n",
+  "coverageRows":[["module/a.go",2,3],["module/a.go",3,3],["module/a.go",4,5],["module/a.go",5,2],["module/b.go",1,0]]
+}

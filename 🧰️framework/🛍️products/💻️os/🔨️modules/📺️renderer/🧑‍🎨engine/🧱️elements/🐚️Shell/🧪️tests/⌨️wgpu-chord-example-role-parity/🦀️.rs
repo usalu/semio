@@ -85,7 +85,7 @@ fn shell_with_keybindings(keybindings: Vec<Keybinding>) -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut app = test_app(Vec::new(), Vec::new());
     app.keybindings = keybindings;
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
@@ -99,7 +99,7 @@ fn binding(keys: &str, action: &str) -> Keybinding {
 #[test]
 fn escape_resolves_the_apps_own_engagement_abort_binding() {
     let shell = shell_with_keybindings(vec![binding("escape", "engagementAbort")]);
-    let resolved = shell.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default());
+    let resolved = shell.docs.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &shell.chrome);
     assert_eq!(resolved.map(|descriptor| descriptor.action), Some("engagementAbort".to_string()));
 }
 
@@ -113,7 +113,7 @@ fn escape_resolves_the_apps_own_engagement_abort_binding() {
 fn a_comma_separated_binding_matches_each_chord_it_declares() {
     let shell = shell_with_keybindings(vec![binding("delete,backspace", "deleteSelection")]);
     for action in [ui_wgpu::wgpu::KeyAction::Delete, ui_wgpu::wgpu::KeyAction::Backspace] {
-        let resolved = shell.match_app_keybinding(&action, &PointerModifiers::default());
+        let resolved = shell.docs.match_app_keybinding(&action, &PointerModifiers::default(), &shell.chrome);
         assert_eq!(resolved.map(|descriptor| descriptor.action), Some("deleteSelection".to_string()), "{action:?} is one of the binding's own chords");
     }
 }
@@ -125,9 +125,9 @@ fn a_comma_separated_binding_matches_each_chord_it_declares() {
 fn a_binding_that_also_claims_a_shell_chord_keeps_its_other_chords() {
     let shell = shell_with_keybindings(vec![binding("mod+p,mod+d", "duplicateSelection")]);
     let (shell_chord, shell_modifiers) = probe_chord("mod+p");
-    assert_eq!(shell.match_app_keybinding(&shell_chord, &shell_modifiers), None, "mod+p is the shell's palette chord and never an app's");
+    assert_eq!(shell.docs.match_app_keybinding(&shell_chord, &shell_modifiers, &shell.chrome), None, "mod+p is the shell's palette chord and never an app's");
     let (app_chord, app_modifiers) = probe_chord("mod+d");
-    assert_eq!(shell.match_app_keybinding(&app_chord, &app_modifiers).map(|descriptor| descriptor.action), Some("duplicateSelection".to_string()));
+    assert_eq!(shell.docs.match_app_keybinding(&app_chord, &app_modifiers, &shell.chrome).map(|descriptor| descriptor.action), Some("duplicateSelection".to_string()));
 }
 
 /// ⚖️ LAW: `mod+z` / `mod+shift+z` / `mod+y` resolve to the framework-universal undo/redo verbs an app
@@ -170,21 +170,21 @@ fn only_a_real_in_session_activation_is_a_window_activate_note() {
 #[test]
 fn a_real_activation_arms_the_shell_window_activate_history_note() {
     let mut shell = shell_with_keybindings(Vec::new());
-    shell.active_window_id = Some("main".into());
-    shell.arm_window_activation_note();
-    assert!(shell.deferred_actions.is_empty(), "the first observation seeds the witness without noting");
+    shell.windows.active_window_id = Some("main".into());
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    assert!(shell.settle.deferred_actions.is_empty(), "the first observation seeds the witness without noting");
 
-    shell.active_window_id = Some("second".into());
-    shell.arm_window_activation_note();
-    let armed = shell.deferred_actions.first().expect("a real activation arms exactly one note");
+    shell.windows.active_window_id = Some("second".into());
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    let armed = shell.settle.deferred_actions.first().expect("a real activation arms exactly one note");
     assert_eq!(armed.action, "noteShellCommand");
     let args = armed.args.as_ref().expect("the note carries its command");
     assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowActivate"));
     assert_eq!(args.get("detail").and_then(|detail| detail.get("windowId")).and_then(DslValue::as_str), Some("second"));
-    assert_eq!(shell.deferred_actions.len(), 1, "one activation, one note");
+    assert_eq!(shell.settle.deferred_actions.len(), 1, "one activation, one note");
 
-    shell.arm_window_activation_note();
-    assert_eq!(shell.deferred_actions.len(), 1, "…and re-observing the same active window notes nothing again");
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    assert_eq!(shell.settle.deferred_actions.len(), 1, "…and re-observing the same active window notes nothing again");
 }
 
 /// 📨️ LAW: the pane that loses the activation is blurred exactly once — `hostEvent{windowId, kind: blur}` for it on the
@@ -192,21 +192,21 @@ fn a_real_activation_arms_the_shell_window_activate_history_note() {
 #[test]
 fn a_pane_losing_the_activation_is_blurred_once() {
     let mut shell = shell_with_keybindings(Vec::new());
-    shell.active_window_id = Some("main".into());
-    shell.arm_window_blur_host_event();
-    assert!(shell.deferred_actions.is_empty(), "the first observation seeds the witness without a blur");
+    shell.windows.active_window_id = Some("main".into());
+    shell.windows.arm_window_blur_host_event(&mut shell.settle, &shell.plugins, &shell.docs);
+    assert!(shell.settle.deferred_actions.is_empty(), "the first observation seeds the witness without a blur");
 
-    shell.active_window_id = Some("second".into());
-    shell.arm_window_blur_host_event();
-    let [blur] = shell.deferred_actions.as_slice() else { panic!("one blur: {:?}", shell.deferred_actions) };
+    shell.windows.active_window_id = Some("second".into());
+    shell.windows.arm_window_blur_host_event(&mut shell.settle, &shell.plugins, &shell.docs);
+    let [blur] = shell.settle.deferred_actions.as_slice() else { panic!("one blur: {:?}", shell.settle.deferred_actions) };
     assert_eq!(blur.action, semio_framework::HOST_EVENT_ACTION_ID);
     let args = blur.args.as_ref().expect("the blur names its window");
     assert_eq!(args.get(semio_framework::HOST_EVENT_ARG_WINDOW_ID).and_then(DslValue::as_str), Some("main"));
     assert_eq!(args.get(semio_framework::HOST_EVENT_ARG_KIND).and_then(DslValue::as_str), Some(semio_framework::HOST_EVENT_KIND_BLUR));
 
-    shell.deferred_actions.clear();
-    shell.arm_window_blur_host_event();
-    assert!(shell.deferred_actions.is_empty(), "re-observing the same active window blurs nothing");
+    shell.settle.deferred_actions.clear();
+    shell.windows.arm_window_blur_host_event(&mut shell.settle, &shell.plugins, &shell.docs);
+    assert!(shell.settle.deferred_actions.is_empty(), "re-observing the same active window blurs nothing");
 }
 
 //#endregion 🪟️WindowActivationNote
@@ -239,10 +239,10 @@ fn the_example_picker_publishes_reacts_trigger_and_row_control_ids() {
 fn escape_closes_the_open_example_dropdown() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.overlay_state = OverlayState::Dropdown("example".into());
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
-    assert_eq!(shell.overlay_state, OverlayState::None, "the picker is dismissed");
-    assert!(shell.deferred_actions.is_empty(), "dismissing an overlay is chrome state, never a dispatch");
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    assert_eq!(shell.input.overlay_state, OverlayState::None, "the picker is dismissed");
+    assert!(shell.settle.deferred_actions.is_empty(), "dismissing an overlay is chrome state, never a dispatch");
 }
 
 /// 🧪️ The error a `dispatch_action` reaches on a fixture with no loaded plugin — proof the action
@@ -255,19 +255,19 @@ const NO_PROGRAM: &str = "action program missing";
 #[test]
 fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
     let mut shell = shell_with_keybindings(Vec::new());
-    let app = shell.session.as_ref().unwrap().app.clone();
+    let app = shell.docs.session.as_ref().unwrap().app.clone();
     let manifest = semio_framework::PluginManifest {
         plugin_id: "test".into(), label: "Test".into(), version: "1".into(), apps: vec![app.clone()],
         examples: vec![semio_framework::ExampleDefinition { id: "nakagin".into(), label: LocalizedLabel::native("Nakagin", "Nakagin"), icon_id: "file".into(), artifact_json: "{}".into(), dialect: app.dialect.clone() }],
         capabilities: vec![], topic_contributions: vec![], commands: vec![], artifact_kinds: vec![], hosted_artifact_kinds: vec![], dependencies: vec![], contributions: vec![],
     };
-    shell.plugins.push(ProgramBridgeEntry::from_wasm("test".into(), None, None, std::path::PathBuf::from("missing-example-picker-guest.wasm"), manifest).unwrap());
-    shell.overlay_state = OverlayState::Dropdown("example".into());
+    shell.plugins.plugins.push(ProgramBridgeEntry::from_wasm("test".into(), None, None, std::path::PathBuf::from("missing-example-picker-guest.wasm"), manifest).unwrap());
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
     let row = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("shell.example.nakagin".into()), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None };
-    let dispatched = semio_framework_async::block_on(shell.handle_shell_hit(&row, &InputState::<ActionDescriptor>::default()));
+    let dispatched = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&row, &InputState::<ActionDescriptor>::default()));
     assert!(dispatched.is_err(), "the offered row dispatched `setActiveExample` to the fixture's unavailable guest");
-    assert_eq!(shell.active_example_id.as_deref(), Some("nakagin"), "the picker's own selection follows the click");
-    assert_eq!(shell.overlay_state, OverlayState::None, "…and the dropdown closes behind it");
+    assert_eq!(shell.plugins.active_example_id.as_deref(), Some("nakagin"), "the picker's own selection follows the click");
+    assert_eq!(shell.input.overlay_state, OverlayState::None, "…and the dropdown closes behind it");
 }
 
 /// ⚖️ LAW: a freshly mounted instance is TOLD its example — React re-runs its boot-example effect per
@@ -279,13 +279,13 @@ fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
 #[test]
 fn a_freshly_mounted_instance_is_announced_its_resolved_example() {
     let mut shell = shell_with_keybindings(Vec::new());
-    shell.active_example_id = Some("nakagin".into());
-    let announced = semio_framework_async::block_on(shell.announce_session_example());
+    shell.plugins.active_example_id = Some("nakagin".into());
+    let announced = semio_framework_async::block_on(ActionsCtx::of(&mut shell).announce_session_example());
     assert_eq!(announced.err().as_deref(), Some(NO_PROGRAM), "the mount dispatched `setActiveExample` down to the guest hop this fixture has no program for");
 
     let mut without = shell_with_keybindings(Vec::new());
-    without.active_example_id = None;
-    assert!(semio_framework_async::block_on(without.announce_session_example()).is_ok(), "a dialect with no example announces nothing at all");
+    without.plugins.active_example_id = None;
+    assert!(semio_framework_async::block_on(ActionsCtx::of(&mut without).announce_session_example()).is_ok(), "a dialect with no example announces nothing at all");
 }
 
 /// ⚖️ LAW: the two role chips carry React's own control ids and each one's chord, so the pointer and

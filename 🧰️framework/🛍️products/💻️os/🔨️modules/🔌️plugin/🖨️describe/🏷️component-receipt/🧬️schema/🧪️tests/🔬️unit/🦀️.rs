@@ -66,10 +66,21 @@ fn binds_only_shipped_bytes_of_the_named_package_and_descriptor() {
 fn mirrors_the_schema_profile_policy() {
     let schema: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).expect("receipt schema");
     let policies = &schema["$defs"]["ComponentProfilePolicies"]["const"];
-    assert_eq!(policies["wasm-release"]["maximumBytes"].as_u64(), Some(SHIPPED_COMPONENT_MAX_BYTES));
-    assert_eq!(policies["wasm-prototype"]["maximumBytes"].as_u64(), Some(ITERATE_COMPONENT_MAX_BYTES));
-    assert_eq!(policies["wasm-release"]["shipped"].as_bool(), Some(ComponentProfileV1::WasmRelease.shipped()));
-    assert_eq!(policies["wasm-prototype"]["shipped"].as_bool(), Some(ComponentProfileV1::WasmIterate.shipped()));
+    assert_eq!(policies["release"]["maximumBytes"].as_u64(), Some(SHIPPED_COMPONENT_MAX_BYTES));
+    assert_eq!(policies["prototype"]["maximumBytes"].as_u64(), Some(ITERATE_COMPONENT_MAX_BYTES));
+    assert_eq!(policies["release"]["shipped"].as_bool(), Some(ComponentProfileV1::Release.shipped()));
+    assert_eq!(policies["prototype"]["shipped"].as_bool(), Some(ComponentProfileV1::Prototype.shipped()));
     assert_eq!(schema["$defs"]["ComponentReceiptV1"]["properties"]["schema"]["const"].as_str(), Some(super::COMPONENT_RECEIPT_SCHEMA));
     assert_eq!(schema["$defs"]["ComponentReceiptV1"]["properties"]["target"]["const"].as_str(), Some(super::COMPONENT_TARGET));
+}
+
+#[test]
+fn admits_two_intent_corpus_with_exact_size_and_shipping() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🎚️profile/🔣️.json")).expect("intent corpus");
+    for row in corpus["cases"].as_array().expect("cases") {
+        let profile = serde_json::from_value::<ComponentProfileV1>(row["profile"].clone());
+        let valid = profile.as_ref().is_ok_and(|profile| (8..=profile.maximum_bytes()).contains(&row["bytes"].as_u64().expect("bytes")));
+        assert_eq!(valid, row["valid"].as_bool().expect("valid"));
+        assert_eq!(valid && profile.is_ok_and(|profile| profile.shipped()), row["shipped"].as_bool().expect("shipped"));
+    }
 }

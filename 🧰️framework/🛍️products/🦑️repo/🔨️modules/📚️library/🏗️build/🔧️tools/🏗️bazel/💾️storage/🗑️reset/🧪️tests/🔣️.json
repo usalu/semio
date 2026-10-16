@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "all-three",
+      "device": 7,
+      "kinds": [
+        "directory",
+        "directory",
+        "directory"
+      ],
+      "devices": [
+        7,
+        7,
+        7
+      ],
+      "expected": [
+        "bazel/actions",
+        "bazel/outputs",
+        "bazel/workspaces"
+      ]
+    },
+    {
+      "name": "all-missing",
+      "device": 7,
+      "kinds": [
+        "missing",
+        "missing",
+        "missing"
+      ],
+      "devices": [
+        7,
+        7,
+        7
+      ],
+      "expected": []
+    },
+    {
+      "name": "partial",
+      "device": 7,
+      "kinds": [
+        "missing",
+        "directory",
+        "missing"
+      ],
+      "devices": [
+        7,
+        7,
+        7
+      ],
+      "expected": [
+        "bazel/outputs"
+      ]
+    },
+    {
+      "name": "foreign-link",
+      "device": 7,
+      "kinds": [
+        "symlink",
+        "directory",
+        "directory"
+      ],
+      "devices": [
+        7,
+        7,
+        7
+      ],
+      "expected": null
+    },
+    {
+      "name": "cross-device",
+      "device": 7,
+      "kinds": [
+        "directory",
+        "directory",
+        "directory"
+      ],
+      "devices": [
+        8,
+        7,
+        7
+      ],
+      "expected": null
+    }
+  ]
+}

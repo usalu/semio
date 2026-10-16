@@ -13,10 +13,10 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::{TrustedCatalogLoader, VerifiedTrustedCatalog};
-use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use crate::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
-use crate::inference::VerifiedGisMapArtifactBindingV1;
+use semio_hub_trusted_catalog::{TrustedCatalogLoader, VerifiedTrustedCatalog};
+use semio_hub_native_openable::NativeCodecProviderSetV1;
+use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
+use semio_hub_inference_catalog::VerifiedGisMapArtifactBindingV1;
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_store;
 use semio_framework_hash::{Hasher, Sha256};
@@ -49,9 +49,9 @@ impl AuthorityOperationControl for BuilderControl {
 /// 🗂️ One retained on-disk GIS Map profile; its directory is removed when the value is dropped.
 pub struct VerifiedGisMapIntegrationProfileV1 {
     root: PathBuf,
-    bundle_path: PathBuf,
-    catalog: Arc<VerifiedTrustedCatalog>,
-    binding: Arc<VerifiedGisMapArtifactBindingV1>,
+    pub bundle_path: PathBuf,
+    pub catalog: Arc<VerifiedTrustedCatalog>,
+    pub binding: Arc<VerifiedGisMapArtifactBindingV1>,
 }
 
 impl VerifiedGisMapIntegrationProfileV1 {
@@ -99,9 +99,9 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
-    let descriptor = super::decode_package_descriptor(&emitted)?;
-    semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
-    semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
+    let descriptor = semio_hub_trusted_catalog_descriptor::decode_package_descriptor(&emitted)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(semio_hub_trusted_catalog_contract::catalog_error)?;
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let actor_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_ACTOR));
     let mut component_blake3 = Hasher::new();
@@ -136,11 +136,11 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     std::fs::write(root.join("component.wasm"), component).map_err(|error| AuthorityError::Catalog(format!("component write failed: {error}")))?;
     std::fs::write(root.join("descriptor.semio"), &descriptor_bytes).map_err(|error| AuthorityError::Catalog(format!("descriptor write failed: {error}")))?;
     std::fs::write(root.join("closed-actor.mjs"), SYNTHETIC_ACTOR).map_err(|error| AuthorityError::Catalog(format!("synthetic actor write failed: {error}")))?;
-    let (stdio_identity, stdio_record) = super::headless_stdio_fixture_package(root)?;
-    let receipt = super::fixture_component_receipt(&descriptor.manifest.plugin_id, &descriptor.package_id, &component_sha256, component.len() as u64, &descriptor_bytes);
-    let plugin_module = super::write_fixture_plugin_module(root, &descriptor.manifest.plugin_id, &descriptor.package_id, &descriptor.manifest.version, &receipt, &descriptor_bytes)?;
+    let (stdio_identity, stdio_record) = semio_hub_trusted_catalog::headless_stdio_fixture_package(root)?;
+    let receipt = semio_hub_trusted_catalog::fixture_component_receipt(&descriptor.manifest.plugin_id, &descriptor.package_id, &component_sha256, component.len() as u64, &descriptor_bytes);
+    let plugin_module = semio_hub_trusted_catalog::write_fixture_plugin_module(root, &descriptor.manifest.plugin_id, &descriptor.package_id, &descriptor.manifest.version, &receipt, &descriptor_bytes)?;
     let mut bundle = serde_json::json!({
-        "schemaVersion": super::TRUSTED_BUNDLE_SCHEMA_VERSION,
+        "schemaVersion": semio_hub_trusted_catalog_contract::schema::TRUSTED_BUNDLE_SCHEMA_VERSION,
         "profiles": [{
             "id": GIS_MAP_INTEGRATION_PROFILE_ID,
             "selectedClosure": [package.clone(), stdio_identity.clone()],
@@ -163,16 +163,16 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
             "nativeCodecs": native_codecs, "openTargets": [target]
         }, stdio_record]
     });
-    let decoded: super::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
-    bundle["profiles"][0]["selectedClosureSha256"] = hex_lower(&super::selected_closure_digest(&decoded.profiles[0].selected_closure)?).into();
-    let regenerated: super::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
-    bundle["profiles"][0]["generationId"] = super::trusted_profile_generation(&regenerated, &regenerated.profiles[0])?.into();
+    let decoded: semio_hub_trusted_catalog_contract::schema::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
+    bundle["profiles"][0]["selectedClosureSha256"] = hex_lower(&semio_hub_trusted_catalog_descriptor::selected_closure_digest(&decoded.profiles[0].selected_closure)?).into();
+    let regenerated: semio_hub_trusted_catalog_contract::schema::TrustedBundleV1 = serde_json::from_value(bundle.clone()).map_err(|error| AuthorityError::Catalog(format!("integration-fixtures bundle shape invalid: {error}")))?;
+    bundle["profiles"][0]["generationId"] = semio_hub_trusted_catalog_descriptor::trusted_profile_generation(&regenerated, &regenerated.profiles[0])?.into();
     let bundle_path = root.join("trusted-catalog.json");
     std::fs::write(&bundle_path, serde_json::to_vec_pretty(&bundle).map_err(|error| AuthorityError::Catalog(format!("bundle encode failed: {error}")))?).map_err(|error| AuthorityError::Catalog(format!("bundle write failed: {error}")))?;
     let control = BuilderControl;
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
     let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&bundle_path, GIS_MAP_INTEGRATION_PROFILE_ID, &NativeCodecProviderSetV1::linked(), &context).await?);
-    let binding = crate::inference::verified_gis_map_binding(catalog.clone())
+    let binding = semio_hub_inference_catalog::verified_gis_map_binding(catalog.clone(), &semio_hub_gis::inference::GisMapInferenceBindingV1)
         .map_err(|error| AuthorityError::Catalog(format!("verified GIS Map binding rejected the integration-fixtures profile: {error:?}")))?
         .ok_or_else(|| AuthorityError::Catalog("integration-fixtures profile did not select a writable GIS Map editor".to_owned()))?;
     Ok(VerifiedGisMapIntegrationProfileV1 { root: root.to_path_buf(), bundle_path, catalog, binding })
@@ -182,5 +182,8 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
 pub fn unique_profile_root(label: &str) -> PathBuf {
     static SEQUENCE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let sequence = SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    crate::test_artifact_root::test_artifact_root().join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
+    semio_hub_testing::test_artifact_root().join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
 }
+
+#[path = "🪶️count/🦀️.rs"]
+pub mod count_trusted_catalog_fixture;

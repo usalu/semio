@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-stdio-contract-native-print"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original-caller authority for complete native text printing of a snapshot"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

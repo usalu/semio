@@ -17,7 +17,7 @@ fn control() -> QueryCursorControl {
 }
 
 async fn query_bytes(bytes: &[u8]) -> QueryBytes {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).unwrap();
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).unwrap();
     let mut offset = 0;
     while offset < bytes.len() {
         offset += writer.write_fragment(&bytes[offset..]).unwrap();
@@ -27,12 +27,12 @@ async fn query_bytes(bytes: &[u8]) -> QueryBytes {
 
 #[semio_framework_async_macros::async_test]
 async fn interrupted_query_rows_drop_retains_one_resumable_close_owner() {
-    if !crate::db_storage::process_isolated_law("db_query::tests::interrupted_query_rows_drop_retains_one_resumable_close_owner") {
+    if !db_io_driver::process_isolated_law("tests::interrupted_query_rows_drop_retains_one_resumable_close_owner") {
         return;
     }
     while query_rows_maintenance_step().unwrap() {}
     let mut rows = QueryRows::new();
-    rows.push(QueryRow::new(RowId(1), Value::Bytes(query_bytes(&vec![0x5a; db_storage::DB_IO_PAGE_BYTES + 1]).await))).unwrap();
+    rows.push(QueryRow::new(RowId(1), Value::Bytes(query_bytes(&vec![0x5a; db_io_core::DB_IO_PAGE_BYTES + 1]).await))).unwrap();
     drop(rows);
     assert!(query_rows_maintenance_step().unwrap());
     {
@@ -234,7 +234,7 @@ mod projection_bridge {
     async fn decode_rejects_truncated_bytes_and_unknown_tag_without_panicking() {
         let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
         let mut cancelled_control = QueryCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
-        let mut writer = db_storage::DbIoPageWriter::try_reserve(1).unwrap();
+        let mut writer = db_io_core::DbIoPageWriter::try_reserve(1).unwrap();
         writer.write_fragment(&[200]).unwrap();
         let mut pages = writer.seal_retained().await.unwrap();
         assert!(matches!(QueryBytes::copy_from_pages(&pages, &mut cancelled_control).await, Err(DbError::Unavailable(_))));
@@ -354,8 +354,8 @@ mod execute_tests {
     /// real `db_storage::IndexStorage` (not a dependency of this crate; see module doc).
     pub(super) struct FakeFullText(pub std::collections::HashMap<String, Vec<RowId>>);
     impl FullTextLookup for FakeFullText {
-        async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
-            let mut result = db_storage::DbIoU64List::new();
+        async fn search(&self, term: &str) -> Result<db_io_core::DbIoU64List, DbError> {
+            let mut result = db_io_core::DbIoU64List::new();
             for id in self.0.get(term).into_iter().flatten() {
                 result.push(id.0)?;
             }

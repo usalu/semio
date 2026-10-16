@@ -46,20 +46,30 @@
     "fonts": {
       "cache": true,
       "inputs": [
+        "sharedGlobals",
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts",
         {
           "dependentTasksOutputFiles": "**/*"
-        }
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts"
       ],
       "dependsOn": [
         "semio-framework-canvas-font-assets:build"
       ],
       "outputs": [
-        "{projectRoot}/dist/fonts"
+        "{workspaceRoot}/.cache/b/p/m/infinite/{options.env.SEMIO_BUILD_MODE}/fonts"
       ],
       "options": {
         "command": "bun ./📜️script.ts fonts"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-wgpu-world-terrain": {

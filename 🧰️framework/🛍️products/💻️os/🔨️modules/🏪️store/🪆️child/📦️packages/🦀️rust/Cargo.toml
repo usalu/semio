@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-child"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Artifact children, child references and the retained clone of a composed child"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-child"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-link-schema = { path = "../../../🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]

@@ -24,7 +24,7 @@ use crate::wgpu::component::ui::{
     UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode,
 };
 use crate::wgpu::component::ui::{UiControlNode, UiFieldNode, UiNode, UiPresence, UiProgressNode, UiSectionNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
-use crate::wgpu::draw::{DrawList, IconAtlas};
+use crate::wgpu::draw_types::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::layout::tree_section_header_height;
 use crate::wgpu::layout::{tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, TreeDragRole, TreeRowMetrics};
@@ -198,7 +198,7 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
         }
     }
     let strikes = weight.strikes();
-    if draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
+    if draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw_types::UiInstance>()).is_err() {
         return RetainedGlyphStep::Fault;
     }
     let atlas_w = atlas.width as f32;
@@ -382,17 +382,17 @@ impl RetainedNodePaintCursor {
     }
 }
 
-fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
+fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw_types::RetainedOutputError> {
     retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS, paint)
 }
 
-fn retained_fixed_output_budgeted(draw: &mut DrawList, items: usize, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
+fn retained_fixed_output_budgeted(draw: &mut DrawList, items: usize, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw_types::RetainedOutputError> {
     draw.begin_retained_output(items, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
     paint(draw);
     draw.finish_retained_output().map(|_| ())
 }
 
-fn retained_select_close_route(draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
+fn retained_select_close_route(draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> Result<(), crate::wgpu::draw_types::RetainedOutputError> {
     if !cursor.popup_route {
         return Ok(());
     }

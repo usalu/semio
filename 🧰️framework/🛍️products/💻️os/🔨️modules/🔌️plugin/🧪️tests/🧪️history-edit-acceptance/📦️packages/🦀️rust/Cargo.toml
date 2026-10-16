@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-testing-acceptance"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "History edit acceptance, node drag history and ui action collection laws of the plugin SDK (feature artifact-app-testing)"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-testing-acceptance"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+
+[dev-dependencies]

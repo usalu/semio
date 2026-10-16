@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "chargeBytes": 4294967296,
+  "parentMetadataBytes": 67108864,
+  "maximumBackingBytes": 4227858432,
+  "filesystemBytes": 4226809856,
+  "maximumSlots": 8,
+  "maximumCatalogBytes": 32768,
+  "maximumEntries": 262144,
+  "maximumDepth": 64,
+  "maximumPathBytes": 256,
+  "maximumPending": 32,
+  "maximumOutputBytes": 16777216,
+  "maximumOutputLines": 65536,
+  "namespace": "cs",
+  "workDirectory": "w",
+  "slotDirectory": "i",
+  "catalogFile": "slots.json",
+  "chargeFile": "compiler-state.json",
+  "intentFile": "compiler-state.intent.json",
+  "volumeDirectory": "v",
+  "initialCompilerFloorBytes": 4294967296
+}

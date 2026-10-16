@@ -9,7 +9,8 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use ui_host::{WindowDelegate, WindowMetrics};
 use ui_render::{DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, OffscreenPresentToken, PointerModifiers, Theme};
+use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, IconAtlas, InputState, OffscreenPresentToken, PointerModifiers, Theme};
+use ui_gpu::{GpuContext};
 use wasm_bindgen::prelude::*;
 
 const MESSAGE_BYTE_CAPACITY: usize = 4 * 1024;
@@ -81,14 +82,6 @@ fn worker_now_ms() -> f64 {
     js_sys::global().dyn_into::<web_sys::WorkerGlobalScope>().ok().and_then(|scope| scope.performance()).map(|performance| performance.now()).unwrap_or(0.0)
 }
 
-fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
-    let global = js_sys::global();
-    if let Ok(func) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioDeclareBootSubphase")) {
-        if let Ok(func) = func.dyn_into::<js_sys::Function>() {
-            let _ = func.call3(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(phase), &wasm_bindgen::JsValue::from_str(state), &wasm_bindgen::JsValue::from_f64(elapsed_ms));
-        }
-    }
-}
 //#endregion 📥️Wire
 
 //#region 🧵️Runtime
@@ -770,8 +763,8 @@ impl BrowserRendererBootstrap {
             5 => {
                 let (locale, terminology) = crate::shell::shell_language_axes().map_err(|error| js_error("language-authority", &error))?;
                 let mut shell = ShellState::new(self.entries.take().expect("bootstrap plugin entries exist"), self.plugin_filter.clone(), locale, terminology);
-                shell.screen_w = self.width.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
-                shell.screen_h = self.height.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
+                shell.chrome.screen_w = self.width.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
+                shell.chrome.screen_h = self.height.max(1) as f32 / self.dpr.max(f32::MIN_POSITIVE);
                 self.shell = Some(shell);
                 BootPhase { stage: "shell-construct", progress: 0.65, shell_boot: false, complete: false }
             }
@@ -794,7 +787,7 @@ impl BrowserRendererBootstrap {
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str("[TRACE] wgpu-worker boot_shell enter"));
         declare_boot_subphase("shell-boot:select-program", "enter", 0.0);
         let started = worker_now_ms();
-        let result = self.shell.as_mut().expect("bootstrap shell exists").boot().await;
+        let result = crate::shell::ActionsCtx::of(self.shell.as_mut().expect("bootstrap shell exists")).boot().await;
         let elapsed = (worker_now_ms() - started).max(0.0);
         declare_boot_subphase("shell-boot:select-program", "leave", elapsed);
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!("[TRACE] wgpu-worker boot_shell leave {elapsed:.0} ms")));
@@ -927,7 +920,7 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     let css_height = height.max(1) as f32 / dpr.max(f32::EPSILON);
     canvas.set_width(width.max(1));
     canvas.set_height(height.max(1));
-    let gpu = GpuContext::from_offscreen_canvas(canvas, css_width, css_height, dpr).await.map_err(|error| js_error("gpu-boot", &error))?;
+    let gpu = ui_gpu::platform::BrowserSurfaceCapture::capture(canvas, css_width, css_height, dpr).prepare().await.map_err(|error| js_error("gpu-boot", &error))?;
     Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
@@ -935,3 +928,5 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
 fn js_error(code: &str, detail: &str) -> JsValue {
     JsValue::from_str(&format!("{code}: {detail}"))
 }
+
+pub use semio_framework_os_renderer_wgpu_host_base::declare_boot_subphase;

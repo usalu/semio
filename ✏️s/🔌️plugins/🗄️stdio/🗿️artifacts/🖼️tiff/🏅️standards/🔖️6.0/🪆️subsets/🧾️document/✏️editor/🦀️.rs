@@ -46,7 +46,7 @@ use semio_s_artifact_stdio_contract::editing;
 #[path = "🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs"]
 pub(crate) mod paint_region;
 #[path = "🎚️config/🦀️.rs"]
-pub(crate) mod config;
+pub mod config;
 use config::{TiffEditorConfig, TiffEditorConfigMutation};
 
 //#region 🔖️Command

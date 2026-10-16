@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { typecheckProject } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -26,12 +27,12 @@ class DevScript extends BundleScript {
  * `PROCTOR_PORT`. */
 class DevSiteScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBunxDev(this.root, segments, { config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-quiz"), defaultPort: playgroundDevPortString("architecture-quiz"), fixedPort: true });
+    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-quiz"), defaultPort: playgroundDevPortString("architecture-quiz"), fixedPort: true });
   }
 }
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBuild(this.invocation, this.root, segments, VITE_CONFIG);
+    await runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, VITE_CONFIG);
   }
 }
 class TestScript extends BundleScript {
@@ -62,7 +63,7 @@ class CheckScript extends BundleScript {
 }
 class PublishScript extends BundleScript {
   async run(): Promise<void> {
-    await publishQuizSite(this.root, () => runViteBuild(this.invocation, this.root, [], VITE_CONFIG));
+    await publishQuizSite(this.root, () => runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, [], VITE_CONFIG));
   }
 }
 class DockerImageBuildScript extends BundleScript {
@@ -94,7 +95,7 @@ class DockerStackBundleScript extends BundleScript {
 }
 class DeployCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await checkQuizDeployment(this.repoRoot, this.root, () => runViteBuild(this.invocation, this.root, [], VITE_CONFIG), segments);
+    await checkQuizDeployment(this.repoRoot, this.root, () => runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, [], VITE_CONFIG), segments);
   }
 }
 

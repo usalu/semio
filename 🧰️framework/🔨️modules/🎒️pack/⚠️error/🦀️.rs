@@ -3,8 +3,7 @@ use semio_framework_diagnostic::{FaultOrigin,TextError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[cfg(test)] use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
 #[cfg(test)]
-#[path="../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static REQUESTED_ALLOCATOR:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;

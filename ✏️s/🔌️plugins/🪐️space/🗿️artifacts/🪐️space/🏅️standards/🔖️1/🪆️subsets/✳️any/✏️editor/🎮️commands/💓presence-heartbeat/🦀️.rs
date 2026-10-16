@@ -22,7 +22,4 @@ pub fn handle(payload: &PresenceHeartbeat, _doc: &ArtifactView<'_, SSpaceSnapsho
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

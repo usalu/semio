@@ -1,13 +1,13 @@
 //! 🔗️ Bounded ordinal and literal cell construction for explicitly named space entities.
 use semio_framework_value::NativeDecodeControl;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteRow;
-use semio_framework_os_kernel::sqlite_snapshot::SqliteTable;
+use semio_framework_io_sqlite_snapshot::SqliteRow;
+use semio_framework_io_sqlite_snapshot::SqliteTable;
 use semio_framework_value::{ValueError, ValueRefusalKind};
-pub(crate) fn invalid(message: impl Into<String>) -> ValueError {
+pub fn invalid(message: impl Into<String>) -> ValueError {
     ValueError::new(ValueRefusalKind::InvalidValue, message)
 }
-pub(crate) fn reconstruct<T>(control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut NativeDecodeControl<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
-    use semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
+pub fn reconstruct<T>(control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut NativeDecodeControl<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    use semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase;
     let maximum = control.reconstruction_remaining_bytes()?;
     let mut owned = 0;
     let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining,checkpoint,allocation| {
@@ -20,10 +20,10 @@ pub(crate) fn reconstruct<T>(control: &mut semio_framework_os_kernel::sqlite_sna
     control.admit_reconstruction_bytes(owned)?;
     result?
 }
-pub(crate) fn ordinal(value: usize) -> Result<i64, ValueError> {
+pub fn ordinal(value: usize) -> Result<i64, ValueError> {
     i64::try_from(value).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "space ordinal exceeds SQLite INTEGER"))
 }
-pub(crate) fn keyed<'a>(table: &'a SqliteTable, width: usize, control: &mut NativeDecodeControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
+pub fn keyed<'a>(table: &'a SqliteTable, width: usize, control: &mut NativeDecodeControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(0)?;
         let mut rows = control.allocate_vec(table.rows.len())?;
@@ -67,7 +67,7 @@ pub(crate) fn keyed<'a>(table: &'a SqliteTable, width: usize, control: &mut Nati
         Ok(rows)
     })
 }
-pub(crate) fn ordered<'a>(table: &'a SqliteTable, parent: i64, width: usize, control: &mut NativeDecodeControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
+pub fn ordered<'a>(table: &'a SqliteTable, parent: i64, width: usize, control: &mut NativeDecodeControl<'_>) -> Result<Vec<&'a SqliteRow>, ValueError> {
     control.scoped_stage(|control| {
         let keyed = keyed(table, width, control)?;
         control.begin_stage(table.rows.len())?;
@@ -91,22 +91,22 @@ pub(crate) fn ordered<'a>(table: &'a SqliteTable, parent: i64, width: usize, con
         Ok(rows)
     })
 }
-pub(crate) fn text(row: &SqliteRow, index: usize, control: &mut NativeDecodeControl<'_>) -> Result<String, ValueError> {
+pub fn text(row: &SqliteRow, index: usize, control: &mut NativeDecodeControl<'_>) -> Result<String, ValueError> {
     control.copy_text(row.text(index)?)
 }
-pub(crate) fn optional(row: &SqliteRow, index: usize, control: &mut NativeDecodeControl<'_>) -> Result<Option<String>, ValueError> {
+pub fn optional(row: &SqliteRow, index: usize, control: &mut NativeDecodeControl<'_>) -> Result<Option<String>, ValueError> {
     row.optional_text(index)?.map(|text| control.copy_text(text)).transpose()
 }
-pub(crate) fn list_count(record: &semio_framework_dsl_record::RecordValue, id: u16) -> Result<usize, ValueError> {
+pub fn list_count(record: &semio_framework_dsl_record::RecordValue, id: u16) -> Result<usize, ValueError> {
     match record.get(id) {
         Some(semio_framework_dsl_record::FieldValue::List(values)) => Ok(values.len()),
         _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "space native field requires its declared list")),
     }
 }
-pub(crate) fn add(left: usize, right: usize) -> Result<usize, ValueError> {
+pub fn add(left: usize, right: usize) -> Result<usize, ValueError> {
     left.checked_add(right).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "space row count overflow"))
 }
-pub(crate) fn grouped<'a>(table: &'a SqliteTable, width: usize, parents: &[&SqliteRow], control: &mut NativeDecodeControl<'_>) -> Result<Vec<Vec<&'a SqliteRow>>, ValueError> {
+pub fn grouped<'a>(table: &'a SqliteTable, width: usize, parents: &[&SqliteRow], control: &mut NativeDecodeControl<'_>) -> Result<Vec<Vec<&'a SqliteRow>>, ValueError> {
     control.scoped_stage(|control| {
         let rows = keyed(table, width, control)?;
         let mut counts = control.allocate_vec::<usize>(parents.len())?;
@@ -151,7 +151,7 @@ pub(crate) fn grouped<'a>(table: &'a SqliteTable, width: usize, parents: &[&Sqli
 #[cfg(test)]
 #[test]
 fn sqlite_snapshot_space_fields_nested_controls_preserve_refusal_authority() {
-    use semio_framework_os_kernel::sqlite_snapshot::SqliteValue;
+    use semio_framework_io_sqlite_snapshot::SqliteValue;
     let corpus: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("🧪️tests/🧫️fixtures/⚠️refusal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let parent = corpus["parent"].as_i64().unwrap();
     for case in corpus["cases"].as_array().unwrap() {

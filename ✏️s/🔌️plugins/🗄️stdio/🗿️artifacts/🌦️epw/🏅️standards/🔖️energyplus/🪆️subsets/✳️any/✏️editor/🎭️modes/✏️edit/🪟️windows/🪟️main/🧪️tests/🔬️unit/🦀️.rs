@@ -1,4 +1,6 @@
-use super::*;
+use crate::editor::epw::epw_row_revision;
+use crate::EpwSnapshot;
+use crate::editor::epw::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_table_window() {

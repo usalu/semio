@@ -7,9 +7,9 @@
 
 use super::launcher::Start;
 use super::windows::{Body, Dashboard, Kind, LinkState, Place};
-use crate::daemon::client::{Connection, Message};
-use crate::inventory::Update;
-use crate::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
+use dashboard_inventory::Update;
+use dashboard_wire::client::{Connection, Message};
+use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 use ui_tui::tui::engine::Tui;
@@ -74,7 +74,7 @@ pub(super) struct Polled { pub changed: bool, pub quit: bool }
 
 fn without_graph_reuse(command: &SessionCommand) -> SessionCommand {
     let mut command = command.clone();
-    command.env.retain(|(key, _)| key != crate::registry::GRAPH_REUSE.0);
+    command.env.retain(|(key, _)| key != dashboard_registry::GRAPH_REUSE.0);
     command
 }
 
@@ -124,7 +124,7 @@ impl Dashboard {
             }
         } else {
             self.link.pending.push_back(message);
-            self.notice = Some(self.text().start_waiting.fill(&[("cancel", &self.keymap.keys_label(crate::preferences::keymap::Scope::Prefix, "stop-task").unwrap_or_default())]).into_string());
+            self.notice = Some(self.text().start_waiting.fill(&[("cancel", &self.keymap.keys_label(dashboard_preferences::keymap::Scope::Prefix, "stop-task").unwrap_or_default())]).into_string());
             let line = self.text().pane_waiting.as_str().to_string();
             self.feed(tui, index, &line);
         }
@@ -248,8 +248,8 @@ impl Dashboard {
                 for window in &mut self.windows { if let Body::Output { sent, .. } = &mut window.body { *sent = Size::default(); } }
             }
             Message::Control(ServerMsg::ReplayComplete { session_id: Some(_) }) => {}
-            Message::Control(ServerMsg::Error { message, code: Some(crate::ipc::ErrorCode::ViewLimit), .. }) => {
-                let text = self.text().error(Some(crate::ipc::ErrorCode::ViewLimit), &message);
+            Message::Control(ServerMsg::Error { message, code: Some(dashboard_wire::ipc::ErrorCode::ViewLimit), .. }) => {
+                let text = self.text().error(Some(dashboard_wire::ipc::ErrorCode::ViewLimit), &message);
                 self.link.connection = None;
                 self.link.schedule_reconnect(false, Instant::now());
                 self.state = LinkState::Failed(text.clone());
@@ -283,7 +283,7 @@ impl Dashboard {
             std::thread::spawn(move || {
                 let result = Connection::connect(&root).or_else(|_| {
                     let executable = std::env::current_exe()?;
-                    crate::daemon::supervisor::spawn_daemon(&root, &executable).map_err(|error| std::io::Error::other(format!("{}: {error}", text.cli_daemon_startup_failed.as_str())))?;
+                    dashboard_daemon::lifecycle::spawn_daemon(&root, &executable).map_err(|error| std::io::Error::other(format!("{}: {error}", text.cli_daemon_startup_failed.as_str())))?;
                     Connection::connect(&root)
                 });
                 let _ = sender.send(result);
@@ -295,7 +295,7 @@ impl Dashboard {
             match result {
                 Ok(mut connection) => {
                     let skew = connection.skew();
-                    if skew.as_ref().is_some_and(crate::daemon::client::Skew::incompatible) {
+                    if skew.as_ref().is_some_and(dashboard_wire::client::Skew::incompatible) {
                         self.state = LinkState::Failed(skew.map(|skew| self.text().skew(&skew)).unwrap_or_default());
                         self.link.schedule_reconnect(true, Instant::now());
                         polled.changed = true;
@@ -333,7 +333,7 @@ impl Dashboard {
 // #region 🔖️Discovery
 impl Dashboard {
     pub fn refresh_inventory(&mut self) {
-        self.inventory = Some(crate::inventory::start(&self.root, true));
+        self.inventory = Some(dashboard_inventory::start(&self.root, true));
         self.notice = Some(self.text().state_discovering.as_str().into());
     }
 
@@ -343,7 +343,7 @@ impl Dashboard {
     }
 
     /// 📚️ Adopts a newer registry in the dashboard and in every launcher, whose trees keep their open folders, filter and selection.
-    pub fn set_registry(&mut self, tui: &mut Tui, registry: std::sync::Arc<crate::registry::Registry>) {
+    pub fn set_registry(&mut self, tui: &mut Tui, registry: std::sync::Arc<dashboard_registry::Registry>) {
         for window in &mut self.windows {
             let (Body::Launcher(launcher), Some(node)) = (&mut window.body, window.tree) else { continue };
             launcher.set_registry(registry.clone());
@@ -364,7 +364,7 @@ impl Dashboard {
         let updates: Vec<Update> = self.inventory.as_ref().map(|job| job.receiver.try_iter().collect()).unwrap_or_default();
         for update in updates {
             match update {
-                Update::Ready(..) => { if let Some(registry) = self.inventory.as_ref().and_then(crate::inventory::Job::registry) { self.set_registry(tui, registry); } }
+                Update::Ready(..) => { if let Some(registry) = self.inventory.as_ref().and_then(dashboard_inventory::Job::registry) { self.set_registry(tui, registry); } }
                 Update::Finished => self.inventory = None,
                 Update::Failed(error) => self.notice = Some(error),
             }

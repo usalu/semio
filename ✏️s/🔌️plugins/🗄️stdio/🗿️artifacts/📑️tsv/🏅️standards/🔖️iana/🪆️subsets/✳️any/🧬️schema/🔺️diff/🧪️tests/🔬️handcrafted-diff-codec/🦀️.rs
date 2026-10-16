@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+use crate::standards::iana::subsets::any::schema::diff::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn row(fields: &[&str]) -> Vec<String> {

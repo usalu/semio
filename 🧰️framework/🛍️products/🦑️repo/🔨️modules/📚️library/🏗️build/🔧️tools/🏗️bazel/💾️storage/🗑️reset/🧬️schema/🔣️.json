@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "device",
+    "entries"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "device": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "device"
+        ],
+        "properties": {
+          "path": {
+            "enum": [
+              "bazel/actions",
+              "bazel/outputs",
+              "bazel/workspaces"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "directory",
+              "missing",
+              "symlink",
+              "file",
+              "other"
+            ]
+          },
+          "device": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "partition": "products",
+        "namespaces": [
+          "bazel/actions",
+          "bazel/outputs",
+          "bazel/workspaces"
+        ],
+        "maximumEntries": 262144,
+        "maximumPath": 256,
+        "continuationEntries": 128
+      }
+    }
+  }
+}

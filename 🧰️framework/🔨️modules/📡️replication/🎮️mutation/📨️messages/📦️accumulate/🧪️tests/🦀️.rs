@@ -59,7 +59,7 @@ fn replay_message_accumulator_native_original_rows_paid_vec_scaffold_and_partial
         let pointers: Vec<_> = messages.iter().map(|message| (message.message.as_ptr(), message.code.0.as_ptr(), message.target.as_ptr())).collect();
         let scaffold = messages.capacity() * size_of::<MutationMessage>();
         assert!(scaffold > 4096);
-        let outcome = MutationReplayOutcome { mutation_id: crate::MutationId("original-mutation".into()), edit_id: "original-edit".into(), op_index: 7, worst: None, messages, superseded: false, withdrawn: false };
+        let outcome = MutationReplayOutcome { mutation_id: semio_framework_replication_ids::MutationId("original-mutation".into()), edit_id: "original-edit".into(), op_index: 7, worst: None, messages, superseded: false, withdrawn: false };
         let ((mut cursor, mut ledger), heap) = observe_heap_allocations_on_this_thread(|| (OperationMessageDrain::new(outcome), ReplayMessageAccumulator::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(size_of::<OperationMessageDrain>() <= 4096 && size_of::<ReplayMessageAccumulator>() <= 4096);

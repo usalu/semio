@@ -1,5 +1,14 @@
+use crate::{standards::v2_1::subsets::any::schema::mutations::set_topic_markup::SetTopicMarkup, standards::v2_1::subsets::any::schema::mutations::BcfMutation};
+use crate::{standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot, standards::v2_1::subsets::any::schema::snapshot::BcfTopic};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_s_artifact_stdio_contract::editing;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use semio_s_artifact_stdio_contract::pack;
+use crate::editor::bcf::{bcf_example_snapshot, bcf_command_from_action, bcf_emit};
 use crate::apply_mutation;
-use super::*;
+use crate::editor::bcf::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {

@@ -1,7 +1,7 @@
 //! 🧪️ Actual-grant session byte retirement, final cache ownership, and strict lifecycle guards.
 
 use super::*;
-use crate::dag::DagHostRetirement;
+use semio_framework_os_infinite::board::ports::directed_dag::DagHostRetirement;
 // 🧬️ `DagCamera`/`IoPortSpec` are the dag ARTIFACT crate's own records; `crate::dag` glob-imports them
 // privately, so they are named at their source rather than through that re-export.
 use semio_framework_os_infinite_directed_presentation::{DagCamera};
@@ -352,7 +352,7 @@ fn original_host_retirement_preserves_whole_source_and_full_close_receipts(){
  flow_extension_registry_generation();
  for copy in law["copyGrants"].as_array().unwrap(){
   let (host,source_heap)=observe(||{
-   let mut host=FlowHost::default();let baseline=host.host_snapshot.clone();assert!(host.history_store_from_baseline(baseline).is_some(),"original Host store authority installed");
+   let mut host=FlowHost::default();let baseline=host.graph.host_snapshot.clone();assert!(host.history_store_from_baseline(baseline).is_some(),"original Host store authority installed");
    let mut text=String::with_capacity(law["capacityBytes"].as_u64().unwrap()as usize);text.push_str(&law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap()as usize));assert_eq!(text.len(),law["utf8Bytes"].as_u64().unwrap()as usize);
    host.host_catalogue_json=text;host.edited_note=Some(String::from("retained-original-note"));host
   });
@@ -518,13 +518,13 @@ fn a_gesture_that_changed_nothing_retires_its_history_baseline() {
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
     let mut host = FlowHost::from_host_snapshot(fixture);
-    host.set_viewport(1280, 800, 1.0);
+    host.viewport.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     for _ in 0..3 {
         host.pointer_down_screen(4.0, 4.0, 0, false, false, false, false);
         host.pointer_up_screen(4.0, 4.0, false, false, false);
     }
-    assert!(!host.widget_drag_active(), "a bare press and release leaves no gesture in flight");
+    assert!(!host.pointer.widget_drag_active(), "a bare press and release leaves no gesture in flight");
     host.retire_cold();
 }
 
@@ -553,7 +553,7 @@ fn arming_a_second_history_baseline_retires_the_first() {
 "#;
     let fixture = FlowHost::parse_host_snapshot_json(json).expect("fixture json");
     let mut host = FlowHost::from_host_snapshot(fixture);
-    host.set_viewport(1280, 800, 1.0);
+    host.viewport.set_viewport(1280, 800, 1.0);
     host.rebuild_dag();
     let pan = |x: f64, y: f64| dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x, y, button: 1, shift: false, ctrl_or_meta: false, alt: false, pan: true };
     for turn in 0..8 {

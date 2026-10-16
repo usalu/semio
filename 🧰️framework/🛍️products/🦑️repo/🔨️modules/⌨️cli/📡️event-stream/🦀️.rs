@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as Json};
 
 //#region 🧭️RepoCli
+//#region 📡️EventStream
 //#region 🔑️Events
 
 /// 🏷️ The start event kind.
@@ -268,7 +269,7 @@ fn go_json_ordered(members: &[(&str, Json)]) -> String {
 }
 
 /// 🖨️ A decoded JSON value the way Go's `%v` verb prints it.
-pub(crate) fn go_sprint(value: &Json) -> String {
+pub fn go_sprint(value: &Json) -> String {
     match value {
         Json::Null => "<nil>".to_string(),
         Json::Bool(flag) => flag.to_string(),
@@ -823,4 +824,5 @@ fn format_markdown_file(file: &Map<String, Json>) -> String {
 }
 
 //#endregion 🌩️Renderers
+//#endregion 📡️EventStream
 //#endregion 🧭️RepoCli

@@ -275,7 +275,5 @@ pub(crate) fn demo_diff_cases() -> Vec<WavDiff> {
     vec![WavDiff::default(), WavDiff { fmt_pad_byte: Some(1), data_pad_byte: Some(0), ..Default::default() }]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests

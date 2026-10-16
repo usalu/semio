@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-extension"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The .sxt extension package format: pack, unpack and verify (not for wasm32-wasip2 guests)"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-extension"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-semio = { path = "../../../🧬️semio/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

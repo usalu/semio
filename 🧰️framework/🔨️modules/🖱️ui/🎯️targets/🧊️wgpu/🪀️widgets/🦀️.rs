@@ -2,7 +2,7 @@
 //! 🧩️ Generic widget tree — layout, measurement, and drawing.
 
 use crate::wgpu::component::ui::UiTreeWindow;
-use crate::wgpu::draw::{DrawList, IconAtlas};
+use crate::wgpu::draw_types::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget, InputState};
 use crate::wgpu::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};

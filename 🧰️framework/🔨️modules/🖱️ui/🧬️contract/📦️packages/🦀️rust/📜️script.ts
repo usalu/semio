@@ -25,7 +25,7 @@ import { seedGeneratedFile } from "../../../../🏃️process/📦️packages/�
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { testBuiltTreeRetirementFixture } from "../../♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "../../🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-storage/🟦️.ts";
 import { conformanceCorpusSelfTests } from "../../🧪️tests/🔬️conformance-corpus/🟦️.ts";
 import { accessibilityProjectionSelfTests } from "../../🧪️tests/🔬️accessibility-projection/🟦️.ts";
@@ -105,7 +105,7 @@ function generatedUiContractPath(root: string): string {
 /** 🧬️ Runs the owned schema export test, optionally writing its deterministic projection. */
 async function runTypegenExportTest(original:ScriptInvocation,workspace:string,root: string, outPath?: string): Promise<void> {
   const env = outPath === undefined ? process.env : { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  await runRepositoryCargoCommandV1(original,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-framework-ui-contract","--features","typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
+  await runRepositoryCargoCommandV1(original,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
 }
 
 class GenerateScript extends BundleScript {
@@ -125,7 +125,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-framework-ui-contract","--features","typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
+      await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
       content = readFileSync(outPath);
     } finally {
       rmSync(temp, { recursive: true, force: true });

@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-time-travel-actions"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "time-travel-actions"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-manifest-actions = { path = "../../../../🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
+semio-framework-manifest-address = { path = "../../../../🛂️manifest/🧭️address/📦️packages/🦀️rust" }
+semio-framework-manifest-app-surface = { path = "../../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
+semio-framework-manifest-arg-schema = { path = "../../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

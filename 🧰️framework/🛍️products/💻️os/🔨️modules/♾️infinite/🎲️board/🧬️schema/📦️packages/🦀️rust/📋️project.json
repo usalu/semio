@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/os-infinite-board-schema-rs",
+  "tags": [
+    "language:rust",
+    "role:product",
+    "family:infinite"
+  ]
+}

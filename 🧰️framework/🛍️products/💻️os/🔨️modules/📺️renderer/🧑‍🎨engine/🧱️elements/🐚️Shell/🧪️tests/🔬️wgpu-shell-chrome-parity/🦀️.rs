@@ -575,9 +575,9 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     let hit = |kind: HitKind, control_id: &str| HitTarget::<ActionDescriptor> { rect: bounds, event: None, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None };
     let chrome = hit(HitKind::NavbarItem, &control.control_id);
     let surface = hit(HitKind::World3d, "procedural-preview");
-    assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&chrome)), "a press on the overlay control is the shell's");
-    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
-    assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
+    assert!(pointer_press_belongs_to_shell_chrome(Some(&chrome)), "a press on the overlay control is the shell's");
+    assert!(!pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
+    assert!(!pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
     super::shell_input_tests::retained_world_sequence_probe("chrome");
 }
@@ -737,9 +737,9 @@ fn asking_for_the_role_already_mounted_creates_and_retires_nothing() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let dialect = ArtifactDialect { artifact_kind: "s.procedural.generation3d".into(), standard: "1".into(), subset: "*".into() };
     let app = parity_app("s.procedural.generation3d@1/*#editor", AppRole::Editor, dialect, "Editor", "Editor", &["edit", "generate"]);
-    shell.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    semio_framework_async::block_on(shell.switch_to_session_role(AppRole::Editor)).expect("a no-op switch never fails");
-    let session = shell.session.as_ref().expect("the session survives a no-op switch");
+    shell.docs.session = Some(ActiveSession { plugin_id: "procedural".into(), instance_id: 7, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).switch_to_session_role(AppRole::Editor)).expect("a no-op switch never fails");
+    let session = shell.docs.session.as_ref().expect("the session survives a no-op switch");
     assert_eq!(session.instance_id, 7, "the mounted instance is untouched");
     assert_eq!(session.app.role, AppRole::Editor);
 }
@@ -872,39 +872,39 @@ fn accepted_window_icon_commands_are_instance_scoped_precede_projection_and_reti
     };
     let full_root = layout(true);
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
-    shell.layout_override = None;
-    let session = shell.session.as_mut().expect("🖼️ test session");
+    shell.dock.layout_override = None;
+    let session = shell.docs.session.as_mut().expect("🖼️ test session");
     let kind = session.app.window_kinds.first_mut();
     kind.id = kind_id.to_string();
     kind.icon_id = kind_icon_id.into();
     session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
-    shell.sync_dock();
+    SessionCtx::of(&mut shell).sync_dock();
 
-    let (_, initial_icons) = shell.dock_chrome_maps();
+    let (_, initial_icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(initial_icons.get(projection["windowId"].as_str().unwrap()).map(String::as_str), projection["expectedIconId"].as_str(), "a projection icon is the pre-publication fallback");
     assert_eq!(initial_icons.get(fixture["kindFallback"]["windowId"].as_str().unwrap()).map(String::as_str), fixture["kindFallback"]["expectedIconId"].as_str(), "an ordinary instance keeps its kind icon");
 
     for command in fixture["commands"].as_array().expect("🖼️ fixture icon commands") {
         let window_id = command["windowId"].as_str().expect("🖼️ command window id");
-        assert!(shell.apply_window_icon_host_command(window_id, command["iconId"].as_str().expect("🖼️ command icon id")), "a command for the exact live instance is accepted");
-        let (_, icons) = shell.dock_chrome_maps();
+        assert!(shell.dock.apply_window_icon_host_command(window_id, command["iconId"].as_str().expect("🖼️ command icon id"), &shell.docs, &mut shell.windows), "a command for the exact live instance is accepted");
+        let (_, icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
         assert_eq!(icons.get(window_id).map(String::as_str), command["expectedIconId"].as_str(), "{window_id}: command icon wins");
     }
-    let (_, independent) = shell.dock_chrome_maps();
+    let (_, independent) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(independent.get("main").map(String::as_str), Some("diamond"), "replacing one instance changes only its own slot");
     assert_eq!(independent.get("main-2").map(String::as_str), Some("circle"), "the sibling instance keeps its independent override");
     assert_eq!(independent.get("main-projection").map(String::as_str), Some("star"), "a generic override precedes a valid projection icon");
     for rejected in fixture["rejected"].as_array().expect("🖼️ rejected icon commands") {
-        assert!(!shell.apply_window_icon_host_command(rejected["windowId"].as_str().unwrap(), rejected["iconId"].as_str().unwrap()), "a missing instance or empty icon is refused");
+        assert!(!shell.dock.apply_window_icon_host_command(rejected["windowId"].as_str().unwrap(), rejected["iconId"].as_str().unwrap(), &shell.docs, &mut shell.windows), "a missing instance or empty icon is refused");
     }
 
-    shell.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&layout(false)) });
-    shell.sync_dock();
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&layout(false)) });
+    SessionCtx::of(&mut shell).sync_dock();
     let retired_id = fixture["retireReuse"]["windowId"].as_str().expect("🖼️ retired id");
-    assert!(!shell.window_icon_overrides.contains_key(retired_id), "retirement erases the renderer-local owner");
-    shell.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
-    shell.sync_dock();
-    let (_, reused) = shell.dock_chrome_maps();
+    assert!(!shell.windows.window_icon_overrides.contains_key(retired_id), "retirement erases the renderer-local owner");
+    shell.docs.session.as_mut().expect("🖼️ test session").app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&full_root) });
+    SessionCtx::of(&mut shell).sync_dock();
+    let (_, reused) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(reused.get(retired_id).map(String::as_str), fixture["retireReuse"]["expectedReusedIconId"].as_str(), "an id reused by a successor starts from kind fallback");
 }
 
@@ -919,18 +919,18 @@ fn dock_sync_seeds_the_authored_instance_and_publishes_its_projection_icons() {
         (crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance_template("main-perspective", "main", Some(perspective_template.into()), WindowStackCorner::TopLeft)], active: "main-perspective".into() }, 2.0),
     ]);
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
-    shell.layout_override = None;
-    shell.active_window_id = Some("main".into());
-    let session = shell.session.as_mut().expect("🖼️ test session");
+    shell.dock.layout_override = None;
+    shell.windows.active_window_id = Some("main".into());
+    let session = shell.docs.session.as_mut().expect("🖼️ test session");
     session.app.window_kinds.first_mut().icon_id = "puzzle".into();
     session.app.default_layout = Some(WindowLayout { root: crate::dock::dock_node_to_layout_root(&root) });
 
-    shell.sync_dock();
+    SessionCtx::of(&mut shell).sync_dock();
 
-    assert_eq!(shell.active_window_id.as_deref(), Some("main-top"));
-    assert_eq!(shell.dock.active_window_id.as_deref(), Some("main-top"));
-    assert_eq!(shell.dock.active_stack.as_deref(), Some([0].as_slice()));
-    let (_, icons) = shell.dock_chrome_maps();
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some("main-top"));
+    assert_eq!(shell.dock.dock.active_window_id.as_deref(), Some("main-top"));
+    assert_eq!(shell.dock.dock.active_stack.as_deref(), Some([0].as_slice()));
+    let (_, icons) = shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows);
     assert_eq!(icons.get("main-top").map(String::as_str), Some("projection-orthographic"));
     assert_eq!(icons.get("main-perspective").map(String::as_str), Some("projection-three-point"));
 }
@@ -995,8 +995,8 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
         assert_eq!(chord_carries_accelerator_v1(chord), case["accelerator"].as_bool().expect("⌨️ fixture accelerator"), "{chord}: accelerator");
         assert_eq!(reserved.contains(chord), case["reserved"].as_bool().expect("⌨️ fixture reserved"), "{chord}: reserved");
     }
-    assert_eq!(semio_framework::ToolRunAction::Step.chord(), block["collision"]["chord"].as_str().expect("⌨️ fixture collision chord"), "the tool-run step chord still collides with the shell's mode step");
-    assert_eq!(block["collision"]["alsoMintedFor"].as_str(), Some(semio_framework::ToolRunAction::Step.id()), "the fixture names the action the chord is minted for");
+    assert_eq!(semio_framework_tool_run::ToolRunAction::Step.chord(), block["collision"]["chord"].as_str().expect("⌨️ fixture collision chord"), "the tool-run step chord still collides with the shell's mode step");
+    assert_eq!(block["collision"]["alsoMintedFor"].as_str(), Some(semio_framework_tool_run::ToolRunAction::Step.id()), "the fixture names the action the chord is minted for");
     eprintln!(
         "reserved shell chords: {} of {} fixture rows reserved, collision {}",
         block["cases"].as_array().expect("rows").iter().filter(|case| case["reserved"].as_bool() == Some(true)).count(),
@@ -1111,7 +1111,7 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
     };
     for case in law["cases"].as_array().unwrap() {
         let mut shell = super::panel_anchor_model_tests::host_test_shell();
-        let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
+        let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
         let kinds = |ids: &Value, label: &str| {
             WindowKinds::try_from(
                 ids.as_array()
@@ -1128,38 +1128,38 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
             )
             .unwrap()
         };
-        shell.session.as_mut().unwrap().app.window_kinds = kinds(&law["windows"], "A");
-        shell.session.as_mut().unwrap().app.default_layout = Some(layout(&law["initialWeights"], None));
-        shell.layout_override = (case["source"] == "override").then(|| layout(&law["initialWeights"], None));
-        shell.active_window_id = Some("b".into());
-        shell.sync_dock();
-        let before = shell.layout_override.clone();
-        assert!(shell.focus_active_window());
-        assert_eq!(shell.layout_override, before, "{}: maximize is ephemeral", case["id"]);
-        assert_eq!(shell.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]));
+        shell.docs.session.as_mut().unwrap().app.window_kinds = kinds(&law["windows"], "A");
+        shell.docs.session.as_mut().unwrap().app.default_layout = Some(layout(&law["initialWeights"], None));
+        shell.dock.layout_override = (case["source"] == "override").then(|| layout(&law["initialWeights"], None));
+        shell.windows.active_window_id = Some("b".into());
+        SessionCtx::of(&mut shell).sync_dock();
+        let before = shell.dock.layout_override.clone();
+        assert!(shell.dock.focus_active_window(&shell.windows));
+        assert_eq!(shell.dock.layout_override, before, "{}: maximize is ephemeral", case["id"]);
+        assert_eq!(shell.dock.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]));
         if case["source"] == "override" {
-            shell.layout_override = Some(layout(&case["weights"], Some(case)));
+            shell.dock.layout_override = Some(layout(&case["weights"], Some(case)));
         } else {
-            shell.session.as_mut().unwrap().app.default_layout = Some(layout(&case["weights"], Some(case)));
+            shell.docs.session.as_mut().unwrap().app.default_layout = Some(layout(&case["weights"], Some(case)));
         }
-        shell.session.as_mut().unwrap().app.window_kinds = kinds(&case["windows"], case["layoutLabel"].as_str().unwrap());
-        shell.sync_dock();
+        shell.docs.session.as_mut().unwrap().app.window_kinds = kinds(&case["windows"], case["layoutLabel"].as_str().unwrap());
+        SessionCtx::of(&mut shell).sync_dock();
         let expected = case["maximized"].as_u64().map(|index| vec![index as usize]);
-        assert_eq!(shell.dock.maximized_stack, expected, "{}: matches React prop resynchronization", case["id"]);
-        assert_eq!(shell.active_window_id.as_deref(), Some("b"), "{}: focus remains on its live instance", case["id"]);
+        assert_eq!(shell.dock.dock.maximized_stack, expected, "{}: matches React prop resynchronization", case["id"]);
+        assert_eq!(shell.windows.active_window_id.as_deref(), Some("b"), "{}: focus remains on its live instance", case["id"]);
         if let Some(template) = case["templateId"].as_str() {
-            assert_eq!(shell.world_projection_template.get("b").map(String::as_str), Some(template));
+            assert_eq!(shell.windows.world_projection_template.get("b").map(String::as_str), Some(template));
         }
         if expected.is_none() {
-            assert!(shell.focus_active_window());
+            assert!(shell.dock.focus_active_window(&shell.windows));
         }
-        shell.sync_dock();
-        assert_eq!(shell.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]), "{}: unchanged refresh preserves a later maximize", case["id"]);
+        SessionCtx::of(&mut shell).sync_dock();
+        assert_eq!(shell.dock.dock.maximized_stack, Some(vec![law["maximized"].as_u64().unwrap() as usize]), "{}: unchanged refresh preserves a later maximize", case["id"]);
     }
     let retitle = &law["localeRetitle"];
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
-    let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
-    shell.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
+    let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
+    shell.docs.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
         law["windows"]
             .as_array()
             .unwrap()
@@ -1179,17 +1179,17 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
             stack.children[1].title = retitle["bakedTitle"].as_str().map(str::to_string);
         }
     }
-    shell.layout_override = Some(seeded);
-    shell.active_window_id = Some("b".into());
-    shell.locale_id = "en".into();
-    shell.sync_dock();
-    assert!(shell.focus_active_window());
-    shell.locale_id = retitle["locale"].as_str().unwrap().into();
-    shell.sync_dock();
-    assert_eq!(shell.dock.maximized_stack, Some(vec![retitle["maximized"].as_u64().unwrap() as usize]));
-    assert_eq!(shell.dock_chrome_maps().0[retitle["extraId"].as_str().unwrap()], retitle["retainedTitle"].as_str().unwrap());
-    shell.sync_dock();
-    assert_eq!(shell.dock.maximized_stack, Some(vec![1]));
+    shell.dock.layout_override = Some(seeded);
+    shell.windows.active_window_id = Some("b".into());
+    shell.prefs.locale_id = "en".into();
+    SessionCtx::of(&mut shell).sync_dock();
+    assert!(shell.dock.focus_active_window(&shell.windows));
+    shell.prefs.locale_id = retitle["locale"].as_str().unwrap().into();
+    SessionCtx::of(&mut shell).sync_dock();
+    assert_eq!(shell.dock.dock.maximized_stack, Some(vec![retitle["maximized"].as_u64().unwrap() as usize]));
+    assert_eq!(shell.dock.dock_chrome_maps(&shell.prefs, &shell.docs, &shell.windows).0[retitle["extraId"].as_str().unwrap()], retitle["retainedTitle"].as_str().unwrap());
+    SessionCtx::of(&mut shell).sync_dock();
+    assert_eq!(shell.dock.dock.maximized_stack, Some(vec![1]));
 }
 
 #[test]
@@ -1211,8 +1211,8 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
     let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️maximize-resync/🔣️.json")).unwrap();
     for case in law["ingressCases"].as_array().unwrap() {
         let mut shell = super::panel_anchor_model_tests::host_test_shell();
-        let prototype = shell.session.as_ref().unwrap().app.window_kinds.first().clone();
-        shell.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
+        let prototype = shell.docs.session.as_ref().unwrap().app.window_kinds.first().clone();
+        shell.docs.session.as_mut().unwrap().app.window_kinds = WindowKinds::try_from(
             law["windows"]
                 .as_array()
                 .unwrap()
@@ -1247,24 +1247,24 @@ fn incoming_layout_prunes_unknown_windows_against_the_react_instance_roster() {
             serde_json::from_value(serde_json::json!({ "root": { "kind": "row", "children": children } })).unwrap()
         };
         if let Some(previous) = case.get("previousStacks") {
-            shell.layout_override = Some(layout(previous));
-            shell.sync_dock();
+            shell.dock.layout_override = Some(layout(previous));
+            SessionCtx::of(&mut shell).sync_dock();
         }
-        shell.layout_override = Some(layout(&case["stacks"]));
-        shell.sync_dock();
+        shell.dock.layout_override = Some(layout(&case["stacks"]));
+        SessionCtx::of(&mut shell).sync_dock();
         let expected: Vec<String> = case["windows"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().into()).collect();
-        assert_eq!(shell.dock.collect_window_ids(), expected, "{}", case["id"]);
+        assert_eq!(shell.dock.dock.collect_window_ids(), expected, "{}", case["id"]);
         let mut stack_paths = Vec::new();
-        paths(&shell.dock.root, String::new(), &mut stack_paths);
+        paths(&shell.dock.dock.root, String::new(), &mut stack_paths);
         assert_eq!(serde_json::to_value(stack_paths).unwrap(), case["stackPaths"], "{}: surviving axis shape", case["id"]);
-        let instances = ShellState::session_window_instances(shell.session.as_ref().unwrap(), &shell.dock);
+        let instances = session_window_instances(shell.docs.session.as_ref().unwrap(), &shell.dock.dock);
         let extras: Vec<&str> = instances.iter().filter(|instance| !law["windows"].as_array().unwrap().iter().any(|id| id == &instance.id)).map(|instance| instance.id.as_str()).collect();
         assert_eq!(serde_json::to_value(extras).unwrap(), case["extras"], "{}: published roster", case["id"]);
         for instance in instances {
-            assert!(shell.session.as_ref().unwrap().app.window_kinds.iter().any(|kind| kind.id == instance.window_kind_id));
+            assert!(shell.docs.session.as_ref().unwrap().app.window_kinds.iter().any(|kind| kind.id == instance.window_kind_id));
         }
-        assert_eq!(serde_json::to_value(&shell.world_projection_template).unwrap(), case["templates"], "{}: projections only for declared kinds", case["id"]);
-        shell.sync_dock();
-        assert_eq!(shell.dock.collect_window_ids(), expected, "{}: stable repeat", case["id"]);
+        assert_eq!(serde_json::to_value(&shell.windows.world_projection_template).unwrap(), case["templates"], "{}: projections only for declared kinds", case["id"]);
+        SessionCtx::of(&mut shell).sync_dock();
+        assert_eq!(shell.dock.dock.collect_window_ids(), expected, "{}: stable repeat", case["id"]);
     }
 }

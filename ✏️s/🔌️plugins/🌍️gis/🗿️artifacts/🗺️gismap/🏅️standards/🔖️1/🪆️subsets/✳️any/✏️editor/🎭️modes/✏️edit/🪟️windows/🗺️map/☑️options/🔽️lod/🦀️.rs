@@ -1,8 +1,8 @@
 //! 🔽️ Map window option — the level-of-detail tier select.
 //!
-//! 🧭️ Single owner of the LOD vocabulary: the tier list is derived once here from the tiled-map
-//! surface crate's scale table, and reused by the inspector panel's matching field and by the
-//! manifest's `setLodMode` arg schema.
+//! 🧭️ Single owner of the LOD vocabulary: the tier list is derived once here from the GIS map
+//! policy's band table, and reused by the inspector panel's matching field and by the manifest's
+//! `setLodMode` arg schema.
 
 use crate::editor::gis2d::maphost;
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
@@ -13,7 +13,8 @@ use semio_framework_plugin::ActionArgOption;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::MeasureSelectItem;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_surface::tiled_map::{gis_map_lod_scale_json, GIS_MAP_LOD_MODE_AUTOMATIC};
+use crate::tile_coordinates::gis_policy::gis_map_lod_scale_json;
+use semio_framework_surface::tiled_map::MAP_LOD_MODE_AUTOMATIC;
 use serde_json::Value;
 
 //#region 🔖️Vocabulary
@@ -21,7 +22,7 @@ pub const GIS2D_LOD_MODE_MEASURE_ID: &str = "gis2d-play-window.lod-mode";
 
 /// 🔭️ When LOD mode is automatic, the zoom-resolved band id for the config camera (same source as `MapHost::current_lod_json`).
 fn resolved_automatic_lod_id(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> Option<String> {
-    if cfg.lod_mode != GIS_MAP_LOD_MODE_AUTOMATIC {
+    if cfg.lod_mode != MAP_LOD_MODE_AUTOMATIC {
         return None;
     }
     let host = maphost::map_host_from(document, cfg);
@@ -37,7 +38,7 @@ fn lod_automatic_label(labels: &Gis2dPlayLabels, document: &GisMapSnapshot, cfg:
 
 /// 🔽️ The automatic tier plus every LOD scale tier from the map descriptor, as `(value, label)` rows.
 pub fn lod_select_entries(labels: &Gis2dPlayLabels, document: &GisMapSnapshot, cfg: &MapWindowConfig) -> Vec<(String, String)> {
-    std::iter::once((GIS_MAP_LOD_MODE_AUTOMATIC.into(), lod_automatic_label(labels, document, cfg)))
+    std::iter::once((MAP_LOD_MODE_AUTOMATIC.into(), lod_automatic_label(labels, document, cfg)))
         .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
             let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
             let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
@@ -49,7 +50,7 @@ pub fn lod_select_entries(labels: &Gis2dPlayLabels, document: &GisMapSnapshot, c
 /// 🔽️ The static LOD-mode choices for the palette arg schema: the automatic mode plus each LOD scale
 /// tier from the map descriptor, labelled in the app's base locale (localization is applied by overlay).
 pub fn lod_arg_options() -> Vec<ActionArgOption> {
-    std::iter::once(ActionArgOption::new(GIS_MAP_LOD_MODE_AUTOMATIC, LocalizedLabel::native("Automatic", "Automatisch")))
+    std::iter::once(ActionArgOption::new(MAP_LOD_MODE_AUTOMATIC, LocalizedLabel::native("Automatic", "Automatisch")))
         .chain(serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
             let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
             let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();

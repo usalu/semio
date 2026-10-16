@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "canvas": [
+    80,
+    40
+  ],
+  "marker": "Fixture",
+  "operators": {
+    "fnArray": [
+      "setLineWidth",
+      "constructPath",
+      "beginMarkedContent",
+      "beginText",
+      "setFont",
+      "setTextMatrix",
+      "showText",
+      "endText",
+      "paintImageXObject",
+      "endMarkedContent"
+    ],
+    "argsArray": [
+      [
+        0.02834645669291339
+      ],
+      [
+        "stroke",
+        [
+          [
+            0,
+            0,
+            0,
+            1,
+            226.7716535433071,
+            0,
+            1,
+            226.7716535433071,
+            113.38582677165356,
+            1,
+            0,
+            113.38582677165356,
+            4
+          ]
+        ],
+        [
+          0,
+          0,
+          226.7716535433071,
+          113.38582677165356
+        ]
+      ],
+      [
+        "Fixture"
+      ],
+      [],
+      [
+        "font-1",
+        10
+      ],
+      [
+        1,
+        0,
+        0,
+        1,
+        28.34645669291339,
+        14.173228346456694
+      ],
+      [
+        [
+          {
+            "unicode": "A",
+            "width": 500,
+            "isSpace": false
+          },
+          -100
+        ]
+      ],
+      [],
+      [
+        "image-1",
+        2,
+        3
+      ],
+      []
+    ]
+  },
+  "expected": {
+    "glyphs": 1,
+    "text": "A",
+    "origin": [
+      10,
+      5
+    ],
+    "advance": [
+      2.1166666666666663,
+      0
+    ],
+    "images": 1,
+    "imageResource": "image-1",
+    "sourceSize": [
+      2,
+      3
+    ]
+  },
+  "excluded": {
+    "name": "Blocked",
+    "glyphs": 0,
+    "images": 0
+  }
+}

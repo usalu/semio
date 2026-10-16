@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-store-child-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

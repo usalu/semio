@@ -1,5 +1,5 @@
 use super::*;
-use crate::registry::{Request, RunPolicy};
+use dashboard_registry::{Request, RunPolicy};
 use std::fs;
 
 fn temp_root(name: &str) -> PathBuf {
@@ -19,7 +19,7 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
     let root = temp_root("playgrounds");
     fs::create_dir_all(root.join("catalog")).unwrap();
     fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
-    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
+    let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let tree = tree(&registry, true);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();
     for renderer in fixture["renderers"].as_array().unwrap() {
@@ -55,7 +55,7 @@ fn every_listed_command_is_a_leaf_of_the_tree_and_a_row_of_the_launcher_and_name
     let root = temp_root("workspace");
     fs::write(root.join("📋️project.json"), r#"{"name":"workspace","targets":{"build":{},"test":{}}}"#).unwrap();
     fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"bun repo run quiz:test","dashboard":"bun repo run repo:run"}}"#).unwrap();
-    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
+    let registry = crate::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let (mut in_tree, rows) = (Vec::new(), launcher(&registry));
     leaves(&tree(&registry, false), &mut in_tree);
     let listed: Vec<&str> = registry.entries().iter().filter(|entry| entry.listed).map(|entry| entry.id.as_str()).collect();
@@ -88,7 +88,7 @@ fn the_repo_domain_branches_carry_repo_leaves() {
     let verbs: Vec<&str> = tree.children.iter().map(|child| child.key.as_str()).collect();
     for expected in ["goals", "analyze", "tree", "statutes"] { assert!(verbs.contains(&expected), "missing {expected} in {verbs:?}"); }
     let analyze = tree.children.iter().find(|child| child.key == "analyze").expect("analyze branch");
-    assert_eq!(analyze.children.len(), crate::repo_domain::ANALYZE_SCOPES.len());
+    assert_eq!(analyze.children.len(), dashboard_repo_domain::ANALYZE_SCOPES.len());
     assert!(analyze.children.iter().all(|child| child.leaf.as_ref().is_some_and(|leaf| leaf.id.starts_with("repo:analyze:"))));
     fs::remove_dir_all(&tmp).ok();
 }
@@ -96,7 +96,7 @@ fn the_repo_domain_branches_carry_repo_leaves() {
 #[test]
 fn tree_json_states_every_leaf_kind_and_the_go_argv_of_repo_leaves() {
     let tmp = temp_root("json");
-    let registry = crate::inventory::discover(&tmp, &std::sync::atomic::AtomicBool::new(false));
+    let registry = crate::discover(&tmp, &std::sync::atomic::AtomicBool::new(false));
     let node = CommandNode {
         key: "root".into(),
         label: "semio".into(),
@@ -117,7 +117,7 @@ fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    let path = root.join(crate::registry::graph_file());
+    let path = root.join(dashboard_registry::graph_file());
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, fixture["graph"].to_string()).unwrap();
     let mut found = Vec::new();
@@ -133,7 +133,7 @@ fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred-publication");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    let path = root.join(crate::registry::graph_file());
+    let path = root.join(dashboard_registry::graph_file());
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(&path, "{").unwrap();
     let writer = std::thread::spawn(move || {

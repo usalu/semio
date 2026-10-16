@@ -1,39 +1,58 @@
 //! 🛂️ The headless workspace operations and its `GatewayBackend` implementations.
 
-use super::{AgentPrincipal, AppCommand, AppFrame, Arc, AuthorizedCatalogSnapshot, AuthorizedDescriptorSnapshot, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, HashMap, HubRemoteBinding, InvocationReport, InvokeRequest, LocalHubCredential, Mutex, NullBackend, OnceLock, PathBuf, PreparedActionReport, Resource, ResourceContent, RevisionStamp, SearchFilters, SearchHit, SessionHandle, UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, checkpoint_resource_uri, descriptor_resource_uri, dyn_enum_close, is_repository_root, now_ms, parse_checkpoint_resource_uri, parse_descriptor_resource_uri, remote, untrusted_content, untrusted_content_sha256, workspace_worker_pool};
 #[cfg(not(target_arch = "wasm32"))]
-use super::{ActionAdapter, ActivationPhase, ActivationScope, AuditSinks, AutoApprovePolicy, ClientInfo, DocumentScope, HandleTable, IdempotencyStore, InMemoryAuditSink, NativeHubBindingDriver};
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_dispatch_macros::dyn_enum_close;
+use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::OnceLock;
+use semio_framework_os_mcp_hub_remote::remote;
+use semio_framework_os_mcp_wire::__semio_dispatch_GatewayBackend;
+use crate::headless_workspace_state::{HeadlessWorkspace, directory_json_value};
+use crate::workspace::workspace_worker_pool;
+use semio_framework_os_mcp_catalog::capability_tools::to_schema_search_hit;
+use semio_framework_os_mcp_catalog::catalog::Catalog;
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, is_repository_root, load_package_descriptor, load_plugin_registry};
+use semio_framework_os_mcp_catalog::search::SearchFilters;
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::clock::now_ms;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_framework_os_mcp_hub_remote::remote::{AuthorizedCatalogSnapshot, AuthorizedDescriptorSnapshot, HubRemoteBinding, checkpoint_resource_uri, descriptor_resource_uri, parse_checkpoint_resource_uri, parse_descriptor_resource_uri};
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_port::channel_port::{ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, InvokeRequest};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_framework_os_mcp_probe_document::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, ensure_probe_codec_registered, probe_store_owners};
+use semio_framework_os_mcp_routing::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubLinkClose, HubRelay, InstalledArtifactKind, SessionDocumentPair, document_link_terminal_code, hub_link_tick, hub_links_to_close};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{ArtifactChannels, PluginArtifactBinding, WorkspaceCatalog};
+use semio_framework_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use semio_framework_os_mcp_shell_channel::context_resolve::{mint_session_id, resolve_context};
+use semio_framework_os_mcp_shell_channel::shell_channel::{ChannelKind, SessionChannelBinding, ShellArtifactChannel};
+use semio_framework_os_mcp_wire::protocol::{GatewayBackend, NullBackend, Resource, ResourceContent};
 #[cfg(not(target_arch = "wasm32"))]
-use super::artifact_app_frames::app_media_out_ports;
+use semio_framework_os_mcp_hub_remote::remote::NativeHubBindingDriver;
 #[cfg(not(target_arch = "wasm32"))]
-use super::compiled_components::{activation_fault, shared_plugin_runtime};
+use semio_framework_os_mcp_plugin_runtime::artifact_app_frames::app_media_out_ports;
 #[cfg(not(target_arch = "wasm32"))]
-use super::guest_document_codec::{agent_presence_moment, agent_presence_peer, hub_socket_reactor, register_guest_document_codec};
-use super::headless_workspace_state::{HeadlessWorkspace, PluginArtifactBinding, directory_json_value};
+use semio_framework_os_mcp_plugin_runtime::compiled_components::{activation_fault, shared_plugin_runtime};
 #[cfg(not(target_arch = "wasm32"))]
-use super::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubLinkClose, HubRelay, InstalledArtifactKind, SessionDocumentPair, document_link_terminal_code, hub_link_tick, hub_links_to_close};
+use semio_framework_os_mcp_plugin_runtime::guest_document_codec::{agent_presence_moment, agent_presence_peer, hub_socket_reactor, register_guest_document_codec};
 #[cfg(not(target_arch = "wasm32"))]
-use super::plugin_artifact_channel::PluginArtifactChannel;
-use super::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
 #[cfg(not(target_arch = "wasm32"))]
-use super::plugin_binding_and_activation::{PluginActivationOutcome, activate_plugin_instance};
-use super::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry};
-use super::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, ensure_probe_codec_registered, probe_store_owners};
-use super::routing_and_shell_routed::{ArtifactChannels, WorkspaceCatalog};
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::{PluginActivationOutcome, activate_plugin_instance};
 #[cfg(not(target_arch = "wasm32"))]
-use super::routing_and_shell_routed::{HubPluginComponents, PluginComponentSource, RoutingArtifactChannel, app_instance_slot, capability_instance_slot, distinct_plugin_ids, open_plugin_artifact_channel, open_plugin_artifact_channel_scoped, plugin_instance_slot, resolve_plugin_for_capability_in};
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin_host::GuestRuntime as _;
-/// 🌉️ Trait import only — brings `ArtifactStore::undo`/`redo` (real `store::SpaceMember` methods,
-/// object-safe async trait, not inherent) into method-call scope for `undo_probe_mutation`/
-/// `redo_probe_mutation` below.
-use store::SpaceMember as _;
-use super::ArtifactChannel as _;
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{HubPluginComponents, PluginComponentSource, RoutingArtifactChannel, app_instance_slot, capability_instance_slot, distinct_plugin_ids, open_plugin_artifact_channel, open_plugin_artifact_channel_scoped, plugin_instance_slot, resolve_plugin_for_capability_in};
 
 impl HeadlessWorkspace {
-    pub(super) fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
         ensure_probe_codec_registered();
-        let session_id = crate::mint_session_id(&principal, 0);
+        let session_id = mint_session_id(&principal, 0);
         Self {
             #[cfg(test)]
             test_discovery:None,
@@ -60,7 +79,7 @@ impl HeadlessWorkspace {
     }
 
     /// 🚫 The git repository root is not a workspace folder. Binding it persists `.semio/events.semio` in the tree.
-    pub(crate) fn reject_repository_root_workspace(path: &std::path::Path) -> Result<(), GatewayError> {
+    pub fn reject_repository_root_workspace(path: &std::path::Path) -> Result<(), GatewayError> {
         if is_repository_root(path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error))? {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("--folder `{}` is the repository root and would write .semio/events.semio into the git tree; pass a directory that is not the repository root", path.display())));
         }
@@ -167,7 +186,7 @@ impl HeadlessWorkspace {
         Ok(document.view.descriptor.artifact_schema == PROBE_SCHEMA && document.view.descriptor.pack_schema_hash == PROBE_PACK_SCHEMA_HASH)
     }
 
-    pub(super) fn actor_label(&self) -> String {
+    pub(crate) fn actor_label(&self) -> String {
         format!("agent:{}#{}", self.principal, self.session_id)
     }
 
@@ -264,7 +283,7 @@ impl HeadlessWorkspace {
     /// pair mount — the identical call `semio://workspace/scopes/{space}/{doc}/checkpoint` already
     /// makes, projected to the bytes. See [`remote::NativeHubBindingDriver::read_canonical_pair_bytes`].
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn read_hub_canonical_pair(&self, scope: &DocumentScope) -> Result<(Vec<u8>, Vec<u8>), GatewayError> {
+    pub(crate) fn read_hub_canonical_pair(&self, scope: &DocumentScope) -> Result<(Vec<u8>, Vec<u8>), GatewayError> {
         let binding = self.settled_hub_binding()?;
         let driver = self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())?;
         let cancel = semio_framework_async::CancelToken::root_now();
@@ -273,19 +292,19 @@ impl HeadlessWorkspace {
 
     /// ⏳️ The hub binding once any descriptor refresh in flight has settled (bounded by
     /// [`remote::HUB_AUTHORITY_SETTLE_WAIT_MS`]); the caller's own gate still fails closed.
-    pub(super) fn settled_hub_binding(&self) -> Result<&Arc<HubRemoteBinding>, GatewayError> {
+    pub(crate) fn settled_hub_binding(&self) -> Result<&Arc<HubRemoteBinding>, GatewayError> {
         let binding = self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())?;
         binding.await_settled(remote::HUB_AUTHORITY_SETTLE_WAIT_MS);
         Ok(binding)
     }
 
-    pub(super) fn hub_snapshot(&self) -> Result<Arc<AuthorizedDescriptorSnapshot>, GatewayError> {
+    pub(crate) fn hub_snapshot(&self) -> Result<Arc<AuthorizedDescriptorSnapshot>, GatewayError> {
         let binding = self.settled_hub_binding()?;
         binding.ready_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))
     }
 
     /// 🗂️ The verified package roster and per-document dialects of the live descriptor authority.
-    pub(super) fn hub_catalog_snapshot(&self) -> Result<Arc<remote::AuthorizedCatalogSnapshot>, GatewayError> {
+    pub(crate) fn hub_catalog_snapshot(&self) -> Result<Arc<remote::AuthorizedCatalogSnapshot>, GatewayError> {
         let binding = self.settled_hub_binding()?;
         binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))
     }
@@ -412,7 +431,7 @@ impl HeadlessWorkspace {
     /// 🐚️ Publishes this session's channel decision into the workspace. Called once, by
     /// `server_for_workspace_options`, with the SAME binding `ShellRoutedArtifactChannel` and
     /// `context_resolve` hold — never a second, divergent one.
-    pub fn bind_shell_route(&self, binding: Arc<crate::shell_channel::SessionChannelBinding>, catalog: Arc<Catalog>) {
+    pub fn bind_shell_route(&self, binding: Arc<SessionChannelBinding>, catalog: Arc<Catalog>) {
         let _ = self.shell_route.set((binding, catalog));
     }
 
@@ -421,17 +440,17 @@ impl HeadlessWorkspace {
     /// had resolved `shell` still created and exported against THIS process's interpreter — two
     /// document owners for one session. They now ask here, so the binding governs every verb.
     #[cfg(not(target_arch = "wasm32"))]
-    fn open_session_artifact_channel(&self, plugin_id: &str, app_id: Option<&str>) -> Result<ArtifactChannels, GatewayError> {
+    pub(crate) fn open_session_artifact_channel(&self, plugin_id: &str, app_id: Option<&str>) -> Result<ArtifactChannels, GatewayError> {
         self.open_session_artifact_channel_scoped(plugin_id, app_id, &ActivationScope::detached())
     }
 
     /// 🎚️ [`Self::open_session_artifact_channel`] under a caller's progress and cancel: a headless
     /// plugin channel resolves, reads, hashes and loads or compiles its component in `scope`.
     #[cfg(not(target_arch = "wasm32"))]
-    fn open_session_artifact_channel_scoped(&self, plugin_id: &str, app_id: Option<&str>, scope: &ActivationScope) -> Result<ArtifactChannels, GatewayError> {
+    pub(crate) fn open_session_artifact_channel_scoped(&self, plugin_id: &str, app_id: Option<&str>, scope: &ActivationScope) -> Result<ArtifactChannels, GatewayError> {
         if let Some((binding, catalog)) = self.shell_route.get() {
-            if binding.resolve() == crate::shell_channel::ChannelKind::Shell {
-                return Ok(ArtifactChannels::ShellDirect(crate::shell_channel::ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id)));
+            if binding.resolve() == ChannelKind::Shell {
+                return Ok(ArtifactChannels::ShellDirect(ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id)));
             }
         }
         Ok(ArtifactChannels::Plugin(open_plugin_artifact_channel_scoped(self.plugin_components().as_ref(), plugin_id, app_id, &self.actor_label(), scope, self.host_driver_policy)?))
@@ -448,7 +467,7 @@ impl HeadlessWorkspace {
     /// the one a committed `action_invoke` mutated. `None` when no adapter is bound (a bare
     /// workspace in a unit test) or when this workspace's catalog gives the plugin no instance slot.
     #[cfg(not(target_arch = "wasm32"))]
-    fn read_live_session_artifact_bytes(&self, plugin_id: &str, app_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+    pub(crate) fn read_live_session_artifact_bytes(&self, plugin_id: &str, app_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         let Some(actions) = self.root_actions.get() else { return Ok(None) };
         let Some(instance) = app_instance_slot(&self.catalog.current(), plugin_id, app_id) else { return Ok(None) };
         actions.read_session_artifact(instance).map(Some)
@@ -461,7 +480,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn bind_artifact_document(&self, artifact_id: &str, scope: &ActivationScope) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(binding) = self.plugin_artifact_binding(artifact_id) {
-            let shell_owned = self.shell_route.get().is_some_and(|(route, _)| route.resolve() == crate::shell_channel::ChannelKind::Shell);
+            let shell_owned = self.shell_route.get().is_some_and(|(route, _)| route.resolve() == ChannelKind::Shell);
             if let (false, Some(actions), Some(instance)) = (shell_owned, self.root_actions.get(), app_instance_slot(&self.catalog.current(), &binding.plugin_id, &binding.app_id)) {
                 actions.activate_session(instance, scope)?;
             }
@@ -499,7 +518,7 @@ impl HeadlessWorkspace {
     /// when the phase in flight ends. The job itself stops at its next interruptible boundary and
     /// drops whatever it half-opened.
     #[cfg(not(target_arch = "wasm32"))]
-    fn run_activation_job<T: Send + 'static>(self: &Arc<Self>, scope: ActivationScope, work: impl FnOnce(&HeadlessWorkspace, &ActivationScope) -> Result<T, GatewayError> + Send + 'static) -> Result<T, GatewayError> {
+    pub(crate) fn run_activation_job<T: Send + 'static>(self: &Arc<Self>, scope: ActivationScope, work: impl FnOnce(&HeadlessWorkspace, &ActivationScope) -> Result<T, GatewayError> + Send + 'static) -> Result<T, GatewayError> {
         let cancel = scope.cancel().clone();
         let (sender, receiver) = semio_framework_async::oneshot::channel();
         let workspace = Arc::clone(self);
@@ -516,12 +535,12 @@ impl HeadlessWorkspace {
         }
     }
 
-    fn read_session_artifact_bytes(&self, plugin_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+    pub(crate) fn read_session_artifact_bytes(&self, plugin_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         let Some((binding, catalog)) = self.shell_route.get() else { return Ok(None) };
-        if binding.resolve() != crate::shell_channel::ChannelKind::Shell {
+        if binding.resolve() != ChannelKind::Shell {
             return Ok(None);
         }
-        let mut channel = ArtifactChannels::ShellDirect(crate::shell_channel::ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id));
+        let mut channel = ArtifactChannels::ShellDirect(ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id));
         let frames = channel
             .exchange(0, vec![AppCommand::ReadArtifact])
             .map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` refused ReadArtifact ({}): {}", fault.code, fault.message)))?;
@@ -666,7 +685,7 @@ impl HeadlessWorkspace {
     /// succeeded is already acknowledged by the hub; an unacknowledged one was reverted and reported, so nothing an
     /// agent believes the hub holds rides on a closed actor.
     #[cfg(not(target_arch = "wasm32"))]
-    fn close_hub_links(&self, opening: &str, route: (&str, &str)) {
+    pub(crate) fn close_hub_links(&self, opening: &str, route: (&str, &str)) {
         let closes = {
             let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let live = bound.iter().filter(|(_, binding)| binding.backbone.is_some()).map(|(artifact_id, binding)| (artifact_id.clone(), binding.plugin_id.clone(), binding.app_id.clone(), binding.used)).collect::<Vec<_>>();
@@ -729,7 +748,7 @@ impl HeadlessWorkspace {
     /// value — see [`register_guest_document_codec`] for why registering the hub's number would
     /// delete the check that reads it back.
     #[cfg(not(target_arch = "wasm32"))]
-    fn register_hub_document_codec(&self, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> Result<(), GatewayError> {
+    pub(crate) fn register_hub_document_codec(&self, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> Result<(), GatewayError> {
         let Some(PluginComponentSource::Hub(components)) = self.plugin_components() else {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "a hub workspace with no authorized component source cannot resolve a document kind's codec").retryable());
         };
@@ -745,7 +764,7 @@ impl HeadlessWorkspace {
     /// `Handle::try_current()` there, once, and every later turn of this actor is polled under
     /// the handle it captured. Entering after the open would be entering nothing.
     #[cfg(not(target_arch = "wasm32"))]
-    fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
+    pub(crate) fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
         let schema = lease.artifact.schema.clone();
         match ::semio_framework_async::poll::resolve_ready(store::os_store::codec_registry::document_codec(&schema)) {
             Ok(Some(_)) => {}
@@ -796,7 +815,7 @@ impl HeadlessWorkspace {
     /// bootstrap tail past the checkpoint and every other writer's edit — which the guest takes before its
     /// next command ([`RoutingArtifactChannel::exchange`], [`plan_hub_inbound`]).
     #[cfg(not(target_arch = "wasm32"))]
-    fn watch_hub_document(&self, reactor: &'static tokio::runtime::Runtime, document_key: store::sync::ArtifactDocumentKey, relay: Arc<HubRelay>) {
+    pub(crate) fn watch_hub_document(&self, reactor: &'static tokio::runtime::Runtime, document_key: store::sync::ArtifactDocumentKey, relay: Arc<HubRelay>) {
         let host = self.artifact_host.clone();
         let actor = self.actor_label();
         let mut events = ::semio_framework_async::poll::resolve_ready(host.subscribe_key(&document_key));
@@ -913,7 +932,7 @@ impl HeadlessWorkspace {
     /// build on its own any more — a `RoutingArtifactChannel` opens no plugin until a command actually
     /// names one, so "which plugin" errors surface per-call (`plugin_id_for`), not at construction.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) fn action_adapter(&self) -> Result<Arc<ActionAdapter>, GatewayError> {
+    pub(crate) fn action_adapter(&self) -> Result<Arc<ActionAdapter>, GatewayError> {
         let mut cached = self.action_adapter.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(adapter) = cached.as_ref() {
             return Ok(adapter.clone());
@@ -930,7 +949,7 @@ impl HeadlessWorkspace {
         Ok(adapter)
     }
 
-    fn agent_principal(&self) -> AgentPrincipal {
+    pub(crate) fn agent_principal(&self) -> AgentPrincipal {
         AgentPrincipal::from_scope_names(self.principal.clone(), "headless workspace agent", &self.scopes, None)
     }
 }
@@ -938,14 +957,14 @@ impl HeadlessWorkspace {
 impl GatewayBackend for HeadlessWorkspace {
     fn resolve_context(&self, principal: &str) -> Result<ContextSummary, GatewayError> {
         let active_artifact_id = self.workspace_artifact_ids()?.into_iter().next();
-        Ok(crate::resolve_context(&self.catalog.current(), self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
+        Ok(resolve_context(&self.catalog.current(), self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
     }
 
     fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
         let filters = SearchFilters { kind: Vec::new(), owner: None, artifact_kind: None, requires_scope: None, audience: Vec::new() };
         let catalog = self.catalog.current();
         let hits = crate::search(&catalog, query, &filters);
-        Ok(hits.into_iter().filter_map(|hit| catalog.get(&hit.capability_id).map(|capability| crate::to_schema_search_hit(capability, hit.score))).collect())
+        Ok(hits.into_iter().filter_map(|hit| catalog.get(&hit.capability_id).map(|capability| to_schema_search_hit(capability, hit.score))).collect())
     }
 
     fn describe_capabilities(&self, capability_id: &str) -> Result<serde_json::Value, GatewayError> {
@@ -1185,4 +1204,3 @@ dyn_enum_close! {
         WorkspaceArc(Arc<HeadlessWorkspace>),
     }
 }
-

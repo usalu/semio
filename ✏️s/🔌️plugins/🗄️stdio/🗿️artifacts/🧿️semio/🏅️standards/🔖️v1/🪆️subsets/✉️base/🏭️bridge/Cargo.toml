@@ -25,6 +25,3 @@ semio-framework-value = { path = "../../../../../../../../../../🧰️framework
 semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-
-[profile.prototype]
-inherits = "dev"

@@ -1,1 +1,1 @@
-{"semanticRoots":["🦀️.rs","🧬️schema/📜️space-history/🦀️.rs"],"binaryOwners":["🚪️io/💾️binary/📸️snapshot/🦀️.rs","🚪️io/💾️binary/🧬️mutations/🦀️.rs"],"textOwners":["🚪️io/📝️text/📸️snapshot/🦀️.rs","🚪️io/📝️text/🧬️mutations/🦀️.rs"]}
+{"semanticRoots":["🦀️.rs","🧬️schema/📜️space-history/🦀️.rs"],"binaryOwners":["🧬️schema/📥️lifted/💾️binary-snapshot/🦀️.rs","🚪️io/💾️binary/🧬️mutations/🦀️.rs"],"textOwners":["🧬️schema/📥️lifted/📝️text-snapshot/🦀️.rs","🧬️schema/📥️lifted/🧬️mutations/🦀️.rs"]}

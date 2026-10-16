@@ -16,9 +16,9 @@
 //! an existing account keeps its identity and gets the new credential plus a `credential-changed`
 //! fact, and in both cases every live session of that principal is revoked before the verb returns.
 
-use super::HubError;
-use semio_hub::auth::password::{DEFAULT_ITERATIONS, MAX_ITERATIONS, MIN_ITERATIONS, PASSWORD_MAX_BYTES, PASSWORD_MIN_BYTES, PasswordCredentialV1};
-use semio_hub::directory::HubDirectory;
+use semio_hub_runtime::startup::HubError;
+use semio_hub_auth::password::{DEFAULT_ITERATIONS, MAX_ITERATIONS, MIN_ITERATIONS, PASSWORD_MAX_BYTES, PASSWORD_MIN_BYTES, PasswordCredentialV1};
+use semio_hub_directory::HubDirectory;
 use std::ffi::OsString;
 
 /// 🧾️ The exact parsed `credential set` invocation.
@@ -107,7 +107,7 @@ async fn set(request: CredentialSet) -> Result<(), HubError> {
     let mut password = read_password(std::io::stdin().lock())?;
     let credential = PasswordCredentialV1::mint(&password, iterations).map_err(|_| unsafe_configuration("credential set: the password could not be hashed"))?;
     unsafe { password.as_mut_vec() }.fill(0);
-    let directory = super::connect_directory(&data).await?;
+    let directory = semio_hub_runtime::lifecycle::connect_directory(&data).await?;
     let correlation_id = directory::os_identity::time_ordered_id();
     let user_id = match directory.get_user_by_email(&request.email).await? {
         Some(existing) => {

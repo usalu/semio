@@ -1,3 +1,6 @@
+import"../../../../../🧪️tests/📐️phases/🟦️.ts";
+import"../../🎟️capacity/🧪️tests/📤️derivative/🟦️.ts";
+import"../../🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts";
 import"../../📥️source/🔗️derivative/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdtemp,mkdir,writeFile,readFile,rm,symlink,readlink,lstat} from "node:fs/promises";
@@ -66,3 +69,9 @@ test("first-party SDK patch emitter owns exact original bytes and terminal newli
 
 /** 📋️ Shared binary retention follows closed observations and independent relational classification. */
 test("pristine file disposition refuses missing and foreign inode shapes",async()=>{const{nxPristineFileDispositionV1}=await import("../../📥️source/🧊️pristine/📋️plan/🟦️.ts"),rows=(await import("../../📥️source/🧊️pristine/📋️plan/🧪️tests/🔣️.json")).default,contract=(await import("../../📥️source/🧊️pristine/📋️plan/🧬️schema/🔣️.json")).default,validate=new Ajv({strict:true}).compile(contract.definitions.Observation),{Database}=await import("bun:sqlite"),db=new Database(":memory:");try{for(const row of rows){expect(validate(row.observation),row.name).toBe(true);const oracle=db.query("select case when json_extract(?1,'$.path') like 'node_modules/%' then 'nested' when not json_extract(?1,'$.present') then null when json_extract(?1,'$.shared') then case when json_extract(?1,'$.archive') and json_extract(?1,'$.matches') then 'preserve' else null end when json_extract(?1,'$.links') != 1 then null when json_extract(?1,'$.archive') then 'replace' else 'remove' end disposition").get(JSON.stringify(row.observation))as{disposition:string|null};expect(oracle.disposition,row.name).toBe(row.expected);if(row.expected===null)expect(()=>nxPristineFileDispositionV1(row.observation),row.name).toThrow();else expect(String(nxPristineFileDispositionV1(row.observation)),row.name).toBe(row.expected);}console.log("[DEBUG] Pristine file write plan matches independent SQLite custody oracle");}finally{db.close();}});
+
+
+test("SDK snapshot permanently registers captured-input and custody laws",async()=>{
+ const {readFileSync}=await import("node:fs"),ts=await import("typescript"),text=readFileSync(import.meta.path,"utf8"),expected=fixture.capacityRegistration.imports,actual=ts.preProcessFile(text,true,true).importedFiles.map(row=>row.fileName),scan=new Bun.Transpiler({loader:"ts"}).scan(text).imports.map(row=>{const path=row.path;if(!/[\u0080-\u00ff]/u.test(path)||/[\u0100-\uffff]/u.test(path))return path;return Buffer.from(path,"latin1").toString("utf8");});
+ for(const path of expected){expect(actual.filter(value=>value===path)).toHaveLength(1);expect(scan.filter(value=>value===path)).toHaveLength(1);const bytes=readFileSync(new URL(path,import.meta.url),"utf8");expect(bytes).toContain("withBuildTestInvocationV1");}expect(readFileSync(new URL(expected[1]!,import.meta.url),"utf8")).toContain("scriptInvocationEnvironment(original");console.log("[DEBUG] Permanent SDK snapshot capacity and failure imports agree with independent TypeScript and Bun scanners; child failure cases carry the exact canonical Original wire");
+});

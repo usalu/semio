@@ -125,7 +125,7 @@ impl RateLimitPolicyV1 {
 
 /// 🧭️ What a request is charged against: never the raw address or capability, always its digest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct RateLimitSubjectV1([u8; 32]);
+pub struct RateLimitSubjectV1(pub [u8; 32]);
 
 impl RateLimitSubjectV1 {
     /// 🌐️ The peer's network address, domain-separated from principal subjects.
@@ -143,7 +143,7 @@ impl RateLimitSubjectV1 {
         Self::digest(b"semio/hub/rate-limit/identity/v1\0", email.to_lowercase().as_bytes())
     }
 
-    fn digest(domain: &[u8], value: &[u8]) -> Self {
+    pub fn digest(domain: &[u8], value: &[u8]) -> Self {
         let mut hash = Sha256::new();
         hash.update(domain);
         hash.update(value);
@@ -182,7 +182,7 @@ struct Bucket {
 pub struct HubRateLimiterV1 {
     clock: std::sync::Arc<dyn RateLimitClockV1>,
     buckets: Mutex<HashMap<(RateLimitClassV1, RateLimitSubjectV1), Bucket>>,
-    capacity: usize,
+    pub capacity: usize,
 }
 
 /// 🧮️ How many distinct subjects the limiter tracks before it sheds fully recovered entries.
@@ -382,8 +382,8 @@ impl HubStreamLimiterV1 {
 /// 🎫️ One admitted stream's slots, released when the stream ends; the principal's gate is forgotten with its last stream.
 pub struct StreamPermitV1 {
     permits: Option<(tokio::sync::OwnedSemaphorePermit, tokio::sync::OwnedSemaphorePermit)>,
-    key: (StreamLimitClassV1, RateLimitSubjectV1),
-    gate: std::sync::Arc<tokio::sync::Semaphore>,
+    pub key: (StreamLimitClassV1, RateLimitSubjectV1),
+    pub gate: std::sync::Arc<tokio::sync::Semaphore>,
     principals: StreamGates,
     principal_streams: u32,
 }

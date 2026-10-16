@@ -5,13 +5,16 @@ import { materializeHost } from "../../🖥️host/🏗️materialization/🟦�
 import { type Implementation, type SubjectRawInputs, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type DiscoveredCase, type TestResult, markRunComplete, planExecution, readResults } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { rmSync, writeFileSync } from "node:fs";
 
 export type PhaseOutcome = Readonly<{ results: TestResult[]; problems: string[] }>;
 
 /** 🏃️ Executes one `(case, level, role, implementation)` triple and reads back its owned result stream. */
-export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation, subjectRawInputs?: SubjectRawInputs): PhaseOutcome {
+export async function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl, subjectRawInputs?: SubjectRawInputs): Promise<PhaseOutcome> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const planned = planExecution(repoRoot, discovered, level, role, implementation);
   const plan = subjectRawInputs === undefined ? planned.plan : { ...planned.plan, subjectRawInputs };
   const { missingFixtures, planPath } = planned;
@@ -24,8 +27,9 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
   // like a case with nothing to do — the declaration is reported before anything is executed.
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   let command = host.command;
+  const capture=(command:string,args:readonly string[],budgetMs:number)=>withRequestedIssuedResourceControlV1(phaseControl,budgetMs,control=>withIssuedResourceOperationV1(control,()=>captureOwnedCommandResultV1(command,args,host.cwd,{control,env:scriptInvocationEnvironment(invocation,repositoryTestArtifactEnvironmentV1(repoRoot,host.env)),output:{maximumBytes:16777216,maximumLines:65536}})));
   if (host.preparation !== undefined) {
-    const prepared = runProbe(host.preparation.command, [...host.preparation.args], { cwd: host.cwd, env: repositoryTestArtifactEnvironmentV1(repoRoot,host.env), budgetMs: buildBudgetMs() });
+    const prepared = await capture(host.preparation.command,host.preparation.args,buildBudgetMs());
     if ((prepared.status ?? 1) !== 0) {
       problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status}`);
       if (prepared.stdout.trim() !== "") problems.push(prepared.stdout.trimEnd());
@@ -35,7 +39,7 @@ export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: 
     command = host.preparation.executableFromStdout(prepared.stdout) ?? "";
     if (command === "") return { results: [], problems: [...problems, `${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`] };
   }
-  const probe = runProbe(command, [...host.args], { cwd: host.cwd, env: repositoryTestArtifactEnvironmentV1(repoRoot,host.env), budgetMs: testLevelBudgetMs(level) });
+  const probe = await capture(command,host.args,testLevelBudgetMs(level));
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());
   const { results, problems: readProblems } = readResults(plan.resultsPath);
   if ((probe.status ?? 1) !== 0 && results.length === 0) {

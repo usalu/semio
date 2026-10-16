@@ -13,7 +13,7 @@ use crate::standards::v89a::subsets::any::io::GifBuilderConstruction as GifBuild
 use protocol::Inference;
 use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
 
-const DANCING_GIF_BYTES: &[u8] = include_bytes!("../../🖼️assets/🧪️dancing/🖼️.gif");
+static DANCING_GIF_BYTES: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../📚️examples/💃️dancing/🖼️assets/🧪️dancing/🖼️.gif")).expect("the committed fixture is readable").into_boxed_slice()));
 
 /// 🧪️ (a) Real-file decode: non-trivial invariants that a black-frame or invalid-file stub could
 /// never satisfy — frame count > 1 (it's animated), loop count matches the file's NETSCAPE2.0
@@ -21,7 +21,7 @@ const DANCING_GIF_BYTES: &[u8] = include_bytes!("../../🖼️assets/🧪️danc
 /// least one frame has a non-zero delay.
 #[semio_framework_async_macros::async_test]
 async fn decodes_real_fixture_with_nontrivial_invariants() {
-    let snapshot = decode_gif(DANCING_GIF_BYTES).expect("dancing.gif must decode via the real 89a codec");
+    let snapshot = decode_gif(*DANCING_GIF_BYTES).expect("dancing.gif must decode via the real 89a codec");
     assert!(snapshot.frames.len() > 1, "dancing.gif is animated, must decode to more than one frame");
     assert_eq!(snapshot.width, 800);
     assert_eq!(snapshot.height, 800);
@@ -37,7 +37,7 @@ async fn decodes_real_fixture_with_nontrivial_invariants() {
 /// equality after a second round trip, not necessarily byte-identical GIF output).
 #[semio_framework_async_macros::async_test]
 async fn decode_encode_decode_round_trip_is_stable() {
-    let once = decode_gif(DANCING_GIF_BYTES).expect("first decode");
+    let once = decode_gif(*DANCING_GIF_BYTES).expect("first decode");
     let reencoded = encode_gif(&once).expect("re-encode decoded snapshot");
     let twice = decode_gif(&reencoded).expect("second decode");
     assert_eq!(once, twice, "decode(encode(decode(x))) must equal decode(x)");
@@ -49,7 +49,7 @@ async fn decode_encode_decode_round_trip_is_stable() {
 /// `GifAnalyzer::analyze` outputs (original fixture vs. rebuilt-then-re-encoded) must match.
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_matches() {
-    let original = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
+    let original = decode_gif(*DANCING_GIF_BYTES).expect("decode real fixture");
     let packed_original = <GifSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&original);
     let analysis_a = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_original)]);
     let parts_a = analysis_a.parts.snapshot.clone().expect("analyzer must report a snapshot for a valid real fixture");
@@ -79,7 +79,7 @@ async fn analyzer_builder_round_trip_matches() {
 /// decoded snapshot produce byte-equal results.
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
+    let snapshot = decode_gif(*DANCING_GIF_BYTES).expect("decode real fixture");
     assert_eq!(GifInference::infer(&snapshot).expect("valid materialized inference fixture"), GifInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -95,7 +95,7 @@ async fn inference_default_law() {
 /// `hasAlpha` agreeing exactly with a direct scan of every frame's `transparent_index`.
 #[semio_framework_async_macros::async_test]
 async fn dimensions_matches_real_fixture_geometry() {
-    let snapshot = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
+    let snapshot = decode_gif(*DANCING_GIF_BYTES).expect("decode real fixture");
     let inferred = GifInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.dimensions.width, 800);
     assert_eq!(inferred.dimensions.height, 800);

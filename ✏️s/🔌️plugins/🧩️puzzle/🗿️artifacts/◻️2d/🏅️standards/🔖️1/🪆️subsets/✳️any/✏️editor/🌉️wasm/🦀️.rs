@@ -14,7 +14,7 @@
 
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
 use crate::editor::puzzle2d::engine::{
-    canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json,
+    canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, board_lod_scale_json,
     BoardHost, CubicBez, Point,
 };
 use crate::Puzzle2dSnapshot;
@@ -29,6 +29,7 @@ use semio_framework_async::browser::future_to_promise;
 use semio_framework_geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{board_delete_selection, board_set_camera, board_set_grid_visible, board_set_wheel_zoom_active};
 
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(source_px: f64, source_py: f64, source_cx: f64, source_cy: f64, target_px: f64, target_py: f64, target_cx: f64, target_cy: f64) -> Vec<f64> {
@@ -89,13 +90,13 @@ struct BoardSessionInner {
 
 impl BoardSessionInner {
     fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
-        self.host.set_size(lw, lh, dpr);
+        self.host.scene.set_size(lw, lh, dpr);
         self.gpu.resize_surface(pw, ph);
     }
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_vector_scene();
-        let clear = self.host.canvas_theme.raster_clear;
+        let clear = self.host.style.canvas_theme.raster_clear;
         self.gpu.render_frame(&scene, clear)
     }
 }
@@ -125,12 +126,12 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = isDraggingAreaSelect)]
     pub fn is_dragging_area_select(&self) -> bool {
-        self.state.borrow().host.is_dragging_area_select()
+        self.state.borrow().host.focus.is_dragging_area_select()
     }
 
     #[wasm_bindgen(js_name = defersDescriptorSyncFromJs)]
     pub fn defers_descriptor_sync_from_js(&self) -> bool {
-        self.state.borrow().host.defers_descriptor_sync_from_js()
+        match &self.state.borrow().host { __host => defers_descriptor_sync_from_js(&__host.focus, &__host.gestures) }
     }
 
     /// 🌊️ Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store; uses `future_to_promise` so wasm-bindgen does not hold `&mut BoardSession` across `await` (avoids `borrow_fail` vs `setSize` during GPU setup).
@@ -152,7 +153,7 @@ impl BoardSession {
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
-            g.host.set_size(lw, lh, dpr);
+            g.host.scene.set_size(lw, lh, dpr);
             g.gpu.finish_attach(admission);
             Ok(JsValue::UNDEFINED)
         })
@@ -173,19 +174,19 @@ impl BoardSession {
     pub fn set_selection_screen_preview(&mut self, flat_xy: &[f64]) {
         let mut inner = self.state.borrow_mut();
         if flat_xy.len() < 4 || flat_xy.len() % 2 != 0 {
-            inner.host.set_selection_screen_preview(None);
+            inner.host.focus.set_selection_screen_preview(None);
             return;
         }
         let mut pts = Vec::with_capacity(flat_xy.len() / 2);
         for chunk in flat_xy.chunks_exact(2) {
             pts.push(Point::new(chunk[0], chunk[1]));
         }
-        inner.host.set_selection_screen_preview(Some(pts));
+        inner.host.focus.set_selection_screen_preview(Some(pts));
     }
 
     #[wasm_bindgen(js_name = clearSelectionScreenPreview)]
     pub fn clear_selection_screen_preview(&mut self) {
-        self.state.borrow_mut().host.set_selection_screen_preview(None);
+        self.state.borrow_mut().host.focus.set_selection_screen_preview(None);
     }
 
     #[wasm_bindgen(js_name = syncDescriptorJson)]
@@ -199,42 +200,42 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setNodePositionsJson)]
     pub fn set_node_positions_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_node_positions_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+        self.state.borrow_mut().host.scene.set_node_positions_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setKindCatalogsJson)]
     pub fn set_board_kind_catalogs_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+        self.state.borrow_mut().host.style.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
     pub fn set_canvas_theme_json(&mut self, json: &str) {
         let mut accepted=|_|true;
         let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
-        if let Ok(overlay)=semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.set_canvas_palette(&overlay);}
+        if let Ok(overlay)=semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.style.set_canvas_palette(&overlay);}
     }
 
     #[wasm_bindgen(js_name = clearIconVectorCache)]
     pub fn clear_icon_vector_cache_wasm(&mut self) {
-        self.state.borrow_mut().host.clear_icon_vector_cache();
+        self.state.borrow_mut().host.style.clear_icon_vector_cache();
     }
 
     #[wasm_bindgen(js_name = loadBoardSnapshotJson)]
     pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
         let mut accepted=|_|true;
         let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);
-        semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut self.state.borrow_mut().host,json,&mut control)
+        semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut self.state.borrow_mut().host.scene, &mut self.state.borrow_mut().host.focus, &mut self.state.borrow_mut().host.style, &mut self.state.borrow_mut().host.outbox,json,&mut control)
     }
 
     #[wasm_bindgen(js_name = setCamera)]
     pub fn set_camera_wasm(&mut self, x: f64, y: f64, zoom: f64) {
-        self.state.borrow_mut().host.set_camera(x, y, zoom);
+        match &mut self.state.borrow_mut().host { __host => board_set_camera(&mut __host.scene, &mut __host.outbox, x, y, zoom) };
     }
 
     /// 🎥️ Sets the camera without enqueuing a `camera` event — for re-applying the framing camera after a snapshot re-parse without echoing it back to the program.
     #[wasm_bindgen(js_name = setCameraSilent)]
     pub fn set_camera_silent_wasm(&mut self, x: f64, y: f64, zoom: f64) {
-        self.state.borrow_mut().host.set_camera_silent(x, y, zoom);
+        match &mut self.state.borrow_mut().host { __host => set_camera_silent(&mut __host.scene, &mut __host.outbox, x, y, zoom) };
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
@@ -274,17 +275,17 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = wheelScreen)]
     pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
+        match &mut self.state.borrow_mut().host { __host => wheel_screen(&mut __host.scene, &mut __host.outbox, sx, sy, delta_y) };
     }
 
     #[wasm_bindgen(js_name = setWheelZoomActive)]
     pub fn set_wheel_zoom_active_wasm(&mut self, active: bool) {
-        self.state.borrow_mut().host.set_wheel_zoom_active(active);
+        match &mut self.state.borrow_mut().host { __host => board_set_wheel_zoom_active(&mut __host.scene, &mut __host.style, active) };
     }
 
     #[wasm_bindgen(js_name = deleteSelection)]
     pub fn delete_selection_wasm(&mut self) {
-        self.state.borrow_mut().host.delete_selection();
+        match &mut self.state.borrow_mut().host { __host => board_delete_selection(&mut __host.scene, &mut __host.outbox, &mut __host.commit) };
     }
 
     #[wasm_bindgen(js_name = drainEventsJson)]
@@ -296,52 +297,52 @@ impl BoardSession {
     pub fn camera_json(&self) -> String {
         let inner = self.state.borrow();
         semio_framework_pack_json::json!({
-            "x": inner.host.camera.x,
-            "y": inner.host.camera.y,
-            "zoom": inner.host.camera.zoom,
+            "x": inner.host.scene.camera.x,
+            "y": inner.host.scene.camera.y,
+            "zoom": inner.host.scene.camera.zoom,
         })
         .to_string()
     }
 
     #[wasm_bindgen(js_name = overlayPaintStateJson)]
     pub fn overlay_paint_state_json_wasm(&self) -> String {
-        self.state.borrow().host.overlay_paint_state_json()
+        match &self.state.borrow().host { __host => overlay_paint_state_json(&__host.scene, &__host.style) }
     }
 
     #[wasm_bindgen(js_name = setSelectionOptions)]
     pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, select_nodes: bool, select_edges: bool, select_handles: bool) {
-        self.state.borrow_mut().host.set_selection_options(method, mode, select_nodes, select_edges, select_handles);
+        self.state.borrow_mut().host.focus.set_selection_options(method, mode, select_nodes, select_edges, select_handles);
     }
 
     #[wasm_bindgen(js_name = setHandleLinkCompatJson)]
     pub fn set_handle_link_compat_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_handle_link_compat_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+        self.state.borrow_mut().host.style.set_handle_link_compat_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setWorldRasterTiling)]
     pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
-        self.state.borrow_mut().host.set_world_raster_tiling(mode);
+        self.state.borrow_mut().host.style.set_world_raster_tiling(mode);
     }
 
     #[wasm_bindgen(js_name = lodScaleJson)]
     pub fn lod_scale_json_wasm(&self) -> String {
-        puzzle_2d_lod_scale_json()
+        board_lod_scale_json()
     }
 
     /// 👁️ Shows or hides the world grid (`setGridVisible` on the guest). Never touches snapping.
     #[wasm_bindgen(js_name = setGridVisible)]
     pub fn set_grid_visible_wasm(&mut self, visible: bool) {
-        self.state.borrow_mut().host.set_grid_visible(visible);
+        match &mut self.state.borrow_mut().host { __host => board_set_grid_visible(&mut __host.scene, &mut __host.style, visible) };
     }
 
     #[wasm_bindgen(js_name = setGridSnapEnabled)]
     pub fn set_grid_snap_enabled_wasm(&mut self, enabled: bool) {
-        self.state.borrow_mut().host.set_grid_snap_enabled(enabled);
+        self.state.borrow_mut().host.style.set_grid_snap_enabled(enabled);
     }
 
     #[wasm_bindgen(js_name = setGridFactor)]
     pub fn set_grid_factor_wasm(&mut self, v: f64) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_grid_factor(v).map_err(|e| JsValue::from_str(&e.to_string()))
+        self.state.borrow_mut().host.style.set_grid_factor(v).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setActiveUtility)]
@@ -352,7 +353,7 @@ impl BoardSession {
     /// 🕹️ Composes the select utility's gumball handles (`setTransformGumballFlag` on the guest).
     #[wasm_bindgen(js_name = setTransformFlags)]
     pub fn set_transform_flags_wasm(&mut self, move_enabled: bool, rotate_enabled: bool) {
-        self.state.borrow_mut().host.set_transform_flags(move_enabled, rotate_enabled);
+        match &mut self.state.borrow_mut().host { __host => set_transform_flags(&mut __host.scene, &mut __host.gestures, move_enabled, rotate_enabled) };
     }
 
     /// 🩺️ The gumball's probe vitals — published as `data-board-transform-json`.
@@ -363,28 +364,35 @@ impl BoardSession {
 
     /// 🖍️ World extent one area-brush CLICK paints (`setAreaBrushSize` on the guest, in grid cells,
     /// converted to board units by the caller). A click-drag states its own rectangle.
+    /// 🏷️ Installs (`Some`) or clears the scene's brush placement prefixes in the board's wire form
+    /// (`Board2dScene.placementNaming`); `None` falls back to this session's installed puzzle naming.
+    #[wasm_bindgen(js_name = setPlacementNamingJson)]
+    pub fn set_placement_naming_json_wasm(&mut self, json: Option<String>) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.style.set_placement_naming_json(json.as_deref()).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     #[wasm_bindgen(js_name = setAreaBrushExtent)]
     pub fn set_area_brush_extent_wasm(&mut self, width: f64, height: f64) {
-        self.state.borrow_mut().host.set_area_brush_extent(width, height);
+        self.state.borrow_mut().host.gestures.set_area_brush_extent(width, height);
     }
 
     /// 🩺️ Every target region the board holds — published as `data-board-target-regions-json`.
     #[wasm_bindgen(js_name = targetRegionsJson)]
     pub fn target_regions_json_wasm(&self) -> String {
-        self.state.borrow().host.target_regions_json()
+        match &self.state.borrow().host { __host => target_regions_json(&__host.scene, &__host.gestures) }
     }
 
     /// 🩺️ The live gesture/utility/hover snapshot — published as `data-board-interaction-json`.
     #[wasm_bindgen(js_name = interactionJson)]
     pub fn interaction_json_wasm(&self) -> String {
-        self.state.borrow().host.interaction_json()
+        match &self.state.borrow().host { __host => interaction_json(&__host.scene, &__host.focus, &__host.gestures) }
     }
 
     /// 🩺️ Every on-screen handle with its world position, owning node, kind and free/occupied state —
     /// published as `data-board-handle-positions-json`, viewport-bounded and capped by the engine.
     #[wasm_bindgen(js_name = handlePositionsJson)]
     pub fn handle_positions_json_wasm(&self) -> String {
-        self.state.borrow().host.handle_positions_json()
+        match &self.state.borrow().host { __host => handle_positions_json(&__host.scene, &__host.style) }
     }
 
     #[wasm_bindgen(js_name = setSuggestionOffset)]
@@ -439,12 +447,12 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setDropPreviewJson)]
     pub fn set_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_drop_preview_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+        match &mut self.state.borrow_mut().host { __host => set_drop_preview_json(&mut __host.scene, &mut __host.brush, json) }.map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = clearDropPreview)]
     pub fn clear_drop_preview_wasm(&mut self) {
-        let _ = self.state.borrow_mut().host.set_drop_preview_json("");
+        let _ = match &mut self.state.borrow_mut().host { __host => set_drop_preview_json(&mut __host.scene, &mut __host.brush, "") };
     }
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]
@@ -454,35 +462,35 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = clearLinkSessionJson)]
     pub fn clear_link_session_json_wasm(&mut self) {
-        self.state.borrow_mut().host.clear_external_link_preview();
+        match &mut self.state.borrow_mut().host { __host => clear_external_link_preview(&mut __host.focus, &mut __host.outbox) };
     }
 
     #[wasm_bindgen(js_name = setOriginalElementStyle)]
     pub fn set_original_element_style_wasm(&mut self, enabled: bool) {
-        self.state.borrow_mut().host.set_original_element_style(enabled);
+        self.state.borrow_mut().host.style.set_original_element_style(enabled);
     }
 
     #[wasm_bindgen(js_name = setAutomaticLod)]
     pub fn set_automatic_lod_wasm(&mut self, enabled: bool) {
-        self.state.borrow_mut().host.set_automatic_lod(enabled);
+        self.state.borrow_mut().host.style.set_automatic_lod(enabled);
     }
 
     #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
     pub fn set_forced_draw_lod_label_wasm(&mut self, label: &str) {
-        self.state.borrow_mut().host.set_forced_draw_lod_label(label);
+        self.state.borrow_mut().host.style.set_forced_draw_lod_label(label);
     }
 
     #[wasm_bindgen(js_name = setSelectionIdsJson)]
     pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
         let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.set_selection_ids(&ids);
+        match &mut self.state.borrow_mut().host { __host => set_selection_ids(&mut __host.scene, &mut __host.focus, &mut __host.outbox, &ids) };
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setSelectionIdsJsonSilent)]
     pub fn set_selection_ids_json_silent(&mut self, json: &str) -> Result<(), JsValue> {
         let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.set_selection_ids_silent(&ids);
+        match &mut self.state.borrow_mut().host { __host => set_selection_ids_silent(&mut __host.scene, &mut __host.focus, &mut __host.outbox, &ids) };
         Ok(())
     }
 
@@ -495,26 +503,26 @@ impl BoardSession {
             removed_ids: Vec<String>,
         }
         let body: PreselectSync = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.set_preselect_state_silent(&body.ids, &body.removed_ids);
+        match &mut self.state.borrow_mut().host { __host => set_preselect_state_silent(&mut __host.scene, &mut __host.focus, &body.ids, &body.removed_ids) };
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setHoveredIdSilent)]
     pub fn set_hovered_id_silent_wasm(&mut self, id: Option<String>) {
-        self.state.borrow_mut().host.set_hovered_id_silent(id);
+        self.state.borrow_mut().host.focus.set_hovered_id_silent(id);
     }
 
     /// 🔗️ Paints the ids a time-travel draft references highlighted (`Board2dScene.highlightedIdsJson`); `[]` clears them.
     #[wasm_bindgen(js_name = setHighlightedIdsJson)]
     pub fn set_highlighted_ids_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
         let ids: Vec<String> = semio_framework_pack_json::from_json_str(json,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.set_highlighted_ids(ids);
+        self.state.borrow_mut().host.focus.set_highlighted_ids(ids);
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setHoveredKindSilent)]
     pub fn set_hovered_kind_silent_wasm(&mut self, domain: Option<String>, kind_id: Option<String>) {
-        self.state.borrow_mut().host.set_hovered_kind_silent(domain, kind_id);
+        self.state.borrow_mut().host.focus.set_hovered_kind_silent(domain, kind_id);
     }
 
     #[wasm_bindgen(js_name = encodedSceneHint)]

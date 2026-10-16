@@ -1,0 +1,371 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "groups",
+    "owners"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "groups": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "framework",
+        "runtime",
+        "streaming",
+        "isolated"
+      ],
+      "properties": {
+        "repository": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "wasm"
+          ],
+          "properties": {
+            "native": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasm": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "framework": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "wasm"
+          ],
+          "properties": {
+            "native": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasm": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "wasm"
+          ],
+          "properties": {
+            "native": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasm": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "streaming": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "wasm"
+          ],
+          "properties": {
+            "native": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasm": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "isolated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "wasm"
+          ],
+          "properties": {
+            "native": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasm": {
+              "type": "array",
+              "maxItems": 512,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "optLevel"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                    "maxLength": 128
+                  },
+                  "optLevel": {
+                    "enum": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "owners": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 512,
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).*Cargo\\.toml$"
+      },
+      "additionalProperties": {
+        "enum": [
+          "repository",
+          "framework",
+          "runtime",
+          "streaming",
+          "isolated"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumPolicyBytes": 262144,
+        "maximumOwners": 512,
+        "maximumPackageRows": 512,
+        "evidence": {
+          "native": "authored:interactive-native-package-constraints",
+          "wasm": "authored:interactive-wasm-package-constraints"
+        }
+      }
+    }
+  }
+}

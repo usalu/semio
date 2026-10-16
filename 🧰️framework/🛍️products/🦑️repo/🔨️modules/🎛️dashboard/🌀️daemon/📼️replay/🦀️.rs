@@ -11,8 +11,8 @@
 //! @see https://vt100.net/emu/dec_ansi_parser
 //! @see https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 
-use super::ipc::Ready;
 use super::ready::ReadyMatcher;
+use dashboard_launch::Ready;
 use std::collections::{BTreeSet, VecDeque};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};

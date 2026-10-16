@@ -161,7 +161,7 @@ fn encode_data_periods_line(d: &EpwDataPeriods) -> String {
 /// 📐️ One data record: exactly 35 comma-separated columns, spec order — no defaults, no
 /// coercion; a wrong column count is a hard decode error.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
+pub fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() != EPW_RECORD_FIELD_COUNT {
         return Err(format!("expected {EPW_RECORD_FIELD_COUNT} columns, got {}: {line:?}", fields.len()));
@@ -228,9 +228,7 @@ pub fn encode_epw(snap: &EpwSnapshot) -> String {
 //#endregion 🔖️SnapshotCodec
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
@@ -248,14 +246,11 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub use semio_s_artifact_stdio_epw_editor::standards::energyplus::subsets::any::io::binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_s_artifact_stdio_epw_editor::standards::energyplus::subsets::any::io::text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_stdio_epw_schema::standards::energyplus::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::standards::energyplus::subsets::any::schema::diff::EpwDiff;
@@ -377,3 +372,150 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: EpwAnalyzer,
     composer: EpwComposer,
 );
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+/// 📜 EPW-owned MIME policy for every authored artifact definition.
+pub const ARTIFACT_DEFINITION_CONSTRAINT: &str = include_str!("../../../../../🧬️schema/🔣️.json");
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{ARTIFACT_DEFINITION_CONSTRAINT};
+
+/// 🌦️ Validates EPW ownership and its unregistered MIME policy.
+pub fn validate_definition_schema(schema: &str) -> Result<(), semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::validate_definition_constraint(schema, ARTIFACT_DEFINITION_CONSTRAINT)
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{validate_definition_schema};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA)?;
+    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{validate_definition_schema};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    validate_definition_schema(ARTIFACT_DEFINITION_SCHEMA).map_err(|error| semio_framework_plugin::ArtifactDefinitionError::new("epw.definition", error.to_string()))?;
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_EPW_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+pub use crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation;
+pub use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("epw", definition()?, declaration)
+}
+
+/// 🧾️ The runtime `epw` declares: its schema, format, inference descriptor, composers and document codec.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor()])
+        .composers(crate::standards::energyplus::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<EpwSnapshot, EpwMutation>(
+            STDIO_EPW_DOCUMENT_SCHEMA,
+            semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.epw", standard: semio_framework_artifact_reference::StandardId("energyplus"), subset: semio_framework_artifact_reference::SubsetId("*") },
+        )
+        .try_build()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.epw".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Epw", "Epw"),
+        source_format: STDIO_EPW_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_EPW_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems9
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{ARTIFACT_DEFINITION_CONSTRAINT};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: Some(ARTIFACT_DEFINITION_CONSTRAINT), identity: "epw", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems10
+
+//#region 🧩️ArtifactItems11
+pub mod artifact_items_11 {
+//#region 🔖️Register
+/// 🗂️ Registers this artifact's IO and its handcrafted grammar/protocol `LanguageSpec` imperatively, outside any plugin
+/// assembly — the twin of [`declaration`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register() {
+    crate::standards::energyplus::subsets::any::io::register();
+    register_pilot_languages();
+}
+
+/// 📌️ Registers handcrafted facet grammars (text) and protocols (binary).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn register_pilot_languages() {
+    use crate::standards::energyplus::subsets::any::io::{text,binary};
+    semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
+        id: "stdio.epw",
+        extension: Some("epw"),
+        role: semio_framework_dsl::LanguageRole::Document,
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        hooks: semio_framework_dsl::passthrough_hooks("stdio.epw"),
+    });
+}
+//#endregion 🔖️Register
+}
+//#endregion 🧩️ArtifactItems11

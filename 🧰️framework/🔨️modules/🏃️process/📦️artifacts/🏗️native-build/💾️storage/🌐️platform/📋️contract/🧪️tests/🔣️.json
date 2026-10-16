@@ -83,5 +83,147 @@
       "interrupt": "undefined",
       "accepted": false
     }
+  ],
+  "custody": [
+    {
+      "value": {
+        "kind": "kernel-ex",
+        "proof": {}
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "kind": "fresh-private"
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "kind": "kernel-ex"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "kind": "fresh-private",
+        "proof": {}
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "kind": "shared",
+        "proof": {}
+      },
+      "accepted": false
+    }
+  ],
+  "retirement": [
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "dev": 1,
+          "ino": 2,
+          "size": 4096,
+          "allocatedBytes": 4096
+        }
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": false
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "dev": 1,
+          "ino": 2,
+          "size": 4096,
+          "allocatedBytes": 4096
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "dev": 1,
+          "ino": 1.5,
+          "size": 4096,
+          "allocatedBytes": 4096
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "dev": 1,
+          "ino": 2,
+          "size": 0,
+          "allocatedBytes": 4096
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "dev": 1,
+          "ino": 2,
+          "size": 4096,
+          "allocatedBytes": -1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "ino": 2,
+          "size": 4096,
+          "allocatedBytes": 4096
+        }
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "wait": true,
+        "expectedImage": {
+          "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "dev": 1,
+          "ino": 2,
+          "size": 4096,
+          "allocatedBytes": 4096,
+          "foreign": 1
+        }
+      },
+      "accepted": false
+    }
   ]
 }

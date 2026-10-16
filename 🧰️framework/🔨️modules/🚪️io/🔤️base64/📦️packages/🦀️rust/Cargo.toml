@@ -26,3 +26,4 @@ path = "🦀️.rs"
 base64 = "0.22.1"
 serde_json = "1.0.140"
 semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

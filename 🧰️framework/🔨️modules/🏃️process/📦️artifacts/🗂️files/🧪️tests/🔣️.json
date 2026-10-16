@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "name": "a",
+      "text": "abc"
+    },
+    {
+      "name": "nested/b",
+      "text": "de"
+    },
+    {
+      "name": "nested/c",
+      "text": "fgh"
+    }
+  ],
+  "bounds": {
+    "maximumFiles": 3,
+    "maximumBytes": 8,
+    "maximumEntries": 4,
+    "maximumDepth": 1
+  },
+  "expected": {
+    "files": 3,
+    "bytes": 8
+  },
+  "refusedBounds": [
+    {
+      "maximumFiles": 2
+    },
+    {
+      "maximumBytes": 7
+    },
+    {
+      "maximumEntries": 3
+    },
+    {
+      "maximumDepth": 0
+    }
+  ],
+  "reservedName": ".semio-artifact.json"
+}

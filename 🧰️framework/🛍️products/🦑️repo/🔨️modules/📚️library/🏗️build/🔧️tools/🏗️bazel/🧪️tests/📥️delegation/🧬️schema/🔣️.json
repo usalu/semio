@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "kind",
+    "children",
+    "configuration",
+    "expected",
+    "calls"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "kind": {
+      "enum": [
+        "command",
+        "noop",
+        "orchestration"
+      ]
+    },
+    "children": {
+      "enum": [
+        "none",
+        "valid",
+        "malformed"
+      ]
+    },
+    "configuration": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "enum": [
+            "converted",
+            "prototype",
+            "release"
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "enum": [
+        "none",
+        "context",
+        "refusal"
+      ]
+    },
+    "calls": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

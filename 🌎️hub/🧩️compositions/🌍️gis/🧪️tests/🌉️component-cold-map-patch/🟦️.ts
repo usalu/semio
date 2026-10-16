@@ -1,3 +1,4 @@
+import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -136,11 +137,10 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
           cargoPackage: "semio-hub-gis-component",
           componentPackageId: "semio:gis",
           outputName: "semio_hub_gis_component.wasm",
-          componentProfile: "wasm-release",
+          componentProfile: "release",
         },
-        target,
         stage,
-        control,
+        {...control,compiler:scriptCompilerAdmissionControlV1(this.invocation,"fresh:gis-cold",Math.floor(control.remainingMs()))},
         (lease) =>
           lease.consume(async (component) => {
             const componentSha256 = createHash("sha256").update(component).digest("hex");

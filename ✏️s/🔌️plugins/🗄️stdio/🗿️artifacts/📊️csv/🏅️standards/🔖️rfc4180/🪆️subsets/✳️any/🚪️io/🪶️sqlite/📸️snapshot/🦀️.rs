@@ -5,7 +5,7 @@ use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotH
 #[path="💰️backing/🦀️.rs"] mod backing;
 #[path="🫴️receiving/🦀️.rs"]mod receiving;
 pub(super) fn semantic(snapshot:&CsvSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<usize,ValueError>{backing::semantic(snapshot,control,phase)}
-#[path="🛂️admission/🦀️.rs"]pub(super)mod admission;
+#[path="🛂️admission/🦀️.rs"]pub mod admission;
 impl ArtifactSqliteSnapshotHost for CsvSnapshot{
 fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_subset(dialect,control,||native.native().checkpoint())}
  fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_subset(dialect,control,||native.native().checkpoint())}
@@ -25,9 +25,7 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 
 #[path = "🚦️native/🦀️.rs"]

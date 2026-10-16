@@ -1,5 +1,10 @@
+use crate::standards::v3_0::subsets::any::schema::mutations::ObjMutation;
+use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_s_artifact_stdio_contract::editing;
 use crate::apply_mutation;
-use super::*;
+use crate::editor::obj::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -18,7 +23,7 @@ async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<ObjAnyEditor, crate::viewer::obj::ObjAnyViewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::ObjAnyEditor, || semio_framework_plugin::App { definition: super::create_obj_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::obj::ObjAnyEditor, || semio_framework_plugin::App { definition: crate::editor::obj::create_obj_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_row() {

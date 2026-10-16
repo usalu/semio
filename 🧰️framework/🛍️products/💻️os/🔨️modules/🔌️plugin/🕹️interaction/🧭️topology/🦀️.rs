@@ -16,14 +16,15 @@ use semio_framework::{kernel::Effect, Fault, InteractionDefinition, CLEAR_SELECT
 use semio_framework_ui_contract::*;
 use std::collections::BTreeMap;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::ui_assembly_error;
+use crate::UiAssemblyResult;
+use crate::ui_assembly_error;
 
 
 
 /// 🕹️ Reads the required `domainId` text arg every interaction verb except `clearSelection`/
 /// `selectAll` carries (see `interaction_action_definitions`'s arg declarations).
-pub(crate) async fn interaction_domain_id_arg(args: Option<&DslValue>, action: &str) -> Result<String, Fault> {
+#[doc(hidden)]
+pub async fn interaction_domain_id_arg(args: Option<&DslValue>, action: &str) -> Result<String, Fault> {
     args.and_then(|value| value.get("domainId")).and_then(DslValue::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
 }
 
@@ -31,7 +32,8 @@ pub(crate) async fn interaction_domain_id_arg(args: Option<&DslValue>, action: &
 /// `ActionArgDef::text` declaration `interaction_action_definitions` gives both `interactionSelect`
 /// and `interactionHover` (a renderer JSON-serializes its gathered pick/marquee/hover batch into
 /// this one string arg, the same convention other JSON-blob action args in this codebase already use).
-pub(crate) async fn parse_interaction_targets(args: Option<&DslValue>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
+#[doc(hidden)]
+pub async fn parse_interaction_targets(args: Option<&DslValue>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
     let raw = args.and_then(|value| value.get("targets")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
     serde_json::from_str(raw).map_err(|error| plugin_sdk_fault(format!("{action}: malformed targets ({error})")))
 }
@@ -41,13 +43,15 @@ pub(crate) async fn parse_interaction_targets(args: Option<&DslValue>, action: &
 /// The vocabulary is NOT spelled here: [`protocol::MergeMode::from_wire_label`] is the single codec
 /// over this module's own schema enum (`🕹️interaction/🧬️schema/🔣️.json`), pinned by
 /// `🕹️interaction/🧫️fixtures/🎯️merge-modes.json`.
-pub(crate) async fn parse_merge_mode(args: Option<&DslValue>) -> Result<protocol::MergeMode, Fault> {
+#[doc(hidden)]
+pub async fn parse_merge_mode(args: Option<&DslValue>) -> Result<protocol::MergeMode, Fault> {
     let raw = args.and_then(|value| value.get("merge")).and_then(DslValue::as_str).unwrap_or("replace");
     protocol::MergeMode::from_wire_label(raw).ok_or_else(|| plugin_sdk_fault(format!("interactionSelect: unknown merge '{raw}'")))
 }
 
 /// 🕹️ Decodes `setSelectionMode`'s `mode` select-arg.
-pub(crate) async fn parse_selection_mode(raw: &str) -> Result<protocol::SelectionMode, Fault> {
+#[doc(hidden)]
+pub async fn parse_selection_mode(raw: &str) -> Result<protocol::SelectionMode, Fault> {
     match raw {
         "single" => Ok(protocol::SelectionMode::Single),
         "multiple" => Ok(protocol::SelectionMode::Multiple),
@@ -60,7 +64,8 @@ pub(crate) async fn parse_selection_mode(raw: &str) -> Result<protocol::Selectio
 /// split on `delimiter`, becomes one `TopologyNode` (`granularity` from `def.granularities[depth]`,
 /// clamped to the last declared granularity for a deeper id than declared granularities), parented
 /// to the next-shallower prefix. Dedup'd (and stably ordered) by id via the `BTreeMap` key.
-pub(crate) async fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
+#[doc(hidden)]
+pub async fn derive_path_delimited_topology(def: &InteractionDefinition, delimiter: &str, known_ids: impl Iterator<Item = String>) -> protocol::DomainTopology {
     let mut nodes: BTreeMap<String, protocol::TopologyNode> = BTreeMap::new();
     for id in known_ids {
         let segments: Vec<&str> = id.split(delimiter).collect();
@@ -96,7 +101,8 @@ pub(crate) async fn derive_path_delimited_topology(def: &InteractionDefinition, 
 /// topology covers the visible slice and not the container's full `TreeWindow::total` — harmless
 /// today because no app in the fleet declares `HierarchyProvider::UiTree`; a domain that needs the
 /// complete hierarchy must declare `HierarchyProvider::Topology`.
-pub(crate) async fn ui_tree_domain_topology(sections: &BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
+#[doc(hidden)]
+pub async fn ui_tree_domain_topology(sections: &BuiltChildren, granularity: &str) -> UiAssemblyResult<protocol::DomainTopology> {
     struct Frame<'a> {
         children: &'a BuiltChildren,
         next: usize,
@@ -126,20 +132,23 @@ pub(crate) async fn ui_tree_domain_topology(sections: &BuiltChildren, granularit
 /// exactly like the ticket's specified signature.
 // 🚫️async: E1-adjacent pure lazily-initialized static accessor consumed by `unwrap_or_else`/
 // `match`'s sync arms in `InteractionView::selection`/`hover` — see R9.
-pub(crate) fn empty_domain_selection() -> &'static protocol::DomainSelection {
+#[doc(hidden)]
+pub fn empty_domain_selection() -> &'static protocol::DomainSelection {
     static EMPTY: std::sync::OnceLock<protocol::DomainSelection> = std::sync::OnceLock::new();
     EMPTY.get_or_init(protocol::DomainSelection::default)
 }
 
 // 🚫️async: E1-adjacent pure lazily-initialized static accessor consumed by `unwrap_or_else`/
 // `match`'s sync arms in `InteractionView::selection`/`hover` — see R9.
-pub(crate) fn empty_domain_hover() -> &'static protocol::DomainHover {
+#[doc(hidden)]
+pub fn empty_domain_hover() -> &'static protocol::DomainHover {
     static EMPTY: std::sync::OnceLock<protocol::DomainHover> = std::sync::OnceLock::new();
     EMPTY.get_or_init(protocol::DomainHover::default)
 }
 
 /// 🈳️ The draft references of a view no time-travel draft feeds — a dispatch, presence stamping, a viewer law.
-pub(crate) fn empty_draft_references() -> &'static BTreeMap<String, Vec<String>> {
+#[doc(hidden)]
+pub fn empty_draft_references() -> &'static BTreeMap<String, Vec<String>> {
     static EMPTY: BTreeMap<String, Vec<String>> = BTreeMap::new();
     &EMPTY
 }
@@ -154,7 +163,8 @@ pub(crate) fn empty_draft_references() -> &'static BTreeMap<String, Vec<String>>
 /// — an object, so keyed by construction — carried the id exactly once.
 // 🚫️async: E1 pure fold over an owned map, consumed by `InteractionView::leftover_selected_ids`
 // and `leftover_interaction_view_from`'s sync bodies — see R9.
-pub(crate) fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {
+#[doc(hidden)]
+pub fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {
     let mut ids: Vec<String> = Vec::new();
     for selection in state.selection.values() {
         for id in &selection.ids {
@@ -171,7 +181,8 @@ pub(crate) fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Ve
 /// world gumball is app-authored on the guest `selectionJson` lane (`gumballActive` +
 /// `transformMode` keyed off the armed utility), never inferred from bare selected ids (puzzle3d
 /// ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub(crate) fn leftover_gumball_active_v1() -> bool {
+#[doc(hidden)]
+pub fn leftover_gumball_active_v1() -> bool {
     false
 }
 
@@ -180,7 +191,8 @@ pub(crate) fn leftover_gumball_active_v1() -> bool {
 /// document no longer has, `Pick` carries ids a user click or an app's own `InteractionWrite`
 /// just named and owes them to the render.
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum InteractionRevalidateOrigin {
+#[doc(hidden)]
+pub enum InteractionRevalidateOrigin {
     Pick,
     DocumentChange,
 }
@@ -189,9 +201,12 @@ pub(crate) enum InteractionRevalidateOrigin {
 /// ([`VcsArtifactApp::apply_interaction_verb`]): the app-declared refresh scope for the verb and
 /// the domains it touched, and the leftover `InteractionView` publication the host peels from
 /// `Invocation.output.interactionView` (`interactionViewFromLeftoverOutput`, `🏛️ShellHost`).
-pub(crate) struct AppliedInteractionVerb {
-    pub(crate) scope: UiDirtyScope,
-    pub(crate) leftover: DslValue,
+#[doc(hidden)]
+pub struct AppliedInteractionVerb {
+    #[doc(hidden)]
+    pub scope: UiDirtyScope,
+    #[doc(hidden)]
+    pub leftover: DslValue,
 }
 
 /// 🔀️ The outcome of folding a guest emit's interaction verbs inline
@@ -199,15 +214,20 @@ pub(crate) struct AppliedInteractionVerb {
 /// every applied verb's scope, the LAST applied verb's leftover view (the host publishes one
 /// leftover per invocation, and a later verb's snapshot already includes the earlier ones), and
 /// one diagnostic per verb that faulted instead of applying.
-pub(crate) struct InlineInteractionFold {
-    pub(crate) scope: UiDirtyScope,
-    pub(crate) leftover: Option<DslValue>,
-    pub(crate) diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+#[doc(hidden)]
+pub struct InlineInteractionFold {
+    #[doc(hidden)]
+    pub scope: UiDirtyScope,
+    #[doc(hidden)]
+    pub leftover: Option<DslValue>,
+    #[doc(hidden)]
+    pub diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
 }
 
 /// 🩹 Diagnostic code of a guest-emitted interaction verb the reactor could not apply inline —
 /// attached to the carrying command's `InvocationResult.diagnostics`, never raised as its fault.
-pub(crate) const INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE: &str = "interaction.inline-verb-not-applied";
+#[doc(hidden)]
+pub const INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE: &str = "interaction.inline-verb-not-applied";
 
 /// 🔀️ Whether this effect is a guest asking the host to (re)dispatch one of the six framework
 /// interaction verbs (`INTERACTION_ACTION_IDS`), in EITHER of the two shapes apps emit for that
@@ -228,7 +248,8 @@ pub(crate) const INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE: &str = "interaction.in
 /// minted `DispatchAction` (`Host::dispatch_action` → `RequestRegistry::request`) queues on the
 /// registry's own outbound lane and never enters `Emit.effects`, so every one peeled here is an
 /// app struct literal with a placeholder id nothing awaits — dropping it completes nothing late.
-pub(crate) fn is_inline_interaction_verb(effect: &Effect) -> bool {
+#[doc(hidden)]
+pub fn is_inline_interaction_verb(effect: &Effect) -> bool {
     match effect {
         Effect::ReplayShellCommand { action_id, .. } => INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
         Effect::DispatchAction { action, .. } => INTERACTION_ACTION_IDS.contains(&action.as_str()),
@@ -240,7 +261,8 @@ pub(crate) fn is_inline_interaction_verb(effect: &Effect) -> bool {
 /// [`is_inline_interaction_verb`] admits, in one pass so emission order is kept ACROSS the two
 /// shapes — leaving every other effect in place. The host never sees a peeled verb; the reactor
 /// applies it inline instead ([`VcsArtifactApp::fold_inline_interaction_verbs`]).
-pub(crate) fn take_inline_interaction_verbs(effects: &mut Vec<Effect>) -> Vec<(String, Option<DslValue>)> {
+#[doc(hidden)]
+pub fn take_inline_interaction_verbs(effects: &mut Vec<Effect>) -> Vec<(String, Option<DslValue>)> {
     if !effects.iter().any(is_inline_interaction_verb) {
         return Vec::new();
     }
@@ -278,7 +300,8 @@ fn interaction_witness_names_ids(witness: &str) -> bool {
 /// selection-scoped family (`inspection-object-fields id=null`, `locked-flag-row`,
 /// `gumball-scene-delta`, `relocate-pose-delta`) is this predicate answering `Some` where nothing
 /// ever said so.
-pub(crate) fn interaction_selection_loss_v1(dispatched: &str, validated: &str, readback: &str, minted: bool) -> Option<&'static str> {
+#[doc(hidden)]
+pub fn interaction_selection_loss_v1(dispatched: &str, validated: &str, readback: &str, minted: bool) -> Option<&'static str> {
     if !interaction_witness_names_ids(dispatched) || readback == dispatched {
         return None;
     }
@@ -310,7 +333,8 @@ pub(crate) fn interaction_selection_loss_v1(dispatched: &str, validated: &str, r
 /// freshly computed selection (empty included) and the flat leftover ids keep only what is still
 /// selected somewhere. Domains the write never named are untouched, so an unrelated pick in flight
 /// keeps its cover.
-pub(crate) fn leftover_after_app_selection_write_v1(overlay: Option<&protocol::InteractionState>, leftover_ids: &[String], next: &protocol::InteractionState, domains: &[String]) -> (Option<protocol::InteractionState>, Vec<String>) {
+#[doc(hidden)]
+pub fn leftover_after_app_selection_write_v1(overlay: Option<&protocol::InteractionState>, leftover_ids: &[String], next: &protocol::InteractionState, domains: &[String]) -> (Option<protocol::InteractionState>, Vec<String>) {
     let retired = overlay.map(|overlay| {
         let mut retired = overlay.clone();
         for domain in domains {
@@ -349,7 +373,8 @@ pub(crate) fn leftover_after_app_selection_write_v1(overlay: Option<&protocol::I
 ///
 /// A document edit that touches nothing selected leaves all three untouched, so an in-flight pick
 /// during an unrelated edit keeps its cover.
-pub(crate) fn interaction_after_document_change_v1(
+#[doc(hidden)]
+pub fn interaction_after_document_change_v1(
     validated: &protocol::InteractionState,
     declared_domains: &[String],
     overlay: Option<&protocol::InteractionState>,
@@ -395,7 +420,8 @@ pub(crate) fn interaction_after_document_change_v1(
 /// ones from the same guest). A lost pick is a defect report, not a trace, and is emitted only
 /// when one actually happened — the same rule the renderer's own permanent
 /// `refreshUi dropped requested body` record follows.
-pub(crate) fn report_interaction_selection_loss(reason: &str, dispatched: &str, validated: &str, readback: &str, topology: &protocol::InteractionTopology) {
+#[doc(hidden)]
+pub fn report_interaction_selection_loss(reason: &str, dispatched: &str, validated: &str, readback: &str, topology: &protocol::InteractionTopology) {
     let domains = topology.domains.iter().map(|(domain, topo)| format!("{domain}:{}", topo.ordered.len())).collect::<Vec<_>>().join(",");
     eprintln!("interaction selection lost reason={reason} dispatched={dispatched} validated={validated} readback={readback} domains={domains}");
 }
@@ -406,4 +432,5 @@ mod interaction_selection_laws;
 
 /// 🕹️ The six framework-owned interaction actions `dispatch_action` intercepts before any of the
 /// other framework-reserved branches — see `dispatch_interaction_action`'s own doc comment.
-pub(crate) const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];
+#[doc(hidden)]
+pub const INTERACTION_ACTION_IDS: [&str; 6] = [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID];

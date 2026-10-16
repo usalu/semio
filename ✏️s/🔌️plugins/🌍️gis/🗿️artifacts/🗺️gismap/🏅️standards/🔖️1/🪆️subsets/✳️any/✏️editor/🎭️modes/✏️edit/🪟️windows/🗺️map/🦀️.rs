@@ -3,7 +3,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use crate::editor::gis2d::terminology::Gis2dPlayLabels;
 use crate::editor::gis2d::{Gis2dInteractionSnapshot, GIS_MAP_LAYER_IDS};
-use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
+use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
@@ -98,7 +98,7 @@ fn apply_gis_map_tile_base_url(scene: &mut TiledMapScene) {
 /// (highlight) and its hover popup. A `TiledMapHost` feature pick therefore round-trips:
 /// `interactionSelect` → framework interaction store → this render → highlighted feature.
 pub fn render(document: &GisMapSnapshot, cfg: &MapWindowConfig, interaction: &Gis2dInteractionSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let mut scene = TiledMapScene::base(gis_map_descriptor_json(document), cfg.camera_json.clone());
+    let mut scene = TiledMapScene::base(gis_map_scene_descriptor_json(document), cfg.camera_json.clone());
     scene.render_mode = cfg.render_mode.clone();
     scene.vector_style = cfg.vector_style.clone();
     scene.lod_mode = cfg.lod_mode.clone();

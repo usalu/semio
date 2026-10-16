@@ -1,8 +1,8 @@
 // #region chrome
 //! 🎛️ Bordered chrome primitives shared by widgets and shell renderers.
 
-use crate::wgpu::draw::DrawList;
-use crate::wgpu::draw::IconAtlas;
+use crate::wgpu::draw_types::DrawList;
+use crate::wgpu::draw_types::IconAtlas;
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Rgba, Theme};

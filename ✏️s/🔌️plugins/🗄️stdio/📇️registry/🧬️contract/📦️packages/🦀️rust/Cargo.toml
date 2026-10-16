@@ -16,27 +16,25 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testing = []
+testing = ["dep:semio-s-artifact-stdio-contract-testing"]
 
 [dependencies]
-semio-framework-job-fault-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
-semio-framework-artifact-reference = { workspace = true }
-semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
-semio-framework-schema = { workspace = true }
-semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-assembly = { path = "../../🏗️assembly/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-editing = { path = "../../✏️editing/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-editing-details = { path = "../../✏️editing/🪟️details/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-editing-patch = { path = "../../✏️editing/🩹️patch/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-list-delta = { path = "../../🪡️list-delta/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-media-export = { path = "../../🎬️media-export/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-native-print = { path = "../../🖨️native-print/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-part21 = { path = "../../📐️part21/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-testing = { path = "../../🧰️testing/📦️packages/🦀️rust", optional = true }
+semio-s-artifact-stdio-contract-window-kit = { path = "../../🪟️window-kit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-wire = { path = "../../🧾️payload-wire/📦️packages/🦀️rust" }
 
 [[test]]
 name = "details_arena_headroom"
@@ -47,9 +45,9 @@ name = "table_arena_headroom"
 path = "../../🧪️tests/📊️table-arena-headroom/🦀️.rs"
 
 [dev-dependencies]
-semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
-base64 = "0.22.1"
-json-patch = "4.1.0"
-semio-framework-ui-scene = { workspace = true }
-serde_json.workspace = true
+semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

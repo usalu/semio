@@ -1,9 +1,9 @@
 use super::*;
-use db_storage::MemoryStorage;
+use db_storage_memory::MemoryStorage;
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_cursor_cancel_fuel_interrupted_close_and_terminal_empty_are_exact() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let manager = SnapshotManager::new(&storage).await;
     let document = ArtifactId::from("retained-snapshot");
     let body = SnapshotBody { head_seq: 0, commit_seq: 0, epoch: 0, chain_hash: [0; 32], protocol_version: 1, base_pack_hash: None, roots: Vec::new(), created_at_ms: 0 };

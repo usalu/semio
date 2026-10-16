@@ -15,7 +15,7 @@ import type { Component, UiNodeRecord, UiSnapshot } from "@semio-tech/framework"
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { interpretUiNode, type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
-import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
+import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
 
 type ToggleCase = {
   readonly id: string;

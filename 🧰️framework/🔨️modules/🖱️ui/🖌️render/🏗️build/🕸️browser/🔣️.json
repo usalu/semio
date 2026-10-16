@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hotPackages": [
+    "ttf-parser",
+    "rustybuzz",
+    "usvg",
+    "fontdb",
+    "roxmltree",
+    "svgtypes",
+    "simplecss",
+    "strict-num",
+    "tiny-skia-path",
+    "kurbo",
+    "peniko",
+    "vello_encoding"
+  ]
+}

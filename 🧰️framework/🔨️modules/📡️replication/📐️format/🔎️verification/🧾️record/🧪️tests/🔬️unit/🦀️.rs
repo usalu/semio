@@ -15,9 +15,9 @@ fn retained_record_observation_uses_the_existing_framing_state_without_authority
         body.extend_from_slice(&hex(row["payloadHex"].as_str().unwrap()));
         body.resize(body.len() + row["repeat"].as_u64().unwrap() as usize, 97);
         let mut bytes = hex(fixture["headerHex"].as_str().unwrap());
-        crate::codec::write_varint_u64(&mut bytes, body.len() as u64);
+        semio_framework_replication_codec::write_varint_u64(&mut bytes, body.len() as u64);
         bytes.extend_from_slice(&body);
-        bytes.extend_from_slice(&(crate::codec::crc32c(&body) ^ u32::from(row["corruptCrc"].as_bool().unwrap())).to_le_bytes());
+        bytes.extend_from_slice(&(semio_framework_replication_codec::crc32c(&body) ^ u32::from(row["corruptCrc"].as_bool().unwrap())).to_le_bytes());
         let frame_length = bytes.len() as u32 + 4 - 32;
         bytes.extend_from_slice(&frame_length.to_le_bytes());
         for grant in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {

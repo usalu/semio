@@ -115,7 +115,7 @@ impl Encoder<'_,'_,'_,'_>{
     fn projected_body<T:FieldProjectionSource>(&mut self,source:&T,spec:&RecordSpec,output:&mut Output<'_>)->Result<(),PackRefusal>{self.symbols(output)?;self.projected_fields(source,Some(spec),&mut[0;64],0,0,output)}
 }
 
-pub(crate) fn projected_record_body_into<T:FieldProjectionSource>(spec:&RecordSpec,source:&T,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+pub(crate) fn projected_record_body_into<T:FieldProjectionSource>(spec:&RecordSpec,source:&T,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
         control.begin_stage(0)?;let ids=record_ids(source,&[])?;let mut symbols=Symbols{entries:Vec::new()};symbols.projected_fields(source,Some(spec),ids,&mut[0;64],0,0,options.limits.max_depth,control)?;symbols.finish(control)?;

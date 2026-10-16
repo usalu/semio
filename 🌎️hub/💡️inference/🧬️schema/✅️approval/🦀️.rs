@@ -1,7 +1,7 @@
 //! ✅ Approval identifies an offered job and digest; execution authority is never client supplied.
 
 use super::{hex, REQUEST_MAX_BYTES};
-use crate::inference::InferenceErrorV1;
+use crate::InferenceErrorV1;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -26,6 +26,3 @@ impl InferenceApprovalRequestV1 {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

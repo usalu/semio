@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-os-mcp-bridge-codec-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

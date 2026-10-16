@@ -1,7 +1,7 @@
 use super::*;
 use crate::OperatorInfo;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::registry::tests::observe_ownership(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(operation)}
 #[derive(semio_framework_value::RetireOwned)]
 struct Sources{registry:Registry,output:Option<Dictionary>}
 #[test]

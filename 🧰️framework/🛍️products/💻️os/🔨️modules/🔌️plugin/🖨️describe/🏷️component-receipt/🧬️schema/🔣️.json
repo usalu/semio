@@ -20,8 +20,8 @@
       "maxLength": 134
     },
     "ComponentProfile": {
-      "description": "`wasm-release` is the one shipped profile; `wasm-prototype` is the local-only single-plugin loop whose bytes are never shipped.",
-      "enum": ["wasm-release", "wasm-prototype"]
+      "description": "`release` is the one shipped profile; `prototype` is the local-only single-plugin loop whose bytes are never shipped.",
+      "enum": ["release", "prototype"]
     },
     "ComponentProfilePolicyV1": {
       "description": "The fixed directory, byte cap and shipping admission of every component profile, keyed by profile.",
@@ -35,10 +35,10 @@
       }
     },
     "ComponentProfilePolicies": {
-      "description": "The profile policy table. `wasm-release` keeps the 256 MiB shipped bound; `wasm-prototype` carries its own 512 MiB local-only cap.",
+      "description": "The profile policy table. `release` keeps the 256 MiB shipped bound; `prototype` carries its own 512 MiB local-only cap.",
       "const": {
-        "wasm-release": { "directory": "dist/components/release", "maximumBytes": 268435456, "shipped": true },
-        "wasm-prototype": { "directory": "dist/components/prototype", "maximumBytes": 536870912, "shipped": false }
+        "release": { "directory": "dist/components/release", "maximumBytes": 268435456, "shipped": true },
+        "prototype": { "directory": "dist/components/prototype", "maximumBytes": 536870912, "shipped": false }
       }
     },
     "ComponentReceiptV1": {
@@ -68,7 +68,7 @@
           "$ref": "#/$defs/ComponentSha256"
         }
       },
-      "if": { "type": "object", "properties": { "profile": { "const": "wasm-release" } } },
+      "if": { "type": "object", "properties": { "profile": { "const": "release" } } },
       "then": { "type": "object", "properties": { "wasmBytes": { "type": "integer", "maximum": 268435456 } } }
     }
   }

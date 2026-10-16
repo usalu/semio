@@ -1,4 +1,7 @@
-use super::*;
+use crate::GIF_87A_DIALECT;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use crate::editor::gif_87a::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -12,4 +15,4 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<Gif87aEditor as ArtifactEditor>::DIALECT, GIF_87A_DIALECT);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Gif87aEditor, || semio_framework_plugin::App { definition: super::create_gif_87a_editor(), examples: Vec::new() }, "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::gif_87a::Gif87aEditor, || semio_framework_plugin::App { definition: crate::editor::gif_87a::create_gif_87a_editor(), examples: Vec::new() }, "../../🏅️standards/7️⃣87a/🪆️subsets/✳️any");

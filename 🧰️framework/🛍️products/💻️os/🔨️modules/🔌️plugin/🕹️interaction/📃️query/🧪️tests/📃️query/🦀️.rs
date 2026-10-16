@@ -1,8 +1,8 @@
 //! 🧪️ Actual fixed-page query output, exact ACK authority, cancellation, and Store read return.
 
 use super::*;
-use crate::local_interaction::retirement::interaction_store_owners;
-use crate::local_interaction::mutations::InteractionConfigMutation;
+use crate::retirement::interaction_store_owners;
+use crate::mutations::InteractionConfigMutation;
 use protocol::InteractionState;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
@@ -34,20 +34,8 @@ fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQ
  panic!("original query caller grant did not close its Store");
 }
 
-pub(crate) fn original_receiving_recipient() -> crate::io::control::NativeSnapshotBodyWallet {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📨️authority.json")).unwrap();
-    crate::io::control::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
-}
-
-pub(crate) fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mut crate::io::control::NativeSnapshotBodyWallet){
-    let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||interaction_store_owners(recipient.remaining_grant()));
-    let(mut owners,progress)=match result{Ok(received)=>received,Err(error)=>panic!("original interaction catalog refused: {}",error.error)};
-    recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-    while !owners.constructor_is_complete(){
-        let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owners.admit_constructor(recipient.remaining_grant()));let progress=result.unwrap_or_else(|(error,_)|panic!("original interaction catalog ticket refused: {error}"));recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_ne!(progress,Default::default());
-    }
-    store.install_document_store_owners_exact(owners).unwrap_or_else(|(error,_)|panic!("original interaction catalog installation refused: {error}"));
-}
+type Wallet = crate::io::control::NativeSnapshotBodyWallet;
+include!("../🧰️original-owners/🦀️.rs");
 
 #[semio_framework_async_macros::async_test]
 async fn original_local_interaction_copy_one_refuses_metadata_close_and_preserves_owner(){
@@ -63,7 +51,7 @@ async fn original_local_interaction_copy_one_refuses_metadata_close_and_preserve
 }
 
 async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == source_case).unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});

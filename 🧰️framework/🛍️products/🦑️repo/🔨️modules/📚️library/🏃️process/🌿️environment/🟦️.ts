@@ -35,3 +35,12 @@ export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = pr
   env.PLAYWRIGHT_BROWSERS_PATH ??= repoCacheDirectory(repoRoot, "tools", "ms-playwright");
   return env;
 }
+
+/** 👁️ Uses native watcher events unless the explicit environment requires polling. */
+export function playPollingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
+  const pollingDefault = process.env.WATCHPACK_POLLING !== undefined ? {} : process.env.DEVCONTAINER === "true" ? { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" } : {};
+  return devToolingEnv({
+    ...pollingDefault,
+    ...extra,
+  });
+}

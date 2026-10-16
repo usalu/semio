@@ -1,7 +1,7 @@
 //! 🚫️ Missing-target command preserving the law helper's positive error fixture.
 
 use super::super::{CounterDiff, CounterMutation};
-use crate::os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -23,8 +23,8 @@ impl MutationKind<i64, CounterMutation> for AddMissingCounter {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Add to missing counter", "Zum fehlenden Zähler addieren")
     }
 }
 //#endregion ⚙️Behavior

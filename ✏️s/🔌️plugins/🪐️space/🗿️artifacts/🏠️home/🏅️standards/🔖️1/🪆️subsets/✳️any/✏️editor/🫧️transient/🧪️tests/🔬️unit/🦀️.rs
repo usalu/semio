@@ -173,23 +173,19 @@ fn a_dropped_transient_rebootstraps_from_the_origin_without_history() {
 /// declared outcome's, an `applied` vector moves the snapshot and a `no-op`/`rejected` vector does not.
 #[test]
 fn the_committed_vectors_hold_through_the_production_bridge() {
-    macro_rules! vector {
-        ($name:literal) => {
-            (
-                $name,
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🦠️mutation/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🔺️diff/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🎯️outcome/🔣️.json")),
-            )
+    /// 🧫️ One committed vector read when the test runs, so the language-neutral JSON stays out of the compiled source closure.
+    fn vector(name: &'static str) -> (&'static str, String, String, String, String, String) {
+        let read = |leaf: &str| {
+            let path = format!("{}/{name}/{leaf}", concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧪️tests/🧫️fixtures/📬️apply-directory"));
+            std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{path}: {error}"))
         };
+        (name, read("📸️snapshot/⬅️before/🔣️.json"), read("🦠️mutation/🔣️.json"), read("📸️snapshot/➡️after/🔣️.json"), read("🔺️diff/🔣️.json"), read("🎯️outcome/🔣️.json"))
     }
-    for (name, before, mutation, after, diff, outcome) in [vector!("✅️apply"), vector!("🟰️apply"), vector!("🚫️apply")] {
-        let report = semio_framework_pack_json::parse(&home_transient_mutation_report_json(before, mutation, after).expect("bridge report"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report JSON");
-        let outcome = semio_framework_pack_json::parse(outcome, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome JSON");
+    for (name, before, mutation, after, diff, outcome) in [vector("✅️apply"), vector("🟰️apply"), vector("🚫️apply")] {
+        let report = semio_framework_pack_json::parse(&home_transient_mutation_report_json(&before, &mutation, &after).expect("bridge report"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report JSON");
+        let outcome = semio_framework_pack_json::parse(&outcome, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome JSON");
         assert_eq!(report["snapshot"], report["expectedSnapshot"], "{name}: the applied snapshot is the committed after-snapshot");
-        assert_eq!(report["diff"], semio_framework_pack_json::parse(diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff JSON"), "{name}: the delta is the committed diff");
+        assert_eq!(report["diff"], semio_framework_pack_json::parse(&diff, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff JSON"), "{name}: the delta is the committed diff");
         let codes = |messages: &semio_framework_pack_json::Value| messages.as_array().expect("messages").iter().map(|message| message["code"].as_str().expect("code").to_owned()).collect::<Vec<_>>();
         assert_eq!(codes(&report["messages"]), codes(&outcome["messages"]), "{name}: the diagnostics are the declared outcome's");
         assert_eq!(report["snapshot"] != report["base"], outcome["status"] == "applied", "{name}: only an applied vector moves the snapshot");

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "contractId": "taxonomy-member-slug-pattern-v1",
+  "semantics": {
+    "scope": "owner kinds of the row, nearest context first",
+    "precedence": ["structural directory kind", "explicit member name at any distance", "member slug pattern"],
+    "emoji": "any admitted RGI emoji followed by the slug",
+    "ambiguity": "two pattern rows matching at the same nearest owner distance"
+  },
+  "overlay": {
+    "semanticDirectoryKinds": {
+      "slugpat-owner-a": { "emoji": "🧷️", "slugPattern": "^slugpat-owner-a$", "allowEmojiOnly": false },
+      "slugpat-owner-b": { "emoji": "🧷️", "slugPattern": "^slugpat-owner-b$", "allowEmojiOnly": false, "parentKindIds": ["slugpat-owner-a"] },
+      "slugpat-owner-c": { "emoji": "🧷️", "slugPattern": "^slugpat-owner-c$", "allowEmojiOnly": false }
+    },
+    "semanticDirectoryMemberKinds": {
+      "slugpat-children-a": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "source": "registry" },
+      "slugpat-children-b": { "ownerKindIds": ["slugpat-owner-b"], "memberNames": [], "memberSlugPattern": "^b-[a-z0-9]+(-[a-z0-9]+)*$", "source": "registry" },
+      "slugpat-explicit": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": ["🎈️kite-fixed", "🎈️b-pinned"], "source": "registry" },
+      "slugpat-twin-one": { "ownerKindIds": ["slugpat-owner-c"], "memberNames": [], "memberSlugPattern": "^twin(-[a-z0-9]+)*$", "source": "registry" },
+      "slugpat-twin-two": { "ownerKindIds": ["slugpat-owner-c"], "memberNames": [], "memberSlugPattern": "^[a-z]+$", "source": "registry" }
+    }
+  },
+  "cases": [
+    { "id": "pattern-match", "name": "🎈️kite-ordinary", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": "slugpat-children-a", "ambiguous": [] },
+    { "id": "pattern-match-other-emoji", "name": "🐙️octopus", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": "slugpat-children-a", "ambiguous": [] },
+    { "id": "pattern-match-digits-and-hyphens", "name": "🌵️a1-b2-c3", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": "slugpat-children-a", "ambiguous": [] },
+    { "id": "explicit-name-beats-pattern", "name": "🎈️kite-fixed", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": "slugpat-explicit", "ambiguous": [] },
+    { "id": "farther-explicit-name-beats-nearer-pattern", "name": "🎈️b-pinned", "parentKindId": "slugpat-owner-b", "ancestorKindIds": ["slugpat-owner-a"], "kindId": "slugpat-explicit", "ambiguous": [] },
+    { "id": "nearest-pattern-wins", "name": "🎈️b-near", "parentKindId": "slugpat-owner-b", "ancestorKindIds": ["slugpat-owner-a"], "kindId": "slugpat-children-b", "ambiguous": [] },
+    { "id": "falls-back-to-farther-pattern", "name": "🎈️plain", "parentKindId": "slugpat-owner-b", "ancestorKindIds": ["slugpat-owner-a"], "kindId": "slugpat-children-a", "ambiguous": [] },
+    { "id": "ancestor-scope-reaches-descendants", "name": "🎈️deep-1", "parentKindId": "slugpat-owner-c", "ancestorKindIds": ["slugpat-owner-a"], "kindId": "slugpat-children-a", "ambiguous": [] },
+    { "id": "non-kebab-slug", "name": "🎈️Not_Kebab", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "uppercase-slug", "name": "🎈️UPPER", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "emoji-only", "name": "🎈️", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "unadmitted-zwj-sequence", "name": "👨‍🎈kite-zwj", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "no-parent-scope", "name": "🎈️kite-ordinary", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "out-of-scope-owner", "name": "🎈️kite-ordinary", "parentKindId": "slugpat-owner-c", "ancestorKindIds": [], "kindId": null, "ambiguous": [] },
+    { "id": "same-distance-pattern-ambiguity", "name": "🎈️twin", "parentKindId": "slugpat-owner-c", "ancestorKindIds": [], "kindId": null, "ambiguous": ["slugpat-twin-one", "slugpat-twin-two"] },
+    { "id": "scoped-pattern-first-twin", "name": "🎈️twin-extra", "parentKindId": "slugpat-owner-c", "ancestorKindIds": [], "kindId": "slugpat-twin-one", "ambiguous": [] },
+    { "id": "scoped-pattern-second-twin", "name": "🎈️solo", "parentKindId": "slugpat-owner-c", "ancestorKindIds": [], "kindId": "slugpat-twin-two", "ambiguous": [] },
+    { "id": "structural-kind-beats-pattern", "name": "🧷️slugpat-owner-b", "parentKindId": "slugpat-owner-a", "ancestorKindIds": [], "kindId": "slugpat-owner-b", "ambiguous": [] }
+  ],
+  "invalidRows": [
+    { "id": "unanchored-pattern", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": "[a-z]+", "source": "registry" }, "problem": "must be an anchored full-match pattern" },
+    { "id": "invalid-regular-expression", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": "^(a$", "source": "registry" }, "problem": "is not a valid Unicode regular expression" },
+    { "id": "non-string-pattern", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": 7, "source": "registry" }, "problem": "must be a string" },
+    { "id": "pattern-admits-empty-slug", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": "^[a-z]*$", "source": "registry" }, "problem": "must not match an empty slug" },
+    { "id": "no-names-and-no-pattern", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "source": "registry" }, "problem": "memberNames must be non-empty" },
+    { "id": "identical-pattern-for-one-owner", "row": { "ownerKindIds": ["slugpat-owner-a"], "memberNames": [], "memberSlugPattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "source": "registry" }, "problem": "collide for owner" }
+  ]
+}

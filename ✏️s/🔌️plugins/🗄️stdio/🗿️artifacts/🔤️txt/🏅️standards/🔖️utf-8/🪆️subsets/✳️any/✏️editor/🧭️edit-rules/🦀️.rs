@@ -12,3 +12,10 @@ pub const EDIT_RULES: EditRules = EditRules {
     inserts: &[InsertRule::new("/lines", "insert-line", "text").at("index")],
     removes: &[RemoveRule::by_index("/lines", "remove-line", "index")],
 };
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const TXT_ARTIFACT_SCHEMA_ID: &str = "s.stdio.txt";
+}
+//#endregion 🧩️ArtifactItems2

@@ -1,7 +1,7 @@
 //! 🎯️ S Studio app — Workflow window's "active app instance" measure (a `Select` over every node).
 
-use crate::engine::space::config::SpaceConfig;
-use crate::engine::space::terminology::SStudioLabels;
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_hub_space_foundation::terminology::SStudioLabels;
 use semio_framework_os::WorkflowNode;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
@@ -18,7 +18,7 @@ pub async fn measure(config: &SpaceConfig, nodes: &[WorkflowNode], labels: &SStu
         // (see `ShellHelpers`'s `onValueChange`), never the `targets` JSON blob `interactionSelect`
         // requires — this measure's on_change is therefore only correct for reselecting the CURRENT
         // value until a future wave teaches the renderer to build `targets` for measure selects too.
-        on_change: crate::engine::space::space_interaction_select("instance", &value).await,
+        on_change: crate::space_interaction_select("instance", &value).await,
         value,
         items: nodes.iter().map(|node| MeasureSelectItem { id: node.id.clone(), value: node.id.clone(), label: node.label.clone() }).collect(),
     }

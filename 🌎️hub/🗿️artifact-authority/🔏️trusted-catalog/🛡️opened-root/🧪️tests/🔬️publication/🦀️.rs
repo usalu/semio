@@ -1,7 +1,10 @@
 
-use super::*;
-use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress};
+
+use semio_hub_artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::fs::File;
+use semio_hub_artifact_authority::OperationContext;
+use semio_hub_trusted_catalog_contract::{TrustedCatalogDataRoot, TrustedPublicationSync};
 
 struct Control(AtomicBool);
 
@@ -17,7 +20,7 @@ impl AuthorityOperationControl for Control {
 
 fn fixture_root() -> std::path::PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(0);
-    let root = crate::test_artifact_root::test_artifact_root().join(format!("publication-owner-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::SeqCst)));
+    let root = semio_hub_testing::test_artifact_root().join(format!("publication-owner-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::SeqCst)));
     std::fs::create_dir_all(root.join("trusted-catalog")).unwrap();
     root
 }
@@ -62,8 +65,8 @@ async fn trusted_publication_owner_process_crash_releases_exact_lock() {
         if std::fs::read_to_string(root.join("holder-ready.json")).unwrap() != fixture["process"]["holder"].as_str().unwrap() {
             return Err("publication child did not acknowledge its exact lock".to_owned());
         }
-        let directory = platform::open_server_owned(&root.join("trusted-catalog")).unwrap();
-        let competing = super::super::super::file_fence::try_acquire(platform::open_lock(&directory).unwrap()).unwrap();
+        let directory = semio_hub_trusted_catalog_contract::open_server_owned(&root.join("trusted-catalog")).unwrap();
+        let competing = semio_hub_artifact_authority::try_acquire(semio_hub_trusted_catalog_contract::open_lock(&directory).unwrap()).unwrap();
         if competing.is_some() {
             return Err("competing process bypassed the owned publication fence".to_owned());
         }
@@ -90,7 +93,7 @@ async fn trusted_publication_owner_lock_drop_and_exact_replacement_match_fixture
     let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
     let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
     let owner = data.acquire_publication(&context).await.unwrap();
-    let competing = super::super::super::file_fence::try_acquire(platform::open_lock(&owner.directory).unwrap()).unwrap();
+    let competing = semio_hub_artifact_authority::try_acquire(semio_hub_trusted_catalog_contract::open_lock(&owner.directory).unwrap()).unwrap();
     assert!(competing.is_none());
     std::fs::write(root.join("trusted-catalog/current.json"), fixture["before"].as_str().unwrap()).unwrap();
     let after = fixture["after"].as_str().unwrap().as_bytes();

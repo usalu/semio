@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "record": {
+    "version": 1,
+    "phase": "initial",
+    "scanner": "build",
+    "status": "complete",
+    "root": "/fixture",
+    "elapsedMilliseconds": 12,
+    "discoveryMilliseconds": 3,
+    "measurementMilliseconds": 7,
+    "enumerationMilliseconds": 2,
+    "units": 2,
+    "operations": {
+      "stat": {
+        "calls": 3,
+        "milliseconds": 1
+      },
+      "measurement": {
+        "calls": 5,
+        "milliseconds": 6
+      },
+      "entries": {
+        "calls": 2,
+        "milliseconds": 2
+      },
+      "continuation": {
+        "calls": 1,
+        "milliseconds": 1
+      }
+    },
+    "maximumInFlight": 1
+  },
+  "cases": [
+    {
+      "name": "exact",
+      "changes": {},
+      "accepted": true
+    },
+    {
+      "name": "unknown-phase",
+      "changes": {
+        "phase": "other"
+      },
+      "accepted": false
+    },
+    {
+      "name": "unknown-field",
+      "changes": {
+        "authority": true
+      },
+      "accepted": false
+    },
+    {
+      "name": "negative-time",
+      "changes": {
+        "elapsedMilliseconds": -1
+      },
+      "accepted": false
+    },
+    {
+      "name": "long-root",
+      "changes": {
+        "root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accepted": false
+    }
+  ],
+  "files": [
+    {
+      "path": "p/build/a/h/output",
+      "bytes": 7
+    },
+    {
+      "path": "p/build/a/h/nested/file",
+      "bytes": 11
+    },
+    {
+      "path": "p/incremental/crate/s-1-2-final/dep",
+      "bytes": 13
+    },
+    {
+      "path": "p/incremental/crate/s-1-2.lock",
+      "bytes": 0
+    },
+    {
+      "path": "p/build/a/h/many/f00",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f01",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f02",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f03",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f04",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f05",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f06",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f07",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f08",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f09",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f10",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f11",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f12",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f13",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f14",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f15",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f16",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f17",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f18",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f19",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f20",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f21",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f22",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f23",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f24",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f25",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f26",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f27",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f28",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f29",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f30",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f31",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f32",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f33",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f34",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f35",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f36",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f37",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f38",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f39",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f40",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f41",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f42",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f43",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f44",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f45",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f46",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f47",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f48",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f49",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f50",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f51",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f52",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f53",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f54",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f55",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f56",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f57",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f58",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f59",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f60",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f61",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f62",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f63",
+      "bytes": 1
+    },
+    {
+      "path": "p/build/a/h/many/f64",
+      "bytes": 1
+    }
+  ],
+  "switches": [
+    {
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "value": "0",
+      "enabled": false
+    },
+    {
+      "value": "true",
+      "enabled": false
+    },
+    {
+      "value": "",
+      "enabled": false
+    }
+  ]
+}

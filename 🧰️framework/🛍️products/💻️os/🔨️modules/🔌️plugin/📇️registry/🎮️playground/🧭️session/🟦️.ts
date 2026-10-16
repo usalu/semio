@@ -1,9 +1,17 @@
-import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
-import { PLAYGROUND_SESSION_ARTIFACT_KEY, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
 import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
@@ -18,7 +26,7 @@ export class SessionScript extends BundleScript {
     if (args.length !== 1 || !variant || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Usage: session <variant>");
     const projection=readGeneratedCatalogProjection();
     if(!projection.playgrounds.some(row => row.variant===variant)) throw new Error("Selected playground requires current compiled descriptors: "+variant);
-    const { session } = await stagePlaygroundSession(variant, join(this.root, "dist", "sessions"), projection);
+    const { session } = await stagePlaygroundSession(this.repoRoot,this.invocation,variant,projection);
     console.log(`Playground session ${variant}: ${session.plugins.length} plugins staged`);
   }
 }
@@ -125,18 +133,19 @@ export function writePlaygroundSession(variant: string, outPath: string, project
 }
 
 
+/** 📄️ Produces immutable bounded session file DATA before any asynchronous publication. */
+export function playgroundSessionPublicationV1(variant:string,projection:GeneratedCatalogProjection):readonly Readonly<{path:string;text:string}>[]{
+ const copied=readScriptProcessJsonV1({projection}).projection as unknown as GeneratedCatalogProjection,names=schema.definitions.Protocol.const.files,texts=[renderPlaygroundSessionTypeScript(variant,copied),JSON.stringify(copied.entries)+"\n",JSON.stringify(copied.playgrounds)+"\n"];
+ return Object.freeze(texts.map((text,index)=>{if(Buffer.byteLength(text)>publicationSchema.definitions.Protocol.const.maximumManifestBytes)throw Error("Finite session file extent required");return Object.freeze({path:names[index]!,text});}));
+}
+
 /** 🎮️ Stages one variant below its semantic session owner without changing the canonical default session. */
-export async function stagePlaygroundSession(variant: string, sessionsRoot: string, projection: GeneratedCatalogProjection): Promise<{ readonly path: string; readonly session: PlaygroundSession }> {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error(`Invalid playground session variant: ${variant}`);
-  const output = join(sessionsRoot, variant);
-  mkdirSync(dirname(output), { recursive: true });
-  const temporary = mkdtempSync(output + ".source-");
-  try {
-    const file = playgroundSessionOutputPath(temporary);
-    const session = writePlaygroundSession(variant, file, projection);
-    await stageRepositoryArtifacts(output, `playground-session:${variant}`, new Map([[PLAYGROUND_SESSION_ARTIFACT_KEY, file], ...Object.entries({"🔌️plugins.json": projection.entries,"🎠️playgrounds.json": projection.playgrounds}).map(([name, rows]) => {
-      const path = join(temporary,name);writeFileSync(path,JSON.stringify(rows)+"\n");return [name,path] as [string,string];
-    })]));
-    return { path: playgroundSessionStagedOutputPath(sessionsRoot, variant), session };
-  } finally { rmSync(temporary, { recursive: true, force: true }); }
+export async function stagePlaygroundSession(workspace:string,invocation:ScriptInvocation,variant:string,projection:GeneratedCatalogProjection):Promise<{readonly path:string;readonly session:PlaygroundSession}>{
+ if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)||variant.length>64)throw Error("Finite authored session variant required");
+ const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode;if(workspace!==authority.repositoryRoot)throw Error("Actual session Original workspace required");const contents=playgroundSessionPublicationV1(variant,projection),session=buildPlaygroundSession(variant,projection),phase=scriptCompilerAdmissionControlV1(invocation,"browser:session",0),sessionsRoot=playgroundSessionsRootV1(workspace,mode),output=join(sessionsRoot,variant);
+ return withRepositoryCacheStoreV1(workspace,"products",invocation,phase,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/session/"+variant}},token=>withArtifactDestinationTaskV1(token,invocation,async sink=>{
+  const files=new Map<string,string>();for(const row of contents){const path=join(sink.directory,row.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,row.text,{flag:"wx"});files.set(row.path,path);}
+  await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:output},destination=>stageRepositoryArtifacts(destination,"playground-session:"+variant,files));
+  return {path:playgroundSessionStagedOutputPath(sessionsRoot,variant),session};
+ })));
 }

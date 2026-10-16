@@ -19,7 +19,4 @@ pub async fn parse_point_text(text: &str) -> Result<(f64, f64, Option<f64>), Tex
 }
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

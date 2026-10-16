@@ -3,30 +3,19 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { isAbsolute, resolve, join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-const [path,digestArgument]=process.argv.slice(2),root=process.env.SEMIO_WORKSPACE_ROOT!,artifacts=resolve(import.meta.dir,"../🗑️generated");
-assert.equal(process.argv.length,4,"Original absolute all-workspace pin and SHA-256 arguments required");
-assert(path&&isAbsolute(path)&&/^[a-f0-9]{64}$/u.test(digestArgument??""),"Original absolute all-workspace pin and SHA-256 arguments required");
-assert(root&&isAbsolute(root),"Original absolute workspace required");
-assert.equal(process.env.SEMIO_TEST_ARTIFACT_DIR,artifacts,"Original ticket artifact directory required");
-assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,path,"Original all-workspace pin handoff required");
-assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,digestArgument,"Original all-workspace digest handoff required");
-assert.equal(process.env.SEMIO_BUILD_REUSE_GRAPH,"true","Original all-workspace reuse required");
-if(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION!==undefined)throw Error("Standalone command audit requires its own original envelope");
-const routing=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")),{createBuildBootstrapCapabilitiesV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")),arguments_=["show","targets","--json"];
-await routing.withScriptProcessEnvelope(routing.createScriptProcessEnvelope({version:1,owner:"repository:build",maximumElapsedMilliseconds:120000},await createBuildBootstrapCapabilitiesV1(root,arguments_,process.env),Date.now()),async original=>{
-routing.checkScriptInvocation(original);
-const source=readFileSync(path,"utf8"),digest=createHash("sha256").update(source).digest("hex");
-assert.equal(digest,digestArgument);
-const {readBuildGraphV1}=await import(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"));
-const graph=readBuildGraphV1(JSON.parse(source)),failures:unknown[]=[],dynamic:unknown[]=[],seen=new Set<string>();
-assert.equal(graph.admission?.selection.kind,"all","Complete workspace admission required for exhaustive command audit");
+import {withQualificationGraphV1} from "../plan/📜️script.ts";
+await withQualificationGraphV1(async({root,artifacts,library,original,graph,pin,check,progress})=>{
+const routing=await import(join(root,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"));
+const digest=pin.digest;
+const failures:unknown[]=[],dynamic:unknown[]=[],seen=new Set<string>();
+check();
 const ownerManifest=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"),oraclePath=await Bun.resolve("string-argv",dirname(ownerManifest));
 const {parseArgsStringToArgv}=await import(pathToFileURL(oraclePath).href);
 let targets=0,configurations=0,continuous=0,commandRecipes=0,scriptReferences=0,nestedCommandBoundaries=0;
 const processScript=join(root,"🧰️framework/🔨️modules/🏃️process/📜️script.ts");
 const {parseCommandArgumentsV1,resolveCommandConfigurationV1}=await import(join(dirname(processScript),"🧭️routing/🎛️command/⚙️configuration/🟦️.ts"));
 const inspect=(argv:string[],cwd:string,id:string,command:string)=>{
- routing.checkScriptInvocation(original);
+ check();
  const boundary=argv.indexOf("--"),wrapper=argv.findIndex(argument=>argument.endsWith("📜️script.ts")&&resolve(cwd,argument)===processScript);
  const owned=wrapper>=0&&argv[wrapper+1]==="command"&&boundary>wrapper;
  for(const argument of owned?argv.slice(0,boundary):argv)if(argument.endsWith("📜️script.ts")){
@@ -44,7 +33,7 @@ const inspect=(argv:string[],cwd:string,id:string,command:string)=>{
  }
 };
 for(const project of Object.values(graph.projects) as any[])for(const [name,target]of Object.entries(project.targets)as any[]){
- targets++;routing.checkScriptInvocation(original);if(targets%64===0)await routing.advanceScriptInvocation(original,"command-audit","running");if(target.continuous)continuous++;
+ targets++;check();if(targets%64===0)await progress();if(target.continuous)continuous++;
  for(const [configuration,overrides]of[["",{}],...Object.entries(target.configurations??{})]as any[]){
   if(configuration)configurations++;
   const execution={...target.execution,...overrides.execution},expand=(value:string)=>value.replaceAll("{workspaceRoot}",root).replaceAll("{projectRoot}",project.root);
@@ -58,8 +47,8 @@ for(const project of Object.values(graph.projects) as any[])for(const [name,targ
   }
  }
 }
-routing.checkScriptInvocation(original);
+check();
 const result={originalMaximumElapsedMilliseconds:original.policy.maximumElapsedMilliseconds,digest,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length,targets,configurations,continuous,commandRecipes,scriptReferences,nestedCommandBoundaries,dynamicReferences:dynamic.length,failures};
-writeFileSync(join(artifacts,"graph-command-audit.json"),JSON.stringify(result,null,2)+"\n");
+writeFileSync(join(artifacts,"graph-command-audit-"+process.pid+".json"),JSON.stringify(result,null,2)+"\n",{flag:"wx"});
 console.log("[DEBUG] Canonical command audit "+JSON.stringify(result));assert.equal(failures.length,0);
 });

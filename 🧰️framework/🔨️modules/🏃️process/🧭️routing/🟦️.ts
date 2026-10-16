@@ -2,6 +2,7 @@ import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "./📥️invocation/🟦️.ts";
 export { readScriptPolicy, checkScriptInvocation, scriptInvocationBudget, type ScriptPolicy, type ScriptControl, type ScriptInvocation, type ScriptProgress } from "./📥️invocation/🟦️.ts";
+export {createIssuedResourceControlV1} from "./📥️invocation/🏃️process/🟦️.ts";
 
 /** 🧭️Bundle command; `run` receives argv segments after the subcommand (e.g. `dev mcp` → `["mcp"]`). */
 export abstract class Script<Capabilities extends object = object> {

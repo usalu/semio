@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "consumer",
+    "during",
+    "accepted"
+  ],
+  "properties": {
+    "consumer": {
+      "enum": [
+        "records",
+        "pdf",
+        "log"
+      ]
+    },
+    "during": {
+      "enum": [
+        "callback",
+        "after-return"
+      ]
+    },
+    "accepted": {
+      "type": "boolean"
+    }
+  }
+}

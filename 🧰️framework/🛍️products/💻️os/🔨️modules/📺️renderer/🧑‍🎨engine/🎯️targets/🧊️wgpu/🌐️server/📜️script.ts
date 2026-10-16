@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {frameworkOsViteArtifactInputsV1} from "../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -8,7 +12,7 @@ import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇�
 /** 🌐️ Owns one browser listener consuming Nx-completed WGPU artifacts. */
 class ServeScript extends BundleScript {
   async run([variant, profile, ...args]: string[]): Promise<void> {
-    if (variant === undefined || !["prototype", "release"].includes(profile)) throw new Error("serve <variant> <prototype|release> [--port <port>] [--host <host>]");
+    if (variant === undefined || (profile !== "prototype" && profile !== "release")) throw new Error("serve <variant> <prototype|release> [--port <port>] [--host <host>]");
     let composition = process.env.SEMIO_WGPU_COMPOSITION_PATH === undefined ? join(import.meta.dir, "🎚️config/🟦️.ts") : resolve(this.repoRoot, playgroundCompositionPathV1(process.env.SEMIO_WGPU_COMPOSITION_PATH));
     let port = Number(process.env.S_OS_PORT), host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     for (let index = 0; index < args.length; index += 2) {
@@ -28,7 +32,7 @@ class ServeScript extends BundleScript {
     process.once("SIGINT", cancel);
     process.once("SIGTERM", cancel);
     try {
-      await serveVite({ invocation: this.invocation, root: import.meta.dir, config: composition, configLoader: "native", host, port, signal: this.invocation.control.signal, ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
+      await serveVite({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(profile), artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(this.repoRoot, "products"), {version:1,mode:readBuildMode(profile),renderer:"wgpu",command:"serve",engines:"none"}), root: import.meta.dir, config: composition, configLoader: "native", host, port, signal: this.invocation.control.signal, ready: url => console.log("WGPU browser ready: " + url + "?plugin=" + variant) });
     } finally { process.off("SIGINT", cancel); process.off("SIGTERM", cancel); }
   }
 }

@@ -1,4 +1,14 @@
-use super::*;
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
+use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
+use crate::BMP_DIALECT;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::NoConfig;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::bmp::{bmp_editor_command_from_action};
+use crate::editor::bmp::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -156,4 +166,4 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     assert_eq!(snapshot, &direct_snapshot());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::BmpEditor, || semio_framework_plugin::App { definition: super::create_bmp_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️v3/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::bmp::BmpEditor, || semio_framework_plugin::App { definition: crate::editor::bmp::create_bmp_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️v3/🪆️subsets/✳️any");

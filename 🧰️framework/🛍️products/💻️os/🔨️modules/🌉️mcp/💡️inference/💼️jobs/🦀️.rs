@@ -13,101 +13,17 @@
 //! Schema: `🧬️schema/🔣️.json` (`InferenceJobPageV1`, `HubInferenceServiceV1`).
 //! Law: `🧫️fixtures/💼️inference-service-law.json`, replayed by `🧪️tests/💼️inference-service-law`.
 
-use super::{DeclaredInference, InferenceJobStateV1, InferenceProposalStateV1, HubInferenceEventPageV1, HubInferenceJobReceiptV1};
-use crate::catalog::{Catalog, CapabilitySource};
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::ui::{JobEvent, JobSnapshot, JobStatus};
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
-
-//#region 🔖️Wire
-pub const INFERENCE_JOB_PAGE_SCHEMA: &str = "semio.mcp.inference-job/v1";
-pub const INFERENCE_PROPOSAL_DIGEST_DOMAIN: &str = "semio.mcp.inference-proposal/v1";
-pub const INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS: usize = 64;
-
-/// 🧭️ Where one declared inference service executes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum InferenceExecutionSiteV1 {
-    Guest,
-    Hub,
-}
-
-/// 🌎️ One service a hub executes itself, exactly as its readiness publishes it.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceServiceV1 {
-    pub service_id: String,
-    pub route: String,
-}
-
-/// 🗓️ One lifecycle fact of one job.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceJobEventV1 {
-    pub ordinal: u64,
-    pub kind: String,
-    pub at_ms: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
-}
-
-/// 📈️ One progress row, as the fraction of the job's own work done.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceJobProgressV1 {
-    pub cursor: u64,
-    pub fraction: f64,
-    pub at_ms: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
-}
-
-/// 🧾️ What an approval would commit: the declared commit action, its exact input, and the digest an
-/// approval must name. `preview` is the service's own result for a reader to inspect first.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceProposalV1 {
-    pub hash: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub action: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub capability_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub input: Option<serde_json::Value>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub preview: Option<serde_json::Value>,
-}
-
-/// 📃️ The one page every quartet tool answers with, for either execution site.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceJobPageV1 {
-    pub schema: String,
-    pub job_id: String,
-    pub service_id: String,
-    pub artifact_kind: String,
-    pub plugin_id: String,
-    pub document_id: String,
-    pub site: InferenceExecutionSiteV1,
-    pub state: InferenceJobStateV1,
-    pub proposal_state: InferenceProposalStateV1,
-    pub cancel_requested: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub proposal: Option<InferenceProposalV1>,
-    pub events: Vec<InferenceJobEventV1>,
-    pub progress: Vec<InferenceJobProgressV1>,
-    pub next_cursor: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub result: Option<serde_json::Value>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub commit: Option<serde_json::Value>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub error: Option<serde_json::Value>,
-}
-//#endregion 🔖️Wire
+use std::sync::Mutex;
+use std::sync::OnceLock;
+use crate::inference::DeclaredInference;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityDefinition, CapabilitySource, Catalog};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, INFERENCE_JOB_PAGE_SCHEMA, INFERENCE_PROPOSAL_DIGEST_DOMAIN, InferenceExecutionSiteV1, InferenceJobEventV1, InferenceJobPageV1, InferenceJobProgressV1, InferenceJobStateV1, InferenceProposalStateV1, InferenceProposalV1};
+use semio_framework_os_mcp_wire::job_registry::{JobEvent, JobSnapshot, JobStatus};
 
 //#region 🔖️Service
+
 /// 💡️ One declared inference, resolved to the site that executes it and the action that commits it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct InferenceService {
@@ -159,9 +75,11 @@ pub fn select_inference_service(declared: &[DeclaredInference], hub_services: &[
         declared: item,
     })
 }
+
 //#endregion 🔖️Service
 
 //#region 🔖️Proposal
+
 /// 🧾️ Canonical JSON: object keys sorted at every depth, no whitespace — the one byte form a proposal
 /// digest is taken over, independent of any map's insertion order.
 pub fn canonical_json(value: &serde_json::Value) -> String {
@@ -179,7 +97,7 @@ pub fn canonical_json(value: &serde_json::Value) -> String {
 
 /// 🎯️ The capability that invokes `action` on `artifact_kind` for `plugin_id` — the first in catalog
 /// order, since an app-level action is compiled once per window kind with one shared effect.
-pub fn commit_capability<'a>(catalog: &'a Catalog, artifact_kind: &str, plugin_id: &str, action: &str) -> Option<&'a crate::catalog::CapabilityDefinition> {
+pub fn commit_capability<'a>(catalog: &'a Catalog, artifact_kind: &str, plugin_id: &str, action: &str) -> Option<&'a CapabilityDefinition> {
     catalog.entries.iter().find(|entry| entry.artifact_kind.as_deref() == Some(artifact_kind) && matches!(&entry.source, CapabilitySource::Action { plugin_id: owner, action_id, .. } if owner == plugin_id && action_id == action))
 }
 
@@ -197,12 +115,14 @@ pub fn guest_proposal(service_id: &str, document_id: &str, action: &str, capabil
 }
 
 /// 🧾️ The argument ids one capability's input schema declares.
-pub fn capability_argument_ids(capability: &crate::catalog::CapabilityDefinition) -> Vec<String> {
+pub fn capability_argument_ids(capability: &CapabilityDefinition) -> Vec<String> {
     capability.input_schema.get("properties").and_then(serde_json::Value::as_object).map(|properties| properties.keys().cloned().collect()).unwrap_or_default()
 }
+
 //#endregion 🔖️Proposal
 
 //#region 🔖️GuestJobs
+
 /// 📒️ What a guest job holds beyond the generic job registry's fold: the service it runs, the
 /// document it runs on, its proposal and what committing that proposal produced.
 #[derive(Clone, Debug, PartialEq)]
@@ -273,9 +193,11 @@ pub fn guest_page(job_id: &str, snapshot: &JobSnapshot, journal: &[JobEvent], ne
         error: snapshot.error.as_ref().map(GatewayError::to_tool_error_payload),
     }
 }
+
 //#endregion 🔖️GuestJobs
 
 //#region 🔖️HubJobs
+
 /// 🌎️ Projects one hub receipt onto the generic page — the answer `inference_submit` gives for a
 /// hub-executed service before its first event read.
 pub fn hub_receipt_page(service: &InferenceService, document_id: &str, receipt: &HubInferenceJobReceiptV1) -> InferenceJobPageV1 {
@@ -322,10 +244,8 @@ pub fn hub_events_page(service: &InferenceService, document_id: &str, page: &Hub
         error: None,
     }
 }
+
 //#endregion 🔖️HubJobs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../🧪️tests/💼️inference-service-law/🦀️.rs"]
-mod inference_service_law;
 //#endregion 🧪️Tests

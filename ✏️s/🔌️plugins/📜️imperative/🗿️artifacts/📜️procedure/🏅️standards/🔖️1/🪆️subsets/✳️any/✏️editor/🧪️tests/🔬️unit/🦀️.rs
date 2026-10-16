@@ -1,5 +1,22 @@
+use crate::editor::procedure::config::ImperativeConfig;
+use crate::editor::procedure::modes::edit;
+use crate::editor::procedure::modes::edit::windows::script;
+use crate::editor::procedure::panels::document as document_panel;
+use crate::ProcedureSnapshot;
+use semio_framework::InteractiveJobClassification;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::HierarchyProvider;
+use store::pack::snapshot::ArtifactPack;
+use crate::editor::procedure::commands::run;
+use crate::editor::procedure::commands::set_active_example;
+use crate::editor::procedure::commands::set_contributions;
+use crate::{editor::procedure::commands::add_step, editor::procedure::commands::add_step_at, editor::procedure::commands::move_step, editor::procedure::commands::move_step_at, editor::procedure::commands::remove_step, editor::procedure::commands::remove_step_at, editor::procedure::commands::set_step_params, editor::procedure::commands::set_step_params_at};
+use crate::editor::procedure::{imperative_steps_topology, IMPERATIVE_RETAINED_TOOL_IDS, IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS};
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::procedure::*;
     use semio_framework_plugin::app::App;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -108,18 +125,18 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::procedure::*;
 use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, imperative_app_with_registry, live_scene, render};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
 use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
-const RETAINED_ROUTES: &str = include_str!("../🧫️fixtures/🛣️retained-command-routes.json");
+static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
 
 #[test]
 fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
-    let fixture: serde_json::Value = serde_json::from_str(RETAINED_ROUTES).expect("Imperative route fixture decodes through serde_json");
+    let fixture: serde_json::Value = serde_json::from_str((*RETAINED_ROUTES)).expect("Imperative route fixture decodes through serde_json");
     let routes = fixture.get("routes").and_then(serde_json::Value::as_array).expect("routes");
     let commands = every_command();
     let ids: Vec<_> = commands.iter().map(ImperativeCommand::command_id).collect();
@@ -233,7 +250,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<ImperativeCommand> {
+pub(crate) fn every_command() -> Vec<ImperativeCommand> {
     let mut params = BTreeMap::new();
     params.insert("message".to_string(), crate::standards::v1::subsets::any::io::text::snapshot::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("updated".into()))));
     vec![
@@ -470,3 +487,8 @@ fn every_declared_action_is_carried_by_a_window_kind() {
     }
 }
 //#endregion 🪟️WindowActionScope
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

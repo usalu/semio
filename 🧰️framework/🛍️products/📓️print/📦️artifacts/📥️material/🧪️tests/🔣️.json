@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "valid": [
+    {
+      "version": 1,
+      "kind": "toolchain",
+      "maximumBytes": 134217728,
+      "maximumFiles": 4096
+    },
+    {
+      "version": 1,
+      "kind": "bundle",
+      "maximumBytes": 33554432,
+      "maximumFiles": 512
+    },
+    {
+      "version": 1,
+      "kind": "fonts",
+      "maximumBytes": 33554432,
+      "maximumFiles": 16
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "kind": "tools",
+      "maximumBytes": 1,
+      "maximumFiles": 1
+    },
+    {
+      "version": 1,
+      "kind": "bundle",
+      "maximumBytes": 134217729,
+      "maximumFiles": 1
+    }
+  ]
+}

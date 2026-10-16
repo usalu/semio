@@ -1,113 +1,33 @@
-import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readWasmPackageOwnerV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { collectArtifactFiles } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { bundleVirtualJavaScript } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-/** 📦️ Publishes the Flow browser, host and declaration projections beside wasm-bindgen output. */
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { flowBrowserDeclaration, writeFlowBrowserDeclaration } from "../📝️declaration/📤️projection/🟦️.ts";
-
-const browserSource = join(import.meta.dir, "../🏃️runtime/🟨️.js");
-const hostSource = join(import.meta.dir, "../../🖥️host/🏃️runtime/🟨️.js");
-const corePackageRoot = join(import.meta.dir, "../../../🫀️core/🕸️bindings");
-const nativeFiles = ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"] as const;
-const packageFiles = [...nativeFiles, "🌐️browser/🟨️.js", "🖥️host/🟨️.js", "🌐️browser/🟦️.d.ts"] as const;
-const packageExports = { ".": { types: "./flow_core.d.ts", import: "./flow_core.js" }, "./🌐️flow-browser.js": { types: "./🌐️browser/🟦️.d.ts", import: "./🌐️browser/🟨️.js" }, "./🖥️flow-host.js": "./🖥️host/🟨️.js" } as const;
-
-type FlowBrowserBundle = readonly Readonly<{ text(): Promise<string> }>[];
-
-function writePackageManifest(packageRoot: string, source?: Record<string, unknown>): void {
-  const path = join(packageRoot, "package.json");
-  const manifest = source ?? (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {});
-  manifest.type = "module";
-  manifest.version ??= "0.1.0";
-  manifest.sideEffects ??= ["./snippets/*"];
-  manifest.name = "@semio-tech/flow-core";
-  manifest.files = [...packageFiles];
-  manifest.main = "flow_core.js";
-  manifest.module = "flow_core.js";
-  manifest.types = "flow_core.d.ts";
-  manifest.exports = packageExports;
-  writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
-}
-
-/** 🌐️ Bundles the browser entry while retaining only its native wrapper and owned host as package-relative externals. */
-export async function bundleFlowBrowserModule(write: boolean, invocation: ScriptInvocation, packageRoot = corePackageRoot): Promise<FlowBrowserBundle> {
-  const source = readFileSync(browserSource, "utf8");
-  const nativeInitializer = 'import("../../../🫀️core/🕸️bindings/flow_core.js")';
-  const hostInitializer = '"../../🖥️host/🏃️runtime/🟨️.js"';
-  if (source.split(nativeInitializer).length !== 2 || source.split(hostInitializer).length !== 2) throw new Error("Flow browser source requires one native initializer and one owned host binding");
-  const contents = source.replace(nativeInitializer, 'import("../flow_core.js")').replace(hostInitializer, '"../🖥️host/🟨️.js"');
-  const workspace = getWorkspaceRoot(), root = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : join(workspace, ".🧬semio/🦑️repo/⚡️cache/bun-workers");
-  const result = await bundleVirtualJavaScript({ version: 1, kind: "module", mode: readBuildMode(process.env.SEMIO_BUILD_MODE), entrypoint: browserSource, contents, external: ["../flow_core.js", "../🖥️host/🟨️.js"] }, { workspace, temporaryRoot: root, invocation });
-  if (write) { mkdirSync(join(packageRoot, "🌐️browser"), { recursive: true }); writeFileSync(join(packageRoot, "🌐️browser/🟨️.js"), result.source); }
-  return [{ text: async () => result.source }];
-}
-
-/** 👁️ Previews every package projection from current wasm-bindgen output without publishing files. */
-export async function previewFlowBrowserPackage(familyPackageRoot: string, invocation: ScriptInvocation): Promise<Readonly<{ browserBytes: number; declarationBytes: number; files: readonly string[] }>> {
-  for (const name of nativeFiles) if (!existsSync(join(familyPackageRoot, name))) throw new Error(`flow-core package preview is missing ${name}`);
-  const outputs = await bundleFlowBrowserModule(false, invocation);
-  if (outputs.length !== 1) throw new Error(`flow-core browser preview emitted ${outputs.length} outputs`);
-  return { browserBytes: Buffer.byteLength(await outputs[0].text()), declarationBytes: Buffer.byteLength(flowBrowserDeclaration()), files: packageFiles };
-}
-
-/** 📝️ Writes the source and package declaration projections and assembles their package exports. */
-export function publishFlowBrowserDeclarations(packageRoot = corePackageRoot): void {
-  writeFlowBrowserDeclaration();
-  mkdirSync(join(packageRoot, "🌐️browser"), { recursive: true });
-  writeFileSync(join(packageRoot, "🌐️browser", "🟦️.d.ts"), flowBrowserDeclaration(), "utf8");
-  writePackageManifest(packageRoot);
-}
-
-/** 🌱️ Writes the static `@semio-tech/flow-core` manifest a fresh clone lacks: the package is a root workspace member,
- * and `bun install` refuses the whole workspace while a member directory is missing. The wasm-bindgen payload stays with
- * [[publishFlowBrowserPackage]]. Declared in `⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`. */
-export function bootstrapFlowCorePackage(): void {
-  if (existsSync(join(corePackageRoot, "package.json"))) return;
-  mkdirSync(corePackageRoot, { recursive: true });
-  writePackageManifest(corePackageRoot);
-}
-
-/** 📤️ Copies native output, publishes browser projections and preserves wasm-bindgen snippets as one package. */
-export async function publishFlowBrowserPackage(familyPackageRoot: string, invocation: ScriptInvocation, packageRoot = corePackageRoot): Promise<void> {
-  const signal = invocation.control.signal;
-  if (!existsSync(familyPackageRoot)) throw new Error(`flow-core wasm build did not emit ${familyPackageRoot}`);
-  const familyManifestPath = join(familyPackageRoot, "package.json");
-  if (!existsSync(familyManifestPath)) throw new Error("flow-core wasm build did not emit its transient compiler manifest");
-  let familyManifest = JSON.parse(readFileSync(familyManifestPath, "utf8"));
-  const metadata = readWasmPackageOwnerV1(familyManifest.semioWasmOwner);
-  const canonical = join(getWorkspaceRoot(), metadata.sourceOwner, "dist/wasm", readBuildMode(process.env.SEMIO_BUILD_MODE));
-  familyPackageRoot = canonical; familyManifest = JSON.parse(readFileSync(join(canonical, "package.json"), "utf8"));
-  for (const name of nativeFiles) if (!existsSync(join(familyPackageRoot, name))) throw new Error(`flow-core wasm build did not emit ${name}`);
-  const parent = dirname(packageRoot);
-  mkdirSync(parent, { recursive: true });
-  const transactionRoot = mkdtempSync(join(parent, ".flow-browser-publication-"));
-  const staging = join(transactionRoot, "next");
-  mkdirSync(staging);
-  try {
-    for (const name of nativeFiles) copyFileSync(join(familyPackageRoot, name), join(staging, name));
-    writePackageManifest(staging, familyManifest);
-    mkdirSync(join(staging, "🖥️host"), { recursive: true });
-    copyFileSync(hostSource, join(staging, "🖥️host", "🟨️.js"));
-    await bundleFlowBrowserModule(true, invocation, staging);
-    mkdirSync(join(staging, "🌐️browser"), { recursive: true });
-    writeFileSync(join(staging, "🌐️browser", "🟦️.d.ts"), flowBrowserDeclaration(), "utf8");
-    const snippets = join(familyPackageRoot, "snippets");
-    if (existsSync(snippets)) cpSync(snippets, join(staging, "snippets"), { recursive: true });
-    writeFlowBrowserDeclaration();
-    const files = await collectArtifactFiles(staging, signal);
-    {
-      const owner = JSON.parse(readFileSync(join(canonical, ".semio-artifact.json"), "utf8")).owner;
-      await stageRepositoryArtifacts(canonical, owner, files, signal ? { signal } : {});
-      await stageRepositoryArtifacts(packageRoot, "flow-browser:active", files, signal ? { signal } : {});
-      rmSync(transactionRoot, { recursive: true, force: true });
-    }
-  } catch (error) {
-    rmSync(transactionRoot, { recursive: true, force: true });
-    throw error;
-  }
-}
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withProducedWasmPackageTaskV1,readWasmPackageOwnerV1,type ProducedWasmPackageV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {bundleVirtualJavaScript} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
+import {readArtifactBytesV1} from "../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import {type CompilerAdmissionControl} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {flowBrowserDeclaration} from "../📝️declaration/📤️projection/🟦️.ts";
+import {flowBrowserPackageRequestV1} from "./📋️contract/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import policy from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import {join} from "node:path";
+import {existsSync,mkdirSync,writeFileSync} from "node:fs";
+import {writeFile,readFile} from "node:fs/promises";
+const protocol=schema.definitions.Protocol.const,browserSource=join(import.meta.dir,"../🏃️runtime/🟨️.js"),hostSource=join(import.meta.dir,"../../🖥️host/🏃️runtime/🟨️.js"),corePackageRoot=join(import.meta.dir,"../../../🫀️core/🕸️bindings"),packageExports=Object.freeze({".":Object.freeze({types:"./flow_core.d.ts",import:"./flow_core.js"}),"./🌐️flow-browser.js":Object.freeze({types:"./🌐️browser/🟦️.d.ts",import:"./🌐️browser/🟨️.js"}),"./🖥️flow-host.js":"./🖥️host/🟨️.js"});
+/** 📋️ Emits only finite package-manifest DATA; it issues no file, reader or compiler authority. */
+export function flowBrowserPackageManifestV1(version:string,snippets:readonly string[]=[]):Readonly<Record<string,unknown>>{if(typeof version!=="string"||!version||version.length>256||snippets.length>policy.definitions.Protocol.const.maximumFiles-protocol.nativeFiles.length-4||snippets.some(name=>!name.startsWith("snippets/")||name.length>256||/[\\:\u0000-\u001f]|(?:^|\/)\.\.?(?:\/|$)|\/\//u.test(name))||new Set(snippets).size!==snippets.length)throw Error("Finite Flow package version and snippets required");return Object.freeze({type:"module",version,name:protocol.packageName,sideEffects:Object.freeze(["./snippets/*"]),files:Object.freeze([...protocol.nativeFiles,protocol.browser,protocol.host,protocol.declaration,...snippets]),main:"flow_core.js",module:"flow_core.js",types:"flow_core.d.ts",exports:packageExports});}
+/** 🌱️ Materializes only the authored static workspace manifest; compiler output belongs to selected products. */
+export function bootstrapFlowCorePackage():void{const path=join(corePackageRoot,"package.json");if(existsSync(path))return;mkdirSync(corePackageRoot,{recursive:true});writeFileSync(path,JSON.stringify(flowBrowserPackageManifestV1("0.1.0"),null,2)+"\n",{flag:"wx"});}
+/** 🌐️ Bundles finite immutable browser Source through the existing paid worker under the incoming phase. */
+export async function bundleFlowBrowserModule(invocation:ScriptInvocation,control:CompilerAdmissionControl):Promise<Readonly<{source:string}>>{requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),source=await readFile(browserSource,{encoding:"utf8",signal:control.signal}),native='import("../../../🫀️core/🕸️bindings/flow_core.js")',host='"../../🖥️host/🏃️runtime/🟨️.js"';if(source.split(native).length!==2||source.split(host).length!==2)throw Error("Exact Flow native and host Source projections required");const result=await bundleVirtualJavaScript({version:1,kind:"module",mode:authority.original.buildMode,entrypoint:browserSource,contents:source.replace(native,'import("../flow_core.js")').replace(host,'"../🖥️host/🟨️.js"'),external:["../flow_core.js","../🖥️host/🟨️.js"]},{workspace:authority.repositoryRoot,invocation,control});if(Buffer.byteLength(result.source)>policy.definitions.Protocol.const.maximumOutputBytes)throw Error("Finite Flow browser output required");return Object.freeze({source:result.source});}
+/** 📤️ Publishes a fixed Flow product while the actual paid compiler package and all consumers remain enrolled. */
+export function publishFlowBrowserPackage(capture:ProducedWasmPackageV1,invocation:ScriptInvocation):Promise<void>{return withProducedWasmPackageTaskV1(capture,async package_=>{
+ requireIssuedResourceControlInvocationV1(package_.control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=authority.repositoryRoot,mode=authority.original.buildMode;if(package_.owner.mode!==mode||package_.owner.sourceOwner!==protocol.sourceOwner)throw Error("Exact actual Flow compiler package required");const native=new Map<string,string>();for(const name of protocol.nativeFiles){const path=package_.files.get(name);if(!path)throw Error("Flow compiler package omits "+name);native.set(name,path);}const familyPath=package_.files.get("package.json");if(!familyPath)throw Error("Actual Flow compiler package manifest required");const family=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(await readArtifactBytesV1(familyPath,policy.definitions.Protocol.const.maximumManifestBytes,package_.control.signal))),owner=readWasmPackageOwnerV1(family.semioWasmOwner);if(owner.sourceOwner!==protocol.sourceOwner||owner.mode!==mode)throw Error("Actual Flow manifest owner differs from held package");const snippets=[...package_.files.keys()].filter(name=>name.startsWith("snippets/")).sort(),manifest={...flowBrowserPackageManifestV1(family.version,snippets),semioWasmOwner:owner},bundle=await bundleFlowBrowserModule(invocation,package_.control);
+ await withRepositoryCacheStoreV1(workspace,"products",invocation,package_.control,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/flow"}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{const files=new Map(native);for(const name of snippets)files.set(name,package_.files.get(name)!);files.set(protocol.host,hostSource);for(const[name,text]of[[protocol.browser,bundle.source],[protocol.declaration,flowBrowserDeclaration()],["package.json",JSON.stringify(manifest,null,2)+"\n"]]as const){const path=join(sink.directory,String(files.size));await writeFile(path,text,{flag:"wx",signal:sink.control.signal});files.set(name,path);}await package_.recheck();const request=flowBrowserPackageRequestV1(store.root,{version:1,mode});await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,files));})));
+});}
+/** 👓️ Retains the genuine selected Flow product through its complete actual reader task. */
+export function withFlowBrowserPackageV1<T>(invocation:ScriptInvocation,control:CompilerAdmissionControl,body:(artifact:Readonly<{path:string;files:readonly string[];control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=authority.repositoryRoot,mode=authority.original.buildMode;return withRepositoryCacheStoreV1(workspace,"products",invocation,control,(store,storePhase)=>withRepositoryArtifactV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:flowBrowserPackageRequestV1(store.root,{version:1,mode})},reader=>withRepositoryArtifactTaskV1(reader,invocation,async artifact=>{const manifest=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(await readArtifactBytesV1(join(artifact.path,"package.json"),policy.definitions.Protocol.const.maximumManifestBytes,artifact.control.signal))),owner=readWasmPackageOwnerV1(manifest.semioWasmOwner);if(owner.sourceOwner!==protocol.sourceOwner||owner.mode!==mode||!Array.isArray(manifest.files)||manifest.files.length+1!==artifact.files.length||JSON.stringify([...manifest.files,"package.json"].sort())!==JSON.stringify([...artifact.files].sort()))throw Error("Exact complete Flow product manifest required");for(const name of[...protocol.nativeFiles,protocol.browser,protocol.host,protocol.declaration])if(!artifact.files.includes(name))throw Error("Complete actual Flow package required");await artifact.recheck();return body(artifact);})));}
+/** 👁️ Measures the retained published product without treating an escaped package path as ownership. */
+export function previewFlowBrowserPackage(invocation:ScriptInvocation,control:CompilerAdmissionControl):Promise<Readonly<{browserBytes:number;declarationBytes:number;files:readonly string[]}>>{return withFlowBrowserPackageV1(invocation,control,async artifact=>({browserBytes:(await readArtifactBytesV1(join(artifact.path,protocol.browser),policy.definitions.Protocol.const.maximumOutputBytes,artifact.control.signal)).length,declarationBytes:(await readArtifactBytesV1(join(artifact.path,protocol.declaration),policy.definitions.Protocol.const.maximumOutputBytes,artifact.control.signal)).length,files:artifact.files}));}

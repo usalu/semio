@@ -10,14 +10,8 @@ use semio_framework_hash::Sha256;
 #[path = "🧱️chunk-cas/🦀️.rs"]
 pub mod chunk_cas;
 
-#[path = "🌱️creation/🦀️.rs"]
-pub mod creation;
-
 #[path = "🔒️file-fence/🦀️.rs"]
 mod file_fence;
-
-#[path = "📌️check-in/🦀️.rs"]
-pub mod check_in;
 
 /// 🔐️ Domain prefix for a canonical checkpoint identity.
 pub const CHECKPOINT_ID_V1_DOMAIN: &[u8] = b"semio.hub.artifact-checkpoint.v1\0";
@@ -178,12 +172,6 @@ pub trait AuthorityOperationControl: Send + Sync {
     /// a legitimate refusal. The default ignores the sentence, so a control with nowhere to put one
     /// is not forced to invent a sink.
     fn fault(&self, _detail: &str) {}
-
-    /// 📈️ Where a trusted-catalog load reports its per-package progress (`TrustedCatalogLoadProgressV1`), which the
-    /// loaded catalog keeps for its background verification; `None` keeps both private to the catalog.
-    fn catalog_progress(&self) -> Option<std::sync::Arc<trusted_catalog::TrustedCatalogLoadProgressCellV1>> {
-        None
-    }
 }
 
 /// ⏱️ What ends one authority operation that was not cancelled.
@@ -213,11 +201,11 @@ static OPERATION_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::Atomi
 /// what its codec calls must share for exactly its lifetime: a compiled guest the residency ledger did
 /// not admit serves every call of the operation that compiled it and is dropped with the operation.
 pub struct OperationContext<'a> {
-    bound: OperationBoundV1,
-    limits: AuthorityLimits,
-    control: &'a dyn AuthorityOperationControl,
-    serial: u64,
-    retained: std::sync::Mutex<Vec<std::sync::Arc<dyn std::any::Any + Send + Sync>>>,
+    pub bound: OperationBoundV1,
+    pub limits: AuthorityLimits,
+    pub control: &'a dyn AuthorityOperationControl,
+    pub serial: u64,
+    pub retained: std::sync::Mutex<Vec<std::sync::Arc<dyn std::any::Any + Send + Sync>>>,
 }
 
 impl<'a> OperationContext<'a> {
@@ -232,13 +220,8 @@ impl<'a> OperationContext<'a> {
         self.serial
     }
 
-    /// 📈️ The catalog progress cell the host reads, when it reads one.
-    pub(crate) fn catalog_progress(&self) -> Option<std::sync::Arc<trusted_catalog::TrustedCatalogLoadProgressCellV1>> {
-        self.control.catalog_progress()
-    }
-
     /// 📌️ Keeps `value` alive until this operation ends.
-    pub(crate) fn retain(&self, value: std::sync::Arc<dyn std::any::Any + Send + Sync>) {
+    pub fn retain(&self, value: std::sync::Arc<dyn std::any::Any + Send + Sync>) {
         self.retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(value);
     }
 
@@ -286,19 +269,19 @@ impl<'a> OperationContext<'a> {
         Ok(())
     }
 
-    pub(crate) fn report(&self, progress: AuthorityProgress) -> Result<(), AuthorityError> {
+    pub fn report(&self, progress: AuthorityProgress) -> Result<(), AuthorityError> {
         self.control.report(progress);
         self.checkpoint()
     }
 
     /// 🛑️ Whether the caller cancelled this operation — observed without counting as a checkpoint, so work that
     /// only waits (a guest call between two fuel observations) never restamps its stall bound.
-    pub(crate) fn is_cancelled(&self) -> bool {
+    pub fn is_cancelled(&self) -> bool {
         self.control.is_cancelled()
     }
 
     /// 📡️ Observes a completed durable transition without reinterpreting it as cancellation.
-    pub(crate) fn report_committed(&self, progress: AuthorityProgress) {
+    pub fn report_committed(&self, progress: AuthorityProgress) {
         self.control.report(progress);
     }
 
@@ -309,7 +292,7 @@ impl<'a> OperationContext<'a> {
 
     /// ⏱️ Returns the immutable absolute publication deadline, or `None` for a stall-bounded
     /// operation, which has no calendar instant a lease could be clipped to.
-    pub(crate) const fn deadline_ms(&self) -> Option<u64> {
+    pub const fn deadline_ms(&self) -> Option<u64> {
         match &self.bound {
             OperationBoundV1::Deadline(deadline_ms) => Some(*deadline_ms),
             OperationBoundV1::NoProgress { .. } => None,
@@ -455,7 +438,7 @@ pub trait VerifiedCheckpointPublisher: Send + Sync {
 
 /// 🚚️ Failure-atomic candidate staging and verified-publication orchestrator.
 pub struct CheckpointPublicationOrchestrator<S, P> {
-    store: S,
+    pub store: S,
     publisher: P,
 }
 
@@ -474,7 +457,7 @@ pub trait CanonicalArtifactAuthority {
 
 /// 🛡️ Contract implementation over a trusted project-owned catalog port.
 pub struct ValidatingCanonicalArtifactAuthority<C> {
-    catalog: C,
+    pub catalog: C,
 }
 
 impl<C> ValidatingCanonicalArtifactAuthority<C> {
@@ -490,7 +473,7 @@ fn pair_bytes(pair: &ArtifactPair, stage: ArtifactValidationStage) -> Result<u64
     pack.checked_add(spr).ok_or(AuthorityError::PairResourceLimit(stage))
 }
 
-fn validate_pair_budget(pair: &ArtifactPair, limits: AuthorityLimits, stage: ArtifactValidationStage) -> Result<(), AuthorityError> {
+pub fn validate_pair_budget(pair: &ArtifactPair, limits: AuthorityLimits, stage: ArtifactValidationStage) -> Result<(), AuthorityError> {
     if pair_bytes(pair, stage)? > limits.max_pair_bytes {
         return Err(AuthorityError::PairResourceLimit(stage));
     }
@@ -653,7 +636,7 @@ impl<S: ImmutableArtifactBlobStore, P: VerifiedCheckpointPublisher> CheckpointPu
     }
 }
 
-fn blob_reference(bytes: &[u8]) -> Result<ArtifactBlobRef, AuthorityError> {
+pub fn blob_reference(bytes: &[u8]) -> Result<ArtifactBlobRef, AuthorityError> {
     let integrity = exact_blob_integrity(bytes)?;
     Ok(ArtifactBlobRef { sha256: integrity.sha256, byte_length: integrity.byte_length, storage_key: format!("sha256/{}", hex_lower(&integrity.sha256.0)) })
 }
@@ -722,18 +705,24 @@ impl<C: TrustedArtifactCatalog> CanonicalArtifactAuthority for ValidatingCanonic
 #[path = "🔌️adapters/🦀️.rs"]
 pub mod adapters;
 
-#[path = "🔏️trusted-catalog/🦀️.rs"]
-pub mod trusted_catalog;
-
 /// 🔒️ The process-wide codec registry holds the REAL linked stdio/GIS/VCS schemas once any law assembles them, and a
 /// registration is immutable for the process lifetime. Every in-process law that registers or observes those real
 /// schemas holds this guard, so a before/after observation is never interleaved with another law's registration.
-#[cfg(test)]
-pub(crate) static REAL_LINKED_CODEC_REGISTRY: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
-
-#[path = "📇️native-openable-provider/🦀️.rs"]
-pub mod native_openable_provider;
+#[cfg(any(test, feature = "testkit"))]
+pub static REAL_LINKED_CODEC_REGISTRY: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl<C: TrustedArtifactCatalog> TrustedArtifactCatalog for std::sync::Arc<C> {
+    type Codec = C::Codec;
+
+    async fn resolve<'a>(&'a self, required: &TrustedArtifactIdentity) -> Result<&'a Self::Codec, AuthorityError> {
+        self.as_ref().resolve(required).await
+    }
+}
+
+pub use file_fence::FileFence;
+#[cfg(unix)]
+pub use file_fence::try_acquire;

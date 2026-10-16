@@ -12,6 +12,8 @@
 //!
 //! @see 🧰️framework/🛍️products/💻️os/🔨️modules/🪡️list-delta/🦀️.rs — the algebra and its randomized sequence laws
 
+pub use semio_framework_os_kernel as kernel;
+
 #[doc(hidden)]
 pub use semio_framework_value_derive as __value_derive;
 
@@ -55,7 +57,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $removal {
             pub id: $key_ty,
@@ -63,7 +65,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $insertion {
             pub index: usize,
@@ -71,7 +73,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $relocation {
             pub id: $key_ty,
@@ -80,7 +82,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $modification {
             pub id: $key_ty,
@@ -88,7 +90,7 @@ macro_rules! stdio_list_delta {
         }
 
         $(#[$meta])*
-        #[derive(Clone, Debug, Default, PartialEq, $crate::list_delta::__value_derive::ToValue, $crate::list_delta::__value_derive::FromValue, $crate::list_delta::__value_derive::RetireOwned)]
+        #[derive(Clone, Debug, Default, PartialEq, $crate::__value_derive::ToValue, $crate::__value_derive::FromValue, $crate::__value_derive::RetireOwned)]
         #[value(rename_all = "camelCase")]
         $vis struct $delta {
             #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -183,7 +185,7 @@ macro_rules! stdio_list_delta {
             }
         }
 
-        impl $crate::list_delta::Composable for $delta {
+        impl $crate::Composable for $delta {
             fn compose(&mut self, later: Self) {
                 self.absorb(later);
             }

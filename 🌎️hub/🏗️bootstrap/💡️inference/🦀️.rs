@@ -8,57 +8,23 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
-use semio_hub::directory::model::DocumentScope;
-use semio_hub::directory::HubDirectory;
-use semio_hub::inference::runtime::{GisMapApprovalIngressAuthorityV1, InferenceApprovalRouteContextV1, InferenceRouteErrorV1};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory::HubDirectory;
+use semio_hub_inference_runtime_contract::{GisMapApprovalIngressAuthorityV1, InferenceRouteErrorV1};
+use semio_hub_inference_runtime::InferenceApprovalRouteContextV1;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use crate::support::{now_ms, bearer};
-use crate::state::HubState;
-use crate::socket_grants::{SocketBindingKeyV1, SocketBindingGuardV1};
-use crate::guard::{session_access_roles, access_permits_in_space};
-use crate::directory_commands::{AuthedUser, resolve_bearer_user, revalidate_directory_caller};
+use semio_hub_runtime::support::{now_ms, bearer};
+use semio_hub_state::HubState;
+use semio_hub_ledgers::socket_grants::SocketBindingKeyV1;
+use semio_hub_ledgers::guard::session_access_roles;
+use semio_hub_session_routes::guard::access_permits_in_space;
+use semio_hub_session_routes::directory_commands::{resolve_bearer_user, revalidate_directory_caller};
+use semio_hub_route_models::inference::{HubGisMapApprovalIngressAuthorityV1, InferenceEventQueryV1, inference_error_response};
 
 //#region 💡️Inference
-/// 🧾️ The one closed error body every inference route publishes; it never names a private object.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct InferenceErrorBodyV1 {
-    schema: &'static str,
-    code: &'static str,
-}
 
-fn inference_error_response(error: InferenceRouteErrorV1) -> Response {
-    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    (status, Json(InferenceErrorBodyV1 { schema: "semio.hub.inference-error/v1", code: error.code() })).into_response()
-}
-
-/// 🎟️ One private Hub approval admission retaining the exact sorted identity and space guards.
-pub(crate) struct HubGisMapApprovalIngressAuthorityV1 {
-    pub(crate) scope: DocumentScope,
-    pub(crate) caller: AuthedUser,
-    pub(crate) _guards: Vec<SocketBindingGuardV1>,
-}
-
-impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
-    fn scope(&self) -> &DocumentScope {
-        &self.scope
-    }
-
-    fn user_id(&self) -> &str {
-        &self.caller.user_id
-    }
-
-    fn session_id(&self) -> &str {
-        &self.caller.session_id
-    }
-
-    fn authorization_generation(&self) -> u64 {
-        self.caller.authorization_generation
-    }
-}
-
-pub(crate) async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
+pub async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
     revalidate_directory_caller(state, &authority.caller).await.map_err(|status| if status == StatusCode::SERVICE_UNAVAILABLE { InferenceRouteErrorV1::Unavailable } else { InferenceRouteErrorV1::Denied })?;
     let role =
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.principal_role(&authority.scope.space_id, authority.caller.principal())).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
@@ -69,7 +35,7 @@ pub(crate) async fn revalidate_gis_map_approval_authority(state: &HubState, auth
     Ok(())
 }
 
-pub(crate) async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope, token: Option<&str>) -> Result<Arc<HubGisMapApprovalIngressAuthorityV1>, InferenceRouteErrorV1> {
+pub async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope, token: Option<&str>) -> Result<Arc<HubGisMapApprovalIngressAuthorityV1>, InferenceRouteErrorV1> {
     let caller = resolve_bearer_user(state, token).await.ok_or(InferenceRouteErrorV1::Denied)?;
     let guards = tokio::time::timeout(
         std::time::Duration::from_secs(2),
@@ -87,10 +53,10 @@ pub(crate) async fn acquire_gis_map_approval_ingress(state: &HubState, scope: Do
     Ok(authority)
 }
 
-fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
+fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub_inference_runtime::InferenceRouteContextV1<'a>, Response> {
     let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(InferenceRouteErrorV1::Unavailable))?;
     let scope = DocumentScope::new(space_id, document_id);
-    Ok(semio_hub::inference::runtime::InferenceRouteContextV1 {
+    Ok(semio_hub_inference_runtime::InferenceRouteContextV1 {
         runtime,
         directory: &state.directory,
         rebootstrap: &state.rebootstrap,
@@ -101,56 +67,49 @@ fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str,
     })
 }
 
-pub(crate) async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
         Err(response) => return response,
     };
-    match semio_hub::inference::runtime::submit_gis_map_job(context, &body).await {
+    match semio_hub_inference_runtime::submit_gis_map_job(context, &body).await {
         Ok(receipt) => Json(receipt).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
 
-pub(crate) async fn post_inference_gis_map_job_reconcile(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_inference_gis_map_job_reconcile(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
         Err(response) => return response,
     };
-    match semio_hub::inference::runtime::reconcile_gis_map_job(context, &body).await {
+    match semio_hub_inference_runtime::reconcile_gis_map_job(context, &body).await {
         Ok(result) => Json(result).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
 
-pub(crate) async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)): Path<(String, String, String)>, Query(query): Query<InferenceEventQueryV1>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+pub async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)): Path<(String, String, String)>, Query(query): Query<InferenceEventQueryV1>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
         Err(response) => return response,
     };
-    match semio_hub::inference::runtime::read_gis_map_job_events(context, &job_id, query.after.unwrap_or(0)).await {
+    match semio_hub_inference_runtime::read_gis_map_job_events(context, &job_id, query.after.unwrap_or(0)).await {
         Ok(page) => Json(page).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
 
-/// 🔖️ The only inference query parameter: an exact bounded progress cursor.
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct InferenceEventQueryV1 {
-    pub(crate) after: Option<u64>,
-}
-
-pub(crate) async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+pub async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
         Err(response) => return response,
     };
-    match semio_hub::inference::runtime::cancel_gis_map_job(context, &job_id).await {
+    match semio_hub_inference_runtime::cancel_gis_map_job(context, &job_id).await {
         Ok(page) => Json(page).into_response(),
         Err(error) => inference_error_response(error),
     }
@@ -161,7 +120,7 @@ pub(crate) async fn post_inference_gis_map_job_cancel(Path((space_id, document_i
 /// durable the answer is its receipt. A second directory check after the commit could only fail for availability
 /// (a 2 s directory read on a loaded hub) and answered `503 inference.unavailable` for a committed approval — the
 /// document advanced while the caller was told nothing happened (ticket 26/09/23 G10, 7800 quartet runs 3/5/6).
-pub(crate) async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let route = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
@@ -172,7 +131,7 @@ pub(crate) async fn post_inference_gis_map_job_approval(Path((space_id, document
         Err(error) => return inference_error_response(error),
     };
     let context = InferenceApprovalRouteContextV1 { route, ingress };
-    match semio_hub::inference::runtime::approve_gis_map_job(context, &job_id, &body).await {
+    match semio_hub_inference_runtime::approve_gis_map_job(context, &job_id, &body).await {
         Ok(receipt) => Json(receipt).into_response(),
         Err(error) => inference_error_response(error),
     }
@@ -180,7 +139,7 @@ pub(crate) async fn post_inference_gis_map_job_approval(Path((space_id, document
 
 /// ↩️ Undoes one approval under the same ingress law as [`post_inference_gis_map_job_approval`]: a durable
 /// undo is answered with its receipt.
-pub(crate) async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let route = match inference_context(&state, &space_id, &document_id, &token) {
         Ok(context) => context,
@@ -191,11 +150,10 @@ pub(crate) async fn post_inference_gis_map_approval_undo(Path((space_id, documen
         Err(error) => return inference_error_response(error),
     };
     let context = InferenceApprovalRouteContextV1 { route, ingress };
-    match semio_hub::inference::runtime::undo_gis_map_approval(context, &body).await {
+    match semio_hub_inference_runtime::undo_gis_map_approval(context, &body).await {
         Ok(receipt) => Json(receipt).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
 
-pub(crate) const INFERENCE_REQUEST_MAX_BYTES: usize = 1024;
 //#endregion 💡️Inference

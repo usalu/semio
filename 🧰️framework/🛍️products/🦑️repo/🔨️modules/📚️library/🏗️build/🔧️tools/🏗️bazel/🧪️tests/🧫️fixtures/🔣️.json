@@ -138,27 +138,112 @@
   },
   "configuration": {
     "target": {
-      "execution": {"kind":"command","command":"printf prototype","env":{"SEMIO_BUILD_MODE":"prototype","RETAINED":"true"},"args":["authored"]},
-      "outputs": ["{projectRoot}/{options.env.SEMIO_BUILD_MODE}.txt"],
+      "execution": {
+        "kind": "command",
+        "command": "printf prototype",
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "RETAINED": "true"
+        },
+        "args": [
+          "authored"
+        ]
+      },
+      "outputs": [
+        "{projectRoot}/{options.env.SEMIO_BUILD_MODE}.txt"
+      ],
       "cache": true,
-      "configurations": {"release":{"execution":{"command":"printf release","env":{"SEMIO_BUILD_MODE":"release"},"args":["configured"]}}}
+      "configurations": {
+        "release": {
+          "execution": {
+            "command": "printf release",
+            "env": {
+              "SEMIO_BUILD_MODE": "release"
+            },
+            "args": [
+              "configured"
+            ]
+          }
+        }
+      }
     },
-    "expected": {"command":"printf release","env":{"SEMIO_BUILD_MODE":"release","RETAINED":"true"},"args":["configured"]},
+    "expected": {
+      "command": "printf release",
+      "env": {
+        "SEMIO_BUILD_MODE": "release",
+        "RETAINED": "true"
+      },
+      "args": [
+        "configured"
+      ]
+    },
     "rejected": [
-      {"outputs":["different.txt"]},
-      {"inputs":["different.txt"]},
-      {"dependsOn":["prepare"]},
-      {"cache":false},
-      {"continuous":true},
-      {"execution":{"kind":"noop"}},
-      {"execution":{"ownerArguments":true}},
-      {"execution":{"nativeOwnerCommand":{}}},
-      {"execution":{"outputs":["different.txt"]}},
-      {"execution":{"cache":false}},
-      {"execution":{"commands":["printf changed-form"]}}
+      {
+        "outputs": [
+          "different.txt"
+        ]
+      },
+      {
+        "inputs": [
+          "different.txt"
+        ]
+      },
+      {
+        "dependsOn": [
+          "prepare"
+        ]
+      },
+      {
+        "cache": false
+      },
+      {
+        "continuous": true
+      },
+      {
+        "execution": {
+          "kind": "noop"
+        }
+      },
+      {
+        "execution": {
+          "ownerArguments": true
+        }
+      },
+      {
+        "execution": {
+          "nativeOwnerCommand": {}
+        }
+      },
+      {
+        "execution": {
+          "outputs": [
+            "different.txt"
+          ]
+        }
+      },
+      {
+        "execution": {
+          "cache": false
+        }
+      },
+      {
+        "execution": {
+          "commands": [
+            "printf changed-form"
+          ]
+        }
+      }
     ]
   },
-  "controlWait": {"originalBudgetMilliseconds":200,"resource":"bazel-snapshot-restore","progress":["publish:start","publish:end","yield"],"consumerStarted":false},
+  "controlWait": {
+    "originalBudgetMilliseconds": 200,
+    "resource": "bazel-snapshot-restore",
+    "progress": [
+      "publish",
+      "continuation"
+    ],
+    "consumerStarted": false
+  },
   "moduleSetup": {
     "receipt": {
       "version": 1,
@@ -169,5 +254,217 @@
       ]
     },
     "offlineError": "Pinned Bazel module setup is not prepared for the original offline invocation"
-  }
+  },
+  "birthRefusals": [
+    {
+      "id": "foreign-task",
+      "kind": "launch",
+      "change": "task",
+      "parameters": []
+    },
+    {
+      "id": "foreign-manifest",
+      "kind": "launch",
+      "change": "manifest",
+      "parameters": []
+    },
+    {
+      "id": "foreign-kind",
+      "kind": "action",
+      "parameters": []
+    },
+    {
+      "id": "foreign-output",
+      "kind": "launch",
+      "parameters": [
+        "/foreign-output"
+      ]
+    }
+  ],
+  "integrationPhases": [
+    "cache",
+    "nested",
+    "uncached",
+    "birth",
+    "services",
+    "refusals",
+    "cancellation",
+    "configuration",
+    "offline"
+  ],
+  "testDispatch": {
+    "cases": [
+      {
+        "arguments": [],
+        "phases": [
+          null,
+          "cache",
+          "nested",
+          "uncached",
+          "birth",
+          "services",
+          "refusals",
+          "cancellation",
+          "configuration",
+          "offline"
+        ]
+      },
+      {
+        "arguments": [
+          "cache"
+        ],
+        "phases": [
+          "cache"
+        ]
+      },
+      {
+        "arguments": [
+          "offline"
+        ],
+        "phases": [
+          "offline"
+        ]
+      }
+    ],
+    "rejected": [
+      [
+        "unknown"
+      ],
+      [
+        "cache",
+        "offline"
+      ],
+      [
+        "cache;run"
+      ],
+      [
+        "CACHE"
+      ],
+      [
+        ""
+      ]
+    ],
+    "maximumChildMilliseconds": 120000,
+    "launchInputs": {
+      "en": "repoBazelPhaseEN",
+      "de": "repoBazelPhaseDE"
+    }
+  },
+  "birthParameterGrants": {
+    "grants": [
+      [
+        "/owned/main/bin/service"
+      ],
+      [
+        "/owned/launch/bin/service"
+      ]
+    ],
+    "cases": [
+      {
+        "parameters": [
+          "/owned/main/bin/service"
+        ],
+        "accepted": true
+      },
+      {
+        "parameters": [
+          "/owned/launch/bin/service"
+        ],
+        "accepted": true
+      },
+      {
+        "parameters": [
+          "/foreign/bin/service"
+        ],
+        "accepted": false
+      },
+      {
+        "parameters": [],
+        "accepted": false
+      },
+      {
+        "parameters": [
+          "/owned/main/bin/service",
+          "/owned/launch/bin/service"
+        ],
+        "accepted": false
+      },
+      {
+        "parameters": [
+          "/owned/main/bin/service",
+          "/foreign/snapshot"
+        ],
+        "accepted": false
+      }
+    ]
+  },
+  "purposeVariants": [
+    {
+      "variant": "build",
+      "target": "fixture:build"
+    },
+    {
+      "variant": "serve",
+      "target": "fixture:serve"
+    },
+    {
+      "variant": "release",
+      "target": "fixture:defaults:release"
+    },
+    {
+      "variant": "offline",
+      "target": "fixture:offline"
+    },
+    {
+      "variant": "parity-nx",
+      "target": null
+    },
+    {
+      "variant": "parity-bazel",
+      "target": null
+    },
+    {
+      "variant": "cancel",
+      "target": "fixture:cancelled"
+    },
+    {
+      "variant": "parallel-failure",
+      "target": "fixture:parallel"
+    },
+    {
+      "variant": "refusal-early",
+      "target": "fixture:consumer"
+    },
+    {
+      "variant": "refusal-ended",
+      "target": "fixture:consumer"
+    }
+  ],
+  "cleanupOutcomes": [
+    {
+      "body": "resolve",
+      "cleanup": "resolve",
+      "expected": "body"
+    },
+    {
+      "body": "throw",
+      "cleanup": "resolve",
+      "expected": "body"
+    },
+    {
+      "body": "resolve",
+      "cleanup": "throw",
+      "expected": "cleanup"
+    },
+    {
+      "body": "throw",
+      "cleanup": "throw",
+      "expected": "body"
+    },
+    {
+      "body": "undefined",
+      "cleanup": "throw",
+      "expected": "body"
+    }
+  ]
 }

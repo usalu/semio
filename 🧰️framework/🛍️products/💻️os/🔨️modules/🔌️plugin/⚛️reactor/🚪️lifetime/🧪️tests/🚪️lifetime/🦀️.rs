@@ -1,15 +1,29 @@
 //#region 🧪️GuestLifecycleOwnership
 use super::*;
 
+struct NoPeers;
+impl ClosePeers for NoPeers {
+    fn preflight_patches(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn reserve_patches(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn activate_patches(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn patches_complete(&self, _key: NativeCloseKey) -> Result<bool, semio_framework::Fault> { Ok(true) }
+    fn release_patches(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn preflight_cold_pair(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn reserve_cold_pair(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn activate_cold_pair(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+    fn cold_pair_complete(&self, _key: NativeCloseKey) -> Result<bool, semio_framework::Fault> { Ok(true) }
+    fn release_cold_pair(&self, _key: NativeCloseKey) -> Result<(), semio_framework::Fault> { Ok(()) }
+}
+
 struct Owner {
     remaining: usize,
 }
 impl terminal_owner::Sealed for Owner {}
 impl GuestLifetimeOwner for Owner {
-    fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
+    fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, _peers: &P) -> Result<bool, semio_framework::Fault> {
         Ok(self.remaining == 0)
     }
-    fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
+    fn release_terminal<P: ClosePeers + ?Sized>(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize, _peers: &P) -> Result<GuestTerminalRelease, semio_framework::Fault> {
         if maximum_items == 0 {
             return Ok(GuestTerminalRelease::Pending);
         }
@@ -41,7 +55,7 @@ fn captured() -> GuestLifecycleCell<Owner> {
 fn ack(cell: &mut GuestLifecycleCell<Owner>) {
     let receipt = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
-    cell.release_owner_step(1, 4096).unwrap();
+    cell.release_owner_step(1, 4096, &NoPeers).unwrap();
     cell.finish_turn(Some(1), true).unwrap();
 }
 
@@ -54,10 +68,10 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     }
     impl terminal_owner::Sealed for DropOwner {}
     impl GuestLifetimeOwner for DropOwner {
-        fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
+        fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, _peers: &P) -> Result<bool, semio_framework::Fault> {
             Ok(true)
         }
-        fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
+        fn release_terminal<P: ClosePeers + ?Sized>(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize, _peers: &P) -> Result<GuestTerminalRelease, semio_framework::Fault> {
             if maximum_items == 0 {
                 return Ok(GuestTerminalRelease::Pending);
             }
@@ -84,18 +98,18 @@ fn guest_instance_lifecycle_terminal_release_work_is_measured_and_never_repeated
     cell.record_close_admission(ActorInstanceCloseRequest { lifetime: cell.lifetime(), request_sequence: 9 }, 51).unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt: cell.retained_receipt().unwrap() }).unwrap();
     cell.finish_turn(Some(clock.get() - started), true).unwrap();
-    cell.prepare_retired().unwrap();
+    cell.prepare_retired(&NoPeers).unwrap();
     let receipt = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt }).unwrap();
-    cell.release_owner_step(0, 4096).unwrap();
+    cell.release_owner_step(0, 4096, &NoPeers).unwrap();
     assert_eq!(drops.get(), 0);
-    cell.release_owner_step(1, 4096).unwrap();
+    cell.release_owner_step(1, 4096, &NoPeers).unwrap();
     assert_eq!(drops.get(), 1);
     assert_eq!(cell.finish_turn(Some(clock.get() - started), true).is_ok(), law["firstAckAccepted"].as_bool().unwrap());
     assert_eq!(cell.retained_receipt(), Some(receipt));
     assert!(!cell.is_released());
     assert!(cell.owner().is_none());
-    cell.release_owner_step(1, 4096).unwrap();
+    cell.release_owner_step(1, 4096, &NoPeers).unwrap();
     cell.finish_turn(Some(0), true).unwrap();
     assert!(cell.is_released());
     assert_eq!(drops.get(), law["destructionsAfterRetry"].as_u64().unwrap() as usize);
@@ -126,7 +140,7 @@ fn guest_instance_lifecycle_ack_fault_keeps_exact_receipt_and_owner() {
         cell.record_close_admission(request, 51).unwrap();
         ack(&mut cell);
         cell.owner_mut().unwrap().remaining = 0;
-        assert!(cell.prepare_retired().unwrap());
+        assert!(cell.prepare_retired(&NoPeers).unwrap());
         ack(&mut cell);
         assert!(cell.is_released());
     }
@@ -147,10 +161,10 @@ fn a_retired_lifetime_waits_out_a_retracted_terminal_witness_instead_of_faulting
     }
     impl terminal_owner::Sealed for Contended {}
     impl GuestLifetimeOwner for Contended {
-        fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
+        fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, _peers: &P) -> Result<bool, semio_framework::Fault> {
             Ok(self.empty.get())
         }
-        fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
+        fn release_terminal<P: ClosePeers + ?Sized>(owner: &mut Option<Self>, maximum_items: usize, _maximum_bytes: usize, _peers: &P) -> Result<GuestTerminalRelease, semio_framework::Fault> {
             if maximum_items == 0 {
                 return Ok(GuestTerminalRelease::Pending);
             }
@@ -171,16 +185,16 @@ fn a_retired_lifetime_waits_out_a_retracted_terminal_witness_instead_of_faulting
             cell.record_close_admission(request, fixture["closeGeneration"].as_str().unwrap().parse().unwrap()).unwrap();
         }
     }
-    assert!(cell.prepare_retired().unwrap(), "an empty witness mints the terminal receipt");
+    assert!(cell.prepare_retired(&NoPeers).unwrap(), "an empty witness mints the terminal receipt");
     let retired = cell.retained_receipt().unwrap();
     cell.stage_ack(ActorInstanceLifecycleAck { receipt: retired }).unwrap();
     empty.set(false);
-    cell.release_owner_step(1, 4096).expect("a retracted witness is a wait, never a fault");
+    cell.release_owner_step(1, 4096, &NoPeers).expect("a retracted witness is a wait, never a fault");
     assert!(cell.owner().is_some(), "the wait must retain the structural owner");
     assert_eq!(cell.finish_turn(Some(1), true).unwrap(), Some(retired), "the terminal receipt survives the wait");
-    assert!(cell.prepare_retired().unwrap(), "a minted terminal receipt is never un-retired");
+    assert!(cell.prepare_retired(&NoPeers).unwrap(), "a minted terminal receipt is never un-retired");
     empty.set(true);
-    cell.release_owner_step(1, 4096).unwrap();
+    cell.release_owner_step(1, 4096, &NoPeers).unwrap();
     assert!(cell.owner().is_none());
     cell.finish_turn(Some(1), true).unwrap();
     assert!(cell.is_released());
@@ -196,10 +210,10 @@ fn guest_instance_lifecycle_partial_close_unwind_never_drops_structural_owner() 
     }));
     assert!(result.is_err());
     assert_eq!(cell.owner().unwrap().remaining, 10);
-    assert!(!cell.prepare_retired().unwrap());
+    assert!(!cell.prepare_retired(&NoPeers).unwrap());
     while cell.owner().unwrap().remaining != 0 {
         cell.owner_mut().unwrap().remaining -= 1;
-        assert_eq!(cell.prepare_retired().unwrap(), cell.owner().unwrap().remaining == 0);
+        assert_eq!(cell.prepare_retired(&NoPeers).unwrap(), cell.owner().unwrap().remaining == 0);
     }
     let retired = cell.retained_receipt().unwrap();
     let ActorInstanceLifecycleReceipt::Retired { lifetime, request_sequence, close_generation } = retired else { panic!("exact terminal receipt") };
@@ -218,7 +232,7 @@ fn guest_instance_lifecycle_same_activation_reopen_rejects_old_authority() {
     let old_lifetime = old.lifetime();
     close(&mut old);
     old.owner_mut().unwrap().remaining = 0;
-    old.prepare_retired().unwrap();
+    old.prepare_retired(&NoPeers).unwrap();
     let old_receipt = old.retained_receipt().unwrap();
     ack(&mut old);
     let mut new = GuestLifecycleCell::admit(ActorInstanceOpenRequest { request_sequence: 10, ..open() }, 14).unwrap();
@@ -229,7 +243,7 @@ fn guest_instance_lifecycle_same_activation_reopen_rejects_old_authority() {
     ack(&mut new);
     new.record_close_admission(ActorInstanceCloseRequest { lifetime: new.lifetime(), request_sequence: 11 }, 52).unwrap();
     ack(&mut new);
-    new.prepare_retired().unwrap();
+    new.prepare_retired(&NoPeers).unwrap();
     ack(&mut new);
     assert!(new.is_released());
     assert!(GuestLifecycleCell::<Owner>::admit(open(), 0).is_err());

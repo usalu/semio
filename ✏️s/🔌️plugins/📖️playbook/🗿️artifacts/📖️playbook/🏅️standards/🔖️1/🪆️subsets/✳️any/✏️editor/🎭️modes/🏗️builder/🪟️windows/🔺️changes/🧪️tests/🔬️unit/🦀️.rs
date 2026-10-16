@@ -1,4 +1,6 @@
-use super::*;
+use crate::PlaybookSpec;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::playbook::modes::builder::windows::changes::*;
 
 #[test]
 fn definition_declares_the_diff_view_surface_and_body_key() {

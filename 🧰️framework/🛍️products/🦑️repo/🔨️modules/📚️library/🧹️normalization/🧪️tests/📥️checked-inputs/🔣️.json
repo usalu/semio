@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "important",
+      "operation": "ticket",
+      "source": "see 📌️important.md;",
+      "expected": [
+        "📌️important.md"
+      ]
+    },
+    {
+      "id": "boundary",
+      "operation": "ticket",
+      "source": "see 📌️important.mdx",
+      "expected": []
+    },
+    {
+      "id": "documentation",
+      "operation": "documentation",
+      "source": "/** Read `./module.ts`. */\nexport const value=1;",
+      "expected": [
+        "./module.ts"
+      ]
+    },
+    {
+      "id": "truncated",
+      "operation": "documentation",
+      "source": "/** Read `./module.ts`",
+      "expected": []
+    },
+    {
+      "id": "ordinary",
+      "operation": "documentation",
+      "source": "const value=\"./module.ts\";",
+      "expected": []
+    }
+  ]
+}

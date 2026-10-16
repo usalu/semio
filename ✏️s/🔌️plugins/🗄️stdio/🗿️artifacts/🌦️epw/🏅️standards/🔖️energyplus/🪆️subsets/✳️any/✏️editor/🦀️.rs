@@ -218,7 +218,7 @@ fn epw_agent_target_revision(snapshot: &EpwSnapshot, args: &semio_framework_valu
     Ok(Some(epw_row_revision(record)))
 }
 
-fn epw_set_cell_emit(snapshot: &EpwSnapshot, row: u32, column: &str, revision: &str, value: &str) -> Result<Emit<EpwMutation>, Fault> {
+pub fn epw_set_cell_emit(snapshot: &EpwSnapshot, row: u32, column: &str, revision: &str, value: &str) -> Result<Emit<EpwMutation>, Fault> {
     let field_index = main::EPW_TABLE_COLUMNS
         .iter()
         .position(|candidate| candidate == &column)

@@ -1,3 +1,6 @@
+import{runtimeActorCargoArgumentsV1,type RuntimeActorCargoArgumentsRequestV1}from"./🎭️actor/🟦️.ts";
+import{captureOwnedCommandResultV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 export type { RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
 import type { RuntimeCompilerInputV1, RuntimeCargoBuildScriptV1, RuntimeCargoUnitV1, RuntimeCargoObservationV1, RuntimeBuildResourceObservationV1, RuntimeCargoBuildResourcesV1, RuntimeCompilerResourceEntryV1, RuntimeCompilerResourceOperationV1, RuntimeCompilerResourceV1, RuntimeCargoCompilerResourcesV1, RuntimeTrunkObservationV1, RuntimeActorCargoSelectionV1, RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
 import { observeSelectedRuntimeActorsV1, acquireSelectedRuntimeActorsV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, parseSelectedRuntimeGraphPackageRootsV1, type SelectedRuntimeGraphPackageRootsV1 } from "../🎭️selection/🧬️schema/🟦️.ts";
@@ -13,8 +16,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";
 import { policyWalkRelFiles } from "../../🚶️file-walk/🟦️.ts";
 import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🟦️.ts";
-import { runOwnedCommand,captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,checkScriptInvocation,scriptInvocationEnvironment,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {withRuntimeVerificationStorageV1,runtimeVerificationMetadataV1} from "./💾️storage/🟦️.ts";
 import {withRepositoryCargoInputsV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
@@ -247,12 +250,10 @@ export async function runtimeCargoObservationsForChecksV1(observations:readonly 
 
 
 /** 🏅️ Binds current package cdylib selection and original-to-final component custody to one production compiler unit. */
-export function runtimeActorCargoUnitV1(observation:RuntimeCargoObservationV1,selection:RuntimeActorCargoSelectionV1,context:{root:string;arguments:readonly string[];read:(path:string)=>string|Uint8Array|undefined}):RuntimeCargoUnitV1|undefined{
-  const args=context.arguments,expected=["rustc","-p",selection.cargoPackage,"--lib","--crate-type","cdylib","--target","wasm32-wasip2","--profile","wasm-release","--message-format=json"];
-  if(!Array.isArray(args)||args.length!==expected.length+2||args[1]!=="--manifest-path"||typeof args[2]!=="string"||!isAbsolute(args[2])||JSON.stringify([args[0],...args.slice(3)])!==JSON.stringify(expected))return;
-  const manifest=args[2]!;
+export function runtimeActorCargoUnitV1(observation:RuntimeCargoObservationV1,selection:RuntimeActorCargoSelectionV1,context:{root:string;expected:RuntimeActorCargoArgumentsRequestV1;read:(path:string)=>string|Uint8Array|undefined}):RuntimeCargoUnitV1|undefined{
+  let args:readonly string[];try{if(context.expected.kind!=="component"||context.expected.root!==context.root||context.expected.packageName!==selection.cargoPackage)return;args=runtimeActorCargoArgumentsV1(context.expected);}catch{return;}const manifest=join(context.root,context.expected.workspaceOwner);
   if(observation.status!==0||observation.cancelled!==false||resolve(observation.cwd)!==resolve(context.root)||resolve(observation.manifest)!==resolve(manifest)||JSON.stringify(observation.args)!==JSON.stringify(args))return;
-  const units=observation.units.filter(unit=>{try{return resolve(unit.message.manifest_path!)===resolve(manifest)&&unit.message.profile.test===false&&!unit.message.features.some(feature=>["mutation-testing","artifact-app-testing"].includes(feature))&&unit.message.target.kind.some(kind=>["lib","cdylib"].includes(kind))&&(Bun.TOML.parse(String(context.read(unit.message.manifest_path!)))as{package:{name:string}}).package.name===selection.cargoPackage&&unit.artifacts.some(artifact=>artifact.stagedPath===selection.componentPath&&artifact.sha256===selection.componentSha256&&artifact.stagedSha256===selection.componentSha256&&artifact.path.endsWith(".wasm"));}catch{return false;}});
+  const units=observation.units.filter(unit=>{try{return resolve(unit.message.manifest_path!)===resolve(context.expected.packageManifest)&&unit.message.profile.test===false&&!unit.message.features.some(feature=>["mutation-testing","artifact-app-testing"].includes(feature))&&unit.message.target.kind.some(kind=>["lib","cdylib"].includes(kind))&&(Bun.TOML.parse(String(context.read(unit.message.manifest_path!)))as{package:{name:string}}).package.name===selection.cargoPackage&&unit.artifacts.some(artifact=>artifact.stagedPath===selection.componentPath&&artifact.sha256===selection.componentSha256&&artifact.stagedSha256===selection.componentSha256&&artifact.path.endsWith(".wasm"));}catch{return false;}});
   return units.length===1?units[0]:undefined;
 }
 
@@ -352,10 +353,10 @@ export function reconcileRuntimeMacroInputsV1(evidence: RuntimeGraphEvidenceV1, 
 }
 
 /** 🏗️ Runs a neutral build producer with the original verification deadline and cancellation. */
-export async function runRuntimeBuildInvocationV1(root:string,args:readonly string[],invocation:ScriptInvocation,environment:NodeJS.ProcessEnv={}):Promise<void>{
-  checkScriptInvocation(invocation);
-  await runOwnedCommand(process.execPath,["repo",...args],root,"runtime-graph:producer",scriptInvocationBudget(invocation,0),{signal:invocation.control.signal,env:scriptInvocationEnvironment(invocation,{...process.env,...environment})});
-  checkScriptInvocation(invocation);
+export async function runRuntimeBuildInvocationV1(root:string,args:readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,environment:NodeJS.ProcessEnv={}):Promise<void>{
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+  process.stdout.write(await withIssuedResourceOperationV1(phaseControl,()=>captureOwnedCommandV1(process.execPath,["repo",...args],root,{control:phaseControl,env:scriptInvocationEnvironment(invocation,{...process.env,...environment}),output:{maximumBytes:1048576,maximumLines:8192}})));
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
 }
 
 /** 🛡️ Executes actual Cargo target metadata and runtime source graphs, retaining qualified evidence rather than inferring compilation. */
@@ -363,7 +364,7 @@ export async function runRuntimeBuildInvocationV1(root:string,args:readonly stri
 export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly string[], actorPort:SelectedRuntimeActorPublicationPortV1, packageRoots:SelectedRuntimeGraphPackageRootsV1, invocation:ScriptInvocation): Promise<void> {
   checkScriptInvocation(invocation);
   return withRuntimeVerificationStorageV1(root,args,invocation,async scope=>{
-  const {diagnostics,compiler:store,environment,preparation,directories,network,report}=scope;
+  const {diagnostics,compiler:store,phaseControl,environment,preparation,directories,network,report}=scope;
   packageRoots=parseSelectedRuntimeGraphPackageRootsV1(packageRoots);
   for (let index = 0; index < args.length; index += 2) if (!["--report", "--compiler-artifacts", "--compiler-provenance", "--asset-owners", "--bundle-inputs", "--dynamic-imports"].includes(args[index]!) || !args[index + 1]) throw Error("runtime-graph accepts --report, --compiler-artifacts, --compiler-provenance, --asset-owners, --dynamic-imports and --bundle-inputs paths");
   const option = (name: string): string | undefined => { const index = args.indexOf(name); if (index < 0) return; if (!args[index + 1]) throw Error(`${name} needs a path`); return resolve(root, args[index + 1]!); };
@@ -384,10 +385,10 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
   const runtimeChecks:{target:string;workspace:string;packages:readonly string[];features:readonly string[];requestedPackages?:readonly string[];witnessTarget?:string|null;binary?:boolean;observation?:RuntimeCargoObservationV1}[]=[...checks];
   const durableLedger=requireNativeStoragePathV1(store.root,join(directories.build,"semio-cargo-provenance"));
   const findings: RuntimeGraphFindingV1[] = [], graphs: { readonly selection: unknown; readonly evidence: RuntimeGraphEvidenceV1; readonly resolvedFeatures?: readonly string[] }[] = [], identities = new Map<string, string>();
-  const signal = invocation.control.signal;
-  const checkCancellation = (): void => checkScriptInvocation(invocation);
-  const observationStarted=Date.now(),observationBudget=cmdBudgetMs(),observation:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.aborted,remainingMs:()=>Math.min(invocation.control.remainingMilliseconds()??Infinity,(observationBudget>0?observationBudget:86_400_000)-(Date.now()-observationStarted)),onProgress:step=>console.log(`[runtime graph] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};
-  const cargoObservation = cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, deadlineMs: 86_400_000, remainingMs: () => Math.min(invocation.control.remainingMilliseconds()??Infinity,(observationBudget > 0 ? observationBudget : 86_400_000) - (Date.now() - observationStarted)), onProgress: step => console.log(`[runtime graph] physical cargo ${step.phase} ${step.bytes}/${step.totalBytes}`) });
+  const signal = phaseControl.signal;
+  const checkCancellation = (): void => requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+  const observationStarted=Date.now(),observationBudget=cmdBudgetMs(),observation:FileObservationControlV1={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.aborted,remainingMs:()=>Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget>0?observationBudget:86_400_000)-(Date.now()-observationStarted)),onProgress:step=>console.log(`[runtime graph] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};
+  const cargoObservation = cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, deadlineMs: 86_400_000, remainingMs: () => Math.min(phaseControl.remainingMilliseconds()??Infinity,(observationBudget > 0 ? observationBudget : 86_400_000) - (Date.now() - observationStarted)), onProgress: step => console.log(`[runtime graph] physical cargo ${step.phase} ${step.bytes}/${step.totalBytes}`) });
   const read = (path: string): string | undefined => {
     checkCancellation(); const absolute = resolve(root, path);
     if (!existsSync(absolute)) return;
@@ -397,11 +398,11 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
   };
   const execute = async (command: string[]): Promise<string> => {
     checkCancellation();await store.storage.recheck();const executable=command[0]!;
-    const capture=async(env:Readonly<Record<string,string|undefined>>)=>{let stdout="";await runOwnedCommand(executable,command.slice(1),root,"runtime-graph:"+executable,scriptInvocationBudget(invocation,0),{signal:diagnostics.control.signal,env,stdout:"ignore",output:{maximumBytes:134217728,maximumLines:65536},onLine:(line,stream)=>{if(stream==="stdout")stdout+=line+"\n";}});checkCancellation();await store.storage.recheck();return stdout;};
-    if(executable!=="cargo")return capture(environment);
-    const prepared=cargoWorkspacePreparationInvocationV1(preparation,root,command.slice(1),root,environment);if(prepared)await captureOwnedCommandV1(prepared.command,[...prepared.args],prepared.cwd,{control:diagnostics.control,env:prepared.environment,output:{maximumBytes:16777216,maximumLines:65536}});
+    const capture=async(arguments_:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl)=>{requireIssuedResourceControlInvocationV1(control,invocation);const result=await withIssuedResourceOperationV1(control,()=>captureOwnedCommandResultV1(executable,arguments_,root,{control,env,output:{maximumBytes:134217728,maximumLines:65536}}));if(result.status!==0||result.signal!==null)throw Error(`runtime-graph:${executable} failed ${result.status}/${result.signal}: ${result.stderr}`);requireIssuedResourceControlInvocationV1(control,invocation);await store.storage.recheck();requireIssuedResourceControlInvocationV1(control,invocation);return result.stdout;};
+    if(executable!=="cargo")return capture(command.slice(1),environment,phaseControl);
+    const prepared=cargoWorkspacePreparationInvocationV1(preparation,root,command.slice(1),root,environment);if(prepared)await captureOwnedCommandV1(prepared.command,[...prepared.args],prepared.cwd,{control:phaseControl,env:prepared.environment,output:{maximumBytes:16777216,maximumLines:65536}});
     const index=command.indexOf("--manifest-path"),manifest=index<0?join(root,"Cargo.toml"):resolve(root,command[index+1]!);
-    return withRepositoryCargoInputsV1({workspace:root,cwd:root,manifest,args:command.slice(1),network,control:diagnostics.control,storage:store.storage,environment},capture);
+    return withRepositoryCargoInputsV1({invocation,consumption:{kind:"resolution"},workspace:root,cwd:root,manifest,args:command.slice(1),network,control:phaseControl,storage:store.storage,environment},async input=>{if(input.selections.length!==1)throw Error("One issued runtime Cargo metadata selection required");return capture(input.selections[0]!.arguments,input.environment,input.control);});
   };
   try {
     if (!provenance && !artifacts) {
@@ -414,16 +415,16 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
         if (!producer) throw Error("Runtime graph has no registered actual guest compiler producer");
         console.log(`[runtime graph] acquiring current exact guest compiler/resource witnesses through ${producer.command[2]}`);
         mkdirSync(ledger,{recursive:true});
-        await runRuntimeBuildInvocationV1(root,[...producer.command.slice(1),"--skip-cache","--output=static"],invocation,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_TEST_ARTIFACT_DIR:ledger});
+        await runRuntimeBuildInvocationV1(root,[...producer.command.slice(1),"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build,SEMIO_TEST_ARTIFACT_DIR:ledger});
         completed=await runtimeCargoObservationsForChecksV1(load(),checks,root,current);
         if (completed.length!==checks.length) throw Error("Registered guest compiler producer did not retain all current exact invocation/input/resource witnesses");
       }
       observations.push(...completed);
     }
-    const loadActors=()=>observeSelectedRuntimeActorsV1(actorPort,observation);
+    const loadActors=()=>observeSelectedRuntimeActorsV1(actorPort,observation,invocation,phaseControl);
     try{try{actorSelection=await loadActors();}catch(error){
       if(provenance||artifacts||dynamic)throw error;
-      await acquireSelectedRuntimeActorsV1(actorPort,observation);actorSelection=await loadActors();
+      await acquireSelectedRuntimeActorsV1(actorPort,observation,invocation,phaseControl);actorSelection=await loadActors();
     }}catch(error){findings.push({code:"runtime-unresolved-edge",path:actorPort.diagnosticOwner,detail:`Actual selected actor producer proof failed: ${String(error)}`});}
     if(actorSelection){dynamicImports={...dynamicImports,...actorSelection.dynamicImports};observations.push(...actorSelection.observations);
       const version=await execute(["rustc","-vV"]),hostTarget=version.split("\n").find(line=>line.startsWith("host: "))?.slice(6);if(!hostTarget)throw Error("Actual Rust host target unavailable for selected actor descriptor producer");
@@ -465,14 +466,14 @@ export async function verifyRuntimeFixtureGraphV1(root: string, args: readonly s
       const physicalOwner=new CurrentPhysicalOwnerV1(root,cargoObservation),currentCompiler=(receipt:RuntimeCargoObservationV1,physical:CurrentPhysicalPortV1):Promise<boolean>=>runtimeCargoObservationCurrentV1(receipt,{root,cwd:receipt.cwd,outDirectory:"",buildDirectory:directories.build,cargoHome:resolve(environment.CARGO_HOME!),fixtureCollections,physical});
       const loadNative=async():Promise<{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}|undefined>=>{const candidates:{receipt:RuntimeTrunkObservationV1;compiler:RuntimeCargoObservationV1}[]=[];if(existsSync(nativeLedger))for(const name of readdirSync(nativeLedger)){let receipt:RuntimeTrunkObservationV1;try{receipt=JSON.parse(readFileSync(join(nativeLedger,name,"trunk.json"),"utf8"));}catch{continue;}const compiler=await runtimeTrunkObservationCurrentV1(receipt,{root,profile:completedProfile,manifest:nativeManifest,outputDirectory:roots.compilerRoot,owner:nativeOwner,physical:physicalOwner,compilerCurrent:currentCompiler});if(compiler)candidates.push({receipt,compiler});}candidates.sort((a,b)=>b.receipt.observedAtMs-a.receipt.observedAtMs);return candidates[0];};
       let native=await loadNative();
-      if(!native&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring actual native browser mount through ${config.nativeBrowserProject}:wasm:${completedProfile}`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":wasm","--configuration="+completedProfile,"--skip-cache","--output=static"],invocation,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});native=await loadNative();if(!native)throw Error("Registered Trunk producer did not retain a current exact native mount/compiler/resource witness");}
+      if(!native&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring actual native browser mount through ${config.nativeBrowserProject}:wasm:${completedProfile}`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":wasm","--configuration="+completedProfile,"--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});native=await loadNative();if(!native)throw Error("Registered Trunk producer did not retain a current exact native mount/compiler/resource witness");}
       const nativePaths=new Set<string>(native?.receipt.outputs.map(output=>relative(root,output.path).replaceAll("\\","/"))??[]);
       if(native){const selection=runtimeCargoInvocationV1(native.compiler,root),name=(Bun.TOML.parse(readFileSync(nativeManifest,"utf8")) as {package:{name:string}}).package.name;for(const unit of native.compiler.units){const message={...unit.message,runtimeTarget:selection.target,runtimeWorkspace:selection.workspace};compiler.push(message);retainedUnits.set(message,{observation:native.compiler,unit,selection});}for(const script of native.compiler.buildScripts){const record={...script,runtimeTarget:selection.target,runtimeWorkspace:selection.workspace};buildScripts.push(record);retainedBuildScripts.set(record,native.compiler);}observations.push(native.compiler);runtimeChecks.push({target:selection.target!,workspace:selection.workspace,packages:[name],requestedPackages:selection.packages,features:selection.features});}
       const resourceMounts = Object.fromEntries(wgpuBrowserMounts(roots).filter((row: unknown[])=>typeof row[1]==="string").map(([route,path]:[string,string])=>[route,relative(root,path).replaceAll("\\","/")]));
       const outputs = new Map<string,string>(browser.nodes.map((node:any)=>[node.path,node.content]));
       const physical=(path:string):Uint8Array|undefined=>{try{return readFileSync(resolve(root,path))}catch{return undefined}};
       let mountedOutputs:ReturnType<typeof runtimeBrowserArtifactV1>[]=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));
-      if(mountedOutputs.some(artifact=>!artifact.current)&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring current browser mount through ${config.nativeBrowserProject}:generate-frame-worker`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":generate-frame-worker","--skip-cache","--output=static"],invocation,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});mountedOutputs=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));}
+      if(mountedOutputs.some(artifact=>!artifact.current)&&!provenance&&!artifacts){console.log(`[runtime graph] acquiring current browser mount through ${config.nativeBrowserProject}:generate-frame-worker`);await runRuntimeBuildInvocationV1(root,["run",config.nativeBrowserProject+":generate-frame-worker","--skip-cache","--output=static"],invocation,phaseControl,{...environment,CARGO_TARGET_DIR:directories.target,CARGO_BUILD_BUILD_DIR:directories.build});mountedOutputs=browser.nodes.map((node:any)=>runtimeBrowserArtifactV1(node.path,node.content,physical));}
       browser.nodes.forEach((node:any)=>read(node.path));
       for(const artifact of mountedOutputs)if(!artifact.current)findings.push({code:"runtime-unresolved-edge",path:artifact.path,detail:artifact.mountedSha256===null?"Fresh browser compiler output is not present at its actual server mount":"Actual server-mounted browser bytes differ from fresh compiler output"});
       const outputUrls = Object.fromEntries(browser.entryInputs.map((entry:any)=>{

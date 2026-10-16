@@ -1,0 +1,111 @@
+{
+  "cases": [
+    {
+      "phase": "issued",
+      "accepted": true,
+      "reads": 1
+    },
+    {
+      "phase": "spread",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "expired",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "cancelled",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "after-await",
+      "accepted": false,
+      "reads": 1
+    }
+  ],
+  "parameters": {
+    "loadBuildGraphV1": [
+      "root",
+      "invocation",
+      "phaseControl",
+      "options"
+    ],
+    "loadBuildInvocationGraphV1": [
+      "root",
+      "args",
+      "original",
+      "current",
+      "phaseControl",
+      "reuse",
+      "read"
+    ],
+    "runOwnedBuildInvocationV1": [
+      "root",
+      "args",
+      "parent",
+      "phaseControl"
+    ]
+  },
+  "storeOrder": [
+    "tools",
+    "dependencies",
+    "products"
+  ],
+  "acquisitionCases": [
+    {
+      "phase": "live",
+      "accepted": true,
+      "rechecks": 1
+    },
+    {
+      "phase": "cancel-before",
+      "accepted": false,
+      "rechecks": 0
+    },
+    {
+      "phase": "cancel-after-recheck",
+      "accepted": false,
+      "rechecks": 1
+    },
+    {
+      "phase": "expire-hash",
+      "accepted": false,
+      "rechecks": 1
+    },
+    {
+      "phase": "sibling",
+      "accepted": false,
+      "rechecks": 0
+    }
+  ],
+  "cleanupCases": [
+    {
+      "body": "success",
+      "close": "success",
+      "outcome": "success"
+    },
+    {
+      "body": "success",
+      "close": "failure",
+      "outcome": "close"
+    },
+    {
+      "body": "undefined",
+      "close": "failure",
+      "outcome": "body"
+    },
+    {
+      "body": "frozen",
+      "close": "failure",
+      "outcome": "body"
+    },
+    {
+      "body": "frozen",
+      "close": "success",
+      "outcome": "body"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-pack-async"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Runtime-neutral async pack access: AsyncPackSource, cancellation and the read scheduler."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-async"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-pack-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }

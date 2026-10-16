@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "targets": [
+    {
+      "target": "test-graph-publication", "command": "bun ./📜️script.ts test graph-publication", "source": "🕸️graph/📤️publication/🧪️tests/🟦️.ts",
+      "rows": [{"language": "EN", "name": "🧪️ Build Tools · Graph Publication [EN]", "order": 20.931}, {"language": "DE", "name": "🧪️ Build-Werkzeuge · Graph-Veröffentlichung [DE]", "order": 20.932}]
+    },
+    {
+      "target": "test-toolkit-use", "command": "bun ./📜️script.ts test toolkit-use", "source": "🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts",
+      "rows": [{"language": "EN", "name": "🧪️ Build Tools · Toolkit Use [EN]", "order": 20.933}, {"language": "DE", "name": "🧪️ Build-Werkzeuge · SDK-Nutzung [DE]", "order": 20.934}]
+    },
+    {
+      "target": "test-selected-graph", "command": "bun ./📜️script.ts test selected-graph", "source": "🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts",
+      "rows": [{"language": "EN", "name": "🧪️ Build Tools · Selected Graph [EN]", "order": 20.935}, {"language": "DE", "name": "🧪️ Build-Werkzeuge · Ausgewählter Graph [DE]", "order": 20.936}]
+    }
+  ]
+}

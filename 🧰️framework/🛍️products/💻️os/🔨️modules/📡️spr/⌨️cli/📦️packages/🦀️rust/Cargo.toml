@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-spr-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The spr command line: inspect, verify, hash, log, compile, decompile, diff, compact, repair, upgrade"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-spr-cli"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-pack-tools = { path = "../../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

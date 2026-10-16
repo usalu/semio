@@ -255,9 +255,9 @@ fn pgraph_content_hash_ignores_insertion_order() {
 async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() {
     let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let mut control = StateCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
-    let mut source = Vec::with_capacity(db_storage::DB_IO_PAGE_BYTES + 1);
+    let mut source = Vec::with_capacity(db_io_core::DB_IO_PAGE_BYTES + 1);
     source.push(0x41);
-    let mut entry = StateEntry::try_admit("one-byte", source, (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
+    let mut entry = StateEntry::try_admit("one-byte", source, (db_io_core::DB_IO_PAGE_BYTES + 1) as u64, &mut control).await.unwrap();
     assert_eq!(entry.value().len(), 1);
     while entry.close_step().unwrap() {}
     assert!(entry.terminal_is_empty());
@@ -293,7 +293,7 @@ async fn retained_state_exact_backing_cancel_capacity_and_close_are_hostile() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic() {
-    if !crate::db_storage::process_isolated_law("db_state::tests::retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic") {
+    if !db_io_driver::process_isolated_law("tests::retained_state_sorted_fixed_capacity_hash_and_terminal_close_are_deterministic") {
         return;
     }
     let mut map = RetainedStateMap::new();

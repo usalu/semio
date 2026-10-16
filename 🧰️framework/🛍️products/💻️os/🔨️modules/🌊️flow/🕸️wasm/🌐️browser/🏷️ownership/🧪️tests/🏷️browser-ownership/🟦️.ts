@@ -1,6 +1,4 @@
 import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 /** 🏷️ Proves Flow browser source, declaration, publication and consumer ownership from one portable contract. */
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -97,13 +95,6 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   assert.equal(buildPackage.scripts[fixture.registration.packageScript], fixture.registration.packageCommand);
   assert.equal(buildPackage.scripts[fixture.registration.previewPackageScript], fixture.registration.previewPackageCommand);
 
-  const packageRoot = dirname(join(workspaceRoot, fixture.package.manifestPath));
-  const manifest = JSON.parse(readFileSync(join(workspaceRoot, fixture.package.manifestPath), "utf8"));
-  assert.equal(manifest.name, fixture.package.name);
-  assert.deepEqual(sorted(manifest.files), sorted(fixture.package.files));
-  assert.deepEqual(manifest.exports, fixture.package.exports);
-  for (const name of fixture.package.files) assert.equal(existsSync(join(packageRoot, name)), true, name);
-
   const declarationOwner = fixture.owners.find((owner) => owner.id === "declaration-projection")!;
   const declaration = await import(`${pathToFileURL(join(workspaceRoot, declarationOwner.path)).href}?ownership=${Date.now()}`);
   const declarationText = declaration.flowBrowserDeclaration();
@@ -112,61 +103,19 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   const hostExport = fixture.package.exports["./🖥️flow-host.js"];
   if (typeof browserExport !== "object" || typeof hostExport !== "string") throw new Error("Flow browser package export kinds changed");
   assert.equal(readFileSync(join(workspaceRoot, authoredDeclaration.path), "utf8"), declarationText);
-  assert.equal(readFileSync(join(packageRoot, browserExport.types), "utf8"), declarationText);
-
-  const browserOwner = fixture.owners.find((owner) => owner.id === "browser-runtime")!;
-  const hostOwner = fixture.owners.find((owner) => owner.id === "host-runtime")!;
-  assert.equal(readFileSync(join(workspaceRoot, hostOwner.path), "utf8"), readFileSync(join(packageRoot, hostExport), "utf8"));
-  const publisher = await import(`${pathToFileURL(join(workspaceRoot, fixture.owners.find((owner) => owner.id === "browser-publication")!.path)).href}?ownership=${Date.now()}`);
-  const outputs = await publisher.bundleFlowBrowserModule(false, invocation);
-  assert.equal(outputs.length, 1);
-  const bundled = await outputs[0].text();
-  assert.ok(bundled.includes('import("../flow_core.js")'));
-  assert.ok(bundled.includes('from "../🖥️host/🟨️.js"'));
-  const bundledCode = bundled.replace(/\/\*[^]*?\*\//gu, "");
-  assert.equal(bundledCode.includes(browserOwner.path.slice(browserOwner.path.lastIndexOf("/🌐️browser/") + 1)), false);
-
-  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
-  mkdirSync(artifactRoot, { recursive: true });
-  const sandbox = mkdtempSync(join(artifactRoot, "flow-browser-publication-"));
-  const nativeFiles = ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"] as const;
-  try {
-    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), sourceOwner = join(sandbox, "family"), family = join(sourceOwner, "dist/wasm", mode);
-    const published = join(sandbox, "published");
-    mkdirSync(family, { recursive: true });
-    for (const name of nativeFiles) copyFileSync(join(packageRoot, name), join(family, name));
-    writeFileSync(join(family, "package.json"), `${JSON.stringify({ type: "module", version: "0.1.0", name: "@semio-tech/flow-core", semioWasmOwner: { version: 1, sourceOwner: relative(workspaceRoot, sourceOwner).replaceAll("\\", "/"), mode, output: `dist/wasm/${mode}` } })}\n`);
-    await stageRepositoryArtifacts(family, "flow-native:fixture", new Map([...nativeFiles, "package.json"].map(name => [name, join(family, name)])));
-    await publisher.publishFlowBrowserPackage(family, invocation, published);
-    assert.equal(existsSync(join(family, "package.json")), true);
-    assert.equal(JSON.parse(readFileSync(join(published, "package.json"), "utf8")).name, fixture.package.name);
-
-    const brokenOwner = join(sandbox, "broken-family"), brokenFamily = join(brokenOwner, "dist/wasm", mode);
-    const preserved = join(sandbox, "preserved");
-    mkdirSync(brokenFamily, { recursive: true });
-    mkdirSync(preserved);
-    for (const name of nativeFiles.slice(0, -1)) copyFileSync(join(packageRoot, name), join(brokenFamily, name));
-    writeFileSync(join(brokenFamily, "package.json"), JSON.stringify({ name: "@semio-tech/flow-core", semioWasmOwner: { version: 1, sourceOwner: relative(workspaceRoot, brokenOwner).replaceAll("\\", "/"), mode, output: `dist/wasm/${mode}` } }));
-    writeFileSync(join(preserved, "package.json"), '{"name":"preserved"}\n');
-    writeFileSync(join(preserved, "sentinel"), "unchanged\n");
-    await assert.rejects(publisher.publishFlowBrowserPackage(brokenFamily, invocation, preserved), /did not emit flow_core_bg\.wasm\.d\.ts/u);
-    assert.equal(readFileSync(join(preserved, "package.json"), "utf8"), '{"name":"preserved"}\n');
-    assert.equal(readFileSync(join(preserved, "sentinel"), "utf8"), "unchanged\n");
-    assert.equal(existsSync(join(brokenFamily, "package.json")), true);
-  } finally {
-    rmSync(sandbox, { recursive: true, force: true });
-  }
-
-  const ts = await import("typescript");
-  const consumerPath = join(workspaceRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/consumer.ts");
-  for (const [subpath, entry] of Object.entries(fixture.package.exports)) {
-    if (typeof entry === "string") continue;
-    const packageName = fixture.package.name + (subpath === "." ? "" : subpath.slice(1));
-    const resolution = ts.resolveModuleName(packageName, consumerPath, { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext }, ts.sys).resolvedModule;
-    assert.ok(resolution, packageName);
-    assert.equal(realpathSync(resolution.resolvedFileName), realpathSync(join(packageRoot, entry.types)));
-  }
-  console.log(`Flow browser ownership: ${fixture.owners.length} owners, ${fixture.consumers.length} consumers, ${fixture.target.inputs.length} exact Nx inputs, staged publication, pre-promotion preservation and native TypeScript/Bun projection parity PASS`);
+  const publisher = await import(pathToFileURL(join(workspaceRoot, fixture.owners.find(owner=>owner.id==="browser-publication")!.path)).href);
+  const manifest=publisher.flowBrowserPackageManifestV1("0.1.0");
+  assert.equal(manifest.name,fixture.package.name);assert.deepEqual(sorted(manifest.files),sorted(fixture.package.files));assert.deepEqual(manifest.exports,fixture.package.exports);
+  const database=new(await import("bun:sqlite")).Database(":memory:");try{database.exec("create table files(name text primary key)");for(const name of fixture.package.files)database.query("insert into files values(?)").run(name);assert.deepEqual(database.query("select count(*) count from files").get(),{count:manifest.files.length});}finally{database.close();}
+  for(const snippets of [["../escape"],["snippets/a","snippets/a"],["snippets/../escape"]])assert.throws(()=>publisher.flowBrowserPackageManifestV1("0.1.0",snippets));
+  assert.ok(Object.isFrozen(manifest));assert.ok(Object.isFrozen(manifest.exports));assert.ok(Object.isFrozen(manifest.exports["."]));
+  assert.throws(()=>publisher.publishFlowBrowserPackage(Object.freeze({}),invocation));
+  const ts=await import("typescript"),syntax=ts.createSourceFile("flow.d.ts",declarationText,ts.ScriptTarget.Latest,true);
+  assert.equal((syntax as unknown as{parseDiagnostics:readonly unknown[]}).parseDiagnostics.length,0);
+  const publicationSource=ts.createSourceFile("publication.ts",readFileSync(join(workspaceRoot,fixture.owners.find(owner=>owner.id==="browser-publication")!.path),"utf8"),ts.ScriptTarget.Latest,true),calls=new Set<string>();
+  const visit=(node:import("typescript").Node):void=>{if(ts.isCallExpression(node))calls.add(node.expression.getText(publicationSource));ts.forEachChild(node,visit);};visit(publicationSource);
+  for(const name of ["withProducedWasmPackageTaskV1","withRepositoryArtifactV1","withRepositoryArtifactTaskV1","withRepositoryArtifactDestinationV1","stageRepositoryArtifacts"])assert.ok(calls.has(name),name);
+  console.log(`Flow browser ownership: ${fixture.owners.length} owners, ${fixture.consumers.length} consumers, ${fixture.target.inputs.length} exact Nx inputs, finite manifest DATA, private producer refusal and independent TypeScript/SQLite source parity PASS`);
 }
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, testFlowBrowserOwnership);

@@ -1,5 +1,5 @@
 /** 👕️ The canvas-presence contract (`🧬️schema/👕️canvas-presence`) held against React's own board presence:
- * `Board2dHost`'s `puzzle2dScreenToWorld` publishes the fixture's views, `peersForWindow` + the canvas overlay math paint
+ * `Board2dHost`'s `boardScreenToWorld` publishes the fixture's views, `peersForWindow` + the canvas overlay math paint
  * its cursors, viewports and marks exactly as `CanvasPresenceOverlayV1` does, and `PEER_OVERLAY_LABELS` names them.
  * gl-matrix's `mat2d` inverse of the board transform is the third-party oracle of the publish half. The wgpu twin
  * (`🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu`) passes the same fixture in `🧪️tests/🔬️wgpu-unit`. */
@@ -17,7 +17,7 @@ import {
   peersForWindow,
   type PresencePeerInput,
 } from "@semio-tech/framework-replication";
-import { puzzle2dScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx";
+import { boardScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "👕️canvas-presence", "🔣️.json"), "utf8"));
@@ -41,7 +41,7 @@ const inside = (bounds: Rect, point: readonly [number, number]): boolean => poin
 
 const reactView = (row: PublishCase) => {
   const [bx, by, w, h] = row.bounds;
-  const world = row.pointer && inside(row.bounds, row.pointer) ? puzzle2dScreenToWorld(JSON.stringify(row.camera), { w, h }, { x: row.pointer[0] - bx, y: row.pointer[1] - by }) : null;
+  const world = row.pointer && inside(row.bounds, row.pointer) ? boardScreenToWorld(JSON.stringify(row.camera), { w, h }, { x: row.pointer[0] - bx, y: row.pointer[1] - by }) : null;
   return {
     windowId: row.windowId,
     space: "canvas",

@@ -1,8 +1,8 @@
 // #region platform
 //! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
-use crate::action_bus::ActionBus;
-use crate::ui::AppDefinition;
+use crate::ActionBus;
+use semio_framework_manifest_app_surface::AppDefinition;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PanelVisibility {

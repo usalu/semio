@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-render-packet"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Backend-neutral producer side of a GPU UI frame: typed resource registry, scene builder, immutable RenderPacket, tessellation and the GraphicsBackend contract"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-render-packet"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+# 🧪️ Offscreen readback + forced device loss, for the cross-backend pixel conformance suite. Never on
+# in a shipping build — it exists so four hand-written backends can be proven to agree.
+backend-testing = []
+
+[dependencies]
+semio-framework-geometry = { path = "../../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+bytemuck = { version = "1.24.0", features = ["derive"] }

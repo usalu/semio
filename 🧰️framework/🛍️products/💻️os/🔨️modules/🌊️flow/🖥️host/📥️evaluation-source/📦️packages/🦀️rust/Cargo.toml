@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-flow-host-source"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow host evaluation source: funded execution projection, builtin seeds and the evaluation work continuation"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-host-source"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-replication = { workspace = true }
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }
+serde_json = "1"

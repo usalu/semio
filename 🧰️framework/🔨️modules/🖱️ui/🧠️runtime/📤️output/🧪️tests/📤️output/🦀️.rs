@@ -6,7 +6,7 @@ fn fixture() -> serde_json::Value {
 }
 
 fn ready(surface: &str, generation: u64) -> (SurfaceReconciler, Option<SurfaceReconcileReadyPatch>) {
-    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new(surface), tree(leaf("root")), generation).unwrap_or_else(|_| panic!("admitted output producer"));
+    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::from_text(surface), tree(leaf("root")), generation).unwrap_or_else(|_| panic!("admitted output producer"));
     let mut sequence = 0;
     for _ in 0..100_000 {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -131,7 +131,7 @@ fn surface_output_admission_refuses_before_producer_when_only_one_handback_is_fr
 fn surface_output_admission_transfers_after_seal_with_no_unreserved_handback() {
     let _guard = crate::surface_reconcile_registry_test_guard();
     let reservation = SurfaceReconcileReservation::try_new(920_001).unwrap();
-    let mut job = SurfaceReconcileJob::try_new_reserved(SurfaceReconciler::new("retained-é"), tree(leaf("root")), reservation).unwrap();
+    let mut job = SurfaceReconcileJob::try_new_reserved(SurfaceReconciler::from_text("retained-é"), tree(leaf("root")), reservation).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -178,7 +178,7 @@ fn surface_output_admission_transfers_after_seal_with_no_unreserved_handback() {
 #[test]
 fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targets_on_unwind() {
     let _guard = crate::surface_reconcile_registry_test_guard();
-    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("in-place-é"), tree(leaf("root")), 930_001).unwrap();
+    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::from_text("in-place-é"), tree(leaf("root")), 930_001).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -205,7 +205,7 @@ fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targe
     let mut ready = None;
     assert!(!job.take_ready_into(&mut current, &mut ready, bytes - 1).unwrap());
     assert_eq!(job.state.as_ref().unwrap().patch.get().unwrap().ops.get(0).unwrap() as *const _, payload);
-    current = Some(SurfaceReconciler::new("occupied"));
+    current = Some(SurfaceReconciler::from_text("occupied"));
     assert!(!job.take_ready_into(&mut current, &mut ready, bytes).unwrap());
     while !current.as_mut().unwrap().retire_one() {}
     current = None;
@@ -235,7 +235,7 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
     let mut observed = Vec::new();
     let law = fixture();
     for row in law["readyRevalidation"].as_array().unwrap() {
-        let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("ready-revalidation"), tree(leaf("root")), 940_001).unwrap();
+        let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::from_text("ready-revalidation"), tree(leaf("root")), 940_001).unwrap();
         let mut sequence = 0;
         for _ in 0..100_000 {
             let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -290,7 +290,7 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
     let generation = 950_001;
     let mut outputs = SurfaceReconcileOutputs::default();
     let mut reservation = outputs.try_reserve(generation, 32768).unwrap();
-    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::new("direct-pool-é"), tree(leaf("root")), generation).unwrap();
+    let mut job = SurfaceReconcileJob::try_new(SurfaceReconciler::from_text("direct-pool-é"), tree(leaf("root")), generation).unwrap();
     let mut sequence = 0;
     for _ in 0..100_000 {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -315,7 +315,7 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
     let mut current = None;
     assert_eq!(outputs.receive_job_into(&mut reservation, &mut job, &mut current, bytes - 1).unwrap(), SurfaceReconcileOutputTransfer::Pending);
     assert_eq!(job.state.as_ref().unwrap().patch.get().unwrap().ops.get(0).unwrap() as *const _, payload);
-    current = Some(SurfaceReconciler::new("occupied"));
+    current = Some(SurfaceReconciler::from_text("occupied"));
     assert_eq!(outputs.receive_job_into(&mut reservation, &mut job, &mut current, bytes).unwrap(), SurfaceReconcileOutputTransfer::Pending);
     while !current.as_mut().unwrap().retire_one() {}
     current = None;

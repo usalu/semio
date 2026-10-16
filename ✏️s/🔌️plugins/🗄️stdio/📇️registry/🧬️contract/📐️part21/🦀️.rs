@@ -6,8 +6,12 @@
 //! `26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION`); moved here from step's `io::part21` (ticket
 //! `26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP`, LB2 p16).
 
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
 use semio_framework_value::{edit_through_value, DslValue, FromValue, ToValue, ValueEdit, ValueError};
-use crate::value_derive;
+use semio_framework_value_derive as value_derive;
 use std::fmt;
 use std::fmt::Write as _;
 

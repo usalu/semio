@@ -1,14 +1,43 @@
-//! 🧱️ App surface of the manifest: dialogs, modes, window kinds, panel groups and tabs, surface ids, fault notices,
-//! `AppDefinition` and the resolvers that derive window actions, mode tools, breadcrumbs and examples from it.
-//!
-//! Split from the manifest root by section C of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/SEAM-MAP-PLUGIN-MANIFEST-HUB.md`.
-use super::*;
+//! 🧱️ App surface: dialogs, modes, window kinds, panels, fault notice wiring and the app definition.
+
+use semio_framework_artifact_reference::ArtifactDialect;
+use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use serde::Deserialize;
+use serde::Deserializer;
+use serde::Serialize;
+use serde::Serializer;
+use std::any::Any;
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::error::Error;
+use std::fmt::Display;
+use ui_wgpu::wgpu::IconName;
+use ui_wgpu::wgpu::NamedLayout;
+use ui_wgpu::wgpu::SurfaceKind;
+use ui_wgpu::wgpu::WindowLayout;
+use ui_wgpu::wgpu::WindowOptions;
+use semio_framework_interaction::{InteractionDefinition, InteractionRef};
+use semio_framework_kernel_history::FaultNoticeDefinition;
+use semio_framework_kernel_identity::{ArtifactKind, CapabilityRequirement};
+use semio_framework_manifest_actions::{ActionDefinition, ActionKind, CLEAR_SELECTION_ACTION_ID, CapabilityAudience, CommandDefinition, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, ToolDefinition, UtilityDefinition, resolve_audience};
+use semio_framework_manifest_address::{ActionRef, Keybinding, ToolRef, UtilityRef};
+use semio_framework_manifest_arg_schema::{ActionArgDef, ActionArgOption, AppRole, ArgFormat, ArgSchema};
+use semio_framework_manifest_media::{AppIo, ArtifactKindSpec, MediaPortSpec};
+use semio_framework_onboarding::{IntroductionDefinition, TutorialDefinition};
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 //#region 🔖️Dialog
 /// 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
-/// identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
+/// identically to every glass overlay box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
 /// presents `args` as a staged form. Submit dispatches `submit_action` with the merged effective
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
 /// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
@@ -199,9 +228,6 @@ impl DialogDefinition {
     }
 }
 
-#[cfg(test)]
-#[path = "../🧪️tests/🧪️dialog-choices/🦀️.rs"]
-mod dialog_choices_tests;
 //#endregion 🔖️Dialog
 
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
@@ -323,6 +349,7 @@ impl<T: ToValue> ToValue for NonEmptyVec<T> {
         DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
+
 impl<T: FromValue> FromValue for NonEmptyVec<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Array(items) = value else {
@@ -345,6 +372,7 @@ impl<T: Clone + Serialize> Serialize for NonEmptyVec<T> {
         values.serialize(serializer)
     }
 }
+
 impl<'de, T: serde::de::DeserializeOwned> Deserialize<'de> for NonEmptyVec<T> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let values = Vec::<T>::deserialize(deserializer)?;
@@ -406,7 +434,7 @@ pub struct WindowKindDefinition {
     pub output_schema: Option<String>,
     #[serde(default)]
     #[value(default)]
-    pub capabilities: Vec<kernel::CapabilityRequirement>,
+    pub capabilities: Vec<CapabilityRequirement>,
 }
 
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
@@ -511,7 +539,6 @@ impl PanelTabDefinition {
 }
 
 //#region 🔖️Surface
-
 /// 🎯️ A surface addressed across plugin boundaries.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -536,145 +563,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let role: AppRole = role_str.parse().map_err(|err| format!("surface id {id:?}: {err}"))?;
     Ok((dialect, role))
 }
+
 //#endregion 🔖️Surface
-
-//#region 🔖️FaultNotices
-/// 📢️ One app-declared fault notice (design §20.12): the `code` a guest refusal carries (`<app>.<area>.<name>`) and its
-/// text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
-/// its English `message`. Published in [`AppDefinition::fault_notices`]; schema `🛂️manifest/🧬️schema` `$defs.FaultNoticeDefinition`,
-/// TS twin `FaultNoticeDefinition` (`🤖️generated/🪪️manifest`), corpus `🧫️fixtures/🧫️fault-notices`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct FaultNoticeDefinition {
-    pub code: String,
-    pub label: LocalizedLabel,
-}
-
-/// 🚫️ Why a fault notice table is refused: a code outside the grammar, a code declared twice, an empty text cell, or a cell
-/// whose `{name}` placeholders are malformed or differ from the notice's first cell (every locale names the same data).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FaultNoticeError {
-    Syntax { code: String },
-    Duplicate { code: String },
-    EmptyText { code: String, terminology: Terminology, locale: Locale },
-    Placeholder { code: String, terminology: Terminology, locale: Locale },
-}
-
-impl FaultNoticeError {
-    /// 🏷️ The corpus/gate name of this rule (`syntax`, `duplicate`, `emptyText`, `placeholder`).
-    pub fn rule(&self) -> &'static str {
-        match self {
-            Self::Syntax { .. } => "syntax",
-            Self::Duplicate { .. } => "duplicate",
-            Self::EmptyText { .. } => "emptyText",
-            Self::Placeholder { .. } => "placeholder",
-        }
-    }
-
-    /// 🔎️ The notice code the refusal names.
-    pub fn code(&self) -> &str {
-        match self {
-            Self::Syntax { code } | Self::Duplicate { code } | Self::EmptyText { code, .. } | Self::Placeholder { code, .. } => code,
-        }
-    }
-}
-
-impl std::fmt::Display for FaultNoticeError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::EmptyText { code, terminology, locale } | Self::Placeholder { code, terminology, locale } => write!(formatter, "fault notice {code}: {} in {terminology}/{locale}", self.rule()),
-            Self::Syntax { code } | Self::Duplicate { code } => write!(formatter, "fault notice {code}: {}", self.rule()),
-        }
-    }
-}
-
-/// 🔤️ Whether `code` is an app notice code: three or more dot-separated kebab segments (`generation3d.gumball.mesh-missing`)
-/// — the app, the area, the refusal. Framework codes have their own tables and are resolved first.
-pub fn is_fault_notice_code(code: &str) -> bool {
-    let segment = |segment: &str| segment.split('-').enumerate().all(|(index, part)| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()) && (index > 0 || part.as_bytes()[0].is_ascii_lowercase()));
-    code.split('.').count() >= 3 && code.split('.').all(segment)
-}
-
-/// 🧩️ The sorted, unique `{name}` placeholders of one notice text; `None` when a brace is unbalanced or names no valid
-/// placeholder (`semio_framework_diagnostic::is_fault_param_name`). Texts have no brace escape.
-pub fn fault_notice_placeholders(text: &str) -> Option<std::collections::BTreeSet<&str>> {
-    let mut names = std::collections::BTreeSet::new();
-    let mut rest = text;
-    while let Some(open) = rest.find(['{', '}']) {
-        if rest.as_bytes()[open] == b'}' {
-            return None;
-        }
-        let close = rest[open + 1..].find(['{', '}'])? + open + 1;
-        let name = &rest[open + 1..close];
-        if rest.as_bytes()[close] != b'}' || !semio_framework_diagnostic::is_fault_param_name(name) {
-            return None;
-        }
-        names.insert(name);
-        rest = &rest[close + 1..];
-    }
-    Some(names)
-}
-
-/// ✅️ Every rule a published fault notice table must satisfy, in table order: code grammar, unique codes, a non-empty text
-/// in every terminology × locale cell, and one placeholder set across a notice's cells. Empty = valid. TS twin
-/// `validateFaultNotices`.
-pub fn validate_fault_notices(notices: &[FaultNoticeDefinition]) -> Vec<FaultNoticeError> {
-    let mut errors = Vec::new();
-    for (index, notice) in notices.iter().enumerate() {
-        let code = || notice.code.clone();
-        if !is_fault_notice_code(&notice.code) {
-            errors.push(FaultNoticeError::Syntax { code: code() });
-        }
-        if notices[..index].iter().any(|earlier| earlier.code == notice.code) {
-            errors.push(FaultNoticeError::Duplicate { code: code() });
-        }
-        let first = fault_notice_placeholders(notice.label.resolve(Terminology::ALL[0], Locale::ALL[0]));
-        for terminology in Terminology::ALL {
-            for locale in Locale::ALL {
-                let text = notice.label.resolve(terminology, locale);
-                if text.trim().is_empty() {
-                    errors.push(FaultNoticeError::EmptyText { code: code(), terminology, locale });
-                } else if first.is_none() || fault_notice_placeholders(text) != first {
-                    errors.push(FaultNoticeError::Placeholder { code: code(), terminology, locale });
-                }
-            }
-        }
-    }
-    errors
-}
-
-/// 🗣️ The notice text `code` names in `notices` for one shell axis pair, its `{name}` placeholders filled from `params`;
-/// `None` when no notice declares `code` or a placeholder has no value (a notice is never shown half-filled). TS twin
-/// `faultNoticeText`.
-pub fn fault_notice_text(notices: &[FaultNoticeDefinition], code: &str, params: Option<&semio_framework_diagnostic::FaultParams>, terminology: Terminology, locale: Locale) -> Option<String> {
-    let text = notices.iter().find(|notice| notice.code == code)?.label.resolve(terminology, locale);
-    fill_fault_notice(text, params)
-}
-
-/// 🧵️ `text` with each `{name}` replaced by the value `params` names; `None` when one is missing or the text is malformed.
-pub fn fill_fault_notice(text: &str, params: Option<&semio_framework_diagnostic::FaultParams>) -> Option<String> {
-    let mut filled = String::with_capacity(text.len());
-    let mut rest = text;
-    while let Some(open) = rest.find('{') {
-        let close = rest[open..].find('}')? + open;
-        filled.push_str(&rest[..open]);
-        filled.push_str(params?.get(&rest[open + 1..close])?);
-        rest = &rest[close + 1..];
-    }
-    filled.push_str(rest);
-    Some(filled)
-}
-
-/// 📋️ An app's declared table (`ArtifactApp::fault_notices`) as the definitions its descriptor publishes.
-pub fn fault_notice_definitions(table: &[(&str, LocalizedLabel)]) -> Vec<FaultNoticeDefinition> {
-    table.iter().map(|(code, label)| FaultNoticeDefinition { code: (*code).to_string(), label: label.clone() }).collect()
-}
-
-#[cfg(test)]
-#[path = "../🧪️tests/🧪️fault-notices/🦀️.rs"]
-mod fault_notices_tests;
-//#endregion 🔖️FaultNotices
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -703,8 +593,8 @@ pub struct AppDefinition {
     /// 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
     pub window_kinds: WindowKinds,
     /// 🕹️ The app-wide action roster: every action dispatchable in ANY window of this app that no
-    /// window kind claims as its own, including the framework-injected History/Clipboard/tutorial
-    /// constants. A window kind's dispatchable set is `WindowKindDefinition.actions` followed by
+    /// window kind claims as its own, including the framework-injected History/Clipboard verbs and
+    /// every reserved contribution. A window kind's dispatchable set is `WindowKindDefinition.actions` followed by
     /// this roster minus the ids some window claims — [`resolve_window_actions`], whose TypeScript
     /// twin is `resolveWindowActions` (`🎯️action-bus/🟦️.ts`). Kept here rather than copied into
     /// every window kind because a copy made the package descriptor grow as
@@ -945,6 +835,7 @@ pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a 
     }
     resolved
 }
+
 //#endregion 🔖️action-args
 
 /// 🪜️ Formats a canonical app breadcrumb for chrome.
@@ -1030,23 +921,287 @@ pub fn examples_for_app<'a>(examples: &'a [ExampleDefinition], app: &AppDefiniti
     examples_for_dialect(examples, &app.dialect)
 }
 
-/// 🧩️ One host-aggregated plugin contribution entry — the element shape of the paged
-/// `setContributions` command payload, never a view-state field.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+//#region 🔖️MediaVocabulary
+//#region 🔖️ConfigSpec
+
+/// 🧮️ An app's full typed configuration record — the manifest-level declaration
+/// `AppDefinition.config` carries: one [`ActionArgDef`] per field (its `id` is the config key), so a config field,
+/// an action argument and a mutation input share one input vocabulary and one renderer.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-pub struct ProgramContributionEntry {
-    pub plugin_id: String,
+pub struct ConfigSpec {
+    #[serde(default)]
     #[value(default)]
-    pub topic_contribution: Option<TopicContribution>,
+    pub fields: Vec<ActionArgDef>,
 }
 
-#[path="../🌲️canonical/🦀️.rs"]
-mod program_contribution_tree;
-
-/// 📕️ Parses one assembled `setContributions` payload into typed entries — the ONE route
-/// contributions reach a guest by.
-pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
-    semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
+impl ConfigSpec {
+    pub async fn empty() -> Self {
+        Self::default()
+    }
 }
+
+//#endregion 🔖️ConfigSpec
+//#region 🔖️CommandGrammar
+
+/// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar — one
+/// [`ActionArgDef`] per field, `required` where the grammar demands the field.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct CommandVariantSpec {
+    pub keyword: String,
+    pub fields: Vec<ActionArgDef>,
+}
+
+/// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
+/// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, Default)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct CommandGrammar {
+    #[serde(default)]
+    #[value(default)]
+    pub variants: Vec<CommandVariantSpec>,
+}
+
+impl CommandGrammar {
+    pub async fn empty() -> Self {
+        Self::default()
+    }
+}
+
+//#endregion 🔖️CommandGrammar
+//#endregion 🔖️MediaVocabulary
+//#region 🧩️ReservedContribution
+/// 🧩️ What one feature reserves on the apps that host it: actions joined to the app roster, actions joined to every
+/// window kind of a built app, dialogs joined to an app that may edit, and the audience it fixes for its own verbs. A
+/// host (the app builder, the capability catalog) passes the contributions it hosts to [`reserved_app_actions`],
+/// [`reserved_window_actions`], [`reserved_editor_dialogs`] and [`reserved_audience_violation`], so a feature reaches
+/// every app without the manifest naming it.
+#[derive(Clone, Copy)]
+pub struct ReservedContribution {
+    pub id: &'static str,
+    pub app_actions: fn() -> Vec<ActionDefinition>,
+    pub window_actions: fn(&AppDefinition) -> Vec<ActionDefinition>,
+    pub editor_dialogs: fn() -> Vec<DialogDefinition>,
+    pub fixed_audience: fn(&str) -> Option<CapabilityAudience>,
+}
+
+impl ReservedContribution {
+    /// 🌱️ A contribution named `id` that reserves nothing yet.
+    pub const fn new(id: &'static str) -> Self {
+        Self { id, app_actions: no_reserved_actions, window_actions: no_reserved_window_actions, editor_dialogs: no_reserved_dialogs, fixed_audience: no_fixed_audience }
+    }
+
+    /// 🕹️ Reserves `app_actions` on the app roster of every hosting app.
+    pub const fn with_app_actions(self, app_actions: fn() -> Vec<ActionDefinition>) -> Self {
+        Self { app_actions, ..self }
+    }
+
+    /// 🪟️ Reserves `window_actions` on every window kind of a built app.
+    pub const fn with_window_actions(self, window_actions: fn(&AppDefinition) -> Vec<ActionDefinition>) -> Self {
+        Self { window_actions, ..self }
+    }
+
+    /// 🗳️ Reserves `editor_dialogs` on every hosting app that may edit.
+    pub const fn with_editor_dialogs(self, editor_dialogs: fn() -> Vec<DialogDefinition>) -> Self {
+        Self { editor_dialogs, ..self }
+    }
+
+    /// 🧭️ Fixes the audience of this contribution's own verbs.
+    pub const fn with_fixed_audience(self, fixed_audience: fn(&str) -> Option<CapabilityAudience>) -> Self {
+        Self { fixed_audience, ..self }
+    }
+}
+
+fn no_reserved_actions() -> Vec<ActionDefinition> {
+    Vec::new()
+}
+
+fn no_reserved_window_actions(_app: &AppDefinition) -> Vec<ActionDefinition> {
+    Vec::new()
+}
+
+fn no_reserved_dialogs() -> Vec<DialogDefinition> {
+    Vec::new()
+}
+
+fn no_fixed_audience(_action_id: &str) -> Option<CapabilityAudience> {
+    None
+}
+
+/// 🕹️ The app-roster actions of every contribution, in contribution order.
+pub fn reserved_app_actions(contributions: &[ReservedContribution]) -> Vec<ActionDefinition> {
+    contributions.iter().flat_map(|contribution| (contribution.app_actions)()).collect()
+}
+
+/// 🪟️ The window-kind actions every contribution reserves on the built `app`, in contribution order.
+pub fn reserved_window_actions(contributions: &[ReservedContribution], app: &AppDefinition) -> Vec<ActionDefinition> {
+    contributions.iter().flat_map(|contribution| (contribution.window_actions)(app)).collect()
+}
+
+/// 🗳️ The dialogs every contribution reserves on an app that may edit, in contribution order.
+pub fn reserved_editor_dialogs(contributions: &[ReservedContribution]) -> Vec<DialogDefinition> {
+    contributions.iter().flat_map(|contribution| (contribution.editor_dialogs)()).collect()
+}
+
+/// 🧭️ The audience the first contribution that owns `action_id` fixes for it.
+pub fn reserved_fixed_audience(contributions: &[ReservedContribution], action_id: &str) -> Option<CapabilityAudience> {
+    contributions.iter().find_map(|contribution| (contribution.fixed_audience)(action_id))
+}
+
+/// ⚖️ The audience a contribution fixes for `action` when `action` resolves to a different one.
+pub fn reserved_audience_violation(contributions: &[ReservedContribution], action: &ActionDefinition) -> Option<CapabilityAudience> {
+    reserved_fixed_audience(contributions, &action.id).filter(|expected| *expected != resolve_audience(action))
+}
+
+//#endregion 🧩️ReservedContribution
+//#region 🔖️Interaction
+//#region 🔖️InteractionRefreshScope
+/// 🕹️ Every declared window body key indexed by the interaction domain that window kind declares —
+/// the schema-first half of [`interaction_verb_surface_scope`], read once when an app's action
+/// registry is built rather than per dispatched hover.
+pub fn interaction_window_bodies_by_domain(app: &AppDefinition) -> BTreeMap<String, Vec<String>> {
+    let mut index: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for window in app.window_kinds.iter() {
+        for interaction in &window.interactions {
+            let bodies = index.entry(interaction.as_str().to_string()).or_default();
+            if !bodies.iter().any(|body| body == &window.body_key) {
+                bodies.push(window.body_key.clone());
+            }
+        }
+    }
+    index
+}
+
+/// 🌳️ Every declared panel LEAF body key, in declaration order, branches walked — the panel half of
+/// [`interaction_verb_surface_scope`].
+pub fn panel_leaf_body_keys(app: &AppDefinition) -> Vec<String> {
+    fn walk(tab: &PanelTabDefinition, out: &mut Vec<String>) {
+        if let Some(body_key) = &tab.body_key {
+            if !out.iter().any(|entry| entry == body_key) {
+                out.push(body_key.clone());
+            }
+        }
+        for child in &tab.children {
+            walk(child, out);
+        }
+    }
+    let mut out = Vec::new();
+    for tab in &app.panel_tabs {
+        walk(tab, &mut out);
+    }
+    out
+}
+
+//#endregion 🔖️InteractionRefreshScope
+
+/// 🕹️ The six framework-owned Interaction actions, auto-injected into any `AppDefinition` that
+/// declares at least one `InteractionDefinition` — mirrors `history_action_definitions`/
+/// `clipboard_action_definitions`, except conditional (like `set_active_utility_action_definition`)
+/// rather than unconditional: returns `[]` when `app.interactions` is empty. `interactionSelect`/
+/// `interactionHover` are the raw dispatch verbs renderers translate clicks/marquee/hover into
+/// (never in the palette); `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity`
+/// are user-facing and drive the per-domain Select controls.
+pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
+    if app.interactions.is_empty() {
+        return Vec::new();
+    }
+    let merge_options = vec![
+        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")),
+        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")),
+        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")),
+        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")),
+        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")),
+    ];
+    let method_options =
+        vec![ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")), ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso"))];
+    let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")), ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach"))];
+    vec![
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction, "mouse-pointer") }.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
+            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
+        ]),
+        ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Darüberfahren"), ActionKind::Interaction, "eye") }.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+        ]),
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction, "mouse-pointer-2") },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction, "maximize-2") },
+        ActionDefinition::resumable_framework(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction, "sliders-horizontal")
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required()]),
+        ActionDefinition::resumable_framework(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction, "layers")
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required()]),
+    ]
+}
+
+//#endregion 🔖️Interaction
+//#endregion 🔖️Manifest
+// #endregion 🛂️Manifest
+
+#[cfg(any(test, feature = "testkit"))]
+#[path = "../🧪️tests/🧰️testkit/🦀️.rs"]
+pub mod testkit;
+
+#[cfg(test)]
+use replication::HierarchyProvider;
+#[cfg(test)]
+use replication::HoverSpec;
+#[cfg(test)]
+use replication::MergeMode;
+#[cfg(test)]
+use replication::SelectionMethod;
+#[cfg(test)]
+use replication::SelectionMode;
+#[cfg(test)]
+use replication::SelectionSpec;
+#[cfg(test)]
+use semio_framework_pack_json::ArtifactCanonicalJsonText as Text;
+#[cfg(test)]
+use semio_framework_value::Number;
+#[cfg(test)]
+use semio_framework_interaction::GranularityDefinition;
+#[cfg(test)]
+use semio_framework_kernel::Effect;
+#[cfg(test)]
+use semio_framework_kernel_identity::{CapabilityId, RequestId};
+#[cfg(test)]
+use semio_framework_kernel_ui::UiDirtyScope;
+#[cfg(test)]
+use semio_framework_manifest_actions::{ActionSemantics, ApprovalMode, InteractiveJobClassification, InteractiveJobClassificationError, OsDefinition, PreviewMode, REVERT_TO_COMMAND_ACTION_ID, SWITCH_ALTERNATIVE_ACTION_ID, SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID, UndoMode, history_action_definitions, set_active_utility_action_definition, validate_interactive_job_classification};
+#[cfg(test)]
+use semio_framework_manifest_address::{ActionAddress, ActionInvocation, CommandAddress, CommandInvocation, CommandOwnerAddress, Platform, PlatformKeybinding, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID, child_element_id, element_id_segment, is_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id};
+#[cfg(test)]
+use semio_framework_manifest_arg_schema::{ActionArgControl, ArgPresentation};
+
+// #region 🛂️Manifest
+//#region 🔖️Manifest
+#[cfg(test)]
+#[path = "../🧪️tests/🔬️app-label/🦀️.rs"]
+mod app_label_tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🔬️example-picker/🦀️.rs"]
+mod example_picker_tests;
+
+//#region 🔖️Dialog
+#[cfg(test)]
+#[path = "../🧪️tests/🧪️dialog-choices/🦀️.rs"]
+mod dialog_choices_tests;
+
+//#endregion 🔖️Dialog
+//#region 🧩️ReservedContribution
+#[cfg(test)]
+#[path = "../🧪️tests/🧩️reserved-contributions/🦀️.rs"]
+mod reserved_contribution_tests;
+//#endregion 🧩️ReservedContribution
 //#endregion 🔖️Manifest
 // #endregion 🛂️Manifest

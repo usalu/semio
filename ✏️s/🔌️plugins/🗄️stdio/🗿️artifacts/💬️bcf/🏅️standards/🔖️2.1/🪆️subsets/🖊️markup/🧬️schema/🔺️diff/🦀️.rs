@@ -7,7 +7,7 @@
 //! base index when they build the diff.
 
 use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfRawPart, BcfTopic, BcfViewpoint};
-#[cfg(test)] use crate::schema::snapshot::{BcfColoring, BcfPoint3, BcfVisibility};
+use crate::schema::snapshot::{BcfColoring, BcfPoint3, BcfVisibility};
 use crate::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -834,9 +834,8 @@ fn absorb_part_rows(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
 /// reused by `demo_diff_cases()` below AND by `⚙️engine/🦀️.rs`'s own
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape
 /// `📜️docx/…/🔺️diff/🦀️.rs`'s own `snapshot_a()`/`snapshot_b()` establishes.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
+pub fn demo_snapshot_a() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.1".into(),
@@ -885,9 +884,8 @@ pub(crate) fn demo_snapshot_a() -> BcfSnapshot {
     }
 }
 
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
+pub fn demo_snapshot_b() -> BcfSnapshot {
     BcfSnapshot {
         schema: crate::STDIO_BCF_DOCUMENT_SCHEMA.into(),
         version: "2.2".into(),
@@ -933,9 +931,8 @@ pub(crate) fn demo_snapshot_b() -> BcfSnapshot {
 }
 
 /// 🧪️ The demo cases proper, built declaratively: `default()` (empty diff), a version change with a modified topic row, and a topic removal.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<BcfDiff> {
+pub fn demo_diff_cases() -> Vec<BcfDiff> {
     let topic = BcfTopicDiff { title: Some("changed".into()), status: Some("Closed".into()), labels: Some(vec!["a".into(), "b".into()]), ..Default::default() };
     vec![
         BcfDiff::default(),

@@ -1,0 +1,133 @@
+# 🧱️ Result PLUGIN-WP1: foundation crates carved out of `semio-framework-plugin`
+
+Executor: Sonnet. Contract: `PLAN-PLUGIN-CRATES.md` section 12.5 and Appendices H to K, built on `RESULT-PLUGIN-WP0.md`. Tools, logs and sandboxes: `pwp1-tools/` (inputs, kept) and `🗑️generated/pwp1-*` (outputs, kept).
+
+## 0. Verdict
+
+Nine crates are carved and wired: `abi`, `actor-host`, `identity`, `interaction`, `operation`, `window-config`, `window-transient`, `window-kits`, `window-kits-rich`. The two companions `tests-01` and `tests-02` stay empty by decision (section 1, item 9).
+
+The stitched differential oracle (the carved crates mounted as modules of one sandbox crate and compared with the pre-WP1 snapshot) shows no regression in four configurations: native lib, `--cfg test`, native lib with testing features, wasm32-wasip2. The two wasip2 differences are artefacts of the union (section 5). All static gates are green. No real compile ran: real cargo is refused (section 6), so nothing here claims a green `cargo check` or `cargo test`.
+
+One planned unit is not carved: `operation_progress` (section 1, item 1). It needs inbound lifts from WP2 that do not exist yet. Everything else in the WP1 contract is delivered.
+
+## 1. Decisions and deviations
+
+1. `operation_progress` stays in the facade. It depends on `ArtifactOperationProgress`, `CANCEL_TYPED_OPERATION_ACTION_ID` and the `🧵️task` items, which only WP2 can lift into `operation`. The `⏳️operation-progress` lift file already re-exports `cancellation_result_lane` from `operation` (hub mount), and the Appendix K mount in `👷️job/🦀️.rs` is untouched.
+2. Tree and document splits are dropped. Only three world3d items (`WorldSunConfig`, `world3d_environment_json`, `world3d_scene`) are split out into `🪟️window-kits/🌍️world3d/☀️sun`, because the definition scan showed `window-kits` and `window-kits-rich` both need them.
+3. The completion files are lifted whole (including `Frame`) into WP2 lift files `📜️declaration/🧩️app/🛬️lifted/{⚠️fault,🚫️refusal,♻️retirement,⏳️operation-progress}`, mounted from hub 1 under the old module names. The old files under `📬️completion/♻️retirement/` and `⚠️fault` are deleted.
+4. `EphemeralParts` moved to `window-transient`. `UiAssemblyResult` and `ui_assembly_error` moved from `window_surface` to `interaction`, which removes the `interaction` to `window_surface` back edge.
+5. `owned_abi` and `component_persistent_local` (module and macro) live in `abi`. The facade keeps a thin `owned_abi` shim whose `deallocate` first checks the receipt through `crate::reactor::original_actor_context::exports`, then calls the `abi` `deallocate`. Reason: that check names a reactor type. WP4 owns removing the shim.
+6. The macros `transient_root!` and `window_transient_owners!` moved to the facade macro mount `📣️macros/🌱️wp1-window`. `window_transient_transfer!` stays in `window-transient`, whose root exports `__kernel` and `__pack_json`; the facade re-exports it.
+7. Crate graph differs from the frozen WP0 table in three edges: `actor-host` gains `abi`, `operation` loses `interaction`, `window-kits` loses `operation`. `verify_static.ts` reports these as DEP-DIFF. WP0 must update the frozen table.
+8. `window-kits-rich` gets the feature `artifact-app-testing = []`. The facade must forward it (hand-off WP0).
+9. `tests-01` and `tests-02` stay empty. Tests that name facade `cfg(test)` fixtures or upper layers are hub-hosted in the facade as file-module test hosts under `🪝️mounts/🌱️wp1-foundation/🧪️test-hosts/`. The crate closures could not carry them: those tests reference `crate::component::window_mutation_tests`, `protocol` fixtures and `OriginalFixtureCaller`, which exist only in the facade test build.
+10. Class B crate roots are the existing module files, with `[lib] path` flipped to `../../🦀️.rs` and the package-local stub deleted (`abi`, `actor-host`, `identity`, `interaction`, `operation`, `window-config`, `window-transient`, `window-kits`). Class A (`window-kits-rich`) has the new root `🧱️rich/🦀️.rs`.
+11. 342 definitions were widened (`pub(crate)`, `pub(super)` or private to `pub`, with `#[doc(hidden)]`) only where `defscan.py` found a user outside the crate: identity 6, actor-host 10, interaction 82, operation 60, window-config 107, window-transient 45, window-kits 27, window-kits-rich 1, abi 4.
+12. Baseline faults found, not hidden. Fixed because the code moved with them: the `lease` file of the tool cancellation lacked imports (`plugin_grant_funds`, `plugin_typed_owner_demand`, `plugin_typed_owner_step`, `RetainedCloneGrant/Progress/Step`, `RetirementDemand`, `ValueError`, `ManuallyDrop`), now imported in the `operation` root; `crate::Effect` in a lifted file; `InteractionState` missing in the included dispatch law (now imported). Not fixed, outside WP1: the facade root has no `pack` extern alias, so `use pack::snapshot::...` was already E0432 in the baseline.
+13. `Cargo.lock` is not refreshed (no cargo run). It must be regenerated by the first real build.
+
+## 2. Census (canonical source-closure counter; files / bytes / active lines)
+
+Before WP1 each of the nine crates was a skeleton stub (1 file, 587 bytes, 4 lines). After, with the gate target 28 files, 3,500 lines, 230,000 bytes and hard limit 32, 4,000, 262,144:
+
+| crate | lib native | lib wasm32-wasip2 | test native | test wasip2 | verdict |
+|---|---|---|---|---|---|
+| `abi` | 5 / 60,640 / 795 | 8 / 94,776 / 1,313 | 6 / 61,151 / 825 (1 emb) | 9 / 95,287 / 1,343 | ok |
+| `actor-host` | 7 / 106,398 / 2,107 | 7 / 106,398 / 2,113 | 14 / 165,087 / 2,964 (2 emb) | 14 / 165,087 / 2,970 | ok |
+| `identity` | 1 / 31,574 / 714 | same | 1 / 31,574 / 714 | same | ok |
+| `interaction` | 11 / 91,540 / 1,875 | same | 27 / 177,710 / 2,960 (8 emb) | same | ok |
+| `operation` | 8 / 78,372 / 792 | same | 12 / 101,267 / 882 (2 emb) | same | ok |
+| `window-config` | 7 / 193,194 / 2,852 | same | 9 / 221,075 / 3,194 (1 emb) | same | ok |
+| `window-transient` | 4 / 59,500 / 942 | same | 6 / 61,384 / 987 | same | ok |
+| `window-kits` | 7 / 93,588 / 1,749 | same | 12 / 111,087 / 2,002 (1 emb) | same | ok |
+| `window-kits-rich` | 5 / 130,471 / 2,281 | same | 7 / 139,804 / 2,417 | same | ok |
+| `tests-01`, `tests-02` | 1 / 587 or 596 / 4 | same | same | same | ok |
+
+Lib with testing features: identical except `operation` 10 / 93,873 / 845 (1 emb), `window-kits` 1,751 lines, `window-kits-rich` 2,282 lines. wasm32-unknown-unknown equals native for every row. Full table: `🗑️generated/pwp1-census-rows.tsv` (133 rows, produced by `pwp1-tools/census-wp1.ts`, formatted by `census_table.py`).
+
+Two earlier over-limits were fixed: the `interaction` test closure had a 91 KB embedded fixture (now read at run time through `CARGO_MANIFEST_DIR`), and the `window-config` test closure was 238,508 bytes (registry and replace tests moved to hub hosts, now 221,075).
+
+Facade (`semio-framework-plugin`, lib native), same counter, now: 184 files / 5,145,654 bytes / 69,941 lines (lib with testing features 208 / 5,635,357 / 75,364; wasip2 186 / 5,228,072 / 70,745). At the end of WP0 it was 195 / 6,018,889 / 83,307. The delta mixes WP1 with concurrent peer carves (WP2, WP3, WP4 are running), so it is not WP1's share alone. The facade is still OVER-GATE, as expected until all work packages land. The facade test closure cannot be counted: a peer file is missing (`🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌲️built/🧪️tests/🧫️fixtures/🔣️.json`).
+
+## 3. Crate graph
+
+```
+abi <- actor-host
+window-config <- window-transient <- window-kits <- window-kits-rich
+interaction <- window-transient, window-kits, window-kits-rich
+identity, operation: standalone inside WP1
+```
+`graph.py` ranks: abi 1, actor-host 2, identity 3, interaction 4, operation 5, window-config 6, window-transient 7, window-kits 8, window-kits-rich 9. Dependencies and dev-dependencies of every crate are regenerated from source evidence by `deps.py` (missing 0, unused 0 for all nine, after the final `window-config` manifest rewrite).
+
+## 4. What changed
+
+Per crate (full list: `🗑️generated/pwp1-files-changed.txt`; 71 changed, 11 removed, 10 added, every file with exactly one owner):
+
+- `abi` (`🚪️io`): root imports protocol and store, mounts `🛂️authority`, `🪶️sqlite` and `../🧬️schema` as `wasip2`, owns `persistent_local` (new file `🧬️schema/🔁️persistent-local`), `owned_abi`, a `component` shim for `$crate::component::wasip2` in the wit-bindgen `default_bindings_module`, `#![allow(async_fn_in_trait)]`.
+- `actor-host` (`🌐host`): executor, document backbone binding, requests; stub for the lifted jobs.
+- `identity` (`🪪️identity`): artifact identity preflight.
+- `interaction` (`🕹️interaction`): authority, live, capture, query, retirement, mutations, topology, diff; children made `pub mod`; owner-installation helpers split into `📃️query/🧪️tests/🧰️original-owners` and included by both the query laws and the facade dispatch law.
+- `operation` (`♻️cancellation`): completion effects and vacant, tool cancellation, issuer, lease, catalog constructor; lifted view and task stubs.
+- `window-config` (`🪟️window/🎚️config`): retained, registry, window mutation, new `📬️mutation` root with `ErasedWindowMutationValue` and `pub mod refresh`.
+- `window-transient` (`🪟️window`): window surface, engagement, window mutation, window transient.
+- `window-kits` (`🪟️window-kits`): media, text, image, mesh, context menu, world3d sun.
+- `window-kits-rich` (`🪟️window-kits/🧱️rich`): tree, table, world3d host, document.
+
+Hub 1 `🪝️mounts/🌱️wp1-foundation/🦀️.rs`: all 30 WP1 units replaced by `extern crate ... as old_module` (crate-root modules), `use` (child modules) or `pub extern crate` (`host`); completion units re-pointed to the WP2 lift files. `verify_mounts.py` confirms 30 units, 0 problems (cfg and visibility preserved).
+
+Hub-hosted tests (facade test build): `window_mutation_tests`, `window_config_tests` (with `retained_tests`, `registry_tests`, `replace_edit_tests`, `pack_identity_tests`, `retained_pack_load_tests`), `window_transient_tests`, `app_window_kits_tests`, `app_panel_kit_tests`. WP7 re-homes them.
+
+Foreign edits (tolerated list): facade root `🦀️.rs` (ComponentPersistentLocal region, `wasip2`, `window_transient`, `owned_abi` units), `⚛️reactor/🦀️.rs` (executor re-export), `🗃️document/🦀️.rs` (catalog constructor import), `🧪️tests/🔬️app-window-kits` and `🔬️app-panel-kit` (imports), and the four WP2 lift files.
+
+## 5. Verification (commands run, real results)
+
+All under `pwp1-tools/`; logs in `🗑️generated/`.
+
+Stitched differential oracle, baseline snapshot compared with the WP1 tree (`uo.py`, rustc nightly-2026-07-20, `--emit=metadata`; B outputs cached and checked for completeness):
+
+| config | A errors | B errors | only new | only old | log |
+|---|---|---|---|---|---|
+| lib | 9,462 | 9,522 | 0 | 77 | `pwp1-uo-s6.log` |
+| lib + testing features | 10,310 | 10,370 | 0 | 77 | `pwp1-uo-s6.log` |
+| test (`--test`), final run | 22,017 | 22,057 | 0 | 102 | `pwp1-uo-s8.log` |
+| wasm32-wasip2 | 9,749 | 9,813 | 2 | 79 | `pwp1-uo-s6.log` |
+
+The lib, lib-features and wasip2 rows come from the s6 run; the later fixes touched only `cfg(test)` mounts, test files and the `window-config` manifest, so they were not re-run for those configurations. The absolute error counts are large because external crates are unresolved in the sandbox; the comparison is on normalised error keys, with sandbox-only noise filtered. "Only old" rows are baseline faults that the carve fixed (missing imports in the lease file, `crate::Effect`, the missing fixture path that is now read at run time, host-resolution errors); I did not suppress them. The two wasip2 "only new" rows are `component_persistent_local` defined twice (E0255 and E0252). They exist only because the union puts the `#[macro_export]` macro at the union root, where the facade's `pub use ...::component_persistent_local` also imports the same name. In the real build the macro and module live in the `abi` crate and cannot collide. This is an argument from the error text, not something a real compile has confirmed.
+
+The first `--test` pass (`pwp1-uo-s6.log`) showed 7 new rows and the second (`pwp1-uo-s7.log`) 5 more, all real WP1 faults, all fixed and re-verified by the final run (only new 0): tests naming facade-only fixtures moved to hub hosts (`replace_edit_tests`, `registry_tests`), duplicate imports in the window-mutation test host removed, the private `query::tests` access from the included dispatch law replaced by the shared `🧰️original-owners` helper, missing registry host imports added.
+
+Seeded sensitivity (lib, `pwp1-uo-s9.log`): four seeds applied at once, all caught (onlyNew 52). Wrong executor mount path gave `TaskId`, `ReactorExecutor`, `ColdFutureExecutor` unresolved; `pub fn preflight_artifact_identity` made private gave E0603 in the declaration units; removing the `PluginAssemblyError` import in `interaction` gave E0425 and E0433; removing the `local_interaction` hub alias gave E0433 `cannot find local_interaction in crate`. Static seeds (`seeds.py`): defscan flags a narrowed `preflight_artifact_identity` (4 users), orphan scan flags a foreign `impl Display for Vec<u8>`; both unseeded runs are empty.
+
+Static gates, final run:
+- `parsecheck.py`: 108 files, 0 bad. `pathcheck.py`: 180 path literals, 0 unresolved.
+- `verify_mounts.py`: 30 units, 0 problems. `cratepaths.py`: 0 problems.
+- `orphan_scan.py`: no foreign impls except 1 reviewed macro false positive. `foreign_impls.py`: 528 monolith files scanned, 191 carved public types, 0 violations.
+- `defscan.py` per crate: no narrowed item with outside users (remaining "weak" rows are generic field names such as `closing` with 0 real hits).
+- `verify_static.ts` (adapted copy of WP0's for flipped class B lib paths): 80 manifests, 1,608 path dependencies resolved, 0 failures. DEP-DIFF rows for WP1: actor-host +abi, operation -interaction, window-kits -operation (others are peers').
+- `lossless.py`: 218 lines of the old monolith text have no exact counterpart (hub mount lines replaced, `cfg(test)` mounts cut, `crate::` paths rewritten, struct fields widened, `EphemeralParts` moved), 482 gained. Reviewed one by one.
+- The nine TS laws that read the moved Rust sources: issuer 4/0, lease 4/0, mutation 1/0, refresh 1/0, document-replacement 2/0 pass; tool-machine 5/4, close-budget 0/31, init-retirement 0/1 fail identically on the snapshot (pre-existing, not WP1).
+- `launch.json` and its seed parse; no `pub(super)` items left at crate roots.
+
+## 6. Real compile
+
+Not run. Last attempt: `bun repo cargo --store=shared --configuration=prototype -- check -p semio-framework-plugin-identity --message-format=short --lib` (log `pwp1-cargo-end2-identity.log`) is refused by the compiler ingress gate with "Live Original resource control issuance required". An earlier attempt (`pwp1-cargo-end-identity.log`) was refused for the Rust source boundary of an oversized dependency. Raw `cargo` is refused as well. I did not compile around the gate.
+
+## 7. Residual risks and hand-offs
+
+Risks:
+- No `cargo check` or `cargo test` has ever seen the carved crates. The oracle is rustc name resolution over a union with unresolved externals; type errors, trait coherence and linking are unverified. The first real build may still show errors.
+- Coherence: the foreign-impl scan found none, but it is name based.
+- Hub-hosted tests run only in the facade test build; the crate-level test builds of `window-config`, `window-transient`, `interaction` and `operation` cover less than before until WP7.
+- The `owned_abi` facade shim still depends on the reactor.
+- Peer churn: other work packages edit the same hub and facade files; my replay of foreign edits in the oracle is anchored text, so a peer reformatting those lines would need the anchors updated.
+
+Hand-offs:
+- WP2: wire the four lift files, remove the hub mounts that point to them, deliver the inbound lifts into `operation` (`ArtifactOperationProgress`, `CANCEL_TYPED_OPERATION_ACTION_ID`, `🧵️task` items) so `operation_progress` can move, and the stub in `actor-host` for the lifted jobs.
+- WP3: nothing blocking from WP1; `interaction` and `window-*` are available as dependencies.
+- WP4: `cancel_job` lift into `🌐host/🛬️lifted/💼️jobs`; replace the `owned_abi` shim.
+- WP0: update the frozen dependency table (three edges), forward `artifact-app-testing` to `window-kits-rich`, regenerate `Cargo.lock`, add the missing `pack` alias or fix the facade import, and take over the lock bookkeeping.
+- WP7: re-home the hub-hosted test hosts into their crates and then drop `tests-01` and `tests-02` if unused.
+
+## 8. Tools (all in `pwp1-tools/`)
+
+`uo.py` (stitched oracle; `--baseline-only`, `--seed`, `--mode crates`), `diff_cached.py`, `defscan.py`, `orphan_scan.py`, `foreign_impls.py`, `seeds.py`, `verify_mounts.py`, `verify_static.ts`, `cratepaths.py`, `parsecheck.py`, `pathcheck.py`, `lossless.py`, `changed.py`, `deps.py`, `graph.py`, `census-wp1.ts`, `census_table.py`, the `carve_*.py` scripts, `rewrite_paths.py`, `explode_glob.py`, `relocate_test.py`, `rebuild_hosts.py` (do not rerun: it would overwrite the manual host fixes made during the final oracle rounds), `runtime_fixtures.py`, `carved.json`.

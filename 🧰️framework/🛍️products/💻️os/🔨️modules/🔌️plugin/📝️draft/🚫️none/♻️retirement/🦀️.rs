@@ -2,7 +2,8 @@
 //! statically empty lane (`NoDraft`, `NoConfig`) shares.
 
 use semio_framework_plugin_ownership::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
-use crate::app_views::{NoDraft, NoDraftMutation};
+use crate::NoDraft;
+use crate::NoDraftMutation;
 use crate::store;
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;

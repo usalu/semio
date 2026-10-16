@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "edges"
+  ],
+  "properties": {
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "scope",
+          "callee",
+          "phaseIndex",
+          "expected"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "bootstrap",
+              "service",
+              "startup"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "callee": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "phaseIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "expected": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      }
+    }
+  }
+}

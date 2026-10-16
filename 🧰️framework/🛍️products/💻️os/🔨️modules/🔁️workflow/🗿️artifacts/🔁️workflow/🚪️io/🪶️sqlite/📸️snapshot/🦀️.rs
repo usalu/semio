@@ -15,7 +15,7 @@ fn workload(value:&WorkflowSnapshot,control:&mut SqliteSnapshotControl<'_>,phase
  for(index,parameter)in value.parameters.iter().enumerate(){if let WorkflowParameter::Categorical{options,..}=parameter{count=add(count,options.len())?;control.check_rows(count)?}let completed=add(value.graph.nodes.len(),index+1)?;if completed%256==0{control.checkpoint(phase,completed,units)?}}
  control.checkpoint(phase,units,units)?;Ok(count)
 }
-fn entity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0||row.values.len()!=columns||row.integer(0)?!=row.rowid{return Err(crate::workflow_invalid("Workflow entities require complete columns and positive aliased identities"))}Ok(())}
+pub fn entity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0||row.values.len()!=columns||row.integer(0)?!=row.rowid{return Err(crate::workflow_invalid("Workflow entities require complete columns and positive aliased identities"))}Ok(())}
 #[path="./📏️cells/🦀️.rs"]mod cells;
 #[path="./💰️backing/🦀️.rs"]mod backing;
 use backing::{ordered,parent_rows,single_rows,grouped};

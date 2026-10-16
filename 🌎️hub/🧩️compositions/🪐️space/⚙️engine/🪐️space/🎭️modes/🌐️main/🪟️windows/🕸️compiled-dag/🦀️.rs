@@ -2,7 +2,7 @@
 //! A read-only text view of the workflow projected onto the generic port-directed-DAG wire literal.
 
 use crate::demo_space_projection;
-use crate::engine::space::engine::compiled_dag_wire_literal;
+use semio_hub_space_operations::compiled_dag_wire_literal;
 use semio_framework_os::WorkflowSnapshot;
 use semio_framework_ui_locale::{LocalizedLabel};
 use semio_framework_plugin::{InteractionRef, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
@@ -42,7 +42,7 @@ pub async fn definition() -> WindowKindDefinition {
         utilities: Vec::new(),
         // 🕹️ Read-only text projection of the SAME `graph` node graph the Workflow window edits — hosts
         // the "graph" domain too (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-        interactions: vec![InteractionRef::new(crate::engine::space::S_PLAY_INTERACTION_DOMAIN)],
+        interactions: vec![InteractionRef::new(semio_hub_space_foundation::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

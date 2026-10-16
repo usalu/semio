@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "funded",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "none",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "dirty",
+      "usedBytes": 1,
+      "physicalBytes": 17,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": true,
+      "interrupt": "none",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "logical pressure",
+      "usedBytes": 536870913,
+      "physicalBytes": 536870913,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "none",
+      "censuses": 2,
+      "maintenance": 1,
+      "opens": 2
+    },
+    {
+      "name": "physical pressure after census",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1073741823,
+      "dirty": false,
+      "interrupt": "none",
+      "censuses": 2,
+      "maintenance": 1,
+      "opens": 2
+    },
+    {
+      "name": "initial physical pressure",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1073741823,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "none",
+      "censuses": 1,
+      "maintenance": 1,
+      "opens": 1
+    },
+    {
+      "name": "reconcile cancellation",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "cancel",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "undefined reconciliation failure",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": true,
+      "interrupt": "undefined",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "body and cleanup failure",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "body",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "cancellation after census",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "cancel-after-census",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "close refuses pressure maintenance",
+      "usedBytes": 536870913,
+      "physicalBytes": 536870913,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "close",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    },
+    {
+      "name": "undefined body and cleanup failure",
+      "usedBytes": 12,
+      "physicalBytes": 12,
+      "availableBytes": 1140850688,
+      "afterCensusAvailableBytes": 1140850688,
+      "dirty": false,
+      "interrupt": "body-undefined",
+      "censuses": 1,
+      "maintenance": 0,
+      "opens": 1
+    }
+  ]
+}

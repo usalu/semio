@@ -26,7 +26,7 @@ type RuntimeTreeRetirementFixture = {
 /** 🔬️ Canonical testRuntimeTreeRetirement fixture and oracle checks. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
+import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 
 export function testRuntimeTreeRetirement(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../..", import.meta.url)), "utf8");
@@ -49,7 +49,8 @@ export function testRuntimeTreeRetirement(): void {
   assert.deepEqual(JSON.parse(Buffer.from(JSON.stringify(fixture.foreign)).toString()), fixture.foreign);
   testBuiltTreeRetirementFixture();
   const runtime = read("../../♻️reconcile/🦀️.rs");
-  assert(runtime.includes('mod tree_retirement;'), "runtime must mount the exact retained tree owner");
+  const cursorSource = read("../../⏭️cursor/🦀️.rs");
+  assert(read("../../🧱️primitives/🦀️.rs").includes('mod tree_retirement;'), "runtime must mount the exact retained tree owner");
   const owner = read("./🦀️.rs");
   assert(owner.includes("Option<ui_contract::BuiltTreeRetirement>"));
   assert(!owner.includes("close_built_node_page_one") && !owner.includes("close_ui_value_page_one"));
@@ -58,8 +59,8 @@ export function testRuntimeTreeRetirement(): void {
   assert(runtime.includes("fn close_admitted_step"));
   assert.equal((runtime.match(/state\.close_admitted_step\(\)/g) ?? []).length, 1);
   assert.equal((runtime.match(/state\.close_admitted_run\(items, bytes\)/g) ?? []).length, 1);
-  const inventory = read("../../📏️ownership/🧪️tests/📏️ownership/🦀️.rs");
+  const inventory = read("../../📏️ownership/🧪️tests/🔒️authority/🦀️.rs");
   assert(inventory.includes("UI_BUILT_CHILD_RETIRE_SLOTS") && !inventory.includes("SURFACE_RECONCILE_TREE_RETIRE_DEPTH"));
-  const cursor = runtime.slice(runtime.indexOf("    fn retire_one(&mut self) -> bool {", runtime.indexOf("impl SurfaceReconcileCursor")));
+  const cursor = cursorSource.slice(cursorSource.indexOf("    pub fn retire_one(&mut self) -> bool {", cursorSource.indexOf("impl SurfaceReconcileCursor")));
   assert(cursor.indexOf("self.retire_tree.step()") >= 0 && cursor.indexOf("self.retire_tree.step()") < cursor.indexOf("self.retire_tree.try_begin"));
 }

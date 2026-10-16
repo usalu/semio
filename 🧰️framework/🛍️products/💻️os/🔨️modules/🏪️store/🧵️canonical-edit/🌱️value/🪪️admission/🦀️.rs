@@ -1,6 +1,6 @@
 //! 🪪️ Bounded admission of immutable duplicate-free dynamic values to canonical Store encoding.
 
-use crate::DslValue;
+use semio_framework_value::DslValue;
 use protocol::value::DslValueSource;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
@@ -9,14 +9,14 @@ use std::mem::ManuallyDrop;
 /// 🔏️ An immutable source whose full object tree has passed bounded canonical admission.
 #[must_use]
 pub struct ArtifactCanonicalValue<R: DslValueSource> {
-    source: R,
+    pub source: R,
 }
 
 impl<R: DslValueSource> ArtifactCanonicalValue<R> {
     pub fn into_source(self) -> R {
         self.source
     }
-    pub(super) fn value(&self) -> &DslValue {
+    pub fn value(&self) -> &DslValue {
         self.source.value()
     }
 }
@@ -82,8 +82,8 @@ struct KeySlot {
 }
 
 struct Frame {
-    next: usize,
-    length: usize,
+    pub next: usize,
+    pub length: usize,
 }
 
 fn reserve_table_with(length: usize, remaining: usize, reserve: impl FnOnce(&mut Vec<Option<KeySlot>>, usize) -> Result<(), std::collections::TryReserveError>) -> Result<Vec<Option<KeySlot>>, &'static str> {
@@ -102,20 +102,20 @@ fn reserve_table_with(length: usize, remaining: usize, reserve: impl FnOnce(&mut
 /// 🧭️ Retains one exact source while validating every key with bounded hash and collision work.
 #[must_use = "Complete admission or drive cancellation before returning the exact source"]
 pub struct ArtifactCanonicalValueAdmission<R: DslValueSource> {
-    source: ManuallyDrop<Option<R>>,
-    limits: ArtifactCanonicalValueLimits,
-    checkpoint: ArtifactCanonicalValueCheckpoint,
-    phase: Phase,
-    path: Vec<usize>,
-    frames: Vec<Frame>,
-    table: Vec<Option<KeySlot>>,
+    pub source: ManuallyDrop<Option<R>>,
+    pub limits: ArtifactCanonicalValueLimits,
+    pub checkpoint: ArtifactCanonicalValueCheckpoint,
+    pub phase: Phase,
+    pub path: Vec<usize>,
+    pub frames: Vec<Frame>,
+    pub table: Vec<Option<KeySlot>>,
     table_length: usize,
     key_index: usize,
     key_offset: usize,
     probe_slot: usize,
     compare_offset: usize,
     key_hash: u64,
-    hasher: DefaultHasher,
+    pub hasher: DefaultHasher,
 }
 
 impl<R: DslValueSource> ArtifactCanonicalValueAdmission<R> {

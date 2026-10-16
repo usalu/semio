@@ -132,7 +132,7 @@ async fn every_bundled_example_dispatches_live_rearms_the_preview_and_never_muta
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Config), "the picked example must land on the viewer's own config lane: {:?}", receipt.lanes);
         let carried = run_actions(&receipt.effects);
         println!("[STATS] viewer setActiveExample {example_id:?} lanes={:?} carried={carried:?}", receipt.lanes);
-        assert_eq!(carried, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries the attached preview its own run start ({example_id})");
+        assert_eq!(carried, vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switch carries the attached preview its own run start ({example_id})");
         assert_eq!(context::snapshot(&app), before, "viewer setActiveExample({example_id}) must not mutate the document");
     }
 }
@@ -148,8 +148,8 @@ async fn consecutive_switches_carry_one_start_each_and_settle_one_run() {
     let first = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_BOX_SHELL.into() }), shell_view.clone()).await.expect("first switch");
     let second = dispatch_with_view(&mut app, Generation3dViewCommand::SetActiveExample(SetActiveExample { example_id: PROCEDURAL_EXAMPLE_RECTANGLE_WIRE.into() }), shell_view.clone()).await.expect("second switch");
     println!("[STATS] viewer switch latch first={:?} second={:?}", run_actions(&first.effects), run_actions(&second.effects));
-    assert_eq!(run_actions(&first.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()]);
-    assert_eq!(run_actions(&second.effects), vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the second gesture carries at most its own one start");
+    assert_eq!(run_actions(&first.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()]);
+    assert_eq!(run_actions(&second.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the second gesture carries at most its own one start");
     let effects: Vec<_> = first.effects.iter().chain(&second.effects).cloned().collect();
     let run = crate::viewer_domain::viewer_laws::context::drive_preview_run(&mut app, &shell_view, &effects).await;
     assert_eq!(run.state.as_deref(), Some("finalized"), "both starts settle into one finalized run: {run:?}");

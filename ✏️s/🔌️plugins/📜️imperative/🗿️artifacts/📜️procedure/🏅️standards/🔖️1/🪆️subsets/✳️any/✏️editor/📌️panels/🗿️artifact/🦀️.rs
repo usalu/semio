@@ -78,7 +78,4 @@ pub fn render(scene: &ProcedureScene, labels: &ImperativeLabels, windows: &TreeW
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,5 @@
+# Public Workspace Source Extent Failure
+
+Root confirms51709 actualterminal1 at02:46:36UTC, before Bun aggregate/tests; all Root custody closed. Stable independent terminal-log read is bound by generated/public-workspace-source-extent-low-proof.json (full SHA/bytes/named timestamps and exact progress-event census). First error: {'line': 38852, 'text': 'error: Original selected owner registry changed'}.
+
+Graph owner line275 rereads canonical owner registry during selected observed-computation inventory and requires its current selected scope key equal initially captured scope. This refusal is a guarded registry-scope mismatch, not proof of a broken lease, infinite loop, failed Bun test or actor. No pre-error registry bytes are retained here; mutation timing/actor and internal silent settlement retry count cannot be reconstructed. Progress-event counts are not owner counts or retries. Earlier current SDK7ce metadata equality26331 remains a point-in-time separate receipt. Workspace/ALL/public aggregate acceptance remain pending.

@@ -14,7 +14,7 @@ pub type InferenceApprovalRequestV1 = approval::InferenceApprovalRequestV1;
 
 /// ↩️ The owner-authored GIS approval undo contracts decoded by this concrete service.
 pub use directory::os_directory::EditedArtifactFrontierV1 as GisMapDocumentFrontierV1;
-pub use semio_s_artifact_gis_gismap::inference_schema::{GisMapApprovalUndoHandleV1, GisMapApprovalUndoReceiptV1, GisMapApprovalUndoRequestV1};
+pub use semio_hub_gis::inference::{GisMapApprovalUndoHandleV1, GisMapApprovalUndoReceiptV1, GisMapApprovalUndoRequestV1};
 
 /// 🧬️ The scope id and `$id` every `hub.inference` export resolves under.
 pub const SCHEMA_SCOPE: &str = "hub.inference";
@@ -32,11 +32,11 @@ const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), 
 const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: include_str!("🟦️.ts"), graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
 
 /// 📚️ The module document the annotation is read from, so the law never restates it.
-#[cfg(test)]
-const MODULE_JSON: &str = include_str!("🔣️.json");
+#[cfg(any(test, feature = "testkit"))]
+pub const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 50] = [
+pub const EXPORTS: [SchemaExport; 50] = [
     SchemaExport { id: "InferenceServerIdV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceDocumentScopeV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "InferenceRequestV1", leaves: ALL_LEAVES },
@@ -95,12 +95,6 @@ const EXPORTS: [SchemaExport; 50] = [
 pub fn register_scope_exports() {
     register_scope_schema_exports(ScopeSchemaExports { scope: SCHEMA_SCOPE, exports: &EXPORTS }).expect("hub.inference scope schema exports");
 }
-/// 🔬 Proves the registration at runtime rather than by inspection: it registers, resolves every
-/// export in exactly the formats its `"x-semio-formats"` annotation names and in no other, and
-/// asserts the scope is visible in the process-wide catalog.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️scope-schema-export-law-standalone/🦀️.rs"]
-mod scope_schema_export_law;
 //#endregion 🔖️ScopeSchemaExports
 
 pub const REQUEST_MAX_BYTES: usize = 1024;
@@ -506,10 +500,17 @@ pub fn hex(value: &str, length: usize) -> bool {
     value.len() == length && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-pub(super) fn server_id(value: &str) -> bool {
+pub fn server_id(value: &str) -> bool {
     !value.is_empty() && value.len() <= SERVER_ID_MAX_BYTES && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(feature = "integration-fixtures")]
+impl GisInferenceCheckpointControlFrameV1 {
+    pub fn progress_persisted(job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Self {
+        Self { schema: "semio.hub.gis-inference-checkpoint-control/v1".into(), version: 1, sequence: 1, kind: "progress-persisted".into(), job_id: job_id.into(), progress_cursor, completed, total }
+    }
+
+    pub fn release(job_id: &str, progress_cursor: u64, completed: u64, total: u64) -> Self {
+        Self { schema: "semio.hub.gis-inference-checkpoint-control/v1".into(), version: 1, sequence: 2, kind: "release".into(), job_id: job_id.into(), progress_cursor, completed, total }
+    }
+}

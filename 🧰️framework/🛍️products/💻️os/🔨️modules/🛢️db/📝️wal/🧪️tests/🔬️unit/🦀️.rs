@@ -1,10 +1,12 @@
 use super::*;
-use db_storage::{MemoryStorage, WalStorage};
-use {ArtifactId, DurabilityClass, Frontier};
 
-fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test WAL writer admitted");
-    for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+use db_io_core::WalStorage;
+use db_storage_memory::MemoryStorage;
+use db_wal_log::{GroupCommitPolicy, MAX_FIELD_BYTES, SharedBuf, WAL_COMMAND, WAL_FRONTIER, WAL_PAYLOAD, WAL_SNAPSHOT_PUB, WAL_TRANSACTION_RECORDS_MAX, WalAuthenticatedSource, WalAuthenticatedStep, WalBytes, WalCommittedRecordStep, WalCommittedStep, WalCursorControl, WalImmutableByteSource, WalPayloadRef, WalPriorChainTip, WalRecord, WalRecordBatch, WalRecoveryReport, WalSegmentChain, WalTransactionGate, WalVerifiedFrameStep, replay_committed_document, replay_document, wal_crc_range, wal_next_verified_page_frame};
+
+fn pages(bytes: &[u8]) -> db_io_core::DbIoPages {
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).expect("test WAL writer admitted");
+    for fragment in bytes.chunks(db_io_core::DB_IO_PAGE_BYTES) {
         assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
     }
     writer.finish().unwrap()
@@ -44,24 +46,6 @@ async fn read_retained(bytes: &WalBytes) -> Vec<u8> {
     }
     assert_eq!(output.len(), bytes.len());
     output
-}
-
-async fn decode(kind: u8, payload: &[u8]) -> Result<WalRecord, DbError> {
-    let carrier = retained(payload).await;
-    let operation = carrier.operation();
-    let mut control = control();
-    let decoded = WalRecord::decode_retained(operation, kind, payload, &mut control).await;
-    let mut carrier = carrier;
-    while carrier.close_step()?.is_some() {}
-    decoded
-}
-
-fn run_ids(values: &[u64]) -> db_storage::DbIoU64List {
-    let mut list = db_storage::DbIoU64List::new();
-    for value in values {
-        list.push(*value).unwrap();
-    }
-    list
 }
 
 async fn submit_one(storage: &impl WalStorage, wal: &mut ArtifactWal, record: WalRecord, durability: DurabilityClass, now_ms: u64) -> WalAppendReceipt {
@@ -104,7 +88,7 @@ async fn replay_summaries(storage: &impl WalStorage, document: &ArtifactId) -> V
 async fn segment_bytes(storage: &impl WalStorage, document: &ArtifactId, index: u64) -> Vec<u8> {
     let len = storage.segment_len(document, index).await.unwrap();
     let mut pages = storage.read(document, index, pack::ByteRange { offset: 0, len }).await.unwrap();
-    let mut prepared = db_storage::db_io_prepare_platform(&pages).unwrap().await.unwrap();
+    let mut prepared = db_io_registry::db_io_prepare_platform(&pages).unwrap().await.unwrap();
     let output = prepared.as_slice().to_vec();
     while prepared.close_step().unwrap() {}
     while pages.close_step().unwrap().is_some() {}
@@ -115,24 +99,9 @@ fn recovery_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🚑️recovery/🔣️.json")).unwrap()
 }
 
-pub(crate) async fn committed_fixture_storage(row: &serde_json::Value, document: &ArtifactId) -> MemoryStorage {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+pub async fn committed_fixture_storage(row: &serde_json::Value, document: &ArtifactId) -> MemoryStorage {
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     write_committed_fixture(&storage, row, document).await;
-    storage
-}
-
-pub(crate) async fn aborted_event_fixture_storage(document: &ArtifactId, event: &[u8]) -> MemoryStorage {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
-    let permit = storage.acquire_writer(document).await.unwrap();
-    let mut writer = SegmentWriter::begin(&storage, &permit, document.clone(), 0, None, 0).await.unwrap();
-    let mut records = [WalRecord::TxBegin { tx_id: 1 }, WalRecord::Event(retained(event).await), WalRecord::TxAbort { tx_id: 1 }];
-    for record in &mut records {
-        writer.append_record(record, 0).await.unwrap();
-        while record.close_step().unwrap() {}
-    }
-    writer.commit_and_flush(&storage, &permit, DurabilityClass::Fsync).await.unwrap();
-    while writer.close_step().unwrap() {}
-    permit.release().await.unwrap();
     storage
 }
 
@@ -251,13 +220,13 @@ async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() 
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let root = base.join(format!("wal-active-abort-{}-{nonce}-{ordinal}", std::process::id()));
         {
-            let filesystem = db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &root).await.unwrap();
+            let filesystem = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
             write_committed_fixture(&filesystem, row, &document).await;
-            assert_eq!(filesystem.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Active);
+            assert_eq!(filesystem.segment_state(&document, 0).await.unwrap(), db_io_core::WalSegmentState::Active);
             filesystem.close().await.unwrap();
         }
         let repaired = {
-            let filesystem = db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &root).await.unwrap();
+            let filesystem = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
             let (mut wal, report) = ArtifactWal::open(&filesystem, document.clone(), GroupCommitPolicy::default(), 1).await.unwrap();
             assert_eq!(report.recovered_abort_tx_id, Some(expected_abort));
             assert_eq!(report.torn_tail_bytes, 0);
@@ -270,12 +239,12 @@ async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() 
             bytes
         };
         {
-            let filesystem = db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &root).await.unwrap();
+            let filesystem = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
             let (mut wal, report) = ArtifactWal::open(&filesystem, document.clone(), GroupCommitPolicy::default(), 2).await.unwrap();
             assert_eq!(report.recovered_abort_tx_id, None);
             assert_eq!(report.torn_tail_bytes, 0);
             assert_eq!(segment_bytes(&filesystem, &document, 0).await, repaired);
-            assert_eq!(filesystem.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Active);
+            assert_eq!(filesystem.segment_state(&document, 0).await.unwrap(), db_io_core::WalSegmentState::Active);
             assert_eq!(replay_summaries(&filesystem, &document).await.iter().filter(|record| **record == ReplaySummary::Abort(expected_abort)).count(), 1);
             assert_no_committed_transaction(&filesystem, &document).await;
             let receipt = submit_one(&filesystem, &mut wal, WalRecord::Command(retained(b"after-filesystem-recovery").await), DurabilityClass::Fsync, 3).await;
@@ -299,7 +268,7 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
             }
             let document = ArtifactId::from("abort-fault");
             let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(committed_fixture_storage(row, &document).await));
-            let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
+            let storage = db_storage::FaultStorage::new(inner.clone()).await;
             let baseline = segment_bytes(&storage, &document, 0).await;
             if tail {
                 let writer = storage.acquire_writer(&document).await.unwrap();
@@ -308,7 +277,7 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
             }
             let append_boundary = storage.append_calls().await + 1;
             let sync_boundary = storage.sync_calls().await + if tail && !fail_tail_sync { 2 } else { 1 };
-            let mut script = crate::db_fault_testing::FaultScript::default();
+            let mut script = db_storage::FaultScript::default();
             match case["fault"].as_str().unwrap() {
                 "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
                 "appendError" => script.fail_nth_write = Some(append_boundary),
@@ -362,51 +331,51 @@ async fn wal_recovery_abort_faults_retry_without_duplicate_abort() {
 
 struct AbortCancellationStorage<'a> {
     inner: &'a MemoryStorage,
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
     cancel_on_truncate: bool,
     synced: std::sync::atomic::AtomicUsize,
 }
 
 impl WalStorage for AbortCancellationStorage<'_> {
-    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> {
+    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_io_core::WalWriterPermit, DbError> {
         self.inner.acquire_writer(document).await
     }
-    async fn create_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn create_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         self.inner.create_segment(writer, index).await
     }
-    async fn append(&self, writer: &db_storage::WalWriterPermit, index: u64, bytes: db_storage::DbIoPages) -> Result<u64, DbError> {
+    async fn append(&self, writer: &db_io_core::WalWriterPermit, index: u64, bytes: db_io_core::DbIoPages) -> Result<u64, DbError> {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.inner.append(writer, index, bytes).await
     }
-    async fn sync(&self, writer: &db_storage::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    async fn sync(&self, writer: &db_io_core::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         let result = self.inner.sync(writer, index, class).await;
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) && class == DurabilityClass::Fsync && result.is_ok() {
             self.synced.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         }
         result
     }
-    async fn seal(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn seal(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         self.inner.seal(writer, index).await
     }
-    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<db_storage::DbIoPages, DbError> {
+    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<db_io_core::DbIoPages, DbError> {
         self.inner.read(document, index, range).await
     }
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         self.inner.segment_len(document, index).await
     }
-    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<db_storage::WalSegmentState, DbError> {
+    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<db_io_core::WalSegmentState, DbError> {
         self.inner.segment_state(document, index).await
     }
-    async fn list_segments(&self, document: &ArtifactId) -> Result<db_storage::DbIoU64List, DbError> {
+    async fn list_segments(&self, document: &ArtifactId) -> Result<db_io_core::DbIoU64List, DbError> {
         self.inner.list_segments(document).await
     }
-    async fn truncate_tail(&self, writer: &db_storage::WalWriterPermit, index: u64, len: u64) -> Result<(), DbError> {
+    async fn truncate_tail(&self, writer: &db_io_core::WalWriterPermit, index: u64, len: u64) -> Result<(), DbError> {
         if self.cancel_on_truncate {
             self.cancelled.store(true, std::sync::atomic::Ordering::Release);
         }
         self.inner.truncate_tail(writer, index, len).await
     }
-    async fn delete_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn delete_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         self.inner.delete_segment(writer, index).await
     }
 }
@@ -460,17 +429,17 @@ async fn wal_recovery_abort_cancellation_has_one_durable_boundary() {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
-    if !crate::db_storage::process_isolated_law("db_wal::tests::wal_recovery_abort_capacity_exact_and_plus_one_preserves_source") {
+    if !db_io_driver::process_isolated_law("tests::wal_recovery_abort_capacity_exact_and_plus_one_preserves_source") {
         return;
     }
     let suffix = wal_frame_bytes(8).unwrap() + protocol::format::COMMIT_FRAME_LEN;
     for extra in [0, 1] {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
         let document = ArtifactId::from("abort-capacity");
         let writer_permit = storage.acquire_writer(&document).await.unwrap();
         let mut writer = SegmentWriter::begin(&storage, &writer_permit, document.clone(), 0, None, 0).await.unwrap();
         writer.append_record(&WalRecord::TxBegin { tx_id: 7 }, 0).await.unwrap();
-        let end = db_storage::DB_IO_MAX_READ_BYTES - suffix + extra;
+        let end = db_io_core::DB_IO_MAX_READ_BYTES - suffix + extra;
         let available = end - writer.total_len().unwrap() - protocol::format::COMMIT_FRAME_LEN;
         let payload = (0..32).map(|overhead| available as usize - overhead).find(|bytes| wal_frame_bytes(*bytes).unwrap() == available).unwrap();
         let mut command = WalRecord::Command(retained(&vec![0xa5; payload]).await);
@@ -485,12 +454,12 @@ async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
         if extra == 0 {
             let (mut wal, report) = result.unwrap();
             assert_eq!(report.recovered_abort_tx_id, Some(7));
-            assert_eq!(storage.segment_len(&document, 0).await.unwrap(), db_storage::DB_IO_MAX_READ_BYTES);
+            assert_eq!(storage.segment_len(&document, 0).await.unwrap(), db_io_core::DB_IO_MAX_READ_BYTES);
             assert_no_committed_transaction(&storage, &document).await;
             let tip = wal.active.tip_chain_hash().unwrap();
             let receipt = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"successor").await), DurabilityClass::Fsync, 2).await;
             assert_eq!((receipt.segment_index, receipt.tx_id), (1, 8));
-            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_io_core::WalSegmentState::Sealed);
             wal.close().await.unwrap();
             let (mut reopened, report) = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 3).await.unwrap();
             assert_eq!(report.recovered_abort_tx_id, None);
@@ -509,7 +478,7 @@ async fn wal_recovery_abort_capacity_exact_and_plus_one_preserves_source() {
             };
             assert!(rejected);
             assert_eq!(segment_bytes(&storage, &document, 0).await, before);
-            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Active);
+            assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_io_core::WalSegmentState::Active);
         }
         eprintln!("WAL abort recovery exact retained capacity plus {extra} had the expected byte-preserving disposition");
     }
@@ -644,8 +613,8 @@ async fn wal_immutable_source_fragmentation_matches_neutral_transactions() {
                     let mut padded = vec![0xad; 4_093];
                     padded.extend_from_slice(&bytes);
                     padded.extend_from_slice(&[0xda; 19]);
-                    let mut writer = db_storage::DbIoPageWriter::try_reserve(padded.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).unwrap();
-                    for fragment in padded.chunks(db_storage::DB_IO_PAGE_BYTES) {
+                    let mut writer = db_io_core::DbIoPageWriter::try_reserve(padded.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).unwrap();
+                    for fragment in padded.chunks(db_io_core::DB_IO_PAGE_BYTES) {
                         assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
                     }
                     let pages = writer.finish().unwrap();
@@ -753,86 +722,6 @@ async fn wal_committed_cursor_single_fuel_and_expired_turns_match_neutral_transa
 }
 
 #[semio_framework_async_macros::async_test]
-async fn wal_retained_varints_match_neutral_exact_u64_and_atomic_interruption() {
-    let _pool = crate::db_storage::db_io_test_pool();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
-    for row in fixture["varints"].as_array().unwrap() {
-        let hex = row["hex"].as_str().unwrap();
-        let input: Vec<_> = (0..hex.len()).step_by(2).map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap()).collect();
-        let mut bytes = WalBytes { pages: pages(&input) };
-        let expected = row["value"].as_str().map(|value| value.parse::<u64>().unwrap());
-        let mut reader = WalPageReader::new(&bytes.pages, 0, input.len()).unwrap();
-        let parsed = reader.varint();
-        assert_eq!(parsed.as_ref().ok().copied(), expected, "{}", row["name"]);
-        assert_eq!(reader.position, row["consumed"].as_u64().unwrap_or(0) as usize, "{}", row["name"]);
-        let mut cursor = bytes.cursor();
-        let parsed = cursor.varint(&mut control());
-        assert_eq!(parsed.as_ref().ok().copied(), expected, "{}", row["name"]);
-        assert_eq!(cursor.offset, row["consumed"].as_u64().unwrap_or(0) as usize, "{}", row["name"]);
-        if row["consumed"].as_u64().is_some_and(|count| count > 1) {
-            let mut cursor = bytes.cursor();
-            let mut opportunity = control();
-            opportunity.replenish(std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
-            assert!(matches!(cursor.varint(&mut opportunity), Err(DbError::LimitExceeded("wal cursor fuel"))));
-            assert_eq!(cursor.offset, 0);
-            opportunity.replenish(std::time::Instant::now() + std::time::Duration::from_secs(30), 16).unwrap();
-            assert_eq!(cursor.varint(&mut opportunity).unwrap(), expected.unwrap());
-        }
-        while bytes.close_step().unwrap().is_some() {}
-    }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn wal_retained_decoder_fuel_resumes_exact_fragmented_bytes() {
-    let _pool = crate::db_storage::db_io_test_pool();
-    let expected: Vec<_> = (0..db_storage::DB_IO_PAGE_BYTES * 3 + 17).map(|index| (index % 251) as u8).collect();
-    let mut source = pages(&expected);
-    let frame = WalRecordFrame { kind: WAL_COMMAND, payload_start: 0, payload_end: expected.len(), frame_end: expected.len() };
-    let mut decoder = WalRetainedRecordDecoder::new(frame);
-    let mut opportunity = control();
-    let mut attempts = 0;
-    let mut record = loop {
-        opportunity.replenish(std::time::Instant::now() + std::time::Duration::from_secs(30), 1).unwrap();
-        match decoder.step(&source, &mut opportunity).unwrap() {
-            Some(record) => break record,
-            None => assert!(matches!(decoder.step(&source, &mut opportunity), Err(DbError::LimitExceeded("wal cursor fuel")))),
-        }
-        attempts += 1;
-        assert!(attempts < 1_024);
-    };
-    assert!(attempts > 3);
-    let WalRecord::Command(bytes) = &record else { panic!("expected command") };
-    assert_eq!(read_retained(bytes).await, expected);
-    while record.close_step().unwrap() {}
-    while decoder.close_owner_step().unwrap() {}
-    assert!(decoder.terminal_is_empty());
-    while source.close_step().unwrap().is_some() {}
-}
-
-#[semio_framework_async_macros::async_test]
-async fn wal_retained_decoder_cancel_close_preserves_source_and_returns_owner() {
-    let _pool = crate::db_storage::db_io_test_pool();
-    let expected = vec![0x57; db_storage::DB_IO_PAGE_BYTES + 7];
-    let mut source = pages(&expected);
-    for cut in 1..=4 {
-        let mut decoder = WalRetainedRecordDecoder::new(WalRecordFrame { kind: WAL_COMMAND, payload_start: 0, payload_end: expected.len(), frame_end: expected.len() });
-        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut opportunity = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
-        for _ in 0..cut {
-            assert!(decoder.step(&source, &mut opportunity).unwrap().is_none());
-        }
-        cancelled.store(true, std::sync::atomic::Ordering::Release);
-        assert!(matches!(decoder.step(&source, &mut opportunity), Err(DbError::Unavailable(message)) if message == "wal cursor cancelled"));
-        while decoder.close_owner_step().unwrap() {
-            assert!(cancelled.load(std::sync::atomic::Ordering::Acquire));
-        }
-        assert!(decoder.terminal_is_empty());
-        assert_eq!(source.len(), expected.len());
-    }
-    while source.close_step().unwrap().is_some() {}
-}
-
-#[semio_framework_async_macros::async_test]
 async fn wal_committed_cursor_cancel_resume_keeps_transaction_position() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == "two-commands-only-after-logical-commit").unwrap();
@@ -921,7 +810,7 @@ async fn wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close() {
 /// refused before any I/O.
 #[semio_framework_async_macros::async_test]
 async fn a_declared_maximal_command_batch_is_one_transaction_replayed_exactly() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("maximal-command-batch").await;
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let count = protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES;
@@ -997,19 +886,19 @@ async fn capacity_backend(storage: &impl WalStorage, fixture: &serde_json::Value
 async fn wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️capacity/🔣️.json")).unwrap();
     for (ordinal, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
         capacity_backend(&storage, &fixture, case).await;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
             let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
             let root = base.join(format!("wal-capacity-{}-{nonce}-{ordinal}", std::process::id()));
-            let filesystem = db_storage::FsStorage::open(crate::db_storage::db_io_test_pool(), &root).await.unwrap();
+            let filesystem = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
             capacity_backend(&filesystem, &fixture, case).await;
             filesystem.close().await.unwrap();
         }
     }
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("d").await;
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     capacity_submission(&storage, &mut wal, fixture["exactPayloadBytes"].as_u64().unwrap() as usize, DurabilityClass::Fsync).await.unwrap();
@@ -1060,7 +949,7 @@ async fn wal_recovery_preserves_neutral_committed_prefixes() {
     let mut byte = [0u8; 1];
     assert!(source.read_exact(0, &mut byte).await.is_err(), "flushed bytes leave the window");
     let document = doc(fixture["document"].as_str().unwrap()).await;
-    let seed = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let seed = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let mut seeded = recovery_seed(&seed, &document).await;
     seeded.close().await.unwrap();
     let full = segment_bytes(&seed, &document, 0).await;
@@ -1070,7 +959,7 @@ async fn wal_recovery_preserves_neutral_committed_prefixes() {
         let trusted = row["trustedEnd"].as_u64().unwrap() as usize;
         let recovered = row["recoveredEnd"].as_u64().unwrap() as usize;
         let next_tx = row["nextTxId"].as_u64().unwrap();
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
         let writer = storage.acquire_writer(&document).await.unwrap();
         storage.create_segment(&writer, 0).await.unwrap();
         if cut != 0 {
@@ -1103,7 +992,7 @@ async fn wal_recovery_matches_neutral_lifecycle_without_prefix_replacement() {
     for row in fixture["lifecycle"].as_array().unwrap() {
         let name = row["name"].as_str().unwrap();
         let accepted = row["accepted"].as_bool().unwrap();
-        let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
         if name == "exhausted-segment" {
             let writer = storage.acquire_writer(&document).await.unwrap();
             let mut segment = SegmentWriter::begin(&storage, &writer, document.clone(), u64::MAX, Some([7; 32]), 0).await.unwrap();
@@ -1184,7 +1073,7 @@ async fn wal_recovery_matches_neutral_lifecycle_without_prefix_replacement() {
         let result = ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 5).await;
         assert_eq!(result.is_ok(), accepted, "{name}: {:?}", result.as_ref().err());
         for (index, bytes, state) in &before {
-            if !accepted || *state == db_storage::WalSegmentState::Sealed || name == "compacted-clean" {
+            if !accepted || *state == db_io_core::WalSegmentState::Sealed || name == "compacted-clean" {
                 assert_eq!(segment_bytes(&storage, &document, *index).await, *bytes, "{name}: retained prefix replaced");
                 assert_eq!(storage.segment_state(&document, *index).await.unwrap(), *state, "{name}: lifecycle changed");
             }
@@ -1210,146 +1099,10 @@ async fn wal_recovery_matches_neutral_lifecycle_without_prefix_replacement() {
         }
     }
 }
-
-//#region 🔖️RecordKinds
-#[semio_framework_async_macros::async_test]
-async fn record_kinds_are_distinct_members_of_the_extension_range() {
-    let kinds = [WAL_SEGMENT_HEADER, WAL_TX_BEGIN, WAL_TX_COMMIT, WAL_TX_ABORT, WAL_COMMAND, WAL_PAYLOAD, WAL_DIFF, WAL_INVERSE, WAL_EVENT, WAL_OUTBOX, WAL_FRONTIER, WAL_SNAPSHOT_PUB, WAL_INDEX_CKPT, WAL_LEASE, WAL_MIGRATION];
-    assert_eq!(kinds.len(), 15);
-    let mut sorted = kinds.to_vec();
-    sorted.sort_unstable();
-    sorted.dedup();
-    assert_eq!(sorted.len(), kinds.len(), "wal record kinds must be pairwise distinct");
-    assert_eq!(*sorted.first().unwrap(), 0x40);
-    assert_eq!(*sorted.last().unwrap(), 0x4F);
-    for kind in kinds {
-        assert!(is_wal_record_kind(kind));
-    }
-    // 🧪️ `0x0C` (protocol::wire::REC_COMMIT) hard-coded rather than depending on protocol_core
-    // directly just for this one assertion — this crate's extension range never overlaps it.
-    assert!(!is_wal_record_kind(0x0C));
-}
-//#endregion 🔖️RecordKinds
-
-//#region 🔖️Records
-#[semio_framework_async_macros::async_test]
-async fn wal_record_round_trips_every_kind_through_encode_decode() {
-    let document = doc("doc-1").await;
-    let mut samples = WalRecordBatch::new();
-    for sample in [
-        WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
-        WalRecord::SegmentHeader { document: document.clone(), segment_index: 1, prev_chain_hash: Some([3u8; 32]) },
-        WalRecord::TxBegin { tx_id: 42 },
-        WalRecord::TxCommit { tx_id: 42, record_count: 5 },
-        WalRecord::TxAbort { tx_id: 7 },
-        WalRecord::Command(retained(b"envelope-bytes").await),
-        WalRecord::Payload(WalPayloadRef::Inline(retained(b"small-payload").await)),
-        WalRecord::Payload(WalPayloadRef::CasRef(pack::ContentHash([5u8; 32]))),
-        WalRecord::Diff(retained(b"diff-bytes").await),
-        WalRecord::Inverse(retained(b"inverse-bytes").await),
-        WalRecord::Event(retained(b"event-bytes").await),
-        WalRecord::Outbox(retained(b"outbox-bytes").await),
-        WalRecord::Frontier(sample_frontier(&document).await),
-        WalRecord::SnapshotPub { generation: 4, frontier: sample_frontier(&document).await },
-        WalRecord::IndexCkpt { run_ids: run_ids(&[1, 2, 3, 100]) },
-        WalRecord::Lease { resource: db_storage::DbIoText::try_from_str("shard-0").unwrap(), holder: db_storage::DbIoText::try_from_str("node-a").unwrap(), fence: 9, expires_at_ms: 12345 },
-        WalRecord::Migration(retained(b"migration-bytes").await),
-    ] {
-        assert!(samples.push(sample).is_ok());
-    }
-    for sample in samples.iter() {
-        let (kind, critical, payload) = sample.encode().await;
-        assert!(critical, "every wal record is critical by design");
-        let mut decoded = decode(kind, &payload).await.unwrap();
-        let (_, _, round_trip) = decoded.encode().await;
-        assert_eq!(round_trip, payload);
-        while decoded.close_step().unwrap() {}
-    }
-    while samples.close_step().unwrap() {}
-}
-
-#[semio_framework_async_macros::async_test]
-async fn decode_rejects_unknown_kind_and_malformed_payload() {
-    assert!(matches!(decode(0x7E, b"").await, Err(DbError::Corrupt(_))));
-    assert!(decode(WAL_TX_BEGIN, b"").await.is_err());
-}
-//#endregion 🔖️Records
-
-//#region 🔖️PayloadTransform
-#[semio_framework_async_macros::async_test]
-async fn identity_payload_transform_round_trips_without_changing_bytes() {
-    let transform = IdentityPayloadTransform;
-    let plaintext = b"hello wal";
-    let mut control = control();
-    let encrypted = transform.encrypt(retained(plaintext).await, &mut control).await.unwrap();
-    assert_eq!(read_retained(&encrypted).await, plaintext);
-    let mut decrypted = transform.decrypt(encrypted, &mut control).await.unwrap();
-    assert_eq!(read_retained(&decrypted).await, plaintext);
-    while decrypted.close_step().unwrap().is_some() {}
-}
-
-/// 🔐️ A reversing "cipher" — enough to prove a caller can thread a non-identity
-/// `PayloadTransform` through `WalPayloadRef::Inline` end-to-end via this crate's own
-/// encode/decode, without `db_wal` itself needing to know encryption happened.
-struct ReversingTransform;
-impl PayloadTransform for ReversingTransform {
-    async fn encrypt(&self, mut plaintext: WalBytes, control: &mut WalCursorControl) -> Result<WalBytes, DbError> {
-        let mut prepared = plaintext.prepare_platform().await?;
-        let reversed: Vec<u8> = prepared.as_slice().iter().rev().copied().collect();
-        while prepared.close_step()? {}
-        while plaintext.close_step()?.is_some() {}
-        match WalBytes::try_admit(reversed, MAX_FIELD_BYTES, control).await {
-            Ok(bytes) => Ok(bytes),
-            Err(mut rejected) => {
-                while rejected.close_step()? {
-                    control.grant()?;
-                }
-                Err(rejected.into_error())
-            }
-        }
-    }
-    async fn decrypt(&self, ciphertext: WalBytes, control: &mut WalCursorControl) -> Result<WalBytes, DbError> {
-        self.encrypt(ciphertext, control).await
-    }
-}
-
-#[semio_framework_async_macros::async_test]
-async fn non_identity_payload_transform_round_trips_through_an_inline_wal_payload_record() {
-    let transform = ReversingTransform;
-    let plaintext = b"round trip me through the wal".to_vec();
-    let mut control = control();
-    let ciphertext = transform.encrypt(retained(&plaintext).await, &mut control).await.unwrap();
-    assert_ne!(read_retained(&ciphertext).await, plaintext, "the transform must actually have changed the bytes");
-
-    let record = WalRecord::Payload(WalPayloadRef::Inline(ciphertext));
-    let (kind, _critical, payload) = record.encode().await;
-    let decoded = decode(kind, &payload).await.unwrap();
-    let WalRecord::Payload(WalPayloadRef::Inline(stored_ciphertext)) = decoded else {
-        panic!("expected an inline payload record");
-    };
-
-    let mut recovered = transform.decrypt(stored_ciphertext, &mut control).await.unwrap();
-    assert_eq!(read_retained(&recovered).await, plaintext);
-    while recovered.close_step().unwrap().is_some() {}
-}
-//#endregion 🔖️PayloadTransform
-
-//#region 🔖️GroupCommit
-#[semio_framework_async_macros::async_test]
-async fn group_commit_policy_is_due_on_any_threshold() {
-    let policy = GroupCommitPolicy { max_delay_ms: 100, max_bytes: 1000, max_records: 10 };
-    assert!(!policy.is_due(0, 0, None, 0));
-    assert!(policy.is_due(1000, 0, None, 0));
-    assert!(policy.is_due(0, 10, None, 0));
-    assert!(policy.is_due(0, 0, Some(0), 100));
-    assert!(!policy.is_due(0, 0, Some(50), 100));
-}
-//#endregion 🔖️GroupCommit
-
 //#region 🔖️Segment + ArtifactWal
 #[semio_framework_async_macros::async_test]
 async fn single_segment_write_commit_flush_recovers_cleanly() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
 
@@ -1368,7 +1121,7 @@ async fn single_segment_write_commit_flush_recovers_cleanly() {
 
 #[semio_framework_async_macros::async_test]
 async fn group_commit_batches_until_policy_threshold_then_commits() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let policy = GroupCommitPolicy { max_delay_ms: 1_000_000, max_bytes: u64::MAX, max_records: 5 };
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), policy, 0)).unwrap();
@@ -1389,7 +1142,7 @@ async fn group_commit_batches_until_policy_threshold_then_commits() {
 
 #[semio_framework_async_macros::async_test]
 async fn fsync_durability_forces_immediate_commit_regardless_of_policy() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let policy = GroupCommitPolicy { max_delay_ms: u64::MAX, max_bytes: u64::MAX, max_records: u32::MAX };
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document, policy, 0)).unwrap();
@@ -1400,7 +1153,7 @@ async fn fsync_durability_forces_immediate_commit_regardless_of_policy() {
 
 #[semio_framework_async_macros::async_test]
 async fn torn_tail_is_recovered_by_truncating_only_the_uncommitted_suffix() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     {
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
@@ -1430,7 +1183,7 @@ async fn torn_tail_is_recovered_by_truncating_only_the_uncommitted_suffix() {
 
 #[semio_framework_async_macros::async_test]
 async fn recovery_resumes_next_tx_id_and_accepts_further_submits() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     {
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
@@ -1460,7 +1213,7 @@ async fn recovery_resumes_next_tx_id_and_accepts_further_submits() {
 /// control, while the same budget as one fixed allowance refuses it. A grown document stays openable.
 #[semio_framework_async_macros::async_test]
 async fn wal_open_bounds_each_verified_segment_not_the_whole_history() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("grown-history").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
     wal.max_segment_bytes = 400;
@@ -1496,7 +1249,7 @@ async fn wal_open_bounds_each_verified_segment_not_the_whole_history() {
 
 #[semio_framework_async_macros::async_test]
 async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
     wal.max_segment_bytes = 200; // force rotation quickly for this test
@@ -1534,7 +1287,7 @@ async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
 
 #[semio_framework_async_macros::async_test]
 async fn recovery_rejects_a_torn_non_active_sealed_segment() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
     wal.max_segment_bytes = 1; // rotate on the very next submit
@@ -1566,7 +1319,7 @@ async fn recovery_rejects_a_torn_non_active_sealed_segment() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_document_open_creates_a_fresh_wal() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let (mut wal, report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
     assert_eq!(report, WalRecoveryReport::default());
@@ -1577,10 +1330,10 @@ async fn empty_document_open_creates_a_fresh_wal() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry() {
-    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_fault_testing::FaultStorage::new(inner).await;
+    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let storage = db_storage::FaultStorage::new(inner).await;
     let document = ArtifactId::from("wal-open-retained-owner");
-    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(1), ..crate::db_fault_testing::FaultScript::default() }).await;
+    storage.set_script(db_storage::FaultScript { fail_nth_write: Some(1), ..db_storage::FaultScript::default() }).await;
     let rejected = match ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await {
         Err(rejected) => rejected,
         Ok(mut wal) => {
@@ -1594,7 +1347,7 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     assert!(matches!(rejected_open_error(rejected).await, DbError::Io(_)));
 
     let writer = storage.acquire_writer(&document).await.unwrap();
-    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(storage.append_calls().await + 1), ..crate::db_fault_testing::FaultScript::default() }).await;
+    storage.set_script(db_storage::FaultScript { fail_nth_write: Some(storage.append_calls().await + 1), ..db_storage::FaultScript::default() }).await;
     let mut open_control = control();
     let rejected = match ArtifactWal::open_acquired(&storage, writer, GroupCommitPolicy::default(), 1, &mut open_control).await {
         Err(rejected) => rejected,
@@ -1605,7 +1358,7 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
     };
     assert!(matches!(rejected.error(), DbError::Io(_)));
     assert!(matches!(storage.acquire_writer(&document).await, Err(DbError::Conflict(_))));
-    storage.set_script(crate::db_fault_testing::FaultScript::default()).await;
+    storage.set_script(db_storage::FaultScript::default()).await;
     let mut retry_control = control();
     let (mut wal, report) = rejected.retry_open(&storage, GroupCommitPolicy::default(), 2, &mut retry_control).await.unwrap();
     assert_eq!(report.segments_seen, 1);
@@ -1620,7 +1373,7 @@ async fn artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owne
 /// the segment exactly as that writer left it.
 #[semio_framework_async_macros::async_test]
 async fn a_reclaimed_wal_writer_is_reacquired_and_verified_before_the_next_append() {
-    let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let (kept, sealed) = (doc("reclaimed-writer-kept").await, doc("reclaimed-writer-sealed").await);
     let mut kept_wal = ArtifactWal::create(&storage, kept.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let mut sealed_wal = ArtifactWal::create(&storage, sealed.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
@@ -1630,10 +1383,10 @@ async fn a_reclaimed_wal_writer_is_reacquired_and_verified_before_the_next_appen
     kept_wal.park_writer();
     sealed_wal.park_writer();
     let mut fillers = Vec::new();
-    for ordinal in 0..db_storage::writer::WAL_WRITER_CAPACITY {
+    for ordinal in 0..db_io_core::WAL_WRITER_CAPACITY {
         fillers.push(storage.acquire_writer(&doc(&format!("reclaiming-filler-{ordinal}")).await).await.unwrap());
-        let reclaimed = [kept_key, sealed_key].map(|key| db_storage::writer::release::parked_since(key).is_none());
-        let expected = match (ordinal + 3).saturating_sub(db_storage::writer::WAL_WRITER_CAPACITY) {
+        let reclaimed = [kept_key, sealed_key].map(|key| db_io_core::parked_since(key).is_none());
+        let expected = match (ordinal + 3).saturating_sub(db_io_core::WAL_WRITER_CAPACITY) {
             0 => [false, false],
             1 => [true, false],
             _ => [true, true],
@@ -1658,7 +1411,7 @@ async fn a_reclaimed_wal_writer_is_reacquired_and_verified_before_the_next_appen
     let refused = sealed_wal.submit(&storage, &[], &records, DurabilityClass::Fsync, 2).await;
     while records.close_step().unwrap() {}
     assert!(matches!(refused, Err(DbError::Conflict(ref detail)) if detail.contains("changed while its writer was reclaimed")), "{refused:?}");
-    assert_eq!(storage.segment_state(&sealed, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
+    assert_eq!(storage.segment_state(&sealed, 0).await.unwrap(), db_io_core::WalSegmentState::Sealed);
     assert_eq!(storage.segment_len(&sealed, 0).await.unwrap(), sealed_len, "the refused WAL wrote nothing");
 
     kept_wal.close().await.unwrap();

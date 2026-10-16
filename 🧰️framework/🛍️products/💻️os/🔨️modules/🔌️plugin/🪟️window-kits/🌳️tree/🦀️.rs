@@ -24,23 +24,15 @@ use semio_framework_ui_locale::LocalizedLabel;
 /// [`semio_framework_ui_contract::TREE_WINDOW_BODY_NODE_BUDGET`] for the cost model both sides
 /// implement; [`TreeWindows`] is this side of it.
 use semio_framework_ui_contract::{TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_FIXED_NODE_HEADROOM, TREE_WINDOW_PATH_SEPARATOR};
-use crate::window_kits::ActionFactory;
+use semio_framework_plugin_window_kits::ActionFactory;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::table_kit::activation_target;
-use crate::window_kits::WindowKit;
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::ui_assembly_error;
-use crate::window_surface::ui_label;
-use crate::window_surface::ui_text;
-use crate::window_surface::window_kind_definition;
-#[cfg(test)]
-use crate::history_view::CommandView;
-#[cfg(test)]
-use crate::history_view::HistoryCommandFilter;
-#[cfg(test)]
-use crate::history_view::HistoryView;
-#[cfg(test)]
-use crate::command_history::ui_history_panel;
+use semio_framework_plugin_window_kits::WindowKit;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_interaction::ui_assembly_error;
+use semio_framework_plugin_window_transient::ui_label;
+use semio_framework_plugin_window_transient::ui_text;
+use semio_framework_plugin_window_transient::window_kind_definition;
 
 
 
@@ -145,7 +137,8 @@ pub struct PanelTreeBuilder {
     sections: UiFixedList<BuiltNode>,
     selected_ids: Option<UiFixedList<UiText>>,
     highlighted_ids: Option<UiFixedList<UiText>>,
-    interaction_domain: Option<UiText>,
+    #[doc(hidden)]
+    pub interaction_domain: Option<UiText>,
     interaction_select: Option<(ActionId, Option<UiValue>)>,
     drop_action: Option<ActionId>,
 }
@@ -615,7 +608,8 @@ impl<'a> TreeWindows<'a> {
         TreeWindow { total: slice.total as u32, offset: slice.offset as u32, row_extent: TreeWindowRowExtent::Standard }
     }
 
-    pub(crate) fn stamp(&self, path: &str, slice: &TreeSlice) -> Option<TreeWindow> {
+    #[doc(hidden)]
+    pub fn stamp(&self, path: &str, slice: &TreeSlice) -> Option<TreeWindow> {
         (slice.total > 0 || self.seat(path).is_some()).then(|| Self::window(slice))
     }
 }
@@ -797,8 +791,6 @@ pub fn ui_node_list(values: impl IntoIterator<Item = UiAssemblyResult<BuiltNode>
     Ok(nodes)
 }
 
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-panel-kit/🦀️.rs");
 
 /// 🌳️ One recursive labeled node; `TreeView.roots` seeds a single unlabeled tree section.
 #[derive(Clone, Debug, PartialEq)]

@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-host-space"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "OS host orchestration for space drafts, the draft backbone port and collection archives"
+
+[package.metadata.semio]
+role = "product"
+id = "os-host-space"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-os-host-registry = { path = "../../../../🖥️host/🗂️registry/📦️packages/🦀️rust" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }

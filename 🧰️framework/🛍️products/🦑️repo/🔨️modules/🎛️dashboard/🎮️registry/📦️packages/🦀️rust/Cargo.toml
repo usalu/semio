@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard command registry: every runnable thing of the workspace as one entry, the inventory that discovers them and the command tree that projects them"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
+dashboard_repo_domain = { path = "../../../🏛️repo-domain/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-repo-domain" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ui_locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
+ui_tui = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["tui-terminal"], package = "semio-framework-ui" }

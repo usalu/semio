@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-infinite-dag-vcs-rs",
+  "tags": [
+    "language:rust",
+    "role:artifact",
+    "family:infinite"
+  ]
+}

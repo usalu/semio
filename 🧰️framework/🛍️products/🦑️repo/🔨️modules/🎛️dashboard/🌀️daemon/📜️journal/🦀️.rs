@@ -42,7 +42,7 @@ pub fn project(path: &Path) -> (Vec<SessionInfo>, usize) {
 /// running tasks into interrupted ones.
 pub fn offline(root: &Path) -> Vec<SessionInfo> {
     let mut sessions = project(&ipc::event_log_path(root)).0;
-    if super::supervisor::WorkspaceLease::acquire(root).is_err() { return sessions; }
+    if super::lease::WorkspaceLease::acquire(root).is_err() { return sessions; }
     for session in sessions.iter_mut().filter(|session| session.status.live()) { interrupt(session, None); }
     sessions
 }

@@ -67,6 +67,28 @@
         "command": "bun ./📜️script.ts logical-owner check",
         "forwardAllArgs": false
       }
+    },
+    "test-native-emission": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts emit-grammar",
+        "forwardAllArgs": false
+      },
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      }
     }
   }
 }

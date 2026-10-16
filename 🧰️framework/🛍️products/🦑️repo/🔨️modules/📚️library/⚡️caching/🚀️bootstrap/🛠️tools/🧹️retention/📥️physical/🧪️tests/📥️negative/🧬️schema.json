@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Purpose": {
+      "enum": [
+        "maintenance-held",
+        "shared-held",
+        "queued-cancel",
+        "queued-deadline",
+        "queued-reader",
+        "queued-invalid-0",
+        "queued-invalid-1",
+        "queued-invalid-2"
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "reason",
+        "waited"
+      ],
+      "properties": {
+        "purpose": {
+          "$ref": "#/definitions/Purpose"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "waited": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "workspace",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "$ref": "#/definitions/Purpose"
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        }
+      }
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "reason",
+        "waited",
+        "entered"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "$ref": "#/definitions/Purpose"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "waited": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entered": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/definitions/Case"
+      }
+    }
+  }
+}

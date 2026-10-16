@@ -21,9 +21,14 @@ use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, Su
 const ENGINE_SURFACES_FIXTURE: &str = include_str!("../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
 const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
 const SURFACE_PINCH_FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json");
+const MAP_OVERLAY_DESCRIPTOR_FIXTURE: &str = include_str!("../../../🧭️TiledMapHost/🧪️tests/🧫️fixtures/🗺️overlay-descriptor/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(ENGINE_SURFACES_FIXTURE).expect("committed engine-surface fixture parses")
+}
+
+fn map_overlay_fixture() -> Value {
+    serde_json::from_str(MAP_OVERLAY_DESCRIPTOR_FIXTURE).expect("committed map overlay descriptor fixture parses")
 }
 
 fn json_text(value: &Value) -> String {
@@ -79,9 +84,9 @@ fn world3d_preview_scene_with_selection(surface_id: &str, fixture: &Value, selec
 }
 
 fn tiled_map_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
-    let map = &fixture["tiledMap"];
+    let overlay = map_overlay_fixture();
     let mut scene = scene_shell(surface_id, SurfaceKind::TiledMap);
-    scene.tiled_map = Some(TiledMapScene { selection_json: json_text(&map["selectionJson"]), hover_json: json_text(&map["hoverJson"]), ..TiledMapScene::base(json_text(&map["mapDescriptorJson"]), json_text(&map["cameraJson"])) });
+    scene.tiled_map = Some(TiledMapScene { selection_json: json_text(&overlay["selection"]), hover_json: json_text(&overlay["hover"]), ..TiledMapScene::base(json_text(&overlay["mapDescriptor"]), json_text(&fixture["tiledMap"]["cameraJson"])) });
     scene
 }
 
@@ -301,12 +306,12 @@ fn a_component_engine_close_retires_only_its_exact_staged_host_and_preserves_the
 fn drop_world3d_states(mut states: crate::scenes::AdmittedSurfaceMap<World3dState>) {
     while let Some(owner) = states.close_step() {
         let mut state = owner.value;
-        begin_world3d_dynamic_retirement(&mut state);
+        begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets);
         let mut turns = 0usize;
         while !world3d_dynamic_retirement_terminal_is_empty(&state) {
             with_world_step(64, |context| {
                 let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-                let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,context);
+                let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,context);
                 assert!(terrain.ownership.fits(terrain_grant));
                 assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
                 if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle {step_world3d_dynamic_retirement(&mut state,context);}
@@ -418,7 +423,7 @@ fn drive_world3d_ladder(state: &mut World3dState) {
     for turn in 0..8_192 {
         let mut faulted = false;
         with_world_step(64, |context| {
-            faulted = step_world3d_draw_rebuild(state, context) == WorldDrawRebuildStep::Fault;
+            faulted = step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) == WorldDrawRebuildStep::Fault;
             true
         });
         assert!(!faulted, "the retained draw rebuild faulted on turn {turn}");
@@ -435,7 +440,7 @@ fn drive_world3d_ladder(state: &mut World3dState) {
     for _ in 0..8_192 {
         let mut complete = false;
         with_world_step(64, |context| {
-            complete = step_world3d_draw_rebuild(state, context) == WorldDrawRebuildStep::Complete;
+            complete = step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) == WorldDrawRebuildStep::Complete;
             true
         });
         if complete {
@@ -466,9 +471,9 @@ fn attach_and_settle_world3d(scene: &UiComponentSceneNode, bounds: Rect, surface
 /// the intent, then drive the bounded authority to its terminal — and collects what it wrote.
 fn publish_world3d_intent(state: &mut World3dState, intent: WorldInteractionIntent) -> Vec<ActionDescriptor> {
     let mut input = InputState::<ActionDescriptor>::default();
-    enqueue_world3d_event(state, intent).expect("the world interaction queue admits the intent");
+    enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).expect("the world interaction queue admits the intent");
     for turn in 0..8_192 {
-        let Some(generation) = infinite_world::world::world3d_interaction_front_generation(state) else { break };
+        let Some(generation) = infinite_world::world::world3d_interaction_front_generation(&state.camera, &state.authority) else { break };
         let mut faulted = false;
         with_world_step(64, |context| {
             faulted = matches!(step_world3d_interaction(state, generation, &mut input, context), WorldInteractionAuthorityStep::Fault);
@@ -532,7 +537,7 @@ fn world3d_pointer_down_law(surface_id: &str) {
     let mut states = attach_and_settle_world3d(&scene, bounds, surface_id).world3d_states;
     let state = states.get_mut(surface_id).expect("attached world state");
 
-    let camera = state.orbit.to_camera();
+    let camera = state.camera.orbit.to_camera();
     let point = &fixture["world3d"]["expect"]["pickWorldPosition"];
     let point = ui_wgpu::wgpu::Vec3::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32);
     let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), point, bounds.w, bounds.h).expect("the original solid pick target projects");
@@ -589,7 +594,7 @@ fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
     let mut states = attach_and_settle_world3d(&scene, bounds, surface_id).world3d_states;
     let state = states.get_mut(surface_id).expect("attached world state");
-    let before = state.orbit.to_camera().position.to_array();
+    let before = state.camera.orbit.to_camera().position.to_array();
 
     let wheel = publish_world3d_intent(state, WorldInteractionIntent::wheel(400.0, 300.0, -120.0, &PointerModifiers::default()));
     let zoomed = wheel.iter().find(|action| action.action == "setCamera").expect("a wheel over the preview publishes setCamera");
@@ -602,7 +607,7 @@ fn world3d_orbit_and_wheel_law(surface_id: &str) {
     assert_eq!(args["camera"]["zoom"].as_f64(), Some(1.0), "a perspective orbit reports React's identity zoom");
     assert_eq!(args["camera"]["up"].as_array().map(<[_]>::len), Some(3));
     assert!(args["camera"].get("fov").is_none(), "`fov` is not part of the React `setCamera` camera value");
-    let after = state.orbit.to_camera().position.to_array();
+    let after = state.camera.orbit.to_camera().position.to_array();
     let moved = (0..3).any(|axis| (after[axis] - before[axis]).abs() > 1.0e-4);
     assert!(moved, "the wheel actually moved the orbit camera the action reports: {before:?} -> {after:?}");
 
@@ -610,7 +615,7 @@ fn world3d_orbit_and_wheel_law(surface_id: &str) {
     let orbited = dragged.iter().find(|action| action.action == "setCamera").expect("an orbit drag publishes setCamera");
     let orbit_args = orbited.args.clone().expect("orbit camera args");
     assert_eq!(orbit_args["windowId"].as_str(), Some(surface_id));
-    let orbited_position = state.orbit.to_camera().position.to_array();
+    let orbited_position = state.camera.orbit.to_camera().position.to_array();
     let turned = (0..3).any(|axis| (orbited_position[axis] - after[axis]).abs() > 1.0e-4);
     assert!(turned, "the orbit drag actually turned the camera: {after:?} -> {orbited_position:?}");
     drop_world3d_states(states);
@@ -661,12 +666,13 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     let map_frame = paint_retained_surface_scene(&map_scene, bounds);
     let map_host_id = map_frame.owner.host_id.clone();
     let map_draw = map_frame.draw;
-    let map_expect = &fixture["tiledMap"]["expect"];
-    let (positions, routes, selected, hovered) =
-        with_map_host(&map_host_id, |host| (host.features.positions.len(), host.features.routes.len(), host.selected_position_ids().map(str::to_owned).collect::<Vec<_>>(), host.hovered_id().map(str::to_owned)))
-            .expect("the first painted frame constructs the map engine");
-    assert_eq!(positions, map_expect["positions"].as_u64().expect("positions") as usize, "the descriptor reaches the host whole");
-    assert_eq!(routes, map_expect["routes"].as_u64().expect("routes") as usize);
+    let overlay = map_overlay_fixture();
+    let map_expect = &overlay["expect"];
+    let granularity = map_expect["selectedGranularity"].as_str().expect("granularity");
+    let (pins, paths, selected, hovered) = with_map_host(&map_host_id, |host| (host.overlays.features("pins").count(), host.overlays.features("paths").count(), host.selected_ids(granularity).map(str::to_owned).collect::<Vec<_>>(), host.hovered_id().map(str::to_owned)))
+        .expect("the first painted frame constructs the map engine");
+    assert_eq!(pins, map_expect["pins"].as_u64().expect("pins") as usize, "the descriptor reaches the host whole");
+    assert_eq!(paths, map_expect["paths"].as_u64().expect("paths") as usize);
     assert_eq!(selected, map_expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_owned()).collect::<Vec<_>>(), "React's resolveMapInteractionSync granularity rule, reproduced");
     assert_eq!(hovered.as_deref(), map_expect["hoveredId"].as_str());
     let map_key = engine_raster_key(&map_host_id).expect("bounded engine raster key");
@@ -906,22 +912,22 @@ fn board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer
     let board_frame = paint_retained_surface_scene(&board_scene, bounds);
     let board_id = board_frame.owner.host_id.clone();
     let board_window = board_frame.owner.window_id.clone();
-    assert!(puzzle_board_set_camera_silent(&board_id, [0.0, 0.0, 1.0]));
+    assert!(board2d_set_camera_silent(&board_id, [0.0, 0.0, 1.0]));
     let mut board_input = InputState::default();
-    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, down[0].0, down[0].1, down[0].2, &mut board_input), Ok(false));
-    crate::scenes::puzzle_board_pointer_down_into(&board_id, bounds, down[0].1, down[0].2, 0, false, false, &mut board_input).expect("an idle board takes the press");
+    assert_eq!(crate::scenes::board2d_touch_pointer_down_into(&board_id, bounds, down[0].0, down[0].1, down[0].2, &mut board_input), Ok(false));
+    crate::scenes::board2d_pointer_down_into(&board_id, bounds, down[0].1, down[0].2, 0, false, false, &mut board_input).expect("an idle board takes the press");
     assert!(crate::scenes::board2d_drag_active(&board_id));
-    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, down[1].0, down[1].1, down[1].2, &mut board_input), Ok(true));
+    assert_eq!(crate::scenes::board2d_touch_pointer_down_into(&board_id, bounds, down[1].0, down[1].1, down[1].2, &mut board_input), Ok(true));
     assert!(!crate::scenes::board2d_drag_active(&board_id), "board transfer cancels the area-select lane and synthesizes its one pointer-up");
-    assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[0].0, moves[0].1, moves[0].2));
-    assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[1].0, moves[1].1, moves[1].2));
-    close_camera(puzzle_board_camera(&board_id).expect("board camera"), [0.0, 0.0, 2.0]);
-    assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[0].0, &mut board_input), Ok(true));
+    assert!(crate::scenes::board2d_touch_pointer_move(&board_id, bounds, moves[0].0, moves[0].1, moves[0].2));
+    assert!(crate::scenes::board2d_touch_pointer_move(&board_id, bounds, moves[1].0, moves[1].1, moves[1].2));
+    close_camera(board2d_camera(&board_id).expect("board camera"), [0.0, 0.0, 2.0]);
+    assert_eq!(crate::scenes::board2d_touch_pointer_up_into(&board_id, "touch.board", down[0].0, &mut board_input), Ok(true));
     assert!(crate::collect_fixture_actions(&mut board_input).is_empty(), "the first board lift is silent");
-    assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[1].0, &mut board_input), Ok(true));
+    assert_eq!(crate::scenes::board2d_touch_pointer_up_into(&board_id, "touch.board", down[1].0, &mut board_input), Ok(true));
     let board_actions = crate::collect_fixture_actions(&mut board_input);
     assert_eq!(board_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setCamera"]);
-    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, ui_render::PointerId(3), 400.0, 300.0, &mut board_input), Ok(false), "the successor board touch is fresh");
+    assert_eq!(crate::scenes::board2d_touch_pointer_down_into(&board_id, bounds, ui_render::PointerId(3), 400.0, 300.0, &mut board_input), Ok(false), "the successor board touch is fresh");
 
     close_retained_surface_fixture(&map_window);
     close_retained_surface_fixture(&board_window);

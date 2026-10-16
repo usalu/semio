@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-codec-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "All Store codec and IO registries, dialect migrations, native snapshot capability and the assembly registry plan"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-codec-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-semio = { path = "../../../../🧬️semio/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-backbone = { path = "../../../🔗️backbone/📦️packages/🦀️rust" }
+semio-framework-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-decode = { path = "../../🧬️owned-schema/📦️packages/🦀️rust" }
+semio-framework-os-store-space-history = { path = "../../../📜️space-history/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+semio-framework-io-schema = { path = "../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
+semio-framework-os-directory = { path = "../../../../📇️directory/📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.140"

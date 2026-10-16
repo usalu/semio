@@ -15,7 +15,7 @@ fn the_framework_notices_mirror_the_fixture_in_both_locales() {
         assert_eq!(framework_fault_notice(code), Some((en, de)), "{code}");
         assert_eq!(history_notice(code), None, "{code} is no history-lane notice");
         assert!(!en.is_empty() && !de.is_empty() && en != de, "{code} names both locales");
-        assert_eq!(crate::manifest::fault_notice_placeholders(en), crate::manifest::fault_notice_placeholders(de), "{code} names the same placeholders in both locales");
+        assert_eq!(crate::fault_notice_placeholders(en), crate::fault_notice_placeholders(de), "{code} names the same placeholders in both locales");
     }
     assert_eq!(framework_fault_notice("history.full"), None, "a history-lane refusal is the history table's");
 }

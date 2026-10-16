@@ -19,7 +19,7 @@
 
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
 import moduleRoutes from "../../../../../🔌️plugin/📇️registry/📦️deployment/🛣️routes.json";
-import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
+import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
 
 const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
 

@@ -1,4 +1,5 @@
 import { ExactCargoLawError, exactExecutableFingerprint, generatedOutputHasLiveLease, type ExactCargoLawPort, originalNativeLibraryEnvironment } from "../🟦️.ts";
+import "./📥️inputs/🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync, mkdtempSync, readdirSync, renameSync, writeFileSync, mkdirSync, utimesSync } from "node:fs";
 import { spawnSync } from "node:child_process";

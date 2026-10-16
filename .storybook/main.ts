@@ -20,6 +20,7 @@ import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱�
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repoCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { pluginModulesRoot, builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { RUNTIME_ASSET_CHANNELS } from "../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -80,8 +81,9 @@ const config: StorybookConfig = {
   // (`/plugin-modules/<pluginId>/<wasmOut>.js`). Without it every `framework/os` plugin story renders
   // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
-  // never triggers a cargo build itself.
-  staticDirs: [{ from: process.env.SEMIO_STORYBOOK_BUILD === "true" ? builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)) : pluginModulesRoot(), to: "/plugin-modules" }],
+  // never triggers a cargo build itself. The runtime asset channels (compiler fonts, label face, icon pack)
+  // serve every wasm session story the fonts and icons Canvas no longer embeds.
+  staticDirs: [{ from: process.env.SEMIO_STORYBOOK_BUILD === "true" ? builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)) : pluginModulesRoot(), to: "/plugin-modules" }, ...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),

@@ -8,14 +8,14 @@ pub type ArtifactPreparedOperations=Vec<Vec<u8>>;
 
 /// 📦️ The supplied embedding limits cover original rows and every collection backing.
 pub struct ArtifactPreparedOperationsOwner {
- values:ManuallyDrop<PagedList<Option<Vec<u8>>,{isize::MAX as usize}>>,
- contiguous:ManuallyDrop<Option<ArtifactPreparedOperations>>,
+ pub values:ManuallyDrop<PagedList<Option<Vec<u8>>,{isize::MAX as usize}>>,
+ pub contiguous:ManuallyDrop<Option<ArtifactPreparedOperations>>,
  transferred:usize,
  payload_capacity_bytes:usize,
- maximum_operations:usize,
- maximum_capacity_bytes:usize,
- closing:bool,
- closed:bool,
+ pub maximum_operations:usize,
+ pub maximum_capacity_bytes:usize,
+ pub closing:bool,
+ pub closed:bool,
 }
 
 fn refusal(error:PagedListError)->ValueError {

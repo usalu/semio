@@ -105,8 +105,8 @@ export function compilerParseDiagnostics(sourceText: string, language: Vector["l
 
 //#region 🧪️StrictSourceTypes
 /** 🔎️ Checks one exact virtual source with strict compiler options and no emitted files. */
-export function strictSourceDiagnostics(sourceText: string, filePath: string): readonly { readonly code: number; readonly start: number; readonly end: number; readonly message: string }[] {
-  const options: ts.CompilerOptions = { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true, esModuleInterop: true, types: [] };
+export function strictSourceDiagnostics(sourceText: string, filePath: string, noUncheckedIndexedAccess = false): readonly { readonly code: number; readonly start: number; readonly end: number; readonly message: string }[] {
+  const options: ts.CompilerOptions = { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true, esModuleInterop: true, types: [] };
   const host = ts.createCompilerHost(options), original = host.getSourceFile;
   host.getSourceFile = (path, version, onError, fresh) => path === filePath ? ts.createSourceFile(path, sourceText, version, true, ts.ScriptKind.TS) : original(path, version, onError, fresh);
   const program = ts.createProgram([filePath], options, host), source = program.getSourceFile(filePath);

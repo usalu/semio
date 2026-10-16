@@ -41,7 +41,16 @@
         "command": "bun ./📜️script.ts wasm",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
         "forwardAllArgs": true
-      }
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust"
+          }
+        }
+      },
+      "outputs": []
     },
     "browser-test": {
       "executor": "repo:script",

@@ -1,5 +1,5 @@
 //! 🧩️ Typed, domain-neutral block-list scene records.
-use super::{value_push,value_push_option,value_decode,SceneDoc};
+use semio_framework_ui_scene_doc::{value_decode, value_push, value_push_option, SceneDoc};
 use protocol::value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind};
 use serde::{Serialize,Deserialize};
 

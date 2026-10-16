@@ -185,7 +185,7 @@ async fn a_second_refresh_starts_no_second_run() {
     let (flow_view, preview_view) = crate::editor_domain::editor_laws::context::shell_views("procedural-latch-main", "procedural-latch-preview");
     let switched = dispatch_with_view(&mut app, Generation3dCommand::SetActiveExample(semio_s_artifact_procedural_3d_editor_commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE.into() }), flow_view.clone()).await.expect("example");
     let first = crate::editor_domain::editor_laws::context::run_actions(&switched.effects);
-    assert_eq!(first, vec![semio_framework_plugin::TOOL_RUN_START_ACTION_ID.to_string()], "the gesture carries one run start");
+    assert_eq!(first, vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the gesture carries one run start");
     for _ in 0..3 {
         let polled = crate::editor_domain::editor_laws::context::owed_run_actions(&mut app, &preview_view).await;
         assert!(polled.is_empty(), "a refresh must not ask again while the gesture's start stands, got {polled:?}");
@@ -196,7 +196,7 @@ async fn a_second_refresh_starts_no_second_run() {
         owed_per_refresh.push(crate::editor_domain::editor_laws::context::owed_run_actions(&mut app, &preview_view).await);
     }
     assert!(owed_per_refresh.iter().all(Vec::is_empty), "a settled run owes nothing to any later refresh, got {owed_per_refresh:?}");
-    assert_eq!(receipt.run_actions.iter().filter(|action| *action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID).count(), 1, "one run start in the whole drive: {receipt:?}");
+    assert_eq!(receipt.run_actions.iter().filter(|action| *action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID).count(), 1, "one run start in the whole drive: {receipt:?}");
     assert_eq!(receipt.state.as_deref(), Some("finalized"));
     println!("[STATS] run start: first={first:?} hops={} answered={} refreshes={owed_per_refresh:?}", receipt.hops, receipt.answered);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);

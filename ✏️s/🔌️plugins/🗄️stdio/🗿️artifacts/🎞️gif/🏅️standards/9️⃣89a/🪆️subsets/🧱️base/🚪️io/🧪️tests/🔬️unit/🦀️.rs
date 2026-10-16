@@ -1,4 +1,7 @@
-use super::*;
+use crate::standards::v87a::subsets::any::io as codec;
+use crate::{standards::v89a::subsets::any::schema::snapshot::GifAppExtension, standards::v89a::subsets::any::schema::snapshot::GifDisposal, standards::v89a::subsets::any::schema::snapshot::GifFrame, standards::v89a::subsets::any::schema::snapshot::GifPlainText, standards::v89a::subsets::any::schema::snapshot::GifSnapshot, standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA};
+use crate::standards::v89a::subsets::any::io::{color_table_from_bytes};
+use crate::standards::v89a::subsets::any::io::*;
 use crate::standards::v89a::subsets::any::schema::demo_gif_snapshot;
 
 /// 📐️ Pads a quantized palette to the on-disk power-of-two size `write_color_table` would pad
@@ -279,20 +282,20 @@ mod conformance_laws {
     /// dancing.gif fixture decoded via the real 89a codec).
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        static FIXTURE_DSL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| Box::leak(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).expect("the committed fixture is readable").into_boxed_str()));
+        static FIXTURE_PACK: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../9️⃣89a/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).expect("the committed fixture is readable").into_boxed_slice()));
 
         let demo = demo_gif_snapshot();
-        assert!(pack::snapshot::ArtifactDsl::print_dsl(&demo)==FIXTURE_DSL, "owned native Text fixture differs");
-        assert!(pack::snapshot::ArtifactPack::encode_pack(&demo)==FIXTURE_PACK, "owned native Pack fixture differs");
+        assert!(pack::snapshot::ArtifactDsl::print_dsl(&demo)==(*FIXTURE_DSL), "owned native Text fixture differs");
+        assert!(pack::snapshot::ArtifactPack::encode_pack(&demo)==(*FIXTURE_PACK), "owned native Pack fixture differs");
 
-        let parsed = <GifSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <GifSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(*FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gif_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gif_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), *FIXTURE_DSL, "print_dsl(demo_gif_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <GifSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <GifSnapshot as pack::snapshot::ArtifactPack>::decode_pack(*FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_gif_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gif_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), *FIXTURE_PACK, "encode_pack(demo_gif_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

@@ -113,7 +113,7 @@ fn chrome_chip_label_set() -> Vec<String> {
     .map(ToOwned::to_owned)
     .collect();
     for is_de in [false, true] {
-        labels.extend(ShellState::framework_display_tabs(is_de).into_iter().map(|tab| tab.label));
+        labels.extend(framework_display_tabs(is_de).into_iter().map(|tab| tab.label));
         for key in [
             "settings.tab.general",
             "settings.tab.theme",

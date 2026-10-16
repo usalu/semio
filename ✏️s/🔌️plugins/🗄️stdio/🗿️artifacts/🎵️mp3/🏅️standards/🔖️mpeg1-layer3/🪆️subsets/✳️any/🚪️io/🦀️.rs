@@ -77,8 +77,7 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 //#endregion 🔖️Sniff
 
 //#region 🔖️Syncsafe
-#[path = "🏷️metadata/🦀️.rs"]
-pub mod metadata;
+pub use semio_s_artifact_stdio_mp3_mutations::standards::mpeg1_layer3::subsets::any::io::metadata;
 use metadata::{encode_syncsafe,encode_id3v2,encode_id3v1,decode_id3v1,id3_frame_body_len,id3_frame_body_slice};
 
 //#region 🔖️FrameHeader
@@ -129,7 +128,7 @@ fn bitrate_kbps(version_id: u8, layer: u8, index: u8) -> Option<u16> {
 /// size (header + payload, per Layer I/II/III's own formula). Returns `None` on any reserved
 /// field or a size that would overrun the buffer.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize)> {
+pub fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize)> {
     if pos + 4 > bytes.len() {
         return None;
     }
@@ -170,7 +169,7 @@ fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, usize
 
 /// 📐️ Re-encodes a frame header's typed fields back to the real 4 header bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
+pub fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
     let b0 = 0xFFu8;
     let b1 = 0xE0 | (h.mpeg_version_id << 3) | (h.layer << 1) | (h.protection_bit as u8);
     let b2 = (h.bitrate_index << 4) | (h.sample_rate_index << 2) | ((h.padding as u8) << 1) | (h.private_bit as u8);
@@ -509,9 +508,7 @@ pub mod playback {
 }
 //#endregion 🔖️Codec
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️codec/🦀️.rs"]
-mod codec_tests;
+
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
@@ -528,14 +525,11 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
+
+
 
 pub mod derived_construction {
     use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;

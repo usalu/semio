@@ -1,0 +1,59 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-instance-commands"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Instance use-cases of the plugin SDK: command routes, dispatch, groups and ingress over the command bundle"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-instance-commands"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+artifact-app-testing = []
+
+[dependencies]
+semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust" }
+semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust" }
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
+semio-framework-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
+semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
+semio-framework-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-extension = { path = "../../../🧩️extensions/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

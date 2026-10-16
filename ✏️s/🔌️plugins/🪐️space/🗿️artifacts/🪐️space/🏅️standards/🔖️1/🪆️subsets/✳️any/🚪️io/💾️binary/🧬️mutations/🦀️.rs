@@ -32,17 +32,13 @@ pub fn decode_op(bytes: &[u8]) -> Result<SSpaceMutation, protocol::ProtocolError
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "🏷️rename-artifact/🦀️.rs"]
-pub mod rename_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::binary::mutations::rename_artifact;
 
-#[path = "🗑️delete-artifact/🦀️.rs"]
-pub mod delete_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::binary::mutations::delete_artifact;
 
-#[path = "🕒touch-artifact/🦀️.rs"]
-pub mod touch_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::binary::mutations::touch_artifact;
 
-#[path = "🌱create-artifact/🦀️.rs"]
-pub mod create_artifact;
+pub use semio_s_artifact_space_space_schema::standards::v1::subsets::any::io::binary::mutations::create_artifact;
 
 mod native_codec {
 #[cfg(test)] use super::*;

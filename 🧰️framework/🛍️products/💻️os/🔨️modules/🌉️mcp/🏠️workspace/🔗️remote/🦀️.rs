@@ -1,45 +1,86 @@
 //! 🔗️ Authenticated hub descriptor binding for a headless MCP workspace.
 
-use crate::{GatewayError, GatewayErrorCode};
-use semio_framework_async::{HostAsyncRuntime, OperationContext};
-use semio_framework_os_kernel::os_directory::{
-    client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
-};
+use semio_framework_ui_contract_validation::{validate_snapshot};
+use semio_framework_async::HostAsyncRuntime;
+use semio_framework_async::OperationContext;
+use semio_framework_os_kernel::os_directory::DirectoryAccessChange;
+use semio_framework_os_kernel::os_directory::DirectoryEventBody;
+use semio_framework_os_kernel::os_directory::DirectorySessionKindV1;
+use semio_framework_os_kernel::os_directory::DirectorySpaceAdministrationPageV1;
+use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+use semio_framework_os_kernel::os_directory::DirectoryStreamMessage;
+use semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1;
+use semio_framework_os_kernel::os_directory::DocumentOpenIntentV1;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::DocumentView;
+use semio_framework_os_kernel::os_directory::MemberSpaceViewV1;
+use semio_framework_os_kernel::os_directory::MemberView;
+use semio_framework_os_kernel::os_directory::client::DirectoryClient;
+use semio_framework_os_kernel::os_directory::client::DirectoryClientError;
+use semio_framework_os_kernel::os_directory::client::DirectoryTransport;
+use semio_framework_os_kernel::os_directory::client::HubSocketGrantSource;
+use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
+use semio_framework_os_kernel::os_directory::descriptor_digest_v1;
+use semio_framework_os_kernel::os_directory::hex_lower;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
-
-#[path = "🧩️pair/🦀️.rs"]
-mod pair;
-pub use pair::{CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMount, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairMountProgress, CanonicalPairMountStage, CanonicalPairTransport};
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::sync::Arc;
+use std::sync::Condvar;
+use std::sync::Mutex;
+use std::sync::PoisonError;
+use std::sync::RwLock;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use semio_framework_os_mcp_hub_pair::pair;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::percent_codec::{percent_decode, percent_encode};
+use semio_framework_os_mcp_hub_pair::binding_errors::{HubBindingError, HubUnavailableCause};
+use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairBody, CanonicalPairMountError, CanonicalPairMountIdentity};
+use semio_framework_os_mcp_inference_hub::hub_wire::HubInferenceSubjectV1;
+use semio_framework_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use semio_framework_os_mcp_wire::notify::publish_call_progress;
 #[cfg(not(target_arch = "wasm32"))]
-pub use pair::{NativeCanonicalPairBody, NativeCanonicalPairTransport};
+use semio_framework_os_mcp_foundation::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairMount, NativeCanonicalPairTransport};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalReceiptV1, HubInferenceApprovalRequestV1, HubInferenceBaseBindingV1, HubInferenceEventPageV1, HubInferenceJobReceiptV1, HubInferenceServiceV1, HubInferenceSubmitRequestV1, InferenceRouteErrorV1, NativeInferenceHubTransport, approve_hub_inference_job, cancel_hub_inference_job, read_hub_inference_job_events, read_hub_inference_services, submit_hub_inference_job, undo_hub_inference_approval};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_wire::notify::active_request_cancel_requested;
 
 pub const HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS: usize = 4_096;
+
 /// 👥️ The most member rows a descriptor refresh reads while it looks for the authenticated principal's own row.
 pub const HUB_SPACE_MEMBERS_MAX: usize = 4_096;
+
 pub const HUB_VERIFIED_CATALOG_MAX_PACKAGES: usize = 256;
+
 pub const HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES: usize = 32 * 1024 * 1024;
+
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
-/// ✂️ The longest transport detail a hub-unavailable refusal carries (characters), schema `HubUnavailableCauseV1`.
-pub const HUB_UNAVAILABLE_DETAIL_MAX_CHARS: usize = 512;
+
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
+
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
+
 /// ⏳️ How long a hub-bound call waits for a descriptor refresh already in flight before it fails
 /// closed: one refresh turn's own deadline. Every directory event in the space (another member's
 /// new document, this agent's own commit) invalidates the authority, and without the wait every
 /// tool call in that window answered a retryable `PLUGIN_UNAVAILABLE`, including an approval whose
 /// edit had already landed.
 pub const HUB_AUTHORITY_SETTLE_WAIT_MS: u64 = HUB_BINDING_OPERATION_TIMEOUT_MS;
+
 /// ⏳️ How long a hub-bound call keeps waiting while the binding waits for its network byte budget to refill: one refill
 /// interval on top of the ordinary settle wait, so a call spans the refill instead of refusing inside it.
 pub const HUB_NETWORK_BUDGET_SETTLE_WAIT_MS: u64 = semio_framework_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS + HUB_AUTHORITY_SETTLE_WAIT_MS;
+
 /// 💰️ The budget one authority refresh waits for before it runs again after its budget ran out: the session, the space page
 /// and one manifest per document, plus any descriptor it has not verified before.
 pub const HUB_REFRESH_NETWORK_BUDGET_BYTES: u64 = 16 * 1024 * 1024;
+
 /// 🔁️ How often a network budget wait re-reads the budget.
 pub const HUB_NETWORK_BUDGET_POLL_MS: u64 = 250;
 
@@ -70,6 +111,7 @@ pub fn await_network_budget(
 /// requests plus two per document, and one that failed (a busy hub answering `503
 /// deadline-exceeded`) used to be retried back-to-back for as long as it kept failing.
 pub const HUB_REFRESH_RETRY_BASE_MS: u64 = 100;
+
 pub const HUB_REFRESH_RETRY_MAX_MS: u64 = 5_000;
 
 /// 🔁️ `min(base · 2^(failures-1), max)` — the pause after the `failures`th refresh in a row failed.
@@ -85,30 +127,43 @@ fn pause_unless_cancelled(cancel: &semio_framework_async::CancelToken, ms: u64) 
         std::thread::sleep(remaining.min(std::time::Duration::from_millis(25)));
     }
 }
+
 /// 🧩️ Execution-target components are static assets — immutable, catalog-verified, content-addressed — so a gateway keeps
 /// them in the per-user execution-target store and fetches a missing one over a pool of its own that meters no bytes: the
 /// per-minute budget is for the directory's API requests, and component traffic is bounded by [`HUB_COMPONENT_STREAMS`]
 /// here and by the hub's own execution-target asset stream rule (see [`HubComponentAssets`]).
 pub const HUB_COMPONENT_ASSET_BYTES_PER_MINUTE: u64 = u64::MAX;
+
 /// 🚰️ Component streams one gateway runs at once: one stream already takes the whole link, a second only splits it.
 pub const HUB_COMPONENT_STREAMS: u32 = 1;
+
 /// ⏱️ One component stream's deadline is this allowance plus its declared length at [`HUB_COMPONENT_STREAM_FLOOR_BYTES_PER_SECOND`].
 pub const HUB_COMPONENT_STREAM_ALLOWANCE_MS: u64 = 60_000;
+
 /// 🐢️ The slowest transfer rate a component stream is still waited for.
 pub const HUB_COMPONENT_STREAM_FLOOR_BYTES_PER_SECOND: u64 = 256 * 1024;
+
 /// 🔁️ How often one component is asked for across interrupted streams and hub shortages (`502`/`503`/`504`) before the
 /// open fails, retryably.
 pub const HUB_COMPONENT_STREAM_ATTEMPTS: u32 = 4;
+
 /// ⏳️ The wait a busy hub's asset refusal stands for when its body names none, and the longest wait any refusal is held to.
 pub const HUB_COMPONENT_STREAM_RETRY_MS: u64 = 1_000;
+
 pub const HUB_COMPONENT_STREAM_RETRY_MAX_MS: u64 = 30_000;
+
 /// 📈️ The longest a component transfer stays silent: an unchanged progress is published again after this long.
 pub const HUB_COMPONENT_PROGRESS_KEEPALIVE_MS: u64 = 2_000;
+
 /// 💰️ The budget one execution-target lease request waits for: its ≈3 KB JSON with generous headroom.
 pub const HUB_EXECUTION_TARGET_LEASE_BUDGET_BYTES: u64 = 64 * 1024;
+
 pub const CANONICAL_CHECKPOINT_RESOURCE_SCHEMA: &str = "semio.mcp.canonical-checkpoint-resource/v1";
+
 pub const CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES: usize = 6 * 1024 * 1024;
+
 const CANONICAL_CHECKPOINT_RESOURCE_METADATA_MAX_BYTES: usize = 16 * 1024;
+
 static NEXT_HUB_AUTHORITY_GENERATION: AtomicU64 = AtomicU64::new(1);
 
 #[derive(Clone, Debug, PartialEq)]
@@ -155,16 +210,16 @@ pub struct AuthorizedCatalogSnapshot {
 /// selects.
 #[derive(Default)]
 struct HubDescriptorCache {
-    entries: HashMap<(String, u64), semio_framework::PackageDescriptor>,
-    bytes: u64,
+    pub entries: HashMap<(String, u64), semio_framework::PackageDescriptor>,
+    pub bytes: u64,
 }
 
 impl HubDescriptorCache {
-    fn get(&self, key: &(String, u64)) -> Option<semio_framework::PackageDescriptor> {
+    pub fn get(&self, key: &(String, u64)) -> Option<semio_framework::PackageDescriptor> {
         self.entries.get(key).cloned()
     }
 
-    fn insert(&mut self, key: (String, u64), descriptor: semio_framework::PackageDescriptor, used: &HashSet<(String, u64)>) -> Result<(), HubBindingError> {
+    pub fn insert(&mut self, key: (String, u64), descriptor: semio_framework::PackageDescriptor, used: &HashSet<(String, u64)>) -> Result<(), HubBindingError> {
         if self.entries.contains_key(&key) {
             return Ok(());
         }
@@ -176,7 +231,7 @@ impl HubDescriptorCache {
         Ok(())
     }
 
-    fn retain(&mut self, selected: &HashSet<(String, u64)>) {
+    pub fn retain(&mut self, selected: &HashSet<(String, u64)>) {
         self.entries.retain(|key, _| selected.contains(key));
         self.bytes = self.entries.keys().map(|(_, length)| *length).sum();
     }
@@ -215,128 +270,22 @@ pub enum HubStreamObservation {
     Revoked,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum HubBindingError {
-    Cancelled,
-    DeadlineExceeded,
-    Unauthorized,
-    SessionExpired,
-    MembershipRequired,
-    CapacityExceeded,
-    InvalidResponse(&'static str),
-    StaleRefresh,
-    Unavailable(HubUnavailableCause),
-}
-
-/// 🔎️ What made the hub directory unavailable, so a refusal names it instead of one opaque word
-/// (schema `HubUnavailableCauseV1`).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum HubUnavailableCause {
-    /// 🌐️ The HTTP status and, when the hub answered its typed refusal, that refusal's `code`.
-    Http { status: u16, code: Option<String> },
-    /// 🔌️ The transport failed before any HTTP answer; `detail` is its own bounded cause (an exhausted byte
-    /// budget, a refused connection), never dropped.
-    Transport { detail: String },
-    /// 💰️ This gateway's own network byte budget is spent until its next refill turn — the hub is fine.
-    NetworkBudget,
-    UndecodableResponse,
-}
-
-impl HubUnavailableCause {
-    /// 🌐️ An HTTP refusal, keeping the hub's typed `code` (bounded) when its body carries one.
-    fn http(status: u16, body: &str) -> Self {
-        let code = serde_json::from_str::<serde_json::Value>(body).ok().and_then(|value| value.get("code").and_then(serde_json::Value::as_str).map(|code| code.chars().take(64).collect()));
-        Self::Http { status, code }
-    }
-
-    /// 🔌️ A transport failure, keeping its own detail bounded to [`HUB_UNAVAILABLE_DETAIL_MAX_CHARS`].
-    fn transport(error: &semio_framework_os_kernel::os_directory::client::TransportError) -> Self {
-        if matches!(error, semio_framework_os_kernel::os_directory::client::TransportError::BudgetExhausted) {
-            return Self::NetworkBudget;
-        }
-        let detail = match error {
-            semio_framework_os_kernel::os_directory::client::TransportError::Io(detail) => detail.clone(),
-            other => other.to_string(),
-        };
-        Self::Transport { detail: detail.chars().take(HUB_UNAVAILABLE_DETAIL_MAX_CHARS).collect() }
-    }
-
-    /// 🧾️ The typed `HubUnavailableCauseV1` a refusal's `details.cause` carries.
-    fn to_json(&self) -> serde_json::Value {
-        match self {
-            Self::Http { status, code } => serde_json::json!({ "kind": "http", "status": status, "code": code }),
-            Self::Transport { detail } => serde_json::json!({ "kind": "transport", "detail": detail }),
-            Self::NetworkBudget => serde_json::json!({ "kind": "network-budget" }),
-            Self::UndecodableResponse => serde_json::json!({ "kind": "undecodable-response" }),
-        }
-    }
-
-    /// 🗣️ The en + de sentence a client shows for this cause (`details.summary`).
-    fn summary(&self) -> serde_json::Value {
-        let (en, de) = match self {
-            Self::Http { status, code: Some(code) } => (
-                format!("The hub answered HTTP {status} ({code}); the request is retried once the hub recovers."),
-                format!("Der Hub antwortete mit HTTP {status} ({code}); die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."),
-            ),
-            Self::Http { status, code: None } => (
-                format!("The hub answered HTTP {status}; the request is retried once the hub recovers."),
-                format!("Der Hub antwortete mit HTTP {status}; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist."),
-            ),
-            Self::Transport { detail } => (
-                format!("The hub could not be reached ({detail}); the request is retried once the connection recovers."),
-                format!("Der Hub war nicht erreichbar ({detail}); die Anfrage wird wiederholt, sobald die Verbindung wieder steht."),
-            ),
-            Self::NetworkBudget => (
-                "This gateway's network allowance for this minute is used up; the request continues once it refills.".to_string(),
-                "Das Netzwerkkontingent dieses Gateways für diese Minute ist aufgebraucht; die Anfrage läuft weiter, sobald es aufgefüllt ist.".to_string(),
-            ),
-            Self::UndecodableResponse => (
-                "The hub's answer could not be read; the request is retried once the hub recovers.".to_string(),
-                "Die Antwort des Hubs war nicht lesbar; die Anfrage wird wiederholt, sobald der Hub wieder bereit ist.".to_string(),
-            ),
-        };
-        serde_json::json!({ "en": en, "de": de })
-    }
-}
-
-impl std::fmt::Display for HubBindingError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Cancelled => formatter.write_str("hub descriptor refresh was cancelled"),
-            Self::DeadlineExceeded => formatter.write_str("hub descriptor refresh exceeded its deadline"),
-            Self::Unauthorized => formatter.write_str("hub session is unauthorized"),
-            Self::SessionExpired => formatter.write_str("hub session is expired"),
-            Self::MembershipRequired => formatter.write_str("current hub space membership is required"),
-            Self::CapacityExceeded => formatter.write_str("hub descriptor index exceeded its fixed document capacity"),
-            Self::InvalidResponse(detail) => write!(formatter, "hub directory response was invalid: {detail}"),
-            Self::StaleRefresh => formatter.write_str("hub descriptor refresh was superseded"),
-            Self::Unavailable(HubUnavailableCause::Http { status, code: Some(code) }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status} {code})"),
-            Self::Unavailable(HubUnavailableCause::Http { status, code: None }) => write!(formatter, "hub directory is temporarily unavailable (HTTP {status})"),
-            Self::Unavailable(HubUnavailableCause::Transport { detail }) => write!(formatter, "hub directory is temporarily unavailable (transport: {detail})"),
-            Self::Unavailable(HubUnavailableCause::NetworkBudget) => formatter.write_str("hub directory is temporarily unavailable (network byte budget exhausted until its next refill)"),
-            Self::Unavailable(HubUnavailableCause::UndecodableResponse) => formatter.write_str("hub directory is temporarily unavailable (undecodable response)"),
-        }
-    }
-}
-
-impl std::error::Error for HubBindingError {}
-
 pub struct HubRemoteBinding {
-    hub_origin: String,
-    space_id: String,
-    state: RwLock<HubRemoteBindingState>,
-    progress: RwLock<HubBindingProgress>,
-    diagnostic: RwLock<Option<String>>,
-    generation: AtomicU64,
-    authority_generation: AtomicU64,
-    observed_event_seq: AtomicU64,
-    authenticated_user_id: RwLock<Option<String>>,
-    catalog: RwLock<Option<Arc<AuthorizedCatalogSnapshot>>>,
-    descriptors: Mutex<HubDescriptorCache>,
-    pair_actor: Mutex<pair::CanonicalPairActor>,
+    pub hub_origin: String,
+    pub space_id: String,
+    pub state: RwLock<HubRemoteBindingState>,
+    pub progress: RwLock<HubBindingProgress>,
+    pub(crate) diagnostic: RwLock<Option<String>>,
+    pub generation: AtomicU64,
+    pub authority_generation: AtomicU64,
+    pub observed_event_seq: AtomicU64,
+    pub authenticated_user_id: RwLock<Option<String>>,
+    pub catalog: RwLock<Option<Arc<AuthorizedCatalogSnapshot>>>,
+    pub descriptors: Mutex<HubDescriptorCache>,
+    pub(crate) pair_actor: Mutex<pair::CanonicalPairActor>,
     settle: (Mutex<()>, Condvar),
     #[cfg(test)]
-    pair_mount_return_pause: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
+    pub(crate) pair_mount_return_pause: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
 }
 
 impl HubRemoteBinding {
@@ -370,7 +319,7 @@ impl HubRemoteBinding {
 
     /// 🔄️ Whether an authority refresh is in flight: not yet bound, refreshing, or bound while the
     /// catalog of that exact authority generation is still being verified.
-    fn settling(&self) -> bool {
+    pub(crate) fn settling(&self) -> bool {
         match self.state() {
             HubRemoteBindingState::Unbound | HubRemoteBindingState::Refreshing => true,
             HubRemoteBindingState::Ready(_) => {
@@ -407,7 +356,7 @@ impl HubRemoteBinding {
                 let now = std::time::Instant::now();
                 let Some(remaining) = deadline.checked_duration_since(now).filter(|remaining| !remaining.is_zero()) else { return };
                 let fraction = now.duration_since(started).as_secs_f64() / deadline.duration_since(started).as_secs_f64();
-                crate::notify::publish_call_progress(fraction, &settle_progress_message(&progress));
+                publish_call_progress(fraction, &settle_progress_message(&progress));
                 guard = self.settle.1.wait_timeout(guard, remaining.min(std::time::Duration::from_secs(1))).unwrap_or_else(PoisonError::into_inner).0;
             }
         }
@@ -673,7 +622,7 @@ impl HubRemoteBinding {
         self.announce();
     }
 
-    fn begin_refresh(&self, phase: HubBindingPhase, total: usize) -> u64 {
+    pub(crate) fn begin_refresh(&self, phase: HubBindingPhase, total: usize) -> u64 {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         let generation = self.generation.fetch_add(1, Ordering::SeqCst).saturating_add(1);
         self.authority_generation.store(0, Ordering::SeqCst);
@@ -736,7 +685,7 @@ impl HubRemoteBinding {
         *self.progress.write().unwrap_or_else(PoisonError::into_inner) = HubBindingProgress { phase, completed, total };
     }
 
-    fn invalidate(&self, diagnostic: &str) {
+    pub(crate) fn invalidate(&self, diagnostic: &str) {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
         self.authority_generation.store(0, Ordering::SeqCst);
@@ -749,7 +698,7 @@ impl HubRemoteBinding {
         self.announce();
     }
 
-    fn revoke(&self, error: HubBindingError) {
+    pub fn revoke(&self, error: HubBindingError) {
         let mut actor = self.pair_actor.lock().unwrap_or_else(PoisonError::into_inner);
         self.generation.fetch_add(1, Ordering::SeqCst);
         self.authority_generation.store(0, Ordering::SeqCst);
@@ -763,7 +712,7 @@ impl HubRemoteBinding {
         self.announce();
     }
 
-    fn fail<T>(&self, generation: u64, error: HubBindingError) -> Result<T, HubBindingError> {
+    pub fn fail<T>(&self, generation: u64, error: HubBindingError) -> Result<T, HubBindingError> {
         if self.generation.load(Ordering::SeqCst) != generation {
             return Err(HubBindingError::StaleRefresh);
         }
@@ -826,7 +775,7 @@ impl HubRemoteBinding {
     }
 
     #[cfg(test)]
-    pub(crate) fn install_snapshot_for_test(&self, snapshot: AuthorizedDescriptorSnapshot) {
+    pub fn install_snapshot_for_test(&self, snapshot: AuthorizedDescriptorSnapshot) {
         self.generation.fetch_add(1, Ordering::SeqCst);
         let authority_generation = next_authority_generation().expect("test authority generation capacity");
         *self.authenticated_user_id.write().unwrap_or_else(PoisonError::into_inner) = Some(snapshot.authenticated_user_id.clone());
@@ -837,7 +786,7 @@ impl HubRemoteBinding {
     }
 
     #[cfg(test)]
-    pub(crate) fn install_catalog_for_test(&self, selections: Vec<AuthorizedPackageSelection>) {
+    pub fn install_catalog_for_test(&self, selections: Vec<AuthorizedPackageSelection>) {
         let authority_generation = self.authority_generation.load(Ordering::SeqCst);
         assert_ne!(authority_generation, 0);
         let dialect_kinds = selections.iter().map(|selection| (selection.scope.clone(), selection.lease.parent_dialect.artifact_kind.clone())).collect();
@@ -859,7 +808,7 @@ fn next_authority_generation() -> Result<u64, HubBindingError> {
 
 /// 🔑️ Exchanges an explicitly selected credential protocol with the shared bounded native transport.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn exchange_delegated_session_v1(base_url: &str, credential: &crate::agent_credential::DelegatedCredentialV1, protocol: crate::agent_credential::CredentialExchangeProtocolV1) -> Result<crate::agent_credential::DelegatedSessionGrantV1, GatewayError> {
+pub fn exchange_delegated_session_v1(base_url: &str, credential: &DelegatedCredentialV1, protocol: CredentialExchangeProtocolV1) -> Result<DelegatedSessionGrantV1, GatewayError> {
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
     use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryTransport, HttpMethod};
@@ -887,7 +836,7 @@ pub fn exchange_delegated_session_v1(base_url: &str, credential: &crate::agent_c
         capability: None,
     };
     let request = (protocol.request)(credential, &agent_instance_id())?;
-    let request = crate::agent_credential::CredentialExchangeRequestV1::new(request.path, request.body)?;
+    let request = CredentialExchangeRequestV1::new(request.path, request.body)?;
     let url = format!("{origin}{}", request.path);
     let mut response = runtime
         .block_on(transport.http(&ctx, HttpMethod::Post, &url, Some(credential.expose_for_exchange()), Some(request.body)))
@@ -940,11 +889,11 @@ pub fn parse_checkpoint_resource_uri(uri: &str) -> Option<DocumentScope> {
     Some(DocumentScope::new(space_id, document_id))
 }
 
-fn checked_base64_length(length: usize) -> Result<usize, CanonicalPairMountError> {
+pub(crate) fn checked_base64_length(length: usize) -> Result<usize, CanonicalPairMountError> {
     length.checked_add(2).and_then(|value| value.checked_div(3)).and_then(|value| value.checked_mul(4)).ok_or(CanonicalPairMountError::ResourceLimit)
 }
 
-fn base64_encode_exact(bytes: &[u8], output_length: usize) -> Result<String, CanonicalPairMountError> {
+pub(crate) fn base64_encode_exact(bytes: &[u8], output_length: usize) -> Result<String, CanonicalPairMountError> {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     if checked_base64_length(bytes.len())? != output_length {
         return Err(CanonicalPairMountError::ResourceLimit);
@@ -962,7 +911,7 @@ fn base64_encode_exact(bytes: &[u8], output_length: usize) -> Result<String, Can
     Ok(output)
 }
 
-fn canonical_checkpoint_resource_text(
+pub(crate) fn canonical_checkpoint_resource_text(
     identity: &CanonicalPairMountIdentity,
     frontier: &semio_framework_os_kernel::os_directory::ArtifactFrontier,
     pack: &[u8],
@@ -986,13 +935,13 @@ fn canonical_checkpoint_resource_text(
     }
     let pack_base64 = base64_encode_exact(pack, pack_base64_length)?;
     let spr_base64 = base64_encode_exact(spr, spr_base64_length)?;
-    let provenance = crate::schema::UntrustedProvenance {
-        source: crate::schema::UntrustedSource::HubCheckpoint,
+    let provenance = UntrustedProvenance {
+        source: UntrustedSource::HubCheckpoint,
         artifact_id: Some(identity.scope.document_id.clone()),
         artifact_kind: None,
         space_id: Some(identity.scope.space_id.clone()),
-        revision: crate::schema::UntrustedRevision { content_sha256: crate::schema::untrusted_content_sha256(&[pack, spr]), head_edit_id: Some(frontier.head_edit_id.clone()), commit_seq: Some(frontier.last_commit_seq) },
-        authors: crate::schema::UntrustedAuthors::SpaceWriters { space_id: identity.scope.space_id.clone() },
+        revision: UntrustedRevision { content_sha256: untrusted_content_sha256(&[pack, spr]), head_edit_id: Some(frontier.head_edit_id.clone()), commit_seq: Some(frontier.last_commit_seq) },
+        authors: UntrustedAuthors::SpaceWriters { space_id: identity.scope.space_id.clone() },
     };
     let value = serde_json::json!({
         "schema": CANONICAL_CHECKPOINT_RESOURCE_SCHEMA,
@@ -1011,7 +960,7 @@ fn canonical_checkpoint_resource_text(
         },
         "pack": { "byteLength": pack.len(), "sha256": framework_hash::sha256_hex(pack) },
         "spr": { "byteLength": spr.len(), "sha256": framework_hash::sha256_hex(spr) },
-        "untrusted": crate::schema::untrusted_content(&provenance, serde_json::json!({ "packBase64": pack_base64, "sprBase64": spr_base64 }))
+        "untrusted": untrusted_content(&provenance, serde_json::json!({ "packBase64": pack_base64, "sprBase64": spr_base64 }))
     });
     let text = serde_json::to_string(&value).map_err(|_| CanonicalPairMountError::InvalidResponse("canonical checkpoint resource serialization failed"))?;
     if text.len() > CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES {
@@ -1027,7 +976,7 @@ fn validate_identity(field: &'static str, value: &str) -> Result<(), HubBindingE
     Ok(())
 }
 
-fn validate_document_count(actual: usize, declared: u32) -> Result<(), HubBindingError> {
+pub(crate) fn validate_document_count(actual: usize, declared: u32) -> Result<(), HubBindingError> {
     if actual > HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS {
         return Err(HubBindingError::CapacityExceeded);
     }
@@ -1037,7 +986,7 @@ fn validate_document_count(actual: usize, declared: u32) -> Result<(), HubBindin
     Ok(())
 }
 
-fn map_client_error(error: DirectoryClientError) -> HubBindingError {
+pub(crate) fn map_client_error(error: DirectoryClientError) -> HubBindingError {
     match error {
         DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403 | 404, .. } => HubBindingError::Unauthorized,
         DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
@@ -1048,7 +997,7 @@ fn map_client_error(error: DirectoryClientError) -> HubBindingError {
     }
 }
 
-fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
+pub(crate) fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
     match error {
         DirectoryClientError::Unauthorized | DirectoryClientError::Http { status: 403, .. } => HubBindingError::Unauthorized,
         DirectoryClientError::Cancelled | DirectoryClientError::Transport(semio_framework_os_kernel::os_directory::client::TransportError::Cancelled) => HubBindingError::Cancelled,
@@ -1060,7 +1009,7 @@ fn map_catalog_client_error(error: DirectoryClientError) -> HubBindingError {
     }
 }
 
-fn bounded_diagnostic(message: &str) -> String {
+pub(crate) fn bounded_diagnostic(message: &str) -> String {
     if message.len() <= HUB_BINDING_DIAGNOSTIC_MAX_BYTES {
         return message.to_string();
     }
@@ -1146,45 +1095,8 @@ fn unavailable_gateway_error(state: HubRemoteBindingState, phase: HubBindingPhas
         .retryable()
 }
 
-pub(crate) fn percent_encode(value: &str) -> String {
-    let mut output = String::with_capacity(value.len());
-    for byte in value.bytes() {
-        match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => output.push(char::from(byte)),
-            _ => output.push_str(&format!("%{byte:02X}")),
-        }
-    }
-    output
-}
-
-fn percent_decode(value: &str) -> Option<String> {
-    let bytes = value.as_bytes();
-    let mut decoded = Vec::with_capacity(bytes.len());
-    let mut index = 0;
-    while index < bytes.len() {
-        if bytes[index] == b'%' {
-            let high = hex_digit(*bytes.get(index + 1)?)?;
-            let low = hex_digit(*bytes.get(index + 2)?)?;
-            decoded.push(high << 4 | low);
-            index += 3;
-        } else {
-            decoded.push(bytes[index]);
-            index += 1;
-        }
-    }
-    String::from_utf8(decoded).ok()
-}
-
-fn hex_digit(byte: u8) -> Option<u8> {
-    match byte {
-        b'0'..=b'9' => Some(byte - b'0'),
-        b'a'..=b'f' => Some(byte - b'a' + 10),
-        b'A'..=b'F' => Some(byte - b'A' + 10),
-        _ => None,
-    }
-}
-
 //#region 🧩️ComponentAssets
+
 /// 📶️ Where one execution-target component transfer is (schema `HubComponentTransferPhaseV1`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HubComponentTransferPhase {
@@ -1244,10 +1156,10 @@ enum ComponentStreamFault {
 /// plugin is therefore bound by bandwidth alone and reports its bytes as it goes.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct HubComponentAssets {
-    runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
-    transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
-    credential: Arc<LocalHubCredential>,
-    store: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore,
+    pub runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
+    pub(crate) transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
+    pub credential: Arc<LocalHubCredential>,
+    pub store: semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore,
     serial: Mutex<()>,
 }
 
@@ -1406,17 +1318,18 @@ fn hub_asset_refusal_wait_ms(body: &[u8]) -> u64 {
 fn component_cancelled() -> GatewayError {
     GatewayError::new(GatewayErrorCode::Cancelled, "the execution-target component transfer was cancelled")
 }
+
 //#endregion 🧩️ComponentAssets
 
 #[cfg(not(target_arch = "wasm32"))]
 pub struct NativeHubBindingDriver {
-    cancel: semio_framework_async::CancelToken,
+    pub cancel: semio_framework_async::CancelToken,
     thread: Option<std::thread::JoinHandle<()>>,
-    runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
+    pub runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
     pair_transport: Arc<NativeCanonicalPairTransport<semio_framework_os_services::TokioHostRuntime>>,
-    inference_transport: Arc<crate::inference::NativeInferenceHubTransport<semio_framework_os_services::TokioHostRuntime>>,
+    inference_transport: Arc<NativeInferenceHubTransport<semio_framework_os_services::TokioHostRuntime>>,
     /// 🪪️ The SAME authenticated client the binding refreshes through, held for the per-document execution-target lease.
-    client: Arc<DirectoryClient<semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>>>,
+    pub client: Arc<DirectoryClient<semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>>>,
     /// 💰️ The same transport, read for its byte budget: a transfer the budget cannot admit waits for the refill turn.
     budget: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>,
     /// 🧩️ The execution-target components, fetched on demand as static assets. The catalog refresh pulls manifest and
@@ -1478,7 +1391,7 @@ impl NativeHubBindingDriver {
         );
         let assets = HubComponentAssets::new(runtime.clone(), credential.clone(), semio_framework_os_kernel::os_directory::client::ExecutionTargetModuleStore::for_user());
         let pair_transport = Arc::new(NativeCanonicalPairTransport::new(transport.clone(), credential.clone()));
-        let inference_transport = Arc::new(crate::inference::NativeInferenceHubTransport::new(transport.clone(), credential.clone()));
+        let inference_transport = Arc::new(NativeInferenceHubTransport::new(transport.clone(), credential.clone()));
         let budget = transport.clone();
         let client = Arc::new(DirectoryClient::authenticated(transport, credential));
         let grant_source: Arc<dyn HubSocketGrantSource> = client.clone();
@@ -1667,14 +1580,14 @@ impl NativeHubBindingDriver {
         let cancel = self.cancel.child_now();
         let mut published: Option<(HubComponentTransferPhase, u64, std::time::Instant)> = None;
         self.assets.component(&intent, expected, &cancel, |transfer| {
-            if crate::notify::active_request_cancel_requested() {
+            if active_request_cancel_requested() {
                 cancel.cancel_now();
             }
             let percent = transfer.received_bytes.saturating_mul(100) / transfer.total_bytes.max(1);
             let stale = published.is_none_or(|(phase, at, when)| phase != transfer.phase || at != percent || when.elapsed().as_millis() >= u128::from(HUB_COMPONENT_PROGRESS_KEEPALIVE_MS));
             if stale {
                 published = Some((transfer.phase, percent, std::time::Instant::now()));
-                crate::notify::publish_call_progress(transfer.fraction(), &transfer.message(plugin_id));
+                publish_call_progress(transfer.fraction(), &transfer.message(plugin_id));
             }
         })
     }
@@ -1719,12 +1632,12 @@ impl NativeHubBindingDriver {
         let cancel = self.cancel.child_now();
         let started = std::time::Instant::now();
         await_network_budget(|| self.budget.network_budget(), needed, &cancel, |remaining, needed| {
-            if crate::notify::active_request_cancel_requested() {
+            if active_request_cancel_requested() {
                 cancel.cancel_now();
             }
             let progress = HubBindingProgress { phase: HubBindingPhase::AwaitingNetworkBudget, completed: usize::try_from(remaining).unwrap_or(usize::MAX), total: usize::try_from(needed).unwrap_or(usize::MAX) };
             let refill = std::time::Duration::from_millis(semio_framework_os_services::HTTP_BUCKET_REFILL_INTERVAL_MS).as_secs_f64();
-            crate::notify::publish_call_progress((started.elapsed().as_secs_f64() / refill).min(0.99), &settle_progress_message(&progress));
+            publish_call_progress((started.elapsed().as_secs_f64() / refill).min(0.99), &settle_progress_message(&progress));
         })
         .map_err(binding_error_to_gateway)
     }
@@ -1774,7 +1687,7 @@ pub(crate) fn directory_dial_refusal(cause: &impl std::fmt::Display) -> GatewayE
     GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("hub directory stream is unavailable ({cause}); authenticated snapshot was not activated")).retryable()
 }
 
-fn binding_error_to_gateway(error: HubBindingError) -> GatewayError {
+pub(crate) fn binding_error_to_gateway(error: HubBindingError) -> GatewayError {
     let code = match error {
         HubBindingError::Cancelled => GatewayErrorCode::Cancelled,
         HubBindingError::CapacityExceeded => GatewayErrorCode::BudgetExceeded,
@@ -1798,7 +1711,7 @@ fn wall_now_ms() -> i64 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
+pub(crate) fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
     stream: &mut semio_framework_os_kernel::os_directory::client::DirectoryStream<T>,
     binding: &HubRemoteBinding,
     ctx: &OperationContext,
@@ -1816,6 +1729,7 @@ fn complete_authorized_directory_dial<T: DirectoryTransport + Clone>(
 }
 
 //#region 💡️Inference
+
 /// ⏱️ The bounded deadline every authenticated inference route call runs under. It is the hub's own
 /// fixed job lifetime plus one binding-operation timeout of slack, because `POST …/jobs` runs the
 /// bounded deterministic service inline before it answers.
@@ -1833,13 +1747,13 @@ impl HubRemoteBinding {
     }
 
     /// 👤️ The live authenticated subject and coarse authority fence one inference job is owned by.
-    pub fn inference_subject(&self, wall_now_ms: i64) -> Result<crate::inference::HubInferenceSubjectV1, GatewayError> {
+    pub fn inference_subject(&self, wall_now_ms: i64) -> Result<HubInferenceSubjectV1, GatewayError> {
         let snapshot = self.ready_snapshot(wall_now_ms)?;
         let authority_generation = self.authority_generation.load(Ordering::SeqCst);
         if authority_generation == 0 {
             return Err(self.unavailable(HubRemoteBindingState::Refreshing));
         }
-        Ok(crate::inference::HubInferenceSubjectV1 { hub_origin: self.hub_origin.clone(), space_id: self.space_id.clone(), user_id: snapshot.authenticated_user_id.clone(), authority_generation })
+        Ok(HubInferenceSubjectV1 { hub_origin: self.hub_origin.clone(), space_id: self.space_id.clone(), user_id: snapshot.authenticated_user_id.clone(), authority_generation })
     }
 
     /// 📄️ Resolves one document id inside this binding's own space against the authenticated
@@ -1874,42 +1788,42 @@ impl NativeHubBindingDriver {
 
     /// 🌎️ The inference services the hub executes itself, read from its own readiness body — the one
     /// place a hub declares them, so a client never keeps a table of its own.
-    pub fn read_hub_inference_services(&self, hub_origin: &str, cancel: &semio_framework_async::CancelToken) -> Result<Vec<crate::inference::HubInferenceServiceV1>, crate::inference::InferenceRouteErrorV1> {
+    pub fn read_hub_inference_services(&self, hub_origin: &str, cancel: &semio_framework_async::CancelToken) -> Result<Vec<HubInferenceServiceV1>, InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::read_hub_inference_services(self.inference_transport.as_ref(), &context, hub_origin))
+        self.runtime.block_on(read_hub_inference_services(self.inference_transport.as_ref(), &context, hub_origin))
     }
 
     /// 📥️ Submits one closed client intent through the protected inference transport and blocks the
     /// synchronous MCP tool call until the hub answers or `cancel`/the deadline interrupts it.
     pub fn submit_hub_inference_job(
-        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &crate::inference::HubInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::HubInferenceJobReceiptV1, crate::inference::InferenceRouteErrorV1> {
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &HubInferenceSubmitRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<HubInferenceJobReceiptV1, InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::submit_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
+        self.runtime.block_on(submit_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// 📤️ Reads one owner-private bounded event page.
     pub fn read_hub_inference_job_events(
         &self, scope: &DocumentScope, hub_origin: &str, route: &str, job_id: &str, after: u64, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::HubInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+    ) -> Result<HubInferenceEventPageV1, InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::read_hub_inference_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id, after))
+        self.runtime.block_on(read_hub_inference_job_events(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id, after))
     }
 
     /// 🛑️ Records the owner's durable cancel request.
     pub fn cancel_hub_inference_job(
         &self, scope: &DocumentScope, hub_origin: &str, route: &str, job_id: &str, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::HubInferenceEventPageV1, crate::inference::InferenceRouteErrorV1> {
+    ) -> Result<HubInferenceEventPageV1, InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::cancel_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id))
+        self.runtime.block_on(cancel_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, job_id))
     }
 
     /// ✅️ Sends one explicit approval of an exact proposal hash.
     pub fn approve_hub_inference_job(
-        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &crate::inference::HubInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
-    ) -> Result<crate::inference::HubInferenceApprovalReceiptV1, crate::inference::InferenceRouteErrorV1> {
+        &self, scope: &DocumentScope, hub_origin: &str, route: &str, request: &HubInferenceApprovalRequestV1, cancel: &semio_framework_async::CancelToken,
+    ) -> Result<HubInferenceApprovalReceiptV1, InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::approve_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
+        self.runtime.block_on(approve_hub_inference_job(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// ↩️ Sends one Hub-minted durable GIS approval undo through the authenticated transport.
@@ -1920,19 +1834,19 @@ impl NativeHubBindingDriver {
         route: &str,
         request:&semio_framework_value::DslValue,
         cancel: &semio_framework_async::CancelToken,
-    ) -> Result<semio_framework_value::DslValue,crate::inference::InferenceRouteErrorV1> {
+    ) -> Result<semio_framework_value::DslValue,InferenceRouteErrorV1> {
         let (context, _) = self.operation_context(cancel, HUB_INFERENCE_OPERATION_TIMEOUT_MS);
-        self.runtime.block_on(crate::inference::undo_hub_inference_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
+        self.runtime.block_on(undo_hub_inference_approval(self.inference_transport.as_ref(), &context, hub_origin, scope, route, request))
     }
 
     /// 🧊️ Mounts the P4-C canonical checkpoint pair for one scope and projects exactly the frozen
     /// base identity an inference job is compared against: descriptor digest, active checkpoint,
     /// catalog generation, etag and the verified baseline frontier.
-    pub fn hub_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<crate::inference::HubInferenceBaseBindingV1, CanonicalPairMountError> {
+    pub fn hub_inference_base(&self, binding: &HubRemoteBinding, scope: &DocumentScope, cancel: &semio_framework_async::CancelToken) -> Result<HubInferenceBaseBindingV1, CanonicalPairMountError> {
         let mount = self.mount_settled(binding, scope, cancel)?;
         let identity = mount.identity();
         let baseline = mount.baseline();
-        Ok(crate::inference::HubInferenceBaseBindingV1 {
+        Ok(HubInferenceBaseBindingV1 {
             hub_origin: identity.hub_origin.clone(),
             space_id: identity.scope.space_id.clone(),
             document_id: identity.scope.document_id.clone(),
@@ -2004,8 +1918,5 @@ pub fn pair_mount_error_to_gateway(error: CanonicalPairMountError) -> GatewayErr
         gateway
     }
 }
-//#endregion 💡️Inference
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+//#endregion 💡️Inference

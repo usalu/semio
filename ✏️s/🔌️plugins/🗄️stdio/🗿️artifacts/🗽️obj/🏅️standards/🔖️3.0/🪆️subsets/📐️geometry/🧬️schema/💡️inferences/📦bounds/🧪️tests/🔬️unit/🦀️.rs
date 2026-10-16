@@ -1,4 +1,5 @@
-use super::*;
+use crate::schema::snapshot::ObjSnapshot;
+use crate::standards::v3_0::subsets::any::schema::inferences::bounds::*;
 use crate::schema::snapshot::{ObjFace, ObjFaceVertex, ObjGroup, ObjVertex};
 use crate::STDIO_OBJ_DOCUMENT_SCHEMA;
 

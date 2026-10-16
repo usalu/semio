@@ -1,6 +1,8 @@
 
-use super::*;
+
 use semio_framework_hash::Sha256;
+use directory::os_directory::schema::DocumentBrowserActorSourceV1;
+use semio_hub_trusted_catalog_contract::{TrustedBundleBrowserActorV1, catalog};
 
 #[test]
 fn trusted_browser_actor_metadata_and_generation_match_neutral_corpus() {

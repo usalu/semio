@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-kernel-db-storage-driver-runtime"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db bounded runtime for the external storage drivers"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-storage-driver-runtime"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_storage_driver_runtime"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"] }
+
+[dev-dependencies]

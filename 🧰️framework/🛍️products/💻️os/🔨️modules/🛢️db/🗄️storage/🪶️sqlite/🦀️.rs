@@ -1,16 +1,16 @@
 //! 🗄️ SQLite storage behind the process-wide typed, retained database I/O lane.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
 //#region 🔖️SqliteStorage
 #[cfg(not(target_arch = "wasm32"))]
 mod sqlite_storage {
-    use crate::db_durability::{DurabilityClass, EpochFence};
-    use crate::db_ids::{check_len, ArtifactId, DbError};
-    use crate::db_storage::writer::{WalFileWriterGuard, WalWriterGuard, WalWriterTable};
-    use crate::db_storage::{
-        close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted, CatalogStorage, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoExecutionStep,
-        DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbIoWriterReleaseStep, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage,
-        SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit, DB_IO_PAGE_BYTES,
-    };
+    use db_durability::{DurabilityClass, EpochFence};
+    use db_ids::{ArtifactId, DbError, check_len};
+    use db_io_driver::{WalFileWriterGuard, WalWriterGuard, WalWriterTable};
+    use db_io_core::{CatalogStorage, DB_IO_PAGE_BYTES, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoExecutionStep, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbIoWriterReleaseStep, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit};
+    use db_io_driver::{DbStorageOpenRejected, close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted};
+    use db_io_registry::{DbIoBackendKind, DbIoBackendRollbackReservation};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OpenFlags, OptionalExtension, TransactionBehavior};
     use semio_framework_async::WorkerPool;
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     //#region 🔖️Authority
     const MAX_BLOB_BYTES: u64 = 496 * 1024;
-    const SQLITE_OPERATION_OWNERS: usize = crate::db_storage::DB_IO_LEDGER_ITEMS;
+    const SQLITE_OPERATION_OWNERS: usize = db_io_core::DB_IO_LEDGER_ITEMS;
     /// 📖️ WAL reader connections of a file database: a read that starts while one is free runs on it, beside the writer and
     /// the other readers, inside its own read transaction, and never writes.
     const SQLITE_READERS: usize = 16;
@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
         fn payload_stage_step(&self, connection: &Connection, operation: u64, input: &mut DbIoPages) -> Result<Option<ContentHash>, DbError> {
             let sql_operation = Self::operation(operation)?;
             Self::ensure_write_stage(connection, sql_operation)?;
-            let slot = crate::db_storage::db_io_operation_owner_slot(operation)?;
+            let slot = db_io_core::db_io_operation_owner_slot(operation)?;
             let mut state = self.payload_hashes[slot].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if state.as_ref().is_some_and(|(owner, _)| *owner != operation) {
                 return Err(DbError::Unavailable("SQLite payload hash cursor capacity exhausted".to_string()));
@@ -780,7 +780,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
                     return Ok(false);
                 }
             }
-            let owner_slot = crate::db_storage::db_io_operation_owner_slot(operation).ok();
+            let owner_slot = db_io_core::db_io_operation_owner_slot(operation).ok();
             for hash in owner_slot.map_or(&self.payload_hashes[..], |slot| std::slice::from_ref(&self.payload_hashes[slot])) {
                 let mut hash = hash.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                 if hash.as_ref().is_some_and(|(owner, _)| *owner == operation) {
@@ -902,7 +902,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
 
     impl SqliteStorage {
         async fn open_owned(pool: Arc<WorkerPool>, path: DbIoText, in_memory: bool) -> Result<Self, DbStorageOpenRejected> {
-            crate::db_storage::open_db_io_backend_admitted(&pool, || Self::open_owned_once(pool.clone(), path.clone(), in_memory)).await
+            db_io_driver::open_db_io_backend_admitted(&pool, || Self::open_owned_once(pool.clone(), path.clone(), in_memory)).await
         }
 
         /// 🎯️ One SQLite backend open attempt, refused at once when the backend capacity is taken.
@@ -952,7 +952,7 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
     impl WalStorage for SqliteStorage {
         async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
             let document = document_text(document)?;
-            crate::db_storage::writer::admitted_acquire(self.control, std::time::Duration::from_millis(crate::db_storage::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+            db_io_driver::admitted_acquire(self.control, std::time::Duration::from_millis(db_io_driver::WAL_WRITER_ADMISSION_WAIT_MS), || async {
                 wal_writer(execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await?)
             })
             .await

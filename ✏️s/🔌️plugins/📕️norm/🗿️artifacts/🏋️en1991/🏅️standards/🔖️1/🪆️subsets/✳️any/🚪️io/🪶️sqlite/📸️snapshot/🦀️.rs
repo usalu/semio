@@ -151,7 +151,7 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 }
 
 /// 🪶️ Exposes only the explicitly authored EN1991 relational provider.
-pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1991Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec() }
+pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1991Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec() }
 
 #[path="🛂️admission/🦀️.rs"]
 pub(crate)mod admission;

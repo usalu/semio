@@ -1,8 +1,8 @@
 //! 🫳️ Exact history wire demand borrows original checkpoint and alternative fields.
-use crate::os_store::{space_history_document::SpaceHistorySnapshot,space_history_document::SpaceCheckpoint,space_history_document::SpaceAlternative,space_history_document::SpaceMemberPin};
-use crate::os_vcs::Author;
-use crate::os_spr::HybridLogicalTimestamp;
-use crate::sqlite_snapshot::SnapshotEncoding;
+use semio_framework_os_store_space_schema::space_history_document::{SpaceHistorySnapshot, SpaceCheckpoint, SpaceAlternative, SpaceMemberPin};
+use semio_framework_os_vcs::Author;
+use semio_framework_os_spr::HybridLogicalTimestamp;
+use semio_framework_io_sqlite_snapshot::SnapshotEncoding;
 use semio_framework_pack_json::{JsonWriteSource,JsonWriteNode as J};
 use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as R,BorrowedShape as H,RecordLayout};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
@@ -17,7 +17,7 @@ enum Node<'a>{
 }
 fn absent()->ValueError{ValueError::new(K::InvariantViolated,"borrowed history ordinal path is absent")}
 impl<'a> Node<'a>{
- fn child(self,index:usize)->Result<Self,ValueError>{
+ pub fn child(self,index:usize)->Result<Self,ValueError>{
   Ok(match self{
    Self::Root(value)=>match index{0=>Self::Checkpoints(&value.checkpoints),1=>Self::Alternatives(&value.alternatives),2=>Self::Text(value.active_alternative_id.as_deref().ok_or_else(absent)?),_=>return Err(absent())},
    Self::Checkpoints(rows)=>Self::Checkpoint(rows.get(index).ok_or_else(absent)?),
@@ -39,7 +39,7 @@ impl<'a> Node<'a>{
    Self::Text(_)|Self::UInt(_)=>return Err(absent()),
   })
  }
- fn view(self)->J<'a>{match self{
+ pub fn view(self)->J<'a>{match self{
   Self::Root(value)=>J::Object(2+usize::from(value.active_alternative_id.is_some())),
   Self::Checkpoints(rows)=>J::Array(rows.len()),Self::Checkpoint(value)=>J::Object(5+usize::from(value.parent_id.is_some())),
   Self::Authors(rows)=>J::Array(rows.len()),Self::Author(value)=>J::Object(2+usize::from(value.avatar.is_some())),
@@ -47,7 +47,7 @@ impl<'a> Node<'a>{
   Self::Alternatives(rows)=>J::Array(rows.len()),Self::Alternative(_)=>J::Object(3),Self::Ids(rows)=>J::Array(rows.len()),
   Self::Text(text)=>J::String(text),Self::UInt(value)=>J::Number(Number::UInt(value)),
  }}
- fn key(self,index:usize)->Result<&'static str,ValueError>{
+ pub fn key(self,index:usize)->Result<&'static str,ValueError>{
   let keys:&[&str]=match self{
    Self::Root(value)=>if value.active_alternative_id.is_some(){&["checkpoints","alternatives","activeAlternativeId"]}else{&["checkpoints","alternatives"]},
    Self::Checkpoint(value)=>if value.parent_id.is_some(){&["id","parentId","message","authors","timestamp","members"]}else{&["id","message","authors","timestamp","members"]},
@@ -58,7 +58,7 @@ impl<'a> Node<'a>{
  }
 }
 impl Source<'_>{
- fn at(&self,path:&[usize])->Result<Node<'_>,ValueError>{let mut node=Node::Root(self.0);for index in path{node=node.child(*index)?;}Ok(node)}
+ pub fn at(&self,path:&[usize])->Result<Node<'_>,ValueError>{let mut node=Node::Root(self.0);for index in path{node=node.child(*index)?;}Ok(node)}
 }
 impl JsonWriteSource for Source<'_>{
  fn node_at_path(&self,path:&[usize])->Result<J<'_>,ValueError>{Ok(self.at(path)?.view())}

@@ -15,24 +15,31 @@
 //! `🧫️fixtures/⏱️binding-cancellation-law.json`, and the hub wire corpus
 //! Installed owner declarations bind request and reply codecs.
 
-use crate::catalog::{Catalog, CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::tool_from_capability;
-use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
-use crate::policy::{AgentPrincipal, PolicyEngine};
-use crate::schema::{
-    inference_approve_input_schema, inference_get_input_schema, inference_get_output_schema, inference_job_handle_input_schema, inference_job_output_schema, inference_list_input_schema, inference_list_output_schema,
-    inference_submit_input_schema,
-};
-use crate::workspace::remote::percent_encode;
-use crate::workspace::{HeadlessWorkspace, PROBE_SCHEMA};
-use semio_framework_async::OperationContext;
 use semio_framework_os_kernel::os_directory::DocumentScope;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 use std::sync::Arc;
+use crate::jobs::{GuestInferenceJob, InferenceService, capability_argument_ids, commit_capability, guest_job, guest_page, guest_proposal, hub_events_page, hub_receipt_page, retain_guest_job, select_inference_service, update_guest_job};
+use semio_framework_os_mcp_capabilities::capability_declarations::{inference_approve_capability, inference_cancel_capability, inference_events_capability, inference_get_capability, inference_list_capability, inference_run_capability, inference_submit_capability};
+use semio_framework_os_mcp_catalog::capability_tools::tool_from_capability;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityDefinition, Catalog};
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::find_repo_root;
+use semio_framework_os_mcp_catalog::registry::discover_descriptors;
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle, mint_id};
+use semio_framework_os_mcp_foundation::reports::{InvocationReport, InvocationStatus};
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalRequestV1, HubInferenceJobBindingV1, HubInferenceSubjectV1, HubInferenceSubmitRequestV1, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS, INFERENCE_JOB_MAX_LIFETIME_MS, INFERENCE_REQUEST_ID_HEX_LENGTH, InferenceExecutionSiteV1, InferenceJobHandlePayloadV1, InferenceJobPageV1, InferenceJobStateV1, InferenceProposalV1, inference_operation_label, inflight_registry};
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_port::channel_port::{ActivationScope, ArtifactDocumentBinding, InferCommand, InferenceCancel, InvokeRequest};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, PolicyEngine};
+use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_framework_os_mcp_wire::job_registry::job_registry;
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_routing::routing_and_shell_routed::capability_instance_slot;
 
 //#region 🔖️DeclaredInference
+
 /// 💡️ One declared inference service, wire-shaped 1:1 from `semio_framework::ContributedInferenceMetadata`
 /// — the exact static fields a plugin's own `🔣️.json` carries, never a live guest call.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -145,8 +152,8 @@ fn installed_descriptors_for_contributions(workspace: &HeadlessWorkspace) -> Res
     #[cfg(test)]
     if let Some(descriptors)=&workspace.test_discovery {return Ok(descriptors.clone());}
     match workspace.origin() {
-        crate::workspace::WorkspaceOrigin::Hub { .. } => Ok(Vec::new()),
-        crate::workspace::WorkspaceOrigin::Folder { .. } => crate::registry::discover_descriptors(&crate::find_repo_root()?),
+        WorkspaceOrigin::Hub { .. } => Ok(Vec::new()),
+        WorkspaceOrigin::Folder { .. } => discover_descriptors(&find_repo_root()?),
     }
 }
 
@@ -202,9 +209,11 @@ pub fn declared_inferences_for_artifact(workspace: &HeadlessWorkspace, artifact_
     let matches = declared_inferences_for_workspace(workspace)?.into_iter().filter(|item| item.artifact_kind == artifact_kind).collect();
     Ok((artifact_kind, matches))
 }
+
 //#endregion 🔖️DeclaredInference
 
 //#region 🔖️ExecutionSeam
+
 /// 💡️ Outcome of matching one `inferenceSchema` against a `declared_inferences_for_artifact` roster
 /// — the fully-bound tier's seam. `Execute`'s only caller-visible outcome today is
 /// `execution_not_wired_error` (no `artifact-infer` route exists on `crate::actions::ArtifactChannel`
@@ -239,7 +248,7 @@ pub fn lookup_inference(declared: &[DeclaredInference], inference_schema: &str) 
 /// 📜️ The published contract travels WITH the refusal, so a client that asked for a value
 /// and got a gap learns in the same round trip what to call and what to send — instead of
 /// having to find `inference_list` and correlate the row itself.
-fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
+pub(crate) fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
     GatewayError::new(
         GatewayErrorCode::PluginUnavailable,
         match item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) {
@@ -264,9 +273,11 @@ fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
 fn no_such_service_error(schema: &str, inference_schema: &str) -> GatewayError {
     GatewayError::new(GatewayErrorCode::NotFound, format!("no inference service `{inference_schema}` is declared for artifact kind `{schema}`")).with_details(serde_json::json!({ "artifactKind": schema, "inferenceSchema": inference_schema }))
 }
+
 //#endregion 🔖️ExecutionSeam
 
 //#region 🔖️JobSeam
+
 /// 💡️ The `job_` handle payload an expensive inference execution would mint via
 /// `crate::handles::HandleTable::mint(HandleKind::Job, ..)` once a real `artifact-infer` route
 /// exists — `job_get`/`job_cancel` (`🦀️.rs`'s own `DECLARED_STUB_TOOL_NAMES`, still
@@ -287,56 +298,11 @@ pub struct InferenceJobPayload {
 pub fn inference_job_payload(artifact_id: &str, item: &DeclaredInference, cancellation_id: &str) -> InferenceJobPayload {
     InferenceJobPayload { artifact_id: artifact_id.to_string(), artifact_kind: item.artifact_kind.clone(), inference_schema: item.inference_schema.clone(), cancellation_id: cancellation_id.to_string() }
 }
+
 //#endregion 🔖️JobSeam
 
-//#region 🔖️Capabilities
-fn inference_capability(id: &str, tool_name: &str, title: &str, description: &str, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef(id.to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Query,
-        audience: CapabilityAudience::Agent,
-        title: title.to_string(),
-        description: description.to_string(),
-        artifact_kind: None,
-        use_when: vec!["what inferences exist for this artifact".to_string(), "read an inferred value".to_string()],
-        input_schema,
-        output_schema,
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: tool_name.to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("brain".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn inference_list_capability() -> CapabilityDefinition {
-    inference_capability(
-        "inference.list",
-        "inference_list",
-        "List Declared Inferences",
-        "Lists inference metadata declared for one resolvable artifact or every catalogued workspace plugin. Discovery does not grant execution or document access.",
-        inference_list_input_schema(),
-        inference_list_output_schema(),
-    )
-}
-
-fn inference_get_capability() -> CapabilityDefinition {
-    inference_capability("inference.get", "inference_get", "Get Inference", "Reads one declared inference field for an artifact — a typed, retryable gap until a real artifact-infer route is wired.", inference_get_input_schema(), inference_get_output_schema())
-}
-
-/// 💡️ The plugin-declared inference capabilities — discovery (`inference_list`/`inference_get`) and
-/// the general execution route (`inference_run`) — folded into `CatalogSource.gateway` by root
-/// wiring, same pattern as `🦀️.rs`'s own `core_tool_capabilities()`.
-pub fn inference_capabilities() -> Vec<CapabilityDefinition> {
-    vec![inference_list_capability(), inference_get_capability(), inference_run_capability()]
-}
-//#endregion 🔖️Capabilities
-
 //#region 🔖️Tools
+
 fn workspace_binding_required(what: &str) -> GatewayError {
     GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{what}` needs a live workspace — bind one with `--folder <path>` or `--hub <url> --space <id>`")).with_details(serde_json::json!({ "bindWith": ["--folder", "--hub"] })).retryable()
 }
@@ -404,9 +370,11 @@ pub fn register_inference_tools(registry: &mut InMemoryToolRegistry, workspace: 
     let get_workspace = workspace.clone();
     registry.register(get_tool, move |arguments| inference_get_handler(get_workspace.as_ref(), arguments)).expect("inference_get is a valid tool name");
 }
+
 //#endregion 🔖️Tools
 
 //#region 🔖️Resources
+
 /// 💡️ The `semio://artifact/{id}/inference…` resources this facet answers; `None` when `uri` is not
 /// one of ours (so the composing registry falls through to the next facet), `Some(Err(NOT_FOUND))`
 /// for a URI that IS clearly ours but malformed (empty artifact id, empty/nested field segment).
@@ -466,491 +434,10 @@ pub fn inference_resources(workspace: Option<&Arc<HeadlessWorkspace>>) -> Vec<Re
         })
         .collect()
 }
+
 //#endregion 🔖️Resources
 
-//#region 💡️InferenceJobWire
-/// 💡️ The exact closed wire vocabulary the installed service transport outcomes
-/// publish (`🌎️hub/💡️inference/🏃️runtime/🦀️.rs`, `🌎️hub/🏗️bootstrap/🦀️.rs`'s own `//#region 💡️Inference`).
-/// Mirrored here as typed Rust rather than reached for as free-form JSON: nothing on this
-/// boundary is a `serde_json::Value`, and a hub field this client does not know about is a loud
-/// decode failure rather than a silently-dropped one.
-pub const INFERENCE_REQUEST_MAX_BYTES:usize=64*1024;
-pub const INFERENCE_RESPONSE_MAX_BYTES:usize=64*1024;
-pub const INFERENCE_JOB_MAX_LIFETIME_MS:u64=120_000;
-pub const INFERENCE_PROGRESS_MAX_CURSOR:u64=9_007_199_254_740_991;
-pub const INFERENCE_EVENT_PAGE_MAX_ITEMS:usize=64;
-pub const INFERENCE_REQUEST_ID_HEX_LENGTH:usize=32;
-pub const INFERENCE_PROPOSAL_HASH_HEX_LENGTH:usize=64;
-pub const INFERENCE_INFLIGHT_CAPACITY: usize = 32;
-
-/// 🚦️ The one stable failure vocabulary those routes publish, code and HTTP status verbatim.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum InferenceRouteErrorV1 {
-    Unavailable,
-    Denied,
-    NotFound,
-    Invalid,
-    Bounds,
-    Conflict,
-    Capacity,
-    Expired,
-    Cancelled,
-    CommitUnavailable,
-    Storage,
-}
-
-pub const INFERENCE_ROUTE_ERRORS: [InferenceRouteErrorV1; 11] = [
-    InferenceRouteErrorV1::Unavailable,
-    InferenceRouteErrorV1::Denied,
-    InferenceRouteErrorV1::NotFound,
-    InferenceRouteErrorV1::Invalid,
-    InferenceRouteErrorV1::Bounds,
-    InferenceRouteErrorV1::Conflict,
-    InferenceRouteErrorV1::Capacity,
-    InferenceRouteErrorV1::Expired,
-    InferenceRouteErrorV1::Cancelled,
-    InferenceRouteErrorV1::CommitUnavailable,
-    InferenceRouteErrorV1::Storage,
-];
-
-impl InferenceRouteErrorV1 {
-    /// 🏷️ The exact wire code; a caller never learns which private hub object was missing.
-    pub const fn code(self) -> &'static str {
-        match self {
-            Self::Unavailable => "inference.unavailable",
-            Self::Denied => "inference.denied",
-            Self::NotFound => "inference.not-found",
-            Self::Invalid => "inference.invalid",
-            Self::Bounds => "inference.bounds",
-            Self::Conflict => "inference.conflict",
-            Self::Capacity => "inference.capacity",
-            Self::Expired => "inference.expired",
-            Self::Cancelled => "inference.cancelled",
-            Self::CommitUnavailable => "approval.commit-unavailable",
-            Self::Storage => "inference.storage",
-        }
-    }
-
-    /// 🔢️ The exact HTTP status the hub publishes for this code.
-    pub const fn status(self) -> u16 {
-        match self {
-            Self::Unavailable | Self::CommitUnavailable | Self::Storage => 503,
-            Self::Denied => 403,
-            Self::NotFound => 404,
-            Self::Invalid => 400,
-            Self::Bounds => 413,
-            Self::Conflict | Self::Cancelled => 409,
-            Self::Capacity => 429,
-            Self::Expired => 410,
-        }
-    }
-
-    /// 🔎️ Resolves a published code back to its variant; an unknown code is never guessed at.
-    pub fn from_code(code: &str) -> Option<Self> {
-        INFERENCE_ROUTE_ERRORS.into_iter().find(|candidate| candidate.code() == code)
-    }
-
-    /// 🔢️ The conservative fallback when a hub reply carries no decodable closed error body: the
-    /// status alone is ambiguous for 503 and 409, so it resolves to the widest honest member.
-    pub fn from_status(status: u16) -> Self {
-        match status {
-            403 => Self::Denied,
-            404 => Self::NotFound,
-            400 => Self::Invalid,
-            413 => Self::Bounds,
-            409 => Self::Conflict,
-            429 => Self::Capacity,
-            410 => Self::Expired,
-            _ => Self::Unavailable,
-        }
-    }
-
-    /// ♻️ Whether a caller may retry this exact call unchanged without changing anything else.
-    pub const fn retryable(self) -> bool {
-        matches!(self, Self::Unavailable | Self::CommitUnavailable | Self::Storage | Self::Capacity)
-    }
-
-    /// 🧭️ The gateway code this maps to, plus the one sentence that names the missing binding.
-    pub fn gateway_code(self) -> GatewayErrorCode {
-        match self {
-            Self::Unavailable | Self::CommitUnavailable | Self::Storage | Self::Capacity => GatewayErrorCode::PluginUnavailable,
-            Self::Denied => GatewayErrorCode::PermissionDenied,
-            Self::NotFound => GatewayErrorCode::NotFound,
-            Self::Invalid => GatewayErrorCode::InputInvalid,
-            Self::Bounds => GatewayErrorCode::BudgetExceeded,
-            Self::Conflict | Self::Expired => GatewayErrorCode::PreconditionFailed,
-            Self::Cancelled => GatewayErrorCode::Cancelled,
-        }
-    }
-
-    fn explanation(self) -> &'static str {
-        match self {
-            Self::Unavailable => "this hub executes no such inference service — bind a hub whose readiness lists it in `features.inferenceServices`",
-            Self::CommitUnavailable => "the hub has no registered atomic parent+existing-child composition transaction, so an approval cannot be published; the prepared proposal is retained and nothing was applied",
-            Self::Storage => "the hub's private inference ledger is temporarily unavailable",
-            Self::Capacity => "the hub's fixed inference operation capacity is exhausted",
-            Self::Denied => "the hub re-checked the live author, session, authorization generation and scope and refused; only the document's current `Author` may run, read, cancel or approve a job, and only its original owner",
-            Self::NotFound => "the hub has no such job or document for this authenticated subject",
-            Self::Invalid => "the hub rejected this closed client intent",
-            Self::Bounds => "the request or reply exceeded the installed service’s declared bounds",
-            Self::Conflict => "the frozen binding, document frontier, base pack or proposal hash drifted from the accepted job",
-            Self::Expired => "this job outlived the hub's fixed job lifetime",
-            Self::Cancelled => "this job carries a durable cancel request",
-        }
-    }
-
-    /// ⚠️ The typed gateway error one tool call answers with; retryable members stay retryable.
-    pub fn to_gateway_error(self, what: &str) -> GatewayError {
-        let error = GatewayError::new(self.gateway_code(), format!("`{what}` was refused by the hub with `{}`: {}", self.code(), self.explanation()))
-            .with_details(serde_json::json!({ "inferenceCode": self.code(), "httpStatus": self.status(), "retryable": self.retryable() }));
-        if self.retryable() {
-            error.retryable()
-        } else {
-            error
-        }
-    }
-}
-
-/// ⚠️ Why a protected inference request never reached a decodable hub reply at all.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum InferenceHubTransportErrorV1 {
-    Cancelled,
-    DeadlineExceeded,
-    Unauthorized,
-    Unavailable,
-    ResourceLimit,
-    InvalidRequest(&'static str),
-}
-
-impl From<InferenceHubTransportErrorV1> for InferenceRouteErrorV1 {
-    fn from(error: InferenceHubTransportErrorV1) -> Self {
-        match error {
-            InferenceHubTransportErrorV1::Cancelled => Self::Cancelled,
-            InferenceHubTransportErrorV1::DeadlineExceeded | InferenceHubTransportErrorV1::Unavailable => Self::Unavailable,
-            InferenceHubTransportErrorV1::Unauthorized => Self::Denied,
-            InferenceHubTransportErrorV1::ResourceLimit => Self::Bounds,
-            InferenceHubTransportErrorV1::InvalidRequest(_) => Self::Invalid,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum InferenceJobStateV1 {
-    Accepted,
-    Running,
-    Succeeded,
-    Failed,
-    Cancelled,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum InferenceProposalStateV1 {
-    None,
-    Offered,
-    Approved,
-    Stale,
-    Cancelled,
-}
-
-/// 📨 Neutral submission arguments projected by the installed owner codec.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceSubmitRequestV1 {pub request_id:String,pub service_id:String,pub lifetime_ms:u64}
-impl HubInferenceSubmitRequestV1 {
-    pub fn new(service_id:impl Into<String>,request_id:impl Into<String>,lifetime_ms:u64)->Self {Self {service_id:service_id.into(),request_id:request_id.into(),lifetime_ms}}
-    pub fn validate(&self)->Result<(),InferenceRouteErrorV1> {if !is_lower_hex(&self.request_id,32) || !is_service_id(&self.service_id) || self.lifetime_ms==0 || self.lifetime_ms>INFERENCE_JOB_MAX_LIFETIME_MS {Err(InferenceRouteErrorV1::Invalid)}else{Ok(())}}
-}
-
-/// ✅ Neutral proposal admission arguments; the installed owner binds its receipt.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceApprovalRequestV1 {pub job_id:String,pub proposal_hash:String}
-impl HubInferenceApprovalRequestV1 {
-    pub fn new(job_id:impl Into<String>,proposal_hash:impl Into<String>)->Self {Self {job_id:job_id.into(),proposal_hash:proposal_hash.into()}}
-    pub fn validate(&self)->Result<(),InferenceRouteErrorV1> {if !is_lower_hex(&self.job_id,32) || !is_lower_hex(&self.proposal_hash,64) {Err(InferenceRouteErrorV1::Invalid)}else{Ok(())}}
-}
-
-/// 📣 Owner-validated job admission projection.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceJobReceiptV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub proposal_hash:Option<String>,pub cursor:u64,pub expires_at_ms:u64}
-
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceEventV1 {pub ordinal:u64,pub kind:String,pub at_ms:u64}
-
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceProgressV1 {pub cursor:u64,pub run_epoch:u64,pub completed:u64,pub total:u64,pub at_ms:u64}
-
-/// 📃 Owner-validated lifecycle projection with an opaque presentation payload.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceEventPageV1 {pub job_id:String,pub state:InferenceJobStateV1,pub proposal_state:InferenceProposalStateV1,pub cancel_requested:bool,pub stale:bool,pub proposal_hash:Option<String>,#[serde(default,with="dsl_json_optional")]pub preview:Option<semio_framework_value::DslValue>,pub events:Vec<HubInferenceEventV1>,pub progress:Vec<HubInferenceProgressV1>,pub next_cursor:u64}
-
-/// 🧾 Generic remote commit witness and owner-authored history locator.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all="camelCase",deny_unknown_fields)]
-pub struct HubInferenceApprovalReceiptV1 {pub job_id:String,pub mutation_id:String,pub command_hash:String,pub proposal_hash:String,pub applied:bool,#[serde(with="dsl_json")]pub undo:semio_framework_value::DslValue}
-
-#[path="🔌️service/🦀️.rs"]
-pub mod service;
-pub use service::*;
-
-/// 🪪️ A declared inference service id: the `InferenceIdV1` shape the discovery schema pins.
-fn is_service_id(value: &str) -> bool {
-    !value.is_empty() && value.len() <= 256 && value.bytes().next().is_some_and(|byte| byte.is_ascii_alphanumeric()) && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
-}
-
-fn is_lower_hex(value: &str, length: usize) -> bool {
-    value.len() == length && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-}
-//#endregion 💡️InferenceJobWire
-
-//#region 💡️InferenceHubClient
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum InferenceHubMethodV1 {
-    Get,
-    Post,
-}
-
-/// 📨️ One protected inference request: an origin, an exact path, and a bounded closed body.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct InferenceHubRequestV1 {
-    pub hub_origin: String,
-    pub method: InferenceHubMethodV1,
-    pub path: String,
-    pub body: Vec<u8>,
-    pub maximum_response_bytes: usize,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct InferenceHubResponseV1 {
-    pub status: u16,
-    pub body: Vec<u8>,
-}
-
-/// 🔌️ The injection seam for the four inference routes — the JSON twin of `CanonicalPairTransport`.
-/// No concrete HTTP type ever appears above it, and the bearer never crosses it.
-pub trait InferenceHubTransport: Send + Sync {
-    async fn request(&self, context: &OperationContext, request: &InferenceHubRequestV1) -> Result<InferenceHubResponseV1, InferenceHubTransportErrorV1>;
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub struct NativeInferenceHubTransport<R: semio_framework_async::HostAsyncRuntime> {
-    transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>,
-    credential: Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<R: semio_framework_async::HostAsyncRuntime> NativeInferenceHubTransport<R> {
-    pub fn new(transport: semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<R>, credential: Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>) -> Self {
-        Self { transport, credential }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<R: semio_framework_async::HostAsyncRuntime + 'static> InferenceHubTransport for NativeInferenceHubTransport<R> {
-    async fn request(&self, context: &OperationContext, request: &InferenceHubRequestV1) -> Result<InferenceHubResponseV1, InferenceHubTransportErrorV1> {
-        use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
-        if self.credential.hub_origin().trim_end_matches('/') != request.hub_origin.trim_end_matches('/') {
-            return Err(InferenceHubTransportErrorV1::InvalidRequest("inference request authority mismatch"));
-        }
-        if !request.path.starts_with('/') || request.path.starts_with("//") || request.path.contains('#') || request.body.len() > INFERENCE_REQUEST_MAX_BYTES {
-            return Err(InferenceHubTransportErrorV1::InvalidRequest("inference request path or body is out of bounds"));
-        }
-        let method = match request.method {
-            InferenceHubMethodV1::Get => HttpMethod::Get,
-            InferenceHubMethodV1::Post => HttpMethod::Post,
-        };
-        let url = format!("{}{}", request.hub_origin.trim_end_matches('/'), request.path);
-        let body = match request.method {
-            InferenceHubMethodV1::Get => None,
-            InferenceHubMethodV1::Post => Some(request.body.clone()),
-        };
-        let response = self.transport.request_protected_json(context, self.credential.as_ref(), method, &url, body).await.map_err(|error| match error {
-            TransportError::Cancelled => InferenceHubTransportErrorV1::Cancelled,
-            TransportError::DeadlineExceeded => InferenceHubTransportErrorV1::DeadlineExceeded,
-            TransportError::Io(_) | TransportError::BudgetExhausted => InferenceHubTransportErrorV1::Unavailable,
-        })?;
-        if response.body.len() > request.maximum_response_bytes {
-            return Err(InferenceHubTransportErrorV1::ResourceLimit);
-        }
-        Ok(InferenceHubResponseV1 { status: response.status, body: response.body })
-    }
-}
-
-/// 🛡 Accepts bounded relative route labels; concrete paths belong to declared operations.
-pub fn is_hub_inference_route(route:&str)->bool { !route.is_empty() && route.len()<=256 && route.split('/').all(|segment|!segment.is_empty() && segment.bytes().all(|byte|byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte==b'-')) }
-
-/// 🧾️ The part of a hub's readiness body that declares the inference services it executes.
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct HubReadinessInferenceV1 {
-    features: HubReadinessInferenceFeaturesV1,
-    #[serde(default)]
-    startup: Option<serde::de::IgnoredAny>,
-}
-
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct HubReadinessInferenceFeaturesV1 {
-    inference_services: Vec<HubInferenceServiceV1>,
-}
-
-/// 🌎️ `GET /readyz` → `features.inferenceServices`. A body that declares none is an empty roster;
-/// one whose routes are not relative lower-case route families is refused whole. A hub still booting
-/// (`startup` present) has not loaded the catalog its roster comes from, so it is `Unavailable` — a
-/// retryable answer — never an empty roster the caller would act on.
-pub async fn read_hub_inference_services<T: InferenceHubTransport>(transport: &T, context: &OperationContext, hub_origin: &str) -> Result<Vec<HubInferenceServiceV1>, InferenceRouteErrorV1> {
-    let wire = InferenceHubRequestV1 { hub_origin: hub_origin.to_string(), method: InferenceHubMethodV1::Get, path: "/readyz".to_string(), body: Vec::new(), maximum_response_bytes: INFERENCE_RESPONSE_MAX_BYTES };
-    let response = transport.request(context, &wire).await?;
-    if !(200..=299).contains(&response.status) && response.status != 503 {
-        return Err(InferenceRouteErrorV1::from_status(response.status));
-    }
-    let readiness: HubReadinessInferenceV1 = serde_json::from_slice(&response.body).map_err(|_| InferenceRouteErrorV1::Invalid)?;
-    if readiness.startup.is_some() {
-        return Err(InferenceRouteErrorV1::Unavailable);
-    }
-    let services = readiness.features.inference_services;
-    if services.iter().any(|service| !is_service_id(&service.service_id) || !is_hub_inference_route(&service.route)) {
-        return Err(InferenceRouteErrorV1::Invalid);
-    }
-    Ok(services)
-}
-
-fn remote_payload(value:serde_json::Value)->Result<semio_framework_value::DslValue,InferenceRouteErrorV1> {
-    semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_|InferenceRouteErrorV1::Invalid)
-}
-fn remote_projection<T:serde::de::DeserializeOwned>(value:semio_framework_value::DslValue)->Result<T,InferenceRouteErrorV1> {
-    semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(&value,INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|if code==semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1::Bounds {InferenceRouteErrorV1::Bounds}else{InferenceRouteErrorV1::Invalid})?;
-    serde_json::from_str(&semio_framework_pack_json::to_json_string(&value)).map_err(|_|InferenceRouteErrorV1::Invalid)
-}
-
-/// 📡 Runs one neutral admission through its installed owner declaration and codecs.
-pub async fn submit_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&HubInferenceSubmitRequestV1)->Result<HubInferenceJobReceiptV1,InferenceRouteErrorV1> {
-    request.validate()?;
-    let protocol=remote_inference_protocol_v1(route)?;
-    if protocol.service_id!=request.service_id {return Err(InferenceRouteErrorV1::Invalid);}
-    let payload=remote_payload(serde_json::to_value(request).map_err(|_|InferenceRouteErrorV1::Invalid)?)?;
-    remote_projection((protocol.receipt)(call_remote_inference_v1(transport,context,origin,scope,route,"submit",&payload).await?)?)
-}
-
-pub async fn read_hub_inference_job_events<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,job_id:&str,after:u64)->Result<HubInferenceEventPageV1,InferenceRouteErrorV1> {
-    let protocol=remote_inference_protocol_v1(route)?;
-    let payload=remote_payload(serde_json::json!({"jobId":job_id,"after":after}))?;
-    remote_projection((protocol.page)(call_remote_inference_v1(transport,context,origin,scope,route,"events",&payload).await?,job_id)?)
-}
-
-pub async fn cancel_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,job_id:&str)->Result<HubInferenceEventPageV1,InferenceRouteErrorV1> {
-    let protocol=remote_inference_protocol_v1(route)?;
-    let payload=remote_payload(serde_json::json!({"jobId":job_id}))?;
-    remote_projection((protocol.page)(call_remote_inference_v1(transport,context,origin,scope,route,"cancel",&payload).await?,job_id)?)
-}
-
-pub async fn approve_hub_inference_job<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&HubInferenceApprovalRequestV1)->Result<HubInferenceApprovalReceiptV1,InferenceRouteErrorV1> {
-    request.validate()?;
-    let protocol=remote_inference_protocol_v1(route)?;
-    let payload=remote_payload(serde_json::to_value(request).map_err(|_|InferenceRouteErrorV1::Invalid)?)?;
-    remote_projection((protocol.approval)(call_remote_inference_v1(transport,context,origin,scope,route,"approve",&payload).await?,scope,&request.job_id,&request.proposal_hash)?)
-}
-
-pub async fn undo_hub_inference_approval<T:InferenceHubTransport>(transport:&T,context:&OperationContext,origin:&str,scope:&DocumentScope,route:&str,request:&semio_framework_value::DslValue)->Result<semio_framework_value::DslValue,InferenceRouteErrorV1> {
-    let protocol=remote_inference_protocol_v1(route)?;
-    (protocol.undo)(call_remote_inference_v1(transport,context,origin,scope,route,"undo",request).await?,request)
-}
-//#endregion 💡️InferenceHubClient
-
-//#region 💡️InferenceJobBinding
-/// 🧊️ The client-side frozen base one job was submitted against — the P4-C canonical pair mount's
-/// own identity (`descriptor_digest_v1`, `active_checkpoint_id`, `etag`, `catalog_generation`) plus
-/// its verified baseline `ArtifactFrontier`. It is a LOCAL staleness and display record: the hub
-/// re-derives its own binding from server objects at admission and never trusts a client field.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceBaseBindingV1 {
-    pub hub_origin: String,
-    pub space_id: String,
-    pub document_id: String,
-    pub authority_generation: u64,
-    pub descriptor_digest_v1: String,
-    pub active_checkpoint_id: String,
-    pub etag: String,
-    pub catalog_generation: Option<u64>,
-    pub head_edit_ordinal: u64,
-    pub head_edit_id: String,
-    pub last_commit_seq: u64,
-    pub chain_hash: String,
-}
-
-/// 🎫️ The payload one `job_` handle carries, for either execution site. The handle is owned by the
-/// connection's own `SessionHandle`, so a job minted by one MCP connection is unreadable by another;
-/// a hub job additionally carries the subject that minted it, and the hub applies its own
-/// owner-private check on top.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct InferenceJobHandlePayloadV1 {
-    pub site: InferenceExecutionSiteV1,
-    pub service_id: String,
-    pub artifact_kind: String,
-    pub plugin_id: String,
-    pub document_id: String,
-    pub job_id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub hub: Option<HubInferenceJobBindingV1>,
-}
-
-/// 🌎️ What a hub-executed job's handle binds beyond the job itself: the published route family, the
-/// minting subject and authority generation, the client idempotency key, and the frozen base.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct HubInferenceJobBindingV1 {
-    pub route: String,
-    pub space_id: String,
-    pub subject_user_id: String,
-    pub authority_generation: u64,
-    pub request_id: String,
-    pub base: Option<HubInferenceBaseBindingV1>,
-}
-
-/// 👤️ The live authenticated subject one hub-bound workspace is speaking as.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct HubInferenceSubjectV1 {
-    pub hub_origin: String,
-    pub space_id: String,
-    pub user_id: String,
-    pub authority_generation: u64,
-}
-//#endregion 💡️InferenceJobBinding
-
 //#region 💡️InferenceJobTools
-/// 🛑️ Every in-flight inference call this process started, keyed by its bounded operation label, so
-/// `inference_cancel` interrupts the local wait as well as recording the hub's durable cancel.
-/// MCP has no progress notification and no out-of-band request cancellation wired to jobs
-/// (`notifications/cancelled` is a recognized no-op for JSON-RPC REQUESTS), so this registry is the
-/// only local half of cancellation; the durable half is always the hub's `/cancel` route.
-static INFERENCE_INFLIGHT: std::sync::OnceLock<std::sync::Mutex<Vec<(String, semio_framework_async::CancelToken)>>> = std::sync::OnceLock::new();
-
-fn inflight_registry() -> &'static std::sync::Mutex<Vec<(String, semio_framework_async::CancelToken)>> {
-    INFERENCE_INFLIGHT.get_or_init(|| std::sync::Mutex::new(Vec::new()))
-}
-
-/// 🎛️ Retains one bounded cancellation token for the lifetime of one local inference call.
-pub fn retain_inference_operation(label: &str, cancel: semio_framework_async::CancelToken) {
-    let mut registry = inflight_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    registry.retain(|(existing, token)| existing.as_str() != label && !token.is_cancelled_now());
-    if registry.len() >= INFERENCE_INFLIGHT_CAPACITY {
-        registry.remove(0);
-    }
-    registry.push((label.to_string(), cancel));
-}
-
-/// 🧹️ Releases one retained token once its bounded local wait has terminated.
-pub fn release_inference_operation(label: &str) {
-    inflight_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).retain(|(existing, _)| existing.as_str() != label);
-}
 
 /// 🛑️ Interrupts the retained local wait for one operation label; `false` when nothing was waiting.
 pub fn interrupt_inference_operation(label: &str) -> bool {
@@ -965,16 +452,6 @@ pub fn interrupt_inference_operation(label: &str) -> bool {
     interrupted
 }
 
-/// 🏷️ The bounded operation label one local wait is retained under. `None` is the document-wide
-/// label a submit or approve waits under before its job id is known — the hub serializes every
-/// checked phase on one per-`DocumentScope` gate, so at most one such wait per document is live.
-pub fn inference_operation_label(space_id: &str, document_id: &str, job_id: Option<&str>) -> String {
-    match job_id {
-        Some(job_id) => format!("inference:{space_id}/{document_id}/{job_id}"),
-        None => format!("inference:{space_id}/{document_id}/*"),
-    }
-}
-
 fn inference_wall_now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
@@ -982,142 +459,11 @@ fn inference_wall_now_ms() -> u64 {
 /// 🎲️ A fresh 32-lower-hex client idempotency key. The hub mints the `jobId`; this is only the
 /// client's own scoped `(user, authorization generation, space, document, request_id)` key.
 pub fn mint_inference_request_id() -> String {
-    let entropy = format!("semio.mcp.inference-request/v1\0{}\0{}", inference_wall_now_ms(), crate::handles::mint_id(crate::handles::HandleKind::Job, inference_wall_now_ms()));
+    let entropy = format!("semio.mcp.inference-request/v1\0{}\0{}", inference_wall_now_ms(), mint_id(HandleKind::Job, inference_wall_now_ms()));
     framework_hash::hash_bytes(entropy.as_bytes())[..INFERENCE_REQUEST_ID_HEX_LENGTH].to_string()
 }
 
-fn inference_scope_ids() -> Vec<semio_framework::manifest::kernel::CapabilityId> {
-    vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string()), semio_framework::manifest::kernel::CapabilityId("artifacts.write".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())]
-}
-
-/// 📝️ The resources one hub inference job capability really writes — a Mutation that names none is
-/// a conformance error, and these three name exactly what they touch: the owner's durable hub job
-/// row, plus the bound document for the one capability (`inference.approve`) that actually commits.
-fn inference_job_writes(id: &str) -> Vec<semio_framework::manifest::ResourceSelector> {
-    match id {
-        "inference.submit" | "inference.cancel" => vec![semio_framework::manifest::ResourceSelector::new("job:{self}")],
-        "inference.approve" => vec![semio_framework::manifest::ResourceSelector::new("job:{self}"), semio_framework::manifest::ResourceSelector::new("artifact:{self}")],
-        _ => Vec::new(),
-    }
-}
-
-fn inference_job_capability(id: &str, tool_name: &str, title: &str, description: &str, kind: CapabilityKind, scopes: Vec<semio_framework::manifest::kernel::CapabilityId>, input_schema: serde_json::Value, output_schema: serde_json::Value) -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef(id.to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind,
-        audience: CapabilityAudience::Agent,
-        title: title.to_string(),
-        description: description.to_string(),
-        artifact_kind: None,
-        use_when: vec!["run a declared inference over an open document and commit its result".to_string(), "watch, cancel or approve an inference job".to_string()],
-        input_schema,
-        output_schema,
-        effects: semio_framework::manifest::CapabilityEffects { external: true, writes: inference_job_writes(id), ..Default::default() },
-        policy: semio_framework::manifest::CapabilityPolicy { scopes, approval: semio_framework::manifest::ApprovalMode::Never },
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: tool_name.to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("brain".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-pub fn inference_submit_capability() -> CapabilityDefinition {
-    inference_job_capability(
-        "inference.submit",
-        "inference_submit",
-        "Submit Inference Job",
-        "Starts one job for an inference service the document's own kind declares (in the plugin's guest, or on the bound hub when the hub executes that service) and returns a session-owned job handle and its first page. Nothing is applied to the document until an approval commits the job's proposal. — Startet einen Auftrag für einen Inferenzdienst, den die Art des Dokuments deklariert (im Gast des Plugins oder auf dem gebundenen Hub, wenn dieser den Dienst ausführt), und liefert ein sitzungsgebundenes Auftrags-Handle mit seiner ersten Seite. Am Dokument wird nichts angewendet, bis eine Genehmigung den Vorschlag des Auftrags festschreibt.",
-        CapabilityKind::Mutation,
-        inference_scope_ids(),
-        inference_submit_input_schema(),
-        inference_job_output_schema("inference.submit"),
-    )
-}
-
-pub fn inference_events_capability() -> CapabilityDefinition {
-    inference_job_capability(
-        "inference.events",
-        "inference_events",
-        "Read Inference Job Events",
-        "Reads the job's lifecycle events and progress rows after a cursor, with its state, proposal and result. The same page shape for every service and execution site. — Liest die Lebenszyklus-Ereignisse und Fortschrittszeilen des Auftrags nach einem Cursor, mit Zustand, Vorschlag und Ergebnis. Dieselbe Seitenform für jeden Dienst und jeden Ausführungsort.",
-        CapabilityKind::Query,
-        vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string())],
-        inference_job_handle_input_schema("inference.events"),
-        inference_job_output_schema("inference.events"),
-    )
-}
-
-pub fn inference_cancel_capability() -> CapabilityDefinition {
-    inference_job_capability(
-        "inference.cancel",
-        "inference_cancel",
-        "Cancel Inference Job",
-        "Cancels a running job, or withdraws the proposal of one awaiting approval. Cancellation never applies anything. — Bricht einen laufenden Auftrag ab oder zieht den Vorschlag eines auf Genehmigung wartenden Auftrags zurück. Ein Abbruch wendet niemals etwas an.",
-        CapabilityKind::Mutation,
-        vec![semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())],
-        inference_job_handle_input_schema("inference.cancel"),
-        inference_job_output_schema("inference.cancel"),
-    )
-}
-
-pub fn inference_approve_capability() -> CapabilityDefinition {
-    inference_job_capability(
-        "inference.approve",
-        "inference_approve",
-        "Approve Inference Proposal",
-        "Commits one offered proposal, named by its exact hash, as an edit of the document through the normal edit path, so every collaborator sees it and it can be undone. — Schreibt einen angebotenen Vorschlag, benannt durch seinen exakten Hash, als Bearbeitung des Dokuments über den normalen Bearbeitungsweg fest, sodass alle Mitwirkenden ihn sehen und er rückgängig gemacht werden kann.",
-        CapabilityKind::Mutation,
-        inference_scope_ids(),
-        inference_approve_input_schema(),
-        inference_job_output_schema("inference.approve"),
-    )
-}
-
-/// 💡️ The general plugin-declared inference execution capability — the one that is NOT hub-bound.
-/// Every inference service any installed plugin declares is reachable through it, routed to that
-/// plugin's own guest by `ArtifactInferenceRouter` (`🏠️workspace`'s `PluginArtifactChannel`), so
-/// this is the tool that retires the blanket `channel.not-wired` gap. Expensive by construction, so
-/// it always mints a job handle: progress is readable with `job_get` and cancellation is requested
-/// with `job_cancel`, the same plugin-agnostic registry every other long-running gateway job uses.
-pub fn inference_run_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("inference.run".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Job,
-        audience: CapabilityAudience::Agent,
-        title: "Run Declared Inference".to_string(),
-        description: "Runs one plugin-declared inference service in its own plugin's guest and returns the guest's own result, plus a job handle whose progress is readable with `job_get` and cancellable with `job_cancel`. — Führt einen von einem Plugin deklarierten Inferenzdienst im Gast dieses Plugins aus und liefert dessen eigenes Ergebnis sowie ein Auftrags-Handle, dessen Fortschritt mit `job_get` gelesen und mit `job_cancel` abgebrochen werden kann.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["run a plugin's own inference".to_string(), "compute a declared inference value".to_string()],
-        input_schema: crate::schema::inference_run_input_schema(),
-        output_schema: crate::schema::inference_run_output_schema(),
-        effects: Default::default(),
-        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string()), semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())], approval: semio_framework::manifest::ApprovalMode::Never },
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "inference_run".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("brain".to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-/// 💡️ The four inference job capabilities, folded into `CatalogSource.gateway`. `inference_run` is
-/// their synchronous sibling in the plugin-declared family ([`inference_capabilities`]): the same
-/// service resolution and engine, answered in one call with no proposal.
-pub fn inference_job_capabilities() -> Vec<CapabilityDefinition> {
-    vec![inference_submit_capability(), inference_events_capability(), inference_cancel_capability(), inference_approve_capability()]
-}
-
 //#region 🔖️InferenceServiceResolution
-pub fn hub_inference_binding_required(what: &str) -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{what}` needs an authenticated hub binding — start this gateway with `--hub <url> --space <id>`"))
-        .with_details(serde_json::json!({ "bindWith": ["--hub", "--space"] }))
-        .retryable()
-}
 
 /// 🗂️ The artifact kind one readable document IS — the owning app's dialect coordinate when the
 /// workspace knows it, else the schema a folder document shares with its kind.
@@ -1133,6 +479,7 @@ pub fn resolve_document_inference_service(workspace: &HeadlessWorkspace, documen
     let artifact_kind = document_artifact_kind(workspace, document_id)?;
     select_inference_service(&declared_inferences_for_workspace(workspace)?, &workspace.hub_inference_services()?, &artifact_kind, inference_schema, plugin_id)
 }
+
 //#endregion 🔖️InferenceServiceResolution
 
 fn inference_input_invalid(detail: &str) -> GatewayError {
@@ -1147,29 +494,29 @@ fn authorize_inference(policy: &PolicyEngine, principal: &AgentPrincipal, capabi
 }
 
 struct InferenceToolContext<'a> {
-    workspace: Option<&'a Arc<HeadlessWorkspace>>,
-    actions: &'a Arc<crate::actions::ActionAdapter>,
-    catalog: &'a Arc<Catalog>,
-    principal: &'a AgentPrincipal,
-    session: crate::handles::SessionHandle,
+    pub workspace: Option<&'a Arc<HeadlessWorkspace>>,
+    pub actions: &'a Arc<ActionAdapter>,
+    pub catalog: &'a Arc<Catalog>,
+    pub principal: &'a AgentPrincipal,
+    session: SessionHandle,
 }
 
 impl InferenceToolContext<'_> {
-    fn policy(&self) -> &PolicyEngine {
+    pub fn policy(&self) -> &PolicyEngine {
         self.actions.policy()
     }
 
-    fn handles(&self) -> &crate::handles::HandleTable {
+    pub fn handles(&self) -> &HandleTable {
         self.actions.handles().as_ref()
     }
 
-    fn workspace(&self, what: &str) -> Result<&Arc<HeadlessWorkspace>, GatewayError> {
+    pub fn workspace(&self, what: &str) -> Result<&Arc<HeadlessWorkspace>, GatewayError> {
         self.workspace.ok_or_else(|| workspace_binding_required(what))
     }
 
     /// 🎫️ Resolves one `job_` handle against this connection's own session; a hub job's live subject
     /// must still be the exact subject and authority generation that minted it.
-    fn job(&self, workspace: &HeadlessWorkspace, handle: &str) -> Result<InferenceJobHandlePayloadV1, GatewayError> {
+    pub(crate) fn job(&self, workspace: &HeadlessWorkspace, handle: &str) -> Result<InferenceJobHandlePayloadV1, GatewayError> {
         let payload = resolve_inference_job_handle(self.handles(), &self.session, handle, inference_wall_now_ms())?;
         if payload.hub.is_some() {
             check_hub_job_subject(&payload, &workspace.hub_inference_subject()?)?;
@@ -1179,9 +526,9 @@ impl InferenceToolContext<'_> {
 }
 
 /// 🎫️ One `job_` handle of THIS session, decoded to the inference job it names.
-pub fn resolve_inference_job_handle(handles: &crate::handles::HandleTable, session: &crate::handles::SessionHandle, handle: &str, now_ms: u64) -> Result<InferenceJobHandlePayloadV1, GatewayError> {
+pub fn resolve_inference_job_handle(handles: &HandleTable, session: &SessionHandle, handle: &str, now_ms: u64) -> Result<InferenceJobHandlePayloadV1, GatewayError> {
     let record = handles.resolve(handle, session, now_ms)?;
-    if record.kind != crate::handles::HandleKind::Job {
+    if record.kind != HandleKind::Job {
         return Err(inference_input_invalid("handle is not an inference job handle"));
     }
     serde_json::from_value(record.payload).map_err(|_| GatewayError::new(GatewayErrorCode::InputInvalid, "this job handle does not name an inference job"))
@@ -1215,7 +562,7 @@ fn page_text(page: &InferenceJobPageV1) -> String {
 
 /// 📃️ The current page of one guest job, after `after`.
 fn guest_job_page(job_id: &str, after: u64) -> Result<InferenceJobPageV1, GatewayError> {
-    let registry = crate::ui::job_registry();
+    let registry = job_registry();
     let (Some(snapshot), Some(journal), Some(job)) = (registry.snapshot(job_id), registry.events(job_id, after, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS), guest_job(job_id)) else {
         return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no inference job {job_id} in this process")));
     };
@@ -1249,21 +596,21 @@ fn inference_submit_handler(context: &InferenceToolContext<'_>, arguments: serde
 fn submit_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, service: InferenceService, document_id: &str, arguments: &serde_json::Value) -> Result<(String, serde_json::Value), GatewayError> {
     inference_original_turn(arguments)?;
     validate_inference_request(&service.declared, arguments.get("payload").filter(|value| !value.is_null()), Some(document_id))?;
-    let jobs = crate::ui::job_registry();
+    let jobs = job_registry();
     let job_id = jobs.begin("inference.submit");
-    let cancel = crate::actions::InferenceCancel::default();
+    let cancel = InferenceCancel::default();
     let hook = cancel.0.clone();
     jobs.bind_cancel(&job_id, move || hook.cancel_now());
     retain_guest_job(&job_id, GuestInferenceJob { service: service.clone(), document_id: document_id.to_string(), proposal: None, committed: None, commit_refused: false });
     let payload = InferenceJobHandlePayloadV1 { site: InferenceExecutionSiteV1::Guest, service_id: service.service_id().to_string(), artifact_kind: service.declared.artifact_kind.clone(), plugin_id: service.plugin_id().to_string(), document_id: document_id.to_string(), job_id: job_id.clone(), hub: None };
-    let handle = context.handles().mint(crate::handles::HandleKind::Job, context.session.clone(), crate::handles::Attachment::Artifact { artifact_id: document_id.to_string() }, serde_json::to_value(&payload).unwrap_or(serde_json::Value::Null), inference_wall_now_ms());
+    let handle = context.handles().mint(HandleKind::Job, context.session.clone(), Attachment::Artifact { artifact_id: document_id.to_string() }, serde_json::to_value(&payload).unwrap_or(serde_json::Value::Null), inference_wall_now_ms());
     spawn_guest_job(Arc::clone(workspace), Arc::clone(context.actions), Arc::clone(context.catalog), service, document_id.to_string(), arguments.clone(), job_id.clone(), cancel)?;
     let page = guest_job_page(&job_id, 0)?;
     Ok((page_text(&page), serde_json::json!({ "jobHandle": handle, "sessionId": context.session.0, "job": page_value(&page) })))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn spawn_guest_job(workspace: Arc<HeadlessWorkspace>, actions: Arc<crate::actions::ActionAdapter>, catalog: Arc<Catalog>, service: InferenceService, document_id: String, arguments: serde_json::Value, job_id: String, cancel: crate::actions::InferenceCancel) -> Result<(), GatewayError> {
+fn spawn_guest_job(workspace: Arc<HeadlessWorkspace>, actions: Arc<ActionAdapter>, catalog: Arc<Catalog>, service: InferenceService, document_id: String, arguments: serde_json::Value, job_id: String, cancel: InferenceCancel) -> Result<(), GatewayError> {
     let thread_job = job_id.clone();
     std::thread::Builder::new()
         .name(format!("semio-inference-{job_id}"))
@@ -1271,22 +618,22 @@ fn spawn_guest_job(workspace: Arc<HeadlessWorkspace>, actions: Arc<crate::action
         .map(|_| ())
         .map_err(|error| {
             let error = GatewayError::new(GatewayErrorCode::Internal, format!("could not start the inference job thread: {error}"));
-            crate::ui::job_registry().fail(&job_id, error.clone());
+            job_registry().fail(&job_id, error.clone());
             error
         })
 }
 
 #[cfg(target_arch = "wasm32")]
-fn spawn_guest_job(_workspace: Arc<HeadlessWorkspace>, _actions: Arc<crate::actions::ActionAdapter>, _catalog: Arc<Catalog>, _service: InferenceService, _document_id: String, _arguments: serde_json::Value, job_id: String, _cancel: crate::actions::InferenceCancel) -> Result<(), GatewayError> {
+fn spawn_guest_job(_workspace: Arc<HeadlessWorkspace>, _actions: Arc<ActionAdapter>, _catalog: Arc<Catalog>, _service: InferenceService, _document_id: String, _arguments: serde_json::Value, job_id: String, _cancel: InferenceCancel) -> Result<(), GatewayError> {
     let error = GatewayError::new(GatewayErrorCode::PluginUnavailable, "a guest inference job needs a native gateway with job threads");
-    crate::ui::job_registry().fail(&job_id, error.clone());
+    job_registry().fail(&job_id, error.clone());
     Err(error)
 }
 
 /// 🏃️ The job thread: run the guest, then either finish with its result, or — for a service that
 /// declares a commit action — offer the proposal that action would commit and park for approval.
-fn run_guest_job(workspace: &Arc<HeadlessWorkspace>, actions: &crate::actions::ActionAdapter, catalog: &Catalog, service: &InferenceService, document_id: &str, arguments: &serde_json::Value, job_id: &str, cancel: crate::actions::InferenceCancel) {
-    let jobs = crate::ui::job_registry();
+fn run_guest_job(workspace: &Arc<HeadlessWorkspace>, actions: &ActionAdapter, catalog: &Catalog, service: &InferenceService, document_id: &str, arguments: &serde_json::Value, job_id: &str, cancel: InferenceCancel) {
+    let jobs = job_registry();
     let run = match run_guest_inference(workspace, actions, &service.declared, Some(document_id), arguments, job_id, cancel) {
         Ok(Some(run)) if !jobs.is_cancel_requested(job_id) => run,
         Ok(_) => {
@@ -1344,7 +691,7 @@ fn submit_hub_job(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWo
         job_id: receipt.job_id.clone(),
         hub: Some(HubInferenceJobBindingV1 { route, space_id: subject.space_id.clone(), subject_user_id: subject.user_id.clone(), authority_generation: subject.authority_generation, request_id, base: base.clone() }),
     };
-    let handle = context.handles().mint(crate::handles::HandleKind::Job, context.session.clone(), crate::handles::Attachment::Artifact { artifact_id: document_id.to_string() }, serde_json::to_value(&payload).unwrap_or(serde_json::Value::Null), inference_wall_now_ms());
+    let handle = context.handles().mint(HandleKind::Job, context.session.clone(), Attachment::Artifact { artifact_id: document_id.to_string() }, serde_json::to_value(&payload).unwrap_or(serde_json::Value::Null), inference_wall_now_ms());
     let page = hub_receipt_page(&service, document_id, &receipt);
     Ok((page_text(&page), serde_json::json!({ "jobHandle": handle, "sessionId": context.session.0, "job": page_value(&page), "baseBinding": base, "baseBindingUnavailable": base_diagnostic })))
 }
@@ -1402,7 +749,7 @@ fn inference_cancel_handler(context: &InferenceToolContext<'_>, arguments: serde
         let payload = context.job(workspace, handle)?;
         let (page, interrupted) = match payload.site {
             InferenceExecutionSiteV1::Guest => {
-                crate::ui::job_registry().request_cancel(&payload.job_id)?;
+                job_registry().request_cancel(&payload.job_id)?;
                 (guest_job_page(&payload.job_id, 0)?, true)
             }
             InferenceExecutionSiteV1::Hub => {
@@ -1448,7 +795,7 @@ fn approve_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<Headles
     if proposal.hash != proposal_hash {
         return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "proposalHash does not name this job's offered proposal").with_details(serde_json::json!({ "field": "proposalHash" })));
     }
-    let jobs = crate::ui::job_registry();
+    let jobs = job_registry();
     if !jobs.resume_approved(&payload.job_id) {
         return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("job {} has no proposal awaiting approval — it was already approved, withdrawn or cancelled", payload.job_id)));
     }
@@ -1470,7 +817,7 @@ fn approve_guest_job(context: &InferenceToolContext<'_>, workspace: &Arc<Headles
     Ok((format!("approved — {}", page_text(&page)), serde_json::json!({ "jobHandle": handle, "job": page_value(&page), "undoToken": undo_token })))
 }
 
-fn commit_guest_proposal(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, document_id: &str, proposal: &InferenceProposalV1) -> Result<crate::schema::InvocationReport, GatewayError> {
+fn commit_guest_proposal(context: &InferenceToolContext<'_>, workspace: &Arc<HeadlessWorkspace>, document_id: &str, proposal: &InferenceProposalV1) -> Result<InvocationReport, GatewayError> {
     let (Some(capability_id), Some(input)) = (proposal.capability_id.as_deref(), proposal.input.clone()) else {
         return Err(GatewayError::new(GatewayErrorCode::Internal, "an offered guest proposal carries no commit capability"));
     };
@@ -1483,9 +830,9 @@ fn commit_guest_proposal(context: &InferenceToolContext<'_>, workspace: &Arc<Hea
         let _ = context.actions.cancel(&context.session, &prepared.prepared_handle, inference_wall_now_ms());
         return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("this session addresses another document of `{capability_id}`'s plugin, so the commit cannot land on `{document_id}` unambiguously")));
     }
-    let request = crate::actions::InvokeRequest { prepared_handle: Some(prepared.prepared_handle), capability_id: None, input: None, expected_revision: prepared.expected_revision, idempotency_key: Some(format!("inference-{}", proposal.hash)), approval_handle: None };
+    let request = InvokeRequest { prepared_handle: Some(prepared.prepared_handle), capability_id: None, input: None, expected_revision: prepared.expected_revision, idempotency_key: Some(format!("inference-{}", proposal.hash)), approval_handle: None };
     let report = context.actions.invoke(context.catalog, context.principal, &context.session, request, instance, inference_wall_now_ms())?;
-    if report.status != crate::schema::InvocationStatus::Succeeded {
+    if report.status != InvocationStatus::Succeeded {
         return Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("the commit action `{capability_id}` answered {:?}", report.status)));
     }
     Ok(report)
@@ -1493,7 +840,7 @@ fn commit_guest_proposal(context: &InferenceToolContext<'_>, workspace: &Arc<Hea
 
 #[cfg(not(target_arch = "wasm32"))]
 fn commit_instance_slot(catalog: &Catalog, capability_id: &str) -> u32 {
-    crate::workspace::capability_instance_slot(catalog, capability_id).unwrap_or(0)
+    capability_instance_slot(catalog, capability_id).unwrap_or(0)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1560,7 +907,7 @@ fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::Value> {
 /// 🧾️ `input_schema` is the plugin's own JSON Schema TEXT. Only its top-level `required` list is
 /// enforced here: that is what makes the difference between "answers in 200 ms naming the field"
 /// and "hangs" — a full JSON Schema evaluator belongs to the guest that owns the schema.
-fn validate_inference_request(item: &DeclaredInference, payload: Option<&serde_json::Value>, artifact_id: Option<&str>) -> Result<(), GatewayError> {
+pub(crate) fn validate_inference_request(item: &DeclaredInference, payload: Option<&serde_json::Value>, artifact_id: Option<&str>) -> Result<(), GatewayError> {
     let Some(contract) = item.payload.as_ref() else {
         if payload.is_none() {
             return Err(inference_field_invalid(
@@ -1636,31 +983,30 @@ fn inference_field_invalid(field: &str, message: impl Into<String>) -> GatewayEr
 /// pushed to the client as progress (`crate::actions::ActivationPhase`), and a cancel is answered as
 /// soon as it lands. Laws: `🧫️fixtures/⏱️binding-cancellation-law.json` and
 /// `🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json`.
-fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>, job_id: &str, cancel: &semio_framework_async::CancelToken) -> Result<Option<crate::actions::ArtifactDocumentBinding>, GatewayError> {
+fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>, job_id: &str, cancel: &semio_framework_async::CancelToken) -> Result<Option<ArtifactDocumentBinding>, GatewayError> {
     let Some(artifact_id) = artifact_id else { return Ok(None) };
     if item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()).is_none() {
         return Err(inference_field_invalid("artifactId", format!("`{}` publishes no artifact binding, so naming `artifactId` cannot change what it computes — send `payload` instead", item.inference_schema)));
     }
     let job_id = job_id.to_string();
-    let scope = crate::actions::ActivationScope::new(cancel.clone(), move |phase, fraction| {
-        crate::ui::job_registry().report_progress(&job_id, INFERENCE_BINDING_PROGRESS_START + INFERENCE_BINDING_PROGRESS_SPAN * phase.at(fraction), Some(format!("binding: {}", phase.id())));
+    let scope = ActivationScope::new(cancel.clone(), move |phase, fraction| {
+        job_registry().report_progress(&job_id, INFERENCE_BINDING_PROGRESS_START + INFERENCE_BINDING_PROGRESS_SPAN * phase.at(fraction), Some(format!("binding: {}", phase.id())));
     });
     match workspace.bind_artifact_document_cancellably(artifact_id, scope)? {
-        Some((pack, spr)) => Ok(Some(crate::actions::ArtifactDocumentBinding { pack, spr })),
+        Some((pack, spr)) => Ok(Some(ArtifactDocumentBinding { pack, spr })),
         None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no readable document for artifact `{artifact_id}` — open or create it before running an inference on it"))),
     }
 }
 
-
 /// 🏁 One finished guest run: the guest's own result bytes and whether it reported completion.
 struct GuestInferenceRun {
-    inference_schema: String,
-    complete: bool,
-    payload: Option<Vec<u8>>,
+    pub inference_schema: String,
+    pub complete: bool,
+    pub payload: Option<Vec<u8>>,
 }
 
 /// 🎟️ All retained axes come from the original turn's explicit grant.
-fn inference_original_retained(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
+pub(crate) fn inference_original_retained(grant:&serde_json::Value)->Result<semio_framework_value::RetainedCloneGrant,GatewayError>{
     let invalid=||inference_field_invalid("turn.grant","all five explicit retained axes are required within the cross-platform address range");
     let fields=grant.as_object().ok_or_else(invalid)?;
     if fields.len()!=5{return Err(invalid())}
@@ -1669,10 +1015,10 @@ fn inference_original_retained(grant:&serde_json::Value)->Result<semio_framework
 }
 
 /// 🎟️ The command borrows original cancellation and carries its one caller turn and work policy.
-struct InferenceCallerAuthority<'a>{turn:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,revision:u64,cancellation_id:&'a str,work_units:u64,maximum_elapsed_milliseconds:u64}
+struct InferenceCallerAuthority<'a>{pub turn:semio_framework_actor::RetainedTurnInput,pub retained_policy:semio_framework_value::RetainedCloneGrant,pub revision:u64,pub cancellation_id:&'a str,pub work_units:u64,pub maximum_elapsed_milliseconds:u64}
 
 /// 🎟️ Exact JSON identities are mandatory before any guest command or job is born.
-fn inference_original_turn(arguments: &serde_json::Value) -> Result<InferenceCallerAuthority<'_>, GatewayError> {
+pub(crate) fn inference_original_turn(arguments: &serde_json::Value) -> Result<InferenceCallerAuthority<'_>, GatewayError> {
     let integer = |value: &serde_json::Value, name: &str, minimum: u64| value.get(name)
         .and_then(serde_json::Value::as_u64)
         .filter(|number| *number >= minimum && *number <= 9007199254740991)
@@ -1722,9 +1068,9 @@ fn inference_original_turn(arguments: &serde_json::Value) -> Result<InferenceCal
 /// 🏃️ The one guest engine both `inference_run` and a guest job drive: bind the artifact's document
 /// into the request, route it to the service's plugin guest, run it under `cancel`, reporting each
 /// step on `job_id`. `Ok(None)` is a run the caller's cancel stopped.
-fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::actions::ActionAdapter, item: &DeclaredInference, artifact_id: Option<&str>, arguments: &serde_json::Value, job_id: &str, cancel: crate::actions::InferenceCancel) -> Result<Option<GuestInferenceRun>, GatewayError> {
+fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &ActionAdapter, item: &DeclaredInference, artifact_id: Option<&str>, arguments: &serde_json::Value, job_id: &str, cancel: InferenceCancel) -> Result<Option<GuestInferenceRun>, GatewayError> {
     let authority=inference_original_turn(arguments)?;
-    let jobs = crate::ui::job_registry();
+    let jobs = job_registry();
     jobs.report_progress(job_id, INFERENCE_BINDING_PROGRESS_START, Some(match artifact_id {
         Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
         None => "no artifact binding declared — the caller's own body travels verbatim".to_string(),
@@ -1734,7 +1080,7 @@ fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::acti
         Err(_) if jobs.is_cancel_requested(job_id) => return Ok(None),
         Err(error) => return Err(error.with_details(serde_json::json!({ "field": "artifactId" }))),
     };
-    let command = crate::actions::InferCommand {
+    let command = InferCommand {
         plugin_id: item.route_plugin_id().to_string(),
         artifact_kind: item.artifact_kind.clone(),
         inference_schema: item.inference_schema.clone(),
@@ -1799,9 +1145,9 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
     let caller_payload = arguments.get("payload").filter(|value| !value.is_null());
     let authority=match inference_original_turn(&arguments){Ok(authority)=>authority,Err(error)=>return CallToolResult::tool_error(&error)};
     let cancellation_id=authority.cancellation_id;
-    let cancel = crate::actions::InferenceCancel::default();
+    let cancel = InferenceCancel::default();
 
-    let jobs = crate::ui::job_registry();
+    let jobs = job_registry();
     let job_id = jobs.begin("inference.run");
     let base = serde_json::json!({
         "jobId": job_id,
@@ -1822,7 +1168,7 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         return CallToolResult::tool_error(&error);
     }
     let cancelled = |job_id: &str, base: serde_json::Value| {
-        crate::ui::job_registry().mark_cancelled(job_id);
+        job_registry().mark_cancelled(job_id);
         CallToolResult::ok(vec![ContentBlock::Text { text: format!("inference job {job_id} was cancelled") }], Some(merge_inference_run_fields(base, serde_json::json!({ "status": "CANCELLED", "complete": false }))))
     };
     match run_guest_inference(workspace, context.actions, &item, requested_artifact, &arguments, &job_id, cancel) {
@@ -1889,6 +1235,7 @@ fn merge_inference_run_fields(mut base: serde_json::Value, extra: serde_json::Va
 /// 📈️ The span of `inference_run`'s job progress its artifact binding reports into, between the
 /// binding row and routing.
 const INFERENCE_BINDING_PROGRESS_START: f64 = 0.15;
+
 const INFERENCE_BINDING_PROGRESS_SPAN: f64 = 0.1;
 
 /// 🔢️ `RoutingArtifactChannel` resolves an inference's plugin from the command's own `pluginId`, so
@@ -1896,12 +1243,11 @@ const INFERENCE_BINDING_PROGRESS_SPAN: f64 = 0.1;
 /// zero rather than a fabricated per-capability slot.
 const INFERENCE_ROUTED_INSTANCE: u32 = 0;
 
-
 /// 💡️ Registers the four inference job tools plus `inference_run`. Like every other tool in this
 /// crate they are ALWAYS present in `tools/list`; only a call's result varies by whether a
 /// workspace (and, for a hub-executed service, a hub binding) exists, and every call is first gated
 /// by the connection's own granted MCP scopes.
-pub fn register_inference_job_tools(registry: &mut InMemoryToolRegistry, catalog: Arc<Catalog>, workspace: Option<Arc<HeadlessWorkspace>>, actions: Arc<crate::actions::ActionAdapter>, principal: AgentPrincipal, session: crate::handles::SessionHandle) {
+pub fn register_inference_job_tools(registry: &mut InMemoryToolRegistry, catalog: Arc<Catalog>, workspace: Option<Arc<HeadlessWorkspace>>, actions: Arc<ActionAdapter>, principal: AgentPrincipal, session: SessionHandle) {
     let definitions: [(CapabilityDefinition, &str, fn(&InferenceToolContext<'_>, serde_json::Value) -> CallToolResult); 5] = [
         (inference_submit_capability(), "inference_submit", inference_submit_handler),
         (inference_events_capability(), "inference_events", inference_events_handler),
@@ -1920,9 +1266,11 @@ pub fn register_inference_job_tools(registry: &mut InMemoryToolRegistry, catalog
             .expect("inference job tool names are valid");
     }
 }
+
 //#endregion 💡️InferenceJobTools
 
 //#region 💡️InferenceHubRead
+
 /// 🆔️ The deterministic client idempotency key one hub-backed inference READ uses, derived from
 /// nothing but the authenticated subject and the document. The hub's ledger scopes idempotency on
 /// `(user, authorization generation, space, document, request_id)`, so re-reading the same field
@@ -1931,7 +1279,6 @@ pub fn deterministic_inference_request_id(subject: &HubInferenceSubjectV1, docum
     let seed = format!("semio.mcp.inference-read/v1\0{}\0{}\0{}\0{}\0{}", subject.hub_origin, subject.space_id, document_id, subject.user_id, subject.authority_generation);
     framework_hash::hash_bytes(seed.as_bytes())[..INFERENCE_REQUEST_ID_HEX_LENGTH].to_string()
 }
-
 
 /// 💡️ A READ of a hub-executed service's field: submits (or reconciles to) the one job this subject
 /// owns for the document under a deterministic request id and returns its owner-private receipt. A
@@ -1958,47 +1305,14 @@ pub fn hub_inference_read(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str,
         })
     }))
 }
+
 //#endregion 💡️InferenceHubRead
 
-
 //#region 💼️Jobs
-#[path = "💼️jobs/🦀️.rs"]
-pub mod jobs;
-pub use jobs::*;
 //#endregion 💼️Jobs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests
 
 //#region 🧪️InferenceJobTests
-/// 🧪️ The MCP-side laws for the hub inference bridge. They read the SAME neutral fixture the hub's
-/// own Rust laws and independent JSON oracle read, so a
-/// hub-side change to the closed vocabulary, limits or lifecycle fails here loudly instead of
-/// drifting. Nothing here starts a hub, a model, a renderer or a second process.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️inference-jobs/🦀️.rs"]
-mod inference_jobs;
 //#endregion 🧪️InferenceJobTests
-
-pub(crate) mod dsl_json {
-    use serde::{Deserialize,Serialize};
-    pub fn serialize<S:serde::Serializer>(value:&semio_framework_value::DslValue,serializer:S)->Result<S::Ok,S::Error> {
-        semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1::validate_payload(value,super::INFERENCE_RESPONSE_MAX_BYTES).map_err(|code|serde::ser::Error::custom(format!("opaque payload rejected: {code:?}")))?;
-        let json:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).map_err(serde::ser::Error::custom)?;json.serialize(serializer)
-    }
-    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<semio_framework_value::DslValue,D::Error> {
-        let json=serde_json::Value::deserialize(deserializer)?;semio_framework_pack_json::from_json_str(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(serde::de::Error::custom)
-    }
-}
-mod dsl_json_optional {
-    use serde::{Deserialize,Serialize};
-    pub fn serialize<S:serde::Serializer>(value:&Option<semio_framework_value::DslValue>,serializer:S)->Result<S::Ok,S::Error> {
-        let json=value.as_ref().map(|value|serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(value))).transpose().map_err(serde::ser::Error::custom)?;json.serialize(serializer)
-    }
-    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<Option<semio_framework_value::DslValue>,D::Error> {
-        Option::<serde_json::Value>::deserialize(deserializer)?.map(|json|semio_framework_pack_json::from_json_str(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(serde::de::Error::custom)).transpose()
-    }
-}

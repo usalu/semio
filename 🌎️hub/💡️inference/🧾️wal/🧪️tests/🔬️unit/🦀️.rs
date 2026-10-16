@@ -1,8 +1,12 @@
 //! 🔬️ Literal hostile traces exercise the production retained WAL reader, not a second matcher.
 
-
-use super::*;
 use db::storage::WalStorage;
+use std::sync::Arc;
+use semio_hub_inference::wal::{CommittedInferenceWalWitnessV1, InferenceDocumentFenceV1, InferenceWalTargetV1, InferenceWalVerifierV1};
+use directory::os_directory::DocumentScope;
+use std::time::Duration;
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1};
+use std::sync::atomic::Ordering;
 
 #[path = "../⛓️chain/🦀️.rs"]
 mod chain;
@@ -179,8 +183,8 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         (record, proposal, inverse)
     };
     let canonical_proposal = semio_framework_pack_json::to_json_string(&GisMapInference::infer(&base).create_region_group_work(&base, job_id).expect("typed fixed-three inference work").parent).into_bytes();
-    let proposal_hash = crate::inference::sha256(&canonical_proposal);
-    let mutation_id = crate::inference::sha256(format!("semio.hub.inference-approval-mutation/v1\0{job_id}\0{proposal_hash}").as_bytes())[..32].to_string();
+    let proposal_hash = semio_hub_inference::sha256(&canonical_proposal);
+    let mutation_id = semio_hub_inference::sha256(format!("semio.hub.inference-approval-mutation/v1\0{job_id}\0{proposal_hash}").as_bytes())[..32].to_string();
     let (record, proposal, inverse) = sealed(job_id, &mutation_id, actor);
     let altered_job_id = fixture["bindingMismatches"][0]["jobId"].as_str().unwrap();
     assert_ne!(altered_job_id, job_id, "the altered-envelope decision must propose something else entirely");
@@ -188,18 +192,18 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
     let wrong_actor = actor.replacen('a', "e", 1);
     assert_ne!(wrong_actor, actor, "the wrong-actor decision must be committed by somebody else");
     let (wrong_actor_record, _, _) = sealed(job_id, &mutation_id, &wrong_actor);
-    let command = super::super::command::encode_server_stamped_command_v1(&super::super::command::CanonicalInferenceCommandPartsV1 {
+    let command = semio_hub_inference::command::encode_server_stamped_command_v1(&semio_hub_inference::command::CanonicalInferenceCommandPartsV1 {
         mutation_id: &mutation_id,
         document_id: fixture["documentKey"].as_str().unwrap(),
         actor,
-        diff_schema: super::super::schema::GIS_DOCUMENT_SCHEMA,
+        diff_schema: semio_hub_inference::schema::GIS_DOCUMENT_SCHEMA,
         diff_payload: &proposal,
-        inverse_schema: super::super::schema::GIS_DOCUMENT_SCHEMA,
+        inverse_schema: semio_hub_inference::schema::GIS_DOCUMENT_SCHEMA,
         inverse_payload: &inverse,
         timestamp,
     })
     .expect("canonical command reconstructed from Store parent edit");
-    let command_hash = crate::inference::sha256(&command);
+    let command_hash = semio_hub_inference::sha256(&command);
     DurableFixtureRecord { record, altered_record, wrong_actor_record, command, proposal_hash, mutation_id, command_hash, diff_payload: proposal, inverse_payload: inverse }
 }
 
@@ -207,7 +211,7 @@ fn scope(fixture: &serde_json::Value) -> DocumentScope {
     DocumentScope::new(fixture["scope"]["spaceId"].as_str().unwrap(), fixture["scope"]["documentId"].as_str().unwrap())
 }
 
-pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::MutationEnvelope {
+pub fn envelope(fixture: &serde_json::Value) -> protocol::MutationEnvelope {
     let source = &fixture["command"];
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(source["mutationId"].as_str().unwrap().into()),
@@ -322,7 +326,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
     let mut bytes = Vec::new();
     protocol::encode_envelope(&envelope(&fixture), &mut bytes);
     assert_eq!(bytes, decode_hex(fixture["encodedHex"].as_str().unwrap()));
-    assert_eq!(crate::inference::sha256(&bytes), fixture["commandHash"].as_str().unwrap());
+    assert_eq!(semio_hub_inference::sha256(&bytes), fixture["commandHash"].as_str().unwrap());
     let identifiers: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖥️inference-server-identity-v1/🔣️.json")).unwrap();
     for row in identifiers["cases"].as_array().unwrap() {
         for field in ["userId", "sessionId", "spaceId", "documentId"] {
@@ -343,7 +347,7 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
     for trace in fixture["traces"].as_array().unwrap() {
         guard.at(format!("trace {} storage admission", trace["name"]));
         let storage = storage(&fixture, trace, &durable).await;
-        let verifier = InferenceWalVerifierV1::new(storage);
+        let verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(storage);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
         let control = Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap());
         if trace["cancelAfterRecords"] == 0 {
@@ -445,11 +449,11 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
     }
 }
 
-pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInferenceWalWitnessV1, Arc<InferenceDocumentFenceV1>) {
+pub async fn committed_fixture_witness() -> (CommittedInferenceWalWitnessV1, Arc<InferenceDocumentFenceV1>) {
     let fixture = fixture();
     let durable = durable_fixture_record(&fixture);
     let trace = &fixture["traces"][0];
-    let verifier = InferenceWalVerifierV1::new(storage(&fixture, trace, &durable).await);
+    let verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(storage(&fixture, trace, &durable).await);
     let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
     let witness = verifier.verify(target(&fixture, trace, &durable), fence.clone(), Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await.unwrap().unwrap();
     assert_eq!(verifier.active(), 0);
@@ -487,10 +491,10 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
             bytes.insert(offset + 1, 0);
         }
         let mut target = target(&fixture, trace, &durable);
-        target.command_hash = crate::inference::sha256(&bytes);
+        target.command_hash = semio_hub_inference::sha256(&bytes);
         guard.at(format!("hostile vector {}", vector["name"]));
         let backend = storage_with_event(&fixture, trace, &durable, Some(&bytes)).await;
-        let verifier = InferenceWalVerifierV1::new(backend);
+        let verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(backend);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
         let result = verifier.verify(target, fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
         assert!(matches!(result, Err(InferenceErrorV1::Invalid)), "a matching durable hash cannot bypass {}", vector["name"]);
@@ -502,6 +506,10 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
 
 mod quick {
     use super::*;
+use std::sync::Arc;
+use std::time::Duration;
+use semio_hub_inference::wal::{InferenceDocumentFenceV1, InferenceWalVerifierV1};
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1};
 
     #[tokio::test]
     async fn inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay_before_release() {
@@ -509,7 +517,7 @@ mod quick {
         let durable = durable_fixture_record(&fixture);
         let trace = &fixture["traces"][0];
         for owner in fixture["ownership"].as_array().unwrap() {
-            let mut verifier = InferenceWalVerifierV1::new(storage(&fixture, trace, &durable).await);
+            let mut verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(storage(&fixture, trace, &durable).await);
             let gate = Arc::new(tokio::sync::Semaphore::new(0));
             Arc::get_mut(&mut verifier.state).unwrap().replay_gate = Some(gate.clone());
             let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());

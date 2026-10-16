@@ -1,4 +1,23 @@
 {
+  "discovery": {
+    "contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "files", "patterns", "expected", "compilations"],
+      "properties": {
+        "id": {"type": "string"},
+        "files": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "patterns": {"type": "array", "items": {"type": "string"}},
+        "expected": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "compilations": {"type": "integer", "minimum": 0}
+      }
+    },
+    "cases": [
+      {"id": "repeated-positive-and-exclusions", "files": ["src/a.ts", "src/b.ts", "src/c.js", "src/nested/d.ts", "src/generated/e.ts", "src/.hidden.ts"], "patterns": ["src/**/*.{ts,js}", "src/**/*.ts", "src/**/*.ts", "!src/generated/**", "!src/**/*.js"], "expected": ["src/.hidden.ts", "src/a.ts", "src/b.ts", "src/nested/d.ts"], "compilations": 4},
+      {"id": "unmatched-positive-keeps-exclusions-lazy", "files": ["src/a.ts", "src/b.ts"], "patterns": ["src/**/*.js", "!src/["], "expected": [], "compilations": 1},
+      {"id": "empty-candidates-compile-nothing", "files": [], "patterns": ["missing/[", "!missing/["], "expected": [], "compilations": 0},
+      {"id": "first-exclusion-keeps-later-malformed-lazy", "files": ["src/a.ts", "src/b.ts"], "patterns": ["src/**/*.ts", "!src/**", "!src/["], "expected": [], "compilations": 2}
+    ]
+  },
   "contract": {
     "type": "object",
     "additionalProperties": false,

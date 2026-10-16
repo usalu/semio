@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 /** 🔀️ Adapter for `interpolate-kinds`: `\SemioVizInterpolate`, the public interpolator surface.
  *
  * Subject: `semio-viz-scale`'s interpolators, probed through `semio-viz-probe`.
@@ -6,7 +7,7 @@
 import { rgb } from "d3-color";
 import { interpolateArray, interpolateHcl, interpolateLab, interpolateNumber, interpolateRgb, interpolateRound } from "d3-interpolate";
 import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { type ProbeProjection, compileVizProbe, probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { type ProbeProjection, probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors
 const CASE = "interpolate-kinds";
@@ -41,7 +42,7 @@ const SPACES: Readonly<Record<string, (a: string, b: string) => (t: number) => s
 
 /** 🎯️ Compiles the committed fixture and projects the records of one scenario. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
 }
 //#endregion 🔖️Vectors

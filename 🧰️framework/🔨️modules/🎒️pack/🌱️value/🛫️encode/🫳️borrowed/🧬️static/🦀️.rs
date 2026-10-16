@@ -203,7 +203,7 @@ impl<T:FieldProjectionSource> BorrowedProjectedPackOperation<T>{
  /// 📐️ Reports finite caller-embedded locator and scalar scratch without claiming heap allocation.
  pub fn inline_storage_bytes(&self)->usize{size_of::<InlineSymbols>()+size_of::<InlineOrder>()}
  /// 🖨️ Writes exact canonical bytes under the caller control and retains scratch on success or refusal.
- pub fn write_body(&mut self,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+ pub fn write_body(&mut self,options:&EncodeOptions,output:&mut dyn semio_framework_replication_codec::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
   if !matches!(self.phase,OperationPhase::Fresh|OperationPhase::Ready){return Err(mismatch())}
   let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
   let result=control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{

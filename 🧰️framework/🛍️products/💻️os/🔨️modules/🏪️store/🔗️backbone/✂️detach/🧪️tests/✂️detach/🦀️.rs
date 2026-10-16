@@ -24,18 +24,18 @@ async fn observe_refusal(case_id: &str) {
     let expected_capacity = payload.capacity();
     local.send(BackboneMessage::Mutations { envelopes: payload }).await.expect("original queued payload");
     let original_outbox = Arc::as_ptr(local.outbox.as_ref().unwrap());
-    store.envelope.backbone = Some(local.descriptor().await);
-    *store.backbone = Some(Backbones::Memory(local));
-    let original_generation = store.generation;
+    store.log.envelope.backbone = Some(local.descriptor().await);
+    *store.wire.backbone = Some(Backbones::Memory(local));
+    let original_generation = store.cursor.generation;
     let occupied = if case["failure"] == "capacity" {
-        Some(store.displaced_retirements.reserve_owner_slots(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY).expect("reserve the actual full destination"))
+        Some(store.owners.displaced_retirements.reserve_owner_slots(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY).expect("reserve the actual full destination"))
     } else {
-        store.generation = fixture["generationMaximum"].as_str().unwrap().parse().unwrap();
+        store.cursor.generation = fixture["generationMaximum"].as_str().unwrap().parse().unwrap();
         None
     };
-    let before_generation = store.generation;
-    let before_descriptor = serde_json::Value::from(store.envelope.backbone.to_value());
-    let before_revision = store.content_revision;
+    let before_generation = store.cursor.generation;
+    let before_descriptor = serde_json::Value::from(store.log.envelope.backbone.to_value());
+    let before_revision = store.cursor.content_revision;
     let mut detached = None;
     let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| match store.detach_backbone() {
         Ok(owner) => {
@@ -46,18 +46,18 @@ async fn observe_refusal(case_id: &str) {
     }));
     let refused = matches!(attempt, Ok(true));
     let panicked = attempt.is_err();
-    let descriptor_preserved = store.envelope.backbone.to_value() == before_descriptor;
-    let generation_preserved = store.generation == before_generation;
-    let revision_preserved = store.content_revision == before_revision;
-    let backbone_preserved = matches!(store.backbone.as_ref(), Some(Backbones::Memory(local)) if Arc::as_ptr(local.outbox.as_ref().unwrap()) == original_outbox);
+    let descriptor_preserved = store.log.envelope.backbone.to_value() == before_descriptor;
+    let generation_preserved = store.cursor.generation == before_generation;
+    let revision_preserved = store.cursor.content_revision == before_revision;
+    let backbone_preserved = matches!(store.wire.backbone.as_ref(), Some(Backbones::Memory(local)) if Arc::as_ptr(local.outbox.as_ref().unwrap()) == original_outbox);
     let payload_preserved = {
         let queue = peer.inbox.as_ref().unwrap().lock().unwrap();
         matches!(queue.front(), Some(BackboneMessage::Mutations { envelopes }) if envelopes.as_ptr() == expected_pointer && envelopes.capacity() == expected_capacity && envelopes.len() == payload_length && envelopes.iter().all(|byte| *byte == payload_byte))
     };
     if let Some(reservation) = occupied {
-        store.displaced_retirements.release_owner_slots(reservation).expect("release exact fixture reservation");
+        store.owners.displaced_retirements.release_owner_slots(reservation).expect("release exact fixture reservation");
     }
-    store.generation = original_generation;
+    store.cursor.generation = original_generation;
     drop(peer);
     if let Some(owner) = detached.take() {
         let mut retirement = ArtifactStoreBackboneRetirement::new(owner);

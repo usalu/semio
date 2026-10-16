@@ -97,12 +97,3 @@ pub fn verify_protocol_bytes(spec: &GrammarFile, bytes: &[u8]) -> Result<(), Str
     }
     Err(format!("verify_protocol_bytes: cannot classify protocol id='{}' start='{}'", spec.id, spec.start))
 }
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧬️originals/🦀️.rs"]
-mod original_shipped_grammar_tests;

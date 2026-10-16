@@ -1,0 +1,75 @@
+//! 🧪️ engine tests (↔️undirected-normal): compiled against the `testkit` surface of the board crates.
+
+use semio_framework_os_infinite_board_schema::LayoutControl;
+use semio_framework_os_infinite_board_engine::{force_snapshot_json, UndirectedGraphEngine};
+use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
+
+macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=LayoutControl::new(500_000_000,&mut progress);layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
+
+#[test]
+fn undirected_graph_engine_alias() {
+    let mut g = UndirectedGraphEngine::new();
+    g.create_node(1, 0.0, 0.0, 20.0, true);
+    g.create_node(2, 50.0, 0.0, 20.0, true);
+    g.create_edge(9, 2, 1);
+    let e = g.edges.get(&9).unwrap();
+    assert_eq!(e.source, 1);
+    assert_eq!(e.target, 2);
+}
+
+#[test]
+fn force_graph_without_gravity_stays_near_initial_centroid() {
+    let fixture = serde_json::json!({
+        "schema": "board.normal.undirected.v1",
+        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+        "nodes": [
+            { "id": "a", "x": 1000.0, "y": 1000.0, "radius": 40.0 },
+            { "id": "b", "x": 1001.0, "y": 1000.0, "radius": 40.0 }
+        ],
+        "edges": [{ "id": "e1", "source": "a", "target": "b" }]
+    });
+    let opts = serde_json::json!({
+        "iterations": 200,
+        "idealEdgeLength": 180.0,
+        "repulsionStrength": 0.0,
+        "springStrength": 0.04,
+        "gravity": 0.0,
+        "centerX": 0.0,
+        "centerY": 0.0,
+        "randomSeed": 7
+    });
+    let out = physical_layout!(force_snapshot_json,&fixture.to_string(), &opts.to_string()).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let nodes = parsed["nodes"].as_array().unwrap();
+    let ax = nodes[0]["x"].as_f64().unwrap();
+    let bx = nodes[1]["x"].as_f64().unwrap();
+    let mean_x = (ax + bx) * 0.5;
+    assert!(mean_x > 900.0, "expected layout to stay near initial centroid, not creep to world origin, mean_x={mean_x}");
+}
+
+#[test]
+fn force_graph_node_id_edges_apply_spring_forces() {
+    let fixture = serde_json::json!({
+        "schema": "board.normal.undirected.v1",
+        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+        "nodes": [
+            { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0 },
+            { "id": "b", "x": 1.0, "y": 0.0, "radius": 40.0 }
+        ],
+        "edges": [{ "id": "e1", "source": "a", "target": "b" }]
+    });
+    let opts = serde_json::json!({
+        "iterations": 200,
+        "idealEdgeLength": 180.0,
+        "repulsionStrength": 0.0,
+        "springStrength": 0.04,
+        "gravity": 0.0,
+        "randomSeed": 7
+    });
+    let out = physical_layout!(force_snapshot_json,&fixture.to_string(), &opts.to_string()).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+    let nodes = parsed["nodes"].as_array().unwrap();
+    let ax = nodes[0]["x"].as_f64().unwrap();
+    let bx = nodes[1]["x"].as_f64().unwrap();
+    assert!((bx - ax).abs() > 80.0, "expected undirected springs to spread nodes, got a={ax} b={bx}");
+}

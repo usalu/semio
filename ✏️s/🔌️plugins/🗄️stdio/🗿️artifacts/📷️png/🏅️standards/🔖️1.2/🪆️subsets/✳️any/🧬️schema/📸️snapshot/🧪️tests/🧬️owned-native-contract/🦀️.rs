@@ -3,7 +3,7 @@ use crate::schema::{snapshot::{PngSnapshot,PngRegion,PngNativePaint},operations:
 use protocol::{DiffAlgebra,MutationDiff};
 #[test]
 fn neutral_native_samples_preserve_metadata_and_inverse_laws() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap() {
   let base:PngSnapshot=semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();base.validate().unwrap();let input=&row["paint"];let region=PngRegion {x:input["x"].as_u64().unwrap()as u32,y:input["y"].as_u64().unwrap()as u32,width:input["width"].as_u64().unwrap()as u32,height:input["height"].as_u64().unwrap()as u32};
   let paint:PngNativePaint=semio_framework_pack_json::from_json_str(&serde_json::json!({"profile":input["profile"],"first":input["first"],"second":input["second"],"third":input["third"],"fourth":input["fourth"]}).to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -15,4 +15,9 @@ fn neutral_native_samples_preserve_metadata_and_inverse_laws() {
   assert_eq!(progress.first(),Some(&(0,region.height as usize)));assert_eq!(progress.last(),Some(&(region.height as usize,region.height as usize)));assert!(paint_native_region_controlled(&base,"stale",region,paint,&mut|_,_|true).unwrap_err().contains("stale"));
   eprintln!("[DEBUG] png owned native case={} metadata=exact inverse=exact",row["name"]);
  }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

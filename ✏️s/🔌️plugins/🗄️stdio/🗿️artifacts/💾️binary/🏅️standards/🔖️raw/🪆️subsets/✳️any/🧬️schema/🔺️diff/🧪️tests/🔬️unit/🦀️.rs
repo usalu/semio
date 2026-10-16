@@ -1,4 +1,6 @@
-use super::*;
+use crate::BinarySnapshot;
+use crate::standards::v_raw::subsets::any::schema::diff::{absorb_splices};
+use crate::standards::v_raw::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_before_matches_canonical_shape() {

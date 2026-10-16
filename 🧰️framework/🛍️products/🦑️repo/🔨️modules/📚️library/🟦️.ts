@@ -1,3 +1,12 @@
+import {runVitest} from "./🧪️testing/🧪️vitest/🟦️.ts";
+export {runVitest};
+export {runViteBuild} from "./⚡️caching/🌐️vite/🏗️build/🟦️.ts";
+export {runViteBunxDev} from "./⚡️caching/🌐️vite/🌐️service/🟦️.ts";
+import {playPollingEnv} from "./🏃️process/🌿️environment/🟦️.ts";
+export {playPollingEnv};
+import {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort} from "./🌐️network/🔌️ports/🟦️.ts";
+export {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort};
+import type {RepositoryArtifactRequestV1} from "./⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
 import {type CargoDependencyNetworkV1} from "./🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS} from "./🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
 export {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS};
@@ -598,7 +607,7 @@ export function parseTsImportSpecs(line: string): string[] {
   const re = /(?:from|import)\s+['"]([^'"]+)['"]/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(line)) !== null) {
-    specs.push(m[1]);
+    const spec = m[1]; if (spec !== undefined) specs.push(spec);
   }
   return specs;
 }
@@ -624,8 +633,7 @@ export function dependencyBoundaryBreachesForFile(repoRoot: string, filePath: st
   if (deps.size === 0) return [];
   const breachs: BreachRecord[] = [];
   const lines = content.split(/\r?\n/);
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const [i, line] of lines.entries()) {
     if (!line.includes("import ")) continue;
     for (const spec of parseTsImportSpecs(line)) {
       if (!isThirdPartySpec(spec, deps)) continue;
@@ -1211,8 +1219,8 @@ function generateCargoVariants(name: string): string[] {
   const parts = name.split("-");
 
   let firstNonPrefix = parts.length - 1;
-  for (let i = 0; i < parts.length; i++) {
-    if (!CARGO_PREFIX_WORDS.has(parts[i])) {
+  for (const [i, part] of parts.entries()) {
+    if (!CARGO_PREFIX_WORDS.has(part)) {
       firstNonPrefix = i;
       break;
     }
@@ -1222,9 +1230,9 @@ function generateCargoVariants(name: string): string[] {
   variants.add(coreSuffix);
 
   const prefixParts = parts.slice(0, firstNonPrefix);
-  for (let i = 0; i < prefixParts.length; i++) {
+  for (const [i, prefix] of prefixParts.entries()) {
     variants.add(parts.slice(i).join("-"));
-    variants.add([prefixParts[i], ...parts.slice(firstNonPrefix)].join("-"));
+    variants.add([prefix, ...parts.slice(firstNonPrefix)].join("-"));
   }
 
   return Array.from(variants);
@@ -1287,9 +1295,10 @@ export function resolveCargoPackageName(pkg: string, cwd: string): string {
 
   // 2. Direct libName lookup
   const byLib = index.libNameToCrates.get(pkg);
-  if (byLib && byLib.length > 0) {
-    if (byLib.length === 1) return byLib[0].pkgName;
-    let best = byLib[0];
+  const firstLib = byLib?.[0];
+  if (byLib && firstLib) {
+    if (byLib.length === 1) return firstLib.pkgName;
+    let best = firstLib;
     let bestDist = Infinity;
     for (const item of byLib) {
       const dist = relative(cwd, item.dir).length;
@@ -1304,9 +1313,10 @@ export function resolveCargoPackageName(pkg: string, cwd: string): string {
   // 3. Alias / prefix-variant lookup
   const normPkg = pkg.replaceAll("-", "_").toLowerCase();
   const byAlias = index.aliasToCrates.get(normPkg);
-  if (byAlias && byAlias.length > 0) {
-    if (byAlias.length === 1) return byAlias[0].pkgName;
-    let best = byAlias[0];
+  const firstAlias = byAlias?.[0];
+  if (byAlias && firstAlias) {
+    if (byAlias.length === 1) return firstAlias.pkgName;
+    let best = firstAlias;
     let bestDist = Infinity;
     for (const item of byAlias) {
       const dist = relative(cwd, item.dir).length;
@@ -1325,7 +1335,7 @@ export function resolveCargoPackageName(pkg: string, cwd: string): string {
       try {
         const content = readFileSync(cargoPath, "utf8");
         const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
-        if (pkgMatch) return pkgMatch[1];
+        if (pkgMatch?.[1] !== undefined) return pkgMatch[1];
       } catch {
         /* ignore */
       }
@@ -1343,7 +1353,7 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
         try {
           const content = readFileSync(cargoPath, "utf8");
           const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
-          if (pkgMatch) return [pkgMatch[1]];
+          if (pkgMatch?.[1] !== undefined) return [pkgMatch[1]];
         } catch {
           /* ignore */
         }
@@ -1575,6 +1585,7 @@ export function goProfileToLcov(text: string): LcovFileRecord[] {
     const match = /^(.+):(\d+)\.\d+,(\d+)\.\d+ \d+ (\d+)$/.exec(line);
     if (!match) continue;
     const [, file, startStr, endStr, countStr] = match;
+    if (file === undefined || startStr === undefined || endStr === undefined || countStr === undefined) throw new Error("Go coverage record captures required");
     const start = Number(startStr);
     const end = Number(endStr);
     const hits = Number(countStr);
@@ -1745,13 +1756,6 @@ export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
   });
 }
 
-/** 🌐️ Builds a mode-owned site under shared compiler admission and complete artifact publication. */
-export async function runViteBuild(invocation: ScriptInvocation, bundleRoot: string, segments: string[], config: string): Promise<void> {
-  checkScriptInvocation(invocation);
-  const [{ buildViteArtifact }, { readBuildMode }] = await Promise.all([import("./⚡️caching/🌐️vite/🟦️.ts"), import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts")]);
-  const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), configFile = resolve(bundleRoot, config);
-  await buildViteArtifact({ invocation, root: bundleRoot, workspace: getWorkspaceRoot(), config: configFile, owner: `vite:${relative(getWorkspaceRoot(), bundleRoot)}`, mode, args: segments, signal: invocation.control.signal, timeoutMs: scriptInvocationBudget(invocation, buildBudgetMs()), environment: devToolingEnv() });
-}
 /**
  * ▶️Vitest run in bundle directory, under the [[runRepositoryTestCommand]] wall-clock budget. Appends v8 lcov coverage
  * flags when [[coverageEnabled]]. Invokes the workspace's own `node_modules/vitest/vitest.mjs` directly rather
@@ -1781,10 +1785,6 @@ export function vitestRunArguments(bundleRoot: string, segments: string[], confi
   return vitestArgumentsV1(repositoryVitestPolicyV1(bundleRoot),segments,config,collectingCoverage);
 }
 
-export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> {
-  const policy=repositoryVitestPolicyV1(bundleRoot),env=devToolingEnv({SEMIO_VITEST_POLICY:JSON.stringify(policy)});
-  await runVitestV1(policy,segments,config,env);
-}
 
 export { SEMIO_LOCKED_LOCALE_ENV, SEMIO_LOCKED_TERMINOLOGY_ENV, SEMIO_LOCKED_THEME_ENV, SEMIO_LOCKED_APPEARANCE_ENV, SEMIO_BRAND_ENV, SEMIO_DEFAULT_EXAMPLE_ENV, frameworkOsLockedPrefsEnv } from "./🎮️playground/🔒️preferences/🟦️.ts";
 
@@ -1802,14 +1802,6 @@ export const SEMIO_ASSET_BASE_URL_ENV = "SEMIO_ASSET_BASE_URL";
  * native filesystem events don't reach the watcher (bind-mounted devcontainers) — on native macOS/
  * Windows/Linux it just burns CPU/RSS across every spawned dev server for no benefit. An explicit
  * `WATCHPACK_POLLING` always wins as a manual override in either direction. */
-export function playPollingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
-  const pollingDefault = process.env.WATCHPACK_POLLING !== undefined ? {} : process.env.DEVCONTAINER === "true" ? { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" } : {};
-  return devToolingEnv({
-    ...pollingDefault,
-    ...extra,
-  });
-}
-
 /** 🔒️ Parses optional `example <id>` argv prefix for playground play scripts. */
 export function consumePlaygroundExampleArgv(segments: string[], resolveExampleId: (slug: string) => string | undefined): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
   if (segments[0] !== "example" || !segments[1]) {
@@ -1829,26 +1821,6 @@ export function consumePlaygroundExampleArgv(segments: string[], resolveExampleI
 /** ▶️Playwright test run in bundle directory; browsers land in the shared cache root. */
 export function runPlaywright(bundleRoot: string, config: string, segments: string[] = []): void {
   runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, repoToolCacheEnv(findWorkspaceRoot(bundleRoot), playPollingEnv()));
-}
-
-/** 🔌️ True when host:port already accepts TCP (existing dev server). */
-export function isDevPortInUse(host: string, port: number): boolean {
-  const probe = `
-import { createConnection } from "node:net";
-const socket = createConnection({ host: ${JSON.stringify(host)}, port: ${port} });
-socket.setTimeout(300);
-socket.once("connect", () => process.exit(0));
-socket.once("timeout", () => process.exit(1));
-socket.once("error", () => process.exit(1));
-`;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 500 });
-  return result.status === 0;
-}
-
-/** 🌐️ Loopback URL for a dev server bound to `host`/`port`. */
-export function devServerUrl(host: string, port: number): string {
-  const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
-  return `http://${probeHost}:${port}/`;
 }
 
 /** 🧊️ Legacy trunk entry paths still seen on long-running dev servers. */
@@ -1888,115 +1860,6 @@ export function stopTrunkDevPort(port: number): boolean {
   }
 }
 
-/** 🎯️ Reads `import.meta.env.PLAYGROUND_APP_KIND` baked into a running playground dev server. */
-export function devServerPlayEntry(host: string, port: number): string | undefined {
-  const url = `${devServerUrl(host, port)}index.ts`;
-  const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
-if (!res.ok) process.exit(1);
-const text = await res.text();
-const match = text.match(/PLAYGROUND_APP_KIND\\":\\s*\\"([^\\"]+)\\"/);
-process.stdout.write(match?.[1] ?? "");
-`;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
-  const entry = result.stdout?.trim();
-  return entry || undefined;
-}
-
-/** 🔎️ Best-effort description of the process listening on `port` (Unix/macOS/Linux). */
-export function describeDevPortOccupant(port: number): string | undefined {
-  if (process.platform === "win32") return undefined;
-  const result = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], { encoding: "utf8" });
-  const line = result.stdout
-    ?.trim()
-    .split("\n")
-    .find((row, index) => index > 0 && row.trim().length > 0);
-  if (!line) return undefined;
-  const parts = line.trim().split(/\s+/);
-  return parts.length >= 2 ? `${parts[0]} (PID ${parts[1]})` : line.trim();
-}
-
-/** ♻️ True when an HTTP server on `port` already responds successfully (reuse existing dev). */
-export function canReuseDevPort(host: string, port: number, expectedPlayEntry?: string): boolean {
-  const url = devServerUrl(host, port);
-  const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
-process.exit(res.ok ? 0 : 1);`;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
-  if (result.status !== 0) return false;
-  if (!expectedPlayEntry) return true;
-  return devServerPlayEntry(host, port) === expectedPlayEntry;
-}
-
-/** 🔌️ First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
-export function resolveDevPort(host: string, preferredPort: number, maxAttempts = 20, skipPorts: ReadonlySet<number> = new Set()): number {
-  for (let offset = 0; offset < maxAttempts; offset++) {
-    const port = preferredPort + offset;
-    if (skipPorts.has(port)) continue;
-    if (!isDevPortInUse(host, port)) return port;
-  }
-  console.error(`[dev] No free port found in range ${preferredPort}-${preferredPort + maxAttempts - 1}.`);
-  process.exit(1);
-}
-
-/** ▶️Vite dev via `bunx` with an explicitly owned configuration source. */
-export function runViteBunxDev(
-  bundleRoot: string,
-  segments: string[],
-  opts: {
-    config: string;
-    portEnv?: string;
-    defaultPort?: string;
-    clearViteCache?: boolean;
-    strictPort?: boolean;
-    /** When true, bind only `defaultPort` / env — never bump into another playground port. */
-    fixedPort?: boolean;
-    reservedPorts?: ReadonlySet<number>;
-    env?: NodeJS.ProcessEnv;
-    /** When set with `fixedPort`, only reuse an existing listener serving this play entry. */
-    expectedPlayEntry?: string;
-  },
-): Promise<void> {
-  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-  const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
-  const spawnEnv = playPollingEnv(opts.env);
-  if (opts.fixedPort && isDevPortInUse(host, preferredPort)) {
-    const url = devServerUrl(host, preferredPort);
-    if (canReuseDevPort(host, preferredPort, opts.expectedPlayEntry)) {
-      console.log(`[dev] Port ${preferredPort} is already in use — dev server appears to be running at ${url}`);
-      return Promise.resolve();
-    }
-    const occupant = describeDevPortOccupant(preferredPort);
-    const servedEntry = devServerPlayEntry(host, preferredPort);
-    if (servedEntry && opts.expectedPlayEntry && servedEntry !== opts.expectedPlayEntry) {
-      console.error(`[dev] Port ${preferredPort} is serving play entry "${servedEntry}" but "${opts.expectedPlayEntry}" was requested. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`);
-      process.exit(1);
-    }
-    console.error(`[dev] Port ${preferredPort} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`);
-    process.exit(1);
-  }
-  const port = (() => {
-    if (opts.fixedPort) {
-      return preferredPort;
-    }
-    const skip = opts.reservedPorts ?? new Set<number>();
-    const resolved = resolveDevPort(host, preferredPort, 20, skip);
-    if (resolved !== preferredPort) {
-      console.warn(`[dev] Port ${preferredPort} is already in use — starting on ${resolved} instead.`);
-      if (opts.portEnv) process.env[opts.portEnv] = String(resolved);
-    }
-    return resolved;
-  })();
-  if (opts.clearViteCache) {
-    const viteCache = join(bundleRoot, "node_modules", ".vite");
-    if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
-  }
-  const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--mode", readBuildMode(spawnEnv.SEMIO_BUILD_MODE), "--config", opts.config, "--host", host, "--port", String(port)];
-  if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
-    viteArgs.push("--strictPort");
-  }
-  return spawnBunx([...viteArgs, ...segments], bundleRoot, spawnEnv);
-}
-
 /** ▶️Vite dev via `bunx` without a fixed config path (extra args only). */
 export function runViteBunxDevPlain(bundleRoot: string, segments: string[]): void {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
@@ -2023,85 +1886,7 @@ export function runCargo(args: string[], cwd: string, env: NodeJS.ProcessEnv = p
 /** 🦀️ Composes actual repository source preparation with neutral browser compiler execution. */
 
 
-function parseCargoTomlStringArray(block: string, key: string): string[] {
-  const match = block.match(new RegExp(`^${key}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
-  if (!match) return [];
-  return [...match[1]!.matchAll(/"([^"]+)"/g)].map((row) => row[1]!);
-}
-
-/** 🧩️ Reads one extension crate's Cargo identity — the crate name every extension route (`package`'s
- * `.sxt` and `describe`'s owner descriptor pair alike) builds from, its component package id, and its
- * declared `extends` host. */
-export function parseExtensionCargoManifest(
-  manifestPath: string,
-  repoRoot: string,
-): {
-  readonly packageName: string;
-  readonly directoryName: string;
-  readonly version: string;
-  readonly description: string;
-  readonly componentPackageId: string;
-  readonly extends: string;
-  readonly contributes: readonly string[];
-} {
-  const text = readFileSync(manifestPath, "utf8");
-  const packageName = text.match(/^name\s*=\s*"([^"]+)"/m)?.[1];
-  if (!packageName) throw new Error(`missing package name in ${manifestPath}`);
-  let version = text.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
-  if (!version && /^\s*version\.workspace\s*=\s*true/m.test(text)) {
-    const rootToml = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
-    version = rootToml.match(/\[workspace\.package\][\s\S]*?^version\s*=\s*"([^"]+)"/m)?.[1];
-  }
-  version = version ?? "0.1.0";
-  const description = text.match(/^description\s*=\s*"([^"]+)"/m)?.[1] ?? packageName;
-  const componentPackageId = text.match(/\[package\.metadata\.component\][\s\S]*?^package\s*=\s*"semio:([^"]+)"/m)?.[1];
-  if (!componentPackageId) throw new Error(`missing [package.metadata.component].package in ${manifestPath}`);
-  const semioLines: string[] = [];
-  let inSemio = false;
-  for (const line of text.split("\n")) {
-    if (line.trim() === "[package.metadata.semio]") {
-      inSemio = true;
-      continue;
-    }
-    if (inSemio && line.startsWith("[") && line.trim() !== "[package.metadata.semio]") break;
-    if (inSemio) semioLines.push(line);
-  }
-  const semioBlock = semioLines.join("\n");
-  const extendsHost = semioBlock.match(/^extends\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-  const contributes = parseCargoTomlStringArray(semioBlock, "contributes");
-  const directoryName = basename(resolve(dirname(manifestPath), "../.."));
-  return { packageName, directoryName, version, description, componentPackageId, extends: extendsHost, contributes };
-}
-
-/** 📦 Packs the SHIPPED `wasm-release` component of one extension component crate — built, staged and verified against its committed
- * semantic descriptor by the one component stage — into a runtime-installable `.sxt` beside that crate (`dist/<id>.sxt`). */
-export async function runExtensionComponentPackage(opts: { readonly network:CargoDependencyNetworkV1;readonly control: CompilerAdmissionControl; readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
-  const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
-  const componentDir = resolve(opts.componentDir);
-  const manifestPath = join(componentDir, "Cargo.toml");
-  const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
-  const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
-  const { componentStageTargetV1, stageComponentV1 } = await import("../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
-  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify", opts.control,opts.network);
-  const componentWasm = new Uint8Array(readFileSync(staged.deliverable.wasm));
-  const { packExtensionPackage } = await import("../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts");
-  const manifest = {
-    extensionId: parsed.componentPackageId,
-    directoryName: parsed.directoryName,
-    label: parsed.description,
-    version: parsed.version,
-    extends: parsed.extends,
-    capabilities: [...parsed.contributes],
-    contributions: parsed.contributes,
-    packageFormat: 1,
-  };
-  const packed = packExtensionPackage({ manifest, componentWasm });
-  const outPath = join(componentDir, "dist", `${parsed.componentPackageId}.sxt`);
-  mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, packed);
-  console.log(`[TRACE] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
-  return outPath;
-}
+export {runExtensionComponentPackage} from "../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts";
 
 /** 🔗️Resolves `import.meta.url` of the bundle `script.ts`. */
 export function scriptPathFromUrl(scriptUrl: string): string {
@@ -3569,7 +3354,8 @@ export function extractCounterFromSubject(subject: string): { nnn: number; line1
   const s = subject.trim();
   const formatted = COUNTER_RE.exec(s);
   if (!formatted) return null;
-  return { nnn: Number.parseInt(formatted[2], 10), line1Base: formatted[1] };
+  const [, line1Base, counter] = formatted; if (line1Base === undefined || counter === undefined) return null;
+  return { nnn: Number.parseInt(counter, 10), line1Base };
 }
 
 /** 🔢️Reads GitKraken numeric-only subjects (`152`, `299`, …). */

@@ -10,36 +10,76 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
 //! `### protocol (facade) — additional re-exports`).
 
+//#region 🔖️Modules
+// 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary, `.spr` format) lives in
+// `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no longer owns it. This crate keeps every historical
+// `protocol::`/`os_spr::` path working.
+pub use protocol::causal;
+pub use protocol::conflict;
+pub use protocol::crypto;
+pub use protocol::dictionary;
+pub use protocol::format;
+pub use protocol::ids;
+pub use protocol::scalar;
+pub use protocol::wire;
+
+pub use semio_framework_os_channel as channel;
+
+// 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor registry, composite planner).
+// It re-exports `protocol::mutation`'s contract from its own file, so `os_spr::command::Mutation` and friends still resolve here.
+pub use semio_framework_os_command as command;
+
+// 🧮️ Composite-plan folding and the fold-footprint law, kept apart from the command layer's leaf-facing kit.
+pub use semio_framework_os_command::fold;
+
+pub use self::crypto::*;
+pub use self::dictionary::*;
+pub use self::ids::*;
+pub use self::wire::*;
+
+pub use semio_framework_os_history as history;
+
+#[path = "🔌️io/🦀️.rs"]
+pub mod io;
+
+#[path = "💎️materialize/🦀️.rs"]
+pub mod materialize;
+
+#[cfg(any(test, feature = "protocol-laws"))]
+#[path = "🧪️tests/⚖️protocol-laws/🦀️.rs"]
+pub mod protocol_laws;
+//#endregion 🔖️Modules
+
 //#region 🔖️Reexports
 pub use protocol::io::binary::operation_bytes;
 pub use protocol::io::{DiffBinary, DiffCodec, DiffText, OpBinary, OpText};
-pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprIdentityRecord, SprWriter, VerificationLevel, WriteOptions};
-pub use crate::os_spr::format::retained::RetainedSprLimits;
-pub use crate::os_spr::history::{
+pub use crate::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprIdentityRecord, SprWriter, VerificationLevel, WriteOptions};
+pub use crate::format::retained::RetainedSprLimits;
+pub use crate::history::{
     decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAppender, HistoryComposition, HistoryConflict, HistoryEdit, HistoryLog, HistoryMessage, HistoryOpMeta,
     HistoryEdits, HistoryReader, HistoryTransitionRecord, OpPayload, RetainedHistoryDecode, RetainedHistoryDecodeStep, REC_COMPOSITION, REC_TRANSITION,
 };
 #[cfg(not(target_arch = "wasm32"))]
-pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
-pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
+pub use crate::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
+pub use crate::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
 pub use protocol::ProtocolError;
-use crate::os_spr::wire::{ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
+pub use crate::wire::{ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
-pub use crate::os_spr::io::binary::causal::{decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, DocumentBackboneBatchLimitsV1, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES};
-pub use crate::os_spr::causal::{
+pub use crate::io::binary::causal::{decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, DocumentBackboneBatchLimitsV1, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES};
+pub use crate::causal::{
     frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, mutation_id_for_edit_operation, ArtifactDiff, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
     InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };
-pub use crate::os_spr::causal::transition::{
+pub use crate::causal::transition::{
     HistoryFoldControl, HistoryFoldJob, HistoryFoldJobStep, fold_history_for_controlled, decode_history_transition_controlled, decode_history_envelope_controlled, copy_history_text, copy_history_text_parts, copy_history_bytes, history_envelope_id_controlled,
     decode_history_transition, encode_history_transition, fold_history, fold_history_for, history_transition_envelope, history_transition_from_envelope, history_transition_id, is_history_transition, trunk_alternative_id, ViewerHead, HistoryShape, HistoryTransitionKind, FoldAlternative, FoldChange, FoldCheckpoint, FoldEdit, HistoryFold, HistoryTransition,
     TransitionAuthor, TransitionCheckpoint, TransitionPin, EffectiveSupersession, InputReplacement, HistoryInputDrafts, SupersededInput, TransitionSupersede, HISTORY_TRANSITION_SCHEMA, SUPERSEDE_PAYLOAD_MAX_BYTES, SUPERSEDE_SCOPE_MAX_BYTES,
 };
-pub use crate::os_spr::channel::{
+pub use crate::channel::{
     admit_guest_channel_version, CHANNEL_MISMATCH_CODE, decode_app_frame, decode_document_archive_bytes, encode_app_command, encode_app_frame, encode_document_archive_bytes, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildHeadPackEntry, ChildPackEntry, DecodedAppCommandOwner, DocumentArchiveArtifactRef,
     AppDocumentIdentity, DocumentArchiveLoadHost, DocumentArchiveLoadOutcome, DocumentArchiveLoadRefusal, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveLoadStep, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
 };
-pub use crate::os_spr::command::{
+pub use crate::command::{
     apply_diff, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures,
     named_apply, outcome_code_level, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
@@ -50,14 +90,14 @@ pub use crate::os_spr::command::{
     SemanticMutation, TouchedPaths, TransactionRef, ValidatedMutationLeafSourceScope, APPLY_OUTCOME_CODE_PREFIX, APPROVED_VERBS, MAX_PLAN_DEPTH, OUTCOME_CODES,
 };
 #[cfg(any(test, feature = "mutation-testing"))]
-pub use crate::os_spr::command::mutation_fixture_ops;
-pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
-pub use crate::os_spr::wire::{
+pub use crate::command::mutation_fixture_ops;
+pub use crate::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
+pub use crate::wire::{
     borrow_presence_metadata, BorrowedPresenceMetadata, BorrowedPresenceInteraction, BorrowedPresenceDomain, BorrowedPresenceStrings, decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,
     ServerFrame,
 };
-pub use crate::os_spr::wire::LOCAL_ACTOR_ID;
-pub use {crate::os_spr::wire::read_f64, crate::os_spr::wire::read_str, crate::os_spr::wire::read_varint_u64, crate::os_spr::wire::write_f64, crate::os_spr::wire::write_str, crate::os_spr::wire::write_varint_u64, crate::os_spr::wire::ActorId, crate::os_spr::wire::ArtifactId, crate::os_spr::wire::ArtifactVersion, crate::os_spr::wire::HybridLogicalTimestamp, crate::os_spr::wire::MergePolicy, crate::os_spr::wire::MutationId, crate::os_spr::wire::PayloadHash, crate::os_spr::wire::SchemaId, crate::os_spr::wire::SchemaVersion, crate::os_spr::wire::UndoPolicy};
+pub use crate::wire::LOCAL_ACTOR_ID;
+pub use {crate::wire::read_f64, crate::wire::read_str, crate::wire::read_varint_u64, crate::wire::write_f64, crate::wire::write_str, crate::wire::write_varint_u64, crate::wire::ActorId, crate::wire::ArtifactId, crate::wire::ArtifactVersion, crate::wire::HybridLogicalTimestamp, crate::wire::MergePolicy, crate::wire::MutationId, crate::wire::PayloadHash, crate::wire::SchemaId, crate::wire::SchemaVersion, crate::wire::UndoPolicy};
 use semio_framework_schema_state::StateClass;
 //#endregion 🔖️Reexports
 
@@ -95,15 +135,15 @@ pub async fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Ran
     if ordinals.start >= ordinals.end {
         return Err(ProtocolError::Malformed { what: "extract_range ordinals", offset: 0, detail: "range must be non-empty (start < end)".to_string() });
     }
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
+    let recovery = crate::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let mut cursor = FrameCursor::new(trusted, crate::os_spr::format::HEADER_SIZE as u64).await;
+    let mut cursor = FrameCursor::new(trusted, crate::format::HEADER_SIZE as u64).await;
     let mut ordinal = 0u64;
     let mut start_offset: Option<u64> = None;
     let mut end_offset: Option<u64> = None;
     while let Some(frame) = cursor.next_frame().await? {
-        if frame.kind == crate::os_spr::REC_EDIT {
+        if frame.kind == crate::REC_EDIT {
             if start_offset.is_none() && ordinal >= ordinals.start {
                 start_offset = Some(frame.offset);
             }
@@ -144,7 +184,7 @@ pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(),
 /// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
 /// bytes)` digest in `slice` into one combined digest, in frame order.
 async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
-    let hasher = crate::os_spr::format::Blake3Hasher;
+    let hasher = crate::format::Blake3Hasher;
     let mut cursor = FrameCursor::new(slice, 0).await;
     let mut concat = Vec::new();
     while let Some(frame) = cursor.next_frame().await? {
@@ -166,7 +206,7 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
     let decode_options = DecodeOptions::default();
     let log = decode_history(protocol_bytes, &decode_options).await?;
     let fold = log.fold()?;
-    let recovery = crate::os_spr::format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit).await?;
+    let recovery = crate::format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit).await?;
 
     let (head_edit_ordinal, head_edit_id) = match log.edits.last() {
         Some(edit) => ((log.edits.len() - 1) as u64, edit.id.clone()),
@@ -174,11 +214,11 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
     };
 
     let chain_hash = if recovery.last_commit_seq == 0 {
-        crate::os_spr::format::Blake3Hasher.hash(&protocol_bytes[..crate::os_spr::format::HEADER_SIZE])
+        crate::format::Blake3Hasher.hash(&protocol_bytes[..crate::format::HEADER_SIZE])
     } else {
         let mut cursor = FrameCursor::new(protocol_bytes, recovery.last_commit_offset).await;
         let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "commit frame", offset: recovery.last_commit_offset, detail: "expected a commit frame at the recovered offset".to_string() })?;
-        crate::os_spr::format::parse_commit_payload(frame.payload().await)?.chain_hash
+        crate::format::parse_commit_payload(frame.payload().await)?.chain_hash
     };
 
     let ordinal_of: std::collections::HashMap<&str, u64> = log.edits.iter().enumerate().map(|(ordinal, edit)| (edit.id.as_str(), ordinal as u64)).collect();

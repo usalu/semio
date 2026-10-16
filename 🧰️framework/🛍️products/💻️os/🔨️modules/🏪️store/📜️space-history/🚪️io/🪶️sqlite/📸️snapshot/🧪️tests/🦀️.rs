@@ -105,7 +105,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     assert!(import_refusal.diagnostics.is_empty());
     assert_eq!(live.envelope().dialect, expected_envelope_dialect);
     assert_eq!(*live.snapshot_ref(), source);
-    store::space_history::io::sqlite::snapshot::register_sqlite_snapshot().unwrap();
+    store::space_history_registration::register_sqlite_snapshot().unwrap();
     let output = async{let original_file_dialect=&dialect();let original_file_input=live.snapshot_ref();let original_file_encoding=encoding;let original_file_limits=limits;let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_| true;store::io::testing::with_snapshot_file_decoding(store::io::testing::SnapshotFileCaller{grant:caller_grant(),native_maximum_bytes:1073741824,close_grant:caller_grant(),maximum_close_turns:65536},original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();
     assert!(output.diagnostics.is_empty());
     let bytes = output.value;
@@ -142,7 +142,7 @@ fn sqlite_snapshot_framework_space_history_same_control_retained_materialization
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_and_route() {
-    store::space_history::io::sqlite::snapshot::register_sqlite_snapshot().unwrap();
+    store::space_history_registration::register_sqlite_snapshot().unwrap();
     let source = fixture();
     let limits = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -276,7 +276,7 @@ fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
     semio_framework_artifact_reference::ArtifactDialect { artifact_kind: S_SPACE_HISTORY_SCHEMA.into(), standard: "1".into(), subset: "*".into() }
 }
 fn codec() -> crate::os_store::serialization::ArtifactSqliteSnapshotCodec {
-    store::bare_artifact_codec::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")
+    store::artifact_codec::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")
 }
 fn payload(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding) -> store::io::IoPayload {
     match encoding {

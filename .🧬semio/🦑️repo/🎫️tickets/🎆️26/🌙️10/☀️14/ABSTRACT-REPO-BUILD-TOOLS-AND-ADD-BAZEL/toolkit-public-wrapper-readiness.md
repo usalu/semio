@@ -1,0 +1,13 @@
+# Public Toolkit Wrapper Readiness
+
+Prepared only while RootSDK50239 owns its genuineOriginal120; no compiler/test/SDK/store lease or public toolkit command was executed.
+
+Existing ticket TypeScript checker now accepts --dashboard-tests, adding exactly the current dashboard launch projector and four-law test entry. Previous18-root flags remain unchanged. --storage-exact still replaces the list with its exact three roots and enables checked indexed access. Execution remains held until Root's SDK terminal/release.
+
+Ticket permanent-toolkit/📜️script.ts accepts only outputs PIN SHA or retention PIN SHA. It refuses inherited Original or authored-capability override, backend override, missing/mismatched pin/digest/reuse env, extra arguments and nonabsolute/oversized pin paths. It checks the actual caching project target, direct permanent command, uncached/dependency-free/argument-forwarding-disabled declaration, exact package repo alias and unchanged120000ms Bun-control source. Outputs also requires its actual strict-tail branch. It runs the actual package alias, with no profiler, Source bypass or argv substitution.
+
+The public capability factory runs before one genuine standaloneOriginal120 birth, matching the existing permanent requested child caps. Before dispatch it verifies tool===nx from the actual privately issued envelope; absence of a backend environment variable alone is not treated as that proof. The actual owned command retains this exact wire, cancellation signal, shrinking remaining budget and awaited progress. Full Bun and any strict compiler phases remain inside that one incoming deadline. The wrapper does not add a fresh selected300 mode or borrow the workspace owner's larger budget. It cannot run without Root supplying an actually accepted current pin; no historical ALL/selected pin is substituted or invented.
+
+The success receipt is written only after actual public terminal success, current Original check and byte-for-byte rechecks of package/project/owner declarations. It records the supplied pin as production-consumer-validated, with no inferred ALL acceptance or independent custody claim. Root must release actual execution after refreshed SDK and current graph authority. Initial environment includes explicit SEMIO_WORKSPACE_ROOT/artifacts and the exact pin/digest/reuse, while SEMIO_BUILD_TOOL and inheritedOriginal remain absent.
+
+Prepared exact child arguments are repo run repo:test-toolkit-outputs --exclude-dependencies --skip-cache and repo run repo:test-toolkit-retention --exclude-dependencies --skip-cache. Actual routes, compiler phases and private retention isolation evidence are in toolkit-permanent-lifetimes.md. No runtime result is claimed by this preparation.

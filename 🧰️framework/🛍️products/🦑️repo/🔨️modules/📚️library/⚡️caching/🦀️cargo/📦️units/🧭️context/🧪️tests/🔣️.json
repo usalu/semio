@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "own-source",
+      "unit": "base",
+      "path": [
+        "inputs",
+        0,
+        "digest"
+      ],
+      "value": "1111111111111111111111111111111111111111111111111111111111111111",
+      "changed": []
+    },
+    {
+      "id": "dependency-source",
+      "unit": "base",
+      "path": [
+        "inputs",
+        0,
+        "bytes"
+      ],
+      "value": 33,
+      "changed": []
+    },
+    {
+      "id": "configuration-bytes",
+      "unit": "base",
+      "path": [
+        "inputs",
+        1,
+        "digest"
+      ],
+      "value": "2222222222222222222222222222222222222222222222222222222222222222",
+      "changed": []
+    },
+    {
+      "id": "artifact",
+      "unit": "consumer",
+      "path": [
+        "dependencies",
+        0,
+        "artifactDigest"
+      ],
+      "value": "3333333333333333333333333333333333333333333333333333333333333333",
+      "changed": []
+    },
+    {
+      "id": "semantic-env",
+      "unit": "base",
+      "path": [
+        "environment",
+        "SEMIO_INPUT"
+      ],
+      "value": "changed",
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "feature",
+      "unit": "base",
+      "path": [
+        "features"
+      ],
+      "value": [
+        "changed"
+      ],
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "cfg",
+      "unit": "base",
+      "path": [
+        "cfg"
+      ],
+      "value": [
+        "changed"
+      ],
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "cfg-snapshot",
+      "unit": "base",
+      "path": [
+        "cfgSnapshot"
+      ],
+      "value": [
+        "unix"
+      ],
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "compiler",
+      "unit": "base",
+      "path": [
+        "compiler",
+        "digest"
+      ],
+      "value": "4444444444444444444444444444444444444444444444444444444444444444",
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "package-version",
+      "unit": "base",
+      "path": [
+        "packageIdentity",
+        "version"
+      ],
+      "value": "2.0.0",
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "package-provenance",
+      "unit": "base",
+      "path": [
+        "packageIdentity",
+        "provenance",
+        "identity"
+      ],
+      "value": "other/Cargo.toml",
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "extern-public",
+      "unit": "consumer",
+      "path": [
+        "dependencies",
+        0,
+        "public"
+      ],
+      "value": true,
+      "changed": [
+        "consumer"
+      ]
+    },
+    {
+      "id": "extern-noprelude",
+      "unit": "consumer",
+      "path": [
+        "dependencies",
+        0,
+        "noprelude"
+      ],
+      "value": true,
+      "changed": [
+        "consumer"
+      ]
+    },
+    {
+      "id": "extern-name",
+      "unit": "consumer",
+      "path": [
+        "dependencies",
+        0,
+        "externName"
+      ],
+      "value": "renamed",
+      "changed": [
+        "consumer"
+      ]
+    },
+    {
+      "id": "evidence",
+      "unit": "base",
+      "path": [
+        "evidence",
+        "compilation"
+      ],
+      "value": "5555555555555555555555555555555555555555555555555555555555555555",
+      "changed": []
+    }
+  ],
+  "profileCases": [
+    {
+      "field": "name",
+      "value": "release"
+    },
+    {
+      "field": "opt_level",
+      "value": "3"
+    },
+    {
+      "field": "lto",
+      "value": "thin"
+    },
+    {
+      "field": "codegen_units",
+      "value": 8
+    },
+    {
+      "field": "debuginfo",
+      "value": 2
+    },
+    {
+      "field": "split_debuginfo",
+      "value": "packed"
+    },
+    {
+      "field": "debug_assertions",
+      "value": false
+    },
+    {
+      "field": "overflow_checks",
+      "value": false
+    },
+    {
+      "field": "rpath",
+      "value": true
+    },
+    {
+      "field": "incremental",
+      "value": true
+    },
+    {
+      "field": "panic",
+      "value": "unwind"
+    },
+    {
+      "field": "strip",
+      "value": {
+        "resolved": {
+          "Named": "symbols"
+        }
+      }
+    }
+  ],
+  "environmentCases": [
+    {
+      "environment": {
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "transport",
+        "SEMIO_INPUT": "semantic",
+        "RUST_MIN_STACK": "16"
+      },
+      "expected": {
+        "SEMIO_INPUT": "semantic",
+        "RUST_MIN_STACK": "16"
+      }
+    },
+    {
+      "environment": {
+        "SEMIO_SOMETHING_ELSE": "retained",
+        "PATH": "/compiler"
+      },
+      "expected": {
+        "SEMIO_SOMETHING_ELSE": "retained",
+        "PATH": "/compiler"
+      }
+    }
+  ]
+}

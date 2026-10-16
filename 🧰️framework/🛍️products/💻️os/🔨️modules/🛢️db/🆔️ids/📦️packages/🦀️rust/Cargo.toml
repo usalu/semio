@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-ids"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db identity types, DbError and resource limits"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-ids"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_ids"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

@@ -10,10 +10,11 @@ use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use crate::artifact::*;
+use crate::snapshot::*;
 use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
-use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, store_schema::HistoryLane, document_store_owners::MemberStoreProducer, document_store_owners::DocumentStoreOwners, SnapshotRetirementFactory};
 
 
@@ -29,42 +30,6 @@ use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetireme
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.host_snapshot";
 
 //#region 🔖️CollectionSupport
-impl Identified<String> for Widget {
-    fn id(&self) -> &String {
-        match self {
-            Widget::Neuron { id, .. }
-            | Widget::InputSlider { id, .. }
-            | Widget::InputNote { id, .. }
-            | Widget::InputImage { id, .. }
-            | Widget::Variable { id, .. }
-            | Widget::OutputPreview { id, .. }
-            | Widget::OutputAction { id, .. }
-            | Widget::OutputExport { id, .. }
-            | Widget::Cluster { id, .. } => id,
-        }
-    }
-}
-
-/// 🩹️ Whole-value replacement patch — flow widgets are heterogeneous enum variants, so a granular
-/// per-field patch buys nothing; `Patch { patch: Widget }` LWW-replaces.
-impl Patchable<Widget> for Widget {
-    fn apply_patch(&mut self, patch: &Widget) {
-        *self = patch.clone();
-    }
-}
-
-impl Identified<String> for SynapseSpec {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-impl Patchable<SynapseSpec> for SynapseSpec {
-    fn apply_patch(&mut self, patch: &SynapseSpec) {
-        *self = patch.clone();
-    }
-}
-
 /// 📏️ Converts native positions to the portable Flow wire index without truncation.
 fn flow_wire_index(index: usize) -> MutationApplyResult<u32> {
     u32::try_from(index).map_err(|_| MutationApplyError::new("mutation.apply.index-range", "Flow position exceeds the u32 wire range").at(["index"]))
@@ -90,7 +55,7 @@ pub struct FlowCollectionDelta<T> {
 }
 
 /// ▶️ Validates one structural fragment without copying or dropping its payload owners.
-fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>, delta: &'a FlowCollectionDelta<T>) -> MutationApplyResult<()> {
+pub fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>, delta: &'a FlowCollectionDelta<T>) -> MutationApplyResult<()> {
     flow_wire_index(items.len())?;
     let mut ids = BTreeSet::new();
     for item in items.iter() {
@@ -122,24 +87,9 @@ fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>
 //#endregion 🔖️CollectionSupport
 
 //#region 🔖️Mutations
-/// 📍️ One layout assignment; absent or null layout removes the existing entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct FlowLayoutEntry {
-    pub id: String,
-    #[dsl(block)]
-    pub layout: Option<WidgetLayout>,
-}
-
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
-
-#[cfg(test)]
-#[path = "🧪️tests/🌿️vcs/🦀️.rs"]
-mod flow_direct_tests;
 
 #[path = "🧬️schema/🔺️diff/🦀️.rs"]
 mod diff;
@@ -173,10 +123,6 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
     fn retirement_birth_bytes(&self,_:&FlowMutation)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<FlowMutation>()}
     fn retire_owned(&self,value:FlowMutation,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,FlowMutation)> {semio_framework_value::retirement::admit_owned_retirement(value,grant)}
 }
-
-#[cfg(test)]
-#[path = "🧬️schema/🧹️retirement/🦀️.rs"]
-mod flow_mutation_retirement;
 
 impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::snapshot::FlowSnapshotPackProducer {
     /// 📦️ A flow document opens as an owned member through its OWN `ArtifactPack` codec (the

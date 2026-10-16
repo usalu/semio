@@ -1,6 +1,6 @@
 use super::*;
-use crate::directory::model::{AgentDelegationRecord, SpaceRole};
-use crate::directory::{AgentDelegationCapability, AgentSessionPreflight, agent_session_preflight, prepare_agent_delegation};
+use semio_hub_directory_contract::model::{AgentDelegationRecord, SpaceRole};
+use semio_hub_directory_contract::{AgentDelegationCapability, AgentSessionPreflight, agent_session_preflight, prepare_agent_delegation};
 
 fn delegation(audience: AgentAudience, now: i64, ttl_secs: i64) -> (AgentDelegationRecord, AgentDelegationCapability) {
     let issued = prepare_agent_delegation("space-a", "usr_ada", "Drafting agent", audience, ttl_secs, now).expect("a bounded delegation mints");
@@ -11,8 +11,8 @@ fn delegation(audience: AgentAudience, now: i64, ttl_secs: i64) -> (AgentDelegat
 fn a_create_request_is_admitted_exactly_at_the_schema_bounds() {
     let base = |label: &str, ttl: i64| CreateAgentDelegationRequestV1 { schema: AGENT_DELEGATION_CREATE_SCHEMA.into(), space_id: "space-a".into(), agent_label: label.into(), audience: AgentAudience::Edit, ttl_secs: ttl };
     assert!(base("Drafting agent", DEFAULT_DELEGATION_TTL_SECS).verify().is_ok());
-    assert!(base(&"a".repeat(crate::directory::AGENT_LABEL_MAX_BYTES), MIN_DELEGATION_TTL_SECS).verify().is_ok());
-    assert!(base(&"a".repeat(crate::directory::AGENT_LABEL_MAX_BYTES + 1), MIN_DELEGATION_TTL_SECS).verify().is_err());
+    assert!(base(&"a".repeat(semio_hub_directory_contract::AGENT_LABEL_MAX_BYTES), MIN_DELEGATION_TTL_SECS).verify().is_ok());
+    assert!(base(&"a".repeat(semio_hub_directory_contract::AGENT_LABEL_MAX_BYTES + 1), MIN_DELEGATION_TTL_SECS).verify().is_err());
     assert!(base("", DEFAULT_DELEGATION_TTL_SECS).verify().is_err());
     assert!(base("ok\u{7}bell", DEFAULT_DELEGATION_TTL_SECS).verify().is_err());
     assert!(base("ok", MIN_DELEGATION_TTL_SECS - 1).verify().is_err());
@@ -121,7 +121,7 @@ fn a_delegation_receipt_exposes_the_token_once_and_a_summary_never_does() {
     assert!(token.starts_with("delegation.v1."), "the delegation capability has its own prefix: {token}");
     assert_ne!(token, issued.record.selector, "the token is never the selector alone");
 
-    let summary = AgentDelegationSummaryV1::from_row(crate::directory::model::AgentDelegationRow {
+    let summary = AgentDelegationSummaryV1::from_row(semio_hub_directory_contract::model::AgentDelegationRow {
         delegation_id: issued.record.id.clone(),
         space_id: issued.record.space_id.clone(),
         delegating_user_id: issued.record.delegating_user_id.clone(),
@@ -203,7 +203,7 @@ fn the_agent_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
     assert!(structural("AgentDelegationCapabilityV1").is_valid_json(&serde_json::to_string(&receipt.token).expect("token json")));
     assert!(!structural("AgentDelegationCapabilityV1").is_valid_json(&serde_json::to_string(&format!("session.v1.{}.{}", "0".repeat(32), "0".repeat(64))).expect("token json")), "a session capability is not a delegation");
 
-    let listing = AgentDelegationListV1::new(vec![AgentDelegationSummaryV1::from_row(crate::directory::model::AgentDelegationRow {
+    let listing = AgentDelegationListV1::new(vec![AgentDelegationSummaryV1::from_row(semio_hub_directory_contract::model::AgentDelegationRow {
         delegation_id: issued.record.id.clone(),
         space_id: issued.record.space_id.clone(),
         delegating_user_id: issued.record.delegating_user_id.clone(),
@@ -220,7 +220,7 @@ fn the_agent_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
     assert!(error_schema.is_valid_json(&serde_json::to_string(&AgentErrorV1::new(AgentErrorCodeV1::DelegationRevoked)).expect("error json")));
 
     let kinds = structural("AuthDurableEventKindV1");
-    for kind in [crate::directory::AGENT_DELEGATED_EVENT, crate::directory::AGENT_DELEGATION_REVOKED_EVENT, crate::directory::AGENT_SESSION_ISSUED_EVENT] {
+    for kind in [semio_hub_directory_contract::AGENT_DELEGATED_EVENT, semio_hub_directory_contract::AGENT_DELEGATION_REVOKED_EVENT, semio_hub_directory_contract::AGENT_SESSION_ISSUED_EVENT] {
         assert!(kinds.is_valid_json(&serde_json::to_string(kind).expect("kind json")), "{kind} must be a declared durable event kind");
     }
 

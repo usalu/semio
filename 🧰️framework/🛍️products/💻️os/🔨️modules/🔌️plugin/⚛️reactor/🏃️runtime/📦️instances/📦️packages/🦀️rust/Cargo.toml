@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-runtime-instances"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Runtime instance registry, descriptor, opening and cleanup pumps of the plugin runtime"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-runtime-instances"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-job = { path = "../../../../../👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-tasks = { path = "../../../../⏲️tasks/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-registry = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-plugin-plugin-program = { path = "../../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-lifecycle = { path = "../../../../📨️pending/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-worker = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
+semio-framework-job-worker-authority = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+
+[dev-dependencies]

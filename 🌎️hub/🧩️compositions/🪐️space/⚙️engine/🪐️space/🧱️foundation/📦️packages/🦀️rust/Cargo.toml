@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-hub-space-foundation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Studio foundation: space configuration, presence, terminology and shared identifiers"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-space-foundation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { path = "../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework-os = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }

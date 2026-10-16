@@ -10,7 +10,7 @@ import { startAdmissionBrokerV1, type UnitRecordV1 } from "../../🎟️admissio
 import { createJobserverV1, defaultJobserverStyleV1 } from "../../🎰️jobserver/🟦️.ts";
 import type { BuildScriptRunV1 } from "../../📈️telemetry/🟦️.ts";
 import { acquireNativeStorageV1, nativeStorageRetirementPortV1, type NativeStorageReservationV1 } from "../../💾️storage/🟦️.ts";
-import { provisionNativeImageStorageV1 } from "../../💾️storage/🍎️image/🟦️.ts";
+import { withNativeImageStorageV1 } from "../../💾️storage/🍎️image/🟦️.ts";
 import type { CargoSourceBoundaryPolicyV1 } from "../../📥️source/🎟️admission/🟦️.ts";
 import policy from "./🧫️fixtures/🔣️.json" with { type: "json" };
 
@@ -23,27 +23,9 @@ export const lawSourceBoundaryV1: CargoSourceBoundaryPolicyV1 = policy.sourceBou
  * Cargo home and temporary directories every bounded child must use. */
 export type LawStorageV1 = Readonly<{ storage: NativeStorageReservationV1; root: string; environment: Readonly<Record<string, string>> }>;
 
-/** 🗄️ Runs `body` inside one original compiler reservation bound to `control`, provisioned through the canonical fixed-image owner and retired afterwards: the
- * reservation is released, the image detached and its backing file removed, whatever `body` did; a law that cancelled `control` can no longer prove the
- * reservation (cancelled or out of time), so its image is force-detached.
- * @see ../../💾️storage/🍎️image/🟦️.ts */
-export async function withLawStorageV1<T>(control: CompilerAdmissionControl, filesystemBytes: number, body: (held: LawStorageV1) => Promise<T>): Promise<T> {
-  const directory = join(mkdtempSync(join(artifacts, "i-")), "i"), image = await provisionNativeImageStorageV1({ directory, filesystemBytes, maximumPhysicalBytes: filesystemBytes + policy.imageSlackBytes, control }), root = join(image.root, "o");
-  let storage: NativeStorageReservationV1 | undefined;
-  try {
-    storage = await acquireNativeStorageV1({ policy: { version: 1, root: image.root, leaseDirectory: artifacts, capacityBytes: image.maximumPhysicalBytes, maximumWorkspaceBytes: filesystemBytes, maximumArtifactBytes: filesystemBytes }, control, port: nativeStorageRetirementPortV1(image.port, async () => rmSync(root, { recursive: true, force: true })), owner: "law:" + basename(resolve(directory, "..")), kind: "compiler-workspace", bytes: filesystemBytes });
-    const home = join(root, "h"), temporary = join(root, "tmp");
-    for (const path of [root, home, temporary]) mkdirSync(path, { recursive: true });
-    return await body({ storage, root, environment: { CARGO_HOME: home, TMPDIR: temporary, TMP: temporary, TEMP: temporary } });
-  } finally {
-    const live = (): boolean => { try { checkResourceLeaseControl(control); return true; } catch { return false; } };
-    try { if (live()) { await storage?.retire(); await image.close(); } }
-    finally {
-      if (!live()) for (let attempt = 0; attempt < policy.detachAttempts && spawnSync("hdiutil", ["detach", "-force", image.root], { encoding: "utf8" }).status !== 0; attempt++) await Bun.sleep(policy.detachRetryMs);
-      if (spawnSync("mount", [], { encoding: "utf8" }).stdout.includes(` on ${image.root} (`)) console.error(`[law-storage] fixed image still mounted after force detach: ${image.root}`);
-      else rmSync(resolve(directory, ".."), { recursive: true, force: true });
-    }
-  }
+/** 🗄️ Retains the real scoped Native body and its allocation until accepted work and terminal cleanup settle. */
+export function withLawStorageV1<T>(control:CompilerAdmissionControl,filesystemBytes:number,body:(held:LawStorageV1,control:CompilerAdmissionControl)=>Promise<T>):Promise<T>{
+ const directory=join(mkdtempSync(join(artifacts,"i-")),"i");return withNativeImageStorageV1({directory,leaseDirectory:artifacts,filesystemBytes,maximumPhysicalBytes:filesystemBytes+policy.imageSlackBytes,control},async(image,control)=>{const root=join(image.root,"o");let storage:NativeStorageReservationV1|undefined;try{storage=await acquireNativeStorageV1({policy:{version:1,root:image.root,leaseDirectory:artifacts,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:filesystemBytes,maximumArtifactBytes:filesystemBytes},control,port:nativeStorageRetirementPortV1(image.port,async()=>rmSync(root,{recursive:true,force:true})),owner:"law:"+basename(resolve(directory,"..")),kind:"compiler-workspace",bytes:filesystemBytes});const home=join(root,"h"),temporary=join(root,"tmp");for(const path of[root,home,temporary])mkdirSync(path,{recursive:true});return await body({storage,root,environment:{CARGO_HOME:home,TMPDIR:temporary,TMP:temporary,TEMP:temporary}},control);}finally{if(storage)await storage.retire();}});
 }
 
 /** 📐️ The fixed image sizes, the slack each law's image envelope admits and the storage reserve a law's small image keeps free, kept with the Source

@@ -114,7 +114,7 @@ fn the_browser_appearance_door_is_wired_end_to_end() {
 
 //#region 🎓️BootTour
 
-pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinition>) -> AppDefinition {
+pub(crate) fn tour_app(introduction: Option<semio_framework::onboarding::IntroductionDefinition>) -> AppDefinition {
     AppDefinition {
         id: "tour-app".into(),
         role: semio_framework::manifest::AppRole::Editor,
@@ -167,35 +167,35 @@ pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinit
     }
 }
 
-pub(crate) fn tour_introduction() -> semio_framework::IntroductionDefinition {
-    semio_framework::IntroductionDefinition {
+pub(crate) fn tour_introduction() -> semio_framework::onboarding::IntroductionDefinition {
+    semio_framework::onboarding::IntroductionDefinition {
         title: LocalizedLabel::data("Welcome"),
         steps: vec![
-            semio_framework::IntroductionStepDefinition::new("one", LocalizedLabel::data("One"), LocalizedLabel::data("First")),
-            semio_framework::IntroductionStepDefinition::new("two", LocalizedLabel::data("Two"), LocalizedLabel::data("Second")),
+            semio_framework::onboarding::IntroductionStepDefinition::new("one", LocalizedLabel::data("One"), LocalizedLabel::data("First")),
+            semio_framework::onboarding::IntroductionStepDefinition::new("two", LocalizedLabel::data("Two"), LocalizedLabel::data("Second")),
         ],
     }
 }
 
-pub(crate) fn tour_shell(introduction: Option<semio_framework::IntroductionDefinition>) -> ShellState {
+pub(crate) fn tour_shell(introduction: Option<semio_framework::onboarding::IntroductionDefinition>) -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.docs.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     shell
 }
 
 #[test]
 fn tutorial_dialog_restoration_uses_declared_dialog_construction() {
     let mut shell = tour_shell(None);
-    shell.session.as_mut().unwrap().app.dialogs.push(semio_framework::DialogDefinition::new("confirm.reset", LocalizedLabel::native("Reset?", "Zurücksetzen?"), semio_framework::ActionRef::new("resetTheme")));
-    let snapshot = semio_framework::TutorialUiSnapshot { open_dialog_id: Some("confirm.reset".into()), ..Default::default() };
-    tutorial_apply_ui_snapshot(&mut shell, &snapshot);
-    let restored = shell.chrome_build.dialog_stack.last().expect("known dialog is restored");
+    shell.docs.session.as_mut().unwrap().app.dialogs.push(semio_framework::DialogDefinition::new("confirm.reset", LocalizedLabel::native("Reset?", "Zurücksetzen?"), semio_framework::ActionRef::new("resetTheme")));
+    let snapshot = semio_framework::onboarding::TutorialUiSnapshot { open_dialog_id: Some("confirm.reset".into()), ..Default::default() };
+    tutorial_apply_ui_snapshot(&mut WindowActionsCtx::of(&mut shell), &snapshot);
+    let restored = shell.chrome.chrome_build.dialog_stack.last().expect("known dialog is restored");
     assert_eq!(restored.id, "confirm.reset");
     assert_eq!(restored.confirm_action, "resetTheme");
-    tutorial_apply_ui_snapshot(&mut shell, &semio_framework::TutorialUiSnapshot::default());
-    assert!(shell.chrome_build.dialog_stack.is_empty(), "an absent dialog closes the restored request");
-    shell.queue_host_effects("tour-controller", vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "confirm.reset".into(), args: None }]);
-    assert_eq!(shell.chrome_build.dialog_stack.last().map(|dialog| dialog.id.as_str()), Some("confirm.reset"), "normal effects and tutorial restoration share the constructor");
+    tutorial_apply_ui_snapshot(&mut WindowActionsCtx::of(&mut shell), &semio_framework::onboarding::TutorialUiSnapshot::default());
+    assert!(shell.chrome.chrome_build.dialog_stack.is_empty(), "an absent dialog closes the restored request");
+    WindowActionsCtx::of(&mut shell).queue_host_effects("tour-controller", vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "confirm.reset".into(), args: None }]);
+    assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(|dialog| dialog.id.as_str()), Some("confirm.reset"), "normal effects and tutorial restoration share the constructor");
 }
 
 /// 🧪️ The mounting condition, mirroring `🧱️elements/🐚️Shell/🟦️.tsx`'s `shouldAutoStartIntroduction`:
@@ -215,17 +215,17 @@ fn a_fresh_profile_arms_the_app_introduction_exactly_once() {
     assert!(!should_auto_start_introduction("brand:tour-app", true, true, false, true, false), "and still yields to a running tutorial");
 
     let mut shell = tour_shell(Some(tour_introduction()));
-    assert!(shell.chrome_build.tour_state.is_none());
-    shell.auto_start_introduction("tour-app", false);
-    assert_eq!(shell.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "a fresh profile boots into step 1");
+    assert!(shell.chrome.chrome_build.tour_state.is_none());
+    shell.docs.auto_start_introduction("tour-app", false, &mut shell.chrome, &shell.tutorial);
+    assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().map(|tour| tour.step_index), Some(0), "a fresh profile boots into step 1");
 
     let mut seen = tour_shell(Some(tour_introduction()));
-    seen.auto_start_introduction("tour-app", true);
-    assert!(seen.chrome_build.tour_state.is_none());
+    seen.docs.auto_start_introduction("tour-app", true, &mut seen.chrome, &seen.tutorial);
+    assert!(seen.chrome.chrome_build.tour_state.is_none());
 
     let mut bare = tour_shell(None);
-    bare.auto_start_introduction("tour-app", false);
-    assert!(bare.chrome_build.tour_state.is_none());
+    bare.docs.auto_start_introduction("tour-app", false, &mut bare.chrome, &bare.tutorial);
+    assert!(bare.chrome.chrome_build.tour_state.is_none());
 }
 
 /// 🧪️ Answering the tour ends it for this device AND for this process: `dismiss_introduction` is
@@ -235,17 +235,17 @@ fn a_fresh_profile_arms_the_app_introduction_exactly_once() {
 #[test]
 fn dismissing_the_tour_records_the_answer_and_stops_the_read_that_would_re_arm_it() {
     let mut shell = tour_shell(Some(tour_introduction()));
-    shell.auto_start_introduction("tour-app", false);
-    shell.chrome_build.dismiss_introduction("tour-app");
-    assert!(shell.chrome_build.tour_state.is_none(), "Skip and Done both end the tour");
-    assert!(shell.chrome_build.introduction_was_seen("tour-app"));
-    assert_eq!(shell.chrome_build.introduction_seen_writes, vec!["tour-app".to_string()], "the device-local flag is queued for the store");
+    shell.docs.auto_start_introduction("tour-app", false, &mut shell.chrome, &shell.tutorial);
+    shell.chrome.chrome_build.dismiss_introduction("tour-app");
+    assert!(shell.chrome.chrome_build.tour_state.is_none(), "Skip and Done both end the tour");
+    assert!(shell.chrome.chrome_build.introduction_was_seen("tour-app"));
+    assert_eq!(shell.chrome.chrome_build.introduction_seen_writes, vec!["tour-app".to_string()], "the device-local flag is queued for the store");
 
-    shell.request_introduction_read();
-    assert_eq!(shell.chrome_present.maintenance.introduction_read, None, "an answered app is never re-read, so it is never re-armed");
+    shell.docs.request_introduction_read(&mut shell.chrome);
+    assert_eq!(shell.chrome.chrome_present.maintenance.introduction_read, None, "an answered app is never re-read, so it is never re-armed");
 
-    shell.auto_start_introduction("tour-app", true);
-    assert!(shell.chrome_build.tour_state.is_none());
+    shell.docs.auto_start_introduction("tour-app", true, &mut shell.chrome, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_state.is_none());
 }
 
 /// 🧪️ The wiring itself — the defect was a correct tour that nothing started. `start_introduction`
@@ -301,9 +301,9 @@ fn the_sync_pill_speaks_reacts_own_vocabulary() {
 #[test]
 fn a_shell_with_no_backbone_reads_remote_detached() {
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert_eq!(shell.sync_pill(), ShellSyncPill::Remote(ShellSyncRemote::Detached));
-    assert_eq!(shell_sync_pill_text(shell.sync_pill(), false), "Remote: detached");
-    assert!(shell.footer_presence_rows().is_empty());
+    assert_eq!(shell.sync.sync_pill(), ShellSyncPill::Remote(ShellSyncRemote::Detached));
+    assert_eq!(shell_sync_pill_text(shell.sync.sync_pill(), false), "Remote: detached");
+    assert!(PanelsViewCtx::of(&mut shell).footer_presence_rows().is_empty());
 }
 
 /// 🧪️ The presence pill's empty state is the ELEMENT's own copy, so the chip and the `UiNode` roster
@@ -364,21 +364,21 @@ fn embedded_host_introduction_policy_matches_neutral_vectors() {
 fn live_host_introduction_policy_preserves_the_unanswered_tour() {
     crate::set_host_introduction_suppressed(false);
     let mut shell = tour_shell(Some(tour_introduction()));
-    let key = shell.introduction_seen_key().unwrap();
-    shell.auto_start_introduction(&key, false);
-    assert!(shell.chrome_build.tour_is_open());
+    let key = shell.docs.introduction_seen_key().unwrap();
+    shell.docs.auto_start_introduction(&key, false, &mut shell.chrome, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_is_open());
     crate::set_host_introduction_suppressed(true);
-    shell.reconcile_host_introduction_policy();
-    assert!(!shell.chrome_build.tour_is_open());
-    assert!(!shell.chrome_build.introduction_was_seen(&key));
-    assert!(shell.chrome_build.introduction_seen_writes.is_empty());
+    shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
+    assert!(!shell.chrome.chrome_build.tour_is_open());
+    assert!(!shell.chrome.chrome_build.introduction_was_seen(&key));
+    assert!(shell.chrome.chrome_build.introduction_seen_writes.is_empty());
     crate::set_host_introduction_suppressed(false);
-    shell.reconcile_host_introduction_policy();
-    assert!(shell.chrome_build.tour_is_open());
-    shell.chrome_build.dismiss_introduction(&key);
+    shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
+    assert!(shell.chrome.chrome_build.tour_is_open());
+    shell.chrome.chrome_build.dismiss_introduction(&key);
     crate::set_host_introduction_suppressed(true);
-    shell.reconcile_host_introduction_policy();
+    shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
     crate::set_host_introduction_suppressed(false);
-    shell.reconcile_host_introduction_policy();
-    assert!(!shell.chrome_build.tour_is_open());
+    shell.docs.reconcile_host_introduction_policy(&mut shell.chrome, &shell.tutorial);
+    assert!(!shell.chrome.chrome_build.tour_is_open());
 }

@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "mode",
+    "root",
+    "workspaceOwner",
+    "workspaceKind",
+    "packageManifest",
+    "packageName",
+    "buildDirectory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "component",
+        "descriptor-emitter"
+      ]
+    },
+    "mode": {
+      "const": "release"
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "workspaceOwner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "workspaceKind": {
+      "enum": [
+        "repository",
+        "isolated"
+      ]
+    },
+    "packageManifest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "packageName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "buildDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

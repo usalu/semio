@@ -1,8 +1,11 @@
+import{inspectPrintCompilerRefusalV1,type PrintCompilerRefusalResultV1}from"../🖨️tectonic-template-compilation/📥️refusal/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
-import { compilePrintTexOnce } from "../🖨️tectonic-template-compilation/🟦️.ts";
-import { prepareTectonic } from "../🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts";
+import{withCompiledPrintProbeV1,type CompiledPrintProbeV1}from"../🖨️tectonic-template-compilation/🟦️.ts";
+import type{PrintProbeResourceV1}from"../🖨️tectonic-template-compilation/📋️intent/🟦️.ts";
+import{withPrintStorageTaskV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+
 
 //#region 🧪️ProbeProtocol
 /** 🧪️ One line of `<job>.probe.jsonl` — the `ProbeRecord` of `🧬️schema/🔣️.json`. */
@@ -12,14 +15,7 @@ export type ProbeRecord = Readonly<{ case: string; scenario: string; key: string
 export type ProbeProjection = Readonly<Record<string, readonly (number | string)[]>>;
 
 /** 🧪️ How one probe document is compiled. `workDir` must be cache-local, never inside the repository tree. */
-export type VizProbeOptions = Readonly<{
-  workDir: string;
-  caseName?: string;
-  scenario?: string;
-  jobName?: string;
-  extraSources?: readonly string[];
-  keepWorkDir?: boolean;
-}>;
+export type VizProbeOptions=Readonly<{execution:PrintExecutionV1;caseName?:string;scenario?:string;sources?:readonly string[];resources?:readonly PrintProbeResourceV1[]}>;
 
 /** 📝️ One statement of a programmatically rendered probe document. */
 export type VizProbeStatement =
@@ -152,72 +148,16 @@ function renderStatement(statement: VizProbeStatement): string {
   return `\\${statement.command}${optional}${statement.arguments.map((value) => `{${value}}`).join("")}`;
 }
 
-/** 📝️ Writes a rendered probe document into `workDir` and returns its path, ready for `compileVizProbe`. */
-export function writeVizProbeDocument(spec: VizProbeDocumentSpec, workDir: string, fileName = `${spec.scenario}.tex`): string {
-  mkdirSync(workDir, { recursive: true });
-  const path = join(workDir, fileName);
-  writeFileSync(path, renderVizProbeDocument(spec), "utf8");
-  return path;
-}
-//#endregion 📝️DocumentRendering
-
-//#region 🖨️Compilation
-/** 🗃️ Records of every probe already compiled in this process, so the scenarios of one adapter share a run. */
-const COMPILED_PROBES = new Map<string, Promise<ProbeRecord[]>>();
-
-/** 🖨️ Absolute path of the repo tectonic — downloaded and unpacked on first use, never the system one silently. */
-export async function vizProbeTectonic(): Promise<string> {
-  return await prepareTectonic();
-}
-
-/**
- * 🧪️ Stages one probe `.tex` into a cache-local work directory, compiles it with the repo tectonic
- * and returns the validated records of `<job>.probe.jsonl`.
- *
- * @see 🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-probe.sty
- */
-export async function compileVizProbe(texPath: string, options: VizProbeOptions): Promise<ProbeRecord[]> {
-  if (!existsSync(texPath)) throw new Error(`probe document does not exist: ${texPath}`);
-  const key = probeCompilationKey(texPath, options);
-  const pending = COMPILED_PROBES.get(key) ?? compileProbeStream(texPath, options);
-  COMPILED_PROBES.set(key, pending);
-  return selectProbeRecords(await pending, options);
-}
-
-/** 🗝️ Identity of one compilation: the source bytes, its companions, the job name and the work directory. */
-function probeCompilationKey(texPath: string, options: VizProbeOptions): string {
-  const source = readFileSync(texPath, "utf8");
-  let hash = 5381;
-  for (let index = 0; index < source.length; index += 1) hash = ((hash * 33) ^ source.charCodeAt(index)) >>> 0;
-  return [texPath, hash.toString(36), (options.extraSources ?? []).join("|"), options.jobName ?? "", options.workDir, options.keepWorkDir === true ? "keep" : "sweep"].join(" ");
-}
-
-/** 🖨️ The compilation itself, awaited once per identity so a multi-scenario adapter runs tectonic once. */
-async function compileProbeStream(texPath: string, options: VizProbeOptions): Promise<ProbeRecord[]> {
-  const stageRoot = join(options.workDir, "🧪️probe-source");
-  const outDirectory = join(options.workDir, "🧪️probe-out");
-  const sourceRoot = dirname(texPath);
-  const entries = [basename(texPath), ...(options.extraSources ?? [])];
-  const staged = stagePrintSources(sourceRoot, entries, stageRoot);
-  const stagedTex = staged.get(basename(texPath).replaceAll("\\", "/"));
-  if (stagedTex === undefined) throw new Error(`staging did not produce ${basename(texPath)} under ${stageRoot}`);
-  rmSync(outDirectory, { recursive: true, force: true });
-  mkdirSync(outDirectory, { recursive: true });
-  await compilePrintTexOnce(stagedTex, outDirectory, stageRoot);
-  const jobName = options.jobName ?? basename(printCompilerName(basename(texPath)), ".tex");
-  const stream = join(outDirectory, `${jobName}.probe.jsonl`);
-  if (!existsSync(stream)) throw new Error(`no probe stream at ${stream} — the run produced ${readdirSync(outDirectory).join(", ") || "nothing"}. A probe document that typesets no page writes no files at all, so it must call \\SemioVizProbePage.`);
-  const records = parseProbeJsonLines(readFileSync(stream, "utf8"));
-  if (options.keepWorkDir !== true) rmSync(stageRoot, { recursive: true, force: true });
-  return records;
-}
-
-/** 🧪️ Compiles a spec-rendered probe document — the data-table path, with no committed fixture. */
-export async function compileVizProbeDocument(spec: VizProbeDocumentSpec, options: VizProbeOptions): Promise<ProbeRecord[]> {
-  const sourceDir = join(options.workDir, "🧪️probe-input");
-  const texPath = writeVizProbeDocument(spec, sourceDir);
-  return await compileVizProbe(texPath, { caseName: spec.case, scenario: spec.scenario, ...options });
-}
+/** 📖️ Carries parsed records while the actual compiled input readers and scratch remain held. */
+export interface CompiledVizProbeV1{readonly records:readonly ProbeRecord[];readonly probe:CompiledPrintProbeV1}
+/** 🧪️ Compiles generated DATA and keeps every expensive consumer inside the retained callback. */
+export function withCompiledVizProbeDocumentV1<T>(spec:VizProbeDocumentSpec,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const source=renderVizProbeDocument(spec),execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName??spec.case,scenario:Object.hasOwn(options,"scenario")?options.scenario:spec.scenario}),resources=options.resources;return withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"probe.tex",source,...(resources?{resources}:{})},async probe=>{const text=new TextDecoder("utf-8",{fatal:true}).decode(await probe.read("probe.probe.jsonl",1048576)),records=selectProbeRecords(parseProbeJsonLines(text),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});}
+/** 🧪️ Returns finite validated records as DATA, with no escaped compiler path or memoized pending work. */
+export function compileVizProbeDocument(spec:VizProbeDocumentSpec,options:VizProbeOptions):Promise<ProbeRecord[]>{return withCompiledVizProbeDocumentV1(spec,options,async compiled=>[...compiled.records]);}
+/** 📚️ Compiles an explicit workspace Source probe and retains all consumers through its callback. */
+export function withCompiledVizProbeV1<T>(texPath:string,options:VizProbeOptions,body:(compiled:CompiledVizProbeV1)=>Promise<T>):Promise<T>{const path=texPath,execution=Object.freeze({...options.execution}),selection=Object.freeze({caseName:options.caseName,scenario:options.scenario}),sources=Object.freeze([...(options.sources??[])]);return withPrintStorageTaskV1(execution.operation,execution.phaseControl,async(operation,context)=>{const sourceRoot=relative(context.workspace,dirname(path)).replaceAll("\\","/"),name=basename(path);return withCompiledPrintProbeV1({operation,phaseControl:context.phaseControl},{version:1,kind:"document",namespace:"probe",id:"source-probe",sourceRoot,texPath:name,sources:[name,...sources],dark:false},async probe=>{const stream=basename(printCompilerName(name),".tex")+".probe.jsonl",records=selectProbeRecords(parseProbeJsonLines(new TextDecoder("utf-8",{fatal:true}).decode(await probe.read(stream,1048576))),{execution,...selection});return body(Object.freeze({records:Object.freeze(records),probe}));});});}
+/** 🧪️ Projects a consumed Source compilation into finite record DATA. */
+export function compileVizProbe(texPath:string,options:VizProbeOptions):Promise<ProbeRecord[]>{return withCompiledVizProbeV1(texPath,options,async compiled=>[...compiled.records]);}
 
 function selectProbeRecords(records: readonly ProbeRecord[], options: VizProbeOptions): ProbeRecord[] {
   const selected = records.filter((record) => (options.caseName === undefined || record.case === options.caseName) && (options.scenario === undefined || record.scenario === options.scenario));
@@ -231,13 +171,11 @@ export async function vizProbeProjection(texPath: string, options: VizProbeOptio
   return probeProjection(options.decimals === undefined ? records : roundProbeNumbers(records, options.decimals));
 }
 
-/** 📁️ The cache-local directory a probe of this case and scenario compiles in. */
-export function vizProbeWorkDirectory(caseName: string, scenario: string): string {
-  return join(workspaceRoot, ".🧬semio", "🦑️repo", "⚡️cache", "tests", "viz-probe", caseName, scenario);
-}
-
 /** 📁️ Repository-relative form of a path, for diagnostics that must stay platform-neutral. */
 export function vizProbeRelativePath(path: string): string {
   return relative(workspaceRoot, path).replaceAll("\\", "/");
 }
 //#endregion 🖨️Compilation
+
+/** 🛑️ Observes an actual failed child compiler as finite diagnostics while the parent retains its paid execution. */
+export function inspectVizProbeDocumentRefusalV1(spec:VizProbeDocumentSpec,options:VizProbeOptions):Promise<PrintCompilerRefusalResultV1>{return inspectPrintCompilerRefusalV1(options.execution,{version:1,kind:"probe",name:"probe.tex",source:renderVizProbeDocument(spec),...(options.resources?{resources:options.resources}:{})});}

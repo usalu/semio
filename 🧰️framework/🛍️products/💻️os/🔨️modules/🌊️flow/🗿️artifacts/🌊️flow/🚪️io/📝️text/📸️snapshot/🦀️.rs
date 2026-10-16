@@ -1,43 +1,10 @@
-//! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+//! 🚪️ Native text representation of the Flow document components: value, tree, synapse and widget DSL twins with their field codecs.
 
-/// 📜️ Handcrafted ArtifactDsl (P6): derive no longer emits ArtifactDsl/ArtifactPack.
-impl pack::snapshot::ArtifactDsl for FlowHostSnapshotDsl {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
-    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let body = match crate::os_store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), crate::os_store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        crate::os_store::semio_format::wrap_text(&envelope, &body)
-    }
-}
+use std::collections::BTreeMap;
 
-impl pack::snapshot::ArtifactDsl for FlowHostSnapshot {
-    const EXTENSION: &'static str = "flow";
+use crate::neural::{Atom, Dictionary, Neuron, Synapse, Tree, Value as NeuralValue};
+use crate::{CameraJson, OrderedSet, SynapseSpec, Widget, WidgetLayout};
 
-    fn envelope_id() -> &'static str {
-        <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::envelope_id()
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, crate::os_store::TextError> {
-        let dsl_fixture = <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?;
-        flow_host_snapshot_dsl_to_host_snapshot(dsl_fixture).map_err(|message| crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message, crate::os_store::TextSpan::at(1, 1)))
-    }
-
-    fn print_dsl(&self) -> String {
-        <FlowHostSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&flow_host_snapshot_to_dsl(self))
-    }
-}
 
 /// 🌱️ `Value`/`Atom`/`Dictionary`/`Tree`/`Neuron`/`Synapse` are all defined in `neural_engine`
 /// (a foreign crate out of scope for this conversion), so none of them can carry a
@@ -48,7 +15,7 @@ impl pack::snapshot::ArtifactDsl for FlowHostSnapshot {
 /// identical fix for the same foreign-`Dictionary`/`Value`/`Atom` problem one-for-one (same crate,
 /// same shapes).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct ValueDsl {
+pub struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
     null: Option<bool>,
     #[dsl(key = "bool")]
@@ -61,7 +28,7 @@ pub(crate) struct ValueDsl {
     dictionary: Option<BTreeMap<String, ValueDsl>>,
 }
 
-pub(crate) fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
+pub fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
     match value {
         NeuralValue::Atom(Atom::Null) => dsl_value.null = Some(true),
@@ -74,7 +41,7 @@ pub(crate) fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
     dsl_value
 }
 
-pub(crate) fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
+pub fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     if dsl_value.null.is_some() {
         return NeuralValue::Atom(Atom::Null);
     }
@@ -96,32 +63,32 @@ pub(crate) fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
     }
 }
 
-pub(crate) fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+pub fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
     dict.keys().map(|key| (key.clone(), value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")))).collect()
 }
 
-pub(crate) fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+pub fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
 }
 
 /// 📦️ `None` when `dict` is empty, mirroring `imperative_core`'s identical printer convention —
 /// omits an empty dictionary section rather than printing empty braces.
-pub(crate) fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+pub fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
     (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
 }
 
-pub(crate) fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+pub fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
     entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
 }
 
 /// 🔢️ Ordered string membership uses the native DSL array representation — a
 /// sorted `Vec<String>` is a lossless, order-independent stand-in at the DSL-text boundary since the
 /// real field is reconstructed as a set on the way back in.
-pub(crate) fn ordered_set_to_vec(set: &crate::OrderedSet) -> Vec<String> {
+pub fn ordered_set_to_vec(set: &crate::OrderedSet) -> Vec<String> {
     set.iter().cloned().collect()
 }
 
-pub(crate) fn vec_to_ordered_set(items: Vec<String>) -> crate::OrderedSet {
+pub fn vec_to_ordered_set(items: Vec<String>) -> crate::OrderedSet {
     items.into_iter().collect()
 }
 
@@ -130,7 +97,7 @@ pub(crate) fn vec_to_ordered_set(items: Vec<String>) -> crate::OrderedSet {
 /// `crate::os_dsl::DslVariants` lazy `fn() -> RecordSpec` pointer instead of `TreeDsl` and `NeuronNodeDsl`
 /// eagerly recursing into each other just to construct the schema.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct TreeDsl {
+pub struct TreeDsl {
     #[dsl(statements, block)]
     neurons: Vec<NeuronNodeDsl>,
     #[dsl(table)]
@@ -140,7 +107,7 @@ pub(crate) struct TreeDsl {
 /// 🔵️ Local twin of `neural::Neuron` — a one-variant `crate::os_dsl::DslEnum` (not a plain `DslRecord`) purely
 /// for the mutual-recursion reason documented on `TreeDsl`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum NeuronNodeDsl {
+pub enum NeuronNodeDsl {
     Neuron {
         id: String,
         kind: String,
@@ -159,18 +126,18 @@ pub(crate) enum NeuronNodeDsl {
 /// itself (JSON shape, `tree_from_host_snapshot`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct SynapseDsl {
+pub struct SynapseDsl {
     id: String,
     link: semio_framework_dsl_record::Wire,
 }
 
-pub(crate) fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseDsl {
+pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseDsl {
     let from = semio_framework_dsl_record::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) };
     let to = semio_framework_dsl_record::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) };
     SynapseDsl { id: synapse.id.clone(), link: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue { from, edge: Some((true, to)), edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: semio_framework_value::DslValue::Object(Vec::new()) }) }
 }
 
-pub(crate) fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, String> {
+pub fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, String> {
     let semio_framework_dsl_record::WireValue { from, edge, .. } = synapse.link.0;
     let (directed, to) = edge.ok_or_else(|| "synapse wire literal must have a target".to_string())?;
     if !directed {
@@ -179,25 +146,25 @@ pub(crate) fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, Strin
     Ok(SynapseSpec { id: synapse.id, from: from.id, to: to.id, from_port: from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() })
 }
 
-pub(crate) fn tree_to_tree_dsl(tree: &Tree) -> TreeDsl {
+pub fn tree_to_tree_dsl(tree: &Tree) -> TreeDsl {
     TreeDsl {
         neurons: tree.neurons.iter().map(neuron_to_neuron_node_dsl).collect(),
         synapses: tree.synapses.iter().map(|synapse| synapse_to_dsl(&SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() })).collect(),
     }
 }
 
-pub(crate) fn tree_dsl_to_tree(tree: TreeDsl) -> Result<Tree, String> {
+pub fn tree_dsl_to_tree(tree: TreeDsl) -> Result<Tree, String> {
     Ok(Tree {
         neurons: tree.neurons.into_iter().map(neuron_node_dsl_to_neuron).collect::<Result<Vec<_>, _>>()?,
         synapses: tree.synapses.into_iter().map(|dsl_synapse| synapse_from_dsl(dsl_synapse).map(|spec| Synapse { id: spec.id, from: spec.from, to: spec.to, from_port: spec.from_port, to_port: spec.to_port })).collect::<Result<Vec<_>, _>>()?,
     })
 }
 
-pub(crate) fn neuron_to_neuron_node_dsl(neuron: &Neuron) -> NeuronNodeDsl {
+pub fn neuron_to_neuron_node_dsl(neuron: &Neuron) -> NeuronNodeDsl {
     NeuronNodeDsl::Neuron { id: neuron.id.clone(), kind: neuron.kind.clone(), params: dictionary_to_option_dsl_map(&neuron.params), tree: neuron.tree.as_deref().map(tree_to_tree_dsl) }
 }
 
-pub(crate) fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
+pub fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
     let NeuronNodeDsl::Neuron { id, kind, params, tree } = node;
     let tree = match tree {
         Some(tree) => Some(Box::new(tree_dsl_to_tree(tree)?)),
@@ -214,7 +181,7 @@ pub(crate) fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, S
 /// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowArtifact`
 /// itself gets relative to `FlowHostSnapshot`, just one level further in.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum WidgetDsl {
+pub enum WidgetDsl {
     Neuron {
         id: String,
         neuron_kind: String,
@@ -288,7 +255,7 @@ impl semio_framework_dsl_record::DslField for WidgetDsl {
     }
 }
 
-pub(crate) fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
+pub fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
     match widget {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: dictionary_to_option_dsl_map(params), input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview }
@@ -304,7 +271,7 @@ pub(crate) fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
     }
 }
 
-pub(crate) fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
+pub fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview },
         WidgetDsl::InputSlider { id, label, value, min, max, step } => Widget::InputSlider { id, label, value, min, max, step },
@@ -317,51 +284,6 @@ pub(crate) fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> 
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: semio_framework_value::FromValue::from_value(flow).map_err(|error| error.to_string())? },
     })
 }
-
-/// 📄️ Local mirror of `FlowHostSnapshot` — see this region's opening doc comment for why `widgets:
-/// Vec<Widget>` (which embeds foreign `Dictionary`/`Tree` types) can't stay as-is under a direct
-/// `#[derive(crate::os_dsl::DslArtifact)]`. `FlowArtifact` (the derived read-view built by
-/// `FlowHostSnapshot::to_artifact()`) deliberately does NOT get this treatment — it's a computed
-/// snapshot for rendering, never itself round-tripped through DSL text.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, crate::os_dsl::DslArtifact)]
-#[artifact(id = "flow.flow")]
-#[dsl(layout = "lines")]
-pub(crate) struct FlowHostSnapshotDsl {
-    schema: String,
-    #[dsl(block)]
-    camera: CameraJson,
-    #[dsl(statements, block)]
-    widgets: Vec<WidgetDsl>,
-    #[dsl(table)]
-    synapses: Vec<SynapseDsl>,
-    layout: BTreeMap<String, WidgetLayout>,
-}
-
-pub(crate) fn flow_host_snapshot_to_dsl(host_snapshot: &FlowHostSnapshot) -> FlowHostSnapshotDsl {
-    FlowHostSnapshotDsl {
-        schema: host_snapshot.schema.clone(),
-        camera: host_snapshot.camera.clone(),
-        widgets: host_snapshot.widgets.iter().map(widget_to_widget_dsl).collect(),
-        synapses: host_snapshot.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: host_snapshot.layout.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
-    }
-}
-
-pub(crate) fn flow_host_snapshot_dsl_to_host_snapshot(dsl: FlowHostSnapshotDsl) -> Result<FlowHostSnapshot, String> {
-    Ok(FlowHostSnapshot {
-        schema: dsl.schema,
-        camera: dsl.camera,
-        widgets: dsl.widgets.into_iter().map(widget_dsl_to_widget).collect::<Result<Vec<_>, _>>()?,
-        synapses: dsl.synapses.into_iter().map(synapse_from_dsl).collect::<Result<Vec<_>, _>>()?,
-        layout: dsl.layout.into_iter().collect(),
-    })
-}
-
-
-
-
-
-
 
 //#endregion 🔖️Dsl
 
@@ -390,24 +312,5 @@ impl semio_framework_dsl_record::DslField for SynapseSpec {
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue { <SynapseDsl as semio_framework_dsl_record::DslField>::to_value(&synapse_to_dsl(self)) }
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         synapse_from_dsl(<SynapseDsl as semio_framework_dsl_record::DslField>::from_value(value)?)
-    }
-}
-
-impl semio_framework_dsl_record::BorrowedDslField for FlowHostSnapshot {
-    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<FlowHostSnapshotDsl>);
-}
-
-/// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
-impl semio_framework_dsl_record::DslField for FlowHostSnapshot {
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { io::sqlite::snapshot::flow_native_carrier::encode_field(self, control) }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { io::sqlite::snapshot::flow_native_carrier::decode_field(value, control) }
-    fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()) }
-    fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()))}
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Record(record) => flow_host_snapshot_dsl_to_host_snapshot(FlowHostSnapshotDsl::__dsl_from_record(record).map_err(|error| error.message)?),
-            other => Err(format!("expected Flow fixture record, found {other:?}")),
-        }
     }
 }

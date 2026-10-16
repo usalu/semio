@@ -1,4 +1,4 @@
-use super::super::{AcceptedArtifactOperation, AuthorityLimits};
+use semio_hub_artifact_authority::{AcceptedArtifactOperation, AuthorityLimits};
 use super::*;
 use ::directory::os_directory::{DocumentFrontier, DocumentOwner, DocumentCheckInStatusV1};
 use std::sync::atomic::{AtomicUsize, Ordering};

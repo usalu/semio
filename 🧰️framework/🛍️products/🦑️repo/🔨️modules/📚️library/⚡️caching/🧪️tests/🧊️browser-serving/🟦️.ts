@@ -1,3 +1,4 @@
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -6,6 +7,7 @@ import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️
 
 /** 🧊️ Serves completed profile artifacts under native Vite and compares native public-file delivery. */
 export async function testWgpuBrowserServing(workspace: string, output: string, invocation:ScriptInvocation): Promise<void> {
+ const vitePhase=scriptCompilerAdmissionControlV1(invocation,"test:vite-entry",0);
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️browser-serving/🔣️.json"), "utf8"));
   const engine = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu");
   const implementation = join(engine, "🌐️server/🟦️.ts"), template = join(engine, "🌐️server/🌐️.html");
@@ -37,7 +39,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
       const controller = new AbortController();
       let ready!: (url: string) => void;
       const readiness = new Promise<string>(resolve => ready = resolve);
-      const running = serveVite({ invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: 0, signal: controller.signal, ready });
+      const running = serveVite({control:vitePhase, invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: 0, signal: controller.signal, ready });
       const url = await Promise.race([readiness, running.then(() => { throw new Error("Server ended before readiness"); })]);
       const oracle = await createServer({ configFile: false, root: app, publicDir: publicRoot, server: { host: "127.0.0.1", port: 0, strictPort: true }, optimizeDeps: { noDiscovery: true } });
       let socket: any;
@@ -55,7 +57,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string, 
         assert.equal(wasmResponse.headers.get("content-type"), "application/wasm");
         assert.ok((await WebAssembly.instantiate(await wasmResponse.arrayBuffer())).instance);
         assert.equal((await fetch(new URL(fixture.missing, url))).status, 404);
-        await assert.rejects(() => serveVite({ invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Foreign port reused") }), /in use|EADDRINUSE/i);
+        await assert.rejects(() => serveVite({control:vitePhase, invocation,root: app, config, configLoader: "native", host: "127.0.0.1", port: Number(new URL(url).port), signal: new AbortController().signal, ready: () => assert.fail("Foreign port reused") }), /in use|EADDRINUSE/i);
         socket = new WebSocket(url.replace("http:", "ws:"), "vite-hmr");
         await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
         const reloaded = new Promise<void>((resolve, reject) => {

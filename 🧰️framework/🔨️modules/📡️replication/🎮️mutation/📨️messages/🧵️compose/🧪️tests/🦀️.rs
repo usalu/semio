@@ -2,6 +2,8 @@
 use super::*;
 use semio_framework_value::paged::PagedUtf8;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
+use semio_framework_replication_mutation::MUTATION_MESSAGE_OWNER_BYTES;
+use semio_framework_replication_mutation::MUTATION_MESSAGE_TARGET_BYTES;
 
 enum Fragment { Text(PagedUtf8<{usize::MAX}>), Static(&'static str), Quoted(PagedUtf8<{usize::MAX}>), Unsigned(u64) }
 struct Source { level: Severity, code: &'static str, fragments: Vec<Fragment>, targets: Vec<PagedUtf8<{usize::MAX}>> }

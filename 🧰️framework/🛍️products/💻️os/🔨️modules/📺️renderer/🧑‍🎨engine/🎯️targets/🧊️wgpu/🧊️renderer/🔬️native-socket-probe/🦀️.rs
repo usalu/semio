@@ -51,7 +51,7 @@ fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::D
         Some((native_socket_sqlite::DIALECT,store::os_store::artifact_codec::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
     }
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -318,7 +318,7 @@ pub async fn run_socket_grant_probe() -> i32 {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
-    compiler_fonts::install_native_compiler_fonts();
+    runtime_assets::install_native_runtime_assets();
     scenes::install_native_host_temporal_formatter(std::sync::Arc::new(native_temporal::SystemTemporalFormatter::default()));
     let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
@@ -353,7 +353,7 @@ pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::Path
 /// 🧭️ Boots the exact selected native plugin under caller-declared presentation axes.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root: std::path::PathBuf,services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,axes:(semio_framework_ui_locale::Locale,semio_framework_ui_locale::Terminology)) -> i32 {
-    compiler_fonts::install_native_compiler_fonts();
+    runtime_assets::install_native_runtime_assets();
     let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
         Ok(entries) => entries,
         Err(error) => {
@@ -364,29 +364,29 @@ pub(crate) async fn run_smoke_with_axes(plugin_filter: &str, plugin_modules_root
     let entries = filter_plugins(loaded, plugin_filter);
     let (locale, terminology) = axes;
     let mut shell = ShellState::new(entries, plugin_filter.to_string(), locale, terminology);
-    shell.install_document_services(services);
-    if let Err(error) = shell.boot().await {
+    shell.opening.install_document_services(services, &mut shell.directory);
+    if let Err(error) = crate::shell::ActionsCtx::of(&mut shell).boot().await {
         eprintln!("smoke: shell.boot() failed: {error}");
         return 1;
     }
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while std::time::Instant::now() < deadline {
-        shell.pump_sync_events().await;
-        if shell.identity.is_some() || shell.identity_env.is_none() {
+        crate::shell::PointerCtx::of(&mut shell).pump_sync_events().await;
+        if shell.directory.identity.is_some() || shell.directory.identity_env.is_none() {
             break;
         }
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
-    let _ = shell.refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
-    let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
-    let window_documents: Vec<_> = shell.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
-    let booted = plugin_filter.is_empty() || shell.session.is_some();
+    let _ = crate::shell::WindowActionsCtx::of(&mut shell).refresh_ui(semio_framework::kernel::UiDirtyScope::Full).await;
+    let identity_summary = shell.directory.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
+    let window_documents: Vec<_> = shell.docs.window_ui.iter().map(|(window, document)| serde_json::json!({ "window": window, "generation": document.generation() })).collect();
+    let booted = plugin_filter.is_empty() || shell.docs.session.is_some();
     let report = serde_json::json!({
         "booted": booted,
         "identity": identity_summary,
-        "identityOffline": shell.identity_offline,
-        "openSpaceId": shell.open_space_id,
-        "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
+        "identityOffline": shell.directory.identity_offline,
+        "openSpaceId": shell.opening.open_space_id,
+        "session": shell.docs.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
         "windowDocuments": window_documents,
     });
     match serde_json::to_string_pretty(&report) {
@@ -430,8 +430,4 @@ pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &
         cell.borrow_mut().replace(IconAtlas::from_packed(width, height, pixels.to_vec(), entries));
     });
     Ok(())
-}
-
-thread_local! {
-    pub(crate) static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }

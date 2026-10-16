@@ -1,0 +1,88 @@
+{
+ "hub": {
+  "crate": "semio_hub",
+  "ct": "lib",
+  "root": "🌎️hub/📦️packages/🦀️rust/🦀️.rs",
+  "baseline": {
+   "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+   "🌎️hub/💡️inference/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔐️committer/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔐️committer/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧱️document-preparation/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧱️document-preparation/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔁️commit-turns/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔁️commit-turns/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔎️checkpoint-verify/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔎️checkpoint-verify/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/📕️commit-and-close/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/📕️commit-and-close/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧭️job-types-and-port/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧭️job-types-and-port/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🏭️inference-runtime/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🏭️inference-runtime/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🛣️routes/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🛣️routes/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧾️approval-contract/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧾️approval-contract/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🧪️tests/⛓️chain/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🧪️tests/⛓️chain/🦀️.rs",
+   "🌎️hub/💡️inference/📇️catalog/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/📇️catalog/🦀️.rs",
+   "🌎️hub/💡️inference/📇️catalog/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/📇️catalog/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧬️schema/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧬️schema/🦀️.rs",
+   "🌎️hub/🏗️bootstrap/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🏗️bootstrap/🦀️.rs",
+   "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+   "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs",
+   "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🌍️gis-map-binding/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🌍️gis-map-binding/🦀️.rs"
+  },
+  "fam": [
+   "💡️inference/🏃️runtime/(🦀️\\.rs|[^/]+/🦀️\\.rs)$",
+   "💡️inference/(🦀️\\.rs|🧾️wal/🦀️\\.rs|📇️catalog/🦀️\\.rs|🧬️schema/🦀️\\.rs)$"
+  ]
+ },
+ "bin": {
+  "crate": "os_hub",
+  "ct": "bin",
+  "root": "🌎️hub/🏗️bootstrap/🦀️.rs",
+  "baseline": {
+   "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+   "🌎️hub/💡️inference/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔐️committer/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔐️committer/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧱️document-preparation/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧱️document-preparation/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔁️commit-turns/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔁️commit-turns/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🔎️checkpoint-verify/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🔎️checkpoint-verify/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/📕️commit-and-close/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/📕️commit-and-close/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧭️job-types-and-port/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧭️job-types-and-port/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🏭️inference-runtime/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🏭️inference-runtime/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🛣️routes/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🛣️routes/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧾️approval-contract/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧾️approval-contract/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧾️wal/🧪️tests/⛓️chain/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧾️wal/🧪️tests/⛓️chain/🦀️.rs",
+   "🌎️hub/💡️inference/📇️catalog/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/📇️catalog/🦀️.rs",
+   "🌎️hub/💡️inference/📇️catalog/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/📇️catalog/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🧬️schema/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🧬️schema/🦀️.rs",
+   "🌎️hub/🏗️bootstrap/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🏗️bootstrap/🦀️.rs",
+   "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+   "🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧪️tests/🔏️trusted-catalog-profile/🦀️.rs",
+   "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs",
+   "🌎️hub/💡️inference/🏃️runtime/🌍️gis-map-binding/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/💡️inference/🏃️runtime/🌍️gis-map-binding/🦀️.rs"
+  },
+  "fam": [
+   "💡️inference/🏃️runtime/(🦀️\\.rs|[^/]+/🦀️\\.rs)$",
+   "💡️inference/(🦀️\\.rs|🧾️wal/🦀️\\.rs|📇️catalog/🦀️\\.rs|🧬️schema/🦀️\\.rs)$"
+  ]
+ },
+ "gis": {
+  "crate": "semio_hub_gis",
+  "ct": "lib",
+  "root": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+  "baseline": {
+   "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/🗑️generated/relo-hubgis-baseline/tree/🌎️hub/🧩️compositions/🌍️gis/🦀️.rs"
+  },
+  "fam": []
+ },
+ "port": {
+  "crate": "semio_hub_inference_binding",
+  "ct": "lib",
+  "root": "🌎️hub/💡️inference/🔗️binding/🦀️.rs",
+  "baseline": {},
+  "fam": []
+ }
+}

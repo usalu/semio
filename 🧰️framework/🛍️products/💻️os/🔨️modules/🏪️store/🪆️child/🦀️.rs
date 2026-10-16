@@ -2,20 +2,22 @@
 //! and the DSL records of children, owner references and links that composition, codecs and the engine share.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_spr::command::ArtifactMessageSource;
+#[path = "📥️lifted/♻️retirement/🦀️.rs"]
+pub mod lifted_retirement;
+#[path = "🧬️retained-clone/🦀️.rs"]
+pub mod artifact_child_retained_clone;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use super::artifact_child_owner_schema::OwnerRef;
+use semio_framework_os_store_envelope::owner::OwnerRef;
 use semio_framework_os_store_link_schema::ArtifactLink;
-use crate::os_pack::pack_rt;
+use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::RecordSpecProducer;
-use super::canonical_edit::{
-    ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree,
-};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText, ArtifactCanonicalJsonTree};
 
 // 🧩️ Composable-vs-referenceable artifact primitives (ticket `26/08/12/UNIFIED-COMPOSABLE-
 // ARTIFACT-SYSTEM` `📓️design-full-plan.md` §"1. Kernel primitives"). Two structurally distinct
@@ -50,7 +52,7 @@ use super::canonical_edit::{
 /// `local_owner` is a serialization-skipped, immutable materialization retained by this exact
 /// handle; it is intentionally absent from equality, debug, DSL, pack, and JSON identity. No pin,
 /// no independent lifecycle: see the region doc's CHILD-vs-LINK split.
-pub(crate) struct ArtifactChildLocalText(Arc<str>);
+pub struct ArtifactChildLocalText(Arc<str>);
 
 /// 🚫️ Why an owned child's local materialization cannot be read at a typed boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,8 +75,8 @@ impl std::error::Error for ArtifactChildMaterializationError {}
 pub struct ArtifactChild<S> {
     pub child_id: String,
     pub target: semio_framework_artifact_reference::ArtifactRef,
-    pub(crate) local_owner: Option<Arc<dyn std::any::Any + Send + Sync>>,
-    pub(crate) _snapshot: PhantomData<S>,
+    pub local_owner: Option<Arc<dyn std::any::Any + Send + Sync>>,
+    pub _snapshot: PhantomData<S>,
 }
 
 /// 🪆️ The same child headers and optional typed local root after an exhaustive ownership transfer.
@@ -313,7 +315,7 @@ impl<S> semio_framework_dsl_record::BorrowedDslRecord for ArtifactChild<S>{
 
 impl<S> semio_framework_dsl_record::BorrowedDslField for ArtifactChild<S>{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Record(semio_framework_dsl_record::borrowed_record::<Self>);}
 
-pub(crate) fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
+pub fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,
         semio_framework_dsl_record::RecordLayout::Inline,
@@ -321,7 +323,7 @@ pub(crate) fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-pub(crate) fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
+pub fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(2)?;
         let mut fields = control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(2)?;
@@ -334,13 +336,13 @@ pub(crate) fn artifact_child_spec_controlled<C: semio_framework_dsl_record::Nati
     })
 }
 
-pub(crate) fn artifact_child_spec_producer() -> RecordSpecProducer {
+pub fn artifact_child_spec_producer() -> RecordSpecProducer {
     RecordSpecProducer { ordinary: artifact_child_spec, decoding: |control| artifact_child_spec_controlled(control), encoding: |control| artifact_child_spec_controlled(control) }
 }
 
 // 🚫️async: E1 pure — record conversion with no suspension point, consumed by the sync
 // `DslField::to_value` impl below. See R9.
-pub(crate) fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> semio_framework_dsl_record::RecordValue {
+pub fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> semio_framework_dsl_record::RecordValue {
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(0, semio_framework_dsl_record::FieldValue::Text(child.child_id.clone()));
     record.fields.insert(1, <semio_framework_artifact_reference::ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&child.target));
@@ -349,7 +351,7 @@ pub(crate) fn artifact_child_to_record<S>(child: &ArtifactChild<S>) -> semio_fra
 
 // 🚫️async: E1 pure — same sync consumer as `artifact_child_to_record`. See R9.
 /// 🧱️ Constructs the persisted child identity and literal target without a local owner.
-pub(crate) fn artifact_child_from_record<S>(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactChild<S>, String> {
+pub fn artifact_child_from_record<S>(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactChild<S>, String> {
     if record.fields.len() != 2 || record.fields.keys().any(|id| *id > 1) {
         return Err("artifact child requires its two literal fields".into());
     }
@@ -430,7 +432,7 @@ impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-pub(crate) fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {
+pub fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,
         semio_framework_dsl_record::RecordLayout::Inline,
@@ -438,7 +440,7 @@ pub(crate) fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-pub(crate) fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
+pub fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         let mut fields = control.allocate_vec(3)?;
@@ -450,11 +452,11 @@ pub(crate) fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSch
     })
 }
 
-pub(crate) fn owner_ref_spec_producer() -> RecordSpecProducer {
+pub fn owner_ref_spec_producer() -> RecordSpecProducer {
     RecordSpecProducer { ordinary: owner_ref_spec, decoding: |control| owner_ref_spec_controlled(control), encoding: |control| owner_ref_spec_controlled(control) }
 }
 
-pub(crate) fn owner_ref_to_record(owner: &OwnerRef) -> semio_framework_dsl_record::RecordValue {
+pub fn owner_ref_to_record(owner: &OwnerRef) -> semio_framework_dsl_record::RecordValue {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut record = semio_framework_dsl_record::RecordValue::default();
@@ -464,7 +466,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     record
 }
 
-pub(crate) fn owner_ref_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<OwnerRef, String> {
+pub fn owner_ref_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<OwnerRef, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let parent = match record.get(0) {

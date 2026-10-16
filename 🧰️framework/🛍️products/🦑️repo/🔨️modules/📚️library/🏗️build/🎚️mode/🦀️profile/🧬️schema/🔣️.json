@@ -1,0 +1,805 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "target",
+        "role",
+        "operation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "target": {
+          "enum": [
+            "x86_64-unknown-linux-gnu",
+            "aarch64-unknown-linux-gnu",
+            "aarch64-apple-darwin",
+            "x86_64-apple-darwin",
+            "x86_64-pc-windows-msvc",
+            "wasm32-wasip2",
+            "wasm32-unknown-unknown"
+          ]
+        },
+        "role": {
+          "enum": [
+            "native",
+            "descriptor",
+            "component",
+            "browser"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "build",
+            "check",
+            "test",
+            "doc"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "role": {
+              "const": "component"
+            },
+            "target": {
+              "const": "wasm32-wasip2"
+            }
+          }
+        },
+        {
+          "properties": {
+            "role": {
+              "const": "browser"
+            },
+            "target": {
+              "const": "wasm32-unknown-unknown"
+            }
+          }
+        },
+        {
+          "properties": {
+            "role": {
+              "enum": [
+                "native",
+                "descriptor"
+              ]
+            },
+            "target": {
+              "enum": [
+                "x86_64-unknown-linux-gnu",
+                "aarch64-unknown-linux-gnu",
+                "aarch64-apple-darwin",
+                "x86_64-apple-darwin",
+                "x86_64-pc-windows-msvc"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "request",
+        "profile"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "request": {
+          "$ref": "#/definitions/Request"
+        },
+        "profile": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "prototype"
+                }
+              }
+            },
+            "profile": {
+              "const": "prototype"
+            }
+          }
+        },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "release"
+                }
+              }
+            },
+            "profile": {
+              "const": "release"
+            }
+          }
+        }
+      ]
+    },
+    "PrecedenceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "profile",
+        "package",
+        "role",
+        "manifest",
+        "configuration",
+        "environment",
+        "expectedOptLevel",
+        "layers"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "package": {
+          "const": "leaf"
+        },
+        "role": {
+          "enum": [
+            "target",
+            "host"
+          ]
+        },
+        "manifest": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "configuration": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 1024
+          }
+        },
+        "expectedOptLevel": {
+          "enum": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "s",
+            "z"
+          ]
+        },
+        "layers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "origin",
+              "rank",
+              "value"
+            ],
+            "properties": {
+              "origin": {
+                "enum": [
+                  "default",
+                  "profile",
+                  "build-override",
+                  "named-package",
+                  "config",
+                  "environment"
+                ]
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "value": {
+                "enum": [
+                  "0",
+                  "1",
+                  "2",
+                  "3",
+                  "s",
+                  "z"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumFixtureBytes": 65536,
+        "maximumOutputBytes": 1048576,
+        "maximumCases": 32,
+        "maximumElapsedMilliseconds": 120000,
+        "profiles": [
+          "prototype",
+          "release"
+        ],
+        "preserved": [
+          "panic",
+          "debug-assertions",
+          "overflow-checks",
+          "target-stack",
+          "target-memory",
+          "artifact-ceilings"
+        ]
+      }
+    },
+    "PolicyRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "target",
+        "producer",
+        "operation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "target": {
+          "enum": [
+            "x86_64-unknown-linux-gnu",
+            "aarch64-unknown-linux-gnu",
+            "aarch64-apple-darwin",
+            "x86_64-apple-darwin",
+            "x86_64-pc-windows-msvc",
+            "wasm32-wasip2",
+            "wasm32-unknown-unknown"
+          ]
+        },
+        "producer": {
+          "enum": [
+            "artifact",
+            "descriptor-emitter",
+            "wasm-component",
+            "browser-canvas",
+            "browser-module"
+          ]
+        },
+        "operation": {
+          "enum": [
+            "build",
+            "check",
+            "test",
+            "doc",
+            "run",
+            "bench",
+            "clippy",
+            "rustc",
+            "rustdoc"
+          ]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "producer": {
+              "const": "artifact"
+            }
+          }
+        },
+        {
+          "properties": {
+            "producer": {
+              "enum": [
+                "descriptor-emitter"
+              ]
+            },
+            "target": {
+              "enum": [
+                "x86_64-unknown-linux-gnu",
+                "aarch64-unknown-linux-gnu",
+                "aarch64-apple-darwin",
+                "x86_64-apple-darwin",
+                "x86_64-pc-windows-msvc"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "producer": {
+              "const": "wasm-component"
+            },
+            "target": {
+              "const": "wasm32-wasip2"
+            }
+          }
+        },
+        {
+          "properties": {
+            "producer": {
+              "enum": [
+                "browser-canvas",
+                "browser-module"
+              ]
+            },
+            "target": {
+              "const": "wasm32-unknown-unknown"
+            }
+          }
+        }
+      ]
+    },
+    "ManifestInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "kind"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "repository",
+            "isolated"
+          ]
+        }
+      }
+    },
+    "PolicyProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPackageRows": 512,
+        "maximumPackageNameBytes": 128,
+        "producers": {
+          "artifact": "native",
+          "descriptor-emitter": "descriptor",
+          "wasm-component": "component",
+          "browser-canvas": "browser",
+          "browser-module": "browser"
+        },
+        "evidence": {
+          "dev": "authored:interactive-native-package-constraints",
+          "wasm-prototype": "authored:interactive-wasm-package-constraints",
+          "browser-canvas": "ticket:26/09/23/F1:browser-canvas-label-latency"
+        },
+        "preserved": [
+          "panic",
+          "debug-assertions",
+          "overflow-checks",
+          "target-stack",
+          "target-memory",
+          "artifact-ceilings"
+        ],
+        "settings": {
+          "prototype-native": {
+            "optLevel": "0",
+            "debug": 1,
+            "codegenUnits": 256,
+            "incremental": true,
+            "lto": "off"
+          },
+          "prototype-wasm": {
+            "optLevel": "1",
+            "debug": 1,
+            "codegenUnits": 256,
+            "incremental": true,
+            "lto": "off"
+          },
+          "prototype-host": {
+            "optLevel": "0",
+            "debug": 0,
+            "codegenUnits": 256,
+            "incremental": false
+          },
+          "release-native": {
+            "optLevel": "3",
+            "debug": 0,
+            "codegenUnits": 1,
+            "incremental": false,
+            "lto": "thin"
+          },
+          "release-wasm": {
+            "optLevel": "s",
+            "debug": 0,
+            "codegenUnits": 16,
+            "incremental": false,
+            "lto": "thin"
+          },
+          "release-host": {
+            "optLevel": "0",
+            "debug": 0,
+            "codegenUnits": 256,
+            "incremental": false
+          },
+          "release-descriptor": {
+            "optLevel": "3",
+            "debug": 0,
+            "codegenUnits": 16,
+            "incremental": false,
+            "lto": false
+          }
+        },
+        "maximumSelectors": 256,
+        "maximumSelectorBytes": 4096,
+        "maximumSerializedBytes": 1048576
+      }
+    },
+    "Settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "optLevel",
+        "debug",
+        "codegenUnits",
+        "incremental",
+        "lto"
+      ],
+      "properties": {
+        "optLevel": {
+          "enum": [
+            "0",
+            "1",
+            "3",
+            "s"
+          ]
+        },
+        "debug": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "codegenUnits": {
+          "enum": [
+            1,
+            16,
+            256
+          ]
+        },
+        "incremental": {
+          "type": "boolean"
+        },
+        "lto": {
+          "enum": [
+            "off",
+            "thin",
+            false
+          ]
+        }
+      }
+    },
+    "Constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "optLevel",
+        "origin",
+        "owner",
+        "evidence"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+          "maxLength": 128
+        },
+        "optLevel": {
+          "enum": [
+            "1",
+            "2",
+            "3"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "native",
+            "wasm",
+            "browser-canvas"
+          ]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "evidence": {
+          "enum": [
+            "authored:interactive-native-package-constraints",
+            "authored:interactive-wasm-package-constraints",
+            "ticket:26/09/23/F1:browser-canvas-label-latency"
+          ]
+        }
+      }
+    },
+    "PolicyPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "request",
+        "profile",
+        "role",
+        "target",
+        "host",
+        "authoredConstraints",
+        "packageOverrides",
+        "sources",
+        "preserved",
+        "requiresConsumedView",
+        "digest",
+        "workspaceOwner",
+        "workspaceKind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "request": {
+          "$ref": "#/definitions/PolicyRequest"
+        },
+        "profile": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "role": {
+          "enum": [
+            "native",
+            "descriptor",
+            "component",
+            "browser"
+          ]
+        },
+        "target": {
+          "$ref": "#/definitions/Settings"
+        },
+        "host": {
+          "$ref": "#/definitions/HostSettings"
+        },
+        "authoredConstraints": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/definitions/Constraint"
+          }
+        },
+        "packageOverrides": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "$ref": "#/definitions/Constraint"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "path",
+              "digest"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "preserved": {
+          "const": [
+            "panic",
+            "debug-assertions",
+            "overflow-checks",
+            "target-stack",
+            "target-memory",
+            "artifact-ceilings"
+          ]
+        },
+        "requiresConsumedView": {
+          "const": true
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "workspaceOwner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspaceKind": {
+          "enum": [
+            "repository",
+            "isolated"
+          ]
+        }
+      }
+    },
+    "HostSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "optLevel",
+        "debug",
+        "codegenUnits",
+        "incremental"
+      ],
+      "properties": {
+        "optLevel": {
+          "enum": [
+            "0",
+            "1",
+            "3",
+            "s"
+          ]
+        },
+        "debug": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "codegenUnits": {
+          "enum": [
+            1,
+            16,
+            256
+          ]
+        },
+        "incremental": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RenderedProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "plan",
+        "selectors",
+        "digest"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "plan": {
+          "$ref": "#/definitions/PolicyPlan"
+        },
+        "selectors": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "Consumption": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "resolution"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "producer",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "compiler"
+            },
+            "producer": {
+              "enum": [
+                "artifact",
+                "descriptor-emitter",
+                "wasm-component",
+                "browser-canvas",
+                "browser-module"
+              ]
+            },
+            "operation": {
+              "enum": [
+                "build",
+                "check",
+                "test",
+                "doc",
+                "run",
+                "bench",
+                "clippy",
+                "rustc",
+                "rustdoc"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

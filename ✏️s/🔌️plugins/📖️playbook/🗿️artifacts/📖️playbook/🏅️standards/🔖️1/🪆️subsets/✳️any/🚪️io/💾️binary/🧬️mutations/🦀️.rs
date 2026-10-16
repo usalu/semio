@@ -29,9 +29,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<PlaybookMutation, protocol::ProtocolErr
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 mod native_codec {

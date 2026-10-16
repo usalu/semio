@@ -1,5 +1,8 @@
+use crate::{standards::v5::subsets::any::schema::diff::HtmlChildAdded, standards::v5::subsets::any::schema::diff::HtmlChildrenDiff, standards::v5::subsets::any::schema::diff::HtmlDiff, standards::v5::subsets::any::schema::diff::HtmlNodeDiff};
+use crate::{standards::v5::subsets::any::schema::snapshot::element_attr, standards::v5::subsets::any::schema::snapshot::node_at, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot};
+use protocol::Mutation;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v5::subsets::any::schema::mutations::*;
 use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
 use crate::standards::v5::subsets::any::io::text::snapshot::{write_html_document};

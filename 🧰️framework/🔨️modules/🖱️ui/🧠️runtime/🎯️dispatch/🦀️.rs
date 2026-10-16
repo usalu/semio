@@ -18,6 +18,8 @@
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
 //! default for exactly this crate.
 
+use semio_framework_ui_runtime_exchange::Command;
+
 //#region 🔖️Intent
 
 /// 🎯️ A revision-guarded moment: a presenter's own type implements this once, and
@@ -59,7 +61,7 @@ pub enum DispatchOutcome {
     Handled,
     /// ✅️ The intent was applied and additionally describes commands to submit and/or deferred work
     /// for the frame transaction to carry out.
-    HandledWith { commands: Vec<crate::Command>, deferred: Vec<DeferredOp> },
+    HandledWith { commands: Vec<Command>, deferred: Vec<DeferredOp> },
     /// 🕰️ Dropped: the handler itself recognizes this intent as targeting a stale moment, for a
     /// reason the revision guard alone could not see. Converges with a revision-guard drop: no patch,
     /// no command.
@@ -74,7 +76,7 @@ pub enum DispatchOutcome {
 pub enum DeferredOp {
     /// 📤️ Submit through `crate::UiRuntime`'s own `CommandGateway` — the same non-blocking, bounded
     /// path any other command takes.
-    SubmitCommand(crate::Command),
+    SubmitCommand(Command),
     /// 👥️ Record onto `crate::UiRuntime`'s own `PresenceHub`, decomposed into `record_own`/
     /// `record_peer` calls — presence never enters a document revision (see `🦀️presence.rs`'s module
     /// doc), so it never becomes a `UiPatch` op either.

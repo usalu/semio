@@ -9,7 +9,7 @@
       "type":"object","additionalProperties":false,
       "required":["package","manifest","entry","dependencies","forbiddenDependencies"],
       "properties":{
-        "package":{"type":"string","pattern":"^semio-framework-[a-z-]+$"},
+        "package":{"type":"string","pattern":"^semio-framework-[a-z0-9-]+$"},
         "manifest":{"type":"string"},"entry":{"type":"string"},
         "dependencies":{"type":"array","uniqueItems":true,"items":{"type":"string"}},
         "forbiddenDependencies":{"type":"array","uniqueItems":true,"items":{"type":"string"}}

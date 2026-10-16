@@ -1,6 +1,6 @@
 //! 🪟️ Host view projections isolate concrete windows, including windows of the same kind.
 
-use super::ViewModel;
+use crate::ViewModel;
 
 #[semio_framework_async_macros::async_test]
 async fn window_view_context_uses_the_addressed_instance() {

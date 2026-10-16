@@ -1,5 +1,7 @@
 /** 🔌️ Owns the neutral scenario adapter protocol and registration contract. */
 import type { TestLevel } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import type { ScriptInvocation } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ResourceLeaseControl } from "../../🏃️process/🔒️leases/🟦️.ts";
 
 export const IMPLEMENTATIONS = ["rust", "typescript", "go", "python", "dotnet"] as const;
 
@@ -78,6 +80,8 @@ export type TestCasePlan = Readonly<{
 }>;
 
 export type AdapterContext = Readonly<{
+  invocation: ScriptInvocation;
+  phaseControl: ResourceLeaseControl;
   plan: TestCasePlan;
   scenario: FeatureScenario;
   role: TestRole;

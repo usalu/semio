@@ -1,16 +1,15 @@
 //! 🧩️ 🧩️ S Studio app command — `reorganize-workflow`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::workflow::MoveNode;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "reorganize-workflow")]
 pub struct ReorganizeWorkflow {}
 
-pub(crate) async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+pub async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let node_ids: Vec<String> = if selected.is_empty() { doc.snapshot.graph.nodes.iter().map(|node| node.id.clone()).collect() } else { selected.to_vec() };
     let artifact_mutations = node_ids
         .iter()
@@ -30,7 +29,7 @@ pub(crate) async fn reorganize_selected(doc: &ArtifactView<'_, WorkflowSnapshot>
 /// `apply` below instead); an empty selection already reorganizes every node (unchanged behavior), so
 /// this degrades identically to a real "nothing selected" dispatch.
 pub fn handle(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(reorganize_selected(doc, &[])))
+    Ok(semio_hub_space_operations::resolve_future(reorganize_selected(doc, &[])))
 }
 
 pub async fn apply(_payload: &ReorganizeWorkflow, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {

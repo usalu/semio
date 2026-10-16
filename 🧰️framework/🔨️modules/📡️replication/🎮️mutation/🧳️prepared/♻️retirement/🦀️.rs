@@ -11,7 +11,7 @@ pub fn demands<P,M>(prepared:&ArtifactReplayPrepared<P,M>,factory:Factory<'_,P,M
  if prepared.next.is_some(){return Ok(RetirementDemand{capacity_bytes:issuer(factory)?.snapshot_birth_bytes(),depth:1,..Default::default()});}
  match &prepared.inverse{Err(_)=>return Ok(frame::<ControlledRetirement<ValueError>>()),Ok(inverse)if !inverse.terminal_is_empty()=>return Ok(RetirementDemand{capacity_bytes:issuer(factory)?.mutations_birth_bytes(),depth:1,..Default::default()}),Ok(_)=>{}}
  if prepared.messages.capacity()!=0{return Ok(frame::<crate::MutationMessageLedgerRetirement>());}
- if prepared.apply_refusal.is_some(){return Ok(frame::<ControlledRetirement<crate::MutationApplyError>>());}
+ if prepared.apply_refusal.is_some(){return Ok(frame::<ControlledRetirement<semio_framework_mutation_diff::MutationApplyError>>());}
  if prepared.input_refusal.is_some(){return Ok(frame::<ControlledRetirement<String>>());}
  Ok(Default::default())
 }

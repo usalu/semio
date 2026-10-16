@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "files"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "files": {
+      "type": "array",
+      "maxItems": 16384,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "contents"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^(🟦️\\.d\\.ts|🧬️types/[a-f0-9]{24}\\.(d\\.ts|json))$"
+          },
+          "contents": {
+            "type": "string",
+            "maxLength": 16777216
+          }
+        }
+      }
+    }
+  }
+}

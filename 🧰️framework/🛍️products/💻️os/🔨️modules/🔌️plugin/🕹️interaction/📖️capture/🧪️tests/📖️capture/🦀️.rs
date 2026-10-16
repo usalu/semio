@@ -1,19 +1,19 @@
 //! 🧪️ Actual Store read leases, bounded byte output, cancellation, and return-maintenance ownership.
 use super::*;
-use crate::local_interaction::mutations::InteractionConfigMutation;
+use crate::mutations::InteractionConfigMutation;
 use store::{ArtifactStore, SpaceMember};
 
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
 
 async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>, crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["hover-is-not-captured"]}});
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-capture-test", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = InteractionStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
-    let mut recipient=recipient();crate::local_interaction::query::tests::install_original_interaction_owners(&mut store,&mut recipient);
+    let mut recipient=recipient();crate::query::tests::install_original_interaction_owners(&mut store,&mut recipient);
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
     let hex = |bytes: &[u8; 32]| bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let expected = serde_json::to_vec(&serde_json::json!({"identity": {

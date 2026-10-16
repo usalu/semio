@@ -1,4 +1,3 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::sqlite::snapshot;

@@ -121,7 +121,7 @@ impl protocol::DiffAlgebra<PlaybookConfig> for PlaybookConfigDiff {
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub mod mutations;
 pub use mutations::*;
 
 //#region 🧪️Tests
@@ -134,5 +134,4 @@ mod tests;
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
 mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+

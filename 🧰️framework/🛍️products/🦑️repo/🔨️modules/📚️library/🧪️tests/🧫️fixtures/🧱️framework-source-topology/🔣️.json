@@ -93,13 +93,13 @@
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/♿️accessibility.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🦀️.rs",
       "kind": "rust",
       "anchor": "pub "
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🎨️style.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎨️style/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🎨️style/🦀️.rs",
       "kind": "rust",
       "anchor": "pub "
     },
@@ -117,7 +117,7 @@
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/👥️presence.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/👥️presence/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/👥️presence/🦀️.rs",
       "kind": "rust",
       "anchor": "pub "
     },
@@ -129,13 +129,13 @@
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📐️layout.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📐️layout/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/📐️layout/🦀️.rs",
       "kind": "rust",
       "anchor": "pub "
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/🗺️surface.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🗺️surface/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🗺️surface/🦀️.rs",
       "kind": "rust",
       "anchor": "pub "
     },

@@ -11,12 +11,10 @@ Feature: Apply every typed opening-preferences mutation to its committed specifi
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
   ⚠️ Two things about this case are unusual and both are deliberate. First, the case lives under
-  `🔌️plugin/🖥️host` rather than beside the vocabulary it exercises, because `🎚️config` has no crate
-  of its own: `📦️glue.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `OpeningConfigMutation` is
-  mounted, and a case placed at `🎚️config` would resolve its subject crate to the OS kernel, which
-  does not expose the facet at all. Second, the same mount compiles the sibling merge-policy and
-  identity vocabularies, but this feature remains scoped to opening preferences and their two
-  committed vectors.
+  `🔌️plugin/🖥️host`; its Rust subject links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `../../🔮️oracles/🔣️.json`. Second, the same
+  crate compiles the sibling merge-policy and identity vocabularies, but this feature remains scoped
+  to opening preferences and their two committed vectors.
 
   What distinguishes the vocabulary that IS here is how completely two kinds cover it.
   `OpeningPreferences` holds one list of pins keyed on `(dialect, role)`, so a pin is an UPSERT — it

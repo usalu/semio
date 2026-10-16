@@ -14,92 +14,11 @@
 // exception — each embeds `crate::UiValue`/`crate::UiMap` (directly or via `RowTarget`), which stay
 // DslValue-free by construction (see `UiValue`'s own docstring in `🎬️action.rs`).
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize,Serialize};
+pub use semio_framework_ui_contract_values::*;
+pub use semio_framework_ui_contract_actions::*;
+pub use semio_framework_ui_contract_presentation::*;
 
-/// 🧾️ Exact native committed-document revision projected onto the u64 completion lane.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
-pub struct UiPublicationRevision(pub u64);
-
-impl UiPublicationRevision {
-    pub fn decimal(self) -> String { self.0.to_string() }
-}
-
-impl Serialize for UiPublicationRevision {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> { serializer.serialize_str(&self.0.to_string()) }
-}
-
-impl<'de> Deserialize<'de> for UiPublicationRevision {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = String::deserialize(deserializer)?;
-        if value == "0" || (!value.starts_with('0') && value.bytes().all(|byte| byte.is_ascii_digit())) {
-            return value.parse::<u64>().map(Self).map_err(serde::de::Error::custom);
-        }
-        Err(serde::de::Error::custom("publication revision must be canonical decimal u64"))
-    }
-}
-
-impl ::semio_framework_value::ToValue for UiPublicationRevision {
-    fn to_value(&self) -> ::semio_framework_value::DslValue { ::semio_framework_value::DslValue::String(self.0.to_string()) }
-}
-
-impl ::semio_framework_value::FromValue for UiPublicationRevision {
-    fn from_value(value: ::semio_framework_value::DslValue) -> Result<Self, ::semio_framework_value::ValueError> {
-        let ::semio_framework_value::DslValue::String(value) = value else {
-            return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must be a decimal string"));
-        };
-        if value != "0" && (value.starts_with('0') || !value.bytes().all(|byte| byte.is_ascii_digit())) {
-            return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must be canonical decimal u64"));
-        }
-        value.parse::<u64>().map(Self).map_err(|_| ::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "publication revision must fit u64"))
-    }
-}
-
-//#region 🔖️Component
-
-//#region 🏷️Label
-/// 🏷️ Display-ready UI text carried on the wire.
-///
-/// ⚠️ Decision (flagged per packet brief): the old `UiNode`'s `Label` (`crate::wgpu::Label` in
-/// `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏷️label/🦀️.rs`) is NOT reused here. It
-/// is defined inside the old wgpu-target UI package, imports that package's own `Locale`/
-/// `Terminology` axes, and its whole point (`From<LabelText>` wired to the `app_labels!` macro,
-/// no `From<&str>`) is a compile-time-checked-label enforcement mechanism that lives at the
-/// authoring boundary, not the wire boundary — and this crate must not depend on that package at
-/// all (no engine, no wgpu; see `🦀️.rs`). This is therefore a minimal, independent transparent
-/// string. The localization/terminology resolution that used to happen via `LabelText::fill` still
-/// happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(transparent)]
-#[value(crate = "::semio_framework_value", transparent)]
-pub struct Label(pub crate::UiText);
-
-impl TryFrom<String> for Label {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        crate::UiText::try_from_string(value).map(Self)
-    }
-}
-
-impl<'a> TryFrom<&'a str> for Label {
-    type Error = &'a str;
-
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
-        crate::UiText::try_from_str(value).map(Self).ok_or(value)
-    }
-}
-
-impl std::fmt::Display for Label {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.0.as_str())
-    }
-}
-//#endregion 🏷️Label
-
-//#region 🎛️Enums
-/// 🌿️ The closed set of roles a [`Component::Container`] plays — collapses the old `Stack`/
-/// `Section`/`Group`/`Field` variants (all four were "a box with children plus optional chrome") into
-/// one component, distinguished only by role. `Form`/`Toolbar` are new roles with no old-`UiNode`
 /// counterpart, added per the packet brief for the layouts those two collapsed variants could not
 /// previously express as a single node.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -1412,8 +1331,42 @@ impl Component {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../🧪️tests/🔬️component-unit/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
 
 //#endregion 🔖️Component
+
+/// 🎚️ The number-range law every renderer shares (TS twin `numberRangeIsValid`): a display factor is positive; a
+/// `log` scale has a strictly positive travel; declared limits keep their lower bound below their upper one
+/// (equal only when both include it) and admit the key range `min..=max` and every detent — so a slider's travel
+/// is a soft range inside its hard one. The admission gate behind [`UiContractViolation::InvalidNumberRange`].
+pub fn number_range_is_valid(min: Option<f64>, max: Option<f64>, scale: crate::UiNumberScale, display_factor: Option<f64>, limits: Option<&crate::UiNumberLimits>, snaps: impl IntoIterator<Item = f64>) -> bool {
+    let factor = display_factor.is_none_or(|factor| factor > 0.0);
+    let axis = scale == crate::UiNumberScale::Linear || min.zip(max).is_some_and(|(min, max)| min > 0.0 && max > 0.0);
+    let Some(limits) = limits else { return factor && axis };
+    let ordered = limits.min.as_ref().zip(limits.max.as_ref()).is_none_or(|(low, high)| low.value < high.value || (low.value == high.value && !low.exclusive && !high.exclusive));
+    let admitted = |value: f64| limits.crossed(value).is_none();
+    factor && axis && ordered && min.is_none_or(admitted) && max.is_none_or(admitted) && snaps.into_iter().all(admitted)
+}
+
+/// 🧲️ The detent law every renderer shares: finite, strictly ascending, inside `min..=max` — the admission
+/// gate behind [`UiContractViolation::InvalidSnaps`] (TS twin `snapsAreValid`, `🛡️limits/🟦️.ts`).
+pub fn snaps_are_valid(snaps: impl IntoIterator<Item = f64>, min: f64, max: f64) -> bool {
+    let mut previous = f64::NEG_INFINITY;
+    snaps.into_iter().all(|snap| {
+        let valid = snap.is_finite() && snap > previous && snap >= min && snap <= max;
+        previous = snap;
+        valid
+    })
+}
+
+
+#[path="🧾️fields/🦀️.rs"]
+mod fields;
+#[path="♻️retirement/🦀️.rs"]
+mod typed_retirement;
+#[path="🧾️copy/🦀️.rs"]
+mod typed_copy;
+#[path="🧾️compare/🦀️.rs"]
+mod typed_compare;

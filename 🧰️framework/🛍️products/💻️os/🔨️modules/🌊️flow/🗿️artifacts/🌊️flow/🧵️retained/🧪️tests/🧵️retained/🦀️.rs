@@ -25,8 +25,8 @@ fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() 
     for copy in [1,4096] {
         let value:FlowHostSnapshot=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
         let oracle:FlowHostSnapshot=semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&value)).unwrap();assert_eq!(value,oracle);
-        let expected=drain(FlowRetirement::from_owner(FlowOwner::HostSnapshot(oracle)),copy).copied;
-        let mut retirement=FlowRetirement::from_owner(FlowOwner::HostSnapshot(value));let paid=grant(&retirement,copy);
+        let expected=drain(FlowRetirement::from_owner(FlowOwner::HostSnapshot(oracle.into())),copy).copied;
+        let mut retirement=FlowRetirement::from_owner(FlowOwner::HostSnapshot(value.into()));let paid=grant(&retirement,copy);
         assert_eq!(retirement.step(RetainedCloneGrant {maximum_items:0,..paid}).unwrap().progress().copied_items,0);
         assert_eq!(retirement.step(RetainedCloneGrant {maximum_capacity_bytes:0,maximum_copy_bytes:0,maximum_release_bytes:0,..paid}).unwrap().progress().copied_items,0);
         let observed=std::thread::spawn(move||drain(retirement,copy)).join().unwrap();assert_eq!(observed.copied,expected);assert!(expected>=fixture.get("expected").unwrap().get("releasedBytes").unwrap().as_u64().unwrap()as usize);
@@ -62,7 +62,7 @@ fn flow_physical_retirement_every_direct_string_and_vec_releases_actual_capacity
 }
 #[test]
 fn flow_physical_retirement_frontier_requires_exact_admission_and_releases_metadata_last() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let (snapshot,born,freed)=observe(||semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap());let original=born-freed;let mut owner=FlowRetirement::from_owner(FlowOwner::HostSnapshot(snapshot));let demand=owner.next_capacity_byte_demand(1).unwrap();assert!(demand>0);
+    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let (snapshot,born,freed)=observe(||semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap());let original=born-freed;let mut owner=FlowRetirement::from_owner(FlowOwner::HostSnapshot(snapshot.into()));let demand=owner.next_capacity_byte_demand(1).unwrap();assert!(demand>0);
     let paid=grant(&owner,1);for capacity in [0,demand-1]{let (step,a,r)=observe(||owner.step(RetainedCloneGrant {maximum_capacity_bytes:capacity,..paid}).unwrap());assert_eq!(step.progress().copied_items,0);assert_eq!((a,r),(0,0));}
     let receipt=drain(owner,1);assert_eq!(receipt.released,original+receipt.born);assert!(receipt.last_release>0,"the cursor frontier metadata has a final exact physical release");
 }

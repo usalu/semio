@@ -1,3 +1,3 @@
 //! 🎚️ Native representations of authored config field sets.
 use super::*;
-crate::field_set_mutations_binary!(ProbeConfigSet);
+semio_framework_os_kernel::field_set_mutations_binary!(ProbeConfigSet);

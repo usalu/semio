@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::modules::fonts::truetype::synthesize_truetype;
 
-const THESIS: &[u8] = include_bytes!("../../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
+static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
 const REPORT_STRIP: &[u8] = include_bytes!("../../../../🧪️tests/🧫️fixtures/📊️report-strip/📊️report-strip.pdf");
 
 fn typed_lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
@@ -270,7 +270,7 @@ fn moved_objects(before: &PdfSnapshot, after: &PdfSnapshot) -> (Vec<u32>, Vec<u3
 
 #[test]
 fn a_direct_graph_edit_moves_its_typed_lanes_and_survives_the_write() {
-    let base = decode_pdf(THESIS).unwrap();
+    let base = decode_pdf(*THESIS).unwrap();
     let (root, catalog) = catalog_of(&base);
     let action = catalog.dict_get("OpenAction").and_then(PdfObject::as_ref).expect("the thesis opens through an indirect action");
     let mut edited = base.clone();
@@ -295,7 +295,7 @@ fn a_direct_graph_edit_moves_its_typed_lanes_and_survives_the_write() {
 
 #[test]
 fn a_typed_page_and_info_edit_rewrites_only_what_those_lanes_own() {
-    let base = decode_pdf(THESIS).unwrap();
+    let base = decode_pdf(*THESIS).unwrap();
     let mut edited = base.clone();
     edited.pages[5].rotate = 90;
     edited.pages[15].media_box = [0.0, 0.0, 595.0, 842.0];
@@ -317,7 +317,7 @@ fn a_typed_page_and_info_edit_rewrites_only_what_those_lanes_own() {
 
 #[test]
 fn a_structural_page_edit_restates_the_page_tree_and_keeps_the_catalog() {
-    let base = decode_pdf(THESIS).unwrap();
+    let base = decode_pdf(*THESIS).unwrap();
     let mut edited = base.clone();
     let moved = edited.pages.remove(10);
     edited.pages.insert(40, moved);
@@ -340,7 +340,7 @@ fn a_structural_page_edit_restates_the_page_tree_and_keeps_the_catalog() {
 
 #[test]
 fn a_page_removal_keeps_the_catalog_when_a_destination_outruns_the_pages() {
-    let base = decode_pdf(THESIS).unwrap();
+    let base = decode_pdf(*THESIS).unwrap();
     let mut edited = base.clone();
     edited.pages.remove(7);
     let last = edited.pages.len() as u32;
@@ -379,7 +379,7 @@ fn report_strip_fixture_reads_and_rewrites_stably() {
 
 #[test]
 fn bachelor_thesis_reads_with_real_text_and_rewrites_stably() {
-    let decoded = decode_pdf(THESIS).unwrap();
+    let decoded = decode_pdf(*THESIS).unwrap();
     assert_eq!(decoded.pages.len(), 65);
     let text: String = (0..8).map(|index| crate::standards::v1_7::subsets::base::io::import::page_text(&decoded, index).unwrap()).collect::<Vec<_>>().join("\n");
     assert!(text.contains("Abstract") && text.contains("construction industry"), "{}", text.chars().take(500).collect::<String>());

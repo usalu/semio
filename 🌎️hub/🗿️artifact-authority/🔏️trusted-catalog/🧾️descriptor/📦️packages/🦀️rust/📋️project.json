@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-trusted-catalog-descriptor-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

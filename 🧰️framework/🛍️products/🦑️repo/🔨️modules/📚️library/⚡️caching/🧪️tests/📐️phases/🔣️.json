@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "command": "sdk-snapshot",
+      "testsBeforeCompiler": 1,
+      "compilerMilliseconds": 120000
+    },
+    {
+      "command": "pruning",
+      "testsBeforeCompiler": 3,
+      "compilerMilliseconds": 120000
+    },
+    {
+      "command": "journal-source",
+      "testsBeforeCompiler": 1,
+      "compilerMilliseconds": 120000
+    }
+  ]
+}

@@ -10,28 +10,9 @@ use semio_framework_ui_scene::world3d_default_selection_json;
 pub use semio_framework_ui_scene::{
     scene_lane_hash, SceneLanePayload, SceneLaneRef, World3dScene, World3dSceneLane, World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
-use ui_wgpu::wgpu::{world3d_camera_json, ActionDescriptor, MeasureSelectItem, WindowMeasure};
-/** 🌞️ Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
-#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner = semio_framework_pack_json)]
-#[serde(rename_all = "camelCase", default)]
-#[value(rename_all = "camelCase", default)]
-pub struct WorldSunConfig {
-    pub enabled: bool,
-    pub azimuth: f64,
-    pub elevation: f64,
-    pub intensity: f64,
-    pub color: String,
-}
-impl Default for WorldSunConfig {
-    fn default() -> Self {
-        Self { enabled: false, azimuth: 45.0, elevation: 35.0, intensity: 0.85, color: "#ffffff".into() }
-    }
-}
-/** 🌞️ Builds the `environment_json` payload consumed by `world-3d-host.tsx`'s `WorldEnvironmentRecord.sun`. */
-pub fn world3d_environment_json(sun: &WorldSunConfig) -> String {
-    json!({ "sun": sun }).to_string()
-}
+use semio_framework_ui_declaration::ui::world3d_camera_json;
+use semio_framework_ui_layout::layout::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
+pub use semio_framework_plugin_window_kits::world3d_sun::{world3d_environment_json, world3d_scene, WorldSunConfig};
 /** 🌳️ Measure group with optional open state and no header slider fields. */
 fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
     WindowMeasure::Group { id, label: label.into(), default_open, active_utility_id: None, value: None, min: None, max: None, step: None, ready: None, loading: None, waiting: None, on_change: None, children }
@@ -505,11 +486,6 @@ pub fn world3d_selection_json_with_granularity(method: &str, ids: &[String], hov
         }
     }
     value.to_string()
-}
-pub fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
-    let mut scene = World3dScene::base(camera_json, meshes_json, instances_json, selection_json);
-    scene.environment_json = Some(world3d_environment_json(sun));
-    scene
 }
 pub fn world3d_default_camera() -> String {
     world3d_camera_json([4.0, -4.0, 3.0], [0.0, 0.0, 0.0], 45.0)

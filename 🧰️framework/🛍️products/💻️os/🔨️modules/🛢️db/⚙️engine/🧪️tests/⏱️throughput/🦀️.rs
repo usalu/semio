@@ -1,11 +1,8 @@
-//! ⏱️ Write and reopen throughput laws against neutral examples in `🧫️fixtures/⏱️throughput`: what
-//! one durable commit and one reopened greeting cost in typed DB I/O (the
-//! census: exact, load-free), commit acknowledgements relative to the backend's own durable append
-//! measured in the same moment by the same number of writers, and a reopen storm relative to the same
-//! greetings made one after another on a freshly opened database (both under the same machine load),
-//! on every backend. Absolute targets are printed next to each verdict.
 use super::*;
-use db_storage::WalStorage as _;
+
+use db_engine_base::now_ms;
+use db_engine_handle::ArtifactHandle;
+use db_io_core::WalStorage as _;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/⏱️throughput/🔣️.json")).unwrap()
@@ -42,15 +39,15 @@ impl ThroughputTarget {
         match self {
             Self::Fs { root } => Database::open_at(pool, root, Profile::Dev).await.unwrap(),
             Self::Sqlite { path } => {
-                let storage = crate::db_storage_sqlite::SqliteStorage::open(pool.clone(), path).await.unwrap();
+                let storage = db_storage_sqlite::SqliteStorage::open(pool.clone(), path).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Sqlite(storage))).await.unwrap()
             }
             Self::Postgres { url } => {
-                let storage = crate::db_storage_postgres::PostgresStorage::connect(pool.clone(), url).await.unwrap();
+                let storage = db_storage_postgres::PostgresStorage::connect(pool.clone(), url).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Postgres(storage))).await.unwrap()
             }
             Self::Neo4j { uri, user, password } => {
-                let storage = crate::db_storage_neo4j::Neo4jStorage::connect(pool.clone(), uri, user, password).await.unwrap();
+                let storage = db_storage_neo4j::Neo4jStorage::connect(pool.clone(), uri, user, password).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Neo4j(storage))).await.unwrap()
             }
         }
@@ -86,7 +83,7 @@ async fn grow_document(handle: &ArtifactHandle, document: &protocol::ArtifactId,
             })
             .collect();
         let asked = std::time::Instant::now();
-        handle.submit(db_artifact::CommandBatch::new(envelopes).await.unwrap(), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.unwrap().unwrap();
+        handle.submit(db_artifact_contract::CommandBatch::new(envelopes).await.unwrap(), db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.unwrap().unwrap();
         acks.push(asked.elapsed());
     }
     acks
@@ -104,7 +101,7 @@ async fn durable_appends(database: &Database, document: &str, batches: usize, ba
     let mut appends = Vec::with_capacity(batches);
     for _ in 0..batches {
         let asked = std::time::Instant::now();
-        wal.append(&writer, 0, db_storage::db_io_copy_pages(&bytes).unwrap().await.unwrap()).await.unwrap();
+        wal.append(&writer, 0, db_io_registry::db_io_copy_pages(&bytes).unwrap().await.unwrap()).await.unwrap();
         wal.sync(&writer, 0, DurabilityClass::Fsync).await.unwrap();
         appends.push(asked.elapsed());
     }
@@ -182,9 +179,9 @@ async fn throughput_law(target: ThroughputTarget) {
                 envelope
             })
             .collect();
-        let before = db_storage::db_io_census();
-        cost_handle.submit(db_artifact::CommandBatch::new(envelopes).await.unwrap(), db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.unwrap().unwrap();
-        commits.push(db_storage::db_io_census().since(&before));
+        let before = db_io_registry::db_io_census();
+        cost_handle.submit(db_artifact_contract::CommandBatch::new(envelopes).await.unwrap(), db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.unwrap().unwrap();
+        commits.push(db_io_registry::db_io_census().since(&before));
     }
     drop(cost_handle);
     for (index, commit) in commits.iter().enumerate() {
@@ -209,12 +206,12 @@ async fn throughput_law(target: ThroughputTarget) {
     drop(database);
 
     let database = target.open(pool.clone()).await;
-    let before = db_storage::db_io_census();
+    let before = db_io_registry::db_io_census();
     let mount_started = std::time::Instant::now();
     let cost_handle = database.ensure_document(&cost_document).await.unwrap();
     let mount = mount_started.elapsed();
-    let mounted = db_storage::db_io_census().since(&before);
-    let before = db_storage::db_io_census();
+    let mounted = db_io_registry::db_io_census().since(&before);
+    let before = db_io_registry::db_io_census();
     let hello_started = std::time::Instant::now();
     let mut greeting = database.hello(cost_document.clone(), None, "throughput-solo".to_string(), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
     greeting.take_welcome().unwrap().acknowledge().unwrap();
@@ -222,17 +219,17 @@ async fn throughput_law(target: ThroughputTarget) {
     while let Some(frame) = greeting.next_frame().await.unwrap() {
         frame.acknowledge().unwrap();
     }
-    let greeted = db_storage::db_io_census().since(&before);
+    let greeted = db_io_registry::db_io_census().since(&before);
     drop(greeting);
     drop(cost_handle);
     let solo = mount + hello;
-    let serial_census = db_storage::db_io_census();
+    let serial_census = db_io_registry::db_io_census();
     let serial_at = std::time::Instant::now();
     for (index, document) in storm_documents.iter().enumerate() {
         greet(&database, document, format!("throughput-serial-session-{index}")).await;
     }
     let serial = serial_at.elapsed();
-    let serialized = db_storage::db_io_census().since(&serial_census);
+    let serialized = db_io_registry::db_io_census().since(&serial_census);
     let mut database = database;
     database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(120))).await.unwrap();
     drop(database);
@@ -240,10 +237,10 @@ async fn throughput_law(target: ThroughputTarget) {
     let database = Arc::new(target.open(pool.clone()).await);
     eprintln!("throughput[{label}] reopen storm of {documents} documents begins");
     let storm_at = std::time::Instant::now();
-    let storm_census = db_storage::db_io_census();
+    let storm_census = db_io_registry::db_io_census();
     let greetings: Vec<Greeting> = on_threads(documents, |index| db_actor::block_on(greet(&database, &storm_documents[index], format!("throughput-storm-session-{index}"))));
     let storm = storm_at.elapsed();
-    let stormed = db_storage::db_io_census().since(&storm_census);
+    let stormed = db_io_registry::db_io_census().since(&storm_census);
     let welcome_times: Vec<std::time::Duration> = greetings.iter().map(|greeting| greeting.welcomed).collect();
     let mount_times: Vec<std::time::Duration> = greetings.iter().map(|greeting| greeting.mounted).collect();
     let bootstrap_frames: usize = greetings.iter().map(|greeting| greeting.frames).sum();
@@ -301,13 +298,13 @@ async fn throughput_law(target: ThroughputTarget) {
     let bounds = &fixture["bounds"];
     let steady = &commits[1..];
     let (first_half, second_half) = steady.split_at(steady.len() / 2);
-    let half_tasks = |half: &[db_storage::DbIoCensusV1]| half.iter().map(db_storage::DbIoCensusV1::total_tasks).sum::<u64>();
+    let half_tasks = |half: &[db_io_registry::DbIoCensusV1]| half.iter().map(db_io_registry::DbIoCensusV1::total_tasks).sum::<u64>();
     assert!(half_tasks(second_half) <= half_tasks(first_half), "[{label}] later commits cost {} tasks, earlier ones {}: per-commit I/O grows with history", half_tasks(second_half), half_tasks(first_half));
     let mean_tasks = half_tasks(steady) as f64 / steady.len() as f64;
     assert!(mean_tasks <= fixture_f64(bounds, &["commitTasksMeanMax"]), "[{label}] a commit costs {mean_tasks:.1} DB I/O tasks on average");
     for (index, commit) in steady.iter().enumerate() {
         assert!(commit.total_tasks() <= fixture_u64(bounds, &["commitTasksMax"]), "[{label}] commit {} costs {} tasks: {}", index + 1, commit.total_tasks(), commit.describe());
-        assert!(commit.tasks(db_storage::DbIoTaskKind::IndexRead) <= fixture_u64(bounds, &["commitIndexReadsMax"]), "[{label}] commit {} reads {} index runs", index + 1, commit.tasks(db_storage::DbIoTaskKind::IndexRead));
+        assert!(commit.tasks(db_io_core::DbIoTaskKind::IndexRead) <= fixture_u64(bounds, &["commitIndexReadsMax"]), "[{label}] commit {} reads {} index runs", index + 1, commit.tasks(db_io_core::DbIoTaskKind::IndexRead));
         assert!(commit.total_turns() <= commit.total_tasks() * fixture_u64(bounds, &["commitTurnsPerTaskMax"]), "[{label}] commit {} spends {} worker turns on {} tasks", index + 1, commit.total_turns(), commit.total_tasks());
     }
     assert!(greeted.total_tasks() <= fixture_u64(bounds, &["helloTasksMax"]), "[{label}] a greeting of a mounted document costs {} DB I/O tasks: {}", greeted.total_tasks(), greeted.describe());
@@ -320,7 +317,7 @@ async fn throughput_law(target: ThroughputTarget) {
 
 #[semio_framework_async_macros::async_test]
 async fn fs_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
-    if !db_storage::process_isolated_law("db_engine::throughput_tests::fs_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
+    if !db_io_driver::process_isolated_law("throughput_tests::fs_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
         return;
     }
     let root = std::env::temp_dir().join(format!("db-throughput-fs-{}-{}", std::process::id(), now_ms().await));
@@ -330,7 +327,7 @@ async fn fs_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
-    if !db_storage::process_isolated_law("db_engine::throughput_tests::sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
+    if !db_io_driver::process_isolated_law("throughput_tests::sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
         return;
     }
     let root = std::env::temp_dir().join(format!("db-throughput-sqlite-{}-{}", std::process::id(), now_ms().await));
@@ -350,7 +347,7 @@ fn claimed_backend_env(key: &str) -> String {
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- …`"]
 async fn postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
-    if !db_storage::process_isolated_law("db_engine::throughput_tests::postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
+    if !db_io_driver::process_isolated_law("throughput_tests::postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
         return;
     }
     throughput_law(ThroughputTarget::Postgres { url: claimed_backend_env("OS_HUB_DATABASE_URL") }).await;
@@ -359,7 +356,7 @@ async fn postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds(
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- …`"]
 async fn neo4j_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
-    if !db_storage::process_isolated_law("db_engine::throughput_tests::neo4j_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
+    if !db_io_driver::process_isolated_law("throughput_tests::neo4j_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
         return;
     }
     throughput_law(ThroughputTarget::Neo4j { uri: claimed_backend_env("OS_HUB_NEO4J_URI"), user: claimed_backend_env("OS_HUB_NEO4J_USER"), password: claimed_backend_env("OS_HUB_NEO4J_PASSWORD") }).await;

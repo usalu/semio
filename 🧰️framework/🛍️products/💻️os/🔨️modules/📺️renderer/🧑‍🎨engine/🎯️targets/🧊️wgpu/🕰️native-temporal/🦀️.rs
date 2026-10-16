@@ -1,6 +1,6 @@
 //! 🕰️ Native system temporal presentation behind the renderer-neutral host formatter seam.
 
-use crate::scenes::NativeHostTemporalFormatter;
+use crate::NativeHostTemporalFormatter;
 use std::sync::Mutex;
 use ui_contract::{HostHourCycleV1, HostTemporalFormatReplyV1, HostTemporalFormatRequestV1, HostTemporalLabelV1, HostTemporalProfileV1, HostTemporalSourceV1};
 
@@ -217,7 +217,7 @@ mod tests {
         assert_eq!(parse_iso_epoch_ms("2026-03-08T07:00:01"), None);
         assert_eq!(parse_iso_epoch_ms("+002026-03-08T07:00Z"), None);
         assert_eq!(parse_iso_epoch_ms("2026-02-30"), None);
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared temporal fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared temporal fixture");
         for value in fixture["isoGrammar"]["valid"].as_array().expect("valid ISO grammar cases") {
             assert!(parse_iso_epoch_ms(value.as_str().unwrap()).is_some(), "{value}");
         }
@@ -229,7 +229,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn macos_foundation_matches_the_shared_intl_fixture_for_injected_profiles() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared temporal fixture");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json")).expect("shared temporal fixture");
         for case in fixture["cases"].as_array().expect("fixture cases") {
             let request: HostTemporalFormatRequestV1 = serde_json::from_value(serde_json::json!({ "nowMs": case["nowMs"], "values": case["values"] })).expect("fixture request");
             let locale = case["locales"][0].as_str().expect("fixture locale");

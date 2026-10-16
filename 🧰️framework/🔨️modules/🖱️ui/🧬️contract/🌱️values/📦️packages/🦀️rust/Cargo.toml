@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-contract-values"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical semantic UI values owner"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+rust-source-boundary = { maxSourceBytes = 262144, maxSourceFiles = 32, maxActiveLines = 4000 }
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+testkit = []
+
+[dependencies]
+semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
+semio-framework-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
+semio-framework-ui-contract-identity = { path = "../../../🆔️identity/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true, features = ["derive"] }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+serde_json.workspace = true

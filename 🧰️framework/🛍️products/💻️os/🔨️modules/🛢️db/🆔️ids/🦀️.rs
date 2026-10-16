@@ -1,4 +1,5 @@
 //! 🆔 Db identity types, DbError, and resource limits.
+extern crate semio_framework_os_kernel as pack;
 
 //#region 🔖️Ids
 /// 🪪️ A document's identity, decoupled from `protocol::ArtifactId` (see module doc) but

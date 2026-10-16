@@ -77,7 +77,7 @@ describe("node graph gestures", () => {
   });
 
   it("writes each of those fields, under that name, in the ONE row encoder both renderers use", () => {
-    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
+    const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const encoder = dag.slice(dag.indexOf("pub fn write_dag_graph_edit_rows"));
     const body = encoder.slice(0, encoder.indexOf("\n}\n"));
     for (const [operation, fields] of Object.entries(law.operationFields)) {
@@ -150,7 +150,7 @@ describe("node graph gestures", () => {
     // 🩸️ A bounded drag wrote the new positions into the fixture layout and told the guest nothing, so
     // every dragged node snapped back on the next fixture push; an absolute position per node then made the
     // guest's edit unreplayable on any other base. Every host now writes the ONE gesture record (design §13.3).
-    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
+    const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const plan = dag.slice(dag.indexOf("pub fn plan_graph_edits"));
     const body = plan.slice(0, plan.indexOf("\n    }\n"));
     expect(body).toContain("plan.drag.filter(|_| plan.previous_active && matches!(plan.next.gesture, DagProjectionGesture::Idle))");
@@ -163,7 +163,7 @@ describe("node graph gestures", () => {
   });
 
   it("lets the HOST journal every content change a released gesture made, so no renderer publishes the fixture", () => {
-    const flowHost = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
+    const flowHost = ["✏️host-authoring", "🌳️host-evaluation-history"].map((node) => readFileSync(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/${node}/🦀️.rs`), "utf8")).join("\n");
     const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
     const answerBody = answer.slice(0, answer.indexOf("\n    }\n"));
     expect(answerBody).toContain("self.dag.take_graph_edits()");
@@ -203,10 +203,10 @@ describe("node graph gestures", () => {
     // pressing and seeing what happened. `DagScreenHit` is the one classification, `is_screen_path`
     // routes from it and `is_draggable_body` reports from it, so a press can never be explained by a
     // different hit test than the one that routed it.
-    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
+    const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const begins = dag.slice(dag.indexOf("pub fn screen_pointer_gesture_begins_at"));
-    expect(begins.slice(0, begins.indexOf("\n    }\n"))).toContain("self.screen_hit(sx, sy).is_screen_path()");
-    const hit = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🦀️.rs"), "utf8");
+    expect(begins.slice(0, begins.indexOf("\n}\n"))).toContain("screen_hit(viewport, graph, minimap, sx, sy).is_screen_path()");
+    const hit = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🦀️.rs"), "utf8");
     expect(hit).toContain("pub fn is_draggable_body(&self) -> bool {");
     expect(hit).toContain("self.node_id.is_some() && !self.is_screen_path()");
     expect(law.rules.aBodyPressSelectsThatNode).toContain("is_draggable_body");

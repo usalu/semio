@@ -3,7 +3,7 @@ use super::*;
 mod original_receiving;
 pub(super) fn original_receiving_sources_empty(key:instance_lifetime::NativeCloseKey)->bool{original_receiving::response_key_empty(key)&&original_receiving::intent_key_empty(key)}
 
-use crate::component::extension_invocation_failure::{ExtensionInvocationCause,RetainedExtensionFaultReply};
+use crate::component::extension_invocation_failure::{ExtensionInvocationCause, RetainedExtensionFaultReply};
 
 struct RetainedExtensionInvocation{
     req:semio_framework::kernel::RequestId,
@@ -877,7 +877,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
                 let mut lifetimes = runtime.guest_lifetimes.try_borrow_mut().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
                 let slot = lifetimes.get_mut(request.lifetime.instance_id).ok_or_else(|| reactor_close_fault("close lifetime absent"))?;
                 slot.cell.validate_close(*request).map_err(reactor_close_fault)?;
-                slot.cell.owner_mut().ok_or_else(|| reactor_close_fault("close native owner absent"))?.request_close(*request, runtime)?;
+                slot.cell.owner_mut().ok_or_else(|| reactor_close_fault("close native owner absent"))?.request_close(*request, runtime, &ReactorClosePeers)?;
             }
             Event::InstanceLifecycleAck(ack) => {
                 let mut lifetimes = runtime.guest_lifetimes.try_borrow_mut().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
@@ -892,7 +892,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     if let Some(instance) = focus {
         let mut lifetimes = runtime.guest_lifetimes.borrow_mut();
         if let Some(slot) = lifetimes.get_mut(instance) {
-            if let Some(admission) = slot.cell.owner_mut().map(|owner| owner.advance_admission(runtime)).transpose()?.flatten() {
+            if let Some(admission) = slot.cell.owner_mut().map(|owner| owner.advance_admission(runtime, &ReactorClosePeers)).transpose()?.flatten() {
                 slot.cell.record_close_admission(admission.0, admission.1).map_err(reactor_close_fault)?;
             }
         }
@@ -925,7 +925,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
         }
     }
     retire_until_complete(cx, || ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("queued document retirement remains valid").complete);
-    retire_until_complete(cx, ui_contract::close_ui_patch_owner_one);
+    retire_until_complete(cx, semio_framework_ui_contract_validation::close_ui_patch_owner_one);
     retire_until_complete(cx, || ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("exact UI value retirement queue remains valid").complete);
     retire_until_complete(cx, ui_contract::close_built_node_page_one);
     retire_while_progress(cx, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
@@ -968,10 +968,11 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     } else { None };
     for event in selected_event {
         match event {
-            Event::InstanceOpen { request, app_id, actor, quotas, .. } => {
+            Event::InstanceOpen { request, app_id, actor, assets, quotas, .. } => {
                 let instance = request.instance_id;
                 let fresh = runtime.guest_lifetimes.borrow_mut().admit(request).map_err(reactor_close_fault)?;
                 if fresh {
+                    crate::reactor::admit_package_assets(assets);
                     if let Err(error) = INSTANCE_METADATA.with(|metadata| metadata.borrow_mut().insert(instance, app_id.0.clone(), quotas)) {
                         runtime.guest_lifetimes.borrow_mut().remove_uncreated(instance).map_err(reactor_close_fault)?;
                         return Err(error.into());
@@ -1576,7 +1577,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
         *trace = (streak, seen);
     });
 
-    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance)).transpose()?.flatten();
+    let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance, &ReactorClosePeers)).transpose()?.flatten();
     let (ui_patches, ui_patch_receipt) = if cold_pair_loading { (semio_framework::kernel::UiTurnPatches::default(), None) } else { fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))? };
     let presence = PRESENCE.with(|hub| {
         let mut hub = hub.borrow_mut();

@@ -73,6 +73,15 @@
         }
       },
       "additionalProperties": false
+    },
+    "GalleryMeasurementPolicy": {
+      "const": {
+        "maximumSourceBytes": 2097152,
+        "maximumEvidenceBytes": 16777216,
+        "maximumSections": 1024,
+        "maximumVariants": 4096,
+        "maximumKinds": 4096
+      }
     }
   }
 }

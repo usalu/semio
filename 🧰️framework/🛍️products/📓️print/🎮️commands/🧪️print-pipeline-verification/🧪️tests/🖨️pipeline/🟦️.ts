@@ -1,27 +1,50 @@
+import{printArtifactNxOutputV1}from"../../../../📦️artifacts/🟦️.ts";
+import{inspectPrintPdfV1,rasterPrintPdfV1,PRINT_PDF_OPS_V1 as OPS,printPdfTransformV1,printPdfApplyV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfBoxV1,type PrintPdfTextV1}from"../../../../📦️artifacts/📖️pdf/🟦️.ts";
+const Util=Object.freeze({transform:printPdfTransformV1,applyTransform:printPdfApplyV1});
+import{mkdir,writeFile}from"node:fs/promises";
+import{printPipelineEvidenceV1,printPipelineEvidencePolicyV1}from"../../📋️evidence/🟦️.ts";
+import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
+import{withPrintStorageTaskV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
+import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import{requireIssuedResourceControlRefinementV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import MarkdownIt from "markdown-it";
 import { loadVizCatalog } from "../../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { basename, dirname, join } from "node:path";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { repoTestArtifactEnvironment } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { basename, dirname, join, resolve } from "node:path";
+import {fileURLToPath} from "node:url";
+
+
 import { classifyPackageSource, fileKindIdForSourcePath, fixedSourceDispositionDecision, implementationLeafBasenameFinding, loadCatalogTaxonomy, scopedFileKindIdForSourcePath, taxonomyFileKindIsImplementation } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { loadPrintDesignTokens, renderPrintLatexTokenStylesheet, resolvePrintPanelGlassStyle } from "../../../../🔨️modules/🎨print-design-token-paints/🟦️.ts";
 import { renderVizGalleryDocument, parseVizTaxonomyLeaves, verifyVisualizationCoverage, visualizationTemplates, vizGeneratedFiles, vizPrintedKeyFindings, vizPrintedFamilyFindings, vizPrintedScopeFindings, vizDocumentKeyGerman, vizDocumentKeyFamilies, vizDeclaredKeyNames, vizPrintedPackageFindings, vizDocumentKeyRegions, vizImplementedFamilyKeyScopes, vizImplementedKeyPathNames, vizPrintedKeyTables, vizPrintedKeyRows } from "../../../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { stagePrintSources } from "../../../../🔨️modules/📥️source-staging/🟦️.ts";
-import { printFontDescriptors, printFontSearchPaths, stagePrintFonts } from "../../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
-import { printDocumentOutputDirectory } from "../../../../🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
-import { compilePrintTexOnce, deriveDarkPrintTexSource, printTemplatePdfNames, publishPrintArtifact, registeredPrintTemplates } from "../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import { printCompilerName, printSourceReferenceMapV1, printSourceReferenceTextV1 } from "../../../../🔨️modules/📥️source-staging/🟦️.ts";
+import { printFontDescriptors, withPrintFontsV1 } from "../../../../🔨️modules/🔤print-font-catalog/🟦️.ts";
+import {printDocuments} from "../../../../🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts";
+import{withPrintScratchV1,type PrintExecutionV1,type PrintScratchV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
+import{inspectPrintCompilerRefusalV1}from"../../../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts";
+import{withRepositoryArtifactTaskV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import { withCompiledPrintProbeV1, withPublishedPrintDocumentV1, deriveDarkPrintTexSource, printTemplatePdfNames, publishPrintArtifact, registeredPrintTemplates } from "../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
 
 //#region 🧪️PrintPipelineTests
-const workspaceRoot = getWorkspaceRoot();
-const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
+const productRoot=resolve(fileURLToPath(new URL("../../../../",import.meta.url))),workspaceRoot=resolve(productRoot,"../../..");
 const packageRoot = join(productRoot, "📦️packages", "🟦️typescript");
 const latexRoot = join(productRoot, "🖋️latex");
-const outputRoot = process.env.SEMIO_PRINT_OUTPUT_DIR ?? repoTestArtifactEnvironment(workspaceRoot, "print-pipeline").SEMIO_TEST_ARTIFACT_DIR!;
+declare const pipelineBrand:unique symbol;
+/** 🎟️ Names one actual funded pipeline verification callback. */
+export interface PrintPipelineVerificationV1{readonly[pipelineBrand]:true}
+const pipelineScopes=new WeakMap<object,PrintScratchV1>(),evidenceScopes=new WeakMap<object,{bytes:number;pixels:number;files:Map<string,string>}>(),evidencePolicy=printPipelineEvidencePolicyV1();
+function pipelineScope(context:PrintPipelineVerificationV1):PrintScratchV1{const scope=pipelineScopes.get(context);if(!scope)throw Error("Actual retained Print verification scope required");checkResourceLeaseControl(scope.control);return scope;}
+/** 🧪️ Retains the actual paid diagnostic destination through every accepted verification effect. */
+export function withPrintPipelineVerificationV1<T>(execution:PrintExecutionV1,body:(context:PrintPipelineVerificationV1)=>Promise<T>):Promise<T>{return withPrintScratchV1(execution,"verification/pipeline",async scope=>{if(scope.workspace!==workspaceRoot)throw Error("Actual Print Source workspace required");const context=Object.freeze({})as PrintPipelineVerificationV1;pipelineScopes.set(context,scope);const evidence={bytes:0,pixels:0,files:new Map<string,string>()};evidenceScopes.set(context,evidence);try{const value=await body(context);if(evidence.files.size)await withPrintStorageTaskV1(scope.execution.operation,scope.control,async(_accepted,task)=>{const products=task.store("products"),directory=printArtifactLayoutV1(products.root,{version:1,kind:"measurement",mode:task.mode,id:"pipeline-verification"}).directory;await withRepositoryArtifactDestinationV1({workspace:task.workspace,invocation:task.invocation,storage:products.storage,control:products.control,phaseControl:task.phaseControl,directory},destination=>stageRepositoryArtifacts(destination,"@semio-tech/print:pipeline-verification",evidence.files));});return value;}finally{evidenceScopes.delete(context);pipelineScopes.delete(context);}});}
+function outputDirectory(context:PrintPipelineVerificationV1):string{return pipelineScope(context).directory;}
+async function writePipelineEvidence(context:PrintPipelineVerificationV1,name:string,value:Uint8Array|string,control:ResourceLeaseControl):Promise<string>{const scope=pipelineScope(context),evidence=evidenceScopes.get(context);if(!evidence)throw Error("Live paid evidence scope required");requireIssuedResourceControlRefinementV1(scope.control,control);checkResourceLeaseControl(control);const bytes=typeof value==="string"?new TextEncoder().encode(value):value,plan=printPipelineEvidenceV1({version:1,name,bytes:bytes.byteLength});if(evidence.files.has(plan.name)||evidence.files.size>=evidencePolicy.maximumEvidenceFiles||plan.bytes>evidencePolicy.maximumEvidenceBytes-evidence.bytes)throw Error("Print evidence aggregate capacity exceeded");evidence.bytes+=plan.bytes;const path=join(scope.directory,...plan.name.split("/"));if(path.length>256)throw Error("Finite paid Print evidence path required");await mkdir(dirname(path),{recursive:true});checkResourceLeaseControl(control);await writeFile(path,bytes,{flag:"wx"});evidence.files.set(plan.name,path);checkResourceLeaseControl(control);return plan.name;}
+
 
 /** 🧬️ Loads one print scope's owned schema module and asserts its canonical identity. */
 function printSchemaModule(modulePath: string, schemaId: string): Record<string, unknown> {
@@ -43,14 +66,15 @@ export function verifyPrintToolchainManifest(): void {
 
 
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
-export async function verifyPrintPipelineQuick(): Promise<void> {
+export async function verifyPrintPipelineQuick(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
   verifyPrintApiFreshness();
   await verifyPrintPdfGlyphPolicy();
-  await verifyPrintCommandBoundaries();
+  await verifyPrintCommandBoundaries(context);
   await verifyPrintDocumentCatalog();
-  await verifyPrintBundleContract();
+  await verifyPrintBundleContract(context);
   verifyPrintToolchainManifest();
-  await verifyPrintFontStaging();
+  await verifyPrintFontStaging(context);
   verifyPrintMacroStaging();
   const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
@@ -83,23 +107,9 @@ export async function verifyPrintPipelineQuick(): Promise<void> {
   }
   assert.deepEqual(templates.map((template) => template.id), contract.templates);
   for (const vector of contract.markdownCases) assert.deepEqual(parseVizTaxonomyLeaves(vector.source), vector.leaves);
-  mkdirSync(outputRoot, { recursive: true });
-  const stagingRoot = mkdtempSync(join(outputRoot, ".staging-test-"));
-  try {
-    const input = join(stagingRoot, "input"), output = join(stagingRoot, "output");
-    for (const [path, content] of Object.entries(contract.staging.inputs)) {
-      mkdirSync(dirname(join(input, path)), { recursive: true });
-      writeFileSync(join(input, path), content as string);
-    }
-    const staged = stagePrintSources(input, ["📄️document.tex", "📎️appendix.tex", "🖼️assets"], output);
-    assert.equal(staged.get("📄️document.tex"), join(output, "document.tex"));
-    for (const [path, content] of Object.entries(contract.staging.outputs)) assert.equal(readFileSync(join(output, path), "utf8"), content);
-    writeFileSync(join(input, "document.tex"), "collision");
-    assert.throws(() => stagePrintSources(input, ["📄️document.tex", "document.tex"], output), /colliding print source/);
-    assert.equal(readFileSync(join(output, "document.tex"), "utf8"), contract.staging.outputs["document.tex"]);
-  } finally {
-    rmSync(stagingRoot, { recursive: true, force: true });
-  }
+  const staged=printSourceReferenceMapV1(Object.keys(contract.staging.inputs));
+  for(const[path,content]of Object.entries(contract.staging.inputs)){const target=path.split("/").map(printCompilerName).join("/");assert.equal(printSourceReferenceTextV1(String(content),staged),contract.staging.outputs[target]);}
+  assert.throws(()=>printSourceReferenceMapV1(["📄️document.tex","document.tex"]),/Distinct Print staged Source/);
   const taxonomy = readFileSync(join(productRoot, "🖼️assets/📊️viz-taxonomy.md"), "utf8");
   const markdown = new MarkdownIt().parse(taxonomy, {});
   const oracle: string[] = [];
@@ -320,24 +330,21 @@ function verifyPrintApiTitleContracts(): void {
 }
 
 /** 📖️ Compiles the actual document-local title apparatus in both explicitly selected languages. */
-export async function verifyPrintApiTitleRendering(): Promise<void> {
+export async function verifyPrintApiTitleRendering(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
   const source = readFileSync(join(productRoot, "🧾️template/📊️viz-api/🔓️viz-api.tex"), "utf8");
   const visual = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
   const apparatus = source.slice(source.indexOf("%region 🔖️Apparatus"), source.indexOf("%endregion 🔖️Apparatus"));
-  mkdirSync(outputRoot, { recursive: true });
-  const root = mkdtempSync(join(outputRoot, ".api-title-"));
   for (const language of ["en", "de"] as const) {
-    const work = join(root, language), out = join(work, "out"), tex = join(work, "titles.tex");
-    mkdirSync(work, { recursive: true });
     const headings = visual.headings.map((heading: any, index: number) => `\\${index === 0 ? "chapter" : "section"}{${heading.tex}}`).join("\n");
-    writeFileSync(tex, `\\documentclass[type=report,theme=light,language=${language}]{semio}\n${apparatus}\n\\title{\\ApiText{API title controls}{API-Titelkontrollen}}\n\\author{Semio}\n\\errorcontextlines=100\n\\begin{document}\n\\tableofcontents\n${headings}\n\\ApiScopeSource{api-path-spatial-vector-field}{semio / viz / family / spatial-vector-field}\n\\SemioTableLong{\\ApiTitle{api-path-spatial-vector-field}}{0.18,0.13,0.15,0.54}{\\ApiKey & \\ApiType & \\ApiDefault & \\ApiMeaning}{\\SemioTableRow{\\Key{field} & \\Key{string} & \\Key{shear} & \\ApiText{Named vector field.}{Benanntes Vektorfeld.}}}\n\\end{document}\n`);
-    await compilePrintTexOnce(tex, out, work);
-    const pdf = await openPrintPdf(join(out, "titles.pdf")), texts: string[] = [], contents: string[] = [];
+    const generated=`\\documentclass[type=report,theme=light,language=${language}]{semio}\n${apparatus}\n\\title{\\ApiText{API title controls}{API-Titelkontrollen}}\n\\author{Semio}\n\\errorcontextlines=100\n\\begin{document}\n\\tableofcontents\n${headings}\n\\ApiScopeSource{api-path-spatial-vector-field}{semio / viz / family / spatial-vector-field}\n\\SemioTableLong{\\ApiTitle{api-path-spatial-vector-field}}{0.18,0.13,0.15,0.54}{\\ApiKey & \\ApiType & \\ApiDefault & \\ApiMeaning}{\\SemioTableRow{\\Key{field} & \\Key{string} & \\Key{shear} & \\ApiText{Named vector field.}{Benanntes Vektorfeld.}}}\n\\end{document}\n`;
+    await withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"titles.tex",source:generated},async probe=>{
+    const pdf = await openPrintPdf(context,await probe.read("titles.pdf",67108864),probe.control), texts: string[] = [], contents: string[] = [];
     let captions = 0;
     try {
       for (let number = 1; number <= pdf.numPages; number++) {
         const page = await pdf.getPage(number), content = await page.getTextContent();
-        const items = content.items.filter((item): item is import("pdfjs-dist/types/src/display/api").TextItem => "str" in item);
+        const items = content.items.filter((item): item is PrintPdfTextV1 => "str" in item);
         const text = items.map(item => item.str).join(" ");
         assertPrintPdfGlyphs(text, `${language} API-title page ${number}`);
         texts.push(text);
@@ -357,13 +364,15 @@ export async function verifyPrintApiTitleRendering(): Promise<void> {
       assert.ok(captions > 0, `${language}: no measured table caption`);
       console.log(`[print] API localized title rendering ${language}: ${visual.headings.length} headings, ${captions} measured captions, ${pdf.numPages} PDF.js pages PASS`);
     } finally { await pdf.destroy(); }
+    });
   }
 }
 
 /** 🪟️ Measures actual gallery content against its effective PGF frame without changing that frame. */
-export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise<void> {
+export async function verifyPrintGalleryCarrier(context:PrintPipelineVerificationV1): Promise<void> {
+  const{execution}=pipelineScope(context);
   const control = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.galleryCarrier;
-  const { extent } = await import("d3-array"), { OPS, Util } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const { extent } = await import("d3-array");
   
   
   const title = { en: "Gallery carrier controls", de: "Galerierahmen-Kontrollen" };
@@ -375,17 +384,12 @@ export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise
   for (const [index, entry] of control.cases.entries()) source = source.replace(`\\SemioVizChart{${entry.slug}}`, `${mark(`SemioCarrier${index}`)}\n\\SemioVizChart{${entry.slug}}\n${end}\n${reference(index)}`);
   const explicit = `\\begin{VizFigure}[title={\\SemioVizLocalized{Explicit height}{Explizite Höhe}},width=${control.width},height=${control.explicitHeight}]\n${mark("SemioCarrierExplicit")}\n\\draw (0,0) rectangle (10,10);\n${end}\n${reference("Explicit")}\n\\end{VizFigure}`;
   source = source.replace("\\end{document}", explicit + "\n\\end{document}");
-  mkdirSync(outputRoot, { recursive: true });
-  const root = mkdtempSync(join(outputRoot, ".gallery-carrier-"));
   const box = (points: number[][]) => [...extent(points.map(point => point[0]!)), ...extent(points.map(point => point[1]!))] as [number, number, number, number];
-  const documents = beforePdfPath ? [["en", "light"]] as const : [["en", "light"], ["de", "dark"]] as const;
+  const documents = [["en", "light"], ["de", "dark"]] as const;
   for (const [language, appearance] of documents) {
-    const work = join(root, `${language}-${appearance}`), out = join(work, "out"), tex = join(work, "carrier.tex");
-    mkdirSync(work, { recursive: true });
     const documentSource = source.replace("theme=light,language=de", `theme=${appearance},language=${language}`);
-    if (beforePdfPath) assert.equal(readFileSync(join(dirname(dirname(beforePdfPath)), "carrier.tex"), "utf8"), documentSource, "retained carrier TeX differs from neutral input");
-    else { writeFileSync(tex, documentSource); await compilePrintTexOnce(tex, out, work); }
-    const pdf = await openPrintPdf(beforePdfPath ?? join(out, "carrier.pdf"));
+    await withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"carrier.tex",source:documentSource},async probe=>{
+    const pdf = await openPrintPdf(context,await probe.read("carrier.pdf",67108864),probe.control);
     const frames = new Map<string, number[]>(), origins = new Map<string, number>(), pages = new Map<string, number>(), pageWidths = new Map<number, number>(), panels: { page: number; bounds: number[] }[] = [], geometry = new Map<string, number[][]>(), texts = new Map<string, string[]>();
     try {
       for (let number = 1; number <= pdf.numPages; number++) {
@@ -394,29 +398,29 @@ export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise
         const graphics: { matrix: number[]; width: number; join: number; cap: number; limit: number }[] = [], marked: string[] = [];
         let matrix = [1, 0, 0, 1, 0, 0], width = 1, joinStyle = 0, cap = 0, limit = 10;
         for (const [index, id] of operators.fnArray.entries()) {
-          const args = operators.argsArray[index];
-          if (id === OPS.save || id === OPS.paintFormXObjectBegin) { graphics.push({ matrix: [...matrix], width, join: joinStyle, cap, limit }); if (id === OPS.paintFormXObjectBegin && args[0]) matrix = Util.transform(matrix, args[0]); }
+          const args=operators.argsArray[index];if(!args)throw Error("Complete PDF argument roster required");
+          if (id === OPS.save || id === OPS.paintFormXObjectBegin) { graphics.push({ matrix: [...matrix], width, join: joinStyle, cap, limit }); if (id === OPS.paintFormXObjectBegin && args[0]) matrix = Util.transform(matrix,printPdfVectorV1(args[0],6)); }
           else if (id === OPS.restore || id === OPS.paintFormXObjectEnd) { const saved = graphics.pop(); assert.ok(saved, "gallery PDF graphics stack underflow"); matrix = saved.matrix; width = saved.width; joinStyle = saved.join; cap = saved.cap; limit = saved.limit; }
-          else if (id === OPS.transform) matrix = Util.transform(matrix, args);
-          else if (id === OPS.setLineWidth) width = Number(args[0]);
-          else if (id === OPS.setLineJoin) joinStyle = Number(args[0]);
-          else if (id === OPS.setLineCap) cap = Number(args[0]);
-          else if (id === OPS.setMiterLimit) limit = Number(args[0]);
-          else if (id === OPS.setGState) { for (const state of args[0]) { if (state[0] === "LW") width = Number(state[1]); else if (state[0] === "LJ") joinStyle = Number(state[1]); else if (state[0] === "LC") cap = Number(state[1]); else if (state[0] === "ML") limit = Number(state[1]); } }
-          else if (id === OPS.beginMarkedContent || id === OPS.beginMarkedContentProps) marked.push(String(args[0]?.name ?? args[0]));
+          else if (id === OPS.transform) matrix = Util.transform(matrix,printPdfVectorV1(args,6));
+          else if (id === OPS.setLineWidth) width = printPdfNumberV1(args[0]);
+          else if (id === OPS.setLineJoin) joinStyle = printPdfNumberV1(args[0]);
+          else if (id === OPS.setLineCap) cap = printPdfNumberV1(args[0]);
+          else if (id === OPS.setMiterLimit) limit = printPdfNumberV1(args[0]);
+          else if (id === OPS.setGState) { for (const rawState of printPdfArrayV1(args[0])) { const state=printPdfArrayV1(rawState);if (state[0] === "LW") width = printPdfNumberV1(state[1]); else if (state[0] === "LJ") joinStyle = printPdfNumberV1(state[1]); else if (state[0] === "LC") cap = printPdfNumberV1(state[1]); else if (state[0] === "ML") limit = printPdfNumberV1(state[1]); } }
+          else if (id === OPS.beginMarkedContent || id === OPS.beginMarkedContentProps) marked.push(printPdfNameV1(args[0]));
           else if (id === OPS.endMarkedContent) marked.pop();
           else if (id === OPS.constructPath && args[2]) {
-            const owner = [...marked].reverse().find(name => /^(?:SemioFrame|SemioCarrier)/.test(name)) ?? "", bounds = Array.from(args[2], Number);
+            const owner = [...marked].reverse().find(name => /^(?:SemioFrame|SemioCarrier)/.test(name)) ?? "", bounds = printPdfVectorV1(args[2],4);
             const points = [[bounds[0]!, bounds[1]!], [bounds[2]!, bounds[1]!], [bounds[2]!, bounds[3]!], [bounds[0]!, bounds[3]!]];
             points.forEach(point => Util.applyTransform(point, matrix));
             if (owner.startsWith("SemioFrame")) { assert.ok(!frames.has(owner), `duplicate ${owner}`); frames.set(owner, box(points)); origins.set(owner, matrix[5]!); pages.set(owner, number); }
             else if (owner.startsWith("SemioCarrier")) {
-              const stroked = [OPS.stroke, OPS.closeStroke, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(args[0]);
+              const stroked = [OPS.stroke, OPS.closeStroke, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(printPdfNameV1(args[0]));
               const reservation = Math.max(joinStyle === 0 ? limit : 1, cap === 2 ? Math.SQRT2 : 1);
               const horizontal = stroked ? reservation * width / 2 * Math.hypot(matrix[0]!, matrix[2]!) : 0, vertical = stroked ? reservation * width / 2 * Math.hypot(matrix[1]!, matrix[3]!) : 0;
               geometry.set(owner, [...(geometry.get(owner) ?? []), ...points.flatMap(point => [[point[0]! - horizontal, point[1]! - vertical], [point[0]! + horizontal, point[1]! + vertical]])]);
             }
-            else if ([OPS.fill, OPS.eoFill].includes(args[0])) panels.push({ page: number, bounds: box(points) });
+            else if ([OPS.fill, OPS.eoFill].includes(printPdfNameV1(args[0]))) panels.push({ page: number, bounds: box(points) });
           }
         }
         assert.equal(graphics.length, 0, "unbalanced gallery PDF graphics stack");
@@ -447,6 +451,7 @@ export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise
       assert.ok(Math.min(...geometry.get("SemioCarrier2")!.map(point => point[1]!)) < origins.get("SemioFrame2")! - 6, "negative legend ink was not measured");
       console.log(`[print] Gallery carrier ${language}/${appearance}: ${control.cases.length} actual frames, marked path/text extents, explicit-height control, ${pdf.numPages} PDF.js pages measured`);
     } finally { await pdf.destroy(); }
+    });
   }
   if (failures.length) throw Error(failures.join("\n"));
   assert.doesNotMatch(source, /width=80, height=40/, "gallery must select intrinsic height");
@@ -455,8 +460,8 @@ export async function verifyPrintGalleryCarrier(beforePdfPath?: string): Promise
 type PrintKindPaint = { marker: string; page: number; paths: number[][][]; pathOperations: number[][]; images: number[][][]; glyphs: { text: string; bounds: number[]; font: string; size: number; width: number }[]; bounds: number[]; signature: string; graphicSignature: string; glyphGeometrySignature: string };
 
 /** 🖌️ Extracts only marked chart-body paint through the independent PDF.js operator and glyph readers. */
-export async function readPrintKindPaint(pdf: Awaited<ReturnType<typeof openPrintPdf>>): Promise<PrintKindPaint[]> {
-  const { OPS, Util } = await import("pdfjs-dist/legacy/build/pdf.mjs"), { extent } = await import("d3-array"), { polygonContains } = await import("d3-polygon"), prefix = "SemioVizLeaf", records = new Map<string, PrintKindPaint>(), seen = new Set<string>();
+async function readPrintKindPaint(pdf: Awaited<ReturnType<typeof openPrintPdf>>): Promise<PrintKindPaint[]> {
+  const { extent } = await import("d3-array"), { polygonContains } = await import("d3-polygon"), prefix = "SemioVizLeaf", records = new Map<string, PrintKindPaint>(), seen = new Set<string>();
   const bounds = (points: number[][]): number[] => [...extent(points.map(point => point[0]!)), ...extent(points.map(point => point[1]!))] as number[];
   const filled = (raw: number[], evenOdd: boolean): boolean => {
     const rings: number[][][] = []; let ring: number[][] = [], current: number[] | undefined;
@@ -479,30 +484,30 @@ export async function readPrintKindPaint(pdf: Awaited<ReturnType<typeof openPrin
     let state = { matrix: [1, 0, 0, 1, 0, 0], width: 1, join: 0, cap: 0, limit: 10, fillAlpha: 1, strokeAlpha: 1, textMode: 0, clip: [-Infinity, Infinity, -Infinity, Infinity] }, pendingClip = false;
     const owner = () => [...marked].reverse().find(name => name.startsWith(prefix));
     for (const [index, id] of operators.fnArray.entries()) {
-      const args = operators.argsArray[index];
-      if (id === OPS.save || id === OPS.paintFormXObjectBegin) { stack.push({ ...state, matrix: [...state.matrix] }); if (id === OPS.paintFormXObjectBegin && args[0]) state.matrix = Util.transform(state.matrix, args[0]); }
+      const args=operators.argsArray[index];if(!args)throw Error("Complete PDF argument roster required");
+      if (id === OPS.save || id === OPS.paintFormXObjectBegin) { stack.push({ ...state, matrix: [...state.matrix] }); if (id === OPS.paintFormXObjectBegin && args[0]) state.matrix = Util.transform(state.matrix,printPdfVectorV1(args[0],6)); }
       else if (id === OPS.restore || id === OPS.paintFormXObjectEnd) { assert.ok(stack.length, "kind paint graphics stack underflow"); state = stack.pop(); }
-      else if (id === OPS.transform) state.matrix = Util.transform(state.matrix, args);
-      else if (id === OPS.setLineWidth) state.width = Number(args[0]);
-      else if (id === OPS.setLineJoin) state.join = Number(args[0]);
-      else if (id === OPS.setLineCap) state.cap = Number(args[0]);
-      else if (id === OPS.setMiterLimit) state.limit = Number(args[0]);
-      else if (id === OPS.setTextRenderingMode) state.textMode = Number(args[0]);
+      else if (id === OPS.transform) state.matrix = Util.transform(state.matrix,printPdfVectorV1(args,6));
+      else if (id === OPS.setLineWidth) state.width = printPdfNumberV1(args[0]);
+      else if (id === OPS.setLineJoin) state.join = printPdfNumberV1(args[0]);
+      else if (id === OPS.setLineCap) state.cap = printPdfNumberV1(args[0]);
+      else if (id === OPS.setMiterLimit) state.limit = printPdfNumberV1(args[0]);
+      else if (id === OPS.setTextRenderingMode) state.textMode = printPdfNumberV1(args[0]);
       else if (id === OPS.clip || id === OPS.eoClip) pendingClip = true;
-      else if (id === OPS.setGState) for (const [key, value] of args[0]) { const field = ({ LW: "width", LJ: "join", LC: "cap", ML: "limit", ca: "fillAlpha", CA: "strokeAlpha" } as Record<string, string>)[key]; if (field) (state as any)[field] = Number(value); }
+      else if (id === OPS.setGState) for (const rawState of printPdfArrayV1(args[0])) { const[key,value]=printPdfArrayV1(rawState);if(typeof key!=="string")throw Error("Actual PDF graphics state key required");if(!["LW","LJ","LC","ML","ca","CA"].includes(key))continue;const amount=printPdfNumberV1(value);if(key==="LW")state.width=amount;else if(key==="LJ")state.join=amount;else if(key==="LC")state.cap=amount;else if(key==="ML")state.limit=amount;else if(key==="ca")state.fillAlpha=amount;else if(key==="CA")state.strokeAlpha=amount; }
       else if (id === OPS.beginMarkedContent || id === OPS.beginMarkedContentProps) {
-        const name = String(args[0]?.name ?? args[0]); marked.push(name);
+        const name = printPdfNameV1(args[0]); marked.push(name);
         if (name.startsWith(prefix)) { assert.ok(!seen.has(name), `duplicate kind body ${name}`); seen.add(name); records.set(name, { marker: name, page: pageNumber, paths: [], pathOperations: [], images: [], glyphs: [], bounds: [], signature: "", graphicSignature: "", glyphGeometrySignature: "" }); }
       } else if (id === OPS.endMarkedContent) { assert.ok(marked.length, "kind paint marked stack underflow"); marked.pop(); }
       else if ([OPS.showText, OPS.showSpacedText, OPS.nextLineShowText, OPS.nextLineSetSpacingShowText].includes(id)) { const name = owner(), mode = state.textMode % 4; if (name && (mode === 0 && state.fillAlpha > 0 || mode === 1 && state.strokeAlpha > 0 || mode === 2 && Math.max(state.fillAlpha, state.strokeAlpha) > 0)) visibleText.add(name); }
       else if (id === OPS.constructPath && args[2]) {
-        const clipPoints = [[args[2][0], args[2][1]], [args[2][2], args[2][1]], [args[2][2], args[2][3]], [args[2][0], args[2][3]]]; clipPoints.forEach(point => Util.applyTransform(point, state.matrix));
+        const boundsData=printPdfBoxV1(args[2]),clipPoints=[[boundsData[0],boundsData[1]],[boundsData[2],boundsData[1]],[boundsData[2],boundsData[3]],[boundsData[0],boundsData[3]]]; clipPoints.forEach(point => Util.applyTransform(point, state.matrix));
         if (pendingClip) { const box = bounds(clipPoints); state.clip = [Math.max(state.clip[0]!, box[0]!), Math.min(state.clip[1]!, box[1]!), Math.max(state.clip[2]!, box[2]!), Math.min(state.clip[3]!, box[3]!)]; pendingClip = false; }
         const name = owner(); if (!name) continue;
-        const fill = [OPS.fill, OPS.eoFill, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(args[0]) && state.fillAlpha > 0, stroke = [OPS.stroke, OPS.closeStroke, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(args[0]) && state.strokeAlpha > 0 && state.width > 0;
+        const fill = [OPS.fill, OPS.eoFill, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(printPdfNameV1(args[0])) && state.fillAlpha > 0, stroke = [OPS.stroke, OPS.closeStroke, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke, OPS.closeEOFillStroke].includes(printPdfNameV1(args[0])) && state.strokeAlpha > 0 && state.width > 0;
         if (!fill && !stroke) continue;
-        const raw = Array.from(args[1]?.[0] ?? [], Number), points: number[][] = [], pathOperations: number[] = [];
-        if (!stroke && !filled(raw, [OPS.eoFill, OPS.eoFillStroke, OPS.closeEOFillStroke].includes(args[0]))) continue;
+        const raw = printPdfVectorV1(printPdfArrayV1(args[1])[0]), points: number[][] = [], pathOperations: number[] = [];
+        if (!stroke && !filled(raw, [OPS.eoFill, OPS.eoFillStroke, OPS.closeEOFillStroke].includes(printPdfNameV1(args[0])))) continue;
         for (let offset = 0; offset < raw.length;) { const operation = raw[offset++]!, size = [2, 2, 6, 4, 0][operation]; assert.ok(size !== undefined, `unknown PDF.js path operation ${operation}`); pathOperations.push(operation); for (let pair = 0; pair < size; pair += 2) { const point = [raw[offset + pair]!, raw[offset + pair + 1]!]; Util.applyTransform(point, state.matrix); points.push(point); } offset += size; }
         if (!points.length) continue;
         assert.ok(points.flat().every(Number.isFinite), `${name}: nonfinite painted path`);
@@ -539,15 +544,6 @@ export async function readPrintKindPaint(pdf: Awaited<ReturnType<typeof openPrin
   return [...records.values()];
 }
 
-/** 🏷️ Requires exact authored leaf ownership and source-backed graphic or typographic chart-body ink. */
-export async function verifyPrintGalleryPaintOwnership(path: string, leaves: readonly { leafId: string; slug: string }[]): Promise<PrintKindPaint[]> {
-  const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8")), pdf = await openPrintPdf(path);
-  try {
-    const actual = await readPrintKindPaint(pdf); assertPrintKindPaintOwnership(path, leaves, actual, contract);
-    return actual;
-  } finally { await pdf.destroy(); }
-}
-
 /** 🧷️ Joins independently consumed paint with exact authored leaf markers and source-backed paint classes. */
 function assertPrintKindPaintOwnership(path: string, leaves: readonly { leafId: string; slug: string }[], actual: PrintKindPaint[], contract: { markerPrefix: string; glyphKinds: { slug: string }[] }): void {
   const expected = leaves.map(leaf => contract.markerPrefix + Buffer.from(leaf.leafId).toString("hex"));
@@ -556,17 +552,16 @@ function assertPrintKindPaintOwnership(path: string, leaves: readonly { leafId: 
 }
 
 /** 🧫️ Compiles positive and negative marked-body controls against independent PDF.js and D3. */
-export async function verifyPrintKindPaintFixtures(): Promise<void> {
+export async function verifyPrintKindPaintFixtures(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
   const root = join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint"),contract = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")),{ extent } = await import("d3-array");
   
   for (const entry of contract.glyphKinds) { assert.equal(loadVizCatalog().kinds.find(kind => kind.slug === entry.slug)?.family, entry.family, entry.slug); assert.ok(readFileSync(join(latexRoot, entry.source), "utf8").includes(entry.definition), entry.slug + ": source-backed glyph painter"); }
-  const work = mkdtempSync(join(outputRoot, ".kind-paint-"));
   for (const [language, appearance] of [["en", "light"], ["de", "dark"]] as const) {
-    const directory = join(work, language + "-" + appearance), tex = join(directory, "paint.tex"), out = join(directory, "out"); mkdirSync(directory, { recursive: true });
-    const { createCanvas } = createRequire(import.meta.url)("@napi-rs/canvas"), canvas = createCanvas(2, 1), context = canvas.getContext("2d"); context.fillStyle = "#3768a8"; context.fillRect(0, 0, 2, 1); writeFileSync(join(directory, "neutral.png"), canvas.toBuffer("image/png"));
     const body = contract.cases.map((entry: any) => `${entry.chart ? "\\begin{VizFigure}[width=80,height=40]" : "\\begin{tikzpicture}[x=1mm,y=1mm]\\draw (-1,-1) rectangle (25,16);"}\\special{pdf:literal direct /${contract.markerPrefix + Buffer.from(entry.id).toString("hex")} BMC}\\begin{scope}${entry.body}\\end{scope}\\special{pdf:literal direct EMC}${entry.chart ? "\\end{VizFigure}" : "\\end{tikzpicture}"}`).join("\\par\n");
-    writeFileSync(tex, `\\documentclass[type=report,theme=${appearance},language=${language}]{semio}\\title{Paint}\\author{Semio}\\date{}\\begin{document}\\chapter{Paint}${body}\\end{document}`); await compilePrintTexOnce(tex, out, directory);
-    const pdf = await openPrintPdf(join(out, "paint.pdf"));
+    const generated=`\\documentclass[type=report,theme=${appearance},language=${language}]{semio}\\title{Paint}\\author{Semio}\\date{}\\begin{document}\\chapter{Paint}${body}\\end{document}`;
+    await withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"paint.tex",source:generated,resources:[{source:"🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🖼️image.png",name:"neutral.png"}]},async probe=>{
+    const pdf = await openPrintPdf(context,await probe.read("paint.pdf",67108864),probe.control);
     try {
       const actual = await readPrintKindPaint(pdf);
       for (const entry of contract.cases) {
@@ -578,6 +573,7 @@ export async function verifyPrintKindPaintFixtures(): Promise<void> {
       }
       console.log(`[DEBUG] Kind paint ${language}/${appearance}: ${contract.cases.length} actual graphic/glyph/empty/outer-only/transparent/clip controls PASS`);
     } finally { await pdf.destroy(); }
+    });
   }
 }
 
@@ -708,13 +704,9 @@ function verifyPrintApiScopeCases(printed: any): void {
   }
   console.log("[DEBUG] Printed shared source contracts: " + printed.sharedSourceContracts.scopes.reduce((total: number, scope: any) => total + scope.keys.length, 0) + " exact owner/type/default/bilingual rows PASS");
   const packageFindings = vizPrintedPackageFindings(familySource);
-  mkdirSync(outputRoot, { recursive: true });
-  writeFileSync(join(outputRoot, "printed-api-package-findings.json"), JSON.stringify(packageFindings, null, 2));
   console.log("[DEBUG] Printed API actual package findings: " + JSON.stringify(packageFindings));
   assert.deepEqual(packageFindings, [], "Every actual native owner control has a complete rendered contract");
   const familyFindings = vizPrintedFamilyFindings(familySource, printed.scopeBindings);
-  mkdirSync(outputRoot, { recursive: true });
-  writeFileSync(join(outputRoot, "printed-api-semantic-findings.json"), JSON.stringify({ translations: { expected, actual }, families: familyFindings, packages: packageFindings }, null, 2));
   console.log("[DEBUG] Printed API actual candidate: " + familyFindings.length + " scoped family findings; " + actual.filter((value: string, index: number) => value !== expected[index]).length + " translation scope failures");
   assert.deepEqual({ translations: actual, families: familyFindings, packages: packageFindings }, { translations: expected, families: [], packages: [] }, "Current owner-scoped semantic API reference");
 }
@@ -751,53 +743,18 @@ export function verifyPrintMacroStaging(): void {
     assert.equal(fixedSourceDispositionDecision(fixture.shimGrammar.contractId, source, taxonomy)?.finding, "fixed-source-disposition-unresolved", rejection.id);
   }
   assert.equal(classifyPackageSource(readFileSync(join(productRoot, "🔨️modules/🕸️graph/📐️.tex"), "utf8"), grammar).role, "implementation");
-  mkdirSync(outputRoot, { recursive: true });
-  const root = mkdtempSync(join(outputRoot, ".macro-staging-test-"));
-  try {
-    const input = join(root, "input"), output = join(root, "output");
-    for (const [path, content] of Object.entries(fixture.inputs)) {
-      mkdirSync(dirname(join(input, path)), { recursive: true });
-      writeFileSync(join(input, path), content);
-    }
-    const staged = stagePrintSources(input, fixture.entries, output);
-    assert.equal(staged.get("🔨️modules/🕸️graph/📐️.tex"), join(output, "modules/graph/_.tex"));
-    for (const [path, content] of Object.entries(fixture.outputs)) assert.equal(readFileSync(join(output, path), "utf8"), content, path);
-    for (const collision of fixture.collisions) {
-      const source = join(root, collision.id), destination = join(root, `${collision.id}-output`);
-      for (const [path, content] of Object.entries(collision.inputs)) {
-        mkdirSync(dirname(join(source, path)), { recursive: true });
-        writeFileSync(join(source, path), content);
-      }
-      mkdirSync(destination, { recursive: true });
-      writeFileSync(join(destination, "sentinel"), collision.id);
-      assert.throws(() => stagePrintSources(source, collision.entries, destination), /colliding print source/);
-      assert.equal(readFileSync(join(destination, "sentinel"), "utf8"), collision.id);
-    }
-  } finally { rmSync(root, { recursive: true, force: true }); }
+  const references=printSourceReferenceMapV1(Object.keys(fixture.inputs));
+  assert.equal("🔨️modules/🕸️graph/📐️.tex".split("/").map(printCompilerName).join("/"),"modules/graph/_.tex");
+  for(const[path,content]of Object.entries(fixture.inputs)){const output=path.split("/").map(printCompilerName).join("/");assert.equal(/\.(?:tex|bib|sty|cls)$/.test(path)?printSourceReferenceTextV1(content,references):content,fixture.outputs[output],path);}
+  for(const collision of fixture.collisions)assert.throws(()=>printSourceReferenceMapV1([...collision.entries,...Object.keys(collision.inputs).filter(name=>!collision.entries.includes(name))]),/Distinct Print staged Source/,collision.id);
+
 }
 
 /** 🧪️ Compiles the semantic graph owner twice through the production stage and independently reads its PDF. */
-export async function verifyPrintMacroStagingNative(): Promise<void> {
-  mkdirSync(outputRoot, { recursive: true });
-  const root = mkdtempSync(join(outputRoot, ".macro-staging-native-")), sourceRoot = join(import.meta.dir, "../🧫️fixtures/🖨️macro-staging");
-  try {
-    const outputs = [join(root, "first"), join(root, "second")];
-    for (const [index, output] of outputs.entries()) await publishPrintArtifact({ id: `graph-macro-native-${index + 1}`, sourceRoot, texPath: "🧪️control.tex", sources: ["🧪️control.tex"], output, owner: `@semio-tech/print:test-macro-staging-${index + 1}`, dark: false });
-    const pdfs = outputs.map(output => readFileSync(join(output, "🧪️control.pdf")));
-    assert.deepEqual(pdfs[0], pdfs[1]);
-    const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
-    (globalThis as { DOMMatrix?: unknown }).DOMMatrix ??= canvas.DOMMatrix;
-    const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs"), pdf = await getDocument({ data: new Uint8Array(pdfs[0]!) }).promise;
-    try {
-      const text: string[] = [];
-      for (let index = 1; index <= pdf.numPages; index++) {
-        const page = await pdf.getPage(index);
-        text.push((await page.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" "));
-        page.cleanup();
-      }
-      assert.ok(text.join(" ").replace(/\s+/g, " ").includes("Graph macro staging reached"));
-    } finally { await pdf.destroy(); }
-  } finally { rmSync(root, { recursive: true, force: true }); }
+export async function verifyPrintMacroStagingNative(context:PrintPipelineVerificationV1):Promise<void>{
+ const{execution}=pipelineScope(context),sourceRoot="🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🖨️macro-staging",pdfs:Uint8Array[]=[];
+ for(const id of["graph-macro-native-first","graph-macro-native-second"]){await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"probe",id,sourceRoot,texPath:"🧪️control.tex",sources:["🧪️control.tex"],dark:false});await withPublishedPrintDocumentV1(execution,"probe",id,async artifact=>{assert.deepEqual(artifact.files,["🧪️control.pdf"]);pdfs.push(await readPrintMaterialFileV1(join(artifact.path,"🧪️control.pdf"),67108864,artifact.control));await artifact.recheck();});}
+ assert.deepEqual(pdfs[0],pdfs[1]);const bytes=pdfs[0];if(!bytes)throw Error("Actual first macro PDF required");const pdf=await openPrintPdf(context,bytes,pipelineScope(context).control);try{const texts:string[]=[];for(let index=1;index<=pdf.numPages;index++){const page=await pdf.getPage(index);texts.push((await page.getTextContent()).items.map(item=>"str"in item?item.str:"").join(" "));page.cleanup();}assert.ok(texts.join(" ").replace(/\s+/g," ").includes("Graph macro staging reached"));}finally{await pdf.destroy();}
 }
 
 /** 🪪️ Requires published text to contain no replacement markers or Unicode noncharacters. */
@@ -809,51 +766,33 @@ function assertPrintPdfGlyphs(text: string, source: string): void {
 }
 
 /** 🔎️ Opens an authored PDF with the independent reader and its native matrix provider. */
-async function openPrintPdf(path: string) {
-  const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
-  (globalThis as { DOMMatrix?: typeof canvas.DOMMatrix }).DOMMatrix ??= canvas.DOMMatrix;
-  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  return await getDocument({ data: new Uint8Array(readFileSync(path)) }).promise;
-}
+async function openPrintPdf(context:PrintPipelineVerificationV1,bytes:Uint8Array,control:ResourceLeaseControl){const scope=pipelineScope(context);const snapshot=await inspectPrintPdfV1({operation:scope.execution.operation,phaseControl:control},scope.destination,bytes);let live=true;const recheck=()=>{if(!live)throw Error("Live PDF snapshot consumer required");checkResourceLeaseControl(control);};return{numPages:snapshot.pages.length,async getPage(index:number){recheck();const page=snapshot.pages[index-1];if(!Number.isInteger(index)||index<1||!page)throw Error("Actual PDF snapshot page required");return{async getTextContent(_options?:Readonly<{includeMarkedContent?:boolean}>){recheck();return{items:page.items,styles:page.styles};},async getOperatorList(){recheck();return{fnArray:page.operators.fnArray,argsArray:page.operators.argsArray.map(value=>value===null?[]:printPdfArrayV1(value))};},getViewport(options:Readonly<{scale:number}>){recheck();if(!Number.isFinite(options.scale)||options.scale<=0||options.scale>4)throw Error("Bounded PDF viewport scale required");return{width:page.width*options.scale,height:page.height*options.scale};},cleanup(){recheck();}};},async destroy(){live=false;}};}
 
 /** 🧩️ Checks a neutral glyph policy and an optional actual missing-glyph compiler counterexample. */
 async function verifyPrintPdfGlyphPolicy(): Promise<void> {
   const policy = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️pdf-consumption.json"), "utf8")).glyphPolicy as { accepted: string[]; rejectedCodePoints: number[] };
-  const before = process.env.SEMIO_PRINT_GLYPH_REGRESSION_PDF;
-  if (before) {
-    const pdf = await openPrintPdf(before);
-    let observed = 0;
-    try {
-      for (let page = 1; page <= pdf.numPages; page++) {
-        const current = await pdf.getPage(page), text = (await current.getTextContent()).items.map(item => "str" in item ? item.str : "").join(" ");
-        if (text.includes("\uFFFF")) { observed++; assert.throws(() => assertPrintPdfGlyphs(text, `${basename(before)}:${page}`), /invalid published glyph/); }
-        current.cleanup();
-      }
-      assert.ok(observed > 0, "actual compiler counterexample has no observed U+FFFF");
-      console.log(`[print] PDF.js missing-glyph counterexample: ${observed} pages rejected PASS`);
-    } finally { await pdf.destroy(); }
-  }
   for (const text of policy.accepted) assert.doesNotThrow(() => assertPrintPdfGlyphs(text, "neutral accepted glyphs"));
   for (const point of policy.rejectedCodePoints) assert.throws(() => assertPrintPdfGlyphs(String.fromCodePoint(point), "neutral rejected glyph"), /invalid published glyph/);
   console.log(`[print] Published glyph policy: ${policy.accepted.length} accepted cases, ${policy.rejectedCodePoints.length} rejected scalars PASS`);
 }
 
 /** 📖️ Consumes each restored document through the independent PDF.js page and text reader. */
-async function verifyPrintPdfs(templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
+async function verifyPrintPdfs(context:PrintPipelineVerificationV1,templates: readonly { id: string; texPath: string }[], collection: "templates" | "visualizations"): Promise<void> {
+  const{execution}=pipelineScope(context),outputRoot=outputDirectory(context);
   const expected = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️pdf-consumption.json"), "utf8"));
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️merge-contract.json"), "utf8"));
   const visual = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
   const painted: any[] = [], paintContract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8"));
   let count = 0;
-  for (const template of templates) for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
-    const pdf = await openPrintPdf(join(printDocumentOutputDirectory(template.id), name));
+  for (const template of templates) await withPublishedPrintDocumentV1(execution,"print",template.id,async artifact=>{for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
+    const pdf = await openPrintPdf(context,await readPrintMaterialFileV1(join(artifact.path,name),67108864,artifact.control),artifact.control);
     try {
       assert.ok(pdf.numPages >= expected.minimumPages, `${name}: empty document`);
       const texts: string[] = [];
       let contents = 0, captions = 0;
       for (let index = 1; index <= pdf.numPages; index++) {
         const page = await pdf.getPage(index);
-        const items = (await page.getTextContent()).items.filter((item): item is import("pdfjs-dist/types/src/display/api").TextItem => "str" in item);
+        const items = (await page.getTextContent()).items.filter((item): item is PrintPdfTextV1 => "str" in item);
         const text = items.map(item => item.str).join(" ");
         assertPrintPdfGlyphs(text, `${name}:${index}`);
         if (template.id === "viz-api") {
@@ -879,79 +818,45 @@ async function verifyPrintPdfs(templates: readonly { id: string; texPath: string
       } else if (collection === "visualizations") {
         const source = readFileSync(join(productRoot, template.texPath), "utf8"), leaves = [...source.matchAll(/% viz-covers: ([^\r\n]+)[\s\S]*?\\SemioVizChart\{([^}]+)\}/g)].map(match => ({ leafId: match[1]!, slug: match[2]! }));
         assert.ok(leaves.length, `${template.id}: authored leaf/chart mapping missing`);
-        const records = await readPrintKindPaint(pdf), catalog = loadVizCatalog(); assertPrintKindPaintOwnership(join(printDocumentOutputDirectory(template.id), name), leaves, records, paintContract);
+        const records = await readPrintKindPaint(pdf), catalog = loadVizCatalog(); assertPrintKindPaintOwnership(template.id+"/"+name, leaves, records, paintContract);
         for (const leaf of leaves) { const kind = catalog.kinds.find(kind => kind.slug === leaf.slug); assert.ok(kind, leaf.slug); painted.push({ theme: name.includes("-dark") ? "dark" : "light", document: template.id, leafId: leaf.leafId, slug: leaf.slug, family: kind.family, options: kind.options, paintClass: paintContract.glyphKinds.some((entry: any) => entry.slug === leaf.slug) ? "glyph" : "graphic", ...records.find(record => record.marker === paintContract.markerPrefix + Buffer.from(leaf.leafId).toString("hex")) }); }
-        writeFileSync(join(outputRoot, `kind-painted-${template.id}-${name.includes("-dark") ? "dark" : "light"}.json`), JSON.stringify(painted.slice(-leaves.length), null, 2));
+        await writePipelineEvidence(context,`kind-painted-${template.id}-${name.includes("-dark")?"dark":"light"}.json`,JSON.stringify(painted.slice(-leaves.length)),artifact.control);
         console.log(`[DEBUG] Painted chart-body census ${template.id}/${name}: ${leaves.length} exact leaf instances PASS`);
       }
       count++;
       console.log(`[print] Consumed ${collection} ${template.id}/${name}: ${pdf.numPages} pages PASS (${count}/${expected[collection]})`);
     } finally { await pdf.destroy(); }
-  }
+  }await artifact.recheck();});
   assert.equal(count, expected[collection]);
   if (collection === "visualizations") {
     const taxonomy = parseVizTaxonomyLeaves(readFileSync(join(productRoot, "🖼️assets/📊️viz-taxonomy.md"), "utf8")), catalog = loadVizCatalog();
     for (const theme of ["light", "dark"]) { const rows = painted.filter(row => row.theme === theme); assert.equal(rows.length, paintContract.leaves, `${theme}: exact leaf paint count`); assert.deepEqual(rows.map(row => row.leafId).sort(), [...taxonomy].sort(), `${theme}: exact taxonomy paint set`); assert.equal(new Set(rows.map(row => row.slug)).size, paintContract.kinds, `${theme}: unique painted kinds`); assert.deepEqual([...new Set(rows.map(row => row.slug))].sort(), catalog.kinds.map(kind => kind.slug).sort(), `${theme}: exact kind paint set`); }
-    writeFileSync(join(outputRoot, "kind-painted-coverage.json"), JSON.stringify(painted, null, 2));
+    await writePipelineEvidence(context,"kind-painted-coverage.json",JSON.stringify(painted),pipelineScope(context).control);
     const groups = new Map<string, any[]>(); for (const row of painted) { const key = [row.theme, row.family, row.paintClass === "glyph" ? row.glyphGeometrySignature : row.graphicSignature].join("/"); groups.set(key, [...(groups.get(key) ?? []), { leafId: row.leafId, slug: row.slug, options: row.options }]); }
-    writeFileSync(join(outputRoot, "kind-painted-equal-geometry.json"), JSON.stringify([...groups].filter(([, rows]) => new Set(rows.map(row => row.slug)).size > 1).map(([group, rows]) => ({ group, rows })), null, 2));
+    await writePipelineEvidence(context,"kind-painted-equal-geometry.json",JSON.stringify([...groups].filter(([,rows])=>new Set(rows.map(row=>row.slug)).size>1).map(([group,rows])=>({group,rows}))),pipelineScope(context).control);
     console.log(`[DEBUG] Painted chart-body coverage: ${paintContract.leaves} exact leaves/${paintContract.kinds} unique kinds in each theme PASS; equal geometry retained for source/feature adjudication`);
   }
   console.log(`[print] PDF.js consumption ${collection}: ${count} PDFs PASS`);
 }
 
 /** 🧪️ Verifies the light and dark PDFs prepared by explicit Nx document prerequisites. */
-export async function verifyPrintPipelineLong(): Promise<void> {
-  await verifyPrintPdfs(registeredPrintTemplates(), "templates");
+export async function verifyPrintPipelineLong(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
+  await verifyPrintPdfs(context,registeredPrintTemplates(), "templates");
 }
 //#endregion 🧪️PrintPipelineTests
 
 /** 🧪️ Verifies every visualization PDF and the authored API text contract. */
-export async function verifyPrintVisualizationBuild(): Promise<void> {
-  await verifyPrintPdfs(visualizationTemplates(), "visualizations");
+export async function verifyPrintVisualizationBuild(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
+  await verifyPrintPdfs(context,visualizationTemplates(), "visualizations");
 }
 
 /** 🔤️ Verifies font publication against the schema and an independent native font loader. */
-export async function verifyPrintFontStaging(output = outputRoot): Promise<void> {
-  const require = createRequire(import.meta.url), modulePath = join(productRoot, "🔨️modules/🔤print-font-catalog");
-  const catalog = JSON.parse(readFileSync(join(modulePath, "🔣️.json"), "utf8"));
-  assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://json.schemas.assets.semio-tech.com/print/print-font-catalog/schema.json"), catalog), true);
-  assert.deepEqual(printFontDescriptors(), catalog);
-  mkdirSync(output, { recursive: true });
-  const root = mkdtempSync(join(output, "print-fonts-")), product = "🧰️framework/🛍️products/📓️print";
-  try {
-    for (const row of catalog) {
-      const path = join(product, "🖼️assets/🔤️font", row.directory, row.filename);
-      mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspaceRoot, path), join(root, path));
-    }
-    await stagePrintFonts(root);
-    const staged = printFontSearchPaths(root)[0]!;
-    assert.equal(staged, join(root, product, "📦️packages/🟦️typescript/dist/fonts"));
-    const { GlobalFonts } = require("@napi-rs/canvas");
-    for (const row of catalog) {
-      const path = join(staged, row.texFilename);
-      assert.deepEqual(readFileSync(path), readFileSync(join(root, product, "🖼️assets/🔤️font", row.directory, row.filename)));
-      const key = GlobalFonts.registerFromPath(path, "nx-font-fixture-" + row.family);
-      assert.ok(key, row.family); GlobalFonts.remove(key);
-    }
-    const repeated = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️font-publication.json"), "utf8"));
-    const identity = () => catalog.map((row: any) => { const stat = statSync(join(staged, row.texFilename), { bigint: true }); return [stat.ino.toString(), stat.birthtimeNs.toString()]; });
-    const original = identity(), registrations = catalog.map((row: any) => GlobalFonts.registerFromPath(join(staged, row.texFilename), "nx-live-font-fixture-" + row.family));
-    try {
-      assert.ok(registrations.every(Boolean));
-      for (let round = 0; round < repeated.rounds; round++) await Promise.all(Array.from({ length: repeated.concurrent }, () => stagePrintFonts(root)));
-      assert.deepEqual(identity(), original, "Identical live fonts must retain file identity");
-    } finally { for (const key of registrations) if (key) GlobalFonts.remove(key); }
-    writeFileSync(join(staged, "stale.ttf"), "stale");
-    await stagePrintFonts(root);
-    assert.equal(existsSync(join(staged, "stale.ttf")), false);
-    assert.deepEqual(JSON.parse(readFileSync(join(staged, ".semio-artifact.json"), "utf8")).files, catalog.map((row: any) => row.texFilename).sort());
-    const prior = readFileSync(join(staged, catalog[0].texFilename));
-    const invalidSource = join(root, product, "🖼️assets/🔤️font", catalog[0].directory, catalog[0].filename);
-    writeFileSync(invalidSource, "invalid");
-    await assert.rejects(() => stagePrintFonts(root), { message: `Print font is not OpenType: ${invalidSource}` });
-    assert.deepEqual(readFileSync(join(staged, catalog[0].texFilename)), prior);
-  } finally { rmSync(root, { recursive: true }); }
+export async function verifyPrintFontStaging(context:PrintPipelineVerificationV1):Promise<void>{
+ const{execution}=pipelineScope(context),require=createRequire(import.meta.url),modulePath=join(productRoot,"🔨️modules/🔤print-font-catalog"),catalog=printFontDescriptors();
+ assert.equal(new(require("ajv").default)({strict:false}).validate(printSchemaModule(modulePath,"https://json.schemas.assets.semio-tech.com/print/print-font-catalog/schema.json"),catalog),true);
+ await withPrintFontsV1(execution,async fonts=>{const{GlobalFonts}=require("@napi-rs/canvas"),keys:unknown[]=[];try{for(const row of catalog){checkResourceLeaseControl(fonts.control);const target=join(fonts.directory,row.texFilename),source=join(productRoot,"🖼️assets/🔤️font",row.directory,row.filename),bytes=await readPrintMaterialFileV1(target,16777216,fonts.control);assert.deepEqual(bytes,await readPrintMaterialFileV1(source,16777216,fonts.control));assert.ok(bytes.byteLength>=12&&[0x00010000,0x4f54544f].includes(new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength).getUint32(0)),row.family);const key=GlobalFonts.registerFromPath(target,"print-held-font-"+row.family);assert.ok(key,row.family);keys.push(key);}await fonts.recheck();}finally{for(const key of keys)GlobalFonts.remove(key);}});
 }
 
 /** 🧱️ Enforces the neutral reviewed source identities independent of graph size and enumeration order. */
@@ -959,13 +864,14 @@ function assertPrintCommandSourceInputs(actual: readonly string[], expected: rea
   assert.deepEqual(actual.map(path => path.replaceAll("\\", "/")).sort(), expected.map(path => path.replaceAll("\\", "/")).sort(), `${owner}: exact reviewed source owners`);
 }
 /** 🪶️ Independently resolves production imports without loading generators or repository tests. */
-export async function verifyPrintCommandBoundaries(): Promise<void> {
+export async function verifyPrintCommandBoundaries(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
   const { build } = await import("esbuild");
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧫️command-boundaries.json"), "utf8"));
   const graphs = await Promise.all((contract.entries as string[]).map(async (entry: string, index: number) => {
     const result = await build({ absWorkingDir: workspaceRoot, entryPoints: [join(productRoot, entry)], platform: "node", format: "esm", bundle: true, packages: "external", external: ["bun"], write: false, metafile: true, logLevel: "silent" });
     mkdirSync(outputRoot, { recursive: true });
-    writeFileSync(join(outputRoot, `command-boundary-${index}.json`), JSON.stringify({ entry, metafile: result.metafile }, null, 2));
+    await writePipelineEvidence(context,`command-boundary-${index}.json`,JSON.stringify({entry,metafile:result.metafile}),control);
     return { entry, result };
   }));
   for (const { entry, result } of graphs) {
@@ -1004,7 +910,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const documents = api.printDocuments();
   assert.equal(documents.length, 88);
   assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
-  assert.equal(new Set(documents.map((row: any) => api.printDocumentOutputDirectory(row.id, root))).size, documents.length);
+  assert.equal(new Set(documents.map((row:{id:string})=>row.id)).size,documents.length);
   assert.throws(() => api.printDocument("../report"), /Unknown/);
   const project = JSON.parse(readFileSync(join(root, product, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const targets = await plugin.cacheInternals.printDocumentTargets(project, join(product, "📦️packages/🟦️typescript"), root);
@@ -1015,7 +921,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
     assert.deepEqual([...new Set(target.inputs.flatMap((input: any) => input.externalDependencies ?? []))].sort(), ["pdfjs-dist", "sharp"]);
     assert.equal(target.inputs.includes("{workspaceRoot}/bun.lock"), false);
     assert.ok(target.inputs.includes("{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex"));
-    assert.deepEqual(target.outputs, [`{projectRoot}/dist/documents/${document.id}`]);
+    assert.deepEqual(target.outputs, [printArtifactNxOutputV1(root,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})]);
     assert.match(target.options.command, /📜️script\.ts build [a-z0-9-]+$/);
     assert.ok(target.dependsOn.includes("fonts"));
     assert.ok(target.dependsOn.includes("deps-tectonic"));
@@ -1025,39 +931,18 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
 }
 
 /** 📚️ Exercises locked range acquisition with language-neutral corruption vectors. */
-export async function verifyPrintBundleContract(output = outputRoot): Promise<void> {
-  const modulePath = join(productRoot, "🔨️modules/🖨️tectonic-template-compilation/📚️bundle");
-  const require = createRequire(import.meta.url), manifest = JSON.parse(readFileSync(join(modulePath, "🔒️dependencies.json"), "utf8"));
-  assert.equal(new (require("ajv").default)({ strict: false }).validate(printSchemaModule(modulePath, "https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/bundle/schema.json"), manifest), true);
-  const vectors = JSON.parse(readFileSync(join(modulePath, "🧫️cases.json"), "utf8"));
-  const api = await import("../../../../🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts");
-  mkdirSync(output, { recursive: true });
-  const root = mkdtempSync(join(output, "print-bundle-contract-")), original = globalThis.fetch;
-  try {
-    const controller = new AbortController(); controller.abort();
-    await assert.rejects(() => api.preparePrintBundle(root, controller.signal), /abort/i);
-    for (const vector of vectors.failures) {
-      let requests = 0;
-      globalThis.fetch = (async (_url, options) => {
-        requests++;
-        const range = new Headers(options?.headers).get("range")!.slice(6);
-        const file = manifest.files.find((file: any) => range === `${file.offset}-${file.offset + file.bytes - 1}`);
-        assert.ok(file);
-        return new Response(Buffer.alloc(file.bytes + (vector.bytes === "oversized" ? 1 : 0)), { status: vector.status, headers: { "content-range": `bytes ${vector.range === "matching" ? range : "0-0"}/${manifest.archiveBytes}` } });
-      }) as typeof fetch;
-      await assert.rejects(() => api.preparePrintBundle(root), new RegExp(vector.error), vector.name);
-      assert.ok(requests > 0);
-      assert.equal(existsSync(api.printBundleDirectory(root)), false);
-      assert.equal(readdirSync(dirname(api.printBundleDirectory(root))).some(name => name.startsWith(".prepare-")), false);
-    }
-  } finally { globalThis.fetch = original; rmSync(root, { recursive: true }); }
+export async function verifyPrintBundleContract(context:PrintPipelineVerificationV1):Promise<void>{
+ const{control}=pipelineScope(context);
+ const modulePath=join(productRoot,"🔨️modules/🖨️tectonic-template-compilation/📚️bundle"),require=createRequire(import.meta.url),manifest=JSON.parse(readFileSync(join(modulePath,"🔒️dependencies.json"),"utf8")),vectors=JSON.parse(readFileSync(join(modulePath,"🧫️cases.json"),"utf8"));
+ assert.equal(new(require("ajv").default)({strict:false}).validate(printSchemaModule(modulePath,"https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/bundle/schema.json"),manifest),true);
+ const{printBundlePlanV1,readPrintBundleRangeV1}=await import("../../../../📦️artifacts/📥️material/🟦️.ts"),plan=printBundlePlanV1();assert.equal(plan.bytes,manifest.files.reduce((sum:number,file:{bytes:number})=>sum+file.bytes,0));assert.equal(plan.files.length,manifest.files.length);assert.equal(new Set(plan.files.map(file=>file.name)).size,plan.files.length);
+ for(const vector of vectors.failures){const file=plan.files.find(row=>row.bytes>0);assert.ok(file);const range=`${file.offset}-${file.offset+file.bytes-1}`,headers=new Headers({"content-range":`bytes ${vector.range==="matching"?range:"0-0"}/${plan.archiveBytes}`}),response=new Response(new Uint8Array(file.bytes+(vector.bytes==="oversized"?1:0)),{status:vector.status,headers});await assert.rejects(()=>readPrintBundleRangeV1(response,file,plan.archiveBytes,control),/range refused|pinned length|SHA256 mismatch/,vector.name);}
 }
 
 /** 📖️ Publishes and independently measures the complete authored API in every selected language and theme. */
-export async function verifyPrintApiPublication(): Promise<void> {
+export async function verifyPrintApiPublication(context:PrintPipelineVerificationV1): Promise<void> {
+  const outputRoot=outputDirectory(context),{execution}=pipelineScope(context);
   const { createHash } = await import("node:crypto");
-  const canvas = createRequire(join(workspaceRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"))("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
-  Object.assign(globalThis, { DOMMatrix: canvas.DOMMatrix, Path2D: canvas.Path2D, ImageData: canvas.ImageData });
   const contract = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📖️api-publication/🔣️.json"), "utf8"));
   
   
@@ -1069,48 +954,29 @@ export async function verifyPrintApiPublication(): Promise<void> {
   const digest = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
   const bindings = Object.fromEntries(paths.map(path => [path, digest(join(productRoot, path))]));
   for (const name of readdirSync(latexRoot).filter(name => /\.(?:sty|cls)$/.test(name))) bindings[`🖋️latex/${name}`] = digest(join(latexRoot, name));
-  const retained = process.env.SEMIO_PRINT_API_PUBLICATION_REUSE;
-  if (retained) assert.deepEqual(JSON.parse(readFileSync(join(retained, "source-bindings.json"), "utf8")), bindings, "retained API publication source bindings differ");
-  writeFileSync(join(root, "source-bindings.json"), JSON.stringify(bindings, null, 2));
+  await writePipelineEvidence(context,"api-publication/source-bindings.json",JSON.stringify(bindings),pipelineScope(context).control);
   const source = readFileSync(join(productRoot, paths[0]!), "utf8"), normalize = (value: string) => value.replace(/\s+/g, "");
   assert.match(source, /\\documentclass\[[^\]]*language=de/);
-  const abort = new AbortController(), cancel = () => abort.abort(new Error("API publication cancelled"));
-  process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-  const receipts: unknown[] = [], failures: string[] = [], retainedBytes: { source: string; target: string; sha256: string }[] = [];
+  const receipts:unknown[]=[],failures:string[]=[];
   const check = (condition: unknown, message: string): void => { if (!condition) failures.push(message); };
-  try {
-    for (const language of control.languages) {
-      abort.signal.throwIfAborted();
-      const work = join(root, language), output = join(work, "published"), tex = `viz-api-${language}.tex`;
+  for (const language of control.languages) {
+      checkResourceLeaseControl(pipelineScope(context).control);
+      const work = join(root, language), tex = `viz-api-${language}.tex`;
       mkdirSync(work, { recursive: true });
       const selectedSource = source.replace(/(\\documentclass\[[^\]]*)language=de/, `$1language=${language}`);
-      writeFileSync(join(work, tex), selectedSource);
       console.log(`[DEBUG] Full API publication ${language}: compiling light and dark from bound authored source`);
-      const retainedWork = retained ? join(retained, language) : undefined;
-      if (retainedWork && existsSync(join(retainedWork, "published", printTemplatePdfNames(tex).light))) {
-        assert.equal(readFileSync(join(retainedWork, tex), "utf8"), selectedSource, "retained authored API input differs");
-        for (const name of Object.values(printTemplatePdfNames(tex))) {
-          const retainedPdf = join(retainedWork, "published", name);
-          assert.equal(readFileSync(retainedPdf).subarray(0, 5).toString(), "%PDF-", "retained publication is not a PDF");
-          const hash = digest(retainedPdf), target = join(output, name);
-          mkdirSync(output, { recursive: true }); copyFileSync(retainedPdf, target);
-          assert.equal(digest(target), hash, "retained PDF copy byte digest differs");
-          assert.equal(digest(retainedPdf), hash, "retained producer PDF changed during copy");
-          retainedBytes.push({ source: retainedPdf, target, sha256: hash });
-          writeFileSync(join(root, "retained-consumer-sha256.json"), JSON.stringify(retainedBytes, null, 2));
-        }
-        console.log(`[DEBUG] Full API ${language}: reusing source-bound consumer owner PDFs`);
-      } else await publishPrintArtifact({ id: `api-publication-${language}`, sourceRoot: work, texPath: tex, sources: [tex], output, owner: "@semio-tech/print:test", dark: true }, abort.signal);
+      const id=`api-publication-${language}`;await publishPrintArtifact(execution,{version:1,kind:"generated-document",namespace:"print",id,name:tex,source:selectedSource,dark:true,resources:[]});
+      await withPublishedPrintDocumentV1(execution,"print",id,async artifact=>{
       for (const theme of control.themes) {
-        const path = join(output, printTemplatePdfNames(tex)[theme]), pdf = await openPrintPdf(path), initialFailures = failures.length;
-        type Item = import("pdfjs-dist/types/src/display/api").TextItem;
+        const path=join(artifact.path,printTemplatePdfNames(tex)[theme]),pdfBytes=await readPrintMaterialFileV1(path,67108864,artifact.control),pdf=await openPrintPdf(context,pdfBytes,artifact.control),initialFailures=failures.length;
+        type Item=PrintPdfTextV1;
         type Caption = { page: number; y: number; title: string; gap: number; titleBands: number[][]; badgeHeight: number };
         const sameRow = (item: Item, anchor: Item): boolean => Math.max(item.transform[5]!, anchor.transform[5]!) < Math.min(item.transform[5]! + item.height, anchor.transform[5]! + anchor.height);
         const pages = new Map<number, Item[]>(), texts: string[] = [], contents: string[] = [], captions: Caption[] = [];
         const images = new Set<number>([1, 2, 3]);
         try {
           for (let number = 1; number <= pdf.numPages; number++) {
-            abort.signal.throwIfAborted();
+            checkResourceLeaseControl(artifact.control);
             const page = await pdf.getPage(number), content = await page.getTextContent(), viewport = page.getViewport({ scale: 1 });
             const items = content.items.filter((item): item is Item => "str" in item), text = items.map(item => item.str).join(" ");
             pages.set(number, items); texts.push(text);
@@ -1153,21 +1019,15 @@ export async function verifyPrintApiPublication(): Promise<void> {
             }
             failures.push(`${language}/${theme}: missing scoped boolean default ${sample.table}/${sample.key}=${sample.expected}`); return { ...sample, missing: true };
           });
-          const imageRoot = join(work, theme, "pages"); mkdirSync(imageRoot, { recursive: true });
-          const rendered: string[] = [];
-          for (const number of [...images].filter(number => number <= pdf.numPages).sort((a, b) => a - b)) {
-            abort.signal.throwIfAborted();
-            const page = await pdf.getPage(number), viewport = page.getViewport({ scale: control.renderScale }), image = canvas.createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-            await page.render({ canvasContext: image.getContext("2d") as unknown as CanvasRenderingContext2D, viewport, canvas: image as unknown as HTMLCanvasElement }).promise;
-            const imagePath = join(imageRoot, `page-${String(number).padStart(3, "0")}.png`); writeFileSync(imagePath, image.toBuffer("image/png")); rendered.push(imagePath); page.cleanup();
-          }
-          receipts.push({ language, theme, path, sha256: digest(path), pageCount: pdf.numPages, captions, actualDefaults: actual, rendered, failures: failures.slice(initialFailures) });
-          writeFileSync(join(root, "measurements.json"), JSON.stringify(receipts, null, 2));
+          const rendered:string[]=[],selected=[...images].filter(number=>number<=pdf.numPages).sort((a,b)=>a-b),scope=pipelineScope(context),rasters=await rasterPrintPdfV1({operation:scope.execution.operation,phaseControl:artifact.control},scope.destination,pdfBytes,selected,control.renderScale);
+          for(const image of rasters){checkResourceLeaseControl(artifact.control);const name=`api-publication/${language}/${theme}/pages/page-${String(image.page).padStart(3,"0")}.png`;rendered.push(await writePipelineEvidence(context,name,image.png,artifact.control));}
+          receipts.push({ language, theme, document:id,file:printTemplatePdfNames(tex)[theme],sha256:digest(path), pageCount: pdf.numPages, captions, actualDefaults: actual, rendered, failures: failures.slice(initialFailures) });
+          await writePipelineEvidence(context,`api-publication/${language}/${theme}/measurements.json`,JSON.stringify(receipts),artifact.control);
           console.log(`[DEBUG] Full API ${language}/${theme}: ${pdf.numPages} independent PDF.js pages, ${captions.length} measured captions, ${actual.length} defaults in 51 tables, ${rendered.length} review images, ${failures.length - initialFailures} failures ${failures.length === initialFailures ? "PASS" : "FAIL"}`);
         } finally { await pdf.destroy(); }
       }
+      await artifact.recheck();});
     }
     assert.deepEqual(failures, [], "Full API publication layout violations");
     for (const [path, hash] of Object.entries(bindings)) assert.equal(digest(join(productRoot, path)), hash, `publication source changed during verification: ${path}`);
-  } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
 }

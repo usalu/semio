@@ -1,11 +1,13 @@
 //! 📦️ Whole physical retirement of empty resident Store metadata backings.
-use super::*;
+use semio_framework_value::{ErasedSnapshotRetirement, ValueError};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use std::collections::VecDeque;
 
 fn extent<T>(capacity: usize) -> usize { capacity.checked_mul(size_of::<T>()).expect("resident metadata backing layout") }
 
-fn denied() -> RetainedCloneStep { RetainedCloneStep::Progress(Default::default()) }
+pub fn denied() -> RetainedCloneStep { RetainedCloneStep::Progress(Default::default()) }
 
-fn released(bytes: usize, terminal: bool) -> RetainedCloneStep {
+pub fn released(bytes: usize, terminal: bool) -> RetainedCloneStep {
     let progress = RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() };
     if terminal { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }
 }
@@ -16,11 +18,11 @@ fn admit_release(grant: RetainedCloneGrant, demand: usize) -> Result<bool, Value
     Ok(true)
 }
 
-pub(super) fn vec_demand<T>(owner: &Vec<T>) -> usize { extent::<T>(owner.capacity()) }
+pub fn vec_demand<T>(owner: &Vec<T>) -> usize { extent::<T>(owner.capacity()) }
 
-pub(super) fn deque_demand<T>(owner: &VecDeque<T>) -> usize { extent::<T>(owner.capacity()) }
+pub fn deque_demand<T>(owner: &VecDeque<T>) -> usize { extent::<T>(owner.capacity()) }
 
-pub(super) fn close_vec<T>(owner: &mut Vec<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn close_vec<T>(owner: &mut Vec<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     if !owner.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resident vector backing still holds typed owners")); }
     let demand = vec_demand(owner);
     if demand == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -29,7 +31,7 @@ pub(super) fn close_vec<T>(owner: &mut Vec<T>, grant: RetainedCloneGrant) -> Res
     Ok(released(demand, true))
 }
 
-pub(super) fn close_deque<T>(owner: &mut VecDeque<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn close_deque<T>(owner: &mut VecDeque<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     if !owner.is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resident deque backing still holds typed owners")); }
     let demand = deque_demand(owner);
     if demand == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -38,7 +40,7 @@ pub(super) fn close_deque<T>(owner: &mut VecDeque<T>, grant: RetainedCloneGrant)
     Ok(released(demand, true))
 }
 
-pub(super) fn close_history<T>(owner: &mut crate::os_vcs::HistoryPageStack<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn close_history<T>(owner: &mut semio_framework_os_vcs::HistoryPageStack<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let demand = owner.next_empty_page_release_byte_demand().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resident history backing still holds typed owners"))?;
     if demand == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
     if !admit_release(grant, demand)? { return Ok(denied()); }
@@ -47,12 +49,12 @@ pub(super) fn close_history<T>(owner: &mut crate::os_vcs::HistoryPageStack<T>, g
 }
 
 /// 🧵️ Retains the original native vector allocation across ordered prefix publication.
-pub(super) struct SourceIterator<T: semio_framework_value::retirement::RetireOwned> {
-    source: std::mem::ManuallyDrop<std::vec::IntoIter<T>>,
+pub struct SourceIterator<T: semio_framework_value::retirement::RetireOwned> {
+    pub source: std::mem::ManuallyDrop<std::vec::IntoIter<T>>,
     source_bytes: usize,
-    pending: std::mem::ManuallyDrop<Option<T>>,
-    active: Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,
-    terminal: bool,
+    pub pending: std::mem::ManuallyDrop<Option<T>>,
+    pub active: Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,
+    pub terminal: bool,
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned> SourceIterator<T> {
@@ -61,9 +63,9 @@ impl<T: semio_framework_value::retirement::RetireOwned> SourceIterator<T> {
         Self { source: std::mem::ManuallyDrop::new(source.into_iter()), source_bytes, pending: std::mem::ManuallyDrop::new(None), active: None, terminal: false }
     }
 
-    pub(super) fn as_slice(&self) -> &[T] { self.source.as_slice() }
+    pub fn as_slice(&self) -> &[T] { self.source.as_slice() }
 
-    pub(super) fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         if self.terminal { return Ok(Default::default()); }
         if let Some(owner) = self.active.as_ref() {
@@ -130,7 +132,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> Drop for SourceIterator<
 }
 
 /// 📋️ Keeps original paged source backing through paid ordered publication and controlled close.
-pub(super) struct PagedSourceIterator<T:semio_framework_value::retirement::RetireOwned,const N:usize={usize::MAX}>{
+pub struct PagedSourceIterator<T:semio_framework_value::retirement::RetireOwned,const N:usize={usize::MAX}>{
     source:std::mem::ManuallyDrop<Option<semio_framework_value::list::PagedList<T,N>>>,
     position:usize,
     vacant:fn()->T,
@@ -139,10 +141,10 @@ pub(super) struct PagedSourceIterator<T:semio_framework_value::retirement::Retir
 }
 impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSourceIterator<T,N>{
     pub(super) fn new(source:semio_framework_value::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
-    pub(super) fn peek(&self)->Option<&T>{self.source.as_ref().and_then(|source|source.get(self.position))}
-    pub(super) fn publication_complete(&self)->bool{self.source.as_ref().is_none_or(|source|self.position==source.len())}
-    pub(super) fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value::list::PagedList::allocated_bytes)}
-    pub(super) fn take_next_into(&mut self,receiving:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+    pub fn peek(&self)->Option<&T>{self.source.as_ref().and_then(|source|source.get(self.position))}
+    pub fn publication_complete(&self)->bool{self.source.as_ref().is_none_or(|source|self.position==source.len())}
+    pub fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value::list::PagedList::allocated_bytes)}
+    pub fn take_next_into(&mut self,receiving:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
         if receiving.is_some()||self.active.is_some()||self.terminal{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source has an occupied or closing receiver"))}
         let source=self.source.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source lost its retained backing"))?;
         if self.position==source.len(){return Ok(None)}
@@ -152,7 +154,7 @@ impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSource
         *receiving=Some(std::mem::replace(source.get_mut(self.position).unwrap(),(self.vacant)()));self.position+=1;
         Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
     }
-    pub(super) fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+    pub fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         if self.terminal{return Ok(Default::default())}
         if let Some(active)=self.active.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:active.next_copy_byte_demand()?,capacity_bytes:active.next_capacity_byte_demand(copy)?,release_bytes:active.next_release_byte_demand()?,depth:active.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source child depth overflow"))?})}
         Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::list::PagedList<T,N>>>(),depth:1,..Default::default()})
@@ -175,9 +177,7 @@ impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> Drop for Pa
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original paged source dropped before controlled page retirement");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.source)}}}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 #[cfg(test)]
 #[path="📦️paged/🧪️tests/🦀️.rs"]
 mod original_paged_source_tests;

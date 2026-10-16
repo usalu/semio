@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/replication-command-ingress-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

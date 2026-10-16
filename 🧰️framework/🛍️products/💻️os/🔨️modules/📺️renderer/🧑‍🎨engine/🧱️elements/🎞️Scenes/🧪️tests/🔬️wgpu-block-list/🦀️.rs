@@ -63,7 +63,7 @@ fn authored_selection_targets_support_pointer_and_accessibility() {
     }
 }
 
-fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -76,7 +76,7 @@ fn fixture_scene() -> UiComponentSceneNode {
     block_list_scene("pipeline", "controller.block-list", fixture["blockList"]["steps"].clone(), fixture["blockList"]["palette"].clone())
 }
 
-fn render(node: &UiComponentSceneNode, driver_drag: UiDriverDrag) -> InputState<ActionDescriptor> {
+pub fn render(node: &UiComponentSceneNode, driver_drag: UiDriverDrag) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -96,11 +96,11 @@ fn role_rect(plan: &BlockListPlan, accepts: impl Fn(&BlockListRole) -> bool) -> 
     plan.targets.iter().find(|target| accepts(&target.role)).expect("role target").rect
 }
 
-fn pointer(node: &UiComponentSceneNode, input: &mut InputState<ActionDescriptor>, point: (f32, f32), down: bool, generation: u64, driver_drag: UiDriverDrag) {
+pub fn pointer(node: &UiComponentSceneNode, input: &mut InputState<ActionDescriptor>, point: (f32, f32), down: bool, generation: u64, driver_drag: UiDriverDrag) {
     passive_scene_pointer_button(node, Rect::new(0.0, 0.0, 600.0, 400.0), ui_render::PointerId(1), point.0, point.1, down, 0, SceneModifiers::default(), "window.pipeline", generation, driver_drag, input).expect("bounded pointer action");
 }
 
-fn center(rect: Rect) -> (f32, f32) {
+pub fn center(rect: Rect) -> (f32, f32) {
     (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5)
 }
 

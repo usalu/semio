@@ -1,4 +1,4 @@
-fn test_command_context()->crate::os_pack::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=crate::os_pack::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();crate::os_pack::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
+fn test_command_context()->crate::control::CommandContext{let token=semio_framework_async::CancelToken::root_now();let transport=crate::control::admit_command_transport(1048576,token.clone(),|_|{}).unwrap();crate::control::CommandContext::try_new(transport,1048576,token,|_|{}).unwrap()}
 use super::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -21,7 +21,7 @@ fn sample_record(name: &str, age: u64, active: bool) -> semio_framework_dsl_reco
 fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
     let spec = sample_spec();
     let record = sample_record(name, age, active);
-    crate::os_pack::record::encode_document(&spec, &record, &crate::os_pack::record::EncodeOptions::default()).unwrap()
+    semio_framework_os_pack::record::encode_document(&spec, &record, &semio_framework_os_pack::record::EncodeOptions::default()).unwrap()
 }
 //#endregion 🔖️Fixtures
 

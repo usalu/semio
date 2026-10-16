@@ -1,6 +1,6 @@
 //! 🧪️ LAS complete semantic laws preserve physical original custody and exact IEEE state.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::super::{LasSnapshot,LasHeader,LasVlr,LasPoint};
+use crate::standards::v1_0::subsets::any::schema::snapshot::{LasSnapshot,LasHeader,LasVlr,LasPoint};
 use semio_framework_os_kernel::{io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicBool,Ordering};
 static ORIGINAL_LAS_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["grant"].clone()).unwrap()}
-fn source(id:&str)->LasSnapshot{let mut input=super::super::tests::snapshot();if id=="empty"{input.vlrs.clear();input.points.clear();}if id=="long"{let literal=contract()["literal"].as_str().unwrap().repeat(257);input.schema=literal.clone();input.header.system_identifier=literal.clone();input.header.generating_software=literal.clone();for vlr in &mut input.vlrs{vlr.user_id=literal.clone();vlr.description=literal.clone();}}input}
+fn source(id:&str)->LasSnapshot{let mut input=super::snapshot();if id=="empty"{input.vlrs.clear();input.points.clear();}if id=="long"{let literal=contract()["literal"].as_str().unwrap().repeat(257);input.schema=literal.clone();input.header.system_identifier=literal.clone();input.header.generating_software=literal.clone();for vlr in &mut input.vlrs{vlr.user_id=literal.clone();vlr.description=literal.clone();}}input}
 fn database(input:&LasSnapshot)->SqliteDatabase{semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits{max_allocation_bytes:contract()["sqlBytes"].as_u64().unwrap()as usize,..Default::default()},&mut |_|true,|sql|input.to_sqlite_database(sql)).unwrap()}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.las".into(),standard:"1.0".into(),subset:"*".into()}}
 fn close<T:semio_framework_value::retirement::RetireOwned+'static>(output:T)->(usize,usize){let c=contract();let policy=grant();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap();let(zero,heap)=observe(||owner.step(Default::default()).unwrap());assert_eq!((zero.progress(),heap.requested_bytes,heap.released_bytes),(Default::default(),0,0));let(mut born,mut released)=(0,0);for _ in 0..c["closeTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(step,heap)=observe(||owner.step(policy).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(owner.terminal_is_empty());(born,released)}

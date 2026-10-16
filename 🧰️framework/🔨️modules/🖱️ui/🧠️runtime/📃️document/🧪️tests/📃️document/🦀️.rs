@@ -4,83 +4,6 @@ use super::*;
 fn document_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
-
-fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64) -> SurfaceReconciler {
-    let mut job = SurfaceReconcileJob::try_new(current, tree(leaf(name)), generation).expect("real reconciliation admission");
-    let mut sequence = 0;
-    for _ in 0..100_000 {
-        let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(
-            semio_framework_job::allocate_operation_id(),
-            semio_framework_job::Generation(generation),
-            semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut sequence,
-        &mut actual_retained_progress);
-        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
-            SurfaceReconcileJobStep::MoreWork => {}
-            SurfaceReconcileJobStep::Ready => {
-                let (current, output) = job.take_ready().unwrap_or_else(|_| panic!("completed job retains its exact ready output"));
-                if let Some(mut output) = output {
-                    while !output.close_step() {}
-                }
-                return current;
-            }
-            SurfaceReconcileJobStep::Fault => panic!("real reconciliation fault: {:?}", job.fault()),
-        }
-    }
-    panic!("real reconciliation did not finish")
-}
-
-#[test]
-fn surface_canonical_document_nine_live_reconcilers_share_the_original_root_with_readers() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
-    let fixture = document_fixture();
-    let mut owners = Vec::new();
-    let mut readers = Vec::new();
-    for index in 0..fixture["surfaces"].as_u64().unwrap() {
-        let owner = complete_document_job(SurfaceReconciler::new(format!("canonical-{index}")), "root", 910_000 + index);
-        let mut reader = None;
-        assert!(owner.capture_document(&mut reader, fixture["physicalBytes"].as_u64().unwrap() as usize).unwrap());
-        let reader = reader.unwrap();
-        assert!(owner.document.as_ref().unwrap().same_root(&reader));
-        assert_eq!(reader.try_read().unwrap().len(), 1);
-        owners.push(owner);
-        readers.push(reader);
-    }
-    assert_eq!(owners.len(), 9);
-    for owner in &mut owners {
-        while !owner.retire_one() {}
-    }
-    for reader in &readers {
-        assert_eq!(reader.try_read().unwrap().len(), 1);
-    }
-    for reader in &mut readers {
-        while !reader.close_read_step_with_grant(1, 64).unwrap().complete {}
-    }
-}
-
-#[test]
-fn surface_canonical_document_old_reader_keeps_original_credit_during_replacement() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
-    for grant in document_fixture()["readerReleaseGrants"].as_array().unwrap() {
-        let grant = grant.as_u64().unwrap() as usize;
-        let current = complete_document_job(SurfaceReconciler::new("canonical-reader-pressure"), "before", 920_000 + grant as u64);
-        let mut reader = None;
-        assert!(current.capture_document(&mut reader, 32768).unwrap());
-        let mut reader = reader.unwrap();
-        let before = serde_json::to_value(reader.try_read().unwrap().node_at(0).unwrap()).unwrap();
-        let mut replacement = complete_document_job(current, "after", 930_000 + grant as u64);
-        assert!(!replacement.document.as_ref().unwrap().same_root(&reader));
-        assert_eq!(serde_json::to_value(reader.try_read().unwrap().node_at(0).unwrap()).unwrap(), before);
-        assert!(reader.try_read().unwrap().resident_limits().bytes > 0);
-        while !replacement.retire_one() {}
-        assert_eq!(serde_json::to_value(reader.try_read().unwrap().node_at(0).unwrap()).unwrap(), before);
-        while !reader.close_read_step_with_grant(1, grant).unwrap().complete {}
-    }
-}
-
 /// 📏️ The most a SINGLE lease-close turn may release. `close_document_owner` widens its own grant to
 /// the retired document's node-page allocation
 /// (`retire_exact`: `grant = maximum_bytes.max(slot.nodes.entries.allocated_bytes())`), so a close
@@ -97,10 +20,9 @@ fn surface_canonical_document_old_reader_keeps_original_credit_during_replacemen
 fn document_close_turn_ceiling() -> usize {
     SURFACE_RECONCILE_PAGE_BYTES
 }
-
 #[test]
 fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     let fixture = document_fixture();
     assert!(fixture["completionTransferUsesSeparateGrant"].as_bool().unwrap());
     let component = |last| {
@@ -109,7 +31,7 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
         serde_json::from_value::<ui_contract::Component>(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":bytes},"bindings":[]})).unwrap()
     };
     let id = ui_contract::UiNodeId(1);
-    let mut current = SurfaceReconciler::new("completion-grant");
+    let mut current = SurfaceShadow::from_text("completion-grant");
     current.install_fixture_record(build_record_owned(id, crate::TreeNode::try_new("surface", component(18)).unwrap(), Default::default(), None));
     let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
     cursor.stage = SurfaceReconcileStage::DiffRecords;
@@ -126,7 +48,7 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
         let comparing = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(owner)) if owner.changed.is_none() && owner.lease.is_some() && owner.cursor.result().is_none());
         let closing = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Comparison(owner)) if owner.changed.is_some() && owner.lease.is_some());
         if closing && !old_retired {
-            while !current.retire_one() {}
+            while !current.retire_one_detached() {}
             old_retired = true;
         }
         let copying = matches!(&diff.owned_copy, Some(RecordOwnedCopy::Component(owner)) if owner.candidate().is_none() && owner.source().is_some());
@@ -173,7 +95,7 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
         }
     }
     while !cursor.retire_one() {}
-    while !current.retire_one() {}
+    while !current.retire_one_detached() {}
     assert!(comparison_completed && copy_completed && source_returned && candidate_returned && full_close_grant);
     assert!(size_of::<ExistingComponentComparison>() <= SURFACE_COMPONENT_COPY_WORK_BYTES);
     eprintln!(
@@ -187,15 +109,14 @@ fn surface_canonical_document_completion_transfers_do_not_borrow_the_child_grant
         size_of::<ui_contract::UiPatchOp>()
     );
 }
-
 #[test]
 fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwind() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     for phase in document_fixture()["unwindPhases"].as_array().unwrap() {
         let phase = phase.as_str().unwrap();
         let component = |value| serde_json::from_value::<ui_contract::Component>(serde_json::json!({"type":"surface","kind":"canvas-2d","docSchema":"wire","doc":{"bytes":vec![value;32768]},"bindings":[]})).unwrap();
         let id = ui_contract::UiNodeId(1);
-        let mut current = SurfaceReconciler::new("retained-existing-unwind");
+        let mut current = SurfaceShadow::from_text("retained-existing-unwind");
         current.install_fixture_record(build_record_owned(id, crate::TreeNode::try_new("surface", component(1u8)).unwrap(), Default::default(), None));
         let before = serde_json::to_value(&current.read_record(id).unwrap().unwrap().component).unwrap();
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
@@ -223,14 +144,13 @@ fn surface_canonical_document_existing_pair_stays_structurally_owned_across_unwi
         assert!(failed.is_err());
         assert_eq!(serde_json::to_value(&current.read_record(id).unwrap().unwrap().component).unwrap(), before);
         while !cursor.retire_one() {}
-        while !current.retire_one() {}
+        while !current.retire_one_detached() {}
         eprintln!("existing-pair-unwind phase={phase} exact-current-unchanged=true retained-close=true");
     }
 }
-
 #[test]
 fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separate_turn() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     let mut outcomes = Vec::new();
     for field in document_fixture()["freshCompletionFields"].as_array().unwrap() {
         let field = field.as_str().unwrap();
@@ -239,7 +159,7 @@ fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separa
         for index in 0..32 {
             node = with_binding(node, "fixture", &format!("action-{index}"));
         }
-        let mut current = SurfaceReconciler::new("fresh-child-grant");
+        let mut current = SurfaceShadow::from_text("fresh-child-grant");
         let mut cursor = SurfaceReconcileCursor::new(tree(leaf("unused")), &current);
         cursor.stage = SurfaceReconcileStage::DiffRecords;
         let start = if field == "component" { 1 } else { 5 };
@@ -260,7 +180,7 @@ fn surface_canonical_document_fresh_children_retain_completed_roots_for_a_separa
             }
         }
         while !cursor.retire_one() {}
-        while !current.retire_one() {}
+        while !current.retire_one_detached() {}
         outcomes.push((field.to_string(), separate));
     }
     assert!(outcomes.iter().all(|(_, separate)| *separate));

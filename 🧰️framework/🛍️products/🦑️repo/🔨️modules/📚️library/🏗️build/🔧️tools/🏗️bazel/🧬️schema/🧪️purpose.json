@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned Bazel Purpose Test V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "variant",
+    "project",
+    "graph"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "build",
+        "serve",
+        "release",
+        "offline",
+        "parity-nx",
+        "parity-bazel",
+        "cancel",
+        "parallel-failure",
+        "refusal-early",
+        "refusal-ended"
+      ]
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "graph": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumContextBytes": 1048576,
+        "maximumPathCharacters": 256,
+        "readChunkBytes": 65536,
+        "targets": {
+          "build": "fixture:build",
+          "serve": "fixture:serve",
+          "release": "fixture:defaults:release",
+          "offline": "fixture:offline",
+          "cancel": "fixture:cancelled",
+          "parallel-failure": "fixture:parallel",
+          "refusal-early": "fixture:consumer",
+          "refusal-ended": "fixture:consumer"
+        }
+      }
+    }
+  }
+}

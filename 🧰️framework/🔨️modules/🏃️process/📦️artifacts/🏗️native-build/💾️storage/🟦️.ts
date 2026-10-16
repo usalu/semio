@@ -8,7 +8,7 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 💾️ Describes one fixed managed allocation envelope; its lease directory fixes the sole queue catalog. */
 export type NativeStoragePolicyV1=Readonly<{version:1;root:string;leaseDirectory:string;capacityBytes:number;maximumWorkspaceBytes:number;maximumArtifactBytes:number}>;
 /** 🧮️ Retains conservative charge through publication, cancellation and physical retirement. */
-export type NativeStorageAllocationV1=Readonly<{id:string;owner:string;kind:"compiler-workspace"|"artifact-publication"|"artifact-restore";bytes:number;phase:"reserved"|"committed"|"retiring"}>;
+export type NativeStorageAllocationV1=Readonly<{id:string;owner:string;kind:"compiler-workspace"|"compiler-state"|"artifact-publication"|"artifact-restore";bytes:number;phase:"reserved"|"committed"|"retiring"}>;
 /** 📚️ Projects the durable storage event stream without expiring unfinished owners. */
 export type NativeStorageStateV1=Readonly<{version:1;sequence:number;allocations:readonly NativeStorageAllocationV1[]}>;
 /** 📨️ Records allocation custody changes; retirement follows physical release, never a PID timeout. */
@@ -17,6 +17,7 @@ export type NativeStorageEventV1=Readonly<{type:"reserved";allocation:NativeStor
 export type NativeStorageBackingV1=Readonly<{identity:string;root:string;maximumPhysicalBytes:number}>;
 /** 🔌️ Owns actual platform enforcement, identity revalidation and complete physical retirement. */
 export interface NativeStoragePortV1{
+ withOperation<T>(control:ResourceLeaseControl,run:(actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
  observe(policy:NativeStoragePolicyV1,control:ResourceLeaseControl):Promise<NativeStorageBackingV1|null>;
  recheck(backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
  retire(allocation:NativeStorageAllocationV1,backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
@@ -45,10 +46,10 @@ export function nativeStorageEventV1(state:NativeStorageStateV1,event:NativeStor
 }
 
 /** 🚫️ An ordinary directory has no portable aggregate physical quota. */
-export function ordinaryNativeStoragePortV1():NativeStoragePortV1{return{observe:async()=>null,recheck:async()=>{throw Error("No enforcing storage backend");},retire:async()=>{throw Error("No enforcing storage backend");}};}
+export function ordinaryNativeStoragePortV1():NativeStoragePortV1{return{withOperation:()=>Promise.reject(Error("An enforcing storage backend is required before native operations")),observe:async()=>null,recheck:async()=>{throw Error("No enforcing storage backend");},retire:async()=>{throw Error("No enforcing storage backend");}};}
 
 /** 🤝️ Supplies the original writer and reader's awaited physical release to an enforcing backing. */
-export function nativeStorageRetirementPortV1(port:NativeStoragePortV1,retire:NativeStoragePortV1["retire"]):NativeStoragePortV1{return{observe:(policy,control)=>port.observe(policy,control),recheck:(backing,control)=>port.recheck(backing,control),retire:async(allocation,backing,control)=>{checkResourceLeaseControl(control);await port.recheck(backing,control);await retire(allocation,backing,control);checkResourceLeaseControl(control);await port.recheck(backing,control);}};}
+export function nativeStorageRetirementPortV1(port:NativeStoragePortV1,retire:NativeStoragePortV1["retire"]):NativeStoragePortV1{return{withOperation:(control,run)=>port.withOperation(control,run),observe:(policy,control)=>port.observe(policy,control),recheck:(backing,control)=>port.recheck(backing,control),retire:(allocation,backing,control)=>port.withOperation(control,async actual=>{checkResourceLeaseControl(actual);await port.recheck(backing,actual);await retire(allocation,backing,actual);checkResourceLeaseControl(actual);await port.recheck(backing,actual);})};}
 
 /** 🎟️ Keeps original custody and charge until an enforcing owner acknowledges physical retirement. */
 export interface NativeStorageReservationV1{
@@ -67,14 +68,14 @@ const journalProjections=new Map<string,Readonly<{text:string;state:NativeStorag
 
 type StorageCustodyOptionsV1=Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1}>;
 
-async function storageCustodyV1(options:StorageCustodyOptionsV1):Promise<Readonly<{backing:NativeStorageBackingV1;transaction:<T>(run:(state:NativeStorageStateV1,append:(event:NativeStorageEventV1)=>void,checkpoint:()=>void)=>T)=>Promise<T>}>>{
+async function storageCustodyV1(options:StorageCustodyOptionsV1):Promise<Readonly<{backing:NativeStorageBackingV1;transaction:<T>(control:ResourceLeaseControl,run:(state:NativeStorageStateV1,append:(event:NativeStorageEventV1)=>void,checkpoint:()=>void)=>T)=>Promise<T>}>>{
  const {control,port}=options;checkResourceLeaseControl(control);const policy=admit<NativeStoragePolicyV1>("Policy",options.policy),root=requireMaterializedPathV1(policy.root);
  if(root!==policy.root||policy.maximumWorkspaceBytes>policy.capacityBytes||policy.maximumArtifactBytes>policy.capacityBytes)throw Error("Invalid native storage envelope");
  const backing=await port.observe(policy,control);checkResourceLeaseControl(control);
  if(!backing||resolve(backing.root)!==root||!backing.identity||!Number.isSafeInteger(backing.maximumPhysicalBytes)||backing.maximumPhysicalBytes<1||backing.maximumPhysicalBytes>policy.capacityBytes)throw Error("An enforcing storage backend is required before native writes");
  const capacityBytes=Math.min(policy.capacityBytes,backing.maximumPhysicalBytes);
  const journal=requireMaterializedPathV1(join(root,"storage-events.jsonl")),leaseDirectory=requireMaterializedPathV1(policy.leaseDirectory);
- return{backing,transaction:async run=>{
+ return{backing,transaction:async(control,run)=>{
   checkResourceLeaseControl(control);await port.recheck(backing,control);checkResourceLeaseControl(control);
   const lease=await acquireQueuedResourceLease({directory:leaseDirectory,resource:"native-storage:"+backing.identity,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:control.signal,control});
   try{
@@ -91,26 +92,26 @@ async function storageCustodyV1(options:StorageCustodyOptionsV1):Promise<Readonl
 
 function heldReservationV1(options:StorageCustodyOptionsV1,allocation:NativeStorageAllocationV1,custody:Awaited<ReturnType<typeof storageCustodyV1>>):NativeStorageReservationV1{
  const {control,port}=options,backing=Object.freeze({...custody.backing});allocation=Object.freeze({...allocation});let phase:NativeStorageAllocationV1["phase"]|"retired"=allocation.phase;
- const transition=(event:NativeStorageEventV1)=>custody.transaction((_,append)=>append(event));
- const reservation:NativeStorageReservationV1={allocation,backing,recheck:async()=>{checkResourceLeaseControl(control);if(phase==="retired")throw Error("Native storage reservation retired");await custody.transaction(state=>{const held=state.allocations.find(row=>row.id===allocation.id);if(!held||held.owner!==allocation.owner||held.kind!==allocation.kind||held.bytes!==allocation.bytes)throw Error("Original durable native storage allocation no longer held");if(held.phase==="retiring")throw Error("Original native storage allocation is retiring");});checkResourceLeaseControl(control);},commit:async()=>{if(phase!=="reserved")throw Error("Native storage reservation already settled");await transition({type:"committed",id:allocation.id});phase="committed";},retire:async()=>{if(phase==="retired")return;if(phase!=="retiring"){await transition({type:"retiring",id:allocation.id});phase="retiring";}await port.retire({...allocation,phase:"retiring"},backing,control);checkResourceLeaseControl(control);await transition({type:"retired",id:allocation.id});phase="retired";}};
+ const transition=(actual:ResourceLeaseControl,event:NativeStorageEventV1)=>custody.transaction(actual,(_,append)=>append(event));
+ const reservation:NativeStorageReservationV1={allocation,backing,recheck:()=>port.withOperation(control,async actual=>{checkResourceLeaseControl(actual);if(phase==="retired")throw Error("Native storage reservation retired");await custody.transaction(actual,state=>{const held=state.allocations.find(row=>row.id===allocation.id);if(!held||held.owner!==allocation.owner||held.kind!==allocation.kind||held.bytes!==allocation.bytes)throw Error("Original durable native storage allocation no longer held");if(held.phase==="retiring")throw Error("Original native storage allocation is retiring");});checkResourceLeaseControl(actual);}),commit:()=>port.withOperation(control,async actual=>{if(phase!=="reserved")throw Error("Native storage reservation already settled");await transition(actual,{type:"committed",id:allocation.id});phase="committed";}),retire:()=>port.withOperation(control,async actual=>{if(phase==="retired")return;if(phase!=="retiring"){await transition(actual,{type:"retiring",id:allocation.id});phase="retiring";}await port.retire({...allocation,phase:"retiring"},backing,actual);checkResourceLeaseControl(actual);await transition(actual,{type:"retired",id:allocation.id});phase="retired";})};
  originalReservations.set(reservation,control.signal);return Object.freeze(reservation);
 }
 
 /** 🏪️ Reserves before any managed write under a shared physical owner's serialized durable journal. */
-export async function acquireNativeStorageV1(options:Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1;owner:string;kind:NativeStorageAllocationV1["kind"];bytes:number}>):Promise<NativeStorageReservationV1>{
- const custody=await storageCustodyV1(options),policy=options.policy;
+export function acquireNativeStorageV1(options:Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1;owner:string;kind:NativeStorageAllocationV1["kind"];bytes:number}>):Promise<NativeStorageReservationV1>{
+ options=Object.freeze({...options,policy:Object.freeze({...options.policy})});return options.port.withOperation(options.control,async control=>{const custody=await storageCustodyV1({...options,control}),policy=options.policy;
  const allocation=admit<NativeStorageAllocationV1>("Allocation",{id:randomBytes(16).toString("hex"),owner:options.owner,kind:options.kind,bytes:options.bytes,phase:"reserved"});
- if(allocation.bytes>(allocation.kind==="compiler-workspace"?policy.maximumWorkspaceBytes:policy.maximumArtifactBytes))throw Error("Native storage allocation exceeds kind capacity");
- await custody.transaction((_,append)=>append({type:"reserved",allocation}));return heldReservationV1(options,allocation,custody);
+ if(allocation.bytes>((allocation.kind==="compiler-workspace"||allocation.kind==="compiler-state")?policy.maximumWorkspaceBytes:policy.maximumArtifactBytes))throw Error("Native storage allocation exceeds kind capacity");
+ await custody.transaction(control,(_,append)=>append({type:"reserved",allocation}));return heldReservationV1(options,allocation,custody);});
 }
 
 /** 🔄️ Reacquires exact durable custody after restart; no age, PID death or missing file releases its charge. */
-export async function recoverNativeStorageReservationV1(options:StorageCustodyOptionsV1&Readonly<{id:string}>):Promise<NativeStorageReservationV1>{
- const custody=await storageCustodyV1(options),allocation=await custody.transaction(state=>{const allocation=state.allocations.find(row=>row.id===options.id);if(!allocation)throw Error("Original durable native storage allocation required");return allocation;});return heldReservationV1(options,allocation,custody);
+export function recoverNativeStorageReservationV1(options:StorageCustodyOptionsV1&Readonly<{id:string}>):Promise<NativeStorageReservationV1>{
+ options=Object.freeze({...options,policy:Object.freeze({...options.policy})});return options.port.withOperation(options.control,async control=>{const custody=await storageCustodyV1({...options,control}),allocation=await custody.transaction(control,state=>{const allocation=state.allocations.find(row=>row.id===options.id);if(!allocation)throw Error("Original durable native storage allocation required");return allocation;});return heldReservationV1(options,allocation,custody);});
 }
 
 /** 🧾️ Atomically checkpoints only the exact serialized durable state; held and retiring charges remain intact. */
-export async function checkpointNativeStorageV1(options:StorageCustodyOptionsV1):Promise<NativeStorageStateV1>{const custody=await storageCustodyV1(options);return custody.transaction((state,_,checkpoint)=>{checkpoint();return state;});}
+export function checkpointNativeStorageV1(options:StorageCustodyOptionsV1):Promise<NativeStorageStateV1>{options=Object.freeze({...options,policy:Object.freeze({...options.policy})});return options.port.withOperation(options.control,async control=>{const custody=await storageCustodyV1({...options,control});return custody.transaction(control,(state,_,checkpoint)=>{checkpoint();return state;});});}
 
 /** 👁️ Reads the complete durable projection only under actual original backing and journal transaction custody. */
-export async function observeNativeStorageStateV1(options:StorageCustodyOptionsV1):Promise<NativeStorageStateV1>{const custody=await storageCustodyV1(options);return custody.transaction(state=>Object.freeze({...state,allocations:Object.freeze(state.allocations.map(row=>Object.freeze({...row})))}));}
+export function observeNativeStorageStateV1(options:StorageCustodyOptionsV1):Promise<NativeStorageStateV1>{options=Object.freeze({...options,policy:Object.freeze({...options.policy})});return options.port.withOperation(options.control,async control=>{const custody=await storageCustodyV1({...options,control});return custody.transaction(control,state=>Object.freeze({...state,allocations:Object.freeze(state.allocations.map(row=>Object.freeze({...row})))}));});}

@@ -26,10 +26,10 @@ pub(super) fn typed(value:&WorkflowSnapshot,control:&mut SqliteSnapshotControl<'
  for(index,row)in value.output_bindings.iter().enumerate(){e.add(24)?;for text in[&row.node_id,&row.port_id,&row.path_template]{e.text(text)?;}if(index+1)%256==0{control.checkpoint(phase,index+1,value.output_bindings.len())?;}}
  control.check_value_bytes(e.bytes)?;control.checkpoint(phase,0,0)
 }
-fn text(value:Option<&FieldValue>)->Result<&str,ValueError>{match value{Some(FieldValue::Text(s))=>Ok(s),_=>Err(invalid("Workflow semantic cells require literal Text"))}}
+pub fn text(value:Option<&FieldValue>)->Result<&str,ValueError>{match value{Some(FieldValue::Text(s))=>Ok(s),_=>Err(invalid("Workflow semantic cells require literal Text"))}}
 fn scalar(value:Option<&FieldValue>)->Result<f64,ValueError>{match value{Some(FieldValue::Float(n))=>Ok(*n),_=>Err(invalid("Workflow semantic IEEE cells require literal Float"))}}
-fn optional(value:Option<&FieldValue>)->bool{!matches!(value,None|Some(FieldValue::Absent))}
-fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{native_record(value.ok_or_else(||invalid("Workflow semantic entity is missing"))?)}
+pub fn optional(value:Option<&FieldValue>)->bool{!matches!(value,None|Some(FieldValue::Absent))}
+pub fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{native_record(value.ok_or_else(||invalid("Workflow semantic entity is missing"))?)}
 pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
  let mut e=Extent{bytes:0,maximum};e.add(24)?;e.text(text(value.get(0))?)?;let graph=record(value.get(1))?;e.text(text(graph.get(0))?)?;
  let nodes=native_list(graph.get(1))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(nodes.len())?;for node in nodes{let row=native_record(node)?;e.add(24)?;for field in 0..7{e.text(text(row.get(field))?)?;}for field in 7..11{e.ieee(scalar(row.get(field))?)?;}

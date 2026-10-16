@@ -63,14 +63,14 @@ const TAG_I64: u8 = 4;
 const TAG_F64: u8 = 5;
 const TAG_STR: u8 = 6;
 const TAG_BYTES: u8 = 7;
-const TAG_NONE: u8 = 8;
-const TAG_SOME: u8 = 9;
-const TAG_SEQ: u8 = 10;
+pub const TAG_NONE: u8 = 8;
+pub const TAG_SOME: u8 = 9;
+pub const TAG_SEQ: u8 = 10;
 const TAG_CHAR: u8 = 11;
 const TAG_VARIANT: u8 = 12;
-const TAG_MAP: u8 = 13;
+pub const TAG_MAP: u8 = 13;
 
-fn write_varint(out: &mut Vec<u8>, value: u64) {
+pub fn write_varint(out: &mut Vec<u8>, value: u64) {
     let mut remaining = value;
     loop {
         let byte = (remaining & 0x7F) as u8;

@@ -9,9 +9,9 @@ Feature: Apply every typed local-catalog mutation to its committed specification
   is no reference implementation to register (recorded as the `os-config-local-catalog-mutation-semantics` no-oracle
   decision in `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
-  ⚠️ Like its opening, merge-policy and identity siblings, this case lives under `🔌️plugin/🖥️host` rather than beside the
-  vocabulary it exercises, because `🎚️config` has no crate of its own and `🖥️host/📦️packages/🦀️rust` is the ONE place
-  `LocalCatalogConfigMutation` is mounted.
+  ⚠️ Like its opening, merge-policy and identity siblings, this case lives under `🔌️plugin/🖥️host`; its Rust subject
+  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `../../🔮️oracles/🔣️.json`.
 
   Two kinds close the vocabulary: an admission is an UPSERT keyed on `documentId` (a re-admission replaces the entry, a new
   id is inserted in id order) and a retirement unlists one id without touching the document's own events. Both committed

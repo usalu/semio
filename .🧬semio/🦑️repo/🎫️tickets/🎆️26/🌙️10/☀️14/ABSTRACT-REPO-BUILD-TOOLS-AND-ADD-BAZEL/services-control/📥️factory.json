@@ -1,0 +1,1 @@
+{"version":1,"requests":[["test","bazel","services"],["run","workspace:test-build-tool-bazel","--","services"]],"expectedEqual":["workspaceRoot","tool","buildMode","native"]}

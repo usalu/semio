@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-native-openable-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

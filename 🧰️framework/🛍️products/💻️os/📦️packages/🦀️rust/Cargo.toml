@@ -32,10 +32,10 @@ name = "artifact_command_retirement"
 path = "../../🔨️modules/🏪️store/📬️command/♻️retirement/🧪️tests/🚪️public/🦀️.rs"
 
 [features]
-protocol-laws = ["record-codec-laws"]
+protocol-laws = ["record-codec-laws", "semio-framework-os-spr/protocol-laws"]
 record-codec-laws = ["semio-framework-os-pack/record-codec-laws"]
 durable-group-testing = []
-mutation-testing = ["semio-framework-os-command/mutation-testing"]
+mutation-testing = ["semio-framework-os-command/mutation-testing", "semio-framework-os-spr/mutation-testing"]
 default = ["deflate"]
 deflate = ["semio-framework-os-history/deflate", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
@@ -63,6 +63,31 @@ typegen = []
 native-bin = []
 
 [dependencies]
+# 🪓️ OS-KERNEL partition (PLAN-OS-KERNEL-CRATES.md): the WP1 leaves already carved out of this crate; the facade re-exports their historical paths from `📥️mounts/🌱️wp1-leaves`.
+semio-framework-os-dsl = { path = "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-os-list-delta = { path = "../../🔨️modules/🪡️list-delta/📦️packages/🦀️rust" }
+semio-framework-os-plugin-registry-schema = { path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-semio = { path = "../../🔨️modules/🧬️semio/📦️packages/🦀️rust" }
+semio-framework-os-space-sqlite-cells = { path = "../../🔨️modules/🪐️space/🪶️sqlite/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../🔨️modules/📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-io = { path = "../../🔨️modules/🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-store-codec-registry = { path = "../../🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-space-history = { path = "../../🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-decode = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-fields = { path = "../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
+semio-framework-os-store-retirement = { path = "../../🔨️modules/🏪️store/♻️retirement/📦️packages/🦀️rust" }
+semio-framework-os-store-space-schema = { path = "../../🔨️modules/🏪️store/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-backbone = { path = "../../🔨️modules/🏪️store/🔗️backbone/📦️packages/🦀️rust" }
+semio-framework-os-store-canonical-json = { path = "../../🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-framework-os-store-child = { path = "../../🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-batch = { path = "../../🔨️modules/🏪️store/📬️one-item-owners/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust" }
+semio-framework-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-snapshot-clone = { path = "../../🔨️modules/🏪️store/🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-pack-source = { path = "../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
@@ -158,10 +183,13 @@ web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "Web
 # (only caller repo-wide: `semio-framework-os`'s native host crate), never something a guest
 # component does to itself; its module mount is gated the same way in `🦀️.rs`.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-os-extension = { path = "../../🔨️modules/🧩️extension/📦️packages/🦀️rust" }
 tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 semio-framework-deflate = { path = "../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-pack-tools = { path = "../../🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+semio-framework-os-spr-cli = { path = "../../🔨️modules/📡️spr/⌨️cli/📦️packages/🦀️rust" }
 futures = "0.3"
 tokio-tungstenite = { version = "0.26", optional = true, features = ["rustls-tls-webpki-roots"] }
 # 🧵️ Same crate key as the `not(all(target_arch = "wasm32", target_env = "p2"))` table above — cargo
@@ -203,6 +231,9 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework-os-store-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-framework-os-store-replay = { path = "../../🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
+semio-framework-trace-memory-testing = { path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
 semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,13 +1,9 @@
 //! 🧾 Pack varint, byte I/O, CRC, and compression codec primitives.
 
-use crate::codec::ids::{ByteRange, ChunkId, CodecId, ContentHash};
+use crate::CodecId;
 pub use semio_framework_pack_error::PackRefusal;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
-#[path="🛬️retained/🦀️.rs"]
-mod retained_wire_field;
-pub use retained_wire_field::{RetainedWireFieldDecode,RetainedWireFieldStep,RetainedWireByteSource,OriginalWireSourceIdentity};
-pub(crate) use retained_wire_field::RetainedWireUtf8Validation;
 #[path="🎟️history-limits/🦀️.rs"]
 mod history_limits;
 pub use history_limits::HistoryReadLimits;
@@ -430,10 +426,10 @@ pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackRefusal> {
 }
 
 /// 🗜️ Compresses under the same cumulative caller admission as native field emission.
-pub fn deflate_compress_controlled(raw:&[u8],control:&mut crate::value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
+pub fn deflate_compress_controlled(raw:&[u8],control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     #[cfg(feature="deflate")]
     {
-        struct Admission<'a,'b>{control:&'a mut crate::value::native_encoding::NativeEncodeControl<'b>,phase:Option<semio_framework_deflate::DeflateEncodePhase>,completed:usize,total:usize}
+        struct Admission<'a,'b>{control:&'a mut semio_framework_value::native_encoding::NativeEncodeControl<'b>,phase:Option<semio_framework_deflate::DeflateEncodePhase>,completed:usize,total:usize}
         impl semio_framework_deflate::DeflateEncodeControl for Admission<'_,'_>{
             fn admit(&mut self,bytes:usize)->Result<(),ValueError>{self.control.charge(bytes)}
             fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),ValueError>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Deflate output progress regressed"))?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-shell-pointer-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

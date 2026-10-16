@@ -3,7 +3,7 @@
 use directory::os_directory::{DirectoryActor, DirectoryEventBody, Hlc};
 
 //#region 🔖️Events
-pub(super) fn now_ms() -> i64 {
+pub fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
@@ -15,8 +15,8 @@ pub(super) fn now_ms() -> i64 {
 /// executes, which `append_events` then turns into a dense backend-assigned `seq`.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct HubClock {
-    pub(super) physical_ms: i64,
-    pub(super) logical: u32,
+    pub physical_ms: i64,
+    pub logical: u32,
 }
 
 impl HubClock {

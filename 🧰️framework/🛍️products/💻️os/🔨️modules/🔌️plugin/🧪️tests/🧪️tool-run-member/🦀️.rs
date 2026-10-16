@@ -130,29 +130,29 @@ async fn member_app(target: u64, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> Memb
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("the member target config applies");
+    app.stores.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }, &mut caller.identity).await.expect("the member target config applies");
     let (slot, child_id) = member_key();
     let declared = ArtifactRef { artifact_id: child_id.clone(), dialect: member_dialect() }.to_uri();
-    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }, &mut caller.identity).await.expect("the parent declares its member");
+    app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }, &mut caller.identity).await.expect("the parent declares its member");
     app.refresh_cache().await.expect("the parent view follows its declaration");
     app.register_child(slot, child_id, member_dialect(), member_store().await, &mut caller.identity).await.expect("the owned member registers");
     app
 }
 
 fn member_child(app: &MemberApp) -> &ArtifactStore<TestSnapshot, TestMutation> {
-    let ToolRunMembers::Child(child) = &app.children.get(&member_key()).expect("the live member").member;
+    let ToolRunMembers::Child(child) = &app.child_composition.children.get(&member_key()).expect("the live member").member;
     child
 }
 
 fn member_child_mut(app: &mut MemberApp) -> &mut ArtifactStore<TestSnapshot, TestMutation> {
-    let ToolRunMembers::Child(child) = &mut app.children.get_mut(&member_key()).expect("the live member").member;
+    let ToolRunMembers::Child(child) = &mut app.child_composition.children.get_mut(&member_key()).expect("the live member").member;
     child
 }
 
 /// 🔭️ The member as the render seams read it: the run's composed overlay while it holds ops, else the live member.
 fn composed_member(app: &MemberApp) -> TestSnapshot {
     let (slot, child_id) = member_key();
-    app.tool_runs.children_or(&app.child_content_root).typed_read::<TestSnapshot>(&slot, &child_id).expect("the composed member reads").clone()
+    app.tool_runs.children_or(&app.child_composition.child_content_root).typed_read::<TestSnapshot>(&slot, &child_id).expect("the composed member reads").clone()
 }
 
 /// 🧮️ The fresh fold of `ops` (the member's own wire) on `base` — the independent replay every member state must equal.
@@ -191,7 +191,7 @@ async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&Membe
         advance_toy(app, caller).await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
     }
     let reasons: Vec<u16> = app.tool_runs.steps().map(|steps| steps.iter().map(|step| step.reason).collect()).unwrap_or_default();
-    let admission = app.admit_child_content_publication().err().map(|fault| fault.code.0);
+    let admission = app.child_composition.admit_child_content_publication().err().map(|fault| fault.code.0);
     panic!("{what} never settled; state {:?}; member ops {}; ledger work {}; step reasons {reasons:?}; child-content admission refusal {admission:?}", app.tool_runs.state(), app.tool_runs.member_ops().len(), app.tool_runs.has_pending_work());
 }
 
@@ -224,10 +224,10 @@ async fn member_run_ticks_compose_the_member_on_read_while_both_stores_stay_unto
     let units = number(&member["units"]);
     let mut app = member_app(units, &mut caller).await;
     let base = member_child(&app).snapshot_ref().clone();
-    let (parent_generation, member_generation) = (app.store.generation(), member_child(&app).generation());
+    let (parent_generation, member_generation) = (app.stores.store.generation(), member_child(&app).generation());
     member_start(&mut app, &mut caller).await;
     member_pump_until(&mut app, "the member run completes and its overlay shows every op", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    assert_eq!(app.store.generation(), parent_generation, "member ticks never touch the parent store");
+    assert_eq!(app.stores.store.generation(), parent_generation, "member ticks never touch the parent store");
     assert_eq!(member_child(&app).generation(), member_generation, "member ticks never touch the member store");
     assert!(app.tool_runs.provisional().is_empty(), "a member run holds no parent op");
     assert_eq!(app.tool_runs.member_ops().len() as u64, units * number(&fixture()["opsPerUnit"]));
@@ -295,14 +295,14 @@ async fn member_run_abort_leaves_both_stores_the_command_log_and_the_history_unt
     let mut app = member_app(number(&expected["target"]), &mut caller).await;
     app.refresh_cache().await.expect("backfill the command log before the invariant capture");
     let base = member_child(&app).snapshot_ref().clone();
-    let (parent_generation, parent_edits, commands) = (app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len());
+    let (parent_generation, parent_edits, commands) = (app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len());
     let (member_generation, member_edits) = (member_child(&app).generation(), member_child(&app).envelope().vcs.edits.len());
     let rows = member_transaction_rows(&mut app).await.len();
     member_start(&mut app, &mut caller).await;
     member_pump_until(&mut app, "first member unit", |app| app.tool_runs.member_ops().len() as u64 >= number(&expected["unitsBeforeAbort"]) * number(&fixture()["opsPerUnit"]), &mut caller).await;
     assert_eq!(member_run_action(&mut app, "toolRunAbort", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("closeJob"));
     member_pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    assert_eq!((app.store.generation(), app.store.envelope().vcs.edits.len(), app.command_log.len()), (parent_generation, parent_edits, commands), "abort: parent store and command log");
+    assert_eq!((app.stores.store.generation(), app.stores.store.envelope().vcs.edits.len(), app.history.command_log.len()), (parent_generation, parent_edits, commands), "abort: parent store and command log");
     assert_eq!((member_child(&app).generation(), member_child(&app).envelope().vcs.edits.len()), (member_generation, member_edits), "abort: member store");
     assert_eq!(member_child(&app).snapshot_ref(), &base, "abort: member state");
     assert_eq!(member_transaction_rows(&mut app).await.len(), rows, "abort: no history row");
@@ -328,7 +328,7 @@ async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and
     let member = member_fixture();
     let mut app = member_app(number(&member["units"]), &mut caller).await;
     let base = member_child(&app).snapshot_ref().clone();
-    let parent_edits = app.store.envelope().vcs.edits.len();
+    let parent_edits = app.stores.store.envelope().vcs.edits.len();
     let member_edits = member_child(&app).envelope().vcs.edits.len();
     let rows = member_transaction_rows(&mut app).await.len();
     member_start(&mut app, &mut caller).await;
@@ -336,7 +336,7 @@ async fn member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and
     let ops = app.tool_runs.member_ops().to_vec();
     assert_eq!(member_run_action(&mut app, "toolRunFinalize", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     member_pump_until(&mut app, "member finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work(), &mut caller).await;
-    assert_eq!((app.store.envelope().vcs.edits.len() - parent_edits) as u64, number(&member["parentEditsAdded"]), "the parent publishes nothing");
+    assert_eq!((app.stores.store.envelope().vcs.edits.len() - parent_edits) as u64, number(&member["parentEditsAdded"]), "the parent publishes nothing");
     assert_eq!((member_child(&app).envelope().vcs.edits.len() - member_edits) as u64, number(&member["memberEditsAdded"]), "ONE member edit");
     let edit = member_child(&app).envelope().vcs.edits.last().expect("the finalized member edit");
     assert_eq!(edit.forwards.len(), ops.len(), "every member op lands in the one edit");

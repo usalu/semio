@@ -27,10 +27,10 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 /// 🎨️ A board host painted from `snapshot` — the document a window paints, a time-travel preview included.
 pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
-    host.set_size(800, 600, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host,&snapshot.to_string(),&mut control)}, "the engine paints the document");
-    host.set_camera_silent(0.0, 0.0, 1.0);
-    host.set_transform_flags(true, false);
+    host.scene.set_size(800, 600, 1.0);
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
+    set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
+    set_transform_flags(&mut host.scene, &mut host.gestures, true, false);
     let _ = drain_board_events_json(&mut host);
     host
 }
@@ -42,17 +42,17 @@ pub(super) fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
 }
 
 pub(super) fn press(host: &mut BoardHost, x: f64, y: f64) {
-    let screen = host.world_to_screen(Point::new(x, y));
+    let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_down_screen(screen.x, screen.y, 0, false, false);
 }
 
 pub(super) fn move_to(host: &mut BoardHost, x: f64, y: f64) {
-    let screen = host.world_to_screen(Point::new(x, y));
+    let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_move_screen(screen.x, screen.y, false, false, false);
 }
 
 pub(super) fn release(host: &mut BoardHost, x: f64, y: f64) {
-    let screen = host.world_to_screen(Point::new(x, y));
+    let screen = host.scene.world_to_screen(Point::new(x, y));
     host.pointer_up_screen(screen.x, screen.y, false, false, false);
 }
 
@@ -115,7 +115,7 @@ fn one_board_drag_is_one_edit_one_row_and_one_transaction() {
 fn a_group_drag_row_is_labelled_from_its_leaf_in_english_and_german() {
     let mut app = board_app();
     let mut host = painted_host(&app);
-    host.set_selection_ids_silent(&["left".to_string(), "mid".to_string()]);
+    set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["left".to_string(), "mid".to_string()]);
     press(&mut host, -200.0, 0.0);
     move_to(&mut host, -150.0, 20.0);
     move_to(&mut host, -120.0, 40.0);
@@ -203,8 +203,8 @@ fn a_streamed_ring_rotation_is_one_transaction() {
     let mut app = board_app();
     select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, "mid").expect("select mid");
     let mut host = painted_host(&app);
-    host.set_transform_flags(true, true);
-    host.set_selection_ids_silent(&["left".to_string(), "mid".to_string()]);
+    set_transform_flags(&mut host.scene, &mut host.gestures, true, true);
+    set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["left".to_string(), "mid".to_string()]);
     let gumball: Value = semio_framework_pack_json::from_json_str(&host.transform_gumball_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("gumball vitals parse");
     assert_eq!(gumball["ringVisible"], true, "the ring is armed: {gumball}");
     let (pivot, radius) = (Point::new(gumball["pivot"]["x"].as_f64().expect("pivot x"), gumball["pivot"]["y"].as_f64().expect("pivot y")), gumball["radius"].as_f64().expect("radius"));

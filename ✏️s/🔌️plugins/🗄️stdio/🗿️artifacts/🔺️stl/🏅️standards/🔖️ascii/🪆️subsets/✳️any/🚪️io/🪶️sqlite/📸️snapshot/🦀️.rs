@@ -98,13 +98,8 @@ fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<
 fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Self,ValueError> {Self::reconstruct_sqlite_database(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path="🫴️receiving/🧪️tests/🦀️.rs"]
-mod original_receiving_tests;
+
 
 #[path="🫴️receiving/🦀️.rs"]
 mod receiving;

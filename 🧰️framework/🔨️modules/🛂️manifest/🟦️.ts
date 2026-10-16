@@ -1,6 +1,10 @@
 import { type ArtifactDialect } from "../🧬️schema/🗿️artifact-reference/🟦️.ts";
 import { dialectCoordinate, parseDialectCoordinate } from "../🚪️io/🧬️schema/🟦️.ts";
 import type { AppRole, AppRef } from "./🧬️schema/🟦️.ts";
+import type { IntroductionDefinition, TutorialDefinition } from "../🎓️onboarding/🟦️.ts";
+import type { WindowLayout } from "./🗺️window-layout/🟦️.ts";
+export type { WindowStackCorner, WindowLayoutWindowNode, WindowLayoutStackNode, WindowLayoutAxisNode, WindowLayout } from "./🗺️window-layout/🟦️.ts";
+import type { JobKindId as GeneratedJobKindId, ToolRunCounterDefinition as GeneratedToolRunCounterDefinition, ToolRunDefinition as GeneratedToolRunDefinition, ToolRunReasonDefinition as GeneratedToolRunReasonDefinition, ToolRunRebasePolicy as GeneratedToolRunRebasePolicy, ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy, ToolRunSettingsReads as GeneratedToolRunSettingsReads, ToolRunStageDefinition as GeneratedToolRunStageDefinition, ToolRunTraceKind as GeneratedToolRunTraceKind, ToolRunVerdict as GeneratedToolRunVerdict } from "./🤖️generated/🪪️manifest/🟦️.ts";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 // #region 🛂️Manifest
 /// <reference types="vitest/importMeta" />
@@ -23,7 +27,7 @@ import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } fr
 
 // #region 🧬️GeneratedMirror
 /** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`bun repo run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
-import type { ActionDescriptor as GeneratedActionDescriptor, ActionKind as GeneratedActionKind, ActionDefinition as GeneratedActionDefinition, ActionAddress as GeneratedActionAddress, ActionInvocation as GeneratedActionInvocation, ActionArgDef as GeneratedActionArgDef, ActionArgControl as GeneratedActionArgControl, ActionArgOption as GeneratedActionArgOption, ArgSchema as GeneratedArgSchema, ArgFormat as GeneratedArgFormat, ArgPresentation as GeneratedArgPresentation, SnapSource as GeneratedSnapSource, OptionSource as GeneratedOptionSource, NumberScale as GeneratedNumberScale, ReferenceIdType as GeneratedReferenceIdType, ResourceSelector as GeneratedResourceSelector, CapabilityEffects as GeneratedCapabilityEffects, ApprovalMode as GeneratedApprovalMode, CapabilityPolicy as GeneratedCapabilityPolicy, PreviewMode as GeneratedPreviewMode, UndoMode as GeneratedUndoMode, IdempotencyMode as GeneratedIdempotencyMode, ExecutionClass as GeneratedExecutionClass, CapabilityExecution as GeneratedCapabilityExecution, ActionSemantics as GeneratedActionSemantics, UtilityDefinition as GeneratedUtilityDefinition, UtilityRef as GeneratedUtilityRef, InteractionDefinition as GeneratedInteractionDefinition, GranularityDefinition as GeneratedGranularityDefinition, HierarchyProvider as GeneratedHierarchyProvider, HoverSpec as GeneratedHoverSpec, SelectionSpec as GeneratedSelectionSpec, SelectionMode as GeneratedSelectionMode, SelectionMethod as GeneratedSelectionMethod, MergeMode as GeneratedMergeMode, InteractionRef as GeneratedInteractionRef, DomainSelection as GeneratedDomainSelection, ToolDefinition as GeneratedToolDefinition, ToolRef as GeneratedToolRef, JobKindId as GeneratedJobKindId, ToolRunCounterDefinition as GeneratedToolRunCounterDefinition, ToolRunDefinition as GeneratedToolRunDefinition, ToolRunReasonDefinition as GeneratedToolRunReasonDefinition, ToolRunRebasePolicy as GeneratedToolRunRebasePolicy, ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy, ToolRunSettingsReads as GeneratedToolRunSettingsReads, ToolRunStageDefinition as GeneratedToolRunStageDefinition, ToolRunTraceKind as GeneratedToolRunTraceKind, ToolRunVerdict as GeneratedToolRunVerdict, CommandDefinition as GeneratedCommandDefinition, CommandOwnerAddress as GeneratedCommandOwnerAddress, CommandAddress as GeneratedCommandAddress, CommandInvocation as GeneratedCommandInvocation, OsDefinition as GeneratedOsDefinition, Platform as GeneratedPlatform, PlatformKeybinding as GeneratedPlatformKeybinding, WindowMeasure as GeneratedWindowMeasure, WindowEngagementOption as GeneratedWindowEngagementOption, WindowEngagementInput as GeneratedWindowEngagementInput, WindowEngagementStatus as GeneratedWindowEngagementStatus, WindowEngagementPossible as GeneratedWindowEngagementPossible, WindowEngagementRingOption as GeneratedWindowEngagementRingOption, WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption, WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem, WindowEngagementControl as GeneratedWindowEngagementControl, WindowEngagement as GeneratedWindowEngagement, WindowEngagementSlot as GeneratedWindowEngagementSlot, WindowOptions as GeneratedWindowOptions, ActionRef as GeneratedActionRef, PanelGroup as GeneratedPanelGroup, PanelTabKind as GeneratedPanelTabKind, PanelTabDefinition as GeneratedPanelTabDefinition, ModeDefinition as GeneratedModeDefinition, WindowKindDefinition as GeneratedWindowKindDefinition, AppDefinition as GeneratedAppDefinition, IntroductionDefinition as GeneratedIntroductionDefinition, IntroductionStepDefinition as GeneratedIntroductionStepDefinition, IntroductionPlacement as GeneratedIntroductionPlacement, IntroductionInteraction as GeneratedIntroductionInteraction, IntroductionInteractionKind as GeneratedIntroductionInteractionKind, IntroductionLogo as GeneratedIntroductionLogo, IntroductionPoint as GeneratedIntroductionPoint, IntroductionGesture as GeneratedIntroductionGesture, IntroductionKeyModifier as GeneratedIntroductionKeyModifier, IntroductionPointerButton as GeneratedIntroductionPointerButton, IntroductionCursor as GeneratedIntroductionCursor, IntroductionDemonstration as GeneratedIntroductionDemonstration, DialogChoice as GeneratedDialogChoice, DialogDefinition as GeneratedDialogDefinition, TutorialDocumentEvent as GeneratedTutorialDocumentEvent, TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind, TutorialAssetSrc as GeneratedTutorialAssetSrc, TutorialBase as GeneratedTutorialBase, TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe, TutorialCameraState as GeneratedTutorialCameraState, TutorialCaption as GeneratedTutorialCaption, TutorialChapter as GeneratedTutorialChapter, TutorialDefinition as GeneratedTutorialDefinition, TutorialEasing as GeneratedTutorialEasing, TutorialEvent as GeneratedTutorialEvent, TutorialEventKind as GeneratedTutorialEventKind, TutorialGestureCue as GeneratedTutorialGestureCue, TutorialNarrationCue as GeneratedTutorialNarrationCue, TutorialOverlayRect as GeneratedTutorialOverlayRect, TutorialUiChange as GeneratedTutorialUiChange, TutorialUiKeyframe as GeneratedTutorialUiKeyframe, TutorialUiSnapshot as GeneratedTutorialUiSnapshot, TutorialVideoCue as GeneratedTutorialVideoCue, UiPresence as GeneratedUiPresence, UiState as GeneratedUiState, UiStatus as GeneratedUiStatus } from "./🤖️generated/🪪️manifest/🟦️.ts";
+import type { ActionDescriptor as GeneratedActionDescriptor, ActionKind as GeneratedActionKind, ActionDefinition as GeneratedActionDefinition, ActionAddress as GeneratedActionAddress, ActionInvocation as GeneratedActionInvocation, ActionArgDef as GeneratedActionArgDef, ActionArgControl as GeneratedActionArgControl, ActionArgOption as GeneratedActionArgOption, ArgSchema as GeneratedArgSchema, ArgFormat as GeneratedArgFormat, ArgPresentation as GeneratedArgPresentation, SnapSource as GeneratedSnapSource, OptionSource as GeneratedOptionSource, NumberScale as GeneratedNumberScale, ReferenceIdType as GeneratedReferenceIdType, ResourceSelector as GeneratedResourceSelector, CapabilityEffects as GeneratedCapabilityEffects, ApprovalMode as GeneratedApprovalMode, CapabilityPolicy as GeneratedCapabilityPolicy, PreviewMode as GeneratedPreviewMode, UndoMode as GeneratedUndoMode, IdempotencyMode as GeneratedIdempotencyMode, ExecutionClass as GeneratedExecutionClass, CapabilityExecution as GeneratedCapabilityExecution, ActionSemantics as GeneratedActionSemantics, UtilityDefinition as GeneratedUtilityDefinition, UtilityRef as GeneratedUtilityRef, InteractionDefinition as GeneratedInteractionDefinition, GranularityDefinition as GeneratedGranularityDefinition, HierarchyProvider as GeneratedHierarchyProvider, HoverSpec as GeneratedHoverSpec, SelectionSpec as GeneratedSelectionSpec, SelectionMode as GeneratedSelectionMode, SelectionMethod as GeneratedSelectionMethod, MergeMode as GeneratedMergeMode, InteractionRef as GeneratedInteractionRef, DomainSelection as GeneratedDomainSelection, ToolDefinition as GeneratedToolDefinition, ToolRef as GeneratedToolRef, CommandDefinition as GeneratedCommandDefinition, CommandOwnerAddress as GeneratedCommandOwnerAddress, CommandAddress as GeneratedCommandAddress, CommandInvocation as GeneratedCommandInvocation, OsDefinition as GeneratedOsDefinition, Platform as GeneratedPlatform, PlatformKeybinding as GeneratedPlatformKeybinding, WindowMeasure as GeneratedWindowMeasure, WindowEngagementOption as GeneratedWindowEngagementOption, WindowEngagementInput as GeneratedWindowEngagementInput, WindowEngagementStatus as GeneratedWindowEngagementStatus, WindowEngagementPossible as GeneratedWindowEngagementPossible, WindowEngagementRingOption as GeneratedWindowEngagementRingOption, WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption, WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem, WindowEngagementControl as GeneratedWindowEngagementControl, WindowEngagement as GeneratedWindowEngagement, WindowEngagementSlot as GeneratedWindowEngagementSlot, WindowOptions as GeneratedWindowOptions, ActionRef as GeneratedActionRef, PanelGroup as GeneratedPanelGroup, PanelTabKind as GeneratedPanelTabKind, PanelTabDefinition as GeneratedPanelTabDefinition, ModeDefinition as GeneratedModeDefinition, WindowKindDefinition as GeneratedWindowKindDefinition, AppDefinition as GeneratedAppDefinition, DialogChoice as GeneratedDialogChoice, DialogDefinition as GeneratedDialogDefinition, UiPresence as GeneratedUiPresence, UiState as GeneratedUiState, UiStatus as GeneratedUiStatus } from "./🤖️generated/🪪️manifest/🟦️.ts";
 // #endregion 🧬️GeneratedMirror
 
 // #region 🧬️GeneratedUiContract
@@ -284,33 +288,6 @@ export type UiState = GeneratedUiState;
 export type UiStatus = GeneratedUiStatus;
 
 
-
-export type WindowStackCorner = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
-
-export type WindowLayoutWindowNode = {
-  readonly kind: "window";
-  readonly windowKindId: string;
-  readonly title?: string;
-  readonly instanceId?: string;
-  readonly templateId?: string;
-  readonly corner?: WindowStackCorner;
-};
-
-export type WindowLayoutStackNode = {
-  readonly kind: "stack";
-  readonly size?: number;
-  readonly children: readonly WindowLayoutWindowNode[];
-};
-
-export type WindowLayoutAxisNode = {
-  readonly kind: "row" | "column";
-  readonly size?: number;
-  readonly children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
-};
-
-export type WindowLayout = {
-  readonly root: WindowLayoutAxisNode | WindowLayoutStackNode;
-};
 
 export type NamedLayout = {
   readonly id: string;
@@ -1300,7 +1277,6 @@ export type DomainSelection = GeneratedDomainSelection;
  * activatable capability (e.g. puzzle3d fill), distinct from a per-window `UtilityDefinition`. See
  * `js/generated/manifest.ts`. */
 export type ToolDefinition = GeneratedToolDefinition;
-export type ToolRef = GeneratedToolRef;
 
 /** ⏯️ Generated from Rust `ToolRunDefinition` (`⏯️tool-run/🦀️.rs`, schema `⏯️tool-run/🧬️schema/🔣️.json`) — the static
  * run declaration a `ToolDefinition`/`UtilityDefinition` carries as `run`. */
@@ -1314,30 +1290,7 @@ export type ToolRunSettingsReads = GeneratedToolRunSettingsReads;
 export type ToolRunTraceKind = GeneratedToolRunTraceKind;
 export type ToolRunVerdict = GeneratedToolRunVerdict;
 export type JobKindId = GeneratedJobKindId;
-export {
-  TOOL_RUN_ABORT_ACTION_ID,
-  TOOL_RUN_ABORT_CHORD,
-  TOOL_RUN_ACTION_IDS,
-  TOOL_RUN_ACTIONS,
-  TOOL_RUN_DISMISS_ACTION_ID,
-  TOOL_RUN_DISMISS_CHORD,
-  TOOL_RUN_FINALIZE_ACTION_ID,
-  TOOL_RUN_FINALIZE_CHORD,
-  TOOL_RUN_PAUSE_ACTION_ID,
-  TOOL_RUN_PAUSE_RESUME_CHORD,
-  TOOL_RUN_RESUME_ACTION_ID,
-  TOOL_RUN_START_ACTION_ID,
-  TOOL_RUN_START_CHORD,
-  TOOL_RUN_STEP_ACTION_ID,
-  TOOL_RUN_STEP_CHORD,
-  type ToolRunActionId,
-} from "../⏯️tool-run/🟦️.ts";
-
-/** ⏯️ Mirrors Rust `app_declares_tool_run`: the seven reserved tool run actions are injected exactly when a
- * tool or utility declares `run`. */
-export function appDeclaresToolRun(app: { readonly tools: readonly { readonly run?: ToolRunDefinition }[]; readonly utilities: readonly { readonly run?: ToolRunDefinition }[] }): boolean {
-  return app.tools.some((tool) => tool.run !== undefined) || app.utilities.some((utility) => utility.run !== undefined);
-}
+export type ToolRef = GeneratedToolRef;
 
 /** 🎛️ Generated command ownership, invocation, and platform-aware keybinding contracts. */
 export type CommandDefinition = GeneratedCommandDefinition;
@@ -1365,10 +1318,6 @@ export const SELECT_ALL_ACTION_ID = "selectAll";
 export const SET_SELECTION_MODE_ACTION_ID = "setSelectionMode";
 export const SET_INTERACTION_GRANULARITY_ACTION_ID = "setInteractionGranularity";
 
-/** 🎓️ The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
- * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
-export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
-
 /** 📤️ The framework-owned Export Document action id, shell-intercepted in every app — mirrors Rust
  * `EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
 export const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID = "exportArtifactDocument";
@@ -1386,20 +1335,6 @@ export const OPEN_ARTIFACT_FILE_ACTION_ID = "openArtifactFile";
 /** 📄️ The ABI media port reserved for an editor's declared natural-file representation. */
 export const NATURAL_FILE_PORT_ID = "artifact:native";
 
-/** 🎓️ Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
-export type IntroductionDefinition = GeneratedIntroductionDefinition;
-export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
-export type IntroductionPlacement = GeneratedIntroductionPlacement;
-export type IntroductionInteraction = GeneratedIntroductionInteraction;
-export type IntroductionInteractionKind = GeneratedIntroductionInteractionKind;
-export type IntroductionLogo = GeneratedIntroductionLogo;
-export type IntroductionPoint = GeneratedIntroductionPoint;
-export type IntroductionGesture = GeneratedIntroductionGesture;
-export type IntroductionKeyModifier = GeneratedIntroductionKeyModifier;
-export type IntroductionPointerButton = GeneratedIntroductionPointerButton;
-export type IntroductionCursor = GeneratedIntroductionCursor;
-export type IntroductionDemonstration = GeneratedIntroductionDemonstration;
-
 /** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type DialogDefinition = GeneratedDialogDefinition;
 
@@ -1415,110 +1350,6 @@ export function dialogChoiceArgs(choice: DialogChoice, defs: readonly ActionArgD
   const kept = Object.entries(effective).filter(([key]) => key !== DIALOG_CHOICE_ARG && (requires.includes(key) || !defs.some((def) => def.id === key)));
   return { ...Object.fromEntries(kept), [DIALOG_CHOICE_ARG]: choice.id };
 }
-
-//#region 🎬️Tutorial
-/** 🎬️ The framework-owned action id apps dispatch (or the shell auto-injects into the command palette,
- * with a `tutorialId` Select arg) to (re)start a tutorial — mirrors Rust `START_TUTORIAL_ACTION_ID`.
- * Distinct from the docs-tooltip `tutorial` link field on `UiLabelLeaf` (`framework/ui/js/react`), a URL into the
- * manual — this is the interactive recorded-walkthrough mechanism. */
-export const START_TUTORIAL_ACTION_ID = "startTutorial";
-
-/** ⏺️ The framework-owned action id that opens the tutorial recorder chrome — injected into EVERY app
- * unconditionally (recording needs no app-side declaration). Mirrors Rust `RECORD_TUTORIAL_ACTION_ID`. */
-export const RECORD_TUTORIAL_ACTION_ID = "recordTutorial";
-
-/** ⏱️ Real-time (rate-independent) duration of the camera glide the player performs when the user
- * presses Play after deviating from an active tutorial's recorded state. Mirrors Rust `TUTORIAL_CONVERGE_MS`. */
-export const TUTORIAL_CONVERGE_MS = 600;
-
-// 🔢️ `at`/`durationMs`/`sourceOffsetMs`/`size` are Rust `u64`, which the owned schema exporter
-// projects as `bigint` (see `AssetDeclaration.sizeBytes`/`QuotaSchema.*` above) — every consumer in
-// `ui/js/react`'s tutorial player/recorder (`createTutorialClock`, `tutorialCameraAt`, `composeTutorialUi`,
-// the `TutorialBar`/`TutorialChapterMarker` chrome) treats timeline offsets as plain `number`
-// millisecond values, so every such field is narrowed back with `Omit<Generated*, ...> & {...}` here —
-// the identical pattern `AppDefinition` already uses to narrow `iconId`/`defaultLayout`/`namedLayouts`
-// below. `title`/`body`/`description`/`text` (Rust `LocalizedLabel`) are NOT narrowed: they stay the
-// generated `unknown`, exactly like `AppDefinition.label` — every consumer already resolves them via
-// `resolveManifestLabel(label: unknown, …)`.
-export type TutorialChapter = Omit<GeneratedTutorialChapter, "at"> & { readonly at: number };
-
-/** 📦️ `Blob.size` is the sole `u64` field — narrowed to `number` like every other timeline offset above. */
-export type TutorialAssetSrc = Exclude<GeneratedTutorialAssetSrc, { readonly kind: "blob" }> | (Omit<Extract<GeneratedTutorialAssetSrc, { readonly kind: "blob" }>, "size"> & { readonly size: number });
-
-export type TutorialCaption = Omit<GeneratedTutorialCaption, "at" | "durationMs"> & { readonly at: number; readonly durationMs: number };
-
-export type TutorialNarrationCue = Omit<GeneratedTutorialNarrationCue, "at" | "durationMs" | "audio" | "captions"> & {
-  readonly at: number;
-  readonly durationMs: number;
-  readonly audio?: TutorialAssetSrc;
-  readonly captions: readonly TutorialCaption[];
-};
-
-export type TutorialOverlayRect = GeneratedTutorialOverlayRect;
-
-export type TutorialVideoCue = Omit<GeneratedTutorialVideoCue, "at" | "durationMs" | "sourceOffsetMs" | "src"> & {
-  readonly at: number;
-  readonly durationMs: number;
-  readonly sourceOffsetMs: number;
-  readonly src: TutorialAssetSrc;
-};
-
-export type TutorialEventKind = GeneratedTutorialEventKind;
-
-export type TutorialEvent = Omit<GeneratedTutorialEvent, "at"> & { readonly at: number };
-
-/** 🧮️ Renderer-neutral restore point for chrome/UI state — see the Rust doc comment on
- * `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState`. `layout` is
- * narrowed to this file's own hand-refined `WindowLayout` — same reason and same override
- * (`applyFrameworkLayoutSeed` below requires the narrower `"row" | "column" | "stack" | "window"`
- * literal `kind`) as `AppDefinition.defaultLayout`. */
-export type TutorialUiSnapshot = Omit<GeneratedTutorialUiSnapshot, "layout"> & { readonly layout?: WindowLayout };
-
-export type TutorialUiChange = Exclude<GeneratedTutorialUiChange, { readonly kind: "layout" }> | { readonly kind: "layout"; readonly layout: WindowLayout };
-
-export type TutorialUiSample = { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot } | { readonly kind: "delta"; readonly changes: readonly TutorialUiChange[] };
-
-export type TutorialUiKeyframe = Omit<GeneratedTutorialUiKeyframe, "at" | "sample"> & { readonly at: number; readonly sample: TutorialUiSample };
-
-/** 🖋️ Mirrors `store::os_store::store_schema::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
- * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
-export type TutorialDocumentEventKind = GeneratedTutorialDocumentEventKind;
-
-export type TutorialDocumentEvent = Omit<GeneratedTutorialDocumentEvent, "at"> & { readonly at: number };
-
-export type TutorialCameraState = GeneratedTutorialCameraState;
-
-export type TutorialEasing = GeneratedTutorialEasing;
-
-export type TutorialCameraKeyframe = Omit<GeneratedTutorialCameraKeyframe, "at"> & { readonly at: number };
-
-/** 👻️ Reuses the introduction demonstration vocabulary verbatim — see `IntroductionGesture`/`IntroductionPoint`. */
-export type TutorialGestureCue = Omit<GeneratedTutorialGestureCue, "at" | "durationMs"> & { readonly at: number; readonly durationMs: number };
-
-export type TutorialTracks = {
-  readonly narration: readonly TutorialNarrationCue[];
-  readonly video: readonly TutorialVideoCue[];
-  readonly events: readonly TutorialEvent[];
-  readonly ui: readonly TutorialUiKeyframe[];
-  readonly document: readonly TutorialDocumentEvent[];
-  readonly camera: readonly TutorialCameraKeyframe[];
-  readonly gestures: readonly TutorialGestureCue[];
-};
-
-export type TutorialBase = Omit<GeneratedTutorialBase, "ui" | "cameras"> & {
-  readonly ui: TutorialUiSnapshot;
-  readonly cameras: readonly TutorialCameraKeyframe[];
-};
-
-/** 🎬️ A recorded, timed, replayable walkthrough — the timeline sibling of `IntroductionDefinition`. A
- * *recording* IS a `TutorialDefinition`; the recorder simply produces a densely-sampled one. */
-export type TutorialDefinition = Omit<GeneratedTutorialDefinition, "durationMs" | "chapters" | "base" | "tracks"> & {
-  readonly durationMs: number;
-  readonly chapters: readonly TutorialChapter[];
-  readonly base: TutorialBase;
-  readonly tracks: TutorialTracks;
-};
-//#endregion 🎬️Tutorial
 
 //#region 🏷️ShellBrand
 // 🌐️ ShellLocale/ShellTerminology are generated from 🖱️ui/🎚️axes/🔣️.json (the same source of
@@ -1590,48 +1421,6 @@ export const HOST_EVENT_ACTION_ID = "hostEvent";
 /** 🏷️ The kinds a host forwards — mirror Rust `HOST_EVENT_KIND_BLUR`, `HOST_EVENT_KIND_CAPTURE_LOST`, `HOST_EVENT_KIND_RETIRING`. */
 export const HOST_EVENT_KINDS = ["blur", "captureLost", "retiring"] as const;
 export type HostEventKind = (typeof HOST_EVENT_KINDS)[number];
-
-/** ✏️ Mirrors Rust `HISTORY_EDIT_ACTION_IDS` — the thirteen reserved history-edit verbs, host-driven on the instance's
- * one time-travel session. Every verb but `historyEditBegin`/`historyEditExit` may carry `generation`
- * ({@link HISTORY_EDIT_ARG_GENERATION}); without it the verb addresses the live session. */
-export const HISTORY_EDIT_ACTION_IDS = [
-  "historyEditBegin",
-  "historyEditInput",
-  "historyEditUseSelection",
-  "historyEditWithdraw",
-  "historyEditAccept",
-  "historyEditDiscard",
-  "historyEditRestore",
-  "historyEditFinalize",
-  "historyEditCommit",
-  "historyEditBack",
-  "historyEditExit",
-  "historyEditCancelReplay",
-  "historyEditRerun",
-] as const;
-export type HistoryEditActionId = (typeof HISTORY_EDIT_ACTION_IDS)[number];
-/** 🪪️ The mutation id argument of `historyEditBegin`, of a row's `historyEditWithdraw` and of `historyEditRestore` — mirrors Rust `HISTORY_EDIT_ARG_MUTATION_ID`. */
-export const HISTORY_EDIT_ARG_MUTATION_ID = "mutationId";
-/** 🧩️ The member store argument (`<slot>/<childId>`) beside every `mutationId`, absent for the document's own store — mirrors Rust `HISTORY_EDIT_ARG_STORE`. */
-export const HISTORY_EDIT_ARG_STORE = "store";
-/** 🧭️ The input pointer argument — mirrors Rust `HISTORY_EDIT_ARG_PATH`. */
-export const HISTORY_EDIT_ARG_PATH = "path";
-/** 🎚️ `historyEditInput`'s value argument (the new value, or the inserted item) — mirrors Rust `HISTORY_EDIT_ARG_VALUE`. */
-export const HISTORY_EDIT_ARG_VALUE = "value";
-/** ✂️ `historyEditInput`'s list edit argument (absent sets; `insert`/`remove` one item at `path`) — mirrors Rust `HISTORY_EDIT_ARG_EDIT`. */
-export const HISTORY_EDIT_ARG_EDIT = "edit";
-/** ➕️ The list edit that inserts an item — mirrors Rust `HISTORY_EDIT_INPUT_INSERT`. */
-export const HISTORY_EDIT_INPUT_INSERT = "insert";
-/** ➖️ The list edit that removes an item — mirrors Rust `HISTORY_EDIT_INPUT_REMOVE`. */
-export const HISTORY_EDIT_INPUT_REMOVE = "remove";
-/** 🧿️ The session generation argument — mirrors Rust `HISTORY_EDIT_ARG_GENERATION`. */
-export const HISTORY_EDIT_ARG_GENERATION = "generation";
-/** 🏷️ `historyEditCommit`'s alternative name argument — mirrors Rust `HISTORY_EDIT_ARG_NAME`. */
-export const HISTORY_EDIT_ARG_NAME = "name";
-/** ✍️ The overwrite choice of `historyEditCommit` — mirrors Rust `HISTORY_EDIT_CHOICE_OVERWRITE`. */
-export const HISTORY_EDIT_CHOICE_OVERWRITE = "overwrite";
-/** 🗳️ The framework-injected finalize dialog id — mirrors Rust `HISTORY_EDIT_FINALIZE_DIALOG_ID`. */
-export const HISTORY_EDIT_FINALIZE_DIALOG_ID = "finalizeHistoryEdit";
 
 export type PluginViewState = {
   readonly activeModeId?: string;
@@ -2517,5 +2306,6 @@ export type PluginContextMenuResponse = {
  * instead (see `🔖️AppChannelClient` in the os-product package, which frames these bytes). `dispose`
  * remains host-side only (never part of the WIT ABI) for worker/resource teardown.
  */
+//#endregion PluginRuntime
 //#endregion 🔌️PluginAndAppContract
 // #endregion 🛂️Manifest

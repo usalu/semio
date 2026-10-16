@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "_comment": "Language-agnostic Web-Mercator / slippy-tile vectors for s.gis tiled-map. `projection`, `tiles` and `tileBounds` are checked against the mercantile third-party oracle (see sibling 🐍️.py adapter); `lodBands` are repository-owned specification vectors for GIS_MAP_LOD_MAX_SPAN_DEG/GIS_MAP_LOD_TILE_Z (no third-party reference exists for a repo-defined band scheme).",
+  "_comment": "Language-agnostic Web-Mercator / slippy-tile vectors for the tiled map. `projection`, `tiles` and `tileBounds` are checked against the mercantile third-party oracle (see sibling 🐍️.py adapter); `lodBands` are repository-owned specification vectors of the sample band table `lodConstants` as resolved by a neutral `DescribedMapPolicy` (no third-party reference exists for a repo-defined band scheme). The GIS policy pins the same vectors in `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/🧪️tests/🧫️fixtures/🔣️.json`.",
   "oracle": {
     "id": "mercantile-spherical-mercator",
     "kind": "third-party-library",

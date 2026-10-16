@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "prototype",
+      "renderer": "react",
+      "command": "build",
+      "count": 11,
+      "engines": "renderer"
+    },
+    {
+      "mode": "prototype",
+      "renderer": "react",
+      "command": "serve",
+      "count": 4,
+      "engines": "renderer"
+    },
+    {
+      "mode": "prototype",
+      "renderer": "wgpu",
+      "command": "build",
+      "count": 9,
+      "engines": "none"
+    },
+    {
+      "mode": "prototype",
+      "renderer": "wgpu",
+      "command": "serve",
+      "count": 2,
+      "engines": "none"
+    },
+    {
+      "mode": "release",
+      "renderer": "react",
+      "command": "build",
+      "count": 11,
+      "engines": "renderer"
+    },
+    {
+      "mode": "release",
+      "renderer": "react",
+      "command": "serve",
+      "count": 4,
+      "engines": "renderer"
+    },
+    {
+      "mode": "release",
+      "renderer": "wgpu",
+      "command": "build",
+      "count": 9,
+      "engines": "none"
+    },
+    {
+      "mode": "release",
+      "renderer": "wgpu",
+      "command": "serve",
+      "count": 2,
+      "engines": "none"
+    },
+    {
+      "mode": "prototype",
+      "renderer": "react",
+      "command": "build",
+      "engines": "play",
+      "count": 12
+    },
+    {
+      "mode": "prototype",
+      "renderer": "react",
+      "command": "serve",
+      "engines": "play",
+      "count": 5
+    },
+    {
+      "mode": "release",
+      "renderer": "react",
+      "command": "build",
+      "engines": "play",
+      "count": 12
+    },
+    {
+      "mode": "release",
+      "renderer": "react",
+      "command": "serve",
+      "engines": "play",
+      "count": 5
+    }
+  ],
+  "canvasFiles": [
+    5,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "mode": "production",
+      "renderer": "react",
+      "command": "build"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "renderer": "webgl",
+      "command": "build"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "renderer": "react",
+      "control": {},
+      "command": "build"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "renderer": "react"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "renderer": "react",
+      "command": "preview"
+    }
+  ],
+  "callers": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📜️script.ts",
+      "call": "buildViteArtifact",
+      "count": 1,
+      "inputs": "os",
+      "engines": "distribution"
+    },
+    {
+      "path": "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts",
+      "call": "buildViteArtifact",
+      "count": 1,
+      "inputs": "bundle-engines",
+      "engines": "play"
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+      "call": "buildViteArtifact",
+      "count": 1,
+      "inputs": "os",
+      "engines": "play"
+    },
+    {
+      "path": "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/📜️script.ts",
+      "call": "serveVite",
+      "count": 2,
+      "inputs": "os",
+      "engines": "play"
+    },
+    {
+      "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+      "call": "serveVite",
+      "count": 2,
+      "inputs": "os",
+      "engines": "play"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+      "call": "serveVite",
+      "count": 1,
+      "inputs": "os",
+      "engines": "none"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+      "call": "runViteBunxDev",
+      "count": 1,
+      "inputs": "os",
+      "engines": "contribution"
+    }
+  ],
+  "rendererOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+  "storePhaseCallers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts",
+    "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/👓️reading/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/📥️capture/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts"
+  ],
+  "generatedViteCallers": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🖥️services/🟦️.ts",
+      "receivers": [
+        false,
+        true
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts",
+      "receivers": [
+        true
+      ]
+    }
+  ],
+  "engineCases": [
+    {
+      "facet": "renderer",
+      "ids": [
+        "surface",
+        "editor",
+        "graph"
+      ]
+    },
+    {
+      "facet": "play",
+      "ids": [
+        "surface",
+        "editor",
+        "graph",
+        "puzzle"
+      ]
+    },
+    {
+      "facet": "distribution",
+      "ids": [
+        "surface",
+        "editor",
+        "graph",
+        "puzzle"
+      ]
+    }
+  ],
+  "invalidEngineCases": [
+    {
+      "version": 1,
+      "mode": "debug",
+      "facet": "play"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "facet": "auto"
+    },
+    {
+      "version": 1,
+      "mode": "prototype",
+      "facet": "play",
+      "path": "/outside"
+    }
+  ],
+  "engineResolverCases": [
+    {
+      "specifier": "@fixture/engine",
+      "file": "engine.js"
+    },
+    {
+      "specifier": "@fixture/engine/engine.js",
+      "file": "engine.js"
+    },
+    {
+      "specifier": "@fixture/engine/engine_bg.wasm?url",
+      "file": "engine_bg.wasm?url"
+    }
+  ],
+  "invalidEngineSpecifiers": [
+    "@fixture/engine/../outside.js",
+    "@fixture/engine/pkg/engine.js",
+    "@fixture/engine/absent.js",
+    "@fixture/engine/engine.js/extra"
+  ],
+  "factoryContributions": [
+    "✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json"
+  ]
+}

@@ -9,6 +9,6 @@ fn direct_fixture_contract() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     for delta in [5, -7, 0] {
-        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddCounter(AddCounter { delta }), &10i64).await;
+        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddCounter(AddCounter { delta }), &10i64).await;
     }
 }

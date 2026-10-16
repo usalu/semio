@@ -2,17 +2,27 @@
 //! proposal digests, the guest job lifecycle folded from a real `JobRegistry` journal, and the hub
 //! page projection — every produced page is also held against `$defs/InferenceJobPageV1`.
 
-use super::*;
-use crate::ui::JobRegistry;
+use crate::inference::DeclaredInference;
+use crate::jobs::{GuestInferenceJob, InferenceService, canonical_json, guest_page, guest_proposal, hub_events_page, select_inference_service};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceEventPageV1, HubInferenceServiceV1, INFERENCE_JOB_EVENT_PAGE_MAX_ITEMS, InferenceExecutionSiteV1};
+use semio_framework_os_mcp_schema::schema::{compile_validator, validate};
+use semio_framework_os_mcp_wire::job_registry::JobRegistry;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
+    serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/💼️inference-service-law.json")).expect("inference service law fixture")
 }
 
 /// 🧬️ `name` rooted over exactly the component `$defs` it reaches, so a sibling definition's
 /// cross-document reference never has to resolve here.
 fn schema_def(name: &str) -> serde_json::Value {
-    let component: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🔣️.json")).expect("inference component schema");
+    let component: serde_json::Value = serde_json::from_str(fixture_text("../../../💡️inference/🧬️schema/🔣️.json")).expect("inference component schema");
     let mut reached = std::collections::BTreeMap::new();
     let mut pending = vec![name.to_string()];
     while let Some(next) = pending.pop() {
@@ -28,8 +38,8 @@ fn schema_def(name: &str) -> serde_json::Value {
 }
 
 fn assert_valid(def: &str, value: &serde_json::Value) {
-    let validator = crate::schema::compile_validator(&schema_def(def)).unwrap_or_else(|error| panic!("{def} compiles: {error}"));
-    crate::schema::validate(&validator, value).unwrap_or_else(|error| panic!("{def} rejects {value}: {error}"));
+    let validator = compile_validator(&schema_def(def)).unwrap_or_else(|error| panic!("{def} compiles: {error}"));
+    validate(&validator, value).unwrap_or_else(|error| panic!("{def} rejects {value}: {error}"));
 }
 
 fn text<'a>(value: &'a serde_json::Value, key: &str) -> Option<&'a str> {
@@ -116,7 +126,7 @@ fn a_journal_folds_into_the_same_page_state_at_every_step() {
                 }
                 "refuse" => {
                     job.commit_refused = true;
-                    registry.fail(&job_id, GatewayError::new(crate::errors::GatewayErrorCode::SideEffectRejected, "law refusal"))
+                    registry.fail(&job_id, GatewayError::new(GatewayErrorCode::SideEffectRejected, "law refusal"))
                 }
                 "cancel" => registry.request_cancel(&job_id).is_ok(),
                 "cancelled" => registry.mark_cancelled(&job_id),

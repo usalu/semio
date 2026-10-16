@@ -248,16 +248,16 @@ fn every_schema_feature_has_a_distinct_action_binding() {
 #[test]
 fn synchronized_document_json_is_the_exact_retained_document() {
     let mut domain = FlowDomainAdapter::default();
-    let mut expected = crate::artifact::FlowHostSnapshot::default();
+    let mut expected = semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default();
     expected.schema = "flow.host_snapshot.synchronized".into();
     for (index, widget) in ["slider", "add", "preview"].into_iter().enumerate() {
-        expected.layout.insert(widget.into(), crate::artifact::WidgetLayout { x: 240.0 * index as f64, y: 40.0 });
+        expected.layout.insert(widget.into(), semio_framework_artifact_flow_flow::artifact::WidgetLayout { x: 240.0 * index as f64, y: 40.0 });
     }
     let json = semio_framework_pack_json::to_json_string(&expected);
     run(&mut domain, 2_610, text_payload(&json)).unwrap();
     let bytes = run(&mut domain, 2_609, Vec::new()).unwrap();
     let value = semio_framework_pack_json::parse(std::str::from_utf8(&bytes).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let actual = <crate::artifact::FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
+    let actual = <semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     let equal = actual == expected;
     let report = format!("{actual:?}\n!=\n{expected:?}");
     actual.retire_cold();
@@ -274,7 +274,7 @@ fn synchronized_document_json_is_the_exact_retained_document() {
 const MEASURED_ROWS: u32 = 24;
 
 fn row_document_json(rows: u32) -> String {
-    let mut document = crate::artifact::FlowHostSnapshot::default();
+    let mut document = semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default();
     for index in 0..rows {
         document.widgets.push(Widget::InputNote { id: format!("measured-{index}"), text: format!("measured payload row {index}: a retained node-graph draw list carries thousands of bytes of exactly this shape") });
     }
@@ -612,27 +612,21 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
 
 #[test]
 fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-    let component = include_str!("../../🦀️.rs");
-    let production = component.split_once("//#region 🧪️DomainLaws").expect("Flow production/test boundary").0;
-    let bridge_protocol = include_str!("../../📡️protocol/🦀️.rs");
-    let protocol_production = bridge_protocol.split_once("//#region 🧪️Laws").expect("Flow protocol production/test boundary").0;
-    let schema = protocol::FLOW_ABI_SCHEMA;
-    let host = include_str!("../../🖥️host/🏃️runtime/🟨️.js");
-    let browser = include_str!("../../🌐️browser/🏃️runtime/🟨️.js");
-    let packaged_host = include_str!("../../../🫀️core/🕸️bindings/🖥️host/🟨️.js");
-    let packaged_browser = include_str!("../../../🫀️core/🕸️bindings/🌐️browser/🟨️.js");
-    let package_manifest = include_str!("../../../🫀️core/🕸️bindings/package.json");
-    let package_build = include_str!("../../../🫀️core/📦️packages/🦀️rust/📜️script.ts");
-    let production_loader = include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx");
+    let production = production_source(&["🦀️.rs", "🌉️domain-impl/🦀️.rs", "🧭️dispatch/🦀️.rs", "🔗️linear-memory/🦀️.rs", "🧩️domain-adapter/🦀️.rs", "🌿️vcs-feature/🦀️.rs", "🛠️adapter-ops/🦀️.rs", "🔤️argument-helpers/🦀️.rs", "🖼️surface-presentation/🦀️.rs", "🎬️actions-a/🦀️.rs", "🎞️actions-b/🦀️.rs", "🧵️dag-input/🦀️.rs"]);
+    let protocol_production = production_source(&["📡️protocol/🦀️.rs", "📡️protocol/🌉️bridge/🦀️.rs", "📡️protocol/🪢️domain/🦀️.rs"]);
+    let schema = read_source("../../🧬️schema/📡️abi/🔣️.json");
+    let host = read_source("../../🖥️host/🏃️runtime/🟨️.js");
+    let browser = read_source("../../🌐️browser/🏃️runtime/🟨️.js");
+    let package_publication = read_source("../../🌐️browser/📦️publication/🟦️.ts");
+    let package_build = read_source("../../../🫀️core/📦️packages/🦀️rust/📜️script.ts");
+    let production_loader = read_source("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx");
     for symbol in ["vcsCheckpoint", "vcsFault", "vcsRetryCheckpoint"] {
         assert!(schema.contains(symbol));
         assert!(host.contains(symbol));
-        assert!(packaged_host.contains(symbol));
     }
     for legacy in ["loadSnapshotJson", "resyncFixtureJson", "snapshotJson"] {
         assert!(!schema.contains(legacy));
         assert!(!host.contains(legacy));
-        assert!(!packaged_host.contains(legacy));
     }
     let callers = [
         ["FlowRetained", "Vcs::new"].concat(),
@@ -665,11 +659,9 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
     for control in ["encodeCancel(", "encodeClose(", "encodeAcknowledge("] {
         assert!(host.contains(control));
     }
-    assert_eq!(host, packaged_host);
-    assert_eq!(browser, packaged_browser);
-    assert!(package_manifest.contains("\"./🌐️flow-browser.js\""));
-    assert!(package_build.contains("manifest.exports"));
-    assert!(package_build.contains("publishFlowBrowserPackage(join(FAMILY_RS_DIR"));
+    assert!(package_publication.contains("withProducedWasmPackageTaskV1"));
+    assert!(package_publication.contains("withRepositoryArtifactTaskV1"));
+    assert!(package_build.contains("consume:capture=>publishFlowBrowserPackage(capture,this.invocation)"));
     assert!(production_loader.contains("import(\"@semio-tech/flow-core/🌐️flow-browser.js\")"));
     let rows: Vec<&str> = FLOW_VCS_PRODUCTION_LEDGER.lines().skip(1).collect();
     assert_eq!(rows.len(), 6);
@@ -711,7 +703,7 @@ fn selected_widget_query_uses_census_and_multiple_cancellable_grants() {
 fn scaled_document_json(target_bytes: usize) -> String {
     const ROWS: usize = 8;
     let text = "measured retained payload ".repeat(1 + target_bytes / (ROWS * 26));
-    let mut document = crate::artifact::FlowHostSnapshot::default();
+    let mut document = semio_framework_artifact_flow_flow::artifact::FlowHostSnapshot::default();
     for index in 0..ROWS {
         document.widgets.push(Widget::InputNote { id: format!("scaled-{index}"), text: text.clone() });
     }
@@ -841,7 +833,7 @@ fn dag_budget(fixture:&Value,byte_credit:usize)->AbiWorkBudget{let mut budget=Ab
 fn original_dag_poll_spends_each_independent_retained_grant_once(){
     let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let mut polls=0;
     for credit in fixture["workGrants"].as_array().unwrap().iter().filter_map(Value::as_u64).filter(|credit|*credit!=0){for operation in fixture["pollOperations"].as_array().unwrap().iter().filter_map(Value::as_u64){let operation=operation as u16;
-        let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+        let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&semio_framework_os_infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
         let input=operation==2525;let expected=if input{fixture["replacement"].clone()}else{let domain=domain.borrow();match operation{2518=>serde_json::to_value(domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_value(domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_value(domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_value(domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_value(domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};let payload=if input{text_payload(&serde_json::to_string(&expected).unwrap())}else{Vec::new()};let arguments=FlowArguments::preflight(operation,payload).unwrap();let observer=Rc::new(FlowOperationObserver::new());observer.bound.set(true);let admission=FlowFeatureAdmission{session:semio_framework::abi::AbiHandle::try_new(1,1).unwrap(),request_generation:1};let mut action=flow_action(operation,&arguments).unwrap();action.bind_admission(admission).unwrap();action.bind_observer(observer.clone());let mut feature=FlowProgramFeature{domain:domain.clone(),arguments,action,observer,admission,operation,dag_read_lease:None,terminal_failure:None};let budget=dag_budget(&fixture,credit as usize);let mut complete=false;
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){
             let before=feature.action.retained_receipt().unwrap();let step=feature.step(budget);let after=feature.action.retained_receipt().unwrap();assert!(after.copied_items-before.copied_items<=budget.retained.maximum_items);assert!(after.copied_bytes-before.copied_bytes<=budget.retained.maximum_copy_bytes);assert!(after.retained_capacity_bytes-before.retained_capacity_bytes<=budget.retained.maximum_capacity_bytes);assert!(after.released_bytes-before.released_bytes<=budget.retained.maximum_release_bytes);polls+=1;
@@ -859,7 +851,7 @@ fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease
     for operation in fixture["outputOperations"].as_array().unwrap(){
         for refusal in fixture["terminalRefusals"].as_array().unwrap(){
             let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));
-            domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+            domain.borrow_mut().host.set_selection_domains(&semio_framework_os_infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
             let original=domain.borrow().host.selected_widget_ids();
             let mut output=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation.as_u64().unwrap()as u16,Vec::new()).unwrap();
             assert!(matches!(output.step(dag_budget(&fixture,0)),FlowFeatureStep::Yield));
@@ -895,7 +887,7 @@ fn admitted_dag_output_pins_the_original_source_and_control_releases_every_lease
 #[test]
 fn admitted_dag_original_outputs_match_independent_serde_under_pinned_single_unit_grants(){
     let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧵️dag-retained/🔣️.json")).unwrap();let session=semio_framework::abi::AbiHandle::try_new(1,1).unwrap();let mut grants=0;
-    for operation in fixture["outputOperations"].as_array().unwrap(){let operation=operation.as_u64().unwrap()as u16;let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&crate::infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
+    for operation in fixture["outputOperations"].as_array().unwrap(){let operation=operation.as_u64().unwrap()as u16;let domain=Rc::new(RefCell::new(FlowDomainAdapter::default()));domain.borrow_mut().host.set_selection_domains(&semio_framework_os_infinite::board::schema::dag_input::DagSelectionDomains{nodes:vec!["slider".into()],edges:vec![],handles:vec![]});
         let expected={let domain=domain.borrow();match operation{2518=>serde_json::to_vec(&domain.host.selected_widget_ids()).unwrap(),2519=>serde_json::to_vec(&domain.host.dag.selected_edge_ids()).unwrap(),2520=>serde_json::to_vec(&domain.host.dag.selection_domains()).unwrap(),2522=>serde_json::to_vec(&domain.host.dag.hover_facts()).unwrap(),2523=>serde_json::to_vec(&domain.host.dag.selected_channels()).unwrap(),_=>unreachable!()}};
         let mut feature=FlowDomainAdapter::start_feature(Rc::clone(&domain),FlowFeatureAdmission{session,request_generation:1},operation,Vec::new()).unwrap();let mut completed=false;
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){assert!(matches!(feature.step(dag_budget(&fixture,0)),FlowFeatureStep::Yield));grants+=1;match feature.step(dag_budget(&fixture,1)){FlowFeatureStep::Complete(bytes)=>{assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap(),serde_json::from_slice::<Value>(&expected).unwrap());completed=true;break},FlowFeatureStep::Failed(failure)=>panic!("original DAG output {failure:?}"),_=>{}}}

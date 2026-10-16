@@ -145,7 +145,4 @@ pub async fn canonicalize_trace(text: &str, env: &HashMap<String, f64>) -> Resul
 //#endregion 🔖️Trace
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

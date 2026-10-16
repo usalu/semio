@@ -81,7 +81,8 @@
         "request",
         "command",
         "cwd",
-        "presentation"
+        "presentation",
+        "env"
       ],
       "properties": {
         "name": {
@@ -106,7 +107,19 @@
           "additionalProperties": {
             "type": "string",
             "pattern": "^\\$\\{input:semio-dashboard-"
-          }
+          },
+          "properties": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": {
+              "const": "0"
+            },
+            "NODE_DISABLE_COMPILE_CACHE": {
+              "const": "1"
+            }
+          },
+          "required": [
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH",
+            "NODE_DISABLE_COMPILE_CACHE"
+          ]
         },
         "presentation": {
           "type": "object",
@@ -128,6 +141,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "RuntimeEnvironment": {
+      "const": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      }
     }
   }
 }

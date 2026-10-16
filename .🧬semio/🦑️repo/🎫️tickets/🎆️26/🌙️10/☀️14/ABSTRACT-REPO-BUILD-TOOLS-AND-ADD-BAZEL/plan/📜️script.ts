@@ -1,27 +1,38 @@
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
-import {readFile,writeFile} from "node:fs/promises";
-import {isAbsolute,join} from "node:path";
+import {constants} from "node:fs";
+import {open,lstat,writeFile} from "node:fs/promises";
+import {isAbsolute,join,resolve,relative} from "node:path";
 import {createRequire} from "node:module";
-const root=process.env.SEMIO_WORKSPACE_ROOT!,artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR!;
-if(!root||!artifacts)throw Error("Workspace and ticket artifacts required");
-const path=process.argv[2],expectedDigest=process.argv[3];
-if(process.argv.length!==4||!path||!isAbsolute(path)||!expectedDigest||!/^[a-f0-9]{64}$/u.test(expectedDigest))throw Error("Explicit absolute immutable graph pin and SHA-256 digest required");
-assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,path,"Public entry changed the original graph pin");assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,expectedDigest,"Public entry changed the original graph digest");
-const library=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const {planBazelTasksV1}=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts"));
-const {readBuildGraphV1}=await import(join(library,"🏗️build/🕸️graph/🟦️.ts"));
-const Ajv=createRequire(join(root,".nx/installation/package.json"))("ajv");
-const schema=JSON.parse(await readFile(join(library,"🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json"),"utf8")),validate=new Ajv({strict:true}).compile(schema);
-let source=await readFile(path,"utf8");const digest=createHash("sha256").update(source).digest("hex");assert.equal(digest,expectedDigest);
-const graph=readBuildGraphV1(JSON.parse(source));assert.equal(graph.admission?.selection.kind,"all","Exhaustive planning requires whole-workspace admission");source="";Bun.gc(true);const began=performance.now(),unique=new Set<string>(),failures:{task:string;message:string}[]=[];
-let planned=0,baseTasks=0,configuredTasks=0,expandedEntries=0,maximumClosure=0,cancelled=false;
-const cancel=()=>{cancelled=true;};process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-try{
- for(const project of Object.values(graph.projects))for(const[name,target]of Object.entries(project.targets)){
-  const base=project.name+":"+name;const selections=[base,...Object.keys(target.configurations??{}).map(configuration=>base+":"+configuration)];baseTasks++;configuredTasks+=selections.length-1;
-  for(const task of selections){if(cancelled||performance.now()-began>300000)throw Error("All-task qualification cancelled or exhausted its five-minute deadline");try{const plan=planBazelTasksV1(graph,{tasks:[task]});assert(validate(plan),JSON.stringify(validate.errors));const ids=Object.keys(plan.tasks);expandedEntries+=ids.length;maximumClosure=Math.max(maximumClosure,ids.length);for(const id of ids)unique.add(id);}catch(error){failures.push({task,message:error instanceof Error?error.message:String(error)});}planned++;if(planned%250===0){console.log(`[DEBUG] Bazel plans checked ${planned} failures=${failures.length}`);await new Promise(resolve=>setImmediate(resolve));}}
- }
- const result={graph:{path,digest,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length},baseTasks,configuredTasks,planned,expandedEntries,uniqueExpandedTasks:unique.size,maximumClosure,failures,elapsedMilliseconds:Math.round(performance.now()-began)};
- await writeFile(join(artifacts,"bazel-all-task-plan.json"),JSON.stringify(result,null,2)+"\n");console.log("[DEBUG] Bazel complete task qualification "+JSON.stringify(result));assert.equal(failures.length,0,"Bazel task plans failed");
-}finally{process.off("SIGINT",cancel);process.off("SIGTERM",cancel);}
+import type {ScriptInvocation} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import inputSchema from "./🔣️schema.json";
+
+/** 📌️ Retains the carried Original and exact immutable ALL pin throughout a read-only qualification. */
+export async function withQualificationGraphV1<T>(body:(scope:{root:string;artifacts:string;library:string;original:ScriptInvocation;graph:any;pin:{path:string;digest:string};check:()=>void;progress:()=>Promise<void>})=>Promise<T>):Promise<T>{
+ const root=process.env.SEMIO_WORKSPACE_ROOT!,artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR!,[path,digest]=process.argv.slice(2),input={version:1,root,artifacts,path,digest,reuse:process.env.SEMIO_BUILD_REUSE_GRAPH},library=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"),processOwner=join(root,"🧰️framework/🔨️modules/🏃️process");
+ const routing=await import(join(processOwner,"📦️packages/🟦️typescript/🧭️routing/🟦️.ts")),{validateJsonSchemaSubset}=await import(join(root,"🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));
+ if(process.argv.length!==4||validateJsonSchemaSubset(inputSchema,input).length||!isAbsolute(path!)||resolve(root)!==root||process.cwd()!==root||resolve(artifacts)!==artifacts||artifacts!==resolve(import.meta.dir,"../🗑️generated")||process.env.SEMIO_BUILD_GRAPH_PATH!==path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==digest||process.env.SEMIO_SCRIPT_PROCESS_INVOCATION===undefined)throw Error("Exact carried qualification Original and immutable pin required");
+ return routing.receiveScriptProcessInvocation(process.env,async(original:ScriptInvocation)=>{
+  const control=routing.createIssuedResourceControlV1(original,"qualification:graph-reader",import.meta.main?300000:120000);
+  const check=()=>{routing.checkScriptInvocation(original);routing.requireIssuedResourceControlV1(control);if(process.env.SEMIO_BUILD_GRAPH_PATH!==path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==digest||process.env.SEMIO_BUILD_REUSE_GRAPH!=="true"||process.env.SEMIO_WORKSPACE_ROOT!==root)throw Error("Qualification process pin changed");};check();
+  const {withRepositoryCacheStoreV1}=await import(join(library,"⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts")),{requireNativeStoragePathV1}=await import(join(processOwner,"📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts")),{acquireResourceLease}=await import(join(processOwner,"🔒️leases/🟦️.ts")),{captureBuildSourceClosureV1,buildSourceClosureIdentityV1}=await import(join(library,"🏗️build/📥️source/🔏️closure/🟦️.ts"));
+  const backend=relative(root,join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts")).replaceAll("\\","/"),source=await captureBuildSourceClosureV1(root,backend,original),sourceIdentity=buildSourceClosureIdentityV1(source),sourceCheck=async()=>{check();if(buildSourceClosureIdentityV1(await captureBuildSourceClosureV1(root,backend,original))!==sourceIdentity)throw Error("Qualification Source closure changed");check();};
+  return withRepositoryCacheStoreV1(root,"graph",original,control,async(store:any,actualPhase:ResourceLeaseControl)=>{
+   const canonical=requireNativeStoragePathV1(store.root,path!);if(canonical!==path||canonical!==join(store.root,"snapshots",digest+".json"))throw Error("Canonical immutable graph snapshot required");const lease=await acquireResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"build-graph:"+canonical,mode:"shared",signal:control.signal,control});let failed=false;
+   try{check();await store.recheck();check();const file=await open(canonical,constants.O_RDONLY|(constants.O_NOFOLLOW??0));let fileFailed=false;
+    try{check();const before=await file.stat({bigint:true});check();if(!before.isFile()||before.nlink!==1n||before.size>536870912n)throw Error("Bounded immutable ALL graph required");const stamp=(row:typeof before)=>[row.dev,row.ino,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":"),verify=async()=>{check();const named=await lstat(canonical,{bigint:true});check();const held=await file.stat({bigint:true});check();if(named.isSymbolicLink()||stamp(named)!==stamp(before)||stamp(held)!==stamp(before))throw Error("Immutable qualification graph identity changed");};
+     await verify();const chunk=Buffer.alloc(1048576),hash=createHash("sha256");for(let offset=0;offset<Number(before.size);){check();const row=await file.read(chunk,0,Math.min(chunk.length,Number(before.size)-offset),offset);check();if(!row.bytesRead)throw Error("Immutable graph shortened");hash.update(chunk.subarray(0,row.bytesRead));offset+=row.bytesRead;if(offset%(8388608)===0)await routing.advanceScriptInvocation(original,"qualification:pin-read","running");}if(hash.digest("hex")!==digest)throw Error("Immutable qualification graph digest changed");await verify();
+     const {loadBuildGraphV1}=await import(join(library,"🏗️build/🕸️graph/🟦️.ts")),graph=await loadBuildGraphV1(root,original,actualPhase,{selection:{kind:"all"},reuse:true});check();await verify();if(graph.admission?.selection.kind!=="all")throw Error("Whole-workspace graph admission required");await sourceCheck();
+     const result=await body({root,artifacts,library,original,graph,pin:{path:canonical,digest:digest!},check,progress:async()=>{check();await routing.advanceScriptInvocation(original,"qualification:plans","running");check();}});await sourceCheck();await verify();await store.recheck();check();return result;
+    }catch(error){fileFailed=true;throw error;}finally{try{await file.close();}catch(error){if(!fileFailed)throw error;}}
+   }catch(error){failed=true;throw error;}finally{try{lease.release();}catch(error){if(!failed)throw error;}}
+  });
+ });
+}
+
+if(import.meta.main)await withQualificationGraphV1(async({root,artifacts,library,original,graph,pin,check,progress})=>{
+ const {planBazelTasksV1}=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/📜️script.ts")),{default:schema}=await import(join(library,"🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json")),Ajv=createRequire(join(root,"package.json"))("ajv"),validate=new Ajv({strict:true}).compile(schema),unique=new Set<string>(),failures:{task:string;message:string}[]=[];let planned=0,baseTasks=0,configuredTasks=0,expandedEntries=0,maximumClosure=0;
+ for(const project of Object.values(graph.projects)as any[])for(const[name,target]of Object.entries(project.targets)as [string,any][]){check();const base=project.name+":"+name,selections=[base,...Object.keys(target.configurations??{}).map(configuration=>base+":"+configuration)];baseTasks++;configuredTasks+=selections.length-1;for(const task of selections){check();try{const plan=planBazelTasksV1(graph,{tasks:[task]});assert(validate(plan),JSON.stringify(validate.errors));const ids=Object.keys(plan.tasks);expandedEntries+=ids.length;maximumClosure=Math.max(maximumClosure,ids.length);for(const id of ids)unique.add(id);}catch(error){check();failures.push({task,message:error instanceof Error?error.message:String(error)});}planned++;if(planned%64===0)await progress();}}
+ check();const result={graph:{...pin,projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length},originalMaximumElapsedMilliseconds:original.policy.maximumElapsedMilliseconds,baseTasks,configuredTasks,planned,expandedEntries,uniqueExpandedTasks:unique.size,maximumClosure,failures};await writeFile(join(artifacts,"bazel-all-task-plan-"+process.pid+".json"),JSON.stringify(result,null,2)+"\n",{flag:"wx"});check();console.log("[DEBUG] Bazel complete task qualification "+JSON.stringify(result));assert.equal(failures.length,0,"Bazel task plans failed");
+});

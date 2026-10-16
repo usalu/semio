@@ -507,6 +507,12 @@ async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_rout
 }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
+use protocol::InteractionState;
+type Wallet = ::semio_framework_os_kernel::io::control::NativeSnapshotBodyWallet;
+type InteractionStore = store::ArtifactStore<InteractionState, InteractionConfigMutation>;
+use crate::local_interaction::retirement::interaction_store_owners;
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🕹️interaction/📃️query/🧪️tests/🧰️original-owners/🦀️.rs"));
+
 async fn query_app() -> VcsArtifactApp<TestApp> {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
@@ -514,10 +520,10 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let state: InteractionState = serde_json::from_value(state).unwrap();
     let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut interaction = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
-    let mut receiving = crate::local_interaction::query::tests::original_receiving_recipient();
-    crate::local_interaction::query::tests::install_original_interaction_owners(&mut interaction, &mut receiving);
+    let mut receiving = original_receiving_recipient();
+    install_original_interaction_owners(&mut interaction, &mut receiving);
     let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    let mut previous = std::mem::replace(&mut app.interaction_store, interaction);
+    let mut previous = std::mem::replace(&mut app.stores.interaction_store, interaction);
     previous.close_owned_unscheduled().unwrap();
     assert!(previous.close_owned_terminal_is_empty());
     app.bind_instance_id(7).await;

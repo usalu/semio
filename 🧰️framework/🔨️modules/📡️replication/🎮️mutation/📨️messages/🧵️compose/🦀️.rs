@@ -1,5 +1,5 @@
 //! 🧵️ Composes bounded diagnostic text directly from immutable native UTF8 capabilities.
-use super::{MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES};
+use semio_framework_replication_mutation::{MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES};
 use semio_framework_diagnostic::Severity;
 use semio_framework_value::{paged::Utf8Text, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::{ManuallyDrop, size_of};

@@ -17,7 +17,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     let revision = law["sceneRevision"].as_u64().unwrap();
     let generation = law["previewGeneration"].as_u64().unwrap();
     let limit = law["retirementTurns"].as_u64().unwrap() as usize;
-    let mut gpu = match semio_framework_async::block_on(crate::wgpu::gpu::GpuContext::headless(width, height)) {
+    let mut gpu = match semio_framework_async::block_on(semio_framework_ui_wgpu_render::GpuContext::headless(width, height)) {
         Ok(gpu) => gpu,
         Err(error) => { assert!(error.starts_with("offscreen adapter:"), "{error}"); eprintln!("[DEBUG] originalZeroIndexGpu adapterUnavailable=true runtimeQualified=false"); return; }
     };
@@ -61,7 +61,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
             assert!(gpu.raster_table_terminal_is_empty());
             panic!("{key}: original GPU upload failed after exact owner closure: {upload_error:?}");
         }
-        assert_eq!(gpu.mesh_store_mut().get_versioned(key, revision).unwrap().index_count, law["indexCount"].as_u64().unwrap() as u32);
+        assert_eq!(gpu.mesh_index_count(key, revision).unwrap(), law["indexCount"].as_u64().unwrap() as u32);
         let mut answers = Vec::new();
         for (version_index, version_law) in law["versions"].as_array().unwrap().iter().enumerate() {
             let drawn_version = revision + version_law["offset"].as_u64().unwrap();
@@ -77,7 +77,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
             for index in 0..packet.command_pages().len() { match packet.command_pages().get(index).and_then(|command| command.draw_cursor()) { Some(DrawMeasureCursor::PassInstance { translucent: false, .. }) => paths[0] += 1, Some(DrawMeasureCursor::PassInstance { translucent: true, .. }) => paths[1] += 1, Some(DrawMeasureCursor::PassMaterialInstance { .. }) => paths[2] += 1, _ => {} } }
             assert_eq!(paths, [1; 3]);
             assert_eq!(law["drawPaths"], serde_json::json!(["opaque", "translucent", "material"]));
-            let witness = crate::wgpu::draw::RasterTextureWitness { scene_revision: revision, preview_generation: generation, operation: (case_index * law["versions"].as_array().unwrap().len() + version_index) as u64 + 1 };
+            let witness = semio_framework_ui_wgpu_render::RasterTextureWitness { scene_revision: revision, preview_generation: generation, operation: (case_index * law["versions"].as_array().unwrap().len() + version_index) as u64 + 1 };
             gpu.begin_raster_ownership(witness).unwrap();
             gpu.seal_raster_ownership(witness).unwrap();
             let mut cursor = gpu.begin_prepared_present(&packet, witness).unwrap();
@@ -129,7 +129,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
 #[test]
 fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_physically() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::draw::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
+    use crate::wgpu::draw_types::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
     use crate::wgpu::draw_types::ScissorRect;
     use crate::wgpu::kernel_3d_scene::ProceduralGrid3d;
     let grid = ProceduralGrid3d { plane_z: 2.001, camera_plane_projection: [7.0, -4.0, 2.001], cell_size: 2.5, fade_distance: 18.0, cell_color: [0.2, 0.3, 0.4] };

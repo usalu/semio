@@ -14,7 +14,7 @@
 //! 🧭️ Every NEW io-mechanism type (`IoEntry`/`IoPayload`/io_schema's wire types) is referenced by its FULL path
 //! (`semio_framework_os_kernel::io::io_mechanism::…` / `semio_framework::io_schema::…`), never `use`d bare, so it can never
 //! collide with the OLD same-named `IoPayload`/`Confidence` of the `🔖️Dialect` region.
-use crate::surface_contract::remember_subset_examples;
+use semio_framework_plugin_decl_surface::remember_subset_examples;
 use semio_framework_ui_contract::schema_metadata;
 use crate::plugin_program::AppFactory;
 use semio_framework::AppDefinition;
@@ -30,27 +30,24 @@ use semio_framework_artifact_reference::Dialect;
 use semio_framework_artifact_reference::StandardId;
 use semio_framework::surface_app_id;
 use semio_framework::AppRole;
-use crate::plugin_app::NoPluginApp;
-use crate::app_builder::App;
-use crate::app_builder::ExampleSource;
-use crate::window_kits::AppActionRegistry;
-use crate::app_contract::ArtifactApp;
-use crate::plugin_app::PluginApp;
-use crate::app_contract::mount_natural_file_actions;
-use crate::artifact_identity::ArtifactLocale;
+use semio_framework_plugin_reactor_app::NoPluginApp;
+use semio_framework_plugin_app_builder::App;
+use semio_framework_plugin_app_builder::ExampleSource;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_app::mount_natural_file_actions;
+use semio_framework_plugin_identity::ArtifactLocale;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::artifact_identity::preflight_artifact_identity;
+use semio_framework_plugin_identity::preflight_artifact_identity;
 use crate::artifact_inference::ArtifactInferenceService;
-use crate::artifact_inference::preflight_artifact_inference_services;
-use crate::artifact_inference::register_artifact_inference_services;
-use crate::artifact_instance::VcsArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
-use crate::surface_contract::ArtifactCodecTableV1;
-use crate::surface_contract::ArtifactEditor;
-use crate::surface_contract::ArtifactViewer;
-use crate::surface_contract::EditorApp;
-use crate::surface_contract::ViewerApp;
-use crate::surface_contract::artifact_codec_table;
+use semio_framework_plugin_decl_surface::ArtifactCodecTableV1;
+use semio_framework_plugin_decl_surface::ArtifactEditor;
+use semio_framework_plugin_decl_surface::ArtifactViewer;
+use semio_framework_plugin_decl_surface::EditorApp;
+use semio_framework_plugin_decl_surface::ViewerApp;
+use semio_framework_plugin_decl_surface::artifact_codec_table;
 
 /// 🗣️ One text/binary [`dsl::LanguageSpec`] pair for one `NativeCodecs` channel.
 /// `dsl::LanguageRole` names FIVE roles total (`Document`/`Ops`/`Diff`/`Pack`/`Spr`) —
@@ -118,43 +115,13 @@ pub struct SchemaDeclaration {
 pub struct SurfaceDeclaration<PA: PluginApp = NoPluginApp> {
     pub definition: AppDefinition,
     /// 🚫️async: E4 fn-pointer slot
-    pub factory: for<'a, 'b> fn(&AppDefinition, ActorId, crate::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA,
+    pub factory: for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA,
     /// 🚫️async: E4 fn-pointer slot
     pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
     pub document_schema: &'static str,
     pub codec: ArtifactCodecTableV1,
     pub mutation_roster: Option<OwnerMutationRoster>,
     pub rights: Rights,
-}
-
-/// ✏️ Builds an editor `SurfaceDeclaration` from `E` — `def` is `Editor::builder(E::DIALECT)
-/// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
-/// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
-/// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`. The
-/// concrete app retains `E::Members`, so a composed editor keeps its typed child fleet in every
-/// bundle that declares this subset. Schema-first (C8.2), exactly as `PluginBuilder::editor`:
-/// an empty `io.artifact_schema` is stamped with `E::DOCUMENT_SCHEMA`, so the manifest names the
-/// document this surface opens and a shell attaching a hub document checks the lease against it.
-///
-/// 🚫️async: E4 fn-pointer slot
-///
-/// 🚫️async: E4 fn-pointer slot — `E::app_schema()` is a genuine (pure, non-suspending)
-/// AFIT trait method; resolved synchronously via `resolve_ready` to fit the bare slot.
-pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-        PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)))
-    }
-    fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        E::app_schema()
-    }
-    if def.io.artifact_schema.is_empty() {
-        def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
-    }
-    if let Some(codec) = E::natural_file_codec() {
-        mount_natural_file_actions(&mut def, codec);
-    }
-    stamp_fault_notices::<EditorApp<E>>(&mut def);
-    SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, codec: artifact_codec_table::<EditorApp<E>>(), mutation_roster: None, rights: Rights::Write }
 }
 
 /// 📢️ Stamps `A`'s declared fault notices (design §20.12) into the definition its descriptor publishes. A table that
@@ -165,27 +132,6 @@ pub fn stamp_fault_notices<A: ArtifactApp>(def: &mut AppDefinition) {
     if let Some(error) = semio_framework::validate_fault_notices(&def.fault_notices).first() {
         panic!("app {}: {error}", def.id);
     }
-}
-
-/// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
-/// §2.3 clause 4: a viewer's document store attaches Read only, never Write), and the same
-/// schema-first stamp from `V::DOCUMENT_SCHEMA`.
-///
-/// 🚫️async: E4 fn-pointer slot
-///
-/// 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
-pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-        PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)))
-    }
-    fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        V::app_schema()
-    }
-    if def.io.artifact_schema.is_empty() {
-        def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
-    }
-    stamp_fault_notices::<ViewerApp<V>>(&mut def);
-    SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, codec: artifact_codec_table::<ViewerApp<V>>(), mutation_roster: None, rights: Rights::Read }
 }
 
 /// 🪆️ One complete standalone subset — own schema, own io, own viewer, own editor, own
@@ -237,7 +183,7 @@ pub(crate) struct DeclaredRegistration<PA: PluginApp = NoPluginApp> {
     pub capabilities: Vec<CapabilityRequirement>,
 }
 
-fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_framework_os_kernel::io::FormatDescriptor {
+pub fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_framework_os_kernel::io::FormatDescriptor {
     let kind_id = format!("{}@{}", artifact.kind.as_str(), standard.id.0);
     semio_framework_os_kernel::io::FormatDescriptor {
         kind_id: kind_id.clone(),
@@ -255,7 +201,7 @@ fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, stand
 
 /// ➕️ Baseline Read, plus Write when `surface.rights == Rights::Write` — see `editor_surface`/
 /// `viewer_surface` doc for why `rights` alone drives this instead of a `Vec<Rights>` field.
-fn capability_rows_for<PA: PluginApp>(surface: &SurfaceDeclaration<PA>) -> Vec<CapabilityRequirement> {
+pub fn capability_rows_for<PA: PluginApp>(surface: &SurfaceDeclaration<PA>) -> Vec<CapabilityRequirement> {
     let mut rows = vec![CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }];
     if surface.rights == Rights::Write {
         rows.push(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App });
@@ -267,7 +213,7 @@ fn capability_rows_for<PA: PluginApp>(surface: &SurfaceDeclaration<PA>) -> Vec<C
 /// `io.native.codec.schema` in its genesis history, and a surface whose `DOCUMENT_SCHEMA` differs refuses that history at
 /// hydration (`Identity`) — measured on hub 7800 p33, where the puzzle 3d editor named `puzzle.3d.fixture` against its
 /// codec's (and viewer's) `puzzle.3d` and no hub puzzle 3d document ever opened. Refused here, the drift fails `describe`.
-fn check_surface_document_schema<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: &SurfaceDeclaration<PA>) -> Result<(), PluginAssemblyError> {
+pub fn check_surface_document_schema<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: &SurfaceDeclaration<PA>) -> Result<(), PluginAssemblyError> {
     if surface.document_schema != subset.io.native.codec.schema {
         return Err(PluginAssemblyError::new(
             "plugin-assembly.declaration-document-schema",
@@ -277,7 +223,7 @@ fn check_surface_document_schema<PA: PluginApp>(subset: &SubsetDeclaration<PA>, 
     Ok(())
 }
 
-fn check_surface_id<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: &SurfaceDeclaration<PA>, role: AppRole) -> Result<(), PluginAssemblyError> {
+pub fn check_surface_id<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: &SurfaceDeclaration<PA>, role: AppRole) -> Result<(), PluginAssemblyError> {
     let expected = surface_app_id(&subset.dialect.into(), role);
     if surface.definition.id != expected {
         return Err(PluginAssemblyError::new(
@@ -288,74 +234,16 @@ fn check_surface_id<PA: PluginApp>(subset: &SubsetDeclaration<PA>, surface: &Sur
     Ok(())
 }
 
-fn subset_binding<PA: PluginApp>(plugin_id: &str, artifact: &ArtifactDeclaration<PA>, subset: &SubsetDeclaration<PA>) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
+pub fn subset_binding<PA: PluginApp>(plugin_id: &str, artifact: &ArtifactDeclaration<PA>, subset: &SubsetDeclaration<PA>) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
     let apps = [&subset.viewer.definition.id, &subset.editor.definition.id].into_iter().filter(|app| !app.is_empty()).cloned().collect();
     semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::TreeSubset, plugin_id, Some(artifact.kind.as_str().to_string()), apps, Some(subset.dialect.into()), None, &subset.io.native.codec)
 }
 
-pub(crate) fn artifact_declaration_bindings<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Vec<semio_framework_os_kernel::io::ArtifactCodecBinding> {
+pub fn artifact_declaration_bindings<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Vec<semio_framework_os_kernel::io::ArtifactCodecBinding> {
     declarations.iter().flat_map(|artifact| artifact.standards.iter().flat_map(move |standard| standard.subsets.iter().map(move |subset| subset_binding(plugin_id, artifact, subset)))).collect()
 }
 
-/// 🔬️ Validates a whole batch of declared trees against every established registry WITHOUT
-/// mutating any of them — schema/inference-descriptor/inference-service/language preflights
-/// each own their independent lock (safe to call freely); document-codec and format-descriptor
-/// preflights share ONE `semio_framework_schema_registry::assembly::begin()` guard (dropped before returning);
-/// io entries get a hand-rolled coordinate-level duplicate check against `io_entries()` since
-/// `semio_framework_os_kernel::io::io_mechanism` exposes no standalone dry-run (its own `io_register`
-/// preflights+commits in one call — see the W1-C report's "atomicity" section for why holding
-/// an outer guard across THAT call would deadlock the process-wide assembly mutex, and why this
-/// function therefore never holds one while any io call could happen).
-pub(crate) fn preflight_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
-    let mut schemas = Vec::new();
-    let mut inferences = Vec::new();
-    let mut inference_services = Vec::new();
-    let mut languages: Vec<semio_framework_dsl::LanguageSpec> = Vec::new();
-    let mut codecs: Vec<store::os_store::serialization::ArtifactCodec> = Vec::new();
-    let mut document_bindings = Vec::new();
-    let mut format_rows = Vec::new();
-    let mut native_snapshots = Vec::new();
-    for artifact in declarations {
-        preflight_artifact_identity(plugin_id, artifact.kind.as_str())?;
-        for standard in &artifact.standards {
-            format_rows.push(format_descriptor_of(artifact, standard));
-            for subset in &standard.subsets {
-                preflight_artifact_identity(plugin_id, subset.dialect.artifact_kind)?;
-                if subset.dialect.artifact_kind != artifact.kind.as_str() {
-                    return Err(PluginAssemblyError::new("plugin-assembly.declaration-dialect", "subset dialect must belong to the exact declared artifact root"));
-                }
-                schemas.push(subset.schema.descriptor);
-                inferences.extend(subset.schema.inferences.iter().copied());
-                inference_services.extend(subset.schema.inference_services.iter().copied());
-                for pair in [subset.io.native.snapshot, subset.io.native.diff, subset.io.native.mutations].into_iter().chain(subset.io.native.inferences) {
-                    languages.extend(pair.text.copied());
-                    languages.extend(pair.binary.copied());
-                }
-                document_bindings.push(subset_binding(plugin_id, artifact, subset));
-                codecs.push(subset.io.native.codec.clone());
-                native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
-                check_surface_id(subset, &subset.editor, AppRole::Editor)?;
-                check_surface_id(subset, &subset.viewer, AppRole::Viewer)?;
-                check_surface_document_schema(subset, &subset.editor)?;
-                check_surface_document_schema(subset, &subset.viewer)?;
-            }
-        }
-    }
-    semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
-    semio_framework_os_kernel::io::preflight_artifact_codec_bindings(&document_bindings, &codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec-binding", error.to_string()))?;
-    ::semio_framework_schema_registry::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
-    ::semio_framework_schema_registry::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
-    preflight_artifact_inference_services(&inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
-    semio_framework_dsl::preflight_languages(&languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
-    {
-        let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-        store::os_store::codec_registry::preflight_document_codecs_in_assembly(&assembly, &codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
-        semio_framework_os_kernel::io::preflight_format_descriptors_in_assembly(&assembly, &format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
-    }
-    preflight_io_entries(declarations)
-}
-
-fn preflight_io_entries<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
+pub fn preflight_io_entries<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let mut proposed: BTreeMap<(String, String), semio_framework::io_schema::IoFidelity> = BTreeMap::new();
@@ -406,59 +294,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// plugin assembly is the same as calling it once (`📋️execution-contract.md` §C,
 /// `📓️wp4c-framework-modules.md` §5.4, ledger row 95).
 // 🚫️async: E1 pure registration helper (no I/O) — see R9
-fn register_boot_scope_schema_exports() {
+pub fn register_boot_scope_schema_exports() {
     semio_framework::interaction::schema::register_scope_exports();
     schema_metadata::register_scope_exports();
-}
-
-pub(crate) fn commit_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
-    preflight_artifact_declarations(plugin_id, declarations)?;
-
-    let mut schemas = Vec::new();
-    let mut inferences = Vec::new();
-    let mut inference_services = Vec::new();
-    let mut languages: Vec<semio_framework_dsl::LanguageSpec> = Vec::new();
-    let mut codecs: Vec<store::os_store::serialization::ArtifactCodec> = Vec::new();
-    let mut document_bindings = Vec::new();
-    let mut format_rows = Vec::new();
-    let mut io_batches: Vec<&'static [semio_framework_os_kernel::io::io_mechanism::IoEntry]> = Vec::new();
-    let mut native_snapshots = Vec::new();
-
-    for artifact in declarations {
-        for standard in &artifact.standards {
-            format_rows.push(format_descriptor_of(artifact, standard));
-            for subset in &standard.subsets {
-                schemas.push(subset.schema.descriptor);
-                inferences.extend(subset.schema.inferences.iter().copied());
-                inference_services.extend(subset.schema.inference_services.iter().copied());
-                for pair in [subset.io.native.snapshot, subset.io.native.diff, subset.io.native.mutations].into_iter().chain(subset.io.native.inferences) {
-                    languages.extend(pair.text.copied());
-                    languages.extend(pair.binary.copied());
-                }
-                document_bindings.push(subset_binding(plugin_id, artifact, subset));
-                codecs.push(subset.io.native.codec.clone());
-                native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
-                io_batches.push(subset.io.entries);
-            }
-        }
-    }
-
-    semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
-    register_boot_scope_schema_exports();
-    ::semio_framework_schema_registry::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
-    ::semio_framework_schema_registry::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
-    register_artifact_inference_services(inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
-    semio_framework_dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
-    {
-        let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-        let plan = semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_codecs: codecs, document_bindings, format_descriptors: format_rows, native_snapshots, ..Default::default() };
-        semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-registry", error.to_string()))?;
-    }
-    for batch in io_batches {
-        semio_framework_os_kernel::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
-    }
-
-    Ok(())
 }
 
 /// 🪞️ Projects app definitions without publishing any registry entry.
@@ -466,7 +304,7 @@ pub(crate) fn commit_artifact_declarations<PA: PluginApp>(plugin_id: &str, decla
 /// 📚️ The subset's examples are registered ONCE — through the editor row —
 /// and stamped with the subset's dialect there, which is what makes them
 /// resolve for the viewer surface too (`manifest::examples_for_app`).
-pub(crate) fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> DeclaredRegistration<PA> {
+pub fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> DeclaredRegistration<PA> {
     let mut result = DeclaredRegistration { app_defs: Vec::new(), app_schema_descriptors: Vec::new(), capabilities: Vec::new() };
     for artifact in declarations {
         for standard in &artifact.standards {
@@ -485,26 +323,3 @@ pub(crate) fn project_artifact_declarations<PA: PluginApp>(declarations: &[Artif
     result
 }
 
-/// 🧪️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1-C Task 4 — the executable
-/// specification: a synthetic TWO-standard, THREE-subset artifact (`crate::declarations::
-/// fixture`) declared entirely through this tree, proving open→mutate→save works end to end
-/// and that `io_route` finds the `standard 1 / subset strict` conformance-profile hop back to
-/// `standard 1 / subset any`. Plugin waves reading this ticket copy this shape verbatim.
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs");
-
-/// 🎭️ Authoring traits for artifact surfaces split by mutation capability (ticket
-/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1/§2.2/§2.4). `ArtifactEditor`
-/// and `ArtifactViewer` replace `ArtifactApp` as the trait an app AUTHOR implements; the runtime
-/// `ArtifactApp` trait above is unchanged and is satisfied by the `EditorApp`/`ViewerApp` adapters
-/// below through pure delegation — nothing here alters runtime dispatch.
-/// 👁️✏️ Authoring trait for a mutation-capable surface — a structural copy of `ArtifactApp`'s
-/// members (contract §2.1) plus `ROLE`/`DIALECT`; `APP_ID` is intentionally absent, the runtime id
-/// being derived from `DIALECT`+`ROLE` via `surface_app_id` (contract §7.4) instead of hand-written.
-/// `EditorApp<E>` below is the sole `ArtifactApp` implementor for any `E: ArtifactEditor`.
-/// ✏️🧩️ The concrete runtime app an editor surface instantiates — the roster read off `E` itself, so
-/// a fleet variant spelled this way can never register `E` over a roster it does not compose with.
-pub type EditorSurfaceApp<E> = VcsArtifactApp<EditorApp<E>, <E as ArtifactEditor>::Members>;
-
-/// 👁️🧩️ Viewer twin of [`EditorSurfaceApp`].
-pub type ViewerSurfaceApp<V> = VcsArtifactApp<ViewerApp<V>, <V as ArtifactViewer>::Members>;

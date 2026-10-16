@@ -1,12 +1,14 @@
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import { stagePrintFonts } from "./🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Print font preparation accepts no arguments");
-    const result = await stagePrintFonts(this.repoRoot);
-    console.log(`Print fonts staged: ${result.total} authored OpenType assets`);
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"print:fonts:prepare",0),result=await withPrintExecutionV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,kind:"fonts"},stagePrintFonts);
+    console.log(`Print fonts staged: ${result.files} authored OpenType assets`);
   }
 }
 

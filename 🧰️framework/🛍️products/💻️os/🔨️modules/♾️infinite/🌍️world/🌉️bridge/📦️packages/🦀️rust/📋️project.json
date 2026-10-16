@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/os-infinite-world-bridge-rs",
+  "tags": [
+    "language:rust",
+    "role:product",
+    "family:infinite"
+  ]
+}

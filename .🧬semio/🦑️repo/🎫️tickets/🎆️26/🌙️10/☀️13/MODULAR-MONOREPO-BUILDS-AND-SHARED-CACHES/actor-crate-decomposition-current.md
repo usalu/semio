@@ -185,3 +185,28 @@ The current Source prototype is terminal exit 1. Actual Cargo tests passed Actor
 This is partial current defining-closure runtime evidence (13 laws across the first three owners), not a complete current Actor composite. No recency/capacity/physical guard was weakened, no manual deletion was performed, and no stored witness was rewritten. Release was held rather than blindly repeating the newly observed capacity frontier. Root and Nx received the exact observation; Nx owns the actual retirement implementation. The new Source prerequisite and both editor entries remain ready for the coherent successor once capacity is lawfully admitted.
 
 The expanded ES2022 strict/noUnchecked successor including the new closed Actor prerequisite is terminal exit 0 (`actor-current-source-types.log`, Original 31177). Core/process/domain/Actor implementation and manifests remain frozen. All own Original handles are now terminal; final release/composite awaits lawful compiler capacity and the retirement owner's coherent checkpoint.
+
+
+## Current Job closure observed prototype checkpoint
+
+The latest Job native/source and twenty-workspace lock checkpoint was used by one authorized fresh Actor prototype Original 82098 through `actor-current/📜️script.ts test prototype`. It is collected exit 1 at 77.5 s: Pack 0/0 and RetainedTurn 10/10 passed; RetainedContext refused before its compiler at the enforcing compact retirement recensus. The exact new row is `prototype/build/serde/a08cbd69c84178a8`, 1405739 bytes unchanged, lock false, maximum recency 1792066731000 → 1792066730000. No Source boundary/semantic Actor failure was reached at that stop.
+
+The same finite Original retained a bounded metadata-only max-source observer of the specifically authorized io-base64 hash directory; 145 samples / 18 events / 18564 record bytes drained and its real Native image closed before terminal. The prior io-base64 recensus selection succeeded, but the new serde refusal stays authoritative. Detailed provenance, test limits and independent Python/SQLite qualification are in `compact-recency-investigation-current.md`. That oracle is BOTH 1/29 and expanded strict is exit 0.
+
+No automatic retry or release was launched. Prior full Actor BOTH 147 results remain older defining snapshots; they are not the latest Job composite. Current final BOTH recapture remains pending authentic stable retirement/headroom, then the still-unreached owners.
+
+
+## Latest reviewed provenance cohort 49501
+
+The next authorized current-Source prototype is collected exit 1 at 289116 ms. Pack passed 0/0; RetainedTurn reached its actual compiler but stopped at the preserved remaining 134716 ms Cargo timeout. No recensus mismatch or Rust semantic error was reported before that stop. Both launches admitted ten of ten cores; actual initial headroom/exclusion checks passed. Release did not run. There was no immediate retry or budget increase.
+
+`actor-preparation-timing-current.md` separates the approximately 105284 ms pre-spawn interval from the actual child allowance and records the remaining causal limits. It also describes bounded actual phase/resource and owned-subtree CPU/state/RSS diagnostics wired for a future separately authorized cohort. Current final Actor composite remains pending; older BOTH147 results remain defining snapshots rather than the latest full closure qualification.
+
+
+## Diagnostic prototype 92270: physical admission refusal
+
+The one next authorized current-closure prototype is collected exit 1 after 4385 ms, before Actor Pack compilation. Actual fixed Rust availability was 4293222400 bytes versus the unchanged 4294967296 initial floor, deficit 1744896 bytes. Authentic existing recovery scanned three prototype units (27929380 logical bytes) and zero release units, selecting no retirement. No Actor test or compiler ran in this cohort, and no recensus mismatch occurred.
+
+The frozen diagnostics measured 2970 ms store admission, inputs entry immediately afterward, and a 10 ms actual cache-scan SH wait at elapsed 3948 ms. The bounded observer drained and the real image closed. Its single CPU snapshot cannot establish a delta, CPU/I/O stall or external contention cause. Exact observations and limits are retained in `actor-preparation-timing-current.md`; actual output is `🗑️generated/actor-timed-prototype.log`.
+
+No retry, release, cap increase, manual deletion or witness refresh followed. Latest full current Job composite qualification remains pending lawful Rust headroom and all six Actor owners; older BOTH147 results retain only their defining-snapshot scope.

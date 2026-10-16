@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "semantics": "observation-only-no-resource-authority",
+  "traces": [
+    {
+      "id": "cancel-drains-before-handback",
+      "events": [
+        "source-borrow",
+        "vertex-acquire",
+        "index-acquire",
+        "step-accept",
+        "cancel",
+        "step-settle",
+        "vertex-close",
+        "index-close",
+        "source-return",
+        "terminal"
+      ],
+      "valid": true
+    },
+    {
+      "id": "partial-upload-cancel",
+      "events": [
+        "source-borrow",
+        "vertex-acquire",
+        "cancel",
+        "vertex-close",
+        "source-return",
+        "terminal"
+      ],
+      "valid": true
+    },
+    {
+      "id": "handback-before-index-close",
+      "events": [
+        "source-borrow",
+        "vertex-acquire",
+        "index-acquire",
+        "vertex-close",
+        "source-return",
+        "index-close",
+        "terminal"
+      ],
+      "valid": false
+    },
+    {
+      "id": "handback-before-accepted-step-settles",
+      "events": [
+        "source-borrow",
+        "step-accept",
+        "cancel",
+        "source-return",
+        "step-settle",
+        "terminal"
+      ],
+      "valid": false
+    },
+    {
+      "id": "terminal-retains-source",
+      "events": [
+        "source-borrow",
+        "cancel",
+        "terminal"
+      ],
+      "valid": false
+    },
+    {
+      "id": "duplicate-source-return",
+      "events": [
+        "source-borrow",
+        "source-return",
+        "source-return",
+        "terminal"
+      ],
+      "valid": false
+    }
+  ],
+  "stageFailures": [
+    {
+      "id": "returned-exact-tuple",
+      "disposition": "Returned",
+      "original": [
+        "admission",
+        "renderer",
+        "texture",
+        "view"
+      ],
+      "caller": [
+        "admission",
+        "renderer",
+        "texture",
+        "view"
+      ],
+      "retained": [],
+      "valid": true
+    },
+    {
+      "id": "retained-exact-stage-tuple-renderer-stays-caller",
+      "disposition": "Retained",
+      "original": [
+        "admission",
+        "renderer",
+        "texture",
+        "view"
+      ],
+      "caller": [
+        "renderer"
+      ],
+      "retained": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "valid": true
+    },
+    {
+      "id": "returned-loses-texture",
+      "disposition": "Returned",
+      "original": [
+        "admission",
+        "renderer",
+        "texture",
+        "view"
+      ],
+      "caller": [
+        "admission",
+        "renderer",
+        "view"
+      ],
+      "retained": [],
+      "valid": false
+    },
+    {
+      "id": "retained-duplicates-view",
+      "disposition": "Retained",
+      "original": [
+        "admission",
+        "renderer",
+        "texture",
+        "view"
+      ],
+      "caller": [
+        "renderer",
+        "view"
+      ],
+      "retained": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "valid": false
+    }
+  ],
+  "sourceAssertions": [
+    {
+      "law": "every_world_color_cursor_uses_the_encoded_composite_attachment",
+      "variable": "draw_source",
+      "source": "🔧️pipeline/🏭️factory/🦀️.rs",
+      "symbols": [
+        "let world_encoded_format = format.remove_srgb_suffix();",
+        "scene_color_world_encoded",
+        "prepared_composite_world_encoded_view"
+      ]
+    },
+    {
+      "law": "standard_translucent_world_pipeline_preserves_react_depth_and_side_policy",
+      "variable": "source",
+      "source": "🔧️pipeline/🏭️factory/🦀️.rs",
+      "symbols": [
+        "world3d_standard_translucent_pipeline"
+      ]
+    },
+    {
+      "law": "the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane",
+      "variable": "source",
+      "source": "🔧️pipeline/🏭️factory/🦀️.rs",
+      "symbols": [
+        "world3d_textured_pipeline"
+      ]
+    }
+  ]
+}

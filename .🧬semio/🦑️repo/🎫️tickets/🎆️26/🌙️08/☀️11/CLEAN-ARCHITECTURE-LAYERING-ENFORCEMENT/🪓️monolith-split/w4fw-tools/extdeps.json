@@ -1,0 +1,801 @@
+{
+"abi": {
+"semio_framework_value": [
+"AbiWorkBudget"
+]
+},
+"action-bus": {
+"semio_framework_job": [
+"ActionBus",
+"ErasedToolJob",
+"ErasedToolJobFactory",
+"RetainedToolWireInput",
+"ToolExecutionContract",
+"ToolJobFactory",
+"ToolJobFactoryAdapter",
+"ToolOperationSpec"
+],
+"semio_framework_value": [
+"ErasedToolJob",
+"RetainedToolWireInput",
+"ToolDispatchError"
+]
+},
+"interaction": {
+"serde": [
+"GranularityDefinition",
+"InteractionDefinition",
+"InteractionRef"
+],
+"semio_framework_value": [
+"GranularityDefinition",
+"InteractionDefinition",
+"InteractionRef"
+],
+"semio_framework_ui_locale": [
+"GranularityDefinition",
+"InteractionDefinition"
+],
+"semio_framework_schema_registry": [
+"EXPORTS",
+"LEAVES",
+"register_scope_exports"
+]
+},
+"kernel-identity": {
+"serde": [
+"ActionDef",
+"ActionId",
+"ActionInvocation",
+"ActivationEvent",
+"AppInstanceId",
+"ArtifactHandle",
+"ArtifactKind",
+"AssetHandle",
+"BrokerCapabilityGrant",
+"Budget",
+"Capability",
+"CapabilityChange",
+"CapabilityGrant",
+"CapabilityId",
+"CapabilityRequest",
+"CapabilityRequirement",
+"CapabilityToken",
+"CommandId",
+"CommandInvocation",
+"ExtensionDescriptor",
+"FailureAction",
+"InvocationId",
+"PluginInstanceId",
+"QuotaBreach",
+"QuotaSchema",
+"QuotaTree",
+"RequestId",
+"RequestOutcome",
+"Rights",
+"SchemaVersion",
+"Scope",
+"TurnStatus",
+"Usage",
+"WindowHandle",
+"WindowKindDef",
+"WindowKindId"
+],
+"semio_framework_value_derive": [
+"ActionId",
+"ActionInvocation",
+"ActivationEvent",
+"AppEvent",
+"AppInstanceId",
+"Appearance",
+"ArtifactHandle",
+"ArtifactKind",
+"Capability",
+"CapabilityGrant",
+"CapabilityId",
+"CapabilityRequest",
+"CapabilityRequirement",
+"CapabilityToken",
+"CommandId",
+"CommandInvocation",
+"EditRef",
+"InverseMutation",
+"InvocationId",
+"KernelMutation",
+"PhysicalSize",
+"PluginInstanceId",
+"QuotaSchema",
+"RequestId",
+"RequestOutcome",
+"Rights",
+"Scope",
+"UndoGroup",
+"WindowEvent",
+"WindowHandle",
+"WindowInput",
+"WindowKindId"
+],
+"semio_framework_value": [
+"ActionInvocation",
+"ActivationEvent",
+"AppEvent",
+"AppInstanceId",
+"ArtifactHandle",
+"BrokerCapabilityGrant",
+"Budget",
+"CapabilityChange",
+"CapabilityId",
+"CapabilityRequest",
+"CapabilityToken",
+"CommandInvocation",
+"PluginInstanceId",
+"QuotaSchema",
+"RequestId",
+"RequestOutcome",
+"WindowEvent",
+"WindowHandle",
+"WindowInput",
+"WindowKindId"
+],
+"semio_framework_actor": [
+"Budget",
+"TurnStatus"
+]
+},
+"kernel": {
+"serde": [
+"ActionContext",
+"ActionRequest",
+"ArtifactMergeKind",
+"ClipboardFragment",
+"ColdDocumentPairHeader",
+"ColdDocumentPairPage",
+"CommandContext",
+"Effect",
+"Event",
+"JobPlacement",
+"MessageEndpoint",
+"PasteAnchor",
+"PastePlacement",
+"TurnResult",
+"WindowOutput"
+],
+"semio_framework_value_derive": [
+"ActionContext",
+"ClipboardFragment",
+"CommandContext",
+"Effect",
+"InvocationResult",
+"JobPlacement",
+"MessageEndpoint"
+],
+"semio_framework_value": [
+"ActionContext",
+"ClipboardFragment",
+"ColdDocumentPairHeader",
+"ColdDocumentPairPage",
+"Effect",
+"Event",
+"InvocationResult",
+"JobPlacement",
+"MessageEndpoint"
+],
+"pack": [
+"Effect"
+],
+"semio_framework_diagnostic": [
+"BrokerHooks",
+"InvocationResult"
+],
+"ui_wgpu": [
+"WindowOutput"
+],
+"semio_framework_actor": [
+"ColdDocumentPairHeader",
+"Event",
+"ReturnMessageCursor",
+"TurnResult"
+],
+"semio_framework_ui_contract": [
+"TurnResult"
+]
+},
+"kernel-media-jobs": {
+"serde": [
+"IconRenderExportItem",
+"SpawnedJobStep",
+"VideoRenderEncoderTier",
+"VideoRenderImage",
+"VideoRenderJobEvent",
+"VideoRenderJobOutcome",
+"VideoRenderJobRow",
+"VideoRenderOp",
+"VideoRenderPath",
+"VideoRenderProgram",
+"VideoRenderRun",
+"VideoRenderScene"
+],
+"semio_framework_value_derive": [
+"IconRenderExportItem",
+"VideoRenderEncoderTier",
+"VideoRenderImage",
+"VideoRenderJobEvent",
+"VideoRenderJobOutcome",
+"VideoRenderOp",
+"VideoRenderPath",
+"VideoRenderProgram",
+"VideoRenderRun",
+"VideoRenderScene"
+],
+"semio_framework_value": [
+"IconRenderExportItem",
+"ImportArguments",
+"ImportStaging",
+"VideoRenderImage",
+"VideoRenderOp",
+"VideoRenderPath",
+"VideoRenderProgram",
+"VideoRenderRun",
+"VideoRenderScene",
+"import_chunk_arguments"
+],
+"semio_framework_io_base64": [
+"media_export_bytes"
+],
+"semio_framework_trace": [
+"IMPORT_CHUNK_BYTES"
+]
+},
+"kernel-ui": {
+"serde": [
+"UiDirtyScope",
+"UiDirtySection",
+"UiTurnPatches"
+],
+"semio_framework_value_derive": [
+"UiDirtyScope"
+],
+"semio_framework_value": [
+"UiDirtyScope"
+],
+"semio_framework_trace": [
+"UI_TURN_PATCHES_MAXIMUM",
+"UI_TURN_PATCH_BUDGET_BYTES",
+"UiTurnPatchTransportHandback",
+"UiTurnPatches"
+],
+"semio_framework_ui_contract": [
+"UiTurnPatchContents",
+"UiTurnPatches",
+"UiTurnPatchesIntoIter",
+"ui_patch_turn_bytes"
+],
+"semio_framework_diagnostic": [
+"UiTurnPatchTransportProducer",
+"UiTurnPatchTransportStep"
+]
+},
+"kernel-history": {
+"serde": [
+"FaultNoticeDefinition",
+"HistoryEntry",
+"HistoryMutationEntry",
+"HistoryMutationMessage",
+"HistoryPatch",
+"HistoryReprojection",
+"HistoryReprojectionKind",
+"HistoryTimeTravel",
+"HistoryTimeTravelProblem",
+"HistoryTimeTravelReview",
+"HistoryTimeTravelStage",
+"HistoryTransaction"
+],
+"semio_framework_value_derive": [
+"HistoryEntry",
+"HistoryMutationEntry",
+"HistoryMutationMessage",
+"HistoryPatch",
+"HistoryReprojection",
+"HistoryReprojectionKind",
+"HistoryTimeTravel",
+"HistoryTimeTravelProblem",
+"HistoryTimeTravelReview",
+"HistoryTimeTravelStage",
+"HistoryTransaction"
+],
+"semio_framework_ui_locale": [
+"FaultNoticeDefinition",
+"FaultNoticeError",
+"HistoryEntry",
+"HistoryMutationEntry",
+"HistoryTimeTravel",
+"fault_notice",
+"fault_notice_definitions",
+"fault_notice_text",
+"history_reprojection_status",
+"validate_fault_notices"
+],
+"semio_framework_diagnostic": [
+"fault_notice",
+"fault_notice_placeholders",
+"fault_notice_text",
+"fill_fault_notice"
+],
+"semio_framework_value": [
+"FaultNoticeDefinition"
+]
+},
+"manifest-actions": {
+"serde": [
+"ActionDefinition",
+"ActionKind",
+"ActionRef",
+"ActionSemantics",
+"ApprovalMode",
+"CapabilityAudience",
+"CapabilityEffects",
+"CapabilityExecution",
+"CapabilityPolicy",
+"CommandDefinition",
+"ExecutionClass",
+"IdempotencyMode",
+"InteractiveJobClassification",
+"Keybinding",
+"OsDefinition",
+"Platform",
+"PlatformKeybinding",
+"PreviewMode",
+"ResourceSelector",
+"ToolDefinition",
+"ToolRef",
+"UndoMode",
+"UtilityDefinition",
+"UtilityRef"
+],
+"semio_framework_value": [
+"ActionAddress",
+"ActionDefinition",
+"ActionInvocation",
+"ActionKind",
+"ActionRef",
+"ActionSemantics",
+"ApprovalMode",
+"CapabilityAudience",
+"CapabilityEffects",
+"CapabilityExecution",
+"CapabilityPolicy",
+"CommandAddress",
+"CommandDefinition",
+"CommandInvocation",
+"CommandInvocationView",
+"CommandOwnerAddress",
+"ExecutionClass",
+"IdempotencyMode",
+"InteractiveJobClassification",
+"Keybinding",
+"OsDefinition",
+"Platform",
+"PlatformKeybinding",
+"PreviewMode",
+"ResourceSelector",
+"ToolDefinition",
+"ToolRef",
+"UndoMode",
+"UtilityDefinition",
+"UtilityRef"
+],
+"ui_wgpu": [
+"Keybinding",
+"UtilityDefinition"
+],
+"semio_framework_ui_locale": [
+"ActionDefinition",
+"ActionSemantics",
+"CommandDefinition",
+"ToolDefinition",
+"UtilityDefinition",
+"clipboard_action_definitions",
+"document_transfer_action_definitions",
+"history_lane_action_definitions",
+"host_event_action_definition",
+"note_shell_command_action_definition",
+"set_active_tool_action_definition",
+"set_active_utility_action_definition",
+"set_history_command_filter_action_definition"
+]
+},
+"manifest-contribution": {
+"semio_framework_value": [
+"ArtifactContributionDescriptor",
+"ContributedInferenceMetadata",
+"ContributedMutationMetadata",
+"ContributedMutationSemantics",
+"InferenceArtifactBinding",
+"InferenceCommitBinding",
+"InferencePayloadContract",
+"PluginDependency",
+"ProgramContributionEntry",
+"SpaceIndexContribution",
+"TopicContribution",
+"Version",
+"VersionPin",
+"absent"
+],
+"semio_framework_pack_json": [
+"parse_contributions"
+],
+"serde": [
+"ArtifactContributionDescriptor",
+"ContributedInferenceMetadata",
+"ContributedMutationMetadata",
+"ContributedMutationSemantics",
+"InferenceArtifactBinding",
+"InferenceCommitBinding",
+"InferencePayloadContract",
+"PluginDependency",
+"TopicContribution",
+"VersionPin"
+]
+},
+"manifest-media": {
+"semio_framework_value": [
+"AppIo",
+"ArtifactKindSpec",
+"ArtifactPresentation",
+"HostedArtifactKind",
+"Media",
+"MediaClass",
+"MediaError",
+"MediaFingerprint",
+"MediaForm",
+"MediaPayload",
+"MediaPortDirection",
+"MediaPortSpec",
+"MediaType",
+"MediaWireFormat",
+"OsMediaCapability",
+"Part",
+"PortMultiplicity",
+"fingerprint"
+],
+"semio_framework_hash": [
+"MediaFingerprint",
+"bytes",
+"fingerprint"
+],
+"serde": [
+"AppIo",
+"ArtifactKindSpec",
+"ArtifactPresentation",
+"HostedArtifactKind",
+"MediaClass",
+"MediaForm",
+"MediaPortDirection",
+"MediaPortSpec",
+"MediaType",
+"MediaWireFormat",
+"OsMediaCapability",
+"PortMultiplicity"
+],
+"semio_framework_pack_json": [
+"MediaClass",
+"MediaForm",
+"MediaPortDirection",
+"MediaPortSpec",
+"MediaType",
+"MediaWireFormat",
+"PortMultiplicity"
+],
+"semio_framework_ui_locale": [
+"ArtifactKindSpec"
+]
+},
+"manifest-arg-schema": {
+"semio_framework_ui_locale": [
+"ActionArgDef",
+"ActionArgOption",
+"ArgFormat",
+"action_arg_bound_refusal",
+"apply_arg_format",
+"arg_schema_json_schema"
+],
+"serde": [
+"ActionArgControl",
+"ActionArgDef",
+"ActionArgOption",
+"AppRole",
+"ArgFormat",
+"ArgPresentation",
+"ArgSchema",
+"NumberScale",
+"OptionSource",
+"ReferenceIdType",
+"SnapSource"
+],
+"semio_framework_value": [
+"ActionArgControl",
+"ActionArgDef",
+"ActionArgOption",
+"AppRole",
+"ArgFormat",
+"ArgPresentation",
+"ArgSchema",
+"NumberScale",
+"OptionSource",
+"ReferenceIdType",
+"SnapSource",
+"apply_arg_format",
+"arg_schema_json_schema",
+"reference_id_text"
+],
+"semio_framework_ui_contract": [
+"ActionArgDef",
+"ActionArgNumberFacets"
+]
+},
+"manifest-mutation-inputs": {
+"semio_framework_value": [
+"<impl:F@1090>",
+"InputSchemaError",
+"InputSchemaErrorCode",
+"InputSchemaReader",
+"InputSchemaResolver",
+"ResolvedInput",
+"input_label_glossary",
+"input_localized_text",
+"input_number",
+"input_numeric_transport",
+"input_option_source",
+"input_options",
+"input_shape",
+"input_string",
+"input_type",
+"input_union",
+"mutation_input_instance",
+"registered_input_schema_document"
+],
+"semio_framework_ui_locale": [
+"InputSchemaReader",
+"input_label_glossary",
+"input_localized_text"
+],
+"semio_framework_pack_json": [
+"InputSchemaReader",
+"input_label_glossary",
+"input_numeric_transport",
+"registered_input_schema_document"
+],
+"semio_framework_schema_registry": [
+"registered_input_schema_document"
+]
+},
+"manifest-app-surface": {
+"semio_framework_ui_locale": [
+"AppDefinition",
+"DialogChoice",
+"DialogDefinition",
+"ExampleDefinition",
+"ModeDefinition",
+"PanelTabDefinition",
+"WindowKindDefinition",
+"app_window_label",
+"interaction_action_definitions"
+],
+"serde": [
+"AppDefinition",
+"CommandGrammar",
+"CommandVariantSpec",
+"ConfigSpec",
+"DialogChoice",
+"DialogDefinition",
+"ExampleDefinition",
+"ModeDefinition",
+"NonEmptyVec",
+"PanelGroup",
+"PanelTabDefinition",
+"PanelTabKind",
+"WindowKindDefinition"
+],
+"semio_framework_value": [
+"AppDefinition",
+"AppRef",
+"CommandGrammar",
+"CommandVariantSpec",
+"ConfigSpec",
+"DialogChoice",
+"DialogDefinition",
+"ExampleDefinition",
+"ModeDefinition",
+"NonEmptyVec",
+"PanelGroup",
+"PanelTabDefinition",
+"PanelTabKind",
+"WindowKindDefinition",
+"effective_action_args",
+"invalid_action_choice_args",
+"missing_required_args",
+"unresolved_action_args"
+],
+"semio_framework_ui_contract": [
+"DialogChoice",
+"is_neutral_tone"
+],
+"ui_wgpu": [
+"AppDefinition",
+"WindowKindDefinition",
+"resolve_layout_for_mode"
+],
+"semio_framework_artifact_reference": [
+"parse_surface_app_id",
+"surface_app_id"
+]
+},
+"RELOC": {
+"semio_framework_ui_locale": [
+"IntroductionDefinition",
+"IntroductionStepDefinition",
+"TutorialCaption",
+"TutorialChapter",
+"TutorialDefinition",
+"TutorialNarrationCue",
+"history_edit_action_definitions",
+"history_edit_finalize_dialog",
+"record_tutorial_action_definition",
+"start_introduction_action_definition",
+"start_tutorial_action_definition",
+"tool_run_action_arg",
+"tool_run_action_description"
+],
+"semio_framework_ui_contract": [
+"history_edit_finalize_dialog"
+],
+"semio_framework_tool_run": [
+"tool_run_action_arg",
+"tool_run_action_definitions",
+"tool_run_action_description"
+],
+"serde": [
+"IntroductionCursor",
+"IntroductionDefinition",
+"IntroductionDemonstration",
+"IntroductionGesture",
+"IntroductionInteraction",
+"IntroductionInteractionKind",
+"IntroductionKeyModifier",
+"IntroductionLogo",
+"IntroductionPlacement",
+"IntroductionPoint",
+"IntroductionPointerButton",
+"IntroductionStepDefinition",
+"TutorialAssetSrc",
+"TutorialBase",
+"TutorialCameraKeyframe",
+"TutorialCameraState",
+"TutorialCaption",
+"TutorialChapter",
+"TutorialDefinition",
+"TutorialDocumentEvent",
+"TutorialDocumentEventKind",
+"TutorialEasing",
+"TutorialEvent",
+"TutorialEventKind",
+"TutorialGestureCue",
+"TutorialNarrationCue",
+"TutorialOverlayRect",
+"TutorialTracks",
+"TutorialUiChange",
+"TutorialUiKeyframe",
+"TutorialUiSample",
+"TutorialUiSnapshot",
+"TutorialVideoCue"
+],
+"semio_framework_value": [
+"IntroductionCursor",
+"IntroductionDefinition",
+"IntroductionDemonstration",
+"IntroductionGesture",
+"IntroductionInteraction",
+"IntroductionInteractionKind",
+"IntroductionKeyModifier",
+"IntroductionLogo",
+"IntroductionPlacement",
+"IntroductionPoint",
+"IntroductionPointerButton",
+"IntroductionStepDefinition",
+"TutorialAssetSrc",
+"TutorialBase",
+"TutorialCameraKeyframe",
+"TutorialCameraState",
+"TutorialCaption",
+"TutorialChapter",
+"TutorialDefinition",
+"TutorialDocumentEvent",
+"TutorialDocumentEventKind",
+"TutorialEasing",
+"TutorialEvent",
+"TutorialEventKind",
+"TutorialGestureCue",
+"TutorialNarrationCue",
+"TutorialOverlayRect",
+"TutorialTracks",
+"TutorialUiChange",
+"TutorialUiKeyframe",
+"TutorialUiSample",
+"TutorialUiSnapshot",
+"TutorialVideoCue"
+],
+"serde_json": [
+"TutorialDefinition"
+],
+"ui_wgpu": [
+"TutorialUiChange",
+"TutorialUiSnapshot"
+]
+},
+"manifest-plugin": {
+"serde": [
+"AssetDeclaration",
+"ComposerEntryDescriptor",
+"ContributionSet",
+"DescriptorEntry",
+"ExecutionMode",
+"ExecutionProtocol",
+"ExtensionPointDeclaration",
+"FileTypeContribution",
+"IoEntryDescriptor",
+"IoEntryDirection",
+"PackageDescriptor",
+"PackageRole",
+"PluginManifest"
+],
+"semio_framework_value": [
+"AgentContributions",
+"AssetDeclaration",
+"CanonicalDescriptorValue",
+"ComposerEntryDescriptor",
+"ContributionSet",
+"DescriptorEntry",
+"ExecutionMode",
+"ExecutionProtocol",
+"ExtensionPointDeclaration",
+"FileTypeContribution",
+"IoEntryDescriptor",
+"IoEntryDirection",
+"PackageDescriptor",
+"PackageRole",
+"PluginManifest",
+"canonical_members"
+],
+"semio_framework_ui_locale": [
+"ArtifactKindChoice",
+"decode_artifact_kind_choice",
+"encode_artifact_kind_choice"
+],
+"semio_framework_pack_json": [
+"decode_artifact_kind_choice",
+"decode_surface_app_choice",
+"encode_artifact_kind_choice",
+"encode_surface_app_choice"
+],
+"semio_framework_artifact_reference": [
+"artifact_kind_choices"
+]
+},
+"manifest-view-model": {
+"semio_framework_ui_locale": [
+"ViewModel"
+],
+"serde": [
+"TreeWindowRequest",
+"ViewModel",
+"ViewSessionIdentity",
+"ViewWindowInstance"
+],
+"semio_framework_value": [
+"TreeWindowRequest",
+"ViewModel",
+"ViewSessionIdentity",
+"ViewWindowInstance"
+]
+}
+}

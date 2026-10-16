@@ -1,4 +1,14 @@
-use super::*;
+use crate::editor::txt::modes::edit::windows::main;
+use crate::schema::mutations::TextSplice;
+use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::txt::{TXT_KIT_ACTION_ID, txt_example_snapshot, txt_command_from_action, txt_emit};
+use crate::editor::txt::*;
 use crate::schema::mutations::RemoveLineMutation;
 
 #[test]

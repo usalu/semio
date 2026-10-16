@@ -18,5 +18,5 @@ if (segments[0] === "playbook-document-contract") {
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-playbook-playbook", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-playbook-playbook", { packages: ["semio-s-artifact-playbook-playbook", "semio-s-artifact-playbook-playbook-examples", "semio-s-artifact-playbook-playbook-inferences", "semio-s-artifact-playbook-playbook-schema", "semio-s-artifact-playbook-playbook-snapshot", "semio-s-artifact-playbook-playbook-v1", "semio-s-artifact-playbook-playbook-viewer"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
 

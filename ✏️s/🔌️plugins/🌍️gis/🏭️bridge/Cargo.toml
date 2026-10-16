@@ -20,6 +20,3 @@ semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️produc
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-gis-gismap = { path = "../🗿️artifacts/🗺️gismap/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gisterrain = { path = "../🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust" }
-
-[profile.prototype]
-inherits = "dev"

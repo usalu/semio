@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { formatUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
+import { formatUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/🟦️.tsx";

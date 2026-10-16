@@ -1,5 +1,14 @@
+use crate::editor::csv::modes::edit::windows::main;
+use crate::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::csv::{grid_row_to_record_index, CSV_KIT_ACTION_ID, csv_example_snapshot, csv_command_from_action, csv_emit};
 use crate::apply_mutation;
-use super::*;
+use crate::editor::csv::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_csv_editor_builds_a_definition_for_the_editor_role() {

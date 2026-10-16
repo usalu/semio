@@ -1,4 +1,7 @@
-use super::*;
+use crate::{standards::v87a::subsets::any::schema::snapshot::GifImage, standards::v87a::subsets::any::schema::snapshot::GifSnapshot as Gif87aSnapshot};
+use crate::{standards::v89a::subsets::any::schema::snapshot::GifDisposal, standards::v89a::subsets::any::schema::snapshot::GifSnapshot as Gif89aSnapshot};
+use crate::standards::v89a::migrations::{migrate_color_table};
+use crate::standards::v89a::migrations::*;
 
 /// 🏗️ Builds a REAL 87a snapshot by round-tripping through the actual 87a encoder/decoder
 /// (`standards::v87a::engine`), not a hand-built struct literal — so this test exercises the

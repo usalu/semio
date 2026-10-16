@@ -157,6 +157,7 @@ interface ScopedFileKindSpec {
 interface SemanticDirectoryMemberKindSpec {
   readonly ownerKindIds: readonly string[];
   readonly memberNames: readonly string[];
+  readonly memberSlugPattern?: string;
   readonly source: "registry";
 }
 
@@ -462,7 +463,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
     if (/[{}]/u.test(pattern) || /^!/u.test(pattern) || /[!@+?*]\(/u.test(pattern)) throw new Error(`Taxonomy v7 ${name} uses unsupported glob syntax`);
     for (const segment of pattern.split("/")) {
       if (segment.includes("**") && segment !== "**") throw new Error(`Taxonomy v7 ${name} may use ** only as a whole segment`);
-      for (const match of segment.matchAll(/\[([^\]]*)\]/gu)) if (!/^[A-Za-z0-9-]+$/u.test(match[1]) || /^[!^]/u.test(match[1])) throw new Error(`Taxonomy v7 ${name} has an invalid character class`);
+      for (const match of segment.matchAll(/\[([^\]]*)\]/gu)) if (!/^[A-Za-z0-9-]+$/u.test(requireString(match[1],"character class")) || /^[!^]/u.test(requireString(match[1],"character class"))) throw new Error(`Taxonomy v7 ${name} has an invalid character class`);
       if ((segment.match(/\[/gu)?.length ?? 0) !== (segment.match(/\]/gu)?.length ?? 0)) throw new Error(`Taxonomy v7 ${name} has an unclosed character class`);
     }
     const filename = pattern.slice(pattern.lastIndexOf("/") + 1);
@@ -665,9 +666,11 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
     if (spec.source !== "registry") throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id}.source must be registry`);
     const ownerKindIds = requireStringArray(spec.ownerKindIds, `semanticDirectoryMemberKinds.${id}.ownerKindIds`);
     const memberNames = requireStringArray(spec.memberNames, `semanticDirectoryMemberKinds.${id}.memberNames`);
-    if (ownerKindIds.length === 0 || memberNames.length === 0) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} must declare owners and members`);
+    const memberSlugPattern = spec.memberSlugPattern === undefined ? undefined : requireString(spec.memberSlugPattern, `semanticDirectoryMemberKinds.${id}.memberSlugPattern`);
+    if (ownerKindIds.length === 0 || (memberNames.length === 0 && memberSlugPattern === undefined)) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} must declare owners and members or a memberSlugPattern`);
+    if (memberSlugPattern !== undefined && (!memberSlugPattern.startsWith("^") || !memberSlugPattern.endsWith("$") || new RegExp(memberSlugPattern, "u").test(""))) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id}.memberSlugPattern must be an anchored pattern that rejects an empty slug`);
     if (memberNames.some((name) => name !== name.normalize("NFC") || !splitLeadingEmoji(name).emoji)) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} member names must be NFC emoji-leading evidence`);
-    semanticDirectoryMemberKinds[id] = { ownerKindIds: [...new Set(ownerKindIds)].sort(), memberNames: [...new Set(memberNames)].sort(), source: "registry" };
+    semanticDirectoryMemberKinds[id] = { ownerKindIds: [...new Set(ownerKindIds)].sort(), memberNames: [...new Set(memberNames)].sort(), ...(memberSlugPattern === undefined ? {} : { memberSlugPattern }), source: "registry" };
   }
   const directoryContextIds = new Set([...Object.keys(semanticDirectoryKinds), ...Object.keys(semanticDirectoryMemberKinds)]);
   for (const [id, spec] of Object.entries(semanticDirectoryMemberKinds)) for (const ownerId of spec.ownerKindIds) if (!directoryContextIds.has(ownerId)) throw new Error(`Taxonomy v7 semanticDirectoryMemberKinds.${id} references unknown owner kind ${ownerId}`);
@@ -762,7 +765,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
       if (node.nodeType === "file") {
         if ("kindId" in node) {
           segments.push(canonicalPrimaryFilenameForKind(node.kindId, root as unknown as DiscoveryTaxonomy));
-        } else if ("fixedFilenameContractId" in node) segments.push(posix.basename(fixedFilenameContracts[node.fixedFilenameContractId].pathPattern));
+        } else if ("fixedFilenameContractId" in node){const fixed=fixedFilenameContracts[node.fixedFilenameContractId];if(!fixed)throw new Error("Required descendant fixed filename contract is missing");segments.push(posix.basename(fixed.pathPattern));}
         else throw new Error(`Taxonomy v7 semanticDescendantContracts.${id} file authority is invalid`);
       }
       return segments.length === 0 ? "" : `/${segments.join("/")}`;
@@ -840,7 +843,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
       if (spec.literal !== undefined && kindId) return { kindId, literal: requireString(spec.literal, `${name}.literal`) };
       if (spec.literal !== undefined && memberKindId) {
         const literal = requireString(spec.literal, `${name}.literal`).normalize("NFC");
-        if (!semanticDirectoryMemberKinds[memberKindId].memberNames.includes(literal)) throw new Error(`Taxonomy v7 ${name}.literal is not registered by ${memberKindId}`);
+        if (semanticDirectoryMemberKinds[memberKindId]?.memberNames.includes(literal)!==true) throw new Error(`Taxonomy v7 ${name}.literal is not registered by ${memberKindId}`);
         return { memberKindId, literal };
       }
       if (typeof spec.capture === "string" && captureFields.has(spec.capture as SemanticProjectionCaptureField)) return projectedMemberKindId ? { projectedMemberKindId, capture: spec.capture as SemanticProjectionCaptureField } : { kindId: kindId!, capture: spec.capture as SemanticProjectionCaptureField };
@@ -1059,6 +1062,7 @@ function parseTaxonomy(raw: unknown, path: string): TaxonomyContentFacts {
   for (let left = 0; left < generatorRoots.length; left++) for (let right = left + 1; right < generatorRoots.length; right++) {
     const a = generatorRoots[left];
     const b = generatorRoots[right];
+    if(!a||!b)throw new Error("Required generator root pair is missing");
     if (a.path === b.path || a.path.startsWith(`${b.path}/`) || b.path.startsWith(`${a.path}/`)) throw new Error(`Taxonomy v7 generator output roots overlap: ${a.id}:${a.path} and ${b.id}:${b.path}`);
   }
 

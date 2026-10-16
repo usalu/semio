@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-pack-tools"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The pack command line: inspect, verify, hash, to-dsl, from-dsl, diff, and the command-file control"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-pack-tools"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-pack = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-pack-source = { path = "../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

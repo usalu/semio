@@ -4,7 +4,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { boardTestSession } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as flowSessionLoader from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import { Board2dHost, beginPuzzle2dPeerGesture, endPuzzle2dPeerGesture, unregisterBoard2dPeer, puzzle2dPeerOwnsGesture } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { Board2dHost, beginBoardPeerGesture, endBoardPeerGesture, unregisterBoard2dPeer, boardPeerOwnsGesture } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import boardSessionFixture from "../🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../🧬️schema/🔣️.json";
 
@@ -86,8 +86,8 @@ describe("app-owned surface session factories", () => {
       expect(sessions[2]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
       expect(sessions[3]!.setSelectionIdsJsonSilent).not.toHaveBeenCalled();
       fireEvent.pointerDown(canvas, { clientX: 2, clientY: 3, button: 0 });
-      expect(puzzle2dPeerOwnsGesture(a, "board", "pane.b")).toBe(true);
-      expect(puzzle2dPeerOwnsGesture(b, "board", "pane.b")).toBe(false);
+      expect(boardPeerOwnsGesture(a, "board", "pane.b")).toBe(true);
+      expect(boardPeerOwnsGesture(b, "board", "pane.b")).toBe(false);
       views[0]!.unmount();
       expect(a.peers.get("board")?.has("pane.a")).toBe(false);
       expect(b.peers.get("board")?.has("pane.a")).toBe(true);
@@ -115,9 +115,9 @@ describe("app-owned surface session factories", () => {
     try {
       await waitFor(() => expect(newSession.attach_canvas).toHaveBeenCalledOnce());
       const successor = scope.peers.get("board")!.get("pane.a")!;
-      beginPuzzle2dPeerGesture(scope, "board", "pane.a", successor);
+      beginBoardPeerGesture(scope, "board", "pane.a", successor);
       unregisterBoard2dPeer(scope, "board", "pane.a", oldPeer);
-      endPuzzle2dPeerGesture(scope, "board", "pane.a", oldPeer);
+      endBoardPeerGesture(scope, "board", "pane.a", oldPeer);
       await reactAct(async () => {
         pending.reject(new Error("old attachment"));
         await pending.promise.catch(() => {});

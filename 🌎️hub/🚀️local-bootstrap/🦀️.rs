@@ -1,11 +1,10 @@
 //! 🔐️ First-party, inherited-handle local bootstrap transport and bounded issuance service.
 
-use crate::directory::error::{DirectoryError, DirectoryResult};
-use crate::directory::model::{AuthSessionIssue, AuthSessionKind, IssuedAuthSession};
-use crate::directory::{
-    constant_time_digest_eq, identity_subject_digest, validate_bounded_auth_text, HubDirectories, HubDirectory, IdentityVerificationContext, IdentityVerificationControl, LocalBootstrapAcceptFuture, LocalBootstrapClientClass,
-    LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, VerifiedLocalBootstrapRequest, AUTH_TEXT_MAX_BYTES, DEVICE_INSTANCE_MAX_BYTES,
-};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind, IssuedAuthSession};
+use semio_hub_directory_contract::{constant_time_digest_eq, identity_subject_digest, validate_bounded_auth_text, IdentityVerificationContext, IdentityVerificationControl, LocalBootstrapAcceptFuture, LocalBootstrapClientClass, LocalBootstrapIssueFuture, LocalBootstrapRejectCode, LocalBootstrapTerminalFuture, LocalBootstrapTransport, VerifiedLocalBootstrapRequest, AUTH_TEXT_MAX_BYTES, DEVICE_INSTANCE_MAX_BYTES};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::HubDirectory;
 use semio_framework_hash::{hex_lower, Sha256};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -298,7 +297,7 @@ impl<const N: usize> ExchangeSlots<N> {
 type LocalBootstrapInbound = DirectoryResult<Box<[u8]>>;
 
 pub struct InheritedLocalBootstrapTransport {
-    run_id: String,
+    pub run_id: String,
     channel_key: SecretChannelKey,
     profiles: Box<[LocalBootstrapProfileWire]>,
     inbound: tokio::sync::Mutex<tokio::sync::mpsc::Receiver<LocalBootstrapInbound>>,
@@ -309,8 +308,8 @@ pub struct InheritedLocalBootstrapTransport {
     pending: Mutex<ExchangeSlots<LOCAL_BOOTSTRAP_OUTSTANDING_MAX>>,
     cancelled: Mutex<ExchangeSlots<LOCAL_BOOTSTRAP_OUTSTANDING_MAX>>,
     ready: AtomicBool,
-    shutdown: Arc<AtomicBool>,
-    closed: Arc<LocalBootstrapClosed>,
+    pub shutdown: Arc<AtomicBool>,
+    pub closed: Arc<LocalBootstrapClosed>,
 }
 
 /// 🚪️ Raised once the pipe ended — the launcher closed it, or a frame broke it — whatever phase the
@@ -355,7 +354,7 @@ impl IdentityVerificationControl for PumpControl {
         self.base.is_cancelled() || self.shutdown.load(Ordering::Acquire)
     }
 
-    fn report(&self, _progress: crate::directory::IdentityVerificationProgress) {}
+    fn report(&self, _progress: semio_hub_directory_contract::IdentityVerificationProgress) {}
 }
 
 /// 📥️ Owns the pipe's read half for the whole run: every admitted frame goes to `accept`, bounded by
@@ -663,7 +662,7 @@ impl InheritedLocalBootstrapTransport {
         let result = self.write(&wire, context).await;
         self.finish_request(&request.request_id);
         capability.into_bytes().fill(0);
-        context.control.report(crate::directory::IdentityVerificationProgress { completed_units: 2, total_units: 2 });
+        context.control.report(semio_hub_directory_contract::IdentityVerificationProgress { completed_units: 2, total_units: 2 });
         result
     }
 
@@ -751,7 +750,7 @@ impl IdentityVerificationControl for TransportControl<'_> {
         self.base.is_cancelled() || self.shutdown.load(Ordering::Acquire)
     }
 
-    fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+    fn report(&self, progress: semio_hub_directory_contract::IdentityVerificationProgress) {
         self.base.report(progress);
     }
 }
@@ -765,7 +764,7 @@ impl IdentityVerificationControl for RequestControl {
         self.base.is_cancelled() || self.transport.request_cancelled(&self.request_id)
     }
 
-    fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+    fn report(&self, progress: semio_hub_directory_contract::IdentityVerificationProgress) {
         self.base.report(progress);
     }
 }
@@ -838,7 +837,7 @@ async fn issue_local_session(directory: Arc<HubDirectories>, request: &VerifiedL
         peer_class: request.client_class.as_str().to_string(),
     };
     let session = directory.issue_auth_session(&issue).await?;
-    context.control.report(crate::directory::IdentityVerificationProgress { completed_units: 4, total_units: 4 });
+    context.control.report(semio_hub_directory_contract::IdentityVerificationProgress { completed_units: 4, total_units: 4 });
     Ok(session)
 }
 
@@ -981,7 +980,7 @@ async fn read_admitted_frame(reader: &mut (impl tokio::io::AsyncRead + Unpin), c
     }
     let deadline_ms = checked_deadline(control.now_ms())?;
     let context = IdentityVerificationContext { deadline_ms, control };
-    control.report(crate::directory::IdentityVerificationProgress { completed_units: 1, total_units: 2 });
+    control.report(semio_hub_directory_contract::IdentityVerificationProgress { completed_units: 1, total_units: 2 });
     match tokio::time::timeout(remaining(&context)?, reader.read_exact(&mut prefix[1..])).await {
         Ok(Ok(_)) => {}
         Ok(Err(_)) => return Err(denied()),
@@ -994,7 +993,7 @@ async fn read_admitted_frame(reader: &mut (impl tokio::io::AsyncRead + Unpin), c
     let mut bytes = vec![0; length].into_boxed_slice();
     match tokio::time::timeout(remaining(&context)?, reader.read_exact(&mut bytes)).await {
         Ok(Ok(_)) => {
-            control.report(crate::directory::IdentityVerificationProgress { completed_units: 2, total_units: 2 });
+            control.report(semio_hub_directory_contract::IdentityVerificationProgress { completed_units: 2, total_units: 2 });
             Ok(Some((bytes, deadline_ms)))
         }
         Ok(Err(_)) => Err(denied()),

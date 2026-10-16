@@ -1,16 +1,44 @@
-use super::*;
-use semio_framework_value::{FromValue,ToValue};
-use semio_framework_async::{CancelToken,TraceId};
-fn fixture()->serde_json::Value {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+//! 🧱️ Service_tests of the inference-hub crate: Inference job wire, hub inference client and bindings.
+
+use semio_framework_async::CancelToken;
+use semio_framework_async::OperationContext;
+use semio_framework_async::TraceId;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::client::DocumentHttpPortCodeV1;
+use semio_framework_os_kernel::os_directory::client::DocumentHttpPortDeclarationV1;
+use semio_framework_os_kernel::os_directory::client::document_http::CompiledDocumentHttpPortV1;
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use crate::hub_wire::{InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceRouteErrorV1};
+use crate::service::{RemoteInferenceProtocolV1, call_remote_inference_v1, install_remote_inference_protocols_v1, remote_inference_protocol_v1};
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
+
+fn fixture()->serde_json::Value {serde_json::from_str(fixture_text("../../../💡️inference/🔌️service/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+
 fn value(input:&serde_json::Value)->DslValue {semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+
 fn declaration()->DocumentHttpPortDeclarationV1 {DocumentHttpPortDeclarationV1::from_value(value(&fixture()["declaration"])).unwrap()}
+
 fn encode(_action:&str,payload:&DslValue)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload.clone())}
+
 fn receipt(payload:DslValue)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload)}
+
 fn page(payload:DslValue,_job:&str)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload)}
+
 fn approval(payload:DslValue,_scope:&DocumentScope,_job:&str,_hash:&str)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload)}
+
 fn undo(payload:DslValue,_request:&DslValue)->Result<DslValue,InferenceRouteErrorV1> {Ok(payload)}
+
 fn protocol()->RemoteInferenceProtocolV1 {RemoteInferenceProtocolV1 {owner:"neutral",service_id:"neutral.service",route:"operations/signal",declaration,encode,receipt,page,approval,undo,error:|status,_body|InferenceRouteErrorV1::from_status(status)}}
+
 struct Transport {retire:bool,seen:std::sync::Mutex<Vec<String>>}
+
 impl InferenceHubTransport for Transport {
     async fn request(&self,context:&OperationContext,request:&InferenceHubRequestV1)->Result<InferenceHubResponseV1,InferenceHubTransportErrorV1> {
         self.seen.lock().unwrap().push(request.path.clone());
@@ -18,6 +46,7 @@ impl InferenceHubTransport for Transport {
         Ok(InferenceHubResponseV1 {status:200,body:serde_json::to_vec(&fixture()["reply"]).unwrap()})
     }
 }
+
 #[test]
 fn installed_protocol_revokes_actual_calls_and_reinstallation_creates_fresh_authority() {
     let law=fixture();let owned=value(&law);

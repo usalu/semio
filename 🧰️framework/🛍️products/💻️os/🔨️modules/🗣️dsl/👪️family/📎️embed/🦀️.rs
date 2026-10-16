@@ -11,7 +11,4 @@ pub async fn parse_fence_lang(header: &str) -> Option<String> {
 }
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

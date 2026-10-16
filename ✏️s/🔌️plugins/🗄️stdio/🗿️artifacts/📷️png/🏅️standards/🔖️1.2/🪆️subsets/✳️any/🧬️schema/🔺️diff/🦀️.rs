@@ -90,3 +90,6 @@ pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
         PngDiff { rects: vec![PngSampleRect { region: PngRegion { x: 0, y: 0, width: 1, height: 1 }, samples: vec![1, 2, 3, 4] }], ..PngDiff::default() },
     ]
 }
+
+#[path="🔏️canonical/🦀️.rs"]
+mod canonical;

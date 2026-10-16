@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 1,
+  "_comment": "🧪️ Language-agnostic vectors of the neutral map policy interpreter (`🎛️map-policy`): the serialised neutral descriptor, a two-band sample descriptor, and the band, raster tile-z and vector tile-z each resolves to. Both descriptors are validated against `../../🧬️schema/🔣️.json` by a third-party JSON Schema validator; no third party defines the band rules themselves.",
+  "neutral": {
+    "id": "surface.tiled-map/neutral",
+    "bands": [
+      {
+        "id": "all",
+        "name": "All",
+        "description": "One band for every zoom.",
+        "maxZoom": null,
+        "maxSpanDeg": 0.0,
+        "rasterTileZ": 0,
+        "representativeSpanDeg": 360.0,
+        "labelPx": 10.5,
+        "gates": {
+          "water": true,
+          "landBackdrop": false,
+          "landCover": true,
+          "roads": true,
+          "buildings": true,
+          "boundaries": true,
+          "coastline": true,
+          "maxAdminLevel": 18446744073709551615
+        },
+        "buildingsMaxSpanDeg": null,
+        "buildingsMinTileZ": 0,
+        "roadSpans": null,
+        "roadStrokeScale": 1.0,
+        "waterAreaClasses": null,
+        "waterways": true,
+        "adminAreaHoles": true,
+        "landWash": false,
+        "landCoverOverAdminAreas": true
+      }
+    ],
+    "coarseBandCount": 0,
+    "rasterTileZMax": 22,
+    "vectorTileZMax": 22,
+    "vectorZoomSteps": [],
+    "boundaryAdminMin": 0,
+    "layers": [],
+    "defaultDrawRank": 0,
+    "featureKeys": {
+      "class": "",
+      "adminLevel": "",
+      "maritime": "",
+      "label": []
+    },
+    "roadSpans": {
+      "rows": [],
+      "fallbackBelowSpanDeg": null
+    },
+    "roadWidths": {
+      "rows": [],
+      "fallback": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "boundaryWidths": {
+      "rows": [],
+      "fallback": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "coastlineWidth": {
+      "width": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "lineScale": {
+      "coefficient": 1.0,
+      "minSpanDeg": 0.0,
+      "coefficientMinSpanDeg": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "segments": [],
+      "beyond": 1.0
+    },
+    "labels": {
+      "spanFloorDeg": 360.0,
+      "minSpanDeg": 0.0,
+      "roadLabelSpans": {
+        "rows": [],
+        "fallbackBelowSpanDeg": null
+      },
+      "roadLabelRanks": {
+        "rows": [],
+        "fallback": 0
+      },
+      "placeLabelSpans": [],
+      "placeLabelRanks": {
+        "rows": [],
+        "fallback": 0
+      },
+      "pointLabelMaxSpanDeg": 1.7976931348623157e+308
+    },
+    "layerToggles": [],
+    "overlays": [],
+    "stylePresets": [
+      {
+        "id": "default",
+        "technique": "colored",
+        "ink": "labelFill",
+        "paper": "surfaceClear",
+        "labelFill": "labelFill",
+        "labelHalo": "labelHalo"
+      }
+    ]
+  },
+  "samplePolicy": {
+    "id": "test.map/two-bands",
+    "bands": [
+      {
+        "id": "far",
+        "name": "Far",
+        "description": "Coarse overview.",
+        "maxZoom": 500.0,
+        "maxSpanDeg": 30.0,
+        "rasterTileZ": 1,
+        "representativeSpanDeg": 90.0,
+        "labelPx": 10.5,
+        "gates": {
+          "water": true,
+          "landBackdrop": false,
+          "landCover": true,
+          "roads": true,
+          "buildings": true,
+          "boundaries": true,
+          "coastline": true,
+          "maxAdminLevel": 18446744073709551615
+        },
+        "buildingsMaxSpanDeg": null,
+        "buildingsMinTileZ": 0,
+        "roadSpans": null,
+        "roadStrokeScale": 1.0,
+        "waterAreaClasses": null,
+        "waterways": true,
+        "adminAreaHoles": true,
+        "landWash": false,
+        "landCoverOverAdminAreas": true
+      },
+      {
+        "id": "near",
+        "name": "Near",
+        "description": "Fine detail.",
+        "maxZoom": null,
+        "maxSpanDeg": 0.0,
+        "rasterTileZ": 6,
+        "representativeSpanDeg": 5.0,
+        "labelPx": 10.5,
+        "gates": {
+          "water": true,
+          "landBackdrop": false,
+          "landCover": true,
+          "roads": true,
+          "buildings": true,
+          "boundaries": true,
+          "coastline": true,
+          "maxAdminLevel": 18446744073709551615
+        },
+        "buildingsMaxSpanDeg": null,
+        "buildingsMinTileZ": 0,
+        "roadSpans": null,
+        "roadStrokeScale": 1.0,
+        "waterAreaClasses": null,
+        "waterways": true,
+        "adminAreaHoles": true,
+        "landWash": false,
+        "landCoverOverAdminAreas": true
+      }
+    ],
+    "coarseBandCount": 1,
+    "rasterTileZMax": 22,
+    "vectorTileZMax": 12,
+    "vectorZoomSteps": [
+      {
+        "aboveSpanDeg": 10.0,
+        "tileZ": 4
+      }
+    ],
+    "boundaryAdminMin": 0,
+    "layers": [],
+    "defaultDrawRank": 0,
+    "featureKeys": {
+      "class": "",
+      "adminLevel": "",
+      "maritime": "",
+      "label": []
+    },
+    "roadSpans": {
+      "rows": [],
+      "fallbackBelowSpanDeg": null
+    },
+    "roadWidths": {
+      "rows": [],
+      "fallback": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "boundaryWidths": {
+      "rows": [],
+      "fallback": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "coastlineWidth": {
+      "width": 1.0,
+      "min": 0.0,
+      "max": 1.7976931348623157e+308
+    },
+    "lineScale": {
+      "coefficient": 1.0,
+      "minSpanDeg": 0.0,
+      "coefficientMinSpanDeg": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "segments": [],
+      "beyond": 1.0
+    },
+    "labels": {
+      "spanFloorDeg": 360.0,
+      "minSpanDeg": 0.0,
+      "roadLabelSpans": {
+        "rows": [],
+        "fallbackBelowSpanDeg": null
+      },
+      "roadLabelRanks": {
+        "rows": [],
+        "fallback": 0
+      },
+      "placeLabelSpans": [],
+      "placeLabelRanks": {
+        "rows": [],
+        "fallback": 0
+      },
+      "pointLabelMaxSpanDeg": 1.7976931348623157e+308
+    },
+    "layerToggles": [],
+    "overlays": [],
+    "stylePresets": [
+      {
+        "id": "default",
+        "technique": "colored",
+        "ink": "labelFill",
+        "paper": "surfaceClear",
+        "labelFill": "labelFill",
+        "labelHalo": "labelHalo"
+      }
+    ]
+  },
+  "bandForSpan": [
+    {
+      "spanDeg": 60.0,
+      "band": 0
+    },
+    {
+      "spanDeg": 30.0,
+      "band": 1
+    },
+    {
+      "spanDeg": 5.0,
+      "band": 1
+    },
+    {
+      "spanDeg": 0.0,
+      "band": 1
+    }
+  ],
+  "tileZTarget": [
+    {
+      "spanDeg": 60.0,
+      "idealTileZ": 3,
+      "pinned": null,
+      "tileZ": 1
+    },
+    {
+      "spanDeg": 5.0,
+      "idealTileZ": 3,
+      "pinned": null,
+      "tileZ": 3
+    },
+    {
+      "spanDeg": 20.0,
+      "idealTileZ": 9,
+      "pinned": null,
+      "tileZ": 4
+    },
+    {
+      "spanDeg": 60.0,
+      "idealTileZ": 3,
+      "pinned": "near",
+      "tileZ": 3
+    },
+    {
+      "spanDeg": 5.0,
+      "idealTileZ": 2,
+      "pinned": "near",
+      "tileZ": 6
+    },
+    {
+      "spanDeg": 5.0,
+      "idealTileZ": 2,
+      "pinned": "bogus",
+      "tileZ": 2
+    }
+  ],
+  "vectorTileZTarget": [
+    {
+      "spanDeg": 60.0,
+      "rasterTileZ": 1,
+      "tileZ": 4
+    },
+    {
+      "spanDeg": 5.0,
+      "rasterTileZ": 3,
+      "tileZ": 3
+    },
+    {
+      "spanDeg": 20.0,
+      "rasterTileZ": 9,
+      "tileZ": 4
+    }
+  ],
+  "sampleDescriptor": {
+    "overlays": {
+      "pins": [
+        {
+          "id": "p1",
+          "coordinates": [
+            [
+              8.54,
+              47.37
+            ]
+          ],
+          "label": "Zürich",
+          "style": "accent"
+        }
+      ]
+    },
+    "policy": {
+      "id": "test.map/two-bands",
+      "bands": [
+        {
+          "id": "far",
+          "name": "Far",
+          "description": "Coarse overview.",
+          "maxZoom": 500.0,
+          "maxSpanDeg": 30.0,
+          "rasterTileZ": 1,
+          "representativeSpanDeg": 90.0,
+          "labelPx": 10.5,
+          "gates": {
+            "water": true,
+            "landBackdrop": false,
+            "landCover": true,
+            "roads": true,
+            "buildings": true,
+            "boundaries": true,
+            "coastline": true,
+            "maxAdminLevel": 18446744073709551615
+          },
+          "buildingsMaxSpanDeg": null,
+          "buildingsMinTileZ": 0,
+          "roadSpans": null,
+          "roadStrokeScale": 1.0,
+          "waterAreaClasses": null,
+          "waterways": true,
+          "adminAreaHoles": true,
+          "landWash": false,
+          "landCoverOverAdminAreas": true
+        },
+        {
+          "id": "near",
+          "name": "Near",
+          "description": "Fine detail.",
+          "maxZoom": null,
+          "maxSpanDeg": 0.0,
+          "rasterTileZ": 6,
+          "representativeSpanDeg": 5.0,
+          "labelPx": 10.5,
+          "gates": {
+            "water": true,
+            "landBackdrop": false,
+            "landCover": true,
+            "roads": true,
+            "buildings": true,
+            "boundaries": true,
+            "coastline": true,
+            "maxAdminLevel": 18446744073709551615
+          },
+          "buildingsMaxSpanDeg": null,
+          "buildingsMinTileZ": 0,
+          "roadSpans": null,
+          "roadStrokeScale": 1.0,
+          "waterAreaClasses": null,
+          "waterways": true,
+          "adminAreaHoles": true,
+          "landWash": false,
+          "landCoverOverAdminAreas": true
+        }
+      ],
+      "coarseBandCount": 1,
+      "rasterTileZMax": 22,
+      "vectorTileZMax": 12,
+      "vectorZoomSteps": [
+        {
+          "aboveSpanDeg": 10.0,
+          "tileZ": 4
+        }
+      ],
+      "boundaryAdminMin": 0,
+      "layers": [],
+      "defaultDrawRank": 0,
+      "featureKeys": {
+        "class": "",
+        "adminLevel": "",
+        "maritime": "",
+        "label": []
+      },
+      "roadSpans": {
+        "rows": [],
+        "fallbackBelowSpanDeg": null
+      },
+      "roadWidths": {
+        "rows": [],
+        "fallback": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "boundaryWidths": {
+        "rows": [],
+        "fallback": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "coastlineWidth": {
+        "width": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "lineScale": {
+        "coefficient": 1.0,
+        "minSpanDeg": 0.0,
+        "coefficientMinSpanDeg": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "segments": [],
+        "beyond": 1.0
+      },
+      "labels": {
+        "spanFloorDeg": 360.0,
+        "minSpanDeg": 0.0,
+        "roadLabelSpans": {
+          "rows": [],
+          "fallbackBelowSpanDeg": null
+        },
+        "roadLabelRanks": {
+          "rows": [],
+          "fallback": 0
+        },
+        "placeLabelSpans": [],
+        "placeLabelRanks": {
+          "rows": [],
+          "fallback": 0
+        },
+        "pointLabelMaxSpanDeg": 1.7976931348623157e+308
+      },
+      "layerToggles": [],
+      "overlays": [],
+      "stylePresets": [
+        {
+          "id": "default",
+          "technique": "colored",
+          "ink": "labelFill",
+          "paper": "surfaceClear",
+          "labelFill": "labelFill",
+          "labelHalo": "labelHalo"
+        }
+      ]
+    }
+  }
+}

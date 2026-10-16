@@ -155,27 +155,22 @@ test("source playground catalogs retain example membership while compiled channe
 });
 
 
-test("staged sessions carry their compiled catalog independently of the global projection", async () => {
-  const { stagePlaygroundSession } = await import("../../🎮️playground/🧭️session/🟦️.ts");
+test("pure session file DATA carries its supplied catalog independently of the global projection", async () => {
+  const {playgroundSessionPublicationV1,buildPlaygroundSession}=await import("../../🎮️playground/🧭️session/🟦️.ts");
   const { readGeneratedCatalogProjection } = await import("../../📖️catalog-view/🟦️.ts");
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "session-catalog-"));
   const entry = corpus.cases.find(row => row.stage === "deployed" && row.valid)!.value;
   const projection = { entries: [entry], playgrounds: [{ variant: "portable", pluginId: entry.pluginId, aliases: [], app: "portable.drawing@1/*#editor", ports: { react: 6000, wgpu: 6100 }, examples: [], assets: [], engines: [], cratePath: entry.cratePath }] } as never;
-  const result = await stagePlaygroundSession("portable", root, projection);
+  const output=join(root,"portable");for(const row of playgroundSessionPublicationV1("portable",projection)){const path=join(output,row.path);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,row.text);}const session=buildPlaygroundSession("portable",projection);
   const parsed = readGeneratedCatalogProjection(join(root,"portable"));
   const oracle = new Ajv({ strict: false }).addSchema(identity).addSchema(contract).compile({ $ref: contract.$id + "#/$defs/DeployedRegistryEntryV1" });
   expect(oracle(parsed.entries[0])).toBe(true);
   expect(parsed).toEqual(projection);
-  expect(result.session.plugins.map(row => row.pluginId)).toEqual([entry.pluginId]);
+  expect(session.plugins.map(row => row.pluginId)).toEqual([entry.pluginId]);
 });
 
-test("descriptor emission consumes the published Nx prerequisite without starting Cargo", async () => {
-  const { publishedDescriptorEmitter } = await import("../../../🖨️describe/🏗️component-build/🟦️.ts");
-  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "descriptor-prerequisite-"));
-  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/dist/build/semio-framework-plugin-describe" + (process.platform === "win32" ? ".exe" : "");
-  expect(() => publishedDescriptorEmitter(root)).toThrow(/Nx prerequisite/);
-  mkdirSync(dirname(join(root,relative)), {recursive:true});writeFileSync(join(root,relative),"published");
-  expect(publishedDescriptorEmitter(root)).toBe(join(root,relative));
+test("descriptor emitter product request is selected-mode DATA without a checkout binary probe",async()=>{
+ const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe(2);}
 });
 
 

@@ -11,10 +11,10 @@ fn push<T,C:NativeSchemaControl>(values:&mut Vec<T>,value:T,control:&mut C)->Res
     if values.len()==values.capacity(){let capacity=if values.capacity()==0{1}else{values.capacity().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema frontier capacity overflow"))?};let bytes=capacity.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"schema frontier backing overflow"))?;control.charge(bytes)?;control.checkpoint()?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"schema frontier allocation"))?;}
     values.push(value);Ok(())
 }
-pub(super) fn compare_text<C:NativeSchemaControl>(a:&str,b:&str,control:&mut C)->Result<Ordering,ValueError>{
+pub fn compare_text<C:NativeSchemaControl>(a:&str,b:&str,control:&mut C)->Result<Ordering,ValueError>{
     control.scoped_stage(|control|{let count=a.len().min(b.len());control.begin_stage(count)?;for offset in (0..count).step_by(65536){let end=(offset+65536).min(count);let order=a.as_bytes()[offset..end].cmp(&b.as_bytes()[offset..end]);control.advance(end-offset)?;if order!=Ordering::Equal{return Ok(order);}}Ok(a.len().cmp(&b.len()))})
 }
-pub(super) fn sort<T,C:NativeSchemaControl>(values:&mut[T],compare:impl Fn(&T,&T,&mut C)->Result<Ordering,ValueError>,control:&mut C)->Result<(),ValueError>{
+pub fn sort<T,C:NativeSchemaControl>(values:&mut[T],compare:impl Fn(&T,&T,&mut C)->Result<Ordering,ValueError>,control:&mut C)->Result<(),ValueError>{
     fn sift<T,C:NativeSchemaControl>(values:&mut[T],mut root:usize,end:usize,compare:&impl Fn(&T,&T,&mut C)->Result<Ordering,ValueError>,control:&mut C)->Result<(),ValueError>{
         loop{let Some(mut child)=root.checked_mul(2).and_then(|root|root.checked_add(1)).filter(|child|*child<end)else{return Ok(())};if child+1<end{control.step()?;if compare(&values[child],&values[child+1],control)?==Ordering::Less{child+=1;}}control.step()?;if compare(&values[root],&values[child],control)?!=Ordering::Less{return Ok(())}values.swap(root,child);root=child;}
     }

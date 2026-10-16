@@ -1,7 +1,7 @@
 //! 📇️ Lists generated playground registrations as canonical JSON or tabular terminal text.
 
-use crate::args::ParsedArgs;
-use crate::catalog::{load_playground_catalog, playgrounds_json_text, PlaygroundEntry};
+use dashboard_core::args::ParsedArgs;
+use dashboard_core::catalog::{load_playground_catalog, playgrounds_json_text, PlaygroundEntry};
 use std::path::Path;
 
 // #region 🔖️Command

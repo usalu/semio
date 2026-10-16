@@ -7,7 +7,7 @@ impl OriginalCaller{
 }
 impl Drop for OriginalCaller{fn drop(&mut self){self.issuer.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:semio_framework_job::StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()});assert!(self.issuer.terminal_is_empty());}}
 
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::registry::tests::observe_ownership(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(operation)}
 
 #[derive(semio_framework_value::RetireOwned)]
 struct FinishedChannels(EvalChannels);
@@ -39,3 +39,39 @@ fn original_budgeted_eval_state_preserves_complete_source_roster_and_closes_with
   assert!(registry_retirement.terminal_is_empty());assert_eq!(original+births,releases);let(_,born,free)=observe(||drop(registry_retirement));assert_eq!((born,free),(0,0));eprintln!("[DEBUG] Original eval custody id={} copy={copy} original={original} born={births} release={releases} terminalDrop=0",row["id"]);
  }}
 }
+
+#[global_allocator]
+static OBSERVED_SYSTEM:semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem;
+
+//#region 🧠️CacheRetirement
+fn cache_grant(owner:&crate::NeuralCacheRetirement,copy:usize)->RetainedCloneGrant {
+    RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}
+}
+#[test]
+fn cache_retirement_preserves_shared_roots_and_drains_replaced_nested_values() {
+    use semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retirement/🧪️tests/🧫️fixtures/🗃️cache-retirement/🔣️.json")).unwrap();
+    let seeds:Vec<_>=fixture["operations"].as_array().unwrap().iter().filter(|value|value["op"]=="seed").collect();
+    let payload:usize=seeds.iter().map(|seed|seed["field"].as_str().unwrap().len()+seed["text"].as_str().unwrap().len()*seed["repeat"].as_u64().unwrap()as usize).sum();assert_eq!(payload,fixture["expected"]["finalReleasedBytes"].as_u64().unwrap()as usize);
+    for copy in [1,64,4096] {
+        let (_,born,freed)=observe_ownership(|| {
+            let cache=Arc::new(crate::NeuralCache::new());
+            for seed in &seeds {cache.seed(fixture["key"].as_u64().unwrap(),Dictionary::new().insert(seed["field"].as_str().unwrap(),Value::Atom(Atom::String(seed["text"].as_str().unwrap().repeat(seed["repeat"].as_u64().unwrap()as usize))))).unwrap();}
+            let mut shared=crate::NeuralCacheRetirement::new(Arc::clone(&cache));
+            for _ in 0..100 {if shared.terminal_is_empty(){break;}let grant=cache_grant(&shared,copy);let (step,a,r)=observe_ownership(||shared.close_step(grant).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(a,r));assert_eq!(r,0);}
+            assert!(shared.terminal_is_empty());assert_eq!(cache.len(),1);
+            let mut owner=crate::NeuralCacheRetirement::new(cache);
+            for _ in 0..1000000 {
+                if owner.terminal_is_empty(){break;}let grant=cache_grant(&owner,copy);
+                let (zero,a,r)=observe_ownership(||owner.close_step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress(),RetainedCloneProgress::default());assert_eq!((a,r),(0,0));
+                let (step,a,r)=observe_ownership(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(a,r));
+            }
+            assert!(owner.terminal_is_empty());
+        });assert_eq!(born,freed);eprintln!("[DEBUG] Original Neural cache copy={copy} alias/replacement/final allocations closed={freed}");
+    }
+}
+#[test]
+fn cache_live_final_drop_is_guarded_instead_of_recursively_destroying_dictionaries() {
+    assert!(std::panic::catch_unwind(||{let cache=crate::NeuralCache::new();cache.seed(1,Dictionary::new().insert("label",Value::Atom(Atom::String("guarded".into())))).unwrap();drop(cache);}).is_err());
+}
+//#endregion 🧠️CacheRetirement

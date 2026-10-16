@@ -1,8 +1,10 @@
+import{withPrintExecutionV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+import{withCompiledPrintProbeV1}from"../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
 /** 🧬️ Authored transformation columns adjudicated by native TeX and independent D3. */
 import { join, resolve } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileVizProbe, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { parseProbeJsonLines, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import vectors from "./🔣️.json";
 
 type Check = { readonly module: string; readonly name: string; readonly subject: () => unknown; readonly oracle: () => unknown; readonly tolerance: number };
@@ -85,13 +87,9 @@ async function reference(): Promise<Record<string, readonly number[]>> {
 }
 
 /** ⚖️ Compiles every authored transform once and returns checks for each inferred numeric column. */
-export async function nativeTransformGrammarChecks(workDir: string): Promise<readonly Check[]> {
-  workDir = resolve(workDir);
-  mkdirSync(workDir, { recursive: true });
-  const input = join(workDir, "chart-transform-grammar.tex");
-  writeFileSync(input, source());
-  const [records, oracle] = await Promise.all([compileVizProbe(input, { workDir: join(workDir, "compiled"), keepWorkDir: true, caseName: "chart-transform-grammar", scenario: "all-transform-kinds" }), reference()]);
+export async function nativeTransformGrammarChecks(execution:PrintExecutionV1):Promise<readonly Check[]> {
+  const [records,oracle]=await Promise.all([withCompiledPrintProbeV1(execution,{version:1,kind:"probe",name:"probe.tex",source:source()},async probe=>parseProbeJsonLines(new TextDecoder("utf-8",{fatal:true}).decode(await probe.read("probe.probe.jsonl",1048576)))),reference()]);
   return Object.entries(oracle).map(([key, values]) => ({ module: "native-transform", name: key, subject: () => records.filter((record: ProbeRecord) => record.key === key).flatMap(record => record.values.map(Number)), oracle: () => values, tolerance: 2e-6 }));
 }
 
-export default defineTestAdapter({ implementation: "typescript", scenarios: { "all-transform-kinds": { subject: async context => ({ projection: Object.fromEntries((await nativeTransformGrammarChecks(context.workDir)).map(check => [check.name, check.subject() as number[]])) }), oracle: async () => ({ projection: await reference() }) } } });
+export default defineTestAdapter({ implementation: "typescript", scenarios: { "all-transform-kinds": { subject:async context=>withPrintExecutionV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl:context.phaseControl,kind:"probe"},async execution=>({projection:Object.fromEntries((await nativeTransformGrammarChecks(execution)).map(check=>[check.name,check.subject() as number[]]))})), oracle: async () => ({ projection: await reference() }) } } });

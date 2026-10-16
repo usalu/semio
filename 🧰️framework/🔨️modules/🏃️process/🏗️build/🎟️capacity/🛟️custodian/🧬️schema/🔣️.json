@@ -1,0 +1,268 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/compiler-capacity/custodian/v1",
+  "definitions": {
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directory",
+        "parallelism",
+        "jobs",
+        "coverage"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/definitions/Job"
+          }
+        },
+        "coverage": {
+          "const": "direct-child"
+        }
+      }
+    },
+    "Job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "args",
+        "cwd",
+        "parallelism",
+        "output"
+      ],
+      "properties": {
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "maximumLines"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "maximumLines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            }
+          }
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "index"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "run"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        }
+      }
+    },
+    "Stop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "drain",
+            "cancel"
+          ]
+        }
+      }
+    },
+    "Response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "parallelism"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "ready"
+            },
+            "parallelism": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1024
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "settled"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "index"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "refused"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "index",
+            "result"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "result"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            },
+            "result": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "stdout",
+                "stderr",
+                "status",
+                "signal"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "stdout": {
+                  "type": "string",
+                  "maxLength": 1048576
+                },
+                "stderr": {
+                  "type": "string",
+                  "maxLength": 1048576
+                },
+                "status": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "signal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Protocol": {
+      "const": {
+        "maximumPlanBytes": 1048576
+      }
+    }
+  }
+}

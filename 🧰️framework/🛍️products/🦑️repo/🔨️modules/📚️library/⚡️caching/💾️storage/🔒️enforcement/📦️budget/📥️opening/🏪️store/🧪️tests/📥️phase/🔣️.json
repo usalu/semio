@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "order": [
+    "authenticate-phase",
+    "open-image",
+    "enter-body",
+    "drain-body",
+    "close-image",
+    "retire-owner"
+  ],
+  "callbackArguments": [
+    "store",
+    "actualControl"
+  ]
+}

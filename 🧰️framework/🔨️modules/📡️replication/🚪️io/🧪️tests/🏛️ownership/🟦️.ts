@@ -28,8 +28,10 @@ for (const path of [canonical.textOwner, canonical.sealOwner]) {
   assert.equal(minimatch(path, "🚪️io/📝️text/**/*.rs"), true);
   assert.equal(existsSync(resolve(owner, path)), true);
 }
-const canonicalText = readFileSync(resolve(owner, canonical.textOwner), "utf8");
-for (const type of canonical.borrowedTrees as string[]) assert.match(canonicalText, new RegExp(`ArtifactCanonicalJsonTree for ${type}\\b`));
+for (const row of canonical.borrowedTrees as {type: string; owner: string}[]) {
+  assert.equal(minimatch(row.owner, "🚪️io/📝️text/**/*.rs"), true);
+  assert.match(readFileSync(resolve(owner, row.owner), "utf8"), new RegExp(`ArtifactCanonicalJsonTree for ${row.type}\\b`));
+}
 assert.match(readFileSync(resolve(owner, canonical.sealOwner), "utf8"), /struct ArtifactCanonicalEditSealCursor/);
 assert.doesNotMatch(semantic, /pub use[^;]*ArtifactCanonicalEditSealCursor/);
 console.log(`[DEBUG] replication-io-ownership traits=5 canonicalTrees=${canonical.borrowedTrees.length} boundary=io oracle=minimatch`);
@@ -89,12 +91,12 @@ assert.doesNotMatch(causalSemantic, /pub use[^;]*(?:binary::causal|encode_envelo
 for (const path of causal.consumers as string[]) {
   const consumer = readFileSync(resolve(owner, path), "utf8");
   assert.doesNotMatch(consumer, /crate::causal::(?:encode|decode)_/);
-  assert.match(consumer, /crate::io::binary::causal::(?:encode|decode)_/);
+  assert.match(consumer, /(?:crate::io::binary::causal|semio_framework_replication_causal::binary)::(?:encode|decode)_/);
 }
 assert.equal(minimatch(causal.textOwner, "🚪️io/📝️text/**/*.rs"), true);
-for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl crate::value::${trait} for ${type}\\b`).test(causalSemantic), false, `${trait} ${type}`);
+for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl (?:crate::value|semio_framework_value)::${trait} for ${type}\\b`).test(causalSemantic), false, `${trait} ${type}`);
 const causalText = readFileSync(resolve(owner, causal.textOwner), "utf8");
-for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl crate::value::${trait} for ${type}\\b`).test(causalText), true, `${trait} ${type}`);
+for (const type of causal.valueTypes as string[]) for (const trait of ["ToValue", "FromValue"]) assert.equal(new RegExp(`impl (?:crate::value|semio_framework_value)::${trait} for ${type}\\b`).test(causalText), true, `${trait} ${type}`);
 console.log(`[DEBUG] causal-codec-ownership functions=${causal.functions.length} semanticTypes=${causal.semanticTypes.length} actualConsumer=true oracle=minimatch`);
 });
 

@@ -8,11 +8,11 @@ use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🎯️outcome/🔣️.json"));
 
 fn decode_value<T: semio_framework_value::FromValue>(text: &str) -> T {
     let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON decodes");
@@ -22,13 +22,13 @@ fn encode_value<T: semio_framework_value::ToValue>(value: &T) -> semio_framework
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
 }
 fn before() -> SSpaceSnapshot {
-    decode_value(BEFORE)
+    decode_value((*BEFORE))
 }
 fn expected_after() -> SSpaceSnapshot {
-    decode_value(AFTER)
+    decode_value((*AFTER))
 }
 fn mutation() -> SSpaceMutation {
-    decode_value(MUTATION)
+    decode_value((*MUTATION))
 }
 fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
     <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &before())
@@ -60,14 +60,14 @@ async fn deleting_the_created_row_restores_before() {
 /// 🔣️ Both committed index snapshots and the `createArtifact` payload are canonical.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", (*BEFORE)), ("after", (*AFTER))] {
         let decoded = decode_value::<SSpaceSnapshot>(text);
         let reencoded = encode_value(&decoded);
         let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("space index snapshot reparses");
         assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed {label} index JSON is not canonical");
     }
     let reencoded = encode_value(&mutation());
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation fixture reparses");
+    let original = semio_framework_pack_json::parse((*MUTATION), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation fixture reparses");
     assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed createArtifact JSON is not canonical");
 }
 
@@ -75,7 +75,7 @@ async fn committed_json_is_canonical() {
 /// no `mutation.duplicate-id` fault at all.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
+    let declared = semio_framework_pack_json::parse((*OUTCOME), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"), "create-artifact/appends-artifact-3-to-the-index: this fixture declares an applied outcome");
     let produced = built_outcome();
     assert_eq!(produced.worst_level(), None, "create-artifact/appends-artifact-3-to-the-index: creating a fresh id must raise no mutation.duplicate-id fault");
@@ -87,24 +87,24 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let produced = encode_value(built_outcome().diff());
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let committed = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-artifact/appends-artifact-3-to-the-index: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
 
 /// 🔣️ The committed diff decodes to `SSpaceDiff` and re-encodes unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded = decode_value::<SSpaceDiff>(DIFF);
+    let decoded = decode_value::<SSpaceDiff>((*DIFF));
     assert!(decoded.schema.is_none(), "create-artifact/appends-artifact-3-to-the-index: creating a row must leave the index schema field alone");
     let reencoded = encode_value(&decoded);
-    let original = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
+    let original = semio_framework_pack_json::parse((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-artifact/appends-artifact-3-to-the-index: committed diff JSON is not canonical");
 }
 
 /// 🩹 The committed diff alone carries the before-index to the after-index.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded = decode_value::<SSpaceDiff>(DIFF);
+    let decoded = decode_value::<SSpaceDiff>((*DIFF));
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-index");
     assert_eq!(produced, expected_after(), "create-artifact/appends-artifact-3-to-the-index: committed diff did not carry before to after");
 }
@@ -113,4 +113,9 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

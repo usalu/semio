@@ -1,3 +1,4 @@
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -6,6 +7,7 @@ import { join } from "node:path";
 
 /** 🧾️ Verifies service generations and readiness using real loopback responses and schema validation. */
 export async function testServiceReadiness(workspace: string, output: string,invocation:ScriptInvocation): Promise<void> {
+ const vitePhase=scriptCompilerAdmissionControlV1(invocation,"test:vite-entry",0);
   const directory = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session");
   const api = await import(join(directory, "🟦️.ts"));
   const fixture = JSON.parse(readFileSync(join(directory, "🧫️cases.json"), "utf8")), schema = JSON.parse(readFileSync(join(directory, "🧬️schema/🔣️.json"), "utf8"));
@@ -52,7 +54,7 @@ export async function testServiceReadiness(workspace: string, output: string,inv
     writeFileSync(join(app, "index.html"), "<!doctype html><title>Service fixture</title>");
     writeFileSync(join(app, "⚙️vite.config.ts"), 'export default { logLevel: "silent" };');
     const { serveVite } = await import(join(directory, "../🟦️.ts"));
-    const server = serveVite({ invocation,root: app, config: join(app, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session: current, ready: (url: string) => api.publishServiceReady(sessionRoot, current, url) });
+    const server = serveVite({control:vitePhase, invocation,root: app, config: join(app, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session: current, ready: (url: string) => api.publishServiceReady(sessionRoot, current, url) });
     try {
       const url = await Promise.race([api.waitForServiceReady(sessionRoot, current, new AbortController().signal, 10000), server.then(() => { throw new Error("Service stopped before readiness"); })]);
       const health = await fetch(new URL(fixture.endpoint, url));

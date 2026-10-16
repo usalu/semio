@@ -1,9 +1,12 @@
 //! 🪶️ Bounded SQLite private-job ledger with durable idempotency and first-terminal-wins.
 
-use super::{command::COMMAND_MAX_BYTES, schema::*, sha256, InferenceErrorV1, InferencePrivateBytesV1};
+use semio_hub_inference::command::COMMAND_MAX_BYTES;
+use semio_hub_inference::{sha256, InferenceErrorV1, InferencePrivateBytesV1};
 use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
 use std::path::Path;
 use std::sync::Mutex;
+use semio_hub_inference::schema::{CLAIM_LEASE_MAX_MS, EVENT_PAGE_MAX_ITEMS, IDENTITY_JSON_MAX_BYTES, INPUT_MAX_BYTES, InferenceApprovalReceiptV1, InferenceEventV1, InferenceIdentityV1, InferenceJobReceiptV1, InferenceJobReconcileApprovalStateV1, InferenceJobReconcileApprovalV1, InferenceJobReconcileJobV1, InferenceJobReconcilePageV1, InferenceJobStateV1, InferenceProgressV1, InferenceProposalStateV1, JOB_CAPACITY, PROGRESS_MAX_CURSOR, PROPOSAL_MAX_BYTES, RESULT_MAX_BYTES, SAFE_INTEGER_MAX, hex};
+use semio_hub_gis::inference::{GisMapApprovalUndoHandleV1, GisMapApprovalUndoReceiptV1};
 
 /// 🧱️ The ledger's SQL, with every size and cursor CHECK taken from the declared bounds, so the store
 /// admits exactly what the service admits and a bound changes in one place.
@@ -142,7 +145,7 @@ pub struct InferenceApprovalPageV1 {
 }
 
 /// ↩️ Exact private inverse authority retained from the original committed approval.
-pub(crate) struct GisMapApprovalUndoTargetV1 {
+pub struct GisMapApprovalUndoTargetV1 {
     pub target_id: String,
     pub original_job_id: String,
     pub original_mutation_id: String,
@@ -200,7 +203,7 @@ pub(crate) fn last_approval_reconciliation_conflict() -> Option<ApprovalReconcil
 }
 
 /// 🎫️ Durable undo idempotency admission or exact terminal replay.
-pub(crate) enum GisMapApprovalUndoAdmissionV1 {
+pub enum GisMapApprovalUndoAdmissionV1 {
     Prepared,
     Replayed(GisMapApprovalUndoReceiptV1),
 }
@@ -262,7 +265,7 @@ pub struct InferenceReaderV1<'a> {
 }
 
 impl InferenceReaderV1<'_> {
-    fn matches(&self, identity: &InferenceIdentityV1) -> bool {
+    pub fn matches(&self, identity: &InferenceIdentityV1) -> bool {
         self.user_id == identity.user_id && self.session_id == identity.session_id && self.authorization_generation == identity.authorization_generation && self.space_id == identity.space_id && self.document_id == identity.document_id
     }
 }
@@ -795,7 +798,7 @@ impl InferenceJobLedgerV1 {
         let mutation_id = sha256(format!("semio.hub.inference-approval-mutation/v1\0{job_id}\0{proposal_hash}").as_bytes())[..32].to_string();
         let document_key = format!("v1:{}:{}:{}{}", current.space_id.len(), current.document_id.len(), current.space_id, current.document_id);
         let actor = format!("user:{}#session:{}", current.user_id, current.session_id);
-        let decoded = super::command::CanonicalInferenceCommandV1::decode(command.as_slice())?;
+        let decoded = semio_hub_inference::command::CanonicalInferenceCommandV1::decode(command.as_slice())?;
         if !decoded.matches_identity(&mutation_id, &document_key, &actor) {
             return Err(InferenceErrorV1::Conflict);
         }
@@ -847,7 +850,7 @@ impl InferenceJobLedgerV1 {
         Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), COMMAND_MAX_BYTES)? })
     }
 
-    pub(crate) fn abandon_prepared_approval(&self, reader: &InferenceReaderV1<'_>, job_id: &str, mutation_id: &str, command_hash: &str, proposal_hash: &str) -> Result<bool, InferenceErrorV1> {
+    pub fn abandon_prepared_approval(&self, reader: &InferenceReaderV1<'_>, job_id: &str, mutation_id: &str, command_hash: &str, proposal_hash: &str) -> Result<bool, InferenceErrorV1> {
         if !hex(job_id, 32) || !hex(mutation_id, 32) || !hex(command_hash, 64) || !hex(proposal_hash, 64) {
             return Err(InferenceErrorV1::Invalid);
         }
@@ -874,7 +877,7 @@ impl InferenceJobLedgerV1 {
         Ok(true)
     }
 
-    pub fn pending_approvals(&self, after: Option<&str>, control: &super::InferenceOperationControlV1) -> Result<InferenceApprovalPageV1, InferenceErrorV1> {
+    pub fn pending_approvals(&self, after: Option<&str>, control: &semio_hub_inference::InferenceOperationControlV1) -> Result<InferenceApprovalPageV1, InferenceErrorV1> {
         if after.is_some_and(|cursor| !hex(cursor, 32)) {
             return Err(InferenceErrorV1::Invalid);
         }
@@ -917,7 +920,7 @@ impl InferenceJobLedgerV1 {
             .transpose()
     }
 
-    pub(crate) fn approval_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<(InferenceApprovalOutboxV1, InferenceIdentityV1, bool)>, InferenceErrorV1> {
+    pub fn approval_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<(InferenceApprovalOutboxV1, InferenceIdentityV1, bool)>, InferenceErrorV1> {
         if !hex(mutation_id, 32) {
             return Err(InferenceErrorV1::Invalid);
         }
@@ -939,10 +942,10 @@ impl InferenceJobLedgerV1 {
         Ok(Some((outbox, accepted, phase == "committed")))
     }
 
-    pub(crate) fn reconcile_committed_approval(
+    pub fn reconcile_committed_approval(
         &self,
         job_id: &str,
-        witness: &super::wal::CommittedInferenceWalWitnessV1,
+        witness: &semio_hub_inference::wal::CommittedInferenceWalWitnessV1,
         document_generation: u64,
         after_frontier: &directory::os_directory::EditedArtifactFrontierV1,
         descriptor_digest: &str,
@@ -1016,7 +1019,7 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🔎️ Reads the exact private undo authority only for its original authenticated owner.
-    pub(crate) fn gis_map_approval_undo_target(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<GisMapApprovalUndoTargetV1, InferenceErrorV1> {
+    pub fn gis_map_approval_undo_target(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<GisMapApprovalUndoTargetV1, InferenceErrorV1> {
         if !hex(target_id, 32) {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -1060,7 +1063,7 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🪪️ Resolves only the original owner's private job identity for live authorization recheck.
-    pub(crate) fn gis_map_approval_undo_job_id(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<String, InferenceErrorV1> {
+    pub fn gis_map_approval_undo_job_id(&self, target_id: &str, reader: &InferenceReaderV1<'_>) -> Result<String, InferenceErrorV1> {
         if !hex(target_id, 32) {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -1079,7 +1082,7 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🔁️ Replays only the exact committed target/idempotency tuple to its original owner.
-    pub(crate) fn replayed_gis_map_approval_undo(&self, target_id: &str, idempotency_key: &str, reader: &InferenceReaderV1<'_>) -> Result<Option<GisMapApprovalUndoReceiptV1>, InferenceErrorV1> {
+    pub fn replayed_gis_map_approval_undo(&self, target_id: &str, idempotency_key: &str, reader: &InferenceReaderV1<'_>) -> Result<Option<GisMapApprovalUndoReceiptV1>, InferenceErrorV1> {
         if !hex(target_id, 32) || !hex(idempotency_key, 32) {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -1127,7 +1130,7 @@ impl InferenceJobLedgerV1 {
 
     /// 🎫️ Persists one exact server-derived inverse identity before any Store/WAL effect.
     #[allow(clippy::too_many_arguments)]
-    pub(crate) fn prepare_gis_map_approval_undo(
+    pub fn prepare_gis_map_approval_undo(
         &self,
         target: &GisMapApprovalUndoTargetV1,
         idempotency_key: &str,
@@ -1198,10 +1201,10 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🧾️ Finalizes an undo only from its exact second committed-WAL witness.
-    pub(crate) fn reconcile_committed_gis_map_approval_undo(
+    pub fn reconcile_committed_gis_map_approval_undo(
         &self,
         target_id: &str,
-        witness: &super::wal::CommittedInferenceWalWitnessV1,
+        witness: &semio_hub_inference::wal::CommittedInferenceWalWitnessV1,
         document_generation: u64,
         frontier: &directory::os_directory::EditedArtifactFrontierV1,
     ) -> Result<bool, InferenceErrorV1> {
@@ -1263,7 +1266,7 @@ impl InferenceJobLedgerV1 {
     }
 
     /// 🧰 Restores only the exact prepared or committed undo identity addressed by its WAL mutation.
-    pub(crate) fn gis_map_approval_undo_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<GisMapApprovalUndoRecoveryV1>, InferenceErrorV1> {
+    pub fn gis_map_approval_undo_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<GisMapApprovalUndoRecoveryV1>, InferenceErrorV1> {
         if !hex(mutation_id, 32) {
             return Err(InferenceErrorV1::Bounds);
         }

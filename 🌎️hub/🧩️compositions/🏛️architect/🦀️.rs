@@ -22,9 +22,11 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape: the host activates one instance whenever a `program::artifact_kind().id` artifact is
-/// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access.
+/// opened, this plugin's actor runs `Isolated`, and it asks the broker for document write access. `.asset(…)` declares the
+/// program's JSON Schema documents as package assets the host preloads into `Event::InstanceOpen.assets`: the descriptor no
+/// longer embeds them, and the guest's validators read them through the schema registry's package-asset reader.
 pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
-    PluginBuilder::<_, ArchitectApps>::new("architect")
+    let mut builder = PluginBuilder::<_, ArchitectApps>::new("architect")
         .label("Architect")
         .version("0.1.0")
         .package_id("semio:architect")
@@ -35,8 +37,11 @@ pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::architect::ArchitectViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::program::standards::v1::subsets::any::schema::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist architect program edits to the open document".into(), optional: false })
-        .try_build()
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist architect program edits to the open document".into(), optional: false });
+    for declaration in crate::artifacts::program::standards::v1::subsets::any::schema::schema_leaf_asset_declarations() {
+        builder = builder.asset(declaration);
+    }
+    builder.try_build()
 }
 
 //#region 🧪️SurfaceTests

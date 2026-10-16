@@ -17,11 +17,12 @@
 #[path = "🔎️verification/🦀️.rs"]
 pub mod retained;
 
-use crate::codec::CompressionCodec;
+use semio_framework_replication_codec::CompressionCodec;
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_pack_source::{PackSink, PackSource};
 use semio_framework_replication_error::ProtocolError;
-use crate::wire::{frame_flags, ProtocolLimits, RecordHasher, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
+use semio_framework_replication_wire_core::{frame_flags, ProtocolLimits, FRAME_FLAG_COMPRESSED, FRAME_FLAG_CRITICAL};
+use semio_framework_replication_crypto::RecordHasher;
 
 //#region 🔖️Header
 /// 🧲️ The 8-byte magic every `.spr` file begins with — distinct from pack's `.spk` magic
@@ -36,7 +37,7 @@ pub const FORMAT_VERSION_MINOR: u16 = 0;
 
 /// 🎭️ The union of `crate::REQUIRED_*` bits this crate understands; any bit outside
 /// this mask makes a header (and therefore the whole file) unreadable.
-const REQUIRED_KNOWN_MASK: u32 = crate::REQUIRED_HASH_CHAIN | crate::REQUIRED_SIGNED | crate::REQUIRED_ENCRYPTED;
+const REQUIRED_KNOWN_MASK: u32 = semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN | semio_framework_replication_wire_core::REQUIRED_SIGNED | semio_framework_replication_wire_core::REQUIRED_ENCRYPTED;
 
 /// ✍️ Serializes the 32-byte header: magic, version, flags, `header_crc32` over bytes
 /// `0..20` (CRC-32C, `crate::codec::crc32c`), 8 reserved zero bytes.
@@ -47,7 +48,7 @@ pub fn build_header_bytes(required_flags: u32, optional_flags: u32) -> [u8; HEAD
     buf[10..12].copy_from_slice(&FORMAT_VERSION_MINOR.to_le_bytes());
     buf[12..16].copy_from_slice(&required_flags.to_le_bytes());
     buf[16..20].copy_from_slice(&optional_flags.to_le_bytes());
-    let crc = crate::codec::crc32c(&buf[0..20]);
+    let crc = semio_framework_replication_codec::crc32c(&buf[0..20]);
     buf[20..24].copy_from_slice(&crc.to_le_bytes());
     buf
 }
@@ -69,7 +70,7 @@ pub fn parse_header_bytes(buf: &[u8; HEADER_SIZE]) -> Result<Header, ProtocolErr
     let version_minor = u16::from_le_bytes([buf[10], buf[11]]);
     let required_flags = u32::from_le_bytes(buf[12..16].try_into().unwrap());
     let stored_crc = u32::from_le_bytes(buf[20..24].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(&buf[0..20]);
+    let computed_crc = semio_framework_replication_codec::crc32c(&buf[0..20]);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "header", offset: 20 })));
     }
@@ -108,7 +109,7 @@ pub async fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolEr
 /// 🔢️ The wire width, in bytes, of `value` encoded as an unsigned LEB128 varint.
 async fn varint_width(value: u64) -> u64 {
     let mut buf = Vec::with_capacity(10);
-    crate::codec::write_varint_u64(&mut buf, value);
+    semio_framework_replication_codec::write_varint_u64(&mut buf, value);
     buf.len() as u64
 }
 
@@ -141,7 +142,7 @@ async fn write_frame_retained<S: PackSink>(sink: &mut S, kind: u8, flags: u8, ra
     let frame_len = body_len_bytes.len().checked_add(body_len as usize).and_then(|len| len.checked_add(8)).ok_or(ProtocolError::LimitExceeded("frame length overflow"))?;
     let back_len = u32::try_from(frame_len).map_err(|_| ProtocolError::LimitExceeded("frame exceeds u32 back_len (4 GiB cap)"))?;
     let fixed = [kind, flags];
-    let mut crc = crate::codec::Crc32cCursor::new();
+    let mut crc = semio_framework_replication_codec::Crc32cCursor::new();
     crc.update_page(&fixed);
     crc.update_page(raw_len_bytes);
     crc.update_page(stored_payload);
@@ -199,7 +200,7 @@ impl<'a> RecordFrame<'a> {
 /// `(frame, next_pos)` so callers (both cursors below) can advance without recomputing `frame_len`.
 async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<'_>, usize), ProtocolError> {
     let mut cursor = pos;
-    let body_len = crate::codec::read_varint_u64(bytes, &mut cursor)?;
+    let body_len = semio_framework_replication_codec::read_varint_u64(bytes, &mut cursor)?;
     if body_len < 2 {
         return Err(malformed("frame body_len", pos as u64, "body_len smaller than kind+flags (2 bytes)").await);
     }
@@ -216,7 +217,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::codec::read_varint_u64(body, &mut p)?;
+        let v = semio_framework_replication_codec::read_varint_u64(body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -224,7 +225,7 @@ async fn decode_frame_in_slice(bytes: &[u8], pos: usize) -> Result<(RecordFrame<
     };
     let stored = &body[payload_start..];
     let stored_crc = u32::from_le_bytes(bytes[body_end..body_end + 4].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(body);
+    let computed_crc = semio_framework_replication_codec::crc32c(body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "frame", offset: body_end as u64 })));
     }
@@ -374,13 +375,13 @@ pub struct WriteOptions {
 type PreparedPayload<'a> = (bool, Option<u64>, std::borrow::Cow<'a, [u8]>);
 
 /// 🗜️ Resolves `codec` for one `write_record` call.
-async fn prepare_payload(codec: crate::codec::ids::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
+async fn prepare_payload(codec: semio_framework_replication_codec::CodecId, payload: &[u8]) -> Result<PreparedPayload<'_>, ProtocolError> {
     match codec.0 {
         0 => Ok((false, None, std::borrow::Cow::Borrowed(payload))),
         1 => {
             #[cfg(feature = "deflate")]
             {
-                let compressed = crate::codec::DeflateCodec.compress(payload)?;
+                let compressed = semio_framework_replication_codec::DeflateCodec.compress(payload)?;
                 Ok((true, Some(payload.len() as u64), std::borrow::Cow::Owned(compressed)))
             }
             #[cfg(not(feature = "deflate"))]
@@ -413,7 +414,7 @@ pub struct SprIdentityRecord<'a, S: PackSink> {
     payload_len: usize,
     written: usize,
     frame_len: u64,
-    crc: crate::codec::Crc32cCursor,
+    crc: semio_framework_replication_codec::Crc32cCursor,
     digest: semio_framework_hash::Hasher,
 }
 
@@ -504,7 +505,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
         let body_len_bytes = fixed_varint(body_len, &mut body_len_bytes);
         let frame_len = body_len_bytes.len().checked_add(body_len as usize).and_then(|len| len.checked_add(8)).ok_or(ProtocolError::LimitExceeded("record frame length overflow"))? as u64;
         let fixed = [kind, flags];
-        let mut crc = crate::codec::Crc32cCursor::new();
+        let mut crc = semio_framework_replication_codec::Crc32cCursor::new();
         crc.update_page(&fixed);
         let mut digest = semio_framework_hash::Hasher::new();
         for fragment in [body_len_bytes, fixed.as_slice()] {
@@ -518,7 +519,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
     /// offset. Folds the frame's `blake3` digest into the pending commit-chain accumulator — the
     /// digest covers the WHOLE on-disk frame (length-prefix through `back_len`), matching the
     /// contract's `digest_i = blake3(full frame bytes of record i)`.
-    pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: crate::codec::ids::CodecId) -> Result<u64, ProtocolError> {
+    pub async fn write_record(&mut self, kind: u8, critical: bool, payload: &[u8], codec: semio_framework_replication_codec::CodecId) -> Result<u64, ProtocolError> {
         if codec.0 == 0 {
             let mut record = self.begin_identity_record(kind, critical, payload.len()).await?;
             record.write_fragment(payload).await?;
@@ -546,7 +547,7 @@ impl<S: PackSink> SprWriter<S> where ProtocolError: From<S::Error> {
         let prev_commit_offset = self.last_commit_offset.unwrap_or(0);
         let payload = write_commit_payload(commit_seq, prev_commit_offset, self.pending_records_len, self.pending_record_count, &chain_hash);
         let flags = frame_flags(false, true, 0);
-        write_frame_retained(&mut self.sink, crate::REC_COMMIT, flags, None, &payload).await?;
+        write_frame_retained(&mut self.sink, semio_framework_replication_wire_core::REC_COMMIT, flags, None, &payload).await?;
 
         self.running_chain_hash = chain_hash;
         self.pending_chain_hasher = semio_framework_hash::Hasher::new();
@@ -617,7 +618,7 @@ async fn read_varint_via_source<S: PackSource>(source: &S, offset: u64, total_le
         }
     }
     let mut pos = 0usize;
-    let value = crate::codec::read_varint_u64(&tmp, &mut pos)?;
+    let value = semio_framework_replication_codec::read_varint_u64(&tmp, &mut pos)?;
     Ok((value, i))
 }
 
@@ -652,7 +653,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let mut payload_start = 2usize;
     let raw_len = if compressed {
         let mut p = payload_start;
-        let v = crate::codec::read_varint_u64(&body, &mut p)?;
+        let v = semio_framework_replication_codec::read_varint_u64(&body, &mut p)?;
         payload_start = p;
         Some(v)
     } else {
@@ -661,7 +662,7 @@ async fn read_frame_via_source<S: PackSource>(source: &S, offset: u64, limits: &
     let mut trailer = [0u8; 8];
     source.read_exact_at(body_end, &mut trailer).await?;
     let stored_crc = u32::from_le_bytes(trailer[0..4].try_into().unwrap());
-    let computed_crc = crate::codec::crc32c(&body);
+    let computed_crc = semio_framework_replication_codec::crc32c(&body);
     if stored_crc != computed_crc {
         return Err(ProtocolError::Pack(semio_framework_pack_error::PackError::Refusal(PackRefusal::ChecksumMismatch { segment: "frame", offset: body_end })));
     }
@@ -686,7 +687,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
     }
     let tail_offset = total_len - COMMIT_FRAME_LEN;
     let (kind, flags, _raw_len, payload, frame_len) = read_frame_via_source(source, tail_offset, limits).await.ok()?;
-    if kind != crate::REC_COMMIT || frame_len != COMMIT_FRAME_LEN || flags & FRAME_FLAG_CRITICAL == 0 {
+    if kind != semio_framework_replication_wire_core::REC_COMMIT || frame_len != COMMIT_FRAME_LEN || flags & FRAME_FLAG_CRITICAL == 0 {
         return None;
     }
     let mut current = parse_commit_payload(&payload).ok()?;
@@ -708,7 +709,7 @@ async fn try_fast_path<S: PackSource>(source: &S, total_len: u64, limits: &Proto
             return None;
         }
         let (prev_kind, prev_flags, _prev_raw_len, prev_payload, _prev_frame_len) = read_frame_via_source(source, prev_offset, limits).await.ok()?;
-        if prev_kind != crate::REC_COMMIT || prev_flags & FRAME_FLAG_CRITICAL == 0 {
+        if prev_kind != semio_framework_replication_wire_core::REC_COMMIT || prev_flags & FRAME_FLAG_CRITICAL == 0 {
             return None;
         }
         let prev_commit = parse_commit_payload(&prev_payload).ok()?;
@@ -763,7 +764,7 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
                 }
                 pos += frame_len;
                 last_valid_end = pos;
-                if kind == crate::REC_COMMIT {
+                if kind == semio_framework_replication_wire_core::REC_COMMIT {
                     if let Ok(commit) = parse_commit_payload(&payload) {
                         last_commit_seq = commit.commit_seq;
                         last_commit_offset = frame_start;
@@ -784,18 +785,6 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
     Ok(RecoveryReport { records_recovered, bytes_recovered: trusted_end, last_commit_seq, last_commit_offset, torn_tail_bytes: total_len - trusted_end })
 }
 //#endregion 🔖️Recovery
-
-//#region 🔖️Crypto
-/// 🔗️ The commit chain's hash primitive: `blake3`, owned here so `protocol_core` stays
-/// dependency-free (per the family's crypto-trait-only rule).
-pub struct Blake3Hasher;
-
-impl RecordHasher for Blake3Hasher {
-    fn hash(&self, bytes: &[u8]) -> [u8; 32] {
-        *semio_framework_hash::hash(bytes).as_bytes()
-    }
-}
-//#endregion 🔖️Crypto
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -4,8 +4,6 @@
 
 // #region 🔖️MvtDecoder
 // #region 🔖️VectorTiles
-/// OpenFreeMap planet tiles (OpenMapTiles schema, OSM) — max generated zoom.
-pub const MAP_VECTOR_TILE_MAX_Z: u32 = 14;
 pub const DEFAULT_MVT_EXTENT: u32 = 4096;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -481,7 +479,7 @@ fn decode_geometry(geometry: &[u32], geom_type: GeomType) -> DecodedGeometry {
 #[cfg(test)]
 include!("../../🧪️tests/🔬️vector-tiles-decode-geometry/🦀️.rs");
 
-pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, super::FrameworkSurfaceTiledMapError> {
+pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, MvtDecodeError> {
     let raw = decode_raw_tile(bytes)?;
     let mut layers = Vec::new();
     for layer in raw.layers {
@@ -508,16 +506,13 @@ pub fn property_str<'a>(properties: &'a std::collections::BTreeMap<String, Strin
     properties.get(key).map(|s| s.as_str()).filter(|s| !s.is_empty())
 }
 
-pub fn property_class(properties: &std::collections::BTreeMap<String, String>) -> &str {
-    property_str(properties, "class").unwrap_or("")
-}
-
 pub fn property_u64(properties: &std::collections::BTreeMap<String, String>, key: &str) -> Option<u64> {
     properties.get(key)?.parse().ok()
 }
 
-pub fn feature_label(properties: &std::collections::BTreeMap<String, String>) -> Option<String> {
-    for key in ["name:en", "name_en", "name_int", "name", "name:latin", "NAME", "Name", "title", "TITLE", "ref"] {
+/// 🏷️ The first non-blank property among `keys`, in priority order — the label key list comes from the host's map policy.
+pub fn feature_label(properties: &std::collections::BTreeMap<String, String>, keys: &[String]) -> Option<String> {
+    for key in keys {
         if let Some(v) = properties.get(key) {
             let t = v.trim();
             if !t.is_empty() {
@@ -592,3 +587,7 @@ pub fn mvt_ring_is_tile_bbox_cover(extent: u32, ring: &[(f64, f64)]) -> bool {
 }
 // #endregion 🔖️VectorTiles
 // #endregion 🔖️MvtDecoder
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

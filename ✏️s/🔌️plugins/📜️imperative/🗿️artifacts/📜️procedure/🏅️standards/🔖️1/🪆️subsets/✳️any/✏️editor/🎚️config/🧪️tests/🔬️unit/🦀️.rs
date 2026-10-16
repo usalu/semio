@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::procedure::config::*;
 
 #[semio_framework_async_macros::async_test]
 async fn imperative_config_default_is_empty_english() {

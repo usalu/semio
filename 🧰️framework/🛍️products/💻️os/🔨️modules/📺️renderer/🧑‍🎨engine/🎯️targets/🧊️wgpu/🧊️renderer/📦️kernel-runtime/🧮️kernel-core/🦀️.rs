@@ -1,16 +1,17 @@
 //! 🧮️ Kernel core: sequence authority, job progress presentation, turn budget, extension index, requests and close submissions.
+use semio_framework_ui_contract_validation::{UiDocumentLimits};
 use super::*;
 
 //#region 🎠️KernelRuntime
 #[derive(Default)]
-pub(super) struct RendererSequenceAuthority {
-    pub(super) committed: u64,
-    pub(super) reserved: Option<u64>,
-    pub(super) exhausted: bool,
+pub struct RendererSequenceAuthority {
+    pub committed: u64,
+    pub reserved: Option<u64>,
+    pub exhausted: bool,
 }
 
 impl RendererSequenceAuthority {
-    pub(super) fn try_reserve(&mut self) -> Result<u64, String> {
+    pub fn try_reserve(&mut self) -> Result<u64, String> {
         if self.exhausted || self.reserved.is_some() {
             return Err("renderer sequence authority is exhausted or reserved".to_string());
         }
@@ -19,7 +20,7 @@ impl RendererSequenceAuthority {
         Ok(generation)
     }
 
-    pub(super) fn commit(&mut self, generation: u64) -> Result<(), String> {
+    pub fn commit(&mut self, generation: u64) -> Result<(), String> {
         if self.reserved != Some(generation) || self.committed.checked_add(1) != Some(generation) {
             return Err("renderer sequence reservation is stale".to_string());
         }
@@ -29,7 +30,7 @@ impl RendererSequenceAuthority {
         Ok(())
     }
 
-    pub(super) fn rollback(&mut self, generation: u64) {
+    pub fn rollback(&mut self, generation: u64) {
         if self.reserved == Some(generation) {
             self.reserved = None;
         }
@@ -42,11 +43,11 @@ struct RendererSequenceReservation {
 }
 
 impl RendererSequenceReservation {
-    fn generation(&self) -> u64 {
+    pub fn generation(&self) -> u64 {
         self.generation
     }
 
-    pub(super) fn commit(mut self) -> Result<u64, String> {
+    pub fn commit(mut self) -> Result<u64, String> {
         let mut authority = renderer_sequence_authority().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         authority.commit(self.generation)?;
         self.active = false;
@@ -69,13 +70,13 @@ fn renderer_sequence_authority() -> &'static Mutex<RendererSequenceAuthority> {
     AUTHORITY.get_or_init(|| Mutex::new(RendererSequenceAuthority::default()))
 }
 
-pub(super) fn reserve_seq() -> Result<RendererSequenceReservation, String> {
+pub fn reserve_seq() -> Result<RendererSequenceReservation, String> {
     let mut authority = renderer_sequence_authority().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let generation = authority.try_reserve()?;
     Ok(RendererSequenceReservation { generation, active: true })
 }
 
-pub(super) const JOB_PROGRESS_PRESENTATION_CAPACITY: usize = 64;
+pub const JOB_PROGRESS_PRESENTATION_CAPACITY: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum JobProgressPresentationState {
@@ -88,12 +89,12 @@ enum JobProgressPresentationState {
 
 #[derive(Clone, Copy, Debug)]
 struct JobProgressPresentationSlot {
-    pub(super) epoch: u64,
+    pub epoch: u64,
     admission_sequence: u64,
     state: JobProgressPresentationState,
-    pub(super) identity: JobProgressIdentity,
+    pub identity: JobProgressIdentity,
     kind: JobProgressKind,
-    pub(super) applied_progress: u64,
+    pub applied_progress: u64,
 }
 
 impl JobProgressPresentationSlot {
@@ -109,18 +110,26 @@ impl JobProgressPresentationSlot {
     }
 }
 
-pub(super) struct JobProgressPresentationBridge {
-    pub(super) slots: [JobProgressPresentationSlot; JOB_PROGRESS_PRESENTATION_CAPACITY],
+/// 🔌️ The inversion seam of the lease: the kernel pool installs how a presented progress token is handed back to the pool, so this file never names the pool's client.
+pub type JobProgressAcknowledge = fn(JobProgressPresentationToken) -> bool;
+
+pub struct JobProgressPresentationBridge {
+    pub slots: [JobProgressPresentationSlot; JOB_PROGRESS_PRESENTATION_CAPACITY],
     reserve_cursor: usize,
     next_admission_sequence: u64,
+    acknowledge: Option<JobProgressAcknowledge>,
 }
 
 impl JobProgressPresentationBridge {
-    pub(super) fn new() -> Self {
-        Self { slots: [JobProgressPresentationSlot::vacant(); JOB_PROGRESS_PRESENTATION_CAPACITY], reserve_cursor: 0, next_admission_sequence: 1 }
+    pub fn new() -> Self {
+        Self { slots: [JobProgressPresentationSlot::vacant(); JOB_PROGRESS_PRESENTATION_CAPACITY], reserve_cursor: 0, next_admission_sequence: 1, acknowledge: None }
     }
 
-    pub(super) fn reserve(&mut self, identity: JobProgressIdentity, kind: JobProgressKind, applied_progress: u64) -> Option<JobProgressPresentationToken> {
+    pub fn install_acknowledge(&mut self, acknowledge: JobProgressAcknowledge) {
+        self.acknowledge = Some(acknowledge);
+    }
+
+    pub fn reserve(&mut self, identity: JobProgressIdentity, kind: JobProgressKind, applied_progress: u64) -> Option<JobProgressPresentationToken> {
         let index = (0..JOB_PROGRESS_PRESENTATION_CAPACITY)
             .map(|offset| (self.reserve_cursor + offset) % JOB_PROGRESS_PRESENTATION_CAPACITY)
             .find(|index| self.slots[*index].state == JobProgressPresentationState::Vacant && self.slots[*index].epoch != u64::MAX)?;
@@ -137,7 +146,7 @@ impl JobProgressPresentationBridge {
         Some(JobProgressPresentationToken { index, epoch: slot.epoch })
     }
 
-    pub(super) fn publish(&mut self, token: JobProgressPresentationToken) -> bool {
+    pub fn publish(&mut self, token: JobProgressPresentationToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::Reserved {
             return false;
@@ -146,7 +155,7 @@ impl JobProgressPresentationBridge {
         true
     }
 
-    pub(super) fn cancel(&mut self, token: JobProgressPresentationToken) -> bool {
+    pub fn cancel(&mut self, token: JobProgressPresentationToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || !matches!(slot.state, JobProgressPresentationState::Reserved | JobProgressPresentationState::Ready) {
             return false;
@@ -155,22 +164,22 @@ impl JobProgressPresentationBridge {
         true
     }
 
-    pub(super) fn can_cancel(&self, token: JobProgressPresentationToken) -> bool {
+    pub fn can_cancel(&self, token: JobProgressPresentationToken) -> bool {
         self.slots.get(token.index).is_some_and(|slot| slot.epoch == token.epoch && matches!(slot.state, JobProgressPresentationState::Reserved | JobProgressPresentationState::Ready))
     }
 
-    pub(super) fn take(&mut self) -> Option<JobProgressPresentationLease> {
+    pub fn take(&mut self) -> Option<JobProgressPresentationLease> {
         let index = self.oldest_ready_index()?;
         let slot = &mut self.slots[index];
         slot.state = JobProgressPresentationState::CheckedOut;
-        Some(JobProgressPresentationLease { token: JobProgressPresentationToken { index, epoch: slot.epoch }, kind: slot.kind, applied_progress: slot.applied_progress, terminal: false })
+        Some(JobProgressPresentationLease { token: JobProgressPresentationToken { index, epoch: slot.epoch }, kind: slot.kind, applied_progress: slot.applied_progress, terminal: false, acknowledge: self.acknowledge })
     }
 
     fn oldest_ready_index(&self) -> Option<usize> {
         self.slots.iter().enumerate().filter(|(_, slot)| slot.state == JobProgressPresentationState::Ready).min_by_key(|(_, slot)| slot.admission_sequence).map(|(index, _)| index)
     }
 
-    pub(super) fn return_lease(&mut self, token: JobProgressPresentationToken) -> bool {
+    pub fn return_lease(&mut self, token: JobProgressPresentationToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::CheckedOut {
             return false;
@@ -179,7 +188,7 @@ impl JobProgressPresentationBridge {
         true
     }
 
-    pub(super) fn presented(&mut self, token: JobProgressPresentationToken) -> bool {
+    pub fn presented(&mut self, token: JobProgressPresentationToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::CheckedOut {
             return false;
@@ -188,7 +197,7 @@ impl JobProgressPresentationBridge {
         true
     }
 
-    pub(super) fn release_presented(&mut self, token: JobProgressPresentationToken) -> bool {
+    pub fn release_presented(&mut self, token: JobProgressPresentationToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::Presented {
             return false;
@@ -197,34 +206,35 @@ impl JobProgressPresentationBridge {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.slots.iter().all(|slot| slot.state == JobProgressPresentationState::Vacant)
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct JobProgressPresentationToken {
-    pub(super) index: usize,
-    pub(super) epoch: u64,
+pub struct JobProgressPresentationToken {
+    pub index: usize,
+    pub epoch: u64,
 }
 
-pub(crate) struct JobProgressPresentationLease {
-    token: JobProgressPresentationToken,
+pub struct JobProgressPresentationLease {
+    pub token: JobProgressPresentationToken,
     kind: JobProgressKind,
-    pub(super) applied_progress: u64,
-    pub(super) terminal: bool,
+    pub applied_progress: u64,
+    pub terminal: bool,
+    acknowledge: Option<JobProgressAcknowledge>,
 }
 
 impl JobProgressPresentationLease {
-    pub(crate) fn visual(&self) -> (JobProgressKind, u64) {
+    pub fn visual(&self) -> (JobProgressKind, u64) {
         (self.kind, self.applied_progress)
     }
 
-    pub(crate) fn acknowledge_presented(&mut self) -> bool {
+    pub fn acknowledge_presented(&mut self) -> bool {
         if self.terminal {
             return false;
         }
-        let admitted = KernelClient::get().try_acknowledge_job_progress(self.token);
+        let admitted = self.acknowledge.is_some_and(|acknowledge| acknowledge(self.token));
         self.terminal = admitted;
         admitted
     }
@@ -239,16 +249,20 @@ impl Drop for JobProgressPresentationLease {
     }
 }
 
-pub(super) fn job_progress_presentation_bridge() -> &'static Mutex<JobProgressPresentationBridge> {
+pub fn job_progress_presentation_bridge() -> &'static Mutex<JobProgressPresentationBridge> {
     static BRIDGE: OnceLock<Mutex<JobProgressPresentationBridge>> = OnceLock::new();
     BRIDGE.get_or_init(|| Mutex::new(JobProgressPresentationBridge::new()))
 }
 
-pub(crate) fn take_job_progress_presentation() -> Option<JobProgressPresentationLease> {
+pub fn install_job_progress_acknowledge(acknowledge: JobProgressAcknowledge) {
+    job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").install_acknowledge(acknowledge);
+}
+
+pub fn take_job_progress_presentation() -> Option<JobProgressPresentationLease> {
     job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").take()
 }
 
-pub(super) fn next_seq() -> Result<u64, String> {
+pub fn next_seq() -> Result<u64, String> {
     reserve_seq()?.commit()
 }
 
@@ -256,7 +270,7 @@ pub(super) fn next_seq() -> Result<u64, String> {
 /// with EMPTY `ui_patches` bytes — the plugin-host bridge (`🧵️shard`'s `to_actor_turn_result`)
 /// publishes a transport token only for a non-empty patch owner — so empty bytes are the empty
 /// owner, never a malformed token.
-pub(super) fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, session: u64) -> Result<TurnResult, String> {
+pub fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult, session: u64) -> Result<TurnResult, String> {
     let status = match &result.status {
         semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
         semio_framework_actor::TurnStatus::MoreWork => semio_framework::kernel::TurnStatus::MoreWork,
@@ -288,31 +302,31 @@ pub(super) fn decode_actor_turn_result(result: &semio_framework_actor::TurnResul
 /// ⛽️ One generous constant turn budget until the DRR scheduler threads a real per-lane one
 /// through (same honestly-flagged gap `PluginInstanceHandle`'s `RELAY_JOB_BUDGET` already
 /// documents on the host side for jobs — this is its `reactor::poll` turn-budget twin).
-pub(super) const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
+pub const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 };
 
 /// ⏳️ terra-kernel-loop: same tripwire shape as `scale_bench`'s own `PUMP_OUTCOME_TIMEOUT` —
 /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
-pub(super) const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
+pub const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// ⏳️ How long one [`KernelPoolState::run_turn`] request keeps settling a guest that COMPLETED its turn
 /// answering `MoreWork`: past it the guest is handed back settled-as-far-as-it-got, never mid-call. A
 /// guest preempted MID-call is never bounded by wall-clock time: it yields its slice to the other
 /// actors ([`KernelPoolState::yield_slice`]) and only an explicit cancel ends it
 /// ([`KernelPoolState::turn_cancelled`]).
-pub(super) const RUN_TURN_SETTLE_BUDGET: Duration = Duration::from_secs(30);
+pub const RUN_TURN_SETTLE_BUDGET: Duration = Duration::from_secs(30);
 
 /// ⚖️ How many queued requests of other instances run between two slices of a mid-flight turn — the
 /// fairness contract's `requestsBetweenSlices` (`🧑‍🎨engine/🧫️fixtures/🧵️kernel-pool-future` `turnFairness`); a
 /// slice itself is [`TURN_BUDGET`]'s fuel and wall.
-pub(super) const TURN_REQUESTS_BETWEEN_SLICES: usize = 1;
+pub const TURN_REQUESTS_BETWEEN_SLICES: usize = 1;
 
 /// 🧩️ How many compiled components the kernel keeps for reuse by content hash — a reopened kind, a second
 /// window of one app — before the oldest is dropped (its live instances keep their own handle).
-pub(super) const COMPILED_COMPONENT_CAPACITY: usize = 8;
+pub const COMPILED_COMPONENT_CAPACITY: usize = 8;
 
 /// 🧪️ How many mid-flight turns their owners cancelled in this test process ([`KernelPoolState::retire_cancelled_turn`]).
 #[cfg(test)]
-pub(crate) static CANCELLED_KERNEL_TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub static CANCELLED_KERNEL_TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// 🤫️ Consecutive continuation turns that carried nothing after which [`KernelPoolState::run_turn`]
 /// stops settling a guest that still answers `MoreWork`: that guest is waiting on a host round trip
@@ -322,7 +336,7 @@ pub(crate) static CANCELLED_KERNEL_TURNS: std::sync::atomic::AtomicU64 = std::sy
 /// 🧵️ The turns one continuation takes: every owed event (a lifecycle ACK, a typed-operation ACK)
 /// on a turn of its own — a guest left owning ingress by the first must not receive the second in
 /// the same grant — or one empty-event turn for a guest that only answered `MoreWork`.
-pub(super) fn run_turn_continuation_turns(continuation: Option<Vec<Event>>) -> std::collections::VecDeque<Vec<Event>> {
+pub fn run_turn_continuation_turns(continuation: Option<Vec<Event>>) -> std::collections::VecDeque<Vec<Event>> {
     match continuation {
         None => std::collections::VecDeque::new(),
         Some(events) if events.is_empty() => std::collections::VecDeque::from([Vec::new()]),
@@ -330,7 +344,7 @@ pub(super) fn run_turn_continuation_turns(continuation: Option<Vec<Event>>) -> s
     }
 }
 
-pub(super) fn run_turn_quiescent_continuations() -> usize {
+pub fn run_turn_quiescent_continuations() -> usize {
     let limits = UiDocumentLimits::default();
     limits.max_patch_bytes.div_ceil(limits.max_text_bytes) * 8
 }
@@ -343,7 +357,7 @@ pub(super) fn run_turn_quiescent_continuations() -> usize {
 /// pure scheduling/affinity unit post-P1c, never a thread per shard). `available_parallelism()`
 /// failing (rare; a sandboxed/exotic host) falls back to `4` cores' worth of shards rather than
 /// faulting the kernel pool task before it can start.
-pub(super) fn native_shard_count() -> u16 {
+pub fn native_shard_count() -> u16 {
     let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
     semio_framework_async::worker_count_for(semio_framework_async::ProcessKind::InteractiveNative, cores) as u16
 }
@@ -367,7 +381,7 @@ struct PluginDescriptorJson {
     plugin_id: String,
     role: String,
     #[serde(default)]
-    pub(super) capabilities: Vec<String>,
+    pub capabilities: Vec<String>,
     #[serde(default)]
     extends: Option<String>,
 }
@@ -380,9 +394,9 @@ struct PluginDescriptorJson {
 /// populating scopes for ANY actor kind yet, extension or plugin).
 #[derive(Clone)]
 struct ExtensionRecord {
-    pub(super) extension_id: String,
-    pub(super) package: PackageId,
-    pub(super) capability_requests: Vec<CapabilityGrant>,
+    pub extension_id: String,
+    pub package: PackageId,
+    pub capability_requests: Vec<CapabilityGrant>,
 }
 
 /// 🧩️ `by_parent[plugin_id]` = every installed extension whose descriptor `extends == plugin_id`
@@ -406,14 +420,14 @@ impl ExtensionIndex {
         Self { by_parent }
     }
 
-    pub(super) fn extensions_of(&self, plugin_id: &str) -> &[ExtensionRecord] {
+    pub fn extensions_of(&self, plugin_id: &str) -> &[ExtensionRecord] {
         self.by_parent.get(plugin_id).map(Vec::as_slice).unwrap_or(&[])
     }
 }
 
 /// 🧩️ Parsed once, lazily — the registry JSON is fixed at compile time (`include_str!`), so
 /// there is nothing to invalidate or re-read across the process's lifetime.
-pub(super) fn extension_index() -> &'static ExtensionIndex {
+pub fn extension_index() -> &'static ExtensionIndex {
     static INDEX: OnceLock<ExtensionIndex> = OnceLock::new();
     INDEX.get_or_init(ExtensionIndex::load)
 }
@@ -421,7 +435,7 @@ pub(super) fn extension_index() -> &'static ExtensionIndex {
 /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
 /// plugin's own directory" convention — kept as a small local helper rather than importing that
 /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
-pub(super) async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
+pub async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
     let request = semio_framework_os_services::NativeIoRequest::ScanDirectory { path: dir.to_path_buf(), directories_only: false, extension: Some("wasm".into()), first_only: true };
     match crate::run_renderer_io(request).await.ok()? {
         semio_framework_os_services::NativeIoValue::Paths(mut paths) => paths.pop(),
@@ -431,19 +445,19 @@ pub(super) async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf>
 //#endregion 🔖️ExtensionIndex
 
 //#region 🔖️Requests/Outcomes
-pub(super) struct CreateAppRequestOwner {
-    pub(super) wasm_path: Option<PathBuf>,
-    pub(super) plugin_id: Option<String>,
-    pub(super) app_id: Option<String>,
-    pub(super) artifact_schema: Option<String>,
+pub struct CreateAppRequestOwner {
+    pub wasm_path: Option<PathBuf>,
+    pub plugin_id: Option<String>,
+    pub app_id: Option<String>,
+    pub artifact_schema: Option<String>,
 }
 
 impl CreateAppRequestOwner {
-    pub(super) fn new(wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Self {
+    pub fn new(wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Self {
         Self { wasm_path: Some(wasm_path), plugin_id: Some(plugin_id), app_id: Some(app_id), artifact_schema: Some(artifact_schema) }
     }
 
-    pub(super) fn into_parts(mut self) -> (PathBuf, String, String, String) {
+    pub fn into_parts(mut self) -> (PathBuf, String, String, String) {
         (
             self.wasm_path.take().expect("create request path is present"),
             self.plugin_id.take().expect("create request plugin is present"),
@@ -452,7 +466,7 @@ impl CreateAppRequestOwner {
         )
     }
 
-    pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some(length) = self.wasm_path.as_ref().map(|path| path.as_os_str().len()) {
             if length > maximum_bytes {
                 return (false, 0, 0);
@@ -477,7 +491,7 @@ impl CreateAppRequestOwner {
         }
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.wasm_path.is_none() && self.plugin_id.is_none() && self.app_id.is_none() && self.artifact_schema.is_none()
     }
 
@@ -487,23 +501,23 @@ impl CreateAppRequestOwner {
 }
 
 #[derive(Clone, Copy)]
-pub(super) enum QueuedKernelEventKind {
+pub enum QueuedKernelEventKind {
     SurfaceVisible,
     MessageShell,
     MessageBackbone,
 }
 
-pub(super) struct QueuedKernelEvent {
-    pub(super) kind: Option<QueuedKernelEventKind>,
-    pub(super) surface_visible: Option<String>,
-    pub(super) surface_body_key: Option<String>,
-    pub(super) surface_view_state: Option<Vec<u8>>,
-    pub(super) message_endpoint: Option<String>,
-    pub(super) message_payload: Option<Vec<u8>>,
+pub struct QueuedKernelEvent {
+    pub kind: Option<QueuedKernelEventKind>,
+    pub surface_visible: Option<String>,
+    pub surface_body_key: Option<String>,
+    pub surface_view_state: Option<Vec<u8>>,
+    pub message_endpoint: Option<String>,
+    pub message_payload: Option<Vec<u8>>,
 }
 
 impl QueuedKernelEvent {
-    pub(super) fn try_from_events(events: Vec<Event>) -> Result<Self, RejectedKernelEvents> {
+    pub fn try_from_events(events: Vec<Event>) -> Result<Self, RejectedKernelEvents> {
         let mut events = std::collections::VecDeque::from(events);
         if events.len() != 1 {
             return Err(RejectedKernelEvents { events });
@@ -525,7 +539,7 @@ impl QueuedKernelEvent {
         }
     }
 
-    pub(super) fn into_event(mut self) -> Event {
+    pub fn into_event(mut self) -> Event {
         match self.kind.take().expect("queued event kind is present") {
             QueuedKernelEventKind::SurfaceVisible => Event::SurfaceVisible {
                 surface: self.surface_visible.take().expect("queued surface-visible surface is present"),
@@ -542,7 +556,7 @@ impl QueuedKernelEvent {
         }
     }
 
-    pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if let Some(length) = self.surface_visible.as_ref().map(String::len) {
             if length > maximum_bytes {
                 return (false, 0, 0);
@@ -592,12 +606,12 @@ impl QueuedKernelEvent {
     }
 }
 
-pub(super) struct RejectedKernelEvents {
-    pub(super) events: std::collections::VecDeque<Event>,
+pub struct RejectedKernelEvents {
+    pub events: std::collections::VecDeque<Event>,
 }
 
 impl RejectedKernelEvents {
-    pub(super) fn close_step(&mut self) -> (bool, usize) {
+    pub fn close_step(&mut self) -> (bool, usize) {
         let Some(event) = self.events.pop_front() else {
             return (true, 0);
         };
@@ -605,12 +619,12 @@ impl RejectedKernelEvents {
         (self.events.is_empty(), 1)
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.events.is_empty()
     }
 }
 
-pub(super) enum KernelRequest {
+pub enum KernelRequest {
     CreateApp {
         owner: CreateAppRequestOwner,
     },
@@ -663,7 +677,7 @@ pub(super) enum KernelRequest {
 /// that owns its outcome, and a new app; never one for the busy instance itself (its guest owns the next
 /// call), never a close or a retained-rejection drain (their maintenance invariants hold only between
 /// whole requests).
-pub(super) fn kernel_request_interleavable(request: &KernelRequest, busy: u32) -> bool {
+pub fn kernel_request_interleavable(request: &KernelRequest, busy: u32) -> bool {
     match request {
         KernelRequest::Exchange { instance, .. } | KernelRequest::AdvanceRetained { instance, .. } | KernelRequest::AdvanceProductReplay { instance } | KernelRequest::ExchangeCommands { instance, .. } => *instance != busy,
         KernelRequest::MountProductReplay { owner } | KernelRequest::RetireProductReplay { owner } => owner.instance != busy,
@@ -673,7 +687,7 @@ pub(super) fn kernel_request_interleavable(request: &KernelRequest, busy: u32) -
 }
 
 impl KernelRequest {
-    pub(super) fn command_credits(&self) -> (usize, usize) {
+    pub fn command_credits(&self) -> (usize, usize) {
         match self {
             Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
             Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
@@ -692,34 +706,34 @@ impl KernelRequest {
     }
 }
 
-pub(super) const KERNEL_CLOSE_SUBMISSION_CAPACITY: usize = 64;
-pub(super) const KERNEL_CLOSE_UNADMITTED: u8 = 0;
+pub const KERNEL_CLOSE_SUBMISSION_CAPACITY: usize = 64;
+pub const KERNEL_CLOSE_UNADMITTED: u8 = 0;
 const KERNEL_CLOSE_ADMITTING: u8 = 1;
-pub(super) const KERNEL_CLOSE_READY: u8 = 2;
+pub const KERNEL_CLOSE_READY: u8 = 2;
 const KERNEL_CLOSE_SCHEDULED: u8 = 3;
 const KERNEL_CLOSE_QUEUEING: u8 = 4;
-pub(super) const KERNEL_CLOSE_QUEUED: u8 = 5;
+pub const KERNEL_CLOSE_QUEUED: u8 = 5;
 const KERNEL_CLOSE_COMPLETE: u8 = 6;
 const KERNEL_CLOSE_FAULT: u8 = 7;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum KernelCloseStatus {
+pub enum KernelCloseStatus {
     AdmissionBlocked,
     Pending,
     Complete,
     Fault,
 }
 
-pub(super) struct KernelCloseSubmissionRegistry {
-    pub(super) slots: Mutex<[Option<(u32, u64, Arc<KernelCloseSubmission>)>; KERNEL_CLOSE_SUBMISSION_CAPACITY]>,
+pub struct KernelCloseSubmissionRegistry {
+    pub slots: Mutex<[Option<(u32, u64, Arc<KernelCloseSubmission>)>; KERNEL_CLOSE_SUBMISSION_CAPACITY]>,
 }
 
 impl KernelCloseSubmissionRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: Mutex::new(std::array::from_fn(|_| None)) }
     }
 
-    pub(super) fn slot(instance: u32) -> usize {
+    pub fn slot(instance: u32) -> usize {
         instance as usize % KERNEL_CLOSE_SUBMISSION_CAPACITY
     }
 
@@ -755,23 +769,23 @@ impl KernelCloseSubmissionRegistry {
     }
 
     #[cfg(test)]
-    pub(super) fn contains(&self, instance: u32, generation: u64) -> bool {
+    pub fn contains(&self, instance: u32, generation: u64) -> bool {
         self.slots.try_lock().is_ok_and(|slots| matches!(&slots[Self::slot(instance)], Some((retained_instance, retained_generation, _)) if *retained_instance == instance && *retained_generation == generation))
     }
 }
 
-pub(super) struct KernelCloseSubmission {
-    pub(super) instance: u32,
-    pub(super) realm: bool,
-    pub(super) generation: u64,
-    pub(super) queue: Arc<KernelRequestQueue>,
-    pub(super) pool: semio_framework_async::WorkerPool,
-    pub(super) registry: std::sync::Weak<KernelCloseSubmissionRegistry>,
-    pub(super) phase: std::sync::atomic::AtomicU8,
+pub struct KernelCloseSubmission {
+    pub instance: u32,
+    pub realm: bool,
+    pub generation: u64,
+    pub queue: Arc<KernelRequestQueue>,
+    pub pool: semio_framework_async::WorkerPool,
+    pub registry: std::sync::Weak<KernelCloseSubmissionRegistry>,
+    pub phase: std::sync::atomic::AtomicU8,
 }
 
 impl KernelCloseSubmission {
-    pub(super) fn terminal_status(&self) -> Option<KernelCloseStatus> {
+    pub fn terminal_status(&self) -> Option<KernelCloseStatus> {
         match self.phase.load(std::sync::atomic::Ordering::Acquire) {
             KERNEL_CLOSE_COMPLETE => Some(KernelCloseStatus::Complete),
             KERNEL_CLOSE_FAULT => Some(KernelCloseStatus::Fault),
@@ -779,7 +793,7 @@ impl KernelCloseSubmission {
         }
     }
 
-    pub(super) fn try_admit(self: &Arc<Self>) -> bool {
+    pub fn try_admit(self: &Arc<Self>) -> bool {
         if self.phase.compare_exchange(KERNEL_CLOSE_UNADMITTED, KERNEL_CLOSE_ADMITTING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return self.phase.load(std::sync::atomic::Ordering::Acquire) >= KERNEL_CLOSE_READY;
         }
@@ -800,7 +814,7 @@ impl KernelCloseSubmission {
         }
     }
 
-    pub(super) fn try_schedule(self: &Arc<Self>) -> bool {
+    pub fn try_schedule(self: &Arc<Self>) -> bool {
         if self.phase.compare_exchange(KERNEL_CLOSE_READY, KERNEL_CLOSE_SCHEDULED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return false;
         }
@@ -835,7 +849,7 @@ impl KernelCloseSubmission {
         }
     }
 
-    pub(super) fn finish(&self, status: KernelCloseStatus) {
+    pub fn finish(&self, status: KernelCloseStatus) {
         let phase = match status {
             KernelCloseStatus::Complete => KERNEL_CLOSE_COMPLETE,
             KernelCloseStatus::Fault => KERNEL_CLOSE_FAULT,
@@ -859,12 +873,12 @@ impl std::task::Wake for KernelCloseSubmission {
 }
 
 #[must_use = "kernel close ownership must be polled through terminal completion"]
-pub(crate) struct KernelCloseHandle {
-    pub(super) owner: Arc<KernelCloseSubmission>,
+pub struct KernelCloseHandle {
+    pub owner: Arc<KernelCloseSubmission>,
 }
 
 impl KernelCloseHandle {
-    pub(crate) fn poll(&self) -> KernelCloseStatus {
+    pub fn poll(&self) -> KernelCloseStatus {
         if let Some(status) = self.owner.terminal_status() {
             if let Some(registry) = self.owner.registry.upgrade() {
                 let _ = registry.try_remove(self.owner.instance, self.owner.generation);

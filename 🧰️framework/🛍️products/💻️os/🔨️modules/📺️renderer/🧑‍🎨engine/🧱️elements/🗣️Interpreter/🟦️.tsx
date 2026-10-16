@@ -162,8 +162,8 @@ import {
   type UiValue,
 } from "@semio-tech/framework";
 import { decodeScenePackValue } from "@semio-tech/framework-os";
-import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
-import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
+import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, uiTextInputKey, uiTextInputKeyOf } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs, openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContextMenuResult } from "./🖱️surface-menu/🟦️.ts";
@@ -463,7 +463,7 @@ const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
 };
 
 /** 🚚️ `SurfaceKind` wire tag → the lane table of every scene kind whose Rust `SceneDoc` overrides
- * `split_lanes` (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs`). A kind IN this table must be
+ * `split_lanes` (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📜️doc/🦀️.rs`). A kind IN this table must be
  * rendered through {@link PagedSurfaceView}, which puts the lanes back; a kind that is absent renders
  * its decoded doc verbatim.
  *

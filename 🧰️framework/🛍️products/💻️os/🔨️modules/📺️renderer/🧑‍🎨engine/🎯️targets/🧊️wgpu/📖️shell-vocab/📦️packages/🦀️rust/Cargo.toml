@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-shell-vocab"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shell chrome strings, language axes, labels and refusal vocabulary"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-shell-vocab"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+
+[dev-dependencies]

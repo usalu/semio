@@ -25,7 +25,7 @@ fn descriptor() -> PackageDescriptor {
         extension_points: Vec::new(),
         execution: ExecutionMode::Isolated,
         execution_protocol: ExecutionProtocol { app_channel_version: 14 },
-        quotas: kernel::QuotaSchema::default(),
+        quotas: QuotaSchema::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),
     }

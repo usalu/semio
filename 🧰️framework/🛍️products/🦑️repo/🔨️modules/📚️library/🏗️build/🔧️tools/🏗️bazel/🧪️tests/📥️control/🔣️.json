@@ -1,0 +1,1 @@
+{"version":1,"roles":[{"role":"birth","cancel":false},{"role":"execution","cancel":true}],"cases":[{"name":"nested","receipt":true,"lateJoin":false,"expected":"acknowledged"},{"name":"late","receipt":true,"lateJoin":true,"expected":"acknowledged"},{"name":"hung","receipt":false,"lateJoin":true,"expected":"deadline"}]}

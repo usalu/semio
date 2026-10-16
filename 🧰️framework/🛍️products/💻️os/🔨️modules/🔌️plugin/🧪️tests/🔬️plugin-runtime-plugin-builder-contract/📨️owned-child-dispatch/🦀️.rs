@@ -36,7 +36,7 @@ async fn direct_owned_child_dispatch_retains_original_output_when_authority_capt
         let verb = if refused { "unregisteredOriginalChildVerb" } else { "compositeEdit" };
         let result = app.test_dispatch_emit(verb, emit, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("original output remains mounted even after authority capture refusal");
         let operation = result.output.get("operationId").and_then(DslValue::as_str).unwrap().parse::<u64>().unwrap();
-        let (observation, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.test_original_owned_emit_observation(operation).unwrap());
+        let (observation, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.tools.test_original_owned_emit_observation(operation).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(observation, (1, 1, original, refused, refused));
         assert!(result.mutations.is_empty());

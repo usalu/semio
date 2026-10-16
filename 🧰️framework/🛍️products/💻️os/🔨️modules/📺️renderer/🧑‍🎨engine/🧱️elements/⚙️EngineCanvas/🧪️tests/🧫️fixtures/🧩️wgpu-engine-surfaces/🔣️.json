@@ -2,7 +2,7 @@
   "schema": "framework.renderer.wgpu.engine-surfaces/v1",
   "provenance": {
     "world3d": "verbatim copy of 🧰️framework/…/♾️infinite/🌍️world/🧫️fixtures/🌉️scene-bridge/🔣️.json — s.procedural.generation3d's `hexagonal-mushroom-column` preview payload, produced by the real pipeline (parse_dsl → FlowHost::evaluate → tessellate_geometry(0.05) → preview_payload_from_eval) in that plugin's example-geometry harness and independently confirmed there by a parry3d oracle. Copied rather than imported so the framework renderer never depends on a plugin crate; the source fixture is itself pinned back to the live kernel by `hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture`.",
-    "tiledMap": "the descriptor shape 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map's own `sync_map_json` lanes drive (positions/routes/regions), as the gis 2d app publishes it through `TiledMapScene::base`.",
+    "tiledMap": "the camera of the map surface; its descriptor ({ overlays, policy }), selection, hover and expectations come from the shared 🧭️TiledMapHost/🧪️tests/🧫️fixtures/🗺️overlay-descriptor fixture React's story paints.",
     "board2d": "verbatim copy of vector[0] of 🧰️framework/…/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧫️fixtures/🔣️board-ingress.json — the `board.normal.undirected.v1` document the puzzle 2d board publishes, pinned there by `board_snapshot_json_vectors_match_the_json_oracle`."
   },
   "world3d": {
@@ -610,61 +610,10 @@
     }
   },
   "tiledMap": {
-    "mapDescriptorJson": {
-      "positions": [
-        {
-          "id": "zurich",
-          "lon": 8.54,
-          "lat": 47.37,
-          "label": "Zürich"
-        },
-        {
-          "id": "muenchen",
-          "lon": 11.58,
-          "lat": 48.14,
-          "label": "München"
-        }
-      ],
-      "routes": [
-        {
-          "id": "zurich-muenchen",
-          "points": [
-            [
-              8.54,
-              47.37
-            ],
-            [
-              11.58,
-              48.14
-            ]
-          ]
-        }
-      ],
-      "regions": []
-    },
     "cameraJson": {
       "x": 0.42,
       "y": 0.31,
       "zoom": 6.0
-    },
-    "selectionJson": {
-      "positions": [
-        "zurich"
-      ],
-      "routes": []
-    },
-    "hoverJson": {
-      "kind": "position",
-      "id": "muenchen"
-    },
-    "expect": {
-      "positions": 2,
-      "routes": 1,
-      "selectedGranularity": "position",
-      "selectedIds": [
-        "zurich"
-      ],
-      "hoveredId": "muenchen"
     }
   },
   "board2d": {

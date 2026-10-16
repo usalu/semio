@@ -9,7 +9,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 use semio_framework_pack_json::Value;
 
 fn puzzle5d_lod_tier_ids() -> Vec<String> {
-    semio_framework_pack_json::from_json_str::<Vec<Value>>(&semio_framework_os_infinite::puzzle_2d_lod_scale_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned LOD options admit").into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
+    semio_framework_pack_json::from_json_str::<Vec<Value>>(&semio_framework_os_infinite::board_lod_scale_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned LOD options admit").into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
 /// 📶️ The LOD select measure, persisted via `setLodMode`.

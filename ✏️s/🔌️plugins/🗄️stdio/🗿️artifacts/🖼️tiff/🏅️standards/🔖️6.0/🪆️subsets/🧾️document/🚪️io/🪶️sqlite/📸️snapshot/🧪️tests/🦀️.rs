@@ -5,15 +5,8 @@ use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::Art
 #[path = "🚦️cohort/🦀️.rs"]
 mod cohort;
 
-fn fixture()->TiffSnapshot{let neutral:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️semantic.json")).unwrap();let case=neutral["cases"].as_array().unwrap().iter().find(|case|case["id"]=="metadataAndExactRaster").unwrap();semio_framework_pack_json::from_json_str(&case["input"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+use cohort::{fixture,project,restore};
 
-fn project(snapshot: &TiffSnapshot) -> SqliteDatabase {
-    snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).expect("project")
-}
-
-fn restore(database: &SqliteDatabase) -> Result<TiffSnapshot, ValueError> {
-    TiffSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default()))
-}
 
 fn bun_oracle(bytes: &[u8], script: &str) -> Vec<u8> {
     use std::io::Write;
@@ -76,7 +69,7 @@ fn sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner() {
     let neutral: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧾️native-owner/🔣️.json")).expect("closed neutral owner");
     let snapshot:TiffSnapshot=semio_framework_pack_json::from_json_str(&neutral.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.tiff".into(), standard: "6.0".into(), subset: "*".into() };
-    let codec = TiffSnapshot::sqlite_codec();
+    let codec = <TiffSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         let imported = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default()), native_owner)).expect("erased native import");
         let decoded = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| TiffSnapshot::decode_sqlite_snapshot_native(&imported.value, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default()), native_owner)).expect("decode imported full owner");

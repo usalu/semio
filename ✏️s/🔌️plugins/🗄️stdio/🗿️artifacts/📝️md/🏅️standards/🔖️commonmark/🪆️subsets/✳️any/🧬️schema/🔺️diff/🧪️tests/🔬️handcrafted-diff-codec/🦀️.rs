@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v_commonmark::subsets::any::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see

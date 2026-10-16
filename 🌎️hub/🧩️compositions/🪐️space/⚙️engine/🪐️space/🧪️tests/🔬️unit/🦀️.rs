@@ -1,4 +1,4 @@
-pub(crate) mod context {
+pub mod context {
     
     use super::super::*;
     use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity, apply_workflow_operation, register_app_io};
@@ -6,7 +6,7 @@ pub(crate) mod context {
     use semio_framework_ui_locale::{LocalizedLabel};
 use semio_framework_plugin::{App, AppIo, HistoryView};
     
-    pub(crate) fn empty_history() -> HistoryView {
+    pub fn empty_history() -> HistoryView {
         HistoryView::empty()
     }
     
@@ -17,13 +17,13 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     /// 🔗️ The instance id is BOUND here: a retained (migrated) tool command is refused with
     /// `interactive-job.live-instance` unless the app's mounted live instance id equals the
     /// dispatching `ActionMeta`'s, and every fixture in this tree dispatches as `meta("local")`.
-    pub(crate) async fn app_with_registry() -> SpaceVcsApp {
+    pub async fn app_with_registry() -> SpaceVcsApp {
         let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
         semio_framework_plugin::PluginApp::bind_instance_id(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
         app
     }
     
-    pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
+    pub async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
         app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch")
     }
 
@@ -43,7 +43,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     /// treating the selection as empty here — exactly the same degradation `SpaceApp::render`'s own
     /// selection-dependent branches already carry — so this helper stays usable for every OTHER
     /// command's non-selection-dependent behavior unchanged.
-    pub(crate) async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
+    pub async fn studio_emit(projection: &WorkflowSnapshot, config: &SpaceConfig, command: &SpaceCommand) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
         let history = empty_history();
         let doc = ArtifactView::new(projection, &history);
         let cfg = ConfigView { snapshot: config, window: None };
@@ -51,12 +51,12 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     }
     
     /// 📽️ Folds studio document operations onto a projection the way the store would (minus history).
-    pub(crate) async fn apply_mutations(projection: &WorkflowSnapshot, operations: &[WorkflowMutation]) -> WorkflowSnapshot {
+    pub async fn apply_mutations(projection: &WorkflowSnapshot, operations: &[WorkflowMutation]) -> WorkflowSnapshot {
         operations.iter().fold(projection.clone(), |current, operation| apply_workflow_operation(&current, operation))
     }
     
     /// 📽️ Folds studio config operations onto a config snapshot the way the store would.
-    pub(crate) async fn apply_config(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
+    pub async fn apply_config(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
         apply_config_mutations(config, operations).await
     }
     
@@ -65,7 +65,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
     /// via `semio_framework::parse_surface_app_id`, so this mirrors `surface_app_id` over a throwaway
     /// `s.<slug>@1/*` dialect. Shared by `seed_app` and every command test module that dispatches
     /// `SpawnApp`/looks the registration back up, so both sides agree on the same string.
-    pub(crate) async fn test_surface_id(slug: &str) -> String {
+    pub async fn test_surface_id(slug: &str) -> String {
         semio_framework::surface_app_id(&semio_framework::ArtifactDialect { artifact_kind: format!("s.{slug}"), standard: "1".into(), subset: "*".into() }, semio_framework::AppRole::Editor)
     }
     
@@ -87,11 +87,11 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
         register_app_io(plugin_id, &definition);
     }
     
-    pub(crate) async fn seed_draw_plugin() {
+    pub async fn seed_draw_plugin() {
         seed_app("draw", "draw", "Draw", &["semio", "draw"], "draw.document", Vec::new()).await;
     }
     
-    pub(crate) async fn seed_multi_port_plugins() {
+    pub async fn seed_multi_port_plugins() {
         let puzzle_ports = vec![
             MediaPortSpec {
                 id: "in-a".into(),
@@ -135,7 +135,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
         seed_app("shooting", "shooting", "Shooting", &["semio", "shooting"], "shooting.document", shooting_ports).await;
     }
     
-    pub(crate) async fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
+    pub async fn test_node(id: &str, inputs: Vec<WorkflowMediaPort>, outputs: Vec<WorkflowMediaPort>) -> WorkflowNode {
         WorkflowNode {
             id: id.into(),
             plugin_id: "test".into(),
@@ -153,7 +153,7 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
         }
     }
     
-    pub(crate) async fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> WorkflowMediaPort {
+    pub async fn test_port(node_id: &str, spec_id: &str, direction: MediaPortDirection, media_type: MediaType, kind_id: &str) -> WorkflowMediaPort {
         let dir_word = match direction {
             MediaPortDirection::In => "in",
             MediaPortDirection::Out => "out",
@@ -161,7 +161,6 @@ use semio_framework_plugin::{App, AppIo, HistoryView};
         WorkflowMediaPort { id: format!("{node_id}:{spec_id}:{dir_word}"), spec: MediaPortSpec { id: spec_id.into(), label: spec_id.into(), direction, media_type, kind_id: Some(kind_id.into()), required: false, multiplicity: PortMultiplicity::One } }
     }
 }
-
 
 use super::*;
 
@@ -197,9 +196,10 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::demo_space_projection;
-use crate::engine::space::unit_tests::context::{empty_history, studio_emit};
+use crate::unit_tests::context::{empty_history, studio_emit};
 use semio_framework_plugin::artifact_app_laws as plugin_laws;
 use semio_framework_plugin::{PluginApp, VcsArtifactApp};
+use semio_hub_space_foundation::{S_PLAY_APP_ID, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_PARAMETERS_BODY_KEY, S_STUDIO_EXAMPLES};
 
 //#region 🧪️RetainedCatalogOracle
 #[derive(Debug, PartialEq, Eq)]
@@ -282,10 +282,10 @@ async fn node_graph_viewport_writes_typed_workflow_camera_config() {
     let projection = SpaceApp::initial_snapshot().await;
     let config = SpaceConfig::default();
     let viewport = semio_framework_os_kernel::Viewport2d { x: 17.0, y: -9.0, zoom: 2.5 };
-    let emit = context::studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(crate::engine::space::commands::node_graph_viewport::NodeGraphViewport { viewport })).await.expect("viewport");
+    let emit = context::studio_emit(&projection, &config, &SpaceCommand::NodeGraphViewport(semio_hub_space_commands_authoring::node_graph_viewport::NodeGraphViewport { viewport })).await.expect("viewport");
     assert!(emit.artifact_mutations.is_empty());
     let next = context::apply_config(&config, &emit.config_mutations).await;
-    assert_eq!(next.camera.get(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW), Some(&crate::engine::space::config::SpaceWindowCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom }));
+    assert_eq!(next.camera.get(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW), Some(&semio_hub_space_foundation::config::SpaceWindowCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -304,9 +304,9 @@ async fn space_window_kind_actions_scope_editing_to_workflow() {
         let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
         semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
     };
-    let graph = resolve(crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW);
-    let vfs = resolve(crate::engine::space::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS);
-    let dag = resolve(crate::engine::space::modes::main::windows::compiled_dag::S_PLAY_WINDOW_COMPILED_DAG);
+    let graph = resolve(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW);
+    let vfs = resolve(crate::modes::main::windows::media_vfs::S_PLAY_WINDOW_MEDIA_VFS);
+    let dag = resolve(crate::modes::main::windows::compiled_dag::S_PLAY_WINDOW_COMPILED_DAG);
     for graph_operation in ["spawnApp", "connectMediaPorts", "removeAppInstance", "exportMedia", "addParameter"] {
         assert!(graph.contains(&graph_operation.to_string()), "Workflow must expose {graph_operation}");
         assert!(!vfs.contains(&graph_operation.to_string()), "Media VFS must NOT expose {graph_operation}");
@@ -336,13 +336,13 @@ async fn space_manifest_uses_studio_app_id() {
 /// like the sibling `checkout_checkpoint_restores_projection` below.
 #[semio_framework_async_macros::async_test]
 async fn commit_checkpoint_round_trips_projection() {
-    use crate::engine::space::commands::spawn_app;
+    use semio_hub_space_commands_authoring::spawn_app;
     context::seed_draw_plugin().await;
     // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
     // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
     // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
-    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "snapshot" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
@@ -353,14 +353,14 @@ async fn commit_checkpoint_round_trips_projection() {
 
 #[semio_framework_async_macros::async_test]
 async fn checkout_checkpoint_restores_projection() {
-    use crate::engine::space::commands::spawn_app;
+    use semio_hub_space_commands_authoring::spawn_app;
     context::seed_draw_plugin().await;
     // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
     // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
     // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
-    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let commit_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "message": "after-first-spawn" }));
     let admitted = app.handle_action("commitCheckpoint", Some(&commit_args), &plugin_laws::meta("local")).await.expect("commit");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("commit publication");
@@ -370,7 +370,7 @@ async fn checkout_checkpoint_restores_projection() {
     let parsed: store::os_store::text_format::ParsedDocumentText<WorkflowSnapshot, WorkflowMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr).await.expect("parse document pack");
     let checkpoint_id = parsed.envelope.vcs.checkpoints[0].id.clone();
     store::os_store::test_support::retire_parsed_document(parsed);
-    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
+    context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     assert!(app.snapshot().expect("projection").graph.nodes.len() > after_first);
     let checkout_args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "checkpointId": checkpoint_id }));
     let admitted = app.handle_action("checkoutCheckpoint", Some(&checkout_args), &plugin_laws::meta("local")).await.expect("checkout");
@@ -406,7 +406,7 @@ async fn checkout_checkpoint_restores_projection() {
 /// `📓️w2-g-report.md` for the sharedFileRequest.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits_via_backbone() {
-    use crate::engine::space::commands::spawn_app;
+    use semio_hub_space_commands_authoring::spawn_app;
     context::seed_draw_plugin().await;
     context::seed_multi_port_plugins().await;
     let draw_surface_id = context::test_surface_id("draw").await;
@@ -417,8 +417,8 @@ async fn two_instances_converge_on_disjoint_edits_via_backbone() {
     plugin_laws::assert_two_registered_instances_converge::<SpaceApp, (usize, usize), _, _>(
         "mem://s-studio-convergence",
         || create_space_app(),
-        SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: draw_surface_id, x: 80.0, y: 80.0 }),
-        SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: shooting_surface_id, x: 300.0, y: 100.0 }),
+        SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: draw_surface_id, x: 80.0, y: 80.0 }),
+        SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: shooting_surface_id, x: 300.0, y: 100.0 }),
         move |app| {
             let projection = app.snapshot().expect("projection");
             let draw_count = projection.graph.nodes.iter().filter(|node| node.plugin_id == "draw").count();
@@ -432,7 +432,7 @@ async fn two_instances_converge_on_disjoint_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn space_declares_expected_actions_and_examples() {
     let studio = create_space_app().await;
-    let workflow = studio.definition.window_kinds.iter().find(|window| window.id == crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW).expect("workflow window");
+    let workflow = studio.definition.window_kinds.iter().find(|window| window.id == semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW).expect("workflow window");
     assert!(workflow.actions.iter().any(|action| action.id == "spawnApp"));
     assert!(workflow.actions.iter().any(|action| action.id == "reorganizeWorkflow"));
     let registrations = studio.definition.commands.iter().find(|command| command.id == "setAppRegistrations").expect("host registration command");
@@ -461,7 +461,6 @@ async fn space_labels_resolve_native_english_by_default() {
     assert!(!parameters_json.contains("Parameter hinzufügen"));
 }
 
-
 /// 🗂️ Grouped-disclosure context menu: at most 9 top-level rows (leaves+groups combined) and the
 /// destructive `removeAppInstance` row is always the final top-level entry.
 #[semio_framework_async_macros::async_test]
@@ -481,7 +480,7 @@ async fn graph_hit_context_menu_owns_the_remove_target_argument() {
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
     let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let surface = semio_framework_plugin::ContextMenuSurfaceTarget {
-        surface_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_SURFACE_WORKFLOW.into(),
+        surface_id: semio_hub_space_foundation::S_PLAY_SURFACE_WORKFLOW.into(),
         kind: "nodeGraph".into(),
         hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "instance-7".into(), label: None }],
         selection: Vec::new(),
@@ -499,5 +498,5 @@ async fn artifact_app_laws_studio_emit_smoke_test() {
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
     let _ = empty_history();
-    let _ = studio_emit(&projection, &config, &SpaceCommand::GoHome(go_home::GoHome {})).await.expect("handle");
+    let _ = studio_emit(&projection, &config, &SpaceCommand::GoHome(semio_hub_space_commands_media::go_home::GoHome {})).await.expect("handle");
 }

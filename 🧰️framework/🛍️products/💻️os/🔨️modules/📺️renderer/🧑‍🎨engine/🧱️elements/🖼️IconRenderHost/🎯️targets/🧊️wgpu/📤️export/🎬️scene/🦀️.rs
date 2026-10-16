@@ -13,13 +13,13 @@ use super::super::{icon_render_shadow_profile, icon_render_world_component_scene
 const PREVIEW_GENERATION: u64 = 1;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum IconExportFormat {
+pub enum IconExportFormat {
     Png,
     Svg,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Phase {
+pub enum Phase {
     Paint,
     Bridge,
     Transfer,
@@ -29,7 +29,7 @@ enum Phase {
     Close,
 }
 
-pub(crate) struct IconExportSceneRejected {
+pub struct IconExportSceneRejected {
     fault: String,
     asset: Option<World3dMeshAsset>,
 }
@@ -41,11 +41,11 @@ impl std::fmt::Debug for IconExportSceneRejected {
 }
 
 impl IconExportSceneRejected {
-    pub(crate) fn fault(&self) -> &str {
+    pub fn fault(&self) -> &str {
         &self.fault
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         let Some(asset) = self.asset.as_mut() else { return true };
         if !asset.close_step() {
             return false;
@@ -54,12 +54,12 @@ impl IconExportSceneRejected {
         true
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.asset.is_none()
     }
 }
 
-pub(crate) struct IconExportPreparedScene {
+pub struct IconExportPreparedScene {
     packet: Option<PreparedRenderPacket>,
     state: Option<World3dState>,
     dimensions: (u32, u32),
@@ -68,24 +68,24 @@ pub(crate) struct IconExportPreparedScene {
 }
 
 impl IconExportPreparedScene {
-    pub(crate) fn dimensions(&self) -> (u32, u32) {
+    pub fn dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
 
-    pub(crate) fn format(&self) -> IconExportFormat {
+    pub fn format(&self) -> IconExportFormat {
         self.format
     }
 
     /// 📦️ Transfers the accepted packet while retaining its mesh authority in this owner.
-    pub(crate) fn take_packet(&mut self) -> Option<PreparedRenderPacket> {
+    pub fn take_packet(&mut self) -> Option<PreparedRenderPacket> {
         (!self.closing).then(|| self.packet.take()).flatten()
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    pub(crate) fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<bool,super::IconExportFault> {
+    pub fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<bool,super::IconExportFault> {
         let copy=context.retained_grant().maximum_copy_bytes;
         self.closing = true;
         if let Some(packet) = self.packet.as_mut() {
@@ -97,11 +97,11 @@ impl IconExportPreparedScene {
         }
         let Some(state) = self.state.as_mut() else { return Ok(true) };
         if state.dynamic_retirement_is_idle() && !world3d_dynamic_retirement_terminal_is_empty(state) {
-            begin_world3d_dynamic_retirement(state);
+            begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets);
             return Ok(false);
         }
         let terrain_grant=context.retained_grant();
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,context);
         context.consume_retained(terrain.ownership).map_err(OriginalTurnFailure::from)?;
         match terrain.step {
             infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
@@ -115,12 +115,12 @@ impl IconExportPreparedScene {
         Ok(true)
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.packet.is_none() && self.state.is_none()
     }
 }
 
-pub(crate) struct IconExportScenePreparation {
+pub struct IconExportScenePreparation {
     phase: Phase,
     scene: ui_wgpu::wgpu::UiComponentSceneNode,
     state: Option<World3dState>,
@@ -148,16 +148,16 @@ pub(super) struct ValidatedIconExportRequest {
 }
 
 impl IconExportScenePreparation {
-    pub(crate) fn asset_url(request_json: &str) -> Result<String, String> {
+    pub fn asset_url(request_json: &str) -> Result<String, String> {
         validate_request(request_json).map(|validated| crate::mesh_assets::mesh_asset_transport_url(&validated.request.asset_url))
     }
 
-    pub(crate) fn request_format(request_json: &str) -> Result<IconExportFormat, String> {
+    pub fn request_format(request_json: &str) -> Result<IconExportFormat, String> {
         validate_request(request_json).map(|validated| validated.format)
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal returns the exact decoded mesh and appearance owners for bounded retirement.")]
-    pub(crate) fn new(request_json: String, asset: World3dMeshAsset) -> Result<Self, IconExportSceneRejected> {
+    pub fn new(request_json: String, asset: World3dMeshAsset) -> Result<Self, IconExportSceneRejected> {
         let ValidatedIconExportRequest { request, dimensions: (width, height), format } = match validate_request(&request_json) {
             Ok(validated) => validated,
             Err(fault) => return Err(IconExportSceneRejected { fault, asset: Some(asset) }),
@@ -179,7 +179,7 @@ impl IconExportScenePreparation {
         let surface_id = "icon-export-surface".to_string();
         let controller_id = "icon-export-controller".to_string();
         let mut state = World3dState::request_owned(surface_id.clone(), controller_id.clone(), revision);
-        if let Err(rejected) = publish_world3d_asset_mesh(&mut state, &asset_url, asset) {
+        if let Err(rejected) = publish_world3d_asset_mesh(&mut state.session, &mut state.interaction, &mut state.scene, &mut state.assets, &asset_url, asset) {
             return Err(IconExportSceneRejected { fault: format!("icon export mesh publication was refused: {:?}", rejected.fault), asset: Some(rejected.value) });
         }
         let scene = icon_render_world_component_scene(&request, &asset_url, &mesh_id, Some(subject_bounds), 1.0, "icon-export-host".into(), surface_id, controller_id);
@@ -205,15 +205,15 @@ impl IconExportScenePreparation {
         })
     }
 
-    pub(crate) fn dimensions(&self) -> (u32, u32) {
+    pub fn dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
 
-    pub(crate) fn format(&self) -> IconExportFormat {
+    pub fn format(&self) -> IconExportFormat {
         self.format
     }
 
-    pub(crate) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.cancelled = true;
         self.phase = Phase::Close;
         if let Some(job) = self.job.as_mut() {
@@ -221,7 +221,7 @@ impl IconExportScenePreparation {
         }
     }
 
-    pub(crate) fn advance(&mut self, context: &mut StepContext<'_>) -> Result<bool, super::IconExportFault> {
+    pub fn advance(&mut self, context: &mut StepContext<'_>) -> Result<bool, super::IconExportFault> {
         if self.phase == Phase::Complete {
             return Ok(true);
         }
@@ -261,7 +261,7 @@ impl IconExportScenePreparation {
         let mut collapsed = HashMap::new();
         let mut selects = HashMap::new();
         {
-            let mut context = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, height as f32);
+            let mut context = crate::element_contracts::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, height as f32);
             infinite_world::world::render_world_3d(&self.scene, Rect::new(0.0, 0.0, width as f32, height as f32), &mut context, state, &mut self.resources, self.shadow_profile);
         }
         if state.snapshot_fault().is_some() {
@@ -297,10 +297,10 @@ impl IconExportScenePreparation {
             World3dSceneBridgeStep::Fault => return Err("icon export World bridge faulted".into()),
             World3dSceneBridgeStep::Idle | World3dSceneBridgeStep::Pending | World3dSceneBridgeStep::Complete => {}
         }
-        match step_world3d_draw_rebuild(state, context) {
+        match step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) {
             WorldDrawRebuildStep::Fault => return Err("icon export World draw publication faulted".into()),
             WorldDrawRebuildStep::Stale => {
-                close_world3d_draw_rebuild_step(state, context);
+                close_world3d_draw_rebuild_step(&mut state.scene, context);
             }
             WorldDrawRebuildStep::Pending | WorldDrawRebuildStep::Complete => {}
         }
@@ -385,7 +385,7 @@ impl IconExportScenePreparation {
         Ok(())
     }
 
-    pub(crate) fn take_prepared(&mut self) -> Option<IconExportPreparedScene> {
+    pub fn take_prepared(&mut self) -> Option<IconExportPreparedScene> {
         if self.phase != Phase::Complete || self.cancelled || self.faulted || self.packet.is_none() || self.state.is_none() {
             return None;
         }
@@ -395,12 +395,12 @@ impl IconExportScenePreparation {
         Some(IconExportPreparedScene { packet: Some(packet), state: Some(state), dimensions: self.dimensions, format: self.format, closing: false })
     }
 
-    pub(crate) fn progress(&self) -> (u8, usize, usize, usize) {
+    pub fn progress(&self) -> (u8, usize, usize, usize) {
         let detail = self.job.as_ref().map_or(0, |job| job.fault().is_some() as usize);
         (self.phase as u8, usize::from(self.phase == Phase::Complete), 1, detail)
     }
 
-    pub(crate) fn terminal(&self) -> bool {
+    pub fn terminal(&self) -> bool {
         self.phase == Phase::Complete || (self.phase == Phase::Close && self.terminal_is_empty())
     }
 
@@ -455,11 +455,11 @@ impl IconExportScenePreparation {
         }
         let Some(state) = self.state.as_mut() else { return Ok(true) };
         if state.dynamic_retirement_is_idle() && !world3d_dynamic_retirement_terminal_is_empty(state) {
-            begin_world3d_dynamic_retirement(state);
+            begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets);
             return Ok(false);
         }
         let terrain_grant=context.retained_grant();
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,context);
         context.consume_retained(terrain.ownership).map_err(OriginalTurnFailure::from)?;
         match terrain.step {
             infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
@@ -520,7 +520,7 @@ pub(super) fn validate_request(request_json: &str) -> Result<ValidatedIconExport
     Ok(ValidatedIconExportRequest { request, dimensions: (width, height), format })
 }
 
-pub(crate) fn close_prepared(context:&mut StepContext<'_>,quote:Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>,close:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<bool,super::IconExportFault>{
+pub fn close_prepared(context:&mut StepContext<'_>,quote:Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>,close:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<bool,super::IconExportFault>{
     let quote=quote.map_err(|error|OriginalTurnFailure::debit_original(error,context))?;
     let demand=semio_framework_value::RetirementDemand{copy_bytes:quote.maximum_copy_bytes,capacity_bytes:quote.maximum_capacity_bytes,release_bytes:quote.maximum_release_bytes,depth:quote.maximum_depth};
     let mut complete=false;

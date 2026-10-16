@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "material": {
+        "version": 1,
+        "kind": "immutable-binary-objects",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "copied": true
+    },
+    {
+      "material": null,
+      "copied": false
+    },
+    {
+      "material": {
+        "version": 1,
+        "kind": "unknown",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "copied": false
+    },
+    {
+      "material": {
+        "version": 1,
+        "kind": "immutable-binary-objects",
+        "snapshot": "../escape"
+      },
+      "copied": false
+    },
+    {
+      "material": {
+        "version": 1,
+        "kind": "immutable-binary-objects",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "extra": true
+      },
+      "copied": false
+    },
+    {
+      "material": {
+        "version": 1,
+        "kind": "immutable-binary-objects",
+        "snapshot": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      },
+      "copied": false
+    }
+  ]
+}

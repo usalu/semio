@@ -1,6 +1,6 @@
 // #region 🧲️Header
 // 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx
-// Specs: Host `WasmCanvas` (`framework/product/os/module/infinite/canvas/react-renderer/index.tsx`) against a pure-JS mock `WasmCanvasSession` — no real WASM session, no puzzle-2d program.
+// Specs: Host `WasmCanvas` (`framework/product/os/module/infinite/canvas/react-renderer/index.tsx`) against a pure-JS mock `WasmCanvasSession` — no real WASM session, no board program.
 // Summary: `WasmCanvas` only depends on the small `WasmCanvasSession` interface (`attachCanvas`/`setSize`/`renderFrame`/pointer hooks); the mock here paints a deterministic checkerboard + a pointer-tracked marker onto the raw `<canvas>` 2D context so the story proves the reconciler-free host wiring (attach → resize → RAF loop → pointer events) without pulling in any leaf bundle's `cdylib`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header

@@ -12,7 +12,7 @@ use ui_wgpu::wgpu::Rect;
 pub const CANVAS_PRESENCE_SPACE: &str = "canvas";
 
 /// 📐️ Inverse of the canonical board transform `screen = (world - camera) * zoom + size / 2` — React's
-/// `puzzle2dScreenToWorld`, the inverse of `protocol::canvas_point_to_screen`.
+/// `boardScreenToWorld`, the inverse of `protocol::canvas_point_to_screen`.
 pub fn canvas_screen_to_point(camera: (f64, f64, f64), size_px: [f64; 2], screen: [f64; 2]) -> [f64; 2] {
     let (x, y, zoom) = camera;
     let zoom = if zoom == 0.0 { 1.0 } else { zoom };

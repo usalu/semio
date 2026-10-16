@@ -114,7 +114,7 @@ pub const TAG_TILE_WIDTH:u16=322;
 pub const TAG_TILE_LENGTH:u16=323;
 pub const TAG_TILE_OFFSETS:u16=324;
 pub const TAG_TILE_BYTE_COUNTS:u16=325;
-pub(crate) trait NativeFieldType {
+pub trait NativeFieldType {
  fn from_u16(code:u16)->Result<Self,String> where Self:Sized;
  fn to_u16(self)->u16;
  fn element_size(self)->usize;

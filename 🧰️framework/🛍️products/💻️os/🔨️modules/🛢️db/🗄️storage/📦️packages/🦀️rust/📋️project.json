@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-db-storage-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

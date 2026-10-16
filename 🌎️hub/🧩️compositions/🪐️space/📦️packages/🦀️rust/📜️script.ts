@@ -36,7 +36,7 @@ function retainedCommandValidators(repoRoot: string) {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-hub-space"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(["semio-hub-space", "semio-hub-space-foundation", "semio-hub-space-operations", "semio-hub-space-commands-authoring", "semio-hub-space-commands-media", "semio-hub-space-app", "semio-hub-space-laws"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -316,7 +316,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎮️commands/🚀️spawn-app/🧪️tests/🔬️unit/🦀️.rs",
   ]);
   const ownerScript = readFileSync(import.meta.filename, "utf8");
-  const osHost = `${readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"))}\n${readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️workflow-unit/🦀️.rs"])}`;
+  const osHost = `${readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"))}\n${readSources(["🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️media-export-raster-unit/🦀️.rs"])}`;
   const exact = (editorSource: string, editorTestSource: string, viewerTestSource: string): boolean => editorSource.includes("row.role == Some(crate::DirectorySpaceRole::Author)")
     && editorSource.includes('home_row_action(IconName::Users, labels.action_manage, "manageSpace")?')
     && editorTestSource.includes('assert_eq!(buttons.len(), 5')
@@ -391,7 +391,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     [editor, editorTests.replace('assert_eq!(buttons.len(), 5', 'assert_eq!(buttons.len(), 4')],
     [editor, editorTests.replace("role: Some(crate::DirectorySpaceRole::Spectator)", "role: Some(crate::DirectorySpaceRole::Author)")],
   ]) assert.equal(exact(editorSource, editorTestSource, viewerTests), false);
-  for (const law of ["workflow::tests::svg_path_extraction_preserves_transformed_geometry"]) {
+  for (const law of ["registrar_tests::svg_path_extraction_preserves_transformed_geometry"]) {
     assert(ownerScript.includes(law), `Home native gate omitted ${law}`);
     const name = law.slice(law.lastIndexOf("::") + 2);
     assert(osHost.includes(`fn ${name}()`), `OS host omitted ${law}`);
@@ -410,10 +410,10 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
             laws: ["component::imports::effect_conversion_tests::request_inference_proposal_preserves_the_closed_kind"],
           },
           {
-            package: "semio-framework-os",
+            package: "semio-framework-os-host-media-raster",
             target: { kind: "lib" },
             laws: [
-              "workflow::tests::svg_path_extraction_preserves_transformed_geometry",
+              "registrar_tests::svg_path_extraction_preserves_transformed_geometry",
             ],
           },
           {

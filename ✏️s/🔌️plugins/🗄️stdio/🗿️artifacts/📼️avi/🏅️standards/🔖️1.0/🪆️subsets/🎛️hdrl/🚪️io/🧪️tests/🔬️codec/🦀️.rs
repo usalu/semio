@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::v1_0::subsets::any::schema::snapshot::AviChunk, standards::v1_0::subsets::any::schema::snapshot::AviMainHeader, standards::v1_0::subsets::any::schema::snapshot::AviSnapshot, standards::v1_0::subsets::any::schema::snapshot::AviStream, standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat, standards::v1_0::subsets::any::schema::snapshot::AviStreamHeader, standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA};
+use crate::standards::v1_0::subsets::any::io::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn synthetic_snapshot() -> AviSnapshot {
@@ -190,11 +191,11 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
 /// (`♻️mit-bestand/.../🎥️bauen-mit-bestand.mp4`). Its own `strh` is 56 bytes (BUG 1: ffmpeg's
 /// AVI-1.0 muxer writes the classic form) and its `hdrl`/`strl` carry real `JUNK`/`vprp`
 /// auxiliary chunks (BUG 2) — confirmed by direct hex inspection, not assumed.
-const REAL_FFMPEG_AVI: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.avi");
+static REAL_FFMPEG_AVI: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🎬️.avi")).expect("the committed fixture is readable").into_boxed_slice()));
 
 #[semio_framework_async_macros::async_test]
 async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {
-    let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode_avi must accept a real ffmpeg AVI-1.0 strh (56 bytes, classic SHORT-rcFrame form)");
+    let snap = decode_avi(*REAL_FFMPEG_AVI).expect("decode_avi must accept a real ffmpeg AVI-1.0 strh (56 bytes, classic SHORT-rcFrame form)");
     assert_eq!(snap.streams.len(), 1);
     let strh = &snap.streams[0].strh;
     assert_eq!(strh.fcc_type, "vids");
@@ -205,7 +206,7 @@ async fn decode_avi_accepts_the_real_ffmpeg_56_byte_strh() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_avi_retains_nested_hdrl_and_strl_auxiliary_chunks() {
-    let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode");
+    let snap = decode_avi(*REAL_FFMPEG_AVI).expect("decode");
     assert!(snap.hdrl_extra.iter().any(|c| c.fourcc == "JUNK"), "the real fixture's hdrl carries its own 260-byte JUNK padding chunk");
     let strl_extra = &snap.streams[0].strl_extra;
     assert!(strl_extra.iter().any(|c| c.fourcc == "JUNK"), "the real fixture's strl carries a 4120-byte JUNK padding chunk");
@@ -214,7 +215,7 @@ async fn decode_avi_retains_nested_hdrl_and_strl_auxiliary_chunks() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_encode_round_trips_the_real_ffmpeg_fixtures_strh_and_nested_chunks() {
-    let snap = decode_avi(REAL_FFMPEG_AVI).expect("decode");
+    let snap = decode_avi(*REAL_FFMPEG_AVI).expect("decode");
     let re_encoded = encode_avi(&snap);
     let round_tripped = decode_avi(&re_encoded).expect("re-decode");
     assert_eq!(round_tripped, snap, "decode -> encode -> decode must be a fixed point, including the 56-byte strh width and the nested hdrl/strl auxiliaries");

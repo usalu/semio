@@ -28,6 +28,9 @@ export type { Viewport2d } from "../../🔨️modules/🖱️ui/🪟️viewport/
 export { parseViewport3dProjectionFramePolicy } from "../../🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
 export type { Viewport3dProjectionFramePolicy } from "../../🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts";
 export * from "../../🔨️modules/🛂️manifest/🟦️.ts";
+export * from "../../🔨️modules/⏪️time-travel/🕹️actions/🟦️.ts";
+export * from "../../🔨️modules/⏯️tool-run/🕹️actions/🟦️.ts";
+export * from "../../🔨️modules/🎓️onboarding/🟦️.ts";
 export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…
 // family is already re-exported above via `🛂️manifest` (owned-schema-generated mirror of the same Rust types),

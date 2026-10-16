@@ -170,9 +170,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️op-codec/🦀️.rs"]
-mod op_codec_tests;
+
 //#endregion 🧪️Tests
 
 

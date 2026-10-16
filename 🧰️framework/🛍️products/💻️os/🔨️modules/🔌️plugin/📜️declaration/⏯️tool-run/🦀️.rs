@@ -4,8 +4,7 @@ use std::collections::BTreeSet;
 use std::mem::ManuallyDrop;
 use crate::child_view::ChildContentView;
 use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
-use crate::window_config::WindowConfigSnapshot;
-use crate::app_contract::ArtifactApp;
+use semio_framework_plugin_window_config::WindowConfigSnapshot;
 use semio_framework_tool_run::ToolRunDefinition;
 use semio_framework_tool_run::ToolRunIdentity;
 use semio_framework_tool_run::ToolRunState;
@@ -37,43 +36,6 @@ pub enum ToolRunJobPurpose {
 /// in a `PluginApp`, which stays `Send` on every target.
 pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 
-/// 🧳️ Everything an app needs to build one run or revalidate job (§3.7).
-///
-/// - `snapshot` is the run's base for `Run` and the committed head for `Revalidate`.
-/// - `window_id` is the window instance the run was started from (`toolRunStart`'s `windowId`, else the
-///   dispatching view's window), and `window_config` that window's config snapshot as of this build.
-/// - `checkpoint` is the last `StepOutcome::CheckpointReady` state of this run (reconfigure `resume`).
-/// - `provisional` is the provisional op list the job continues from or revalidates.
-/// - `instance_owner` is the instance's retained operation owner, shared with its commands.
-/// - `port` carries the host effects the job asks for and the wake of a job waiting on them.
-/// - `trace_keys` allocates trace keys no record of this run uses, e.g. one per placement a revalidate job
-///   re-tests; every job of the run shares it, so keys never collide across rebuilds and purposes.
-/// - `entity_marks` holds `(provisional length at the end of the tick that appended it, entity)` per entity, in
-///   append order: which provisional op prefix each placement's entity belongs to.
-/// - `children` is the composed read the job runs on: the live owned children, whose member a member run
-///   (`ToolRunDefinition::member`) edits.
-/// - `member_ops` is a member run's provisional op list (that member's `OpBinary` ops), the one the job continues
-///   from or revalidates; empty for a run on the document's own store.
-pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
-    pub receiving: &'a semio_framework_tool_run::ToolRunReceivingLimits,
-    pub tool_id: &'a str,
-    pub definition: &'a ToolRunDefinition,
-    pub purpose: ToolRunJobPurpose,
-    pub identity: ToolRunIdentity,
-    pub snapshot: Arc<A::Snapshot>,
-    pub config: Arc<A::Config>,
-    pub window_id: Option<&'a str>,
-    pub window_config: Option<WindowConfigSnapshot>,
-    pub checkpoint: Option<&'a [u8]>,
-    pub provisional: &'a [A::Mutation],
-    pub instance_owner: ArtifactInstanceOperationOwnerHandle,
-    pub port: ToolRunJobPort,
-    pub trace_keys: ToolRunTraceKeys,
-    pub entity_marks: &'a [(u32, u64)],
-    pub children: ChildContentView,
-    pub member_ops: &'a [Vec<u8>],
-}
-
 /// 🔑️ The trace key allocator every job of one run shares: keys handed out lie above every key the run's
 /// ticks have upserted and every key allocated before.
 #[derive(Clone, Debug, Default)]
@@ -93,7 +55,7 @@ impl ToolRunTraceKeys {
         start..start.saturating_add(count)
     }
 
-    pub(crate) fn observe(&self, key: u64) {
+    pub fn observe(&self, key: u64) {
         self.next.fetch_max(key.saturating_add(1), std::sync::atomic::Ordering::SeqCst);
     }
 }
@@ -115,12 +77,12 @@ pub trait ToolRunRetargetableJob<C>: semio_framework_job::InteractiveJob + Send 
 /// costs no turn; whoever folds the awaited answer calls [`ToolRunJobPort::wake`].
 #[derive(Clone, Default)]
 pub struct ToolRunJobPort {
-    pub(crate) inner: Arc<ToolRunJobPortState>,
+    pub inner: Arc<ToolRunJobPortState>,
 }
 
 #[derive(Default)]
-pub(crate) struct ToolRunJobPortState {
-    pub(crate) effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
+pub struct ToolRunJobPortState {
+    pub effects: std::sync::Mutex<std::collections::VecDeque<Effect>>,
     waiting: std::sync::atomic::AtomicBool,
 }
 
@@ -173,11 +135,11 @@ impl ToolRunJobPort {
         self.inner.effects.lock().is_ok_and(|effects| !effects.is_empty())
     }
 
-    pub(crate) fn pop_effect(&self) -> Option<Effect> {
+    pub fn pop_effect(&self) -> Option<Effect> {
         self.inner.effects.lock().ok()?.pop_front()
     }
 
-    pub(crate) fn restore_effect(&self, effect: Effect) {
+    pub fn restore_effect(&self, effect: Effect) {
         if let Ok(mut effects) = self.inner.effects.lock() {
             effects.push_front(effect);
         }
@@ -188,8 +150,8 @@ fn tool_original_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->
 
 /// ♻️ Keeps atomic final-port queue custody until its original backing closes.
 pub struct OriginalToolRunJobPortRetirement{
-    pub(crate) source:ManuallyDrop<Option<ToolRunJobPort>>,
-    pub(crate) effects:ManuallyDrop<Option<std::collections::VecDeque<Effect>>>,
+    pub source:ManuallyDrop<Option<ToolRunJobPort>>,
+    pub effects:ManuallyDrop<Option<std::collections::VecDeque<Effect>>>,
 }
 
 impl OriginalToolRunJobPortRetirement{

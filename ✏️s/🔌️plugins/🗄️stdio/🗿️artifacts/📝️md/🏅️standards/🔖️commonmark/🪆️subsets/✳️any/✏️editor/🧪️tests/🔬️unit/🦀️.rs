@@ -1,4 +1,14 @@
-use super::*;
+use crate::{standards::v_commonmark::subsets::any::schema::mutations::splice_source, standards::v_commonmark::subsets::any::schema::mutations::MdMutation};
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
+use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::md::{MD_KIT_ACTION_ID, md_example_snapshot, md_command_from_action, md_emit};
+use crate::editor::md::*;
 
 #[test]
 fn text_edit_requires_an_explicit_revision_and_change_set_and_allows_an_empty_one() {
@@ -150,13 +160,13 @@ async fn one_applied_change_set_is_one_splice_source_edit() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
-const SPLICE_SOURCE: &str = include_str!("../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json");
+static SPLICE_SOURCE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json"));
 
 /// ⚖️ LAW (corpus `🧫️fixtures/✂️splice-source`): the ranges of a row carry the committed document to exactly the parse of the
 /// source they mean, and the leaf's own concrete inverse carries it back to the committed document.
 #[test]
 fn the_corpus_ranges_reach_exactly_the_source_they_mean_and_undo() {
-    let corpus: serde_json::Value = serde_json::from_str(SPLICE_SOURCE).expect("splice-source corpus");
+    let corpus: serde_json::Value = serde_json::from_str((*SPLICE_SOURCE)).expect("splice-source corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let id = case["id"].as_str().expect("id");
         let base = MdSnapshot::from_text(case["before"].as_str().expect("before"));
@@ -214,4 +224,9 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     let level = emit(SnapshotEditEvent::SetValue { path: "/blocks/0/level".into(), value: semio_framework_value::DslValue::uint(2) }).expect("a heading level edit resolves");
     assert!(matches!(level.artifact_mutations.as_slice(), [MdMutation::ReplaceBlock(_)]));
     assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "arguments": [
+    "test",
+    "--config",
+    "owned-profile"
+  ],
+  "environment": {
+    "CARGO_BUILD_BUILD_DIR": "/owned/build",
+    "CARGO_TARGET_DIR": "/owned/target",
+    "SENTINEL": "held"
+  },
+  "cases": [
+    {
+      "name": "live",
+      "cancel": false,
+      "cleanup": null,
+      "probeFailure": false,
+      "stage": "build"
+    },
+    {
+      "name": "cancelled-probe",
+      "cancel": true,
+      "cleanup": null,
+      "probeFailure": false,
+      "stage": "build"
+    },
+    {
+      "name": "cancelled-capacity-close",
+      "cancel": true,
+      "cleanup": "capacity",
+      "probeFailure": false,
+      "stage": "build"
+    },
+    {
+      "name": "cancelled-lease-close",
+      "cancel": true,
+      "cleanup": "lease",
+      "probeFailure": false,
+      "stage": "build"
+    },
+    {
+      "name": "successful-body-cleanup-refusal",
+      "cancel": false,
+      "cleanup": "capacity",
+      "probeFailure": false,
+      "stage": "build"
+    },
+    {
+      "name": "undefined-primary-cleanup-refusal",
+      "cancel": false,
+      "cleanup": "lease",
+      "probeFailure": true,
+      "stage": "build"
+    },
+    {
+      "name": "native-live",
+      "cancel": false,
+      "cleanup": null,
+      "probeFailure": false,
+      "stage": "native"
+    },
+    {
+      "name": "native-cancelled",
+      "cancel": true,
+      "cleanup": null,
+      "probeFailure": false,
+      "stage": "native"
+    }
+  ]
+}

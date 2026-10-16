@@ -117,7 +117,21 @@ pub fn create_imperative_viewer() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{ProcedureSnapshot};
+
+//#region 🧬️ChildRestoreProjection
+/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
+/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
+/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
+/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
+pub fn procedure_child_restore_projection(snapshot: &ProcedureSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("procedure.child-projection"), error.to_string()))
+}
+//#endregion 🧬️ChildRestoreProjection
+}
+//#endregion 🧩️ArtifactItems5

@@ -38,7 +38,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
         vec!["edges".into(), self.id.clone()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

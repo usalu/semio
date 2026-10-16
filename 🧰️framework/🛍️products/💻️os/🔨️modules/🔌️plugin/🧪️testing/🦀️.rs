@@ -50,11 +50,11 @@ use store::{os_store::document_materialize::create_document_envelope, os_store::
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use ui_wgpu::wgpu::ContextMenuItemSpec;
-use ui_wgpu::wgpu::ContextMenuRequest;
-use ui_wgpu::wgpu::WindowEngagement;
-use ui_wgpu::wgpu::WindowMeasure;
-use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_ui_layout::layout::ContextMenuItemSpec;
+use semio_framework_ui_layout::layout::ContextMenuRequest;
+use semio_framework_ui_layout::layout::WindowEngagement;
+use semio_framework_ui_layout::layout::WindowMeasure;
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
 /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
 /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
@@ -310,16 +310,16 @@ pub mod artifact_app_laws {
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
         app.refresh_cache().await?;
-        let read = app.store.snapshot_read().map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
-        let (generation, revision) = (app.store.generation_now(), app.store.content_revision());
+        let read = app.stores.store.snapshot_read().map_err(semio_framework_diagnostic::FaultFrom::into_fault)?;
+        let (generation, revision) = (app.stores.store.generation_now(), app.stores.store.content_revision());
         if !read.commit_authority_matches(generation, revision) {
             return Err(super::Fault::new(super::FaultOrigin::Framework, super::FaultCode::new("framework.artifact-law.publication-invariant"), "law parent snapshot publication changed before document view capture").with_param("refusalKind", semio_framework_value::ValueRefusalKind::InvariantViolated.as_str()));
         }
-        let (_, snapshot, _, history) = app.cache.as_ref().ok_or_else(|| super::plugin_sdk_fault("law document view cache was not prepared"))?;
+        let (_, snapshot, _, history) = app.history.cache.as_ref().ok_or_else(|| super::plugin_sdk_fault("law document view cache was not prepared"))?;
         if !std::ptr::eq(snapshot.as_ref(), read.get()) {
             return Err(super::Fault::new(super::FaultOrigin::Framework, super::FaultCode::new("framework.artifact-law.publication-invariant"), "law history cache belongs to a different parent snapshot publication").with_param("refusalKind", semio_framework_value::ValueRefusalKind::InvariantViolated.as_str()));
         }
-        let view = super::ArtifactView::with_children(read.get(), history.as_ref(), super::ChildContentView::clone(&app.child_content_root));
+        let view = super::ArtifactView::with_children(read.get(), history.as_ref(), super::ChildContentView::clone(&app.child_composition.child_content_root));
         Ok(inspect(&view))
     }
 
@@ -705,7 +705,7 @@ pub mod artifact_app_laws {
     pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: super::SpaceMember + super::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &super::ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, semio_framework_job::OriginalTurnFailure> {
         let projected = render_registered_fixture_app(app, body_key, view,cx).await?;
         let projection: serde_json::Value = serde_json::from_str(&projected).map_err(|error| super::plugin_sdk_fault(error.to_string()))?;
-        Ok(document_input_commit_findings(&projection, &|verb| app.registry.get(verb).is_some_and(|definition| definition.kind == super::ActionKind::Mutation)))
+        Ok(document_input_commit_findings(&projection, &|verb| app.tools.registry.get(verb).is_some_and(|definition| definition.kind == super::ActionKind::Mutation)))
     }
 
     /// 🎬️ The projected fixture node carrying `T`'s scene — the root itself when a body IS a bare
@@ -919,7 +919,7 @@ pub mod artifact_app_laws {
             retain_original_ownership_receipts(app, mounted_policy, &mut receipts).expect("original fixture constructor receipts");
             if !app.store_constructor_is_pending() { return receipts; }
             assert!(std::time::Instant::now() < deadline, "registered fixture store constructor did not settle");
-            app.drive_store_constructor_unit(mounted_policy.preparation).expect("registered fixture store constructor turn");
+            app.stores.drive_store_constructor_unit(&mut app.constructor, mounted_policy.preparation).expect("registered fixture store constructor turn");
         }
     }
 
@@ -943,9 +943,9 @@ pub mod artifact_app_laws {
         let mut receipts = Vec::new();
         loop {
             retain_original_ownership_receipts(app, mounted_policy, &mut receipts).expect("original fixture constructor close receipts");
-            if app.constructor_terminal_is_empty() { return receipts; }
+            if app.constructor.constructor_terminal_is_empty() { return receipts; }
             assert!(std::time::Instant::now() < deadline, "registered fixture store constructor close did not settle");
-            app.close_store_constructor_unit(mounted_policy.close).expect("registered fixture store constructor close turn");
+            app.stores.close_store_constructor_unit(&mut app.constructor, mounted_policy.close).expect("registered fixture store constructor close turn");
         }
     }
 
@@ -977,7 +977,7 @@ pub mod artifact_app_laws {
 
     /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
     pub async fn capture_fixture_window_config<O: crate::WindowConfigOwner, A: ArtifactApp, M: super::SpaceMember + super::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &super::ViewModel) -> Result<Option<O::State>, super::Fault> {
-        Ok(app.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
+        Ok(app.stores.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
     }
 
     /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
@@ -1698,7 +1698,7 @@ pub mod artifact_app_laws {
                     load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, identity,cx).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
                 }
             }
-            app.follow_derivable_children(identity).await.unwrap_or_else(|fault| panic!("the boot example's derivable children must follow its coordinates: {fault:?}"));
+            app.child_composition.follow_derivable_children(&mut app.stores, identity).await.unwrap_or_else(|fault| panic!("the boot example's derivable children must follow its coordinates: {fault:?}"));
         }
         app
     }
@@ -1716,7 +1716,7 @@ pub mod artifact_app_laws {
             document.extend_from_slice(&child.envelope_pack);
         }
         let config = match app.refresh_cache().await {
-            Ok(()) => app.cache.as_ref().map(|(_, _, config, _)| pack::snapshot::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
+            Ok(()) => app.history.cache.as_ref().map(|(_, _, config, _)| pack::snapshot::ArtifactPack::encode_pack(config.as_ref())).unwrap_or_default(),
             Err(_) => Vec::new(),
         };
         (document, config)
@@ -2267,12 +2267,12 @@ pub mod artifact_app_laws {
     /// applying anything (contract §5.1) — the guest-side half of "propose instead of apply".
     /// Returns the draft so a test can inspect `local_ops`/`foreign`.
     pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> super::TransactionProposalDraft {
-        let generation_before = app.store.generation();
-        let edits_before = app.store.envelope().vcs.edits.len();
+        let generation_before = app.stores.store.generation();
+        let edits_before = app.stores.store.envelope().vcs.edits.len();
         app.dispatch_typed(command, &meta("local"), identity,cx).await.expect("dispatch a command whose mutations carry foreign steps");
         settle_registered_typed_operation(app, meta("local").instance_id, mounted_policy, identity,cx).await.expect("a proposing dispatch settles its own operation");
-        assert_eq!(app.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
-        assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");
+        assert_eq!(app.stores.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
+        assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");
         app.take_pending_transaction_proposal().await.expect("dispatch_emit must stash a TransactionProposalDraft when foreign steps are present")
     }
 
@@ -2281,7 +2281,7 @@ pub mod artifact_app_laws {
     /// commits, and asserts exactly one resulting `Edit` whose `group_id` is `txn_id` and whose
     /// every `MutationMeta.origin` is `origin`. Returns the committed edit id.
     pub async fn assert_transaction_commits_as_one_edit<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>, origin: protocol::MutationOrigin, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> String {
-        let edits_before = app.store.envelope().vcs.edits.len();
+        let edits_before = app.stores.store.envelope().vcs.edits.len();
         let mut prepared_ops: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
         for op in ops.iter() {
             prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
@@ -2289,8 +2289,8 @@ pub mod artifact_app_laws {
         let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, &[], Some(origin.clone())).await;
         assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
         let edit_id = app.transaction_commit(txn_id, &meta("local"), identity).await.expect("commit prepared transaction");
-        assert_eq!(app.store.envelope().vcs.edits.len(), edits_before + 1, "commit must produce exactly one new Edit");
-        let edit = app.store.envelope().vcs.edits.last().expect("committed edit must exist");
+        assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits_before + 1, "commit must produce exactly one new Edit");
+        let edit = app.stores.store.envelope().vcs.edits.last().expect("committed edit must exist");
         assert_eq!(edit.id, edit_id, "transaction_commit must return the tail edit's own id");
         assert!(!edit.mutation_meta.is_empty(), "the committed edit must carry at least one MutationMeta entry");
         for op_meta in &edit.mutation_meta {
@@ -2304,8 +2304,8 @@ pub mod artifact_app_laws {
     /// count are completely untouched (contract §5.5: rollback discards pending state without
     /// ever having applied anything).
     pub async fn assert_transaction_rollback_leaves_state_untouched<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, txn_id: &str, ops: Vec<A::Mutation>) {
-        let generation_before = app.store.generation();
-        let edits_before = app.store.envelope().vcs.edits.len();
+        let generation_before = app.stores.store.generation();
+        let edits_before = app.stores.store.envelope().vcs.edits.len();
         let mut prepared_ops: Vec<Vec<u8>> = Vec::with_capacity(ops.len());
         for op in ops.iter() {
             prepared_ops.push(::protocol::OpBinary::encode_op(op).expect("encode prepared op"));
@@ -2313,8 +2313,8 @@ pub mod artifact_app_laws {
         let outcome = app.transaction_prepare(txn_id, "", &[], &prepared_ops, &[], Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "prepare unexpectedly rejected");
         app.transaction_rollback(txn_id).await.expect("rollback the pending transaction");
-        assert_eq!(app.store.generation(), generation_before, "rollback must not change the store generation");
-        assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "rollback must not add any edit");
+        assert_eq!(app.stores.store.generation(), generation_before, "rollback must not change the store generation");
+        assert_eq!(app.stores.store.envelope().vcs.edits.len(), edits_before, "rollback must not add any edit");
     }
 
 
@@ -2631,7 +2631,7 @@ pub mod artifact_app_laws {
         let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
         app.refresh_cache().await.expect("viewer fixture cache");
         let result = {
-            let (_, snapshot, config, history) = app.cache.as_ref().expect("viewer fixture cache populated");
+            let (_, snapshot, config, history) = app.history.cache.as_ref().expect("viewer fixture cache populated");
             let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             let draft = NoDraft::default();

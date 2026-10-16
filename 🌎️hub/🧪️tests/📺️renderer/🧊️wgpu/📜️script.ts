@@ -67,7 +67,7 @@ function stageNativeRuntime(variant: string, profile: "prototype" | "release"): 
   const publisher = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts");
   const published = spawnSync(process.execPath, [publisher, "publish", variant, profile], { cwd: repoRoot, encoding: "utf8" });
   if (published.status !== 0) throw new Error(`native ${variant} runtime publish failed: ${published.stderr}${published.stdout}`);
-  return nativeRuntimeDirectory(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, profile);
+  return nativeRuntimeDirectory(repoRoot, variant, profile);
 }
 
 /** 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */

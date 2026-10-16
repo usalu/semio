@@ -94,3 +94,18 @@ pub fn wav_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#region 🧬️DerivedArtifactFacets
 
 //#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const WAV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.wav";
+}
+//#endregion 🧩️ArtifactItems2
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    Vec::new()
+}
+}
+//#endregion 🧩️ArtifactItems6

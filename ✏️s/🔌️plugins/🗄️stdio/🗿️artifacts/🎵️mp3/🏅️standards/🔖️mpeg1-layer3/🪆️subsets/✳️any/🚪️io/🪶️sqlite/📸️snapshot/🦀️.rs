@@ -5,11 +5,11 @@ use std::collections::BTreeMap;
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,RowWriter,NativeEncodingBound,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
 fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)->Result<(),ValueError>{if position%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,position,total)?;}Ok(())}
 fn octet(row:&SqliteRow,column:usize)->Result<u8,ValueError>{u8::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string()))}
-fn short(row:&SqliteRow,column:usize)->Result<u16,ValueError>{u16::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string()))}
+pub fn short(row:&SqliteRow,column:usize)->Result<u16,ValueError>{u16::try_from(row.integer(column)?).map_err(|error|invalid(error.to_string()))}
 fn flag(row:&SqliteRow,column:usize)->Result<bool,ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("MP3 header flag must be boolean"))}}
 fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>,ValueError>{let rows=&database.table(table)?.rows;let mut entities=BTreeMap::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||entities.insert(row.rowid,row).is_some(){return Err(invalid(format!("{table} requires unique positive aliased identities and exact columns")));}}Ok(entities)}
 fn optional_tag<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>,ValueError>{let rows=entities(database,table,columns,control)?;if rows.len()>1||rows.keys().any(|&id|id!=1){return Err(invalid("MP3 optional tag must have the document identity"));}Ok(rows)}
@@ -82,6 +82,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

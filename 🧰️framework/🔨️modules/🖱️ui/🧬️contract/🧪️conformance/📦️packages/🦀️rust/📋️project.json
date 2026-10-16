@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-contract-conformance-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

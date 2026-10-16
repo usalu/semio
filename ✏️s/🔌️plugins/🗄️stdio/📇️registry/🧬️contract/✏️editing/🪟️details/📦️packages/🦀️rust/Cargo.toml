@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-artifact-stdio-contract-editing-details"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Snapshot details window: schema-driven detail presentation and its controls"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-editing = { path = "../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-window-kit = { path = "../../../../🪟️window-kit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-wire = { path = "../../../../🧾️payload-wire/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-framework-ui-scene = { workspace = true }
+serde_json = { workspace = true }

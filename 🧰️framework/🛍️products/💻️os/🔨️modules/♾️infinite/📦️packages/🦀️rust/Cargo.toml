@@ -20,6 +20,18 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-infinite-directed-presentation = { path = "../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+# 🎲️ The board family lives in producer crates (schema, engine, normal model/scene/focus/gestures/fill/host, dag model/graph/host); `src/🦀️.rs` re-exports them under the former `board` paths.
+semio-framework-os-infinite-board-schema = { path = "../../🎲️board/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-engine = { path = "../../🎲️board/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-model = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🗃️model/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-scene = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🖼️scene/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-focus = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-gestures = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-fill = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🪣️fill/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-normal-host = { path = "../../🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-model = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🗃️model/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-graph = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-host = { path = "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -55,18 +67,24 @@ base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base6
 # to the puzzle guest's own `brush_mesh_digest` and React's `puzzle3dBrushMeshDigest`, which is what
 # lets the guest refuse a page run that does not reassemble into the announced mesh.
 semio-framework-hash = { workspace = true }
-# 🏔️ Required by the path-mounted `🗺️surface/🏔️terrain/🦀️.rs` above, which decodes
-# Terrarium RGB-encoded elevation PNGs via the first-party `semio-framework-pixels` codec (no
-# third-party runtime dependency) instead of `image`/`png`. That file is compiled into BOTH this
-# crate and `semio-framework-surface` (mounted here by `#[path]` because surface depends on
-# infinite, so a real dependency edge would be a cycle) — a shared source file needs the same
-# dependency declared in every crate that mounts it. This removes `image`/`png`/`flate2`/
-# `miniz_oxide`/`fdeflate`/`crc32fast`/`adler2`/`simd-adler32`/`byteorder-lite` from EVERY target's
-# graph here, including `wasm32-wasip2` — this was the last unconditional `image` dependency in
-# this manifest. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+# 🏔️ The single owner of the terrain tile engine (`TerrainSessionCore`, Terrarium DEM decode, heightfield meshing). It is a
+# real downward dependency now: `semio-framework-surface-terrain` depends on neither this crate nor `semio-framework-surface`,
+# so the former `#[path]` re-mounting of its source into two crates is gone.
+semio-framework-surface-terrain = { path = "../../../../../../🔨️modules/🗺️surface/🏔️terrain/📦️packages/🦀️rust" }
+# 🖼️ Decodes the world's texture PNGs (`🌍️world/🧱️scene`) through the first-party codec, no third-party image crate on any
+# target. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
 semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_gpu = { path = "../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
+# 🌍️ The world family lives in producer crates (components, cursors, scene, bridge, interaction, host over the model); `src/🌍️world/🦀️.rs` is only their facade.
+semio-framework-os-infinite-world-model = { path = "../../🌍️world/🗃️model/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-components = { path = "../../🌍️world/🧩️components/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-cursors = { path = "../../🌍️world/🧲️cursors/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-scene = { path = "../../🌍️world/🧱️scene/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-bridge = { path = "../../🌍️world/🌉️bridge/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-interaction = { path = "../../🌍️world/🧵️interaction/📦️packages/🦀️rust" }
+semio-framework-os-infinite-world-host = { path = "../../🌍️world/🎛️host/📦️packages/🦀️rust" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 

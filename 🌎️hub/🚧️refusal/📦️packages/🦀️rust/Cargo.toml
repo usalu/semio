@@ -1,0 +1,28 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-refusal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The one typed shape of every answer the hub gives that is not a success"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-refusal"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

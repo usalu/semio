@@ -1,30 +1,22 @@
 //! 📝️ Borrowed ordered domain text with one structural event or sixty-four copied bytes per turn.
-use super::{ValueError, ValueRefusalKind, ArtifactPreparedOperationError};
+use super::{ValueError, ValueRefusalKind};
+use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactPreparedOperationError;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneGrant};
+pub use semio_framework_os_store_one_item_publication::lifted_text::{ArtifactOperationText, ArtifactOperationTextNode};
 
-/// 🌳️ Exact domain text leaves and ordered delimiters without intermediate ownership.
-pub enum ArtifactOperationTextNode<'a> {
-    Bytes(&'a [u8]),
-    Hex(&'a [u8]),
-    Scalar,
-    Sequence { length: usize, open: &'a [u8], separator: &'a [u8], close: &'a [u8] },
-}
 
-/// 🫳️ Ordinal lookup borrows the original typed operation; scalar formatting stays inline.
-pub trait ArtifactOperationText: Sync {
-    fn operation_text_node(&self, path: &[usize]) -> Result<ArtifactOperationTextNode<'_>, ValueError>;
-    fn operation_text_scalar(&self, path: &[usize], offset: usize, output: &mut [u8]) -> Result<(usize, bool), ArtifactPreparedOperationError>;
-}
+
+
 
 #[derive(Clone, Copy, Default)]
 struct Frame { phase: u8, offset: usize, child: usize }
 
 /// 🧭️ Fixed depth traversal retains offsets alone and reborrows source authority each turn.
 pub struct ArtifactOperationTextCursor {
-    frames: [Frame; 64],
-    path: [usize; 64],
-    depth: usize,
-    complete: bool,
+    pub frames: [Frame; 64],
+    pub path: [usize; 64],
+    pub depth: usize,
+    pub complete: bool,
 }
 
 impl Default for ArtifactOperationTextCursor {
@@ -34,7 +26,7 @@ impl Default for ArtifactOperationTextCursor {
 impl ArtifactOperationTextCursor {
     pub fn is_complete(&self) -> bool { self.complete }
 
-    fn pop(&mut self) { if self.depth == 0 { self.complete = true; } else { self.depth -= 1; } }
+    pub fn pop(&mut self) { if self.depth == 0 { self.complete = true; } else { self.depth -= 1; } }
 
     pub fn advance(&mut self, source: &dyn ArtifactOperationText, output: &mut [u8], grant: RetainedCloneGrant) -> Result<usize, ArtifactPreparedOperationError> {
         if self.complete || output.is_empty() || grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 { return Ok(0); }

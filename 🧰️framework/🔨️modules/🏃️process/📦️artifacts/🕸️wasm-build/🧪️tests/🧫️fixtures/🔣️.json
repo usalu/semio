@@ -27,50 +27,5 @@
     "leaseDirectory": "/leases",
     "sourceOwner": "owner"
   },
-  "wasmHex": "0061736d01000000",
-  "wasm": [
-    {
-      "name": "success",
-      "status": 0,
-      "output": true
-    },
-    {
-      "name": "failure",
-      "status": 1,
-      "output": false
-    },
-    {
-      "name": "missing",
-      "status": 0,
-      "output": false
-    },
-    {
-      "name": "threaded",
-      "status": 0,
-      "output": true,
-      "threads": true
-    },
-    {
-      "name": "release",
-      "status": 0,
-      "output": true,
-      "mode": "release"
-    },
-    {
-      "name": "refused",
-      "status": 0,
-      "output": false,
-      "refused": true
-    }
-  ],
-  "modePublications": [
-    {
-      "mode": "prototype",
-      "wasmHex": "0061736d01000000"
-    },
-    {
-      "mode": "release",
-      "wasmHex": "0061736d01000000000100"
-    }
-  ]
+  "wasmHex": "0061736d01000000"
 }

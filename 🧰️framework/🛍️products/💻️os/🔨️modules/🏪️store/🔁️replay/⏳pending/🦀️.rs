@@ -6,13 +6,13 @@ use protocol::mutation::Mutation as MutationContract;
 /// ([`ArtifactStore::defer_remote_replays`]) and at most one `local` step this replica authored
 /// ([`ArtifactStore::defer_local_replays`]) wait outside the log while their Report replay steps turn by turn; the replay
 /// restarts whenever the history it started from changed (the content revision it names).
-pub(crate) struct PendingReprojection<P, Mutation>
+pub struct PendingReprojection<P, Mutation>
 where
     Mutation: MutationContract<P>,
 {
-    pub(crate) transitions: Vec<crate::os_spr::MutationEnvelope>,
-    pub(crate) local: Option<PendingLocalStep>,
-    pub(crate) replay: Option<([u8; 32], EditReplay<P, Mutation>)>,
+    pub transitions: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub local: Option<PendingLocalStep>,
+    pub replay: Option<([u8; 32], EditReplay<P, Mutation>)>,
 }
 
 impl<P, Mutation> PendingReprojection<P, Mutation>
@@ -20,7 +20,7 @@ where
     Mutation: MutationContract<P>,
 {
     /// 🫗️ Nothing admitted yet.
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { transitions: Vec::new(), local: None, replay: None }
     }
 }
@@ -28,22 +28,22 @@ where
 /// 🪃️ A local history step whose Report replay outlasts its dispatch: the transitions it authored (neither recorded nor
 /// announced yet), the head `(line, checkpoint)` it moves this replica to, and whether it finalizes a supersession — whose
 /// report must not block finalizing, or the step is refused with nothing of it recorded.
-pub(crate) struct PendingLocalStep {
-    pub(crate) envelopes: Vec<crate::os_spr::MutationEnvelope>,
-    pub(crate) head: (Option<String>, Option<String>),
-    pub(crate) finalizing: bool,
+pub struct PendingLocalStep {
+    pub envelopes: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub head: (Option<String>, Option<String>),
+    pub finalizing: bool,
 }
 
 /// ⚡️ A local undo or redo that changes nothing but the applied tail ([`ArtifactStore::tail_step`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TailStep {
+pub enum TailStep {
     Undo,
     Redo,
 }
 
 /// ⏩️ Where one advance of a deferred reprojection left it.
-pub(crate) enum ReprojectionAdvance {
+pub enum ReprojectionAdvance {
     Pending(ReplayProgress),
-    Adopted(Vec<crate::os_spr::EditMessages>),
+    Adopted(Vec<semio_framework_os_spr::EditMessages>),
 }
 

@@ -1,6 +1,6 @@
-use super::super::super::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJsonCursor};
+use crate::{ARTIFACT_CANONICAL_JSON_CHUNK_BYTES, ArtifactCanonicalJsonCursor};
 use super::{ArtifactCanonicalValueAdmission, ArtifactCanonicalValueCloseStep, ArtifactCanonicalValueGrant, ArtifactCanonicalValueLimits, ArtifactCanonicalValueStep};
-use crate::DslValue;
+use semio_framework_value::DslValue;
 use semio_framework_value::RetainedCloneGrant;
 use std::sync::Arc;
 

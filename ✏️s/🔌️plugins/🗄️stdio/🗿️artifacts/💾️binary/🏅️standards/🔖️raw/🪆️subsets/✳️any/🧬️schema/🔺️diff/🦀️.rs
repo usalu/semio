@@ -186,7 +186,7 @@ fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
 /// labels), then the resulting label array is run-length-encoded back into a minimal ordered
 /// `ByteSplice` list.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
+pub fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
     // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
     // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
     // elements when `d2` still references real base positions `d1` never touched.
@@ -247,7 +247,5 @@ pub(crate) fn demo_diff_cases() -> Vec<BinaryDiff> {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

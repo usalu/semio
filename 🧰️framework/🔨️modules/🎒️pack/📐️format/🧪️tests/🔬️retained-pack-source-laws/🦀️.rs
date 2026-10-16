@@ -1,6 +1,6 @@
-
 use semio_framework_pack_error::PackRefusal;
 use super::*;
+use semio_framework_pack_format::{Manifest, OPTIONAL_CANONICAL, PackWriter, WriteOptions, encode_symbols};
 
 fn page(bytes: &[u8]) -> RetainedPackPage {
     let mut owned = [0; RETAINED_PACK_PAGE_BYTES];
@@ -44,30 +44,6 @@ fn close(cursor: &mut RetainedPackSourceCursor) -> usize {
     released
 }
 
-fn close_catalog(cursor: &mut RetainedPackCatalogCursor) -> usize {
-    let mut released = 0;
-    loop {
-        let grant = cursor.next_release_allocation_bytes().expect("catalog release query").unwrap_or(0);
-        match cursor.close_step(1, grant).expect("catalog close") {
-            RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-            RetainedPackCloseStep::Complete => break,
-        }
-    }
-    released
-}
-
-fn close_symbol_table(table: &mut RetainedPackSymbolTable) -> usize {
-    let mut released = 0;
-    loop {
-        let grant = table.next_release_allocation_bytes().expect("symbol-table release query").unwrap_or(0);
-        match table.close_step(1, grant).expect("symbol-table close") {
-            RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-            RetainedPackCloseStep::Complete => break,
-        }
-    }
-    released
-}
-
 fn close_segment(cursor: &mut RetainedPackSegmentCursor) -> usize {
     let mut released = 0;
     loop {
@@ -82,10 +58,10 @@ fn close_segment(cursor: &mut RetainedPackSegmentCursor) -> usize {
 async fn canonical_pack(codec: CodecId) -> (Vec<u8>, Vec<u8>) {
     let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.expect("writer");
-    writer.write_segment(crate::KIND_SYMBOLS, &encode_symbols(&["p2d2".to_string(), "ä".to_string()]).await).await.expect("symbols");
+    writer.write_segment(semio_framework_replication_codec::KIND_SYMBOLS, &encode_symbols(&["p2d2".to_string(), "ä".to_string()]).await).await.expect("symbols");
     let document = b"retained-canonical-document".to_vec();
     let doc_offset = writer.position().await;
-    writer.write_segment(crate::KIND_DOCUMENT, &document).await.expect("document");
+    writer.write_segment(semio_framework_replication_codec::KIND_DOCUMENT, &document).await.expect("document");
     let doc_len = writer.position().await - doc_offset;
     let manifest = Manifest {
         schema_name: "p2d2".into(),
@@ -103,50 +79,6 @@ async fn canonical_pack(codec: CodecId) -> (Vec<u8>, Vec<u8>) {
     (writer.finish(&manifest).await.expect("finish"), document)
 }
 
-async fn canonical_chunk_pack(chunk: &[u8]) -> Vec<u8> {
-    let options = WriteOptions { required_flags: REQUIRED_CHUNKED, optional_flags: OPTIONAL_CANONICAL, codec: CodecId(0) };
-    let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.expect("chunk writer");
-    assert_eq!(writer.write_chunk(chunk).await.expect("multi-byte chunk"), ChunkId(0));
-    writer
-        .finish(&Manifest {
-            schema_name: String::new(),
-            schema_hash: [0; 32],
-            doc_span: ByteRange { offset: 0, len: 0 },
-            doc_frame_count: 0,
-            symbols_span: ByteRange { offset: 0, len: 0 },
-            chunk_table_span: ByteRange { offset: 0, len: 0 },
-            field_index_span: ByteRange { offset: 0, len: 0 },
-            uncompressed_body_len: 0,
-            field_count: 0,
-            chunk_count: 1,
-            symbol_count: 0,
-        })
-        .await
-        .expect("chunk pack finish")
-}
-
-async fn canonical_symbol_pack(symbol: &str) -> Vec<u8> {
-    let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec: CodecId(0) };
-    let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.expect("symbol writer");
-    writer.write_segment(crate::KIND_SYMBOLS, &encode_symbols(&[symbol.to_string()]).await).await.expect("symbol segment");
-    writer
-        .finish(&Manifest {
-            schema_name: symbol.to_string(),
-            schema_hash: [7; 32],
-            doc_span: ByteRange { offset: 0, len: 0 },
-            doc_frame_count: 0,
-            symbols_span: ByteRange { offset: 0, len: 0 },
-            chunk_table_span: ByteRange { offset: 0, len: 0 },
-            field_index_span: ByteRange { offset: 0, len: 0 },
-            uncompressed_body_len: 0,
-            field_count: 0,
-            chunk_count: 0,
-            symbol_count: 1,
-        })
-        .await
-        .expect("symbol pack finish")
-}
-
 fn source(bytes: &[u8]) -> RetainedPackSourceCursor {
     let pages = bytes.len().div_ceil(RETAINED_PACK_PAGE_BYTES);
     let maximum_allocation_bytes = pages.checked_mul(32 * 1024).expect("test source physical credits");
@@ -157,51 +89,6 @@ fn source(bytes: &[u8]) -> RetainedPackSourceCursor {
     }
     source.seal().expect("seal");
     source
-}
-
-fn forward_catalog(event: RetainedPackSegmentEvent, catalog: &mut RetainedPackCatalogCursor, document: &mut Vec<u8>) {
-    catalog.admit(event).expect("catalog admission");
-    while let Some(exact) = catalog.next_allocation_bytes().expect("catalog allocation query") {
-        let step = catalog.reserve_allocation(exact).expect("catalog exact allocation");
-        assert!(step.progressed);
-    }
-    if let Some(RetainedPackCatalogEvent::DocumentByte { value, .. }) = catalog.grant().expect("catalog grant") {
-        document.push(value);
-    }
-}
-
-fn catalog_segment(kind: u8, raw_len: u64) -> RetainedPackSegmentHeader {
-    RetainedPackSegmentHeader { offset: 64, kind, flags: 0, stored_len: raw_len, raw_len, payload_offset: 68 }
-}
-
-fn admit_catalog_event(cursor: &mut RetainedPackCatalogCursor, event: RetainedPackSegmentEvent, allocated: &mut usize) -> Result<Option<RetainedPackCatalogEvent>, RetainedPackCatalogFault> {
-    cursor.admit(event).expect("retained catalog event admission");
-    while let Some(exact) = cursor.next_allocation_bytes()? {
-        let step = cursor.reserve_allocation(exact).expect("retained catalog exact allocation");
-        assert!(step.progressed && step.allocated_bytes != 0);
-        *allocated += step.allocated_bytes;
-    }
-    cursor.grant()
-}
-
-fn catalog_limits(maximum_symbols: u32, maximum_items: u64) -> PackLimits {
-    PackLimits { max_file_len: 16 * 1024, max_segment_len: 16 * 1024, max_symbols: maximum_symbols, max_depth: 8, max_items: maximum_items, max_total_alloc: 16 * 1024 }
-}
-
-fn forward_source(event: RetainedPackSourceEvent, segment: &mut RetainedPackSegmentCursor, catalog: &mut RetainedPackCatalogCursor, document: &mut Vec<u8>) {
-    segment.admit(event).expect("segment admission");
-    loop {
-        if let Some(exact) = segment.next_allocation_bytes() {
-            let step = segment.reserve_allocation(exact).expect("segment retained inflater allocation");
-            assert!(step.progressed && step.allocated_bytes >= exact);
-        }
-        if let Some(event) = segment.grant().expect("segment grant") {
-            forward_catalog(event, catalog, document);
-        }
-        if segment.preflight().is_ok() || matches!(event, RetainedPackSourceEvent::Complete { .. }) {
-            break;
-        }
-    }
 }
 
 #[test]
@@ -304,327 +191,6 @@ fn language_neutral_retained_law_ledger_is_complete() {
     assert!(fixture["hostile"].as_array().expect("hostile laws").iter().any(|law| law == "terminal-empty"));
 }
 
-#[test]
-fn retained_pack_catalog_exact_utf8_allocation_refusal_and_release_are_conserved() {
-    let symbols = ["", "axis", "A€𐍈"];
-    let payload = [3, 0, 4, b'a', b'x', b'i', b's', 8, b'A', 0xe2, 0x82, 0xac, 0xf0, 0x90, 0x8d, 0x88];
-    let segment = catalog_segment(crate::KIND_SYMBOLS, payload.len() as u64);
-    let mut cursor = RetainedPackCatalogCursor::try_new(catalog_limits(3, 1), 3, 12, 7, 0, 64 * 1024).expect("retained catalog credits");
-    assert_eq!(cursor.allocated_bytes(), 0);
-    let mut allocated = 0;
-    assert_eq!(admit_catalog_event(&mut cursor, RetainedPackSegmentEvent::Begin(segment), &mut allocated).expect("symbol begin"), None);
-    cursor.admit(RetainedPackSegmentEvent::RawByte { segment, index: 0, value: payload[0] }).expect("symbol count event");
-    let exact = cursor.next_allocation_bytes().expect("symbol-span allocation query").expect("symbol-span allocation");
-    let before = cursor.progress();
-    assert_eq!(cursor.retained_symbol_scalar_ptr(), None);
-    assert_eq!(cursor.reserve_allocation(exact - 1).expect("subexact allocation refusal"), RetainedPackCatalogAllocationStep::default());
-    assert_eq!(cursor.progress(), before);
-    assert_eq!(cursor.retained_symbol_scalar_ptr(), None);
-    while let Some(exact) = cursor.next_allocation_bytes().expect("symbol-span allocation query") {
-        let step = cursor.reserve_allocation(exact).expect("symbol-span exact allocation");
-        assert!(step.progressed);
-        allocated += step.allocated_bytes;
-    }
-    assert_eq!(cursor.grant().expect("symbol count grant"), None);
-    for (index, value) in payload.iter().copied().enumerate().skip(1) {
-        admit_catalog_event(&mut cursor, RetainedPackSegmentEvent::RawByte { segment, index: index as u64, value }, &mut allocated).expect("symbol byte");
-    }
-    admit_catalog_event(&mut cursor, RetainedPackSegmentEvent::Complete { segment, wire_len: payload.len() as u64 + 7 }, &mut allocated).expect("symbol completion");
-    assert_eq!(cursor.progress().symbols, 3);
-    for (symbol, expected) in symbols.iter().enumerate() {
-        let span = cursor.symbol_span(symbol as u64).expect("retained symbol span");
-        assert_eq!(span.utf8_len, expected.len() as u64);
-        let actual: String = (0..span.scalar_len as usize).map(|index| cursor.symbol_char(symbol as u64, index).expect("retained scalar").expect("retained scalar value")).collect();
-        assert_eq!(&actual, expected);
-    }
-    assert_eq!(cursor.symbol_char(2, 3).expect("past retained scalar"), None);
-    let pointer = cursor.retained_symbol_scalar_ptr().expect("retained scalar backing");
-    let before = cursor.progress();
-    assert_eq!(cursor.close_step(0, usize::MAX).expect("bytes-only close refusal"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(cursor.progress(), before);
-    assert_eq!(cursor.retained_symbol_scalar_ptr(), Some(pointer));
-    let physical_release = loop {
-        if let Some(exact) = cursor.next_release_allocation_bytes().expect("catalog release query") {
-            break exact;
-        }
-        assert!(matches!(cursor.close_step(1, 0).expect("logical catalog retirement"), RetainedPackCloseStep::Pending { released_bytes: 0, .. }));
-    };
-    let before = cursor.progress();
-    assert_eq!(cursor.close_step(1, physical_release - 1).expect("subexact catalog release"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(cursor.progress(), before);
-    assert_eq!(cursor.retained_symbol_scalar_ptr(), Some(pointer));
-    let released = close_catalog(&mut cursor);
-    assert_eq!(released, allocated);
-    assert!(cursor.terminal_is_empty());
-    let terminal = cursor.progress();
-    assert_eq!((terminal.symbols, terminal.symbol_capacity, terminal.symbol_utf8_bytes, terminal.symbol_scalars, terminal.symbol_scalar_capacity), (0, 0, 0, 0, 0));
-    assert_eq!((terminal.chunks, terminal.chunk_capacity, terminal.observed_chunks, terminal.observed_chunk_capacity, terminal.allocated_bytes, terminal.partial_symbol_bytes), (0, 0, 0, 0, 0, 0));
-}
-
-#[test]
-fn retained_symbol_table_crosses_a_leaf_with_target_aware_demands_and_checked_coordinates() {
-    let mut table = RetainedPackSymbolTable::try_new(1_024, 16, 4, 256 * 1024).expect("symbol-table credits");
-    assert_eq!(table.allocated_bytes(), 0);
-    let mut allocated = 0;
-    while table.symbol_capacity() == 0 {
-        let exact = table.next_symbol_allocation_bytes(1, 0).expect("first span demand").expect("first span backing");
-        let before = (table.symbol_capacity(), table.allocated_bytes());
-        assert_eq!(table.reserve_symbol_capacity(1, exact - 1, 0).expect("subexact span refusal"), RetainedPackCatalogAllocationStep::default());
-        assert_eq!((table.symbol_capacity(), table.allocated_bytes()), before);
-        let step = table.reserve_symbol_capacity(1, exact, 0).expect("first span backing admission");
-        assert!(step.progressed);
-        allocated += step.allocated_bytes;
-    }
-    let first_leaf_capacity = table.symbol_capacity();
-    let target = first_leaf_capacity + 1;
-    assert!(target <= table.maximum_symbols());
-    while table.symbol_capacity() < target {
-        let exact = table.next_symbol_allocation_bytes(target, 1).expect("next span demand").expect("target remains above capacity");
-        assert!(exact > 0);
-        let step = table.reserve_symbol_capacity(target, exact, 1).expect("next span backing admission");
-        assert!(step.progressed);
-        allocated += step.allocated_bytes;
-    }
-    for index in 0..target {
-        assert_eq!(
-            table.push_symbol_reserved(RetainedPackSymbolSpan { scalar_start: 0, scalar_len: 0, utf8_len: 0 }, index as u64),
-            Ok(index as u64)
-        );
-    }
-    assert_eq!(table.symbol_chars(u64::MAX).expect_err("unrepresentable or out-of-range symbol id").code, "retained-pack.symbol-reference");
-    assert_eq!(table.symbol_char(u64::MAX, 0).expect_err("unrepresentable or out-of-range scalar lookup").code, "retained-pack.symbol-reference");
-    let pointer = table.symbols.backing_ptr(first_leaf_capacity).expect("second leaf span pointer");
-    let before = (table.len(), table.symbol_capacity(), table.allocated_bytes());
-    assert_eq!(table.close_step(0, usize::MAX).expect("bytes-only close refusal"), RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!((table.len(), table.symbol_capacity(), table.allocated_bytes()), before);
-    assert_eq!(table.symbols.backing_ptr(first_leaf_capacity), Some(pointer));
-    let released = close_symbol_table(&mut table);
-    assert_eq!(released, allocated);
-    assert!(table.terminal_is_empty());
-}
-
-#[test]
-fn retained_symbol_table_preserves_the_first_span_fault_and_every_admitted_backing() {
-    let mut table = RetainedPackSymbolTable::try_new(2, 4, 2, 64 * 1024).expect("symbol-table credits");
-    let mut allocated = 0;
-    while let Some(exact) = table.next_scalar_allocation_bytes(1, 7).expect("scalar allocation demand") {
-        let step = table.reserve_scalar_capacity(1, exact, 7).expect("scalar allocation");
-        assert!(step.progressed);
-        allocated += step.allocated_bytes;
-    }
-    table.push_scalar_reserved('a', 7).expect("first scalar");
-    while let Some(exact) = table.next_symbol_allocation_bytes(1, 8).expect("span allocation demand") {
-        let step = table.reserve_symbol_capacity(1, exact, 8).expect("span allocation");
-        assert!(step.progressed);
-        allocated += step.allocated_bytes;
-    }
-    let first = table
-        .push_symbol_reserved(RetainedPackSymbolSpan { scalar_start: 1, scalar_len: 0, utf8_len: 1 }, 8)
-        .expect_err("nonconsecutive span");
-    assert_eq!(first.code, "retained-pack.symbol-span");
-    assert_eq!(table.push_scalar_reserved('b', 9).expect_err("first fault remains sticky"), first);
-    assert_eq!(table.next_symbol_allocation_bytes(2, 10).expect_err("allocation query preserves first fault"), first);
-    assert_eq!(close_symbol_table(&mut table), allocated);
-    assert!(table.terminal_is_empty());
-}
-
-#[test]
-fn retained_pack_catalog_limit_and_utf8_faults_are_sticky_until_exact_close() {
-    let mut excessive = RetainedPackCatalogCursor::try_new(catalog_limits(2, 2), 2, 8, 8, 2, 64 * 1024).expect("count credits");
-    let symbols = catalog_segment(crate::KIND_SYMBOLS, 1);
-    let mut allocated = 0;
-    admit_catalog_event(&mut excessive, RetainedPackSegmentEvent::Begin(symbols), &mut allocated).expect("count begin");
-    excessive.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 0, value: 3 }).expect("maximum plus one pending count");
-    let count_fault = excessive.next_allocation_bytes().expect_err("maximum plus one symbol count");
-    assert_eq!(count_fault.code, "retained-pack.catalog-symbol-count");
-    assert!(excessive.progress().pending_input);
-    assert_eq!(excessive.grant().expect_err("sticky count fault"), count_fault);
-    assert_eq!(excessive.fault(), Some(count_fault));
-    assert_eq!(close_catalog(&mut excessive), allocated);
-    assert_eq!(excessive.fault(), Some(count_fault));
-
-    let mut physical_credit = RetainedPackCatalogCursor::try_new(catalog_limits(1, 1), 1, 1, 1, 0, 1).expect("separate physical catalog credit");
-    let symbols = catalog_segment(crate::KIND_SYMBOLS, 2);
-    let mut physical_allocated = 0;
-    admit_catalog_event(&mut physical_credit, RetainedPackSegmentEvent::Begin(symbols), &mut physical_allocated).expect("physical credit begin");
-    physical_credit.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 0, value: 1 }).expect("physical credit pending count");
-    let physical_fault = physical_credit.next_allocation_bytes().expect_err("physical catalog allocation credit");
-    assert_eq!(physical_fault.code, "retained-pack.catalog-allocation-credits");
-    assert!(physical_credit.progress().pending_input);
-    assert_eq!(physical_credit.grant().expect_err("sticky physical credit fault"), physical_fault);
-    assert_eq!(close_catalog(&mut physical_credit), 0);
-    assert_eq!(physical_credit.fault(), Some(physical_fault));
-
-    let mut cumulative = RetainedPackCatalogCursor::try_new(catalog_limits(2, 1), 2, 7, 7, 0, 64 * 1024).expect("cumulative credits");
-    let payload = [2, 4, b'a', b'b', b'c', b'd', 4];
-    let symbols = catalog_segment(crate::KIND_SYMBOLS, 11);
-    admit_catalog_event(&mut cumulative, RetainedPackSegmentEvent::Begin(symbols), &mut allocated).expect("cumulative begin");
-    for (index, value) in payload[..6].iter().copied().enumerate() {
-        admit_catalog_event(&mut cumulative, RetainedPackSegmentEvent::RawByte { segment: symbols, index: index as u64, value }, &mut allocated).expect("first individually valid symbol");
-    }
-    cumulative.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 6, value: payload[6] }).expect("cumulative pending length");
-    let cumulative_fault = cumulative.next_allocation_bytes().expect_err("cumulative UTF-8 byte refusal");
-    assert_eq!(cumulative_fault.code, "retained-pack.catalog-symbol-bytes");
-    assert!(cumulative.progress().pending_input);
-    assert_eq!(cumulative.grant().expect_err("sticky cumulative fault"), cumulative_fault);
-    let cumulative_allocation = cumulative.allocated_bytes();
-    assert_eq!(close_catalog(&mut cumulative), cumulative_allocation);
-
-    let mut malformed = RetainedPackCatalogCursor::try_new(catalog_limits(1, 1), 1, 4, 4, 0, 64 * 1024).expect("UTF-8 credits");
-    let symbols = catalog_segment(crate::KIND_SYMBOLS, 6);
-    let mut malformed_allocated = 0;
-    admit_catalog_event(&mut malformed, RetainedPackSegmentEvent::Begin(symbols), &mut malformed_allocated).expect("UTF-8 begin");
-    for (index, value) in [1, 4, b'a', 0xe2].into_iter().enumerate() {
-        admit_catalog_event(&mut malformed, RetainedPackSegmentEvent::RawByte { segment: symbols, index: index as u64, value }, &mut malformed_allocated).expect("valid UTF-8 prefix");
-    }
-    malformed.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 4, value: 0x28 }).expect("malformed continuation pending");
-    let utf8_fault = malformed.next_allocation_bytes().expect_err("malformed UTF-8 preview");
-    assert_eq!(utf8_fault.code, "retained-pack.catalog-utf8-continuation");
-    assert!(malformed.progress().pending_input);
-    assert_eq!(malformed.grant().expect_err("sticky UTF-8 fault"), utf8_fault);
-    assert_eq!(close_catalog(&mut malformed), malformed_allocated);
-
-    let mut truncated = RetainedPackCatalogCursor::try_new(catalog_limits(1, 1), 1, 4, 4, 0, 64 * 1024).expect("truncated UTF-8 credits");
-    let symbols = catalog_segment(crate::KIND_SYMBOLS, 6);
-    let mut truncated_allocated = 0;
-    admit_catalog_event(&mut truncated, RetainedPackSegmentEvent::Begin(symbols), &mut truncated_allocated).expect("truncated UTF-8 begin");
-    for (index, value) in [1, 4, b'a', 0xf0, 0x90].into_iter().enumerate() {
-        admit_catalog_event(&mut truncated, RetainedPackSegmentEvent::RawByte { segment: symbols, index: index as u64, value }, &mut truncated_allocated).expect("truncated UTF-8 prefix");
-    }
-    truncated.admit(RetainedPackSegmentEvent::RawByte { segment: symbols, index: 5, value: 0x8d }).expect("truncated final byte pending");
-    assert_eq!(truncated.next_allocation_bytes().expect("truncated byte needs no allocation"), None);
-    let truncated_fault = truncated.grant().expect_err("truncated UTF-8 rejection");
-    assert_eq!(truncated_fault.code, "retained-pack.catalog-utf8-truncated");
-    assert_eq!(truncated.fault(), Some(truncated_fault));
-    assert_eq!(close_catalog(&mut truncated), truncated_allocated);
-
-    let mut chunks = RetainedPackCatalogCursor::try_new(catalog_limits(0, 2), 0, 0, 0, 2, 64 * 1024).expect("chunk count credits");
-    let mut chunk_allocated = 0;
-    for index in 0..2u64 {
-        let chunk = RetainedPackSegmentHeader { offset: 100 + index * 8, kind: crate::KIND_CHUNK, flags: 0, stored_len: 1, raw_len: 1, payload_offset: 104 + index * 8 };
-        admit_catalog_event(&mut chunks, RetainedPackSegmentEvent::Begin(chunk), &mut chunk_allocated).expect("maximum chunk begin");
-        admit_catalog_event(&mut chunks, RetainedPackSegmentEvent::Complete { segment: chunk, wire_len: 8 }, &mut chunk_allocated).expect("maximum chunk complete");
-    }
-    let third = RetainedPackSegmentHeader { offset: 116, kind: crate::KIND_CHUNK, flags: 0, stored_len: 1, raw_len: 1, payload_offset: 120 };
-    chunks.admit(RetainedPackSegmentEvent::Begin(third)).expect("maximum plus one chunk pending");
-    let chunk_fault = chunks.next_allocation_bytes().expect_err("maximum plus one chunk count");
-    assert_eq!(chunk_fault.code, "retained-pack.catalog-observed-count");
-    assert!(chunks.progress().pending_input);
-    assert_eq!(close_catalog(&mut chunks), chunk_allocated);
-
-    let mut table_count = RetainedPackCatalogCursor::try_new(catalog_limits(0, 2), 0, 0, 0, 2, 64 * 1024).expect("chunk-table count credits");
-    let table = catalog_segment(crate::KIND_CHUNK_TABLE, 1);
-    let mut table_allocated = 0;
-    admit_catalog_event(&mut table_count, RetainedPackSegmentEvent::Begin(table), &mut table_allocated).expect("chunk-table begin");
-    table_count.admit(RetainedPackSegmentEvent::RawByte { segment: table, index: 0, value: 3 }).expect("maximum plus one chunk-table count pending");
-    let table_fault = table_count.next_allocation_bytes().expect_err("maximum plus one chunk-table count");
-    assert_eq!(table_fault.code, "retained-pack.catalog-chunk-count");
-    assert!(table_count.progress().pending_input);
-    assert_eq!(table_count.grant().expect_err("sticky chunk-table count fault"), table_fault);
-    assert_eq!(close_catalog(&mut table_count), table_allocated);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn retained_pack_catalog_multibyte_scalar_crosses_physical_source_page_and_matches_pack_file() {
-    let expected = format!("{}€", "a".repeat(4_056));
-    let bytes = canonical_symbol_pack(&expected).await;
-    let euro = [0xe2, 0x82, 0xac];
-    let position = bytes.windows(euro.len()).position(|window| window == euro).expect("multibyte symbol wire bytes");
-    assert_eq!(position % RETAINED_PACK_PAGE_BYTES, RETAINED_PACK_PAGE_BYTES - 1);
-    let limits = PackLimits { max_file_len: bytes.len() as u64, max_segment_len: 8 * 1024, max_symbols: 1, max_depth: 8, max_items: 1, max_total_alloc: 16 * 1024 };
-    let independent = PackFile::open_manifest(bytes.clone(), &limits, VerificationLevel::Full).await.expect("independent full Pack reader");
-    assert_eq!(independent.symbol(0).expect("independent schema symbol"), expected);
-    let mut source = source(&bytes);
-    let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment cursor");
-    let mut catalog = RetainedPackCatalogCursor::try_new(limits, 1, expected.len(), expected.chars().count(), 0, 256 * 1024).expect("catalog cursor");
-    let mut document = Vec::new();
-    loop {
-        let event = source.grant().expect("source grant").expect("sealed source event");
-        anchor.grant(Some(event)).expect("anchor collect");
-        forward_source(event, &mut segment, &mut catalog, &mut document);
-        if matches!(event, RetainedPackSourceEvent::Complete { .. }) {
-            break;
-        }
-    }
-    while !anchor.grant(None).expect("anchor verify") {}
-    let receipt = catalog.take(anchor.take().expect("anchor handback")).expect("catalog validation").expect("catalog receipt");
-    assert_eq!(receipt.manifest.schema_symbol, Some(0));
-    let actual: String = (0..catalog.symbol_chars(0).expect("retained scalar count")).map(|index| catalog.symbol_char(0, index).expect("retained scalar").expect("retained scalar value")).collect();
-    assert_eq!(actual, expected);
-    let allocated = catalog.allocated_bytes();
-    anchor.close_step();
-    close_segment(&mut segment);
-    assert_eq!(close_catalog(&mut catalog), allocated);
-    close(&mut source);
-    eprintln!("retained-pack-catalog page-crossing-offset={position} scalar={} independent-pack-file=true allocated-bytes={allocated}", u32::from('€'));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn retained_anchors_segments_catalog_and_deflate_are_wire_identical_and_resumable() {
-    let (bytes, expected_document) = canonical_pack(CodecId(1)).await;
-    let mut source = source(&bytes);
-    let limits = PackLimits { max_file_len: bytes.len() as u64, max_segment_len: 4096, max_symbols: 2, max_depth: 8, max_items: 4, max_total_alloc: 4096 };
-    let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment");
-    let mut catalog_cursor = RetainedPackCatalogCursor::try_new(limits, 2, 16, 16, 0, 64 * 1024).expect("catalog");
-    let mut document = Vec::new();
-    loop {
-        let event = source.grant().expect("source grant").expect("sealed source event");
-        anchor.grant(Some(event)).expect("anchor collect");
-        forward_source(event, &mut segment, &mut catalog_cursor, &mut document);
-        if matches!(event, RetainedPackSourceEvent::Complete { .. }) {
-            break;
-        }
-    }
-    while !anchor.grant(None).expect("anchor verify") {}
-    let superblock = anchor.take().expect("anchor handback");
-    let catalog = catalog_cursor.take(superblock).expect("catalog result").expect("catalog handback");
-    assert_eq!(document, expected_document);
-    assert_eq!(catalog.manifest.schema_symbol, Some(0));
-    let schema: String = (0..catalog_cursor.symbol_chars(0).expect("schema scalar count")).map(|index| catalog_cursor.symbol_char(0, index).expect("schema scalar").expect("schema scalar value")).collect();
-    let second: String = (0..catalog_cursor.symbol_chars(1).expect("second scalar count")).map(|index| catalog_cursor.symbol_char(1, index).expect("second scalar").expect("second scalar value")).collect();
-    assert_eq!((schema.as_str(), second.as_str()), ("p2d2", "ä"));
-    anchor.close_step();
-    close_segment(&mut segment);
-    assert!(close_catalog(&mut catalog_cursor) > 0);
-    close(&mut source);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn multi_byte_chunk_is_observed_once_at_begin_and_matches_pack_file() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json")).expect("fixture JSON");
-    let chunk: Vec<u8> = fixture["multiByteChunk"]["bytes"].as_array().expect("chunk bytes").iter().map(|value| value.as_u64().expect("byte") as u8).collect();
-    assert!(chunk.len() > 1);
-    let bytes = canonical_chunk_pack(&chunk).await;
-    let limits = PackLimits { max_file_len: bytes.len() as u64, max_segment_len: 4096, max_symbols: 0, max_depth: 8, max_items: 4, max_total_alloc: 4096 };
-    let independent = PackFile::open_manifest(bytes.clone(), &limits, VerificationLevel::Full).await.expect("independent Pack reader");
-    assert_eq!(independent.chunk_count(), fixture["multiByteChunk"]["observations"].as_u64().unwrap());
-    assert_eq!(independent.read_chunk(ChunkId(0), VerificationLevel::Full).await.expect("independent chunk"), chunk);
-    let mut source = source(&bytes);
-    let mut anchor = RetainedPackAnchorCursor::new();
-    let mut segment = RetainedPackSegmentCursor::try_new(limits.clone(), 64 * 1024).expect("segment");
-    let mut catalog_cursor = RetainedPackCatalogCursor::try_new(limits, 0, 0, 0, 1, 64 * 1024).expect("catalog");
-    let mut document = Vec::new();
-    loop {
-        let event = source.grant().expect("source grant").expect("sealed source event");
-        anchor.grant(Some(event)).expect("anchor collect");
-        forward_source(event, &mut segment, &mut catalog_cursor, &mut document);
-        if matches!(event, RetainedPackSourceEvent::Complete { .. }) {
-            break;
-        }
-    }
-    while !anchor.grant(None).expect("anchor verify") {}
-    let catalog = catalog_cursor.take(anchor.take().expect("anchor handback")).expect("catalog result").expect("catalog handback");
-    assert_eq!(catalog.manifest.chunk_count, 1);
-    assert_eq!(catalog_cursor.chunk(0).expect("retained chunk entry").raw_len, chunk.len() as u64);
-    let _ = catalog;
-    anchor.close_step();
-    close_segment(&mut segment);
-    assert!(close_catalog(&mut catalog_cursor) > 0);
-    close(&mut source);
-}
-
 #[semio_framework_async_macros::async_test]
 async fn retained_anchor_rejects_hostile_crc_and_requires_explicit_close() {
     let (mut bytes, _) = canonical_pack(CodecId(0)).await;
@@ -674,7 +240,7 @@ fn segment_prefix(cursor: &mut RetainedPackSegmentCursor, flags: u8) -> u64 {
     for offset in 0..HEADER_SIZE as u64 {
         assert_eq!(segment_byte(cursor, offset, 0).expect("header byte"), None);
     }
-    assert_eq!(segment_byte(cursor, HEADER_SIZE as u64, crate::KIND_DOCUMENT).expect("kind byte"), None);
+    assert_eq!(segment_byte(cursor, HEADER_SIZE as u64, semio_framework_replication_codec::KIND_DOCUMENT).expect("kind byte"), None);
     assert_eq!(segment_byte(cursor, HEADER_SIZE as u64 + 1, flags).expect("flags byte"), None);
     HEADER_SIZE as u64 + 2
 }
@@ -711,8 +277,8 @@ fn retained_pack_pipeline_diagnostic_segment_and_varint_are_inline_sticky_and_re
 #[test]
 fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_real_decode() {
     let raw = b"retained diagnostic backing";
-    let stored = crate::codec::deflate_compress(raw).expect("cold independent compressor");
-    let mut cursor = crate::codec::DeflateRetainedCursor::try_new(raw.len() as u64 + 1, raw.len() as u64 + 1, 64 * 1024).expect("retained inflater");
+    let stored = semio_framework_replication_codec::deflate_compress(raw).expect("cold independent compressor");
+    let mut cursor = semio_framework_replication_codec::DeflateRetainedCursor::try_new(raw.len() as u64 + 1, raw.len() as u64 + 1, 64 * 1024).expect("retained inflater");
     let exact = cursor.next_allocation_bytes().expect("retained inflater allocation");
     let allocated = cursor.reserve_allocation(exact).expect("retained inflater reserve").allocated_bytes;
     let mut produced = Vec::new();
@@ -721,9 +287,9 @@ fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_r
         cursor.admit_byte(byte).expect("retained compressed input");
         loop {
             match cursor.grant(false) {
-                Ok(crate::codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
-                Ok(crate::codec::DeflateRetainedStep::NeedInput) => break,
-                Ok(crate::codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
+                Ok(semio_framework_replication_codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
+                Ok(semio_framework_replication_codec::DeflateRetainedStep::NeedInput) => break,
+                Ok(semio_framework_replication_codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
                 Err(fault) => {
                     first = Some(fault);
                     break;
@@ -739,9 +305,9 @@ fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_r
             break;
         }
         match cursor.grant(true) {
-            Ok(crate::codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
-            Ok(crate::codec::DeflateRetainedStep::NeedInput) => {}
-            Ok(crate::codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
+            Ok(semio_framework_replication_codec::DeflateRetainedStep::Byte(byte)) => produced.push(byte),
+            Ok(semio_framework_replication_codec::DeflateRetainedStep::NeedInput) => {}
+            Ok(semio_framework_replication_codec::DeflateRetainedStep::Complete) => panic!("declared output is deliberately one byte too long"),
             Err(fault) => first = Some(fault),
         }
     }
@@ -754,8 +320,8 @@ fn retained_pack_pipeline_diagnostic_deflate_is_inline_sticky_and_closes_after_r
     loop {
         let grant = cursor.next_release_allocation_bytes().unwrap_or(0);
         match cursor.close_step(1, grant) {
-            crate::codec::RetainedInflateCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-            crate::codec::RetainedInflateCloseStep::Complete => break,
+            semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            semio_framework_replication_codec::RetainedInflateCloseStep::Complete => break,
         }
     }
     assert!(cursor.terminal_is_empty());
@@ -833,20 +399,20 @@ async fn retained_pack_inflater_physical_identity_has_zero_demand_and_compressed
 #[cfg(feature = "deflate")]
 #[test]
 fn retained_pack_inflater_physical_cancellation_retires_pending_input_before_exact_backing() {
-    let mut cursor = crate::codec::DeflateRetainedCursor::try_new(1024, 64 * 1024, 64 * 1024).expect("cancellable retained inflater");
+    let mut cursor = semio_framework_replication_codec::DeflateRetainedCursor::try_new(1024, 64 * 1024, 64 * 1024).expect("cancellable retained inflater");
     let exact = cursor.next_allocation_bytes().expect("cancellation history demand");
     let allocated = cursor.reserve_allocation(exact).expect("cancellation history reserve").allocated_bytes;
     let pointer = cursor.retained_history_ptr().expect("cancellation pointer");
     cursor.admit_byte(0b11).expect("pending compressed byte");
-    assert_eq!(cursor.close_step(0, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.close_step(0, 0), semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(cursor.retained_history_ptr(), Some(pointer));
-    assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    assert_eq!(cursor.close_step(1, 0), semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
     while cursor.next_release_allocation_bytes().is_none() {
-        assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        assert_eq!(cursor.close_step(1, 0), semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 });
     }
-    assert_eq!(cursor.close_step(0, allocated - 1), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.close_step(0, allocated - 1), semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(cursor.retained_history_ptr(), Some(pointer));
-    assert_eq!(cursor.close_step(0, allocated), crate::codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: allocated });
-    assert_eq!(cursor.close_step(1, 0), crate::codec::RetainedInflateCloseStep::Complete);
+    assert_eq!(cursor.close_step(0, allocated), semio_framework_replication_codec::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: allocated });
+    assert_eq!(cursor.close_step(1, 0), semio_framework_replication_codec::RetainedInflateCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
 }

@@ -1,11 +1,10 @@
-//! 🧬️ DAG mutation, diff, and document codecs.
-use crate::dag_demo_host_snapshot;
+//! 🧬️ DAG mutation, diff, and document codecs: the persisted snapshot, its diff algebra and every direct mutation leaf with all of their native representations.
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store};
 use semio_framework_os_infinite_directed_presentation::*;
 use ::graph::manifest::PropertyBag;
-#[cfg(test)]
-use ::graph::manifest::PropertyValue;
-#[cfg(test)]
-use semio_framework_pack_json::Value;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashSet;
 
@@ -13,16 +12,8 @@ use std::collections::HashSet;
 mod canonical;
 
 // #region 🔖️ArtifactVcs
-#[cfg(test)]
-use crate::os_spr::Mutation;
-#[cfg(test)]
-use crate::os_spr::{ArtifactId, Edit, SchemaId};
 pub use crate::os_spr::ActorId;
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationDiff, Patchable};
-use crate::os_store::document_materialize::create_document_envelope;
-#[cfg(test)]
-use crate::os_store::store_schema::ArtifactCommand;
-use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactStore};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.host_snapshot";
 
@@ -49,11 +40,6 @@ pub struct DagSnapshot {
 
 pub fn empty_dag_document() -> DagSnapshot {
     DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
-}
-
-/// 🌱️ The demo document seed (nodes/edges from `🕸️demo.dag`), sharing the fixture's example.
-pub fn default_dag_document() -> DagSnapshot {
-    dag_document_from_host_snapshot(&dag_demo_host_snapshot())
 }
 
 /// 🔁️ Projects a {@link DagHostSnapshot} (which also carries a camera) down to the persistent {@link DagSnapshot}.
@@ -147,7 +133,8 @@ impl Patchable<DagEdgePatch> for DagHostSnapshotEdge {
 //#region 🔖️DiffDeltas
 const _: () = assert!(usize::BITS <= u64::BITS);
 
-fn dag_index_from_wire(index: u64) -> protocol::MutationApplyResult<usize> {
+/// 🔟️ Decodes a wire DAG index into a target-sized one, rejecting values the target cannot represent.
+pub fn dag_index_from_wire(index: u64) -> protocol::MutationApplyResult<usize> {
     usize::try_from(index).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("DAG wire index {index} is not representable on this target")))
 }
 
@@ -580,33 +567,6 @@ impl MutationDiff<DagSnapshot> for DagDiff {
     }
 }
 
-pub type DagEnvelope = ArtifactEnvelope<DagSnapshot, DagMutation>;
-pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
-
-/// 🏭️ Creates a DAG store with the exact snapshot, mutation, and cursor retirement owners installed.
-pub async fn create_dag_store(id: &str, snapshot: DagSnapshot, actor: ActorId) -> Result<DagStore, crate::os_store::VcsError> {
-    let mut store = DagStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(DAG_DOCUMENT_SCHEMA, id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), actor).await?;
-    crate::os_store::install_funded_member_store_owners(&mut store,&crate::DagMemberStoreProducer)?;
-    Ok(store)
-}
-
-#[cfg(test)]
-fn opened_dag_test_actor() -> ActorId {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🪪️demo-ownership/🔣️.json")).unwrap();
-    ActorId(fixture["openedActor"].as_str().unwrap().into())
-}
-
-#[cfg(test)]
-fn close_dag_test_store(mut store: DagStore) {
-    for turn in 0..65_536 {
-        let demand=store.close_owned_demands(4096).expect("original store close demands");
-        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let step=store.close_owned_store_step(grant).expect("original store admitted close");assert!(step.progress().fits(grant));
-        if store.close_owned_store_terminal_is_empty(){println!("[DEBUG] Exact original DAG store close turns={turn}");return;}
-    }
-    panic!("DAG store did not reach original terminal emptiness");
-}
-
 //#region 🔖️Dsl
 
 
@@ -618,14 +578,17 @@ fn close_dag_test_store(mut store: DagStore) {
 
 //#endregion 🔖️OpText
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️dag-vcs/🦀️.rs"]
-mod dag_vcs_tests;
 // #endregion 🔖️ArtifactVcs
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️dag-direct/🦀️.rs"]
-mod dag_direct_tests;
-
-#[path = "../🚪️io/🦀️.rs"]
-pub mod io;
+//#region 🔖️Representations
+#[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+mod text_snapshot;
+#[path = "../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+mod text_mutations;
+#[path = "../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+mod binary_snapshot;
+#[path = "../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+mod binary_mutations;
+#[path = "../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+mod sqlite_snapshot;
+//#endregion 🔖️Representations

@@ -7,9 +7,10 @@
 //!
 //! @see 🪶️ `ArtifactSqliteSnapshotHost` the trait whose receiving defaults delegate here.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::{ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
-use crate::io_schema::{IoError,IoResult};
-use crate::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl};
+use crate::lifted_serialization::ArtifactSqliteSnapshotHost;
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_io_schema::{IoError, IoResult};
+use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{ValueError,ValueRefusalKind,native_decoding::NativeDecodeRetirementRecipient};
 
@@ -50,15 +51,8 @@ pub fn validate_encoding<P:ArtifactSqliteSnapshotHost>(snapshot:&P,dialect:&Arti
  snapshot.validate_sqlite_snapshot_subset(dialect,database,control)
 }
 
-/// ♻️ An original receiving owner that can retire a stage workspace under its own grant.
-pub trait StageOwner{fn retire_workspace(&mut self,workspace:NativeDecodeRetirementRecipient)->Result<(),ValueError>;}
-impl StageOwner for NativeSnapshotDecodeOwner<'_,'_>{fn retire_workspace(&mut self,workspace:NativeDecodeRetirementRecipient)->Result<(),ValueError>{self.receive::<NativeDecodeRetirementRecipient,()>(|slot,_,_|{*slot=Some(workspace);Ok(())})}}
-impl StageOwner for NativeSnapshotEncodeOwner<'_,'_>{fn retire_workspace(&mut self,workspace:NativeDecodeRetirementRecipient)->Result<(),ValueError>{self.receive::<NativeDecodeRetirementRecipient,()>(|slot,_,_|{*slot=Some(workspace);Ok(())})}}
 
-/// 🗄️ Runs one authored stage with its own empty workspace recipient on the control and retires whatever the stage retained under the owner's grant, so a stage that retains nothing costs nothing.
-pub fn staged<T,E:From<ValueError>,O:StageOwner>(control:&mut SqliteSnapshotControl<'_>,owner:&mut O,stage:impl FnOnce(&mut SqliteSnapshotControl<'_>,&mut O)->Result<T,E>)->Result<T,E>{
- let mut workspace=NativeDecodeRetirementRecipient::new();
- let result=control.with_workspace_recipient(&mut workspace,|control|stage(control,owner));
- if !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&workspace){owner.retire_workspace(workspace).map_err(E::from)?;}
- result
-}
+
+
+
+

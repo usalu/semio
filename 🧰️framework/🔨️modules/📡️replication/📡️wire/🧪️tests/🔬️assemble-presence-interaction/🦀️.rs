@@ -1,5 +1,13 @@
 
 use super::*;
+use semio_framework_replication_interaction::DomainHover;
+use semio_framework_replication_interaction::DomainSelection;
+use semio_framework_replication_interaction::HoverSpec;
+use semio_framework_replication_interaction::InteractionState;
+use semio_framework_replication_interaction::MergeMode;
+use semio_framework_replication_interaction::SelectionMethod;
+use semio_framework_replication_interaction::SelectionMode;
+use semio_framework_replication_interaction::SelectionSpec;
 
 async fn selection(ids: &[&str]) -> DomainSelection {
     DomainSelection { granularity: "node".into(), ids: ids.iter().map(|id| id.to_string()).collect(), anchor_id: None }

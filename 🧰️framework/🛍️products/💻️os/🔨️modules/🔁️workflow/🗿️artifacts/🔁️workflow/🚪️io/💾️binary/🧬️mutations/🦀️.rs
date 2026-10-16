@@ -1,5 +1,5 @@
 //! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+use super::*;
 
 impl protocol::OpBinary for WorkflowMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

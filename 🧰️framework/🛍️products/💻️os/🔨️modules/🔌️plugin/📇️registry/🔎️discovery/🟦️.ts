@@ -85,7 +85,7 @@ export function mergeAreaStates(states: readonly AreaState[]): AreaState {
 
 /** 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
  * maturity in `areas`. `exempt` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
-export const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.areas[area]));
+export const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => { const state = TAXONOMY.areas[area]; if (state === undefined) throw new Error(`Undeclared plugin area ${area}`); return state; }));
 
 
 /** 📚️ Artifact-scoped example data dir (`artifactChildDirs`, not owner root). */
@@ -99,9 +99,12 @@ export const EXAMPLE_ASSETS_DIRNAME = TAXONOMY.exampleAssetsDirName ?? "🖼️a
 
 export const EXAMPLE_TESTS_DIRNAME = TAXONOMY.exampleTestsDirName ?? "🧪️tests";
 
-export const EXAMPLE_RUST_LEAF = primaryFilenameForKind(TAXONOMY.exampleFileKinds["🦀️rust"]);
+/** 📋️ Requires the exact taxonomy entry used by one exported registry constant. */
+export function requiredRegistryEntryV1<T>(entries: Readonly<Record<string, T>>, key: string): T { const value = entries[key]; if (value === undefined) throw new Error(`Registry taxonomy entry required: ${key}`); return value; }
 
-export const EXAMPLE_TS_LEAF = primaryFilenameForKind(TAXONOMY.exampleFileKinds["🟦️typescript"]);
+export const EXAMPLE_RUST_LEAF = primaryFilenameForKind(requiredRegistryEntryV1(TAXONOMY.exampleFileKinds, "🦀️rust"));
+
+export const EXAMPLE_TS_LEAF = primaryFilenameForKind(requiredRegistryEntryV1(TAXONOMY.exampleFileKinds, "🟦️typescript"));
 
 export const EXAMPLE_SLUG_RE = new RegExp(TAXONOMY.exampleSlugPattern ?? "^.+\uFE0F[a-z0-9]+(?:-[a-z0-9]+)*$", "u");
 
@@ -153,7 +156,8 @@ export function findPluginCargoFiles(root: string, packages?: readonly Discovere
  * passed against it. The gate and the test were reading different files and both looked green.
  * `descriptor_is_fresh()` (`🔌️plugin/🦀️.rs`), the dev `📜️script.ts` build step, and every
  * plugin crate's own `📜️script.ts describe` command all use the owner root; this is the last leg. */
-export const DESCRIPTOR_JSON_REL_PATH = TAXONOMY.generatorContracts["plugin-registry"].inputDiscovery!.descriptorRelativePath.split("/");
+export const REGISTRY_INPUT_DISCOVERY = (() => { const contract = requiredRegistryEntryV1(TAXONOMY.generatorContracts, "plugin-registry").inputDiscovery; if (contract === undefined) throw new Error("Registry input discovery contract required"); return contract; })();
+export const DESCRIPTOR_JSON_REL_PATH = REGISTRY_INPUT_DISCOVERY.descriptorRelativePath.split("/");
 
 
 /** 🎬️ `kernel::ActivationEvent`'s default (externally tagged) serde JSON shape, decoded into
@@ -171,8 +175,9 @@ export function formatActivationEvent(raw: unknown): string | undefined {
   }
   if (raw === null || typeof raw !== "object") return undefined;
   const entries = Object.entries(raw as Record<string, unknown>);
-  if (entries.length !== 1) return undefined;
-  const [tag, body] = entries[0];
+  const entry = entries[0];
+  if (entries.length !== 1 || entry === undefined) return undefined;
+  const [tag, body] = entry;
   const field = body !== null && typeof body === "object" ? (body as Record<string, unknown>) : {};
   switch (tag) {
     case "onCommand":
@@ -397,14 +402,12 @@ export function parseRegistryChannelDiagnosticsV1(text: string): readonly Regist
 
 export function tomlBlocksAfterHeader(lines: readonly string[], headerTest: (line: string) => boolean): string[][] {
   const blocks: string[][] = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (!headerTest(lines[i].trim())) continue;
-    const body: string[] = [];
-    for (let j = i + 1; j < lines.length; j++) {
-      if (lines[j].trim().startsWith("[")) break;
-      body.push(lines[j]);
-    }
-    blocks.push(body);
+  let body: string[] | undefined;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("[")) body = undefined;
+    if (headerTest(trimmed)) { body = []; blocks.push(body); }
+    else body?.push(line);
   }
   return blocks;
 }
@@ -413,8 +416,9 @@ export function tomlBlocksAfterHeader(lines: readonly string[], headerTest: (lin
 
 export function parseTomlStringArray(block: string, key: string): string[] {
   const match = block.match(new RegExp(`^${key}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
-  if (!match) return [];
-  return [...match[1].matchAll(/"([^"]*)"/g)].map((m) => m[1]);
+  const body = match?.[1];
+  if (body === undefined) return [];
+  return [...body.matchAll(/"([^"]*)"/g)].map((m) => { const value = m[1]; if (value === undefined) throw new Error("TOML string array capture required"); return value; });
 }
 
 

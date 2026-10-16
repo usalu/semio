@@ -123,7 +123,7 @@ async fn footer_truncated_at_every_byte_boundary_errors_never_panics() {
 async fn open_superblock_truncated_at_every_footer_byte_boundary_errors_never_panics() {
     let options = WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
-    writer.write_segment(crate::KIND_DOCUMENT, b"hello world").await.unwrap();
+    writer.write_segment(semio_framework_replication_codec::KIND_DOCUMENT, b"hello world").await.unwrap();
     let manifest = Manifest {
         schema_name: String::new(),
         schema_hash: [0u8; 32],
@@ -166,7 +166,7 @@ async fn recover_accumulates_unknown_kind_segments_without_erroring() {
     let header = Header { version_major: 1, version_minor: 0, required_flags: 0, optional_flags: 0 };
     let mut file = header.write_bytes().await.to_vec();
     file.extend_from_slice(&encode_segment(0x60, CodecId(0), b"future extension").await.unwrap().bytes);
-    file.extend_from_slice(&encode_segment(crate::KIND_END, CodecId(0), &[]).await.unwrap().bytes);
+    file.extend_from_slice(&encode_segment(semio_framework_replication_codec::KIND_END, CodecId(0), &[]).await.unwrap().bytes);
     let limits = PackLimits::default();
     let report = recover(&file, &limits).await.unwrap();
     assert_eq!(report.segments_recovered, 2);
@@ -175,7 +175,7 @@ async fn recover_accumulates_unknown_kind_segments_without_erroring() {
 
 #[semio_framework_async_macros::async_test]
 async fn segment_crc_mismatch_is_detected() {
-    let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
+    let encoded = encode_segment(semio_framework_replication_codec::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
     let mut file = vec![0u8; HEADER_SIZE];
     file.extend_from_slice(&encoded.bytes);
     let last = file.len() - 1;
@@ -187,7 +187,7 @@ async fn segment_crc_mismatch_is_detected() {
 
 #[semio_framework_async_macros::async_test]
 async fn segment_crc_mismatch_ignored_at_trusted_level() {
-    let encoded = encode_segment(crate::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
+    let encoded = encode_segment(semio_framework_replication_codec::KIND_DOCUMENT, CodecId(0), b"payload").await.unwrap();
     let mut file = vec![0u8; HEADER_SIZE];
     file.extend_from_slice(&encoded.bytes);
     let last = file.len() - 1;
@@ -203,11 +203,11 @@ async fn build_sample_pack(codec: CodecId) -> (Vec<u8>, ChunkId, Vec<u8>) {
     let options = WriteOptions { required_flags: 0, optional_flags: OPTIONAL_CANONICAL, codec };
     let mut writer = PackWriter::begin(Vec::<u8>::new(), &options).await.unwrap();
 
-    writer.write_segment(crate::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()]).await).await.unwrap();
+    writer.write_segment(semio_framework_replication_codec::KIND_SYMBOLS, &encode_symbols(&["widget.v1".to_string(), "name".to_string()]).await).await.unwrap();
 
     let doc_offset = writer.position().await;
     let document_payload = b"the quick brown fox jumps over the lazy dog, repeatedly, for compressibility".to_vec();
-    writer.write_segment(crate::KIND_DOCUMENT, &document_payload).await.unwrap();
+    writer.write_segment(semio_framework_replication_codec::KIND_DOCUMENT, &document_payload).await.unwrap();
     let doc_len = writer.position().await - doc_offset;
 
     let chunk_payload = vec![42u8; 4096];
@@ -428,3 +428,8 @@ async fn open_manifest_rejects_wrong_kind_at_manifest_offset() {
     assert!(matches!(result, Err(PackRefusal::Malformed { what: "manifest", .. })));
 }
 //#endregion 🔖️Corruption
+
+#[test]
+fn check_allocation_layout_refuses_counts_beyond_the_address_space(){
+    assert_eq!(Some(check_allocation_layout::<u64>(usize::MAX,"same deliberately misleading canceled/work/allocation prose").err().unwrap().kind()),Some(ValueRefusalKind::OwnershipLimit));
+}

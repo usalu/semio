@@ -5,7 +5,7 @@
 //! (`🛠️ShellHelpers/🟦️.tsx`): windows coalesce on a trailing debounce, at most one refresh per body is in flight, and a report
 //! that changes nothing schedules nothing. The scheduled state crosses to guests as `ViewModel.tree_windows`/`tree_viewport_rows`
 //! (the fields React stamps), and a shell-owned windowed panel reads it back through [`TreeWindowScheduler::window_of`].
-use super::{ShellState, UiDirtyScope};
+use super::*;
 use std::collections::{BTreeMap, BTreeSet};
 use ui_wgpu::wgpu::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
 
@@ -15,24 +15,16 @@ pub(crate) const TREE_WINDOW_REPORT_DEBOUNCE_MS: u64 = 40;
 /// 🪟️ Rows a container the host has just opened asks for before any viewport was measured (`TREE_WINDOW_DEFAULT_ROWS`).
 pub(crate) const TREE_WINDOW_DEFAULT_ROWS: u32 = 48;
 
-/// 🪟️ One body's host-owned tree state, keyed by window path (`TreeWindowBodyState`).
-#[derive(Clone, Debug, Default)]
-struct TreeWindowBodyState {
-    open: BTreeMap<String, bool>,
-    windows: BTreeMap<String, (u32, u32)>,
-    measured: BTreeSet<String>,
-}
-
 /// 🪟️ The ONE place host-owned tree expansion and scroll windows are held and turned into refreshes (`createTreeWindowSchedulerV1`):
 /// an open toggle is due at once, window reports coalesce on a [`TREE_WINDOW_REPORT_DEBOUNCE_MS`] trailing edge, at most ONE
 /// refresh per body is in flight, and a body whose state moved while its refresh crossed is re-sent with the LATEST state the
 /// moment it settles. Time is injected (milliseconds), so every rule is a pure law.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct TreeWindowScheduler {
-    bodies: BTreeMap<String, TreeWindowBodyState>,
-    pending: BTreeSet<String>,
-    in_flight: BTreeSet<String>,
-    viewport_rows: Option<u32>,
+    pub(super) bodies: BTreeMap<String, TreeWindowBodyState>,
+    pub(super) pending: BTreeSet<String>,
+    pub(super) in_flight: BTreeSet<String>,
+    pub(super) viewport_rows: Option<u32>,
     armed_at: Option<u64>,
     open_now: bool,
 }
@@ -150,51 +142,6 @@ impl TreeWindowScheduler {
 /// control character and no DEL.
 fn tree_window_sendable_identifier(identifier: &str) -> bool {
     !identifier.is_empty() && identifier.chars().count() <= 256 && !identifier.chars().any(|character| character.is_ascii_control())
-}
-
-impl ShellState {
-    /// 🪟️ Measures one retained body that just finished a paint and reports its windows (React's `useTreeWindowObserver` measure):
-    /// the served rule places each window, the scheduler decides whether that changes anything.
-    pub(crate) fn observe_tree_windows(&mut self, surface_id: &str) {
-        let Some((viewport_height, containers)) = crate::interpreter::tree_window_measures(surface_id) else { return };
-        let body = self.tree_window_body_key(surface_id);
-        let memory = self.tree_window_served.remove(&body).unwrap_or_default();
-        let (requests, memory) = served_requests(&containers, viewport_height, &memory, ui_contract::TREE_WINDOW_BODY_NODE_BUDGET);
-        self.tree_window_served.insert(body.clone(), memory);
-        let row_px = f64::from(ui_wgpu::wgpu::layout::tree_window_row_extent_px(ui_wgpu::wgpu::UiTreeWindowRowExtent::Standard));
-        let viewport_rows = ((viewport_height / row_px).ceil() as u32).max(1);
-        let now = semio_framework_job::default_now_us().map_or(0, |now| now / 1_000);
-        self.tree_windows.report(&body, &requests, viewport_rows, now);
-    }
-
-    /// 🪟️ The body a retained surface's windows belong to: the guest body it renders, else (a shell-owned panel) the surface itself.
-    fn tree_window_body_key(&self, surface_id: &str) -> String {
-        self.document_body_key(surface_id).unwrap_or_else(|| surface_id.to_owned())
-    }
-
-    /// 🪟️ One settle step of the scheduler: bodies whose refresh crossed settle (the owed scope drained and nothing renders), and
-    /// every body now due refreshes — a guest body through the owed partial refresh, a shell-owned panel by republishing it.
-    pub(crate) fn pump_tree_windows(&mut self) {
-        if self.owed_refresh_scope.asks_for_nothing() && self.settle_pump.rendering.is_none() {
-            for body in self.tree_windows.in_flight() {
-                self.tree_windows.settled(&body);
-            }
-        }
-        let now = semio_framework_job::default_now_us().map_or(0, |now| now / 1_000);
-        for body in self.tree_windows.due(now) {
-            let window_body = self.session.as_ref().is_some_and(|session| session.app.window_kinds.iter().any(|kind| kind.body_key == body));
-            let guest_panel = !window_body && self.session.as_ref().is_some_and(|session| Self::flatten_panel_tab_leaves(&session.app.panel_tabs).into_iter().any(|tab| tab.body_key.as_deref() == Some(body.as_str())));
-            if window_body || guest_panel {
-                let (window_bodies, panel_bodies) = if window_body { (vec![body.clone()], Vec::new()) } else { (Vec::new(), vec![body.clone()]) };
-                self.owe_refresh(UiDirtyScope::Partial { window_bodies, panel_bodies, utilities: false, tools: false, engagements: false, measures: false, labels: false });
-                continue;
-            }
-            if let Err(error) = self.republish_shell_panel_document(&body) {
-                self.error = Some(error);
-            }
-            self.tree_windows.settled(&body);
-        }
-    }
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

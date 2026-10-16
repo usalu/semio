@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-runtime-reconcile"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Headless UI runtime reconcile authority: the thin reconciler owner, credit reservation, handback registry, resumable job, generation-qualified patches, terminal close and surface output pool"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-runtime-reconcile"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-ui-runtime-reconcile-primitives/testkit", "semio-framework-ui-runtime-reconcile-cursor/testkit"]
+
+[dependencies]
+semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-runtime-presentation = { path = "../../../🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile-cursor = { path = "../../../⏭️cursor/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { version = "1.0.140" }
+semio-framework-ui-runtime-reconcile-primitives = { path = "../../../🧱️primitives/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-runtime-reconcile-cursor = { path = "../../../⏭️cursor/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/replication-frames-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

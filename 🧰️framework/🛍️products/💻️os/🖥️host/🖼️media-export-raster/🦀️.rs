@@ -4,7 +4,7 @@
 //#region 🔖️MediaRegistry
 // 🧬️ The workflow registry owns `register_*` and `export_os_app_instance_media_kind`, so both share one OnceLock. Keyed on
 // string format kind ids (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
-pub use crate::workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
+pub use semio_framework_os_host_workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
 
 /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
 pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework_os_kernel::io::FormatRegistryError> {
@@ -193,7 +193,7 @@ pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: f
 #[cfg(all(test, target_arch = "wasm32", target_env = "p2"))]
 include!("../🧪️tests/🔬️media-export-raster-wasip2/🦀️.rs");
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
+#[cfg(test)]
 include!("../🧪️tests/🔬️media-export-raster-unit/🦀️.rs");
 
 // 🚪️ `//#region SolidMediaExport` DELETED WHOLESALE (ticket

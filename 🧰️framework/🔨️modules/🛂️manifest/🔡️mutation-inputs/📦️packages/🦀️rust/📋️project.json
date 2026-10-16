@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/manifest-mutation-inputs-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

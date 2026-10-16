@@ -33,7 +33,3 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UnbindInput 
     }
 }
 //#endregion ⚙️Semantics
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

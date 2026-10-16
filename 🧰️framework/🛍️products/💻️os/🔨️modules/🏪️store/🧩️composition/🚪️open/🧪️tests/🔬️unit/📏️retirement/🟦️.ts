@@ -470,7 +470,7 @@ test("original source iterator retains its actual allocation extent through pref
     expect(state.retained + state.released).toBe(source.byteLength);
   }
   const backing = await Bun.file(new URL("../../../../../♻️retirement/📦️backing/🦀️.rs", import.meta.url)).text();
-  const start = backing.indexOf("pub(super) struct SourceIterator");
+  const start = backing.indexOf("pub struct SourceIterator");
   const owner = backing.slice(start);
   expect(owner).toContain("source_bytes = extent::<T>(source.capacity())");
   expect(owner).toContain("source.into_iter()");

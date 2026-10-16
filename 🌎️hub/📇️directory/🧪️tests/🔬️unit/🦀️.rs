@@ -1,15 +1,25 @@
-use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
-use super::sqlite::SqliteDirectory;
-use super::*;
-use crate::artifact_authority::chunk_cas::{
-    ArtifactCasObjectKind, ArtifactChunkBlobStore, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1,
-};
-use crate::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob};
-use db::db_storage::{DB_IO_PAGE_BYTES, DbIoPageWriter, MemoryStorage as GenericMemoryStorage, PayloadStorage};
+use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
+use semio_hub_directory_sqlite::SqliteDirectory;
+
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasObjectKind, ArtifactChunkBlobStore, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub_artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, ImmutableArtifactBlobStore, OperationContext, StagedArtifactBlob};
+use db::storage::{DB_IO_PAGE_BYTES, DbIoPageWriter, MemoryStorage as GenericMemoryStorage, PayloadStorage};
 use directory::{DslValue, FromValue, ToValue};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use semio_hub_directory_contract::{ADMIN_PAGE_FETCH_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_DELETE_LEASE_TTL_MS, ARTIFACT_CAS_SWEEP_OBJECT_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES, AUTH_ASSERTION_MAX_BYTES, CAPABILITY_MAX_TTL_SECS, DEVICE_INSTANCE_MAX_BYTES, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DIRECTORY_WIRE_INTEGER_MAX, HubCapability, HubClock, IdentityAssertion, IdentityAssertionVerifier, IdentityAssurance, IdentityVerificationContext, IdentityVerificationControl, IdentityVerificationFuture, IdentityVerificationProgress, InviteCapability, NewDirectoryEvent, SessionCapability, ShareCapability, SocketGrantCapability, VerifiedIdentity, capability_window, constant_time_digest_eq, encode_capability_bytes, identity_subject_digest, now_ms, prepare_auth_session};
+use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1};
+use semio_hub_directory_contract::model::{AdminDirectoryOverviewCounts, AuthSessionIssue, AuthSessionKind, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, InviteRedemptionCommit, NewAdminOperationAuditRecord, NewDirectoryCommandReceipt, SpaceRole};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
+use semio_hub_directory_service::{ArtifactCasSweepRequest, ArtifactDirectoryCommand, DirectoryCommandExecutionV1, DirectoryService, directory_command_result_kind, new_event};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentScope, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::{MemoryArtifactProjection, ProjectionRebuildControl, ProjectionRebuildProgress, bounded_event_read, checkpoint_identity_input, checkpoint_projection_rebuild, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape, validate_verified_checkpoint_append};
+use semio_framework_hash::Sha256;
+use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
+use directory::os_identity::time_ordered_id;
 
 struct IdentityProbe {
     now: i64,
@@ -163,8 +173,8 @@ fn verified_checkpoint(checkpoint: &PublishedArtifactCheckpoint, locator_suffix:
 }
 
 fn ownership_plan(checkpoint: &ArtifactCheckpoint) -> ArtifactCasOwnershipPlanV1 {
-    let pack_manifest_id = crate::artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.pack.storage_key).expect("pack manifest locator");
-    let spr_manifest_id = crate::artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.spr.storage_key).expect("SPR manifest locator");
+    let pack_manifest_id = semio_hub_artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.pack.storage_key).expect("pack manifest locator");
+    let spr_manifest_id = semio_hub_artifact_authority::chunk_cas::decode_artifact_cas_manifest_locator_v1(&checkpoint.spr.storage_key).expect("SPR manifest locator");
     let mut objects = vec![
         ArtifactCasObjectKey { space_id: checkpoint.scope.space_id.clone(), kind: ArtifactCasObjectKind::Manifest, digest: pack_manifest_id },
         ArtifactCasObjectKey { space_id: checkpoint.scope.space_id.clone(), kind: ArtifactCasObjectKind::Manifest, digest: spr_manifest_id },
@@ -188,8 +198,8 @@ async fn publish_reserved(service: &DirectoryService, actor: DirectoryActor, che
 const FIXTURE_PARENT_DIALECT_KIND: &str = "s.gis.gismap";
 
 async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
-    use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
+    use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1};
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🌱️creation/🧪️tests/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
     let mut intent = ArtifactCreationIntentV1::from_value(DslValue::from(fixture["intent"].clone())).expect("creation intent");
     let mut prepared = ArtifactCreationPreparedV1::from_value(DslValue::from(fixture["prepared"].clone())).expect("creation pair");
     let issued = service
@@ -231,7 +241,7 @@ async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &Directory
     prepared.checkpoint = checkpoint.clone();
     prepared.checkpoint.pack.storage_key = format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.pack.sha256));
     prepared.checkpoint.spr.storage_key = format!("sha256/{}", directory::os_directory::io::binary::artifact_hash::artifact_hash_hex(&checkpoint.spr.sha256));
-    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared genesis");
+    semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent).expect("exact prepared genesis");
     assert!(matches!(service.dir.claim_artifact_creation(&intent).await.expect("claim genesis"), ArtifactCreationClaimV1::Accepted(_)));
     service
         .dir
@@ -296,23 +306,23 @@ impl BlockingDeleteArtifactCas {
 }
 
 impl ArtifactChunkCasStorage for BlockingDeleteArtifactCas {
-    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         self.inner.configure_coordinator(coordinator_id, context).await
     }
 
-    async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         self.inner.advance_physical_epoch(coordinator_id, space_id, epoch, context).await
     }
 
-    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<crate::artifact_authority::chunk_cas::ArtifactCasPutOutcome, crate::artifact_authority::AuthorityError> {
+    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<semio_hub_artifact_authority::chunk_cas::ArtifactCasPutOutcome, semio_hub_artifact_authority::AuthorityError> {
         self.inner.put_if_absent(key, bytes, context).await
     }
 
-    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, crate::artifact_authority::AuthorityError> {
+    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, semio_hub_artifact_authority::AuthorityError> {
         self.inner.get(key, context).await
     }
 
-    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, crate::artifact_authority::AuthorityError> {
+    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, semio_hub_artifact_authority::AuthorityError> {
         if self.block_next.swap(false, Ordering::SeqCst) {
             self.entered.notify_one();
             self.release.notified().await;
@@ -328,29 +338,29 @@ struct ProcessBlockingDeleteArtifactCas {
 }
 
 impl ArtifactChunkCasStorage for ProcessBlockingDeleteArtifactCas {
-    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         self.inner.configure_coordinator(coordinator_id, context).await
     }
 
-    async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn advance_physical_epoch(&self, coordinator_id: [u8; 32], space_id: &str, epoch: u64, context: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         self.inner.advance_physical_epoch(coordinator_id, space_id, epoch, context).await
     }
 
-    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<crate::artifact_authority::chunk_cas::ArtifactCasPutOutcome, crate::artifact_authority::AuthorityError> {
+    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<semio_hub_artifact_authority::chunk_cas::ArtifactCasPutOutcome, semio_hub_artifact_authority::AuthorityError> {
         self.inner.put_if_absent(key, bytes, context).await
     }
 
-    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, crate::artifact_authority::AuthorityError> {
+    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, semio_hub_artifact_authority::AuthorityError> {
         self.inner.get(key, context).await
     }
 
-    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, crate::artifact_authority::AuthorityError> {
-        std::fs::write(&self.entered, []).map_err(|_| crate::artifact_authority::AuthorityError::Store("artifact CAS process race readiness write failed".into()))?;
+    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, semio_hub_artifact_authority::AuthorityError> {
+        std::fs::write(&self.entered, []).map_err(|_| semio_hub_artifact_authority::AuthorityError::Store("artifact CAS process race readiness write failed".into()))?;
         let wait_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
         while !self.release.exists() {
             context.checkpoint()?;
             if tokio::time::Instant::now() >= wait_deadline {
-                return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS process race release timed out".into()));
+                return Err(semio_hub_artifact_authority::AuthorityError::Store("artifact CAS process race release timed out".into()));
             }
             tokio::time::sleep(std::time::Duration::from_millis(5)).await;
         }
@@ -361,23 +371,23 @@ impl ArtifactChunkCasStorage for ProcessBlockingDeleteArtifactCas {
 struct FailingAdvanceArtifactCas(MemoryArtifactChunkCasStorage);
 
 impl ArtifactChunkCasStorage for FailingAdvanceArtifactCas {
-    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         self.0.configure_coordinator(coordinator_id, context).await
     }
 
-    async fn advance_physical_epoch(&self, _: [u8; 32], _: &str, _: u64, _: &OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
-        Err(crate::artifact_authority::AuthorityError::Cancelled)
+    async fn advance_physical_epoch(&self, _: [u8; 32], _: &str, _: u64, _: &OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
+        Err(semio_hub_artifact_authority::AuthorityError::Cancelled)
     }
 
-    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<crate::artifact_authority::chunk_cas::ArtifactCasPutOutcome, crate::artifact_authority::AuthorityError> {
+    async fn put_if_absent(&self, key: &ArtifactCasObjectKey, bytes: &[u8], context: &OperationContext<'_>) -> Result<semio_hub_artifact_authority::chunk_cas::ArtifactCasPutOutcome, semio_hub_artifact_authority::AuthorityError> {
         self.0.put_if_absent(key, bytes, context).await
     }
 
-    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, crate::artifact_authority::AuthorityError> {
+    async fn get(&self, key: &ArtifactCasObjectKey, context: &OperationContext<'_>) -> Result<Vec<u8>, semio_hub_artifact_authority::AuthorityError> {
         self.0.get(key, context).await
     }
 
-    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, crate::artifact_authority::AuthorityError> {
+    async fn delete_if_unreferenced(&self, key: &ArtifactCasObjectKey, fence: &ArtifactCasDeleteFence, context: &OperationContext<'_>) -> Result<ArtifactCasDeleteOutcome, semio_hub_artifact_authority::AuthorityError> {
         self.0.delete_if_unreferenced(key, fence, context).await
     }
 }
@@ -389,7 +399,7 @@ fn materialized_checkpoint(mut public: PublishedArtifactCheckpoint, pair: &Artif
     aggregate.update(&pair.pack);
     aggregate.update(&pair.spr);
     public.aggregate_sha256 = ArtifactHash(aggregate.finalize());
-    public.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&public)).expect("checkpoint identity")));
+    public.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&public)).expect("checkpoint identity")));
     let mut checkpoint = checkpoint_identity_input(&public);
     checkpoint.pack.storage_key = artifact_cas_manifest_locator_v1(prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.pack).expect("pack plan").manifest_id);
     checkpoint.spr.storage_key = artifact_cas_manifest_locator_v1(prepare_artifact_cas_manifest_v1(&checkpoint.scope.space_id, &pair.spr).expect("SPR plan").manifest_id);
@@ -409,7 +419,7 @@ fn scoped_materialized_checkpoint(mut public: PublishedArtifactCheckpoint, descr
     materialized_checkpoint(public, pair)
 }
 
-fn generic_payload_pages(bytes: &[u8]) -> db::db_storage::DbIoPages {
+fn generic_payload_pages(bytes: &[u8]) -> db::storage::DbIoPages {
     let mut writer = DbIoPageWriter::try_reserve(bytes.len().div_ceil(DB_IO_PAGE_BYTES)).expect("generic payload pages");
     for fragment in bytes.chunks(DB_IO_PAGE_BYTES) {
         assert_eq!(writer.write_fragment(fragment).expect("generic payload fragment"), fragment.len());
@@ -776,7 +786,7 @@ async fn artifact_chunk_cas_expiry_supersedes_tokens_and_sweep_cancellation_comm
     let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel);
     assert!(matches!(
         service.sweep_artifact_cas(storage.as_ref(), ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &cancel_context).await,
-        Err(crate::artifact_authority::AuthorityError::Cancelled)
+        Err(semio_hub_artifact_authority::AuthorityError::Cancelled)
     ));
     let progress = cancel.progress.lock().expect("cancel progress");
     let swept: Vec<_> = progress.iter().filter(|item| item.stage == AuthorityProgressStage::CasSweep).copied().collect();
@@ -800,13 +810,13 @@ async fn artifact_chunk_cas_failed_epoch_advance_releases_directory_lease() {
     let storage = FailingAdvanceArtifactCas(MemoryArtifactChunkCasStorage::default());
     let probe = ArtifactCasProbe::new(201, None);
     let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
-    assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
+    assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await, Err(semio_hub_artifact_authority::AuthorityError::Cancelled)));
     service.reserve_artifact_cas(system, plan, 400, 201).await.expect("failure cleanup releases live lease immediately");
 }
 
 #[tokio::test]
 async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
     let barrier = &fixture["deleteBarrier"];
     assert_eq!(barrier["leaseMaximumMs"].as_u64(), Some(ARTIFACT_CAS_DELETE_LEASE_TTL_MS));
     assert_eq!(barrier["dryRunAdvancesEpoch"].as_bool(), Some(false));
@@ -854,7 +864,7 @@ async fn artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized
     reserve_service.publish_reserved_artifact_checkpoint(system, live.clone(), reservation, 5_301).await.expect("publish raced checkpoint");
     storage.release.notify_one();
     let error = tokio::time::timeout(std::time::Duration::from_secs(30), sweep_tasks.join_next()).await.expect("sweep completion deadline").expect("owned sweep task").expect("join sweep").expect_err("stale deletion fence");
-    assert!(matches!(&error, crate::artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected raced sweep error: {error:?}");
+    assert!(matches!(&error, semio_hub_artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected raced sweep error: {error:?}");
     assert_eq!(pack.storage_key, live.pack.storage_key);
     assert_eq!(spr.storage_key, live.spr.storage_key);
     assert_eq!(blobs.read(&space_id, &pack, &rewrite_context).await.expect("read raced pack"), pair.pack);
@@ -885,7 +895,7 @@ async fn artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preser
             let control = ArtifactCasProbe::new(300, None);
             let context = OperationContext::new(20_000, AuthorityLimits::maximum(), &control);
             let error = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }, &context).await.expect_err("old process deletion fence is stale");
-            assert!(matches!(&error, crate::artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected old process sweep error: {error:?}");
+            assert!(matches!(&error, semio_hub_artifact_authority::AuthorityError::Store(message) if message == "artifact CAS deletion fence is stale"), "unexpected old process sweep error: {error:?}");
         } else {
             assert_eq!(mode, "successor-publication");
             let storage = Arc::new(storage);
@@ -902,7 +912,7 @@ async fn artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preser
         return;
     }
 
-    let root = crate::test_artifact_root::test_artifact_root().join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
+    let root = semio_hub_testing::test_artifact_root().join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
     std::fs::create_dir_all(&root).expect("create process race root");
     let path_text = root.join("directory.sqlite3").to_str().expect("UTF-8 process race path").to_string();
     let cas_root = root.join("artifact-cas").join("v1");
@@ -1011,9 +1021,9 @@ async fn artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replay
     first.descriptor_digest_v1 = digest;
     second.descriptor_digest_v1 = digest;
     first.parent_checkpoint_id = Some(genesis.checkpoint_id);
-    first.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&first)).expect("first identity")));
+    first.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&first)).expect("first identity")));
     second.parent_checkpoint_id = Some(first.checkpoint_id);
-    second.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&second)).expect("second identity")));
+    second.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&second)).expect("second identity")));
     first_retention.retained_checkpoint_id = first.checkpoint_id;
     first_retention.checkpoint_lineage_head = second.checkpoint_id;
     let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
@@ -1115,7 +1125,7 @@ fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
     assert_eq!(rootless, indexed_only);
     let mut late_root = genesis;
     late_root.spr.sha256.0[0] ^= 1;
-    late_root.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&late_root)).expect("late root identity")));
+    late_root.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&late_root)).expect("late root identity")));
     assert!(projection.fold_atomically(&[artifact_event(7, DirectoryEventBody::ArtifactCheckpointPublished { checkpoint: late_root })]).is_err());
 
     projection.checkpoints.insert(first.scope.clone(), vec![first.clone(); fixture_maximum as usize]);
@@ -1146,7 +1156,7 @@ fn artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws() {
     frontier_max.baseline_frontier.last_commit_seq = DIRECTORY_WIRE_INTEGER_MAX;
     frontier_max.pack.byte_length = DIRECTORY_WIRE_INTEGER_MAX;
     frontier_max.spr.byte_length = DIRECTORY_WIRE_INTEGER_MAX;
-    frontier_max.checkpoint_id = ArtifactHash(Sha256::digest(&crate::artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&frontier_max)).expect("max identity")));
+    frontier_max.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint_identity_input(&frontier_max)).expect("max identity")));
     validate_checkpoint_shape(&frontier_max).expect("all exact wire maxima");
     frontier_max.baseline_frontier.head_edit_ordinal += 1;
     assert!(validate_checkpoint_shape(&frontier_max).is_err());
@@ -1180,7 +1190,7 @@ async fn artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_
     descriptor.document_id = "artifact-00000000000000000000000000000005".into();
     let pair = ArtifactPair { pack: b"restart-pack".to_vec(), spr: b"restart-spr".to_vec() };
     let verified;
-    let mut root = crate::test_artifact_root::test_artifact_root();
+    let mut root = semio_hub_testing::test_artifact_root();
     root.push(format!("semio-artifact-checkpoint-{}", directory::os_identity::time_ordered_id()));
     std::fs::create_dir_all(&root).expect("create test directory");
     let path = root.join("directory.sqlite3");
@@ -1498,9 +1508,9 @@ impl ProjectionRebuildControl for DirectoryRebuildWriterProbe {
 /// 🏛️ Independent service writers cannot retain or restore an Author after the archive event.
 #[tokio::test]
 async fn invite_archive_projection_serializes_independent_service_decisions() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     for row in fixture["backendOrders"].as_array().unwrap() {
-        let root = crate::test_artifact_root::test_artifact_root().join(format!("archive-writers-{}", time_ordered_id()));
+        let root = semio_hub_testing::test_artifact_root().join(format!("archive-writers-{}", time_ordered_id()));
         std::fs::create_dir_all(&root).unwrap();
         let path = root.join("directory.sqlite3");
         let primary = SqliteDirectory::connect(path.to_str().unwrap()).await.unwrap();
@@ -1584,7 +1594,7 @@ async fn invite_archive_projection_serializes_independent_service_decisions() {
 /// 🌫️ A lost commit acknowledgement retains the exact claim and never repeats its durable mutation.
 #[tokio::test]
 async fn directory_command_uncertain_commit_retains_claim_and_never_reexecutes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("📇️directory/🧪️tests/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let row = fixture["receiptRelease"].as_array().unwrap().iter().find(|row| row["outcome"] == "uncertain").unwrap();
     assert_eq!(row["release"], false);
     let backend = SqliteDirectory::connect(":memory:").await.unwrap();
@@ -1695,10 +1705,12 @@ async fn invite_redemption_commit_and_publication_precede_the_next_directory_com
 
 mod exhaustive {
     use super::*;
+use semio_hub_directory_service::{ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES, ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES, ArtifactCasSweepRequest, DirectoryService};
+use directory::os_directory::{DirectoryActor, DirectoryActorKind};
 
     #[tokio::test]
     async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+        let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🧪️tests/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
         let law = &fixture["sweepContinuation"];
         let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
         let total_objects = law["totalObjects"].as_u64().expect("total objects");
@@ -1721,7 +1733,7 @@ mod exhaustive {
         let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
         assert!(matches!(
             service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum + 1, continuation: None }, &context).await,
-            Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))
+            Err(semio_hub_artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))
         ));
         let first = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: None }, &context).await.expect("first bounded sweep");
         let continuation = first.continuation.expect("first sweep continuation");
@@ -1731,13 +1743,13 @@ mod exhaustive {
         assert_eq!(first_position.observed_generation, law["expectedFirstCursor"]["observedGeneration"].as_u64().expect("cursor generation"));
         assert_eq!(first_position.after_generation, law["expectedFirstCursor"]["afterGeneration"].as_u64().expect("cursor page"));
         assert_eq!(first_position.object_offset as u64, law["expectedFirstCursor"]["objectOffset"].as_u64().expect("cursor offset"));
-        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: false, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: false, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(semio_hub_artifact_authority::AuthorityError::Store(_))));
 
         let restarted = DirectoryService::new(dir.clone(), 64);
-        assert!(matches!(restarted.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+        assert!(matches!(restarted.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(semio_hub_artifact_authority::AuthorityError::Store(_))));
         let cancel_probe = ArtifactCasProbe::new(201, Some(1));
         let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel_probe);
-        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &cancel_context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &cancel_context).await, Err(semio_hub_artifact_authority::AuthorityError::Cancelled)));
         assert_eq!(cancel_probe.progress.lock().expect("cancel progress").iter().filter(|progress| progress.stage == AuthorityProgressStage::CasSweep).count(), 1);
         let second = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await.expect("resume bounded sweep");
         assert_eq!(second.examined_objects, law["expectedExaminedPerRequest"][1].as_u64().expect("second examined"));
@@ -1746,6 +1758,22 @@ mod exhaustive {
 
         let changed = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await.expect("generation-bound continuation").continuation.expect("generation-bound token");
         service.reserve_artifact_cas(system, sweep_convergence_plan(object_counts.len(), 2), 500, 300).await.expect("advance sweep generation");
-        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(changed) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(changed) }, &context).await, Err(semio_hub_artifact_authority::AuthorityError::Store(_))));
+    }
+}
+
+#[test]
+fn directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let events: Vec<directory::os_directory::DirectoryEvent> = semio_framework_pack_json::from_json_str(&row["events"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let client = events.iter().fold(directory::os_directory::DirectoryReadModel::default(), directory::os_directory::fold);
+        assert_eq!(client.spaces["space-fixture"].indexed_documents.len(), row["clientRows"].as_u64().unwrap() as usize, "{}", row["id"]);
+        let mut backend = semio_hub_directory::MemoryArtifactProjection::default();
+        let result = backend.fold_atomically(&events);
+        assert_eq!(result.is_ok(), row["backendAccepted"].as_bool().unwrap(), "{}: {result:?}", row["id"]);
+        if result.is_err() {
+            assert_eq!(backend, semio_hub_directory::MemoryArtifactProjection::default());
+        }
     }
 }

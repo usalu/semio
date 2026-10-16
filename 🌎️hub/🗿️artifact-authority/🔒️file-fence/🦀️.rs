@@ -1,10 +1,10 @@
 //! 🔒️ OS-released exclusive file ownership shared by Hub publication domains.
 
 /// 🛡️ One lock held until this file handle is explicitly unlocked and closed.
-pub(crate) struct FileFence(std::fs::File);
+pub struct FileFence(std::fs::File);
 
 #[cfg(unix)]
-pub(crate) fn try_acquire(file: std::fs::File) -> std::io::Result<Option<FileFence>> {
+pub fn try_acquire(file: std::fs::File) -> std::io::Result<Option<FileFence>> {
     use std::os::fd::AsRawFd as _;
     unsafe extern "C" {
         fn flock(fd: i32, operation: i32) -> i32;
@@ -32,7 +32,7 @@ impl Drop for FileFence {
 }
 
 #[cfg(windows)]
-pub(crate) fn try_acquire(file: std::fs::File) -> std::io::Result<Option<FileFence>> {
+pub fn try_acquire(file: std::fs::File) -> std::io::Result<Option<FileFence>> {
     use std::os::windows::io::AsRawHandle as _;
     #[repr(C)]
     struct Overlapped {

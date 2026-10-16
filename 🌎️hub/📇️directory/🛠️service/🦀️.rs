@@ -1,73 +1,19 @@
 //! 🛠️ DirectoryService: the serialized writer, projection rebuild, artifact CAS sweep and the verified checkpoint publisher adapter.
 
-use super::*;
-
 //#region 🔖️Service
 #[cfg(test)]
 struct DirectoryWriterTestFence {
-    pub(super) claimed: std::sync::atomic::AtomicBool,
-    pub(super) reached: tokio::sync::Notify,
-    pub(super) release: tokio::sync::Notify,
+    pub(crate) claimed: std::sync::atomic::AtomicBool,
+    pub(crate) reached: tokio::sync::Notify,
+    pub(crate) release: tokio::sync::Notify,
 }
 
 #[cfg(test)]
 impl DirectoryWriterTestFence {
     /// 🧪️ Creates a one-shot pause at an explicitly armed writer boundary.
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { claimed: std::sync::atomic::AtomicBool::new(false), reached: tokio::sync::Notify::new(), release: tokio::sync::Notify::new() }
     }
-}
-
-/// 🛑️ A projection refusal whose transaction can be rolled back before any commit attempt.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum DirectoryProjectionRejectionV1 {
-    MissingSpace { space_id: String },
-    ArchivedAuthor { space_id: String },
-    ArchivedDocument { space_id: String },
-}
-
-impl DirectoryProjectionRejectionV1 {
-    /// 🧯️ Exposes the semantic refusal without claiming a retry-safe transport outcome.
-    pub(crate) fn into_error(self) -> DirectoryError {
-        DirectoryError::Conflict(match self {
-            Self::MissingSpace { space_id } => format!("space '{space_id}' no longer exists"),
-            Self::ArchivedAuthor { space_id } => format!("space '{space_id}' is an archive; no author memberships are allowed"),
-            Self::ArchivedDocument { space_id } => format!("space '{space_id}' is an archive; document publication is forbidden"),
-        })
-    }
-}
-
-/// 🧮️ Extracts the transactional space authority needed by archive-sensitive projections.
-pub(crate) fn directory_projection_space_v1(body: &DirectoryEventBody) -> Option<&str> {
-    match body {
-        DirectoryEventBody::SpaceArchived { space_id } | DirectoryEventBody::MemberUpserted { space_id, .. } | DirectoryEventBody::InviteRedeemed { space_id, .. } => Some(space_id),
-        DirectoryEventBody::DocumentAnnounced { descriptor } => Some(&descriptor.space_id),
-        DirectoryEventBody::DocumentIndexed { scope, .. } => Some(&scope.space_id),
-        DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => Some(&checkpoint.scope.space_id),
-        _ => None,
-    }
-}
-
-/// 🏛️ Evaluates intrinsic event invariants against the space read under the backend writer lock.
-pub(crate) fn directory_projection_rejection_v1(body: &DirectoryEventBody, space_kind: Option<&str>) -> Option<DirectoryProjectionRejectionV1> {
-    let space_id = directory_projection_space_v1(body)?;
-    if space_kind.is_none() {
-        return Some(DirectoryProjectionRejectionV1::MissingSpace { space_id: space_id.into() });
-    }
-    if space_kind == Some("archive") && matches!(body, DirectoryEventBody::MemberUpserted { role: DirectorySpaceRole::Author, .. } | DirectoryEventBody::InviteRedeemed { role: DirectorySpaceRole::Author, .. }) {
-        return Some(DirectoryProjectionRejectionV1::ArchivedAuthor { space_id: space_id.into() });
-    }
-    if space_kind == Some("archive") && matches!(body, DirectoryEventBody::DocumentAnnounced { .. } | DirectoryEventBody::DocumentIndexed { .. } | DirectoryEventBody::ArtifactCheckpointPublished { .. }) {
-        return Some(DirectoryProjectionRejectionV1::ArchivedDocument { space_id: space_id.into() });
-    }
-    None
-}
-
-/// 🔏️ Only an acknowledged rollback may produce RejectedBeforeCommit; every uncertain error stays Err.
-#[derive(Clone, Debug)]
-pub enum DirectoryAppendOutcomeV1 {
-    Appended(Vec<DirectoryEvent>),
-    RejectedBeforeCommit(DirectoryProjectionRejectionV1),
 }
 
 /// 🧾️ Closed outcome of one idempotent directory-command execution.
@@ -102,10 +48,10 @@ pub fn replay_directory_command_receipt(record: &DirectoryCommandReceiptRecord) 
 /// messages the caller publishes directly) fans out on one `broadcast` channel every
 /// `/directory/socket/v1` connection subscribes to (contract C2).
 pub struct DirectoryService {
-    pub(super) dir: Arc<HubDirectories>,
-    pub(super) write: tokio::sync::Mutex<HubClock>,
-    pub(super) tx: tokio::sync::broadcast::Sender<DirectoryStreamMessage>,
-    pub(super) delivery_epochs: std::sync::Mutex<(u64, u64, std::collections::BTreeMap<String, u64>)>,
+    pub dir: Arc<HubDirectories>,
+    pub write: tokio::sync::Mutex<HubClock>,
+    pub(crate) tx: tokio::sync::broadcast::Sender<DirectoryStreamMessage>,
+    pub delivery_epochs: std::sync::Mutex<(u64, u64, std::collections::BTreeMap<String, u64>)>,
     delivery_write: tokio::sync::RwLock<()>,
     delivery_invalidations: tokio::sync::broadcast::Sender<String>,
     artifact_cas_sweep_secret: [u8; 32],
@@ -120,14 +66,14 @@ pub struct DirectoryDeliveryLeaseV1<'a> {
     _guard: tokio::sync::RwLockReadGuard<'a, ()>,
 }
 
-pub(super) const DIRECTORY_DELIVERY_SCOPE_MAX: usize = 4096;
+pub const DIRECTORY_DELIVERY_SCOPE_MAX: usize = 4096;
 
 #[derive(Clone, Copy)]
 struct ArtifactCasSweepPosition {
-    pub(super) execute: bool,
-    pub(super) observed_generation: u64,
-    pub(super) after_generation: u64,
-    pub(super) object_offset: usize,
+    pub(crate) execute: bool,
+    pub(crate) observed_generation: u64,
+    pub(crate) after_generation: u64,
+    pub(crate) object_offset: usize,
 }
 
 impl DirectoryService {
@@ -148,7 +94,7 @@ impl DirectoryService {
         (self.delivery_epoch(space_id) == expected_epoch).then_some(DirectoryDeliveryLeaseV1 { _guard: guard })
     }
 
-    pub(super) async fn invalidate_delivery_locked(&self, _clock: &tokio::sync::MutexGuard<'_, HubClock>, space_id: &str) {
+    pub async fn invalidate_delivery_locked(&self, _clock: &tokio::sync::MutexGuard<'_, HubClock>, space_id: &str) {
         let _delivery = self.delivery_write.write().await;
         let mut epochs = self.delivery_epochs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         epochs.0 = epochs.0.checked_add(1).expect("directory delivery generation exhausted");
@@ -162,7 +108,7 @@ impl DirectoryService {
     }
 
     /// 🗄️ Server-owned services share the exact directory backend without exposing a driver.
-    pub(crate) fn backend(&self) -> &Arc<HubDirectories> {
+    pub fn backend(&self) -> &Arc<HubDirectories> {
         &self.dir
     }
 
@@ -170,7 +116,7 @@ impl DirectoryService {
     pub async fn publish_document_genesis(
         &self,
         intent: ArtifactCreationIntentV1,
-        prepared: &crate::artifact_authority::creation::ArtifactCreationPreparedV1,
+        prepared: &semio_hub_artifact_creation::ArtifactCreationPreparedV1,
         checkpoint: ArtifactCheckpoint,
         reservation: ArtifactCasReservation,
         now_ms: u64,
@@ -208,7 +154,7 @@ impl DirectoryService {
             DocumentGenesisCommitV1::Indeterminate => {
                 let reconciled = async {
                     let facts = self.dir.read_artifact_creation(&append.intent.actor.user_id, &append.intent.request.request_id).await?;
-                    let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+                    let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
                     if operation.intent != append.intent {
                         return Err(DirectoryError::Conflict("genesis uncertain receipt belongs to another intent".into()));
                     }
@@ -216,7 +162,7 @@ impl DirectoryService {
                         return Err(DirectoryError::Backend("genesis commit acknowledgement is indeterminate; no durable receipt is readable".into()));
                     };
                     let events = self.dir.events_since(receipt.event_seq_first - 1, 3).await?;
-                    let prepared = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts[..2])?;
+                    let prepared = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts[..2])?;
                     let completion = document_genesis_completion_v1(&prepared, &append, &events)?;
                     if facts.last() != Some(&completion) {
                         return Err(DirectoryError::Conflict("genesis uncertain public triple differs from its exact stored receipt".into()));
@@ -258,7 +204,7 @@ impl DirectoryService {
     }
 
     #[cfg(test)]
-    pub(super) fn arm_decision_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
+    pub fn arm_decision_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
         let fence = Arc::new(DirectoryWriterTestFence::new());
         *self.decision_test_fence.lock().unwrap() = Some(fence.clone());
         fence
@@ -275,7 +221,7 @@ impl DirectoryService {
 
     #[cfg(test)]
     /// 🧪️ Arms a one-shot post-append fence for the writer-order concurrency law.
-    pub(super) fn arm_publication_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
+    pub fn arm_publication_test_fence(&self) -> Arc<DirectoryWriterTestFence> {
         let fence = Arc::new(DirectoryWriterTestFence::new());
         *self.publication_test_fence.lock().expect("publication test fence lock") = Some(fence.clone());
         fence
@@ -339,7 +285,7 @@ impl DirectoryService {
         token.finalize()
     }
 
-    pub(super) fn artifact_cas_sweep_position(&self, token: ArtifactCasSweepContinuation, execute: bool) -> Result<ArtifactCasSweepPosition, crate::artifact_authority::AuthorityError> {
+    pub fn artifact_cas_sweep_position(&self, token: ArtifactCasSweepContinuation, execute: bool) -> Result<ArtifactCasSweepPosition, semio_hub_artifact_authority::AuthorityError> {
         let mut mac = Sha256::new();
         mac.update(ARTIFACT_CAS_SWEEP_CONTINUATION_DOMAIN_V1);
         mac.update(&self.artifact_cas_sweep_secret);
@@ -355,9 +301,9 @@ impl DirectoryService {
             || token_execute != execute
             || observed_generation == 0
             || after_generation > observed_generation
-            || object_offset > ARTIFACT_CAS_SWEEP_PAGE_MAX * crate::artifact_authority::chunk_cas::ARTIFACT_CAS_OWNERSHIP_MAX_OBJECTS
+            || object_offset > ARTIFACT_CAS_SWEEP_PAGE_MAX * semio_hub_artifact_authority::chunk_cas::ARTIFACT_CAS_OWNERSHIP_MAX_OBJECTS
         {
-            return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS sweep continuation is invalid".into()));
+            return Err(semio_hub_artifact_authority::AuthorityError::Store("artifact CAS sweep continuation is invalid".into()));
         }
         Ok(ArtifactCasSweepPosition { execute, observed_generation, after_generation, object_offset })
     }
@@ -630,29 +576,29 @@ impl DirectoryService {
         &self,
         storage: &S,
         request: ArtifactCasSweepRequest,
-        context: &crate::artifact_authority::OperationContext<'_>,
-    ) -> Result<ArtifactCasSweepResult, crate::artifact_authority::AuthorityError> {
+        context: &semio_hub_artifact_authority::OperationContext<'_>,
+    ) -> Result<ArtifactCasSweepResult, semio_hub_artifact_authority::AuthorityError> {
         if request.max_objects == 0 || request.max_objects > ARTIFACT_CAS_SWEEP_OBJECT_MAX {
-            return Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"));
+            return Err(semio_hub_artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"));
         }
         context.checkpoint()?;
         if request.execute {
-            let coordinator_id = self.dir.artifact_cas_coordinator_id().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            let coordinator_id = self.dir.artifact_cas_coordinator_id().await.map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
             storage.configure_coordinator(coordinator_id, context).await?;
         }
         let position = match request.continuation {
             Some(continuation) => self.artifact_cas_sweep_position(continuation, request.execute)?,
             None => {
                 let _write = self.write.lock().await;
-                let observed_generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                let observed_generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
                 ArtifactCasSweepPosition { execute: request.execute, observed_generation, after_generation: 0, object_offset: 0 }
             }
         };
         if request.continuation.is_some() {
             let _write = self.write.lock().await;
-            let current_generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            let current_generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
             if current_generation != position.observed_generation {
-                return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS sweep continuation generation changed".into()));
+                return Err(semio_hub_artifact_authority::AuthorityError::Store("artifact CAS sweep continuation generation changed".into()));
             }
         }
         let mut cursor = position.after_generation;
@@ -671,9 +617,9 @@ impl DirectoryService {
                 .dir
                 .artifact_cas_sweep_candidates(cursor, position.observed_generation, ARTIFACT_CAS_SWEEP_PAGE_MAX)
                 .await
-                .map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                .map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
             if page.observed_generation != position.observed_generation || object_offset > page.objects.len() {
-                return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS sweep continuation position is invalid".into()));
+                return Err(semio_hub_artifact_authority::AuthorityError::Store("artifact CAS sweep continuation position is invalid".into()));
             }
             let page_object_count = page.objects.len();
             for key in page.objects.into_iter().skip(object_offset) {
@@ -692,7 +638,7 @@ impl DirectoryService {
                         .dir
                         .artifact_cas_delete_preview_protected(&key, position.observed_generation, context.now_ms())
                         .await
-                        .map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                        .map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
                     if is_protected {
                         protected += 1;
                         digest.update(&[0]);
@@ -700,7 +646,7 @@ impl DirectoryService {
                         eligible += 1;
                         digest.update(&[3]);
                     }
-                    context.report_committed(crate::artifact_authority::AuthorityProgress { stage: crate::artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
+                    context.report_committed(semio_hub_artifact_authority::AuthorityProgress { stage: semio_hub_artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
                     semio_framework_async::yield_once().await;
                     continue;
                 }
@@ -712,7 +658,7 @@ impl DirectoryService {
                     .dir
                     .acquire_artifact_cas_delete_fence(&key, position.observed_generation, lease_token, lease_now_ms, lease_expires_at_ms)
                     .await
-                    .map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                    .map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
                 match fence {
                     None => {
                         protected += 1;
@@ -732,7 +678,7 @@ impl DirectoryService {
                                 Ok(value) => value,
                                 Err(error) => {
                                     let _ = self.dir.release_artifact_cas_delete_fence(fence).await;
-                                    return Err(crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)));
+                                    return Err(semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)));
                                 }
                             }
                         } else {
@@ -749,7 +695,7 @@ impl DirectoryService {
                                     return Err(error);
                                 }
                             };
-                            release.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+                            release.map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
                             match outcome {
                                 ArtifactCasDeleteOutcome::Deleted => {
                                     deleted += 1;
@@ -768,7 +714,7 @@ impl DirectoryService {
                     }
                 }
                 drop(_write);
-                context.report_committed(crate::artifact_authority::AuthorityProgress { stage: crate::artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
+                context.report_committed(semio_hub_artifact_authority::AuthorityProgress { stage: semio_hub_artifact_authority::AuthorityProgressStage::CasSweep, completed_units: examined, total_units: request.max_objects as u64 });
                 semio_framework_async::yield_once().await;
             }
             if object_offset < page_object_count {
@@ -786,9 +732,9 @@ impl DirectoryService {
         }
         let final_generation = {
             let _write = self.write.lock().await;
-            let generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| crate::artifact_authority::AuthorityError::Store(crate::artifact_authority::adapters::bounded_message(error)))?;
+            let generation = self.dir.artifact_cas_ledger_generation().await.map_err(|error| semio_hub_artifact_authority::AuthorityError::Store(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
             if generation < position.observed_generation {
-                return Err(crate::artifact_authority::AuthorityError::Store("artifact CAS ledger generation moved backward".into()));
+                return Err(semio_hub_artifact_authority::AuthorityError::Store("artifact CAS ledger generation moved backward".into()));
             }
             generation
         };
@@ -808,9 +754,9 @@ impl DirectoryService {
 
 /// 🌉️ Concrete authority-to-directory publication adapter used after exact blob readback.
 pub struct HubVerifiedCheckpointPublisher<S> {
-    pub(super) service: Arc<DirectoryService>,
-    pub(super) storage: Arc<S>,
-    pub(super) actor_id: String,
+    pub service: Arc<DirectoryService>,
+    pub storage: Arc<S>,
+    pub actor_id: String,
 }
 
 impl<S> HubVerifiedCheckpointPublisher<S> {
@@ -820,43 +766,96 @@ impl<S> HubVerifiedCheckpointPublisher<S> {
     }
 }
 
-impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPublisher for HubVerifiedCheckpointPublisher<S> {
-    async fn reserve(&self, plan: &ArtifactCasOwnershipPlanV1, context: &crate::artifact_authority::OperationContext<'_>) -> Result<ArtifactCasReservation, crate::artifact_authority::AuthorityError> {
+impl<S: ArtifactChunkCasStorage> semio_hub_artifact_authority::VerifiedCheckpointPublisher for HubVerifiedCheckpointPublisher<S> {
+    async fn reserve(&self, plan: &ArtifactCasOwnershipPlanV1, context: &semio_hub_artifact_authority::OperationContext<'_>) -> Result<ArtifactCasReservation, semio_hub_artifact_authority::AuthorityError> {
         context.checkpoint()?;
         let now_ms = context.now_ms();
         let reservation_ceiling_ms = now_ms.saturating_add(ARTIFACT_CAS_RESERVATION_MAX_TTL_MS);
-        let expires_at_ms = context.deadline_ms().map_or(reservation_ceiling_ms, |deadline_ms| deadline_ms.saturating_add(crate::artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(reservation_ceiling_ms));
+        let expires_at_ms = context.deadline_ms().map_or(reservation_ceiling_ms, |deadline_ms| deadline_ms.saturating_add(semio_hub_artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(reservation_ceiling_ms));
         let reservation = self
             .service
             .reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, plan.clone(), expires_at_ms, now_ms)
             .await
-            .map_err(|error| crate::artifact_authority::AuthorityError::Publication(crate::artifact_authority::adapters::bounded_message(error)))?;
+            .map_err(|error| semio_hub_artifact_authority::AuthorityError::Publication(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
         let coordinator_id = *reservation.coordinator_id();
         if coordinator_id == [0; 32] || reservation.physical_epoch() == 0 {
-            return Err(crate::artifact_authority::AuthorityError::Publication("artifact CAS reservation has no physical fence permit".into()));
+            return Err(semio_hub_artifact_authority::AuthorityError::Publication("artifact CAS reservation has no physical fence permit".into()));
         }
         self.storage.configure_coordinator(coordinator_id, context).await?;
         self.storage.advance_physical_epoch(coordinator_id, &plan.scope.space_id, reservation.physical_epoch(), context).await?;
         Ok(reservation)
     }
 
-    async fn publish_reserved(&self, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, context: &crate::artifact_authority::OperationContext<'_>) -> Result<(), crate::artifact_authority::AuthorityError> {
+    async fn publish_reserved(&self, checkpoint: &ArtifactCheckpoint, reservation: &ArtifactCasReservation, context: &semio_hub_artifact_authority::OperationContext<'_>) -> Result<(), semio_hub_artifact_authority::AuthorityError> {
         context.checkpoint()?;
         self.service
             .publish_reserved_artifact_checkpoint(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, checkpoint.clone(), reservation.clone(), context.now_ms())
             .await
-            .map_err(|error| crate::artifact_authority::AuthorityError::Publication(crate::artifact_authority::adapters::bounded_message(error)))?;
+            .map_err(|error| semio_hub_artifact_authority::AuthorityError::Publication(semio_hub_artifact_authority::adapters::bounded_message(error)))?;
         Ok(())
     }
 }
 //#endregion 🔖️Service
 
-/// 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
-/// under its principal's ceiling ([`HubDirectory::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
-pub(super) async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
-    let Some(space_id) = space_id else { return Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: record.expires_at, session_kind: record.session_kind }) };
-    Ok(match directory.principal_ceiling(record.principal()).await?.cap(space_id, membership) {
-        Some(role) => SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms: record.expires_at, session_kind: record.session_kind },
-        None => SocketSessionBindingStatus::MembershipLost,
-    })
+const ARTIFACT_CAS_SWEEP_CONTINUATION_DOMAIN_V1: &[u8] = b"semio.hub.artifact-cas.sweep-continuation.v1\0";
+
+const ARTIFACT_CAS_DELETE_LEASE_DOMAIN_V1: &[u8] = b"semio.hub.artifact-cas.delete-lease.v1\0";
+
+pub const ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES: usize = 21;
+
+pub const ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES: usize = ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES + 32;
+
+/// 🎫️ Server-instance-bound opaque position within one immutable ledger generation.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct ArtifactCasSweepContinuation(pub [u8; ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES]);
+
+impl fmt::Debug for ArtifactCasSweepContinuation {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("ArtifactCasSweepContinuation(<opaque>)")
+    }
 }
+
+/// 🧹️ Host intent for one bounded sweep; dry-run is the only default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactCasSweepRequest {
+    pub execute: bool,
+    pub max_objects: usize,
+    pub continuation: Option<ArtifactCasSweepContinuation>,
+}
+
+impl Default for ArtifactCasSweepRequest {
+    fn default() -> Self {
+        Self { execute: false, max_objects: ARTIFACT_CAS_SWEEP_OBJECT_MAX, continuation: None }
+    }
+}
+
+/// 📊️ Locator-free bounded sweep result.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactCasSweepResult {
+    pub observed_generation: u64,
+    pub final_generation: u64,
+    pub examined_objects: u64,
+    pub protected_objects: u64,
+    pub eligible_objects: u64,
+    pub deleted_objects: u64,
+    pub missing_objects: u64,
+    pub result_digest: ArtifactHash,
+    pub continuation: Option<ArtifactCasSweepContinuation>,
+}
+
+#[path = "../🧭️decider/🦀️.rs"]
+mod decider;
+use decider::*;
+use semio_hub_directory_contract::{ARTIFACT_CAS_DELETE_LEASE_TTL_MS, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_OBJECT_MAX, ARTIFACT_CAS_SWEEP_PAGE_MAX, HubClock, InviteCapability, NewDirectoryEvent, actor_user_id, now_ms, role_from_wire, validate_checkpoint_publication_completion};
+use semio_hub_directory_contract::model::{AdminEffectCommitV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, InviteRedemptionCommit, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt};
+use std::sync::Arc;
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
+use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DirectoryStreamMessage};
+use semio_hub_artifact_creation::{ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
+use semio_hub_directory::{DirectoryAppendOutcomeV1, document_genesis_completion_v1, published_artifact_checkpoint};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_framework_hash::Sha256;
+use directory::os_identity::time_ordered_id;
+
+pub use decider::{ArtifactDirectoryCommand, CommandResult, new_event};

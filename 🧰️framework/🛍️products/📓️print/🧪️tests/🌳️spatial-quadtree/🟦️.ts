@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 /** 🌳️ Adapter for `spatial-quadtree`: the spatial index the collision layouts stand on.
  *
  * Subject: `semio-viz-spatial`'s quadtree, probed through `semio-viz-probe`.
@@ -6,7 +7,7 @@
  */
 import { quadtree } from "d3-quadtree";
 import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { type ProbeProjection, type ProbeRecord, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors
 const CASE = "spatial-quadtree";
@@ -65,7 +66,7 @@ function found(built: ReturnType<typeof tree>, points: readonly Point[], x: numb
 
 /** 🎯️ Compiles the committed fixture and returns the records of one scenario. */
 async function records(ctx: AdapterContext): Promise<ProbeRecord[]> {
-  return roundProbeNumbers(await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
+  return roundProbeNumbers(await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
 }
 
 /** 🧮️ The probe's records under their own keys, geometry records keyed by their kind. */

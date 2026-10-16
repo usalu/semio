@@ -419,8 +419,7 @@ pub mod viewer {
 pub use crate::standards::v_r12::subsets::any::io::{DxfBuilderConstruction, DxfParts, DxfAnalyzerAnalysis, DxfBuilderFacets, DxfBuilder, DxfAnalyzer, DxfComposer};
 
 #[cfg(test)]
-#[path="../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;

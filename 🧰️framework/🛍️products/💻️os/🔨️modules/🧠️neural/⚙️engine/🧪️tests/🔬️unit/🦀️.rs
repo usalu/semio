@@ -1,6 +1,9 @@
 
 use super::*;
 
+#[global_allocator]
+static OBSERVED_SYSTEM:semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem=semio_framework_os_kernel_neural_engine_model::testkit::ObservedSystem;
+
 #[test]
 fn dictionary_owned_cursor_preserves_order_and_nested_ownership() {
     let dictionary = Dictionary::new().insert("z", Value::Atom(Atom::String("last".into()))).insert("a", Value::Dictionary(Dictionary::new().insert("nested", Value::Atom(Atom::String("🌊".repeat(4096))))));
@@ -1120,7 +1123,7 @@ fn close_original_writer(writer:semio_framework_pack_json::JsonWriteCursor<Dicti
     for _ in 0..250000 {
         if owner.terminal_is_empty(){return;}
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:owner.next_capacity_byte_demand(3).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-        let (step,born,freed)=crate::registry::tests::observe_ownership(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
+        let (step,born,freed)=semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
     }
     panic!("original writer allocations did not close");
 }

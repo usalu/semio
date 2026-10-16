@@ -5,6 +5,7 @@ use super::{
     schema::{SAFE_INTEGER_MAX, hex, server_id},
 };
 use db::wal::{WalCursorControl, WalRecord, WalReplayCursor, WalReplayStep};
+use semio_hub_inference_binding::ComposedMapCommitBindingV1;
 use directory::os_directory::DocumentScope;
 use std::sync::{
     Arc,
@@ -33,12 +34,12 @@ pub enum CommittedWitnessMismatchV1 {
     RecordIndex,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 static LAST_COMMITTED_WITNESS_MISMATCH: std::sync::Mutex<Option<CommittedWitnessMismatchV1>> = std::sync::Mutex::new(None);
 
 /// 🧾️ Answers the unchanged `false` after recording which conjunct refused.
 fn record_committed_witness_mismatch(reason: CommittedWitnessMismatchV1) -> bool {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_COMMITTED_WITNESS_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason);
     }
@@ -47,15 +48,15 @@ fn record_committed_witness_mismatch(reason: CommittedWitnessMismatchV1) -> bool
 }
 
 /// 🔬️ The last recorded witness mismatch of this process, for laws that only see the taxonomy.
-#[cfg(test)]
-pub(in crate::inference) fn last_committed_witness_mismatch() -> Option<CommittedWitnessMismatchV1> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn last_committed_witness_mismatch() -> Option<CommittedWitnessMismatchV1> {
     *LAST_COMMITTED_WITNESS_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 pub struct InferenceDocumentFenceV1 {
-    scope: DocumentScope,
-    generation: AtomicU64,
-    active: AtomicBool,
+    pub scope: DocumentScope,
+    pub generation: AtomicU64,
+    pub active: AtomicBool,
 }
 
 impl InferenceDocumentFenceV1 {
@@ -84,7 +85,7 @@ pub struct InferenceWalTargetV1 {
 }
 
 impl InferenceWalTargetV1 {
-    fn validate(&self, fence: &InferenceDocumentFenceV1) -> Result<(), InferenceErrorV1> {
+    pub fn validate(&self, fence: &InferenceDocumentFenceV1) -> Result<(), InferenceErrorV1> {
         if !hex(&self.job_id, 32)
             || !hex(&self.proposal_hash, 64)
             || !hex(&self.mutation_id, 32)
@@ -110,22 +111,22 @@ impl InferenceWalTargetV1 {
         Ok(())
     }
 
-    fn document_key(&self) -> db::ArtifactId {
+    pub fn document_key(&self) -> db::ArtifactId {
         db::ArtifactId(format!("v1:{}:{}:{}{}", self.scope.space_id.len(), self.scope.document_id.len(), self.scope.space_id, self.scope.document_id))
     }
 }
 
 pub struct CommittedInferenceWalWitnessV1 {
-    fence: Arc<InferenceDocumentFenceV1>,
-    scope: DocumentScope,
-    generation: u64,
-    job_id: String,
-    proposal_hash: String,
-    mutation_id: String,
-    command_hash: String,
+    pub fence: Arc<InferenceDocumentFenceV1>,
+    pub scope: DocumentScope,
+    pub generation: u64,
+    pub job_id: String,
+    pub proposal_hash: String,
+    pub mutation_id: String,
+    pub command_hash: String,
     decision_hash: String,
-    transaction_id: u64,
-    segment_index: u64,
+    pub transaction_id: u64,
+    pub segment_index: u64,
     record_index: u64,
 }
 
@@ -147,7 +148,7 @@ impl CommittedInferenceWalWitnessV1 {
         })
     }
 
-    pub(super) fn matches(&self, scope: &DocumentScope, generation: u64, job_id: &str, proposal_hash: &str, mutation_id: &str, command_hash: &str) -> bool {
+    pub fn matches(&self, scope: &DocumentScope, generation: u64, job_id: &str, proposal_hash: &str, mutation_id: &str, command_hash: &str) -> bool {
         use CommittedWitnessMismatchV1 as Mismatch;
         for (matched, reason) in [
             (self.scope == *scope, Mismatch::Scope),
@@ -170,7 +171,7 @@ impl CommittedInferenceWalWitnessV1 {
     }
 
     /// 🖋️ Derives the durable undo target from every private committed-decision coordinate.
-    pub(super) fn approval_undo_witness_digest(&self) -> String {
+    pub fn approval_undo_witness_digest(&self) -> String {
         super::sha256(
             format!(
                 "semio.hub.gis-map-approval-undo-witness/v1\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}\0{}",
@@ -181,21 +182,24 @@ impl CommittedInferenceWalWitnessV1 {
     }
 }
 
+type DurableDecisionMatcherV1 = fn(&[u8], &InferenceWalTargetV1, &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1>;
+
 struct VerifierState {
     storage: Arc<db::storage::DbBackend>,
+    matcher: DurableDecisionMatcherV1,
     slots: Arc<tokio::sync::Semaphore>,
     active: AtomicUsize,
     close_steps: AtomicU64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     replay_gate: Option<Arc<tokio::sync::Semaphore>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     hashing_gate: Option<Arc<tokio::sync::Semaphore>>,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     hashing_steps: AtomicU64,
 }
 
 pub struct InferenceWalVerifierV1 {
-    state: Arc<VerifierState>,
+    pub state: Arc<VerifierState>,
 }
 
 struct VerifierAdmission {
@@ -223,18 +227,20 @@ impl Drop for CallerCancellation {
 }
 
 impl InferenceWalVerifierV1 {
-    pub fn new(storage: Arc<db::storage::DbBackend>) -> Self {
+    /// 🔗️ Binds one verifier to the registered binding's exact fixed-three member types.
+    pub fn new<B: ComposedMapCommitBindingV1>(storage: Arc<db::storage::DbBackend>) -> Self {
         Self {
             state: Arc::new(VerifierState {
                 storage,
+                matcher: durable_decision_event_match::<B>,
                 slots: Arc::new(tokio::sync::Semaphore::new(VERIFIER_CAPACITY)),
                 active: AtomicUsize::new(0),
                 close_steps: AtomicU64::new(0),
-                #[cfg(test)]
+                #[cfg(any(test, feature = "testkit"))]
                 replay_gate: None,
-                #[cfg(test)]
+                #[cfg(any(test, feature = "testkit"))]
                 hashing_gate: None,
-                #[cfg(test)]
+                #[cfg(any(test, feature = "testkit"))]
                 hashing_steps: AtomicU64::new(0),
             }),
         }
@@ -273,16 +279,13 @@ impl InferenceWalVerifierV1 {
 }
 
 struct Transaction {
-    id: u64,
+    pub id: u64,
     records: u32,
-    events: u32,
+    pub events: u32,
     matched: Option<(u64, u64, String, String)>,
 }
 
-fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
-    use semio_s_artifact_gis_gismap::{GisMapSnapshot, mutations::GisMapMutation};
-    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
-
+fn durable_decision_event_match<B: ComposedMapCommitBindingV1>(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
     let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|error| {
         eprintln!("[WARN] inference wal: committed event is not an admissible durable decision — {error:?}");
         InferenceErrorV1::Invalid
@@ -290,7 +293,7 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
     if record.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
-    let verified = record.verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>().map_err(|error| {
+    let verified = record.verify_fixed_three_edits::<B::ParentSnapshot, B::ParentMutation, B::DrawingSnapshot, B::DrawingMutation, B::ValueSnapshot, B::ValueMutation>().map_err(|error| {
         eprintln!("[WARN] inference wal: committed decision fails fixed-three verification — {error:?}");
         InferenceErrorV1::Invalid
     })?;
@@ -379,7 +382,7 @@ async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, f
 }
 
 async fn scan(
-    _state: &VerifierState,
+    state: &VerifierState,
     replay: &mut WalReplayCursor<'_, db::storage::WalRef<'_>>,
     target: &InferenceWalTargetV1,
     fence: &Arc<InferenceDocumentFenceV1>,
@@ -401,9 +404,9 @@ async fn scan(
         let mut record = match step {
             WalReplayStep::Done => break,
             WalReplayStep::Yield => {
-                #[cfg(test)]
-                if _state.hashing_steps.fetch_add(1, Ordering::AcqRel) == 0 {
-                    if let Some(gate) = &_state.hashing_gate {
+                #[cfg(any(test, feature = "testkit"))]
+                if state.hashing_steps.fetch_add(1, Ordering::AcqRel) == 0 {
+                    if let Some(gate) = &state.hashing_gate {
                         gate.acquire().await.map_err(|_| InferenceErrorV1::Storage)?.forget();
                     }
                 }
@@ -501,7 +504,7 @@ async fn scan(
                                     exact.extend_from_slice(fragment);
                                 }
                                 if exact.starts_with(&directory::os_store::semio_format::BINARY_MAGIC) {
-                                    let (decision_hash, anchor_hash, matches) = durable_decision_event_match(&exact, target, &document)?;
+                                    let (decision_hash, anchor_hash, matches) = (state.matcher)(&exact, target, &document)?;
                                     if decision_hash != target.receipt.decision_sha256 || anchor_hash != target.receipt.anchor_sha256 {
                                         return Err(InferenceErrorV1::Invalid);
                                     }
@@ -529,9 +532,9 @@ async fn scan(
         }
         checked?;
         control.checkpoint(records)?;
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         if records == 1 {
-            if let Some(gate) = &_state.replay_gate {
+            if let Some(gate) = &state.replay_gate {
                 gate.acquire().await.map_err(|_| InferenceErrorV1::Storage)?.forget();
             }
         }
@@ -557,6 +560,3 @@ async fn scan(
     }))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(super) mod tests;

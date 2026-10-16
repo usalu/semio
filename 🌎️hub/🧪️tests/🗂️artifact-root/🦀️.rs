@@ -18,3 +18,9 @@ pub fn test_artifact_root() -> PathBuf {
     std::fs::create_dir_all(&root).expect("hub test artifact root");
     std::fs::canonicalize(&root).expect("canonical hub test artifact root")
 }
+
+/// 📖️ A file of the hub workspace read when the law runs instead of being embedded into the test binary; `relative` is relative to the hub workspace root. The text lives as long as the process, like an embedded constant.
+pub fn hub_source(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..").join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("hub source {relative}: {error}")).into_boxed_str())
+}

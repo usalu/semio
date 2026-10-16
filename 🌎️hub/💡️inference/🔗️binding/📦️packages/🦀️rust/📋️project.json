@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-inference-binding-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

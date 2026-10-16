@@ -82,7 +82,7 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_dir
 pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowConfig) -> UiAssemblyResult<BuiltNode> {
     let mut host = neural_engine::ColdOwner::new(host_from_host_snapshot(host_snapshot));
     host.layout_expanded_slots();
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
     // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and

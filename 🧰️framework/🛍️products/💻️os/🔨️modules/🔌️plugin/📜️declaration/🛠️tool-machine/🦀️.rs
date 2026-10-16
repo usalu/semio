@@ -18,25 +18,25 @@ use semio_framework_tool_machine::GestureTool;
 pub struct GestureSlot<M> {
     window: String,
     base_revision: String,
-    pub(crate) state: std::sync::Mutex<GestureSlotState<M>>,
+    pub state: std::sync::Mutex<GestureSlotState<M>>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct GestureSlotState<M> {
-    pub(crate) admitted: Option<GestureState<M>>,
+    pub admitted: Option<GestureState<M>>,
     closed: Option<String>,
-    pub(crate) decided: Option<Option<GestureState<M>>>,
-    pub(crate) closing: Option<String>,
-    pub(crate) driven: bool,
+    pub decided: Option<Option<GestureState<M>>>,
+    pub closing: Option<String>,
+    pub driven: bool,
 }
 
 /// 📮️ What a driven slot hands the runtime at publication: the gesture it was admitted on, the gesture it decided (when it
 /// changed) and the press it closed.
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) struct GestureSlotDecision<M> {
-    pub(crate) admitted: Option<GestureState<M>>,
-    pub(crate) decided: Option<Option<GestureState<M>>>,
-    pub(crate) closing: Option<String>,
+pub struct GestureSlotDecision<M> {
+    pub admitted: Option<GestureState<M>>,
+    pub decided: Option<Option<GestureState<M>>>,
+    pub closing: Option<String>,
 }
 
 impl<M> GestureSlot<M> {
@@ -46,7 +46,7 @@ impl<M> GestureSlot<M> {
         Self::of(String::new(), String::new(), None, None)
     }
 
-    pub(crate) fn of(window: String, base_revision: String, admitted: Option<GestureState<M>>, closed: Option<String>) -> Self {
+    pub fn of(window: String, base_revision: String, admitted: Option<GestureState<M>>, closed: Option<String>) -> Self {
         Self { window, base_revision, state: std::sync::Mutex::new(GestureSlotState { admitted, closed, decided: None, closing: None, driven: false }) }
     }
 
@@ -55,7 +55,7 @@ impl<M> GestureSlot<M> {
         &self.window
     }
 
-    pub(crate) fn take(&self) -> Option<GestureSlotDecision<M>> {
+    pub fn take(&self) -> Option<GestureSlotDecision<M>> {
         let mut state = self.state.lock().ok()?;
         std::mem::take(&mut state.driven).then(|| GestureSlotDecision { admitted: state.admitted.take(), decided: state.decided.take(), closing: state.closing.take() })
     }

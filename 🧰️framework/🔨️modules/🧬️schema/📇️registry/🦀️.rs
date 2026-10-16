@@ -149,6 +149,122 @@ pub struct SchemaExportEntry {
 }
 //#endregion 🔖️ScopeSchemaExports
 
+//#region 🔖️SchemaLeafDocuments
+/// 📄️ One schema leaf body that a crate serves from a repository document instead of embedding it with `include_str!`. An empty
+/// body in the registered [`FacetLeaves`] defers to this table, so the crate's source closure carries no companion copy.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SchemaLeafDocument {
+    pub scope: &'static str,
+    pub export: &'static str,
+    pub format: SchemaFormat,
+    pub path: &'static str,
+}
+
+/// 📚️ Reads the body of one repository-relative schema document; a host installs exactly one reader for the process.
+pub trait SchemaLeafReader: Send + Sync {
+    fn read(&self, path: &str) -> Option<&'static str>;
+}
+
+static LEAF_READER: OnceLock<&'static dyn SchemaLeafReader> = OnceLock::new();
+static SERVED_LEAF_DOCUMENTS: Mutex<Vec<SchemaLeafDocument>> = Mutex::new(Vec::new());
+
+/// 📎️ Installs the process-wide document reader; returns false when a reader is already installed.
+pub fn install_schema_leaf_reader(reader: &'static dyn SchemaLeafReader) -> bool {
+    LEAF_READER.set(reader).is_ok()
+}
+
+/// 📎️ Publishes the documents a crate serves instead of embedding; exact duplicates are accepted.
+pub fn register_schema_leaf_documents(documents: &[SchemaLeafDocument]) {
+    let mut served = SERVED_LEAF_DOCUMENTS.lock().expect("schema document lock");
+    for document in documents {
+        if !served.contains(document) {
+            served.push(*document);
+        }
+    }
+}
+
+fn served_schema_leaf(scope: &str, export: &str, format: SchemaFormat) -> Option<&'static str> {
+    let path = SERVED_LEAF_DOCUMENTS.lock().ok()?.iter().find(|document| document.scope == scope && document.export == export && document.format == format)?.path;
+    LEAF_READER.get()?.read(path)
+}
+
+/// 🗂️ Reads schema documents below a repository root; each body is read once and kept for the process lifetime.
+pub struct FileSystemSchemaLeaves {
+    root: std::path::PathBuf,
+    cache: Mutex<HashMap<String, &'static str>>,
+}
+
+impl FileSystemSchemaLeaves {
+    /// 🏗️ Reader rooted at the repository directory the document paths are relative to.
+    pub fn new(root: impl Into<std::path::PathBuf>) -> Self {
+        Self { root: root.into(), cache: Mutex::new(HashMap::new()) }
+    }
+}
+
+impl SchemaLeafReader for FileSystemSchemaLeaves {
+    fn read(&self, path: &str) -> Option<&'static str> {
+        let mut cache = self.cache.lock().ok()?;
+        if let Some(body) = cache.get(path) {
+            return Some(*body);
+        }
+        let body: &'static str = Box::leak(std::fs::read_to_string(self.root.join(path)).ok()?.into_boxed_str());
+        cache.insert(path.to_string(), body);
+        Some(body)
+    }
+}
+
+/// 📦️ Reads schema documents from the package assets a host delivered to a guest: `read` answers a repository-relative
+/// document path with the bytes the host delivered under that name (`semio_framework_plugin::reactor::package_asset` in a
+/// guest), and each answer is checked as UTF-8 once and kept for the process lifetime. A name the host delivered nothing for
+/// answers `None`, exactly as a missing file does, so a guest resolves the leaf as soon as its instance has been opened.
+pub struct PackageAssetSchemaLeaves {
+    read: fn(&str) -> Option<&'static [u8]>,
+    cache: Mutex<Vec<(String, &'static str)>>,
+}
+
+impl PackageAssetSchemaLeaves {
+    /// 🏗️ Reader over the guest's package asset lookup.
+    pub const fn new(read: fn(&str) -> Option<&'static [u8]>) -> Self {
+        Self { read, cache: Mutex::new(Vec::new()) }
+    }
+}
+
+impl SchemaLeafReader for PackageAssetSchemaLeaves {
+    fn read(&self, path: &str) -> Option<&'static str> {
+        let mut cache = self.cache.lock().ok()?;
+        if let Some((_, body)) = cache.iter().find(|(name, _)| name == path) {
+            return Some(*body);
+        }
+        let body = std::str::from_utf8((self.read)(path)?).ok()?;
+        cache.push((path.to_string(), body));
+        Some(body)
+    }
+}
+
+/// 📎️ Installs the reader the build target of this process needs, so every artifact that serves schema documents makes the
+/// same choice: a `wasm32` guest reads the documents its host delivered as package assets (`package_asset` is the guest's
+/// lookup, `semio_framework_plugin::reactor::package_asset`), any other process reads them from the checkout that holds
+/// `manifest_directory` (found by the `nx.json` above it). Returns false when a reader is already installed or, off `wasm32`,
+/// when no checkout is found.
+pub fn install_default_schema_leaf_reader(package_asset: fn(&str) -> Option<&'static [u8]>, manifest_directory: &str) -> bool {
+    #[cfg(target_arch = "wasm32")]
+    {
+        static LEAVES: OnceLock<PackageAssetSchemaLeaves> = OnceLock::new();
+        let _ = manifest_directory;
+        install_schema_leaf_reader(LEAVES.get_or_init(|| PackageAssetSchemaLeaves::new(package_asset)))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        static LEAVES: OnceLock<FileSystemSchemaLeaves> = OnceLock::new();
+        let _ = package_asset;
+        match std::path::Path::new(manifest_directory).ancestors().find(|candidate| candidate.join("nx.json").is_file()) {
+            Some(root) => install_schema_leaf_reader(LEAVES.get_or_init(|| FileSystemSchemaLeaves::new(root))),
+            None => false,
+        }
+    }
+}
+//#endregion 🔖️SchemaLeafDocuments
+
 //#region 🔖️SchemaExportRegistry
 /// 📚 Resolves `(scope id, export id, format id)` over every scope's four fixed facets plus its
 /// [`ScopeSchemaExports`]. Exact resolution only — no nearest-parent search, no glob, no
@@ -228,6 +344,9 @@ impl SchemaExportRegistry {
         let leaves = self.leaves(scope, export)?;
         let body = format.leaf(&leaves);
         if body.trim().is_empty() {
+            if let Some(served) = served_schema_leaf(scope, export, format) {
+                return Ok(served);
+            }
             return Err(SchemaResolveError::FormatAbsent { scope: scope.to_string(), export: export.to_string(), format });
         }
         Ok(body)

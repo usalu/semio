@@ -1,3 +1,4 @@
+use semio_framework_ui_contract_validation::{validate_snapshot};
 #[cfg(test)] use crate::surface_contract::SnapshotBuilder;
 #[cfg(test)] use crate::artifact_io::ArtifactBuilder;
 #[cfg(test)] use crate::window_surface::built_text_to_component_tree;
@@ -8,10 +9,7 @@ pub(crate) mod fixture {
     use crate::__semio_dispatch_PluginApp;
     use crate::component::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
     use semio_framework_2d::compute::EngineHandles;
-    use crate::app::{
-        AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, InteractionView, artifact_app_laws, NoConfig, NoConfigMutation, NoDraft,
-        NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, UiAssemblyResult, ViewEmit, Viewer,
-    };
+    use crate::app::{AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, InteractionView, artifact_app_laws, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, UiAssemblyResult, ViewEmit, Viewer, };
     use crate::app::PluginBuilder;
     use semio_framework::{Fault, IconName, ViewModel};
     use semio_framework_artifact_reference::ArtifactKindId;
@@ -20,7 +18,7 @@ pub(crate) mod fixture {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use protocol::{OpBinary, OpText};
     use pack::snapshot::ArtifactPack;
-    use store::{Mutation,MutationDiff};
+    use store::{Mutation, MutationDiff};
     use super::*;
     use serde::{Deserialize, Serialize};
     use std1_any_mutations::Std1AnyMutation;
@@ -98,7 +96,7 @@ pub(crate) mod fixture {
             }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -736,7 +734,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             assert_eq!(restored.diagnostics, exported.diagnostics);
         }
         let snapshot = Std1StrictSnapshot { value: 1 };
-        let provider = <Std1StrictSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec();
+        let provider = <Std1StrictSnapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
         let mut progress = |_| true;
         let mut control = semio_framework::sqlite_snapshot::SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
         let database = <Std1StrictSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::to_sqlite_database(&snapshot, &mut control).unwrap();
@@ -879,43 +877,43 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
         crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
-        assert_eq!(app.close_retirement_demands(4096).unwrap(), app.constructor_close_demands(4096).unwrap());
+        assert_eq!(app.close_retirement_demands(4096).unwrap(), app.stores.constructor_close_demands(&app.constructor, 4096).unwrap());
         crate::app_testing::artifact_app_laws::settle_store_constructor_close(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
-        app.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
-        app.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
-        assert!(app.command_log.is_empty() && app.history_dirty_sequences.is_empty() && app.pending_child_pins.is_empty());
-        let move_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: app.composition.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: app.composition.next_close_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: app.composition.next_close_release_byte_demand().unwrap(), maximum_depth: app.composition.next_close_depth_demand().unwrap() };
+        app.child_composition.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
+        app.close.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
+        assert!(app.history.command_log.is_empty() && app.history.history_dirty_sequences.is_empty() && app.child_composition.pending_child_pins.is_empty());
+        let move_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: app.child_composition.composition.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: app.child_composition.composition.next_close_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: app.child_composition.composition.next_close_release_byte_demand().unwrap(), maximum_depth: app.child_composition.composition.next_close_depth_demand().unwrap() };
         assert!(move_grant.maximum_copy_bytes <= 4096);
-        let (step, moved) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(move_grant).unwrap());
+        let (step, moved) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.child_composition.composition.close_step(move_grant).unwrap());
         assert_eq!(step.progress().copied_items, 1);
         assert!(step.progress().fits(move_grant));
         assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (0, 0));
         assert_eq!((moved.requested_bytes, moved.released_bytes), (0, 0));
-        let graph_demand = semio_framework_value::RetirementDemand { copy_bytes: app.composition.next_close_copy_byte_demand().unwrap(), capacity_bytes: app.composition.next_close_capacity_byte_demand(4096).unwrap(), release_bytes: app.composition.next_close_release_byte_demand().unwrap(), depth: app.composition.next_close_depth_demand().unwrap() };
+        let graph_demand = semio_framework_value::RetirementDemand { copy_bytes: app.child_composition.composition.next_close_copy_byte_demand().unwrap(), capacity_bytes: app.child_composition.composition.next_close_capacity_byte_demand(4096).unwrap(), release_bytes: app.child_composition.composition.next_close_release_byte_demand().unwrap(), depth: app.child_composition.composition.next_close_depth_demand().unwrap() };
         let app_demand = app.retained_fields_close_demand(4096).unwrap();
         let exact = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: graph_demand.copy_bytes, maximum_capacity_bytes: graph_demand.capacity_bytes, maximum_release_bytes: graph_demand.release_bytes, maximum_depth: graph_demand.depth };
         assert_eq!(graph_demand.release_bytes, extent);
         for bytes in fixture["deniedBytes"].as_array().unwrap() {
-            let (step, denied) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: bytes.as_u64().unwrap() as usize, ..exact }).unwrap());
+            let (step, denied) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.child_composition.composition.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: bytes.as_u64().unwrap() as usize, ..exact }).unwrap());
             assert_eq!(step.progress(), semio_framework_value::retained_clone::RetainedCloneProgress::default());
             assert_eq!((denied.requested_bytes, denied.released_bytes), (0, 0));
-            assert_eq!(app.composition.next_close_release_byte_demand().unwrap(), extent);
+            assert_eq!(app.child_composition.composition.next_close_release_byte_demand().unwrap(), extent);
         }
         assert!(graph_demand.release_bytes <= admission);
-        let (step, funded) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.composition.close_step(exact).unwrap());
+        let (step, funded) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.child_composition.composition.close_step(exact).unwrap());
         assert_eq!(step.progress().released_bytes, extent);
         assert!(step.progress().fits(exact));
         assert_eq!((funded.requested_bytes, funded.released_bytes, funded.largest_release_bytes), (0, extent, extent));
         for _ in 0..16 {
-            if app.composition.terminal_is_empty() { break; }
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: app.composition.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: app.composition.next_close_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: app.composition.next_close_release_byte_demand().unwrap(), maximum_depth: app.composition.next_close_depth_demand().unwrap() };
+            if app.child_composition.composition.terminal_is_empty() { break; }
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: app.child_composition.composition.next_close_copy_byte_demand().unwrap(), maximum_capacity_bytes: app.child_composition.composition.next_close_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: app.child_composition.composition.next_close_release_byte_demand().unwrap(), maximum_depth: app.child_composition.composition.next_close_depth_demand().unwrap() };
             assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= admission);
-            assert!(app.composition.close_step(grant).unwrap().progress().fits(grant));
+            assert!(app.child_composition.composition.close_step(grant).unwrap().progress().fits(grant));
         }
-        assert!(app.composition.terminal_is_empty());
+        assert!(app.child_composition.composition.terminal_is_empty());
         assert_eq!(app_demand, semio_framework_value::RetirementDemand { depth: graph_demand.depth + 1, ..graph_demand }, "final application phase must forward the exact retained composition allocation one owner level deeper");
         println!("[DEBUG] Vcs composition query={app_demand:?} exact={graph_demand:?}; denied0/4096/8193 retain owner; whole8194 releases actual8194 with zero allocation");
-        app.close_owned_stage = 0;
+        app.close.close_owned_stage = 0;
         artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
     
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result

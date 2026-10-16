@@ -27,55 +27,11 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::kernel_runtime::{KernelClient, MountedProductReplayAdmission};
-
-/// 🧯️ A refused program call: the guest's own structured `Fault` when it answered with one (its code, severity and the
-/// `params` a localized notice fills its placeholders from, design §20.12), and the one-line `code: message …` text every
-/// `String` error channel of the shell carries.
-#[derive(Clone, Debug, PartialEq)]
-pub struct ProgramFault {
-    pub fault: Option<semio_framework::Fault>,
-    pub text: String,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub frame: Option<semio_framework_actor::pack::PackError>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub kernel:Option<semio_framework_actor::KernelError>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub actor_call:Option<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall>,
-}
-
-impl From<String> for ProgramFault {
-    fn from(text: String) -> Self {
-        Self { fault: None, text, #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
-    }
-}
-
-impl From<&str> for ProgramFault {
-    fn from(text: &str) -> Self {
-        Self { fault: None, text: text.to_string(), #[cfg(not(target_arch = "wasm32"))] frame: None,#[cfg(not(target_arch = "wasm32"))] kernel:None,#[cfg(not(target_arch = "wasm32"))] actor_call:None }
-    }
-}
-
+use semio_framework_os_renderer_wgpu_kernel_pool::KernelClient;
 #[cfg(not(target_arch = "wasm32"))]
-impl From<semio_framework_actor::pack::PackError> for ProgramFault {
-    fn from(error: semio_framework_actor::pack::PackError) -> Self { Self { fault: None, text: String::new(), frame: Some(error),kernel:None,actor_call:None } }
-}
+use semio_framework_os_renderer_wgpu_kernel_protocol::{ExchangeOutcome, MountedProductReplayAdmission};
 
-#[cfg(not(target_arch="wasm32"))]
-impl From<semio_framework_actor::KernelError> for ProgramFault{fn from(error:semio_framework_actor::KernelError)->Self{Self{fault:None,text:String::new(),frame:None,kernel:Some(error),actor_call:None}}}
-#[cfg(not(target_arch="wasm32"))]
-impl From<semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall> for ProgramFault{fn from(call:semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall)->Self{Self{fault:None,text:String::new(),frame:None,kernel:None,actor_call:Some(call)}}}
-impl std::fmt::Display for ProgramFault {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(error) = &self.frame { return std::fmt::Display::fmt(error, formatter); }
-        #[cfg(not(target_arch="wasm32"))]
-        if let Some(error)=&self.kernel{return std::fmt::Display::fmt(error,formatter)}
-        #[cfg(not(target_arch="wasm32"))]
-        if let Some(call)=&self.actor_call{return write!(formatter,"original actor call {}/{}/{} {:?} after {:?}",call.input.operation,call.input.generation,call.input.epoch,call.kind,call.spent)}
-        formatter.write_str(&self.text)
-    }
-}
+pub use semio_framework_os_renderer_wgpu_contracts::ProgramFault;
 
 /// ⏹️ The refusal of a whole-document load the guest cancelled (a person's Cancel in the history body): the previous document
 /// stayed.
@@ -157,7 +113,7 @@ use semio_framework_value::ToValue;
     /// reactor's dedicated command-page argument. `AppFrame`s the guest sends back travel as `Effect::SendMessage{
     /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
     /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
-    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, ProgramFault> {
+    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<ExchangeOutcome, ProgramFault> {
         let outcome = client.exchange_commands(instance_id, commands).await?;
         observe_ephemeral(instance_id, &outcome.frames).await;
         Ok(outcome)
@@ -249,7 +205,7 @@ use semio_framework_value::ToValue;
     /// everything. An absent/undecodable field is still `Full` — the safe default the type's own
     /// `Default` names — but a scope the guest actually published now reaches the shell
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn invocation_from_frames(outcome: &mut crate::kernel_runtime::ExchangeOutcome, seq: u64) -> Result<InvocationResult, ProgramFault> {
+    fn invocation_from_frames(outcome: &mut ExchangeOutcome, seq: u64) -> Result<InvocationResult, ProgramFault> {
         let mut output = semio_framework_value::DslValue::Null;
         let mut diagnostics = Vec::new();
         let events: Vec<AppEvent> = Vec::new();
@@ -661,7 +617,7 @@ pub struct ProgramBridgeEntry {
 /// 🧪️ A law's stand-in for a program's document doors: loading an archive and answering the history snapshot.
 #[cfg(test)]
 #[derive(Clone, Copy)]
-pub(crate) struct ProgramFixtureDocument {
+pub struct ProgramFixtureDocument {
     pub load: fn(u32, &protocol::DocumentArchivePack) -> Result<(), String>,
     pub archive: fn(u32) -> Result<protocol::DocumentArchivePack, String>,
     pub history: fn(u32) -> Result<semio_framework::kernel::HistoryPatch, String>,
@@ -720,22 +676,22 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_render(&mut self, render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>) {
+    pub fn install_fixture_render(&mut self, render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>) {
         self.fixture_render = Some(render);
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
+    pub fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
         self.fixture_action = Some(action);
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_document(&mut self, document: ProgramFixtureDocument) {
+    pub fn install_fixture_document(&mut self, document: ProgramFixtureDocument) {
         self.fixture_document = Some(document);
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_publications(&mut self, publications: fn(u32) -> Vec<OperationPublication>) {
+    pub fn install_fixture_publications(&mut self, publications: fn(u32) -> Vec<OperationPublication>) {
         self.fixture_publications = Some(publications);
     }
 
@@ -1127,11 +1083,11 @@ mod frame_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/📏️wgpu-window-measures-section/🦀️.rs"]
-pub(crate) mod window_measures_section_tests;
+pub mod window_measures_section_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🎬️wgpu-window-engagements-section/🦀️.rs"]
-pub(crate) mod window_engagements_section_tests;
+pub mod window_engagements_section_tests;
 
 #[cfg(target_arch = "wasm32")]
 /// ❗️ Renders a rejected JS promise's reason as text. `map_err(|_| "...")` discarded it, so every
@@ -1367,7 +1323,7 @@ fn unreadable_operation_publication(detail: String) -> OperationPublication {
 /// 🏁️ Reads the bridge's publication array (`takeOperationPublications`). An array or an entry this host cannot read is
 /// answered as a fault publication naming what was unreadable — nothing a guest published is dropped in silence.
 #[cfg(any(target_arch = "wasm32", test))]
-pub(crate) fn operation_publications_from_json(text: &str) -> Vec<OperationPublication> {
+pub fn operation_publications_from_json(text: &str) -> Vec<OperationPublication> {
     match serde_json::from_str::<serde_json::Value>(text) {
         Ok(serde_json::Value::Array(entries)) => entries.iter().map(|entry| operation_publication_from_json(entry).unwrap_or_else(unreadable_operation_publication)).collect(),
         Ok(_) => vec![unreadable_operation_publication("expected an array".to_string())],
@@ -1596,7 +1552,7 @@ const BROWSER_UI_VALUE_RETIREMENT_ITEMS: usize = 64;
 /// only diagnostic that can be acted on is WHAT was asked for beside WHAT was already committed. A
 /// bare `Capacity` was reported six times in one refresh with no way to tell an oversized surface
 /// from an un-retired previous set (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) fn retained_publication_refusal(body_key: &str, error: ui_contract::UiDocumentPublishError) -> String {
+pub fn retained_publication_refusal(body_key: &str, error: ui_contract::UiDocumentPublishError) -> String {
     let ui_contract::UiDocumentPublishError::Permit { fault, items, bytes } = error else {
         return format!("retained document for surface '{body_key}' was refused: {error:?}");
     };

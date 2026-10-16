@@ -1,7 +1,6 @@
 use super::*;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-mod allocation;
+use semio_framework_trace_memory_testing as allocation;
 #[global_allocator]
 static ORIGINAL_PORT_ALLOCATOR: allocation::RequestedAllocator=allocation::RequestedAllocator;
 

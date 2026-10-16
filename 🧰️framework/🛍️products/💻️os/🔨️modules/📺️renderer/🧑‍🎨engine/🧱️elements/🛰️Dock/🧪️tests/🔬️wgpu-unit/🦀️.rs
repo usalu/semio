@@ -138,7 +138,7 @@ fn unregistered_world_and_pane_identifiers_cannot_claim_scene_wheel() {
         let mut input = InputState::<ActionDescriptor>::default();
         input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 800.0, 600.0), event: None, control_id: Some(id.into()), kind, drag_axis: None, drag_data: None });
         input.publish_hits();
-        assert!(!shell.wheel_reaches_scene_surface(400.0, 300.0, &input, &theme), "{id} has no published scene provenance");
+        assert!(!shell.input.wheel_reaches_scene_surface(400.0, 300.0, &input, &theme), "{id} has no published scene provenance");
     }
 }
 
@@ -761,10 +761,10 @@ fn key_event_matches_chord_respects_modifiers() {
 fn required_arg_gates_execution_and_merges_defaults() {
     let app = actions_utilities_app();
     let defs = &app.window_kinds.iter().find(|kind| kind.id == "main").unwrap().actions.iter().find(|action| action.id == "withArgs").unwrap().args;
-    assert!(ShellState::resolved_execute_args(defs, &serde_json::Map::new()).is_none());
+    assert!(resolved_execute_args(defs, &serde_json::Map::new()).is_none());
     let mut staged = serde_json::Map::new();
     staged.insert("name".into(), serde_json::json!("hello"));
-    let merged = ShellState::resolved_execute_args(defs, &staged).expect("executable");
+    let merged = resolved_execute_args(defs, &staged).expect("executable");
     assert_eq!(merged.get("name"), Some(&serde_json::json!("hello")));
     assert_eq!(merged.get("flag"), Some(&serde_json::json!(true)));
 }
@@ -772,13 +772,13 @@ fn required_arg_gates_execution_and_merges_defaults() {
 #[test]
 fn staging_stage_and_reset_roundtrip() {
     let mut shell = shell();
-    shell.stage_arg("main", "withArgs", "name", serde_json::json!("x"));
-    shell.stage_arg("main", "withArgs", "flag", serde_json::json!(false));
-    let staged = shell.staged_map_for("main", "withArgs");
+    shell.commands.stage_arg("main", "withArgs", "name", serde_json::json!("x"));
+    shell.commands.stage_arg("main", "withArgs", "flag", serde_json::json!(false));
+    let staged = shell.commands.staged_map_for("main", "withArgs");
     assert_eq!(staged.get("name"), Some(&serde_json::json!("x")));
     assert_eq!(staged.get("flag"), Some(&serde_json::json!(false)));
-    shell.reset_staged_args("main", "withArgs");
-    assert!(shell.staged_map_for("main", "withArgs").is_empty());
+    shell.commands.reset_staged_args("main", "withArgs");
+    assert!(shell.commands.staged_map_for("main", "withArgs").is_empty());
 }
 
 /// 🔀️ Re-selecting the active utility deactivates it (the same update a re-click / Escape performs).
@@ -787,13 +787,13 @@ fn staging_stage_and_reset_roundtrip() {
 #[test]
 fn utility_activation_toggles_and_switches() {
     let mut shell = shell();
-    shell.toggle_active_utility("main", "utility.a");
-    assert_eq!(shell.active_utility_for_window("main"), Some("utility.a"));
-    shell.toggle_active_utility("main", "utility.a");
-    assert_eq!(shell.active_utility_for_window("main"), None);
-    shell.toggle_active_utility("main", "utility.a");
-    shell.toggle_active_utility("main", "utility.b");
-    assert_eq!(shell.active_utility_for_window("main"), Some("utility.b"));
+    shell.windows.toggle_active_utility("main", "utility.a", &mut shell.chrome, &mut shell.docs);
+    assert_eq!(shell.windows.active_utility_for_window("main"), Some("utility.a"));
+    shell.windows.toggle_active_utility("main", "utility.a", &mut shell.chrome, &mut shell.docs);
+    assert_eq!(shell.windows.active_utility_for_window("main"), None);
+    shell.windows.toggle_active_utility("main", "utility.a", &mut shell.chrome, &mut shell.docs);
+    shell.windows.toggle_active_utility("main", "utility.b", &mut shell.chrome, &mut shell.docs);
+    assert_eq!(shell.windows.active_utility_for_window("main"), Some("utility.b"));
 }
 
 /// 🛂️ No active utility → actions enabled.
@@ -805,12 +805,12 @@ fn utility_activation_toggles_and_switches() {
 fn active_utility_gates_actions_unless_allowed() {
     let app = actions_utilities_app();
     let mut shell = shell();
-    assert!(shell.actions_enabled_for_window(&app, "main"));
-    shell.toggle_active_utility("main", "utility.a");
-    assert!(!shell.actions_enabled_for_window(&app, "main"));
-    shell.toggle_active_utility("main", "utility.a");
-    shell.toggle_active_utility("main", "utility.b");
-    assert!(shell.actions_enabled_for_window(&app, "main"));
+    assert!(shell.windows.actions_enabled_for_window(&app, "main"));
+    shell.windows.toggle_active_utility("main", "utility.a", &mut shell.chrome, &mut shell.docs);
+    assert!(!shell.windows.actions_enabled_for_window(&app, "main"));
+    shell.windows.toggle_active_utility("main", "utility.a", &mut shell.chrome, &mut shell.docs);
+    shell.windows.toggle_active_utility("main", "utility.b", &mut shell.chrome, &mut shell.docs);
+    assert!(shell.windows.actions_enabled_for_window(&app, "main"));
 }
 
 #[test]
@@ -1272,14 +1272,14 @@ fn the_active_stack_paints_a_silhouette_focus_border() {
 #[test]
 fn closing_a_window_collapses_persists_and_refocuses_in_one_lane() {
     let mut shell = shell();
-    shell.dock.root = DockNode::Row(vec![(stack_with("plug-1"), 0.5), (stack_tabs(&["main", "side"], "main"), 0.5)]);
-    shell.dock.sync_active_window("plug-1");
-    shell.active_window_id = Some("plug-1".into());
-    assert!(shell.close_dock_window("plug-1"), "close is never a no-operation");
-    assert_eq!(shell.dock.root, stack_tabs(&["main", "side"], "main"), "the emptied slot is pruned and its sibling hoisted");
-    assert_eq!(shell.active_window_id.as_deref(), Some("main"), "React refocuses children[0]");
-    assert!(shell.layout_override.is_some(), "every close persists the collapsed layout");
-    assert!(!shell.close_dock_window("plug-1"), "a window that is already gone refuses");
+    shell.dock.dock.root = DockNode::Row(vec![(stack_with("plug-1"), 0.5), (stack_tabs(&["main", "side"], "main"), 0.5)]);
+    shell.dock.dock.sync_active_window("plug-1");
+    shell.windows.active_window_id = Some("plug-1".into());
+    assert!(SessionCtx::of(&mut shell).close_dock_window("plug-1"), "close is never a no-operation");
+    assert_eq!(shell.dock.dock.root, stack_tabs(&["main", "side"], "main"), "the emptied slot is pruned and its sibling hoisted");
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some("main"), "React refocuses children[0]");
+    assert!(shell.dock.layout_override.is_some(), "every close persists the collapsed layout");
+    assert!(!SessionCtx::of(&mut shell).close_dock_window("plug-1"), "a window that is already gone refuses");
 }
 
 /// 🪶️ The spawned-app teardown React's `onWindowClose` performs: the closed window's entry leaves the
@@ -1289,12 +1289,12 @@ fn closing_a_window_collapses_persists_and_refocuses_in_one_lane() {
 fn closing_a_spawned_window_takes_its_panel_entry_and_repoints_the_active_one() {
     let entry = |id: &str, instance: u32| crate::shell::SpawnedAppEntry { id: id.into(), plugin_id: "plug".into(), instance_id: instance, app_id: "app".into(), label: "Plug".into(), breadcrumb: vec!["plug".into()] };
     let mut panel = crate::shell::SpacePanelState { active_panel_tab: "workbench".into(), spawned_apps: vec![entry("plug-1", 7), entry("plug-2", 8)], active_spawned_id: Some("plug-1".into()) };
-    let closed = ShellState::take_spawned_entry(&mut panel, "plug-1").expect("the closed window owned a spawned app");
+    let closed = take_spawned_entry(&mut panel, "plug-1").expect("the closed window owned a spawned app");
     assert_eq!(closed.instance_id, 7, "the instance id the guest must be told to destroy");
     assert_eq!(panel.spawned_apps.iter().map(|entry| entry.id.as_str()).collect::<Vec<_>>(), vec!["plug-2"]);
     assert_eq!(panel.active_spawned_id.as_deref(), Some("plug-2"));
-    assert!(ShellState::take_spawned_entry(&mut panel, "main").is_none(), "a plain window hosts nothing to tear down");
-    let last = ShellState::take_spawned_entry(&mut panel, "plug-2").expect("last spawned entry");
+    assert!(take_spawned_entry(&mut panel, "main").is_none(), "a plain window hosts nothing to tear down");
+    let last = take_spawned_entry(&mut panel, "plug-2").expect("last spawned entry");
     assert_eq!(last.instance_id, 8);
     assert_eq!(panel.active_spawned_id, None);
 }

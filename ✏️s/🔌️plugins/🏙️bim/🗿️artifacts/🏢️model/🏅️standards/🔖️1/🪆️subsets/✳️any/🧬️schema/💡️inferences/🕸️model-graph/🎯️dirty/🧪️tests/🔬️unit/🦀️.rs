@@ -8,13 +8,15 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-macro_rules! fixtures {
-    ($($path:literal),+ $(,)?) => {
-        [$(($path, include_str!(concat!("../../../../../../🧫️fixtures/", $path, "/📸️snapshot/🔣️.json")))),+]
-    };
+/// 🧫️ The committed model snapshots at the given fixture paths, read when a test runs so the language-neutral JSON stays out of the compiled source closure.
+fn fixtures<const N: usize>(paths: [&'static str; N]) -> [(&'static str, &'static str); N] {
+    paths.map(|path| {
+        let file = format!("{}/{path}/📸️snapshot/🔣️.json", concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"));
+        (path, &*Box::leak(std::fs::read_to_string(&file).unwrap_or_else(|error| panic!("{file}: {error}")).into_boxed_str()))
+    })
 }
 
-const SOUNDNESS: [(&str, &str); 9] = fixtures![
+static SOUNDNESS: std::sync::LazyLock<[(&str, &str); 9]> = std::sync::LazyLock::new(|| fixtures([
     "🏗️ifc/🏠️house",
     "🏗️ifc/🔲️ceilings",
     "💡️inferences/⚠️diagnostics/💥️defects",
@@ -24,9 +26,9 @@ const SOUNDNESS: [(&str, &str); 9] = fixtures![
     "💡️inferences/🪜️stair-runs/🪜️flights",
     "💡️inferences/🪟️opening-frames/🏡️placed",
     "💡️inferences/🪧️annotation-layout/🏠️room",
-];
+]));
 
-const EQUALITY: [(&str, &str); 3] = fixtures!["🏗️ifc/🏠️house", "🏗️ifc/🔲️ceilings", "💡️inferences/🪧️annotation-layout/🏠️room"];
+static EQUALITY: std::sync::LazyLock<[(&str, &str); 3]> = std::sync::LazyLock::new(|| fixtures(["🏗️ifc/🏠️house", "🏗️ifc/🔲️ceilings", "💡️inferences/🪧️annotation-layout/🏠️room"]));
 
 fn snapshot_of(value: &Value) -> Option<ModelSnapshot> {
     from_json_str(&value.to_string(), JsonMemberPolicy::Reject).ok()
@@ -117,7 +119,7 @@ fn between(base: &ModelSnapshot, other: &ModelSnapshot) -> ModelDiff {
 #[test]
 fn a_node_whose_dependency_a_diff_changed_is_always_reported_touched() {
     let mut checked = 0;
-    for (name, text) in SOUNDNESS {
+    for (name, text) in *SOUNDNESS {
         let json: Value = serde_json::from_str(text).expect("the fixture is JSON");
         let base = snapshot_of(&json).expect("the fixture decodes");
         let before = dependencies(&base);
@@ -138,7 +140,7 @@ fn a_node_whose_dependency_a_diff_changed_is_always_reported_touched() {
 
 #[test]
 fn an_incremental_update_equals_a_fresh_inference_after_every_row_edit_and_back() {
-    for (name, text) in EQUALITY {
+    for (name, text) in *EQUALITY {
         let json: Value = serde_json::from_str(text).expect("the fixture is JSON");
         let base = snapshot_of(&json).expect("the fixture decodes");
         let fresh_base = ModelInference::infer(&base).expect("infers");

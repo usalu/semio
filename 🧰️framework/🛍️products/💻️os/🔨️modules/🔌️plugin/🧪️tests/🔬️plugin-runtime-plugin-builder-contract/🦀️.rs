@@ -152,8 +152,8 @@ mod plugin_builder_contract_tests {
     use pack::snapshot::ArtifactPack;
     use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     use store::{MemberFactory, SpaceMember};
-    use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
-    use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
+    use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
+    use semio_framework_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
 
     /// 🪪️ `TestApp`'s one dialect coordinate (contract §1) — every canonical id this module needs
     /// (`TestApp::APP_ID`, the `App::builder` ids below, every `CommandAddress`/`ActionAddress`/
@@ -415,6 +415,7 @@ mod plugin_builder_contract_tests {
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🦀️.rs"));
 
+    //#region 🧪️TestClipboardReservedJob
     //#region 📋️ContractClipboardFixture
     /// 📋️ The exact reserved clipboard producer of the contract app: `copy` and `cut` author the clipboard write, `paste` the placed label, each through its one completion cell, and every original request owner retires under paid turns.
     struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
@@ -1051,13 +1052,13 @@ mod plugin_builder_contract_tests {
         }
 
         /// 🪟️ One group per live window instance — the reserved `measures` section surface's own payload.
-        async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
-            view_state.window_instances.iter().map(|window| (window.id.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
+        async fn window_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_framework_ui_layout::layout::WindowMeasure>> {
+            view_state.window_instances.iter().map(|window| (window.id.clone(), vec![semio_framework_ui_layout::layout::WindowMeasure::measure_group(format!("{}-measure", window.id), format!("{} measures", window.window_kind_id), Vec::new())])).collect()
         }
 
         /// 🛠️ One group for the active tool — the reserved `tools` section surface's own payload.
-        async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
-            view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+        async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<semio_framework_ui_layout::layout::WindowMeasure>> {
+            view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![semio_framework_ui_layout::layout::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
         }
 
         fn build_reserved_tool_job(request: crate::tool_contract::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
@@ -2110,7 +2111,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
-        apply_test_mutations(app.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
+        apply_test_mutations(app.stores.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("admit retained child gesture");
@@ -2316,7 +2317,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// weakens nothing — it is the same assertion, made where the rotation can actually answer it.
     fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, stage: u8, what: &str,cx:&mut semio_framework_job::StepContext<'_>) {
         for _ in 0..MAINTENANCE_STAGES {
-            app.maintenance_stage = stage;
+            app.maintenance.maintenance_stage = stage;
             match app_maintenance_turn(app,cx) {
                 Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
                 Ok(_) => {}
@@ -2515,8 +2516,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// rule, so a coalesced gesture still reports only the operation THIS dispatch added.
         async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::PluginLifecycleFailure> {
             let verb = test_command_id(&command);
-            let before_edit_id = self.0.test_last_edit_id();
-            let before_tail = self.0.test_edit_tail_lengths();
+            let before_edit_id = self.0.stores.test_last_edit_id();
+            let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
@@ -2524,10 +2525,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
-            let after_edit_id = self.0.test_last_edit_id();
+            let after_edit_id = self.0.stores.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
-                let settled = self.0.test_result_from_last_edit(verb, meta, tail_offset).await;
+                let settled = self.0.stores.test_result_from_last_edit(verb, meta, tail_offset).await;
                 admitted.mutations = settled.mutations;
                 admitted.inverse_group = settled.inverse_group;
             }
@@ -2543,8 +2544,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// {@link artifact_app_laws::settle_history_verb} does for the raw wrapper, and rebuilds the
         /// settled mutations/inverse through the same `result_from_last_edit`.
         async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::PluginLifecycleFailure> {
-            let before_edit_id = self.0.test_last_edit_id();
-            let before_tail = self.0.test_edit_tail_lengths();
+            let before_edit_id = self.0.stores.test_last_edit_id();
+            let before_tail = self.0.stores.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::artifact_instance::settle_framework_reserved_admission(&mut self.0, admitted).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
@@ -2553,10 +2554,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
-            let after_edit_id = self.0.test_last_edit_id();
+            let after_edit_id = self.0.stores.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
-                let settled = self.0.test_result_from_last_edit(action, meta, tail_offset).await;
+                let settled = self.0.stores.test_result_from_last_edit(action, meta, tail_offset).await;
                 admitted.mutations = settled.mutations;
                 admitted.inverse_group = settled.inverse_group;
             }
@@ -2689,8 +2690,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// vanish into the rebuild.
         async fn dispatch_typed(&mut self, command: TestCommand, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::PluginLifecycleFailure> {
             let verb = test_command_id(&command);
-            let before_edit_id = self.0.test_last_edit_id();
-            let before_tail = self.0.test_edit_tail_lengths();
+            let before_edit_id = self.0.stores.test_last_edit_id();
+            let before_tail = self.0.stores.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
             let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
             admitted.requested_effects.extend(receipt.effects);
@@ -2704,10 +2705,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 admitted.inverse_group = composed.inverse_group;
             }
             admitted.output = semio_framework_value::DslValue::Object(vec![("composedResults".into(), semio_framework_value::DslValue::String(composed_results.to_string()))]);
-            let after_edit_id = self.0.test_last_edit_id();
+            let after_edit_id = self.0.stores.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
-                let settled = self.0.test_result_from_last_edit(verb, meta, tail_offset).await;
+                let settled = self.0.stores.test_result_from_last_edit(verb, meta, tail_offset).await;
                 if admitted.mutations.is_empty() {
                     admitted.mutations = settled.mutations;
                 }
@@ -2720,8 +2721,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         /// ⏪️ See {@link ContractApp::dispatch_action}: a framework-reserved history verb admits an
         /// `Effect::SpawnJob` the caller must run, and an app verb hands its reducer to a worker.
         async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, crate::PluginLifecycleFailure> {
-            let before_edit_id = self.0.test_last_edit_id();
-            let before_tail = self.0.test_edit_tail_lengths();
+            let before_edit_id = self.0.stores.test_last_edit_id();
+            let before_tail = self.0.stores.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
             let mut admitted = crate::artifact_instance::settle_framework_reserved_admission(&mut self.0, admitted).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), identity,cx).await?;
@@ -2730,10 +2731,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
-            let after_edit_id = self.0.test_last_edit_id();
+            let after_edit_id = self.0.stores.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
-                let settled = self.0.test_result_from_last_edit(action, meta, tail_offset).await;
+                let settled = self.0.stores.test_result_from_last_edit(action, meta, tail_offset).await;
                 admitted.mutations = settled.mutations;
                 admitted.inverse_group = settled.inverse_group;
             }
@@ -2748,18 +2749,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         ContractComposedApp(app, mounted_policy)
     }
 
-    /// 🧵️ Source text of the mounted artifact instance: the parent file followed by its impl-band children in file order.
+    /// 🧵️ Source text of the mounted artifact instance: its module tree, the parent file followed by every staged impl slice in declaration order, read at run time from the manifest folder of the hosting crate.
     fn instance_source() -> String {
-        [
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🚪️ingress/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/📨️dispatch/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🖼️render/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🧷️command-routes/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🧾️typed-operations/🦀️.rs")),
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🔌️plugin-app-impl/🦀️.rs")),
-        ]
-        .concat()
+        semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧵️instance/🦀️.rs")).expect("the instance module tree reads")
     }
 
     /// 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
@@ -2797,8 +2789,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let controller_id = registry.test_controller_id().to_string();
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
-        let registered: std::collections::BTreeSet<String> = app
-            .test_registered_tool_keys()
+        let registered: std::collections::BTreeSet<String> = app.tools.test_registered_tool_keys()
             .into_iter()
             .map(|key| {
                 assert_eq!(key.0, controller_id);
@@ -2809,7 +2800,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
         let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::HOST_EVENT_ACTION_ID]
             .into_iter()
-            .chain(semio_framework::HISTORY_EDIT_ACTION_IDS)
+            .chain(semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS)
             .map(String::from)
             .collect();
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
@@ -2824,8 +2815,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         );
         let runtime_source: String = instance_source().split_whitespace().collect();
         assert!(
-            runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta,identity)).await;")),
-            "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
+            runtime_source.contains("ifInstanceExtensions::claims_action(action){returnBox::pin(InstanceExtensions::dispatch_action(self,action,args,meta,identity,cx)).await"),
+            "the only reason the history-edit verbs may carry no factory is their boxed instance-extension route at the head of `dispatch_action`"
         );
         assert!(
             instance_source().split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
@@ -2900,7 +2891,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             ("setSelectionMode", "framework.reserved.setSelectionMode.v1", std::any::TypeId::of::<FrameworkSetSelectionModeJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkSetSelectionModeJobFactory<UnprovedFrameworkOwner>>(), 16_384),
         ];
         let joined = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
-        let registrations = app.test_framework_tool_registrations();
+        let registrations = app.tools.test_framework_tool_registrations();
         for (tool_id, schema_id, factory_type_id, factory_type_name, maximum) in expected {
             let (key, registered_schema_id, registered_factory_type_id, registered_factory_type_name, contract) = registrations.get(tool_id).expect("shared framework registration");
             assert_eq!(key, &ToolFactoryKey::new(&controller_id, tool_id));
@@ -3136,11 +3127,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let chunks = ArtifactOutputChunks::new(4);
         assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
         assert_eq!(chunks.seal(), Ok(4));
-        assert!(app.segmented_downloads.insert(91, ArtifactDownloadOutput::new("exact.bin", "application/octet-stream", None, chunks).expect("bounded segmented output")).is_ok());
+        assert!(app.media.segmented_downloads.insert(91, ArtifactDownloadOutput::new("exact.bin", "application/octet-stream", None, chunks).expect("bounded segmented output")).is_ok());
         assert_eq!(app.take_segmented_download_chunk(91).await.expect("last chunk"), Some(vec![1, 2, 3, 4]));
-        assert!(app.segmented_downloads.contains(91));
+        assert!(app.media.segmented_downloads.contains(91));
         assert_eq!(app.take_segmented_download_chunk(91).await.expect("terminal none"), None);
-        assert!(!app.segmented_downloads.contains(91));
+        assert!(!app.media.segmented_downloads.contains(91));
         assert_eq!(app.take_segmented_download_chunk(91).await.expect_err("terminal none removes authority").code.0, "interactive-job.unknown-segmented-download");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
@@ -3163,7 +3154,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let operation_id = semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, 0);
         let handle = ArtifactMediaExportHandle {
             app_instance_id: meta().instance_id,
-            parent_document_id: app.store.envelope().id.clone(),
+            parent_document_id: app.stores.store.envelope().id.clone(),
             operation_id,
             base_revision: semio_framework_job::RevisionId(9_007_199_254_740_993),
             generation: semio_framework_job::Generation(9_007_199_254_740_995),
@@ -3174,23 +3165,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES + 17));
         let mut donated_handle=Some(handle.clone());let mut source=Some(ArtifactMediaExportPoll::Complete(ArtifactMediaExportResult::structured(MediaType{class:MediaClass::Presentation,form:MediaForm::Sequence},"fixture.schema","audio/mpeg",chunks.clone()).expect("exact fixture media")));let mut received=None;
         assert!(ArtifactDownloadOutput::receive_media_export_original(&mut donated_handle,&mut source,&mut received,cx).expect("exact original media output"));let output=received.take().expect("funded download receiving");
-        app.segmented_downloads.insert_admitted(operation_id.0, output);
+        app.media.segmented_downloads.insert_admitted(operation_id.0, output);
 
         app.cancel_media_export(&handle).await.expect("completed output cancellation");
-        assert!(!app.segmented_downloads.contains(operation_id.0));
-        assert!(app.test_segmented_closure_contains(operation_id.0));
+        assert!(!app.media.segmented_downloads.contains(operation_id.0));
+        assert!(app.media.test_segmented_closure_contains(operation_id.0));
         assert_eq!(chunks.chunks_remaining(), 2, "cancellation only transfers ownership");
         assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
-        app.maintenance_stage = 2;
+        app.maintenance.maintenance_stage = 2;
         assert_eq!(app_maintenance_turn(&mut *app,cx).expect("first bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 17);
-        app.maintenance_stage = 2;
+        app.maintenance.maintenance_stage = 2;
         assert_eq!(app_maintenance_turn(&mut *app,cx).expect("second bounded cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 0);
-        app.maintenance_stage = 2;
+        app.maintenance.maintenance_stage = 2;
         assert_eq!(app_maintenance_turn(&mut *app,cx).expect("terminal cleanup"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-        assert!(!app.test_segmented_closure_contains(operation_id.0));
+        assert!(!app.media.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -3274,18 +3265,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let lease = app.envelope_field_decoders.try_admit(Box::new(ReturnedDecoder { terminal: false, drops: drops.clone() })).unwrap_or_else(|_| panic!("app decoder return registry admits one exact owner"));
+        let lease = app.ingest.envelope_field_decoders.try_admit(Box::new(ReturnedDecoder { terminal: false, drops: drops.clone() })).unwrap_or_else(|_| panic!("app decoder return registry admits one exact owner"));
         let ticket = lease.ticket();
         drop(lease);
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
 
         for _ in 0..4 {
-            app.maintenance_stage = 12;
+            app.maintenance.maintenance_stage = 12;
             let _ = app_maintenance_turn(&mut app,cx).expect("production maintenance pumps one returned decoder owner");
         }
-        assert!(app.envelope_field_decoders.ticket_reclaimed(ticket));
-        assert!(app.envelope_field_decoder_retirements.is_empty());
-        assert!(app.envelope_field_decoders.terminal_is_empty());
+        assert!(app.ingest.envelope_field_decoders.ticket_reclaimed(ticket));
+        assert!(app.ingest.envelope_field_decoder_retirements.is_empty());
+        assert!(app.ingest.envelope_field_decoders.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
         assert_eq!(app.drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -3362,7 +3353,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let owner: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
-        let ticket = match app.envelope_completed_records.try_admit(owner) {
+        let ticket = match app.ingest.envelope_completed_records.try_admit(owner) {
             Ok(ticket) => ticket,
             Err((_fault, mut owner)) => {
                 while !owner.terminal_is_empty() {
@@ -3373,18 +3364,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
         for stage in 0..MAINTENANCE_STAGES {
-            app.maintenance_stage = stage;
+            app.maintenance.maintenance_stage = stage;
             let _ = app_maintenance_turn(&mut app,cx).expect("ordinary maintenance preserves unconsumed completed output");
         }
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-        app.envelope_completed_records.try_request_close(ticket).expect("cancelled consumer hands exact completed output to maintenance");
+        app.ingest.envelope_completed_records.try_request_close(ticket).expect("cancelled consumer hands exact completed output to maintenance");
         for _ in 0..6 {
             for stage in 0..MAINTENANCE_STAGES {
-                app.maintenance_stage = stage;
+                app.maintenance.maintenance_stage = stage;
                 let _ = app_maintenance_turn(&mut app,cx).expect("production maintenance pumps one completed-record owner");
             }
         }
-        match app.envelope_completed_records.try_detach(ticket) {
+        match app.ingest.envelope_completed_records.try_detach(ticket) {
             Err(fault) => assert_eq!(fault, store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Stale),
             Ok(mut owner) => {
                 while !owner.terminal_is_empty() {
@@ -3393,8 +3384,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 panic!("maintenance did not reclaim the exact completed record")
             }
         }
-        assert!(app.envelope_completed_record_retirements.is_empty());
-        assert!(app.envelope_completed_records.terminal_is_empty());
+        assert!(app.ingest.envelope_completed_record_retirements.is_empty());
+        assert!(app.ingest.envelope_completed_records.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
         assert_eq!(app.drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -3419,15 +3410,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
-        app.close_started = true;
-        app.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
-        app.close_media_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
-        app.close_media_cleanup_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
+        app.close.close_started = true;
+        app.close.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
+        app.close.close_media_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
+        app.close.close_media_cleanup_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
         let chunks = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES * 2);
         assert_eq!(chunks.push(vec![1; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES));
         assert_eq!(chunks.push(vec![2; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
-        assert!(app.segmented_downloads.insert(37, ArtifactDownloadOutput::new("close.bin", "application/octet-stream", None, chunks.clone()).expect("sealed close output")).is_ok());
+        assert!(app.media.segmented_downloads.insert(37, ArtifactDownloadOutput::new("close.bin", "application/octet-stream", None, chunks.clone()).expect("sealed close output")).is_ok());
         let mut parked = false;
         for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             let demand = app.close_retirement_demands(ARTIFACT_OUTPUT_CHUNK_BYTES).expect("quoted pre-segment close demand");
@@ -3448,7 +3439,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app_close_turn(&mut *app,cx).expect("second close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.chunks_remaining(), 0);
         assert_eq!(app_close_turn(&mut *app,cx).expect("terminal close slice"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-        assert!(!app.segmented_downloads.contains(37));
+        assert!(!app.media.segmented_downloads.contains(37));
     
         
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -3784,10 +3775,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = unproved_contract_app(mounted_policy, &mut identity).await;
-        assert!(!app.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
+        assert!(!app.tools.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
         let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta(), &mut identity).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
         assert_eq!(error.code.0, "interactive-job.not-ui-safe", "a verb with no proof is a verb that was never migrated, and the backstop names the cause");
-        assert_eq!(app.test_snapshot().await.count, 0, "the over-budget reducer never started");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "the over-budget reducer never started");
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -4399,14 +4390,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
-        let before_snapshot = app.test_snapshot().await;
-        let before_edits = app.test_store().await.applied_edit_ids().len();
+        let before_snapshot = app.stores.test_snapshot().await;
+        let before_edits = app.stores.test_store().await.applied_edit_ids().len();
 
         let set = crate::plugin_runtime::set_merge_policy_frames(&mut app, 7, protocol::MergePolicy::Vigilant.as_u8()).await.expect("known policy accepts");
         assert_eq!(set, vec![protocol::AppFrame::Done { in_reply_to: 7 }]);
         assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant);
-        assert_eq!(app.test_snapshot().await, before_snapshot, "local policy changes no document state");
-        assert_eq!(app.test_store().await.applied_edit_ids().len(), before_edits, "local policy changes no shared history");
+        assert_eq!(app.stores.test_snapshot().await, before_snapshot, "local policy changes no document state");
+        assert_eq!(app.stores.test_store().await.applied_edit_ids().len(), before_edits, "local policy changes no shared history");
 
         let invalid_policy = crate::plugin_runtime::set_merge_policy_frames(&mut app, 8, 3).await.expect_err("unknown policy ordinal rejects");
         assert_eq!(invalid_policy.code.0, "merge.invalid-policy");
@@ -4415,7 +4406,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("seed one durable edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("the seeded durable edit reaches its publication");
         let (mut envelope, applied_edit_ids) = {
-            let store = app.test_store().await;
+            let store = app.stores.test_store().await;
             let files = store::os_store::text_format::print_document_pack(store.envelope()).await.expect("print retained test envelope");
             (store::os_store::text_format::parse_document_pack::<TestSnapshot, TestMutation>(&files.pack, &files.spr).await.expect("parse retained test envelope").envelope, store.applied_edit_ids().to_vec())
         };
@@ -4431,7 +4422,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             actors: vec![ActorId("local".into())],
             timestamp,
         });
-        app.test_store_mut().await.reset(envelope).await.expect("seed valid open degraded conflict");
+        app.stores.test_store_mut().await.reset(envelope).await.expect("seed valid open degraded conflict");
 
         let read = crate::plugin_runtime::read_conflicts_frames(&app, 9).await;
         let [protocol::AppFrame::Conflicts { in_reply_to: Some(9), conflicts }] = read.as_slice() else { panic!("read must yield exactly one correlated conflict projection") };
@@ -4478,7 +4469,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
         assert_eq!(result.inverse_group.mutations.len(), 1);
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -4507,33 +4498,33 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let fixture: Value = serde_json::from_str(include_str!("../../🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json")).expect("neutral captured-context fixture");
         let vectors = &fixture["ephemeralPublication"];
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        assert_eq!(app.presence_store.generation().await, 0);
-        assert_eq!(app.transient_store.generation().await, 0);
+        assert_eq!(app.stores.presence_store.generation().await, 0);
+        assert_eq!(app.stores.transient_store.generation().await, 0);
 
         let frame = meta();
         let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("mount increment");
         assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
-        assert_eq!(app.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
-        assert_eq!(app.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");
-        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentEdits": app.test_store().await.envelope().vcs.edits.len() }), vectors["mounted"]);
+        assert_eq!(app.stores.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
+        assert_eq!(app.stores.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");
+        assert_eq!(json!({ "presenceGeneration": app.stores.presence_store.generation().await, "transientGeneration": app.stores.transient_store.generation().await, "documentEdits": app.stores.test_store().await.envelope().vcs.edits.len() }), vectors["mounted"]);
         settle_contract_app(&mut app,&mut identity,cx).await;
 
-        assert_eq!(app.presence_store.generation().await, 1, "presence lane never received the command's emission");
-        assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
+        assert_eq!(app.stores.presence_store.generation().await, 1, "presence lane never received the command's emission");
+        assert_eq!(app.stores.transient_store.generation().await, 1, "transient lane never received the command's emission");
         assert_eq!(
             app.ephemeral_snapshot().await,
             EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new(), tool_run: None, history_edit: None },
             "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
         );
 
-        assert_eq!(app.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
+        assert_eq!(app.stores.test_store().await.envelope().vcs.edits.len(), 1, "an ephemeral lane leaked into the document's edit log");
 
-        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentEdits": app.test_store().await.envelope().vcs.edits.len() }), vectors["completed"]);
+        assert_eq!(json!({ "presenceGeneration": app.stores.presence_store.generation().await, "transientGeneration": app.stores.transient_store.generation().await, "documentEdits": app.stores.test_store().await.envelope().vcs.edits.len() }), vectors["completed"]);
         app.dispatch_action("undo", None, &meta(), &mut identity,cx).await.expect("undo");
-        assert_eq!(app.test_snapshot().await.count, 0);
-        assert_eq!(app.presence_store.generation().await, 1, "undo must not rewind presence");
-        assert_eq!(app.transient_store.generation().await, 1, "undo must not rewind transient");
-        assert_eq!(json!({ "presenceGeneration": app.presence_store.generation().await, "transientGeneration": app.transient_store.generation().await, "documentCount": app.test_snapshot().await.count }), vectors["undone"]);
+        assert_eq!(app.stores.test_snapshot().await.count, 0);
+        assert_eq!(app.stores.presence_store.generation().await, 1, "undo must not rewind presence");
+        assert_eq!(app.stores.transient_store.generation().await, 1, "undo must not rewind transient");
+        assert_eq!(json!({ "presenceGeneration": app.stores.presence_store.generation().await, "transientGeneration": app.stores.transient_store.generation().await, "documentCount": app.stores.test_snapshot().await.count }), vectors["undone"]);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -4555,8 +4546,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "x".into() }, &meta(), &mut identity,cx).await.expect("set label");
-        assert_eq!(app.presence_store.generation().await, 0);
-        assert_eq!(app.transient_store.generation().await, 0);
+        assert_eq!(app.stores.presence_store.generation().await, 0);
+        assert_eq!(app.stores.transient_store.generation().await, 0);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -4681,7 +4672,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         app.admit_presence_ingress(admission, cursor, now_ms);
         let mut next_page = 1usize;
         for _ in 0..512 {
-            app.maintenance_stage = 7;
+            app.maintenance.maintenance_stage = 7;
             let _ = app_maintenance_turn(app,cx).expect("bounded roster step");
             if next_page < roster.len() {
                 let page = FixedCommandPage::try_copy_from(roster.iter().nth(next_page).expect("retained roster page")).expect("test peer page is fixed-authority");
@@ -4720,20 +4711,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
 
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000,cx).await.fault.is_none());
-        assert_eq!(app.own_color, Some(9));
-        let typed_root = app.presence_store.peers_root();
+        assert_eq!(app.roster.own_color, Some(9));
+        let typed_root = app.stores.presence_store.peers_root();
         assert_eq!(typed_root.peers().count(), 1, "only the peer carrying a presence_pack adopts into presence_store");
         assert_eq!(typed_root.peers().next().unwrap().0, "user:alice#s1");
-        assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
-        assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
-        assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
+        assert_eq!(app.roster.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
+        assert_eq!(app.roster.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
+        assert_eq!(app.roster.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
         drop(typed_root);
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000,cx).await.fault.is_none());
-        assert_eq!(app.presence_store.peers_root().peers().count(), 1);
-        assert_eq!(app.peer_presence.len(), 1);
-        assert!(app.peer_presence.contains_key("user:alice#s1"));
-        assert!(!app.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
+        assert_eq!(app.stores.presence_store.peers_root().peers().count(), 1);
+        assert_eq!(app.roster.peer_presence.len(), 1);
+        assert!(app.roster.peer_presence.contains_key("user:alice#s1"));
+        assert!(!app.roster.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
         drain_and_close_fixture(&mut app, mounted_policy,cx);
     
         
@@ -4763,38 +4754,38 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let bob = sample_presence_peer("user:bob#s1", Some(5), false);
         assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000,cx).await.fault.is_none());
         let (captured, typed_captured) = app.test_capture_presence_roots(&TestCommand::Increment, &meta()).await.expect("actual shared typed capture helper");
-        assert!(std::sync::Arc::ptr_eq(&captured, &app.peer_presence), "operation capture clones one peer root Arc");
+        assert!(std::sync::Arc::ptr_eq(&captured, &app.roster.peer_presence), "operation capture clones one peer root Arc");
 
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000,cx).await.fault.is_none());
         assert_eq!(captured.len(), 2, "captured roster remains revision-stable");
-        assert_eq!(app.peer_presence.len(), 1, "live roster advances independently");
+        assert_eq!(app.roster.peer_presence.len(), 1, "live roster advances independently");
         assert_maintenance_reports_block(&mut app, 5, "the shared old peer root",cx);
-        app.maintenance_stage = 6;
+        app.maintenance.maintenance_stage = 6;
         let _ = app_maintenance_turn(&mut app,cx).expect("app-typed retirement selects its displaced entry");
         assert_maintenance_reports_block(&mut app, 6, "the captured app-typed peer root",cx);
 
         drop(captured);
         drop(typed_captured);
         for _ in 0..16 {
-            if app.peer_presence_retirements.is_empty() {
+            if app.roster.peer_presence_retirements.is_empty() {
                 break;
             }
-            app.maintenance_stage = 5;
+            app.maintenance.maintenance_stage = 5;
             let _ = app_maintenance_turn(&mut app,cx).expect("bounded peer root retirement progresses");
         }
-        assert!(app.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
+        assert!(app.roster.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
         for calls in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
-            if app.presence_peer_retirements.is_empty() {
+            if app.roster.presence_peer_retirements.is_empty() {
                 break;
             }
-            app.maintenance_stage = 6;
+            app.maintenance.maintenance_stage = 6;
             match app_maintenance_turn(&mut app,cx).expect("bounded app-typed peer retirement progresses") {
                 semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
                 semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
                 _ => {}
             }
         }
-        assert!(app.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
+        assert!(app.roster.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
         drain_and_close_fixture(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -4942,9 +4933,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn declare_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-        let mut children: Vec<String> = app.test_snapshot().await.slot.iter().map(|child| child.target.to_uri()).collect();
+        let mut children: Vec<String> = app.stores.test_snapshot().await.slot.iter().map(|child| child.target.to_uri()).collect();
         children.push(ArtifactRef { artifact_id: child_id.into(), dialect: test_child_dialect().await }.to_uri());
-        apply_test_mutations(app.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children })]).await.expect("the parent declares the member it is about to own");
+        apply_test_mutations(app.stores.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children })]).await.expect("the parent declares the member it is about to own");
     }
 
     /// 🤝️ [`declare_test_child`], then the RUNTIME's half: a fresh [`new_test_child`] registered as that declared member.
@@ -5064,7 +5055,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `create_member_store`, for a law that first drove the refusal an owner-less member owes and
     /// then has to close the app it registered that member into.
     fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
-        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
+        let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
         store::install_funded_member_store_owners(child,&crate::test_app_mutation_fixture::TestMemberStoreProducer).expect("actual funded member catalog");
     }
 
@@ -5075,7 +5066,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// would pin that alias for ever, so the captured root could never become the snapshot's last
     /// owner and `Arc::into_inner` would never reach the owned-value factory.
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
-        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
+        let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
         type Catalog = store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>;
         let capacity = Catalog::source_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<TestSnapshot>, TestLyingOwnedValueRetirementFactory, semio_framework_value::factory::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>().expect("exact catalog source birth");
         let admitted = Catalog::admit_source_constructor(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }, || (
@@ -5126,37 +5117,37 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
-        app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
-        let parent = ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
-        assert_eq!(app.store.envelope().dialect.as_ref(), Some(&parent.dialect));
+        app.child_composition.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
+        let parent = ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
+        assert_eq!(app.stores.store.envelope().dialect.as_ref(), Some(&parent.dialect));
         assert!(app.open_child("slot", "child-1", dialect.clone(), &[], &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err());
-        assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
-        assert_eq!(app.test_child_admission_state(1).generation, 0);
+        assert!(app.child_composition.test_child_admission_state(1).children_empty && app.child_composition.test_child_admission_state(1).content_empty && app.child_composition.test_child_admission_state(1).abort_empty);
+        assert_eq!(app.child_composition.test_child_admission_state(1).generation, 0);
         let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
         let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
         close_member_admission_fixture(&mut persisted);
         assert!(app.open_child("slot", "child-1", dialect, &packed, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err());
-        assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).roots_retiring_empty);
-        assert_eq!(app.test_child_admission_state(1).generation, 0);
-        assert_eq!(app.pending_child_pins.len(), 1);
-        assert_eq!(app.pending_child_pins[0].checkpoint_id, "missing-checkpoint");
-        assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
-        assert_eq!(app.test_child_admission_state(1).abort_generation, 1);
-        assert!(app.test_child_admission_state(1).requested_abort_retained);
+        assert!(app.child_composition.test_child_admission_state(1).children_empty && app.child_composition.test_child_admission_state(1).content_empty && app.child_composition.test_child_admission_state(1).roots_retiring_empty);
+        assert_eq!(app.child_composition.test_child_admission_state(1).generation, 0);
+        assert_eq!(app.child_composition.pending_child_pins.len(), 1);
+        assert_eq!(app.child_composition.pending_child_pins[0].checkpoint_id, "missing-checkpoint");
+        assert!(app.child_composition.composition.graph_mut().await.owner_of("child-1").await.is_none());
+        assert_eq!(app.child_composition.test_child_admission_state(1).abort_generation, 1);
+        assert!(app.child_composition.test_child_admission_state(1).requested_abort_retained);
         for _ in 0..65_536 {
-            app.maintenance_stage = 20;
+            app.maintenance.maintenance_stage = 20;
             match app_maintenance_turn(&mut app,cx).expect("live failed-member cleanup") {
                 semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(_) | semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_) => {}
                 semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
                 semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
             }
-            if app.test_child_admission_state(1).abort_empty {
+            if app.child_composition.test_child_admission_state(1).abort_empty {
                 break;
             }
         }
-        assert!(app.test_child_admission_state(1).abort_empty);
-        app.maintenance_stage = 20;
+        assert!(app.child_composition.test_child_admission_state(1).abort_empty);
+        app.maintenance.maintenance_stage = 20;
         assert!(matches!(app_maintenance_turn(&mut app,cx).unwrap(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(_)));
         close_member_admission_app(&mut app,cx);
     
@@ -5179,7 +5170,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
-        app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
+        app.child_composition.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
         declare_test_child(&mut app, "child-1").await;
@@ -5188,10 +5179,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
         assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
         assert!(returned.owner_ref().is_none());
-        assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
-        assert_eq!(app.test_child_admission_state(1).generation, 0);
-        assert_eq!(app.pending_child_pins.len(), 1);
-        assert!(app.composition.graph_mut().await.owner_of("child-1").await.is_none());
+        assert!(app.child_composition.test_child_admission_state(1).children_empty && app.child_composition.test_child_admission_state(1).content_empty && app.child_composition.test_child_admission_state(1).abort_empty);
+        assert_eq!(app.child_composition.test_child_admission_state(1).generation, 0);
+        assert_eq!(app.child_composition.pending_child_pins.len(), 1);
+        assert!(app.child_composition.composition.graph_mut().await.owner_of("child-1").await.is_none());
         close_member_admission_fixture(&mut returned);
         close_member_admission_app(&mut app,cx);
     
@@ -5214,8 +5205,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let dialect = test_child_dialect().await;
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         app.register_child("slot", "child-1", dialect.clone(), member, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
-        assert_eq!(app.test_child_admission_state(1).generation, 1);
-        let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
+        assert_eq!(app.child_composition.test_child_admission_state(1).generation, 1);
+        let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.stores.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
@@ -5283,7 +5274,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(member_documents.contains(&parent_handle));
         assert!(member_documents.contains(&child_handle));
 
-        let entry = app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
+        let entry = app.child_composition.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered after dispatch");
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         let TestMembers::Child(child_store) = &mut entry.member;
         assert_eq!(child_store.snapshot().expect("child snapshot").count, 7);
@@ -5329,20 +5320,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(!edit_id.is_empty());
         macro_rules! child_count {
             ($app:expr) => {{
-                let TestMembers::Child(child_store) = &mut $app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered").member;
+                let TestMembers::Child(child_store) = &mut $app.child_composition.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("child stays registered").member;
                 child_store.snapshot().expect("child snapshot").count
             }};
         }
         assert_eq!(child_count!(app), 5, "the child applied the agent's op");
-        assert_eq!(app.test_snapshot().await.label, "agent", "the parent applied the agent's op");
-        assert_eq!(app.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
+        assert_eq!(app.stores.test_snapshot().await.label, "agent", "the parent applied the agent's op");
+        assert_eq!(app.stores.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
 
         app.transaction_undo("txn-agent-1", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
         assert_eq!(child_count!(app), 0, "undo reverts the child");
-        assert_ne!(app.test_snapshot().await.label, "agent", "undo reverts the parent");
+        assert_ne!(app.stores.test_snapshot().await.label, "agent", "undo reverts the parent");
         app.transaction_redo("txn-agent-1", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
         assert_eq!(child_count!(app), 5, "redo reapplies the child");
-        assert_eq!(app.test_snapshot().await.label, "agent", "redo reapplies the parent");
+        assert_eq!(app.stores.test_snapshot().await.label, "agent", "redo reapplies the parent");
         assert!(app.transaction_undo("txn-someone-else", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
 
         let only_child = ChildEmit::encode_groups(&[test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
@@ -5405,10 +5396,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("the migrated composite gesture settles before it is persisted");
-        assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
+        assert_eq!(app.stores.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
         let archive = PluginApp::document_archive(&app).await.expect("the composed document archives its closure");
-        let document = app.store.envelope().id.clone();
+        let document = app.stores.store.envelope().id.clone();
         assert_eq!(
             archive.members.iter().map(|entry| (entry.owner.parent.artifact_id.as_str(), entry.owner.slot.as_str(), entry.owner.child_id.as_str(), entry.reference.artifact_id.as_str())).collect::<Vec<_>>(),
             vec![(document.as_str(), "slot", "child-1", "child-1")],
@@ -5653,8 +5644,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(progress.iter().all(|step| step.operation == job));
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert!(PluginApp::reserved_commit_progress(&*app).is_none());
-        let checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
-        let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|entry| entry.id == checkpoint).map(|entry| entry.composition_pins.clone()).expect("checkpoint found");
+        let checkpoint = app.stores.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
+        let pins = app.stores.test_store().await.envelope().vcs.checkpoints.iter().find(|entry| entry.id == checkpoint).map(|entry| entry.composition_pins.clone()).expect("checkpoint found");
         assert_eq!(pins.iter().map(|pin| pin.child_ref.artifact_id.as_str()).collect::<Vec<_>>(), ["child-1", "child-2"]);
         publication_caller.retire(mounted_policy.close);
 
@@ -5695,7 +5686,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         continuation_unit_is_ready_on_first_poll(&mut app,&mut publication_caller,mounted_policy.maintenance);
         let fault = PluginApp::take_reserved_commit_outcome(&mut *app).expect("a cancelled commit answers").expect_err("cancelled");
         assert_eq!(fault.code.0, "interactive-job.cancelled");
-        assert!(app.test_store().await.current_checkpoint_id().is_none(), "a cancelled checkpoint never commits the parent");
+        assert!(app.stores.test_store().await.current_checkpoint_id().is_none(), "a cancelled checkpoint never commits the parent");
         assert!(!PluginApp::has_runnable_typed_operations(&*app));
         publication_caller.retire(mounted_policy.close);
 
@@ -5730,8 +5721,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity,cx).await.expect("first composite edit");
 
         app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut identity,cx).await.expect("checkpoint");
-        let pinned_checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
-        let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
+        let pinned_checkpoint = app.stores.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
+        let pins = app.stores.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
         assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
         assert_eq!(pins[0].child_ref.artifact_id, "child-1");
 
@@ -5749,7 +5740,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
     async fn reads_child_count(app: &VcsArtifactApp<TestApp, TestMembers>) -> i32 {
-        let view = ChildContentView::clone(&app.child_content_root);
+        let view = ChildContentView::clone(&app.child_composition.child_content_root);
         view.typed_read::<TestSnapshot>("slot", "child-1").expect("child readable through the view").count
     }
 
@@ -5770,17 +5761,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-a").await;
-        let admitted = ChildContentView::clone(&app.child_content_root);
+        let admitted = ChildContentView::clone(&app.child_composition.child_content_root);
         let admitted_root = admitted.root.as_ref().expect("published root").clone();
-        assert!(std::sync::Arc::ptr_eq(&admitted_root, app.child_content_root.root.as_ref().expect("live root")), "command capture retains exactly one immutable root Arc");
+        assert!(std::sync::Arc::ptr_eq(&admitted_root, app.child_composition.child_content_root.root.as_ref().expect("live root")), "command capture retains exactly one immutable root Arc");
 
         register_test_child(&mut app, "child-b").await;
-        let current_root = app.child_content_root.root.as_ref().expect("advanced root");
+        let current_root = app.child_composition.child_content_root.root.as_ref().expect("advanced root");
         assert!(!std::sync::Arc::ptr_eq(&admitted_root, current_root), "a child lifecycle event publishes a new root");
         assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").is_ok(), "the admitted root remains exact after later publication");
         assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").is_err(), "the admitted root never observes a later child");
-        assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
-        assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
+        assert!(ChildContentView::clone(&app.child_composition.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
+        assert!(!app.child_composition.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
         drop(admitted);
         drop(admitted_root);
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
@@ -5807,10 +5798,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
-        let generation = app.admit_child_content_publication().expect("admit replacement root");
-        app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+        let generation = app.child_composition.admit_child_content_publication().expect("admit replacement root");
+        app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         assert_maintenance_reports_block(&mut app, 4, "the rejected child snapshot transfer",cx);
-        let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
+        let retirement = app.child_composition.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
         let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
         assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
         install_test_member_owners(&mut app, "child-a");
@@ -5859,7 +5850,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
         {
-            let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
+            let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
             for value in 1..=2 {
                 apply_test_mutations(child, vec![TestMutation::SetCount(SetCount { value })]).await.expect("member advances past the captured snapshot");
             }
@@ -5872,18 +5863,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             assert!(child.maintenance_retirements_terminal_is_empty(), "the member released every snapshot alias it displaced");
         }
-        let generation = app.admit_child_content_publication().expect("admit replacement root");
-        app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-        app.maintenance_stage = 4;
+        let generation = app.child_composition.admit_child_content_publication().expect("admit replacement root");
+        app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+        app.maintenance.maintenance_stage = 4;
         assert!(matches!(app_maintenance_turn(&mut app,cx).expect("transfer retirement authority"), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(_)));
         let mut faulted = None;
         for turn in 0..64 * usize::from(MAINTENANCE_STAGES) {
-            app.maintenance_stage = 4;
+            app.maintenance.maintenance_stage = 4;
             match app_maintenance_turn(&mut app,cx) {
                 Ok(step) => assert!(
-                    !app.child_content_retirements.is_empty(),
+                    !app.child_composition.child_content_retirements.is_empty(),
                     "the lying owner's authority must never be reclaimed without its terminal witness: turn {turn} answered {step:?} from stage {} and left the registry empty",
-                    (app.maintenance_stage + MAINTENANCE_STAGES - 1) % MAINTENANCE_STAGES
+                    (app.maintenance.maintenance_stage + MAINTENANCE_STAGES - 1) % MAINTENANCE_STAGES
                 ),
                 Err(fault) => {
                     faulted = Some(fault);
@@ -5896,7 +5887,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             matches!(fault.code.0.as_str(), "interactive-job.child-snapshot-terminal-not-empty" | "interactive-job.child-snapshot-disposer-refused"),
             "the lie must be caught BY NAME: {fault:?}"
         );
-        assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
+        assert!(!app.child_composition.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -5918,18 +5909,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
-        let generation = app.admit_child_content_publication().expect("admit replacement root");
-        app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+        let generation = app.child_composition.admit_child_content_publication().expect("admit replacement root");
+        app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         for _ in 0..64 {
-            if app.child_content_retirements.is_empty() {
+            if app.child_composition.child_content_retirements.is_empty() {
                 break;
             }
-            app.maintenance_stage = 4;
+            app.maintenance.maintenance_stage = 4;
             let _ = app_maintenance_turn(&mut app,cx).expect("bounded retirement progress");
         }
-        assert!(app.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
-        let generation = app.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
-        app.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
+        assert!(app.child_composition.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
+        let generation = app.child_composition.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
+        app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -5956,16 +5947,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
-        let start = app.child_content_generation;
+        let start = app.child_composition.child_content_generation;
         for index in 1..=10_000u64 {
-            let generation = app.admit_child_content_publication().unwrap_or_else(|fault| panic!("publication {index} faulted instead of waiting: {fault:?}"));
+            let generation = app.child_composition.admit_child_content_publication().unwrap_or_else(|fault| panic!("publication {index} faulted instead of waiting: {fault:?}"));
             assert_eq!(generation, start + index, "publication {index} is admitted in order");
-            app.publish_child_content_member(generation, "slot", "child-a").await.unwrap_or_else(|fault| panic!("publication {index} did not land: {fault:?}"));
-            assert!(app.child_content_retirements.len() <= ARTIFACT_LIVE_OUTPUT_SLOTS, "the child-root retirement registry stays within its fixed slots");
+            app.child_composition.publish_child_content_member(generation, "slot", "child-a").await.unwrap_or_else(|fault| panic!("publication {index} did not land: {fault:?}"));
+            assert!(app.child_composition.child_content_retirements.len() <= ARTIFACT_LIVE_OUTPUT_SLOTS, "the child-root retirement registry stays within its fixed slots");
         }
         assert!(PluginApp::maintenance_under_pressure(&app), "a saturated child-root retirement registry reports maintenance pressure");
         crate::app_testing::artifact_app_laws::drain_maintenance_pressure(&mut app,cx);
-        assert!(app.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
+        assert!(app.child_composition.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -5993,10 +5984,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-maximum").await;
-        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
+        let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
         apply_test_mutations(child, vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })]).await.expect("seed maximum child");
-        let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
-        app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
+        let publication_generation = app.child_composition.admit_child_content_publication().expect("admit maximum child publication");
+        app.child_composition.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
         MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
         MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
@@ -6070,14 +6061,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         register_test_child(&mut app, "child-a").await;
         register_test_child(&mut app, "child-b").await;
 
-        let before = app.test_snapshot().await;
+        let before = app.stores.test_snapshot().await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta(), &mut identity,cx).await.expect("composite edit");
-        assert_eq!(app.test_snapshot().await.label, "composite");
+        assert_eq!(app.stores.test_snapshot().await.label, "composite");
 
         let result = app.dispatch_action("undo", None, &meta(), &mut identity,cx).await.expect("group undo");
 
-        assert_eq!(app.test_snapshot().await, before);
-        let TestMembers::Child(child_a_store) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a").member;
+        assert_eq!(app.stores.test_snapshot().await, before);
+        let TestMembers::Child(child_a_store) = &mut app.child_composition.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("child-a").member;
         assert_eq!(child_a_store.snapshot().expect("child-a snapshot").count, 0);
         assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
         assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
@@ -6109,14 +6100,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "genesis-child").await;
-        let parent_id = app.store.envelope().id.clone();
-        app.composition.graph_mut().await.insert_owns(&parent_id, "slot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
+        let parent_id = app.stores.store.envelope().id.clone();
+        app.child_composition.composition.graph_mut().await.insert_owns(&parent_id, "slot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
         let target = ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect().await };
         let created: Vec<(ArtifactRef, TestMembers)> = vec![(target, new_test_child("genesis-child").await.expect("construct genesis child"))];
 
-        app.absorb_created_children(created).await.expect("absorb child and publish immutable root");
+        app.child_composition.absorb_created_children(&mut app.stores, created).await.expect("absorb child and publish immutable root");
 
-        let entry = app.children.get_mut(&("slot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under the slot its parent declares it in");
+        let entry = app.child_composition.children.get_mut(&("slot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under the slot its parent declares it in");
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         assert_eq!(entry.member.document_id().await, "genesis-child");
         drain_and_close_composed_fixture(&mut app, mounted_policy,cx);
@@ -6143,7 +6134,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result = app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
-        assert_eq!(app.test_snapshot().await, TestSnapshot::default());
+        assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6182,12 +6173,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
-        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
+        assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
         let history = app.test_history().await;
         assert_eq!(history.commands.iter().map(|entry| entry.action_id.as_str()).collect::<Vec<_>>(), vec!["increment"], "only the document row is listed");
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
-        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
+        assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
         close_reserved_app(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6219,8 +6210,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let first = history.commands.iter().min_by_key(|entry| entry.seq).expect("the first increment row");
         assert!(first.revertible, "a document row is revertible");
         reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq }))), &mut identity).await;
-        assert_eq!(app.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
-        assert_eq!(app.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
+        assert_eq!(app.stores.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
         let after = app.test_history().await;
         assert_eq!(after.commands.len(), 3, "the revert appends one History-kind row");
         assert_eq!(after.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
@@ -6353,11 +6344,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity,cx).await.expect("setLabel");
         let result = reserved_action(&mut app, "cut", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.stores.test_snapshot().await.label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "hello");
+        assert_eq!(app.stores.test_snapshot().await.label, "hello");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6388,7 +6379,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
         reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "pasted");
+        assert_eq!(app.stores.test_snapshot().await.label, "pasted");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6419,7 +6410,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
         reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
+        assert_eq!(app.stores.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6442,7 +6433,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let result = reserved_action(&mut app, "paste", None, &mut identity).await;
         assert!(result.mutations.is_empty());
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.stores.test_snapshot().await.label, "");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6483,9 +6474,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit: false }, &meta(), &mut identity,cx).await.expect("streamLabel tick");
         }
         app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: true }, &meta(), &mut identity,cx).await.expect("streamLabel commit");
-        assert_eq!(app.test_snapshot().await.label, "abc");
+        assert_eq!(app.stores.test_snapshot().await.label, "abc");
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.stores.test_snapshot().await.label, "");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6512,7 +6503,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity,cx).await.expect("setLabel");
         }
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "ab");
+        assert_eq!(app.stores.test_snapshot().await.label, "ab");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -6535,15 +6526,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc1");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc2");
-        assert_eq!(app.test_snapshot().await.count, 2);
+        assert_eq!(app.stores.test_snapshot().await.count, 2);
 
         let undo = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
 
         reserved_action(&mut app, "redo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.count, 2);
+        assert_eq!(app.stores.test_snapshot().await.count, 2);
 
         let checkpoint = reserved_action(&mut app, "commitCheckpoint", None, &mut identity).await;
         assert!(checkpoint.mutations.is_empty());
@@ -6603,13 +6594,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         use semio_framework::manifest::{ActionAddress, ActionInvocation, ViewWindowInstance};
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        app.test_store_mut()
+        app.stores.test_store_mut()
             .await
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
-        assert_eq!(app.test_snapshot().await.count, 1);
-        let before = app.test_store().await.applied_edit_ids().len();
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
+        let before = app.stores.test_store().await.applied_edit_ids().len();
         let view = ViewModel {
             active_mode_id: Some("edit".into()),
             window_instances: vec![ViewWindowInstance { id: "world-1".into(), window_kind_id: "world".into() }],
@@ -6632,11 +6623,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;let admitted=artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta,&mut identity,cx).await.expect("actor reserved undo");
         assert!(admitted.mutations.is_empty());
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
-        assert_eq!(app.test_snapshot().await.count, 1, "first turn must not commit history");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "first turn must not commit history");
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
-        assert_eq!(app.test_snapshot().await.count, 0, "history order must regress through actor ingress");
-        assert!(app.test_store().await.applied_edit_ids().len() < before);
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "history order must regress through actor ingress");
+        assert!(app.stores.test_store().await.applied_edit_ids().len() < before);
         artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6656,19 +6647,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        app.test_store_mut()
+        app.stores.test_store_mut()
             .await
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit undo");
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)));
         assert!(admitted.events.iter().all(|event| event.kind != "history-changed"));
-        assert_eq!(app.test_snapshot().await.count, 1, "first turn answers without committing");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "first turn answers without committing");
         let settled = settle_reserved(&mut app, admitted).await;
         assert!(settled.events.iter().any(|event| event.kind == "history-changed"));
-        assert_eq!(app.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
         artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6833,7 +6824,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        app.test_store_mut()
+        app.stores.test_store_mut()
             .await
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
@@ -6850,7 +6841,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }))),
          &mut identity)
         .await;
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
         let before = app.test_history().await;
         assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
@@ -6860,16 +6851,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             first.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
         );
-        assert_eq!(app.test_snapshot().await.count, 1, "first undo must pop the chrome-top shell, not the document example");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "first undo must pop the chrome-top shell, not the document example");
         assert!(first.history_patch.as_ref().is_some_and(|patch| patch.can_undo && !patch.upserts.is_empty()));
 
         let second = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(second.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })));
-        assert_eq!(app.test_snapshot().await.count, 0, "second undo must apply the document inverse");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "second undo must apply the document inverse");
         assert!(second.history_patch.as_ref().is_some_and(|patch| patch.can_redo && !patch.upserts.is_empty()));
 
         reserved_action(&mut app, "redo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
         close_reserved_app(&mut app, mounted_policy,cx);
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -6892,7 +6883,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use semio_framework::manifest::ViewWindowInstance;
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         app.bind_instance_id(1).await;
-        app.test_store_mut()
+        app.stores.test_store_mut()
             .await
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
@@ -7012,7 +7003,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        app.test_store_mut()
+        app.stores.test_store_mut()
             .await
             .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
@@ -7027,13 +7018,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let before = app.test_history().await;
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Activate Window"), "the window activation is the newest row");
         assert!(before.commands.iter().find(|entry| entry.action_id == "shell.windowActivate").is_some_and(|entry| !entry.revertible), "a note that declared no inverse is not an undo target");
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
         let undone = reserved_action(&mut app, "undo", None, &mut identity).await;
         assert!(
             undone.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })),
             "undo must not replay a window activation into the guest"
         );
-        assert_eq!(app.test_snapshot().await.count, 0, "undo must pop the document edit, not the window activation");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "undo must pop the document edit, not the window activation");
         let after = app.test_history().await;
         assert!(after.commands.iter().any(|entry| entry.action_id == "shell.windowActivate"), "the chrome row stays in the append-only log");
         close_reserved_app(&mut app, mounted_policy,cx);
@@ -7209,13 +7200,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc1");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc2");
-        assert_eq!(app.test_snapshot().await.count, 2);
+        assert_eq!(app.stores.test_snapshot().await.count, 2);
         let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.test_history().await.commands.len();
 
         let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &mut identity).await;
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
-        assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
         assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
@@ -7576,7 +7567,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta(), &mut identity,cx).await.expect("select");
         assert!(app.test_history().await.commands.is_empty(), "a config-only View is never a row (design §20.13, L4)");
-        assert_eq!(app.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
+        assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "while the config lane holds its edit");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -7601,7 +7592,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             app.dispatch_typed(TestCommand::Select { id: Some(id.into()) }, &meta(), &mut identity,cx).await.expect("select");
         }
         assert!(app.test_history().await.commands.is_empty(), "three config-only Views add no row");
-        assert_eq!(app.test_config().await.selected, Some("node-3".to_string()));
+        assert_eq!(app.stores.test_config().await.selected, Some("node-3".to_string()));
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8089,14 +8080,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.detach_backbone().await.expect("detach");
         assert!(app.backbone_ref().is_none());
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment while detached");
-        assert_eq!(app.test_snapshot().await.count, 2, "detached edits still land on the in-memory graph");
+        assert_eq!(app.stores.test_snapshot().await.count, 2, "detached edits still land on the in-memory graph");
         assert!(far.receive().await.expect("receive while detached").is_empty(), "detached edits never reach the peer");
 
         let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2").await;
         app.attach_backbone(store::os_store::backbone::Backbones::Memory(near_again)).await.expect("re-attach");
         assert!(app.backbone_ref().is_some());
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment after re-attach");
-        assert_eq!(app.test_snapshot().await.count, 3);
+        assert_eq!(app.stores.test_snapshot().await.count, 3);
         assert!(!far_again.receive().await.expect("receive after re-attach").is_empty(), "re-attaching resumes outbound convergence on the new backbone");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -8612,7 +8603,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 domains: vec![PresenceDomain { domain: fixture["presence"]["domainId"].as_str().unwrap().into(), granularity: "item".into(), selected: vec![fixture["presence"]["nodeKey"].as_str().unwrap().into()], hovered: Vec::new() }],
             }),
         }).unwrap();
-        *app.peer_presence = std::sync::Arc::new(peers);
+        *app.roster.peer_presence = std::sync::Arc::new(peers);
         let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         for surface in fixture["surfaces"].as_array().unwrap() {
@@ -8643,7 +8634,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity,cx).await.expect_err("a View command emitting operations must be rejected");
         assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
-        assert_eq!(app.test_snapshot().await, TestSnapshot::default());
+        assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8682,7 +8673,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             seq: 1,
         };
         let result = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect("an Activate intent on a Mutation-kind action must dispatch");
-        assert_eq!(app.test_snapshot().await.count, 1, "the mutation must have applied");
+        assert_eq!(app.stores.test_snapshot().await.count, 1, "the mutation must have applied");
         assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
         let history = app.test_history().await;
         assert!(history.commands.iter().any(|entry| entry.action_id == "incrementViaCommand"), "a command-log entry must have been recorded for the intent");
@@ -8723,7 +8714,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         };
         let error = handle_intent_settled(&mut app, &intent, &meta(), &mut identity,cx).await.expect_err("a View-kind intent emitting operations must be rejected");
         assert!(matches!(&error.primary,semio_framework_plugin_ownership::bounded_ownership::PluginLifecyclePrimary::Fault(fault) if fault.message.contains("must not emit operations")), "unexpected complete original error: {error:?}");
-        assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
+        assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8793,16 +8784,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for (value, commit) in [("a", false), ("ab", false), ("abc", true)] {
             app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta(), &mut identity,cx).await.expect("streamLabel");
         }
-        assert_eq!(app.test_snapshot().await.label, "abc");
+        assert_eq!(app.stores.test_snapshot().await.label, "abc");
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.stores.test_snapshot().await.label, "");
 
         for value in ["x", "xy"] {
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity,cx).await.expect("setLabel");
         }
-        assert_eq!(app.test_snapshot().await.label, "xy");
+        assert_eq!(app.stores.test_snapshot().await.label, "xy");
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "x");
+        assert_eq!(app.stores.test_snapshot().await.label, "x");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8841,10 +8832,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         );
         assert_eq!(result.inverse_group.mutations.len(), 1);
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
-        assert_eq!(app.test_snapshot().await.label, "abc");
+        assert_eq!(app.stores.test_snapshot().await.label, "abc");
         app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta(), &mut identity,cx).await.expect("streamLabel commit");
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "");
+        assert_eq!(app.stores.test_snapshot().await.label, "");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8869,7 +8860,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
         assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -8894,7 +8885,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
         app.handle_command(&mut valid, None, Some("edit"), &meta(), &mut identity).await.expect("app-owned command");
         settle_contract_app(&mut app,&mut identity,cx).await;
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
         let mut unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
         let error = app.handle_command(&mut unknown, None, Some("edit"), &meta(), &mut identity).await.expect_err("undeclared app command");
         assert!(error.message.contains("not owned by app"), "unexpected error: {}", error.message);
@@ -8968,7 +8959,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.handle_command(&mut invocation, None, Some("edit"), &meta(), &mut identity).await.expect("active mode-owned command");
         settle_contract_app(&mut app,&mut identity,cx).await;
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
         let error = app.handle_command(&mut invocation, None, None, &meta(), &mut identity).await.expect_err("inactive mode command");
         assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
     
@@ -8998,7 +8989,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta(),&mut identity,cx).await.expect("addressed window action");
         settle_contract_app(&mut app,&mut identity,cx).await;
-        assert_eq!(app.test_snapshot().await.label, "main-instance-2");
+        assert_eq!(app.stores.test_snapshot().await.label, "main-instance-2");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -9053,9 +9044,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity,cx).await.expect("inc");
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity,cx).await.expect("inc");
-        assert_eq!(app.test_snapshot().await.count, 2);
+        assert_eq!(app.stores.test_snapshot().await.count, 2);
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.count, 1);
+        assert_eq!(app.stores.test_snapshot().await.count, 1);
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
     
@@ -9075,7 +9066,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.code.0, "interactive-job.unknown-key");
-        assert_eq!(app.test_snapshot().await, TestSnapshot::default());
+        assert_eq!(app.stores.test_snapshot().await, TestSnapshot::default());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
     
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
@@ -9125,11 +9116,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
-        let edits_after_select = app.interaction_store.envelope().vcs.edits.len();
+        let edits_after_select = app.stores.interaction_store.envelope().vcs.edits.len();
 
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
 
-        assert_eq!(app.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
+        assert_eq!(app.stores.interaction_store.envelope().vcs.edits.len(), edits_after_select, "hover must never mint a persisted interaction_store edit");
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &mut identity).await;
@@ -9161,7 +9152,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
         reserved_action(&mut app, "undo", None, &mut identity).await;
-        assert_eq!(app.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
+        assert_eq!(app.stores.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
     
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -9338,7 +9329,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
 
-        app.own_color = Some(9);
+        app.roster.own_color = Some(9);
         let mut peer_presence = PeerPresenceRoot::empty();
         peer_presence
             .insert(
@@ -9353,7 +9344,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 },
             )
             .expect("peer fixture fits fixed root");
-        let previous = std::mem::replace(&mut *app.peer_presence, std::sync::Arc::new(peer_presence));
+        let previous = std::mem::replace(&mut *app.roster.peer_presence, std::sync::Arc::new(peer_presence));
         assert!(previous.is_empty());
         drop(previous);
 
@@ -9384,13 +9375,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .unwrap_or_else(|_| panic!("bounded fixture"));
         let tree = ComponentTree::new(root);
         let state = app.interaction_state().await;
-        app.stamp_and_cache_interaction_ui(&tree, &state, "window").await.expect("bounded fixture");
-        let topology = app.interaction_ui_topology.get("items").expect("topology cached for the items domain");
+        app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree, &state, "window").await.expect("bounded fixture");
+        let topology = app.interaction.interaction_ui_topology.get("items").expect("topology cached for the items domain");
         assert_eq!(topology.ordered.len(), 1);
         assert_eq!(topology.ordered[0].id, "item-1");
 
-        assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
-        let update = &app.pending_presence[0];
+        assert_eq!(app.roster.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.roster.pending_presence);
+        let update = &app.roster.pending_presence[0];
         assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));
         assert_eq!(update.node_key, "item-1");
         assert!(update.own.selected, "own selection must be reported");
@@ -9460,21 +9451,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         let state = app.interaction_state().await;
-        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
-        let first: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
+        let first: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(first, vec![("item-1".to_string(), true)]);
 
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
         let state = app.interaction_state().await;
-        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
-        let second: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
+        let second: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert!(second.contains(&("item-2".to_string(), true)), "the newly selected row must be marked: {second:?}");
         assert!(second.contains(&("item-1".to_string(), false)), "the row that LOST the selection must be retired, not left marked: {second:?}");
 
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
         let state = app.interaction_state().await;
-        app.stamp_and_cache_interaction_ui(&tree(), &state, "window").await.expect("bounded fixture");
-        let third: Vec<(String, bool)> = app.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
+        app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
+        let third: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(third, vec![("item-2".to_string(), true)], "an unchanged selection must cost exactly its own mark, never a repeated retirement");
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -9703,7 +9694,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
         app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
         assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.as_slice()), Some(["item-1".to_string()].as_slice()));
@@ -9772,7 +9763,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert_eq!(snapshot.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the selection snapshot moved inside the carrying turn");
         let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
         assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
@@ -9805,14 +9796,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
         app.test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pick lands");
-        assert_eq!(app.test_interaction_selection_snapshot().selection.get("items").map(|selection| selection.ids.len()), Some(1));
+        assert_eq!(app.interaction.test_interaction_selection_snapshot(&app.stores).selection.get("items").map(|selection| selection.ids.len()), Some(1));
 
         let carrier_scope = UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: true, tools: false, engagements: false, measures: false, labels: false };
         let clear = Emit { effects: vec![inline_interaction_select(interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))], ui_scope: carrier_scope, ..Default::default() };
         let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("clear lands");
         assert!(result.requested_effects.is_empty(), "nothing is left for the host to replay: {:?}", result.requested_effects);
         assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()), "an empty-target replace clears the domain inline: {:?}", snapshot.selection);
         let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, .. } = &result.ui_scope else { panic!("two partial scopes union into a partial scope, got {:?}", result.ui_scope) };
         assert!(window_bodies.iter().any(|body| body == "some.window"), "the carrier's own window body survives the merge: {window_bodies:?}");
@@ -9849,7 +9840,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(result.diagnostics[0].code.0, crate::interaction_topology::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE);
         assert!(result.diagnostics[0].message.contains("ghosts"), "the diagnostic names the refused domain: {}", result.diagnostics[0].message);
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a refused verb moves nothing: {:?}", snapshot.selection);
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -9906,7 +9897,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the DispatchAction interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert_eq!(snapshot.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the selection snapshot moved inside the carrying turn");
         let declared = <TestApp<false> as ArtifactApp>::interaction_scope(InteractionVerb::Select, &["items"]).expect("the fixture declares its select scope");
         assert_eq!(result.ui_scope, declared, "a `None` carrier scope widens to exactly the verb's declared interaction refresh scope");
@@ -9942,7 +9933,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(result.requested_effects, vec![chain]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
-        let snapshot = app.test_interaction_selection_snapshot();
+        let snapshot = app.interaction.test_interaction_selection_snapshot(&app.stores);
         assert!(snapshot.selection.values().all(|selection| selection.ids.is_empty()), "a non-interaction DispatchAction moves no selection: {:?}", snapshot.selection);
         close_reserved_app(&mut app, mounted_policy,cx);
     
@@ -10609,7 +10600,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        app.test_store_mut().await.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.unwrap();
+        app.stores.test_store_mut().await.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.unwrap();
         crate::child_content::test_mounted_command_history_replacement(&mut app);
     }
     #[semio_framework_async_macros::async_test]

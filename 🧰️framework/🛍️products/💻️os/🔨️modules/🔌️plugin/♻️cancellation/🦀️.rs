@@ -1,13 +1,21 @@
 //! ♻️ Tool operation keys, document authority and tool cancellation scopes, handles and leases.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as pack;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
 use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use semio_framework_plugin_ownership::bounded_ownership::{plugin_grant_funds, plugin_typed_owner_demand, plugin_typed_owner_step};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, RetirementDemand, ValueError};
+use std::mem::ManuallyDrop;
 #[path="🎟️issuer/🦀️.rs"]
 mod issuer;
-pub(crate) use issuer::ToolCancellationIssuer;
+#[doc(hidden)]
+pub use issuer::ToolCancellationIssuer;
 #[cfg(any(test,feature="media-turn-testing"))]
-pub(crate) use issuer::cancellation_issuer_original_creation_physical_birth_and_close;
+#[doc(hidden)]
+pub use issuer::cancellation_issuer_original_creation_physical_birth_and_close;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ArtifactDocumentAuthority(pub u32);
@@ -21,7 +29,8 @@ pub struct ToolOperationKey {
     pub generation: semio_framework_job::Generation,
 }
 
-pub(crate) const TOOL_CANCELLATION_SLOTS: usize = 1_024;
+#[doc(hidden)]
+pub const TOOL_CANCELLATION_SLOTS: usize = 1_024;
 
 const TOOL_CANCELLATION_WORDS: usize = TOOL_CANCELLATION_SLOTS / u64::BITS as usize;
 
@@ -31,21 +40,30 @@ pub(crate) struct ToolPublicationScopePermit {
     _operation: PublicationPermit,
 }
 
-pub(crate) struct ToolDocumentCancellationScope {
+#[doc(hidden)]
+pub struct ToolDocumentCancellationScope {
     pub(crate) document: ArtifactDocumentAuthority,
-    pub(crate) generation: u64,
-    pub(crate) token: semio_framework_job::CancelToken,
-    pub(crate) publication_claim: PublicationClaimHandle,
-    pub(crate) operation: ToolOperationKey,
+    #[doc(hidden)]
+    pub generation: u64,
+    #[doc(hidden)]
+    pub token: semio_framework_job::CancelToken,
+    #[doc(hidden)]
+    pub publication_claim: PublicationClaimHandle,
+    #[doc(hidden)]
+    pub operation: ToolOperationKey,
 }
 
-pub(crate) struct ToolKeyedDocumentCancellationScope {
-    pub(crate) token: semio_framework_job::CancelToken,
-    pub(crate) publication_claim: PublicationClaimHandle,
+#[doc(hidden)]
+pub struct ToolKeyedDocumentCancellationScope {
+    #[doc(hidden)]
+    pub token: semio_framework_job::CancelToken,
+    #[doc(hidden)]
+    pub publication_claim: PublicationClaimHandle,
     pub(crate) active: usize,
 }
 
-pub(crate) struct ToolCancellationState {
+#[doc(hidden)]
+pub struct ToolCancellationState {
     slots: Box<[std::mem::MaybeUninit<ToolDocumentCancellationScope>]>,
     occupied: [u64; TOOL_CANCELLATION_WORDS],
     pub(crate) allocation_admitted: bool,
@@ -69,7 +87,8 @@ impl ToolCancellationState {
     }
 
     /// 🗝️ SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-    pub(crate) fn get(&self, index: usize) -> Option<&ToolDocumentCancellationScope> {
+    #[doc(hidden)]
+    pub fn get(&self, index: usize) -> Option<&ToolDocumentCancellationScope> {
         if !self.occupied(index) {
             return None;
         }
@@ -83,7 +102,8 @@ impl ToolCancellationState {
     }
 
     /// 🫳️ SAFETY: occupancy was checked and is now cleared before the exact initialized read.
-    pub(crate) fn take(&mut self, index: usize) -> Option<ToolDocumentCancellationScope> {
+    #[doc(hidden)]
+    pub fn take(&mut self, index: usize) -> Option<ToolDocumentCancellationScope> {
         if !self.occupied(index) {
             return None;
         }
@@ -93,15 +113,19 @@ impl ToolCancellationState {
 }
 
 pub struct ToolCancellationHandle {
-    pub(crate) state: std::sync::Arc<semio_framework_value::retirement::controlled::RetainedOwnerGate<ToolCancellationState>>,
+    #[doc(hidden)]
+    pub state: std::sync::Arc<semio_framework_value::retirement::controlled::RetainedOwnerGate<ToolCancellationState>>,
     pub(crate) app_scope: semio_framework_job::CancelToken,
-    pub(crate) publication_scope: PublicationClaimHandle,
+    #[doc(hidden)]
+    pub publication_scope: PublicationClaimHandle,
     pub(crate) app_generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
-    pub(crate) active: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    #[doc(hidden)]
+    pub active: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
 
 impl ToolCancellationHandle {
-    pub(crate) fn slot(document: ArtifactDocumentAuthority) -> usize {
+    #[doc(hidden)]
+    pub fn slot(document: ArtifactDocumentAuthority) -> usize {
         document.0 as usize % TOOL_CANCELLATION_SLOTS
     }
 
@@ -157,7 +181,8 @@ pub(crate) struct ToolCancellationLeaseOriginal {
     pub(crate) finished: bool,
 }
 
-pub(crate) struct ToolCancellationLease{original:std::mem::ManuallyDrop<ToolCancellationLeaseOriginal>}
+#[doc(hidden)]
+pub struct ToolCancellationLease{original:std::mem::ManuallyDrop<ToolCancellationLeaseOriginal>}
 impl ToolCancellationLease{
     pub(crate) fn from_original(original:ToolCancellationLeaseOriginal)->Self{Self{original:std::mem::ManuallyDrop::new(original)}}
     pub(crate) fn into_retirement_source(self)->ToolCancellationLeaseOriginal{
@@ -169,20 +194,24 @@ impl std::ops::Deref for ToolCancellationLease{type Target=ToolCancellationLease
 impl std::ops::DerefMut for ToolCancellationLease{fn deref_mut(&mut self)->&mut Self::Target{&mut self.original}}
 
 impl ToolCancellationLease {
-    pub(crate) async fn is_cancelled(&self) -> bool {
+    #[doc(hidden)]
+    pub async fn is_cancelled(&self) -> bool {
         self.token.is_cancelled().await
     }
 
-    pub(crate) fn cancel_token(&self) -> &semio_framework_job::CancelToken {
+    #[doc(hidden)]
+    pub fn cancel_token(&self) -> &semio_framework_job::CancelToken {
         &self.token
     }
 
-    pub(crate) fn cancel(&self) {
+    #[doc(hidden)]
+    pub fn cancel(&self) {
         self.publication_claim.cancel();
         self.token.cancel_now();
     }
 
-    pub(crate) fn rebind_keyed(&mut self, base_revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<bool, Fault> {
+    #[doc(hidden)]
+    pub fn rebind_keyed(&mut self, base_revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<bool, Fault> {
         let original=&mut*self.original;
         let mut state = match original.handle.state.try_lock() {
             Ok(state) => state,
@@ -204,7 +233,8 @@ impl ToolCancellationLease {
         Ok(true)
     }
 
-    pub(crate) fn try_claim_publication(&self) -> Option<ToolPublicationScopePermit> {
+    #[doc(hidden)]
+    pub fn try_claim_publication(&self) -> Option<ToolPublicationScopePermit> {
         let app = self.handle.publication_scope.try_claim()?;
         let document = match self.document_claim.as_ref() {
             Some(claim) => Some(claim.try_claim()?),
@@ -214,12 +244,14 @@ impl ToolCancellationLease {
         Some(ToolPublicationScopePermit { _app: app, _document: document, _operation: operation })
     }
 
-    pub(crate) fn finish(&mut self) {
+    #[doc(hidden)]
+    pub fn finish(&mut self) {
         self.publication_claim.finish();
         self.finished = true;
     }
 
-    pub(crate) fn finish_in_place(&mut self) {
+    #[doc(hidden)]
+    pub fn finish_in_place(&mut self) {
         self.publication_claim.finish();
         self.finished = true;
     }
@@ -232,3 +264,16 @@ impl Drop for ToolCancellationLease {
 }
 
 include!("📦️lease/🦀️.rs");
+
+#[path = "../📬️completion/♻️effects/🦀️.rs"]
+pub mod completion_effects;
+#[path = "../📬️completion/♻️vacant/🦀️.rs"]
+pub mod completion_vacant;
+#[path = "../🌱️initialization/🏪️catalog/🦀️.rs"]
+pub mod original_catalog_constructor;
+#[path = "🛬️lifted/👁️view/🦀️.rs"]
+mod lifted_view;
+pub use lifted_view::*;
+#[path = "🛬️lifted/🧵️task/🦀️.rs"]
+mod lifted_task;
+pub use lifted_task::*;

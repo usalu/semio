@@ -1,3 +1,6 @@
+import {requireHostPlatformBuildArgumentsV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎯️host-platform/🟦️.ts";
+import {buildDescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -10,16 +13,15 @@ import { devToolingEnv, resolveWorkspaceBin, runRepositoryCargoTests, runCmd } f
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
-/** 🛠️ The Cargo profile the emitter is built under: the workspace's build-time host tool profile (`[profile.host-tool]`). */
-export const DESCRIBE_TOOL_PROFILE = "host-tool";
 export const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
 export const DESCRIPTOR_JSON_FILENAME = "🔣️.json";
 export const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
 export class DescriptorBuildScript extends BundleScript {
-  async run(): Promise<void> {
-    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+  async run(segments:string[]): Promise<void> {
+    requireHostPlatformBuildArgumentsV1(segments,process.platform);
+    await buildDescriptorEmitterV1(this.repoRoot,this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"descriptor:build",0));
   }
 }
 
@@ -39,14 +41,6 @@ export function freshWasmArtifactSize(path: string, maximum: number, label: stri
 
 export function cargoTargetRoot(repoRoot: string): string {
   return cargoTargetDirectory(repoRoot);
-}
-
-/** 🛠️ Consumes the descriptor emitter published by its declared Nx build prerequisite. */
-export function publishedDescriptorEmitter(repoRoot: string): string {
-  const binName = process.platform === "win32" ? CRATE_NAME + ".exe" : CRATE_NAME;
-  const binary = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/dist/build", binName);
-  if (!existsSync(binary) || !lstatSync(binary).isFile() || lstatSync(binary).isSymbolicLink()) throw new Error("Missing descriptor emitter Nx prerequisite: @semio-tech/os-plugin-describe-rs:build");
-  return binary;
 }
 
 /** 🎯️ The uplifted artifact cargo writes for `packageName` under one component profile, resolved through

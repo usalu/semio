@@ -1,5 +1,6 @@
 mod tests {
     use super::*;
+    use semio_framework_os_host_registry::register_artifact_descriptor;
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
     /// 🎯️🆕️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM W1b task 1: the real
@@ -44,7 +45,7 @@ mod tests {
         // second run of this same test binary registering the identical static entry must not error.
         io_register(&ENTRIES).ok();
 
-        crate::registry::register_artifact_descriptor(&semio_framework::ArtifactKindSpec {
+        register_artifact_descriptor(&semio_framework::ArtifactKindSpec {
             id: TEST_KIND.to_string(),
             label: semio_framework_ui_locale::LocalizedLabel::native("W1b Export Bug Proof", "W1b-Exportfehlernachweis"),
             source_format: TEST_KIND.to_string(),
@@ -58,9 +59,9 @@ mod tests {
             export_stdio_kinds: Vec::new(),
             import_stdio_kinds: Vec::new(),
         });
-        assert_eq!(crate::registry::os_artifact_dialect(TEST_KIND).to_coordinate(), "s.__w1b_export_bug_proof@1/*", "catalog-derived dialect must exactly match the dialect the test IoEntry was registered under");
+        assert_eq!(os_artifact_dialect(TEST_KIND).to_coordinate(), "s.__w1b_export_bug_proof@1/*", "catalog-derived dialect must exactly match the dialect the test IoEntry was registered under");
 
-        crate::host::resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
+        resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
             kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
             short_id: "w1bproof".to_string(),
             aliases: Vec::new(),
@@ -85,36 +86,7 @@ mod tests {
 
     #[test]
     fn validates_empty_workflow() {
-        assert!(validate_workflow(&crate::host::resolve_kernel_future(empty_workflow())).ok);
-    }
-
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    #[test]
-    fn svg_path_extraction_preserves_transformed_geometry() {
-        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect x="1" y="1" width="4" height="4"/></svg>"#;
-        let paths = crate::media_export_raster::svg_to_polylines(svg).expect("SVG paths");
-        assert_eq!(paths.len(), 1);
-        assert!(paths[0].closed);
-        assert_eq!(paths[0].vertices[0], [1.0, 9.0]);
-    }
-
-    #[test]
-    fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
-        crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework::mesh_io::GlbExporter));
-        let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_handler_key("3d.__mesh_exporter_test", "glb")).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
-        let bytes = base64_codec::base64_standard_decode(result.data).expect("decode base64");
-        let mesh = semio_framework::mesh_io::binary::mesh_from_glb(&bytes).expect("glb decodes back to a mesh");
-        assert!(mesh.vertex_count() > 0);
-    }
-
-    #[test]
-    fn mesh_importer_registrar_round_trips_a_box_through_obj() {
-        crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework::mesh_io::ObjImporter));
-        let obj_bytes = semio_framework::mesh_io::text::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
-        let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let handler = handlers.get(&os_media_handler_key("3d.__mesh_importer_test", "obj")).expect("obj handler registered");
-        let document = handler(&obj_bytes).expect("import obj");
-        assert!(document["vertexCount"].as_u64().expect("vertex count") > 0);
+        assert!(validate_workflow(&resolve_kernel_future(empty_workflow())).ok);
     }
 
     // 🚪️ `solid_exporter_and_importer_registrars_round_trip_a_box_through_step` DELETED (ticket
@@ -163,7 +135,7 @@ mod tests {
 
     #[test]
     fn flow_fixture_projects_neuron_preview() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
         let fixture = os_workflow_to_flow_host_snapshot_json(&graph, &OsWorkflowCamera::default());
         assert_eq!(fixture["schema"], "flow.host_snapshot");
@@ -184,7 +156,7 @@ mod tests {
 
     #[test]
     fn flow_fixture_round_trips_camera_and_diffs_back_to_operations() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 40.0, 80.0));
         graph.nodes.push(media_node("node-2", 300.0, 80.0));
         graph.edges.push(WorkflowEdge {
@@ -193,7 +165,7 @@ mod tests {
             source_port_id: "node-1:out".into(),
             target_node_id: "node-2".into(),
             target_port_id: "node-2:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         let camera = OsWorkflowCamera { x: 12.0, y: -8.0, zoom: 1.5 };
         let fixture = os_workflow_to_flow_host_snapshot_json(&graph, &camera);
@@ -209,7 +181,7 @@ mod tests {
 
     #[test]
     fn flow_fixture_diff_connects_disconnects_and_removes() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
         graph.nodes.push(media_node("node-2", 200.0, 0.0));
         graph.edges.push(WorkflowEdge {
@@ -218,7 +190,7 @@ mod tests {
             source_port_id: "node-1:out".into(),
             target_node_id: "node-2".into(),
             target_port_id: "node-2:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         let mut fixture = os_workflow_to_flow_host_snapshot_json(&graph, &OsWorkflowCamera::default());
         fixture["synapses"] = json!([
@@ -245,7 +217,7 @@ mod tests {
 
     #[test]
     fn plans_a_single_delivery_across_one_dirty_edge() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
         graph.nodes.push(media_node("node-2", 200.0, 0.0));
         graph.edges.push(WorkflowEdge {
@@ -254,15 +226,15 @@ mod tests {
             source_port_id: "node-1:out".into(),
             target_node_id: "node-2".into(),
             target_port_id: "node-2:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
-        let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
+        let deliveries = resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
         assert_eq!(deliveries, vec![WorkflowDelivery { edge_id: "edge-1".into(), producer_node_id: "node-1".into(), producer_port_id: "node-1:out".into(), consumer_node_id: "node-2".into(), consumer_port_id: "node-2:in".into() }]);
     }
 
     #[test]
     fn plans_a_chain_in_topological_order_when_only_the_root_is_dirty() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
         graph.nodes.push(media_node("node-2", 200.0, 0.0));
         graph.nodes.push(media_node("node-3", 400.0, 0.0));
@@ -272,7 +244,7 @@ mod tests {
             source_port_id: "node-1:out".into(),
             target_node_id: "node-2".into(),
             target_port_id: "node-2:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         graph.edges.push(WorkflowEdge {
             id: "edge-bc".into(),
@@ -280,9 +252,9 @@ mod tests {
             source_port_id: "node-2:out".into(),
             target_node_id: "node-3".into(),
             target_port_id: "node-3:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
-        let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
+        let deliveries = resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"])));
         assert_eq!(deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect::<Vec<_>>(), vec!["edge-ab", "edge-bc"], "A→B must be planned before B→C");
     }
 
@@ -290,7 +262,7 @@ mod tests {
     fn plans_a_diamond_with_one_delivery_per_incoming_edge() {
         // 🔀️ One delivery per edge, not per node: D has two producers (B and C), so D is the
         // target of two separate deliveries rather than a single merged one.
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-a", 0.0, 0.0));
         graph.nodes.push(media_node("node-b", 200.0, -80.0));
         graph.nodes.push(media_node("node-c", 200.0, 80.0));
@@ -301,7 +273,7 @@ mod tests {
             source_port_id: "node-a:out".into(),
             target_node_id: "node-b".into(),
             target_port_id: "node-b:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         graph.edges.push(WorkflowEdge {
             id: "edge-ac".into(),
@@ -309,7 +281,7 @@ mod tests {
             source_port_id: "node-a:out".into(),
             target_node_id: "node-c".into(),
             target_port_id: "node-c:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         graph.edges.push(WorkflowEdge {
             id: "edge-bd".into(),
@@ -317,7 +289,7 @@ mod tests {
             source_port_id: "node-b:out".into(),
             target_node_id: "node-d".into(),
             target_port_id: "node-d:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
         graph.edges.push(WorkflowEdge {
             id: "edge-cd".into(),
@@ -325,9 +297,9 @@ mod tests {
             source_port_id: "node-c:out".into(),
             target_node_id: "node-d".into(),
             target_port_id: "node-d:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
-        let deliveries = crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-a"])));
+        let deliveries = resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-a"])));
         let edge_ids: Vec<&str> = deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect();
         assert_eq!(edge_ids.len(), 4);
         let index_of = |id: &str| edge_ids.iter().position(|candidate| *candidate == id).unwrap();
@@ -337,7 +309,7 @@ mod tests {
 
     #[test]
     fn plans_nothing_when_no_instance_is_dirty() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
         graph.nodes.push(media_node("node-2", 200.0, 0.0));
         graph.edges.push(WorkflowEdge {
@@ -346,16 +318,16 @@ mod tests {
             source_port_id: "node-1:out".into(),
             target_node_id: "node-2".into(),
             target_port_id: "node-2:in".into(),
-            contract: crate::host::resolve_kernel_future(placeholder_media_contract("2d.drawing")),
+            contract: resolve_kernel_future(placeholder_media_contract("2d.drawing")),
         });
-        assert!(crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&[]))).is_empty());
+        assert!(resolve_kernel_future(plan_workflow(&graph, &dirty_set(&[]))).is_empty());
     }
 
     #[test]
     fn plans_nothing_for_a_dirty_node_with_no_outgoing_edges() {
-        let mut graph = crate::host::resolve_kernel_future(empty_workflow());
+        let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-1", 0.0, 0.0));
-        assert!(crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"]))).is_empty());
+        assert!(resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"]))).is_empty());
     }
 
     #[derive(semio_framework_value_derive::FromValue)]
@@ -381,9 +353,9 @@ mod tests {
             let witness: PlannerCase = semio_framework_pack_json::from_json_str(example, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             assert_eq!(oracle["name"].as_str(), Some(witness.name.as_str()));
             let dirty = witness.dirty_node_ids.into_iter().collect();
-            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&witness.graph, &dirty));
+            let deliveries = resolve_kernel_future(plan_workflow(&witness.graph, &dirty));
             assert_eq!(deliveries, witness.expected_deliveries, "{}", witness.name);
-            let mut document = crate::host::resolve_kernel_future(empty_workflow_snapshot());
+            let mut document = resolve_kernel_future(empty_workflow_snapshot());
             document.graph = witness.graph;
             store::test_support::assert_dsl_pack_equivalence(&document);
         }

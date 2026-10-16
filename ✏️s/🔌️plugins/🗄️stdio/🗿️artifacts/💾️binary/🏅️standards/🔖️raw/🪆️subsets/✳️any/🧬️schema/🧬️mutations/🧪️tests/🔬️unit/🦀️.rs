@@ -1,5 +1,6 @@
+use crate::BinarySnapshot;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_raw::subsets::any::schema::mutations::*;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;
 

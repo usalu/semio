@@ -6,9 +6,10 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧫️fixtures/🚀️launcher/🔣️.json
 
-use super::labels::{labels, DashboardLabels};
-use crate::preferences::Preferences;
-use crate::registry::{split_arguments, verb_text, Entry, Launch, Parameter, ParameterKind, Registry, Request};
+use dashboard_labels::{labels, verb_text, DashboardLabels};
+use dashboard_launch::Launch;
+use dashboard_preferences::Preferences;
+use dashboard_registry::{split_arguments, Entry, Parameter, ParameterKind, Registry, Request};
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_locale::Locale;
@@ -396,7 +397,7 @@ impl LauncherState {
             }
             (Stage::Confirm, Some(form)) => {
                 let (mut lines, _) = self.form_lines(form, text);
-                let command = self.preview(form).map_or_else(|_| form.id.clone(), |launch| crate::registry::window_title(&launch.label, self.locale));
+                let command = self.preview(form).map_or_else(|_| form.id.clone(), |launch| dashboard_labels::window_title(&launch.label, self.locale));
                 lines.insert(0, text.confirm_prompt.fill(&[("command", &command)]).into_string());
                 self.window(lines, 0, String::new(), String::new(), text.form_mutating.as_str().to_string())
             }
@@ -482,11 +483,11 @@ impl LauncherState {
                 Ok(launch) => {
                     if !launch.requires.is_empty() {
                         lines.push(text.form_requires.as_str().to_string());
-                        lines.extend(launch.requires.iter().map(|required| format!("  {}", crate::registry::window_title(&required.label, locale))));
+                        lines.extend(launch.requires.iter().map(|required| format!("  {}", dashboard_labels::window_title(&required.label, locale))));
                     }
                     if launch.processes.len() > 1 {
                         lines.push(text.form_members.fill(&[("count", &launch.processes.len().to_string())]).into_string());
-                        lines.extend(launch.processes.iter().map(|process| format!("  {}", crate::registry::window_title(&process.label, locale))));
+                        lines.extend(launch.processes.iter().map(|process| format!("  {}", dashboard_labels::window_title(&process.label, locale))));
                     }
                     lines.push(text.form_command.as_str().to_string());
                     lines.extend(launch.processes.iter().map(|process| format!("  {} {}", process.cmd, process.args.join(" "))));

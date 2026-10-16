@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, parse, resolve, sep } from "node:path";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
+import * as discovery from "../../🔍️discovery/🟦️typescript/📋️declarations/🟦️.ts";
 import { compilerFacts, compilerParseDiagnostics, strictSourceDiagnostics, type Facts, type Vector } from "../🔮️typescript-declaration-facts-oracle/🟦️.ts";
 
 //#region 🔒️Inputs
@@ -84,13 +84,13 @@ test("TypeScript declaration inspector rejects an unspecified or unsupported lan
 });
 
 test("TypeScript declaration grammar has strict standalone source types", () => {
-  const source = asset("../../🔍️discovery/🟦️.ts"), begin = "//#region 🟦️TypeScriptDeclarationFacts", finish = "//#endregion 🟦️TypeScriptDeclarationFacts";
+  const source = asset("../../🔍️discovery/🟦️typescript/📋️declarations/🟦️.ts"), begin = "//#region 🟦️TypeScriptDeclarationFacts", finish = "//#endregion 🟦️TypeScriptDeclarationFacts";
   const start = source.indexOf(begin), end = source.indexOf(finish);
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   expect(source.indexOf(begin, start + begin.length)).toBe(-1);
   expect(source.indexOf(finish, end + finish.length)).toBe(-1);
-  expect(strictSourceDiagnostics(source.slice(start, end + finish.length), resolve(import.meta.dir, "🟦️virtual-grammar.ts"))).toEqual([]);
+  expect(strictSourceDiagnostics(source.slice(start, end + finish.length), resolve(import.meta.dir, "🟦️virtual-grammar.ts"), true)).toEqual([]);
 });
 
 test("TypeScript declaration compiler oracle has strict source types", () => {
@@ -154,3 +154,22 @@ for (const row of unsupported.cases) {
   });
 }
 //#endregion 🧪️UnsupportedDeclarations
+
+const boundaries = JSON.parse(asset("../🧫️fixtures/📣️typescript-declaration-facts/⏹️boundary/🔣️.json")) as { readonly version: 1; readonly cases: readonly { readonly id: string; readonly language: "ts" | "tsx"; readonly source: string; readonly completeness: "incomplete" }[] };
+
+test("TypeScript declaration EOF corpus follows closed schema and independent compiler syntax", () => {
+  const validate = ajv.compile(schema.$defs.boundaryCorpus);
+  expect(validate(boundaries), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate({ ...boundaries, unexpected: true })).toBe(false);
+  expect(new Set(boundaries.cases.map(row => row.id)).size).toBe(boundaries.cases.length);
+  for (const row of boundaries.cases) {
+    const diagnostics = compilerParseDiagnostics(row.source, row.language);
+    expect(diagnostics.length, row.id).toBeGreaterThan(0);
+    const actual = inspector()(row.source, row.language);
+    expect(validateFacts(actual), JSON.stringify(validateFacts.errors)).toBe(true);
+    expect(actual.completeness, row.id).toBe(row.completeness);
+    expect(actual.diagnostics.length, row.id).toBeGreaterThan(0);
+    coordinateBounds(row.source, actual);
+  }
+  console.log("[DEBUG] Independent TypeScript compiler confirms " + boundaries.cases.length + " truncated token/Unicode/TSX cases; owned recovery remains bounded");
+});

@@ -9,26 +9,26 @@ export const COMPONENT_RECEIPT_FILE = "🧾️receipt.json";
 /** 🎯️ The one component target triple (`ComponentReceiptV1.target`). */
 export const COMPONENT_TARGET = schema.$defs.ComponentReceiptV1.properties.target.const;
 
-/** 🎚️ A component build profile: `wasm-release` ships, `wasm-prototype` is the local single-plugin loop. */
-export type ComponentProfileV1 = "wasm-release" | "wasm-prototype";
+/** 🎚️ A component build profile: `release` ships, `prototype` is the local single-plugin loop. */
+export type ComponentProfileV1 = "release" | "prototype";
 
 /** 🪶️ The ONE shipped component profile: describe, provenance, receipts, materialization and the trusted catalog act on its bytes. */
-export const SHIPPED_COMPONENT_PROFILE: ComponentProfileV1 = "wasm-release";
+export const SHIPPED_COMPONENT_PROFILE: ComponentProfileV1 = "release";
 
 /** 🔁️ The local-only profile of `components iterate <plugin-id>`; its bytes are never described for commit or shipped. */
-export const ITERATE_COMPONENT_PROFILE: ComponentProfileV1 = "wasm-prototype";
+export const ITERATE_COMPONENT_PROFILE: ComponentProfileV1 = "prototype";
 
 /** 📐️ One profile's fixed deliverable directory (crate-relative), byte cap and shipping admission. */
 export type ComponentProfilePolicyV1 = Readonly<{ directory: string; maximumBytes: number; shipped: boolean }>;
 
 /** 📏️ The schema-owned profile policy table (`ComponentProfilePolicies`). */
-export const COMPONENT_PROFILE_POLICIES = schema.$defs.ComponentProfilePolicies.const as Readonly<Record<ComponentProfileV1, ComponentProfilePolicyV1>>;
+export const COMPONENT_PROFILE_POLICIES = Object.freeze(Object.fromEntries(Object.entries(schema.$defs.ComponentProfilePolicies.const).map(([profile, policy]) => [profile, Object.freeze({ directory: policy.directory, maximumBytes: policy.maximumBytes, shipped: policy.shipped })]))) as Readonly<Record<ComponentProfileV1, ComponentProfilePolicyV1>>;
 
 /** 🧱️ The 256 MiB bound every shipped component meets before it reaches a receipt. */
-export const SHIPPED_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["wasm-release"].maximumBytes;
+export const SHIPPED_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["release"].maximumBytes;
 
-/** 🧯️ The local-only 512 MiB cap of an unoptimized, unstripped `wasm-prototype` link. */
-export const ITERATE_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["wasm-prototype"].maximumBytes;
+/** 🧯️ The local-only 512 MiB cap of an unoptimized, unstripped `prototype` link. */
+export const ITERATE_COMPONENT_MAX_BYTES = COMPONENT_PROFILE_POLICIES["prototype"].maximumBytes;
 
 /** 📏️ The most bytes one canonical receipt file may have. */
 export const COMPONENT_RECEIPT_MAX_BYTES = 4096;
@@ -51,7 +51,7 @@ export type ComponentReceiptV1 = Readonly<{
 /** 🔗️ The identity and bytes a receipt is required to name. */
 export type ComponentReceiptBindingV1 = Readonly<{ pluginId: string; packageId: string; wasmSha256: string; semanticDescriptorSha256: string }>;
 
-const RECEIPT_KEYS = schema.$defs.ComponentReceiptV1.required as readonly (keyof ComponentReceiptV1)[];
+const RECEIPT_KEYS = Object.freeze([...schema.$defs.ComponentReceiptV1.required]) as readonly (keyof ComponentReceiptV1)[];
 const SHA256 = new RegExp(schema.$defs.ComponentSha256.pattern, "u");
 const PLUGIN_ID = new RegExp(schema.$defs.ComponentPluginId.pattern, "u");
 const PACKAGE_ID = new RegExp(schema.$defs.ComponentPackageId.pattern, "u");
@@ -65,7 +65,7 @@ export function componentToolchainV1(identity: string): boolean {
 
 /** 🚦️ Admits exactly one known component profile name. */
 export function componentProfileV1(value: string | undefined): ComponentProfileV1 {
-  if (value !== "wasm-release" && value !== "wasm-prototype") throw new Error(`component profile must be wasm-release or wasm-prototype, not ${JSON.stringify(value)}`);
+  if (value !== "release" && value !== "prototype") throw new Error(`component profile must be release or prototype, not ${JSON.stringify(value)}`);
   return value;
 }
 

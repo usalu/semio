@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import {verifyProducedWasmPackageV1} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
@@ -9,7 +11,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../🧰️
 import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🌐️ Owned native and browser geometry-session build and law routes. */
-import { runCargo, runRepositoryExactCargoLaws, buildRepositoryWasmWebV1, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryExactCargoLaws, buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { sessionLaws } from "../../🧪️tests/🏷️ownership/🟦️.ts";
@@ -30,15 +32,15 @@ class TestScript extends BundleScript {
     await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:selected?args.slice(1):args, groups });
   }
 }
-async function buildSessionWasm(rsDir: string, control: CompilerAdmissionControl): Promise<void> {
-  await buildRepositoryWasmWebV1({ control, rsDir, componentDir: resolve(rsDir, "../../🧩️component/📦️packages/🦀️rust"), logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", outputDirectory: "🕸️bindings", pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
+async function buildSessionWasm(rsDir:string,invocation:ScriptInvocation,control:CompilerAdmissionControl): Promise<void> {
+  await buildRepositoryWasmWebV1({producer:"browser-module",invocation,consume:verifyProducedWasmPackageV1,control, rsDir, componentDir: resolve(rsDir, "../../🧩️component/📦️packages/🦀️rust"), logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
 }
-class WasmScript extends BundleScript { async run(): Promise<void> { await buildSessionWasm(import.meta.dir, scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0)); } }
+class WasmScript extends BundleScript { async run(): Promise<void> { await buildSessionWasm(import.meta.dir,this.invocation,scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0)); } }
 class CanonicalScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length !== 0) throw new Error("canonical-architecture takes no arguments");
     await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:["--locked"], groups:sessionLaws() });
-    await buildSessionWasm(import.meta.dir, scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0));
+    await buildSessionWasm(import.meta.dir,this.invocation,scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0));
     await browserSessionLaws();
   }
 }

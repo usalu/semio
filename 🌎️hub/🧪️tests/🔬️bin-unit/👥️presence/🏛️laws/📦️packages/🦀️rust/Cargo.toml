@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-presence-route-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Presence route laws: presence normalization, lease, roster and liveness over real sockets"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-presence-route-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-document-routes/testkit", "semio-hub-ledgers/testkit", "semio-hub-runtime/testkit", "semio-hub-session-routes/testkit"]
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-directory-contract = { workspace = true }
+semio-hub-document-routes = { workspace = true, features = ["testkit"] }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-route-testkit = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-testing = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+tokio-tungstenite = "0.26"
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
+protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+axum = { version = "0.8", features = ["ws"] }

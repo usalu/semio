@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-reactor-turn-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

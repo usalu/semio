@@ -1,0 +1,63 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-route-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared fixtures of the hub route laws: test states, servers, sockets, sessions and document-open plan authorities"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-route-testkit"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+semio-hub-artifact-checkin = { workspace = true }
+semio-hub-artifact-creation = { workspace = true }
+semio-hub-auth = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+semio-hub-directory-service = { workspace = true }
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-lag-rebootstrap = { workspace = true }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-route-models = { workspace = true, features = ["testkit"] }
+semio-hub-routes = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-state = { workspace = true, features = ["testkit"] }
+semio-hub-stores = { workspace = true }
+semio-hub-testing = { workspace = true }
+semio-hub-trusted-catalog-contract = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+semio-framework-artifact-reference = { path = "../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+axum = { version = "0.8", features = ["ws"] }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+futures = "0.3"
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-trace = { workspace = true }
+semio-hub-stdio-catalog = { workspace = true }
+semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+tokio-tungstenite = "0.26"
+blake3 = "1"
+
+[dev-dependencies]

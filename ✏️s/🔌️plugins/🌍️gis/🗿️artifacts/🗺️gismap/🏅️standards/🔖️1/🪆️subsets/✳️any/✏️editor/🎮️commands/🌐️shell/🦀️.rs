@@ -4,6 +4,7 @@
 use crate::editor::gis2d::modes::edit::windows::map::config;
 use crate::editor::gis2d::maphost::map_host_from;
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::tile_coordinates::gis_policy::GIS_MAP_OVERLAY_POSITIONS;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -22,7 +23,7 @@ pub mod open_source {
     pub fn handle(payload: &OpenSource, doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         let config = config::current(cfg);
         let host = map_host_from(doc.snapshot, &config);
-        match host.features.positions.get(&payload.feature_id).and_then(|row| row.source_url.clone()) {
+        match host.overlay_feature(GIS_MAP_OVERLAY_POSITIONS, &payload.feature_id).and_then(|row| row.link.clone()) {
             Some(url) => Ok(Emit::effect(Effect::OpenExternalUrl { url })),
             None => Ok(Emit::default()),
         }

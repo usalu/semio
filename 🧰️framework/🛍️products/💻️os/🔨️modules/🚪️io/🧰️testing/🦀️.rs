@@ -1,5 +1,6 @@
 //! 🧰️ Explicit original caller policy and funded close for snapshot file IO laws.
-use crate::{os_store::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotProgress}};
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_io_sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
 use semio_framework_value::{RetainedCloneGrant,ErasedSnapshotRetirement,NativeDecodeControl,NativeEncodeControl,native_decoding::NativeDecodeRetirementRecipient,native_encoding::NativeEncodeRetirementRecipient};
 
 /// 🎟️ Independent finite authority supplied by each file law's caller.

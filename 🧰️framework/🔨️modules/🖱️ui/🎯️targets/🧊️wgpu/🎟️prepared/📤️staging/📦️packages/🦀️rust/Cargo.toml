@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-ui-scene = { path = "../../../../../../🎬️scene/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
 semio-framework-ui-raster-owner = { path = "../../../../../../🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🌱️value/📦️packages/🦀️rust" }

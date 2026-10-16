@@ -78,10 +78,8 @@ pub use derived_composition::*;
 #[cfg(test)] use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4CodecFormat, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
 
-#[path = "📦️boxes/🦀️.rs"]
-pub mod boxes;
-#[path = "🎥️h264/🦀️.rs"]
-pub mod h264;
+pub use semio_s_artifact_stdio_mp4_boxes::standards::isobmff::subsets::any::io::boxes;
+pub use semio_s_artifact_stdio_mp4_inferences::standards::isobmff::subsets::any::io::h264;
 
 use boxes::{find_box, find_boxes, iter_boxes, require_box, write_box, ByteReader};
 
@@ -784,7 +782,7 @@ fn build_ctts(track: &Mp4Track) -> Vec<u8> {
 /// nicety: a natural-file open carries a whole caller-supplied document, and a caller that adds or drops
 /// a sample cannot be expected to also restate a writer's chunking. Encoding a legal snapshot must
 /// not depend on two fields being kept in step, so the encoder reconciles instead of aborting.
-fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
+pub fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
     let covered = track.chunk_sample_counts.iter().map(|count| *count as usize).sum::<usize>();
     if track.chunk_sample_counts.is_empty() || covered != track.samples.len() {
         return vec![track.samples.len() as u32];
@@ -1759,9 +1757,7 @@ pub mod playback {
 }
 //#endregion 🔖️Encode
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️codec/🦀️.rs"]
-mod codec_tests;
+
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::isobmff::subsets::any::io::Mp4Composer as Mp4RawAnyComposer;
@@ -1777,14 +1773,16 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub mod text {
+    pub use semio_s_artifact_stdio_mp4_text::standards::isobmff::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_mp4_schema::standards::isobmff::subsets::any::io::text::diff;
+    pub use semio_s_artifact_stdio_mp4_inferences::standards::isobmff::subsets::any::io::text::inferences;
+    pub use semio_s_artifact_stdio_mp4_inferences::standards::isobmff::subsets::any::io::text::snapshot;
+}
+
+
 
 pub mod derived_construction {
     use crate::standards::isobmff::subsets::any::schema::diff::Mp4Diff;

@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-workflow-workflow-schema-laws-rs",
+  "projectType": "library",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

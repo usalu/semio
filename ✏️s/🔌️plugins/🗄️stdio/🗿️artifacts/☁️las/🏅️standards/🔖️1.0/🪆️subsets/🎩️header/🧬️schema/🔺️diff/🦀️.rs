@@ -1261,9 +1261,7 @@ pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion Tests
 
 #[cfg(test)]

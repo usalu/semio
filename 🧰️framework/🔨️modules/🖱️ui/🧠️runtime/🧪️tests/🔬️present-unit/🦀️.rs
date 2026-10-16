@@ -1,5 +1,36 @@
-
 use super::*;
+use std::sync::{Mutex, MutexGuard, OnceLock};
+
+struct RegistryGuard {
+    _lock: MutexGuard<'static, ()>,
+}
+
+fn registry_guard() -> RegistryGuard {
+    static GUARD: OnceLock<Mutex<()>> = OnceLock::new();
+    let lock = GUARD.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    drain_page_registries_until_idle();
+    RegistryGuard { _lock: lock }
+}
+
+impl Drop for RegistryGuard {
+    fn drop(&mut self) {
+        drain_page_registries_until_idle();
+    }
+}
+
+fn drain_page_registries_until_idle() {
+    for _ in 0..(64 * 4 + ui_contract::UI_RESIDENT_SLOTS * 6 * 8) {
+        let resident_pending = ui_contract::UiResidentPermit::has_pending_returns();
+        if resident_pending {
+            let _ = ui_contract::UiResidentPermit::drain_one();
+        }
+        let value_idle = ui_contract::close_ui_value_page_one();
+        let built_idle = ui_contract::close_built_node_page_one();
+        if !resident_pending && value_idle && built_idle {
+            break;
+        }
+    }
+}
 
 fn leaf(key: &str) -> TreeNode {
     TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).ok().expect("bounded fixture key")
@@ -7,7 +38,7 @@ fn leaf(key: &str) -> TreeNode {
 
 #[test]
 fn mounted_producer_advances_one_opportunity_and_publishes_only_complete_candidate() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     let root = leaf("root").try_with_children([leaf("a"), leaf("b")]).ok().expect("fixed child pages");
     let mut producer = ComponentTreeProducer::try_new(ComponentTree::new(root), 7).ok().expect("nonzero generation");
     assert!(producer.take_complete().is_none());
@@ -23,7 +54,7 @@ fn mounted_producer_advances_one_opportunity_and_publishes_only_complete_candida
 
 #[test]
 fn duplicate_stale_cancel_and_deadline_fault_before_publication() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     let duplicate = leaf("root").try_with_children([leaf("same"), leaf("same")]).ok().expect("fixed child pages");
     let mut duplicate = ComponentTreeProducer::try_new(ComponentTree::new(duplicate), 9).ok().expect("producer");
     for _ in 0..256 {
@@ -44,7 +75,7 @@ fn duplicate_stale_cancel_and_deadline_fault_before_publication() {
 
 #[test]
 fn deep_tree_maximum_and_plus_one_preserve_exact_fault_owner_for_incremental_close() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     let mut maximum = leaf("leaf");
     for depth in 1..COMPONENT_TREE_PRODUCER_DEPTH {
         maximum = leaf(position_key(depth).expect("bounded position").as_str()).try_with_children([maximum]).ok().expect("fixed child page");
@@ -79,7 +110,7 @@ fn _accepts_any_present<P: Present>(_p: &P) {}
 
 #[test]
 fn a_stateless_fn_item_satisfies_present_generically() {
-    let _guard = crate::surface_reconcile_registry_test_guard();
+    let _guard = registry_guard();
     fn screen(_cx: &mut PresentCx<'_>) -> ComponentTree {
         ComponentTree::new(leaf("root"))
     }

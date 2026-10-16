@@ -208,9 +208,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#endregion 🔖️IoDeclaration
 
 //#region 🧪️CarrierLaw
-#[cfg(test)]
-#[path = "🧪️tests/🔬️carrier-law/🦀️.rs"]
-mod carrier_law;
+
 //#endregion 🧪️CarrierLaw
 
 #[path = "💾️binary/🦀️.rs"]
@@ -219,8 +217,7 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_stdio_binary_schema::standards::v_raw::subsets::any::io::sqlite;
 
 pub mod derived_construction {
     use crate::{BinaryDiff, BinaryMutation, BinarySnapshot};

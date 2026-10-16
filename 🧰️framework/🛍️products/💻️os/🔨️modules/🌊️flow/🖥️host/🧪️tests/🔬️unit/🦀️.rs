@@ -1,5 +1,5 @@
 use super::*;
-use crate::vcs::forms_bridge;
+use semio_framework_os_flow_vcs::forms_bridge;
 use canvas::camera::{world_to_screen, Camera, Viewport};
 use canvas::Point;
 use dag::{computation_node_width, slider_widget_height, HandleRole};
@@ -240,7 +240,7 @@ fn host_with_test_bridge() -> FixtureRegistryHost {
 }
 
 fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == widget_id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == widget_id).expect("node");
     let (wx, wy) = dag::slider_track_center(node).expect("slider track");
     let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
@@ -251,14 +251,14 @@ fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f
 #[test]
 fn default_fixture_maps_widgets_to_native_dag_kinds() {
     let host = host_with_test_fixture();
-    let slider = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider");
+    let slider = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider");
     assert!(matches!(slider.kind, DagNodeKind::Slider { .. }));
     assert_eq!(slider.height, slider_widget_height());
-    let add = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "add").expect("add");
+    let add = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == "add").expect("add");
     assert!(matches!(add.kind, DagNodeKind::Computation { .. }));
     assert_eq!(slider.width, add.width, "all components should share one width");
     assert_eq!(slider.width, computation_node_width(&slider.name, &[], &[]));
-    let preview = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "preview").expect("preview");
+    let preview = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == "preview").expect("preview");
     assert!(matches!(preview.kind, DagNodeKind::Preview { .. }));
     host.retire_cold();
 }
@@ -542,7 +542,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
     let mut session = FlowEvalSession::new();
     prepare_fixture_window(&mut session);
     let generation = session.flow_extension_generation();
-    assert_eq!(generation, crate::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
+    assert_eq!(generation, semio_framework_os_flow_operators::flow_extension_registry_generation(), "a fresh session is current with the registry it will evaluate against");
     let cached = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
     session.seed_node_cache(17, cached);
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
@@ -651,13 +651,13 @@ fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::syn
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
-    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
-    crate::registry::drain_flow_extension_registry_retirements();
+    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
+    semio_framework_os_flow_operators::registry::drain_flow_extension_registry_retirements();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📔️registry/🧪️tests/🧫️fixtures/🔣️manifest-admission.json")).unwrap();
     let bump = &fixture["generationBump"];
     let source = host_with_test_bridge();
     let generation = source.eval_baseline_registry_generation();
-    assert_eq!(generation, crate::flow_extension_registry_generation(), "a settled host is stamped with the registry it dispatched through");
+    assert_eq!(generation, semio_framework_os_flow_operators::flow_extension_registry_generation(), "a settled host is stamped with the registry it dispatched through");
     let dispatches = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
 
     let mut settled = counting_replay_host_of(&source, &dispatches);
@@ -667,8 +667,8 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     assert_eq!(dispatches.load(std::sync::atomic::Ordering::Relaxed), 0, "control: a current baseline over an unchanged tree dispatches nothing");
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: and owes no further work");
 
-    crate::install_flow_extension_manifest(bump["pluginId"].as_str().unwrap(), bump["manifestJson"].as_str().unwrap()).expect("the fixture manifest installs");
-    assert_ne!(crate::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
+    semio_framework_os_flow_operators::install_flow_extension_manifest(bump["pluginId"].as_str().unwrap(), bump["manifestJson"].as_str().unwrap()).expect("the fixture manifest installs");
+    assert_ne!(semio_framework_os_flow_operators::flow_extension_registry_generation(), generation, "installing a manifest replaces the registry");
     let mut rearmed = counting_replay_host_of(&source, &dispatches);
     let (snapshot, channels) = source.eval_baseline();
     rearmed.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
@@ -677,9 +677,9 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     assert!(dispatches.load(std::sync::atomic::Ordering::Relaxed) > 0, "a superseded registry generation must re-dispatch the unchanged tree");
     assert_eq!(rearmed.preview_text(), source.preview_text(), "re-dispatching an unchanged tree reaches the same answer");
 
-    crate::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
+    semio_framework_os_flow_operators::uninstall_flow_extension(bump["extensionId"].as_str().unwrap()).expect("the law leaves the process-wide registry as it found it");
     for _ in 0..100_000 {
-        if matches!(crate::test_flow_registry_retirement_step(1,64),Ok(neural::RetainedCloneStep::Complete(_))) { break; }
+        if matches!(semio_framework_os_flow_operators::test_flow_registry_retirement_step(1,64),Ok(neural::RetainedCloneStep::Complete(_))) { break; }
     }
     settled.retire_cold();
     rearmed.retire_cold();
@@ -905,7 +905,7 @@ fn image_input_seed_and_preview_content() {
     let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     host.host_snapshot.widgets.push(Widget::InputImage { id: "image".into(), src: png.into() });
     host.rebuild_dag();
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "image").expect("image node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == "image").expect("image node");
     assert!(matches!(node.kind, DagNodeKind::Image { .. }));
     let seeds = host.build_seeds();
     assert_eq!(seeds.get("image").and_then(|d| d.get("image")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("dataUrl")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some(png));
@@ -938,7 +938,7 @@ fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
 fn dag_slider_drag_syncs_fixture_value() {
     let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
-    let slider_node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
+    let slider_node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
     let DagNodeKind::Slider { .. } = slider_node.kind else {
         panic!("expected slider kind");
     };
@@ -971,7 +971,7 @@ fn world_screen_point(host: &FlowHost, wx: f64, wy: f64) -> (f64, f64) {
 /// 🫥️ A world point no node's rect covers — where a press grabs nothing at all.
 fn empty_canvas_world_point(host: &FlowHost) -> (f64, f64) {
     let point = (0.0, 260.0);
-    for node in &host.dag.host_snapshot.nodes {
+    for node in &host.dag.graph.host_snapshot.nodes {
         let covered = (point.0 - node.x).abs() <= node.width * 0.5 + 8.0 && (point.1 - node.y).abs() <= node.height * 0.5 + 8.0;
         assert!(!covered, "{} covers the point this law needs empty", node.id);
     }
@@ -988,7 +988,7 @@ fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() 
         host.begin_gesture();
         let before = host.host_snapshot.clone();
         let pending = case["pendingRows"].as_u64().unwrap() as usize;
-        host.dag.journal_moves("existing", (0..pending).map(|index| (format!("pending-{index}"), index as f64 + 10.0, 0.0))).unwrap();
+        host.dag.graph.journal_moves("existing", (0..pending).map(|index| (format!("pending-{index}"), index as f64 + 10.0, 0.0))).unwrap();
         for movement in fixture["moves"].as_array().unwrap() {
             let id = movement["id"].as_str().unwrap();
             let mut landed = host.host_snapshot.layout.get(id).unwrap().clone();
@@ -1011,7 +1011,7 @@ fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() 
             assert_eq!(answer["refused"]["limit"].as_u64(), Some(256));
             assert_eq!(host.host_snapshot.layout, before.layout);
             assert!(host.history_store.is_none());
-            for node in &host.dag.host_snapshot.nodes {
+            for node in &host.dag.graph.host_snapshot.nodes {
                 let layout = before.layout.get(&node.id).unwrap();
                 assert_eq!((node.x, node.y), (layout.x, layout.y));
             }
@@ -1042,12 +1042,12 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
     host.set_viewport(800, 600, 1.0);
     let (wx, wy) = empty_canvas_world_point(&host);
     let (sx, sy) = world_screen_point(&host, wx, wy);
-    let positions_before: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
+    let positions_before: Vec<(String, f64, f64)> = host.dag.graph.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_up_screen(sx, sy, false, false, false);
     let operations = gesture_answer(&mut host);
     assert!(operations.is_empty(), "a click that wired nothing journals no operation: {operations:?}");
-    let positions_after: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
+    let positions_after: Vec<(String, f64, f64)> = host.dag.graph.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     assert_eq!(positions_after, positions_before, "the click must not have moved the graph either");
     host.retire_cold();
 }
@@ -1060,7 +1060,7 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
 fn a_drag_that_moved_a_node_answers_its_move_rows_and_no_fixture_commit() {
     let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
     let before = host.host_snapshot.layout.get("add").expect("add layout").clone();
     let (sx, sy) = world_screen_point(&host, node.x, node.y - node.height * 0.25);
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
@@ -1193,9 +1193,9 @@ fn flow_document_tree_is_shakable() {
 fn rebuild_dag_preserves_canvas_theme() {
     use canvas::Color;
     let mut host = FlowHost::default();
-    host.dag.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
+    host.dag.viewport.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
     host.rebuild_dag();
-    assert_eq!(host.dag.canvas_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
+    assert_eq!(host.dag.viewport.canvas_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
     host.retire_cold();
 }
 
@@ -1203,10 +1203,10 @@ fn rebuild_dag_preserves_canvas_theme() {
 fn set_canvas_theme_dark_applies_board_dark_strokes() {
     let mut host = FlowHost::default();
     host.set_canvas_theme_dark(true);
-    let stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    let stroke = host.dag.viewport.canvas_theme.node_stroke.to_rgba8();
     assert!(stroke.r > 80 || stroke.g > 80);
     host.set_canvas_theme_dark(false);
-    let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    let light_stroke = host.dag.viewport.canvas_theme.node_stroke.to_rgba8();
     assert!(light_stroke.r < 80);
     host.retire_cold();
 }
@@ -1226,7 +1226,7 @@ fn paint_scene_dark_theme_paints_edges_and_nodes() {
 fn flow_host_enables_minimap_widget_on_dag() {
     let mut host = host_with_test_fixture();
     host.set_viewport(1280, 800, 1.0);
-    host.dag.set_camera(200.0, 120.0, 0.65);
+    host.dag.graph.set_camera(200.0, 120.0, 0.65);
     let raw: serde_json::Value = serde_json::from_str(&host.dag.label_overlay_paint_state_json().unwrap()).unwrap();
     assert!(raw.get("minimapWidget").is_some());
     host.retire_cold();
@@ -1248,7 +1248,7 @@ const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../../../../🔨️
 /// the graph whose nodes sit at negative surface x, which is what made the stale publication visible.
 fn camera_law_column_host() -> FlowHost {
     let mut host = host_with_test_fixture();
-    let mut layout = crate::OrderedMap::new();
+    let mut layout = protocol::value::ordered::OrderedMap::new();
     for (id, x, y) in [("height", -197.19, -102.70), ("radius", -156.03, -177.33), ("sides", -156.43, -155.28), ("profile", -64.49, -163.40), ("extrusion-axis", -65.26, -116.45), ("extrude", 34.84, -154.18)] {
         layout.insert(id.to_string(), WidgetLayout { x, y });
     }
@@ -1289,17 +1289,17 @@ fn a_fitted_flow_surface_publishes_the_camera_it_computed() {
         let published = host.camera();
         assert_ne!(published, before, "{name}: a fit that reports success must move the published camera off the pre-fit one");
 
-        let painted = [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom];
+        let painted = [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom];
         if row["expect"]["publishedEqualsPainted"].as_bool().unwrap_or(false) {
             assert_eq!(published, painted, "{name}: the published camera and the painted camera are one camera");
         }
         if row["expect"]["publishedEqualsFitRule"].as_bool().unwrap_or(false) {
-            let content = host.dag.content_world_bounds().expect("the column graph has content");
+            let content = host.dag.graph.content_world_bounds().expect("the column graph has content");
             let rule = canvas::camera::fit_camera(&content, &Viewport { width, height, dpr: 1.0 }, canvas::camera::CONTENT_FIT_PADDING_PX);
             assert_eq!(published, [rule.x, rule.y, rule.zoom], "{name}: the published camera is the shared fit rule's answer, not a neighbouring copy");
         }
         if let Some(expected) = row["expect"]["coverageAfterFit"].as_f64() {
-            assert!((host.dag.camera_content_coverage() - expected).abs() <= 1e-9, "{name}: a fitted camera frames the whole graph");
+            assert!((camera_content_coverage(&host.dag.viewport, &host.dag.graph) - expected).abs() <= 1e-9, "{name}: a fitted camera frames the whole graph");
         }
         if row["expect"]["idempotent"].as_bool().unwrap_or(false) {
             host.fit_camera_to_content();
@@ -1316,7 +1316,7 @@ fn a_flow_surface_projects_screen_points_with_the_camera_it_published() {
     host.set_camera(94.75581571737445, -97.50833134679668, 1.7844325616011099);
     assert!(host.fit_camera_to_content());
     let published = host.camera();
-    let content = host.dag.content_world_bounds().expect("the column graph has content");
+    let content = host.dag.graph.content_world_bounds().expect("the column graph has content");
     let rule = canvas::camera::fit_camera(&content, &Viewport { width: 483, height: 814, dpr: 1.0 }, canvas::camera::CONTENT_FIT_PADDING_PX);
     let centre = host.world_from_screen(483.0 / 2.0, 814.0 / 2.0);
     assert!((centre.0 - rule.x).abs() <= 1e-6 && (centre.1 - rule.y).abs() <= 1e-6, "the viewport centre must project through the FITTED camera, not through the one the document shipped with");
@@ -1333,9 +1333,9 @@ fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
         synapses: vec![],
-        layout: crate::OrderedMap::new(),
+        layout: protocol::value::ordered::OrderedMap::new(),
     });
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     let input_ids: Vec<&str> = node.inputs().iter().map(|port| port.id.as_str()).collect();
     assert_eq!(input_ids, vec!["a", "b"]);
     host.retire_cold();
@@ -1398,7 +1398,7 @@ fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
 /// asserts the surface is unmoved by them.
 #[test]
 fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operators() {
-    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
+    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
     const OPERATORS: usize = 500;
     let operators = (0..OPERATORS)
         .map(|index| format!(r#"{{"id":"bulk.op{index}","extension":"bulk","name":"Bulk Operator {index}","abbreviation":"B{index}","icon":"box","summary":"Bulk catalogue operator {index} with a deliberately verbose summary line","inputs":[],"outputs":[]}}"#))
@@ -1434,7 +1434,7 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
 
 #[test]
 fn contributed_extension_manifest_installs_catalogue_operator() {
-    let _serialized = crate::registry::lock_flow_extension_registry_for_test();
+    let _serialized = semio_framework_os_flow_operators::registry::lock_flow_extension_registry_for_test();
     let manifest = r#"{"schema":"flow.extension","id":"stubext","name":"Stub","version":"0.0.1","activationEvents":[],"contributes":{"schemas":[],"operators":[{"id":"stubext.echo","extension":"stubext","name":"Echo","abbreviation":"Echo","icon":"emoji:📣️","summary":"Echo","inputs":[],"outputs":[]}],"widgets":[],"commands":[],"settings":[]}}"#;
     install_flow_extension_manifest("stub-plugin", manifest).expect("stub extension admission");
     assert!(flow_extension_registry().operator_info("stubext.echo").is_some());
@@ -1448,8 +1448,8 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.replace_host_snapshot(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
-    assert!(!host.dag.host_snapshot.edges.is_empty(), "synapses should become dag edges");
-    let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
+    assert!(!host.dag.graph.host_snapshot.edges.is_empty(), "synapses should become dag edges");
+    let add = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     assert_eq!(add.inputs().len(), 2);
     assert_eq!(add.outputs().len(), 1);
     let mut scene = canvas::Scene::new();
@@ -1463,15 +1463,15 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
         ],
         synapses: vec![SynapseSpec { id: "wire-height".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "in".into() }],
-        layout: crate::OrderedMap::new(),
+        layout: protocol::value::ordered::OrderedMap::new(),
     });
-    assert_eq!(wired.dag.host_snapshot.edges.len(), 1, "legacy out/in synapse becomes one workflow edge");
-    assert_eq!(wired.dag.host_snapshot.edges[0].source, "height@number");
-    assert_eq!(wired.dag.host_snapshot.edges[0].target, "result@");
-    assert_eq!(wired.dag.engine.edges.len(), 1);
+    assert_eq!(wired.dag.graph.host_snapshot.edges.len(), 1, "legacy out/in synapse becomes one workflow edge");
+    assert_eq!(wired.dag.graph.host_snapshot.edges[0].source, "height@number");
+    assert_eq!(wired.dag.graph.host_snapshot.edges[0].target, "result@");
+    assert_eq!(wired.dag.graph.engine.edges.len(), 1);
     wired.retire_cold();
 
     let refused = FlowHost::from_host_snapshot(FlowHostSnapshot {
@@ -1479,13 +1479,13 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![
             Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
         ],
         synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "missing".into() }],
-        layout: crate::OrderedMap::new(),
+        layout: protocol::value::ordered::OrderedMap::new(),
     });
-    assert_eq!(refused.dag.host_snapshot.edges.iter().map(|edge| edge.target.as_str()).collect::<Vec<_>>(), ["result@missing"], "an unresolved port stays in the document, unjoined, until it can be joined");
-    assert_eq!(refused.dag.engine.edges.len(), 0, "a synapse to a missing port is not a workflow edge");
+    assert_eq!(refused.dag.graph.host_snapshot.edges.iter().map(|edge| edge.target.as_str()).collect::<Vec<_>>(), ["result@missing"], "an unresolved port stays in the document, unjoined, until it can be joined");
+    assert_eq!(refused.dag.graph.engine.edges.len(), 0, "a synapse to a missing port is not a workflow edge");
     refused.retire_cold();
 }
 
@@ -1496,10 +1496,10 @@ fn legacy_out_in_synapse_joins_canonical_ports_and_paints_an_engine_edge() {
     snapshot.synapses.clear();
     snapshot.synapses.push(SynapseSpec { id: "legacy-wire".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "in".into() });
     host.replace_host_snapshot(snapshot);
-    let edge = host.dag.host_snapshot.edges.iter().find(|edge| edge.id == "legacy-wire").expect("legacy synapse");
+    let edge = host.dag.graph.host_snapshot.edges.iter().find(|edge| edge.id == "legacy-wire").expect("legacy synapse");
     assert_eq!(edge.source, "slider@number");
     assert_eq!(edge.target, "add@a");
-    assert_eq!(host.dag.engine.edges.len(), 1);
+    assert_eq!(host.dag.graph.engine.edges.len(), 1);
     host.retire_cold();
 }
 
@@ -1511,7 +1511,7 @@ fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
     snapshot.synapses.push(SynapseSpec { id: "dangling".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "missing".into() });
     host.replace_host_snapshot(snapshot);
     assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "dangling"), "an unresolved port stays in the document until it can be joined");
-    assert!(host.dag.engine.edges.is_empty());
+    assert!(host.dag.graph.engine.edges.is_empty());
     host.retire_cold();
 }
 
@@ -1555,12 +1555,12 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
     let payload_json = host.export_payload_json(&id).expect("export payload");
     assert_ne!(payload_json, "{}");
     assert!(payload_json.contains("4") || payload_json.contains("value") || payload_json.contains("sum"));
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).expect("export node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == id).expect("export node");
     assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     host.retire_cold();
 }
 
-/// ↩️ Exercises the standard `crate::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>` undo/redo
+/// ↩️ Exercises the standard `semio_framework_os_kernel::os_store::ArtifactStore<FlowHostSnapshot, FlowMutation>` undo/redo
 /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
 /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
 /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack.
@@ -1576,14 +1576,14 @@ async fn undo_redo_add_widget() {
     assert_eq!(operations.len(), 2, "add_widget emits its add-widget and change-layout leaves at the gesture site");
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
-    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, crate::os_spr::ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
+    let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
     // 🔐️ `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses every
     // `Apply` without one — `edit history insertion requires its exact mutation retirement factory`.
     // The refusal then drops the replayed projection on the error path, so the FIRST thing this law
     // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
     // never the validation that caused it. The flow host installs the same catalog on its own history
     // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    crate::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
+    semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity).await).expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);
@@ -1855,7 +1855,7 @@ fn pointer_gesture_journal_rows_become_their_concrete_leaves() {
 fn pointer_drag_and_slider_gestures_record_one_leaf_each() {
     let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
     let (sx, sy) = world_screen_point(&host, node.x, node.y - node.height * 0.25);
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_move_screen(sx + 60.0, sy + 40.0, false, false, false);
@@ -1897,7 +1897,7 @@ fn replace_fixture_preserves_live_camera() {
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
         widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
         synapses: vec![],
-        layout: crate::OrderedMap::new(),
+        layout: protocol::value::ordered::OrderedMap::new(),
     });
     assert_eq!(host.host_snapshot.camera.x, 120.0);
     assert_eq!(host.host_snapshot.camera.y, -45.0);
@@ -1939,14 +1939,14 @@ fn variadic_merge_evaluates_port_routed_inputs() {
             Widget::InputSlider { id: "a".into(), label: "A".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::InputSlider { id: "b".into(), label: "B".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
             Widget::Neuron { id: "merge".into(), neuron_kind: "dictionary.merge".into(), params: Dictionary::new(), input_ports: vec!["0".into(), "1".into()], output_ports: vec![], preview: true },
-            Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
+            Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: protocol::value::ordered::OrderedSet::new() },
         ],
         synapses: vec![
             SynapseSpec { id: "s1".into(), from: "a".into(), to: "merge".into(), from_port: "number".into(), to_port: "0".into() },
             SynapseSpec { id: "s2".into(), from: "b".into(), to: "merge".into(), from_port: "number".into(), to_port: "1".into() },
             SynapseSpec { id: "s3".into(), from: "merge".into(), to: "preview".into(), from_port: "dictionary".into(), to_port: String::new() },
         ],
-        layout: crate::OrderedMap::new(),
+        layout: protocol::value::ordered::OrderedMap::new(),
     });
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Merge);
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
@@ -1981,7 +1981,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
 fn widget_to_dag_node_carries_display_meta() {
     let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == id).expect("node");
     assert_eq!(node.name, "Add");
     assert_eq!(node.abbreviation, "Add");
     assert_eq!(node.icon, "emoji:➕️");
@@ -2000,7 +2000,7 @@ fn add_slider_widget_with_explicit_range() {
     assert!((min - 10.2).abs() < 1e-6);
     assert!((max - 15.0).abs() < 1e-6);
     assert!((step - 0.1).abs() < 1e-6);
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
         panic!("expected slider node");
     };
@@ -2020,7 +2020,7 @@ fn add_note_widget_with_text() {
         panic!("expected note widget");
     };
     assert_eq!(text, "some text");
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Note { text: dag_text, .. } = &node.kind else {
         panic!("expected note node");
     };
@@ -2034,7 +2034,7 @@ fn add_note_widget_with_text() {
 fn begin_note_edit_groups_undo_into_single_gesture() {
     let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let origin_x = node.x - node.width * 0.5 + 4.0;
     host.begin_note_edit(&id, origin_x + 40.0, node.y);
     host.note_insert_text("!");
@@ -2085,9 +2085,9 @@ fn wheel_plan_matches_direct_and_rejects_stale_revision() {
 fn set_note_text_keeps_uniform_component_width() {
     let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
-    let short_w = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node").width;
+    let short_w = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node").width;
     host.set_note_text(&id, "a much longer note string");
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Note { text, .. } = &node.kind else {
         panic!("expected note node");
     };
@@ -2123,7 +2123,7 @@ fn add_slider_widget_with_decimal_value_uses_matching_step() {
     assert!((min - 0.0).abs() < 1e-6);
     assert!((max - 10.0).abs() < 1e-6);
     assert!((step - 0.1).abs() < 1e-6);
-    let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let DagNodeKind::Slider { min: dag_min, max: dag_max, step: dag_step, value: dag_value, .. } = &node.kind else {
         panic!("expected slider node");
     };
@@ -2179,7 +2179,7 @@ fn ghost_widget_matches_placed_neuron_size() {
     host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
     let ghost_width = host.ghost_node.as_ref().expect("ghost").width;
     let placed_id = host.add_widget(descriptor, 80.0, 80.0).unwrap();
-    let placed_width = host.dag.host_snapshot.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
+    let placed_width = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == placed_id).expect("placed").width;
     assert!((ghost_width - placed_width).abs() < 1e-6, "ghost width {ghost_width} != placed {placed_width}");
     host.retire_cold();
 }
@@ -2214,33 +2214,33 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
         outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
         ..Default::default()
     }]));
-    host.dag.set_automatic_lod(false);
-    host.dag.set_forced_draw_lod_label("micro");
+    host.dag.viewport.set_automatic_lod(false);
+    host.dag.viewport.set_forced_draw_lod_label("micro");
     let descriptor = r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#;
     host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
-    let ghost = host.dag.ghost_node().expect("ghost");
+    let ghost = host.dag.pointer.ghost_node().expect("ghost");
     assert_eq!(host.draw_lod_label(), "micro");
     assert_eq!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.node_label(), semio_framework_os_infinite_directed_presentation::DagNodeLabel::Name);
     assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_port_labels());
     assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_handles());
-    let ghost_overlay_rows = host.dag.label_overlay_rows_for_node_spec(ghost, true);
+    let ghost_overlay_rows = label_overlay_rows_for_node_spec(&host.dag.viewport, &host.dag.graph, &host.dag.paint, ghost, true);
     assert_eq!(ghost_overlay_rows.len(), 3);
     let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
     let overlay_ghost_rows: Vec<_> = overlay["labels"].as_array().unwrap().iter().filter(|row| row["ghost"] == true).collect();
     assert_eq!(overlay_ghost_rows.len(), 3);
     let placed_node = {
         let widget = widget_from_descriptor(&serde_json::from_str::<WidgetDescriptor>(descriptor).unwrap(), "placed".into(), &host.kind_infos);
-        let mut layout = crate::OrderedMap::new();
+        let mut layout = protocol::value::ordered::OrderedMap::new();
         layout.insert("placed".into(), WidgetLayout { x: 80.0, y: 80.0 });
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &host.kind_infos, widget_node_size(&widget, &[], &host.kind_infos));
         widget.retire_cold();
-        let mut retirement = crate::retained::FlowRetirement::default();
-        retirement.push(crate::retained::FlowOwner::Layouts(layout));
+        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
+        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(layout));
         retirement.retire_cold();
         fit_node_size(&mut node);
         node
     };
-    let placed_rows = host.dag.label_overlay_rows_for_node_spec(&placed_node, false);
+    let placed_rows = label_overlay_rows_for_node_spec(&host.dag.viewport, &host.dag.graph, &host.dag.paint, &placed_node, false);
     assert_eq!(ghost_overlay_rows.len(), placed_rows.len());
     for (ghost_row, placed_row) in ghost_overlay_rows.iter().zip(placed_rows.iter()) {
         assert_eq!(ghost_row["text"], placed_row["text"]);
@@ -2267,11 +2267,11 @@ fn rebuild_dag_preserves_ghost_overlay_at_micro() {
         outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
         ..Default::default()
     }]));
-    host.dag.set_automatic_lod(false);
-    host.dag.set_forced_draw_lod_label("micro");
+    host.dag.viewport.set_automatic_lod(false);
+    host.dag.viewport.set_forced_draw_lod_label("micro");
     host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#, 12.0, 18.0).unwrap();
     host.rebuild_dag();
-    assert!(host.dag.ghost_node().is_some());
+    assert!(host.dag.pointer.ghost_node().is_some());
     assert_eq!(host.draw_lod_label(), "micro");
     let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
     let ghost_rows: Vec<_> = overlay["labels"].as_array().unwrap().iter().filter(|row| row["ghost"] == true).collect();
@@ -2307,8 +2307,8 @@ fn selection_and_preview_state_round_trip() {
 #[test]
 fn channel_hover_and_selection_round_trip_at_detail_lod() {
     let mut host = host_with_test_fixture();
-    host.dag.set_automatic_lod(false);
-    host.dag.set_forced_draw_lod_label("detail");
+    host.dag.viewport.set_automatic_lod(false);
+    host.dag.viewport.set_forced_draw_lod_label("detail");
     host.set_hover_channel(Some("add"), Some("a"));
     let hovered=host.hover_facts().channel.unwrap();
     assert_eq!(hovered.widget_id, "add");
@@ -2339,7 +2339,7 @@ fn drag_merge_node_preserves_single_fixture_widget() {
     }]));
     let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 120.0, 80.0).unwrap();
     host.set_viewport(800, 600, 1.0);
-    let merge = host.dag.host_snapshot.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
+    let merge = host.dag.graph.host_snapshot.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
     let grab = Point::new(merge.x, merge.y);
     let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
@@ -2348,7 +2348,7 @@ fn drag_merge_node_preserves_single_fixture_widget() {
     host.pointer_move_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
     host.pointer_up_screen(screen.x + 80.0, screen.y + 40.0, false, false, false);
     assert_eq!(host.host_snapshot.widgets.iter().filter(|w| widget_id_for(w) == merge_id).count(), 1);
-    assert_eq!(host.dag.host_snapshot.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
+    assert_eq!(host.dag.graph.host_snapshot.nodes.iter().filter(|n| n.id == merge_id).count(), 1);
     let moved = host.host_snapshot.layout.get(&merge_id).expect("merge layout");
     assert!((moved.x - merge.x).abs() > 1.0);
     host.retire_cold();
@@ -2365,17 +2365,17 @@ fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
     let _ = host.add_widget(r#"{"kind":"inputSlider","label":"Number"}"#, 40.0, 40.0).unwrap();
     assert!(host.ghost_node.is_none());
     assert_eq!(host.host_snapshot.widgets.iter().filter(|w| widget_id_for(w).starts_with("slider")).count(), 2);
-    assert_eq!(host.dag.host_snapshot.nodes.iter().filter(|n| n.id == "slider").count(), 1);
+    assert_eq!(host.dag.graph.host_snapshot.nodes.iter().filter(|n| n.id == "slider").count(), 1);
     host.retire_cold();
 }
 
 #[test]
 fn delete_selection_removes_widget_from_host_snapshot() {
     let mut host = host_with_test_fixture();
-    host.dag.set_selection(&["slider".into()]);
+    host.dag.graph.set_selection(&["slider".into()]);
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.widgets.iter().all(|w| widget_id_for(w) != "slider"));
-    assert!(host.dag.host_snapshot.nodes.iter().all(|n| n.id != "slider"));
+    assert!(host.dag.graph.host_snapshot.nodes.iter().all(|n| n.id != "slider"));
     host.retire_cold();
 }
 
@@ -2434,20 +2434,20 @@ fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
         },
     ]));
     host.rebuild_dag();
-    host.dag.set_proximity_distance(160.0);
-    host.dag.set_automatic_lod(false);
-    host.dag.set_forced_draw_lod_label("normal");
-    assert_eq!(host.dag.engine.edges.len(), 2, "synapses should load as engine edges");
-    let cut = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "cut").expect("cut");
+    host.dag.graph.set_proximity_distance(160.0);
+    host.dag.viewport.set_automatic_lod(false);
+    host.dag.viewport.set_forced_draw_lod_label("normal");
+    assert_eq!(host.dag.graph.engine.edges.len(), 2, "synapses should load as engine edges");
+    let cut = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "cut").expect("cut");
     let grab = Point::new(cut.x, cut.y);
     let cam = Camera { x: host.host_snapshot.camera.x, y: host.host_snapshot.camera.y, zoom: host.host_snapshot.camera.zoom };
     let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
     let screen = world_to_screen(&cam, &viewport, grab);
     host.pointer_down_screen(screen.x, screen.y, 0, false, false, false, false);
     host.pointer_move_screen(screen.x - 180.0, screen.y, false, false, false);
-    assert!(host.dag.engine.render_snapshot().pending_edge.is_none(), "dragging wired cut near sources must not preview proximity edges");
+    assert!(host.dag.graph.engine.render_snapshot().pending_edge.is_none(), "dragging wired cut near sources must not preview proximity edges");
     host.pointer_up_screen(screen.x - 180.0, screen.y, false, false, false);
-    assert_eq!(host.dag.engine.edges.len(), 2);
+    assert_eq!(host.dag.graph.engine.edges.len(), 2);
     assert_eq!(host.host_snapshot.synapses.len(), 2);
     host.retire_cold();
 }
@@ -2503,10 +2503,10 @@ fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
         },
     ]));
     host.rebuild_dag();
-    let incoming = host.dag.engine.edges.get(&112).expect("incoming brep edge");
-    let outgoing = host.dag.engine.edges.get(&113).expect("outgoing brep edge");
-    let incoming_target = host.dag.engine.handles.get(&incoming.target).expect("incoming target");
-    let outgoing_source = host.dag.engine.handles.get(&outgoing.source).expect("outgoing source");
+    let incoming = host.dag.graph.engine.edges.get(&112).expect("incoming brep edge");
+    let outgoing = host.dag.graph.engine.edges.get(&113).expect("outgoing brep edge");
+    let incoming_target = host.dag.graph.engine.handles.get(&incoming.target).expect("incoming target");
+    let outgoing_source = host.dag.graph.engine.handles.get(&outgoing.source).expect("outgoing source");
     assert_eq!(incoming_target.role, HandleRole::Target);
     assert_eq!(outgoing_source.role, HandleRole::Source);
     host.retire_cold();
@@ -2517,8 +2517,8 @@ fn delete_selection_removes_selected_edge_from_host_snapshot() {
     let mut host = host_with_test_fixture();
     let synapse_count_before = host.host_snapshot.synapses.len();
     assert!(synapse_count_before > 0);
-    let edge_id = *host.dag.engine.edges.keys().next().expect("edge");
-    host.dag.engine.selection.edge_ids.insert(edge_id);
+    let edge_id = *host.dag.graph.engine.edges.keys().next().expect("edge");
+    host.dag.graph.engine.selection.edge_ids.insert(edge_id);
     assert!(host.has_selection());
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.synapses.len() < synapse_count_before);
@@ -2530,7 +2530,7 @@ fn delete_selection_removes_selected_edge_from_host_snapshot() {
 fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
     let mut host = host_with_test_fixture();
     let before = host.host_snapshot.synapses.len();
-    host.dag.set_selection_domains(&DagSelectionDomains { edges: vec!["s1".into()], ..Default::default() });
+    host.dag.graph.set_selection_domains(&DagSelectionDomains { edges: vec!["s1".into()], ..Default::default() });
     assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.synapses.len() < before);
@@ -2543,10 +2543,10 @@ fn align_selection_left_aligns_selected_widget_layout() {
     let mut host = host_with_test_fixture();
     host.move_widget("slider", -120.0, 20.0).unwrap();
     host.move_widget("add", 180.0, -40.0).unwrap();
-    host.dag.set_selection(&["slider".into(), "add".into()]);
+    host.dag.graph.set_selection(&["slider".into(), "add".into()]);
     host.align_selection("alignLeft").unwrap();
-    let slider = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "slider").expect("slider");
-    let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add");
+    let slider = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "slider").expect("slider");
+    let add = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add");
     let slider_left = slider.x - slider.width * 0.5;
     let add_left = add.x - add.width * 0.5;
     assert!((slider_left - add_left).abs() < 1e-6, "left edges should match after alignLeft");
@@ -2594,14 +2594,14 @@ fn add_output_port_inserts_variadic_get_slot() {
         ..Default::default()
     }]));
     let get_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"list.get"}"#, 0.0, 0.0).unwrap();
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
     let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();
     assert_eq!(labels, vec!["i"]);
     host.add_output_port(&get_id, 1).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == get_id).expect("get");
     let Widget::Neuron { output_ports, .. } = widget else { panic!("neuron") };
     assert_eq!(output_ports.len(), 2);
-    let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
+    let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == get_id).expect("get");
     let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();
     assert_eq!(labels, vec!["i", "i+1"]);
     host.retire_cold();

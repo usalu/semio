@@ -1,6 +1,6 @@
 //! ♻️ Byte-accounted retirement for complete interaction roots and whole-state history mutations.
 
-use crate::local_interaction::mutations::InteractionConfigMutation;
+use crate::mutations::InteractionConfigMutation;
 use protocol::{DomainHover, DomainSelection, InteractionState, SelectionMode};
 use semio_framework_value::{
     RetirementDemand, ValueError, ValueRefusalKind,
@@ -264,11 +264,13 @@ impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for Interact
     }
 }
 
-pub(crate) fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<InteractionState, InteractionConfigMutation>> {
+#[doc(hidden)]
+pub fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<InteractionState, InteractionConfigMutation>> {
     store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer::<InteractionState, InteractionConfigMutation>::new()))
 }
 
-pub(crate) fn interaction_store_owners_source_demands()->Result<RetirementDemand,ValueError>{
+#[doc(hidden)]
+pub fn interaction_store_owners_source_demands()->Result<RetirementDemand,ValueError>{
  type Owners=store::os_store::document_store_owners::DocumentStoreOwners<InteractionState,InteractionConfigMutation>;
  type Disposer=store::ArtifactStoreCursorDisposer<InteractionState,InteractionConfigMutation>;
  Ok(RetirementDemand{copy_bytes:0,capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})

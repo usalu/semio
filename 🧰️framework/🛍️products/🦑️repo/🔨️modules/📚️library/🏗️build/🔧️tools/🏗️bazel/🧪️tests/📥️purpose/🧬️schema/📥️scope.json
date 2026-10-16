@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "events",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "events": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "primary"
+        ],
+        "properties": {
+          "primary": {
+            "enum": [
+              "undefined",
+              "frozen"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

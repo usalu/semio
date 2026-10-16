@@ -1,7 +1,12 @@
 //! 🚪️ OS artifact composition, codec registration and Store-backed IO dispatch.
 
+#[path = "../🏪️store/📦️codec/🪶️snapshot-capability/🧰️codec-operations/🦀️.rs"]
+pub mod sqlite_snapshot_operations;
+#[path = "📥️lifted/🚪️io/🦀️.rs"]
+pub mod lifted_composer_registry;
+use semio_framework_ui_contract_validation::{validate_snapshot};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
+use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_diagnostic::Diagnostic;
@@ -11,7 +16,7 @@ use std::sync::RwLock;
 #[path="🧰️testing/🦀️.rs"]
 pub mod testing;
 
-use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
+use semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId};
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
 
@@ -23,22 +28,8 @@ pub enum AnalyzeSource<'a> {
     Binary(&'a [u8]),
 }
 
-/// 🎚 Soft confidence for partial analysis/composition success.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-pub enum Confidence {
-    High,
-    Medium,
-    Low,
-}
 
-/// 📦 Analysis result carrying the dialect the analyzer determined it read, with soft diagnostics.
-#[derive(Clone, Debug)]
-pub struct Analysis<T> {
-    pub parts: T,
-    pub dialect: Dialect,
-    pub confidence: Confidence,
-    pub diagnostics: Vec<Diagnostic>,
-}
+
 
 /// 🎹 One typed source for composition: a foreign or native dialect plus its payload.
 pub struct ComposeSource<'a> {
@@ -54,44 +45,12 @@ pub struct Composition<T> {
     pub diagnostics: Vec<Diagnostic>,
 }
 
-/// ⚠️ Composition failed: no compatible source dialect, or every candidate errored.
-#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-pub struct ComposeError {
-    pub message: String,
-    pub diagnostics: Vec<Diagnostic>,
-}
 //#endregion 🔖️ComposeTypes
-
 //#region 🔖️ErasedRegistry
-/// 🧾️ Erased payload crossing composer/registry boundaries (dispatch, UI, wire).
-pub use crate::io_schema::IoPayload;
 
-/// 🎹️ One erased compose source for the type-erased registry entry points.
-pub struct ErasedComposeSource {
-    pub dialect: Dialect,
-    pub payload: IoPayload,
-}
 
-/// 📦️ Erased composition result.
-pub struct ComposedArtifact {
-    pub dialect: Dialect,
-    pub payload: IoPayload,
-    pub diagnostics: Vec<Diagnostic>,
-    pub confidence: Confidence,
-}
 
-/// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`io-async-signatures`): the boxed, pinned future
-/// every erased compose/deserialize/serialize hop now returns — named once so none of the 163
-/// `ComposerEntry` construction sites (nor `composer_entry_of`/`deserializer_entry_of`/
-/// `serializer_entry_of`) has to repeat the raw `Pin<Box<dyn Future<..>>>` spelling. Borrows
-/// `sources` for its own lifetime so a hop that never truly suspends still doesn't have to
-/// allocate an owned copy just to satisfy the signature.
-pub type ComposeFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<ComposedArtifact, ComposeError>> + Send + 'a>>;
 
-/// 🌀️ `ComposerEntry.compose`'s function-POINTER type (still a plain, non-capturing `fn` — every
-/// existing `compose: some_fn` construction site keeps working unchanged) whose signature now
-/// returns a future instead of the future's own eventual output.
-pub type AsyncComposeFn = for<'a> fn(&'a [ErasedComposeSource]) -> ComposeFuture<'a>;
 
 /// 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`io-thunks`, R1/R2 E4): wraps an `async fn(&[
 /// ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError>` in a macro-generated, non-
@@ -107,12 +66,15 @@ pub type AsyncComposeFn = for<'a> fn(&'a [ErasedComposeSource]) -> ComposeFuture
 macro_rules! compose_thunk {
     ($f:path) => {{
         // 🚫️async: E4 fn-pointer slot
-        fn __thunk<'a>(s: &'a [$crate::io::ErasedComposeSource]) -> $crate::io::ComposeFuture<'a> {
+        fn __thunk<'a>(s: &'a [$crate::ErasedComposeSource]) -> $crate::ComposeFuture<'a> {
             Box::pin($f(s))
         }
         __thunk
     }};
 }
+
+#[doc(hidden)]
+pub use semio_framework_io_schema as io_schema;
 
 /// 🌀️ `compose_thunk!`'s twin for `io_mechanism::IoEntry.run` — wraps an
 /// `async fn(&IoPayload) -> IoResult<IoPayload>` in a macro-generated E4 thunk that resolves it
@@ -145,119 +107,22 @@ macro_rules! io_sniff_thunk {
 
 
 
-/// 🎹️ Type-erased composer vtable row. Built by a plugin's composer facet from its typed
-/// `ArtifactComposer` impl (SDK trait lives in the plugin crate, this struct only carries the
-/// erased shape so the registry never needs the plugin's concrete snapshot types).
-pub struct ComposerEntry {
-    pub writes: Dialect,
-    pub reads: &'static [Dialect],
-    pub compose: AsyncComposeFn,
-}
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-pub enum IoDirection {
-    Import,
-    Export,
-}
+pub use crate::lifted_composer_registry::{ArtifactAssemblyRegistryError, ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan, register_native_document_codec, register_native_snapshot_codec};
+pub use semio_framework_os_store_codec_registry::composer_registry::{AsyncComposeFn, ComposeError, ComposeFuture, ComposedArtifact, ComposerEntry, Confidence, ErasedComposeSource, FORMAT_CATALOG, FormatDescriptor, FormatDescriptorIndexes, FormatRegistryConflict, FormatRegistryError, IO_REGISTRY, IoDirection, IoKey, IoRegistryConflict, IoRegistryRegistrationError, IoRegistryUnavailable, SUBSET_VALIDATOR_REGISTRY, SnapshotSubsetValidation, SubsetValidator, SubsetValidatorEntry, SubsetValidatorRegistryConflict, SubsetValidatorRegistryError, bindings, canonicalize_format_descriptor, composer_entries_by_key, format_catalog, format_descriptor_keys, format_mimes, formats_csv, index_format_descriptors, io_registry, same_composer_entry, same_subset_validator_entry, sqlite_snapshot_format_descriptor, subset_validator_registry, validate_composer_entries, validate_format_descriptors, validate_subset_validators};
+pub use semio_framework_io_schema::IoPayload;
 
-/// 🗝️ Owned mirror of two dialects + direction — the registry key. Owned (not `&'static`) so it
-/// can be built from runtime UI input (format kind strings) as well as static composer entries.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct IoKey {
-    pub artifact_kind: String,
-    pub standard: String,
-    pub subset: String,
-    pub direction: IoDirection,
-    pub format_kind: String,
-    pub format_standard: String,
-    pub format_subset: String,
-}
 
-impl IoKey {
-    /// 🗝️ Build a key from an (owner, counterpart) pair already resolved to the right
-    /// perspective by the caller -- see the two call sites in `register_composer_entries`.
-    fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
-        IoKey {
-            artifact_kind: owner.artifact_kind.to_string(),
-            standard: owner.standard.0.to_string(),
-            subset: owner.subset.0.to_string(),
-            direction,
-            format_kind: counterpart.artifact_kind.to_string(),
-            format_standard: counterpart.standard.0.to_string(),
-            format_subset: counterpart.subset.0.to_string(),
-        }
-    }
-}
 
-static IO_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<IoKey, &'static ComposerEntry>>> = std::sync::OnceLock::new();
 
-fn io_registry() -> &'static RwLock<BTreeMap<IoKey, &'static ComposerEntry>> {
-    IO_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
-}
 
-/// ⚠️ A deterministic IO-key ownership collision. The registry never replaces the first owner.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IoRegistryConflict {
-    pub key: IoKey,
-}
 
-/// 🚫️ A registry lock is unavailable after a failed writer panicked.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct IoRegistryUnavailable {
-    pub registry: &'static str,
-}
 
-/// ⚠️ A composer registration either conflicts or cannot safely acquire its registry.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum IoRegistryRegistrationError {
-    Conflict(Box<IoRegistryConflict>),
-    Unavailable(IoRegistryUnavailable),
-}
 
-impl std::fmt::Display for IoRegistryRegistrationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Conflict(conflict) => write!(f, "io registry conflict for key {:?}", conflict.key),
-            Self::Unavailable(unavail) => write!(f, "io registry unavailable: {}", unavail.registry),
-        }
-    }
-}
-impl std::error::Error for IoRegistryRegistrationError {}
 
-fn same_composer_entry(left: &ComposerEntry, right: &ComposerEntry) -> bool {
-    left.writes == right.writes && left.reads == right.reads && std::ptr::fn_addr_eq(left.compose, right.compose)
-}
 
-fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
-    let mut proposed: BTreeMap<IoKey, &'entry ComposerEntry> = BTreeMap::new();
-    for entry in entries {
-        for &source in entry.reads {
-            let keys = [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import), IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export)];
-            for key in keys {
-                if let Some(existing) = proposed.get(&key) {
-                    if !same_composer_entry(existing, entry) {
-                        return Err(IoRegistryRegistrationError::Conflict(Box::new(IoRegistryConflict { key })));
-                    }
-                } else {
-                    proposed.insert(key, entry);
-                }
-            }
-        }
-    }
-    Ok(proposed)
-}
 
-fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
-    for (key, entry) in proposed {
-        if let Some(existing) = registry.get(key) {
-            if !same_composer_entry(existing, entry) {
-                return Err(IoRegistryRegistrationError::Conflict(Box::new(IoRegistryConflict { key: key.clone() })));
-            }
-        }
-    }
-    Ok(())
-}
+
 
 /// 🔬️ Verifies a static composer table against all established keys without mutating the registry.
 pub async fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
@@ -283,61 +148,17 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
     register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
 }
 
-/// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
-pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_composer_entry_refs_in_assembly(&assembly, entries)
-}
 
-/// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
-pub fn register_composer_entry_refs_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let proposed = composer_entries_by_key(entries.iter().copied())?;
-    let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    validate_composer_entries(&reg, &proposed)?;
-    for (key, entry) in proposed {
-        reg.entry(key).or_insert(entry);
-    }
-    Ok(())
-}
 
-#[derive(Clone, Debug)]
-pub struct IoResolveError {
-    pub message: String,
-    pub candidates: Vec<IoKey>,
-    pub unavailable: Option<IoRegistryUnavailable>,
-}
 
-/// 🔎️ Look up the composer entry for one exact (artifact/standard/subset, direction,
-/// format/standard/subset) coordinate. No silent defaulting — callers with a partially-specified
-/// query (unknown standard/subset) must enumerate `dialects_for` first and choose explicitly.
-pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
-    let reg = io_registry().read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
-    reg.get(key).copied().ok_or_else(|| IoResolveError {
-        message: format!("no composer registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset),
-        candidates: reg.keys().filter(|k| k.artifact_kind == key.artifact_kind).cloned().collect(),
-        unavailable: None,
-    })
-}
 
-/// 📚️ Lists every dialect one artifact can move data through in a given direction.
-pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
-    let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
-    dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
-    dialects.dedup();
-    Ok(dialects)
-}
 
-/// 🗝️ Every registered `IoKey` for one artifact_kind + direction, WITH the owner's real
-/// standard/subset (not a hardcoded default) -- callers that used to build a key by hand and
-/// guess `standard: "1", subset: "*"` should enumerate this instead and pick explicitly, the same
-/// "no silent defaulting" policy `resolve` already documents.
-pub async fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<IoKey>, IoRegistryUnavailable> {
-    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
-    Ok(reg.keys().filter(|key| key.artifact_kind == artifact_kind && key.direction == direction).cloned().collect())
-}
+
+
+
+
+
 
 /// 📇️ Every registered composer entry, erased to owned dialects -- the shape the WIT
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
@@ -441,21 +262,7 @@ pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedCompos
     io_dispatch(target, std::slice::from_ref(&hop_source)).await
 }
 //#endregion 🔖️Dispatch
-
 //#region 🔖️SubsetValidator
-/// 🛡️ SDK trait (D5, ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION):
-/// one subset's own conformance checker (e.g. PDF/A-2b's "no `/Encrypt`, no JS/Launch actions,
-/// `OutputIntent` present, fonts embedded"). Unlike `ArtifactComposer`/`ArtifactAnalyzer` (which
-/// live in the plugin crate because they need typed `Snapshot` visibility this generic/erased io
-/// module doesn't have), `SubsetValidator` can live directly HERE: its signature is already
-/// erased over `IoPayload` (mirroring `ComposerEntry.compose`'s own `fn(&[ErasedComposeSource])`
-/// erasure) -- a concrete artifact implements it by decoding its own typed `Snapshot` out of the
-/// payload internally (via `pack::snapshot::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
-/// erasure already does one layer up), so this module never needs to know the concrete type.
-pub trait SubsetValidator {
-    const DIALECT: Dialect;
-    fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
-}
 
 /// 🪶️ A subset's conformance policy over one owned typed snapshot and its exact relational
 /// projection. The owning artifact's `ArtifactSqliteSnapshotHost::validate_sqlite_snapshot_subset`
@@ -463,19 +270,10 @@ pub trait SubsetValidator {
 /// names the subsets that extend it: the dependency points from each subset to its base only.
 pub trait SnapshotSubsetValidator: SubsetValidator {
     type Snapshot: 'static;
-    fn validate_snapshot(snapshot: &Self::Snapshot, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()>;
+    fn validate_snapshot(snapshot: &Self::Snapshot, database: &semio_framework_io_sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_io_schema::IoResult<()>;
 }
 
-/// 🧩️ Type-erased `SnapshotSubsetValidator::validate_snapshot`; it refuses a snapshot of any other type.
-pub type SnapshotSubsetValidation = fn(&dyn std::any::Any, &crate::sqlite_snapshot::SqliteDatabase, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()>;
 
-/// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how
-/// `ComposerEntry` stores a plain `fn` pointer rather than a trait object.
-pub struct SubsetValidatorEntry {
-    pub dialect: Dialect,
-    pub validate: fn(&IoPayload) -> Vec<Diagnostic>,
-    pub validate_snapshot: Option<SnapshotSubsetValidation>,
-}
 
 // 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
 // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
@@ -492,10 +290,10 @@ pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
 
 /// 🎹️ Erases a `SnapshotSubsetValidator` into a row that serves both payload and owned-snapshot validation.
 pub fn snapshot_subset_validator_entry_of<V: SnapshotSubsetValidator>() -> SubsetValidatorEntry {
-    fn validate_snapshot<V: SnapshotSubsetValidator>(snapshot: &dyn std::any::Any, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+    fn validate_snapshot<V: SnapshotSubsetValidator>(snapshot: &dyn std::any::Any, database: &semio_framework_io_sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_io_schema::IoResult<()> {
         match snapshot.downcast_ref::<V::Snapshot>() {
-            Some(snapshot) => V::validate_snapshot(snapshot, database, control),
-            None => Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("snapshot type does not own subset {}", ArtifactDialect::from(V::DIALECT).to_coordinate())))),
+            Some(snapshot) => semio_framework_ui_contract_validation::validate_snapshot(snapshot, database, control),
+            None => Err(semio_framework_io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("snapshot type does not own subset {}", ArtifactDialect::from(V::DIALECT).to_coordinate())))),
         }
     }
     SubsetValidatorEntry { dialect: V::DIALECT, validate: validate_payload_thunk::<V>, validate_snapshot: Some(validate_snapshot::<V>) }
@@ -504,45 +302,21 @@ pub fn snapshot_subset_validator_entry_of<V: SnapshotSubsetValidator>() -> Subse
 /// 🛡️ Runs the owned-snapshot validator registered for exactly `dialect`. The base `*` subset is
 /// unconstrained and always clean; any other dialect without a registered snapshot validator is
 /// refused, because a real subset must never pass unchecked.
-pub fn validate_registered_snapshot_subset<S: 'static>(dialect: &ArtifactDialect, snapshot: &S, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+pub fn validate_registered_snapshot_subset<S: 'static>(dialect: &ArtifactDialect, snapshot: &S, database: &semio_framework_io_sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_io_schema::IoResult<()> {
     if dialect.subset == SubsetId::ANY.0 {
-        return Ok(crate::io_schema::IoOutcome::clean(()));
+        return Ok(semio_framework_io_schema::IoOutcome::clean(()));
     }
-    let validate = subset_validator_registry().read().map_err(|_| crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "subset validator registry unavailable")))?.get(dialect).and_then(|entry| entry.validate_snapshot);
+    let validate = subset_validator_registry().read().map_err(|_| semio_framework_io_schema::IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "subset validator registry unavailable")))?.get(dialect).and_then(|entry| entry.validate_snapshot);
     match validate {
         Some(validate) => validate(snapshot, database, control),
-        None => Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate())))),
+        None => Err(semio_framework_io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate())))),
     }
 }
 
-static SUBSET_VALIDATOR_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>>> = std::sync::OnceLock::new();
 
-fn subset_validator_registry() -> &'static RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>> {
-    SUBSET_VALIDATOR_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
-}
 
-/// ⚠️ A subset-validator dialect already has a different owner.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SubsetValidatorRegistryConflict {
-    pub dialect: ArtifactDialect,
-}
 
-/// ⚠️ Subset-validator registration cannot replace an owner or use a poisoned registry.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SubsetValidatorRegistryError {
-    Conflict(SubsetValidatorRegistryConflict),
-    Unavailable(IoRegistryUnavailable),
-}
 
-impl std::fmt::Display for SubsetValidatorRegistryError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Conflict(conflict) => write!(f, "subset validator conflict for dialect {:?}", conflict.dialect),
-            Self::Unavailable(unavail) => write!(f, "subset validator registry unavailable: {}", unavail.registry),
-        }
-    }
-}
-impl std::error::Error for SubsetValidatorRegistryError {}
 
 /// 🚫️ A subset validation cannot execute because its registry is unavailable or incomplete.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -551,40 +325,12 @@ pub enum SubsetValidationError {
     Unavailable(IoRegistryUnavailable),
 }
 
-fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
-    left.dialect == right.dialect && std::ptr::fn_addr_eq(left.validate, right.validate) && match (left.validate_snapshot, right.validate_snapshot) {
-        (Some(left), Some(right)) => std::ptr::fn_addr_eq(left, right),
-        (None, None) => true,
-        _ => false,
-    }
-}
 
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
 pub fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
     register_subset_validators(&[entry])
 }
 
-fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let mut proposed: BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry> = BTreeMap::new();
-    for entry in entries {
-        let dialect = ArtifactDialect::from(entry.dialect);
-        if let Some(existing) = proposed.get(&dialect) {
-            if same_subset_validator_entry(existing, entry) {
-                continue;
-            }
-            return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect }));
-        }
-        proposed.insert(dialect, entry);
-    }
-    for (dialect, entry) in &proposed {
-        if let Some(existing) = registry.get(dialect) {
-            if !same_subset_validator_entry(existing, entry) {
-                return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect: dialect.clone() }));
-            }
-        }
-    }
-    Ok(())
-}
 
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
 pub async fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
@@ -652,17 +398,8 @@ async fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostic
     Ok(())
 }
 //#endregion 🔖️SubsetValidator
-
 //#region 🔖️IoFidelity
-/// ⚖️ Declared strongest IO fidelity a subset codec achieves.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum IoFidelityClass {
-    Exact,
-    Canonical,
-    Semantic,
-    Lossy,
-}
+
 
 impl IoFidelityClass {
     pub async fn as_str(self) -> &'static str {
@@ -720,36 +457,12 @@ impl IoFidelityDeclaration {
 #[path = "🧪️tests/🔬️io-fidelity/🦀️.rs"]
 mod io_fidelity_tests;
 //#endregion 🔖️IoFidelity
-
 //#region 🔖️Wire
-/// 🎹️ Wire twin of `ErasedComposeSource` for crossing a wasm component boundary: `Dialect` is
-/// `&'static str`-based and can't be safely deserialized from arbitrary runtime bytes (would need
-/// to leak memory per call), so the wire form always carries the owned `ArtifactDialect` and gets
-/// resolved back to the real `&'static Dialect` locally by matching coordinate strings against the
-/// receiving side's own `ComposerEntry.reads` — exactly like the native W15 dispatch sites in
-/// `🧰️framework/🛍️products/💻️os/🦀️.rs` already do via `io_dialects_for(...).find(...)`.
-#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct WireComposeSource {
-    pub dialect: ArtifactDialect,
-    pub payload: IoPayload,
-}
 
-/// 🎹️ Wire twin of `ComposedArtifact`.
-#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct WireComposedArtifact {
-    pub dialect: ArtifactDialect,
-    pub payload: IoPayload,
-    pub diagnostics: Vec<Diagnostic>,
-    pub confidence: Confidence,
-}
 
-impl From<ComposedArtifact> for WireComposedArtifact {
-    fn from(value: ComposedArtifact) -> Self {
-        Self { dialect: ArtifactDialect::from(value.dialect), payload: value.payload, diagnostics: value.diagnostics, confidence: value.confidence }
-    }
-}
+
+
+
 
 /// 🔒️ Process-local intern table: `ArtifactDialect` → a genuine `&'static Dialect`. Cross-plugin
 /// compose results can name a dialect the RECEIVING plugin never registered a `&'static Dialect`
@@ -797,9 +510,9 @@ impl std::fmt::Display for IoWireError {
 
 impl std::error::Error for IoWireError {}
 
-const MAX_IO_WIRE_BYTES: usize = 4 * 1024 * 1024;
+pub const MAX_IO_WIRE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_IO_WIRE_SOURCES: usize = 256;
-const MAX_IO_WIRE_DIALECT_COMPONENT_BYTES: usize = 192;
+pub const MAX_IO_WIRE_DIALECT_COMPONENT_BYTES: usize = 192;
 const MAX_IO_WIRE_INTERNED_DIALECTS: usize = 512;
 
 fn ensure_wire_bytes(operation: &'static str, bytes: &[u8]) -> Result<(), IoWireError> {
@@ -931,86 +644,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 }
 //#endregion 🔖️Wire
-
 //#region 🔖️FormatCatalog
-/// 🗄️ One representation's plural MIME and extension claims with canonical identity metadata. Generic
-/// successor to the closed, `🔺️mesh`-local `StdioFormatEntry`/`STDIO_FORMAT_CATALOG` (ticket
-/// 26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT wave 2): where `mesh`'s catalog is a single
-/// hardcoded `const` slice only `stdio` can ever contribute to, this registry is additive and
-/// string-keyed like `IO_REGISTRY` above it, so ANY plugin that owns formats (not just `stdio`)
-/// can call `register_format_descriptors` from its own init. `mesh`'s catalog itself is untouched
-/// here -- evicting it onto this registry is a LATER wave's job, once every producer/consumer of
-/// `StdioFormatEntry` has migrated to `FormatDescriptor`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct FormatDescriptor {
-    pub kind_id: String,
-    pub short_id: String,
-    pub aliases: Vec<String>,
-    pub mimes: Vec<String>,
-    pub extensions: Vec<String>,
-    pub name: String,
-    pub full_name: String,
-    pub neutral: bool,
-    pub dir_name: String,
-    pub is_binary: bool,
-}
 
-/// ⚠️ A format registry identity, extension, or MIME ownership collision.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FormatRegistryConflict {
-    Identity { key: String, established_kind_id: String, conflicting_kind_id: String },
-    Extension { extension: String, established_kind_id: String, conflicting_kind_id: String },
-    Mime { mime: String, established_kind_id: String, conflicting_kind_id: String },
-    Invalid { kind_id: String, detail: String },
-}
 
-impl std::fmt::Display for FormatRegistryConflict {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Identity { key, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on key '{key}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
-            Self::Extension { extension, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on extension '{extension}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
-            Self::Mime { mime, established_kind_id, conflicting_kind_id } => write!(f, "format conflict on mime '{mime}': established {established_kind_id}, conflicting {conflicting_kind_id}"),
-            Self::Invalid { kind_id, detail } => write!(f, "invalid format descriptor {kind_id}: {detail}"),
-        }
-    }
-}
-impl std::error::Error for FormatRegistryConflict {}
 
-/// 🚫️ A format registration or inspection could not acquire its authoritative catalog.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum FormatRegistryError {
-    Conflict(FormatRegistryConflict),
-    Unknown { input: String },
-    Unavailable(IoRegistryUnavailable),
-}
 
-impl std::fmt::Display for FormatRegistryError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Conflict(error) => error.fmt(formatter),
-            Self::Unknown { input } => write!(formatter, "unknown format {input}"),
-            Self::Unavailable(error) => write!(formatter, "format registry unavailable: {}", error.registry),
-        }
-    }
-}
 
-impl std::error::Error for FormatRegistryError {}
 
-static FORMAT_CATALOG: std::sync::OnceLock<RwLock<BTreeMap<String, FormatDescriptor>>> = std::sync::OnceLock::new();
 
-/// 🪶️ Framework-owned semantic SQLite file endpoint for every declared artifact snapshot.
-pub fn sqlite_snapshot_format_descriptor() -> FormatDescriptor {
-    FormatDescriptor { kind_id: crate::io_schema::SQLITE_SNAPSHOT.artifact_kind.to_string(), short_id: "sqlite".to_string(), aliases: vec![], mimes: vec!["application/vnd.sqlite3".to_string()], extensions: vec![".sqlite".to_string()], name: "SQLite".to_string(), full_name: "Semantic Artifact Snapshot SQLite".to_string(), neutral: true, dir_name: "sqlite".to_string(), is_binary: true }
-}
 
-fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
-    FORMAT_CATALOG.get_or_init(|| {
-        let descriptor = sqlite_snapshot_format_descriptor();
-        let rows = format_descriptor_keys(&descriptor).map(|key| (key, descriptor.clone())).collect();
-        RwLock::new(rows)
-    })
-}
 
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
@@ -1043,115 +685,11 @@ pub fn preflight_format_descriptors_in_assembly(_assembly: &semio_framework_sche
     validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
 }
 
-type FormatDescriptorIndexes = (BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>);
 
-fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<FormatDescriptorIndexes, FormatRegistryConflict> {
-    let mut proposed: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
-    let mut proposed_by_kind: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
-    for row in descriptors {
-        let row = canonicalize_format_descriptor(row)?;
-        for key in format_descriptor_keys(&row) {
-            if let Some(existing) = proposed.get(&key) {
-                if existing != &row {
-                    return Err(FormatRegistryConflict::Identity { key, established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
-                }
-            } else {
-                proposed.insert(key, row.clone());
-            }
-        }
-        if let Some(existing) = proposed_by_kind.get(&row.kind_id) {
-            if existing != &row {
-                return Err(FormatRegistryConflict::Identity { key: row.kind_id.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
-            }
-        } else {
-            proposed_by_kind.insert(row.kind_id.clone(), row);
-        }
-    }
-    Ok((proposed, proposed_by_kind))
-}
 
-fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
-    row.kind_id = row.kind_id.trim().to_string();
-    row.short_id = row.short_id.trim().to_string();
-    if row.kind_id.is_empty() || row.short_id.is_empty() {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "kind_id and short_id must both be non-empty".to_string() });
-    }
-    for extension in &mut row.extensions {
-        *extension = extension.trim().to_ascii_lowercase();
-    }
-    if row.extensions.iter().any(String::is_empty) || row.extensions.is_empty() {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "at least one non-empty extension claim is required".to_string() });
-    }
-    row.extensions.sort();
-    if row.extensions.windows(2).any(|claims| claims[0] == claims[1]) {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "extension claims must be distinct".to_string() });
-    }
-    for mime in &mut row.mimes {
-        *mime = mime.trim().to_ascii_lowercase();
-    }
-    if row.mimes.iter().any(String::is_empty) {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "MIME claims must be non-empty; omit unclaimed MIME values".to_string() });
-    }
-    row.mimes.sort();
-    if row.mimes.windows(2).any(|claims| claims[0] == claims[1]) {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "MIME claims must be distinct".to_string() });
-    }
-    for alias in &mut row.aliases {
-        *alias = alias.trim().to_string();
-    }
-    if row.aliases.iter().any(String::is_empty) || row.aliases.iter().any(|alias| alias == &row.kind_id || alias == &row.short_id) {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "aliases must be non-empty and distinct from kind_id and short_id".to_string() });
-    }
-    row.aliases.sort();
-    if row.aliases.windows(2).any(|aliases| aliases[0] == aliases[1]) {
-        return Err(FormatRegistryConflict::Invalid { kind_id: row.kind_id.clone(), detail: "aliases must be distinct".to_string() });
-    }
-    Ok(row)
-}
 
-fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
-    row.mimes.iter().map(String::as_str)
-}
 
-fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
-    let mut established_by_kind: BTreeMap<String, &FormatDescriptor> = BTreeMap::new();
-    for descriptor in registry.values() {
-        established_by_kind.entry(descriptor.kind_id.clone()).or_insert(descriptor);
-    }
-    for row in proposed_by_kind.values() {
-        for existing in established_by_kind.values().copied().chain(proposed_by_kind.values()) {
-            if existing.kind_id == row.kind_id {
-                continue;
-            }
-            for existing_ext in &existing.extensions {
-                for row_ext in &row.extensions {
-                    if existing_ext == row_ext {
-                        return Err(FormatRegistryConflict::Extension { extension: row_ext.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
-                    }
-                }
-            }
-            for existing_mime in format_mimes(existing) {
-                for row_mime in format_mimes(row) {
-                    if existing_mime == row_mime {
-                        return Err(FormatRegistryConflict::Mime { mime: row_mime.to_string(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
-                    }
-                }
-            }
-        }
-    }
-    for (key, row) in proposed {
-        if let Some(existing) = registry.get(key) {
-            if existing != row {
-                return Err(FormatRegistryConflict::Identity { key: key.clone(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
-            }
-        }
-    }
-    Ok(())
-}
 
-fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String> + '_ {
-    std::iter::once(row.kind_id.clone()).chain(std::iter::once(row.short_id.clone())).chain(row.aliases.iter().cloned())
-}
 
 /// 🔎️ Resolves a format by its `kind_id`, `short_id`, or registered alias.
 pub fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
@@ -1176,174 +714,21 @@ pub fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryE
     Ok(extensions.join(","))
 }
 
-/// 🧷️ All IO and store rows a plugin must publish as one irreducible assembly unit.
-#[path="🪪️bindings/🦀️.rs"]
-pub(crate) mod bindings;
-pub use bindings::{ArtifactCodecBinding,ArtifactCodecBindingChannel,ArtifactCodecBindingError,artifact_codec_bindings,preflight_artifact_codec_bindings,preflight_artifact_codec_bindings_in_assembly};
-pub use bindings::catalog::{ArtifactCatalogBinding,ArtifactCatalogBindingError,ArtifactCatalogCapability,ArtifactCatalogTarget,artifact_catalog_bindings,preflight_artifact_catalog_bindings_in_assembly};
+pub use bindings::{ArtifactCodecBinding, ArtifactCodecBindingChannel, ArtifactCodecBindingError, artifact_codec_bindings, preflight_artifact_codec_bindings, preflight_artifact_codec_bindings_in_assembly};
+pub use bindings::catalog::{ArtifactCatalogBinding, ArtifactCatalogBindingError, ArtifactCatalogCapability, ArtifactCatalogTarget, artifact_catalog_bindings, preflight_artifact_catalog_bindings_in_assembly};
 
-#[derive(Default)]
-pub struct ArtifactAssemblyRegistryPlan {
-    pub composer_entries: Vec<&'static ComposerEntry>,
-    pub subset_validators: Vec<&'static SubsetValidatorEntry>,
-    pub format_descriptors: Vec<FormatDescriptor>,
-    pub document_codecs: Vec<crate::os_store::serialization::ArtifactCodec>,
-    pub dialect_migrations: Vec<crate::os_store::codec_registry::DialectMigration>,
-    pub native_snapshots: Vec<io_mechanism::NativeSnapshotRegistration>,
-    pub document_bindings: Vec<ArtifactCodecBinding>,
-    pub catalog_bindings: Vec<ArtifactCatalogBinding>,
-}
 
-impl ArtifactAssemblyRegistryPlan {
-    /// 🌱️ Starts an empty plan; callers append every owned registry row before committing once.
-    pub async fn new() -> Self {
-        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new(), native_snapshots: Vec::new(), document_bindings: Vec::new(), catalog_bindings:Vec::new() }
-    }
-}
 
-/// 🚫️ An all-registry assembly cannot acquire its locks or pass preflight.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ArtifactAssemblyRegistryError {
-    Transaction(semio_framework_schema_registry::assembly::Error),
-    Composer(Box<IoRegistryRegistrationError>),
-    SubsetValidator(SubsetValidatorRegistryError),
-    Format(FormatRegistryError),
-    Store(Box<crate::os_store::codec_registry::ArtifactAssemblyStoreRegistryError>),
-    NativeSnapshot(io_mechanism::IoRegistryError),
-    Binding(ArtifactCodecBindingError),
-    Catalog(ArtifactCatalogBindingError),
-}
 
-impl std::fmt::Display for ArtifactAssemblyRegistryError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Transaction(error) => error.fmt(formatter),
-            Self::Composer(error) => error.fmt(formatter),
-            Self::SubsetValidator(error) => error.fmt(formatter),
-            Self::Format(error) => error.fmt(formatter),
-            Self::Store(error) => error.fmt(formatter),
-            Self::NativeSnapshot(error) => error.fmt(formatter),
-            Self::Binding(error) => error.fmt(formatter),
-            Self::Catalog(error) => error.fmt(formatter),
-        }
-    }
-}
 
-impl std::error::Error for ArtifactAssemblyRegistryError {}
 
-/// 🧰️ Publishes an imperative native codec and its exact snapshot dialect atomically.
-pub fn register_native_snapshot_codec(dialect: Dialect, codec: crate::os_store::serialization::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
-    let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
-    let contributor=match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
-    let binding=ArtifactCodecBinding::from_codec(ArtifactCodecBindingChannel::DirectNative,contributor,Some(dialect.artifact_kind.to_string()),Vec::new(),Some(dialect.into()),None,&codec);
-    let plan = ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: vec![io_mechanism::NativeSnapshotRegistration { dialect: dialect.into(), codec }], ..Default::default() };
-    commit_artifact_assembly_registry_plan(&assembly, plan)
-}
 
-/// 📣️ Publishes the exact native registration a snapshot owner declares through
-/// [`pack::snapshot::ArtifactPack::native_snapshot_registration`]; an owner that declares none publishes nothing.
-pub fn publish_native_snapshot<P: crate::os_store::serialization::ArtifactStoreSnapshot>() -> Result<(), ArtifactAssemblyRegistryError> {
-    match P::native_snapshot_registration() {
-        Some((dialect, codec)) => register_native_snapshot_codec(dialect, codec),
-        None => Ok(()),
-    }
-}
 
-/// 📦️ Publishes a native document codec and any actual owner-declared relational capability.
-pub fn register_native_document_codec(dialect: Dialect, codec: crate::os_store::serialization::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
-    let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
-    let contributor=match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
-    let binding=ArtifactCodecBinding::from_codec(ArtifactCodecBindingChannel::DirectDocumentNative,contributor,Some(dialect.artifact_kind.to_string()),Vec::new(),Some(dialect.into()),None,&codec);
-    let plan = ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: io_mechanism::NativeSnapshotRegistration::from_capability(dialect.into(), codec).into_iter().collect(), ..Default::default() };
-    commit_artifact_assembly_registry_plan(&assembly, plan)
-}
 
-/// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
-/// fallible operation after the first registry mutation.
-pub fn commit_artifact_assembly_registry_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
-    let mut store_guards = crate::os_store::codec_registry::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
-    let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(Box::new(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))))?;
-    let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
-    let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
-    let mut native_snapshots = io_mechanism::native_snapshot_registry().write().map_err(|_| ArtifactAssemblyRegistryError::NativeSnapshot(io_mechanism::IoRegistryError::Unavailable))?;
-    let mut bindings=bindings::registry().write().map_err(|_|ArtifactAssemblyRegistryError::Binding(ArtifactCodecBindingError::Unavailable))?;
-    let mut catalog=bindings::catalog::registry().write().map_err(|_|ArtifactAssemblyRegistryError::Catalog(ArtifactCatalogBindingError::Unavailable))?;
-    for codec in &plan.document_codecs {
-        if !plan.document_bindings.iter().any(|row|row.validates(codec)) { return Err(ArtifactAssemblyRegistryError::Binding(ArtifactCodecBindingError::Invalid{schema:codec.schema.clone()})); }
-    }
-    for registration in &plan.native_snapshots {
-        if !plan.document_bindings.iter().any(|row|row.dialect.as_ref()==Some(&registration.dialect)&&row.validates(&registration.codec)) { return Err(ArtifactAssemblyRegistryError::Binding(ArtifactCodecBindingError::Invalid{schema:registration.codec.schema.clone()})); }
-    }
-    for row in &plan.document_bindings {
-        if let Some(dialect)=row.dialect.as_ref().filter(|_|row.sqlite_schema.is_some()) {
-            if !plan.native_snapshots.iter().any(|registration|&registration.dialect==dialect&&row.validates(&registration.codec))&&!native_snapshots.get(dialect).is_some_and(|codec|row.validates(codec)) { return Err(ArtifactAssemblyRegistryError::Binding(ArtifactCodecBindingError::Invalid{schema:row.schema.clone()})); }
-        }
-    }
-    let proposed_bindings=bindings::propose(&bindings,&plan.document_bindings,&plan.document_codecs).map_err(ArtifactAssemblyRegistryError::Binding)?;
-    let proposed_catalog=bindings::catalog::propose(&catalog,&plan.catalog_bindings,&plan.document_codecs).map_err(ArtifactAssemblyRegistryError::Catalog)?;
-    let proposed_snapshots = io_mechanism::propose_native_snapshots(&native_snapshots, &plan.native_snapshots).map_err(ArtifactAssemblyRegistryError::NativeSnapshot)?;
-    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
-    validate_composer_entries(&composers, &proposed_composers).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
-    validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
-    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    crate::os_store::codec_registry::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
-    for (key, entry) in proposed_composers {
-        composers.entry(key).or_insert(entry);
-    }
-    for entry in plan.subset_validators {
-        subset_validators.entry(ArtifactDialect::from(entry.dialect)).or_insert(entry);
-    }
-    for (key, descriptor) in proposed_formats {
-        formats.entry(key).or_insert(descriptor);
-    }
-    crate::os_store::codec_registry::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
-    native_snapshots.extend(proposed_snapshots);
-    bindings.extend(proposed_bindings);
-    catalog.extend(proposed_catalog);
-    Ok(())
-}
 
-/// 📋️ Serialize every distinct registered format as a `mimes.csv`-shaped body (header + one row
-/// per distinct `kind_id`, sorted for determinism) -- the generic successor to
-/// `mesh::stdio_mimes_csv`.
-pub async fn formats_csv() -> Result<String, FormatRegistryError> {
-    let reg = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    let mut seen: BTreeMap<&str, &FormatDescriptor> = BTreeMap::new();
-    for row in reg.values() {
-        seen.entry(row.kind_id.as_str()).or_insert(row);
-    }
-    let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
-    for row in seen.into_values() {
-        let mimes = format_mimes(row).collect::<Vec<_>>();
-        for extension in &row.extensions {
-            for mime in mimes.iter().copied().chain(std::iter::once("").take(usize::from(mimes.is_empty()))) {
-                out.push_str(mime);
-                out.push(',');
-                out.push_str(extension);
-                out.push(',');
-                out.push_str(&row.name);
-                out.push(',');
-                out.push_str(&row.full_name);
-                out.push(',');
-                out.push_str(if row.neutral { "true" } else { "false" });
-                out.push(',');
-                out.push_str(&row.dir_name);
-                out.push(',');
-                out.push_str(&row.kind_id);
-                out.push('\n');
-            }
-        }
-    }
-    Ok(out)
-}
 //#endregion 🔖️FormatCatalog
 //#endregion 🔖️ErasedRegistry
-
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests
 
 //#region 🔖️IoMechanism
@@ -1359,18 +744,20 @@ mod tests;
 /// is untouched and keeps working; this region is purely additive until W6 deletes the old one.
 #[path="."]
 pub mod io_mechanism {
-    pub use super::control::{IoRunControl,IoNativeDirection};
+    pub use semio_framework_io_control::{IoRunControl, IoNativeDirection};
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-    use {semio_framework_artifact_reference::ArtifactDialect,crate::io_schema::Confidence,semio_framework_artifact_reference::Dialect,crate::io_schema::IoEntryDescriptor,crate::io_schema::IoError,crate::io_schema::IoFidelity,crate::io_schema::IoOutcome,crate::io_schema::IoPayload,crate::io_schema::IoResult,crate::io_schema::IoRoute,crate::io_schema::CARRIER_BINARY,crate::io_schema::CARRIER_TEXT,crate::io_schema::SQLITE_SNAPSHOT};
+    use semio_framework_artifact_reference::{ArtifactDialect, Dialect};
+use semio_framework_io_schema::{Confidence, IoEntryDescriptor, IoError, IoFidelity, IoOutcome, IoPayload, IoResult, IoRoute, CARRIER_BINARY, CARRIER_TEXT, SQLITE_SNAPSHOT};
     use semio_framework_io_sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteTable, SqliteValue, SqliteSnapshotProgress, SqliteSnapshotControl, SqliteSnapshotPhase, export_sqlite_database, import_sqlite_database, export_sqlite_database_controlled, import_sqlite_database_controlled};
     use semio_framework_diagnostic::Diagnostic;
+    use semio_framework_os_store_space_history::io::sqlite::snapshot::settlement::TypedFileSettlement;
     use semio_framework_value::{ValueError, ValueRefusalKind};
     use std::collections::{BTreeMap, BTreeSet};
     use std::sync::RwLock;
 
     #[path="📤️serialization/📦️owned/🦀️.rs"]
     pub mod owned_serialization;
-    pub use owned_serialization::{io_begin_owned_serialization,OwnedSerializerAdmission,OwnedSerializerChildren,OwnedSerializerFactory,OwnedSerializerJob,OwnedSerializerOutput,OwnedSerializerOutputHandoff,OwnedSerializerFaultHandoff,OwnedSerializerRefusal,OwnedSerializerRequest};
+    pub use owned_serialization::{io_begin_owned_serialization, OwnedSerializerAdmission, OwnedSerializerChildren, OwnedSerializerFactory, OwnedSerializerJob, OwnedSerializerOutput, OwnedSerializerOutputHandoff, OwnedSerializerFaultHandoff, OwnedSerializerRefusal, OwnedSerializerRequest};
     use owned_serialization::same_owned_serializer;
 
     //#region 🔖️Traits
@@ -1513,18 +900,18 @@ pub mod io_mechanism {
     #[derive(Clone)]
     pub struct NativeSnapshotRegistration {
         pub dialect: ArtifactDialect,
-        pub codec: crate::os_store::serialization::ArtifactCodec,
+        pub codec: semio_framework_os_store_text_io::ArtifactCodec,
     }
 
     impl NativeSnapshotRegistration {
         /// 🪶️ Publishes a snapshot registration only for an owner-declared relational capability.
-        pub fn from_capability(dialect: ArtifactDialect, codec: crate::os_store::serialization::ArtifactCodec) -> Option<Self> {
+        pub fn from_capability(dialect: ArtifactDialect, codec: semio_framework_os_store_text_io::ArtifactCodec) -> Option<Self> {
             codec.snapshot_sqlite.as_ref()?;
             Some(Self { dialect, codec })
         }
     }
 
-    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, crate::os_store::serialization::ArtifactCodec>;
+    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, semio_framework_os_store_text_io::ArtifactCodec>;
     static NATIVE_SNAPSHOT_REGISTRY: std::sync::OnceLock<RwLock<NativeSnapshotMap>> = std::sync::OnceLock::new();
 
     pub(super) fn native_snapshot_registry() -> &'static RwLock<NativeSnapshotMap> {
@@ -1560,13 +947,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 🧭️ Publishes original native owners, their document codecs, and exact binding rows atomically.
-    pub fn register_native_snapshots_in_assembly(assembly: &semio_framework_schema_registry::assembly::Transaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), super::ArtifactAssemblyRegistryError> {
+    pub fn register_native_snapshots_in_assembly(assembly: &semio_framework_schema_registry::assembly::Transaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), crate::lifted_composer_registry::ArtifactAssemblyRegistryError> {
         let document_codecs=registrations.iter().map(|registration|registration.codec.clone()).collect();
         let document_bindings=registrations.iter().map(|registration|{
-            let contributor=match &registration.codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
-            super::ArtifactCodecBinding::from_codec(super::ArtifactCodecBindingChannel::DirectNative,contributor,Some(registration.dialect.artifact_kind.clone()),Vec::new(),Some(registration.dialect.clone()),None,&registration.codec)
+            let contributor=match &registration.codec.native_identity{semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),semio_framework_os_store_text_io::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
+            semio_framework_os_store_codec_registry::composer_registry::bindings::ArtifactCodecBinding::from_codec(semio_framework_os_store_codec_registry::composer_registry::bindings::ArtifactCodecBindingChannel::DirectNative,contributor,Some(registration.dialect.artifact_kind.clone()),Vec::new(),Some(registration.dialect.clone()),None,&registration.codec)
         }).collect();
-        super::commit_artifact_assembly_registry_plan(assembly,super::ArtifactAssemblyRegistryPlan{document_codecs,document_bindings,native_snapshots:registrations.to_vec(),..Default::default()})
+        crate::lifted_composer_registry::commit_artifact_assembly_registry_plan(assembly,crate::lifted_composer_registry::ArtifactAssemblyRegistryPlan{document_codecs,document_bindings,native_snapshots:registrations.to_vec(),..Default::default()})
     }
 
     /// 🔎️ Checks snapshot registration conflicts before any assembly publication.
@@ -1600,7 +987,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     const SNAPSHOT_METADATA_SQL: &str = include_str!("../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🗄️.sql");
 
     fn validate_snapshot_schema(database: &SqliteDatabase, schema: &str, phase: SqliteSnapshotPhase, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        crate::sqlite_snapshot::validate_sqlite_database_schema_controlled(database, schema, phase, control)
+        semio_framework_io_sqlite_snapshot::validate_sqlite_database_schema_controlled(database, schema, phase, control)
     }
 
     fn validate_snapshot_coordinate(kind: &str, standard: &str, subset: &str, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {
@@ -1620,7 +1007,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     fn validate_snapshot_metadata<'a>(table: &'a SqliteTable, control: &mut SqliteSnapshotControl<'_>) -> Result<(&'a str, &'a str, &'a str, SnapshotEncoding), ValueError> {
-        crate::sqlite_snapshot::validate_sqlite_table_schema_controlled(table, SNAPSHOT_METADATA_SQL, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
+        semio_framework_io_sqlite_snapshot::validate_sqlite_table_schema_controlled(table, SNAPSHOT_METADATA_SQL, SqliteSnapshotPhase::ReconstructSnapshot, control)?;
         if table.rows.len() != 1 || table.rows[0].rowid != 1 { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata schema or row count is invalid")); }
         let [SqliteValue::Integer(1), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset), SqliteValue::Integer(1), SqliteValue::Text(encoding)] = table.rows[0].values.as_slice() else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "snapshot SQLite metadata values are invalid")); };
         validate_snapshot_coordinate(kind, standard, subset, control, SqliteSnapshotPhase::ReconstructSnapshot)?;
@@ -1633,13 +1020,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
         let table = database.tables.iter().find(|table| table.name == "semio_snapshot").ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "SQLite file has no semantic snapshot metadata"))?;
         let (kind, standard, subset, encoding) = validate_snapshot_metadata(table, &mut control)?;
-        let copy = crate::sqlite_snapshot::transfer::copy_text;
+        let copy = semio_framework_io_sqlite_snapshot::transfer::copy_text;
         Ok((ArtifactDialect { artifact_kind: copy(kind, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)?, standard: copy(standard, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)?, subset: copy(subset, SqliteSnapshotPhase::ReconstructSnapshot, &mut control)? }, encoding))
     }
 
     /// 🪪️ Admits the literal metadata cells and their actual backing before ownership.
     pub fn attach_sqlite_snapshot_metadata(database: &mut SqliteDatabase, dialect: &ArtifactDialect, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        use crate::sqlite_snapshot::transfer::{reserve, copy_text};
+        use semio_framework_io_sqlite_snapshot::transfer::{reserve, copy_text};
         let phase = SqliteSnapshotPhase::ProjectSnapshot;
         control.checkpoint(phase, 0, 0)?;
         validate_snapshot_coordinate(&dialect.artifact_kind, &dialect.standard, &dialect.subset, control, phase)?;
@@ -1881,7 +1268,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         resolve_route(&registry, from, into, max_hops).await
     }
 
-    fn typed_snapshot_codec<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+'static>(dialect:&ArtifactDialect)->Result<(),IoError>{
+    fn typed_snapshot_codec<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+'static>(dialect:&ArtifactDialect)->Result<(),IoError>{
         let registry=native_snapshot_registry().read().map_err(|_|refusal(ValueRefusalKind::InvariantViolated,"native snapshot registry unavailable"))?;
         let codec=registry.get(dialect).ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"unregistered typed snapshot dialect"))?;
         let provider=codec.snapshot_sqlite.as_ref().ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no semantic SQLite provider"))?;
@@ -1889,38 +1276,30 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     #[derive(semio_framework_value::RetireOwned)]
-    struct TypedSnapshotExportFrame{metadata:SnapshotMetadataFrame,physical:crate::sqlite_snapshot::PhysicalExportFrame,validation:Option<IoResult<()>>,result:Option<IoResult<Vec<u8>>>}
-    impl TypedSnapshotExportFrame{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:crate::sqlite_snapshot::PhysicalExportFrame::new(),validation:None,result:None}}}
+    struct TypedSnapshotExportFrame{metadata:SnapshotMetadataFrame,physical:semio_framework_io_sqlite_snapshot::PhysicalExportFrame,validation:Option<IoResult<()>>,result:Option<IoResult<Vec<u8>>>}
+    impl TypedSnapshotExportFrame{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:semio_framework_io_sqlite_snapshot::PhysicalExportFrame::new(),validation:None,result:None}}}
     #[derive(semio_framework_value::RetireOwned)]
-    struct TypedSnapshotImportFrame<P:semio_framework_value::retirement::RetireOwned>{metadata:SnapshotMetadataFrame,physical:crate::sqlite_snapshot::PhysicalImportFrame,snapshot:Option<P>,validation:Option<IoResult<()>>,result:Option<IoResult<P>>}
-    impl<P:semio_framework_value::retirement::RetireOwned> TypedSnapshotImportFrame<P>{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:crate::sqlite_snapshot::PhysicalImportFrame::new(),snapshot:None,validation:None,result:None}}}
+    struct TypedSnapshotImportFrame<P:semio_framework_value::retirement::RetireOwned>{metadata:SnapshotMetadataFrame,physical:semio_framework_io_sqlite_snapshot::PhysicalImportFrame,snapshot:Option<P>,validation:Option<IoResult<()>>,result:Option<IoResult<P>>}
+    impl<P:semio_framework_value::retirement::RetireOwned> TypedSnapshotImportFrame<P>{fn new()->Self{Self{metadata:SnapshotMetadataFrame::new(),physical:semio_framework_io_sqlite_snapshot::PhysicalImportFrame::new(),snapshot:None,validation:None,result:None}}}
 
-    pub(crate) struct TypedFileSettlement<'a,'b>{pub(crate) control:std::cell::RefCell<crate::sqlite_snapshot::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,cause:std::cell::RefCell<Option<ValueError>>}
-    impl<'a,'b> TypedFileSettlement<'a,'b>{
-        pub(crate) fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:std::cell::RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:std::cell::Cell::new(false),cause:std::cell::RefCell::new(None)}}
-        fn settle(&self,owned:usize)->Result<(),ValueError>{crate::sqlite_snapshot::artifact::receiving::settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
-        pub(crate) fn finish_body(&self,owned:usize)->Result<(),ValueError>{self.settle(owned)?;self.post_body.set(true);Ok(())}
-        pub(crate) fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}let result=self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total));match result{Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
-        pub(crate) fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
-    }
     fn typed_file_validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
         match slot.as_ref().unwrap(){Err(_)=>Err(slot.take().unwrap().unwrap_err()),Ok(outcome)if outcome.diagnostics.iter().any(|diagnostic|matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal))=>Err(IoError{cause:ValueError::literal(ValueRefusalKind::InvalidValue,"owned snapshot violates its requested subset"),diagnostics:slot.take().unwrap().unwrap().diagnostics}),Ok(_)=>Ok(())}
     }
     macro_rules! typed_file_work{
         ($native:ident,$control:ident,$direction:ident,$bytes:expr)=>{{
             let mut body=store::NativeSnapshotBodyWallet::new($native.remaining_grant());
-            let result=crate::sqlite_snapshot::artifact::receiving::Port{control:$control,native:crate::sqlite_snapshot::artifact::receiving::Direction::$direction($native.native()),body:&mut body}.work(1,$bytes);
+            let result=semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control:$control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::$direction($native.native()),body:&mut body}.work(1,$bytes);
             $native.record_progress(body.progress())?;result
         }};
     }
 
     /// 📤️ Exports every complete snapshot field through the supplied original SQL and native receiving authorities.
-    pub async fn io_export_sqlite_snapshot<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+    pub async fn io_export_sqlite_snapshot<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
         export_sqlite_snapshot_receiving(dialect,snapshot,encoding,control,native)
     }
 
     /// 🧱️ Shares the original complete file producer with synchronous registered snapshot callbacks.
-    pub(crate) fn export_sqlite_snapshot_receiving<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+    pub(crate) fn export_sqlite_snapshot_receiving<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,snapshot:&P,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
         let result=(||{
             typed_snapshot_codec::<P>(dialect)?;native.native().checkpoint().map_err(IoError::from_value_error)?;
             let before=native.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"typed snapshot original SQL ceiling overflow"))?;
@@ -1940,7 +1319,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     typed_file_validation(&mut frame.validation)?;
                     attach_metadata_decoding(&mut frame.metadata,dialect,encoding,control,native).map_err(IoError::from_value_error)?;
                     let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());
-                    let physical=crate::sqlite_snapshot::export_sqlite_database_receiving_into(frame.metadata.database.as_ref().unwrap(),&mut frame.physical,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});
+                    let physical=semio_framework_io_sqlite_snapshot::export_sqlite_database_receiving_into(frame.metadata.database.as_ref().unwrap(),&mut frame.physical,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});
                     native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
                     typed_file_work!(native,control,Decode,size_of::<Vec<u8>>()+size_of::<Vec<Diagnostic>>()).map_err(IoError::from_value_error)?;
                     Ok(IoOutcome{value:std::mem::take(&mut frame.physical.output),diagnostics:frame.validation.take().unwrap().unwrap().diagnostics})
@@ -1952,12 +1331,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 📥️ Imports every complete snapshot field while keeping parser, metadata and typed reconstruction under the original recipient.
-    pub async fn io_import_sqlite_snapshot<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
+    pub async fn io_import_sqlite_snapshot<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
         import_sqlite_snapshot_receiving(dialect,bytes,control,native)
     }
 
     /// 🧩️ Keeps the complete typed import and original publication boundary shared by every caller.
-    pub(crate) fn import_sqlite_snapshot_receiving<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
+    pub(crate) fn import_sqlite_snapshot_receiving<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+'static>(dialect:&ArtifactDialect,bytes:&[u8],control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<P>{
         let result=(||{
             typed_snapshot_codec::<P>(dialect)?;native.native().checkpoint().map_err(IoError::from_value_error)?;
             let before=native.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"typed snapshot original SQL ceiling overflow"))?;
@@ -1969,7 +1348,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 typed_file_work!(native,control,Encode,size_of::<IoResult<P>>())?;
                 frame.result=Some((||{
                     let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());
-                    let physical=crate::sqlite_snapshot::import_sqlite_database_receiving_into(bytes,&mut frame.physical,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});
+                    let physical=semio_framework_io_sqlite_snapshot::import_sqlite_database_receiving_into(bytes,&mut frame.physical,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});
                     native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
                     typed_file_work!(native,control,Encode,size_of::<SqliteDatabase>()).map_err(IoError::from_value_error)?;
                     frame.metadata.database=Some(std::mem::replace(&mut frame.physical.database,SqliteDatabase{tables:Vec::new()}));
@@ -1992,18 +1371,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 🫳️ Exports the exact captured Store root through its registered complete snapshot type.
-    pub(crate) fn export_snapshot_file_read<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Sync>(dialect:&ArtifactDialect,read:&store::snapshot_read::ErasedSnapshotRead,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
+    pub(crate) fn export_snapshot_file_read<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Sync>(dialect:&ArtifactDialect,read:&store::snapshot_read::ErasedSnapshotRead,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->IoResult<Vec<u8>>{
         let result=read.get::<P>().ok_or_else(||refusal(ValueRefusalKind::InvalidValue,"captured snapshot has the wrong registered type")).and_then(|snapshot|export_sqlite_snapshot_receiving(dialect,snapshot,encoding,control,native));
         result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
     }
 
     /// 🪑️ Publishes a complete reconstructed snapshot into the caller's prevalidated empty typed slot.
-    pub(crate) fn import_snapshot_file_into<P:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned>(dialect:&ArtifactDialect,bytes:&[u8],destination:&mut(dyn std::any::Any+Send),control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
+    pub(crate) fn import_snapshot_file_into<P:semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned>(dialect:&ArtifactDialect,bytes:&[u8],destination:&mut(dyn std::any::Any+Send),control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->IoResult<()>{
         let result=(||{
             typed_snapshot_codec::<P>(dialect)?;
             let destination=destination.downcast_mut::<Option<P>>().ok_or_else(||refusal(ValueRefusalKind::InvalidValue,"snapshot file destination has the wrong registered type"))?;
             if destination.is_some(){return Err(refusal(ValueRefusalKind::InvalidValue,"snapshot file destination must be empty"))}
-            let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let payment=(||{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};port.work(2,size_of::<Option<P>>())?;port.work(2,size_of::<Vec<Diagnostic>>())?;port.work(2,size_of::<IoOutcome<()>>())?;Ok::<(),ValueError>(())})();native.record_progress(body.progress()).map_err(IoError::from_value_error)?;payment.map_err(IoError::from_value_error)?;
+            let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let payment=(||{let mut port=semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};port.work(2,size_of::<Option<P>>())?;port.work(2,size_of::<Vec<Diagnostic>>())?;port.work(2,size_of::<IoOutcome<()>>())?;Ok::<(),ValueError>(())})();native.record_progress(body.progress()).map_err(IoError::from_value_error)?;payment.map_err(IoError::from_value_error)?;
             let IoOutcome{value,diagnostics}=import_sqlite_snapshot_receiving::<P>(dialect,bytes,control,native)?;
             *destination=Some(value);Ok(IoOutcome{value:(),diagnostics})
         })();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
@@ -2027,8 +1406,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let result=(||{let callback=snapshot_file_callbacks(dialect)?.1.ok_or_else(||refusal(ValueRefusalKind::UnsupportedOwner,"artifact has no complete snapshot file capability"))?;callback(dialect,bytes,destination,control,native)})();result.map_err(|mut error|{error.cause=error.cause.with_retained_progress(native.progress());error})
     }
 
-    fn validate_snapshot_metadata_receiving(table:&SqliteTable,port:&mut crate::sqlite_snapshot::artifact::receiving::Port<'_,'_,'_,store::NativeSnapshotBodyWallet>)->Result<SnapshotEncoding,ValueError>{
-        use crate::sqlite_snapshot::artifact::receiving::validate_declaration;
+    fn validate_snapshot_metadata_receiving(table:&SqliteTable,port:&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port<'_,'_,'_,store::NativeSnapshotBodyWallet>)->Result<SnapshotEncoding,ValueError>{
+        use semio_framework_io_sqlite_snapshot::artifact::receiving::validate_declaration;
         let invalid=||ValueError::literal(ValueRefusalKind::InvalidValue,"snapshot SQLite metadata is invalid");let limits=port.control.limits();if limits.max_columns<6||table.name.len().checked_add(table.sql.len()).is_none_or(|bytes|bytes>limits.max_schema_bytes){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot SQLite metadata exceeds original schema ceiling"))}
         validate_declaration(&table.sql,SNAPSHOT_METADATA_SQL,port)?;port.work(1,0)?;if table.name!="semio_snapshot"||table.rows.len()!=1||table.rows[0].rowid!=1{return Err(invalid())}
         let[SqliteValue::Integer(1),SqliteValue::Text(kind),SqliteValue::Text(standard),SqliteValue::Text(subset),SqliteValue::Integer(1),SqliteValue::Text(encoding)]=table.rows[0].values.as_slice()else{return Err(invalid())};
@@ -2036,20 +1415,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         match encoding.as_str(){"binary"=>Ok(SnapshotEncoding::Binary),"text"=>Ok(SnapshotEncoding::Text),_=>Err(invalid())}
     }
 
-    fn validate_snapshot_schema_decoding(database:&SqliteDatabase,schema:&str,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=crate::sqlite_snapshot::artifact::receiving::validate_schema_sql(database,schema,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
-    fn validate_snapshot_schema_encoding(database:&SqliteDatabase,schema:&str,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<(),ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=crate::sqlite_snapshot::artifact::receiving::validate_schema_sql(database,schema,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
-    fn metadata_encoding(table:&SqliteTable,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<SnapshotEncoding,ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=validate_snapshot_metadata_receiving(table,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
+    fn validate_snapshot_schema_decoding(database:&SqliteDatabase,schema:&str,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=semio_framework_io_sqlite_snapshot::artifact::receiving::validate_schema_sql(database,schema,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
+    fn validate_snapshot_schema_encoding(database:&SqliteDatabase,schema:&str,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<(),ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=semio_framework_io_sqlite_snapshot::artifact::receiving::validate_schema_sql(database,schema,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
+    fn metadata_encoding(table:&SqliteTable,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<SnapshotEncoding,ValueError>{let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=validate_snapshot_metadata_receiving(table,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress())?;result}
 
     #[derive(semio_framework_value::RetireOwned)]
     struct SnapshotMetadataFrame{database:Option<SqliteDatabase>,metadata:Option<SqliteTable>,dialect:Option<ArtifactDialect>,tables:Vec<SqliteTable>}
     impl SnapshotMetadataFrame{fn new()->Self{Self{database:None,metadata:None,dialect:None,tables:Vec::new()}}}
 
     #[derive(semio_framework_value::RetireOwned)]
-    struct SnapshotHopFrame{input:Option<IoPayload>,snapshot:SnapshotMetadataFrame,projected:Option<IoResult<SqliteDatabase>>,reconstructed:Option<IoResult<IoPayload>>,physical_export:Option<crate::sqlite_snapshot::PhysicalExportFrame>,physical_import:Option<crate::sqlite_snapshot::PhysicalImportFrame>,result:Option<IoResult<IoPayload>>}
+    struct SnapshotHopFrame{input:Option<IoPayload>,snapshot:SnapshotMetadataFrame,projected:Option<IoResult<SqliteDatabase>>,reconstructed:Option<IoResult<IoPayload>>,physical_export:Option<semio_framework_io_sqlite_snapshot::PhysicalExportFrame>,physical_import:Option<semio_framework_io_sqlite_snapshot::PhysicalImportFrame>,result:Option<IoResult<IoPayload>>}
     impl SnapshotHopFrame{fn new(input:IoPayload)->Self{Self{input:Some(input),snapshot:SnapshotMetadataFrame::new(),projected:None,reconstructed:None,physical_export:None,physical_import:None,result:None}}}
 
     fn attach_metadata_decoding(frame:&mut SnapshotMetadataFrame,dialect:&ArtifactDialect,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{
-        use crate::sqlite_snapshot::artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row};
+        use semio_framework_io_sqlite_snapshot::artifact::receiving::{Port, Direction, Projection, Scalar, row, cell, text_cell, push_row};
         let invalid=||ValueError::literal(ValueRefusalKind::InvalidValue,"snapshot SQLite metadata dialect is invalid");
         let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let preflight=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_ref().unwrap();let limits=port.control.limits();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;if count>limits.max_tables||limits.max_columns<6{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata exceeds original table or column ceiling"))}
             let mut rows=1usize;let mut bytes=16usize.checked_add(dialect.artifact_kind.len()).and_then(|bytes|bytes.checked_add(dialect.standard.len())).and_then(|bytes|bytes.checked_add(dialect.subset.len())).and_then(|bytes|bytes.checked_add(encoding.as_str().len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata value extent overflow"))?;
@@ -2058,12 +1437,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             for(index,text)in[&dialect.artifact_kind,&dialect.standard,&dialect.subset].into_iter().enumerate(){if text.is_empty(){return Err(invalid())}for(position,character)in text.chars().enumerate(){if position%256==0{port.work(1,0)?}if character.is_control()||index==0&&character=='@'||index==2&&character=='/'{return Err(invalid())}}}Ok(())})();native.record_progress(body.progress())?;preflight?;
         frame.metadata=Some(native.receive::<Projection,SqliteTable>(|slot,native,body|{*slot=Some(Projection::new());let projected=slot.as_mut().unwrap();let mut port=Port{control,native:Direction::Decode(native),body};port.vector(1,&mut projected.database.tables,1)?;port.work(2,size_of::<SqliteTable>())?;projected.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut projected.database.tables[0];port.text("semio_snapshot",&mut table.name,2)?;port.text(SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';'),&mut table.sql,2)?;port.vector(1,&mut table.rows,2)?;
             row(projected,1,6,&mut port)?;for text in[&dialect.artifact_kind,&dialect.standard,&dialect.subset]{text_cell(projected,text,&mut port)?}cell(projected,Scalar::Integer(1),&mut port)?;text_cell(projected,encoding.as_str(),&mut port)?;push_row(projected,0,&mut port)?;port.work(1,size_of::<SqliteTable>())?;Ok(projected.database.tables.pop().unwrap())})?);
-        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_mut().unwrap();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;crate::sqlite_snapshot::artifact::receiving::relocate_vector(&mut database.tables,&mut frame.tables,count,1,&mut port)?;port.work(1,size_of::<SqliteTable>())?;database.tables.push(frame.metadata.take().unwrap());Ok(())})();native.record_progress(body.progress())?;result
+        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_mut().unwrap();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;semio_framework_io_sqlite_snapshot::artifact::receiving::relocate_vector(&mut database.tables,&mut frame.tables,count,1,&mut port)?;port.work(1,size_of::<SqliteTable>())?;database.tables.push(frame.metadata.take().unwrap());Ok(())})();native.record_progress(body.progress())?;result
     }
 
     fn take_metadata_encoding(frame:&mut SnapshotMetadataFrame,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->Result<SnapshotEncoding,ValueError>{
         let database=frame.database.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot metadata original database is absent"))?;
-        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let found=(||{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};for(index,table)in database.tables.iter().enumerate(){port.work(1,0)?;if table.name=="semio_snapshot"{return Ok(index)}}Err(ValueError::literal(ValueRefusalKind::InvalidValue,"SQLite file has no semantic snapshot metadata"))})();native.record_progress(body.progress())?;let index=found?;
+        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let found=(||{let mut port=semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body};for(index,table)in database.tables.iter().enumerate(){port.work(1,0)?;if table.name=="semio_snapshot"{return Ok(index)}}Err(ValueError::literal(ValueRefusalKind::InvalidValue,"SQLite file has no semantic snapshot metadata"))})();native.record_progress(body.progress())?;let index=found?;
         let encoding=metadata_encoding(&database.tables[index],control,native)?;let shifted=database.tables.len()-index;let copy=shifted.checked_mul(size_of::<SqliteTable>()).and_then(|copy|copy.checked_add(3*size_of::<SqliteValue>()+size_of::<ArtifactDialect>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer extent overflow"))?;
         let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer exceeds original physical grant"))}native.native().checkpoint()?;
         frame.metadata=Some(database.tables.remove(index));let row=&mut frame.metadata.as_mut().unwrap().rows[0];let take=|cell:&mut SqliteValue|match std::mem::replace(cell,SqliteValue::Null){SqliteValue::Text(text)=>text,_=>unreachable!()};frame.dialect=Some(ArtifactDialect{artifact_kind:take(&mut row.values[1]),standard:take(&mut row.values[2]),subset:take(&mut row.values[3])});native.record_progress(moved)?;Ok(encoding)
@@ -2093,11 +1472,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     typed_file_work!(native,control,Decode,size_of::<Option<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
                     let projected=frame.projected.as_mut().unwrap().as_mut().unwrap();frame.snapshot.database=Some(std::mem::replace(&mut projected.value,SqliteDatabase{tables:Vec::new()}));
                     let database=frame.snapshot.database.as_mut().unwrap();validate_snapshot_schema_decoding(database,&provider.schema,control,native).map_err(IoError::from_value_error)?;
-                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=crate::sqlite_snapshot::artifact::receiving::check_database(database,&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
+                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=semio_framework_io_sqlite_snapshot::artifact::receiving::check_database(database,&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
                     let encoding=match frame.input.as_ref().unwrap(){IoPayload::Binary(_)=>SnapshotEncoding::Binary,IoPayload::Text(_)=>SnapshotEncoding::Text};
                     attach_metadata_decoding(&mut frame.snapshot,&hop.from,encoding,control,native).map_err(IoError::from_value_error)?;
-                    typed_file_work!(native,control,Decode,size_of::<crate::sqlite_snapshot::PhysicalExportFrame>()).map_err(IoError::from_value_error)?;frame.physical_export=Some(crate::sqlite_snapshot::PhysicalExportFrame::new());
-                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=crate::sqlite_snapshot::export_sqlite_database_receiving_into(frame.snapshot.database.as_ref().unwrap(),frame.physical_export.as_mut().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                    typed_file_work!(native,control,Decode,size_of::<semio_framework_io_sqlite_snapshot::PhysicalExportFrame>()).map_err(IoError::from_value_error)?;frame.physical_export=Some(semio_framework_io_sqlite_snapshot::PhysicalExportFrame::new());
+                    let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=semio_framework_io_sqlite_snapshot::export_sqlite_database_receiving_into(frame.snapshot.database.as_ref().unwrap(),frame.physical_export.as_mut().unwrap(),&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
                     typed_file_work!(native,control,Decode,size_of::<Vec<u8>>()+size_of::<Vec<Diagnostic>>()).map_err(IoError::from_value_error)?;
                     Ok(IoOutcome{value:IoPayload::Binary(std::mem::take(&mut frame.physical_export.as_mut().unwrap().output)),diagnostics:frame.projected.take().unwrap().unwrap().diagnostics})
                 })());
@@ -2116,8 +1495,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             frame.result=Some((||{
                 control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1).map_err(IoError::from_value_error)?;
                 let IoPayload::Binary(bytes)=frame.input.as_ref().unwrap()else{return Err(refusal(ValueRefusalKind::InvalidValue,"SQLite snapshot import requires a binary payload"))};
-                typed_file_work!(native,control,Encode,size_of::<crate::sqlite_snapshot::PhysicalImportFrame>()).map_err(IoError::from_value_error)?;frame.physical_import=Some(crate::sqlite_snapshot::PhysicalImportFrame::new());
-                let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=crate::sqlite_snapshot::import_sqlite_database_receiving_into(bytes,frame.physical_import.as_mut().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
+                typed_file_work!(native,control,Encode,size_of::<semio_framework_io_sqlite_snapshot::PhysicalImportFrame>()).map_err(IoError::from_value_error)?;frame.physical_import=Some(semio_framework_io_sqlite_snapshot::PhysicalImportFrame::new());
+                let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let physical=semio_framework_io_sqlite_snapshot::import_sqlite_database_receiving_into(bytes,frame.physical_import.as_mut().unwrap(),&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;physical.map_err(IoError::from_value_error)?;
                 typed_file_work!(native,control,Encode,size_of::<Option<SqliteDatabase>>()).map_err(IoError::from_value_error)?;
                 frame.snapshot.database=Some(std::mem::replace(&mut frame.physical_import.as_mut().unwrap().database,SqliteDatabase{tables:Vec::new()}));
                 let encoding=take_metadata_encoding(&mut frame.snapshot,control,native).map_err(IoError::from_value_error)?;
@@ -2354,3 +1733,4 @@ pub mod text;
 
 /// ⏱️ Original caller authority for physical route execution.
 pub use semio_framework_io_control as control;
+pub use semio_framework_os_store_codec_registry::lifted_io::{Analysis, IoFidelityClass, IoResolveError, WireComposeSource, WireComposedArtifact, dialects_for, io_keys_for, register_composer_entry_refs, register_composer_entry_refs_in_assembly, resolve};

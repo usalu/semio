@@ -30,7 +30,7 @@ struct PackageProgressFixtureV1 {
 
 impl From<CatalogProgressFixtureV1> for TrustedCatalogLoadProgressV1 {
     fn from(fixture: CatalogProgressFixtureV1) -> Self {
-        use crate::artifact_authority::trusted_catalog::schema::{TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1};
+        use semio_hub_trusted_catalog_contract::schema::{TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1};
         let phase = |phase: &str| match phase {
             "pending" => TrustedCatalogPackagePhaseV1::Pending,
             "reading" => TrustedCatalogPackagePhaseV1::Reading,
@@ -182,5 +182,5 @@ fn the_db_io_census_reading_lists_every_kind_that_saw_io() {
     assert_eq!(reading.admission_refusals, reading.kinds.iter().map(|kind| kind.admission_refusals).sum::<u64>());
     assert!(reading.kinds.iter().all(|kind| kind.tasks != 0 || kind.steps != 0 || kind.turns != 0 || kind.admission_waits != 0));
     assert!(reading.kinds.iter().all(|kind| kind.admission_refusals <= kind.admission_waits));
-    assert!(reading.kinds.iter().all(|kind| db::db_storage::DbIoTaskKind::ALL.iter().any(|declared| format!("{declared:?}") == kind.kind)));
+    assert!(reading.kinds.iter().all(|kind| db::storage::DbIoTaskKind::ALL.iter().any(|declared| format!("{declared:?}") == kind.kind)));
 }

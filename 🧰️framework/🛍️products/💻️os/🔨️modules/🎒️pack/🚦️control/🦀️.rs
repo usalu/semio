@@ -1,5 +1,5 @@
 //! 🚦️ Caller-owned finite command admission, cooperative cancellation and native transport progress.
-use crate::os_pack::{PackError,PackRefusal,PackRetryDisposition,PackTransportCategory,PackTransportContext,PackTransportPolicy,PackTransportProgress,TransportAdmission,TransportContextRefusalCause};
+use semio_framework_os_pack::{PackError,PackRefusal,PackRetryDisposition,PackTransportCategory,PackTransportContext,PackTransportPolicy,PackTransportProgress,TransportAdmission,TransportContextRefusalCause};
 pub use semio_framework_async::CancelToken;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::sync::{Arc,Mutex};
@@ -52,7 +52,7 @@ pub fn admit_command_transport<F:Fn(PackTransportProgress)+Send+Sync+'static>(ma
 /// 📥️ Reads through the retained caller context in bounded physical pages.
 pub async fn read_command_file(path:&std::path::Path,maximum_bytes:u64,context:&CommandContext)->Result<CommandBytes,PackError>{
  use semio_framework_pack_source::PackSource;
- let source=crate::os_pack::io::FilePackSource::open(path,context.transport.clone())?;let length=source.len().await;
+ let source=semio_framework_os_pack::io::FilePackSource::open(path,context.transport.clone())?;let length=source.len().await;
  read_command_source(&source,length,maximum_bytes,context).await
 }
 /// 📚️ A retained source's trusted prefix uses the same finite input credit and physical pages.
@@ -74,7 +74,7 @@ pub fn enable_process_stdin_cancellation(context:&PackTransportContext,cancellat
  })
 }
 /// 🖥️ Native binaries expose actual transport work on stderr without altering their document output.
-pub fn print_command_progress(event:PackTransportProgress){if event.phase==crate::os_pack::PackTransportPhase::AfterOperation&&event.bytes>0{eprintln!("Processed {} bytes",event.bytes);}}
+pub fn print_command_progress(event:PackTransportProgress){if event.phase==semio_framework_os_pack::PackTransportPhase::AfterOperation&&event.bytes>0{eprintln!("Processed {} bytes",event.bytes);}}
 /// 🔘 Optional stdin control consumes only its own flag and retains the caller's token and context.
 pub fn configure_stdin_cancellation(args:&mut Vec<String>,context:&PackTransportContext,cancellation:CancelToken)->Result<(),PackError>{if let Some(index)=args.iter().position(|arg|arg=="--cancel-stdin"){args.remove(index);eprintln!("Type cancel and press Enter to cancel.");enable_process_stdin_cancellation(context,cancellation)?;}Ok(())}
 /// 📈️ Native binary observers expose retained input admission before expensive input work.

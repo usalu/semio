@@ -523,9 +523,7 @@ pub(crate) fn demo_diff_cases() -> Vec<EpwDiff> {
     ]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests
 
 const _: () = assert!(EPW_RECORD_FIELD_COUNT == 35, "EpwRecordDiff field-index table must match EPW_RECORD_FIELD_COUNT");

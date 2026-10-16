@@ -44,7 +44,8 @@ where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowCo
 }
 
 impl<S: Copy + RetireOwned + 'static, M: RetireOwned + 'static> WindowConfigReplaceCursor<S, M> {
-    fn normal_demand(&self) -> RetirementDemand {
+    #[doc(hidden)]
+    pub fn normal_demand(&self) -> RetirementDemand {
         let (copy_bytes, capacity_bytes) = match self.stage {
             0 => (size_of::<S>() * 2, 0),
             1 => (size_of::<S>() + size_of::<Box<S>>(), size_of::<S>()),

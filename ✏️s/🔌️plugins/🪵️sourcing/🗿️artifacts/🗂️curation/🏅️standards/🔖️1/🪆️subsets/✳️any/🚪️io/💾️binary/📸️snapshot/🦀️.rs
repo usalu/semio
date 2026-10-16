@@ -23,7 +23,7 @@ impl pack::snapshot::ArtifactPack for CurationSnapshot {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for CurationSnapshot {
-fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.

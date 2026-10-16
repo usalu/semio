@@ -5,7 +5,7 @@ name = "semio-framework-surface"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Surface family — paint, board-2d, terrain, node-graph, tiled-map rendering sessions as one wasm-bindgen crate"
+description = "Surface family facade — re-exports the paint, terrain, node-graph and tiled-map producer crates as one wasm-bindgen library"
 
 [package.metadata.semio]
 role = "framework"
@@ -17,33 +17,11 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
-semio-framework-replication = { path = "../../../📡️replication/📦️packages/🦀️rust" }
-semio-framework-ui-viewport = { path = "../../../🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
-semio-framework-async = { workspace = true }
-ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-canvas = { path = "../../../🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
-semio-framework-job = { workspace = true }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-# 🏔️ First-party PNG codec for the path-mounted `🏔️terrain/🦀️.rs` (Terrarium RGB elevation), the
-# `🗺️tiled-map` raster tile upload and the `🎨️paint` layer-image upload: no third-party runtime
-# dependency. The third-party `image` crate is a dev-dependency below and only validates it.
-# RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
-semio-framework-pixels = { path = "../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
-
-# 🌉️ Browser-only `wasm_bridge` session wrappers (NodeGraph/TiledMap/Paint — each wraps a
-# pure `*Core` type that stays target-neutral). Excluded from `wasm32-wasip2` because
-# `target_arch = "wasm32"` is TRUE for the WASI component target too — the wasip2 guest never
-# attaches an `HtmlCanvasElement`, so it needs none of this bridge.
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-js-sys = "0.3.83"
-wasm-bindgen = "0.2.106"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+# 🧩️ The facade owns no module source: every surface family is its own producer crate, re-exported as `paint`, `terrain`, `node_graph` and `tiled_map`.
+semio-framework-surface-paint = { path = "../../🎨️paint/📦️packages/🦀️rust" }
+semio-framework-surface-terrain = { path = "../../🏔️terrain/📦️packages/🦀️rust" }
+semio-framework-surface-node-graph = { path = "../../🕸️node-graph/📦️packages/🦀️rust" }
+semio-framework-surface-tiled-map = { path = "../../🗺️tiled-map/📦️packages/🦀️rust" }
 
 # 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
 # contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
@@ -52,5 +30,4 @@ name = "tiled_map_mercator_oracle"
 path = "../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs"
 
 [dev-dependencies]
-semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
-image = { version = "0.25", default-features = false, features = ["png"] }
+serde_json = "1.0.140"

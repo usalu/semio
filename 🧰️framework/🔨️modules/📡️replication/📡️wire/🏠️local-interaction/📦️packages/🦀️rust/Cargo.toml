@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-replication-local-interaction"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Local interaction roots, updates and transport pages."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-local-interaction"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-replication-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+
+[dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

@@ -182,6 +182,43 @@
           }
         }
       }
+    },
+    "PhysicalLimits": {
+      "const": {
+        "maximumManifestBytes": 8388608,
+        "maximumAggregateManifestBytes": 67108864,
+        "maximumTextDocuments": 16384,
+        "maximumObservations": 131072,
+        "maximumDirectoryEntries": 65536,
+        "maximumAggregateDirectoryEntries": 262144,
+        "maximumPendingRechecks": 32,
+        "maximumPathUnits": 256,
+        "maximumPolicyBytes": 65536,
+        "readChunkBytes": 65536
+      }
+    },
+    "ReadonlyCustody": {
+      "description": "One actual controlled verification refuses stale published membership and retains its original Source/text/topology observations through the callback. It never calls publication or writes. Rechecks enroll before effects under a finite pending bound; admission closes after body, accepted rechecks drain with their first failure including undefined retained, and a final successful-body replay precedes custody closure. Escaped callbacks cannot start or resume effects after release.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "packages"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     }
   }
 }

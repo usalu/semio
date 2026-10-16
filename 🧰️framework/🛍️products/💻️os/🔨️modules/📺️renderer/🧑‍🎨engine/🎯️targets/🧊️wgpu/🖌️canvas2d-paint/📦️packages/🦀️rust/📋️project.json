@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-canvas2d-paint-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

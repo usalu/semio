@@ -69,13 +69,13 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
 
 #[test]
 fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without_flattening() {
-    use crate::codec::{ByteReader, ByteSpan};
+    use crate::{ByteReader, ByteSpan};
     use super::operation_bytes::OperationByteOutput;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected: Vec<u8> = fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32, 8192)).collect();
     let mut owner = OwnedOperationBytes::try_new(8194, 65536).unwrap();
     let mut allow = |_| true;
-    let mut control = crate::value::NativeEncodeControl::new(65536, &mut allow);
+    let mut control = semio_framework_value::NativeEncodeControl::new(65536, &mut allow);
     owner.write_bytes(&expected, &mut control).unwrap();
     let ((), allocated, returned) = crate::test_allocation::observe_backing(|| {
         let span = ByteSpan::from_source(&owner);
@@ -92,8 +92,8 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
         assert_eq!(reader.position(), 4102);
         let mut refused = ByteReader::from_source(&owner);
         let error = refused.read_bytes(8194).unwrap_err();
-        assert_eq!(error.kind(), crate::value::ValueRefusalKind::UnsupportedOwner);
-        assert!(matches!(error, crate::PackRefusal::RetainedMalformed { offset: 0, .. }));
+        assert_eq!(error.kind(), semio_framework_value::ValueRefusalKind::UnsupportedOwner);
+        assert!(matches!(error, semio_framework_pack_error::PackRefusal::RetainedMalformed { offset: 0, .. }));
         assert_eq!(refused.position(), 0);
         assert!(refused.read_span(8195).is_err());
         assert_eq!(refused.position(), 0);
@@ -111,17 +111,17 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
 #[test]
 fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_first_difference_without_allocation(){
     use super::operation_bytes::{OperationByteComparison,OperationByteOutput};
-    use crate::codec::ByteSpan;
+    use crate::ByteSpan;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     let mut source=OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
     let mut allow=|_|true;
-    let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+    let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
     source.write_bytes(&expected,&mut control).unwrap();
     let retained=source.allocated_bytes();
     for span in [ByteSpan::from_slice(&expected),ByteSpan::from_source(&source)]{
         let mut allow=|_|true;
-        let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+        let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let(result,requested,released)=crate::test_allocation::observe_backing(||{
             let mut comparison=OperationByteComparison::new(span);
             comparison.write_bytes(&expected[..4095],&mut control)?;
@@ -131,12 +131,12 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
         result.unwrap();
         assert_eq!((requested,released),(0,0));
         let mut allow=|_|true;
-        let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+        let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let mut comparison=OperationByteComparison::new(span);
         comparison.write_bytes(&expected[..4095],&mut control).unwrap();
         let(error,requested,released)=crate::test_allocation::observe_backing(||comparison.write_bytes(&[255],&mut control));
-        let crate::PackRefusal::RetainedMalformed{kind,offset,..}=error.unwrap_err()else{panic!("exact typed mismatch lost")};
-        assert_eq!(kind,crate::value::ValueRefusalKind::InvalidValue);
+        let semio_framework_pack_error::PackRefusal::RetainedMalformed{kind,offset,..}=error.unwrap_err()else{panic!("exact typed mismatch lost")};
+        assert_eq!(kind,semio_framework_value::ValueRefusalKind::InvalidValue);
         assert_eq!(offset,4095);
         assert_eq!(comparison.position(),4095);
         assert_eq!((requested,released),(0,0));
@@ -149,11 +149,11 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
         comparison.write_bytes(&expected,&mut control).unwrap();
         assert!(comparison.write_bytes(&[0],&mut control).is_err());
         assert!(comparison.finish().is_err());
-        let mut canceled=|progress:crate::value::native_encoding::NativeEncodeProgress|progress.completed<256;
-        let mut control=crate::value::NativeEncodeControl::new(65536,&mut canceled);
+        let mut canceled=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed<256;
+        let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut canceled);
         let mut comparison=OperationByteComparison::new(span);
         let refusal=comparison.write_bytes(&expected,&mut control).unwrap_err();
-        assert_eq!(refusal.kind(),crate::value::ValueRefusalKind::Canceled);
+        assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::Canceled);
         assert_eq!(comparison.position(),256);
     }
     assert_eq!(source.allocated_bytes(),retained);
@@ -172,14 +172,14 @@ fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns
     for maximum in [expected.len(),expected.len()-1]{
         let mut source=OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
         let mut allow=|_|true;
-        let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+        let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let completed={
             let mut limited=OperationByteLimitedOutput::new(&mut source,maximum as u64);
             limited.write_bytes(&expected[..2],&mut control).unwrap();
             let result=limited.write_bytes(&expected[2..],&mut control);
             if maximum==expected.len(){result.unwrap();assert_eq!(limited.completed_bytes(),expected.len()as u64);}else{
-                let crate::PackRefusal::RetainedMalformed{kind,offset,..}=result.unwrap_err()else{panic!("whole operation typed ceiling lost")};
-                assert_eq!(kind,crate::value::ValueRefusalKind::OwnershipLimit);
+                let semio_framework_pack_error::PackRefusal::RetainedMalformed{kind,offset,..}=result.unwrap_err()else{panic!("whole operation typed ceiling lost")};
+                assert_eq!(kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
                 assert_eq!(offset,2);
                 assert!(limited.write_bytes(&[],&mut control).is_err());
                 assert_eq!(limited.completed_bytes(),2);
@@ -192,13 +192,13 @@ fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns
     }
     let mut source=OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
     let mut allow=|_|true;
-    let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+    let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
     {
         let mut limited=OperationByteLimitedOutput::new(&mut source,expected.len()as u64);
         limited.write_bytes(&expected[..2],&mut control).unwrap();
-        let mut cancel=|progress:crate::value::native_encoding::NativeEncodeProgress|progress.completed<256;
-        let mut control=crate::value::NativeEncodeControl::new(65536,&mut cancel);
-        assert_eq!(limited.write_bytes(&expected[2..],&mut control).unwrap_err().kind(),crate::value::ValueRefusalKind::Canceled);
+        let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed<256;
+        let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut cancel);
+        assert_eq!(limited.write_bytes(&expected[2..],&mut control).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::Canceled);
         assert_eq!(limited.completed_bytes(),2);
         assert!(limited.write_bytes(&[],&mut control).is_err());
     }
@@ -216,10 +216,10 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
     let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
     for canceled in [false,true]{
         let mut prepared=OperationBytePreparation::try_new(expected.len(),65536).unwrap();
-        let mut allow=|_|true;let control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+        let mut allow=|_|true;let control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let mut receipt=control.pause().unwrap();
         for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){
-            let mut allow=|_|true;let mut control=crate::value::NativeEncodeControl::resume(receipt,&mut allow).unwrap();
+            let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::resume(receipt,&mut allow).unwrap();
             let (zero,requested,released)=crate::test_allocation::observe_backing(||prepared.fund_one(1,0,&mut control));
             assert_eq!(zero.unwrap(),OperationByteFundingStep::Pending{prepared_items:0,allocated_bytes:0});assert_eq!((requested,released),(0,0));
             let required=prepared.next_funding_byte_demand().unwrap();
@@ -235,10 +235,10 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
         }
         assert!(prepared.is_funded());
         let retained=prepared.allocated_bytes();
-        let mut callback=|progress:crate::value::native_encoding::NativeEncodeProgress|!canceled||progress.completed<256;
-        let mut control=crate::value::NativeEncodeControl::resume(receipt,&mut callback).unwrap();
+        let mut callback=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|!canceled||progress.completed<256;
+        let mut control=semio_framework_value::NativeEncodeControl::resume(receipt,&mut callback).unwrap();
         if canceled{
-            assert_eq!(prepared.write_bytes(&expected,&mut control).unwrap_err().kind(),crate::value::ValueRefusalKind::Canceled);
+            assert_eq!(prepared.write_bytes(&expected,&mut control).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::Canceled);
             let prefix=prepared.accepted_prefix().unwrap();assert_eq!(prefix.len(),256);assert!(prefix.iter().eq(expected[..256].iter().copied()));
             assert!(prepared.take_ready().is_none());
             for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if prepared.close_one(1,maximum).unwrap()==OperationByteCloseStep::Complete{break;}}
@@ -266,7 +266,7 @@ fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_au
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::json!([]));
     let demand=source.next_allocation_bytes();
     assert_eq!(source.close_one(1,4096).unwrap(),OperationByteCloseStep::Complete);assert!(source.terminal_is_empty());
-    assert_eq!(demand.expect_err("exact zero emitted operation cannot acquire a later payload allocation").kind,crate::value::ValueRefusalKind::OwnershipLimit);
+    assert_eq!(demand.expect_err("exact zero emitted operation cannot acquire a later payload allocation").kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
     println!("[DEBUG] Empty measured operation handback preserves exact zero payload authority and cannot acquire future backing after publication");
 }
 
@@ -277,24 +277,24 @@ fn owned_operation_byte_pages_measure_complete_operation_without_retaining_paylo
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
     for maximum in [expected.len(),expected.len()-1]{
         let mut measured=OperationByteMeasurement::new(maximum as u64);
-        let mut allow=|_|true;let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+        let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
         let (result,requested,released)=crate::test_allocation::observe_backing(||{
             measured.write_bytes(&expected[..2],&mut control)?;
             measured.write_bytes(&expected[2..],&mut control)
         });
         assert_eq!((requested,released),(0,0));assert_eq!(control.owned_bytes(),0);
         if maximum==expected.len(){result.unwrap();assert_eq!(measured.exact_length().unwrap(),expected.len());}else{
-            assert_eq!(result.unwrap_err().kind(),crate::value::ValueRefusalKind::OwnershipLimit);
+            assert_eq!(result.unwrap_err().kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);
             assert!(measured.exact_length().is_err());assert!(measured.write_bytes(&[],&mut control).is_err());
         }
     }
     let mut measured=OperationByteMeasurement::new(expected.len()as u64);
-    let mut allow=|_|true;let mut control=crate::value::NativeEncodeControl::new(65536,&mut allow);
+    let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
     measured.write_bytes(&expected[..2],&mut control).unwrap();
     let receipt=control.pause().unwrap();
-    let mut cancel=|progress:crate::value::native_encoding::NativeEncodeProgress|progress.completed==0;
-    let mut control=crate::value::NativeEncodeControl::resume(receipt,&mut cancel).unwrap();
-    assert_eq!(measured.write_bytes(&expected[2..],&mut control).unwrap_err().kind(),crate::value::ValueRefusalKind::Canceled);
+    let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed==0;
+    let mut control=semio_framework_value::NativeEncodeControl::resume(receipt,&mut cancel).unwrap();
+    assert_eq!(measured.write_bytes(&expected[2..],&mut control).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::Canceled);
     assert_eq!(control.owned_bytes(),0);assert!(measured.exact_length().is_err());
     assert_eq!(serde_json::to_value(&expected).unwrap().as_array().unwrap().len(),fixture["expected"]["payloadBytes"].as_u64().unwrap()as usize);
     println!("[DEBUG] Genuine operation measurement preserves complete8194 whole-frame ceiling and same Native control without any payload backing; finite refusal/cancellation latch prevents a false funding length");
@@ -307,12 +307,12 @@ fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refu
     let source:Vec<u8>=serde_json::from_value(f["source"].clone()).unwrap();let foreign:Vec<u8>=serde_json::from_value(f["foreign"].clone()).unwrap();
     for candidate in [&source,&foreign]{
         let observed=std::cell::Cell::new((0,0));
-        let mut accept=|progress:crate::value::native_encoding::NativeEncodeProgress|{observed.set((progress.completed,progress.total));true};
-        let mut control=crate::value::NativeEncodeControl::new(0,&mut accept);
+        let mut accept=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{observed.set((progress.completed,progress.total));true};
+        let mut control=semio_framework_value::NativeEncodeControl::new(0,&mut accept);
         let total=f["callerTotal"].as_u64().unwrap()as usize;control.begin_stage(total).unwrap();control.advance(f["callerBefore"].as_u64().unwrap()as usize).unwrap();
-        let mut comparison=OperationByteComparison::new(crate::codec::ByteSpan::from_slice(&source));
+        let mut comparison=OperationByteComparison::new(crate::ByteSpan::from_slice(&source));
         let result=comparison.write_bytes(candidate,&mut control);
-        if candidate==&source{result.unwrap();comparison.finish().unwrap();}else{assert_eq!(result.unwrap_err().kind(),crate::value::ValueRefusalKind::InvalidValue);assert_eq!(comparison.position(),0);assert!(comparison.finish().is_err());}
+        if candidate==&source{result.unwrap();comparison.finish().unwrap();}else{assert_eq!(result.unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvalidValue);assert_eq!(comparison.position(),0);assert!(comparison.finish().is_err());}
         control.step().expect("exact enclosing caller stage survives nested sink workload");assert_eq!(observed.get(),(total,total));assert_eq!(control.owned_bytes(),0);
     }
     println!("[DEBUG] Exact borrowed comparison restores caller2/2 workload after nested acceptance and original typed refusal, with no source/output ownership transfer");
@@ -321,12 +321,12 @@ fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refu
 #[test]
 fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_without_physical_credit(){
     use super::operation_bytes::{OperationSourceCollection,OperationByteReturnStep,OperationByteOutput};
-    use crate::value::list::PagedList;
-    use crate::value::retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep};
+    use semio_framework_value::list::PagedList;
+    use semio_framework_value::retirement::allocation_return::{ParentAllocationReturn, AllocationReturnStep};
     let f:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🏠️child-carrier.json")).unwrap();
     let max=f["maximumBytes"].as_u64().unwrap()as usize;
     let mut operation=OwnedOperationBytes::try_new(f["maximumPayloadBytes"].as_u64().unwrap()as usize,f["maximumAllocationBytes"].as_u64().unwrap()as usize).unwrap();
-    let mut allow=|_|true;let mut encoding=crate::value::NativeEncodeControl::new(f["maximumAllocationBytes"].as_u64().unwrap()as usize,&mut allow);
+    let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(f["maximumAllocationBytes"].as_u64().unwrap()as usize,&mut allow);
     operation.write_bytes(f["wire"].as_str().unwrap().as_bytes(),&mut encoding).unwrap();
     for _ in 0..f["paddingBytes"].as_u64().unwrap(){operation.write_bytes(&[f["paddingByte"].as_u64().unwrap()as u8],&mut encoding).unwrap();}
     let retained=operation.allocated_bytes();assert_eq!(retained,encoding.owned_bytes());assert_eq!(operation.len(),f["wireBytes"].as_u64().unwrap()as usize);

@@ -146,9 +146,7 @@ pub const KINDS: &[&str] = &[
     "remove-app-extension",
 ];
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds/🦀️.rs"]
-mod kinds_tests;
+
 //#endregion 🔖️Kinds
 
 /// 🧪️ P2-FG2: representative `GifMutation` (89a) cases for `ops_grammar_conformance_law`/
@@ -281,9 +279,7 @@ mod tests;
 // agents migrating the other stdio artifacts, so the production mounts there stay untouched while
 // this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
 // directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
+
 //#endregion 🧪️FixtureTests
 
 #[cfg(test)]

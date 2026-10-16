@@ -1,1 +1,79 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","path","owner","maximumBytes","maximumFiles"],"properties":{"version":{"const":1},"path":{"type":"string","minLength":1,"maxLength":256},"owner":{"type":"string","minLength":1,"maxLength":1024},"maximumBytes":{"type":"integer","minimum":1,"maximum":2147483648},"maximumFiles":{"type":"integer","minimum":1,"maximum":131072}},"definitions":{"Artifact":{"type":"object","additionalProperties":false,"required":["version","owner","files"],"properties":{"version":{"const":1},"owner":{"type":"string","minLength":1,"maxLength":1024},"files":{"type":"array","maxItems":131072,"uniqueItems":true,"items":{"type":"string","minLength":1,"maxLength":256,"pattern":"^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000-\\u001f]+$"}}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "path",
+    "owner",
+    "maximumBytes",
+    "maximumFiles"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483648
+    },
+    "maximumFiles": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 131072
+    }
+  },
+  "definitions": {
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 131072,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\\\u0000-\\u001f]+$"
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumPending": 32,
+        "maximumEntries": 262144,
+        "maximumDepth": 64,
+        "maximumManifestBytes": 16777216,
+        "chunkBytes": 65536
+      }
+    }
+  }
+}

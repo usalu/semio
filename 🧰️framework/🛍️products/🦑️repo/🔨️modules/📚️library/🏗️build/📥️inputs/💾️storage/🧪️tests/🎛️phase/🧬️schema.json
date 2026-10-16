@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "phase",
+      "accepted"
+    ],
+    "properties": {
+      "phase": {
+        "enum": [
+          "narrow",
+          "forged",
+          "cancelled",
+          "sibling",
+          "undefined-primary",
+          "frozen-primary"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "definitions": {
+    "ArtifactCleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "writer-release",
+              "undefined-primary",
+              "frozen-primary"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

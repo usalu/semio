@@ -46,7 +46,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DeleteNode {
         vec!["nodes".into(), self.id.clone()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

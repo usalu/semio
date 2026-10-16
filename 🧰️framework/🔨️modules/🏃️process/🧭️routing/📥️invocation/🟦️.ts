@@ -1,9 +1,10 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { compileJsonSchemaSubset, requireExactKeys, requireRecord } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { compileJsonSchemaSubset, compileExactKeysV1, requireRecord } from "../../../🧬️schema/✅️validator/🟦️.ts";
 import {types} from "node:util";
 
 const scriptPolicyContract = compileJsonSchemaSubset(schema);
 const immutablePolicies = new WeakSet<object>();
+const invocationKeys=compileExactKeysV1(schema.definitions.ExpectedKeys.const.invocation),controlKeys=compileExactKeysV1(schema.definitions.ExpectedKeys.const.control);
 
 /** 🧬️ Names the original caller's finite or ordinary no-deadline command authority. */
 export type ScriptPolicy = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number }>;
@@ -34,9 +35,9 @@ export function readScriptPolicy(value: unknown): ScriptPolicy {
 /** ⏳️ Checks original incoming authority before acquiring or executing an owner. */
 export function checkScriptInvocation<Capabilities extends object>(invocation: ScriptInvocation<Capabilities>): void {
   const row = requireRecord(invocation, "Script invocation");
-  requireExactKeys(row, ["policy", "control", "capabilities"], "Script invocation");
+  invocationKeys(row, "Script invocation");
   const policy = readScriptPolicy(row.policy), control = requireRecord(row.control, "Script control");
-  requireExactKeys(control, ["signal", "remainingMilliseconds", "publish", "yieldContinuation"], "Script control");
+  controlKeys(control, "Script control");
   requireRecord(row.capabilities, "Script capabilities");
   if (!(control.signal instanceof AbortSignal) || typeof control.remainingMilliseconds !== "function" || typeof control.publish !== "function" || typeof control.yieldContinuation !== "function") throw Error("Original Script control ports required");
   invocation.control.signal.throwIfAborted();

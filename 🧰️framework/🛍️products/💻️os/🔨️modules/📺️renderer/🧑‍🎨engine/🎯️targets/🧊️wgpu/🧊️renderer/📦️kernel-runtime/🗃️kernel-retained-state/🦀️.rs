@@ -1,4 +1,5 @@
 //! 🗃️ Kernel retained state: retained document exchange and surfaces, pending rejections, mounted replay routes, command document retirement and the pool state head.
+use semio_framework_ui_contract_validation::{UiDocumentLimits,UiPatchApplyOutcome,UiPatchApplyProducer,UiPatchApplyRejected,UiPatchApplyStep};
 use super::*;
 
 //#region 🎠️KernelRuntime
@@ -15,29 +16,29 @@ struct RetainedDocumentBuild {
     cursor: usize,
     builder: Option<UiDocumentBuilder>,
     rejected_record: Option<ui_contract::UiNodeRecord>,
-    pub(super) closing: bool,
+    pub closing: bool,
 }
 //#endregion 📄️RetainedDocumentExchange
 
-pub(super) struct RetainedSurface {
-    pub(super) state: Option<UiSnapshotState>,
-    pub(super) patch: Option<RetainedPatchApply>,
-    pub(super) queued_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
-    pub(super) rejected_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
-    pub(super) build: Option<RetainedDocumentBuild>,
-    pub(super) build_pending: bool,
+pub struct RetainedSurface {
+    pub state: Option<UiSnapshotState>,
+    pub patch: Option<RetainedPatchApply>,
+    pub queued_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
+    pub rejected_patches: UiFixedList<KernelUiPatch, UI_DOCUMENT_LEASE_SLOTS>,
+    pub build: Option<RetainedDocumentBuild>,
+    pub build_pending: bool,
     published: Option<UiDocumentLease>,
-    pub(super) closing: Option<UiDocumentLease>,
-    pub(super) exchange_closing: Option<UiDocumentLease>,
+    pub closing: Option<UiDocumentLease>,
+    pub exchange_closing: Option<UiDocumentLease>,
     patch_close_complete: bool,
     /// 🎫️ The authority the guest issued with the patch this surface is currently applying —
     /// `TurnResult::ui_patch_receipt`, which `ActorUiPatchReceipt::validate_pairing` pins 1:1 to
     /// the turn's single patch. A rejection has to echo it back on `Event::PatchRejected`.
-    pub(super) patch_receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
+    pub patch_receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
 }
 
 impl RetainedSurface {
-    pub(super) fn new(surface: SurfaceId) -> Self {
+    pub fn new(surface: SurfaceId) -> Self {
         Self {
             state: Some(UiSnapshotState::new(surface)),
             patch: None,
@@ -53,7 +54,7 @@ impl RetainedSurface {
         }
     }
 
-    pub(super) fn admit_patch(&mut self, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
+    pub fn admit_patch(&mut self, patch: KernelUiPatch) -> Result<(), KernelUiPatch> {
         if self.patch.is_some() || self.state.is_none() {
             return self.queued_patches.try_push(patch);
         }
@@ -75,7 +76,7 @@ impl RetainedSurface {
         Ok(())
     }
 
-    pub(super) fn advance_patch_one(&mut self) -> Option<(UiRevision, ui_contract::UiText)> {
+    pub fn advance_patch_one(&mut self) -> Option<(UiRevision, ui_contract::UiText)> {
         if let Some(patch) = self.rejected_patches.get_mut(0) {
             if patch.ops.pop().is_some() {
                 return None;
@@ -133,7 +134,7 @@ impl RetainedSurface {
         None
     }
 
-    pub(super) fn begin_document_build(&mut self) {
+    pub fn begin_document_build(&mut self) {
         if self.build.is_some() || !self.build_pending {
             return;
         }
@@ -157,7 +158,7 @@ impl RetainedSurface {
         self.build = Some(build);
     }
 
-    pub(super) fn advance_document_one(&mut self) {
+    pub fn advance_document_one(&mut self) {
         if let Some(closing) = self.exchange_closing.as_mut() {
             if closing.close_step() && closing.terminal_is_empty() {
                 self.exchange_closing = None;
@@ -219,11 +220,11 @@ impl RetainedSurface {
         }
     }
 
-    pub(super) fn try_alias(&self) -> Option<UiDocumentLease> {
+    pub fn try_alias(&self) -> Option<UiDocumentLease> {
         self.published.as_ref()?.try_alias().ok()
     }
 
-    pub(super) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if let Some(current) = self.patch.take() {
             match current {
                 RetainedPatchApply::Applying(mut producer) => {
@@ -313,39 +314,39 @@ impl RetainedSurface {
             return false;
         }
         if !self.patch_close_complete {
-            self.patch_close_complete = ui_contract::close_ui_patch_owner_one();
+            self.patch_close_complete = semio_framework_ui_contract_validation::close_ui_patch_owner_one();
             return false;
         }
         ui_contract::close_ui_document_page_one()
     }
 }
 
-pub(super) const RETAINED_SURFACE_CAPACITY: usize = 64;
+pub const RETAINED_SURFACE_CAPACITY: usize = 64;
 
-pub(super) struct RetainedSurfaceSlot {
-    pub(super) generation: u64,
-    pub(super) instance: u32,
-    pub(super) surface: SurfaceId,
-    pub(super) owner: RetainedSurface,
+pub struct RetainedSurfaceSlot {
+    pub generation: u64,
+    pub instance: u32,
+    pub surface: SurfaceId,
+    pub owner: RetainedSurface,
 }
 
-pub(super) struct RetainedSurfaceRegistry {
-    pub(super) slots: Box<[Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]>,
+pub struct RetainedSurfaceRegistry {
+    pub slots: Box<[Option<RetainedSurfaceSlot>; RETAINED_SURFACE_CAPACITY]>,
     next_generation: u64,
     generation_exhausted: bool,
     close_cursor: usize,
 }
 
 impl RetainedSurfaceRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: semio_framework_async::boxed_fixed_slots(|| None), next_generation: 0, generation_exhausted: false, close_cursor: 0 }
     }
 
-    pub(super) fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
+    pub fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
         self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == instance && slot.surface == *surface))
     }
 
-    pub(super) fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&RetainedSurfaceSlot> {
+    pub fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&RetainedSurfaceSlot> {
         self.index(instance, surface).and_then(|index| self.slots[index].as_ref())
     }
 
@@ -354,7 +355,7 @@ impl RetainedSurfaceRegistry {
         self.slots[index].as_mut()
     }
 
-    pub(super) fn try_admit(&mut self, instance: u32, surface: SurfaceId) -> Result<usize, SurfaceId> {
+    pub fn try_admit(&mut self, instance: u32, surface: SurfaceId) -> Result<usize, SurfaceId> {
         if let Some(index) = self.index(instance, &surface) {
             return Ok(index);
         }
@@ -370,7 +371,7 @@ impl RetainedSurfaceRegistry {
         Ok(index)
     }
 
-    pub(super) fn advance_instance_close_one(&mut self, instance: u32) -> bool {
+    pub fn advance_instance_close_one(&mut self, instance: u32) -> bool {
         let index = self.close_cursor;
         self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
         let Some(slot) = self.slots[index].as_mut().filter(|slot| slot.instance == instance) else {
@@ -382,7 +383,7 @@ impl RetainedSurfaceRegistry {
         false
     }
 
-    pub(super) fn advance_realm_close_one(&mut self) -> bool {
+    pub fn advance_realm_close_one(&mut self) -> bool {
         let index = self.close_cursor;
         self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
         let Some(slot) = self.slots[index].as_mut() else { return self.slots.iter().all(Option::is_none) };
@@ -392,53 +393,53 @@ impl RetainedSurfaceRegistry {
         false
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.slots.iter().all(Option::is_none)
     }
 }
 
-pub(super) struct PendingSurfaceRejection {
-    pub(super) generation: u64,
-    pub(super) instance: u32,
-    pub(super) surface: SurfaceId,
-    pub(super) revision: UiRevision,
-    pub(super) reason: ui_contract::UiText,
-    pub(super) patch: Option<KernelUiPatch>,
+pub struct PendingSurfaceRejection {
+    pub generation: u64,
+    pub instance: u32,
+    pub surface: SurfaceId,
+    pub revision: UiRevision,
+    pub reason: ui_contract::UiText,
+    pub patch: Option<KernelUiPatch>,
     /// 🎫️ The issued-patch authority the guest must see back on `Event::PatchRejected`; `None`
     /// when the rejection has no admitted turn behind it (a surface that never reached a slot).
-    pub(super) receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
+    pub receipt: Option<semio_framework::kernel::ActorUiPatchReceipt>,
 }
 
-pub(super) struct PendingSurfaceRejectionRegistry {
-    pub(super) slots: Box<[Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]>,
+pub struct PendingSurfaceRejectionRegistry {
+    pub slots: Box<[Option<PendingSurfaceRejection>; RETAINED_SURFACE_CAPACITY]>,
     close_cursor: usize,
 }
 
 impl PendingSurfaceRejectionRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: semio_framework_async::boxed_fixed_slots(|| None), close_cursor: 0 }
     }
 
-    pub(super) fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
+    pub fn index(&self, instance: u32, surface: &SurfaceId) -> Option<usize> {
         self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == instance && slot.surface == *surface))
     }
 
-    pub(super) fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&PendingSurfaceRejection> {
+    pub fn get(&self, instance: u32, surface: &SurfaceId) -> Option<&PendingSurfaceRejection> {
         self.index(instance, surface).and_then(|index| self.slots[index].as_ref())
     }
 
-    pub(super) fn remove(&mut self, instance: u32, surface: &SurfaceId) -> Option<PendingSurfaceRejection> {
+    pub fn remove(&mut self, instance: u32, surface: &SurfaceId) -> Option<PendingSurfaceRejection> {
         let index = self.index(instance, surface)?;
         self.slots[index].take()
     }
 
-    pub(super) fn try_admit(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
+    pub fn try_admit(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
         let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(rejection) };
         *slot = Some(rejection);
         Ok(())
     }
 
-    pub(super) fn try_upsert(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
+    pub fn try_upsert(&mut self, rejection: PendingSurfaceRejection) -> Result<(), PendingSurfaceRejection> {
         if let Some(index) = self.index(rejection.instance, &rejection.surface) {
             if self.slots[index].as_ref().is_some_and(|current| current.patch.is_some()) {
                 return Err(rejection);
@@ -449,7 +450,7 @@ impl PendingSurfaceRejectionRegistry {
         self.try_admit(rejection)
     }
 
-    pub(super) fn take_instance_one(&mut self, instance: u32) -> Option<PendingSurfaceRejection> {
+    pub fn take_instance_one(&mut self, instance: u32) -> Option<PendingSurfaceRejection> {
         let index = self.close_cursor;
         self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
         let slot = self.slots[index].as_mut().filter(|slot| slot.instance == instance)?;
@@ -462,7 +463,7 @@ impl PendingSurfaceRejectionRegistry {
         self.slots[index].take()
     }
 
-    pub(super) fn take_any_one(&mut self) -> Option<PendingSurfaceRejection> {
+    pub fn take_any_one(&mut self) -> Option<PendingSurfaceRejection> {
         let index = self.close_cursor;
         self.close_cursor = (self.close_cursor + 1) % RETAINED_SURFACE_CAPACITY;
         if let Some(patch) = self.slots[index].as_mut().and_then(|slot| slot.patch.as_mut()) {
@@ -476,31 +477,31 @@ impl PendingSurfaceRejectionRegistry {
         self.slots[index].take()
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.slots.iter().all(Option::is_none)
     }
 
-    pub(super) fn instance_is_empty(&self, instance: u32) -> bool {
+    pub fn instance_is_empty(&self, instance: u32) -> bool {
         !self.slots.iter().flatten().any(|slot| slot.instance == instance)
     }
 }
 
-pub(super) struct PendingJobProgressPresentation {
-    pub(super) token: JobProgressPresentationToken,
-    pub(super) receipt: JobProgressReceipt,
+pub struct PendingJobProgressPresentation {
+    pub token: JobProgressPresentationToken,
+    pub receipt: JobProgressReceipt,
 }
 
 #[derive(Clone, Copy)]
-pub(super) struct MountedReplayRouteSeed {
-    pub(super) actor: ActorId,
-    pub(super) plugin: [u8; 32],
-    pub(super) package: [u8; 32],
-    pub(super) window: u64,
-    pub(super) artifact: [u8; 32],
+pub struct MountedReplayRouteSeed {
+    pub actor: ActorId,
+    pub plugin: [u8; 32],
+    pub package: [u8; 32],
+    pub window: u64,
+    pub artifact: [u8; 32],
 }
 
 impl MountedReplayRouteSeed {
-    pub(super) fn compose(self, request: JobReplayRequest) -> JobReplayRoute {
+    pub fn compose(self, request: JobReplayRequest) -> JobReplayRoute {
         JobReplayRoute {
             plugin: self.plugin,
             package: self.package,
@@ -515,30 +516,30 @@ impl MountedReplayRouteSeed {
     }
 }
 
-pub(super) struct MountedJobReplay {
-    pub(super) actor: ActorId,
-    pub(super) authority: JobTurn,
-    pub(super) request: JobReplayRequest,
-    pub(super) placement: JobPlacement,
-    pub(super) log: ManuallyDrop<JobReplayLog>,
-    pub(super) captured: Option<JobPublication>,
-    pub(super) policy: Option<JobReplayPublicationPolicy>,
-    pub(super) terminal_seen: bool,
-    pub(super) replay_requested: bool,
-    pub(super) replay_started: bool,
-    pub(super) replay_submit_sequence: Option<u64>,
-    pub(super) accepted_replay_sequence: Option<u64>,
-    pub(super) replay_worker_count: u16,
-    pub(super) replay_worker_slot: u16,
-    pub(super) recovery: Option<MountedReplayRecoveryToken>,
+pub struct MountedJobReplay {
+    pub actor: ActorId,
+    pub authority: JobTurn,
+    pub request: JobReplayRequest,
+    pub placement: JobPlacement,
+    pub log: ManuallyDrop<JobReplayLog>,
+    pub captured: Option<JobPublication>,
+    pub policy: Option<JobReplayPublicationPolicy>,
+    pub terminal_seen: bool,
+    pub replay_requested: bool,
+    pub replay_started: bool,
+    pub replay_submit_sequence: Option<u64>,
+    pub accepted_replay_sequence: Option<u64>,
+    pub replay_worker_count: u16,
+    pub replay_worker_slot: u16,
+    pub recovery: Option<MountedReplayRecoveryToken>,
 }
 
 impl MountedJobReplay {
-    pub(super) fn pending_replay_start_is_exact(&self, worker_count: u16, worker_slot: u16) -> bool {
+    pub fn pending_replay_start_is_exact(&self, worker_count: u16, worker_slot: u16) -> bool {
         self.replay_requested && !self.replay_started && self.replay_worker_count == worker_count && self.replay_worker_slot == worker_slot
     }
 
-    pub(super) fn replay_submission_sequence(&mut self) -> Result<u64, String> {
+    pub fn replay_submission_sequence(&mut self) -> Result<u64, String> {
         match self.replay_submit_sequence {
             Some(sequence) => Ok(sequence),
             None => {
@@ -549,7 +550,7 @@ impl MountedJobReplay {
         }
     }
 
-    pub(super) fn accept_replay_submission(&mut self, sequence: u64) -> Result<(), String> {
+    pub fn accept_replay_submission(&mut self, sequence: u64) -> Result<(), String> {
         if self.replay_started || self.replay_submit_sequence != Some(sequence) {
             return Err("kernel: accepted replay start does not match the retained submission identity".to_string());
         }
@@ -562,38 +563,38 @@ impl MountedJobReplay {
 
 #[derive(Clone, Copy)]
 struct MountedReplayRecoveryToken {
-    index: usize,
-    pub(super) epoch: u64,
+    pub index: usize,
+    pub epoch: u64,
 }
 
 struct MountedReplayRecoveryOwner {
     generation: u64,
-    pub(super) actor: ActorId,
-    pub(super) job: u64,
-    pub(super) log: Option<JobReplayLog>,
-    pub(super) captured: Option<JobPublication>,
+    pub actor: ActorId,
+    pub job: u64,
+    pub log: Option<JobReplayLog>,
+    pub captured: Option<JobPublication>,
     publication_phase: u8,
 }
 
 struct MountedReplayRecoverySlot {
-    pub(super) epoch: u64,
-    pub(super) reserved: bool,
+    pub epoch: u64,
+    pub reserved: bool,
     owner: Option<MountedReplayRecoveryOwner>,
 }
 
-pub(super) struct MountedReplayRecoveryRegistry {
-    pub(super) slots: Box<[MountedReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+pub struct MountedReplayRecoveryRegistry {
+    pub slots: Box<[MountedReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
     abandoned: Box<[Option<MountedReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
     cursor: usize,
     abandoned_cursor: usize,
 }
 
 impl MountedReplayRecoveryRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedReplayRecoverySlot { epoch: 0, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
     }
 
-    pub(super) fn reserve(&mut self) -> Option<MountedReplayRecoveryToken> {
+    pub fn reserve(&mut self) -> Option<MountedReplayRecoveryToken> {
         let index = self.slots.iter().position(|slot| !slot.reserved && slot.owner.is_none())?;
         let epoch = self.slots[index].epoch.checked_add(1)?;
         self.slots[index].epoch = epoch;
@@ -601,7 +602,7 @@ impl MountedReplayRecoveryRegistry {
         Some(MountedReplayRecoveryToken { index, epoch })
     }
 
-    pub(super) fn release(&mut self, token: MountedReplayRecoveryToken) -> bool {
+    pub fn release(&mut self, token: MountedReplayRecoveryToken) -> bool {
         let Some(slot) = self.slots.get_mut(token.index) else { return false };
         if slot.epoch != token.epoch || !slot.reserved || slot.owner.is_some() {
             return false;
@@ -610,7 +611,7 @@ impl MountedReplayRecoveryRegistry {
         true
     }
 
-    pub(super) fn publish(&mut self, token: MountedReplayRecoveryToken, owner: MountedReplayRecoveryOwner) {
+    pub fn publish(&mut self, token: MountedReplayRecoveryToken, owner: MountedReplayRecoveryOwner) {
         if let Some(slot) = self.slots.get_mut(token.index) {
             if slot.epoch == token.epoch && slot.reserved && slot.owner.is_none() {
                 slot.owner = Some(owner);
@@ -621,7 +622,7 @@ impl MountedReplayRecoveryRegistry {
         *slot = Some(owner);
     }
 
-    pub(super) fn close_one(&mut self) -> bool {
+    pub fn close_one(&mut self) -> bool {
         if let Some(index) = (0..JOB_PROGRESS_ACTIVE_CAPACITY).map(|offset| (self.cursor + offset) % JOB_PROGRESS_ACTIVE_CAPACITY).find(|index| self.slots[*index].owner.is_some()) {
             self.cursor = (index + 1) % JOB_PROGRESS_ACTIVE_CAPACITY;
             if mounted_replay_recovery_owner_close_one(self.slots[index].owner.as_mut().expect("published replay recovery owner")) {
@@ -642,7 +643,7 @@ impl MountedReplayRecoveryRegistry {
         true
     }
 
-    pub(super) fn has_close_work(&self) -> bool {
+    pub fn has_close_work(&self) -> bool {
         self.slots.iter().any(|slot| slot.owner.is_some()) || self.abandoned.iter().any(Option::is_some)
     }
 }
@@ -690,7 +691,7 @@ fn mounted_replay_recovery_owner_close_one(owner: &mut MountedReplayRecoveryOwne
     true
 }
 
-pub(super) fn mounted_replay_recovery_registry() -> &'static Mutex<MountedReplayRecoveryRegistry> {
+pub fn mounted_replay_recovery_registry() -> &'static Mutex<MountedReplayRecoveryRegistry> {
     static REGISTRY: OnceLock<Mutex<MountedReplayRecoveryRegistry>> = OnceLock::new();
     REGISTRY.get_or_init(|| Mutex::new(MountedReplayRecoveryRegistry::new()))
 }
@@ -709,56 +710,56 @@ impl Drop for MountedJobReplay {
     }
 }
 
-pub(super) struct ClosingKernelApp {
-    pub(super) instance: u32,
-    pub(super) actors: [ActorId; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) actor_count: usize,
-    pub(super) replay_begin_cursor: usize,
-    pub(super) begin_cursor: usize,
-    pub(super) unregister_cursor: usize,
-    pub(super) unregister_refusal: Option<semio_framework_actor::pack::PackError>,
-    pub(super) route_cursor: usize,
+pub struct ClosingKernelApp {
+    pub instance: u32,
+    pub actors: [ActorId; JOB_PROGRESS_ACTIVE_CAPACITY],
+    pub actor_count: usize,
+    pub replay_begin_cursor: usize,
+    pub begin_cursor: usize,
+    pub unregister_cursor: usize,
+    pub unregister_refusal: Option<semio_framework_actor::pack::PackError>,
+    pub route_cursor: usize,
 }
 
 impl ClosingKernelApp {
-    pub(super) fn contains(&self, actor: ActorId) -> bool {
+    pub fn contains(&self, actor: ActorId) -> bool {
         self.actors[..self.actor_count].contains(&actor)
     }
 }
 
 //#region 📦️CommandDocumentRetirement
-pub(super) const COMMAND_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * ui_contract::UI_DOCUMENT_LEASE_ALIASES as usize;
+pub const COMMAND_DOCUMENT_RETIREMENT_CAPACITY: usize = UI_DOCUMENT_LEASE_SLOTS * ui_contract::UI_DOCUMENT_LEASE_ALIASES as usize;
 
 #[derive(Clone, Copy)]
 struct CommandDocumentReservationToken {
     index: usize,
-    pub(super) epoch: u64,
+    pub epoch: u64,
     batch: u64,
     generation: u64,
 }
 
-pub(super) struct CommandDocumentPageReservation {
+pub struct CommandDocumentPageReservation {
     tokens: UiFixedList<CommandDocumentReservationToken, UI_DOCUMENT_LEASE_SLOTS>,
 }
 
-pub(super) enum CommandDocumentRetirementState {
+pub enum CommandDocumentRetirementState {
     Reserved { epoch: u64, batch: u64, generation: u64 },
     Pending { epoch: u64, batch: u64, generation: u64, surface: SurfaceId, document: UiDocumentLease },
     Closing { epoch: u64, batch: u64, generation: u64, surface: SurfaceId, document: UiDocumentLease },
 }
 
-pub(super) struct CommandDocumentRetirementRegistry {
-    pub(super) slots: Box<[Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY]>,
+pub struct CommandDocumentRetirementRegistry {
+    pub slots: Box<[Option<CommandDocumentRetirementState>; COMMAND_DOCUMENT_RETIREMENT_CAPACITY]>,
     epochs: [u64; COMMAND_DOCUMENT_RETIREMENT_CAPACITY],
-    pub(super) cursor: usize,
+    pub cursor: usize,
 }
 
 impl CommandDocumentRetirementRegistry {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; COMMAND_DOCUMENT_RETIREMENT_CAPACITY], cursor: 0 }
     }
 
-    pub(super) fn try_reserve_page(&mut self, batch: u64, generation: u64) -> Result<CommandDocumentPageReservation, ()> {
+    pub fn try_reserve_page(&mut self, batch: u64, generation: u64) -> Result<CommandDocumentPageReservation, ()> {
         let mut candidates = UiFixedList::<CommandDocumentReservationToken, UI_DOCUMENT_LEASE_SLOTS>::default();
         for index in 0..COMMAND_DOCUMENT_RETIREMENT_CAPACITY {
             if self.slots[index].is_some() {
@@ -780,12 +781,12 @@ impl CommandDocumentRetirementRegistry {
         Ok(CommandDocumentPageReservation { tokens: candidates })
     }
 
-    pub(super) fn admit(&mut self, reservation: &mut CommandDocumentPageReservation, owner: ExchangeSurfaceDocument) {
+    pub fn admit(&mut self, reservation: &mut CommandDocumentPageReservation, owner: ExchangeSurfaceDocument) {
         let token = reservation.tokens.pop().expect("one fixed command-document destination is reserved for every fixed turn-result surface");
         self.slots[token.index] = Some(CommandDocumentRetirementState::Pending { epoch: token.epoch, batch: token.batch, generation: token.generation, surface: owner.surface, document: owner.document });
     }
 
-    pub(super) fn release(&mut self, reservation: &mut CommandDocumentPageReservation) {
+    pub fn release(&mut self, reservation: &mut CommandDocumentPageReservation) {
         while let Some(token) = reservation.tokens.pop() {
             let matches =
                 self.slots[token.index].as_ref().is_some_and(|state| matches!(state, CommandDocumentRetirementState::Reserved { epoch, batch, generation } if *epoch == token.epoch && *batch == token.batch && *generation == token.generation));
@@ -795,7 +796,7 @@ impl CommandDocumentRetirementRegistry {
         }
     }
 
-    pub(super) fn begin_close_batch(&mut self, batch: u64, generation: u64) {
+    pub fn begin_close_batch(&mut self, batch: u64, generation: u64) {
         for slot in &mut self.slots {
             let Some(state) = slot.take() else { continue };
             *slot = match state {
@@ -808,7 +809,7 @@ impl CommandDocumentRetirementRegistry {
         }
     }
 
-    pub(super) fn begin_close_instance(&mut self, batch: u64) {
+    pub fn begin_close_instance(&mut self, batch: u64) {
         for slot in &mut self.slots {
             let Some(state) = slot.take() else { continue };
             *slot = match state {
@@ -821,7 +822,7 @@ impl CommandDocumentRetirementRegistry {
         }
     }
 
-    pub(super) fn publish_batch(&mut self, batch: u64, generation: u64, output: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) {
+    pub fn publish_batch(&mut self, batch: u64, generation: u64, output: &mut UiFixedList<ExchangeSurfaceDocument, UI_DOCUMENT_LEASE_SLOTS>) {
         for slot in &mut self.slots {
             let Some(state) = slot.take() else { continue };
             *slot = match state {
@@ -837,7 +838,7 @@ impl CommandDocumentRetirementRegistry {
         }
     }
 
-    pub(super) fn close_one(&mut self) -> bool {
+    pub fn close_one(&mut self) -> bool {
         let index = self.cursor;
         self.cursor = (self.cursor + 1) % COMMAND_DOCUMENT_RETIREMENT_CAPACITY;
         let Some(CommandDocumentRetirementState::Closing { document, .. }) = self.slots[index].as_mut() else { return false };
@@ -849,12 +850,12 @@ impl CommandDocumentRetirementRegistry {
         true
     }
 
-    pub(super) fn has_close_work(&self) -> bool {
+    pub fn has_close_work(&self) -> bool {
         self.slots.iter().flatten().any(|state| matches!(state, CommandDocumentRetirementState::Closing { .. }))
     }
 
     #[cfg(test)]
-    pub(super) fn batch_is_empty(&self, batch: u64, generation: u64) -> bool {
+    pub fn batch_is_empty(&self, batch: u64, generation: u64) -> bool {
         !self.slots.iter().flatten().any(|state| match state {
             CommandDocumentRetirementState::Reserved { batch: owner_batch, generation: owner_generation, .. }
             | CommandDocumentRetirementState::Pending { batch: owner_batch, generation: owner_generation, .. }
@@ -862,7 +863,7 @@ impl CommandDocumentRetirementRegistry {
         })
     }
 
-    pub(super) fn instance_is_empty(&self, batch: u64) -> bool {
+    pub fn instance_is_empty(&self, batch: u64) -> bool {
         !self.slots.iter().flatten().any(|state| match state {
             CommandDocumentRetirementState::Reserved { batch: owner_batch, .. } | CommandDocumentRetirementState::Pending { batch: owner_batch, .. } | CommandDocumentRetirementState::Closing { batch: owner_batch, .. } => *owner_batch == batch,
         })
@@ -877,65 +878,11 @@ impl CommandDocumentRetirementRegistry {
 /// [`JobTurn`] of its next `Payload::JobStep`; `None` once the job ended or its spawn was refused, while
 /// the shard's deferred `Event::JobCompleted` turn (an outcome no grant asked for) is still owed.
 #[derive(Clone, Copy)]
-pub(super) struct ReservedToolJob {
-    pub(super) actor: ActorId,
-    pub(super) job: u64,
-    pub(super) step: Option<JobTurn>,
+pub struct ReservedToolJob {
+    pub actor: ActorId,
+    pub job: u64,
+    pub step: Option<JobTurn>,
 }
 
-pub(super) struct KernelPoolState {
-    pub(super) request_queue: Arc<KernelRequestQueue>,
-    pub(super) guest_runtime: Arc<GuestRuntimes>,
-    /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
-    /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Native, K, 2,
-    /// 64)` (`exclusive_reserve: 2` — item 3 of the packet brief — makes `request_exclusive`
-    /// real; no caller in this file exercises it yet, but the reserve pool now genuinely exists).
-    /// P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): every shard now runs as a
-    /// pool-scheduled job on `crate::renderer_worker_pool()` — no `ShardExecutor`/forwarder OS
-    /// threads — see `🎠️runtime.rs`'s own module doc.
-    pub(super) runtime: crate::parallel_runtime::ParallelRuntime,
-    pub(super) worker_count: u16,
-    /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — this
-    /// crate's purity-respecting clock source (`Kernel` itself takes no clock, per `🎭️actor`'s
-    /// own rule), incremented once per `run_turn`-internal tick, never wall-clock-read.
-    pub(super) now_ms: u64,
-    pub(super) plugin_ordinals: HashMap<String, u16>,
-    /// 📇️ `instance_id` (the `u32` `ProgramBridgeEntry`'s callers already address plugin apps
-    /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
-    pub(super) instances: HashMap<u32, ActorId>,
-    pub(super) next_instance_id: u32,
-    /// 🖼️ One retained semantic [`UiSnapshotState`] plus its last published generation-qualified
-    /// document lease per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
-    /// contract's retained, quota-bounded [`UiPatchApplyProducer`]; a rejection preserves both
-    /// the document revision and the previously published document.
-    pub(super) retained: RetainedSurfaceRegistry,
-    /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected`, retaining both
-    /// the receiver revision and the contract rejection reason.
-    pub(super) pending_rejections: PendingSurfaceRejectionRegistry,
-    pub(super) retained_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
-    pub(super) queued_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
-    pub(super) command_document_closes: CommandDocumentRetirementRegistry,
-    pub(super) rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
-    pub(super) rejected_events: Option<RejectedKernelEvents>,
-    pub(super) job_progress: JobProgressOverlayStore,
-    pub(super) replay_routes: [Option<MountedReplayRouteSeed>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) job_replays: [Option<MountedJobReplay>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) reserved_jobs: [Option<ReservedToolJob>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) product_replay_claims: [Option<MountedProductReplayClaim>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) product_replay_authorities: [Option<MountedProductReplayAuthority>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) rejected_job_progress: [Option<JobProgressRejected>; 64],
-    pub(super) pending_job_progress_presentations: [Option<PendingJobProgressPresentation>; JOB_PROGRESS_PRESENTATION_CAPACITY],
-    pub(super) closing_apps: [Option<ClosingKernelApp>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) fault_closing_actors: [Option<ActorId>; JOB_PROGRESS_ACTIVE_CAPACITY],
-    pub(super) realm_progress_close_started: bool,
-    pub(super) semantic_close_document_lane: bool,
-    /// 🎛️ The response slots of the requests being served, innermost last, each with whether its owner
-    /// may cancel it mid-turn ([`Self::turn_cancelled`]).
-    pub(super) serving: Vec<(Arc<ResponseSlot>, bool)>,
-    /// ⚖️ True while a request runs in another actor's slice gap ([`Self::yield_slice`]): a gap never nests.
-    pub(super) interleaving: bool,
-    /// 🧩️ The components compiled most recently, newest first, by content hash ([`Self::compile_serving_others`]).
-    pub(super) compiled_components: Vec<(PackageHash, semio_framework_plugin_host::CompiledHandle)>,
-}
 //#endregion
 //#endregion 🎠️KernelRuntime

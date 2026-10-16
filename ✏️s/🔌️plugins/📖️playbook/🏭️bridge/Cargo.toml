@@ -19,6 +19,3 @@ semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/�
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-s-artifact-playbook-playbook = { path = "../🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
-
-[profile.prototype]
-inherits = "dev"

@@ -33,7 +33,7 @@ class DeletionProofScript extends BundleScript {
       if (closure.has(name)) return;
       const member = members.get(name);
       if (!member) throw new Error(`first-party dependency has no workspace owner: ${name}`);
-      if (name.startsWith("semio-s-artifact-stdio-") && name !== "semio-s-artifact-stdio-contract") throw new Error(`general assembly reaches concrete artifact ${name}`);
+      if (name.startsWith("semio-s-artifact-stdio-") && name !== "semio-s-artifact-stdio-contract" && !name.startsWith("semio-s-artifact-stdio-contract-")) throw new Error(`general assembly reaches concrete artifact ${name}`);
       if (name.startsWith("semio-hub-")) throw new Error(`general assembly reaches outward composition ${name}`);
       closure.set(name, member);
       for (const table of [member.manifest, ...Object.values(member.manifest.target ?? {})] as any[]) {

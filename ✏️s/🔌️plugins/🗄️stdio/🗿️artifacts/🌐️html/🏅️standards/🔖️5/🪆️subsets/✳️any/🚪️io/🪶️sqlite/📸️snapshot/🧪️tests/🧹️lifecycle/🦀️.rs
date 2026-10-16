@@ -1,6 +1,8 @@
 //! 🧹️ Public HTML cold retirement and late SQL refusal share literal neutral ownership.
+use crate::{standards::v5::subsets::any::schema::snapshot::HtmlAttr, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot, standards::v5::subsets::any::schema::snapshot::RawTextKind};
+use crate::standards::v5::subsets::any::io::sqlite::snapshot::{index};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::*;
+use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 std::thread_local!{
  static TRACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
@@ -10,9 +12,9 @@ std::thread_local!{
  static VISITS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
  static SQL_LATE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
 }
-pub(super) fn retirement_visit(){VISITS.with(|count|count.set(count.get()+1));}
-pub(super) struct SqlLateCopyScope(bool);
-impl SqlLateCopyScope{pub(super) fn enter()->Self{Self(SQL_LATE.with(|active|active.replace(true)))}}
+pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) fn retirement_visit(){VISITS.with(|count|count.set(count.get()+1));}
+pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) struct SqlLateCopyScope(bool);
+impl SqlLateCopyScope{pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) fn enter()->Self{Self(SQL_LATE.with(|active|active.replace(true)))}}
 impl Drop for SqlLateCopyScope{fn drop(&mut self){SQL_LATE.with(|active|active.set(self.0));}}
 struct ObservedAllocator;
 fn refuse()->bool{if REFUSE.try_with(std::cell::Cell::get).unwrap_or(false){let _=ATTEMPTS.try_with(|count|count.set(count.get()+1));true}else{false}}
@@ -26,7 +28,7 @@ unsafe impl std::alloc::GlobalAlloc for ObservedAllocator{
 }
 #[global_allocator]
 static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧹️lifecycle/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧹️lifecycle/🔣️.json")).unwrap()}
 fn leaf(index:usize,cases:&serde_json::Value)->HtmlNode{let value=&cases["leaves"][index%4];let text=value["text"].as_str().unwrap().to_owned();match value["kind"].as_str().unwrap(){"text"=>HtmlNode::Text{text},"comment"=>HtmlNode::Comment{text},"rawText"=>HtmlNode::RawText{parent_kind:match value["parentKind"].as_str().unwrap(){"script"=>RawTextKind::Script,"style"=>RawTextKind::Style,_=>panic!("literal raw kind")},text},_=>panic!("literal leaf kind")}}
 fn attributes(cases:&serde_json::Value)->Vec<HtmlAttr>{cases["attributes"].as_array().unwrap().iter().map(|value|HtmlAttr{name:value["name"].as_str().unwrap().to_owned(),value:value.get("value").map(|value|value.as_str().unwrap().to_owned())}).collect()}
 fn tree(case:usize,cases:&serde_json::Value)->(HtmlSnapshot,usize){
@@ -47,4 +49,9 @@ fn sqlite_snapshot_html_late_sql_metadata_cancellation_retires_complete_deep_tre
  let cases=corpus();for field in ["schema","doctype"]{let cases=cases.clone();let stack=cases["stackBytes"].as_u64().unwrap()as usize;std::thread::Builder::new().stack_size(stack).spawn(move||{
   let depth=cases["lateSqlDepth"].as_u64().unwrap()as usize;let boundary=cases["cancelUtf8ByteBoundary"].as_u64().unwrap()as usize;let long=cases["lateTextUnit"].as_str().unwrap().repeat(cases["lateTextRepeat"].as_u64().unwrap()as usize);let bytes=long.len();assert!(boundary<bytes&&long.is_char_boundary(boundary));let mut root=leaf(0,&cases);for _ in 0..depth{root=HtmlNode::Element{name:"literal ancestor".into(),attributes:Vec::new(),children:vec![root]};}let snapshot=HtmlSnapshot{schema:if field=="schema"{long.clone()}else{"literal schema".into()},doctype:if field=="doctype"{Some(long)}else{None},root};let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();VISITS.with(|count|count.set(0));let mut reached=false;let result=HtmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |event|{if SQL_LATE.with(std::cell::Cell::get)&&event.phase==SqliteSnapshotPhase::ReconstructSnapshot&&event.total==bytes&&event.completed==boundary{reached=true;false}else{true}},limits));let visits=VISITS.with(std::cell::Cell::get);let refused=result.is_err();if let Ok(candidate)=result{candidate.retire_sqlite_snapshot();}snapshot.retire_sqlite_snapshot();assert!(reached,"only actual late {field} copy after full SQL tree construction may refuse");assert!(refused,"late metadata cancellation must refuse publication");assert!(visits>=depth+1,"completed SQL tree must use cold retirement: {visits} visits for at least {}",depth+1);
  }).unwrap().join().unwrap();}
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

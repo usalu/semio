@@ -38,7 +38,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(installed).toEqual((await store.listInstalled())[0]);
         expect(installed).toMatchObject({ extensionId: fixtureManifest.extensionId, directoryName: fixtureManifest.directoryName, label: fixtureManifest.label, version: fixtureManifest.version, extends: fixtureManifest.extends, packageHash: extensionPackageContentHash(packed) });
         expect(writes).toEqual([join(root, fixtureManifest.directoryName)]);
-        expect((await store.listInstalled())[0].directoryName).toBe(fixtureManifest.directoryName);
+        const first=(await store.listInstalled())[0];if(!first)throw Error("Installed fixture row required");expect(first.directoryName).toBe(fixtureManifest.directoryName);
         expect(existsSync(join(root, fixtureManifest.extensionId))).toBe(false);
         const collision = { ...fixtureManifest, extensionId: "other-id", directoryName: "🧩️another" };
         await expect(store.installFromBytes(packExtensionPackage({ manifest: collision, componentWasm: fixtureWasm }))).rejects.toThrow(/sibling emoji/);
@@ -64,7 +64,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const name of [...cases.validDirectories, ...cases.invalidDirectories]) {
         const valid = cases.validDirectories.includes(name);
         expect(validate(name), name).toBe(valid);
-        if (valid) expect(installationDirectoryEmoji(name)).toBe([...name.replaceAll("\uFE0F", "").matchAll(emojiRegex())][0][0]);
+        if(valid){const match=[...name.replaceAll("\uFE0F", "").matchAll(emojiRegex())][0];if(!match)throw Error("Fixture emoji oracle match required");expect(installationDirectoryEmoji(name)).toBe(match[0]);}
         else expect(() => installationDirectoryEmoji(name)).toThrow();
       }
       expect(installationDirectoryCollision(parseInstallationDirectoryV1("🧩️another"), ["🧩️fixture"])).toBe("🧩️fixture");

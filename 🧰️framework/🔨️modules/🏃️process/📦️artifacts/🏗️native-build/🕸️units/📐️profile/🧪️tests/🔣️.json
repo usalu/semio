@@ -1,0 +1,701 @@
+{
+  "version": 1,
+  "observations": [
+    {
+      "case": "prototype-off",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "panic=abort",
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "debuginfo=1",
+        "split-debuginfo=off"
+      ]
+    },
+    {
+      "case": "prototype-off",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "panic=abort",
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "debuginfo=1",
+        "split-debuginfo=off"
+      ]
+    },
+    {
+      "case": "prototype-off",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "panic=abort",
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "debuginfo=1",
+        "split-debuginfo=off"
+      ]
+    },
+    {
+      "case": "prototype-incremental",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "prototype-incremental",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "prototype-incremental",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "off",
+        "codegen_backend": null,
+        "codegen_units": 4,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "lto=off",
+        "embed-bitcode=no",
+        "codegen-units=4",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "release-thin",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "thin",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": {
+            "Named": "symbols"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "panic=abort",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "strip=symbols"
+      ]
+    },
+    {
+      "case": "release-thin",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "thin",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": {
+            "Named": "symbols"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "panic=abort",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "strip=symbols"
+      ]
+    },
+    {
+      "case": "release-thin",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "thin",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "abort",
+        "strip": {
+          "resolved": {
+            "Named": "symbols"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "panic=abort",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "strip=symbols"
+      ]
+    },
+    {
+      "case": "release-fat",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "fat",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 2,
+        "split_debuginfo": "packed",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": true,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "debuginfo=2",
+        "split-debuginfo=packed",
+        "debug-assertions=on",
+        "rpath",
+        "strip=debuginfo"
+      ]
+    },
+    {
+      "case": "release-fat",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "fat",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 2,
+        "split_debuginfo": "packed",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": true,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "debuginfo=2",
+        "split-debuginfo=packed",
+        "debug-assertions=on",
+        "rpath",
+        "strip=debuginfo"
+      ]
+    },
+    {
+      "case": "release-fat",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "fat",
+        "codegen_backend": null,
+        "codegen_units": 1,
+        "debuginfo": 2,
+        "split_debuginfo": "packed",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": true,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "linker-plugin-lto",
+        "codegen-units=1",
+        "debuginfo=2",
+        "split-debuginfo=packed",
+        "debug-assertions=on",
+        "rpath",
+        "strip=debuginfo"
+      ]
+    },
+    {
+      "case": "prototype-local",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "embed-bitcode=no",
+        "codegen-units=256",
+        "debuginfo=1",
+        "split-debuginfo=off",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "prototype-local",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "embed-bitcode=no",
+        "codegen-units=256",
+        "debuginfo=1",
+        "split-debuginfo=off",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "prototype-local",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "prototype",
+        "opt_level": "0",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 256,
+        "debuginfo": 1,
+        "split_debuginfo": "off",
+        "debug_assertions": true,
+        "overflow_checks": true,
+        "rpath": false,
+        "incremental": true,
+        "panic": "unwind",
+        "strip": {
+          "resolved": "None"
+        }
+      },
+      "flags": [
+        "embed-bitcode=no",
+        "codegen-units=256",
+        "debuginfo=1",
+        "split-debuginfo=off",
+        "incremental=<funded>"
+      ]
+    },
+    {
+      "case": "release-local",
+      "context": "single",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "embed-bitcode=no",
+        "codegen-units=16",
+        "strip=debuginfo"
+      ]
+    },
+    {
+      "case": "release-local",
+      "context": "dependency",
+      "crate": "profile_dependency",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "embed-bitcode=no",
+        "codegen-units=16",
+        "strip=debuginfo"
+      ]
+    },
+    {
+      "case": "release-local",
+      "context": "dependency",
+      "crate": "profile_arguments",
+      "profile": {
+        "name": "release",
+        "opt_level": "3",
+        "lto": "false",
+        "codegen_backend": null,
+        "codegen_units": 16,
+        "debuginfo": 0,
+        "split_debuginfo": "off",
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "rpath": false,
+        "incremental": false,
+        "panic": "unwind",
+        "strip": {
+          "resolved": {
+            "Named": "debuginfo"
+          }
+        }
+      },
+      "flags": [
+        "opt-level=3",
+        "embed-bitcode=no",
+        "codegen-units=16",
+        "strip=debuginfo"
+      ]
+    }
+  ],
+  "suffixCases": [
+    {
+      "name": "scheduler",
+      "suffix": [
+        "-Zthreads=1"
+      ],
+      "valid": true
+    },
+    {
+      "name": "-Copt-level=0",
+      "suffix": [
+        "-Zthreads=1",
+        "-Copt-level=0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "missing",
+      "suffix": [],
+      "valid": false
+    },
+    {
+      "name": "scheduler-duplicate",
+      "suffix": [
+        "-Zthreads=1",
+        "-Zthreads=1"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Copt-level=3",
+      "suffix": [
+        "-Zthreads=1",
+        "-Copt-level=3"
+      ],
+      "valid": false
+    },
+    {
+      "name": "--edition=2018",
+      "suffix": [
+        "-Zthreads=1",
+        "--edition=2018"
+      ],
+      "valid": false
+    },
+    {
+      "name": "--edition=2021",
+      "suffix": [
+        "-Zthreads=1",
+        "--edition=2021"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cpanic=abort",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cpanic=abort"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cdebuginfo=0",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cdebuginfo=0"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Ccodegen-units=1",
+      "suffix": [
+        "-Zthreads=1",
+        "-Ccodegen-units=1"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cdebug-assertions=false",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cdebug-assertions=false"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Coverflow-checks=false",
+      "suffix": [
+        "-Zthreads=1",
+        "-Coverflow-checks=false"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Clto=off",
+      "suffix": [
+        "-Zthreads=1",
+        "-Clto=off"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cembed-bitcode=no",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cembed-bitcode=no"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Clinker-plugin-lto",
+      "suffix": [
+        "-Zthreads=1",
+        "-Clinker-plugin-lto"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Csplit-debuginfo=off",
+      "suffix": [
+        "-Zthreads=1",
+        "-Csplit-debuginfo=off"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Crpath",
+      "suffix": [
+        "-Zthreads=1",
+        "-Crpath"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cstrip=symbols",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cstrip=symbols"
+      ],
+      "valid": false
+    },
+    {
+      "name": "-Cincremental=/foreign",
+      "suffix": [
+        "-Zthreads=1",
+        "-Cincremental=/foreign"
+      ],
+      "valid": false
+    }
+  ]
+}

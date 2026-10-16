@@ -503,7 +503,7 @@ pub mod browser {
             SOCKETS.with(|sockets| sockets.borrow_mut().insert(socket_id, lane.clone()));
             let settle = lane.clone();
             crate::spawn_app_task(async move {
-                match crate::shell::host_io_call(&request, None).await {
+                match crate::host_io_call(&request, None).await {
                     Ok(answer) => match decode_socket_answer(&answer) {
                         Ok(page) => settle.borrow_mut().apply_page(page),
                         Err(error) => {
@@ -548,7 +548,7 @@ pub mod browser {
                 };
                 let settle = self.lane.clone();
                 crate::spawn_app_task(async move {
-                    match crate::shell::host_io_call(&request, None).await {
+                    match crate::host_io_call(&request, None).await {
                         Ok(answer) => match decode_socket_answer(&answer) {
                             Ok(page) => settle.borrow_mut().apply_page(page),
                             Err(error) => settle.borrow_mut().note_error(error),
@@ -570,7 +570,7 @@ pub mod browser {
             let settle = self.lane.clone();
             let polling = self.polling.clone();
             crate::spawn_app_task(async move {
-                let outcome = crate::shell::host_io_call(&request, None).await;
+                let outcome = crate::host_io_call(&request, None).await;
                 *polling.borrow_mut() = false;
                 match outcome {
                     Ok(answer) => match decode_socket_answer(&answer) {
@@ -611,7 +611,7 @@ pub mod browser {
             SOCKETS.with(|sockets| sockets.borrow_mut().remove(&self.socket_id));
             let Ok(request) = encode_socket_close(self.socket_id) else { return };
             crate::spawn_app_task(async move {
-                let _ = crate::shell::host_io_call(&request, None).await;
+                let _ = crate::host_io_call(&request, None).await;
             });
         }
     }

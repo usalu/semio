@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabaseLimits,os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
 fn snapshot(value:&serde_json::Value)->TxtSnapshot{TxtSnapshot{schema:value["schema"].as_str().unwrap().into(),lines:value["lines"].as_array().unwrap().iter().map(|line|line.as_str().unwrap().into()).collect(),trailing_newline:value["trailingNewline"].as_bool().unwrap(),line_ending:if value["lineEnding"]=="crLf"{LineEnding::CrLf}else{LineEnding::Lf}}}
 fn database(value:&serde_json::Value)->SqliteDatabase{SqliteDatabase{tables:value["tables"].as_array().unwrap().iter().map(|table|SqliteTable{name:table["name"].as_str().unwrap().into(),sql:table["sql"].as_str().unwrap().into(),rows:table["rows"].as_array().unwrap().iter().map(|row|SqliteRow{rowid:row["rowid"].as_i64().unwrap(),values:row["values"].as_array().unwrap().iter().map(|value|if let Some(value)=value.as_i64(){SqliteValue::Integer(value)}else{SqliteValue::Text(value.as_str().unwrap().into())}).collect()}).collect()}).collect()}}
@@ -79,4 +79,9 @@ fn txt_original_receiving_directional_validators_borrow_both_original_controls_w
  direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,validate_sqlite_snapshot_subset_decoding,"native decoding canceled");
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding,"native encoding canceled");
  eprintln!("[DEBUG] Original TXT six directional cases per control borrow exact kind/standard/subset and literal Native/SQL causes with zero physical allocations, zero fabricated receipts and no cleanup recipient");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

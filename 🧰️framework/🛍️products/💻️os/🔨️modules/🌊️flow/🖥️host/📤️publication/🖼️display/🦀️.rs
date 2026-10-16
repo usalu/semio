@@ -6,20 +6,20 @@ struct Field{kind:u8,rank:usize}
 #[derive(semio_framework_value::RetireOwned)]
 struct Row{widget:usize,fields:Vec<Field>}
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct FlowDisplayCursor{control:Option<semio_framework_value::NativeEncodeContinuation>,rows:Vec<Row>,writer:JsonBorrowedWriteCursor,text:Option<String>,widget:usize,scan:usize,rank:usize,stage:u8}
+pub struct FlowDisplayCursor{control:Option<semio_framework_value::NativeEncodeContinuation>,rows:Vec<Row>,writer:JsonBorrowedWriteCursor,text:Option<String>,widget:usize,scan:usize,rank:usize,stage:u8}
 struct OriginalDisplay<'a>{snapshot:&'a FlowHostSnapshot,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>,rows:&'a[Row]}
 impl<'a> OriginalDisplay<'a>{
  fn input(&self,widget:usize)->Option<&'a Dictionary>{self.channels.inputs.get(widget_id_for(&self.snapshot.widgets[widget]))}
- fn params(&self,widget:usize)->Option<&'a Dictionary>{match &self.snapshot.widgets[widget]{Widget::Neuron{params,..}=>Some(params),_=>None}}
+ pub fn params(&self,widget:usize)->Option<&'a Dictionary>{match &self.snapshot.widgets[widget]{Widget::Neuron{params,..}=>Some(params),_=>None}}
  fn info(&self,widget:usize)->Option<&'a OperatorInfo>{match &self.snapshot.widgets[widget]{Widget::Neuron{neuron_kind,..}=>self.infos.get(neuron_kind),_=>None}}
  fn merged(&self,widget:usize,key:&str)->Option<&'a NeuralValue>{self.params(widget).and_then(|dict|dict.get(key)).or_else(||self.input(widget).and_then(|dict|dict.get(key)))}
- fn slots(&self,widget:usize)->Option<&'a Dictionary>{self.info(widget)?.variadic_input.as_ref().and_then(|port|self.merged(widget,&port.slot_key)).and_then(NeuralValue::as_dictionary)}
- fn field(&self,row:&Row,index:usize)->Result<(&'a str,&'a NeuralValue),ValueError>{
+ pub fn slots(&self,widget:usize)->Option<&'a Dictionary>{self.info(widget)?.variadic_input.as_ref().and_then(|port|self.merged(widget,&port.slot_key)).and_then(NeuralValue::as_dictionary)}
+ pub fn field(&self,row:&Row,index:usize)->Result<(&'a str,&'a NeuralValue),ValueError>{
   let field=row.fields.get(index).ok_or_else(absent)?;
   match field.kind{0=>self.input(row.widget).and_then(|dict|dict.entry_at_rank(field.rank)).map(|(key,value)|(key.as_str(),value)).ok_or_else(absent),1=>self.params(row.widget).and_then(|dict|dict.entry_at_rank(field.rank)).map(|(key,value)|(key.as_str(),value)).ok_or_else(absent),2=>self.slots(row.widget).and_then(|dict|dict.entry_at_rank(field.rank)).map(|(key,value)|(key.as_str(),value)).ok_or_else(absent),3=>{let key=&self.info(row.widget).and_then(|info|info.inputs.get(field.rank)).ok_or_else(absent)?.name;Ok((key,self.merged(row.widget,key).ok_or_else(absent)?))},_=>Err(absent())}
  }
  fn output(&self,row:&Row)->Option<&'a Dictionary>{self.channels.outputs.get(widget_id_for(&self.snapshot.widgets[row.widget]))}
- fn error(&self,row:&Row)->Option<&'a str>{self.output(row)?.get("error")?.as_atom()?.as_str()}
+ pub fn error(&self,row:&Row)->Option<&'a str>{self.output(row)?.get("error")?.as_atom()?.as_str()}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
@@ -46,10 +46,10 @@ impl JsonWriteSource for OriginalDisplay<'_>{
 }
 impl FlowDisplayCursor{
  pub(super) fn new()->Self{Self{control:None,rows:Vec::new(),writer:JsonBorrowedWriteCursor::new(),text:None,widget:0,scan:0,rank:0,stage:0}}
- pub(super) fn complete(&self)->bool{self.stage==255}
- pub(super) fn take_text(&mut self)->Option<String>{self.text.take()}
+ pub fn complete(&self)->bool{self.stage==255}
+ pub fn take_text(&mut self)->Option<String>{self.text.take()}
  fn source<'a>(&'a self,snapshot:&'a FlowHostSnapshot,channels:&'a EvalChannels,infos:&'a HistoryFoldIndex<String,OperatorInfo>)->OriginalDisplay<'a>{OriginalDisplay{snapshot,channels,infos,rows:&self.rows}}
- pub(super) fn demands(&self,snapshot:&FlowHostSnapshot,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>)->Result<RetirementDemand,ValueError>{
+ pub fn demands(&self,snapshot:&FlowHostSnapshot,channels:&EvalChannels,infos:&HistoryFoldIndex<String,OperatorInfo>)->Result<RetirementDemand,ValueError>{
   let mut d=RetirementDemand{depth:1,..Default::default()};
   if self.stage==0{d.capacity_bytes=snapshot.widgets.len().checked_mul(size_of::<Row>()).ok_or_else(absent)?;}
   if self.stage==2{let source=self.source(snapshot,channels,infos);let maximum=source.input(self.widget).map_or(0,Dictionary::len)+source.params(self.widget).map_or(0,Dictionary::len)+source.slots(self.widget).map_or(0,Dictionary::len)+source.info(self.widget).map_or(0,|info|info.inputs.len());d.capacity_bytes=maximum.checked_mul(size_of::<Field>()).ok_or_else(absent)?;}

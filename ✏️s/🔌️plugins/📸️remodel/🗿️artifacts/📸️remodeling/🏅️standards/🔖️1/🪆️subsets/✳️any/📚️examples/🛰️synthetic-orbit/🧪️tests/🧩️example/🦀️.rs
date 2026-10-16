@@ -603,7 +603,7 @@ async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot
     };
     assert_eq!(complete.state.wire_name(), "complete");
     let arguments = run_arguments(app).await;
-    let output = run_action(app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    let output = run_action(app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
     pump_run(app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(app, "the finalize publication").await;
@@ -713,7 +713,7 @@ async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document
     start_reconstruction(&mut app).await;
     pump_run(&mut app, "the run reaches feature extraction", |run| run.stage >= 1).await;
     let arguments = run_arguments(&mut app).await;
-    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
+    let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID, arguments).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("closeJob"));
     pump_run(&mut app, "abort settles", |run| run.state.wire_name() == "aborted").await;
     let after = durable(&mut app).await;
@@ -735,7 +735,7 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
     let unfinalized = durable(&mut app).await;
     assert!(unfinalized.0 == before.0 && unfinalized.1 == before.1, "a complete but unfinalized run leaves the document pack byte-identical");
     let arguments = run_arguments(&mut app).await;
-    let output = run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    let output = run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
     assert_eq!(output.get("toolRun").and_then(semio_framework_plugin::DslValue::as_str), Some("beginFinalize"));
     pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(&mut app, "the finalize publication").await;
@@ -764,7 +764,7 @@ async fn an_unregistrable_capture_completes_without_cameras() {
     let complete = pump_run(&mut app, "the run rests", |run| matches!(run.state.wire_name(), "complete" | "faulted")).await;
     assert_eq!(complete.state.wire_name(), "complete", "an unregistrable sample completes: {complete:?}");
     let arguments = run_arguments(&mut app).await;
-    run_action(&mut app, semio_framework_plugin::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
+    run_action(&mut app, semio_framework_tool_run::TOOL_RUN_FINALIZE_ACTION_ID, arguments).await;
     pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(&mut app, "the finalize publication").await;
     let finalized = durable(&mut app).await;

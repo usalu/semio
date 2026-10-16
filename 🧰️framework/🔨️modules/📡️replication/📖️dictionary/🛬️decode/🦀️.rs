@@ -1,6 +1,7 @@
 //! 📖️ Original dictionary strings remain borrowed source ranges while every genuine backing stays under its caller receipt.
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,list::{PagedList,PagedListError}};
-use crate::codec::{RetainedWireUtf8Validation,RetainedWireByteSource,OriginalWireSourceIdentity};
+use crate::retained::RetainedWireUtf8Validation;
+use crate::{RetainedWireByteSource, OriginalWireSourceIdentity};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

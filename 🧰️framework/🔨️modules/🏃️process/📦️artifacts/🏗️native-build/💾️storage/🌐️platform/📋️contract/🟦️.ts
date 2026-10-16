@@ -1,6 +1,6 @@
-import {lstatSync} from "node:fs";
+import {lstatSync,opendirSync} from "node:fs";
 import {join,resolve,relative,isAbsolute,sep} from "node:path";
-import {requireMaterializedPathV1} from "../../../../../🔒️leases/🟦️.ts";
+import {requireMaterializedPathV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import type {NativeStoragePortV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -8,10 +8,20 @@ const protocol=schema.definitions.ImageProtocol.const;
 
 /** 🚦️ Chooses required quiescence or an immediate optional-maintenance attempt. */
 export type NativeImageMaintenanceRequestV1=Readonly<{version:1;wait:boolean}>;
+/** 🧷️ Binds optional historical backing authority to one exact stable receipt and physical allocation. */
+export type NativeImageRetirementExpectationV1=Readonly<{receiptSha256:string;dev:number;ino:number;size:number;allocatedBytes:number}>;
+/** ♻️ Separates historical retirement admission from reader maintenance. */
+export type NativeImageRetirementRequestV1=Readonly<{version:1;wait:boolean;expectedImage?:NativeImageRetirementExpectationV1}>;
+/** 📸️ Detaches caller data before any queued exclusive acquisition. */
+export function readNativeImageRetirementRequestV1(value:unknown):NativeImageRetirementRequestV1{if(validateJsonSchemaSubset(schema.definitions.ImageRetirementRequest,value,schema).length)throw Error("Closed original image retirement request required");const request=value as NativeImageRetirementRequestV1,expected=request.expectedImage;const captured={version:1 as const,wait:request.wait,...(expected?{expectedImage:Object.freeze({receiptSha256:expected.receiptSha256,dev:expected.dev,ino:expected.ino,size:expected.size,allocatedBytes:expected.allocatedBytes})}:{})};if(validateJsonSchemaSubset(schema.definitions.ImageRetirementRequest,captured,schema).length)throw Error("Closed original image retirement request required");return Object.freeze(captured);}
+
 /** 📎️ Distinguishes retained readers from an actual exclusive maintenance result. */
 export type NativeImageMaintenanceResultV1<T>=Readonly<{acquired:false}|{acquired:true;value:T}>;
 /** 🛂️ Refuses undeclared image maintenance authority before releasing a reader. */
 export function readNativeImageMaintenanceRequestV1(value:unknown):NativeImageMaintenanceRequestV1{if(validateJsonSchemaSubset(schema.definitions.ImageMaintenanceRequest,value,schema).length)throw Error("Closed original image maintenance request required");return Object.freeze({version:1,wait:(value as NativeImageMaintenanceRequestV1).wait});}
+
+/** 🔐️ Distinguishes an actual retained kernel writer from a fresh private physical owner. */
+export type NativeImageMaintenanceCustodyV1=Readonly<{kind:"kernel-ex";proof:ResourceLeaseWriterProofV1;control:ResourceLeaseControl}|{kind:"fresh-private"}>;
 
 /** 💾️ Retains one enforcing native fixed-volume identity and original usage custody. */
 export interface NativeImageStorageV1{
@@ -22,7 +32,7 @@ export interface NativeImageStorageV1{
  readonly port:NativeStoragePortV1;
  recheck():Promise<void>;
  close():Promise<void>;
- withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1)=>Promise<T>):Promise<NativeImageMaintenanceResultV1<T>>;
+ withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1,custody:NativeImageMaintenanceCustodyV1)=>Promise<T>):Promise<NativeImageMaintenanceResultV1<T>>;
 }
 
 /** 🧭️ Resolves the compact canonical mount namespace without a path alias. */
@@ -38,3 +48,7 @@ export function requireNativeStoragePathV1(root:string,path:string):string{
 
 /** 📏️ Refuses missing, mutable or non-finite physical envelopes before image or lease side effects. */
 export function requireNativeImageEnvelopeV1(options:Readonly<{filesystemBytes:number;maximumPhysicalBytes:number}>):void{if(validateJsonSchemaSubset(schema.definitions.ImageRequest,{filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes},schema).length||options.filesystemBytes%protocol.unitBytes!==0||options.maximumPhysicalBytes<options.filesystemBytes+protocol.unitBytes)throw Error("Invalid fixed image allocation envelope");}
+
+
+/** 📁️ Captures only a finite direct inventory without materializing an unbounded directory. */
+export function nativeImageDirectoryNamesV1(path:string,maximum:number):readonly string[]{const before=lstatSync(path,{bigint:true});if(!Number.isSafeInteger(maximum)||maximum<0||maximum>4||!before.isDirectory()||before.isSymbolicLink())throw Error("Bounded physical Native directory required");const directory=opendirSync(path),names:string[]=[];let failed=false;try{for(;;){const row=directory.readSync();if(!row)break;if(names.length>=maximum)throw Error("Native directory inventory exceeds its owned bound");names.push(row.name);}const after=lstatSync(path,{bigint:true});if(after.isSymbolicLink()||after.dev!==before.dev||after.ino!==before.ino)throw Error("Native directory inventory changed");return names;}catch(error){failed=true;throw error;}finally{try{directory.closeSync();}catch(error){if(!failed)throw error;}}}

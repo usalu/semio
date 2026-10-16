@@ -2479,7 +2479,8 @@
                 "command": [
                   "bun",
                   "./📜️script.ts",
-                  "build"
+                  "build",
+                  "--host-platform={hostPlatform}"
                 ],
                 "after": [],
                 "profile": "release",
@@ -3534,7 +3535,8 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel"
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel",
+        "forwardAllArgs": true
       }
     },
     "test-build-tool-bazel-bootstrap": {

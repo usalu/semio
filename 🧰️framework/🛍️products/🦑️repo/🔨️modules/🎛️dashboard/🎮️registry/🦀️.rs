@@ -7,19 +7,21 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📚️inventory/🦀️.rs
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌳️command-tree/🦀️.rs
 
-use crate::repo_domain::{RepoAction, RepoImplementation};
+use dashboard_core::env_contract::RUNNER_ENV;
+use dashboard_core::xxh3_64;
+use dashboard_repo_domain::{RepoAction, RepoImplementation};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use ui_locale::Locale;
-use ui_tui::tui::text::{elide_end, elide_middle};
+use ui_tui::tui::text::elide_end;
 
 // #region 🔖️Wire
-/// 🏷️ The wire types of a launch, which the daemon schema owns and the registry produces: what a running task is
-/// called, and the address its output announces when it is ready.
+/// 🏷️ The launch types the registry produces and the daemon wire carries, which the launch contract owns: what a running task is
+/// called, the address its output announces when it is ready and the processes a resolved launch starts.
 ///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/✉️ipc/🦀️.rs
-pub use crate::daemon::ipc::{Ready, TaskLabel};
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧾️launch/🦀️.rs
+use dashboard_launch::{Launch, LaunchProcess, Ready, Stop, TaskLabel};
 // #endregion 🔖️Wire
 
 // #region 🔖️Identity
@@ -195,62 +197,6 @@ fn is_absolute_literal(text: &str) -> bool {
 }
 // #endregion 🔖️Identity
 
-// #region 🔖️Labels
-/// 📐️ The cells a tab may take, glyph and close control included.
-pub const TAB_CELLS: usize = 24;
-const TAIL_CELLS: usize = 6;
-
-/// 🗣️ The word a verb is shown as; identifiers stay language-neutral.
-pub fn verb_text(verb: &str, locale: Locale) -> &str {
-    if locale != Locale::De { return verb; }
-    match verb {
-        "setup" => "einrichten", "start" => "starten", "dev" => "entwickeln", "serve" => "ausliefern", "watch" => "beobachten", "activate" => "aktivieren", "prepare" => "vorbereiten", "run" => "ausführen", "build" => "bauen", "package" => "paketieren", "test" => "testen", "smoke" => "rauchtest", "check" => "prüfen", "typecheck" => "typprüfung", "verify" => "verifizieren", "gate" => "freigabe", "lint" => "linten", "format" => "formatieren", "generate" => "generieren", "publish" => "veröffentlichen", "deploy" => "bereitstellen", "preview" => "vorschau", "bench" => "messen", "clean" => "aufräumen", "task" => "aufgabe", "goals" => "ziele", "analyze" => "analysieren", "tree" => "baum", "statutes" => "statuten",
-        other => other,
-    }
-}
-
-fn cells(text: &str) -> usize { usize::from(ui_tui::tui::text::display_width(text)) }
-
-/// 📏️ A cell budget as the shared text helpers take it.
-fn cap(budget: usize) -> u16 { u16::try_from(budget).unwrap_or(u16::MAX) }
-
-/// 📑️ The tab text of a task, `verb subject [qualifier] [×members]`, within `budget` cells: the
-/// subject gives way first (middle elided, last cells kept), then the qualifier; the verb never does.
-pub fn tab_text(label: &TaskLabel, locale: Locale, budget: usize) -> String {
-    let verb = verb_text(&label.verb, locale);
-    let members = if label.members > 0 { format!(" ×{}", label.members) } else { String::new() };
-    let join = |subject: &str, qualifier: &str| format!("{verb} {subject}{}{qualifier}{members}", if qualifier.is_empty() { "" } else { " " });
-    let fixed = cells(verb) + 1 + cells(&members);
-    let qualified = if label.qualifier.is_empty() { 0 } else { 1 + cells(&label.qualifier) };
-    if fixed + cells(&label.subject) + qualified <= budget { return join(&label.subject, &label.qualifier); }
-    let subject = elide_middle(&label.subject, cap(budget.saturating_sub(fixed + qualified).max(TAIL_CELLS + 2)), TAIL_CELLS as u16).into_owned();
-    if fixed + cells(&subject) + qualified <= budget { return join(&subject, &label.qualifier); }
-    let room = budget.saturating_sub(fixed + cells(&subject) + 1);
-    let qualifier = if room < 2 { String::new() } else { elide_end(&label.qualifier, cap(room)).into_owned() };
-    let text = join(&subject, &qualifier);
-    if cells(&text) <= budget { text } else { format!("{verb} {}", elide_end(&text[verb.len() + 1..], cap(budget.saturating_sub(cells(verb) + 1).max(1)))) }
-}
-
-/// 🧮️ The tab texts of tasks in creation order: a text an earlier task already shows gets ` ·2`,
-/// ` ·3`, … and stays within the budget.
-pub fn tab_texts(labels: &[&TaskLabel], locale: Locale, budget: usize) -> Vec<String> {
-    let plain: Vec<String> = labels.iter().map(|label| tab_text(label, locale, budget)).collect();
-    plain.iter().enumerate().map(|(index, text)| match plain[..index].iter().filter(|earlier| *earlier == text).count() {
-        0 => text.clone(),
-        earlier => { let suffix = format!(" ·{}", earlier + 1); format!("{}{suffix}", tab_text(labels[index], locale, budget.saturating_sub(cells(&suffix)))) }
-    }).collect()
-}
-
-/// 🪟️ The window title of a task: verb, owner path, subject, qualifier and chosen parameters.
-pub fn window_title(label: &TaskLabel, locale: Locale) -> String {
-    let mut parts = vec![verb_text(&label.verb, locale).to_string()];
-    if !label.owner.is_empty() && label.owner.last() != Some(&label.subject) { parts.push(label.owner.join(" / ")); }
-    parts.push(if label.members > 0 { format!("{} ×{}", label.subject, label.members) } else { label.subject.clone() });
-    if !label.qualifier.is_empty() { parts.push(label.qualifier.clone()); }
-    parts.extend(label.parameters.iter().map(|(key, value)| format!("{key}={value}")));
-    parts.join(" · ")
-}
-// #endregion 🔖️Labels
 
 // #region 🔖️Declarations
 /// 🎚️ The three kinds of things chosen at launch.
@@ -258,10 +204,6 @@ pub fn window_title(label: &TaskLabel, locale: Locale) -> String {
 #[serde(rename_all = "lowercase")]
 pub enum ParameterKind { Choice, Text, Flag }
 
-/// 🛑️ Whether stopping one member of a compound stops the others.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Stop { Together, #[default] Independent }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -544,30 +486,7 @@ pub struct Entry {
     haystack: String,
 }
 
-/// ▶️ One process of a resolved launch.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LaunchProcess {
-    pub command_id: String,
-    pub cmd: String,
-    pub args: Vec<String>,
-    pub cwd: PathBuf,
-    pub env: Vec<(String, String)>,
-    pub label: TaskLabel,
-    pub ready: Option<Ready>,
-    pub long_running: bool,
-}
 
-/// 🚀️ `(id, chosen parameters, extra arguments)` resolved: the processes in start order, the
-/// services that must be ready first and how the group stops.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Launch {
-    pub command_id: String,
-    pub label: TaskLabel,
-    pub processes: Vec<LaunchProcess>,
-    pub requires: Vec<Launch>,
-    pub group: Option<String>,
-    pub stop: Stop,
-}
 
 /// 📝️ What a developer chooses besides the command: parameter values, free extra arguments that
 /// follow `--` and free extra environment.
@@ -587,8 +506,6 @@ impl Request {
 // #region 🔖️RunPolicy
 /// 🧵️ The variable that lets the build runner start a task from its published project graph instead of rebuilding it.
 pub const GRAPH_REUSE: (&str, &str) = ("SEMIO_BUILD_REUSE_GRAPH", "true");
-/// 🖥️ The variables that keep terminal rendering and process lifecycle with the dashboard.
-pub const RUNNER_ENV: &[(&str, &str)] = &[("SEMIO_BUILD_TERMINAL", "false")];
 #[path = "../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
 mod publication;
 pub use publication::graph_file;
@@ -610,7 +527,7 @@ impl Default for RunPolicy {
 
 impl RunPolicy {
     /// 🌍️ The policy the environment states: `SEMIO_REPO_IMPLEMENTATION` picks the repo implementation.
-    pub fn current() -> Self { Self { repo: crate::repo_domain::repo_implementation(), ..Self::default() } }
+    pub fn current() -> Self { Self { repo: dashboard_repo_domain::repo_implementation(), ..Self::default() } }
 
     fn apply(self, env: &mut Vec<(String, String)>, build: bool, long_running: bool) {
         for (key, value) in RUNNER_ENV { set_env(env, key, value); }
@@ -654,79 +571,6 @@ impl GraphBasis {
 }
 // #endregion 🔖️RunPolicy
 
-// #region 🔖️Hash
-const XXH_SECRET: [u8; 192] = [
-    0xb8, 0xfe, 0x6c, 0x39, 0x23, 0xa4, 0x4b, 0xbe, 0x7c, 0x01, 0x81, 0x2c, 0xf7, 0x21, 0xad, 0x1c, 0xde, 0xd4, 0x6d, 0xe9, 0x83, 0x90, 0x97, 0xdb, 0x72, 0x40, 0xa4, 0xa4, 0xb7, 0xb3, 0x67, 0x1f,
-    0xcb, 0x79, 0xe6, 0x4e, 0xcc, 0xc0, 0xe5, 0x78, 0x82, 0x5a, 0xd0, 0x7d, 0xcc, 0xff, 0x72, 0x21, 0xb8, 0x08, 0x46, 0x74, 0xf7, 0x43, 0x24, 0x8e, 0xe0, 0x35, 0x90, 0xe6, 0x81, 0x3a, 0x26, 0x4c,
-    0x3c, 0x28, 0x52, 0xbb, 0x91, 0xc3, 0x00, 0xcb, 0x88, 0xd0, 0x65, 0x8b, 0x1b, 0x53, 0x2e, 0xa3, 0x71, 0x64, 0x48, 0x97, 0xa2, 0x0d, 0xf9, 0x4e, 0x38, 0x19, 0xef, 0x46, 0xa9, 0xde, 0xac, 0xd8,
-    0xa8, 0xfa, 0x76, 0x3f, 0xe3, 0x9c, 0x34, 0x3f, 0xf9, 0xdc, 0xbb, 0xc7, 0xc7, 0x0b, 0x4f, 0x1d, 0x8a, 0x51, 0xe0, 0x4b, 0xcd, 0xb4, 0x59, 0x31, 0xc8, 0x9f, 0x7e, 0xc9, 0xd9, 0x78, 0x73, 0x64,
-    0xea, 0xc5, 0xac, 0x83, 0x34, 0xd3, 0xeb, 0xc3, 0xc5, 0x81, 0xa0, 0xff, 0xfa, 0x13, 0x63, 0xeb, 0x17, 0x0d, 0xdd, 0x51, 0xb7, 0xf0, 0xda, 0x49, 0xd3, 0x16, 0x55, 0x26, 0x29, 0xd4, 0x68, 0x9e,
-    0x2b, 0x16, 0xbe, 0x58, 0x7d, 0x47, 0xa1, 0xfc, 0x8f, 0xf8, 0xb8, 0xd1, 0x7a, 0xd0, 0x31, 0xce, 0x45, 0xcb, 0x3a, 0x8f, 0x95, 0x16, 0x04, 0x28, 0xaf, 0xd7, 0xfb, 0xca, 0xbb, 0x4b, 0x40, 0x7e,
-];
-const XXH_PRIME32: [u64; 3] = [0x9E37_79B1, 0x85EB_CA77, 0xC2B2_AE3D];
-const XXH_PRIME64: [u64; 5] = [0x9E37_79B1_85EB_CA87, 0xC2B2_AE3D_27D4_EB4F, 0x1656_67B1_9E37_79F9, 0x85EB_CA77_C2B2_AE63, 0x27D4_EB2F_1656_67C5];
-const XXH_MIX: [u64; 2] = [0x1656_6791_9E37_79F9, 0x9FB2_1C65_1E98_DF25];
-
-/// #️⃣ The 64-bit XXH3 hash of a byte string with the default secret and seed 0: the content
-/// hash used for workspace source fingerprints.
-///
-/// @see https://github.com/Cyan4973/xxHash/blob/dev/doc/xxhash_spec.md
-pub fn xxh3_64(input: &[u8]) -> u64 {
-    let word = |bytes: &[u8], at: usize| u64::from_le_bytes(bytes[at..at + 8].try_into().expect("eight bytes"));
-    let half = |bytes: &[u8], at: usize| u64::from(u32::from_le_bytes(bytes[at..at + 4].try_into().expect("four bytes")));
-    let fold = |left: u64, right: u64| { let product = u128::from(left) * u128::from(right); product as u64 ^ (product >> 64) as u64 };
-    let avalanche = |mut hash: u64| { hash ^= hash >> 37; hash = hash.wrapping_mul(XXH_MIX[0]); hash ^ hash >> 32 };
-    let mix = |at: usize, secret: usize| fold(word(input, at) ^ word(&XXH_SECRET, secret), word(input, at + 8) ^ word(&XXH_SECRET, secret + 8));
-    let len = input.len();
-    let seeded = (len as u64).wrapping_mul(XXH_PRIME64[0]);
-    match len {
-        0 => { let mut hash = word(&XXH_SECRET, 56) ^ word(&XXH_SECRET, 64); hash ^= hash >> 33; hash = hash.wrapping_mul(XXH_PRIME64[1]); hash ^= hash >> 29; hash = hash.wrapping_mul(XXH_PRIME64[2]); hash ^ hash >> 32 }
-        1..=3 => {
-            let combined = u64::from(input[0]) << 16 | u64::from(input[len >> 1]) << 24 | u64::from(input[len - 1]) | (len as u64) << 8;
-            let mut hash = combined ^ (half(&XXH_SECRET, 0) ^ half(&XXH_SECRET, 4));
-            hash ^= hash >> 33; hash = hash.wrapping_mul(XXH_PRIME64[1]); hash ^= hash >> 29; hash = hash.wrapping_mul(XXH_PRIME64[2]); hash ^ hash >> 32
-        }
-        4..=8 => {
-            let mut hash = (half(input, len - 4) + (half(input, 0) << 32)) ^ (word(&XXH_SECRET, 8) ^ word(&XXH_SECRET, 16));
-            hash ^= hash.rotate_left(49) ^ hash.rotate_left(24); hash = hash.wrapping_mul(XXH_MIX[1]); hash ^= (hash >> 35).wrapping_add(len as u64); hash = hash.wrapping_mul(XXH_MIX[1]); hash ^ hash >> 28
-        }
-        9..=16 => {
-            let low = word(input, 0) ^ (word(&XXH_SECRET, 24) ^ word(&XXH_SECRET, 32));
-            let high = word(input, len - 8) ^ (word(&XXH_SECRET, 40) ^ word(&XXH_SECRET, 48));
-            avalanche((len as u64).wrapping_add(low.swap_bytes()).wrapping_add(high).wrapping_add(fold(low, high)))
-        }
-        17..=128 => {
-            let mut hash = seeded;
-            for round in (0..(len - 1) / 32 + 1).rev() { hash = hash.wrapping_add(mix(16 * round, 32 * round)).wrapping_add(mix(len - 16 * (round + 1), 32 * round + 16)); }
-            avalanche(hash)
-        }
-        129..=240 => {
-            let mut hash = seeded;
-            for round in 0..8 { hash = hash.wrapping_add(mix(16 * round, 16 * round)); }
-            hash = avalanche(hash);
-            for round in 8..len / 16 { hash = hash.wrapping_add(mix(16 * round, 16 * (round - 8) + 3)); }
-            avalanche(hash.wrapping_add(mix(len - 16, 119)))
-        }
-        _ => {
-            let mut lanes = [XXH_PRIME32[2], XXH_PRIME64[0], XXH_PRIME64[1], XXH_PRIME64[2], XXH_PRIME64[3], XXH_PRIME32[1], XXH_PRIME64[4], XXH_PRIME32[0]];
-            let stripe = |lanes: &mut [u64; 8], at: usize, secret: usize| for lane in 0..8 {
-                let value = word(input, at + 8 * lane);
-                let keyed = value ^ word(&XXH_SECRET, secret + 8 * lane);
-                lanes[lane ^ 1] = lanes[lane ^ 1].wrapping_add(value);
-                lanes[lane] = lanes[lane].wrapping_add((keyed & 0xFFFF_FFFF).wrapping_mul(keyed >> 32));
-            };
-            let blocks = (len - 1) / 1024;
-            for block in 0..blocks {
-                for index in 0..16 { stripe(&mut lanes, block * 1024 + index * 64, index * 8); }
-                for (lane, value) in lanes.iter_mut().enumerate() { *value = ((*value ^ *value >> 47) ^ word(&XXH_SECRET, 128 + 8 * lane)).wrapping_mul(XXH_PRIME32[0]); }
-            }
-            for index in 0..(len - 1 - blocks * 1024) / 64 { stripe(&mut lanes, blocks * 1024 + index * 64, index * 8); }
-            stripe(&mut lanes, len - 64, 121);
-            avalanche((0..4).fold(seeded, |hash, pair| hash.wrapping_add(fold(lanes[2 * pair] ^ word(&XXH_SECRET, 11 + 16 * pair), lanes[2 * pair + 1] ^ word(&XXH_SECRET, 19 + 16 * pair)))))
-        }
-    }
-}
-// #endregion 🔖️Hash
 
 // #region 🔖️Tokens
 /// 🧩️ The `{name}` tokens of a text, in order of appearance.
@@ -911,7 +755,7 @@ const LOCAL_ONLY_ENV: &str = "S_LOCAL_ONLY";
 const CONFIGURATION: &str = "configuration";
 /// 🏗️ The build project whose targets run a playground variant.
 const PLAYGROUND_OWNER: &str = "@semio-tech/framework-os-dev";
-const LABEL_CELLS: usize = 72;
+const LABEL_CELLS: u16 = 72;
 
 /// 🎡️ The build target that runs a playground variant with a renderer.
 pub fn playground_target(variant: &str, renderer: &str) -> Option<String> {
@@ -977,10 +821,10 @@ impl Registry {
             entries.push(entry);
         }
         for ticket in &facts.tickets {
-            let head = segment(ticket.id.as_str(), format!("{} [{}] {}", ticket.id, if ticket.open { "open" } else { "closed" }, elide_end(&ticket.title, cap(LABEL_CELLS))));
+            let head = segment(ticket.id.as_str(), format!("{} [{}] {}", ticket.id, if ticket.open { "open" } else { "closed" }, elide_end(&ticket.title, LABEL_CELLS)));
             let actions = [("show", RepoAction::TicketShow { id: ticket.id.clone() }, false), ("files", RepoAction::TicketFiles { id: ticket.id.clone() }, false), if ticket.open { ("close", RepoAction::TicketClose { id: ticket.id.clone() }, true) } else { ("reopen", RepoAction::TicketReopen { id: ticket.id.clone() }, true) }];
             for (key, action, mutating) in actions {
-                let mut entry = Entry::new(Draft { id: format!("repo:{}", crate::repo_domain::action_key(&action)), kind: Kind::Repo, verb: "tickets".into(), path: vec![head.clone(), segment(key, key)], owner: Vec::new(), subject: ticket.id.clone(), qualifier: key.into(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) });
+                let mut entry = Entry::new(Draft { id: format!("repo:{}", dashboard_repo_domain::action_key(&action)), kind: Kind::Repo, verb: "tickets".into(), path: vec![head.clone(), segment(key, key)], owner: Vec::new(), subject: ticket.id.clone(), qualifier: key.into(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) });
                 (entry.listed, entry.mutating) = (ticket.open, mutating);
                 entries.push(entry);
             }
@@ -993,9 +837,9 @@ impl Registry {
             Self::compounds(&mut scope, &mut entries, &declaration.compounds, &owner, &keys, &|id| format!("ticket:{}/{id}", ticket.id), Kind::Ticket);
         }
         let fixed = [("goals", "list", RepoAction::GoalsList), ("goals", "tree", RepoAction::GoalsTree), ("tree", "monorepo", RepoAction::TreeMonorepo), ("tree", "goal", RepoAction::TreeGoal), ("tree", "statute", RepoAction::TreeStatute), ("tree", "territory", RepoAction::TreeTerritory), ("statutes", "catalog", RepoAction::StatutesCatalog)];
-        let scopes = crate::repo_domain::ANALYZE_SCOPES.iter().map(|(scope, _)| ("analyze", *scope, RepoAction::Analyze { scope: (*scope).to_string() }));
+        let scopes = dashboard_repo_domain::ANALYZE_SCOPES.iter().map(|(scope, _)| ("analyze", *scope, RepoAction::Analyze { scope: (*scope).to_string() }));
         for (verb, key, action) in fixed.into_iter().chain(scopes) {
-            entries.push(Entry::new(Draft { id: format!("repo:{}", crate::repo_domain::action_key(&action)), kind: Kind::Repo, verb: verb.into(), path: vec![segment(key, key)], owner: Vec::new(), subject: key.into(), qualifier: String::new(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) }));
+            entries.push(Entry::new(Draft { id: format!("repo:{}", dashboard_repo_domain::action_key(&action)), kind: Kind::Repo, verb: verb.into(), path: vec![segment(key, key)], owner: Vec::new(), subject: key.into(), qualifier: String::new(), long_running: false, source: "", own: Vec::new(), action: Action::Repo(action) }));
         }
         entries.sort_by(|left, right| verb_rank(&left.verb).cmp(&verb_rank(&right.verb)).then_with(|| left.verb.cmp(&right.verb)).then_with(|| left.label.cmp(&right.label)).then_with(|| left.id.cmp(&right.id)));
         let mut index = HashMap::with_capacity(entries.len());
@@ -1388,10 +1232,10 @@ impl Registry {
                 let slot = value_of("user-slot").and_then(|slot| slot.parse::<usize>().ok());
                 let (port, slots) = if renderer == "react" { (playground.react, &playground.user_react) } else { (playground.wgpu, &playground.user_wgpu) };
                 let port = match slot { Some(slot) => *slots.get(slot.wrapping_sub(1)).ok_or_else(|| format!("{}: renderer {renderer} has no user slot {slot}", entry.id))?, None => port };
-                let lock = |id: &str| value_of(id).map_or(crate::options::Lock::All, |value| crate::options::Lock::Individual(value.to_string()));
-                let row = crate::catalog::PlaygroundEntry { variant: playground.variant.clone(), plugin_id: playground.plugin.clone(), app: playground.app.clone(), ports: crate::catalog::Ports { react: playground.react.into(), wgpu: playground.wgpu.into() }, ..Default::default() };
-                let options = crate::env_contract::DevOptions { renderer: renderer.to_string(), port: Some(port), example: lock("example"), language: lock("language"), terminology: lock("terminology"), appearance: lock("appearance"), ..Default::default() };
-                let stated = std::mem::replace(&mut env, crate::env_contract::build_dev_env(&playground.variant, Some(&row), &options));
+                let lock = |id: &str| value_of(id).map_or(dashboard_core::options::Lock::All, |value| dashboard_core::options::Lock::Individual(value.to_string()));
+                let row = dashboard_core::catalog::PlaygroundEntry { variant: playground.variant.clone(), plugin_id: playground.plugin.clone(), app: playground.app.clone(), ports: dashboard_core::catalog::Ports { react: playground.react.into(), wgpu: playground.wgpu.into() }, ..Default::default() };
+                let options = dashboard_core::env_contract::DevOptions { renderer: renderer.to_string(), port: Some(port), example: lock("example"), language: lock("language"), terminology: lock("terminology"), appearance: lock("appearance"), ..Default::default() };
+                let stated = std::mem::replace(&mut env, dashboard_core::env_contract::build_dev_env(&playground.variant, Some(&row), &options));
                 for (key, value) in stated { set_env(&mut env, &key, &value); }
                 let port = env.iter().find(|(key, _)| key == "S_OS_PORT").and_then(|(_, value)| value.parse::<u16>().ok()).unwrap_or(port);
                 let target = playground_target(&playground.variant, renderer).ok_or_else(|| format!("{}: unknown renderer {renderer:?}", entry.id))?;
@@ -1414,7 +1258,7 @@ impl Registry {
             Action::Repo(action) => {
                 if !extra.is_empty() { return Err(format!("{} takes no extra arguments", entry.id)); }
                 match policy.repo {
-                    RepoImplementation::Go => (crate::repo_domain::go_binary_path(&self.root).display().to_string(), action.go_argv(), self.root.clone(), false),
+                    RepoImplementation::Go => (dashboard_repo_domain::go_binary_path(&self.root).display().to_string(), action.go_argv(), self.root.clone(), false),
                     RepoImplementation::Rust => (std::env::current_exe().map_err(|error| format!("{}: {error}", entry.id))?.display().to_string(), vec!["repo-view".into(), "--action".into(), serde_json::to_string(action).map_err(|error| error.to_string())?], self.root.clone(), false),
                 }
             }
@@ -1539,9 +1383,3 @@ fn unknown_parameter(id: &str, key: &str, accepted: &[Parameter]) -> String {
 
 fn invokes_build(cmd: &str, args: &[String]) -> bool { cmd == "bun" && args.first().is_some_and(|first| first == "repo") }
 // #endregion 🔖️Registry
-
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🔖️Tests

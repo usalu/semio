@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-query"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db consistency resolution, query IR, planner and executor"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-query"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_query"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-index = { path = "../../../🔢️index/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-os-kernel-db-actor = { path = "../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -14,7 +14,7 @@ export type OwnedBuildServer = {
   readonly ws: { send(payload: Readonly<Record<string, unknown>>): void };
   readonly config: { readonly root: string; readonly cacheDir: string; readonly base: string; readonly server: { readonly hmr?: unknown } };
   readonly watcher: { emit(event: string, ...args: readonly unknown[]): boolean };
-  readonly httpServer: { once(event: string, listener: () => void): void } | null;
+  readonly httpServer: { readonly listening:boolean; on(event:"upgrade",listener:(request:{readonly url?:string;readonly headers:Record<string,string|string[]|undefined>},socket:{destroy():void},head:unknown)=>void):unknown; once(event:string,listener:()=>void):void; } | null;
 };
 
 export type OwnedResolvedBuildConfig = {

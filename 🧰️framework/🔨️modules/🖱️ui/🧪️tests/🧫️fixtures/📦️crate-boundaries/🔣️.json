@@ -516,6 +516,409 @@
         "winit",
         "taffy"
       ]
+    },
+    {
+      "package": "semio-framework-ui-render-packet",
+      "manifest": "🖌️render/📮️packet/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🖌️render/📮️packet/🦀️.rs",
+      "dependencies": [
+        "semio-framework-geometry",
+        "bytemuck"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-render-interaction",
+      "manifest": "🖌️render/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🖌️render/🕹️interaction/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-render-packet",
+        "semio-framework-ui-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-render-text",
+      "manifest": "🖌️render/🖋️text/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🖌️render/🖋️text/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-render-packet",
+        "parley",
+        "swash"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-render-shader-contract",
+      "manifest": "🖌️render/✨️shader-contract/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🖌️render/✨️shader-contract/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-algebra",
+      "manifest": "🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📐️math/🧮️algebra/🦀️.rs",
+      "dependencies": [
+        "semio-framework-geometry"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-camera",
+      "manifest": "🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📐️math/🎥️camera/🦀️.rs",
+      "dependencies": [
+        "semio-framework-geometry",
+        "semio-framework-ui-scene-algebra",
+        "semio-framework-ui-viewport"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-mesh",
+      "manifest": "🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📐️math/🕸️mesh/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-geometry",
+        "semio-framework-mesh-engine",
+        "semio-framework-ui-scene-algebra"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-pass",
+      "manifest": "🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📐️math/🎞️pass/🦀️.rs",
+      "dependencies": [
+        "semio-framework-geometry",
+        "semio-framework-ui-scene-algebra",
+        "semio-framework-ui-scene-mesh",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-picking",
+      "manifest": "🎬️scene/📐️math/🎯️picking/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📐️math/🎯️picking/🦀️.rs",
+      "dependencies": [
+        "semio-framework-geometry",
+        "semio-framework-ui-scene-algebra",
+        "semio-framework-ui-scene-camera",
+        "semio-framework-ui-scene-mesh",
+        "semio-framework-ui-scene-pass",
+        "semio-framework-ui-viewport"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-pack",
+      "manifest": "🎬️scene/📦️pack/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📦️pack/🦀️.rs",
+      "dependencies": [
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-doc",
+      "manifest": "🎬️scene/🎬️scenes/📜️doc/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🎬️scenes/📜️doc/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-ui-scene-pack",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-modelling",
+      "manifest": "🎬️scene/📏️world3d-modelling/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/📏️world3d-modelling/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-pack-json",
+        "semio-framework-value",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-world3d",
+      "manifest": "🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🎬️scenes/🌍️world3d/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-ui-scene-doc",
+        "semio-framework-ui-scene-modelling",
+        "semio-framework-ui-scene-pack",
+        "semio-framework-ui-scene-pass",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-node-graph",
+      "manifest": "🎬️scene/🎬️scenes/🕸️node-graph/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🎬️scenes/🕸️node-graph/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-pack-json",
+        "semio-framework-ui-scene-doc",
+        "semio-framework-ui-viewport",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-plane",
+      "manifest": "🎬️scene/🎬️scenes/🖼️plane/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🎬️scenes/🖼️plane/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-ui-scene-doc",
+        "semio-framework-ui-scene-pack",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-views",
+      "manifest": "🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🎬️scenes/📄️views/🦀️.rs",
+      "dependencies": [
+        "semio-framework-replication",
+        "semio-framework-pack-json",
+        "semio-framework-ui-scene-doc",
+        "semio-framework-ui-scene-pack",
+        "serde"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-scene-surface",
+      "manifest": "🎬️scene/🌉️surface/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️scene/🌉️surface/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-scene-doc",
+        "semio-framework-ui-scene-pack",
+        "semio-framework-ui-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-runtime-exchange",
+      "manifest": "🧠️runtime/📡️exchange/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧠️runtime/📡️exchange/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-runtime-presentation",
+      "manifest": "🧠️runtime/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧠️runtime/🖼️presentation/🦀️.rs",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-runtime-exchange",
+        "semio-framework-ui-scene",
+        "semio-framework-value"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-runtime-reconcile-primitives",
+      "manifest": "🧠️runtime/🧱️primitives/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧠️runtime/🧱️primitives/🦀️.rs",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-runtime-presentation"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-runtime-reconcile-cursor",
+      "manifest": "🧠️runtime/⏭️cursor/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧠️runtime/⏭️cursor/🦀️.rs",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-runtime-presentation",
+        "semio-framework-ui-runtime-reconcile-primitives"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-runtime-reconcile",
+      "manifest": "🧠️runtime/♻️reconcile/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧠️runtime/♻️reconcile/🦀️.rs",
+      "dependencies": [
+        "semio-framework-job",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-runtime-presentation",
+        "semio-framework-ui-runtime-reconcile-cursor",
+        "semio-framework-ui-runtime-reconcile-primitives"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
     }
   ]
 }

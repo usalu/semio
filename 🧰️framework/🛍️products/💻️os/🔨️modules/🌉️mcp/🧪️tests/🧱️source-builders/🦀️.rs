@@ -17,21 +17,43 @@
 //! plugin-crate-independent `semio_framework::manifest::{ActionDefinition, ActionArgDef, AppDefinition,
 //! …}` builder API — the same API every real plugin crate itself calls.
 
-use crate::catalog::CatalogSource;
-use crate::conformance::EvalCase;
-use semio_framework::manifest::{
-    self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppRole, ArgSchema, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageRole, UtilityDefinition, WindowKindDefinition,
-    WindowKinds,
-};
-use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::IconName};
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework::IconName;
+use semio_framework::manifest::ActionArgDef;
+use semio_framework::manifest::ActionArgOption;
+use semio_framework::manifest::ActionDefinition;
+use semio_framework::manifest::ActionKind;
+use semio_framework::manifest::AppDefinition;
+use semio_framework::manifest::AppRole;
+use semio_framework::manifest::ArgSchema;
+use semio_framework::manifest::ContributionSet;
+use semio_framework::manifest::ExecutionMode;
+use semio_framework::manifest::ModeDefinition;
+use semio_framework::manifest::Modes;
+use semio_framework::manifest::PackageDescriptor;
+use semio_framework::manifest::PackageRole;
+use semio_framework::manifest::UtilityDefinition;
+use semio_framework::manifest::WindowKindDefinition;
+use semio_framework::manifest::WindowKinds;
+use semio_framework::manifest;
+use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_ui::wgpu::SurfaceKind;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::core_capabilities::core_tool_capabilities;
+use semio_framework_os_mcp_catalog::catalog::CatalogSource;
+use semio_framework_os_mcp_catalog::conformance::EvalCase;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 //#region 🔖️Helpers
+
 /// 🧱️ A schema-authored neutral package exercises retained catalog and inference discovery.
 pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
     use semio_framework_value::ToValue;
-    let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
+    let json = fixture_text("../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📦️catalog-package/🔣️.json");
     let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
     let bytes = semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());
@@ -77,14 +99,16 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         assets: Vec::new(),
     }
 }
+
 //#endregion 🔖️Helpers
 
 //#region 🔖️CadFixture
+
 /// 📐️ Every action id in `📓️luna-actions-audit.md` §5's "All 38 CAD Action IDs" table (41 rows as
 /// literally enumerated there — the section header undercounts by 3 against its own body, noted
 /// as-is), minus row 34 (`setActiveUtility`, framework-injected — triggered instead via
 /// `app.utilities` below, never app-declared).
-fn cad_actions() -> Vec<ActionDefinition> {
+pub(crate) fn cad_actions() -> Vec<ActionDefinition> {
     vec![
         action("addObject", "Add Object", "Objekt hinzufügen", ActionKind::Mutation).use_when(["add a new object", "create an object", "ein objekt hinzufügen"]),
         action("patchObject", "Patch Object", "Objekt anpassen", ActionKind::Mutation),
@@ -226,13 +250,15 @@ pub fn cad_descriptor() -> PackageDescriptor {
         contributions: Vec::new(),
     })
 }
+
 //#endregion 🔖️CadFixture
 
 //#region 🔖️NoteFixture
+
 /// 🗒️ Every action id in `📓️luna-actions-audit.md` §5's "All 36 Declared Action IDs" list for note —
 /// minus row 33 (`setActiveUtility`, framework-injected). Per D2, note declares **zero** manifest
 /// args on any action (engagement-driven UX) — the audit's own finding, preserved exactly here.
-fn note_actions() -> Vec<ActionDefinition> {
+pub(crate) fn note_actions() -> Vec<ActionDefinition> {
     vec![
         action("setGridVisible", "Set Grid Visible", "Raster sichtbar", ActionKind::Mutation).use_when(["toggle the grid", "show the grid", "das raster umschalten"]),
         action("setGridSpacing", "Set Grid Spacing", "Rasterabstand festlegen", ActionKind::Mutation).use_when(["change the grid spacing", "den rasterabstand ändern"]),
@@ -341,9 +367,11 @@ pub fn note_descriptor() -> PackageDescriptor {
         contributions: Vec::new(),
     })
 }
+
 //#endregion 🔖️NoteFixture
 
 //#region 🔖️CollisionFixture
+
 /// 🆔️ Two minimal synthetic plugins declaring the identical bare action id `deleteSelection` — the
 /// D3 regression proof: a bare action id is never a capability id (`📓️luna-actions-audit.md` §7
 /// lists `deleteSelection` as one of the 14 real cross-plugin collisions).
@@ -431,19 +459,23 @@ pub fn colliding_action_id_source() -> CatalogSource {
     });
     CatalogSource { descriptors: vec![a, b], os_commands: Vec::new(), shell: Vec::new(), gateway: Vec::new() }
 }
+
 //#endregion 🔖️CollisionFixture
 
 //#region 🔖️CombinedSource
+
 /// 📚️ The fixture `CatalogSource` every catalog/search/context/conformance test compiles against —
 /// note + cad descriptors plus the crate's own real core-tool `CapabilityDefinition`s (see
 /// `root::core_tool_capabilities`, mounted at the crate root so this module never needs to
 /// reconstruct them).
 pub fn note_and_cad_source() -> CatalogSource {
-    CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: crate::core_tool_capabilities() }
+    CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() }
 }
+
 //#endregion 🔖️CombinedSource
 
 //#region 🔖️DrawFixture
+
 /// 🖍️ The exact shape the coordinator measured live against the `semio` MCP server on 2026-09-19:
 /// one drawing editor whose intent-level verbs sit beside its raw pointer/engagement vocabulary,
 /// every verb's title made of the same two or three tokens ("Layer", "Canvas", "Document"). Before
@@ -564,21 +596,21 @@ pub fn draw_descriptor() -> PackageDescriptor {
 
 /// 🖍️ note + cad + draw — the source the M5a agent-usability laws compile against.
 pub fn note_cad_and_draw_source() -> CatalogSource {
-    CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor(), draw_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: crate::core_tool_capabilities() }
+    CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor(), draw_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: core_tool_capabilities() }
 }
+
 //#endregion 🔖️DrawFixture
 
 //#region 🔖️Eval
+
 /// 📖️ Parses the embedded conformance fixture — `≥60` natural-language requests (English + German,
 /// CLAUDE.md's en-first/de-second rule) each mapping to a real capability id compiled from
 /// `note_and_cad_source()`.
 pub fn eval_cases(json: &str) -> Vec<EvalCase> {
     serde_json::from_str(json).expect("conformance fixture parses into Vec<EvalCase>")
 }
+
 //#endregion 🔖️Eval
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../🧱️source-builders-quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

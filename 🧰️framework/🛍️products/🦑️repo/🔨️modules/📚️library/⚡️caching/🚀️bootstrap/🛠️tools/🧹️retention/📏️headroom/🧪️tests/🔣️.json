@@ -1,0 +1,66 @@
+{
+  "observations": [
+    {
+      "version": 1,
+      "availableBytes": 0,
+      "requiredBytes": 1,
+      "admitted": false
+    },
+    {
+      "version": 1,
+      "availableBytes": 3,
+      "requiredBytes": 3,
+      "admitted": true
+    },
+    {
+      "version": 1,
+      "availableBytes": 4,
+      "requiredBytes": 3,
+      "admitted": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "ready",
+      "success": true,
+      "attempts": 1,
+      "recoveries": 0
+    },
+    {
+      "name": "pressure-success",
+      "success": true,
+      "attempts": 2,
+      "recoveries": 1
+    },
+    {
+      "name": "insufficient",
+      "success": false,
+      "attempts": 2,
+      "recoveries": 1
+    },
+    {
+      "name": "busy",
+      "success": false,
+      "attempts": 1,
+      "recoveries": 1
+    },
+    {
+      "name": "drain-failure",
+      "success": false,
+      "attempts": 1,
+      "recoveries": 0
+    },
+    {
+      "name": "foreign",
+      "success": false,
+      "attempts": 1,
+      "recoveries": 0
+    },
+    {
+      "name": "replay",
+      "success": false,
+      "attempts": 2,
+      "recoveries": 1
+    }
+  ]
+}

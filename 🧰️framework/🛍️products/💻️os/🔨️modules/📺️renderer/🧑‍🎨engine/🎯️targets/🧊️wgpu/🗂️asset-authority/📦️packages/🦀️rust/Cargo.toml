@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-asset-authority"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Renderer asset I/O authority and exact-request asset delivery"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-renderer-wgpu-asset-authority"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
+infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+
+[dev-dependencies]

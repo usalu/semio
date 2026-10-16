@@ -79,7 +79,7 @@ impl protocol::OpBinary for HtmlEditCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const HTML_KIT_ACTION_ID: &str = "textEdit";
+pub const HTML_KIT_ACTION_ID: &str = "textEdit";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `textEdit`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -117,7 +117,7 @@ fn html_retained_contract() -> ToolExecutionContract {
 /// whose asset IS this app's curated document; every other id — including the empty id the shell
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
+pub fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
     if example_id == crate::examples::demo::ID {
         <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -129,7 +129,7 @@ fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn html_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<HtmlEditCommand, Fault> {
+pub fn html_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<HtmlEditCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(HtmlEditCommand::EditSnapshot { event });
     }
@@ -160,7 +160,7 @@ fn html_retained_extent(_command: &HtmlEditCommand, _snapshot: &HtmlSnapshot, _i
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `textEdit` (the explicit Apply of the text window's DSL envelope) hands it the parsed document the same way.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn html_emit(command: &HtmlEditCommand) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         HtmlEditCommand::LoadText { text } => match <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
             Ok(next) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&next, STDIO_HTML_DOCUMENT_SCHEMA)], ..Default::default() }),
@@ -440,3 +440,126 @@ pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_HTML_DOCUMENT_SCHEMA};
+pub use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+pub use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA);
+    codec.extension = "html";
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{formats};
+use crate::{STDIO_HTML_DOCUMENT_SCHEMA};
+use crate::{native_codec};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
+pub use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+pub use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.html.v1", artifact: "html", kind: artifact_kind, codec: native_codec }]
+}
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("html", definition()?, declaration)
+}
+
+/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
+/// and the `stdio.html` document codec the linked `stdio.native.html.v1` receipt instantiates.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }).try_build()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.html".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Html", "Html"),
+        source_format: STDIO_HTML_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_HTML_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{assembly, definition, native_codecs};
+use crate::{formats};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "html", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems7
+
+//#region 🧩️ArtifactItems8
+pub mod artifact_items_8 {
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const HTML_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems8

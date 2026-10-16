@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "owner": {
+    "requestClose": ["preflight_patches", "preflight_cold_pair"],
+    "advanceAdmission": ["reserve_patches", "reserve_cold_pair", "activate_cold_pair", "activate_patches"],
+    "terminalIsEmpty": ["patches_complete", "cold_pair_complete"],
+    "releaseTerminal": ["release_patches", "release_cold_pair"]
+  },
+  "port": ["preflight_patches", "reserve_patches", "activate_patches", "patches_complete", "release_patches", "preflight_cold_pair", "reserve_cold_pair", "activate_cold_pair", "cold_pair_complete", "release_cold_pair"],
+  "forbiddenInLifecycle": ["PATCHES", "COLD_PAIR_INGRESS", "preflight_cold_pair_close", "reserve_cold_pair_close", "activate_cold_pair_close", "cold_pair_close_complete", "release_cold_pair_close"],
+  "reactorImplements": "impl instance_lifetime::ClosePeers for ReactorClosePeers"
+}

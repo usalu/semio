@@ -88,7 +88,7 @@ pub const IMPERATIVE_INTERACTION_GRANULARITY: &str = "step";
 /// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
 /// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
 /// tree, including steps nested inside `control.if`/`control.while` bodies.
-fn imperative_steps_topology(path: &crate::Path) -> DomainTopology {
+pub fn imperative_steps_topology(path: &crate::Path) -> DomainTopology {
     fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for step in steps {
             let id = document_panel::step_row_id(&step.id);
@@ -141,7 +141,7 @@ use crate::editor::procedure::commands::{add_step, add_step_at, move_step, move_
 /// extent function and the `bounded_first_step_tool_proofs!` block below all name the same ids against
 /// ONE registered factory type. All ten verbs were `BatchOnlyPendingRewrite`, so every row of this
 /// app's Actions pane was refused at the dispatch gate (ticket 26/09/18 slice B2c).
-const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] =
+pub const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] =
     &["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions", "setActiveExample"];
 const IMPERATIVE_RETAINED_PAYLOAD_SCHEMA: &str = "imperative.procedure.tool-command.v1";
 const IMPERATIVE_RETAINED_RAW_BYTES: usize = 8_192;
@@ -149,7 +149,7 @@ const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 64;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: the eight structural step
 /// verbs emit `artifact_mutations` only, while `run` and `setContributions` write the config store.
-const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+pub const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -710,11 +710,118 @@ pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "👥️presence/🧬️schema/🦀️.rs"]
-pub mod schema;
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+//#region 🔖️Register
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
+/// the old side-effecting `register()`, which called four different global registries directly from a
+/// plugin `.setup()` callback. `bootstrap_imperative_runtime()` runs here too, NOT as a §6 registrar
+/// (`register_language`/`register_artifact_schema_descriptor`/… all ARE §6 and now live in the builder
+/// chain below) but as this artifact's OWN native-module bootstrap
+/// (`register_native_imperative_module` × 4 + `register_default_imperative_contributions`) — it has no
+/// `ArtifactDeclaration` field because it isn't one of the census's global SDK registrars, it is
+/// imperative's private compute-runtime setup. `Once`-guarded, so calling it eagerly here reproduces
+/// the old `register()`'s timing exactly (native modules populated before any `ImperativeHost`/
+/// `render()` call can observe an empty registry) without adding a second purpose to `.setup()` — see
+/// the plugin root's own doc for why `.setup()` stays narrowed to `register_app_schema` alone. Lives at
+/// the artifact root, not `⚙️engine` (reloc-g7 revision of that same ticket) — `declaration()` describes
+/// the artifact (kind/schema/io/ownership), it is not engine behaviour.
+///
+/// 🔄️ UPDATE (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): `⚙️engine` is deleted.
+/// `bootstrap_imperative_runtime()` and `io_registry` now live in `🚪️io` (multi-caller: this
+/// `declaration()`, the app's `🎚️config`, and the app engine's `ImperativeHost::from_scene` — an
+/// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
+/// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
+/// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
+    let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
+        ("s.imperative.procedure.standard.v1", "standard", "1", &[], None),
+        ("s.imperative.procedure.standard.v1.profile.any", "profile", "any", &[], None),
+        ("s.imperative.procedure.schema.artifact", "schema", "s.imperative.procedure", &[("schema", "s.imperative.procedure")], None),
+        ("s.imperative.procedure.inference.artifact", "inference", "s.imperative.procedure.inference", &[("schema", "s.imperative.procedure.inference")], None),
+        ("s.imperative.procedure.composer.native", "composer", "s.imperative.procedure@1/*", &[("dialect", "s.imperative.procedure@1/*")], None),
+        ("s.imperative.procedure.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.imperative.procedure.grammar.document", "grammar", "procedure.document", &[("grammar", "procedure.document")], None),
+        ("s.imperative.procedure.grammar.diff", "grammar", "imperative.procedure.diff", &[("grammar", "imperative.procedure.diff")], None),
+        ("s.imperative.procedure.grammar.pack", "grammar", "procedure.pack", &[("grammar", "procedure.pack")], None),
+        ("s.imperative.procedure.codec.document.v1", "codec", "procedure.document/v1:imperative", &[("codec", "procedure.document/v1"), ("codec-extension", "21:procedure.document/v1:imperative")], None),
+        ("s.imperative.procedure.localization.en", "localization", "Procedure", &[], Some(("en", "Procedure"))),
+        ("s.imperative.procedure.localization.de", "localization", "Prozedur", &[], Some(("de", "Prozedur"))),
+    ];
+    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.imperative.procedure")?);
+    for (identity, kind, descriptor, claims, localization) in rows {
+        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(*identity)?, ArtifactCapabilityKind::parse(*kind)?).descriptor(descriptor.as_bytes())?;
+        for (namespace, value) in *claims {
+            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(*namespace)?, *value)?)?;
+        }
+        if let Some((locale, text)) = localization {
+            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(*locale)?, *text)?)?;
+        }
+        definition = definition.capability(capability)?;
+    }
+    Ok(definition)
+}
+
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    crate::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
+    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
+        .schema(crate::schema::procedure_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::procedure_artifact_inference_descriptor()])
+        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .languages(pilot_languages())
+        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::procedure::ImperativePlayApp>>()
+        .try_build()
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
+/// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "procedure.document",
+                    extension: Some("procedure"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("procedure.document"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "imperative.procedure.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("imperative.procedure.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "procedure.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("procedure.pack"),
+                },
+            ]
+        })
+        .as_slice()
+}
+//#endregion 🔖️Register
+}
+//#endregion 🧩️ArtifactItems4

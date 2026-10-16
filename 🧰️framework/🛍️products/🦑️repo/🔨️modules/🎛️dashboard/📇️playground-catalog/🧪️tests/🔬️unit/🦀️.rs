@@ -1,5 +1,5 @@
 use super::table_text;
-use crate::catalog::{PlaygroundEntry, Ports};
+use dashboard_core::catalog::{PlaygroundEntry, Ports};
 
 #[test]
 fn table_text_preserves_catalog_order_and_row_wire_format() {

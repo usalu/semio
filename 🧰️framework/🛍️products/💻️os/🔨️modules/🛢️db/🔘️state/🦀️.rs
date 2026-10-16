@@ -20,9 +20,10 @@
 //! cryptographic hash — it only needs to be a stable *router*, not collision-resistant. Content
 //! addressing (dedup/identity across snapshots) is the separate, deliberately blake3-based
 //! `ContentAddressed`/`PageStore` mechanism in the `📇️Pages` region below.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_ids::DbError;
-use crate::db_storage;
+use db_ids::DbError;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -83,15 +84,15 @@ fn hash_bytes(bytes: &[u8]) -> pack::ContentHash {
 /// unit written into `KIND_CHUNK` segments.
 pub struct Page {
     pub hash: pack::ContentHash,
-    pages: db_storage::DbIoPages,
+    pub pages: db_io_core::DbIoPages,
 }
 
 impl Page {
-    pub async fn try_from_pages(pages: db_storage::DbIoPages) -> Result<Page, DbError> {
+    pub async fn try_from_pages(pages: db_io_core::DbIoPages) -> Result<Page, DbError> {
         if pages.operation() == 0 {
             return Err(DbError::InvalidArgument("state page requires a nonzero DB I/O operation".to_string()));
         }
-        let hash = db_storage::db_io_hash_pages(&pages).await;
+        let hash = db_io_registry::db_io_hash_pages(&pages).await;
         Ok(Page { hash, pages })
     }
 
@@ -103,11 +104,11 @@ impl Page {
         self.pages.len()
     }
 
-    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+    pub fn fragments(&self) -> db_io_core::DbIoPageReader<'_> {
         self.pages.fragments()
     }
 
-    pub fn pages(&self) -> &db_storage::DbIoPages {
+    pub fn pages(&self) -> &db_io_core::DbIoPages {
         &self.pages
     }
 
@@ -123,9 +124,9 @@ impl Page {
 const RETAINED_STATE_ENTRIES: usize = 64;
 
 pub struct StateCursorControl {
-    cancelled: Arc<std::sync::atomic::AtomicBool>,
-    deadline: std::time::Instant,
-    fuel: usize,
+    pub cancelled: Arc<std::sync::atomic::AtomicBool>,
+    pub deadline: std::time::Instant,
+    pub fuel: usize,
 }
 
 impl StateCursorControl {
@@ -159,20 +160,20 @@ impl StateCursorControl {
 
 #[derive(Debug)]
 pub struct StateEntry {
-    key: db_storage::DbIoText,
-    value: db_storage::DbIoPages,
+    pub key: db_io_core::DbIoText,
+    pub value: db_io_core::DbIoPages,
 }
 
 #[derive(Debug)]
 pub struct StateEntryRejected {
-    source: Option<Vec<u8>>,
-    writer: Option<db_storage::DbIoPageWriter>,
-    error: DbError,
+    pub source: Option<Vec<u8>>,
+    pub writer: Option<db_io_core::DbIoPageWriter>,
+    pub error: DbError,
 }
 
 impl StateEntry {
-    pub fn try_new(key: &str, value: db_storage::DbIoPages) -> Result<Self, (DbError, db_storage::DbIoPages)> {
-        match db_storage::DbIoText::try_from_str(key) {
+    pub fn try_new(key: &str, value: db_io_core::DbIoPages) -> Result<Self, (DbError, db_io_core::DbIoPages)> {
+        match db_io_core::DbIoText::try_from_str(key) {
             Ok(key) => Ok(Self { key, value }),
             Err(error) => Err((error, value)),
         }
@@ -182,7 +183,7 @@ impl StateEntry {
         self.key.as_str()
     }
 
-    pub fn value(&self) -> &db_storage::DbIoPages {
+    pub fn value(&self) -> &db_io_core::DbIoPages {
         &self.value
     }
 
@@ -190,27 +191,27 @@ impl StateEntry {
         self.value.operation()
     }
 
-    pub fn into_parts(self) -> (db_storage::DbIoText, db_storage::DbIoPages) {
+    pub fn into_parts(self) -> (db_io_core::DbIoText, db_io_core::DbIoPages) {
         (self.key, self.value)
     }
 
     pub async fn try_admit(key: &str, source: Vec<u8>, maximum: u64, control: &mut StateCursorControl) -> Result<Self, StateEntryRejected> {
-        let key = match db_storage::DbIoText::try_from_str(key) {
+        let key = match db_io_core::DbIoText::try_from_str(key) {
             Ok(key) => key,
             Err(error) => return Err(StateEntryRejected { source: Some(source), writer: None, error }),
         };
         if source.capacity() as u64 > maximum {
             return Err(StateEntryRejected { source: Some(source), writer: None, error: DbError::LimitExceeded("state source backing capacity") });
         }
-        let mut writer = match db_storage::DbIoPageWriter::try_reserve(source.capacity().div_ceil(db_storage::DB_IO_PAGE_BYTES)) {
+        let mut writer = match db_io_core::DbIoPageWriter::try_reserve(source.capacity().div_ceil(db_io_core::DB_IO_PAGE_BYTES)) {
             Ok(writer) => writer,
             Err(rejected) => return Err(StateEntryRejected { source: Some(source), writer: rejected.into_writer(), error: DbError::Unavailable("state page admission rejected".to_string()) }),
         };
-        let mut reservation = match db_storage::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
+        let mut reservation = match db_io_core::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
             Ok(reservation) => reservation,
             Err(error) => return Err(StateEntryRejected { source: Some(source), writer: Some(writer), error }),
         };
-        let mut source = db_storage::DbIoExternalBytes::new(source);
+        let mut source = db_io_core::DbIoExternalBytes::new(source);
         if let Err(error) = source.capacity().and_then(|capacity| reservation.observe_capacity(capacity)) {
             return Err(StateEntryRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
@@ -280,14 +281,14 @@ impl StateEntryRejected {
 impl Drop for StateEntryRejected {
     fn drop(&mut self) {
         if let Some(source) = self.source.take() {
-            drop(db_storage::DbIoExternalBytes::new(source));
+            drop(db_io_core::DbIoExternalBytes::new(source));
         }
     }
 }
 
 pub struct RetainedStateMap {
-    entries: [Option<StateEntry>; RETAINED_STATE_ENTRIES],
-    len: u8,
+    pub entries: [Option<StateEntry>; RETAINED_STATE_ENTRIES],
+    pub len: u8,
 }
 
 impl RetainedStateMap {
@@ -303,11 +304,11 @@ impl RetainedStateMap {
         self.len == 0
     }
 
-    fn position(&self, key: &str) -> Result<usize, usize> {
+    pub fn position(&self, key: &str) -> Result<usize, usize> {
         self.entries[..self.len()].binary_search_by(|entry| entry.as_ref().map_or(std::cmp::Ordering::Less, |entry| entry.key().cmp(key)))
     }
 
-    pub fn get(&self, key: &str) -> Option<&db_storage::DbIoPages> {
+    pub fn get(&self, key: &str) -> Option<&db_io_core::DbIoPages> {
         self.position(key).ok().and_then(|position| self.entries[position].as_ref().map(StateEntry::value))
     }
 
@@ -621,8 +622,8 @@ fn hamt_collect<'a, K, V>(node: &'a HamtNode<K, V>, out: &mut Vec<(&'a K, &'a V)
 /// it was derived from, so a chain of `n` single-key edits allocates `O(n log n)` nodes total,
 /// not `O(n²)`.
 pub struct PMap<K, V> {
-    root: Arc<HamtNode<K, V>>,
-    len: usize,
+    pub root: Arc<HamtNode<K, V>>,
+    pub len: usize,
 }
 
 impl<K, V> PMap<K, V> {
@@ -1387,7 +1388,7 @@ enum OverlayValue {
 /// the contract; every mutation returns a new `OverlayRoot` (the base `Rc` is shared, only the
 /// overlay `PMap` grows/shrinks) alongside the `TouchedRegion` it touched, for `db_conflict`.
 pub struct OverlayRoot<B: BaseSource> {
-    base: Rc<B>,
+    pub base: Rc<B>,
     overlay: PMap<String, OverlayValue>,
 }
 

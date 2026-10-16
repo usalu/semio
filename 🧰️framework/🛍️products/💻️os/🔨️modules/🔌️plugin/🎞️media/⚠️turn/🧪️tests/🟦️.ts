@@ -22,7 +22,7 @@ test("media output birth requires caller-funded ownership before any allocation"
 });
 
 test("media producer request contains only current source and export capabilities",()=>{
- const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");const body=declaration.split("pub struct ArtifactMediaExportJobRequest<A: ArtifactApp> {")[1]!.split("\n}")[0]!;const actual=[...body.matchAll(/^    pub (\w+):/gm)].map(match=>match[1]!);
+ const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🧩️app/🛬️lifted/🎬️media-export/🦀️.rs"),"utf8");const body=declaration.split("pub struct ArtifactMediaExportJobRequest<A: ArtifactApp> {")[1]!.split("\n}")[0]!;const actual=[...body.matchAll(/^    pub (\w+):/gm)].map(match=>match[1]!);
  const db=new Database(":memory:");db.exec("CREATE TABLE input (field TEXT PRIMARY KEY)");for(const field of fixture.requestFields)db.query("INSERT INTO input VALUES (?)").run(field);expect(db.query("SELECT field FROM input ORDER BY field").all()).toEqual(actual.toSorted().map(field=>({field})));db.close();
  expect(actual).toEqual(fixture.requestFields);console.log("[DEBUG] actual media producer source roster is closed; no unrelated cache/history/wire inputs; SQLite independent exact inventory");
 });

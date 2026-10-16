@@ -1,3 +1,4 @@
+import {withPlaygroundSessionV1} from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic activation readiness owner. */
@@ -138,13 +139,12 @@ class ColdBootCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args as [string, "react" | "wgpu", "prototype" | "release"];
     if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile)) throw new Error("cold-boot-check <variant> react|wgpu <prototype|release>");
-    const playground = playgroundCatalog.find((row) => row.variant === variant);
+    const playground = playgroundCatalog().find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
     const repoRoot = getWorkspaceRoot();
     const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
-    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
-    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
-    const receiptRoot = join(developmentRuntimeRoot(this.root, variant, profile, renderer), "activation");
+    await withPlaygroundSessionV1(this.repoRoot,this.invocation,variant,async session=>{
+    const receiptRoot = join(developmentRuntimeRoot(this.repoRoot, variant, profile, renderer), "activation");
     if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
     const activated = new Set(readActivationReceipt(receiptRoot).plugins.map((row) => row.pluginId));
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
@@ -154,6 +154,7 @@ class ColdBootCheckScript extends BundleScript {
     if (healthy.refusal) throw new Error(healthy.refusal);
     if (drift.length > 0) throw new Error(`Activation receipt is behind the staged tree for ${drift.length} component(s): ${drift.join(", ")}`);
     console.log(`Cold boot ${variant} ${renderer} ${profile}: ${healthy.prepared.length} of ${session.plugins.length} components staged and activated, ${healthy.excluded.length} excluded`);
+    });
   }
 }
 //#endregion 🩺️ColdBootReceipt

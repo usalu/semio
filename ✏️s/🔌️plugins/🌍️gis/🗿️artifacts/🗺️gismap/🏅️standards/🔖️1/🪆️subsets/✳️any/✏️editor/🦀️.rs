@@ -18,6 +18,7 @@ use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{artifact_kind, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
+use crate::tile_coordinates::gis_policy::GIS_MAP_LAYER_KEYS;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -147,20 +148,21 @@ impl Gis2dInteractionSnapshot {
 /// instead of collapsing to a point.
 pub const GIS2D_DEFAULT_FEATURE_SPAN: f64 = 0.01;
 
-/// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)?`. Every chrome node (document
-/// and catalogue trees, the layers/weights window options, the inspector summary) enumerates it.
+/// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)?`, one row per GIS policy toggle
+/// key ([`GIS_MAP_LAYER_KEYS`]). Every chrome node (document and catalogue trees, the layers/weights
+/// window options, the inspector summary) enumerates it.
 pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
-    ("raster", "Raster", "layers"),
-    ("water", "Water", "cloud"),
-    ("land", "Land", "trees"),
-    ("roads", "Roads", "compass"),
-    ("buildings", "Buildings", "building"),
-    ("borders", "Borders", "square-dashed"),
-    ("labels", "Labels", "type"),
-    ("positions", "Positions", "crosshair"),
-    ("positionLabels", "Position Labels", "tags"),
-    ("routes", "Routes", "git-branch"),
-    ("regions", "Regions", "layers"),
+    (GIS_MAP_LAYER_KEYS[0], "Raster", "layers"),
+    (GIS_MAP_LAYER_KEYS[1], "Water", "cloud"),
+    (GIS_MAP_LAYER_KEYS[2], "Land", "trees"),
+    (GIS_MAP_LAYER_KEYS[3], "Roads", "compass"),
+    (GIS_MAP_LAYER_KEYS[4], "Buildings", "building"),
+    (GIS_MAP_LAYER_KEYS[5], "Borders", "square-dashed"),
+    (GIS_MAP_LAYER_KEYS[6], "Labels", "type"),
+    (GIS_MAP_LAYER_KEYS[7], "Positions", "crosshair"),
+    (GIS_MAP_LAYER_KEYS[8], "Position Labels", "tags"),
+    (GIS_MAP_LAYER_KEYS[9], "Routes", "git-branch"),
+    (GIS_MAP_LAYER_KEYS[10], "Regions", "layers"),
 ];
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
@@ -1446,7 +1448,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
                 ]).default_value(&"colored"),
             ])
             .action_args("setLodMode", vec![
-                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(&semio_framework_surface::tiled_map::GIS_MAP_LOD_MODE_AUTOMATIC),
+                ActionArgDef::select("value", LocalizedLabel::native("LOD Mode", "LOD-Modus"), map::options::lod_mode::lod_arg_options()).default_value(&semio_framework_surface::tiled_map::MAP_LOD_MODE_AUTOMATIC),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")

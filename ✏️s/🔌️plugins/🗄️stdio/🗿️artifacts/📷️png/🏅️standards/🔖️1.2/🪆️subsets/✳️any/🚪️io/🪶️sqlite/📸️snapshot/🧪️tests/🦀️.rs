@@ -1,3 +1,7 @@
+use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
+use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::ValueError};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_2::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{

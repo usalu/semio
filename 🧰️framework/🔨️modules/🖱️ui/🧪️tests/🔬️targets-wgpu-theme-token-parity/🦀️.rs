@@ -30,7 +30,7 @@ const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui/🎯️
 /// literal. Anything not listed here must come from `ui_styling`.
 const ALLOWLIST: &[(&str, &str, &str)] = &[
     (
-        "🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs",
+        "🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs",
         "let white = Rgba::new(1.0, 1.0, 1.0, 1.0);",
         "🎭️ Scissor-mask identity in a `#[cfg(test)]` helper — opaque white is the stencil's \"keep\" value, not a colour anybody sees.",
     ),

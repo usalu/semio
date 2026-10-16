@@ -438,9 +438,7 @@ pub(crate) fn demo_diff_cases() -> Vec<TsvDiff> {
     vec![TsvDiff::default(), TsvDiff { trailing_newline: Some(false), line_ending: None, records: Some(rows) }]
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
-mod handcrafted_diff_codec_tests;
+
 //#endregion 🧪️Tests
 
 #[cfg(test)]

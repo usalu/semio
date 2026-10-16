@@ -607,7 +607,7 @@ fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
     json!([{ "kind": "move", "to": [x, y] }, { "kind": "line", "to": [x + width, y] }, { "kind": "line", "to": [x + width, y + height] }, { "kind": "line", "to": [x, y + height] }, { "kind": "close" }])
 }
 
-fn covers(triangle: &[ui_wgpu::wgpu::draw_types::VectorVertex], point: [f32; 2]) -> bool {
+pub fn covers(triangle: &[ui_wgpu::wgpu::draw_types::VectorVertex], point: [f32; 2]) -> bool {
     let side = |a: [f32; 2], b: [f32; 2]| (b[0] - a[0]) * (point[1] - a[1]) - (b[1] - a[1]) * (point[0] - a[0]);
     let (a, b, c) = (triangle[0].position, triangle[1].position, triangle[2].position);
     let (s1, s2, s3) = (side(a, b), side(b, c), side(c, a));

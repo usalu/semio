@@ -1,13 +1,17 @@
+import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {managedWasmPackagesVitePluginV1} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import {flowBrowserDeliveryV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+import {createAssetBuildPluginsV1} from "../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import {PLAYGROUND_ASSET_PROVIDERS_V1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
+import {defineOwnedBuildConfigFactory,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { demonstratorGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
@@ -41,7 +45,7 @@ const resolvedPlaygroundAssets = DEMONSTRATOR_RUNTIME_TARGETS.flatMap((target) =
 const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout([...new Set(DEMONSTRATOR_RUNTIME_TARGETS.map((target) => target.pluginId))]);
 //#endregion 🔖️DemonstratorUnionAssets
 
-export default defineConfig(({ command, mode }) => {
+export default defineOwnedBuildConfigFactory(({ command, mode }) => {
   const profile = readBuildMode(mode);
   const development = command === "serve" ? readDemonstratorActivation(repoRoot) : undefined;
   const pluginModulesDir = builtPluginModulesRootIn(repoRoot, profile);
@@ -49,14 +53,14 @@ export default defineConfig(({ command, mode }) => {
   return {
   root: playDir,
   base: "./",
-  cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"), { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }, import.meta.url),
+  cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
   define: { "import.meta.vitest": "undefined" },
   resolve: {
     alias: [
-      { find: "@semio-tech/presentation", replacement: resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
+      { find: "@semio-tech/presentation", replacement: path.resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts") },
       ...playgroundSceneHostResolveAliases(repoRoot),
       { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖌️render/🟦️.ts") },
       { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎠️runtime/🟦️.ts") },
@@ -92,22 +96,23 @@ export default defineConfig(({ command, mode }) => {
       cnameHost: DEMONSTRATOR_HOST,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
-    playgroundFlowWasmDevStubPlugin(repoRoot),
+    managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files})=>({packageName,root,entry,files}))),
+    playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
-    development && demonstratorUnionReceiptVitePlugin({ workspace: repoRoot }),
-    development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) }),
-    command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer }),
+    ...(development ? [demonstratorUnionReceiptVitePlugin({ workspace: repoRoot })] : []),
+    ...(development ? [semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: demonstratorActivationComponents(repoRoot) })] : []),
+    ...(command === "serve" ? [semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot, streams: devStreamMuxServer })] : []),
     ...semioAssetsVitePlugin(repoRoot),
-    ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, "release"))] : [
+    ...(command === "build" ? [browserArtifactVitePlugin(demonstratorRuntimeAssetSources(repoRoot, profile))] : [
       ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-      ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, "prototype").find(row => row.owner === "infinite:fonts")!.root) }),
+      ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, demonstratorRuntimeAssetSources(repoRoot, profile).find(row => row.owner === "infinite:fonts")!.root) }),
       ...extensionModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(installedExtensionsDir, name)) })),
     ]),
     staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${DEMONSTRATOR_ASSETS_DIR}`, root: DEMONSTRATOR_ASSETS_DIR }),
-    ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, demonstratorGisMapTileServeMode(command === "build" ? "build" : "serve")),
-    react(),
-    tailwindcss(),
+    ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, PLAYGROUND_ASSET_PROVIDERS_V1, demonstratorGisMapTileServeMode(command === "build" ? "build" : "serve")),
+    uiReactBuildPlugin(),
+    ...uiTailwindBuildPlugins(),
   ],
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️.html")],

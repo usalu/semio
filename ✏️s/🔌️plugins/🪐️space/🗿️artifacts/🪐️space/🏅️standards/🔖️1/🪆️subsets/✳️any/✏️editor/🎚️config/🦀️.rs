@@ -452,5 +452,4 @@ impl protocol::OpBinary for SpaceIndexConfigMutation {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
+pub use semio_s_artifact_space_space_schema::editor::space_index::config::schema;

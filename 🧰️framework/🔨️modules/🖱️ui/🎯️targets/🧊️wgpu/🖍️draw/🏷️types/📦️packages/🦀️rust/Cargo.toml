@@ -24,7 +24,10 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-ui-scene = { path = "../../../../../../🎬️scene/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../../../../../🎬️scene/📐️math/🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pass = { path = "../../../../../../🎬️scene/📐️math/🎞️pass/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../../../../🎬️scene/📐️math/🎥️camera/📦️packages/🦀️rust" }
+semio-framework-ui-scene-algebra = { path = "../../../../../../🎬️scene/📐️math/🧮️algebra/📦️packages/🦀️rust" }
 semio-framework-ui-theme = { path = "../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-job = { path = "../../../../../../../🧵️job/📦️packages/🦀️rust" }

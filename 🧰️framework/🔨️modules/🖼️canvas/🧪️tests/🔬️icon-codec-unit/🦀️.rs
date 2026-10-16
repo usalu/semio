@@ -1,21 +1,6 @@
 mod tests {
     use super::*;
-    use std::sync::OnceLock;
-
-    pub(crate) fn compiler_font_set() -> FontSet<'static> {
-        static SET: OnceLock<FontSet<'static>> = OnceLock::new();
-        *SET.get_or_init(|| {
-            let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../📚️compiler/🌍️world/🔤️fonts");
-            FontSet::from_directory(&directory).expect("compiler font assets must be readable from the repository")
-        })
-    }
-
-    pub(crate) fn install_compiler_fonts_for_tests() {
-        match install_compiler_fonts(compiler_font_set()) {
-            Ok(()) | Err(CompilerFontsInstallError::AlreadyInstalled) => {}
-            Err(failure) => panic!("{failure}"),
-        }
-    }
+    use semio_framework_canvas_assets::testkit::install_repository_assets;
 
     fn round_trip(s: &str) {
         let icon = decode_icon(s).expect("decode");
@@ -59,7 +44,7 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_emoji_shortcode_to_svg() {
-        install_compiler_fonts_for_tests();
+        install_repository_assets();
         let r = resolve_icon_kind(":grinning:", |_| None);
         match r {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
@@ -69,6 +54,7 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_catalog_shortcode_to_svg() {
+        install_repository_assets();
         let r = resolve_icon_kind(":plus:", |_| None);
         match r {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
@@ -78,6 +64,7 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_metabolism_shortcode_to_themed_svg() {
+        install_repository_assets();
         let r = resolve_icon_kind(":capsule_J:", |_| None);
         match r {
             ResolvedIcon::SvgThemed(s) => assert!(s.contains("<svg")),
@@ -87,7 +74,7 @@ mod tests {
 
     #[test]
     fn icon_codec_resolves_text_to_svg() {
-        install_compiler_fonts_for_tests();
+        install_repository_assets();
         let r = resolve_icon_kind("text:Hi", |_| None);
         match r {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<svg")),
@@ -98,21 +85,11 @@ mod tests {
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[test]
     fn icon_codec_resolves_math_to_svg_through_the_installed_fonts() {
-        install_compiler_fonts_for_tests();
+        install_repository_assets();
         match resolve_icon_kind("math:x^2", |_| None) {
             ResolvedIcon::SvgPlain(s) => assert!(s.contains("<path"), "{}", &s[..s.len().min(240)]),
             other => panic!("unexpected: {other:?}"),
         }
-    }
-
-    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-    #[test]
-    fn icon_codec_refuses_unparseable_compiler_fonts_and_a_second_install() {
-        let real = compiler_font_set();
-        let garbage: &'static [u8] = &[0u8; 16];
-        assert_eq!(install_compiler_fonts(FontSet { serif: garbage, ..real }), Err(CompilerFontsInstallError::Unparseable { role: FontRole::Serif }));
-        install_compiler_fonts_for_tests();
-        assert_eq!(install_compiler_fonts(real), Err(CompilerFontsInstallError::AlreadyInstalled));
     }
 
     #[test]
@@ -122,21 +99,23 @@ mod tests {
 }
 
 #[test]
-fn generated_shortcode_emoji_bindings_match_the_assets_snapshot_oracle() {
+fn shortcode_resolution_matches_the_assets_snapshot_oracle() {
+    use semio_framework_canvas_assets::testkit::install_repository_assets;
+    install_repository_assets();
     let snapshot: serde_json::Value = serde_json::from_str(include_str!("../../../🖼️assets/🔣️icons/🔣️shortcodes.json")).expect("General Assets shortcode authority");
     let emoji = snapshot["emoji"].as_object().expect("emoji mapping");
     assert!(!emoji.is_empty());
     for (code, glyph) in emoji {
-        let Some(icon_shortcodes::ShortcodeResolved::Emoji(actual)) = icon_shortcodes::icon_shortcode_resolve(code) else { panic!("{code}: expected emoji"); };
+        let Some(ShortcodeResolved::Emoji(actual)) = icon_shortcode_resolve(code) else { panic!("{code}: expected emoji"); };
         assert_eq!(actual, glyph.as_str().expect("emoji glyph"), "{code}");
     }
     for key in snapshot["catalog"].as_array().expect("catalog identities") {
         let key = key.as_str().expect("catalog identity");
         if let Some(glyph) = emoji.get(key) {
-            let Some(icon_shortcodes::ShortcodeResolved::Emoji(actual)) = icon_shortcodes::icon_shortcode_resolve(key) else { panic!("{key}: expected emoji collision"); };
+            let Some(ShortcodeResolved::Emoji(actual)) = icon_shortcode_resolve(key) else { panic!("{key}: expected emoji collision"); };
             assert_eq!(actual, glyph.as_str().expect("emoji glyph"), "{key}");
         } else {
-            assert!(matches!(icon_shortcodes::icon_shortcode_resolve(key), Some(icon_shortcodes::ShortcodeResolved::SvgPlain(_)) | Some(icon_shortcodes::ShortcodeResolved::SvgThemed(_))), "{key}");
+            assert!(matches!(icon_shortcode_resolve(key), Some(ShortcodeResolved::SvgPlain(_)) | Some(ShortcodeResolved::SvgThemed(_))), "{key}");
         }
     }
 }

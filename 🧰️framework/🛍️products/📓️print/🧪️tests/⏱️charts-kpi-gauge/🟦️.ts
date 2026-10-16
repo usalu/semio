@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -6,7 +7,7 @@
 // #region 🔌️Adapters
 import { arc as d3Arc } from "d3-shape";
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileVizProbe, roundProbeNumbers, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { roundProbeNumbers, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -31,7 +32,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
 
 /** 🎯️ The compiled probe of one fixture, kept whole so the arc and its centroid stay paired. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<ProbeRecord[]> {
-  const parsed = await compileVizProbe(ctx.input(`shared://⏱️charts-kpi-gauge/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const parsed = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://⏱️charts-kpi-gauge/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS);
 }
 

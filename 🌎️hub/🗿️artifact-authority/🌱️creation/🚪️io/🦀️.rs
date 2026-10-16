@@ -1,7 +1,7 @@
 //! 🚪️ Physical commitments admit borrowed creation facts before pure transitions.
 
 use super::operation::*;
-use crate::directory::error::DirectoryResult;
+use semio_hub_directory_contract::error::DirectoryResult;
 use directory::os_directory::{ArtifactHash};
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreateV1;
@@ -51,7 +51,7 @@ pub fn validate_artifact_creation_prepared_v1(prepared: &ArtifactCreationPrepare
     let mut aggregate = Sha256::new();
     aggregate.update(&prepared.pack);
     aggregate.update(&prepared.spr);
-    if c.aggregate_sha256 != ArtifactHash(aggregate.finalize()) || super::super::checkpoint_id_encoding_v1(c).ok().map(|bytes| ArtifactHash(Sha256::digest(&bytes))) != Some(c.checkpoint_id) {
+    if c.aggregate_sha256 != ArtifactHash(aggregate.finalize()) || semio_hub_artifact_authority::checkpoint_id_encoding_v1(c).ok().map(|bytes| ArtifactHash(Sha256::digest(&bytes))) != Some(c.checkpoint_id) {
         return Err(super::operation::rejected("artifact creation prepared integrity differs"));
     }
     Ok(())
@@ -79,7 +79,7 @@ pub fn fold_artifact_creation_facts_v1(facts: &[ArtifactCreationFactV1]) -> Dire
 }
 
 /// ✍️ The candidate body is physically admitted against the immutable accepted fact first.
-pub(crate) fn decide_artifact_creation_fact_append_v1(facts: &[ArtifactCreationFactV1], append: &ArtifactCreationFactAppendV1, observed_now_ms: u64) -> DirectoryResult<Option<ArtifactCreationFactV1>> {
+pub fn decide_artifact_creation_fact_append_v1(facts: &[ArtifactCreationFactV1], append: &ArtifactCreationFactAppendV1, observed_now_ms: u64) -> DirectoryResult<Option<ArtifactCreationFactV1>> {
     let admitted = admit_facts(facts)?;
     let ArtifactCreationFactBodyV1::Accepted { intent } = &facts[0].body else {
         return Err(super::operation::rejected("artifact creation history has no accepted intent"));

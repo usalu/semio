@@ -233,7 +233,7 @@ fn sqlite_snapshot_pptx_actual_erased_native_boundaries_retain_all_owned_fields(
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
-    let codec = <PptxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
+    let codec = <PptxSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
@@ -273,7 +273,7 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
             let snapshot = Owner(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
-            let codec = <PptxSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
+            let codec = <PptxSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
                 let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();

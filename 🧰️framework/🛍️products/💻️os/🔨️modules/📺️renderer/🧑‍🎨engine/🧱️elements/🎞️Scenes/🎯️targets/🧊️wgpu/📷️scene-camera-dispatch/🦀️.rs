@@ -4,11 +4,11 @@ use super::*;
 
 //#region SceneRuntime
 //#region SceneCameraDispatch
-pub(crate) const SCENE_CAMERA_DISPATCH_CAPACITY: usize = 256;
+pub const SCENE_CAMERA_DISPATCH_CAPACITY: usize = 256;
 const SCENE_CAMERA_ID_BYTE_CAPACITY: usize = 256;
 
 #[derive(Clone, Copy, PartialEq)]
-pub(crate) struct SceneCameraOwnerMetadata {
+pub struct SceneCameraOwnerMetadata {
     document_id: ui_contract::UiNodeId,
     window_generation: u64,
     pub(crate) component_generation: u64,
@@ -44,7 +44,7 @@ fn camera_owns_surface(record: &SceneCameraRecord) -> bool {
     });
     if !current_matches { return false; }
     let Some(metadata) = record.metadata else { return true };
-    if crate::interpreter::ui_document_close_pending_for(record.text(3)) || scene_host_retiring(record.text(2)) { return false; }
+    if crate::element_contracts::ui_document_close_pending_for(record.text(3)) || scene_host_retiring(record.text(2)) { return false; }
     let witness = ui_wgpu::wgpu::reconcile::UiComponentSceneWitness {
         document_id: metadata.document_id,
         host_id: record.text(2),
@@ -55,7 +55,7 @@ fn camera_owns_surface(record: &SceneCameraRecord) -> bool {
         kind: metadata.kind,
         surface_id: record.text(4),
     };
-    crate::interpreter::component_scene_is_presented(&witness)
+    crate::element_contracts::component_scene_is_presented(&witness)
 }
 
 pub(crate) fn remove_scene_camera_deadline(host: &str) {
@@ -68,21 +68,21 @@ pub(crate) fn remove_scene_camera_deadline(host: &str) {
 }
 
 /// 🪙️ Receives the exact host bootstrap grant before any camera storage operation.
-pub(crate) fn install_scene_camera_authority(grant: semio_framework_job::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn install_scene_camera_authority(grant: semio_framework_job::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().install(grant))
 }
 
 /// 🧹️ The original host closes global deadlines with the same incoming five-axis authority.
-pub(crate) fn close_scene_camera_storage(grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+pub fn close_scene_camera_storage(grant: semio_framework_job::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().close_step(grant))
 }
 
-pub(crate) fn scene_camera_storage_is_empty() -> bool {
+pub fn scene_camera_storage_is_empty() -> bool {
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow().terminal_is_empty())
 }
 
 /// 🕒️ Settles the original Canvas identity 120 ms after its latest mutation.
-pub(crate) fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
+pub fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
     let result = SCENE_STATE.with(|states| {
         let states = states.borrow();
         let owner = states.get(host_id).and_then(|state| state.canvas_camera_owner.as_ref());
@@ -93,7 +93,7 @@ pub(crate) fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
         SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
             let mut deadlines = cell.borrow_mut();
             let grant = deadlines.received_grant()?;
-            deadlines.schedule(text, metadata, crate::app_now_ms() + 120.0, grant)
+            deadlines.schedule(text, metadata, crate::host_base::app_now_ms() + 120.0, grant)
         })
     });
     if result.is_err() { SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera deadline credits exceeded")); }
@@ -102,8 +102,8 @@ pub(crate) fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
 pub enum SceneCameraDispatchStep { Pending, Action(ActionDescriptor), Complete, Fault(&'static str) }
 
 pub struct SceneCameraDispatchCursor {
-    pub(crate) entries: crate::camera_storage::DirectoryCursor<Option<SceneCameraOwnerMetadata>>,
-    pub(crate) now_ms: f64,
+    pub entries: crate::camera_storage::DirectoryCursor<Option<SceneCameraOwnerMetadata>>,
+    pub now_ms: f64,
     pub(crate) fault: Option<&'static str>,
 }
 
@@ -196,12 +196,10 @@ impl SceneCameraDispatchCursor {
 /// `{surfaceId, camera: {x, y, zoom}}` shape `ink_set_camera_action` already uses for `InkCanvas`'s own
 /// camera dispatch (this crate's one other camera-from-viewport builder), reused here since neither
 /// `Paint2dHost`'s React source nor this repo's own Ink precedent key it any other way.
-pub(crate) fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport) -> ActionDescriptor {
+pub fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: "setCamera".into(), args: crate::action_args_json!({ "surfaceId": surface_id, "camera": { "x": viewport.x, "y": viewport.y, "zoom": viewport.zoom } }) }
 }
 
-#[cfg(test)]
-include!("../../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");
 //#endregion SceneCameraDispatch
 
 /** 🖱️ Cheap read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler — the sole caller of `handle_scene_pointer_button`/`handle_scene_pointer_move` now, `RenderEntry`'s own once-per-render-frame `apply_scene_wheel`/`apply_scene_pointer` having been deleted once every generic-fallback surface was proven reachable through this path) can read `pointer_was_down`/`last_pointer_pos` to derive `handle_scene_pointer_move`'s `down`/drag-delta parameters. */
@@ -210,22 +208,22 @@ pub(crate) fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
 }
 
 /** 🖱️ Records `surface_id`'s latest known pointer position — the write half of `scene_pointer_edge_state`, `pub(crate)` for the same reason (see that fn's own doc comment). */
-pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
+pub fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
     mutate_scene_state(surface_id, |state| {
         state.last_pointer_pos = (x, y);
     });
 }
 
-pub(crate) fn scroll_key(surface_id: &str, suffix: &str) -> String {
+pub fn scroll_key(surface_id: &str, suffix: &str) -> String {
     format!("{surface_id}.{suffix}")
 }
 
-pub(crate) fn scroll_offset(surface_id: &str, suffix: &str) -> f32 {
+pub fn scroll_offset(surface_id: &str, suffix: &str) -> f32 {
     let key = scroll_key(surface_id, suffix);
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.scroll_offsets.get(&key).copied()).unwrap_or(0.0)).max(0.0)
 }
 
-pub(crate) fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
+pub fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
     let key = scroll_key(surface_id, suffix);
     mutate_scene_state(surface_id, |state| {
         state.scroll_offsets.insert(key, value.max(0.0));
@@ -236,17 +234,17 @@ pub(crate) fn set_scroll_offset(surface_id: &str, suffix: &str, value: f32) {
 /// JSON args projected into the DSL. The ONE builder every scene lane shares — `⚙️EngineCanvas`'s
 /// standalone test lane calls it too rather than keeping a second copy
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
-pub(crate) fn scene_action(scene: &UiComponentSceneNode, action: &str, args: semio_framework::DslValue) -> ActionDescriptor {
+pub fn scene_action(scene: &UiComponentSceneNode, action: &str, args: semio_framework::DslValue) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: Some(args) }
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) fn now_ms() -> f64 {
+pub fn now_ms() -> f64 {
     web_sys::window().and_then(|window| window.performance()).map(|perf| perf.now()).unwrap_or(0.0)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn now_ms() -> f64 {
+pub fn now_ms() -> f64 {
     0.0
 }
 
@@ -260,15 +258,15 @@ thread_local! {
     static SCENE_INPUT_THEME: RefCell<Option<Theme>> = const { RefCell::new(None) };
 }
 #[cfg(not(target_arch = "wasm32"))]
-static SCENE_INPUT_THEME: WorkerCell<Option<Theme>> = WorkerCell::new();
+static SCENE_INPUT_THEME: SceneCell<Option<Theme>> = SceneCell::new();
 
-pub(crate) fn remember_scene_theme(theme: &Theme) {
+pub fn remember_scene_theme(theme: &Theme) {
     SCENE_INPUT_THEME.with(|cell| {
         *cell.borrow_mut() = Some(*theme);
     });
 }
 
-pub(crate) fn scene_input_theme() -> Theme {
+pub fn scene_input_theme() -> Theme {
     SCENE_INPUT_THEME.with(|cell| *cell.borrow()).unwrap_or_default()
 }
 
@@ -286,7 +284,7 @@ fn dsl_value_bytes(value: &semio_framework::DslValue) -> usize {
 /// 📨️ Publishes one already-built `ActionDescriptor` through the bounded action queue — the single
 /// ingress every list surface's pointer handler uses, so a row click, a header sort and a palette
 /// press all pay the same exact item/byte credits.
-pub(crate) fn write_scene_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, descriptor: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn write_scene_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, descriptor: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let bytes = scene_action_bytes(descriptor)?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_scene_action_to_batch(&mut batch, descriptor, bytes)?;
@@ -314,13 +312,13 @@ pub(crate) fn write_scene_action_to_batch(batch: &mut ui_wgpu::wgpu::BoundedActi
 const LIST_ROW_ITEM_BUDGET: usize = 64;
 const LIST_SURFACE_ITEM_CEILING: usize = 16 * 1024;
 
-pub(crate) fn reserve_list_rows(ctx: &mut FrameworkWidgetContext<'_>, rows: usize) -> bool {
+pub fn reserve_list_rows(ctx: &mut FrameworkWidgetContext<'_>, rows: usize) -> bool {
     ctx.draw.try_reserve_retained_items(rows.saturating_mul(LIST_ROW_ITEM_BUDGET).min(LIST_SURFACE_ITEM_CEILING)).is_ok()
 }
 
 /// 📐️ How many rows of `row_h` a surface of `bounds` can show at once, plus the partial row at each
 /// edge — the reservation and the paint cull agree on this count.
-pub(crate) fn list_visible_row_capacity(bounds: Rect, row_h: f32) -> usize {
+pub fn list_visible_row_capacity(bounds: Rect, row_h: f32) -> usize {
     ((bounds.h / row_h.max(1.0)).ceil().max(0.0) as usize).saturating_add(2)
 }
 
@@ -328,7 +326,7 @@ pub(crate) fn list_visible_row_capacity(bounds: Rect, row_h: f32) -> usize {
 /// list kind. The retained hit registry cannot carry it: a `ComponentScene` leaf registers exactly
 /// ONE entry (`retained_scene_hit`), minted AFTER this paint stages its own rows, so
 /// `InputState::hovered_id` always answers the surface itself and never one of its rows.
-pub(crate) fn scene_hovered_control_id(surface_id: &str) -> Option<String> {
+pub fn scene_hovered_control_id(surface_id: &str) -> Option<String> {
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.hovered_control_id.clone()))
 }
 

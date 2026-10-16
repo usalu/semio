@@ -11,20 +11,14 @@
 //! calls: queries are short, the mutex guard is never held across an `.await`, so nothing here
 //! blocks the executor for longer than a real query takes.
 
-use crate::artifact_authority::creation::io::{decide_artifact_creation_fact_append_v1};
+use semio_hub_artifact_creation::io::decide_artifact_creation_fact_append_v1;
 use directory::os_directory::io::text::validate_directory_event_page_event;
-use crate::artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
-use crate::artifact_authority::creation::{
-    ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
-use crate::directory::error::{DirectoryError, DirectoryResult};
-use crate::directory::model::*;
-use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
-    DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
-    UNCONTROLLED_PROJECTION_REBUILD, active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str,
-    directory_projection_rejection_v1, directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
-    validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim,
-    validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
-};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteFence, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, decode_artifact_cas_ownership_v1, encode_artifact_cas_ownership_v1, validate_artifact_cas_publication_v1};
+use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationFactV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, DocumentGenesisAppendV1, DocumentGenesisCommitV1};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+
+use semio_hub_directory_contract::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, HubClock, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, SessionCapability, ShareCapability, active_capability, admin_operation_effect_receipt_v1, auth_audit, directory_command_result_kind_from_str, directory_command_result_kind_str, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str};
+use semio_hub_directory::{ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubDirectory, ProjectionRebuildControl, UNCONTROLLED_PROJECTION_REBUILD, bounded_event_read, checkpoint_projection_rebuild, directory_projection_rejection_v1, directory_projection_space_v1, validate_verified_checkpoint_append};
 use directory::os_directory::{
     ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner,
     Hlc, PublishedArtifactCheckpoint, };
@@ -32,6 +26,8 @@ use directory::os_identity::time_ordered_id;
 use directory::{DslValue, FromValue, ToValue};
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use std::sync::{Arc, Mutex};
+use semio_hub_directory_contract::model::{AdminDirectoryOverviewCounts, AdminEffectCommitV1, AdminOperationAuditRecord, AdminOperationEffectReceiptV1, AdminSpaceSummaryRecord, AgentAudience, AgentDelegationRecord, AgentDelegationRow, AuthAuditRecord, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, CheckpointPublicationReceiptRecordV1, CredentialAuditFactV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, InviteRecord, InviteRedemptionCommit, IssuedAgentDelegation, IssuedAuthSession, IssuedInvite, IssuedShareToken, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, RevokedAuthSession, ShareTokenRecord, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceAdministrationInviteRow, SpaceAdministrationMemberRow, SpaceRecord, SpaceRole, SyncSessionRecord, UserRecord};
+use directory::os_directory::DocumentScope;
 
 //#region 🔖️Schema
 const SCHEMA: &str = "\
@@ -399,7 +395,7 @@ CREATE INDEX IF NOT EXISTS idx_directory_command_receipt_actor ON hub_directory_
 ";
 //#endregion 🔖️Schema
 
-fn now_ms() -> i64 {
+pub fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
@@ -667,30 +663,30 @@ impl SqliteDirectory {
         })
     }
 
-    fn lock(&self) -> DirectoryResult<std::sync::MutexGuard<'_, Connection>> {
+    pub fn lock(&self) -> DirectoryResult<std::sync::MutexGuard<'_, Connection>> {
         self.conn.lock().map_err(|_| DirectoryError::Backend("sqlite connection lock poisoned".into()))
     }
 
     /// 🧪️ Simulates a lost commit acknowledgement after the real SQLite transaction commits.
     #[cfg(test)]
-    pub(crate) fn fail_next_append_commit_ack(&self) {
+    pub fn fail_next_append_commit_ack(&self) {
         self.append_commit_ack_failure.store(true, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// 🧪️ Drops only the genesis acknowledgement after its entire real transaction commits.
     #[cfg(test)]
-    pub(crate) fn fail_next_genesis_commit_ack(&self) {
+    pub fn fail_next_genesis_commit_ack(&self) {
         self.genesis_commit_ack_failure.store(1, std::sync::atomic::Ordering::SeqCst);
     }
 
     /// 🧪️ Drops the commit acknowledgement and exactly one subsequent receipt or event read.
     #[cfg(test)]
-    pub(crate) fn fail_next_genesis_reconciliation(&self, events: bool) {
+    pub fn fail_next_genesis_reconciliation(&self, events: bool) {
         self.genesis_commit_ack_failure.store(if events { 3 } else { 2 }, std::sync::atomic::Ordering::SeqCst);
     }
 
     #[cfg(test)]
-    pub(crate) fn install_invite_projection_failure(&self) -> DirectoryResult<()> {
+    pub fn install_invite_projection_failure(&self) -> DirectoryResult<()> {
         self.lock()?
             .execute_batch(
                 "CREATE TEMP TRIGGER hub_test_fail_invite_projection BEFORE INSERT ON hub_space_membership
@@ -701,12 +697,12 @@ impl SqliteDirectory {
     }
 
     #[cfg(test)]
-    pub(crate) fn clear_invite_projection_failure(&self) -> DirectoryResult<()> {
+    pub fn clear_invite_projection_failure(&self) -> DirectoryResult<()> {
         self.lock()?.execute_batch("DROP TRIGGER hub_test_fail_invite_projection;").map_err(backend)
     }
 
     #[cfg(test)]
-    pub(crate) fn install_invite_acceptance_marker_for_test(&self, invite_id: &str, event_id: &str) -> DirectoryResult<()> {
+    pub fn install_invite_acceptance_marker_for_test(&self, invite_id: &str, event_id: &str) -> DirectoryResult<()> {
         self.lock()?.execute("UPDATE hub_space_invite SET accepted_event_id = ?1 WHERE id = ?2", rusqlite::params![event_id, invite_id]).map(|_| ()).map_err(backend)
     }
 
@@ -1045,7 +1041,7 @@ impl SqliteDirectory {
                     "SELECT space_id, document_id, artifact_kind, artifact_schema, owner_plugin_id, owner_package_id, owner_version, owner_package_hash, pack_schema_hash, bootstrap_version, bootstrap_head_seq, bootstrap_commit_seq, bootstrap_epoch, bootstrap_snapshot_hash FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2",
                     rusqlite::params![scope.space_id, scope.document_id], document_descriptor_row,
                 ).optional().map_err(backend)?.ok_or_else(|| DirectoryError::NotFound("indexed document descriptor".into()))?;
-                let row = crate::directory::document_index_projection_v1(event, &descriptor)?;
+                let row = semio_hub_directory::document_index_projection_v1(event, &descriptor)?;
                 let payload = semio_framework_pack_json::to_json_string(&row);
                 let previous: Option<String> = tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
                 if previous.as_ref().is_some_and(|stored| stored != &payload) {
@@ -1059,13 +1055,13 @@ impl SqliteDirectory {
                 let index_payload: Option<String> =
                     tx.query_row("SELECT payload FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).optional().map_err(backend)?;
                 let index = index_payload.as_deref().map(semio_framework_pack_json::from_json_str::<directory::os_directory::DirectoryIndexedDocumentViewV1>).transpose().map_err(backend)?;
-                crate::directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
+                semio_hub_directory::validate_checkpoint_index_v1(index.as_ref(), &descriptor, checkpoint)?;
                 let active = tx
                     .query_row("SELECT payload FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2 AND active = 1", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], published_checkpoint_row)
                     .optional()
                     .map_err(backend)?;
                 let count: i64 = tx.query_row("SELECT COUNT(*) FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
-                crate::directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
+                semio_hub_directory::validate_published_checkpoint_lineage(&descriptor, active.as_ref(), u64::try_from(count).map_err(backend)?, checkpoint)?;
                 let payload = serde_json::Value::from(&checkpoint.to_value()).to_string();
                 tx.execute(
                     "UPDATE hub_artifact_checkpoint SET active = 0 WHERE space_id = ?1 AND document_id = ?2 AND checkpoint_id <> ?3",
@@ -1098,7 +1094,7 @@ impl SqliteDirectory {
 
 impl HubDirectory for SqliteDirectory {
     async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
@@ -1108,7 +1104,7 @@ impl HubDirectory for SqliteDirectory {
         Self::creation_authority(&tx, &intent.actor, &intent.scope.space_id, observed_now)?;
         let facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
         if !facts.is_empty() {
-            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+            let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
             if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
                 return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
             }
@@ -1131,7 +1127,7 @@ impl HubDirectory for SqliteDirectory {
             recorded_at_ms: intent.accepted_at_ms,
             body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
         };
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(std::slice::from_ref(&fact))?;
         Self::insert_creation_fact(&tx, intent, &fact)?;
         tx.commit().map_err(backend)?;
         Ok(ArtifactCreationClaimV1::Accepted(operation))
@@ -1157,7 +1153,7 @@ impl HubDirectory for SqliteDirectory {
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
         Self::creation_authority(&tx, &append.actor, &append.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.actor.user_id, &append.request_id)?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -1165,13 +1161,13 @@ impl HubDirectory for SqliteDirectory {
             Self::insert_creation_fact(&tx, &operation.intent, &next)?;
             facts.push(next);
         }
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         tx.commit().map_err(backend)?;
         Ok(operation)
     }
 
     async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
         let mut conn = self.lock()?;
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
@@ -1179,7 +1175,7 @@ impl HubDirectory for SqliteDirectory {
             return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into()));
         }
         let mut facts = Self::creation_facts(&tx, &intent.actor.user_id, &intent.request.request_id)?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != *intent {
             return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
         }
@@ -1195,7 +1191,7 @@ impl HubDirectory for SqliteDirectory {
         }
         let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
         facts.push(next.clone());
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         Self::insert_creation_fact(&tx, intent, &next)?;
         tx.commit().map_err(backend)?;
         Ok(operation)
@@ -1213,7 +1209,7 @@ impl HubDirectory for SqliteDirectory {
             let ArtifactCreationFactBodyV1::Accepted { intent } = fact.body else {
                 return Err(DirectoryError::Backend("artifact creation recovery row is not accepted".into()));
             };
-            crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+            semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
             Ok(intent)
         })
         .collect()
@@ -1230,7 +1226,7 @@ impl HubDirectory for SqliteDirectory {
         let observed_now = u64::try_from(now_ms()).map_err(backend)?;
         Self::creation_authority(&tx, &append.intent.actor, &append.intent.scope.space_id, observed_now)?;
         let mut facts = Self::creation_facts(&tx, &append.intent.actor.user_id, &append.intent.request.request_id)?;
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent != append.intent {
             return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
         }
@@ -1240,7 +1236,7 @@ impl HubDirectory for SqliteDirectory {
         if append.now_ms > observed_now {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
-        crate::directory::validate_document_genesis_append_v1(&operation, append)?;
+        semio_hub_directory::validate_document_genesis_append_v1(&operation, append)?;
         let checkpoint = &append.checkpoint;
         let reservation = &append.reservation;
         let occupied: i64 = tx.query_row("SELECT EXISTS(SELECT 1 FROM hub_document_descriptor WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_document_index WHERE space_id = ?1 AND document_id = ?2 UNION ALL SELECT 1 FROM hub_artifact_checkpoint WHERE space_id = ?1 AND document_id = ?2)", rusqlite::params![checkpoint.scope.space_id, checkpoint.scope.document_id], |row| row.get(0)).map_err(backend)?;
@@ -1303,10 +1299,10 @@ impl HubDirectory for SqliteDirectory {
         )
         .map_err(backend)?;
         Self::cas_project_publish(&tx, reservation, generation)?;
-        let completion = crate::directory::document_genesis_completion_v1(&operation, append, &events)?;
+        let completion = semio_hub_directory::document_genesis_completion_v1(&operation, append, &events)?;
         Self::insert_creation_fact(&tx, &append.intent, &completion)?;
         facts.push(completion);
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if tx.commit().is_err() {
             return Ok(DocumentGenesisCommitV1::Indeterminate);
         }
@@ -1559,8 +1555,8 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator space page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let conn = self.lock()?;
         let mut statement = conn
@@ -1639,8 +1635,8 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator member page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let conn = self.lock()?;
         let mut statement = conn
@@ -1685,8 +1681,8 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>> {
-        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration member page limit must be 1..={}", semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
         }
         let conn = self.lock()?;
         let mut statement = conn
@@ -1726,8 +1722,8 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn list_document_descriptors_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<DocumentDescriptor>> {
-        if limit == 0 || limit > super::ADMIN_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", super::ADMIN_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("administrator document page limit must be 1..={}", semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX)));
         }
         let conn = self.lock()?;
         let limit = i64::try_from(limit).map_err(backend)?;
@@ -1842,7 +1838,7 @@ impl HubDirectory for SqliteDirectory {
             };
             (record, role)
         };
-        super::capped_socket_session_binding(self, &record, space_id, role).await
+        semio_hub_directory::capped_socket_session_binding(self, &record, space_id, role).await
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
@@ -2382,8 +2378,8 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn list_space_administration_invites_page(&self, space_id: &str, after: Option<(i64, &str)>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationInviteRow>> {
-        if limit == 0 || limit > super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
-            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={}", super::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
+        if limit == 0 || limit > semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX {
+            return Err(DirectoryError::Conflict(format!("space administration invite page limit must be 1..={}", semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX)));
         }
         let conn = self.lock()?;
         let mut statement = conn
@@ -3163,12 +3159,3 @@ fn event_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<DirectoryEvent> {
     Ok(DirectoryEvent { seq, id, hlc: Hlc { physical_ms: hlc_physical, logical }, actor: DirectoryActor { kind: actor_kind_from_str(&actor_kind), id: actor_id }, space_id, user_id, body, recorded_at_ms })
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs"]
-mod creation_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

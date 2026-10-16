@@ -1,6 +1,9 @@
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
-use super::*;
+
 use directory::os_plugin_module_schema::TrustedPluginModuleIndexV1;
+use directory::os_plugin_module_schema::TrustedPluginModuleBundleV1;
+use semio_hub_trusted_catalog_contract::plugin_module::{TrustedPluginModuleSourceV1, assemble_plugin_module_bundle, decode_plugin_module_bundle, digests, plugin_module_blob_path, plugin_module_content_type, validate_plugin_module_bundle, validate_plugin_module_index, verify_plugin_module_file, write_plugin_module_bundle};
+use semio_hub_trusted_catalog_contract::catalog_error;
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/🧫️fixtures/🧩️plugin-module/🔣️.json")).expect("plugin module fixture")
@@ -83,7 +86,7 @@ fn an_assembled_module_is_the_fixture_manifest_and_writes_content_addressed_file
     let files = fixture["contents"].as_object().unwrap().iter().map(|(path, hex)| (path.clone(), hex_bytes(hex.as_str().unwrap()))).collect::<Vec<_>>();
     let assembled = assemble_plugin_module_bundle(source(&fixture), "🗒️note", &files).expect("assembled fixture module");
     assert_eq!(serde_json::to_value(&assembled).unwrap(), fixture["cases"][0]["manifest"]);
-    let root = crate::test_artifact_root::test_artifact_root().join(format!("plugin-module-write-{}", std::process::id()));
+    let root = semio_hub_testing::test_artifact_root().join(format!("plugin-module-write-{}", std::process::id()));
     let record = write_plugin_module_bundle(&root, "packages/note/plugin-module.json", source(&fixture), "🗒️note", &files).expect("written fixture module");
     assert_eq!(record.sha256, fixture["canonical"]["sha256"].as_str().unwrap());
     assert_eq!(std::fs::read(root.join("packages/note/plugin-module.json")).unwrap(), fixture["canonical"]["bytesUtf8"].as_str().unwrap().as_bytes());

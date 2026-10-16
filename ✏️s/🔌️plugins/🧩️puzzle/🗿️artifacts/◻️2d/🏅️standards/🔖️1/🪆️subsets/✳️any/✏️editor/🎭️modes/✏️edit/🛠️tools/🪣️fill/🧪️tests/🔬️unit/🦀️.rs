@@ -79,7 +79,7 @@ fn fill_tool_declares_the_schema_tool_run_definition() {
 /// 🧰️ Declaring the run injects the framework tool run actions into the registered manifest; the plugin owns none.
 #[test]
 fn fill_run_declaration_injects_the_framework_tool_run_actions() {
-    let injected = semio_framework::tool_run_action_definitions(&crate::editor::puzzle2d::create_puzzle2d_app());
+    let injected = semio_framework::tool_run::tool_run_action_definitions(&crate::editor::puzzle2d::create_puzzle2d_app());
     let ids: Vec<&str> = injected.iter().map(|action| action.id.as_str()).collect();
     for action in semio_framework_tool_run::TOOL_RUN_ACTION_IDS {
         assert!(ids.contains(&action), "{action} is injected once the fill tool declares run");

@@ -1,5 +1,5 @@
 import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
-import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🔢️number-format/🟦️.ts";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🖼️presentation/🔢️number-format/🟦️.ts";
 
 /** 🧿️ Share of a slider's axis within which a pointer value is pulled onto a detent — the twin of `SLIDER_SNAP_RADIUS`. */
 export const SLIDER_SNAP_RADIUS = 0.03;

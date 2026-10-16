@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-flow-host-session"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow host session: evaluation session, tick and preview turns, publication custody and intake receivers"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-host-session"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-host-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-source = { path = "../../../📥️evaluation-source/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-read = { path = "../../../📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
+semio-framework-os-flow-operators = { path = "../../../../🗃️operators/📦️packages/🦀️rust" }
+semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { workspace = true }
+semio-framework-replication = { workspace = true }
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }

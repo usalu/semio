@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn owned_mime_constraint_matches_independent_serde_oracle() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📜️definition/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/📜️definition/🔣️.json")).unwrap();
     for row in vectors["cases"].as_array().unwrap() {
         let mut source: serde_json::Value = serde_json::from_str(ARTIFACT_DEFINITION_SCHEMA).unwrap();
         source["representations"][0]["mimes"] = row["mimes"].clone();
@@ -22,4 +22,9 @@ fn owned_snapshot_declares_structural_pack_and_relational_capabilities() {
     assert_eq!(codec.pack_schema_hash, store::os_pack::schema_hash(&spec));
     assert!(codec.snapshot_sqlite.is_some());
     declaration(definition().unwrap()).unwrap();
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

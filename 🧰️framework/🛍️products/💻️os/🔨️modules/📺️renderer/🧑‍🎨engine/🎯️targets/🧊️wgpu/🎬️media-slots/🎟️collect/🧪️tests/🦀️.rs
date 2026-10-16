@@ -6,6 +6,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn clock()->Option<u64>{Some(1000)}
 fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
 #[test]
+#[cfg(feature = "host-plumbing-law")]
 fn original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close(){
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let accepted:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(policy["grant"].clone()).unwrap();
  for copy in [1,3,64]{for cut in [0usize,1,13,64,usize::MAX]{

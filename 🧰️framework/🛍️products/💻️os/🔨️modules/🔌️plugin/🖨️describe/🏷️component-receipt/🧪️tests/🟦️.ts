@@ -38,13 +38,13 @@ describe("ComponentReceiptV1", () => {
   });
 
   it("owns the profile policy in the schema: one shipped profile at 256 MiB, a local-only iterate cap at 512 MiB", () => {
-    expect(SHIPPED_COMPONENT_PROFILE).toBe("wasm-release");
+    expect(SHIPPED_COMPONENT_PROFILE).toBe("release");
     expect(SHIPPED_COMPONENT_MAX_BYTES).toBe(256 * 1024 * 1024);
     expect(ITERATE_COMPONENT_MAX_BYTES).toBe(512 * 1024 * 1024);
-    expect(Object.entries(COMPONENT_PROFILE_POLICIES).filter(([, policy]) => policy.shipped).map(([profile]) => profile)).toEqual(["wasm-release"]);
+    expect(Object.entries(COMPONENT_PROFILE_POLICIES).filter(([, policy]) => policy.shipped).map(([profile]) => profile)).toEqual(["release"]);
     expect(schema.$defs.ComponentProfile.enum).toEqual(Object.keys(COMPONENT_PROFILE_POLICIES));
     expect(() => componentProfileV1("wasm-dev")).toThrow();
-    expect(() => componentProfileV1("release")).toThrow();
+    expect(() => componentProfileV1("wasm-release")).toThrow();
   });
 
   for (const row of fixture.deliverables) it(`places the ${row.profile} deliverable of ${row.packageName}`, () => {
@@ -72,9 +72,9 @@ describe("ComponentReceiptV1", () => {
     const wasm = new TextEncoder().encode("\0asm\r\0\x01\0component"), pack = new TextEncoder().encode("semantic descriptor");
     const sha = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
     const receipt = { ...(fixture.receipts[0]!.value as ComponentReceiptV1), wasmSha256: sha(wasm), wasmBytes: wasm.byteLength, semanticDescriptorSha256: sha(pack) };
-    const expected = { pluginId: "note", packageId: "semio:note", profile: "wasm-release" as const };
+    const expected = { pluginId: "note", packageId: "semio:note", profile: "release" as const };
     expect(componentReceiptFindingsV1(receipt, expected, wasm, pack)).toEqual([]);
-    expect(componentReceiptFindingsV1(receipt, { ...expected, profile: "wasm-prototype" }, wasm, pack)).toHaveLength(1);
+    expect(componentReceiptFindingsV1(receipt, { ...expected, profile: "prototype" }, wasm, pack)).toHaveLength(1);
     expect(componentReceiptFindingsV1(receipt, expected, wasm.subarray(1), pack)).toHaveLength(1);
     expect(componentReceiptFindingsV1(receipt, expected, wasm, wasm)).toHaveLength(1);
     expect(componentReceiptFindingsV1(receipt, { ...expected, pluginId: "gis" }, wasm, pack)).toHaveLength(1);

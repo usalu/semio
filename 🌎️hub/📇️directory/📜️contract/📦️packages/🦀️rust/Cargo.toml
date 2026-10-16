@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-directory-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Directory contract: errors, bounded constants, events, records and capability vocabulary shared by every directory backend"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-directory-contract"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]

@@ -6,4 +6,4 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 
 #[path = "📦️pack/🦀️.rs"]
-pub(crate) mod owned_pack;
+pub mod owned_pack;

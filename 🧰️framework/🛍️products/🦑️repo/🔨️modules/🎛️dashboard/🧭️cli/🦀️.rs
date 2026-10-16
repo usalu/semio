@@ -9,12 +9,12 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🌀️daemon/🕹️control/🦀️.rs
 
-use crate::daemon::client::Connection;
-use crate::daemon::control::{self as daemon_control, Action, Followed, RunError, Wait};
-use crate::daemon::ipc::{self, ClientMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
+use dashboard_daemon::control::{self as daemon_control, Action, Followed, RunError, Wait};
+use dashboard_registry::{ParameterKind, Registry, Request, RunPolicy};
+use dashboard_repo_domain::RepoImplementation;
+use dashboard_wire::client::Connection;
+use dashboard_wire::ipc::{self, ClientMsg, SessionCommand, SessionInfo, SessionStatus, SpawnGroup};
 use std::io::{IsTerminal, Write};
-use crate::registry::{ParameterKind, Registry, Request, RunPolicy};
-use crate::repo_domain::RepoImplementation;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::time::{Duration, Instant};
@@ -87,8 +87,8 @@ fn refuse(message: &str) -> i32 {
 fn root_of(root: &Path, arguments: &Arguments) -> PathBuf { arguments.value("root").map_or_else(|| root.to_path_buf(), PathBuf::from) }
 
 fn registry_of(root: &Path, arguments: &Arguments) -> Registry {
-    let snapshot = arguments.value("snapshot").map_or_else(|| crate::inventory::cache_path(root), PathBuf::from);
-    if arguments.has("refresh") || arguments.has("check") { crate::inventory::discover(root, &AtomicBool::new(false)) } else { crate::inventory::registry_at(root, &snapshot) }
+    let snapshot = arguments.value("snapshot").map_or_else(|| dashboard_inventory::cache_path(root), PathBuf::from);
+    if arguments.has("refresh") || arguments.has("check") { dashboard_inventory::discover(root, &AtomicBool::new(false)) } else { dashboard_inventory::registry_at(root, &snapshot) }
 }
 
 /// ⌨️ `semio commands [words…] [--json] [--all] [--check] [--refresh] [--root PATH] [--snapshot PATH]`
@@ -154,7 +154,7 @@ fn connect(root: &Path) -> Result<Connection, String> {
 
 fn connect_or_start(root: &Path) -> Result<Connection, String> {
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-    daemon_control::connect_or_start(&ipc::canonical_path(root), &executable).map_err(|error| format!("cannot reach the dashboard daemon: {error}"))
+    dashboard_daemon::lifecycle::connect_or_start(&ipc::canonical_path(root), &executable).map_err(|error| format!("cannot reach the dashboard daemon: {error}"))
 }
 
 /// 📋️ The sessions of a workspace: the daemon's when one answers, else the journal's.

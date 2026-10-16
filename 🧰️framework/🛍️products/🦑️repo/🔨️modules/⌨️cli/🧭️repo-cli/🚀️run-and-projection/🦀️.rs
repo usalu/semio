@@ -1,6 +1,14 @@
 //! 🚀️ The process entry and the projections: `run` on the process streams and the JSON projections the language-agnostic test adapters read.
 
-use super::*;
+use super::command_tree::{root, DEFAULT_TIMEOUT_NANOSECONDS};
+use semio_framework_repo_cli_command_framework::{parse, CliError, Config, FlagValue, Invocation};
+use semio_framework_repo_cli_event_stream::{go_json, graphql_events, render, Event, Format, EXIT_ERROR, EXIT_OK};
+use semio_framework_repo_cli_mcp_verb::RepoRepository;
+use semio_framework_repo_cli_tree_source_and_search::export_entities;
+use semio_framework_repo_graphql::RecordingContext;
+use serde_json::{json, Map, Value as Json};
+use std::collections::BTreeMap;
+use std::io::Write;
 
 //#region 🧭️RepoCli
 //#region 🧪️Projection
@@ -146,7 +154,7 @@ impl Write for SharedBuffer {
 pub fn mcp_conversation(profile: &str, requests: &[String]) -> Result<Vec<String>, String> {
     let profile = semio_framework_repo_mcp::Profile::parse(profile).map_err(|error| error.to_string())?;
     let root = semio_framework_repo_workspace::find_repo_root(&std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from(".")));
-    let server = std::sync::Arc::new(semio_framework_repo_mcp::repository_server(crate::mcp_verb::RepoRepository::open(&root, profile), profile, semio_framework_repo_mcp::Limits::default()).map_err(|error| error.to_string())?);
+    let server = std::sync::Arc::new(semio_framework_repo_mcp::repository_server(RepoRepository::open(&root, profile), profile, semio_framework_repo_mcp::Limits::default()).map_err(|error| error.to_string())?);
     let sink = SharedBuffer::default();
     let input = format!("{}\n", requests.join("\n"));
     match semio_framework_repo_mcp::serve(&server, "stdio", input.as_bytes(), sink.clone()) {

@@ -546,7 +546,7 @@ export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
  * lanes SEPARATE is what lets an unchanged lane cost nothing on a partial refresh.
  *
  * Mirrors the Rust `World3dSceneLane` / `WORLD3D_SCENE_LANE_*` in
- * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs`. Both sides are pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/🦀️.rs`. Both sides are pinned against
  * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`. */
 export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "meshes", field: "meshesJson", bodyKey: "framework.scene.world3d.meshes", optional: false },
@@ -1237,6 +1237,8 @@ export type Board2dScene = {
   readonly areaBrushSize?: string;
   /** 🎯️ The framework interaction domain this board's picks and hovers belong to; absent means the app declares none and the host publishes no `interactionHover`. */
   readonly domainId?: string;
+  /** 🏷️ The owning domain's brush placement id prefixes in the board's wire form, `{"brushNodePrefix":string,"brushEdgePrefix":string}`, so every host mints the domain's ids; absent leaves the host's installed naming. */
+  readonly placementNaming?: string;
   /** 💡️ The one-shot handle-suggestions popup this window has open, as a {@link Board2dSuggestionMenu} JSON string; absent is the closed state. */
   readonly suggestionMenuJson?: string;
   /** ⏯️ The base64url `ToolRunTraceDelta` paged to this board — carried outside the doc, see {@link BOARD2D_SCENE_LANES}. */

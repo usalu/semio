@@ -1,5 +1,7 @@
+use crate::{schema::snapshot::PlyElement, schema::snapshot::PlyFormat, schema::snapshot::PlyProperty, schema::snapshot::PlyRow, schema::snapshot::PlyScalarType, schema::snapshot::PlyValue};
+use crate::{PlySnapshot, STDIO_PLY_DOCUMENT_SCHEMA};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v1_0::subsets::any::io::*;
 use crate::schema::diff::PlyElementsDiff;
 
 use crate::schema::mutations::{add_element, insert_comment, insert_row, remove_comment, remove_element, remove_row, set_format, set_row_property};

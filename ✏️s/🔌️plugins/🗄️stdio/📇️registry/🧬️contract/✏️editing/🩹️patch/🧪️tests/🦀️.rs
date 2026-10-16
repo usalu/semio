@@ -1,5 +1,6 @@
 use super::*;
 use kernel::{OpBinary, OpText};
+use semio_s_artifact_stdio_contract_editing::{check_publication_limits, snapshot_edit_value_is_admitted};
 
 #[derive(Clone, value_derive::ToValue, value_derive::FromValue)]
 struct PublicationMutation {
@@ -95,7 +96,7 @@ fn retained_publication_refuses_a_forward_or_exact_inverse_over_the_native_item_
         };
         assert_eq!(mutation.encode_op().unwrap().len(), emitted_bytes + mutation.padding);
         assert_eq!(PublicationMutation::decode_op(&mutation.encode_op().unwrap()).unwrap().snapshot, mutation.snapshot);
-        let result = super::super::check_publication_limits(&before, &[mutation]);
+        let result = check_publication_limits(&before, &[mutation]);
         match row["error"].as_str() {
             Some(code) => assert_eq!(result.expect_err(row["id"].as_str().unwrap()).code.0, code),
             None => result.unwrap_or_else(|error| panic!("{}: {error:?}", row["id"])),
@@ -243,27 +244,27 @@ fn retained_admission_bounds_only_the_event_and_selected_paths() {
     let admission = &fixture["admission"];
     let base = LargeSnapshot { title: "Before".into(), bytes: vec![large["fill"].as_u64().unwrap() as u8; large["bytes"].as_u64().unwrap() as usize] };
     let event: SnapshotEditEvent = semio_framework_pack_json::from_json_str(&admission["event"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert_eq!(super::super::snapshot_edit_value_is_admitted(&event, &base), admission["expected"].as_bool().unwrap());
+    assert_eq!(snapshot_edit_value_is_admitted(&event, &base), admission["expected"].as_bool().unwrap());
 
     let maximum_nodes = admission["maximumNodes"].as_u64().unwrap() as usize;
     let at_node_limit = SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::Array(vec![DslValue::Null; maximum_nodes - 1]) };
-    assert!(super::super::snapshot_edit_value_is_admitted(&at_node_limit, &base));
+    assert!(snapshot_edit_value_is_admitted(&at_node_limit, &base));
     let over_node_limit = SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::Array(vec![DslValue::Null; maximum_nodes]) };
-    assert!(!super::super::snapshot_edit_value_is_admitted(&over_node_limit, &base));
+    assert!(!snapshot_edit_value_is_admitted(&over_node_limit, &base));
 
     let maximum_depth = admission["maximumDepth"].as_u64().unwrap() as usize;
     let nested = |depth: usize| (0..depth).fold(DslValue::Null, |value, _| DslValue::Array(vec![value]));
-    assert!(super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: nested(maximum_depth) }, &base,));
-    assert!(!super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: nested(maximum_depth + 1) }, &base,));
+    assert!(snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: nested(maximum_depth) }, &base,));
+    assert!(!snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: nested(maximum_depth + 1) }, &base,));
 
     let maximum_segments = admission["maximumPointerSegments"].as_u64().unwrap() as usize;
     let over_segment_limit = format!("/{}", vec!["field"; maximum_segments + 1].join("/"));
-    assert!(!super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: over_segment_limit, value: DslValue::Null }, &base,));
-    assert!(!super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "missing-leading-slash".into(), value: DslValue::Null }, &base,));
-    assert!(!super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::Object(vec![("same".into(), DslValue::Null), ("same".into(), DslValue::Null)]) }, &base,));
-    assert!(super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::ReplaceSource { source: "{\"title\":\"a\",\"title\":\"b\"}".into() }, &base,));
+    assert!(!snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: over_segment_limit, value: DslValue::Null }, &base,));
+    assert!(!snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "missing-leading-slash".into(), value: DslValue::Null }, &base,));
+    assert!(!snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::Object(vec![("same".into(), DslValue::Null), ("same".into(), DslValue::Null)]) }, &base,));
+    assert!(snapshot_edit_value_is_admitted(&SnapshotEditEvent::ReplaceSource { source: "{\"title\":\"a\",\"title\":\"b\"}".into() }, &base,));
     let maximum_raw_bytes = admission["maximumRawBytes"].as_u64().unwrap() as usize;
-    assert!(!super::super::snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::String("x".repeat(maximum_raw_bytes)) }, &base,));
+    assert!(!snapshot_edit_value_is_admitted(&SnapshotEditEvent::SetValue { path: "/title".into(), value: DslValue::String("x".repeat(maximum_raw_bytes)) }, &base,));
 }
 
 #[test]

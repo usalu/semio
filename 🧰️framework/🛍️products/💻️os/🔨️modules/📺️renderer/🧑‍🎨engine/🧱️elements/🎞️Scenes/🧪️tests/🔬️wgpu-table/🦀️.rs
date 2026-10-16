@@ -30,7 +30,7 @@ fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
 }
 
 /// 🧪️ Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
-fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
+pub fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -46,11 +46,11 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     input
 }
 
-fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
+pub fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
     input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
 }
 
-fn columns_json(entries: &[(&str, &str, bool)]) -> String {
+pub fn columns_json(entries: &[(&str, &str, bool)]) -> String {
     json!(entries.iter().map(|(id, label, sortable)| json!({ "id": id, "label": label, "sortable": sortable })).collect::<Vec<_>>()).to_string()
 }
 
@@ -124,7 +124,7 @@ fn row_click_dispatches_select_row_with_full_row_payload() {
 /// 🧪️ Resolves a pointer point through the production input path (`table_hit`), the route a real
 /// press takes now that a `ComponentScene` leaf's single retained hit target shadows every row the
 /// paint stages.
-fn press(node: &UiComponentSceneNode, x: f32, y: f32) -> Option<SceneListHit> {
+pub fn press(node: &UiComponentSceneNode, x: f32, y: f32) -> Option<SceneListHit> {
     press_with(node, x, y, SceneModifiers::default())
 }
 
@@ -455,7 +455,7 @@ fn row_press_merge_mode_follows_the_pointer_modifiers() {
 }
 
 //#region TableRowTransferTests
-fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));

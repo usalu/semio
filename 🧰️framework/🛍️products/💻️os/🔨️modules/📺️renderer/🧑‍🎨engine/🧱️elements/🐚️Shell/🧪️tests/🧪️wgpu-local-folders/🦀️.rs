@@ -29,17 +29,17 @@ fn mutation_of(value: &Value) -> LocalFoldersConfigMutation {
 fn booted_shell(document_id: Option<&str>) -> ShellState {
     let mut shell = panel_anchor_model_tests::host_test_shell();
     if let Some(document_id) = document_id {
-        let session = shell.session.clone().expect("the host fixture holds a session");
+        let session = shell.docs.session.clone().expect("the host fixture holds a session");
         let key = (session.plugin_id.clone(), session.instance_id);
-        let request = shell.app_document_identities.begin(key.clone()).expect("an identity request");
-        assert!(shell.app_document_identities.accept(&key, request, session.instance_id, Some(document_id.to_string())));
+        let request = shell.docs.app_document_identities.begin(key.clone()).expect("an identity request");
+        assert!(shell.docs.app_document_identities.accept(&key, request, session.instance_id, Some(document_id.to_string())));
     }
-    shell.ensure_local_folder_bindings();
+    shell.history.ensure_local_folder_bindings();
     shell
 }
 
 fn session_binding(shell: &ShellState, document_id: &str, path: &str) -> LocalFolderBinding {
-    let session = shell.session.as_ref().expect("session");
+    let session = shell.docs.session.as_ref().expect("session");
     LocalFolderBinding { document_id: document_id.into(), plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), folder: LocalFolderRef::Path { path: path.into() } }
 }
 
@@ -148,15 +148,15 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
     let path = folder.display().to_string();
 
     let mut unidentified = booted_shell(None);
-    unidentified.locale_id = "de".into();
-    semio_framework_async::block_on(unidentified.attach_sync_backbone(format!("folder://{path}"))).expect("an unidentified attach is told, not faulted");
-    let notice = unidentified.transient_notice().expect("a notice");
+    unidentified.prefs.locale_id = "de".into();
+    semio_framework_async::block_on(ActionsCtx::of(&mut unidentified).attach_sync_backbone(format!("folder://{path}"))).expect("an unidentified attach is told, not faulted");
+    let notice = unidentified.chrome.transient_notice().expect("a notice");
     assert_eq!((notice.code.as_deref(), notice.message.as_str()), (Some(SYNC_DOCUMENT_UNIDENTIFIED_CODE), "Dieses Programm hat kein Dokument zum Verbinden"));
-    assert!(unidentified.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "nothing is remembered for no document");
+    assert!(unidentified.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "nothing is remembered for no document");
 
     let mut first = booted_shell(Some("doc-7"));
     let binding = session_binding(&first, "doc-7", &path);
-    first.remember_local_folder(binding.clone());
+    first.history.remember_local_folder(binding.clone());
     let archive = protocol::DocumentArchivePack { parent_pack: vec![1, 2, 3], parent_spr: vec![4, 5], members: Vec::new() };
     let bytes = protocol::encode_document_archive_bytes(&archive).expect("an archive");
     semio_framework_async::block_on(store_sync::sync::FolderEventLogStorage::new(folder.clone()).write_archive("doc-7", "s.test", &bytes)).expect("the edit persists in the folder");
@@ -164,24 +164,24 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
 
     let mut restarted = booted_shell(Some("doc-7"));
     assert!(SHELL_DOCUMENT_TRANSPORTS.folder, "the native shell serves folders");
-    assert_eq!(restarted.folder_reconnect_offer(), Some(binding.clone()), "the restart remembers the folder for the same document");
-    assert_eq!(restarted.direct_reattach_candidate(), Some(binding.clone()), "the native shell takes it up itself");
-    assert_eq!(restarted.folder_reconnect_band_offer(), None, "no gesture is asked for");
-    restarted.local_folder_reattach_tried = Some("doc-7".into());
-    assert_eq!(restarted.direct_reattach_candidate(), None, "a reattach that ran is not retried");
-    assert_eq!(restarted.folder_reconnect_band_offer(), Some(binding.clone()), "a failed reattach is offered on the band");
-    restarted.plugins.iter_mut().find(|program| program.plugin_id == binding.plugin_id).expect("the session's program").install_fixture_document(restored_program());
-    assert_eq!(semio_framework_async::block_on(restarted.restore_folder_archive(&path, "doc-7")), Ok(true));
+    assert_eq!(restarted.docs.folder_reconnect_offer(&restarted.history, &restarted.sync), Some(binding.clone()), "the restart remembers the folder for the same document");
+    assert_eq!(restarted.docs.direct_reattach_candidate(&restarted.history, &restarted.sync), Some(binding.clone()), "the native shell takes it up itself");
+    assert_eq!(restarted.docs.folder_reconnect_band_offer(&restarted.history, &restarted.sync), None, "no gesture is asked for");
+    restarted.history.local_folder_reattach_tried = Some("doc-7".into());
+    assert_eq!(restarted.docs.direct_reattach_candidate(&restarted.history, &restarted.sync), None, "a reattach that ran is not retried");
+    assert_eq!(restarted.docs.folder_reconnect_band_offer(&restarted.history, &restarted.sync), Some(binding.clone()), "a failed reattach is offered on the band");
+    restarted.plugins.plugins.iter_mut().find(|program| program.plugin_id == binding.plugin_id).expect("the session's program").install_fixture_document(restored_program());
+    assert_eq!(semio_framework_async::block_on(WindowActionsCtx::of(&mut restarted).restore_folder_archive(&path, "doc-7")), Ok(true));
     assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![archive], "the folder's own archive reached the program");
-    assert_eq!(history_rows_oldest_first(&restarted.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
-    assert_eq!(restarted.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
-    assert_eq!(semio_framework_async::block_on(restarted.restore_folder_archive(&path, "doc-other")), Ok(false), "a folder holding no archive for the document restores nothing");
+    assert_eq!(history_rows_oldest_first(&restarted.history.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
+    assert_eq!(restarted.history.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
+    assert_eq!(semio_framework_async::block_on(WindowActionsCtx::of(&mut restarted).restore_folder_archive(&path, "doc-other")), Ok(false), "a folder holding no archive for the document restores nothing");
 
-    restarted.forget_local_folder("doc-7");
+    restarted.history.forget_local_folder("doc-7");
     drop(restarted);
     let after_detach = booted_shell(Some("doc-7"));
-    assert!(after_detach.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "a detach leaves no binding");
-    assert_eq!((after_detach.folder_reconnect_offer(), after_detach.direct_reattach_candidate()), (None, None));
+    assert!(after_detach.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "a detach leaves no binding");
+    assert_eq!((after_detach.docs.folder_reconnect_offer(&after_detach.history, &after_detach.sync), after_detach.docs.direct_reattach_candidate(&after_detach.history, &after_detach.sync)), (None, None));
     let _ = std::fs::remove_dir_all(folder);
 }
 //#endregion 🖥️NativeLifecycle
@@ -191,7 +191,7 @@ fn paint_folder_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>>
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
     for _ in 0..100_000 {
-        if shell.render_folder_reconnect_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
+        if OverlaysViewCtx::of(&mut shell).render_folder_reconnect_band_step(&mut cursor, &mut overlay, &mut atlas, &mut input, &theme) {
             return input.staged_hits().to_vec();
         }
     }
@@ -208,17 +208,17 @@ fn a_failed_reattach_offers_an_accessible_reconnect_band_and_forget_retires_it()
     let corpus = corpus();
     let mut shell = booted_shell(Some("doc-7"));
     let binding = session_binding(&shell, "doc-7", "/Users/ada/Documents/drawings");
-    shell.remember_local_folder(binding.clone());
-    assert!(paint_folder_band(&mut shell).is_empty() && shell.folder_reconnect_band_offer().is_none(), "no band before the shell tried the folder itself");
-    shell.local_folder_reattach_tried = Some("doc-7".into());
-    assert_eq!(shell.direct_reattach_candidate(), None, "a reattach that ran is not retried");
+    shell.history.remember_local_folder(binding.clone());
+    assert!(paint_folder_band(&mut shell).is_empty() && shell.docs.folder_reconnect_band_offer(&shell.history, &shell.sync).is_none(), "no band before the shell tried the folder itself");
+    shell.history.local_folder_reattach_tried = Some("doc-7".into());
+    assert_eq!(shell.docs.direct_reattach_candidate(&shell.history, &shell.sync), None, "a reattach that ran is not retried");
     for (locale, tongue) in [("en", "en"), ("de", "de")] {
-        shell.locale_id = locale.into();
+        shell.prefs.locale_id = locale.into();
         let hits = paint_folder_band(&mut shell);
         let events: Vec<(String, String, String)> = hits.iter().filter_map(|hit| Some((hit.control_id.clone()?, hit.event.as_ref()?.action.clone(), hit.event.as_ref()?.args.as_ref()?.get("documentId")?.as_str()?.to_string()))).collect();
         assert_eq!(events, [(FOLDER_RECONNECT_CONTROL_ID.to_string(), FOLDER_RECONNECT_ACTION.to_string(), "doc-7".to_string()), (FOLDER_FORGET_CONTROL_ID.to_string(), FOLDER_FORGET_ACTION.to_string(), "doc-7".to_string())]);
         assert!(hits.iter().all(|hit| hit.event.as_ref().is_some_and(|event| event.controller_id == "framework.sync")));
-        let nodes = shell.chrome_accessibility_nodes(&hits);
+        let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
         let status = nodes.iter().find(|node| node.key == FOLDER_RECONNECT_STATUS_ID).expect("the band's status node");
         assert_eq!((status.role.as_str(), status.live.as_str(), status.label.as_deref(), status.description.as_deref()), ("status", "polite", corpus["texts"][tongue]["message"].as_str(), corpus["texts"][tongue]["label"].as_str()), "{tongue}");
         for (control_id, key) in [(FOLDER_RECONNECT_CONTROL_ID, "attach"), (FOLDER_FORGET_CONTROL_ID, "forget")] {
@@ -227,10 +227,10 @@ fn a_failed_reattach_offers_an_accessible_reconnect_band_and_forget_retires_it()
         }
     }
     let forget = ActionDescriptor { controller_id: "framework.sync".into(), action: FOLDER_FORGET_ACTION.into(), args: crate::action_args_json!({ "documentId": "doc-7" }) };
-    semio_framework_async::block_on(shell.handle_sync_action(forget)).expect("forget routes");
-    assert!(shell.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty());
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).handle_sync_action(forget)).expect("forget routes");
+    assert!(shell.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty());
     assert!(paint_folder_band(&mut shell).is_empty(), "the band is gone");
-    assert!(shell.chrome_accessibility_nodes(&[]).iter().all(|node| node.key != FOLDER_RECONNECT_STATUS_ID));
+    assert!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).iter().all(|node| node.key != FOLDER_RECONNECT_STATUS_ID));
 }
 
 /// ⚖️ LAW (React's `max-w-[90vw] flex-wrap` band): on a desktop the reconnect band is one row with its two buttons
@@ -306,42 +306,42 @@ fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_afte
     LOADED.with(|loaded| loaded.borrow_mut().clear());
     let uri = "folder:///Users/ada/drawings".to_string();
     let mut shell = booted_shell(Some("doc-7"));
-    shell.local_folder_direct_reattach = false;
+    shell.history.local_folder_direct_reattach = false;
     let binding = session_binding(&shell, "doc-7", "/Users/ada/drawings");
     let program = binding.plugin_id.clone();
-    shell.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program").install_fixture_document(restored_program());
-    let identity = shell.sync_program_identity().expect("the session's document identity");
-    semio_framework_async::block_on(shell.attach_host_route_backbone(uri.clone(), identity.clone())).expect("the host route attach");
-    let schema = shell.session.as_ref().expect("session").app.io.artifact_schema.clone();
+    shell.plugins.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program").install_fixture_document(restored_program());
+    let identity = shell.docs.sync_program_identity().expect("the session's document identity");
+    semio_framework_async::block_on(WindowActionsCtx::of(&mut shell).attach_host_route_backbone(uri.clone(), identity.clone())).expect("the host route attach");
+    let schema = shell.docs.session.as_ref().expect("session").app.io.artifact_schema.clone();
     assert_eq!(door_requests(), [("read".to_string(), None), ("write".to_string(), Some(schema.clone()))], "nothing stored: read, then the document's own archive written under its schema");
     let stored = TEST_BACKBONE_FOLDER_HOST.with(|host| host.borrow().0.get(&(uri.clone(), "doc-7".to_string())).cloned()).expect("the host holds the archive");
     assert_eq!(semio_framework_async::block_on(protocol::decode_document_archive_bytes(&stored)).expect("an archive"), program_archive());
-    assert_eq!((shell.sync_backbone_uri.as_deref(), shell.local_folder_bindings.clone().unwrap_or_default().bindings), (Some(uri.as_str()), vec![binding.clone()]), "bound, shown on the sync card and remembered");
-    assert_eq!((shell.folder_reconnect_offer(), shell.folder_reconnect_band_offer()), (None, None), "a bound document is not offered");
+    assert_eq!((shell.sync.sync_backbone_uri.as_deref(), shell.history.local_folder_bindings.clone().unwrap_or_default().bindings), (Some(uri.as_str()), vec![binding.clone()]), "bound, shown on the sync card and remembered");
+    assert_eq!((shell.docs.folder_reconnect_offer(&shell.history, &shell.sync), shell.docs.folder_reconnect_band_offer(&shell.history, &shell.sync)), (None, None), "a bound document is not offered");
 
-    assert!(!semio_framework_async::block_on(shell.flush_host_route_folder()), "an unchanged history writes nothing");
-    shell.history_cursor += 1;
-    assert!(semio_framework_async::block_on(shell.flush_host_route_folder()), "a history change writes the archive");
-    assert!(!semio_framework_async::block_on(shell.flush_host_route_folder()), "once");
-    shell.history_cursor += 1;
-    shell.observe_history_time_travel(Some(&semio_framework::kernel::HistoryTimeTravel { session_id: "1".into(), generation: 1, stage: semio_framework::kernel::HistoryTimeTravelStage::Editing, ..Default::default() }));
-    assert!(!semio_framework_async::block_on(shell.flush_host_route_folder()), "never while a history edit is open");
-    shell.observe_history_time_travel(None);
-    assert!(semio_framework_async::block_on(shell.detach_host_route_folder()), "the detach writes the last change");
+    assert!(!semio_framework_async::block_on(SessionCtx::of(&mut shell).flush_host_route_folder()), "an unchanged history writes nothing");
+    shell.history.history_cursor += 1;
+    assert!(semio_framework_async::block_on(SessionCtx::of(&mut shell).flush_host_route_folder()), "a history change writes the archive");
+    assert!(!semio_framework_async::block_on(SessionCtx::of(&mut shell).flush_host_route_folder()), "once");
+    shell.history.history_cursor += 1;
+    SessionCtx::of(&mut shell).observe_history_time_travel(Some(&semio_framework::kernel::HistoryTimeTravel { session_id: "1".into(), generation: 1, stage: semio_framework::kernel::HistoryTimeTravelStage::Editing, ..Default::default() }));
+    assert!(!semio_framework_async::block_on(SessionCtx::of(&mut shell).flush_host_route_folder()), "never while a history edit is open");
+    SessionCtx::of(&mut shell).observe_history_time_travel(None);
+    assert!(semio_framework_async::block_on(SessionCtx::of(&mut shell).detach_host_route_folder()), "the detach writes the last change");
     assert_eq!(door_requests().iter().filter(|(verb, _)| verb == "write").count(), 3);
-    assert!(shell.sync_backbone_uri.is_none() && shell.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "unbound and forgotten");
+    assert!(shell.sync.sync_backbone_uri.is_none() && shell.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "unbound and forgotten");
 
-    shell.remember_local_folder(binding.clone());
+    shell.history.remember_local_folder(binding.clone());
     drop(shell);
     let mut restarted = booted_shell(Some("doc-7"));
-    restarted.local_folder_direct_reattach = false;
-    restarted.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program").install_fixture_document(restored_program());
-    assert_eq!((restarted.direct_reattach_candidate(), restarted.folder_reconnect_band_offer()), (None, Some(binding.clone())), "the browser never reopens a folder by itself; it offers the band");
-    semio_framework_async::block_on(restarted.attach_host_route_backbone(uri.clone(), identity)).expect("the reconnect");
+    restarted.history.local_folder_direct_reattach = false;
+    restarted.plugins.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program").install_fixture_document(restored_program());
+    assert_eq!((restarted.docs.direct_reattach_candidate(&restarted.history, &restarted.sync), restarted.docs.folder_reconnect_band_offer(&restarted.history, &restarted.sync)), (None, Some(binding.clone())), "the browser never reopens a folder by itself; it offers the band");
+    semio_framework_async::block_on(WindowActionsCtx::of(&mut restarted).attach_host_route_backbone(uri.clone(), identity)).expect("the reconnect");
     assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![program_archive()], "the folder's archive reached the program");
-    assert_eq!(history_rows_oldest_first(&restarted.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
-    assert_eq!(restarted.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
-    assert_eq!(restarted.folder_reconnect_band_offer(), None, "reconnected, the band is gone");
+    assert_eq!(history_rows_oldest_first(&restarted.history.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
+    assert_eq!(restarted.history.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
+    assert_eq!(restarted.docs.folder_reconnect_band_offer(&restarted.history, &restarted.sync), None, "reconnected, the band is gone");
 }
 
 /// ⚖️ LAW (`📓️api-stepped-document-load.md` §4): a whole-document load of a `(pack, spr)` pair — a hub checkpoint seed, a
@@ -351,8 +351,8 @@ fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_afte
 fn a_plain_document_load_is_the_stepped_archive_load_without_members() {
     LOADED.with(|loaded| loaded.borrow_mut().clear());
     let mut shell = booted_shell(Some("doc-3"));
-    let program = shell.session.as_ref().expect("session").plugin_id.clone();
-    let entry = shell.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program");
+    let program = shell.docs.session.as_ref().expect("session").plugin_id.clone();
+    let entry = shell.plugins.plugins.iter_mut().find(|entry| entry.plugin_id == program).expect("the session's program");
     entry.install_fixture_document(restored_program());
     semio_framework_async::block_on(entry.load_app_document_pack(1, &[1, 2], &[3])).expect("the load");
     assert_eq!(LOADED.with(|loaded| loaded.borrow().clone()), vec![protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() }]);

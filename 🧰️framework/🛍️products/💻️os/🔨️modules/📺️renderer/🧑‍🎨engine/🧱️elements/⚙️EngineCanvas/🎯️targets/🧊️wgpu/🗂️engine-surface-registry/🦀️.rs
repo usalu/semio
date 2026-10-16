@@ -3,94 +3,95 @@
 //! The per-worker engine surface registry: node graph engines, the surface slots and their ids, tokens and live
 //! freshness, the four per-kind sync caches, the terminal checks and the retirement ladder that closes a surface.
 
-use super::node_graph::{published_graph_interaction, PublishedGraphInteraction};
 use super::prepared_engine_canvas::STAGED_ENGINE_SCENES;
-use super::text_editor::TextEditorDeliveryState;
 use crate::element_contracts::{ScenePointerTarget, WorkerCell};
 use flow::FlowHost;
 use framework_editor::EditorHost;
+#[cfg(target_arch = "wasm32")]
+use js_sys;
 use infinite_world::world::{tool_run_trace, WorldAssetFault};
+use serde_json::{json, Value};
 use semio_framework_os_node_graph::GraphHost;
 use semio_framework_surface::paint::{PaintTarget, RasterHost};
 use semio_framework_surface::tiled_map::MapHost;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 use ui_wgpu::wgpu::ActionDescriptor;
 use vello::wgpu;
 
 //#region Registry
-pub(super) enum NodeGraphEngine {
+pub enum NodeGraphEngine {
     Dag(GraphHost),
     Flow(FlowHost),
 }
 
 #[derive(Default)]
-pub(super) struct NodeGraphSyncCache {
-    pub(super) snapshot_json: Option<String>,
-    pub(super) selection: Option<Vec<String>>,
-    pub(super) preview_off_json: Option<String>,
-    pub(super) computing_json: Option<String>,
-    pub(super) status_json: Option<String>,
-    pub(super) eval_json: Option<String>,
-    pub(super) lod_json: Option<String>,
-    pub(super) viewport: Option<semio_framework_os_kernel::Viewport2d>,
-    pub(super) viewport_pixels: Option<(u32, u32)>,
-    pub(super) operator_ids: Option<Vec<String>>,
-    pub(super) hover: Option<(String, String)>,
-    pub(super) scene_pack: Option<Vec<u8>>,
-    pub(super) interaction_domain: Option<Arc<ui_wgpu::wgpu::NodeGraphInteractionDomain>>,
+pub struct NodeGraphSyncCache {
+    pub snapshot_json: Option<String>,
+    pub selection: Option<Vec<String>>,
+    pub preview_off_json: Option<String>,
+    pub computing_json: Option<String>,
+    pub status_json: Option<String>,
+    pub eval_json: Option<String>,
+    pub lod_json: Option<String>,
+    pub viewport: Option<semio_framework_os_kernel::Viewport2d>,
+    pub viewport_pixels: Option<(u32, u32)>,
+    pub operator_ids: Option<Vec<String>>,
+    pub hover: Option<(String, String)>,
+    pub scene_pack: Option<Vec<u8>>,
+    pub interaction_domain: Option<Arc<ui_wgpu::wgpu::NodeGraphInteractionDomain>>,
 }
 
-pub(super) struct EngineSurface {
-    pub(super) surface_id: Option<EngineSurfaceId>,
-    pub(super) node_graph: Option<NodeGraphEngine>,
-    pub(super) sync_cache: NodeGraphSyncCache,
-    pub(super) map_host: Option<MapHost>,
-    pub(super) map_sync_cache: MapSyncCache,
-    pub(super) map_interaction_owner: Option<ScenePointerTarget>,
-    pub(super) board_host: Option<ManuallyDrop<infinite_canvas::BoardHost>>,
-    pub(super) board_sync_cache: BoardSyncCache,
-    pub(super) board_pending_events: infinite_canvas::BoardEventQueue,
-    pub(super) board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
-    pub(super) board_pointer_inside: bool,
-    pub(super) board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
-    pub(super) board_pointer_controller_id: Option<String>,
+pub struct EngineSurface {
+    pub surface_id: Option<EngineSurfaceId>,
+    pub node_graph: Option<NodeGraphEngine>,
+    pub sync_cache: NodeGraphSyncCache,
+    pub map_host: Option<MapHost>,
+    pub map_sync_cache: MapSyncCache,
+    pub map_interaction_owner: Option<ScenePointerTarget>,
+    pub board_host: Option<ManuallyDrop<infinite_canvas::BoardHost>>,
+    pub board_sync_cache: BoardSyncCache,
+    pub board_pending_events: infinite_canvas::BoardEventQueue,
+    pub board_retiring_events: Option<infinite_canvas::BoardEventQueue>,
+    pub board_pointer_inside: bool,
+    pub board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
+    pub board_pointer_controller_id: Option<String>,
     /// 🐁️ The hover target last published on this board's `interactionHover` lane — outer `None` is
     /// "never published", `Some(None)` the explicit clear. React's `createCoalescingActionDispatcher`
     /// keeps the same witness, so an unchanged hover costs no guest round trip.
-    pub(super) board_hover_published: Option<Option<String>>,
+    pub board_hover_published: Option<Option<String>>,
     /// ⏯️ The board's resident tool run trace (`Board2dScene.tool_run_trace`), its placement footprints by kind index and
     /// the theme verdict palette it paints with. Every column is plain data, so retirement drops it in O(batches).
-    pub(super) board_trace: tool_run_trace::ToolRunTraceLayer,
-    pub(super) board_trace_shapes: Vec<tool_run_trace::ToolRunTraceShape2d>,
-    pub(super) board_trace_palette: Option<tool_run_trace::ToolRunTracePalette>,
-    pub(super) editor: Option<EditorHost>,
-    pub(super) editor_scene_pack: Option<Vec<u8>>,
-    pub(super) editor_sync_cache: EditorSyncCache,
-    pub(super) editor_delivery: TextEditorDeliveryState,
-    pub(super) raster_host: Option<RasterHost>,
-    pub(super) raster_sync_cache: RasterSyncCache,
-    pub(super) width: u32,
-    pub(super) height: u32,
-    pub(super) metrics_generation: u64,
-    pub(super) document_generation: u64,
-    pub(super) scene_revision: u64,
+    pub board_trace: tool_run_trace::ToolRunTraceLayer,
+    pub board_trace_shapes: Vec<tool_run_trace::ToolRunTraceShape2d>,
+    pub board_trace_palette: Option<tool_run_trace::ToolRunTracePalette>,
+    pub editor: Option<EditorHost>,
+    pub editor_scene_pack: Option<Vec<u8>>,
+    pub editor_sync_cache: EditorSyncCache,
+    pub editor_delivery: TextEditorDeliveryState,
+    pub raster_host: Option<RasterHost>,
+    pub raster_sync_cache: RasterSyncCache,
+    pub width: u32,
+    pub height: u32,
+    pub metrics_generation: u64,
+    pub document_generation: u64,
+    pub scene_revision: u64,
     last_note_click: Option<(String, f64)>,
-    pub(super) published_graph_interaction: PublishedGraphInteraction,
-    pub(super) published_graph_hit: u64,
-    pub(super) published_graph_geometry: u64,
+    pub published_graph_interaction: PublishedGraphInteraction,
+    pub published_graph_hit: u64,
+    pub published_graph_geometry: u64,
 }
 
-pub(crate) const ENGINE_SURFACE_CAPACITY: usize = 256;
-pub(super) const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
+pub const ENGINE_SURFACE_CAPACITY: usize = 256;
+pub const ENGINE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
 
 /// ♻️ The bytes one close grant releases from a retained buffer — a page, as the prepared raster owners and the store's paged
 /// retirement do: a large document costs its size over the page in grants, never a grant per scalar.
 const ENGINE_CLOSE_PAGE_BYTES: usize = 64 * 1024;
 
 /// ♻️ Releases up to one page of `text` from its end, cutting on a char boundary; `false` once it is empty.
-pub(super) fn retire_string_page(text: &mut String) -> bool {
+pub fn retire_string_page(text: &mut String) -> bool {
     if text.is_empty() {
         return false;
     }
@@ -112,13 +113,13 @@ fn retire_bytes_page(bytes: &mut Vec<u8>) -> bool {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct EngineSurfaceId {
+pub struct EngineSurfaceId {
     pub(super) bytes: [u8; ENGINE_SURFACE_ID_BYTE_CAPACITY],
-    pub(super) len: u16,
+    pub len: u16,
 }
 
 impl EngineSurfaceId {
-    pub(super) fn try_from_str(id: &str) -> Result<Self, ()> {
+    pub fn try_from_str(id: &str) -> Result<Self, ()> {
         if id.is_empty() || id.len() > ENGINE_SURFACE_ID_BYTE_CAPACITY {
             return Err(());
         }
@@ -127,20 +128,20 @@ impl EngineSurfaceId {
         Ok(Self { bytes, len: id.len() as u16 })
     }
 
-    pub(super) fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         unsafe { std::str::from_utf8_unchecked(&self.bytes[..usize::from(self.len)]) }
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.len == 0
     }
 
-    pub(super) fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         self.len = 0;
         true
     }
 
-    pub(super) fn with_raster_key<R>(&self, apply: impl FnOnce(&str) -> R) -> R {
+    pub fn with_raster_key<R>(&self, apply: impl FnOnce(&str) -> R) -> R {
         const PREFIX: &[u8] = b"engine:";
         let mut bytes = [0; ENGINE_SURFACE_ID_BYTE_CAPACITY + 7];
         bytes[..PREFIX.len()].copy_from_slice(PREFIX);
@@ -151,44 +152,44 @@ impl EngineSurfaceId {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct EngineSurfaceToken {
-    pub(crate) slot: u16,
-    pub(crate) generation: u64,
+pub struct EngineSurfaceToken {
+    pub slot: u16,
+    pub generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct EngineSurfaceIdentity {
-    pub(super) token: EngineSurfaceToken,
-    pub(super) id: EngineSurfaceId,
+pub struct EngineSurfaceIdentity {
+    pub token: EngineSurfaceToken,
+    pub id: EngineSurfaceId,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct EngineSurfaceSnapshot {
-    pub(super) identity: EngineSurfaceIdentity,
-    pub(super) metrics_generation: u64,
+pub struct EngineSurfaceSnapshot {
+    pub identity: EngineSurfaceIdentity,
+    pub metrics_generation: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct EngineSurfaceLiveFreshness {
-    pub(super) identity: EngineSurfaceIdentity,
-    pub(super) metrics_generation: u64,
-    pub(super) document_generation: u64,
-    pub(super) scene_revision: u64,
+pub struct EngineSurfaceLiveFreshness {
+    pub identity: EngineSurfaceIdentity,
+    pub metrics_generation: u64,
+    pub document_generation: u64,
+    pub scene_revision: u64,
 }
 
-pub(super) struct EngineSurfaceSlot {
-    pub(super) id: Option<EngineSurfaceId>,
-    pub(super) generation: u64,
+pub struct EngineSurfaceSlot {
+    pub id: Option<EngineSurfaceId>,
+    pub generation: u64,
     pub(super) exhausted: bool,
-    pub(super) value: Option<EngineSurface>,
-    pub(super) retirement: Option<EngineSurfaceRetirement>,
+    pub value: Option<EngineSurface>,
+    pub retirement: Option<EngineSurfaceRetirement>,
 }
 
-pub(super) struct EngineSurfaceRegistry {
-    pub(super) slots: Box<[EngineSurfaceSlot; ENGINE_SURFACE_CAPACITY]>,
-    pub(super) next_text_editor_receipt: u64,
-    pub(super) text_editor_outbox_cursor: usize,
-    pub(super) faulted: bool,
+pub struct EngineSurfaceRegistry {
+    pub slots: Box<[EngineSurfaceSlot; ENGINE_SURFACE_CAPACITY]>,
+    pub next_text_editor_receipt: u64,
+    pub text_editor_outbox_cursor: usize,
+    pub faulted: bool,
 }
 
 impl Default for EngineSurfaceRegistry {
@@ -202,26 +203,26 @@ impl EngineSurfaceRegistry {
         self.slots.iter().position(|slot| slot.id.as_ref().is_some_and(|stored| stored.as_str() == id))
     }
 
-    pub(super) fn contains_key(&self, id: &str) -> bool {
+    pub fn contains_key(&self, id: &str) -> bool {
         self.slot_index(id).is_some()
     }
 
-    pub(super) fn get(&self, id: &str) -> Option<&EngineSurface> {
+    pub fn get(&self, id: &str) -> Option<&EngineSurface> {
         self.slots.get(self.slot_index(id)?)?.value.as_ref()
     }
 
-    pub(super) fn get_mut(&mut self, id: &str) -> Option<&mut EngineSurface> {
+    pub fn get_mut(&mut self, id: &str) -> Option<&mut EngineSurface> {
         let index = self.slot_index(id)?;
         self.slots[index].value.as_mut()
     }
 
     #[cfg(test)]
-    pub(super) fn token(&self, id: &str) -> Option<EngineSurfaceToken> {
+    pub fn token(&self, id: &str) -> Option<EngineSurfaceToken> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation })
     }
 
-    pub(super) fn identity(&self, id: &str) -> Option<EngineSurfaceIdentity> {
+    pub fn identity(&self, id: &str) -> Option<EngineSurfaceIdentity> {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
     }
@@ -231,7 +232,7 @@ impl EngineSurfaceRegistry {
         (slot.generation == token.generation).then_some(EngineSurfaceIdentity { token, id: slot.id? })
     }
 
-    pub(super) fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
+    pub fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
         let Ok(id) = EngineSurfaceId::try_from_str(id) else {
             self.faulted = true;
             return None;
@@ -255,7 +256,7 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceToken { slot: index as u16, generation: slot.generation })
     }
 
-    pub(super) fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) -> Result<(), EngineSurface> {
+    pub fn publish_reserved(&mut self, token: EngineSurfaceToken, value: EngineSurface) -> Result<(), EngineSurface> {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return Err(value);
         };
@@ -267,7 +268,7 @@ impl EngineSurfaceRegistry {
     }
 
     #[cfg(test)]
-    pub(super) fn remove(&mut self, id: &str) -> Option<EngineSurface> {
+    pub fn remove(&mut self, id: &str) -> Option<EngineSurface> {
         let index = self.slot_index(id)?;
         let slot = &mut self.slots[index];
         slot.generation = slot.generation.checked_add(1).unwrap_or_else(|| {
@@ -278,11 +279,11 @@ impl EngineSurfaceRegistry {
         slot.value.take()
     }
 
-    pub(super) fn values_mut(&mut self) -> impl Iterator<Item = &mut EngineSurface> {
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut EngineSurface> {
         self.slots.iter_mut().filter_map(|slot| slot.value.as_mut())
     }
 
-    pub(super) fn begin_close(&mut self, token: EngineSurfaceToken) -> bool {
+    pub fn begin_close(&mut self, token: EngineSurfaceToken) -> bool {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return false;
         };
@@ -302,7 +303,7 @@ impl EngineSurfaceRegistry {
         true
     }
 
-    pub(super) fn close_step(&mut self, token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    pub fn close_step(&mut self, token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
         let Some(slot) = self.slots.get_mut(usize::from(token.slot)) else {
             return false;
         };
@@ -329,7 +330,7 @@ impl EngineSurfaceRegistry {
         true
     }
 
-    pub(super) fn terminal_nonopaque_is_empty(&self, token: EngineSurfaceToken) -> bool {
+    pub fn terminal_nonopaque_is_empty(&self, token: EngineSurfaceToken) -> bool {
         match self.slots.get(usize::from(token.slot)) {
             None => true,
             Some(slot) => slot.generation != token.generation || (slot.value.is_none() && slot.retirement.is_none() && slot.id.is_none()),
@@ -528,7 +529,7 @@ impl EngineSurfaceRetirement {
 
     fn close_map_sync(cache: &mut MapSyncCache, host_id: Option<&EngineSurfaceId>) -> bool {
         if let Some(host_id) = host_id {
-            crate::cancel_renderer_map_tile_assets(host_id.as_str());
+            crate::asset_authority::cancel_renderer_map_tile_assets(host_id.as_str());
             cache.tile_pending.clear();
             cache.tile_misses.clear();
             cache.raster_tiles_revision = None;
@@ -823,60 +824,62 @@ impl Drop for EngineSurfaceRetirement {
 }
 
 #[derive(Default)]
-pub(super) struct MapSyncCache {
-    pub(super) map_descriptor_json: Option<String>,
-    pub(super) camera_json: Option<String>,
-    pub(super) render_mode: Option<String>,
-    pub(super) vector_style: Option<String>,
-    pub(super) lod_mode: Option<String>,
-    pub(super) layer_visibility_json: Option<String>,
-    pub(super) layer_stroke_scale_json: Option<String>,
-    pub(super) selection_json: Option<String>,
-    pub(super) hover_json: Option<String>,
-    pub(super) theme_json: Option<String>,
-    pub(super) size_key: Option<String>,
+pub struct MapSyncCache {
+    pub map_descriptor_json: Option<String>,
+    pub camera_json: Option<String>,
+    pub render_mode: Option<String>,
+    pub vector_style: Option<String>,
+    pub lod_mode: Option<String>,
+    pub layer_visibility_json: Option<String>,
+    pub layer_stroke_scale_json: Option<String>,
+    pub selection_json: Option<String>,
+    pub hover_json: Option<String>,
+    pub theme_json: Option<String>,
+    pub size_key: Option<String>,
     /// 📡️ Tiles admitted into the bounded renderer-asset pipeline and not yet applied, keyed
     /// `(vector, z, x, y)` — the port of `MapRenderer`'s in-flight `Promise` set, and what keeps a
     /// per-frame re-offer from reserving the same URL twice.
-    pub(super) tile_pending: HashSet<(bool, u32, u32, u32)>,
+    pub tile_pending: HashSet<(bool, u32, u32, u32)>,
     /// 🕳️ Tiles the server or the decoder refused — React's `tileMiss`/`vectorTileMiss`, cleared per
     /// lane whenever that lane's visible range revision changes.
-    pub(super) tile_misses: HashSet<(bool, u32, u32, u32)>,
-    pub(super) raster_tiles_revision: Option<u64>,
-    pub(super) vector_tiles_revision: Option<u64>,
+    pub tile_misses: HashSet<(bool, u32, u32, u32)>,
+    pub raster_tiles_revision: Option<u64>,
+    pub vector_tiles_revision: Option<u64>,
 }
 
 #[derive(Default)]
-pub(super) struct BoardSyncCache {
+pub struct BoardSyncCache {
     /// 🎯️ `Board2dScene.domain_id` — the framework interaction domain this board's hovers belong to.
     /// An app that declares none publishes NO `interactionHover`, exactly like React's
     /// `if (!interactionDomainId) return undefined` (`🖥️Board2dHost/🟦️.tsx:777`). Carried here
     /// because the pointer seams are addressed by surface id, not by scene.
-    pub(super) domain_id: Option<String>,
+    pub domain_id: Option<String>,
     /// 🎯️ Every entity id the snapshot carries, classified into the granularity a hover reports it
     /// under — the port of React's `board2dGranularityById` (`🖥️Board2dHost/🟦️.tsx:190`). Rebuilt
     /// only when the snapshot changes.
-    pub(super) granularity_by_id: HashMap<String, String>,
-    pub(super) snapshot_json: Option<String>,
-    pub(super) glyph_catalogs_json: Option<String>,
-    pub(super) placement_compatibility_json: Option<String>,
-    pub(super) selection_json: Option<String>,
-    pub(super) highlighted_ids_json: Option<String>,
-    pub(super) camera_json: Option<String>,
-    pub(super) hovered_id: Option<String>,
-    pub(super) active_utility: Option<String>,
-    pub(super) selection_method: Option<String>,
-    pub(super) selectable_kinds: Option<(bool, bool, bool)>,
-    pub(super) grid_visible: Option<bool>,
-    pub(super) grid_snap_enabled: Option<bool>,
-    pub(super) grid_factor: Option<f64>,
-    pub(super) suggestion_offset: Option<f64>,
-    pub(super) brush_weights_json: Option<String>,
-    pub(super) lod_mode: Option<String>,
-    pub(super) transform_flags: Option<String>,
-    pub(super) area_brush_size: Option<String>,
-    pub(super) size_key: Option<String>,
-    pub(super) tool_run_trace_window_id: Option<String>,
+    pub granularity_by_id: HashMap<String, String>,
+    pub snapshot_json: Option<String>,
+    pub glyph_catalogs_json: Option<String>,
+    /// 🏷️ `Board2dScene.placement_naming` — the owning domain's brush id prefixes, so a placement on this lane mints the domain's ids.
+    pub placement_naming: Option<String>,
+    pub placement_compatibility_json: Option<String>,
+    pub selection_json: Option<String>,
+    pub highlighted_ids_json: Option<String>,
+    pub camera_json: Option<String>,
+    pub hovered_id: Option<String>,
+    pub active_utility: Option<String>,
+    pub selection_method: Option<String>,
+    pub selectable_kinds: Option<(bool, bool, bool)>,
+    pub grid_visible: Option<bool>,
+    pub grid_snap_enabled: Option<bool>,
+    pub grid_factor: Option<f64>,
+    pub suggestion_offset: Option<f64>,
+    pub brush_weights_json: Option<String>,
+    pub lod_mode: Option<String>,
+    pub transform_flags: Option<String>,
+    pub area_brush_size: Option<String>,
+    pub size_key: Option<String>,
+    pub tool_run_trace_window_id: Option<String>,
 }
 
 /** 🖌️ The last `Paint2dScene` fields pushed into this surface's [`RasterHost`] — the wgpu twin of
@@ -885,19 +888,19 @@ pub(super) struct BoardSyncCache {
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `syncAll` */
 #[derive(Default)]
-pub(super) struct RasterSyncCache {
-    pub(super) document_sync_json: Option<String>,
-    pub(super) assets_json: Option<String>,
-    pub(super) camera_json: Option<String>,
-    pub(super) selection_json: Option<String>,
-    pub(super) hovered_id: Option<String>,
-    pub(super) active_utility: Option<String>,
-    pub(super) view_mode: Option<String>,
-    pub(super) brush: Option<(f64, f64, u32, f64)>,
-    pub(super) paint_target:Option<PaintTarget>,
-    pub(super) mask_value:Option<u8>,
-    pub(super) theme_json: Option<String>,
-    pub(super) size_key: Option<String>,
+pub struct RasterSyncCache {
+    pub document_sync_json: Option<String>,
+    pub assets_json: Option<String>,
+    pub camera_json: Option<String>,
+    pub selection_json: Option<String>,
+    pub hovered_id: Option<String>,
+    pub active_utility: Option<String>,
+    pub view_mode: Option<String>,
+    pub brush: Option<(f64, f64, u32, f64)>,
+    pub paint_target:Option<PaintTarget>,
+    pub mask_value:Option<u8>,
+    pub theme_json: Option<String>,
+    pub size_key: Option<String>,
 }
 
 /** ✍️ The last `TextEditorScene` document pushed into this surface's [`EditorHost`], plus the
@@ -980,11 +983,11 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.tool_run_trace_window_id.is_none()
 }
 
-pub(super) static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new(Default::default);
+pub static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new(Default::default);
 
-pub(super) static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new(Default::default);
+pub static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new(Default::default);
 
-pub(super) fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
+pub fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
     EngineSurface {
         surface_id: None,
         node_graph: None,
@@ -1025,7 +1028,7 @@ pub(super) fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
 /// generation-keyed snapshot a frame packet is admitted against. The single production entry into
 /// [`ENGINE_SURFACES`]: every per-kind attach path (`sync_node_graph_scene` today) goes through it,
 /// so a surface identity can never be published twice or outlive its slot generation.
-pub(super) fn ensure_engine_surface(host_id: &str, surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
+pub fn ensure_engine_surface(host_id: &str, surface_id: &str, pw: u32, ph: u32) -> Option<EngineSurfaceSnapshot> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let surface_id = EngineSurfaceId::try_from_str(surface_id).ok()?;
@@ -1063,11 +1066,11 @@ pub(super) fn ensure_engine_surface(host_id: &str, surface_id: &str, pw: u32, ph
     })
 }
 
-pub(super) fn engine_surface_wire_id(host_id: &str) -> Option<EngineSurfaceId> {
+pub fn engine_surface_wire_id(host_id: &str) -> Option<EngineSurfaceId> {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(host_id)?.surface_id)
 }
 
-pub(crate) fn engine_surface_token(host_id: &str) -> Option<EngineSurfaceToken> {
+pub fn engine_surface_token(host_id: &str) -> Option<EngineSurfaceToken> {
     ENGINE_SURFACES.with(|cell| cell.borrow().identity(host_id).map(|identity| identity.token))
 }
 
@@ -1087,7 +1090,7 @@ pub(super) fn engine_surface_live_freshness(token: EngineSurfaceToken) -> Result
     })
 }
 
-pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()> {
+pub fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfaceToken>, ()> {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.try_borrow_mut().ok_or(())?;
         let Some(slot) = registry.slots.get(index) else {
@@ -1097,7 +1100,7 @@ pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfa
     })
 }
 
-pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()> {
+pub fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()> {
     let (begun, identity) = ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.try_borrow_mut().ok_or(())?;
         let identity = registry.identity_for_token(token);
@@ -1114,25 +1117,304 @@ pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Res
     Ok(begun)
 }
 
-pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().is_some_and(|mut registry| registry.close_step(token, context, input)))
 }
 
-pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()> {
+pub fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()> {
     ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|registry| registry.terminal_nonopaque_is_empty(token)).ok_or(()))
 }
 
-pub(super) fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {
-    device.create_texture(&wgpu::TextureDescriptor {
-        label: Some("engine_canvas_target"),
-        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
-        view_formats: &[],
-    })
-}
 
 //#endregion Registry
+
+//#region ✍️TextEditorDelivery
+
+pub const TEXT_EDITOR_PENDING_ECHO_CAPACITY: usize = 256;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TextEditorDeliverySnapshot {
+    pub controller_id: String,
+    pub surface_id: String,
+    pub text: String,
+    pub start: usize,
+    pub end: usize,
+}
+
+/// ⌨️ The editor's open typing run as its host sees it (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
+/// window folds every `textEdit` delivery that names the buffer (`typing`) into ONE run; the host ends it on idle, on a pure
+/// caret move, when the editor loses focus and when the page is hidden, with one commit signal, never one edit per keystroke.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TextEditorTypingRun {
+    pub controller_id: String,
+    pub surface_id: String,
+    last_ms: f64,
+}
+
+/// 🏁️ Why the host ends an open typing run before its idle bound (the `typingCommit` reasons of the text-splice corpus
+/// `hostSignals`): the editor lost keyboard focus, or the page was hidden or left.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextEditorTypingEnd {
+    Blur,
+    Hidden,
+}
+
+impl TextEditorTypingEnd {
+    /// 🏷️ The `typingCommit` reason the commit signal carries.
+    pub fn reason(self) -> &'static str {
+        match self {
+            Self::Blur => "blur",
+            Self::Hidden => "hidden",
+        }
+    }
+}
+
+/// ⏰️ The host clock the typing run's idle bound reads.
+#[cfg(target_arch = "wasm32")]
+pub fn text_editor_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn text_editor_now_ms() -> f64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_secs_f64() * 1000.0).unwrap_or(0.0)
+}
+
+pub struct TextEditorDeliveryInFlight {
+    source: EngineSurfaceToken,
+    pub token: std::num::NonZeroU64,
+    pub snapshot: TextEditorDeliverySnapshot,
+    pending_members: u8,
+}
+
+pub struct TextEditorDraftPublication {
+    source: String,
+    restore: Option<String>,
+    pub action: ui_wgpu::wgpu::RetainedStringAction,
+}
+
+pub struct TextEditorDeliveryPublication {
+    source: String,
+    pub action: ui_wgpu::wgpu::RetainedStringAction,
+    pub snapshot: TextEditorDeliverySnapshot,
+    include_selection: bool,
+}
+
+#[derive(Default)]
+pub struct TextEditorDeliveryState {
+    pub active: Option<TextEditorDeliveryInFlight>,
+    latest: Option<TextEditorDeliverySnapshot>,
+    publication: Option<TextEditorDeliveryPublication>,
+    pub pending_echoes: VecDeque<String>,
+    acknowledged: Option<String>,
+    pub read_only: bool,
+    selection_undeclared: bool,
+    pub(super) explicit_dirty: bool,
+    pub(super) explicit_base: Option<String>,
+    pub(super) explicit_changes: Option<String>,
+    pub(super) explicit_conflict: bool,
+    pub(super) explicit_past: VecDeque<String>,
+    pub(super) explicit_future: VecDeque<String>,
+    pub(super) explicit_snapshot: Option<String>,
+    pub(super) explicit_publication: Option<TextEditorDraftPublication>,
+    pub(super) explicit_active: Option<std::num::NonZeroU64>,
+    pub(super) explicit_error: Option<String>,
+    typing: Option<TextEditorTypingRun>,
+    typing_end: Option<TextEditorTypingEnd>,
+}
+
+impl TextEditorDeliveryState {
+    pub fn reconcile_buffer(&mut self, buffer: &str) -> bool {
+        if let Some(index) = self.pending_echoes.iter().position(|pending| pending == buffer) {
+            self.pending_echoes.drain(..=index);
+            self.acknowledged = Some(buffer.to_owned());
+            return false;
+        }
+        if self.acknowledged.as_deref() == Some(buffer) {
+            return false;
+        }
+        self.pending_echoes.clear();
+        self.acknowledged = Some(buffer.to_owned());
+        true
+    }
+
+    pub fn offer(&mut self, snapshot: TextEditorDeliverySnapshot) {
+        if self.latest.as_ref() == Some(&snapshot) || self.active.as_ref().is_some_and(|active| active.snapshot == snapshot) {
+            return;
+        }
+        if self.publication.as_ref().is_some_and(|publication| publication.snapshot != snapshot) {
+            self.publication = None;
+        }
+        self.latest = Some(snapshot);
+    }
+
+    /// 🏁️ Marks the open typing run (or the one its in-flight keystroke opens) to end for `end` once nothing is in flight;
+    /// `false` when the editor neither types nor has a delivery in flight.
+    fn end_typing(&mut self, end: TextEditorTypingEnd) -> bool {
+        let typing = self.typing.is_some() || self.active.is_some() || self.latest.is_some() || self.publication.is_some();
+        if typing {
+            self.typing_end = Some(end);
+        }
+        typing
+    }
+
+    pub fn guest_has_text(&self, text: &str) -> bool {
+        self.pending_echoes.back().map_or_else(|| self.acknowledged.as_deref() == Some(text), |pending| pending == text)
+    }
+
+    pub fn note_dispatched(&mut self, source: EngineSurfaceToken, token: std::num::NonZeroU64, include_edit: bool, include_selection: bool) -> bool {
+        if self.active.is_some() {
+            return false;
+        }
+        let Some(snapshot) = self.latest.take() else { return false };
+        if include_edit {
+            if self.pending_echoes.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
+                self.pending_echoes.pop_front();
+            }
+            self.pending_echoes.push_back(snapshot.text.clone());
+        }
+        let pending_members = u8::from(include_edit) | (u8::from(include_selection) << 1);
+        self.active = Some(TextEditorDeliveryInFlight { source, token, snapshot, pending_members });
+        true
+    }
+
+    pub fn remove_pending_echo(&mut self, text: &str) -> bool {
+        let Some(index) = self.pending_echoes.iter().position(|pending| pending == text) else { return false };
+        self.pending_echoes.remove(index);
+        true
+    }
+
+    pub(super) fn close_string(value: &mut String) -> bool {
+        retire_string_page(value)
+    }
+
+    fn close_snapshot(snapshot: &mut TextEditorDeliverySnapshot) -> bool {
+        Self::close_string(&mut snapshot.text) || Self::close_string(&mut snapshot.surface_id) || Self::close_string(&mut snapshot.controller_id)
+    }
+
+    pub(super) fn close_step(&mut self) -> bool {
+        if self.latest.as_mut().is_some_and(Self::close_snapshot) {
+            return false;
+        }
+        self.latest = None;
+        if self.publication.as_mut().is_some_and(|publication| Self::close_string(&mut publication.source) || Self::close_snapshot(&mut publication.snapshot)) {
+            return false;
+        }
+        self.publication = None;
+        if self.active.as_mut().is_some_and(|active| Self::close_snapshot(&mut active.snapshot)) {
+            return false;
+        }
+        self.active = None;
+        if self.pending_echoes.back_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        if self.pending_echoes.pop_back().is_some() {
+            return false;
+        }
+        if self.acknowledged.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.acknowledged = None;
+        self.read_only = false;
+        self.selection_undeclared = false;
+        self.explicit_dirty = false;
+        if self.explicit_base.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_base = None;
+        if self.explicit_changes.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_changes = None;
+        self.explicit_conflict = false;
+        if self.explicit_past.back_mut().is_some_and(Self::close_string) || self.explicit_future.back_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.explicit_past.pop_back();
+        self.explicit_future.pop_back();
+        if !self.explicit_past.is_empty() || !self.explicit_future.is_empty() {
+            return false;
+        }
+        self.explicit_snapshot = None;
+        self.explicit_publication = None;
+        self.explicit_active = None;
+        self.explicit_error = None;
+        if self.typing.as_mut().is_some_and(|run| Self::close_string(&mut run.controller_id) || Self::close_string(&mut run.surface_id)) {
+            return false;
+        }
+        self.typing = None;
+        self.typing_end = None;
+        true
+    }
+
+    pub(super) fn terminal_is_empty(&self) -> bool {
+        self.active.is_none()
+            && self.latest.is_none()
+            && self.publication.is_none()
+            && self.pending_echoes.is_empty()
+            && self.acknowledged.is_none()
+            && !self.read_only
+            && !self.selection_undeclared
+            && !self.explicit_dirty
+            && self.explicit_base.is_none()
+            && !self.explicit_conflict
+            && self.explicit_past.is_empty()
+            && self.explicit_future.is_empty()
+            && self.explicit_snapshot.is_none()
+            && self.explicit_publication.is_none()
+            && self.explicit_active.is_none()
+            && self.explicit_error.is_none()
+            && self.typing.is_none()
+            && self.typing_end.is_none()
+    }
+}
+
+//#endregion ✍️TextEditorDelivery
+
+//#region 🪵️EngineCanvasDiagnostics
+
+/// 🚨️ Console ERROR line for a refusal at the engine edge — a scene the editor engine would not take, a member this
+/// host could not read. `eprintln!` is a no-op inside a `wasm32-unknown-unknown` Worker.
+pub fn engine_canvas_fault_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
+}
+
+/// 🩺️ Console line for a screen-path gesture. `eprintln!` is a no-op inside a
+/// `wasm32-unknown-unknown` Worker, so a wire drawn there would otherwise leave no trace at all.
+pub fn engine_canvas_debug_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
+}
+
+/// 📌️ The fingerprints of the three interaction actions a node-graph surface last dispatched.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PublishedGraphInteraction {
+    pub select: u64,
+    pub hover: u64,
+    pub viewport: u64,
+}
+
+pub fn published_graph_interaction(surface_id: &str) -> PublishedGraphInteraction {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).map(|entry| entry.published_graph_interaction).unwrap_or_default())
+}
+
+//#endregion 🪵️EngineCanvasDiagnostics
+
+//#region 📷️EngineCamera
+
+/// 🎥️ A `{x, y, zoom}` camera document — the shape React's `parseCameraJson`/`parseBoardCamera` read
+/// and the shape both hosts' `set_camera` take.
+pub fn engine_camera_from_json(json: &str) -> Option<(f64, f64, f64)> {
+    let value = serde_json::from_str::<Value>(json).ok()?;
+    let x = value.get("x").and_then(Value::as_f64)?;
+    let y = value.get("y").and_then(Value::as_f64)?;
+    let zoom = value.get("zoom").and_then(Value::as_f64).filter(|zoom| *zoom > 0.0)?;
+    Some((x, y, zoom))
+}
+
+//#endregion 📷️EngineCamera

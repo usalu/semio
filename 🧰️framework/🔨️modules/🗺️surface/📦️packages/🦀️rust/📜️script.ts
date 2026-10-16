@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
+import {verifyProducedWasmPackageV1} from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { BROWSER_CANVAS_HOT_CRATES } from "../../../🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
+import {buildRepositoryWasmWebV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
@@ -15,15 +15,16 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
+/** 🗺️ Every surface producer crate, bottom up; the facade last. */
+const SURFACE_PACKAGES = ["semio-framework-surface-terrain", "semio-framework-surface-paint", "semio-framework-surface-node-graph", "semio-framework-surface"];
+
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildWasmWebV1({control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
+    await buildRepositoryWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/surface/rs",
       wasmBaseName: "framework_surface",
-      outputDirectory: "🕸️bindings",
-      prototypeOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
       pkg: {
         name: "@semio-tech/framework-surface-rs",
         files: ["framework_surface_bg.wasm", "framework_surface.js", "framework_surface.d.ts", "framework_surface_bg.wasm.d.ts"],
@@ -31,7 +32,7 @@ class WasmScript extends BundleScript {
         module: "framework_surface.js",
         types: "framework_surface.d.ts",
       },
-    }, readWasmBuildPolicyV1(process.env,this.root));
+    });
     await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🕸️browser/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
   }
 }
@@ -39,7 +40,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runOwnedCommand("bun", ["test", join(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-surface"], cwd: this.root, extraArgs: segments }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: SURFACE_PACKAGES, cwd: this.root, extraArgs: segments }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -56,7 +57,7 @@ class SourceScript extends BundleScript{
 class SceneWireNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-scene-wire-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface-node-graph"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 

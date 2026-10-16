@@ -4,7 +4,7 @@ use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetainedCloneProgress,RetirementDemand,NativeEncodeControl,NativeEncodeContinuation,retirement::controlled::ControlledRetirement};
 use semio_framework_pack_json::{JsonBorrowedWriteCursor,JsonWriteSource,JsonWriteNode};
 
-pub(crate) struct PresentedSlotSource<'a>{pub(crate) window:&'a str,pub(crate) node_id:u64,pub(crate) key:&'a str,pub(crate) owner:&'a PresentedMediaOwner,pub(crate) rect:PresentedMediaRect,pub(crate) clip:PresentedMediaRect,pub(crate) order:u32,pub(crate) occluded:bool}
+pub struct PresentedSlotSource<'a>{pub window:&'a str,pub node_id:u64,pub key:&'a str,pub owner:&'a PresentedMediaOwner,pub rect:PresentedMediaRect,pub clip:PresentedMediaRect,pub order:u32,pub occluded:bool}
 impl PresentedSlotSource<'_>{fn scalar(&self)->(u32,[u32;8],u32,bool){(self.owner.app_instance_id,[self.rect.x,self.rect.y,self.rect.width,self.rect.height,self.clip.x,self.clip.y,self.clip.width,self.clip.height].map(f32::to_bits),self.order,self.occluded)}fn identity(&self)->[(usize,usize);5]{[self.window,self.key,&self.owner.plugin_id,&self.owner.controller_id,&self.owner.parent_document_id].map(|value|(value.as_ptr()as usize,value.len()))}fn field(&self,index:usize)->&str{match index{0=>self.window,2=>self.key,3=>&self.owner.plugin_id,4=>&self.owner.controller_id,5=>&self.owner.parent_document_id,_=>unreachable!("original numeric field is inline")}}}
 fn allocation(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::AllocationFailed,message)}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
@@ -12,9 +12,9 @@ fn permits(cx:&StepContext<'_>,demand:RetirementDemand)->bool{let grant=cx.retai
 fn metadata(cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(())}
 fn close<T:semio_framework_value::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if owner.terminal_is_empty(){return Ok(true)}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(owner.terminal_is_empty())}
 
-pub(crate) struct OriginalPresentedSlot{source:[(usize,usize);5],node:u64,scalar:(u32,[u32;8],u32,bool),identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,phase:u8,field:usize,position:usize,characters:usize,reserved:bool,decimal:[u8;20],decimal_start:usize,payload:ControlledRetirement<Option<PresentedMediaSlot>>,buffer:ControlledRetirement<Vec<u8>>,writer:ControlledRetirement<JsonBorrowedWriteCursor>,encoding:Option<NativeEncodeContinuation>,wire:ControlledRetirement<Option<String>>,hash:Option<semio_framework_hash::Sha256>,digest:[u8;32],closing:bool}
+pub struct OriginalPresentedSlot{source:[(usize,usize);5],node:u64,scalar:(u32,[u32;8],u32,bool),identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,phase:u8,field:usize,position:usize,characters:usize,reserved:bool,decimal:[u8;20],decimal_start:usize,payload:ControlledRetirement<Option<PresentedMediaSlot>>,buffer:ControlledRetirement<Vec<u8>>,writer:ControlledRetirement<JsonBorrowedWriteCursor>,encoding:Option<NativeEncodeContinuation>,wire:ControlledRetirement<Option<String>>,hash:Option<semio_framework_hash::Sha256>,digest:[u8;32],closing:bool}
 impl OriginalPresentedSlot{
- pub(crate) fn admit(target:&mut Option<Self>,source:&PresentedSlotSource<'_>,props:&mut Option<DslValue>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn admit(target:&mut Option<Self>,source:&PresentedSlotSource<'_>,props:&mut Option<DslValue>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if target.is_some(){return Err(invalid("original slot producer receiver is occupied").into())}
   if !permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}
   if props.is_none(){return Err(invalid("original slot requires its paid props owner").into())}
@@ -23,7 +23,7 @@ impl OriginalPresentedSlot{
   let owner=Self{source:source.identity(),node:source.node_id,scalar:source.scalar(),identity:(cx.operation(),cx.generation()),clock:cx.clock_source(),deadline:cx.deadline_us(),phase:0,field:0,position:0,characters:0,reserved:false,decimal,decimal_start,payload:ControlledRetirement::new(Some(slot)).unwrap_or_else(|_|unreachable!()),buffer:ControlledRetirement::new(Vec::new()).unwrap_or_else(|_|unreachable!()),writer:ControlledRetirement::new(JsonBorrowedWriteCursor::new()).unwrap_or_else(|_|unreachable!()),encoding:None,wire:ControlledRetirement::new(None).unwrap_or_else(|_|unreachable!()),hash:Some(semio_framework_hash::Sha256::new()),digest:[0;32],closing:false};*target=Some(owner);metadata(cx)?;Ok(true)
  }
  fn check_caller(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.identity!=(cx.operation(),cx.generation())||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(invalid("original slot caller clock or deadline changed"))}Ok(())}
- pub(crate) fn advance(&mut self,source:&PresentedSlotSource<'_>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn advance(&mut self,source:&PresentedSlotSource<'_>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.check_caller(cx)?;if self.closing||self.source!=source.identity()||self.node!=source.node_id||self.scalar!=source.scalar(){return Err(invalid("accepted slot source identity changed").into())}
   if self.phase==7{return Ok(true)}
   if self.phase==0{
@@ -48,9 +48,9 @@ impl OriginalPresentedSlot{
   }
   if self.phase==6{if !permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}self.encoding=None;self.phase=7;metadata(cx)?;return Ok(true)}Ok(false)
  }
- pub(crate) fn donate(&mut self,output:&mut Option<PresentedMediaSlot>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;if self.closing||self.phase!=7||output.is_some()||!permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}*output=self.payload.take_original().ok_or_else(||invalid("completed slot body lost original custody"))?;metadata(cx)?;Ok(true)}
- pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if !close(&mut self.writer,cx)?{return Ok(false)}if !close(&mut self.wire,cx)?{return Ok(false)}if !close(&mut self.buffer,cx)?{return Ok(false)}if !close(&mut self.payload,cx)?{return Ok(false)}if self.encoding.is_some()||self.hash.is_some(){if !permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}self.encoding=None;self.hash=None;metadata(cx)?;return Ok(false)}Ok(true)}
- pub(crate) fn terminal_is_empty(&self)->bool{self.writer.terminal_is_empty()&&self.wire.terminal_is_empty()&&self.buffer.terminal_is_empty()&&self.payload.terminal_is_empty()&&self.encoding.is_none()&&self.hash.is_none()}
+ pub fn donate(&mut self,output:&mut Option<PresentedMediaSlot>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;if self.closing||self.phase!=7||output.is_some()||!permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}*output=self.payload.take_original().ok_or_else(||invalid("completed slot body lost original custody"))?;metadata(cx)?;Ok(true)}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if !close(&mut self.writer,cx)?{return Ok(false)}if !close(&mut self.wire,cx)?{return Ok(false)}if !close(&mut self.buffer,cx)?{return Ok(false)}if !close(&mut self.payload,cx)?{return Ok(false)}if self.encoding.is_some()||self.hash.is_some(){if !permits(cx,RetirementDemand{depth:1,..Default::default()}){return Ok(false)}self.encoding=None;self.hash=None;metadata(cx)?;return Ok(false)}Ok(true)}
+ pub fn terminal_is_empty(&self)->bool{self.writer.terminal_is_empty()&&self.wire.terminal_is_empty()&&self.buffer.terminal_is_empty()&&self.payload.terminal_is_empty()&&self.encoding.is_none()&&self.hash.is_none()}
 }
 struct SlotIdentity<'a>(&'a PresentedMediaSlot);
 impl JsonWriteSource for SlotIdentity<'_>{

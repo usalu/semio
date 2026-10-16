@@ -1186,9 +1186,7 @@ pub mod playback {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️codec/🦀️.rs"]
-mod codec_tests;
+
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
@@ -1205,14 +1203,11 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
+
+
 
 pub mod derived_construction {
     use crate::standards::v1_0::subsets::any::schema::diff::AviDiff;

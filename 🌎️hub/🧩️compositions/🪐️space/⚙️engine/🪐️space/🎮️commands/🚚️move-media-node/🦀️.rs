@@ -1,8 +1,8 @@
 //! 🧩️ 🧩️ S Studio app command — `move-media-node`: one workflow node dropped at a canvas position, committed through the
 //! node-drag machine as ONE relative `move-nodes` leaf.
 
-use crate::engine::space::commands::node_graph_edit::space_node_drag_emit;
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use crate::node_graph_edit::space_node_drag_emit;
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_artifact_workflow_workflow::MoveNodes;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

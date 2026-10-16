@@ -19,14 +19,14 @@ use serde::Deserialize;
 use ui_render::{AccessibilityEvent, AccessibilityTarget, DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerId, PointerInfo, PointerKind};
 
 #[derive(Deserialize)]
-pub(crate) struct BrowserBatch {
-    pub(crate) replaceable: Vec<BrowserWireEvent>,
-    pub(crate) lossless: Vec<BrowserWireEvent>,
+pub struct BrowserBatch {
+    pub replaceable: Vec<BrowserWireEvent>,
+    pub lossless: Vec<BrowserWireEvent>,
 }
 
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase")]
-pub(crate) enum BrowserWireEvent {
+pub enum BrowserWireEvent {
     PointerCancel {
         pointer_id: u64,
         pointer_kind: BrowserPointerKind,
@@ -108,7 +108,7 @@ pub(crate) enum BrowserWireEvent {
     ImeCancel,
     HubDocumentStatus {
         document_key: String,
-        remote: crate::shell::ShellHubRemoteV1,
+        remote: semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1,
     },
     HubDocumentClose {
         document_key: String,
@@ -151,7 +151,7 @@ pub(crate) enum BrowserWireEvent {
 
 #[derive(Clone, Copy, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) enum TextTarget {
+pub enum TextTarget {
     Text,
     Paste,
     PasteImageDataUrl,
@@ -161,7 +161,7 @@ pub(crate) enum TextTarget {
 
 #[derive(Clone, Copy, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) enum BrowserPointerKind {
+pub enum BrowserPointerKind {
     Mouse,
     Touch,
     Pen,
@@ -170,13 +170,13 @@ pub(crate) enum BrowserPointerKind {
 
 #[derive(Clone, Copy, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub(crate) enum BrowserPointerButton {
+pub enum BrowserPointerButton {
     Primary,
     Secondary,
     Middle,
 }
 
-pub(crate) fn pointer(id: u64, kind: BrowserPointerKind, pressure: Option<f32>, tilt_x: Option<f32>, tilt_y: Option<f32>) -> PointerInfo {
+pub fn pointer(id: u64, kind: BrowserPointerKind, pressure: Option<f32>, tilt_x: Option<f32>, tilt_y: Option<f32>) -> PointerInfo {
     PointerInfo { id: PointerId(id), kind: kind.into(), pressure, tilt: tilt_x.zip(tilt_y) }
 }
 
@@ -203,13 +203,13 @@ impl From<BrowserPointerButton> for PointerButton {
 
 /// ♿️ The byte credit of one accessibility address id (`windowId`, `nodeKey`) — the transport's
 /// `FRAME_WORKER_ACCESSIBILITY_ID_BYTES` (`🚚️browser-frame-transport/🟦️.ts`).
-pub(crate) const ACCESSIBILITY_ID_BYTES: usize = 512;
+pub const ACCESSIBILITY_ID_BYTES: usize = 512;
 
 /// ♿️ Whether an accessibility address fits its fixed CREDITS — bounded, non-empty, control-free ids
 /// (`🧫️fixtures/♿️wgpu-accessibility-interaction` `transportCredits`). Liveness is not a credit: a
 /// retired generation or a mismatched key is the renderer's own `Ok(false)`, and node id 0 is the
 /// first id `UiNodeIdAllocator` mints, so neither may fault the Worker.
-pub(crate) fn accessibility_address_within_credits(window_id: &str, node_key: &str) -> bool {
+pub fn accessibility_address_within_credits(window_id: &str, node_key: &str) -> bool {
     [window_id, node_key].into_iter().all(|value| !value.is_empty() && value.len() <= ACCESSIBILITY_ID_BYTES && !value.bytes().any(|byte| byte <= 0x1f || byte == 0x7f))
 }
 
@@ -220,7 +220,7 @@ pub(crate) fn accessibility_address_within_credits(window_id: &str, node_key: &s
 /// surface's metrics (`WindowDelegate::handle_metrics`, not the event queue), and a `text-chunk` is one
 /// page of a segmented text stream whose meaning depends on the Worker's own stream table. Both stay
 /// with the host that owns that state.
-pub(crate) fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEvent> {
+pub fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEvent> {
     Some(match event {
         BrowserWireEvent::PointerCancel { pointer_id, pointer_kind, pressure, tilt_x, tilt_y } => DispatchEvent::PointerCancel { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y) },
         BrowserWireEvent::PointerMove { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, shift, ctrl, alt, meta } => {
@@ -259,3 +259,53 @@ pub(crate) fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEve
 #[cfg(test)]
 #[path = "../../../🧪️tests/🎮️wgpu-browser-input-wire/🦀️.rs"]
 mod browser_input_wire_tests;
+
+//#region 🎮️InputNormalization
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn pointer_button_to_i16(button: PointerButton) -> i16 {
+    match button {
+        PointerButton::Primary => 0,
+        PointerButton::Middle => 1,
+        PointerButton::Secondary => 2,
+    }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn event_modifiers_to_pointer(modifiers: EventModifiers) -> ui_wgpu::wgpu::PointerModifiers {
+    ui_wgpu::wgpu::PointerModifiers { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
+}
+
+/// ⌨️ DOM-`KeyboardEvent.key`-shaped strings (`ui_host::logical_key_to_dispatch_string`'s own output
+/// vocabulary) → `AppRuntime`'s `KeyAction`. Space is the one level-triggered key (`Space(bool)`
+/// tracks press/release for the context-menu-hold gesture `AppRuntime::handle_key` already branches
+/// on); everything else is edge-triggered on `KeyDown` only, matching the old raw-winit dispatch path
+/// this replaces (`ui_wgpu::wgpu::dispatch_window_event`, never consulted for `KeyUp` beyond Space).
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::KeyAction> {
+    use ui_wgpu::wgpu::KeyAction as K;
+    if key == " " {
+        return Some(K::Space(pressed));
+    }
+    if !pressed {
+        return None;
+    }
+    match key {
+        "Backspace" => Some(K::Backspace),
+        "Delete" => Some(K::Delete),
+        "Enter" => Some(K::Enter),
+        "Escape" => Some(K::Escape),
+        "ArrowLeft" => Some(K::ArrowLeft),
+        "ArrowRight" => Some(K::ArrowRight),
+        "ArrowUp" => Some(K::ArrowUp),
+        "ArrowDown" => Some(K::ArrowDown),
+        "Home" => Some(K::Home),
+        "End" => Some(K::End),
+        "PageUp" => Some(K::PageUp),
+        "PageDown" => Some(K::PageDown),
+        "Tab" => Some(K::Tab),
+        _ if key.len() >= 2 && key.starts_with('F') && key[1..].chars().all(|c| c.is_ascii_digit()) => key[1..].parse::<u8>().ok().map(K::Function),
+        _ if key.chars().count() == 1 => Some(K::Char(key.to_string())),
+        _ => None,
+    }
+}
+//#endregion 🎮️InputNormalization

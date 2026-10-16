@@ -1,4 +1,7 @@
-use super::*;
+use crate::CsvSnapshot;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_ui_locale::Locale;
+use crate::editor::csv::modes::edit::windows::main::*;
 use semio_framework_plugin::Component;
 
 #[semio_framework_async_macros::async_test]

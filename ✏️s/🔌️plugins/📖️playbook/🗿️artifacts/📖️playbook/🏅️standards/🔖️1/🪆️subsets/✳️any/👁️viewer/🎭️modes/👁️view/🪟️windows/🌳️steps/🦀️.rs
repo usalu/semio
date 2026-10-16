@@ -50,7 +50,5 @@ pub fn render(spec: &PlaybookSpec, windows: &TreeWindows<'_>) -> semio_framework
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

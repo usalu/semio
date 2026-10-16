@@ -27,7 +27,7 @@ fn retained_intrinsic_body_original_corpus_and_partial_cancel_close(){
  let rows:Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in rows["cases"].as_array().unwrap(){
   let value=if row["kind"]=="bytes"{DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect())}else{DslValue::from(&row["expected"])};
-  let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut callback);let bytes=crate::record::intrinsic::encode_body(&value,&Default::default(),&mut control).unwrap();
+  let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut callback);let bytes=semio_framework_pack_record::intrinsic::encode_body(&value,&Default::default(),&mut control).unwrap();
   let mut cursor=RetainedIntrinsicBody::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();for _ in 0..100000{if cursor.advance(1,false).unwrap().complete{break}}assert_eq!(cursor.take_output().unwrap(),value);close(&mut cursor);
   for cutoff in [0,1,3,bytes.len(),bytes.len()*2]{let mut cursor=RetainedIntrinsicBody::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();cursor.advance(cutoff,false).unwrap();assert!(cursor.advance(1,true).is_err());close(&mut cursor)}
  }
@@ -67,7 +67,7 @@ fn retained_intrinsic_body_owned_input_returns_on_refusal_and_closes_original_po
 #[test]
 fn retained_intrinsic_body_logical_depth_matches_original_intrinsic_boundary(){
  for(text,depth,accepted)in[("0001011112",1,true),("0001011110010701780c0204121000",2,true),("0001011110010701780c0204121000",1,false)]{
-  let bytes=hex(text);let mut limits=crate::PackLimits::default();limits.max_depth=depth;let mut cursor=RetainedIntrinsicBody::new(RetainedIntrinsicInput::Borrowed(&bytes),limits,1<<20).unwrap();let mut complete=false;let mut refused=false;
+  let bytes=hex(text);let mut limits=semio_framework_replication_codec::PackLimits::default();limits.max_depth=depth;let mut cursor=RetainedIntrinsicBody::new(RetainedIntrinsicInput::Borrowed(&bytes),limits,1<<20).unwrap();let mut complete=false;let mut refused=false;
   for _ in 0..100000{match cursor.advance(1,false){Ok(step)=>if step.complete{complete=true;break},Err(_)=>{refused=true;break}}}close(&mut cursor);assert_eq!(complete,accepted,"{text} depth {depth}");assert_eq!(refused,!accepted);
  }
 }
@@ -86,8 +86,8 @@ fn close_document(cursor:&mut RetainedIntrinsicDocument<'_>){
 fn retained_intrinsic_document_original_corpus_framing_compression_and_chunk_custody(){
  let rows:Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let plan=corpus();
  for row in rows["cases"].as_array().unwrap(){for codec in plan["document"]["codecs"].as_array().unwrap(){for frame in plan["document"]["frameBytes"].as_array().unwrap(){
-  let value=if row["kind"]=="bytes"{DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect())}else{DslValue::from(&row["expected"])};let mut options=crate::record::EncodeOptions::default();options.codec=crate::CodecId(codec.as_u64().unwrap()as u8);options.frame_size=frame.as_u64().unwrap();options.chunk_threshold=plan["document"]["chunkThreshold"].as_u64().unwrap();options.chunk_size=1;
-  let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let bytes=crate::record::intrinsic::encode_document(&value,&options,&mut control).unwrap();let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();assert_eq!(cursor.advance(0,false).unwrap().units,0);
+  let value=if row["kind"]=="bytes"{DslValue::Bytes(row["expected"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect())}else{DslValue::from(&row["expected"])};let mut options=semio_framework_pack_record::EncodeOptions::default();options.codec=semio_framework_replication_codec::CodecId(codec.as_u64().unwrap()as u8);options.frame_size=frame.as_u64().unwrap();options.chunk_threshold=plan["document"]["chunkThreshold"].as_u64().unwrap();options.chunk_size=1;
+  let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let bytes=semio_framework_pack_record::intrinsic::encode_document(&value,&options,&mut control).unwrap();let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();assert_eq!(cursor.advance(0,false).unwrap().units,0);
   for _ in 0..1000000{let step=cursor.advance(1,false).unwrap();assert!(step.units<=1);if step.complete{break}}
   let output=cursor.take_output();close_document(&mut cursor);assert_eq!(output,Some(value),"{} codec {codec} frame {frame}",row["id"]);
  }}}
@@ -96,25 +96,25 @@ fn retained_intrinsic_document_original_corpus_framing_compression_and_chunk_cus
 #[test]
 fn retained_intrinsic_document_explicit_body_refusal_and_partial_cancel_close(){
  let body=hex("0001011112");let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&body),Default::default(),1<<20).unwrap();let mut refused=false;for _ in 0..100000{match cursor.advance(1,false){Ok(step)=>assert!(!step.complete),Err(_)=>{refused=true;break}}}close_document(&mut cursor);assert!(refused,"Document cannot fall back to Body");
- let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let bytes=crate::record::intrinsic::encode_document(&DslValue::String("雪😀".repeat(1024)),&Default::default(),&mut control).unwrap();for cutoff in [0,1,3,256,bytes.len(),bytes.len()*3]{let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();cursor.advance(cutoff,false).unwrap();assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());close_document(&mut cursor)}
+ let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let bytes=semio_framework_pack_record::intrinsic::encode_document(&DslValue::String("雪😀".repeat(1024)),&Default::default(),&mut control).unwrap();for cutoff in [0,1,3,256,bytes.len(),bytes.len()*3]{let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();cursor.advance(cutoff,false).unwrap();assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());close_document(&mut cursor)}
 }
 
 #[test]
 fn retained_intrinsic_document_schema_graph_agrees_with_canonical_and_third_party_hash(){
  use semio_framework_dsl_record::{FieldSpec,RecordSpec,RecordLayout,Shape};
- let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);let hash=crate::record::schema_hash(&spec);assert_eq!(hash,*blake3::hash(super::retained::schema_graph()).as_bytes());
+ let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);let hash=semio_framework_pack_record_schema::schema_hash(&spec);assert_eq!(hash,*blake3::hash(super::retained::schema_graph()).as_bytes());
  let mut own=semio_framework_hash::Hasher::new();for byte in super::retained::schema_graph(){own.update(&[*byte]);}assert_eq!(hash,*own.finalize().as_bytes());
 }
 
-fn document_octets()->Vec<u8>{let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let mut options=crate::record::EncodeOptions::default();options.codec=crate::CodecId(0);options.chunk_threshold=2;options.chunk_size=1;crate::record::intrinsic::encode_document(&DslValue::Bytes(vec![0,127,255]),&options,&mut control).unwrap()}
+fn document_octets()->Vec<u8>{let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let mut options=semio_framework_pack_record::EncodeOptions::default();options.codec=semio_framework_replication_codec::CodecId(0);options.chunk_threshold=2;options.chunk_size=1;semio_framework_pack_record::intrinsic::encode_document(&DslValue::Bytes(vec![0,127,255]),&options,&mut control).unwrap()}
 fn word(bytes:&[u8],offset:&mut usize)->usize{let mut result=0;let mut shift=0;loop{let byte=bytes[*offset];*offset+=1;result|=usize::from(byte&127)<<shift;if byte&128==0{return result}shift+=7;}}
 
 #[test]
 fn retained_intrinsic_document_referenced_chunk_catalog_integrity_is_mandatory(){
  for tamper in corpus()["document"]["catalogTamper"].as_array().unwrap(){
-  let mut bytes=document_octets();let mut offset=crate::format::HEADER_SIZE;
+  let mut bytes=document_octets();let mut offset=semio_framework_pack_format::HEADER_SIZE;
   loop{let start=offset;let kind=bytes[offset];offset+=1;let flags=bytes[offset];offset+=1;assert_eq!(flags,0);let stored=word(&bytes,&mut offset);let payload=offset;let end=payload+stored;
-   if kind==crate::KIND_CHUNK_TABLE{assert_eq!(word(&bytes,&mut offset),3);for _ in 0..3{word(&bytes,&mut offset);}if tamper=="blake3"{offset+=4;}bytes[offset]^=1;let crc=crate::crc32c(&bytes[start..end]);bytes[end..end+4].copy_from_slice(&crc.to_le_bytes());break}offset=end+4;assert!(offset<bytes.len()-crate::format::FOOTER_SIZE);
+   if kind==semio_framework_replication_codec::KIND_CHUNK_TABLE{assert_eq!(word(&bytes,&mut offset),3);for _ in 0..3{word(&bytes,&mut offset);}if tamper=="blake3"{offset+=4;}bytes[offset]^=1;let crc=semio_framework_replication_codec::crc32c(&bytes[start..end]);bytes[end..end+4].copy_from_slice(&crc.to_le_bytes());break}offset=end+4;assert!(offset<bytes.len()-semio_framework_pack_format::FOOTER_SIZE);
   }
   let mut cursor=RetainedIntrinsicDocument::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<24).unwrap();let mut refused=false;for _ in 0..1000000{match cursor.advance(1,false){Ok(step)=>if step.complete{break},Err(_)=>{refused=true;break}}}let output=cursor.take_output();close_document(&mut cursor);assert!(refused,"{tamper} catalog witness accepted");assert!(output.is_none());
  }
@@ -122,7 +122,7 @@ fn retained_intrinsic_document_referenced_chunk_catalog_integrity_is_mandatory()
 
 #[test]
 fn retained_intrinsic_document_allocator_birth_and_terminal_physical_grants_are_exact(){
- let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let mut options=crate::record::EncodeOptions::default();options.codec=crate::CodecId(1);options.chunk_threshold=2;options.chunk_size=1;let bytes=crate::record::intrinsic::encode_document(&DslValue::Array(vec![DslValue::String("雪😀".into()),DslValue::Bytes(vec![0,127,255])]),&options,&mut control).unwrap();let pointer=bytes.as_ptr();let backing=bytes.capacity();
+ let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);let mut options=semio_framework_pack_record::EncodeOptions::default();options.codec=semio_framework_replication_codec::CodecId(1);options.chunk_threshold=2;options.chunk_size=1;let bytes=semio_framework_pack_record::intrinsic::encode_document(&DslValue::Array(vec![DslValue::String("雪😀".into()),DslValue::Bytes(vec![0,127,255])]),&options,&mut control).unwrap();let pointer=bytes.as_ptr();let backing=bytes.capacity();
  let (mut cursor,requests,releases)=crate::test_allocation::observe_backing(||RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),Default::default(),1<<24).unwrap());assert_eq!((requests,releases),(0,0));assert_eq!(cursor.input().unwrap().as_ptr(),pointer);assert_eq!(cursor.admitted_bytes(),backing);
  for _ in 0..1000000{let before=cursor.admitted_bytes();let(result,requests,releases)=crate::test_allocation::observe_backing(||cursor.advance(1,false));if let Err(error)=result{close_document(&mut cursor);panic!("unexpected document refusal: {error:?}")}let step=result.unwrap();assert_eq!(requests,step.admitted_bytes-before);assert_eq!(releases,0);assert_eq!(cursor.input().unwrap().as_ptr(),pointer);if step.complete{break}}
  let admitted=cursor.admitted_bytes();assert!(cursor.advance(1,true).is_err());assert!(cursor.take_output().is_none());let mut actual_releases=0;

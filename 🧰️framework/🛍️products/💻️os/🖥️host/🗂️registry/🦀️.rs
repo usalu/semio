@@ -1,9 +1,10 @@
 //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
 // #region registry
 
-use crate::instance::OsParameterFieldSpec;
-use crate::space;
-use crate::workflow;
+use semio_framework_artifact_space_collection::S_COLLECTION_SCHEMA;
+use semio_framework_artifact_space_space::S_SPACE_SCHEMA;
+use semio_framework_artifact_workflow_workflow::S_WORKFLOW_SCHEMA;
+use semio_framework_os_host_instance::OsParameterFieldSpec;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ArtifactKindSpec,semio_framework::ConfigSpec,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::ModeDefinition,semio_framework::OsMediaCapability,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
@@ -12,6 +13,34 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 use semio_framework_ui_locale::LocalizedLabel;
 use ui_wgpu::wgpu::SurfaceKind;
+
+/// 🌉️ Synchronous bridge for the kernel/`semio_framework` calls this crate's already-published
+/// sync API (`BackboneDocument` codecs, `OsBackbonePort`'s in-memory/localStorage bridge, media
+/// negotiation, the `io_dialects_for`/`io_route`/`io_run`/`io_dispatch` mechanism, workflow node/
+/// parameter/validation helpers, `AppIo`/`CommandGrammar` reconstruction) still depend on, now
+/// that those crates made them `async fn` for their own pooled-actor substrate. Every caller of
+/// this helper is over a documented-immediate operation — pure data transforms and registry
+/// lookups, never the file/folder host ports (which stay behind their own genuinely-async
+/// host `SpaceBackbonePort` path) — so a single poll always resolves `Ready`. Not a
+/// second executor entry point: it holds no runtime, spawns nothing, and never parks — it is one
+/// bare `Future::poll`, same shape and same justification as this crate's existing test-only
+/// bridge just below (`ExtensionInstall`'s `block_on`), lifted out of `#[cfg(test)]` because this
+/// crate's sync surface needs it in production too.
+pub fn resolve_kernel_future<F: std::future::Future>(future: F) -> F::Output {
+    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+    fn no_op(_: *const ()) {}
+    fn clone(_: *const ()) -> RawWaker {
+        RawWaker::new(std::ptr::null(), &VTABLE)
+    }
+    static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, no_op, no_op, no_op);
+    let waker = unsafe { Waker::from_raw(RawWaker::new(std::ptr::null(), &VTABLE)) };
+    let mut cx = Context::from_waker(&waker);
+    let mut future = std::pin::pin!(future);
+    match future.as_mut().poll(&mut cx) {
+        Poll::Ready(value) => value,
+        Poll::Pending => panic!("resolve_kernel_future: this call site is documented immediate"),
+    }
+}
 
 pub type OsArtifactKindId = String;
 
@@ -125,16 +154,16 @@ fn seed_builtin_artifact_kinds() -> HashMap<OsArtifactKindId, ArtifactKindEntry>
     // dissolve (`## The inversion`) now persists directly — seeded as builtins for the same reason
     // `parameter.value` is: they are not any single app's document format.
     registry.insert(
-        workflow::S_WORKFLOW_SCHEMA.to_string(),
+        S_WORKFLOW_SCHEMA.to_string(),
         ArtifactKindEntry {
             descriptor: OsArtifactDescriptor {
-                kind: workflow::S_WORKFLOW_SCHEMA.into(),
+                kind: S_WORKFLOW_SCHEMA.into(),
                 label: LocalizedLabel::native("Workflow", "Workflow"),
-                source_format: workflow::S_WORKFLOW_SCHEMA.into(),
+                source_format: S_WORKFLOW_SCHEMA.into(),
                 component_kind: "workflow".into(),
                 dimension: "data".into(),
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Document },
-                schema: workflow::S_WORKFLOW_SCHEMA.into(),
+                schema: S_WORKFLOW_SCHEMA.into(),
                 export_formats: Vec::new(),
                 import_formats: Vec::new(),
                 export_stdio_kinds: Vec::new(),
@@ -145,16 +174,16 @@ fn seed_builtin_artifact_kinds() -> HashMap<OsArtifactKindId, ArtifactKindEntry>
         },
     );
     registry.insert(
-        space::S_SPACE_SCHEMA.to_string(),
+        S_SPACE_SCHEMA.to_string(),
         ArtifactKindEntry {
             descriptor: OsArtifactDescriptor {
-                kind: space::S_SPACE_SCHEMA.into(),
+                kind: S_SPACE_SCHEMA.into(),
                 label: LocalizedLabel::native("Space", "Space"),
-                source_format: space::S_SPACE_SCHEMA.into(),
+                source_format: S_SPACE_SCHEMA.into(),
                 component_kind: "space".into(),
                 dimension: "data".into(),
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Document },
-                schema: space::S_SPACE_SCHEMA.into(),
+                schema: S_SPACE_SCHEMA.into(),
                 export_formats: Vec::new(),
                 import_formats: Vec::new(),
                 export_stdio_kinds: Vec::new(),
@@ -165,16 +194,16 @@ fn seed_builtin_artifact_kinds() -> HashMap<OsArtifactKindId, ArtifactKindEntry>
         },
     );
     registry.insert(
-        space::S_COLLECTION_SCHEMA.to_string(),
+        S_COLLECTION_SCHEMA.to_string(),
         ArtifactKindEntry {
             descriptor: OsArtifactDescriptor {
-                kind: space::S_COLLECTION_SCHEMA.into(),
+                kind: S_COLLECTION_SCHEMA.into(),
                 label: LocalizedLabel::native("Collection", "Sammlung"),
-                source_format: space::S_COLLECTION_SCHEMA.into(),
+                source_format: S_COLLECTION_SCHEMA.into(),
                 component_kind: "collection".into(),
                 dimension: "data".into(),
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Document },
-                schema: space::S_COLLECTION_SCHEMA.into(),
+                schema: S_COLLECTION_SCHEMA.into(),
                 export_formats: Vec::new(),
                 import_formats: Vec::new(),
                 export_stdio_kinds: Vec::new(),
@@ -308,7 +337,7 @@ static APP_REGISTRATIONS: LazyLock<Mutex<HashMap<(String, String), OsAppRegistra
 /// `document:out` ports plus every declared `AppIo.ports` entry) and registers it — call at plugin
 /// registration time (`PluginHost::load_plugin`/`hot_swap_plugin`), beside `register_artifact_descriptors`.
 pub fn register_app_io(plugin_id: &str, app: &AppDefinition) {
-    let ports = crate::host::resolve_kernel_future(app.io.all_ports());
+    let ports = resolve_kernel_future(app.io.all_ports());
     let (inputs, outputs): (Vec<_>, Vec<_>) = ports.into_iter().partition(|port| port.direction == semio_framework::MediaPortDirection::In);
     let registration = OsAppRegistration {
         id: app.id.clone(),
@@ -345,7 +374,7 @@ fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework:
         .or_else(|| registration.outputs.iter().find(|port| port.id == "artifact:out"))
         .map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |port| port.media_type);
     let declared_ports: Vec<_> = registration.inputs.iter().chain(registration.outputs.iter()).filter(|port| port.id != "artifact:in" && port.id != "artifact:out").cloned().collect();
-    let io = crate::host::resolve_kernel_future(semio_framework::AppIo::from_artifact(
+    let io = resolve_kernel_future(semio_framework::AppIo::from_artifact(
         registration.source_format.clone(),
         artifact_media_type,
         semio_framework::ArtifactPresentation {
@@ -357,7 +386,7 @@ fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework:
             component_kind: registration.component_kind.clone(),
         },
     ));
-    crate::host::resolve_kernel_future(io.with_ports(declared_ports))
+    resolve_kernel_future(io.with_ports(declared_ports))
 }
 
 /// 🧩️ Resolves the AppDefinition backing an embedded os app instance. Returns `None` if the
@@ -417,7 +446,7 @@ pub fn resolve_os_app_definition(plugin_id: &str, app_id: &str) -> Option<AppDef
         media_outputs: Vec::new(),
         artifact_kinds: Vec::new(),
         config: registration.config,
-        command_grammar: crate::host::resolve_kernel_future(semio_framework::CommandGrammar::empty()),
+        command_grammar: resolve_kernel_future(semio_framework::CommandGrammar::empty()),
         io,
         tutorials: Vec::new(),
         fault_notices: Vec::new(),

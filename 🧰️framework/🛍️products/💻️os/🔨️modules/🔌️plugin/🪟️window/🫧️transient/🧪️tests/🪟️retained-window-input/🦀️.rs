@@ -70,11 +70,11 @@ fn retained_window_input_preserves_owner_generation() {
         let digest = crate::tool_jobs::test_window_transient_context_identity(Some(&snapshot));
         let duplicate=snapshot.try_duplicate().unwrap();
         assert_eq!(digest, crate::tool_jobs::test_window_transient_context_identity(Some(&duplicate)));
-        crate::component::window_mutation::close_test_original_with_pump(duplicate,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
+        crate::component::window_mutation_tests::close_test_original_with_pump(duplicate,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
         assert_ne!(digest, crate::tool_jobs::test_window_transient_context_identity(None));
         digests.insert(digest);
         identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation(), snapshot.document_generation()));
-        crate::component::window_mutation::close_test_original_with_pump(snapshot,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
+        crate::component::window_mutation_tests::close_test_original_with_pump(snapshot,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
     }
     assert_eq!(identities.len(), fixture["expectedUniqueOwners"].as_u64().unwrap() as usize);
     assert_eq!(digests.len(), identities.len());
@@ -128,13 +128,13 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
             }
         }
         assert!(publication.terminal_is_empty());
-        let observed=old.capture(Some(&view(id))).unwrap().unwrap(); assert_eq!(observed.snapshot.get::<ReplacementWindow>().unwrap().revision, revision.as_u64().unwrap()); crate::component::window_mutation::close_test_original_with_pump(observed,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();}); crate::component::window_mutation::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
+        let observed=old.capture(Some(&view(id))).unwrap().unwrap(); assert_eq!(observed.snapshot.get::<ReplacementWindow>().unwrap().revision, revision.as_u64().unwrap()); crate::component::window_mutation_tests::close_test_original_with_pump(observed,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();}); crate::component::window_mutation_tests::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
     }
     let authority = old.capture(Some(&view("canvas-left"))).unwrap().unwrap();
     let mut pending = old.begin(semio_framework_job::OperationId(2), &authority, mutation("canvas-left", 9)).unwrap();
     let mut replacement = WindowTransientOwnerRegistry::for_document_generation(expected["documentGeneration"].as_u64().unwrap());
     replacement.register::<ReplacementWindow>().unwrap();
-    let rejected=replacement.begin(semio_framework_job::OperationId(3),&authority,mutation("canvas-left",9)).err().unwrap(); assert!(!expected["oldPublicationAccepted"].as_bool().unwrap()); crate::component::window_mutation::close_test_original(rejected.mutation);
+    let rejected=replacement.begin(semio_framework_job::OperationId(3),&authority,mutation("canvas-left",9)).err().unwrap(); assert!(!expected["oldPublicationAccepted"].as_bool().unwrap()); crate::component::window_mutation_tests::close_test_original(rejected.mutation);
     assert!(replacement.advance(pending.as_mut(), grant).is_err());
     for _ in 0..1024 {
         if matches!(pending.close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
@@ -149,11 +149,11 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         .map(|id| {
             let snapshot = replacement.capture(Some(&view(id))).unwrap().unwrap().snapshot;
             assert_eq!(snapshot.document_generation(), 1);
-            let result=(id.clone(),serde_json::json!(snapshot.get::<ReplacementWindow>().unwrap().revision)); crate::component::window_mutation::close_test_original_with_pump(snapshot,||{let demand=replacement.maintenance_demands(4096).unwrap();replacement.maintenance_step(quoted(demand,1)).unwrap();}); result
+            let result=(id.clone(),serde_json::json!(snapshot.get::<ReplacementWindow>().unwrap().revision)); crate::component::window_mutation_tests::close_test_original_with_pump(snapshot,||{let demand=replacement.maintenance_demands(4096).unwrap();replacement.maintenance_step(quoted(demand,1)).unwrap();}); result
         })
         .collect();
     assert_eq!(serde_json::Value::Object(actual), expected["after"]);
-    crate::component::window_mutation::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
+    crate::component::window_mutation_tests::close_test_original_with_pump(authority,||{let demand=old.maintenance_demands(4096).unwrap();old.maintenance_step(quoted(demand,1)).unwrap();});
     for registry in [&mut old, &mut replacement] {
         assert_eq!(registry.close_step(RetainedCloneGrant { maximum_items: 0, ..original_transient_grant() }).unwrap(), PluginLifecycleStep::Progress(Default::default()));
         assert!(!registry.terminal_is_empty());
@@ -259,11 +259,11 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     };
     let captured = registry.capture(Some(&view)).unwrap().unwrap();
     publish(&mut registry, &captured, expected["firstRevision"].as_u64().unwrap());
-    let rejected=registry.begin(semio_framework_job::OperationId(2),&captured,mutation(expected["staleRevision"].as_u64().unwrap())).err().unwrap(); assert!(!expected["staleBeginAccepted"].as_bool().unwrap()); crate::component::window_mutation::close_test_original(rejected.mutation);
+    let rejected=registry.begin(semio_framework_job::OperationId(2),&captured,mutation(expected["staleRevision"].as_u64().unwrap())).err().unwrap(); assert!(!expected["staleBeginAccepted"].as_bool().unwrap()); crate::component::window_mutation_tests::close_test_original(rejected.mutation);
     let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),crate::component::window_mutation::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
     assert!(expected["refreshedBeginAccepted"].as_bool().unwrap());
     publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
-    crate::component::window_mutation::close_test_original_with_pump(live,||{let demand=registry.maintenance_demands(4096).unwrap();registry.maintenance_step(quoted(demand,1)).unwrap();});
+    crate::component::window_mutation_tests::close_test_original_with_pump(live,||{let demand=registry.maintenance_demands(4096).unwrap();registry.maintenance_step(quoted(demand,1)).unwrap();});
     for _ in 0..2048 {
         if matches!(registry.close_step(original_transient_grant()).unwrap(), PluginLifecycleStep::Complete(_)) {
             break;

@@ -1,5 +1,5 @@
 //! 🎟️ Original symbol pages admit and retire through independent caller authority.
-use super::{RetainedPackSymbolTable,RetainedPackSymbolSpans,RetainedPackSymbolScalars,RetainedPackSymbolSpan,RetainedPackCatalogFault,RetainedPackCatalogAllocationError};
+use super::{RetainedPackSymbolTable,RetainedPackSymbolSpans,RetainedPackSymbolScalars,RetainedPackCatalogFault,RetainedPackCatalogAllocationError};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 pub(super) struct SymbolStorage{symbols:RetainedPackSymbolSpans,scalars:RetainedPackSymbolScalars}

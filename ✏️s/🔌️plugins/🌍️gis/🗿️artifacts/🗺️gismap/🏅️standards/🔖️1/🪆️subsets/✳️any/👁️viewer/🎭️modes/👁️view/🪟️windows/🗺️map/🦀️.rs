@@ -1,5 +1,5 @@
 //! 🗺️ GIS map viewer — the Map window: a read-only tiled-map render of the document's
-//! positions/routes/regions, built from the same `crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json`
+//! positions/routes/regions plus the GIS map policy, built from the same `crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json`
 //! pure snapshot→descriptor helper the editor's own Map window uses — this file itself imports
 //! nothing from the sibling editor surface (`policyViewerPurityBreaches` forbids it outright). No
 //! layer toggles and no selection: a viewer has no utilities that edit and emits no document mutation.
@@ -13,7 +13,7 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
+use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_framework_plugin::scene_surface;
@@ -82,7 +82,7 @@ pub fn definition() -> WindowKindDefinition {
 /// "automatic"), every layer visible, nothing selected/hovered.
 pub fn render(document: &GisMapSnapshot, window: Option<&config::GisMapViewerWindowConfig>) -> UiAssemblyResult<BuiltNode> {
     let camera_json = window.map_or_else(|| GIS_MAP_VIEW_DEFAULT_CAMERA_JSON.to_string(), |window| window.camera.scene_camera_json());
-    let scene = TiledMapScene::base(gis_map_descriptor_json(document), camera_json);
+    let scene = TiledMapScene::base(gis_map_scene_descriptor_json(document), camera_json);
     scene_surface(SURFACE_ID, ContractSurfaceKind::TiledMap, &scene)
 }
 //#endregion 🔖️Render

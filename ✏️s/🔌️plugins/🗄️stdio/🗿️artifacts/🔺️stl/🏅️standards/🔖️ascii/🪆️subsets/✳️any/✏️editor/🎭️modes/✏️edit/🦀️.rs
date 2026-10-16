@@ -20,3 +20,17 @@ pub fn layout() -> WindowLayout {
     semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")
 }
 //#endregion 🔖️Definition
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_STL_DOCUMENT_SCHEMA: &str = "stdio.stl";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems2
+pub mod artifact_items_2 {
+/// 🧬️ Artifact schema descriptor id.
+pub const STL_ARTIFACT_SCHEMA_ID: &str = "s.stdio.stl";
+}
+//#endregion 🧩️ArtifactItems2

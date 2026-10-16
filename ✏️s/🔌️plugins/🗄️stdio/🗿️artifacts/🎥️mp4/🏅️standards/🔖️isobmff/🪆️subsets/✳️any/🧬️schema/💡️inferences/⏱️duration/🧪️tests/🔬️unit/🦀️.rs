@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
+use crate::standards::isobmff::subsets::any::schema::inferences::duration::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Edit, Mp4Sample, Mp4Track};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

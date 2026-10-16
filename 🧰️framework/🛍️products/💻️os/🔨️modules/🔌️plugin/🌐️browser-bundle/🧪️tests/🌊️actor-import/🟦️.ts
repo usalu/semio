@@ -1,3 +1,4 @@
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🌊️ Qualifies actor-isolated canonical async result and stream imports through JCO/Wasm. */
@@ -107,7 +108,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, invocation
     await assert.rejects(closeActorBundle(indirectSuspension, cores, { importInterfaces }), /blocking WASI import requires JSPI suspension/);
     await assert.rejects(closeActorBundle(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
-    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, invocation);
+    const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
     // 🧭️ `slice()` answers a `Uint8Array<ArrayBuffer>`: a view over a `SharedArrayBuffer` is not a
     // `BufferSource`, and `Uint8Array` alone no longer says which of the two backs it.
     const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value.slice())).toString("hex");

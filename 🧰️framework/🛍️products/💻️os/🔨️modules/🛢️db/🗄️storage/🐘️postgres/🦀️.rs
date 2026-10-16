@@ -31,6 +31,8 @@
 //! `LeaseStorage`) is real cross-connection fencing via `SELECT ... FOR UPDATE` inside a
 //! transaction — stronger than `db_storage::FsStorage`'s documented in-process-only mutex, since
 //! Postgres gives us a genuine row lock across concurrent connections/processes for free.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
 //#region 🔖️Schema
 /// 🧱️ Idempotent DDL bootstrapped by `PostgresStorage::connect` — one statement per table,
@@ -94,14 +96,11 @@ async fn bootstrap_schema(pool: &PgPool) -> Result<(), DbError> {
 //#endregion 🔖️Schema
 
 //#region 🔖️Connection
-use crate::db_durability::{DurabilityClass, EpochFence};
-use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{
-    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, register_db_io_backend_prepared_with_use,
-    retire_db_io_backend, submit_db_io_task_admitted, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
-    DbIoAsyncDriverRuntime, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
-    WalSegmentState, WalStorage, DB_IO_LIST_ITEMS, DB_IO_PAGE_BYTES,
-};
+use db_durability::{DurabilityClass, EpochFence};
+use db_ids::{ArtifactId, DbError, check_len};
+use db_io_core::{CatalogStorage, DB_IO_LIST_ITEMS, DB_IO_PAGE_BYTES, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoAsyncDriverRuntime, DbIoBackendControl, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
+use db_io_driver::{DbStorageOpenRejected, close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted};
+use db_io_registry::{DbIoBackendKind, DbIoBackendRollbackReservation, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend};
 
 macro_rules! with_admitted_artifact {
     ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
@@ -114,15 +113,15 @@ macro_rules! with_admitted_artifact {
         terminal
     }};
 }
-use crate::db_storage::writer::{release, WalWriterGuard, WalWriterTable};
-use crate::db_storage::DbIoWriterReleaseStep;
+use db_io_driver::{WalWriterGuard, WalWriterTable};
+use db_io_core::DbIoWriterReleaseStep;
 use pack::{ByteRange, ContentHash};
 use semio_framework_async::WorkerPool;
 use sqlx::postgres::{PgConnection, PgPool, PgPoolOptions};
 use sqlx::{ConnectOptions, Connection};
 use std::sync::Arc;
 
-use crate::db_storage::DB_IO_MAX_READ_BYTES;
+use db_io_core::DB_IO_MAX_READ_BYTES;
 const POSTGRES_WAL_STATE_QUERY: &str = "SELECT sealed FROM db_wal_segment WHERE document_id = $1 AND segment_index = $2";
 
 fn postgres_wal_segment_state(sealed: bool) -> WalSegmentState {
@@ -151,7 +150,7 @@ impl PostgresDbIoExecutor {
     /// `PostgresStorage`. `async` because connecting a pool and running DDL are themselves I/O — the
     /// caller (ultimately the hub's `#[tokio::main]`) already awaits this on a real runtime.
     fn new(database_url: DbIoText) -> Result<Self, DbError> {
-        let pool = crate::db_storage_driver_runtime::within(|| PgPoolOptions::new().max_connections(16).connect_lazy(database_url.as_str())).map_err(map_sqlx_error)?;
+        let pool = db_storage_driver_runtime::within(|| PgPoolOptions::new().max_connections(16).connect_lazy(database_url.as_str())).map_err(map_sqlx_error)?;
         Ok(Self {
             pool,
             database_url,
@@ -359,14 +358,14 @@ impl WalWriterGuard for PostgresWalWriterGuard {
                 };
                 let unlock = Arc::new(PostgresWalWriterUnlock { done: std::sync::atomic::AtomicBool::new(false), waker: std::sync::Mutex::new(None) });
                 let signal = unlock.clone();
-                drop(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move {
+                drop(db_storage_driver_runtime::detach_unit(Box::pin(async move {
                     let _ = sqlx::query("SELECT pg_advisory_unlock($1)").bind(lent.key).execute(&mut lent.connection).await;
                     let _ = lent.connection.close().await;
                     signal.done.store(true, std::sync::atomic::Ordering::Release);
                     if let Some(waker) = signal.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         waker.wake();
                     }
-                    release::request_controller(backend);
+                    db_io_core::request_controller(backend);
                 })));
                 *self = Self::Unlocking(unlock);
                 Ok(true)
@@ -1009,7 +1008,7 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
     }
 
     fn driver_runtime(&self) -> Option<&'static dyn DbIoAsyncDriverRuntime> {
-        Some(crate::db_storage_driver_runtime::shared())
+        Some(db_storage_driver_runtime::shared())
     }
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
@@ -1057,7 +1056,7 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
         let mut close = self.close_future.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if close.is_none() {
             let pool = self.pool.clone();
-            *close = Some(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move { pool.close().await })));
+            *close = Some(db_storage_driver_runtime::detach_unit(Box::pin(async move { pool.close().await })));
             return Ok(false);
         }
         let terminal = match close.as_mut() {
@@ -1078,14 +1077,14 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
 
 /// 🐘️ Typed PostgreSQL facade; only the registered executor owns the external driver.
 pub struct PostgresStorage {
-    control: DbIoBackendControl,
+    pub control: DbIoBackendControl,
     worker_pool: Arc<WorkerPool>,
     closed: std::sync::atomic::AtomicBool,
 }
 
 impl PostgresStorage {
     pub async fn connect(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbStorageOpenRejected> {
-        crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_once(worker_pool.clone(), database_url)).await
+        db_io_driver::open_db_io_backend_admitted(&worker_pool, || Self::connect_once(worker_pool.clone(), database_url)).await
     }
 
     /// 🎯️ One PostgreSQL backend open attempt, refused at once when the backend capacity is taken.
@@ -1157,9 +1156,9 @@ fn postgres_list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
 }
 
 impl WalStorage for PostgresStorage {
-    async fn acquire_writer(&self, document: &ArtifactId) -> Result<crate::db_storage::WalWriterPermit, DbError> {
+    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_io_core::WalWriterPermit, DbError> {
         let document = postgres_document(document)?;
-        crate::db_storage::writer::admitted_acquire(self.control, std::time::Duration::from_millis(crate::db_storage::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+        db_io_driver::admitted_acquire(self.control, std::time::Duration::from_millis(db_io_driver::WAL_WRITER_ADMISSION_WAIT_MS), || async {
             match self.execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await? {
                 DbIoResult::WalWriter(writer) => Ok(writer),
                 _ => Err(DbError::Internal("remote WAL writer result taxonomy".to_string())),
@@ -1167,19 +1166,19 @@ impl WalStorage for PostgresStorage {
         })
         .await
     }
-    async fn create_segment(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn create_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
-    async fn append(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+    async fn append(&self, writer: &db_io_core::WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         match self.execute(DbIoTask::WalAppend { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, input: bytes }).await? {
             DbIoResult::Length(length) => Ok(length),
             _ => Err(DbError::Internal("PostgreSQL executor returned a non-length result".to_string())),
         }
     }
-    async fn sync(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    async fn sync(&self, writer: &db_io_core::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalSync { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, class }).await?)
     }
-    async fn seal(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn seal(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalSeal { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
@@ -1200,10 +1199,10 @@ impl WalStorage for PostgresStorage {
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         postgres_list(self.execute(DbIoTask::WalList { backend: self.control, document: postgres_document(document)?, output: DbIoU64List::new() }).await?)
     }
-    async fn truncate_tail(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
+    async fn truncate_tail(&self, writer: &db_io_core::WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalTruncate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, new_len }).await?)
     }
-    async fn delete_segment(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn delete_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         postgres_unit(self.execute(DbIoTask::WalDelete { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
 }

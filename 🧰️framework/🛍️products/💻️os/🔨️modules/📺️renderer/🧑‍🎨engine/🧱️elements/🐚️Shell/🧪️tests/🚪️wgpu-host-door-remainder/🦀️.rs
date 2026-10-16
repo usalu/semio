@@ -107,7 +107,7 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
     }
 
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let fullscreen_description = |shell: &ShellState| shell.command_search_items().into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
+    let fullscreen_description = |shell: &ShellState| shell.docs.command_search_items(&shell.chrome, &shell.plugins, &shell.prefs).into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
     crate::set_host_platform("MacIntel");
     let apple = fullscreen_description(&shell);
     crate::set_host_platform("Win32");
@@ -161,7 +161,7 @@ fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
     assert_eq!(ShellEditVerb::Redo.action_id(), "redo");
 
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let table = shell.shortcut_table();
+    let table = shell.chrome.shortcut_table();
     for chord in ["mod+z", "mod+shift+z", "mod+y"] {
         assert!(!reserved_shell_chords_v1(&table, &[]).contains(chord), "⏪️ `{chord}` is not a reserved shell chord — an app must be able to shadow it");
     }
@@ -276,20 +276,20 @@ fn window_panes_stay_consumer_less_on_both_renderers() {
 fn the_introduction_seen_key_is_brand_scoped() {
     let restore = crate::boot_descriptor();
     let shell = appearance_tour_and_footer_pill_tests::tour_shell(Some(appearance_tour_and_footer_pill_tests::tour_introduction()));
-    let app_id = shell.session.as_ref().expect("the fixture opens a session").app.id.clone();
+    let app_id = shell.docs.session.as_ref().expect("the fixture opens a session").app.id.clone();
 
     let mut unbranded = crate::boot_descriptor();
     unbranded.brand_id = String::new();
     unbranded.brand = crate::WgpuBootBrand::default();
     crate::apply_boot_descriptor(unbranded).expect("an empty brand is a bounded field");
-    assert_eq!(shell.introduction_seen_key().as_deref(), Some(app_id.as_str()), "🎓️ an unbranded shell keys the flag on the bare app id");
+    assert_eq!(shell.docs.introduction_seen_key().as_deref(), Some(app_id.as_str()), "🎓️ an unbranded shell keys the flag on the bare app id");
     assert!(crate::boot_brand().persists_introduction_seen(), "🏷️ and persists it, React's `shouldPersistIntroductionSeen(undefined)`");
     assert!(!crate::boot_brand().replays_introduction());
 
     let mut branded = crate::boot_descriptor();
     branded.brand_id = "entwerfen-mit-bestand-aggregator".into();
     crate::apply_boot_descriptor(branded).expect("a brand id is a bounded field");
-    assert_eq!(shell.introduction_seen_key().as_deref(), Some(format!("entwerfen-mit-bestand-aggregator:{app_id}").as_str()), "🏷️ a branded shell carries React's `${{brand.id}}:${{app.id}}`");
+    assert_eq!(shell.docs.introduction_seen_key().as_deref(), Some(format!("entwerfen-mit-bestand-aggregator:{app_id}").as_str()), "🏷️ a branded shell carries React's `${{brand.id}}:${{app.id}}`");
 
     for (ephemeral, replay_flag, replays) in [(false, false, false), (false, true, true), (true, false, true), (true, true, true)] {
         let brand = crate::WgpuBootBrand { window_title: String::new(), ephemeral, replay_introduction_on_load: replay_flag };
@@ -317,7 +317,7 @@ fn every_palette_command_shape_has_a_live_route() {
     }
 
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let items = shell.command_search_items();
+    let items = shell.docs.command_search_items(&shell.chrome, &shell.plugins, &shell.prefs);
     assert!(!items.is_empty(), "🎛️ the os built-ins alone fill the palette");
     for item in &items {
         let action = item.action.as_deref().unwrap_or_default();

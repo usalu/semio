@@ -106,7 +106,7 @@ fn an_undecodable_blocks_param_is_a_named_fault() {
 fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
     use protocol::Mutation;
     use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️child-leaves/🔣️.json")).expect("child-leaf vectors");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧫️child-leaves/🔣️.json")).expect("child-leaf vectors");
     let cases = fixture["cases"].as_array().expect("cases");
     assert_eq!(cases.len(), 15);
     for case in cases {
@@ -148,3 +148,8 @@ fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
     }
 }
 //#endregion 🧬️ChildLaneLaws
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

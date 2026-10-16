@@ -17,7 +17,7 @@ impl NumericSeen {
     pub(super) fn insert_at(&mut self,index:usize,number:u64,group:u32) {assert!(self.slots[index].is_none()&&self.occupied.len()<self.occupied.capacity());self.slots[index]=Some((number,group));self.occupied.push(index);}
     pub(super) fn pop_first(&mut self)->Option<(u64,u32)> {self.occupied.pop().and_then(|index|self.slots[index].take())}
 }
-protocol::value::artifact_retire_struct!(NumericSeen { slots,occupied });
+semio_framework_value::artifact_retire_struct!(NumericSeen { slots,occupied });
 
 #[derive(Default)]
 pub(super) struct IneligibleGroups {
@@ -33,8 +33,8 @@ impl IneligibleGroups {
     pub(super) fn contains(&self,key:&u64)->bool {let domain=(key>>32)as usize;self.flags.get(self.offsets[domain]+(*key as u32)as usize)==Some(&1)}
     pub(super) fn insert(&mut self,key:u64) {let index=self.offsets[(key>>32)as usize]+(key as u32)as usize;if self.flags[index]==0{self.flags[index]=1;self.count+=1;}}
 }
-impl protocol::value::retirement::RetireOwned for IneligibleGroups {
-    fn retirement(self)->Box<dyn protocol::value::retirement::RetirementCursor> {protocol::value::retirement::RetireOwned::retirement(self.flags)}
-    fn retirement_birth_bytes(&self)->Option<usize> {protocol::value::retirement::RetireOwned::retirement_birth_bytes(&self.flags)}
+impl semio_framework_value::retirement::RetireOwned for IneligibleGroups {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.flags)}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.flags)}
     fn controlled_retirement_supported()->bool {true}
 }

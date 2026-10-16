@@ -85,15 +85,15 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     let app = AppDefinition { window_kinds: WindowKinds::try_from(kinds).unwrap(), ..app };
     let left = fixture["activeWindowId"].as_str().unwrap();
     let right = fixture["clickedWindowId"].as_str().unwrap();
-    shell.active_window_id = Some(left.into());
-    shell.dock.root =
+    shell.windows.active_window_id = Some(left.into());
+    shell.dock.dock.root =
         crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
-    shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.dock.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.publish_retained_input_for_test(&mut input, &Theme::light());
-    semio_framework_async::block_on(shell.open_context_menu(125.0, 25.0, None));
-    let menu = shell.context_menu.as_ref().unwrap();
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::light());
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).open_context_menu(125.0, 25.0, None));
+    let menu = shell.input.context_menu.as_ref().unwrap();
     let action = menu.items.iter().find_map(|item| item.action.as_ref().filter(|action| action.action == "right-action")).expect("clicked window contributes its own fallback actions");
     assert_eq!(action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str), Some(right));
     assert!(!menu.items.iter().any(|item| item.action.as_ref().is_some_and(|action| action.action == "left-action")));
@@ -589,7 +589,7 @@ fn native_document_admission_is_bound_to_verified_package_app_window_and_rendere
 #[test]
 fn build_os_commands_covers_every_wired_setting() {
     let shell = test_shell_state();
-    let commands = shell.build_os_commands();
+    let commands = shell.docs.build_os_commands(&shell.chrome);
     let ids: Vec<String> = commands.iter().map(|command| command.id.clone()).collect();
     assert_eq!(ids, vec!["os.toggleFullscreen", "os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.openTaskManager", "os.openHub", "os.resetDock",]);
     let icons: Vec<&str> = commands.iter().map(|command| command.icon_id.as_str()).collect();
@@ -599,15 +599,15 @@ fn build_os_commands_covers_every_wired_setting() {
 #[test]
 fn fullscreen_command_requests_the_host_transition() {
     let mut shell = test_shell_state();
-    semio_framework_async::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
-    assert!(shell.fullscreen_toggle_requested);
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
+    assert!(shell.chrome.fullscreen_toggle_requested);
 }
 
 #[test]
 fn build_os_commands_terminology_options_include_app_terminologies() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    let terminology_command = shell.build_os_commands().into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let terminology_command = shell.docs.build_os_commands(&shell.chrome).into_iter().find(|command| command.id == "os.setTerminology").expect("terminology command present");
     let ActionArgControl::Select { options } = &terminology_command.args[0].control() else {
         panic!("expected a select control");
     };
@@ -692,7 +692,7 @@ fn command_panel_fixture_maps_every_owner_to_actionable_tree_rows() {
         };
         let command_id = address["commandId"].as_str().expect("command id");
         let definition = CommandDefinition::bounded_catalog(command_id, LocalizedLabel::data(command["labels"]["en"].as_str().expect("English label")), command["category"].as_str().expect("category"), ActionKind::Shell);
-        let row = shell.build_command_panel_row(&ResolvedCommand::new(definition, owner));
+        let row = shell.prefs.build_command_panel_row(&ResolvedCommand::new(definition, owner));
         assert_eq!(row.id, format!("command.{}", command["key"].as_str().expect("stable key").replace(':', ".")));
         let action = row.action.expect("zero-argument row action");
         assert_eq!(action.action, "executeResolvedCommand");
@@ -705,30 +705,30 @@ fn command_panel_fixture_maps_every_owner_to_actionable_tree_rows() {
 #[test]
 fn resolved_zero_argument_command_executes_once_and_a_stale_key_is_rejected() {
     let mut shell = test_shell_state();
-    shell.layout_override = Some(shell.dock.to_window_layout());
+    shell.dock.layout_override = Some(shell.dock.dock.to_window_layout());
     let execute = |value: &str| ActionDescriptor { controller_id: "framework".into(), action: "executeResolvedCommand".into(), args: crate::action_args_json!({ "value": value }) };
-    semio_framework_async::block_on(shell.dispatch_action(execute("stale:os.resetDock"))).expect("stale key is a no-op");
-    assert!(shell.layout_override.is_some());
-    semio_framework_async::block_on(shell.dispatch_action(execute("os:os.resetDock"))).expect("live reset executes");
-    assert!(shell.layout_override.is_none());
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("stale:os.resetDock"))).expect("stale key is a no-op");
+    assert!(shell.dock.layout_override.is_some());
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(execute("os:os.resetDock"))).expect("live reset executes");
+    assert!(shell.dock.layout_override.is_none());
 }
 
 #[test]
 fn argument_command_ingress_toggles_only_a_live_owner_qualified_form() {
     let mut shell = test_shell_state();
-    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("argument command");
+    let entry = shell.docs.resolved_commands(&shell.chrome, &shell.plugins).into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("argument command");
     let key = command_address_stable_key(&entry.address);
-    let row = shell.build_command_panel_row(&entry);
+    let row = shell.prefs.build_command_panel_row(&entry);
     let action = row.action.expect("argument row action");
     assert_eq!(action.action, "setCommandExpanded");
     assert_eq!(action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()), Some(key.as_str()));
-    semio_framework_async::block_on(shell.dispatch_action(action.clone())).expect("first toggle opens");
-    assert_eq!(shell.expanded_command_id.as_deref(), Some(key.as_str()));
-    semio_framework_async::block_on(shell.dispatch_action(action)).expect("second toggle closes");
-    assert_eq!(shell.expanded_command_id, None);
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: crate::action_args_json!({ "value": "mode:retired:stale" }) }))
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action.clone())).expect("first toggle opens");
+    assert_eq!(shell.commands.expanded_command_id.as_deref(), Some(key.as_str()));
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("second toggle closes");
+    assert_eq!(shell.commands.expanded_command_id, None);
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setCommandExpanded".into(), args: crate::action_args_json!({ "value": "mode:retired:stale" }) }))
         .expect("stale toggle is a no-op");
-    assert_eq!(shell.expanded_command_id, None);
+    assert_eq!(shell.commands.expanded_command_id, None);
 }
 
 #[test]
@@ -750,8 +750,8 @@ fn command_category_label_titleizes_hyphenated_ids() {
 #[test]
 fn command_search_items_stages_arg_commands_and_tags_os_category() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    let items = shell.command_search_items();
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let items = shell.docs.command_search_items(&shell.chrome, &shell.plugins, &shell.prefs);
     let appearance = items.iter().find(|item| item.id == "command.os.os.setAppearance").expect("one staged appearance command present");
     assert_eq!(appearance.label, "Set Appearance…");
     assert_eq!(appearance.action.as_deref(), Some("command-form:os:os.setAppearance"));
@@ -766,28 +766,28 @@ fn command_search_items_stages_arg_commands_and_tags_os_category() {
 #[test]
 fn apply_os_command_reset_dock_clears_layout_override_locally() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    shell.layout_override = Some(shell.dock.to_window_layout());
-    semio_framework_async::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
-    assert!(shell.layout_override.is_none());
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.dock.layout_override = Some(shell.dock.dock.to_window_layout());
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.resetDock", None)).expect("reset dock never errors");
+    assert!(shell.dock.layout_override.is_none());
 }
 
 #[test]
 fn apply_os_command_set_locale_dispatches_through_framework_controller() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    semio_framework_async::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
-    assert_eq!(shell.locale_id, "de");
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
+    assert_eq!(shell.prefs.locale_id, "de");
 }
 
 #[test]
 fn apply_os_command_set_driver_updates_driver_id() {
     let mut shell = test_shell_state();
-    assert_eq!(shell.driver_id, "default");
-    semio_framework_async::block_on(shell.apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
-    assert_eq!(shell.driver_id, "compact");
-    semio_framework_async::block_on(shell.apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
-    assert_eq!(shell.driver_id, "default");
+    assert_eq!(shell.prefs.driver_id, "default");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
+    assert_eq!(shell.prefs.driver_id, "compact");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
+    assert_eq!(shell.prefs.driver_id, "default");
 }
 
 /// 🎨️ `os.setThemeId` (added alongside `build_settings_theme_ui`'s reachable Theme tab — see that
@@ -797,12 +797,12 @@ fn apply_os_command_set_driver_updates_driver_id() {
 #[test]
 fn apply_os_command_set_theme_id_updates_active_theme() {
     let mut shell = test_shell_state();
-    semio_framework_async::block_on(shell.apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
     assert_eq!(active_theme_id(), "mono");
-    assert_eq!(shell.chrome_build.preferences.theme_id, "mono");
-    semio_framework_async::block_on(shell.apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
+    assert_eq!(shell.chrome.chrome_build.preferences.theme_id, "mono");
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
     assert_eq!(active_theme_id(), "semio");
-    assert_eq!(shell.chrome_build.preferences.theme_id, "semio");
+    assert_eq!(shell.chrome.chrome_build.preferences.theme_id, "semio");
 }
 
 /// 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
@@ -811,8 +811,8 @@ fn apply_os_command_set_theme_id_updates_active_theme() {
 #[test]
 fn build_command_panel_ui_groups_rows_under_category_headers() {
     let mut shell = test_shell_state();
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    let UiNode::Tree(panel) = shell.build_command_panel_ui() else {
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    let UiNode::Tree(panel) = shell.docs.build_command_panel_ui(&shell.chrome, &shell.plugins, &shell.prefs) else {
         panic!("expected a Tree root");
     };
     assert_eq!(panel.sections.len(), 5);
@@ -849,7 +849,7 @@ fn fuzzy_ranking_is_case_insensitive() {
 //#region ShellCommandHistoryTests
 #[test]
 fn note_shell_command_action_carries_command_id_label_and_detail() {
-    let action = ShellState::note_shell_command_action("controller-1", "os.setLocale", "Set Locale", Some(serde_json::json!({ "value": "de" })));
+    let action = note_shell_command_action("controller-1", "os.setLocale", "Set Locale", Some(serde_json::json!({ "value": "de" })));
     assert_eq!(action.controller_id, "controller-1");
     assert_eq!(action.action, "noteShellCommand");
     let args = action.args.expect("noteShellCommand always carries args");
@@ -860,7 +860,7 @@ fn note_shell_command_action_carries_command_id_label_and_detail() {
 
 #[test]
 fn note_shell_command_action_omits_detail_entirely_when_none() {
-    let action = ShellState::note_shell_command_action("controller-1", "shell.windowResize", "Resize Window", None);
+    let action = note_shell_command_action("controller-1", "shell.windowResize", "Resize Window", None);
     let args = action.args.expect("args always present");
     assert!(args.get("detail").is_none(), "no detail key at all, not a serialized null");
 }
@@ -868,13 +868,13 @@ fn note_shell_command_action_omits_detail_entirely_when_none() {
 #[test]
 fn shell_command_label_for_setting_matches_build_os_commands_and_theme_chrome_labels() {
     let shell = test_shell_state();
-    assert_eq!(shell.shell_command_label_for_setting("os.setAppearance"), "Set Appearance");
-    assert_eq!(shell.shell_command_label_for_setting("os.setDriver"), "Set Driver");
-    assert_eq!(shell.shell_command_label_for_setting("os.setLocale"), "Set Locale");
-    assert_eq!(shell.shell_command_label_for_setting("os.setTerminology"), "Set Terminology");
-    assert_eq!(shell.shell_command_label_for_setting("os.setThemeId"), "Set Theme");
-    assert_eq!(shell.shell_command_label_for_setting("os.resetThemeId"), shell_chrome_string("settings.theme.reset", false));
-    assert_eq!(shell.shell_command_label_for_setting("os.deleteThemeId"), shell_chrome_string("settings.theme.delete", false));
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.setAppearance", &shell.chrome, &shell.prefs), "Set Appearance");
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.setDriver", &shell.chrome, &shell.prefs), "Set Driver");
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.setLocale", &shell.chrome, &shell.prefs), "Set Locale");
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.setTerminology", &shell.chrome, &shell.prefs), "Set Terminology");
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.setThemeId", &shell.chrome, &shell.prefs), "Set Theme");
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.resetThemeId", &shell.chrome, &shell.prefs), shell_chrome_string("settings.theme.reset", false));
+    assert_eq!(shell.docs.shell_command_label_for_setting("os.deleteThemeId", &shell.chrome, &shell.prefs), shell_chrome_string("settings.theme.delete", false));
 }
 
 /// 🕒️ The `handle_shell_hit` control-id-to-shell-command mapping table: every discrete window/panel
@@ -882,13 +882,13 @@ fn shell_command_label_for_setting_matches_build_os_commands_and_theme_chrome_la
 /// doesn't fire on everything.
 #[test]
 fn shell_command_for_control_maps_dock_and_panel_control_ids() {
-    assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.close", false), Some(("shell.windowClose", "Close".to_string())));
-    assert_eq!(ShellState::shell_command_for_control("dock.tab.0.a.focus", false), None, "React notes no `shell.windowMaximize` anywhere — the chip's activation is the only journaled half, and `arm_window_activation_note` owns it");
-    assert_eq!(ShellState::shell_command_for_control("shell.layout.compact", false), Some(("shell.applyNamedLayout", "Apply Layout".to_string())));
-    assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.details", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string())));
-    assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.settings", true), Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string())));
-    assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.chat", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.chat", false).to_string())));
-    assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.display", false), None, "left-panel toggles are out of scope");
-    assert_eq!(ShellState::shell_command_for_control("ui.nav.back", false), None);
+    assert_eq!(shell_command_for_control("dock.tab.0.a.close", false), Some(("shell.windowClose", "Close".to_string())));
+    assert_eq!(shell_command_for_control("dock.tab.0.a.focus", false), None, "React notes no `shell.windowMaximize` anywhere — the chip's activation is the only journaled half, and `arm_window_activation_note` owns it");
+    assert_eq!(shell_command_for_control("shell.layout.compact", false), Some(("shell.applyNamedLayout", "Apply Layout".to_string())));
+    assert_eq!(shell_command_for_control("ui.panelToggle.details", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string())));
+    assert_eq!(shell_command_for_control("ui.panelToggle.settings", true), Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string())));
+    assert_eq!(shell_command_for_control("ui.panelToggle.chat", false), Some(("shell.panelToggle", shell_chrome_string("panelToggle.chat", false).to_string())));
+    assert_eq!(shell_command_for_control("ui.panelToggle.display", false), None, "left-panel toggles are out of scope");
+    assert_eq!(shell_command_for_control("ui.nav.back", false), None);
 }
 //#endregion ShellCommandHistoryTests

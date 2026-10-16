@@ -1,9 +1,7 @@
 use super::*;
-use crate::directory::{
-    model::{AuthSessionIssue, AuthSessionKind},
-    sqlite::SqliteDirectory,
-    DirectoryService,
-};
+use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind};
+use semio_hub_directory_sqlite::SqliteDirectory;
+use semio_hub_directory_service::DirectoryService;
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility};
 use std::sync::Arc;
 
@@ -24,7 +22,7 @@ async fn inference_live_author_rechecks_real_sqlite_session_scope_role_revocatio
             .issue_auth_session(&AuthSessionIssue {
                 user_id: author.id.clone(),
                 identity_provider: "inference-test".into(),
-                identity_subject_digest: crate::directory::identity_subject_digest("inference-test", &author.id).unwrap(),
+                identity_subject_digest: semio_hub_directory_contract::identity_subject_digest("inference-test", &author.id).unwrap(),
                 ttl_secs: 60,
                 device_instance_id: "inference-device".into(),
                 session_kind: AuthSessionKind::DevelopmentLocal,

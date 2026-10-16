@@ -14,9 +14,9 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🟢️ready/🥒️.feature
 
 #[path = "📡️http/🦀️.rs"]
-pub(super) mod http;
+pub mod http;
 
-use super::ipc::Ready;
+use dashboard_launch::Ready;
 
 const HOSTS: [&str; 3] = ["127.0.0.1", "localhost", "0.0.0.0"];
 const SCHEME: &[u8] = b"http://";

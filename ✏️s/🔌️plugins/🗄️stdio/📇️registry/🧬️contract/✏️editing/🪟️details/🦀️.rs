@@ -1,7 +1,12 @@
 //! 🪟️ Bounded, localized typed snapshot details shared by stdio artifact editors.
 
-use super::{snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID};
+use semio_s_artifact_stdio_contract_editing::{
+    snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID,
+};
 use pack::snapshot::ArtifactDsl;
+use semio_framework_os_kernel as kernel;
+use semio_s_artifact_stdio_contract_wire::snapshot_edit_source;
+use semio_s_artifact_stdio_contract_window_kit::window_kit_artifact_publication_revision;
 use semio_framework_value::{DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
@@ -1107,7 +1112,7 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
 
     fn source(&self) -> Option<String> {
         match &self.value {
-            DslSnapshotDetailsValue::Snapshot(snapshot) => Some(super::snapshot_edit_source(*snapshot)),
+            DslSnapshotDetailsValue::Snapshot(snapshot) => Some(snapshot_edit_source(*snapshot)),
             DslSnapshotDetailsValue::Materialized(_) => None,
         }
     }
@@ -1611,7 +1616,7 @@ fn action_text_draft(id: &str, value: String, language: Option<String>, action_i
 
 fn template_control(id: &str, title: &str, path: &str, template: DslValue, insert: bool, labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
     let action_id = if insert { INSERT_SNAPSHOT_VALUE_ACTION_ID } else { SET_SNAPSHOT_VALUE_ACTION_ID };
-    let source = super::snapshot_edit_source(&template);
+    let source = snapshot_edit_source(&template);
     if let Some(source) = UiText::try_from_str(&source) {
         return button(id, title, "plus", controller_id, action_id, ui_args([pointer_argument(path, "path", "pathChunks")?, ("value", UiValue::Text(source)), ("valueEncoding", ui_text_value("json")?)])?);
     }
@@ -1619,7 +1624,7 @@ fn template_control(id: &str, title: &str, path: &str, template: DslValue, inser
 }
 
 fn variant_control(id: &str, title: &str, path: &str, template: DslValue, labels: Labels, controller_id: &str, publication_revision: Option<ui_contract::UiPublicationRevision>) -> UiAssemblyResult<BuiltNode> {
-    let source = super::snapshot_edit_source(&template);
+    let source = snapshot_edit_source(&template);
     if let Some(source) = UiText::try_from_str(&source) {
         return button(id, title, "replace", controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, ui_args([pointer_argument(path, "path", "pathChunks")?, ("value", UiValue::Text(source)), ("valueEncoding", ui_text_value("json")?)])?);
     }
@@ -1677,7 +1682,7 @@ fn enum_control(id: &str, path: &str, current: &SnapshotDetailValue, values: &[D
         }
     }
     let controls = values.iter().enumerate().map(|(index, value)| {
-        let source = super::snapshot_edit_source(value);
+        let source = snapshot_edit_source(value);
         template_control(&format!("{id}-enum-{index}"), &format!("{} {source}", labels.choose), path, value.clone(), false, labels, controller_id, publication_revision)
     });
     control_group(&format!("{id}-enum"), controls)
@@ -1703,7 +1708,7 @@ fn scalar_control(
             bind(builder, ui::Trigger::Change, controller_id, SET_SNAPSHOT_VALUE_ACTION_ID, path_args(path)?)?.try_build().map_err(|_| error("ui.snapshot-details.toggle"))
         }
         SnapshotDetailValue::Number(value) => {
-            let value = super::snapshot_edit_source(&DslValue::Number(value));
+            let value = snapshot_edit_source(&DslValue::Number(value));
             set_input(&format!("{id}-number"), path, ui::InputKind::Text, &value, labels.value, labels, controller_id, true, publication_revision)
         }
         SnapshotDetailValue::String(value) if UiText::try_from_str(&value).is_some() => set_input(&format!("{id}-text"), path, ui::InputKind::Text, &value, labels.value, labels, controller_id, false, publication_revision),
@@ -2018,100 +2023,8 @@ pub fn render_snapshot_details_provider_revisioned<P: SnapshotDetailsProvider + 
 }
 
 pub fn render_snapshot_details<S: ArtifactDsl + ToValue>(doc: &semio_framework_plugin::ArtifactView<'_, S>, locale: Locale, controller_id: &str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let publication_revision = crate::window_kit_artifact_publication_revision(doc)?;
+    let publication_revision = window_kit_artifact_publication_revision(doc)?;
     render_snapshot_details_provider_at_revision(&DslSnapshotDetailsProvider::new_with_schema_hint(doc.snapshot, Some(controller_id)), locale, controller_id, windows, Some(publication_revision))
-}
-
-#[macro_export]
-macro_rules! snapshot_details_editor_support {
-    (
-        owner_file: $owner_file:literal,
-        controller: $controller:literal,
-        artifact_schema: $artifact_schema:literal,
-        preparation: $preparation:literal
-        $(, document_store_owners: $document_store_owners:path)?
-        $(, bounded_native: $bounded_native:tt)?
-        $(, native: {
-            factory_name: $native_factory_name:literal,
-            factory_type: $native_factory_type:ty,
-            contract: $native_contract:expr,
-            build: $native_build:path,
-            tools: [$($native_tool:literal),+ $(,)?]
-        })?
-        $(,)?
-    ) => {
-        fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-            let mut proofs = $crate::editing::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema);
-            $(
-                let _ = stringify!($bounded_native);
-                proofs.extend($crate::editing::bounded_native_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
-            )?
-            $($(
-                proofs.push(
-                    semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<semio_framework_plugin::EditorApp<Self>>(
-                        $owner_file,
-                        $controller,
-                        $native_factory_name,
-                        $native_tool,
-                        $artifact_schema,
-                        $native_contract,
-                    )
-                    .with_factory_type::<semio_framework_plugin::EditorApp<Self>, $native_factory_type>(),
-                );
-            )+)?
-            proofs
-        }
-
-        fn register_tool_job_factories(
-            registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>,
-        ) -> Result<(), semio_framework_plugin::Fault> {
-            $(
-                let _ = stringify!($bounded_native);
-                $crate::editing::register_bounded_native_edit_tool_factory::<Self>(registry)?;
-            )?
-            $(
-                let controller = registry.controller_id().to_string();
-                registry.register(<$native_factory_type>::new(&controller))?;
-            )?
-            $crate::editing::register_snapshot_edit_tool_factory::<Self>(registry)
-        }
-
-        fn build_tool_job(
-            request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>,
-        ) -> Result<Option<semio_framework_plugin::ToolOperationSpec>, semio_framework_plugin::Fault> {
-            if $crate::editing::is_snapshot_edit_action(&request.tool_id) {
-                return $crate::editing::build_snapshot_edit_tool_job::<Self>(request);
-            }
-            $(
-                let _ = stringify!($bounded_native);
-                if <$crate::editing::BoundedNativeEditToolJobFactory<Self> as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&request.tool_id.as_str()) {
-                    return $crate::editing::build_bounded_native_edit_tool_job::<Self>(request);
-                }
-            )?
-            $(return $native_build(request);)?
-            Ok(None)
-        }
-
-        $(
-            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-                Some($document_store_owners(grant))
-            }
-        )?
-
-        fn build_artifact_store_one_item_preparation_factory(
-        ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            let factory = semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
-            $(
-                let _ = stringify!($bounded_native);
-                let factory = $crate::editing::routed_native_edit_preparation_factory(
-                    <Self as $crate::editing::BoundedNativeEditingEditor>::native_edit_preparation_route($preparation),
-                    factory,
-                );
-            )?
-            Some(semio_framework_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::editing::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
-        }
-
-    };
 }
 
 #[cfg(test)]

@@ -1,3 +1,5 @@
+import{createIssuedResourceControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
@@ -5,7 +7,7 @@ import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/
 import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
-import { verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApiTitleRendering, verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
+import { withPrintPipelineVerificationV1, verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApiTitleRendering, verifyPrintApiPublication, verifyPrintCommandBoundaries, verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
 /** 🧪️ Verifies pure print transformations and, from `long` upward, every template PDF; `viz` adds the
@@ -13,42 +15,45 @@ import { verifyPrintKindPaintFixtures, verifyPrintGalleryCarrier, verifyPrintApi
  * `🖼️gallery-render` evidence. */
 export class PrintPipelineVerificationCommand extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"print:pipeline:verification",0);
+    await withPrintExecutionV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,kind:"document"},execution=>withPrintPipelineVerificationV1(execution,async context=>{
     if (segments[0] === "api-publication") {
       if (segments.length !== 1) throw new Error("print API publication test accepts no additional segments");
-      await verifyPrintApiPublication();
+      await verifyPrintApiPublication(context);
       return;
     }
     if (segments[0] === "command-boundaries") {
       if (segments.length !== 1) throw new Error("print command boundaries test accepts no additional segments");
-      await verifyPrintCommandBoundaries();
+      await verifyPrintCommandBoundaries(context);
       return;
     }
     if (segments[0] === "macro") {
       if (segments.length !== 1) throw new Error("print macro staging test accepts no additional segments");
-      await verifyPrintMacroStagingNative();
+      await verifyPrintMacroStagingNative(context);
       return;
     }
     if (segments[0] === "viz" && segments[1] === "fixtures") {
-      const evidence = await writePrintGalleryEvidence(segments.slice(2));
+      const evidence = await writePrintGalleryEvidence(execution,segments.slice(2));
       console.log(`[gallery] evidence holds ${Object.keys(evidence.variants).length} variants`);
       return;
     }
     if (segments[0] === "viz") {
       const mode = segments[1] ?? "coverage";
       if (!["quick", "coverage", "full"].includes(mode)) throw new Error(`unknown viz test mode: ${mode}`);
-      await verifyPrintPipelineQuick();
-      await verifyPrintGalleryCarrier();
-      await verifyPrintKindPaintFixtures();
-      await verifyPrintApiTitleRendering();
+      await verifyPrintPipelineQuick(context);
+      await verifyPrintGalleryCarrier(context);
+      await verifyPrintKindPaintFixtures(context);
+      await verifyPrintApiTitleRendering(context);
       await verifyVizChartInferences(["quick"]);
       verifyVisualizationCoverage();
-      if (mode === "full") await verifyPrintVisualizationBuild();
+      if (mode === "full") await verifyPrintVisualizationBuild(context);
       return;
     }
     const { level } = resolveTestLevel(segments);
-    await verifyPrintPipelineQuick();
+    await verifyPrintPipelineQuick(context);
     await verifyVizChartInferences([level === "exhaustive" ? "exhaustive" : level === "long" ? "long" : "quick"]);
-    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong();
+    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong(context);
+    }));
   }
 }
 //#endregion 🧪️PrintPipelineVerification

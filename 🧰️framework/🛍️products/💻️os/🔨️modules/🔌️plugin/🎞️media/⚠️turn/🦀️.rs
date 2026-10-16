@@ -13,8 +13,6 @@ impl OriginalDomainFailure for MediaOperationRefusal{
  fn domain_message(&self)->&str{match &self.source{MediaOperationSource::Dispatch(source)=>match source{semio_framework::ToolDispatchError::UnknownController{controller_id}=>controller_id,semio_framework::ToolDispatchError::Factory{detail,..}=>detail,semio_framework::ToolDispatchError::RawWireLimit{..}=>"media dispatch raw wire limit exceeded"},MediaOperationSource::Media(source)=>match source{MediaError::UnknownPort(port)=>port,MediaError::Incompatible{port,..}=>port,MediaError::Payload(_,message)=>message,MediaError::NotImplemented=>"media ports are not implemented for this app"}}}
  fn domain_retained_progress(&self)->RetainedCloneProgress{Default::default()}
 }
-fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original media domain projection path changed")}
-fn media_type(value:&MediaType,path:&[usize])->Result<V<'static>,ValueError>{Ok(match path{[]=>V::IntrinsicObject(2),[0]=>V::Enum(value.class as u32),[1]=>V::Enum(value.form as u32),_=>return Err(invalid())})}
 impl OriginalDomainProjection for MediaOperationRefusal{
  fn projection_identity(&self)->usize{&self.source as*const MediaOperationSource as usize}
  fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{
@@ -28,19 +26,6 @@ impl OriginalDomainProjection for MediaOperationRefusal{
  }
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match &self.source{MediaOperationSource::Dispatch(_)=>match path{[]=>["kind","controllerId","toolId","detail","actual","maximum"].get(index).copied().ok_or_else(invalid),_=>Err(invalid())},MediaOperationSource::Media(source)=>match path{[]=>["kind","port","message","produced","accepted"].get(index).copied().ok_or_else(invalid),[3]|[4] if matches!(source,MediaError::Incompatible{..})=>["class","form"].get(index).copied().ok_or_else(invalid),_=>Err(invalid())}}}
 }
-/// 🫴️ Projects the borrowed media enum without moving its original payload.
-pub(crate) fn project_media_error<'a>(source:&'a MediaError,path:&[usize])->Result<V<'a>,ValueError>{Ok(match path{
-  []=>V::IntrinsicObject(5),
-  [0]=>V::IntrinsicText(match source{MediaError::UnknownPort(_)=>"unknownPort",MediaError::Incompatible{..}=>"incompatible",MediaError::Payload(..)=>"payload",MediaError::NotImplemented=>"notImplemented"}),
-  [1]=>match source{MediaError::UnknownPort(port)|MediaError::Incompatible{port,..}|MediaError::Payload(port,_)=>V::IntrinsicText(port),MediaError::NotImplemented=>V::IntrinsicNull},
-  [2]=>match source{MediaError::Payload(_,message)=>V::IntrinsicText(message),_=>V::IntrinsicNull},
-  [3,rest @ ..]=>match source{MediaError::Incompatible{produced,..}=>return media_type(produced,rest),_ if rest.is_empty()=>V::IntrinsicNull,_=>return Err(invalid())},
-  [4,rest @ ..]=>match source{MediaError::Incompatible{accepted,..}=>return media_type(accepted,rest),_ if rest.is_empty()=>V::IntrinsicNull,_=>return Err(invalid())},
-  _=>return Err(invalid()),
- })}
-/// 🔑️ Borrows media fields for enclosing domain projections.
-pub(crate) fn key_media_error<'a>(source:&'a MediaError,path:&[usize],index:usize)->Result<&'a str,ValueError>{match path{[]=>["kind","port","message","produced","accepted"].get(index).copied().ok_or_else(invalid),[3]|[4]if matches!(source,MediaError::Incompatible{..})=>["class","form"].get(index).copied().ok_or_else(invalid),_=>Err(invalid())}}
-
 
 
 /// 🧳️ Keeps domain output and original physical/context failure distinct before paid publication.
@@ -57,3 +42,5 @@ impl From<semio_framework::ToolDispatchError> for MediaOperationFailure{fn from(
 #[cfg(any(test,feature="media-turn-testing"))]
 #[path="🧪️tests/🦀️.rs"]
 pub mod tests;
+
+pub use semio_framework_plugin_decl_app::media_operation_refusal::*;

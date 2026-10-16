@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "clients": [
+    {
+      "role": "birth",
+      "expectedCancellation": false
+    },
+    {
+      "role": "leaf",
+      "expectedCancellation": true
+    }
+  ],
+  "expectedStop": "acknowledged",
+  "expectedEvents": [
+    "leaf:cancelled",
+    "leaf:closed",
+    "birth:closed"
+  ]
+}

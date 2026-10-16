@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-space-sqlite-cells-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

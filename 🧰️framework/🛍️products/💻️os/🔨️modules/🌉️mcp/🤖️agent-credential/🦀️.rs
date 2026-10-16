@@ -1,16 +1,21 @@
 //! 🤖️ Bounded, owner-neutral delegated credential loading and exchange protocol inventory.
-use crate::{GatewayError, GatewayErrorCode};
+
 use std::sync::OnceLock;
+use crate::errors::{GatewayError, GatewayErrorCode};
+use crate::owner_only::verify_owner_only;
 
 /// 📏️ Maximum credential and exchange request bytes.
 pub const DELEGATED_CREDENTIAL_MAX_BYTES: u64 = 16 * 1024;
 
 /// 🔐️ A delegated secret whose wire grammar belongs to the selected owner.
-pub struct DelegatedCredentialV1 { origin: String, scope_id: String, audience: String, token: String }
+pub struct DelegatedCredentialV1 { pub origin: String, pub scope_id: String, pub audience: String, pub token: String }
+
 impl std::fmt::Debug for DelegatedCredentialV1 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_struct("DelegatedCredentialV1").field("origin", &self.origin).field("scope_id", &self.scope_id).field("audience", &self.audience).field("token", &"<redacted>").finish() }
 }
+
 impl Drop for DelegatedCredentialV1 { fn drop(&mut self) { unsafe { self.token.as_bytes_mut() }.fill(0); } }
+
 impl DelegatedCredentialV1 {
     /// 🛂️ Constructs only bounded nonempty neutral credential fields.
     pub fn new(origin: String, scope_id: String, audience: String, mut token: String) -> Result<Self, GatewayError> {
@@ -25,6 +30,7 @@ impl DelegatedCredentialV1 {
 
 /// 📤️ An exact relative exchange route and bounded owner-encoded request body.
 pub struct CredentialExchangeRequestV1 { pub path: String, pub body: Vec<u8> }
+
 impl CredentialExchangeRequestV1 {
     pub fn new(path: String, body: Vec<u8>) -> Result<Self, GatewayError> {
         if path.len() < 2 || path.len() > 1024 || !path.starts_with('/') || path[1..].split('/').any(|part| part.is_empty() || part == "." || part == ".." || !part.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"_.~-".contains(&byte))) || body.len() > DELEGATED_CREDENTIAL_MAX_BYTES as usize { return Err(invalid("credential exchange request is invalid")); }
@@ -34,7 +40,9 @@ impl CredentialExchangeRequestV1 {
 
 /// 🎁️ A first-party session grant returned by the selected owner decoder.
 pub struct DelegatedSessionGrantV1 { pub token: String, pub agent_principal_id: String, pub agent_label: String, pub space_id: String, pub expires_at_ms: i64 }
+
 impl Drop for DelegatedSessionGrantV1 { fn drop(&mut self) { unsafe { self.token.as_bytes_mut() }.fill(0); } }
+
 impl std::fmt::Debug for DelegatedSessionGrantV1 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_struct("DelegatedSessionGrantV1").field("agent_principal_id", &self.agent_principal_id).field("space_id", &self.space_id).field("token", &"<redacted>").finish() }
 }
@@ -49,7 +57,9 @@ pub struct CredentialExchangeProtocolV1 {
     pub decode_grant: fn(&[u8], &DelegatedCredentialV1) -> Result<DelegatedSessionGrantV1, GatewayError>,
     pub decode_error: fn(u16, &[u8]) -> GatewayError,
 }
+
 static PROTOCOLS: OnceLock<Vec<CredentialExchangeProtocolV1>> = OnceLock::new();
+
 fn invalid(message: &str) -> GatewayError { GatewayError::new(GatewayErrorCode::InputInvalid, message) }
 
 /// 🛂️ Installs one exact bounded caller inventory and refuses ambiguous schema ownership.
@@ -79,7 +89,7 @@ pub fn decode_delegated_credential_v1(bytes: &[u8], protocols: &[CredentialExcha
 pub fn read_delegated_credential_file_v1(path: &std::path::Path, protocols: &[CredentialExchangeProtocolV1]) -> Result<(CredentialExchangeProtocolV1, DelegatedCredentialV1), GatewayError> {
     let metadata = std::fs::symlink_metadata(path).map_err(|_| invalid("credential file is unreadable"))?;
     if !metadata.is_file() || metadata.is_symlink() || metadata.len() > DELEGATED_CREDENTIAL_MAX_BYTES { return Err(invalid("credential file must be bounded and regular")); }
-    crate::owner_only::verify_owner_only(path).map_err(|reason| GatewayError::new(GatewayErrorCode::PermissionDenied, reason))?;
+    verify_owner_only(path).map_err(|reason| GatewayError::new(GatewayErrorCode::PermissionDenied, reason))?;
     use std::io::Read;
     let file = std::fs::File::open(path).map_err(|_| invalid("credential file is unreadable"))?;
     let opened = file.metadata().map_err(|_| invalid("credential file is unreadable"))?;
@@ -95,12 +105,12 @@ pub fn read_delegated_credential_file_v1(path: &std::path::Path, protocols: &[Cr
 }
 
 /// 📥️ Loads a source location through the process caller's admitted protocol inventory.
-pub fn load_delegated_credential_v1(source: &crate::AgentCredentialSource) -> Result<(CredentialExchangeProtocolV1, DelegatedCredentialV1), GatewayError> {
+pub fn load_delegated_credential_v1(source: &AgentCredentialSource) -> Result<(CredentialExchangeProtocolV1, DelegatedCredentialV1), GatewayError> {
     let protocols = PROTOCOLS.get().map(Vec::as_slice).unwrap_or(&[]);
     match source {
-        crate::AgentCredentialSource::File(path) => read_delegated_credential_file_v1(std::path::Path::new(path), protocols),
+        AgentCredentialSource::File(path) => read_delegated_credential_file_v1(std::path::Path::new(path), protocols),
         #[cfg(unix)]
-        crate::AgentCredentialSource::Descriptor(fd) => {
+        AgentCredentialSource::Descriptor(fd) => {
             use std::io::Read;
             use std::os::fd::FromRawFd;
             if *fd < 0 { return Err(invalid("credential descriptor must be nonnegative")); }
@@ -109,10 +119,25 @@ pub fn load_delegated_credential_v1(source: &crate::AgentCredentialSource) -> Re
             let outcome = read.map_err(|_| invalid("credential descriptor is unreadable")).and_then(|_| decode_delegated_credential_v1(&bytes, protocols)); bytes.fill(0); outcome
         }
         #[cfg(not(unix))]
-        crate::AgentCredentialSource::Descriptor(_) => Err(invalid("credential descriptors are unavailable on this platform; use a file")),
+        AgentCredentialSource::Descriptor(_) => Err(invalid("credential descriptors are unavailable on this platform; use a file")),
     }
 }
 
-#[cfg(test)]
-#[path="../🧪️tests/🤖️agent-credential/🦀️.rs"]
-mod tests;
+//#region 🔖️WorkspaceOptions
+
+/// 🤖️ Where the delegated credential comes from. Only ever a *location*: the secret itself never
+/// enters argv, the environment, or any `Debug` output.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AgentCredentialSource {
+    File(String),
+    Descriptor(i32),
+}
+
+impl AgentCredentialSource {
+    /// 📥️ Loads and bounds-checks the credential this source names.
+    pub fn load(&self) -> Result<(CredentialExchangeProtocolV1, DelegatedCredentialV1), GatewayError> {
+        load_delegated_credential_v1(self)
+    }
+}
+
+//#endregion 🔖️WorkspaceOptions

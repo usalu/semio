@@ -428,11 +428,12 @@ export function policyMutationStructuralBreachesView(view: MutationTaxonomyStruc
     const seenTextOpcodes = new Map<string, string>();
     const seenBinaryTags = new Map<number, string>();
     const descriptorFilename = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
+    const schemaKind=(name:string):string=>{const format=taxonomy.schemaFormats[name];if(!format)throw new Error(`Required mutation schema format is missing: ${name}`);return format.fileKindId;};
     const surfaceSpecs = [
       { id: "typescript", root: `${mutationsRel}/${POLICY_TS_COMPONENT_LEAF}`, leaf: POLICY_TS_COMPONENT_LEAF, policy: "mutation/language-parity" as const },
-      { id: "graphql", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔗️graphql"].fileKindId, taxonomy), policy: "mutation/schema-parity" as const },
-      { id: "protobuf", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🛰️protobuf"].fileKindId, taxonomy), policy: "mutation/schema-parity" as const },
-      { id: "json-schema", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(taxonomy.schemaFormats["🔣️jsonschema"].fileKindId, taxonomy)}`, leaf: mutationPayloadSchemaRelativePath(taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "graphql", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(schemaKind("🔗️graphql"), taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(schemaKind("🔗️graphql"), taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "protobuf", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(schemaKind("🛰️protobuf"), taxonomy)}`, leaf: canonicalPrimaryFilenameForKind(schemaKind("🛰️protobuf"), taxonomy), policy: "mutation/schema-parity" as const },
+      { id: "json-schema", root: `${mutationsRel}/${canonicalPrimaryFilenameForKind(schemaKind("🔣️jsonschema"), taxonomy)}`, leaf: mutationPayloadSchemaRelativePath(taxonomy), policy: "mutation/schema-parity" as const },
       { id: "text", root: `${mutationsRel}/📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `📝️text/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
       { id: "binary", root: `${mutationsRel}/💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, leaf: `💾️binary/${POLICY_RS_COMPONENT_LEAF_NAME}`, policy: "mutation/language-parity" as const },
     ].map((surface) => {

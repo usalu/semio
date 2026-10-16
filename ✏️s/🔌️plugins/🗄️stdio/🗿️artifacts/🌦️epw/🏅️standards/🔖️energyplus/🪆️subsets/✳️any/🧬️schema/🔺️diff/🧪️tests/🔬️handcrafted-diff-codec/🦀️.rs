@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::energyplus::subsets::any::schema::snapshot::EpwLocation, standards::energyplus::subsets::any::schema::snapshot::EpwRecord, standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot};
+use crate::standards::energyplus::subsets::any::schema::diff::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn location(city: &str) -> EpwLocation {

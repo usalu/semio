@@ -27,10 +27,16 @@
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/🕸️bindings"
-      ],
-      "cache": true
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

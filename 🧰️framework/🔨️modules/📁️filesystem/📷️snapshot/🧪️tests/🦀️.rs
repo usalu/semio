@@ -1,5 +1,5 @@
 //! 🧫️ Checks the same explicit source projection corpus as TypeScript.
-use super::{SourceChange, SourceProjection, SourceProjectionError};
+use crate::{SourceChange, SourceProjection, SourceProjectionError};
 
 #[test]
 fn source_projection_preserves_explicit_deletion_and_exact_predecessors() {

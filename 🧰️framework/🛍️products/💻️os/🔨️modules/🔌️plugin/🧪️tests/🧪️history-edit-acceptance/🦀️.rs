@@ -22,7 +22,8 @@ impl From<semio_framework_value::ValueError> for AcceptanceError{fn from(origina
 impl std::fmt::Display for AcceptanceError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match &self.original{Some(original)=>write!(f,"{}: {original:?}",self.message),None=>f.write_str(&self.message)}}}
 
 use semio_framework::kernel::{HistoryTimeTravelReview, HistoryTimeTravelStage};
-use semio_framework::{ActionArgDef, ArgSchema, HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
+use semio_framework::{ActionArgDef, ArgSchema};
+use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
 
 /// 🧑‍💻️ The actor every acceptance instance authors and dispatches as.
 const ACCEPTANCE_ACTOR: &str = "history-edit-acceptance";
@@ -402,20 +403,20 @@ where
     let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
+        assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         let mut files = app.document_text().await.map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the document does not print".into())))?;
         if files.dsl != base {
             files.dsl = base.to_string();
             crate::with_authoring_identity!(|identity| artifact_app_laws::load_document_text(&mut app, &files, &mut identity,cx).await).map_err(|fault| AcceptanceSeedFault::Original(AcceptanceError::from(fault).context("the base document does not load".into())))?;
         }
         for (index, op) in ops.iter().enumerate() {
-            let applied = app.store.mutation_ops().map_or(0, |applied| applied.len());
+            let applied = app.stores.store.mutation_ops().map_or(0, |applied| applied.len());
             let receipt =
-                crate::with_authoring_identity!(|identity| app.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
+                crate::with_authoring_identity!(|identity| app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![(*op).clone()], transaction: None }, &mut identity).await).map_err(|error| AcceptanceSeedFault::Operation(index, format!("the seed edit is refused: {error:?}")))?;
             if matches!(receipt.worst, Some(semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
                 return Err(AcceptanceSeedFault::Operation(index, format!("the seed edit does not apply cleanly: {:?}", receipt.messages)));
             }
-            if strict && app.store.mutation_ops().map_or(0, |applied| applied.len()) <= applied {
+            if strict && app.stores.store.mutation_ops().map_or(0, |applied| applied.len()) <= applied {
                 return Err(AcceptanceSeedFault::Operation(index, "the seed edit leaves no applied operation".into()));
             }
         }
@@ -438,7 +439,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let head = app.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
+    let head = app.stores.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
     let value = (semio_framework_value::ToValue::to_value(&head), pack::snapshot::ArtifactDsl::print_dsl(&head));
     std::mem::forget(head);
     Ok(value)
@@ -473,7 +474,7 @@ where
         Some(editor) => (editor.inputs.clone(), editor.value.clone()),
     };
     if let Some(as_of) = as_of {
-        let committed = app.store.snapshot_owner();
+        let committed = app.stores.store.snapshot_owner();
         let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
         let shown = (semio_framework_value::ToValue::to_value(shown.as_ref()), pack::snapshot::ArtifactDsl::print_dsl(shown.as_ref()));
         if shown != *as_of {
@@ -501,7 +502,7 @@ where
         if change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked)) {
             acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
             acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-            if store.is_none() && app.store.supersessions().iter().any(|(id, _)| id.0 == target) {
+            if store.is_none() && app.stores.store.supersessions().iter().any(|(id, _)| id.0 == target) {
                 return Err(AcceptanceVerdict::Fail("discarding a blocked trial left a supersession of the mutation".into()));
             }
             continue;
@@ -510,7 +511,7 @@ where
             drafted = Some(candidate);
             break;
         }
-        if store.is_none() && app.store.supersessions().iter().any(|(id, _)| id.0 == target) {
+        if store.is_none() && app.stores.store.supersessions().iter().any(|(id, _)| id.0 == target) {
             return Err(AcceptanceVerdict::Fail((format!("accepting {} = {:?}, which rebuilds the same operation, closed the session but left a supersession of the mutation", candidate.0, candidate.1)).into()));
         }
         unchanged += 1;
@@ -554,7 +555,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let target = app
-        .store
+        .stores.store
         .mutation_ops()
         .map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?
         .first()
@@ -575,7 +576,7 @@ where
     }
     acceptance_verb(app, HISTORY_EDIT_RESTORE_ACTION_ID, named(),cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawal is not restored".into())))?;
     acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-    if app.store.supersessions().iter().any(|(id, _)| id.0 == target) {
+    if app.stores.store.supersessions().iter().any(|(id, _)| id.0 == target) {
         return Err(AcceptanceVerdict::Fail("restoring the only withdrawal left a supersession of the mutation in the store".into()));
     }
     let after = acceptance_head(app).map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
@@ -599,20 +600,20 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let target = app
-        .store
+        .stores.store
         .mutation_ops()
         .map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?
         .first()
         .map(|op| op.mutation_id.0.clone())
         .ok_or_else(|| AcceptanceVerdict::Fail("the seeded edit left no applied operation".into()))?;
     let drafted = acceptance_drive(app, &target, None, change, alternative, Some(as_of), kind,cx).await?;
-    let (_, supersession) = app.store.supersessions().iter().find(|(id, _)| id.0 == target).ok_or_else(|| AcceptanceVerdict::Fail("the finalize superseded nothing".into()))?;
+    let (_, supersession) = app.stores.store.supersessions().iter().find(|(id, _)| id.0 == target).ok_or_else(|| AcceptanceVerdict::Fail("the finalize superseded nothing".into()))?;
     let scope = supersession.scope.clone();
     let protocol::InputReplacement::Input { payload, .. } = &supersession.replacement else {
         return Err(AcceptanceVerdict::Fail("the finalize withdrew the edited operation".into()));
     };
     let edited = <A::Mutation as ::protocol::OpBinary>::decode_op(payload.as_slice()).map_err(|error| AcceptanceVerdict::Fail((format!("the superseding input does not decode: {error:?}")).into()))?;
-    let envelope = app.store.envelope();
+    let envelope = app.stores.store.envelope();
     let expected = alternative.map(|name| envelope.vcs.alternatives.iter().find(|candidate| candidate.name == name).map(|candidate| candidate.id.clone()));
     match expected {
         None if scope.is_some() => return Err(AcceptanceVerdict::Fail((format!("the overwrite is scoped to {scope:?}")).into())),
@@ -631,7 +632,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    let target = app.store.mutation_ops().map_err(|error| format!("{error:?}"))?.first().map(|op| op.mutation_id.0.clone()).unwrap_or_default();
+    let target = app.stores.store.mutation_ops().map_err(|error| format!("{error:?}"))?.first().map(|op| op.mutation_id.0.clone()).unwrap_or_default();
     let patch = app.history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
     let row = patch.upserts.iter().flat_map(|entry| entry.mutations.iter()).find(|mutation| mutation.mutation_id == target).ok_or_else(|| "the edited mutation has no history row".to_string())?;
     let (en, de) = (row.label.resolve(Terminology::Native, Locale::En).to_string(), row.label.resolve(Terminology::Native, Locale::De).to_string());
@@ -908,7 +909,7 @@ where
     };
     let offered = async {
         let target = app
-            .store
+            .stores.store
             .mutation_ops()
             .map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?
             .first()
@@ -1119,7 +1120,7 @@ where
     let mut reloaded = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
-        assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
+        assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| AcceptanceError::from(fault).context("the archive is refused".into()))?;
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             let status = crate::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
@@ -1194,9 +1195,9 @@ fn acceptance_view_difference(saved: &AcceptanceDocumentView, reloaded: &Accepta
     if saved.head != reloaded.head {
         return Some(format!("the head differs at {}", acceptance_text_difference(&saved.head.1, &reloaded.head.1)));
     }
-    if saved.children != reloaded.children {
+    if saved.children != reloaded.child_composition.children {
         let names = |children: &[(String, String, String, Vec<u8>)]| children.iter().map(|(slot, child, dialect, bytes)| format!("{slot}/{child} {dialect} ({} bytes)", bytes.len())).collect::<Vec<_>>();
-        return Some(format!("the owned children differ: {:?} saved, {:?} reloaded", names(&saved.children), names(&reloaded.children)));
+        return Some(format!("the owned children differ: {:?} saved, {:?} reloaded", names(&saved.children), names(&reloaded.child_composition.children)));
     }
     saved.renders.iter().zip(&reloaded.renders).find(|(left, right)| left != right).map(|((body, left), (_, right))| match (left, right) {
         (Ok(left), Ok(right)) => format!("window body {body} renders differently at {}", acceptance_text_difference(left, right)),
@@ -1281,7 +1282,7 @@ where
     let mut app = crate::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let seeded = async {
-        assert_eq!(app.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
+        assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
         for (action, args) in seed {
             let args = semio_framework_pack_json::parse(args, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the seed args of {action} are not JSON: {error:?}"))?;
             let DslValue::Object(args) = semio_framework_pack_json::to_dsl_value(&args) else {
@@ -1492,7 +1493,7 @@ where
     A: ArtifactApp + Default,
     M: SpaceMember + MemberFactory + Send + 'static,
 {
-    Ok(app.store.mutation_ops().map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?.iter().map(|op| op.mutation_id.0.clone()).collect())
+    Ok(app.stores.store.mutation_ops().map_err(|error| AcceptanceVerdict::Fail((format!("the applied operations do not fold: {error:?}")).into()))?.iter().map(|op| op.mutation_id.0.clone()).collect())
 }
 
 /// ⛔️ Whether a replay outcome blocks finalizing: an error or a fatal (the floor `ReplayReport::blocks_finalize` reads).
@@ -1642,7 +1643,7 @@ where
     }
     acceptance_verb(app, HISTORY_EDIT_RESTORE_ACTION_ID, restore(root.as_str()),cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawal of the root is not restored".into())))?;
     acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-    if app.store.supersessions().iter().any(|(id, _)| ids.contains(&id.0)) {
+    if app.stores.store.supersessions().iter().any(|(id, _)| ids.contains(&id.0)) {
         return Err(AcceptanceVerdict::Fail("restoring every withdrawal left a supersession in the store".into()));
     }
     let after = acceptance_head(app).map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
@@ -1752,7 +1753,7 @@ where
         Err(AcceptanceSeedFault::Original(reason)) => return AcceptanceVerdict::Fail(reason),
         Err(AcceptanceSeedFault::Operation(index,reason)) => return AcceptanceVerdict::SkipBase(format!("seed operation #{index}: {reason}")),
     };
-    let inverse = match probe.store.snapshot() {
+    let inverse = match probe.stores.store.snapshot() {
         Ok(before) => {
             let inverse = ::protocol::Mutation::<A::Snapshot>::inverse(&case.op, &before).map_err(|error| format!("its operation states no inverse on its document: {error:?}"));
             std::mem::forget(before);

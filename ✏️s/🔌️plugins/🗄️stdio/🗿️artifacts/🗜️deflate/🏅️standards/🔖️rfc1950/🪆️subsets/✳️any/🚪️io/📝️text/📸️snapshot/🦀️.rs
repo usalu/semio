@@ -40,10 +40,10 @@ impl pack::snapshot::ArtifactDsl for DeflateSnapshot {
             zlib_bytes.push(byte);
             i += 2;
         }
-        crate::standards::v_rfc1950::subsets::any::io::decode_deflate_snapshot(&zlib_bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zlib decode: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
+        crate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decode_deflate_snapshot(&zlib_bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zlib decode: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
+        let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::binary::snapshot::encode_deflate_snapshot(self);
         let body: String = zlib_bytes.iter().map(|b| format!("{b:02x}")).collect();
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)

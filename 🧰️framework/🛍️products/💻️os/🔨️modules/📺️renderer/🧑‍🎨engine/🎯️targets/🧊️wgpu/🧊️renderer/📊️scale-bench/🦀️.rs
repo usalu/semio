@@ -252,7 +252,7 @@ impl Env {
     /// `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
     /// failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
     /// deliberately exercise.
-    async fn pump(&mut self) -> Result<usize, crate::program_bridge::ProgramFault> {
+    async fn pump(&mut self) -> Result<usize, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
         let mut total = 0usize;
         loop {
             self.now_ms += 1;
@@ -309,7 +309,7 @@ impl Env {
     /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
     /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
     /// `send -> this call returning`.
-    async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, crate::program_bridge::ProgramFault> {
+    async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
         let mut target_seen: Option<Instant> = None;
         loop {
             self.now_ms += 1;
@@ -364,7 +364,7 @@ impl Env {
         std::mem::take(&mut self.pending)
     }
 
-    async fn unregister(&mut self, actor: ActorId) -> Result<(), crate::program_bridge::ProgramFault> {
+    async fn unregister(&mut self, actor: ActorId) -> Result<(), semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
         self.runtime.unregister(actor).await?;
         Ok(())
     }
@@ -617,7 +617,7 @@ async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle,
 /// fails with "cannot enter component instance" — that message is CONFIRMING evidence of an
 /// earlier kill, not a different failure. Checked here first; falls back to an explicit `Wake`
 /// only if the InstanceOpen turn happened not to trigger it.
-async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, crate::program_bridge::ProgramFault> {
+async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
     let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
         return Ok(skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry"));
     };
@@ -707,7 +707,7 @@ const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> 
 /// 💤️ The "evicted" half of LRU-suspend: drop A's live instance from this shard.
 ///
 /// The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
-async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, crate::program_bridge::ProgramFault> {
+async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> Result<serde_json::Value, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
     let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
         return Ok(skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry"));
     };
@@ -828,7 +828,7 @@ async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &Com
 /// writes one JSON report. Returns `0` on a clean harness run (regardless of individual budget
 /// pass/fail — a real measured FAIL is a valid, non-error outcome), `1` if the harness itself could
 /// not set up (bad registry/wasm/report path).
-pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, crate::program_bridge::ProgramFault> {
+pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
     let process_start = Instant::now();
     let mut registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
         Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,

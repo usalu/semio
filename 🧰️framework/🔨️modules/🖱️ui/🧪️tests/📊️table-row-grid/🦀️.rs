@@ -12,7 +12,7 @@
 use crate::wgpu::accessibility::{accessibility_projection, row_accessibility_action};
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::chrome::UiDriverDrag;
-use crate::wgpu::draw::{DrawList, KIND_GLYPH};
+use crate::wgpu::draw_types::{DrawList, KIND_GLYPH};
 use crate::wgpu::events::{AccessibilityUiEvent, EventRouter, PointerButton, UiCommand, UiEvent};
 use crate::wgpu::layout::{table_actions_width, table_column_rect, tree_row_action_rect, TreeRowMetrics};
 use crate::wgpu::mounted_layout::layout_tree_now;

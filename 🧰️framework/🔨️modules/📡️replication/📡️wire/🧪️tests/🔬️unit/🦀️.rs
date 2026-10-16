@@ -2,23 +2,23 @@
 use super::*;
 
 //#region 🧸️Fixtures
-async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
-    crate::causal::MutationEnvelope {
-        mutation_id: crate::ids::MutationId(id.to_string()),
-        document_id: crate::ids::ArtifactId("document-1".to_string()),
-        actor: crate::ids::ActorId("actor-1".into()),
+async fn sample_envelope(id: &str) -> semio_framework_replication_causal::MutationEnvelope {
+    semio_framework_replication_causal::MutationEnvelope {
+        mutation_id: semio_framework_replication_ids::MutationId(id.to_string()),
+        document_id: semio_framework_replication_ids::ArtifactId("document-1".to_string()),
+        actor: semio_framework_replication_ids::ActorId("actor-1".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-        inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-        timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+        timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }
 }
 
-async fn sample_frontier() -> crate::causal::FrontierSummary {
-    crate::causal::FrontierSummary { document_id: crate::ids::ArtifactId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
+async fn sample_frontier() -> semio_framework_replication_causal::FrontierSummary {
+    semio_framework_replication_causal::FrontierSummary { document_id: semio_framework_replication_ids::ArtifactId("document-1".to_string()), head_edit_ordinal: 5, head_edit_id: "edit-5".to_string(), last_commit_seq: 2, chain_hash: [7u8; 32] }
 }
 
 fn artifact_bootstrap_fixture() -> serde_json::Value {
@@ -34,9 +34,9 @@ fn hash_from_hex(hex: &str) -> [u8; 32] {
     bytes_from_hex(hex).try_into().expect("32-byte hash")
 }
 
-fn fixture_frontier(value: &serde_json::Value) -> crate::causal::FrontierSummary {
-    crate::causal::FrontierSummary {
-        document_id: crate::ids::ArtifactId(value["documentId"].as_str().unwrap().to_string()),
+fn fixture_frontier(value: &serde_json::Value) -> semio_framework_replication_causal::FrontierSummary {
+    semio_framework_replication_causal::FrontierSummary {
+        document_id: semio_framework_replication_ids::ArtifactId(value["documentId"].as_str().unwrap().to_string()),
         head_edit_ordinal: value["headEditOrdinal"].as_u64().unwrap(),
         head_edit_id: value["headEditId"].as_str().unwrap().to_string(),
         last_commit_seq: value["lastCommitSeq"].as_u64().unwrap(),
@@ -146,16 +146,16 @@ async fn client_frame_commands_round_trips() {
 /// derives and the TypeScript `encodeClientCommandsFrameExact` writes.
 #[semio_framework_async_macros::async_test]
 async fn client_frame_commands_keep_exact_hlc_fields() {
-    let envelope = crate::causal::MutationEnvelope {
-        mutation_id: crate::ids::MutationId("transition-1".into()),
-        document_id: crate::ids::ArtifactId("document-1".into()),
-        actor: crate::ids::ActorId("actor-1".into()),
-        dependencies: vec![crate::ids::MutationId("op-1".into())],
+    let envelope = semio_framework_replication_causal::MutationEnvelope {
+        mutation_id: semio_framework_replication_ids::MutationId("transition-1".into()),
+        document_id: semio_framework_replication_ids::ArtifactId("document-1".into()),
+        actor: semio_framework_replication_ids::ActorId("actor-1".into()),
+        dependencies: vec![semio_framework_replication_ids::MutationId("op-1".into())],
         observed: None,
         target: vec!["title".into()],
-        diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
-        inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
-        timestamp: crate::ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
+        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
+        timestamp: semio_framework_replication_ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
         transaction: None, verb: None, line: None,
     };
     let frame = ClientFrame::Commands { batch_id: 7, envelopes: vec![envelope] };
@@ -214,7 +214,7 @@ async fn rebootstrap_controls_admit_a_genesis_baseline_and_refuse_a_later_one_na
         document_id: "document-1".into(),
         checkpoint_id: [1; 32],
         descriptor_hash: [2; 32],
-        baseline_frontier: crate::causal::FrontierSummary { document_id: crate::ids::ArtifactId("document-1".into()), head_edit_ordinal: ordinal, head_edit_id: head.into(), last_commit_seq: commit, chain_hash: [0; 32] },
+        baseline_frontier: semio_framework_replication_causal::FrontierSummary { document_id: semio_framework_replication_ids::ArtifactId("document-1".into()), head_edit_ordinal: ordinal, head_edit_id: head.into(), last_commit_seq: commit, chain_hash: [0; 32] },
     };
     for admitted in [control(0, 0, ""), control(5, 2, "edit-5")] {
         assert_server_round_trips(&ServerFrame::RebootstrapRequired { control: admitted }, Lane::Command).await;
@@ -371,7 +371,7 @@ async fn artifact_bootstrap_cancellation_is_atomic_and_restartable() {
 
 #[semio_framework_async_macros::async_test]
 async fn server_frame_commands_round_trips() {
-    assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1").await], origin: crate::ids::ActorId("actor-1".into()), frontier: sample_frontier().await }, Lane::Command).await;
+    assert_server_round_trips(&ServerFrame::Commands { envelopes: vec![sample_envelope("op-1").await], origin: semio_framework_replication_ids::ActorId("actor-1".into()), frontier: sample_frontier().await }, Lane::Command).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -383,7 +383,7 @@ async fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant(
 
 #[semio_framework_async_macros::async_test]
 async fn server_frame_preview_round_trips() {
-    assert_server_round_trips(&ServerFrame::Preview { actor: crate::ids::ActorId("actor-1".into()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+    assert_server_round_trips(&ServerFrame::Preview { actor: semio_framework_replication_ids::ActorId("actor-1".into()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -411,27 +411,27 @@ async fn server_frame_session_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn decode_client_frame_rejects_empty_bytes() {
     let err = decode_client_frame(&[]).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire frame", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "wire frame", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_client_frame_rejects_unknown_lane_byte() {
     let err = decode_client_frame(&[2u8, 0]).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire frame lane byte", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "wire frame lane byte", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_client_frame_rejects_unknown_tag() {
     let bytes = vec![Lane::Command.to_byte().await, 0xFF];
     let err = decode_client_frame(&bytes).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_server_frame_rejects_unknown_tag() {
     let bytes = vec![Lane::Command.to_byte().await, 0xFF];
     let err = decode_server_frame(&bytes).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -451,7 +451,7 @@ async fn decode_server_frame_rejects_truncated_field() {
 #[semio_framework_async_macros::async_test]
 async fn decode_client_frame_rejects_empty_body_after_lane() {
     let err = decode_client_frame(&[Lane::Command.to_byte().await]).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]

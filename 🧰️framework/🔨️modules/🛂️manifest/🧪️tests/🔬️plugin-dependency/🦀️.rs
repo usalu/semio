@@ -82,7 +82,7 @@ async fn version_pin_of_tree_accepts_only_a_strict_triple() {
     for malformed in ["0.1", "0.1.0.1", "0.1.0-alpha", "", ".1.0", "0..0"] {
         assert!(std::panic::catch_unwind(|| VersionPin::of_tree(malformed)).is_err(), "{malformed:?} must not pin");
     }
-    assert_eq!(crate::tree_pin!(), VersionPin::parse(concat!("=", env!("CARGO_PKG_VERSION"))).unwrap());
+    assert_eq!(semio_framework_manifest_contribution::tree_pin!(), VersionPin::parse(concat!("=", env!("CARGO_PKG_VERSION"))).unwrap());
 }
 
 #[semio_framework_async_macros::async_test]

@@ -3,8 +3,9 @@
 //! The oracle half is `🐍️.py` beside this file, which answers every vector from `mercantile`. This adapter answers the
 //! same vectors from this repository's `tiled_map` implementation — `projection::lonlat_to_world`, the tile the
 //! production `tiles::visible_tiles` windowing selects at a point, `projection::tile_world_rect` read back through
-//! `projection::world_to_lonlat`, and `map_lod_band` — and asserts the four camera invariants in role through the
-//! production `MapHost`. The `floating-point-v1` profile then compares the two answers.
+//! `projection::world_to_lonlat`, and the band a `DescribedMapPolicy` built from the fixture's `lodConstants`
+//! resolves — and asserts the four camera invariants in role through the production `MapHost`. The
+//! `floating-point-v1` profile then compares the two answers.
 //!
 //! @see 🥒️.feature
 //! @see ../../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs — the crate's own integration test over the same fixture
@@ -17,7 +18,7 @@ mod subject {
     use semio_framework_surface::tiled_map::canvas::camera::{screen_to_world, Camera, Viewport};
     use semio_framework_surface::tiled_map::projection::{lonlat_to_world, tile_world_rect, world_to_lonlat};
     use semio_framework_surface::tiled_map::tiles::visible_tiles;
-    use semio_framework_surface::tiled_map::{map_lod_band, MapHost, Point, MAP_CAMERA_ZOOM_MIN, MAX_VISIBLE_TILE_REQUESTS};
+    use semio_framework_surface::tiled_map::{DescribedMapPolicy, MapHost, MapLodBand, MapPolicy, MapPolicyDescriptor, Point, MAP_CAMERA_ZOOM_MIN, MAX_VISIBLE_TILE_REQUESTS};
     use semio_repo_test_host::{Context, Json, Outcome};
 
     const FIXTURE: &str = "shared://🕸️web-mercator-tile-oracle/🔣️.json";
@@ -103,13 +104,30 @@ mod subject {
         answer("bounds", rows)
     }
 
+    /// 📶️ The band table of the fixture's `lodConstants` (`maxSpanDeg`, `tileZ`) as a described map policy.
+    fn band_policy(fixture: &Json) -> Result<DescribedMapPolicy, String> {
+        let constants = fixture.get("lodConstants").ok_or("fixture carries no lodConstants")?;
+        let numbers = |key: &str| -> Result<Vec<f64>, String> {
+            match constants.get(key) {
+                Some(Json::Array(values)) => values.iter().map(|value| if let Json::Number(n) = value { Ok(*n) } else { Err(format!("lodConstants.{key} holds a non-number")) }).collect(),
+                _ => Err(format!("lodConstants carries no {key} array")),
+            }
+        };
+        let template = MapPolicyDescriptor::neutral().bands.remove(0);
+        let bands = numbers("maxSpanDeg")?.into_iter().zip(numbers("tileZ")?).enumerate().map(|(index, (max_span_deg, tile_z))| MapLodBand { id: format!("band-{index}"), max_span_deg, raster_tile_z: tile_z as u32, ..template.clone() }).collect();
+        Ok(DescribedMapPolicy::new(MapPolicyDescriptor { bands, ..MapPolicyDescriptor::neutral() }))
+    }
+
     pub fn lod_bands(ctx: &Context) -> Result<Outcome, String> {
-        let rows = fixture(ctx)?
+        let fixture = fixture(ctx)?;
+        let policy = band_policy(&fixture)?;
+        let rows = fixture
             .array("lodBands")
             .iter()
             .map(|entry| {
                 let span = field(entry, "spanDeg")?;
-                let (index, tile_z) = map_lod_band(span);
+                let index = policy.band_for_span(span, None);
+                let tile_z = policy.band(index).raster_tile_z;
                 Ok(row(vec![("spanDeg", number(span)), ("lodIndex", number(index as f64)), ("tileZ", number(f64::from(tile_z)))]))
             })
             .collect::<Result<Vec<Json>, String>>()?;

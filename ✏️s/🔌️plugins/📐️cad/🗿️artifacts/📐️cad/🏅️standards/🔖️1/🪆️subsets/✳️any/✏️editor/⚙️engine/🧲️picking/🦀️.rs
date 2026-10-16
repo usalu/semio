@@ -11,7 +11,7 @@
 //! 🚫️ Deliberately NOT here: screen-space marquee/ray math
 //! (`spatialPickTargetsFromRay`/`ScreenSelection`, `marqueeCoverageFromGesture`, `pointInPolygon`,
 //! `projectPointToClient`). That is host geometry, already Rust in the framework
-//! (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🦀️.rs`'s `marquee_is_crossing{,_from_path}`,
+//! (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/📐️math/🎯️picking/🦀️.rs`'s `marquee_is_crossing{,_from_path}`,
 //! `point_in_polygon`) and consumed by the renderer, not by a guest that never sees client pixels.
 //! Merge modes reuse `protocol::MergeMode` — the one wire vocabulary — instead of a bespoke
 //! `SpatialSelectionMode`.

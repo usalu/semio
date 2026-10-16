@@ -2,14 +2,13 @@
 //!
 //! Tiled map tile fetch reservation, the map host accessors, camera and pointer interaction.
 
-use super::engine_surface_registry::{
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{
     engine_surface_wire_id, MapSyncCache, ENGINE_SURFACES, MAP_TILE_ASSET_FAULT,
 };
 use crate::element_contracts::ScenePointerTarget;
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use semio_framework_surface::tiled_map::{tiles as map_tiles, MapHost, MapInteractionIntent};
 use serde_json::Value;
-use std::collections::HashSet;
 use ui_wgpu::wgpu::{ActionDescriptor, Rect};
 
 //#region TiledMap
@@ -20,7 +19,7 @@ pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
 
 /// 🗺️🔗️ `"{z}/{x}/{y}"` substituted into a tile URL template — React's own
 /// `urlTemplate.replace("{z}", …)` chain in `MapRenderer.uploadTileRow`.
-pub(super) fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
+pub fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
     template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
 }
 
@@ -44,7 +43,7 @@ fn reserve_map_tile_fetch(surface: WorldAssetMetadataId, cache: &mut MapSyncCach
         return;
     };
     let url = map_tile_url(template, z, x, y);
-    match crate::reserve_renderer_asset_request(WorldAssetRequestKind::MapTile { surface, key, vector, z, x, y }, &url) {
+    match crate::asset_authority::reserve_renderer_asset_request(WorldAssetRequestKind::MapTile { surface, key, vector, z, x, y }, &url) {
         Ok(_) => {
             cache.tile_pending.insert(slot);
         }
@@ -60,7 +59,7 @@ fn reserve_map_tile_fetch(surface: WorldAssetMetadataId, cache: &mut MapSyncCach
 /// render mode (`image`/`vector`/`combined`) exactly as React's `needsRasterTiles`/
 /// `needsVectorTiles` gates do, and clearing a lane's miss set when that lane's visible-range
 /// revision changes (React's `refreshRasterTiles`/`refreshVectorTiles` do the same).
-pub(super) fn reserve_map_tile_fetches(surface_id: &str, host: &MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::wgpu::TiledMapScene) {
+pub fn reserve_map_tile_fetches(surface_id: &str, host: &MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::wgpu::TiledMapScene) {
     let Ok(surface) = WorldAssetMetadataId::try_from_str(surface_id) else { return };
     let mode = host.render_mode_str();
     if matches!(mode, "image" | "combined") {
@@ -214,45 +213,10 @@ pub fn map_marquee_crossing(method: &str, start_x: f32, end_x: f32) -> bool {
     }
 }
 
-pub fn map_merge_selection(mode: &str, current_positions: &[String], current_routes: &[String], next_positions: &[String], next_routes: &[String]) -> (Vec<String>, Vec<String>) {
-    let mut positions: HashSet<String> = current_positions.iter().cloned().collect();
-    let mut routes: HashSet<String> = current_routes.iter().cloned().collect();
-    let next_pos: HashSet<String> = next_positions.iter().cloned().collect();
-    let next_routes: HashSet<String> = next_routes.iter().cloned().collect();
-    match mode {
-        "additive" => {
-            positions.extend(next_pos);
-            routes.extend(next_routes);
-        }
-        "subtractive" => {
-            positions.retain(|id| !next_pos.contains(id));
-            routes.retain(|id| !next_routes.contains(id));
-        }
-        "invertive" => {
-            for id in next_pos {
-                if !positions.insert(id.clone()) {
-                    positions.remove(&id);
-                }
-            }
-            for id in next_routes {
-                if !routes.insert(id.clone()) {
-                    routes.remove(&id);
-                }
-            }
-        }
-        _ => {
-            positions = next_pos;
-            routes = next_routes;
-        }
-    }
-    (positions.into_iter().collect(), routes.into_iter().collect())
-}
-
-pub fn parse_map_feature_hit(hit_json: &str) -> (Vec<String>, Vec<String>) {
+/// 🗂️ Every feature id of a rect/polygon hit document (`{ <pickable overlay layer id>: [ids] }`), layer by layer.
+pub fn parse_map_feature_hit(hit_json: &str) -> Vec<String> {
     let hit: Value = serde_json::from_str(hit_json).unwrap_or(Value::Null);
-    let positions = hit.get("positions").and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect::<Vec<_>>()).unwrap_or_default();
-    let routes = hit.get("routes").and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect::<Vec<_>>()).unwrap_or_default();
-    (positions, routes)
+    hit.as_object().into_iter().flat_map(|layers| layers.values()).filter_map(Value::as_array).flatten().filter_map(|row| row.as_str().map(str::to_string)).collect()
 }
 
 pub fn parse_map_hover(hit_json: &str) -> Value {
@@ -266,7 +230,7 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
 /// dispatches `setCamera` and nothing else: feature selection and hover ride the generic
 /// `interactionSelect`/`interactionHover` verbs from the pointer lane (`🎞️Scenes/🎯️targets/🧊️wgpu`'s
 /// `write_tiled_map_selection`/`write_tiled_map_hover`). The deleted `setFeatureSelection`/`setHover`
-/// pair this used to also emit on every wheel tick has no handler left in the GIS app at all — its
+/// pair this used to also emit on every wheel tick has no handler left in any map app — a map app's
 /// `"features"` interaction definition auto-injects the generic verbs instead.
 fn write_map_camera_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, camera: [f64; 3]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let camera_action = ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA;

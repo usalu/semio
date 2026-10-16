@@ -70,7 +70,4 @@ pub async fn print_count(n: u64) -> String {
 //#endregion 🔖️Count
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

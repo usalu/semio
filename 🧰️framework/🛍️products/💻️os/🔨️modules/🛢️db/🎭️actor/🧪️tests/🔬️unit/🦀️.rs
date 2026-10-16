@@ -1,5 +1,6 @@
 use super::*;
-use {NullEmit, Profile};
+use db_observe::NullEmit;
+use db_policy::Profile;
 
 fn generous_capacities() -> MailboxCapacities {
     MailboxCapacities::uniform(64)

@@ -4,7 +4,7 @@
     "why": "`DagHost` has had port/handle hit-testing and an `InteractionMode::DrawEdge` since it was written, but only its `pointer_*_screen` entry reaches them. The wgpu renderer called ONLY the bounded `plan_pointer`/`commit_pointer` entry, whose gesture vocabulary is Idle|Pan|Drag|Select and whose `bounded_node_hit_index` answers `Unsupported` for exactly the port, handle, widget and minimap hits — so a press on a port aborted the dispatch instead of starting a wire, and a minimap click navigated nowhere. Port-to-port wire creation, wire removal and minimap click-to-navigate were dead from wgpu's side. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, 📓️audit-wgpu-parity-2026-09-13.md gaps #2 and #5.",
     "rule": "A completed gesture journals what it did to the GRAPH in the guest's own vocabulary — never in engine handle or edge ids, and never as a whole re-serialised fixture.",
     "implementations": {
-      "rust": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🔗️wire-edit/🦀️.rs",
+      "rust": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/🧪️tests/🔗️wire-edit/🦀️.rs",
       "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️node-graph-wire-edit/🟦️.ts"
     },
     "reference": "React dispatches the same vocabulary from ReactFlow's own `onConnect` (🕸️NodeGraph/🟦️.tsx), and the guest decodes it as `FlowNodeGraphEditOp` (✏️s/🔌️plugins/🌊️flow/…/🎮️commands/✏️node-graph-edit/🦀️.rs)."

@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-os-host-media-raster-rs",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:os-host"
+  ]
+}

@@ -1,0 +1,52 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-time-travel-turns"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Instance turns of the time travel feature and its InstanceExtension implementation"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-time-travel-turns"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+artifact-app-testing = []
+
+[dependencies]
+semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }
+semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust" }
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel-panel = { path = "../../../🪟️panel/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../../🧵️instance/🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-history = { path = "../../../../🧵️instance/📜️history/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-children = { path = "../../../../🧵️instance/🪆️children/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-jobs = { path = "../../../../🧵️instance/👷️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-extension = { path = "../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-time-travel = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]

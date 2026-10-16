@@ -22,6 +22,4 @@ pub fn render(snapshot: &MdSnapshot) -> semio_framework_plugin::UiAssemblyResult
     TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("md".into()) })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

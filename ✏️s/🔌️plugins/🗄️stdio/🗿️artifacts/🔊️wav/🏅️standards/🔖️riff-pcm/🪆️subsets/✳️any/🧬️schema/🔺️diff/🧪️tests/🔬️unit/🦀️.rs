@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::RiffChunk, standards::riff_pcm::subsets::any::schema::snapshot::WavChunkRef, standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavFmt, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

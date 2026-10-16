@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 
-pub(crate) const FRAME_LATENCY_CAPACITY: usize = 256;
+pub const FRAME_LATENCY_CAPACITY: usize = 256;
 const FRAME_LATENCY_DOMAIN_COUNT: usize = 2;
 const FRAME_LATENCY_STAGE_COUNT: usize = 27;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[repr(usize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) enum FrameLatencyAuthorityDomain {
+pub enum FrameLatencyAuthorityDomain {
     RendererFrame,
     BrowserInputBatch,
 }
@@ -24,17 +24,17 @@ impl FrameLatencyAuthorityDomain {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct FrameLatencyAuthority {
+pub struct FrameLatencyAuthority {
     domain: FrameLatencyAuthorityDomain,
     generation: u64,
 }
 
 impl FrameLatencyAuthority {
-    pub(crate) const fn renderer_frame(generation: u64) -> Self {
+    pub const fn renderer_frame(generation: u64) -> Self {
         Self { domain: FrameLatencyAuthorityDomain::RendererFrame, generation }
     }
 
-    pub(crate) const fn browser_input_batch(generation: u64) -> Self {
+    pub const fn browser_input_batch(generation: u64) -> Self {
         Self { domain: FrameLatencyAuthorityDomain::BrowserInputBatch, generation }
     }
 }
@@ -42,7 +42,7 @@ impl FrameLatencyAuthority {
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[repr(usize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) enum FrameLatencyStage {
+pub enum FrameLatencyStage {
     WireApply,
     DispatchApply,
     TransactionDrainProjectionDeltas,
@@ -73,7 +73,7 @@ pub(crate) enum FrameLatencyStage {
 }
 
 impl FrameLatencyStage {
-    pub(crate) const ALL: [Self; FRAME_LATENCY_STAGE_COUNT] = [
+    pub const ALL: [Self; FRAME_LATENCY_STAGE_COUNT] = [
         Self::WireApply,
         Self::DispatchApply,
         Self::TransactionDrainProjectionDeltas,
@@ -109,22 +109,22 @@ impl FrameLatencyStage {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct FrameLatencyObservation {
+pub struct FrameLatencyObservation {
     authority: FrameLatencyAuthority,
     stage: FrameLatencyStage,
-    started_us: u64,
-    duration_us: u64,
-    work_items: u32,
+    pub started_us: u64,
+    pub duration_us: u64,
+    pub work_items: u32,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct FrameLatencyPhaseSummary {
+pub struct FrameLatencyPhaseSummary {
     authority: FrameLatencyAuthority,
     stage: FrameLatencyStage,
     first_sequence: u64,
-    last_sequence: u64,
-    observation_count: u64,
+    pub last_sequence: u64,
+    pub observation_count: u64,
     first_started_us: u64,
     last_finished_us: u64,
     total_duration_us: u64,
@@ -133,7 +133,7 @@ pub(crate) struct FrameLatencyPhaseSummary {
 }
 
 impl FrameLatencyPhaseSummary {
-    fn new(sequence: u64, observation: FrameLatencyObservation) -> Self {
+    pub fn new(sequence: u64, observation: FrameLatencyObservation) -> Self {
         Self {
             authority: observation.authority,
             stage: observation.stage,
@@ -148,7 +148,7 @@ impl FrameLatencyPhaseSummary {
         }
     }
 
-    fn observe(&mut self, sequence: u64, observation: FrameLatencyObservation) {
+    pub fn observe(&mut self, sequence: u64, observation: FrameLatencyObservation) {
         self.last_sequence = sequence;
         self.observation_count = self.observation_count.saturating_add(1);
         self.first_started_us = self.first_started_us.min(observation.started_us);
@@ -161,14 +161,14 @@ impl FrameLatencyPhaseSummary {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 struct FrameLatencyAggregate {
-    observation_count: u64,
+    pub observation_count: u64,
     total_duration_us: u64,
     max_duration_us: u64,
     total_work_items: u64,
 }
 
 impl FrameLatencyAggregate {
-    fn observe(&mut self, observation: FrameLatencyObservation) {
+    pub fn observe(&mut self, observation: FrameLatencyObservation) {
         self.observation_count = self.observation_count.saturating_add(1);
         self.total_duration_us = self.total_duration_us.saturating_add(observation.duration_us);
         self.max_duration_us = self.max_duration_us.max(observation.duration_us);
@@ -178,10 +178,10 @@ impl FrameLatencyAggregate {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct FrameLatencyStageTotal {
+pub struct FrameLatencyStageTotal {
     authority_domain: FrameLatencyAuthorityDomain,
     stage: FrameLatencyStage,
-    observation_count: u64,
+    pub observation_count: u64,
     total_duration_us: u64,
     max_duration_us: u64,
     total_work_items: u64,
@@ -189,27 +189,27 @@ pub(crate) struct FrameLatencyStageTotal {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct FrameLatencySnapshot {
+pub struct FrameLatencySnapshot {
     summary_capacity: usize,
-    total_observations: u64,
-    summary_evictions: u64,
+    pub total_observations: u64,
+    pub summary_evictions: u64,
     refused: u64,
-    stage_totals: Vec<FrameLatencyStageTotal>,
-    recent_phases: Vec<FrameLatencyPhaseSummary>,
+    pub stage_totals: Vec<FrameLatencyStageTotal>,
+    pub recent_phases: Vec<FrameLatencyPhaseSummary>,
 }
 
-pub(crate) struct FrameLatencyRegistry<const N: usize> {
-    recent_phases: [Option<FrameLatencyPhaseSummary>; N],
+pub struct FrameLatencyRegistry<const N: usize> {
+    pub recent_phases: [Option<FrameLatencyPhaseSummary>; N],
     active_indices: [[Option<usize>; FRAME_LATENCY_STAGE_COUNT]; FRAME_LATENCY_DOMAIN_COUNT],
-    stage_totals: [[FrameLatencyAggregate; FRAME_LATENCY_STAGE_COUNT]; FRAME_LATENCY_DOMAIN_COUNT],
+    pub stage_totals: [[FrameLatencyAggregate; FRAME_LATENCY_STAGE_COUNT]; FRAME_LATENCY_DOMAIN_COUNT],
     next: usize,
     len: usize,
-    total_observations: u64,
-    summary_evictions: u64,
+    pub total_observations: u64,
+    pub summary_evictions: u64,
 }
 
 impl<const N: usize> FrameLatencyRegistry<N> {
-    const fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             recent_phases: [None; N],
             active_indices: [[None; FRAME_LATENCY_STAGE_COUNT]; FRAME_LATENCY_DOMAIN_COUNT],
@@ -221,7 +221,7 @@ impl<const N: usize> FrameLatencyRegistry<N> {
         }
     }
 
-    fn observe(&mut self, observation: FrameLatencyObservation) {
+    pub fn observe(&mut self, observation: FrameLatencyObservation) {
         self.total_observations = self.total_observations.saturating_add(1);
         let sequence = self.total_observations;
         let domain_index = observation.authority.domain.index();
@@ -259,7 +259,7 @@ impl<const N: usize> FrameLatencyRegistry<N> {
         self.next = self.next.saturating_add(1).checked_rem(N).unwrap_or(0);
     }
 
-    fn snapshot(&self, refused: u64) -> FrameLatencySnapshot {
+    pub fn snapshot(&self, refused: u64) -> FrameLatencySnapshot {
         let mut recent_phases = Vec::with_capacity(self.len);
         if N > 0 {
             let first = if self.len == N { self.next } else { 0 };
@@ -298,21 +298,21 @@ fn registry() -> &'static Mutex<FrameLatencyRegistry<FRAME_LATENCY_CAPACITY>> {
     FRAME_LATENCY_REGISTRY.get_or_init(|| Mutex::new(FrameLatencyRegistry::new()))
 }
 
-pub(crate) fn observe_frame_generation(generation: u64) {
+pub fn observe_frame_generation(generation: u64) {
     if semio_framework_trace::runtime_diagnostics_enabled() {
         LATEST_FRAME_GENERATION.fetch_max(generation, Ordering::Relaxed);
     }
 }
 
-pub(crate) fn latest_frame_generation() -> u64 {
+pub fn latest_frame_generation() -> u64 {
     LATEST_FRAME_GENERATION.load(Ordering::Relaxed)
 }
 
-pub(crate) fn latest_frame_authority() -> FrameLatencyAuthority {
+pub fn latest_frame_authority() -> FrameLatencyAuthority {
     FrameLatencyAuthority::renderer_frame(latest_frame_generation())
 }
 
-pub(crate) fn snapshot() -> FrameLatencySnapshot {
+pub fn snapshot() -> FrameLatencySnapshot {
     let refused = FRAME_LATENCY_REFUSED.load(Ordering::Relaxed);
     match registry().lock() {
         Ok(registry) => registry.snapshot(refused),
@@ -320,24 +320,24 @@ pub(crate) fn snapshot() -> FrameLatencySnapshot {
     }
 }
 
-pub(crate) struct FrameLatencyTimer {
+pub struct FrameLatencyTimer {
     authority: FrameLatencyAuthority,
     stage: FrameLatencyStage,
-    started_us: Option<u64>,
-    work_items: u32,
+    pub started_us: Option<u64>,
+    pub work_items: u32,
 }
 
 impl FrameLatencyTimer {
-    pub(crate) fn start(authority: FrameLatencyAuthority, stage: FrameLatencyStage, work_items: u32) -> Self {
+    pub fn start(authority: FrameLatencyAuthority, stage: FrameLatencyStage, work_items: u32) -> Self {
         Self::start_if(semio_framework_trace::runtime_diagnostics_enabled(), authority, stage, work_items, semio_framework_trace::try_now_us)
     }
 
-    fn start_if(clock_enabled: bool, authority: FrameLatencyAuthority, stage: FrameLatencyStage, work_items: u32, clock: impl FnOnce() -> Option<u64>) -> Self {
+    pub fn start_if(clock_enabled: bool, authority: FrameLatencyAuthority, stage: FrameLatencyStage, work_items: u32, clock: impl FnOnce() -> Option<u64>) -> Self {
         let started_us = if clock_enabled { clock() } else { None };
         Self { authority, stage, started_us, work_items }
     }
 
-    pub(crate) fn set_work_items(&mut self, work_items: usize) {
+    pub fn set_work_items(&mut self, work_items: usize) {
         self.work_items = u32::try_from(work_items).unwrap_or(u32::MAX);
     }
 }
@@ -356,6 +356,3 @@ impl Drop for FrameLatencyTimer {
     }
 }
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/⏱️frame-latency-diagnostics/🦀️.rs"]
-mod tests;

@@ -15,4 +15,4 @@ class OracleScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-bmp", { commands: { "test-oracle": OracleScript }, twins: [{ name: "snapshot-source-hex", run: runBmpSourceHexFixtureChecks }, { name: "paint-region", run: runBmpPaintRegionChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-bmp", { packages: ["semio-s-artifact-stdio-bmp", "semio-s-artifact-stdio-bmp-editor", "semio-s-artifact-stdio-bmp-editor-2", "semio-s-artifact-stdio-bmp-inferences", "semio-s-artifact-stdio-bmp-mutation-regressions", "semio-s-artifact-stdio-bmp-mutations", "semio-s-artifact-stdio-bmp-schema", "semio-s-artifact-stdio-bmp-snapshot"], commands: { "test-oracle": OracleScript }, twins: [{ name: "snapshot-source-hex", run: runBmpSourceHexFixtureChecks }, { name: "paint-region", run: runBmpPaintRegionChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

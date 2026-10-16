@@ -9,7 +9,7 @@
  * (`../../../../../🎚️config/🔮️oracles/🔣️.json`) claims via its `independent-implementations`
  * substitute. `applyIdentityConfigMutation`/`inverseIdentityConfigMutation`
  * (`../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts`) are the authoritative direct TypeScript
- * leaves for `signIn`/`signOut` — written independently of `../../../🖥️host/📦️packages/🦀️rust`'s
+ * leaves for `signIn`/`signOut` — written independently of `semio-framework-os-config`'s
  * Rust dispatch, from the same committed specification the Rust adapter reads. This file drives THAT
  * TypeScript dispatch as a second SUBJECT, over the identical committed
  * `(before, mutation, after, outcome)` vectors the Rust adapter reads literally — never recomputed,

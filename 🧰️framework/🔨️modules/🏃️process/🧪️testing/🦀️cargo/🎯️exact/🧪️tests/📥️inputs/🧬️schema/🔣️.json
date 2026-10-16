@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "arguments",
+    "environment",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "arguments": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CARGO_BUILD_BUILD_DIR",
+        "CARGO_TARGET_DIR",
+        "SENTINEL"
+      ],
+      "properties": {
+        "CARGO_BUILD_BUILD_DIR": {
+          "type": "string"
+        },
+        "CARGO_TARGET_DIR": {
+          "type": "string"
+        },
+        "SENTINEL": {
+          "const": "held"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "cancel",
+          "cleanup",
+          "probeFailure",
+          "stage"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "live",
+              "cancelled-probe",
+              "cancelled-capacity-close",
+              "cancelled-lease-close",
+              "successful-body-cleanup-refusal",
+              "undefined-primary-cleanup-refusal",
+              "native-live",
+              "native-cancelled"
+            ]
+          },
+          "cancel": {
+            "type": "boolean"
+          },
+          "cleanup": {
+            "enum": [
+              null,
+              "capacity",
+              "lease"
+            ]
+          },
+          "probeFailure": {
+            "type": "boolean"
+          },
+          "stage": {
+            "enum": [
+              "build",
+              "native"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
-use super::*;
+use crate::PngSnapshot;
+use crate::standards::v1_2::subsets::any::schema::inferences::dimensions::*;
 #[test]
 fn derives_geometry_from_owned_image() {let mut snapshot=crate::PngSnapshot::default();snapshot.image.width=3;snapshot.image.height=3;snapshot.image.samples=vec![255;36];assert_eq!(compute_png_dimensions(&snapshot),PngDimensions{width:3,height:3,bit_depth:8,has_alpha:true,pixel_count:9});}
 #[test]

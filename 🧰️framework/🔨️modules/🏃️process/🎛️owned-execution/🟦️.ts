@@ -18,6 +18,7 @@ export interface OwnedCommandOptions {
   readonly stdout?: "inherit" | "ignore" | "stderr";
   readonly input?: string | Uint8Array;
   readonly output?: Readonly<{maximumBytes:number;maximumLines:number}>;
+  readonly outputConsumer?: (bytes: Uint8Array, stream: OwnedCommandStreamV1) => unknown;
   readonly env?: Readonly<Record<string, string | undefined>>;
   readonly signal?: AbortSignal;
   readonly onLine?: (line: string,stream:OwnedCommandStreamV1) => void;
@@ -47,8 +48,9 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
 export async function runOwnedCommand(command: string, args: string[], cwd: string, label: string, timeoutMs: number, options: OwnedCommandOptions = {}): Promise<void> {
   if (options.stdout !== undefined && !stdoutDestination.enum.includes(options.stdout)) throw new Error(`${label} has an invalid stdout destination`);
   if(options.output!==undefined&&validateJsonSchemaSubset(outputSchema,options.output).length)throw new Error(`${label} has invalid output limits`);
+  if(options.outputConsumer!==undefined&&(typeof options.outputConsumer!=="function"||options.output===undefined))throw new Error(`${label} output consumer requires finite output limits`);
   if (options.signal?.aborted) throw new Error(`${label} stopped: cancelled`);
-  const child = spawn(command, args, { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined ? "ignore" : "pipe", "pipe"], windowsHide: true });
+  const child = spawn(command, args, { cwd, env: (options.env ?? process.env) as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe"], windowsHide: true });
   let stopped = "", closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
   const terminate = (reason: string): void => {
@@ -70,16 +72,17 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
     stream.once("end", () => { pending += decoder.end(); if (pending) options.onLine!(pending,source); });
   };
-  let outputBytes=0,outputLines=0,outputRefused=false;
+  let outputBytes=0,outputLines=0,outputRefused=false,consumerRefused=false,consumerFailure:unknown;const consumerWork:Promise<PromiseSettledResult<unknown>>[]=[];
   const forward=(stream:NodeJS.ReadableStream,destination:NodeJS.WritableStream|undefined,observed:boolean,source:OwnedCommandStreamV1):void=>{
     const limits=options.output;
     let tail=false;
     const admitted=limits?new Transform({transform(bytes:Buffer,_encoding,done){
-      if(outputRefused){done();return;}
+      if(outputRefused||consumerRefused){done();return;}
       if(bytes.length>limits.maximumBytes-outputBytes){outputRefused=true;terminate("output byte limit");done();return;}
       let lines=outputLines,open=tail;
       for(const byte of bytes){if(!open)lines++;open=byte!==10;if(lines>limits.maximumLines){outputRefused=true;terminate("output line limit");done();return;}}
-      outputBytes+=bytes.length;outputLines=lines;tail=open;done(null,bytes);
+      outputBytes+=bytes.length;outputLines=lines;tail=open;
+      if(options.outputConsumer)try{const result=options.outputConsumer(bytes,source);if(result!==undefined){if(result&&typeof result==="object"&&typeof(result as PromiseLike<unknown>).then==="function")consumerWork.push(Promise.resolve(result).then(value=>({status:"fulfilled" as const,value}),reason=>({status:"rejected" as const,reason})));throw Error(`${label} output consumer must settle synchronously without a return value`);}}catch(error){consumerRefused=true;consumerFailure=error;terminate("output consumer refused");done();return;}done(null,bytes);
     }}):stream;
     if(options.onLine&&observed)observe(admitted,source);
     if(destination)admitted.pipe(destination,{end:false});else (admitted as Transform).resume();
@@ -117,8 +120,9 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
     await inputPublication;
     stopProgress();
-    await Promise.race([Promise.all([...pending]), interrupted]);
+    if(consumerRefused)await Promise.allSettled([...pending]);else await Promise.race([Promise.all([...pending]), interrupted]);
     await Promise.all([process.stdout,process.stderr].map(output=>new Promise<void>((accept,reject)=>output.write("",error=>error?reject(error):accept()))));
+    if(consumerRefused){const returned=await Promise.all(consumerWork),failures=[consumerFailure,...returned.flatMap(row=>row.status==="rejected"?[row.reason]:[]),...(publicationRefused?[publicationFailure]:[])];if(failures.length>1)throw new AggregateError(failures,`${label} output consumer and accepted work failed`);throw consumerFailure;}
     if (publicationRefused) throw publicationFailure;
     if (stopped) throw new Error(`${label} stopped: ${stopped}`);
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });

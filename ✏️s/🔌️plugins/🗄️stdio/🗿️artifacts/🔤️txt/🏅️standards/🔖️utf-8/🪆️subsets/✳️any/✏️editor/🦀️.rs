@@ -151,7 +151,7 @@ impl protocol::OpBinary for TxtEditorCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TextWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const TXT_KIT_ACTION_ID: &str = "textEdit";
+pub const TXT_KIT_ACTION_ID: &str = "textEdit";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `textEdit`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -190,7 +190,7 @@ fn txt_retained_contract() -> ToolExecutionContract {
 /// whose asset IS this app's curated document; every other id — including the empty id the shell
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_example_snapshot(example_id: &str) -> TxtSnapshot {
+pub fn txt_example_snapshot(example_id: &str) -> TxtSnapshot {
     if example_id == crate::examples::demo::ID {
         <TxtSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -202,7 +202,7 @@ fn txt_example_snapshot(example_id: &str) -> TxtSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TxtEditorCommand, Fault> {
+pub fn txt_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TxtEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(TxtEditorCommand::EditSnapshot { event });
     }
@@ -233,7 +233,7 @@ fn txt_retained_extent(_command: &TxtEditorCommand, _snapshot: &TxtSnapshot, _in
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `textEdit` by `splices` becomes ONE `splice-text` mutation carrying the editor's ranges verbatim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn txt_emit(command: &TxtEditorCommand, snapshot: &TxtSnapshot, canonical_revision: Option<[u8; 32]>) -> Result<Emit<TxtMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let (revision, splices) = match command {
         TxtEditorCommand::SetActiveExample { example_id } => return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&txt_example_snapshot(example_id), STDIO_TXT_DOCUMENT_SCHEMA)], ..Default::default() }),
         TxtEditorCommand::SpliceText { revision, splices } => (revision, splices),

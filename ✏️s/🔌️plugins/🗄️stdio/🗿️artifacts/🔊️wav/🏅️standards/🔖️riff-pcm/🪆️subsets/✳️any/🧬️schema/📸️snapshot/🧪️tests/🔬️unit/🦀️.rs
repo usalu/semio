@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_snapshot() -> WavSnapshot {
@@ -23,7 +23,7 @@ async fn dsl_text_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn typed_snapshot_fields_preserve_samples_and_unknown_chunks() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎼️typed-chunks/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎼️typed-chunks/🔣️.json")).unwrap();
     for vector in corpus["cases"].as_array().unwrap() {
         let oracle = &vector["snapshot"];
         let snapshot: WavSnapshot = semio_framework_pack_json::from_json_str(&serde_json::to_string(oracle).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -60,4 +60,9 @@ fn typed_snapshot_fields_refuse_ambiguous_or_unknown_discriminants() {
     unknown.fields.insert(1, semio_framework_dsl_record::FieldValue::Enum(9));
     assert!(WavData::from_value(&semio_framework_dsl_record::FieldValue::Record(unknown.clone())).is_err());
     assert!(WavChunkRef::from_value(&semio_framework_dsl_record::FieldValue::Record(unknown)).is_err());
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

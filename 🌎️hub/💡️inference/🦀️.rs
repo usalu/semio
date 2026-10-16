@@ -1,20 +1,11 @@
 //! 🧭️ Hub-owned private inference lifecycle; no client snapshot or global registry authority.
 
-#[path = "📇️catalog/🦀️.rs"]
-pub(crate) mod catalog;
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 #[path = "🧾️wal/🦀️.rs"]
 pub mod wal;
-pub use catalog::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
-#[path = "🛂️authorization/🦀️.rs"]
-pub(crate) mod authorization;
 #[path = "✉️command/🦀️.rs"]
-pub(crate) mod command;
-#[path = "🏃️runtime/🦀️.rs"]
-pub mod runtime;
+pub mod command;
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -39,7 +30,7 @@ pub struct InferenceOperationControlV1 {
     deadline: Option<Instant>,
     cancelled: AtomicBool,
     interrupted: tokio::sync::Notify,
-    progress: AtomicU64,
+    pub progress: AtomicU64,
     work_limit: u64,
 }
 
@@ -87,7 +78,7 @@ impl InferenceOperationControlV1 {
         (self.progress.load(Ordering::Acquire), self.work_limit)
     }
 
-    pub(super) async fn interruption(&self) -> InferenceErrorV1 {
+    pub async fn interruption(&self) -> InferenceErrorV1 {
         let notified = self.interrupted.notified();
         tokio::pin!(notified);
         notified.as_mut().enable();
@@ -105,7 +96,7 @@ impl InferenceOperationControlV1 {
     }
 }
 
-pub struct InferencePrivateBytesV1(Vec<u8>);
+pub struct InferencePrivateBytesV1(pub Vec<u8>);
 
 impl InferencePrivateBytesV1 {
     pub fn new(bytes: Vec<u8>, maximum: usize) -> Result<Self, InferenceErrorV1> {

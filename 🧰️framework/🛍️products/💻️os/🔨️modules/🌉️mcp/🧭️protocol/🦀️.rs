@@ -10,16 +10,24 @@
 //! client installed in this repo today is legacy-era — see D1's SDK survey), not a compatibility
 //! shim: CLAUDE.md's "no legacy support" rule does not apply to an external protocol we do not own.
 
-use crate::workspace::GatewayBackends;
 use schemars::JsonSchema;
 use semio_framework_dispatch_macros::dyn_enum;
-use semio_framework_value::{DslValue, FromValue, Number, ToValue, ValueError};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::{Arc, Mutex};
-
-pub use crate::errors::{GatewayError, GatewayErrorCode};
-pub use crate::schema::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::Number;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Deserializer;
+use serde::Serialize;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::notify::cancel_request;
+use crate::tool_shapes::{admit_tool_errors, convert_draft07_to_2020_12, normalize_boolean_subschemas};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::reports::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
 
 /// 🌉️ `serde_json::Value` ↔ `DslValue` bridge, built on `🌱️value/🦀️.rs`'s own infallible
 /// `From<&DslValue>`/`From<&serde_json::Value>` impls — shared by every field in this file typed
@@ -51,18 +59,26 @@ fn dsl_to_optional_json_value(value: DslValue) -> Result<Option<serde_json::Valu
 }
 
 //#region 🔖️JsonRpcCodes
+
 /// 🔢️ The five JSON-RPC 2.0 standard error codes plus MCP's own `UnsupportedProtocolVersionError`
 /// (`luna-mcpspec-audit.md` §"Error Codes (JSON-RPC)").
 pub const PARSE_ERROR: i64 = -32700;
+
 pub const INVALID_REQUEST: i64 = -32600;
+
 pub const METHOD_NOT_FOUND: i64 = -32601;
+
 pub const INVALID_PARAMS: i64 = -32602;
+
 pub const INTERNAL_ERROR: i64 = -32603;
+
 /// 🚧️ MCP `UnsupportedProtocolVersionError` — `data: {supported, requested}` always accompanies it.
 pub const UNSUPPORTED_PROTOCOL_VERSION: i64 = -32022;
+
 //#endregion 🔖️JsonRpcCodes
 
 //#region 🔖️ProtocolVersions
+
 /// 📚️ Supported protocol versions, newest first (D1) — modern era is index 0, legacy eras follow.
 pub const SUPPORTED_PROTOCOL_VERSIONS: [&str; 3] = ["2026-07-28", "2025-11-25", "2025-06-18"];
 
@@ -78,9 +94,11 @@ pub const META_PROTOCOL_VERSION_KEY: &str = "io.modelcontextprotocol/protocolVer
 pub fn extract_meta_protocol_version(params: Option<&serde_json::Value>) -> Option<String> {
     params?.get("_meta")?.get(META_PROTOCOL_VERSION_KEY)?.as_str().map(str::to_string)
 }
+
 //#endregion 🔖️ProtocolVersions
 
 //#region 🔖️ProtocolEra
+
 /// 🕰️ Which MCP era a connection is speaking — decided once, from the opening request, and recorded
 /// on the dispatcher (see this file's module doc).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,9 +106,11 @@ pub enum ProtocolEra {
     Modern,
     Legacy,
 }
+
 //#endregion 🔖️ProtocolEra
 
 //#region 🔖️JsonRpcId
+
 /// 🆔️ A JSON-RPC request/response id — `Null` is distinct from an ABSENT id (which makes a request a
 /// notification, modeled as `JsonRpcRequest.id: None`, not `Some(JsonRpcId::Null)`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -113,6 +133,7 @@ impl ToValue for JsonRpcId {
         }
     }
 }
+
 impl FromValue for JsonRpcId {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
@@ -124,6 +145,7 @@ impl FromValue for JsonRpcId {
         }
     }
 }
+
 //#endregion 🔖️JsonRpcId
 
 /// 🕳️ Deserializes a PRESENT field as `Some(T::deserialize(..))`, including when its value is JSON
@@ -140,6 +162,7 @@ where
 }
 
 //#region 🔖️JsonRpcRequest
+
 /// 📨️ A JSON-RPC 2.0 request. `id: None` (the field entirely absent on the wire) makes it a
 /// notification — no response is ever sent for one, success or failure. An explicit `"id":null`
 /// deserializes to `Some(JsonRpcId::Null)`, distinct from absence (see [`deserialize_some`]).
@@ -189,6 +212,7 @@ impl ToValue for JsonRpcIncoming {
         }
     }
 }
+
 impl FromValue for JsonRpcIncoming {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match &value {
@@ -197,9 +221,11 @@ impl FromValue for JsonRpcIncoming {
         }
     }
 }
+
 //#endregion 🔖️JsonRpcRequest
 
 //#region 🔖️JsonRpcResponse
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct JsonRpcErrorObject {
     pub code: i64,
@@ -227,6 +253,7 @@ impl ToValue for JsonRpcOutcome {
         }
     }
 }
+
 impl FromValue for JsonRpcOutcome {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = DslValue::into_object(value)?;
@@ -283,24 +310,41 @@ impl JsonRpcNotification {
 }
 
 pub const NOTIFICATION_TOOLS_LIST_CHANGED: &str = "notifications/tools/list_changed";
+
 pub const NOTIFICATION_RESOURCES_LIST_CHANGED: &str = "notifications/resources/list_changed";
+
 pub const NOTIFICATION_RESOURCES_UPDATED: &str = "notifications/resources/updated";
+
 //#endregion 🔖️JsonRpcResponse
 
 //#region 🔖️Methods
+
 pub const METHOD_SERVER_DISCOVER: &str = "server/discover";
+
 pub const METHOD_INITIALIZE: &str = "initialize";
+
 pub const METHOD_NOTIFICATIONS_INITIALIZED: &str = "notifications/initialized";
+
 pub const METHOD_TOOLS_LIST: &str = "tools/list";
+
 pub const METHOD_TOOLS_CALL: &str = "tools/call";
+
 pub const METHOD_RESOURCES_LIST: &str = "resources/list";
+
 pub const METHOD_RESOURCES_TEMPLATES_LIST: &str = "resources/templates/list";
+
 pub const METHOD_RESOURCES_READ: &str = "resources/read";
+
 pub const METHOD_RESOURCES_SUBSCRIBE: &str = "resources/subscribe";
+
 pub const METHOD_RESOURCES_UNSUBSCRIBE: &str = "resources/unsubscribe";
+
 pub const METHOD_PROMPTS_LIST: &str = "prompts/list";
+
 pub const METHOD_PROMPTS_GET: &str = "prompts/get";
+
 pub const METHOD_PING: &str = "ping";
+
 pub const METHOD_NOTIFICATIONS_CANCELLED: &str = "notifications/cancelled";
 
 /// 🛑️ Out-of-band `notifications/cancelled`: a transport whose serve loop dispatches one request at a
@@ -316,13 +360,15 @@ pub fn intercept_cancellation(line: &str) -> bool {
         return false;
     }
     if let Some(request_id) = value.get("params").and_then(|params| params.get("requestId")) {
-        crate::notify::cancel_request(request_id);
+        cancel_request(request_id);
     }
     true
 }
+
 //#endregion 🔖️Methods
 
 //#region 🔖️ToolNameCharset
+
 /// ✅️ `^[a-zA-Z0-9_-]{1,64}$` (`luna-mcpspec-audit.md` §"Tool Names") — enforced at registration
 /// time by [`InMemoryToolRegistry::register`], not at call time (a caller invoking an already-invalid
 /// name simply gets `NOT_FOUND`, since it was never accepted into the registry).
@@ -330,9 +376,11 @@ pub fn is_valid_tool_name(name: &str) -> bool {
     let length = name.chars().count();
     length >= 1 && length <= 64 && name.chars().all(|character| character.is_ascii_alphanumeric() || character == '_' || character == '-')
 }
+
 //#endregion 🔖️ToolNameCharset
 
 //#region 🔖️Content
+
 /// 📄️ One block of unstructured tool/prompt content (`luna-mcpspec-audit.md` §"Tools Protocol").
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -463,9 +511,11 @@ impl FromValue for ContentBlock {
         })
     }
 }
+
 //#endregion 🔖️Content
 
 //#region 🔖️Tools
+
 /// 🔧️ One registered tool's descriptor (`luna-mcpspec-audit.md` §"Tools Protocol" `tools/list`
 /// shape) — `name` must satisfy [`is_valid_tool_name`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
@@ -541,8 +591,8 @@ type ToolHandler = Arc<dyn Fn(serde_json::Value) -> CallToolResult + Send + Sync
 /// [`is_valid_tool_name`] so an invalid name can never enter the catalog.
 #[derive(Default)]
 pub struct InMemoryToolRegistry {
-    tools: BTreeMap<String, Tool>,
-    handlers: BTreeMap<String, ToolHandler>,
+    pub tools: BTreeMap<String, Tool>,
+    pub handlers: BTreeMap<String, ToolHandler>,
 }
 
 impl InMemoryToolRegistry {
@@ -558,12 +608,12 @@ impl InMemoryToolRegistry {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("tool name `{}` violates ^[a-zA-Z0-9_-]{{1,64}}$", tool.name)));
         }
         let mut tool = tool;
-        crate::schema::convert_draft07_to_2020_12(&mut tool.input_schema);
-        crate::schema::normalize_boolean_subschemas(&mut tool.input_schema);
+        convert_draft07_to_2020_12(&mut tool.input_schema);
+        normalize_boolean_subschemas(&mut tool.input_schema);
         if let Some(output_schema) = tool.output_schema.as_mut() {
-            crate::schema::convert_draft07_to_2020_12(output_schema);
-            crate::schema::normalize_boolean_subschemas(output_schema);
-            crate::schema::admit_tool_errors(output_schema);
+            convert_draft07_to_2020_12(output_schema);
+            normalize_boolean_subschemas(output_schema);
+            admit_tool_errors(output_schema);
         }
         self.handlers.insert(tool.name.clone(), Arc::new(handler));
         self.tools.insert(tool.name.clone(), tool);
@@ -583,9 +633,11 @@ impl ToolRegistry for InMemoryToolRegistry {
         }
     }
 }
+
 //#endregion 🔖️Tools
 
 //#region 🔖️Resources
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -653,10 +705,10 @@ pub trait ResourceRegistry: Send + Sync {
 /// (P1b/P2/P6) implement the trait directly instead of extending this one.
 #[derive(Default)]
 pub struct InMemoryResourceRegistry {
-    resources: BTreeMap<String, Resource>,
-    templates: Vec<ResourceTemplate>,
-    contents: BTreeMap<String, Vec<ResourceContent>>,
-    subscriptions: Mutex<BTreeSet<String>>,
+    pub resources: BTreeMap<String, Resource>,
+    pub templates: Vec<ResourceTemplate>,
+    pub contents: BTreeMap<String, Vec<ResourceContent>>,
+    pub subscriptions: Mutex<BTreeSet<String>>,
 }
 
 impl InMemoryResourceRegistry {
@@ -701,9 +753,11 @@ impl ResourceRegistry for InMemoryResourceRegistry {
         Ok(())
     }
 }
+
 //#endregion 🔖️Resources
 
 //#region 🔖️Prompts
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -754,8 +808,8 @@ type PromptHandler = Arc<dyn Fn(Option<serde_json::Value>) -> Result<PromptGetRe
 
 #[derive(Default)]
 pub struct InMemoryPromptRegistry {
-    prompts: BTreeMap<String, Prompt>,
-    handlers: BTreeMap<String, PromptHandler>,
+    pub prompts: BTreeMap<String, Prompt>,
+    pub handlers: BTreeMap<String, PromptHandler>,
 }
 
 impl InMemoryPromptRegistry {
@@ -781,9 +835,11 @@ impl PromptRegistry for InMemoryPromptRegistry {
         }
     }
 }
+
 //#endregion 🔖️Prompts
 
 //#region 🔖️Backend
+
 /// 🔌️ Everything a real OS/plugin integration provides — later packets (P1b/P2/P6) implement this
 /// against the live plugin host; THIS crate never references `semio-framework`,
 /// `semio-framework-os-kernel`, the plugin host, the channel, or the actor crate (they are mid-rewrite
@@ -840,9 +896,11 @@ impl GatewayBackend for NullBackend {
         Ok(Vec::new())
     }
 }
+
 //#endregion 🔖️Backend
 
 //#region 🔖️CatalogHash
+
 /// #️⃣️ Deterministic hash of a tool catalog's names — `context.resolve`'s published `catalogHash`
 /// (`📋️master.md` §"MCP tool names": "catalog hash published in `context.resolve`") changes if and
 /// only if the promoted/core tool SET changes, independent of description/schema edits to an
@@ -853,9 +911,11 @@ pub fn compute_catalog_hash(tools: &[Tool]) -> String {
     let joined = names.join("\u{0}");
     framework_hash::hash_bytes(joined.as_bytes())
 }
+
 //#endregion 🔖️CatalogHash
 
 //#region 🔖️ClientFeatures
+
 /// 🧭️ What the CONNECTED client advertised in `initialize.params.capabilities` — the only part of
 /// the handshake a later turn needs to branch on. Shared (`Arc`) with whatever transport owns the
 /// server→client request channel, because the decision "may I ask this client's human?" is made deep
@@ -877,442 +937,8 @@ impl ClientFeatures {
         self.roots.store(has("roots"), std::sync::atomic::Ordering::SeqCst);
     }
 }
+
 //#endregion 🔖️ClientFeatures
 
-//#region 🔖️Server
-fn server_capabilities() -> serde_json::Value {
-    serde_json::json!({
-        "tools": { "listChanged": true },
-        "resources": { "listChanged": true, "subscribe": true },
-        "prompts": { "listChanged": true },
-    })
-}
-
-enum DispatchOutcome {
-    Result(serde_json::Value),
-    Error(i64, String, Option<serde_json::Value>),
-    NoResponse,
-}
-
-/// 🗼️ The single dual-era dispatcher — one `McpServer` per connection (stdio: one per process
-/// lifetime). See this file's module doc for the era-detection contract.
-/// 🧾️ One line describing a tool result for the shell's agent panel: the first text block, or —
-/// for a result that carries only structured content — that content rendered as JSON. Never the
-/// whole payload: `AgentConversation` truncates it, and the panel is a view, not a transport.
-fn tool_result_summary(result: &CallToolResult) -> String {
-    if let Some(text) = result.content.iter().find_map(|block| match block {
-        ContentBlock::Text { text } => Some(text.clone()),
-        _ => None,
-    }) {
-        return text;
-    }
-    match result.structured_content.as_ref() {
-        Some(value) => value.to_string(),
-        None => String::new(),
-    }
-}
-
-pub struct McpServer {
-    pub tools: Box<dyn ToolRegistry>,
-    pub resources: Box<dyn ResourceRegistry>,
-    pub prompts: Box<dyn PromptRegistry>,
-    pub backend: Box<GatewayBackends>,
-    server_name: String,
-    server_version: String,
-    era: Option<ProtocolEra>,
-    negotiated_version: Option<String>,
-    initialized: bool,
-    /// 💬️ Where this server publishes what the agent is doing, for an attached shell to render.
-    /// `None` is the ordinary case for a gateway with no `/bridge` (stdio) and for every test that
-    /// does not care; it is never an error, and a tool call behaves identically either way.
-    conversation: Option<Arc<crate::bridge::AgentConversation>>,
-    /// 🧭️ The live mirror of what the connected client advertised, shared with the transport that
-    /// owns the server→client request channel. Always present; empty until `initialize` lands.
-    client_features: Arc<ClientFeatures>,
-    /// 🔔️ THIS connection's live `resources/subscribe` set — always present and always registered
-    /// with the process-wide broker, so `"resources": {"subscribe": true}` is a promise this server
-    /// keeps rather than advertises. With no notification sink bound (every test tier, and stdio
-    /// before a transport publishes one) the set still records faithfully and simply delivers
-    /// nothing.
-    subscriptions: Arc<crate::notify::ResourceSubscriptions>,
-    /// 📤️ Where this connection's unprompted notifications go, filled by whichever transport owns
-    /// the socket.
-    notifications: Option<crate::notify::NotificationSlot>,
-}
-
-impl McpServer {
-    pub fn new(tools: Box<dyn ToolRegistry>, resources: Box<dyn ResourceRegistry>, prompts: Box<dyn PromptRegistry>, backend: Box<GatewayBackends>) -> Self {
-        Self {
-            tools,
-            resources,
-            prompts,
-            backend,
-            server_name: "semio".to_string(),
-            server_version: env!("CARGO_PKG_VERSION").to_string(),
-            era: None,
-            negotiated_version: None,
-            initialized: false,
-            conversation: None,
-            client_features: Arc::new(ClientFeatures::default()),
-            subscriptions: crate::notify::ResourceSubscriptions::registered(),
-            notifications: None,
-        }
-    }
-
-    /// 📤️ Publishes this connection's server→client notification lane into the server, so
-    /// `resources/updated`, `resources/list_changed` and `progress` reach the real client. Builder-
-    /// shaped for the same reason [`McpServer::publishing_conversation_to`] is: every existing caller
-    /// has no sink at all.
-    #[must_use]
-    pub fn publishing_notifications_into(mut self, slot: crate::notify::NotificationSlot) -> Self {
-        self.subscriptions.bind_sink(slot.clone());
-        self.notifications = Some(slot);
-        self
-    }
-
-    /// 🔔️ This connection's live subscription set — what a test asserts `resources/subscribe`
-    /// actually recorded.
-    pub fn subscriptions(&self) -> &Arc<crate::notify::ResourceSubscriptions> {
-        &self.subscriptions
-    }
-
-    /// 🧭️ The client-capability mirror this server fills at `initialize` — handed to the transport
-    /// so an elicitation is attempted only against a client that advertised it.
-    pub fn client_features(&self) -> Arc<ClientFeatures> {
-        self.client_features.clone()
-    }
-
-    /// 💬️ Publishes this server's `tools/call` traffic onto the shell bridge as
-    /// `AgentToolCall`/`AgentToolResult`/`AgentPresence` frames. Builder-shaped rather than a
-    /// constructor argument because every existing caller (and the whole stdio path) has no bridge
-    /// at all, and adding a parameter would force a `None` through dozens of call sites for a
-    /// capability they never use.
-    pub fn publishing_conversation_to(mut self, conversation: Arc<crate::bridge::AgentConversation>) -> Self {
-        self.conversation = Some(conversation);
-        self
-    }
-
-    /// 💬️ The live conversation sink, if one was published into this server.
-    pub fn conversation(&self) -> Option<&Arc<crate::bridge::AgentConversation>> {
-        self.conversation.as_ref()
-    }
-
-    /// 🏗️ `NullBackend` + empty in-memory registries — the default a bare `stdio` invocation boots
-    /// with until a real backend is wired in.
-    pub fn with_defaults() -> Self {
-        Self::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
-    }
-
-    pub fn era(&self) -> Option<ProtocolEra> {
-        self.era
-    }
-
-    pub fn negotiated_version(&self) -> Option<&str> {
-        self.negotiated_version.as_deref()
-    }
-
-    pub fn is_initialized(&self) -> bool {
-        self.initialized
-    }
-
-    /// 🚪️ Dispatches one request/notification, returning `None` for notifications (per JSON-RPC,
-    /// they never get a response — success OR failure) and `Some` for everything with an id.
-    pub fn dispatch(&mut self, request: &JsonRpcRequest) -> Option<JsonRpcResponse> {
-        let id = request.id.clone();
-        match self.dispatch_inner(request) {
-            DispatchOutcome::NoResponse => None,
-            DispatchOutcome::Result(value) => id.map(|id| JsonRpcResponse::result(id, value)),
-            DispatchOutcome::Error(code, message, data) => id.map(|id| JsonRpcResponse::error(id, code, message, data)),
-        }
-    }
-
-    /// 📦️ Dispatches a batch, dropping every notification's (non-)response — the JSON-RPC batch
-    /// contract: an all-notification batch yields an empty vec.
-    pub fn dispatch_batch(&mut self, requests: &[JsonRpcRequest]) -> Vec<JsonRpcResponse> {
-        requests.iter().filter_map(|request| self.dispatch(request)).collect()
-    }
-
-    fn dispatch_inner(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
-        match request.method.as_str() {
-            METHOD_SERVER_DISCOVER => self.handle_server_discover(request),
-            METHOD_INITIALIZE => self.handle_initialize(request),
-            METHOD_NOTIFICATIONS_INITIALIZED => {
-                self.initialized = true;
-                DispatchOutcome::NoResponse
-            }
-            METHOD_PING => DispatchOutcome::Result(serde_json::json!({})),
-            METHOD_NOTIFICATIONS_CANCELLED => self.handle_notifications_cancelled(request),
-            other => self.dispatch_versioned(other, request),
-        }
-    }
-
-    /// 🕵️ Every method past the handshake trio re-validates a per-request modern `_meta` version
-    /// (present or not — a legacy client that already completed `initialize` sends none, and that is
-    /// fine) before routing.
-    fn dispatch_versioned(&mut self, method: &str, request: &JsonRpcRequest) -> DispatchOutcome {
-        if let Some(requested) = extract_meta_protocol_version(request.params.as_ref()) {
-            if let Some(outcome) = self.reject_unsupported_version(&requested) {
-                return outcome;
-            }
-            self.era = Some(ProtocolEra::Modern);
-            self.negotiated_version = Some(requested);
-        }
-        match method {
-            METHOD_TOOLS_LIST => self.handle_tools_list(request),
-            METHOD_TOOLS_CALL => self.handle_tools_call(request),
-            METHOD_RESOURCES_LIST => self.handle_resources_list(request),
-            METHOD_RESOURCES_TEMPLATES_LIST => self.handle_resources_templates_list(request),
-            METHOD_RESOURCES_READ => self.handle_resources_read(request),
-            METHOD_RESOURCES_SUBSCRIBE => self.handle_resources_subscribe(request),
-            METHOD_RESOURCES_UNSUBSCRIBE => self.handle_resources_unsubscribe(request),
-            METHOD_PROMPTS_LIST => self.handle_prompts_list(request),
-            METHOD_PROMPTS_GET => self.handle_prompts_get(request),
-            other => DispatchOutcome::Error(METHOD_NOT_FOUND, format!("method not found: {other}"), None),
-        }
-    }
-
-    fn reject_unsupported_version(&self, requested: &str) -> Option<DispatchOutcome> {
-        if SUPPORTED_PROTOCOL_VERSIONS.contains(&requested) {
-            return None;
-        }
-        Some(DispatchOutcome::Error(UNSUPPORTED_PROTOCOL_VERSION, format!("unsupported protocol version: {requested}"), Some(serde_json::json!({ "supported": SUPPORTED_PROTOCOL_VERSIONS, "requested": requested }))))
-    }
-
-    fn handle_server_discover(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
-        self.client_features.record(request.params.as_ref().and_then(|params| params.get("capabilities")));
-        let negotiated = match extract_meta_protocol_version(request.params.as_ref()) {
-            Some(requested) => {
-                if let Some(outcome) = self.reject_unsupported_version(&requested) {
-                    return outcome;
-                }
-                requested
-            }
-            None => SUPPORTED_PROTOCOL_VERSIONS[0].to_string(),
-        };
-        self.era = Some(ProtocolEra::Modern);
-        self.negotiated_version = Some(negotiated.clone());
-        DispatchOutcome::Result(serde_json::json!({
-            "resultType": "complete",
-            "protocolVersion": negotiated,
-            "capabilities": server_capabilities(),
-            "serverInfo": { "name": self.server_name, "version": self.server_version },
-            "instructions": SERVER_INSTRUCTIONS,
-        }))
-    }
-
-    fn handle_initialize(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
-        self.client_features.record(request.params.as_ref().and_then(|params| params.get("capabilities")));
-        let requested = request.params.as_ref().and_then(|params| params.get("protocolVersion")).and_then(|value| value.as_str()).unwrap_or("");
-        let negotiated = if SUPPORTED_PROTOCOL_VERSIONS.contains(&requested) { requested.to_string() } else { SUPPORTED_PROTOCOL_VERSIONS[0].to_string() };
-        self.era = Some(ProtocolEra::Legacy);
-        self.negotiated_version = Some(negotiated.clone());
-        DispatchOutcome::Result(serde_json::json!({
-            "protocolVersion": negotiated,
-            "capabilities": server_capabilities(),
-            "serverInfo": { "name": self.server_name, "version": self.server_version },
-            "instructions": SERVER_INSTRUCTIONS,
-        }))
-    }
-
-    /// 📄️ The page offset a `*/list` request asked for. An absent `cursor` is page one; a cursor this
-    /// server did not mint is `INVALID_PARAMS` (the spec's own requirement), never a silently-wrong
-    /// page of results.
-    fn requested_offset(request: &JsonRpcRequest) -> Result<usize, DispatchOutcome> {
-        match request.params.as_ref().and_then(|params| params.get("cursor")) {
-            None | Some(serde_json::Value::Null) => Ok(0),
-            Some(serde_json::Value::String(cursor)) => crate::notify::decode_cursor(cursor).ok_or_else(|| DispatchOutcome::Error(INVALID_PARAMS, format!("unknown cursor: {cursor}"), Some(serde_json::json!({ "cursor": cursor })))),
-            Some(other) => Err(DispatchOutcome::Error(INVALID_PARAMS, "cursor must be a string".to_string(), Some(serde_json::json!({ "cursor": other })))),
-        }
-    }
-
-    /// 📄️ One page of an already-stably-ordered list, rendered into the result object `key` names,
-    /// with `nextCursor` present only when there IS a next page.
-    fn paged_result(key: &str, items: Vec<serde_json::Value>, offset: usize, ttl_ms: u64) -> DispatchOutcome {
-        let page = crate::notify::paginate(items, offset, crate::notify::DEFAULT_PAGE_SIZE);
-        let mut result = serde_json::json!({ "resultType": "complete", key: page.items, "ttlMs": ttl_ms, "cacheScope": "public" });
-        if let (Some(object), Some(next)) = (result.as_object_mut(), page.next_cursor) {
-            object.insert("nextCursor".to_string(), serde_json::json!(next));
-        }
-        DispatchOutcome::Result(result)
-    }
-
-    fn handle_tools_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let offset = match Self::requested_offset(request) {
-            Ok(offset) => offset,
-            Err(outcome) => return outcome,
-        };
-        let mut tools = self.tools.list();
-        tools.sort_by(|a, b| a.name.cmp(&b.name));
-        Self::paged_result("tools", tools.into_iter().map(|tool| serde_json::to_value(tool).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
-    }
-
-    /// 📈️ The client's own opaque `_meta.progressToken`, bound to this connection's notification
-    /// lane. Absent token, or no sink bound, is the ordinary call: no scope is entered and the job
-    /// registry's poll-based surface is unchanged.
-    fn progress_binding(&self, request: &JsonRpcRequest, params: &serde_json::Value) -> Option<crate::notify::ProgressBinding> {
-        let token = params.get("_meta").and_then(|meta| meta.get("progressToken")).cloned()?;
-        if token.is_null() {
-            return None;
-        }
-        let slot = self.notifications.clone()?;
-        Some(crate::notify::ProgressBinding { token, slot })
-    }
-
-    /// 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound
-    /// to the client's token, so its progress is PUSHED as `notifications/progress` instead of
-    /// only being readable by polling `job_get`.
-    ///
-    /// 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
-    /// panel shows the agent's actual calls, in order, with their real arguments and outcomes,
-    /// rather than a second bookkeeping path that could drift from what ran.
-    /// 💬️ …except for a tool whose own result IS a conversation frame: `conversation_reply`
-    /// publishes the agent's prose itself, and a tool-call row carrying the same sentence as its
-    /// `arguments` would print every turn twice (`SELF_PUBLISHING_CONVERSATION_TOOLS`).
-    ///
-    /// 🔔️ A committed mutation, an undo/redo, a created artifact — the declared table in
-    /// `📣️notify` says which tool changed which resource, and every connection subscribed
-    /// to one of those URIs is told. This is the one call site that makes
-    /// `"resources": {"subscribe": true}` real.
-    fn handle_tools_call(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(params) = request.params.as_ref() else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params".to_string(), None) };
-        let Some(name) = params.get("name").and_then(|value| value.as_str()) else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params.name".to_string(), None) };
-        let arguments = params.get("arguments").cloned().unwrap_or(serde_json::Value::Null);
-        let _request = crate::notify::enter_request_scope(request.id.as_ref().map(|id| serde_json::to_value(id).unwrap_or(serde_json::Value::Null)).as_ref());
-        let _progress = crate::notify::enter_progress_scope(self.progress_binding(request, params));
-        let publishes_itself = crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&name);
-        let invocation = self.conversation.as_ref().filter(|_| !publishes_itself).map(|conversation| conversation.begin_tool_call(name, &arguments));
-        let outcome = self.tools.call(name, arguments);
-        if let (Some(conversation), Some(invocation_id)) = (self.conversation.as_ref(), invocation.as_deref()) {
-            let (ok, summary) = match &outcome {
-                Ok(result) => (!result.is_error, tool_result_summary(result)),
-                Err(error) => (false, error.message.clone()),
-            };
-            conversation.finish_tool_call(invocation_id, name, ok, &summary);
-        }
-        match outcome {
-            Ok(result) => {
-                crate::notify::broadcast_tool_result_changes(name, result.is_error, result.structured_content.as_ref());
-                DispatchOutcome::Result(serde_json::json!({
-                    "resultType": "complete",
-                    "content": result.content,
-                    "structuredContent": result.structured_content,
-                    "isError": result.is_error,
-                }))
-            }
-            Err(error) => {
-                let (code, message, data) = error.to_json_rpc_parts();
-                DispatchOutcome::Error(code, message, Some(data))
-            }
-        }
-    }
-
-    /// 🛑️ MCP's own request-scoped cancellation, mapped onto the very `job_registry().request_cancel`
-    /// path the `job_cancel` tool uses: every job minted while the named request was running is
-    /// asked to stop. A request that minted no job, or one already finished, is a silent no-op —
-    /// the spec forbids answering a notification either way.
-    fn handle_notifications_cancelled(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        if let Some(request_id) = request.params.as_ref().and_then(|params| params.get("requestId")) {
-            crate::notify::cancel_request(request_id);
-        }
-        DispatchOutcome::NoResponse
-    }
-
-    fn handle_resources_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let offset = match Self::requested_offset(request) {
-            Ok(offset) => offset,
-            Err(outcome) => return outcome,
-        };
-        Self::paged_result("resources", self.resources.list().into_iter().map(|resource| serde_json::to_value(resource).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
-    }
-
-    fn handle_resources_templates_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let offset = match Self::requested_offset(request) {
-            Ok(offset) => offset,
-            Err(outcome) => return outcome,
-        };
-        Self::paged_result("resourceTemplates", self.resources.templates().into_iter().map(|template| serde_json::to_value(template).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
-    }
-
-    fn handle_resources_read(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(uri) = request.params.as_ref().and_then(|params| params.get("uri")).and_then(|value| value.as_str()) else {
-            return DispatchOutcome::Error(INVALID_PARAMS, "resources/read requires params.uri".to_string(), None);
-        };
-        match self.resources.read(uri) {
-            Ok(contents) => DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "contents": contents, "ttlMs": 60_000, "cacheScope": "private" })),
-            Err(error) => {
-                let (code, message, data) = error.to_json_rpc_parts();
-                DispatchOutcome::Error(code, message, Some(data))
-            }
-        }
-    }
-
-    /// 🔔️ The registry validated that this URI is one it can serve; recording it here is what
-    /// makes a later `notifications/resources/updated` actually reach THIS connection.
-    fn handle_resources_subscribe(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(uri) = request.params.as_ref().and_then(|params| params.get("uri")).and_then(|value| value.as_str()) else {
-            return DispatchOutcome::Error(INVALID_PARAMS, "resources/subscribe requires params.uri".to_string(), None);
-        };
-        match self.resources.subscribe(uri) {
-            Ok(()) => {
-                self.subscriptions.subscribe(uri);
-                DispatchOutcome::Result(serde_json::json!({}))
-            }
-            Err(error) => {
-                let (code, message, data) = error.to_json_rpc_parts();
-                DispatchOutcome::Error(code, message, Some(data))
-            }
-        }
-    }
-
-    fn handle_resources_unsubscribe(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(uri) = request.params.as_ref().and_then(|params| params.get("uri")).and_then(|value| value.as_str()) else {
-            return DispatchOutcome::Error(INVALID_PARAMS, "resources/unsubscribe requires params.uri".to_string(), None);
-        };
-        match self.resources.unsubscribe(uri) {
-            Ok(()) => {
-                self.subscriptions.unsubscribe(uri);
-                DispatchOutcome::Result(serde_json::json!({}))
-            }
-            Err(error) => {
-                let (code, message, data) = error.to_json_rpc_parts();
-                DispatchOutcome::Error(code, message, Some(data))
-            }
-        }
-    }
-
-    fn handle_prompts_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let offset = match Self::requested_offset(request) {
-            Ok(offset) => offset,
-            Err(outcome) => return outcome,
-        };
-        Self::paged_result("prompts", self.prompts.list().into_iter().map(|prompt| serde_json::to_value(prompt).unwrap_or(serde_json::Value::Null)).collect(), offset, 600_000)
-    }
-
-    fn handle_prompts_get(&self, request: &JsonRpcRequest) -> DispatchOutcome {
-        let Some(params) = request.params.as_ref() else { return DispatchOutcome::Error(INVALID_PARAMS, "prompts/get requires params".to_string(), None) };
-        let Some(name) = params.get("name").and_then(|value| value.as_str()) else { return DispatchOutcome::Error(INVALID_PARAMS, "prompts/get requires params.name".to_string(), None) };
-        let arguments = params.get("arguments").cloned();
-        match self.prompts.get(name, arguments) {
-            Ok(result) => DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "description": result.description, "messages": result.messages })),
-            Err(error) => {
-                let (code, message, data) = error.to_json_rpc_parts();
-                DispatchOutcome::Error(code, message, Some(data))
-            }
-        }
-    }
-}
-//#endregion 🔖️Server
-
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️long/🦀️.rs"]
-mod long;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️tests-support/🦀️.rs"]
-mod tests_support;
 //#endregion 🧪️Tests

@@ -1,4 +1,6 @@
-use super::*;
+use crate::BinarySnapshot;
+use semio_framework_ui_locale::Locale;
+use crate::editor::binary::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_an_editable_text_window() {

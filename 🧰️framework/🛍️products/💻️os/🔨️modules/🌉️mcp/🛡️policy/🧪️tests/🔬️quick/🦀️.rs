@@ -1,7 +1,30 @@
+//! 🧱️ Policy_quick of the consent crate: Stdio lines, elicitation and the approval coordinator.
 
-use super::*;
-use crate::catalog::{CapabilityAudience, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
-use semio_framework::manifest::{CapabilityEffects, CapabilityExecution, CapabilityPolicy};
+use semio_framework::manifest::ApprovalMode;
+use semio_framework::manifest::CapabilityEffects;
+use semio_framework::manifest::CapabilityExecution;
+use semio_framework::manifest::CapabilityPolicy;
+use semio_framework::manifest::kernel;
+use std::sync::Arc;
+use std::sync::OnceLock;
+use crate::approval_coordinator::{ApprovalChannel, ApprovalCoordinator, ApprovalRequest, ApprovalResolution};
+use crate::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines, SystemElicitationClock};
+use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_framework_os_mcp_bridge_codec::bridge::{ApprovalDecision, GatewayToShell, ShellToGateway};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_foundation::handles::{HandleTable, SessionHandle};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
+use semio_framework_os_mcp_wire::job_registry::job_registry;
+use semio_framework_os_mcp_wire::notify::{active_request_cancel_requested, enter_request_scope};
+use semio_framework_os_mcp_wire::protocol::ClientFeatures;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
     CapabilityDefinition {
@@ -27,6 +50,7 @@ fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bo
 }
 
 //#region 🔖️ScopeExpansion
+
 #[test]
 fn artifact_write_expands_to_documents_write_and_jobs_spawn() {
     let principal = AgentPrincipal::from_scope_names("agent:local", "local", &["artifact.write".to_string()], None);
@@ -67,9 +91,11 @@ fn wildcard_family_grant_covers_any_concrete_member() {
     assert!(principal.grants(&kernel::CapabilityId("fs.read:/tmp/workspace".into())));
     assert!(!principal.grants(&kernel::CapabilityId("fs.write:/tmp/workspace".into())));
 }
+
 //#endregion 🔖️ScopeExpansion
 
 //#region 🔖️ScopeEnforcement
+
 #[test]
 fn authorize_scopes_denies_when_a_required_scope_is_missing() {
     let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
@@ -86,9 +112,11 @@ fn authorize_scopes_allows_when_every_scope_is_granted() {
     let capability = capability("cad.editor.translateSelection", &["artifacts.write"], ApprovalMode::Never, false);
     assert!(engine.authorize_scopes(&principal, &capability).is_ok());
 }
+
 //#endregion 🔖️ScopeEnforcement
 
 //#region 🔖️ApprovalGate
+
 #[test]
 fn never_approval_mode_proceeds_without_any_gate() {
     let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
@@ -152,19 +180,10 @@ fn auto_approve_parses_the_three_frozen_values_and_nothing_else() {
     assert_eq!(AutoApprovePolicy::parse("sometimes"), None);
     assert_eq!(AutoApprovePolicy::default(), AutoApprovePolicy::Never);
 }
+
 //#endregion 🔖️ApprovalGate
 
 //#region 🔖️ApprovalCoordinator
-// 🎫️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice M4 (audit §6 P0.2): the approval gate
-// used to be unresolvable in EVERY configuration — no elicitation was ever sent, no bridge frame was
-// ever published, no tool could decide a handle, and `--auto-approve` had no flag. These tests drive
-// the real chain end to end: the real `ElicitationChannel` over real in-memory streams, and the real
-// `BridgeHandle` with a real registered connection.
-
-use crate::bridge::{ApprovalDecision, BridgeHandle, GatewayToShell, ShellToGateway};
-use crate::protocol::ClientFeatures;
-use crate::transport::{ElicitationChannel, ElicitationSlot, StdioLines};
-use std::sync::OnceLock;
 
 fn approval_request<'a>(handle: &'a str, diff: &'a serde_json::Value) -> ApprovalRequest<'a> {
     ApprovalRequest {
@@ -261,7 +280,7 @@ fn a_client_that_never_answers_its_elicitation_times_out_into_the_same_typed_out
     features.record(Some(&serde_json::json!({ "elicitation": {} })));
     let lines = Arc::new(StdioLines::new(Box::new(std::io::BufReader::new(SilentClient { gate })), Box::new(Vec::new())));
     let slot: ElicitationSlot = Arc::new(OnceLock::new());
-    let _ = slot.set(Arc::new(ElicitationChannel::new(lines, features).with_deadline(60, Box::new(crate::transport::SystemElicitationClock::default()))));
+    let _ = slot.set(Arc::new(ElicitationChannel::new(lines, features).with_deadline(60, Box::new(SystemElicitationClock::default()))));
     let coordinator = ApprovalCoordinator::new(Some(slot), None);
     let diff = serde_json::json!({});
     match coordinator.resolve(&approval_request("appr_timeout", &diff)) {
@@ -291,7 +310,7 @@ fn with_no_lane_at_all_the_answer_names_both_closed_lanes_and_the_remedy() {
 
 /// 🌉️ A live bridge with one registered connection, plus the receiver that would be the shell's
 /// socket — kept alive so the outbox is never closed under the coordinator.
-fn live_bridge() -> (Arc<BridgeHandle>, crate::bridge::ShellConnectionId, impl FnMut() -> Option<GatewayToShell>) {
+fn live_bridge() -> (Arc<BridgeHandle>, ShellConnectionId, impl FnMut() -> Option<GatewayToShell>) {
     let bridge = Arc::new(BridgeHandle::new());
     let (connection, mut receiver) = bridge.register();
     (bridge, connection, move || receiver.try_recv())
@@ -302,7 +321,7 @@ fn live_bridge() -> (Arc<BridgeHandle>, crate::bridge::ShellConnectionId, impl F
 #[test]
 fn a_shell_that_attaches_within_the_grace_is_asked() {
     let bridge = Arc::new(BridgeHandle::new());
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(Arc::clone(&bridge));
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_attach_grace_ms(5_000).with_shell_timeout_ms(5_000);
     let diff = serde_json::json!({});
@@ -313,13 +332,13 @@ fn a_shell_that_attaches_within_the_grace_is_asked() {
         let mut published = false;
         for _ in 0..200 {
             if let Some(frame) = receiver.try_recv() {
-                published = matches!(frame, crate::bridge::GatewayToShell::ApprovalRequested { ref approval_id, .. } if approval_id == "appr_grace");
+                published = matches!(frame, GatewayToShell::ApprovalRequested { ref approval_id, .. } if approval_id == "appr_grace");
                 break;
             }
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
         assert!(published, "the late shell is shown the approval");
-        bridge.record(connection, crate::bridge::ShellToGateway::Approval { approval_id: "appr_grace".to_string(), decision: crate::bridge::ApprovalDecision::Once, note: None });
+        bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_grace".to_string(), decision: ApprovalDecision::Once, note: None });
         asked.join().expect("resolve")
     });
     assert!(matches!(resolution, ApprovalResolution::Approved { channel: ApprovalChannel::Shell }), "{resolution:?}");
@@ -328,7 +347,7 @@ fn a_shell_that_attaches_within_the_grace_is_asked() {
 #[test]
 fn a_bridge_with_no_shell_attached_is_unreachable_and_says_so() {
     let bridge = Arc::new(BridgeHandle::new());
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge);
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_attach_grace_ms(0);
     let diff = serde_json::json!({});
@@ -343,7 +362,7 @@ fn a_bridge_with_no_shell_attached_is_unreachable_and_says_so() {
 #[test]
 fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
     let (bridge, connection, mut next_frame) = live_bridge();
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge.clone());
     bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_9".to_string(), decision: ApprovalDecision::Once, note: None });
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(8_000);
@@ -370,7 +389,7 @@ fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
 #[test]
 fn the_shell_lane_carries_a_humans_deny_back_as_a_denial() {
     let (bridge, connection, _next_frame) = live_bridge();
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge.clone());
     bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_10".to_string(), decision: ApprovalDecision::Deny, note: Some("not on my document".to_string()) });
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(2_000);
@@ -387,7 +406,7 @@ fn the_shell_lane_carries_a_humans_deny_back_as_a_denial() {
 #[test]
 fn a_shell_that_never_answers_times_out_into_unreachable_never_into_approved() {
     let (bridge, _connection, _next_frame) = live_bridge();
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge);
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(120);
     let diff = serde_json::json!({});
@@ -402,7 +421,7 @@ fn a_shell_that_never_answers_times_out_into_unreachable_never_into_approved() {
 #[test]
 fn a_stale_decision_for_another_handle_is_never_mistaken_for_this_one() {
     let (bridge, connection, _next_frame) = live_bridge();
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge.clone());
     bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_other".to_string(), decision: ApprovalDecision::Session, note: None });
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(120);
@@ -418,16 +437,16 @@ fn a_stale_decision_for_another_handle_is_never_mistaken_for_this_one() {
 #[test]
 fn a_cancelled_tool_call_ends_its_parked_shell_approval_instead_of_waiting_out_the_deadline() {
     let (bridge, _connection, _next_frame) = live_bridge();
-    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
     let _ = slot.set(bridge);
     let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(10_000);
     let diff = serde_json::json!({});
-    let _request = crate::notify::enter_request_scope(Some(&serde_json::json!("u5-parked-approval")));
-    let job = crate::ui::job_registry().begin_with_id("inv_u5_parked_approval", "toolCall");
-    crate::ui::job_registry().report_progress(&job, 0.0, None);
+    let _request = enter_request_scope(Some(&serde_json::json!("u5-parked-approval")));
+    let job = job_registry().begin_with_id("inv_u5_parked_approval", "toolCall");
+    job_registry().report_progress(&job, 0.0, None);
     let canceller = std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(60));
-        crate::ui::job_registry().request_cancel(&job).is_ok()
+        job_registry().request_cancel(&job).is_ok()
     });
     let started = std::time::Instant::now();
     assert_eq!(coordinator.resolve(&approval_request("appr_13", &diff)), ApprovalResolution::Cancelled);
@@ -440,7 +459,7 @@ fn a_cancelled_tool_call_ends_its_parked_shell_approval_instead_of_waiting_out_t
 /// stopped waiting (cancel, countdown, a newer shell) — and a superseded request moves to the newer shell.
 #[test]
 fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withdrawal() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
+    let law: serde_json::Value = serde_json::from_str(fixture_text("../../../🛡️policy/🧪️tests/🧫️fixtures/🪦️approval-withdrawal.json")).expect("approval withdrawal law");
     let closing = |frame: &GatewayToShell| {
         let value = serde_json::to_value(frame).expect("frame json");
         let mut kept = serde_json::Map::new();
@@ -465,7 +484,7 @@ fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withd
         let name = case["name"].as_str().expect("case name");
         let approval_id = format!("appr_withdrawal_{index}");
         let (bridge, connection, mut first) = live_bridge();
-        let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+        let slot: BridgeSlot = Arc::new(OnceLock::new());
         let _ = slot.set(bridge.clone());
         let diff = serde_json::json!({});
         let request = approval_request(&approval_id, &diff);
@@ -476,12 +495,12 @@ fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withd
                 (resolution, vec![drain(&mut first, &approval_id)])
             }
             "cancel" => {
-                let _scope = crate::notify::enter_request_scope(Some(&serde_json::json!(format!("withdrawal-law-{index}"))));
-                let job = crate::ui::job_registry().begin_with_id(&format!("inv_withdrawal_law_{index}"), "toolCall");
-                crate::ui::job_registry().report_progress(&job, 0.0, None);
+                let _scope = enter_request_scope(Some(&serde_json::json!(format!("withdrawal-law-{index}"))));
+                let job = job_registry().begin_with_id(&format!("inv_withdrawal_law_{index}"), "toolCall");
+                job_registry().report_progress(&job, 0.0, None);
                 let canceller = std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_millis(60));
-                    let _ = crate::ui::job_registry().request_cancel(&job);
+                    let _ = job_registry().request_cancel(&job);
                 });
                 let resolution = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(10_000).resolve(&request);
                 canceller.join().expect("canceller");
@@ -542,9 +561,10 @@ fn every_published_approval_closes_on_its_shell_with_a_decision_or_a_named_withd
 /// and an unrelated cancelled job never ends someone else's wait.
 #[test]
 fn outside_a_request_scope_no_call_reads_as_cancelled() {
-    let job = crate::ui::job_registry().begin_with_id("inv_u5_unscoped", "toolCall");
-    crate::ui::job_registry().report_progress(&job, 0.0, None);
-    assert!(crate::ui::job_registry().request_cancel(&job).is_ok());
-    assert!(!crate::notify::active_request_cancel_requested());
+    let job = job_registry().begin_with_id("inv_u5_unscoped", "toolCall");
+    job_registry().report_progress(&job, 0.0, None);
+    assert!(job_registry().request_cancel(&job).is_ok());
+    assert!(!active_request_cancel_requested());
 }
+
 //#endregion 🔖️ApprovalCoordinator

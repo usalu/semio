@@ -1,6 +1,8 @@
 //! 💾 Durability class, frontier sync, and epoch fencing.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_ids::{ArtifactId, DbError};
+use db_ids::{ArtifactId, DbError};
 
 //#region 🔖️Durability
 /// 💾️ How durably a command's effects are guaranteed to survive a crash before its
@@ -25,7 +27,7 @@ impl DurabilityClass {
     /// 🥇️ A total order key: `(tier, quorum_n)`, so `Ord`/`PartialOrd` can be derived from
     /// arithmetic comparison rather than a hand-written match ladder.
     // 🚫️async: E1 pure accessor consumed by `impl Ord` (itself E1) — see R9
-    fn rank(&self) -> (u8, u8) {
+    pub fn rank(&self) -> (u8, u8) {
         match self {
             DurabilityClass::Memory => (0, 0),
             DurabilityClass::Os => (1, 0),
@@ -123,7 +125,7 @@ impl FrontierDelta {
 /// `Frontier` field-order change — the wire format is this crate's own choice (the contract
 /// leaves the exact encoding unspecified), versioned via a leading `v1` tag.
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct ResumeToken(String);
+pub struct ResumeToken(pub String);
 
 impl ResumeToken {
     /// ✍️ Encodes `frontier` as `v1|<document>|<head_seq>|<commit_seq>|<epoch>|<hex chain_hash>`.

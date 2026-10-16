@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-inference-ledger"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Owner-private inference job ledger over SQLite"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-ledger"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-inference = { workspace = true }
+serde_json = { workspace = true }
+semio-hub-gis = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+
+[dev-dependencies]
+semio-hub-inference-contract-laws = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-job = { workspace = true }

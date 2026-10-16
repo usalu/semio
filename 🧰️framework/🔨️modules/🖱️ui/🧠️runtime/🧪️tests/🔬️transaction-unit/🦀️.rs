@@ -112,7 +112,7 @@ fn test_runtime() -> UiRuntime<AlwaysAcceptsSink, FakeDelta> {
 fn register_test_surface<S: crate::CommandSink>(runtime: &mut UiRuntime<S, FakeDelta>, surface: ui_contract::SurfaceId) -> (crate::Entity<FakePresenter>, crate::Entity<Model>) {
     let model = runtime.store_mut().insert(Model { value: 0 });
     let presenter = runtime.store_mut().insert(FakePresenter { model: model.clone(), count: 0 });
-    runtime.register_surface(surface.clone(), presenter.clone(), crate::SurfaceReconciler::new(surface));
+    runtime.register_surface(surface.clone(), presenter.clone(), crate::SurfaceReconciler::from_text(surface));
     (presenter, model)
 }
 

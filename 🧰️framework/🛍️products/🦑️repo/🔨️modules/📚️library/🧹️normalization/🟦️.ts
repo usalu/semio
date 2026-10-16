@@ -22,7 +22,7 @@ import { canonicalJson } from "../🧾️serialization/🔣️json/🟦️.ts";
 
 import { generatorPreviewExecution, generatorPreviewResourceLimits, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 
-import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, type SemanticPackageProjectionCatalog } from "../🔍️discovery/🟦️.ts";
+import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, semanticMemberPatternEmojiAdmitted, type SemanticPackageProjectionCatalog } from "../🔍️discovery/🟦️.ts";
 
 import { parseGeneratorInputProjection, parseCurrentSourceApprovals, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
@@ -36,6 +36,9 @@ import { moduleSourceClosureDigest, openRecordStore, pruneRecordStoreNamespaces,
 import { repoCacheDirectory } from "../⚡️caching/🟦️.ts";
 import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, type OwnerProjectionEntry, type OwnerProjectionPolicy, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
+
+/** 📋️ Refuses an absent required taxonomy entry before its fields or paths are consumed. */
+function requireTaxonomyValue<T>(value:T|undefined,context:string):T{if(value===undefined)throw new Error(`Required taxonomy ${context} is missing`);return value;}
 
 //#region 📜️Contracts
 export type TaxonomySeverity = "warning" | "error";
@@ -497,8 +500,8 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
     if (!Array.isArray(row.members) || row.members.length < 2) throw new Error(`${name}.members must contain complete retained evidence`);
     const members = row.members.map((entry, index) => parseEvidenceMember(entry, `${name}.members[${index}]`));
     const keys = members.map((entry) => Buffer.from(entry.sourcePath).toString("hex"));
-    if (keys.some((key, index) => index > 0 && keys[index - 1] >= key)) throw new Error(`${name}.members are not unique and bytewise path sorted`);
-    const identity = canonicalJson(members[0].preimage);
+    if (keys.some((key, index) => index > 0 && requireTaxonomyValue(keys[index - 1],"keys[index - 1]") >= key)) throw new Error(`${name}.members are not unique and bytewise path sorted`);
+    const identity = canonicalJson(requireTaxonomyValue(members[0],"members[0]").preimage);
     if (members.some((entry) => canonicalJson(entry.preimage) !== identity)) throw new Error(`${name}.members are not byte, kind, mode and size identical`);
     const retainedFinalPath = planPath(row.retainedFinalPath, `${name}.retainedFinalPath`);
     if (!members.some((entry) => entry.disposition !== "remove" && entry.finalPath === retainedFinalPath)) throw new Error(`${name}.retainedFinalPath has no retained member`);
@@ -626,7 +629,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
     if (entry.state !== "absent" && entry.state !== "directory") throw new Error(`${name}.state is invalid`);
     return { path: planPath(entry.path, `${name}.path`), state: entry.state } as TaxonomyDestinationAncestorPreimage;
   });
-  if (destinationAncestorPreimages.some((entry, index) => index > 0 && generatorPathCompare(destinationAncestorPreimages[index - 1].path, entry.path) >= 0)) throw new Error("Taxonomy plan destinationAncestorPreimages must be unique and bytewise sorted");
+  if (destinationAncestorPreimages.some((entry, index) => index > 0 && generatorPathCompare(requireTaxonomyValue(destinationAncestorPreimages[index - 1],"destinationAncestorPreimages[index - 1]").path, entry.path) >= 0)) throw new Error("Taxonomy plan destinationAncestorPreimages must be unique and bytewise sorted");
   const parseOperationId = (entry: UnknownRecord, name: string): string => planString(entry.operationId, `${name}.operationId`, PLAN_OPERATION_ID);
   const embeddedTicketRootRelocations = (row.embeddedTicketRootRelocations as unknown[]).map((value, index) => {
     const name = `taxonomy plan embeddedTicketRootRelocations[${index}]`;
@@ -703,7 +706,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
     const expectedTicketId = `${splitLeadingEmoji(ticketSegments[0] ?? "").rest}/${splitLeadingEmoji(ticketSegments[1] ?? "").rest}/${splitLeadingEmoji(ticketSegments[2] ?? "").rest}/${ticketSegments[3] ?? ""}`;
     if (root.ticketId !== expectedTicketId || !/^[0-9]{2}\/[0-9]{2}\/[0-9]{2}\/.+/u.test(root.ticketId)) throw new Error(`Embedded ticket root ${root.operationId} ticketId does not match its canonical root`);
     const orderedChildren = [...root.relocationOperationIds, ...root.removalOperationIds];
-    if ([root.relocationOperationIds, root.removalOperationIds].some((ids) => ids.some((id, index) => index > 0 && Buffer.from(ids[index - 1]).compare(Buffer.from(id)) >= 0))) throw new Error(`Embedded ticket root ${root.operationId} child IDs are not unique and bytewise sorted`);
+    if ([root.relocationOperationIds, root.removalOperationIds].some((ids) => ids.some((id, index) => index > 0 && Buffer.from(requireTaxonomyValue(ids[index - 1],"ids[index - 1]")).compare(Buffer.from(id)) >= 0))) throw new Error(`Embedded ticket root ${root.operationId} child IDs are not unique and bytewise sorted`);
     if (root.relocationOperationIds.some((id) => !relocationIds.has(id)) || root.removalOperationIds.some((id) => !removalIds.has(id))) throw new Error(`Embedded ticket root ${root.operationId} has dangling disposition IDs`);
     const actualChildren = [...embeddedTicketRootRelocations.filter((entry) => entry.embeddedTicketRootId === root.operationId).map((entry) => entry.operationId), ...evidenceRemovals.filter((entry) => entry.embeddedTicketRootId === root.operationId).map((entry) => entry.operationId)];
     if (new Set(orderedChildren).size !== orderedChildren.length || canonicalJson(orderedChildren.sort(generatorPathCompare)) !== canonicalJson(actualChildren.sort(generatorPathCompare))) throw new Error(`Embedded ticket root ${root.operationId} does not exhaust its child dispositions`);
@@ -779,8 +782,9 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
   });
   const nodeByPath = new Map<string, TaxonomyGeneratorPreviewNode>();
   for (let index = 0; index < nodes.length; index++) {
-    const node = nodes[index];
-    if (nodeByPath.has(node.path) || (index > 0 && generatorPathCompare(nodes[index - 1].path, node.path) >= 0)) throw new Error(`Generator preview nodes repeat or are not byte-sorted at ${node.path}`);
+    const node = requireTaxonomyValue(nodes[index],"nodes[index]");
+
+    if (nodeByPath.has(node.path) || (index > 0 && generatorPathCompare(requireTaxonomyValue(nodes[index - 1],"nodes[index - 1]").path, node.path) >= 0)) throw new Error(`Generator preview nodes repeat or are not byte-sorted at ${node.path}`);
     nodeByPath.set(node.path, node);
   }
   for (const registeredRoot of roots) if (!nodeByPath.has(registeredRoot)) throw new Error(`Generator preview omits registered output root ${registeredRoot}`);
@@ -801,7 +805,7 @@ export function parseGeneratorPreviewManifest(content: string, expectedContractI
     if (nodeByPath.has(path) || nodes.some((node) => node.path.startsWith(`${path}/`))) throw new Error(`Generator preview stale removal overlaps expected output ${path}`);
     return path;
   });
-  for (let index = 0; index < staleRemovals.length; index++) if ((index > 0 && generatorPathCompare(staleRemovals[index - 1], staleRemovals[index]) >= 0) || staleRemovals.some((path, candidate) => candidate !== index && path.startsWith(`${staleRemovals[index]}/`))) throw new Error(`Generator preview stale removals repeat, overlap, or are not byte-sorted at ${staleRemovals[index]}`);
+  for (let index = 0; index < staleRemovals.length; index++) if ((index > 0 && generatorPathCompare(requireTaxonomyValue(staleRemovals[index - 1],"staleRemovals[index - 1]"), requireTaxonomyValue(staleRemovals[index],"stale removal")) >= 0) || staleRemovals.some((path, candidate) => candidate !== index && path.startsWith(`${staleRemovals[index]}/`))) throw new Error(`Generator preview stale removals repeat, overlap, or are not byte-sorted at ${staleRemovals[index]}`);
   const manifest: TaxonomyGeneratorPreviewManifest = { contractId: expectedContractId, nodes, schemaVersion: 1, staleRemovals };
   if (content !== `${generatorPreviewJson(manifest)}\n`) throw new Error("Generator preview stdout is noisy or not byte-canonical JSON");
   return manifest;
@@ -837,11 +841,12 @@ function splitLeadingEmojiIdentity(value: string): { sequence: string; first: st
   return { sequence, first, rest: value.slice(sequence.length) };
 }
 
-/** 🗂️ Directory kinds by folded emoji and by locale-folded id, and semantic member kinds by folded member name, each in declaration order, built once per loaded taxonomy. */
+/** 🗂️ Directory kinds by folded emoji and by locale-folded id, semantic member kinds by folded member name, and the member kinds carrying a slug pattern, each in declaration order, built once per loaded taxonomy. */
 interface DirectoryKindIndex {
   readonly kindsByEmoji: ReadonlyMap<string, readonly LoadedTaxonomy["directoryKinds"][number][]>;
   readonly memberKindsByName: ReadonlyMap<string, readonly (readonly [string, LoadedTaxonomy["schema"]["semanticDirectoryMemberKinds"][string]])[]>;
   readonly kindsByFoldedId: ReadonlyMap<string, readonly LoadedTaxonomy["directoryKinds"][number][]>;
+  readonly patternMemberKinds: readonly (readonly [string, LoadedTaxonomy["schema"]["semanticDirectoryMemberKinds"][string], RegExp])[];
 }
 
 const directoryKindIndexes = new WeakMap<LoadedTaxonomy, DirectoryKindIndex>();
@@ -859,17 +864,22 @@ function directoryKindIndex(taxonomy: LoadedTaxonomy): DirectoryKindIndex {
     if (named) named.push(kind);
     else kindsByFoldedId.set(id, [kind]);
   }
-  for (const entry of Object.entries(taxonomy.schema.semanticDirectoryMemberKinds)) for (const key of new Set(entry[1].memberNames.map(emojiFold))) {
-    const rows = memberKindsByName.get(key);
-    if (rows) rows.push(entry);
-    else memberKindsByName.set(key, [entry]);
+  const patternMemberKinds: (readonly [string, LoadedTaxonomy["schema"]["semanticDirectoryMemberKinds"][string], RegExp])[] = [];
+  for (const entry of Object.entries(taxonomy.schema.semanticDirectoryMemberKinds)) {
+    for (const key of new Set(entry[1].memberNames.map(emojiFold))) {
+      const rows = memberKindsByName.get(key);
+      if (rows) rows.push(entry);
+      else memberKindsByName.set(key, [entry]);
+    }
+    if (entry[1].memberSlugPattern !== undefined) patternMemberKinds.push([entry[0], entry[1], new RegExp(entry[1].memberSlugPattern, "u")]);
   }
-  const index = { kindsByEmoji, memberKindsByName, kindsByFoldedId };
+  const index = { kindsByEmoji, memberKindsByName, kindsByFoldedId, patternMemberKinds };
   directoryKindIndexes.set(taxonomy, index);
   return index;
 }
 
-function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId?: string, ancestorKindIds: readonly string[] = []): { kind: { readonly id: string; readonly emoji: string } | null; slug: string; ambiguous: readonly string[] } {
+/** 🧷️ Matches one directory name to its structural kind, then its exact member registry, then its member slug pattern, each below the nearest owner scope; kinds matching at the same nearest distance are reported as ambiguous. */
+export function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId?: string, ancestorKindIds: readonly string[] = []): { kind: { readonly id: string; readonly emoji: string } | null; slug: string; ambiguous: readonly string[] } {
   const normalized = name.normalize("NFC");
   const identity = splitLeadingEmojiIdentity(normalized);
   const leading = { emoji: identity.first, rest: identity.rest };
@@ -879,30 +889,42 @@ function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId
     const global = (index.kindsByEmoji.get(emojiFold(leading.emoji)) ?? []).filter((kind) => (leading.rest.length === 0 && kind.allowEmojiOnly) || kind.slugRegex.test(leading.rest));
     const named = index.kindsByFoldedId.get(leading.rest.toLocaleLowerCase("und")) ?? [];
     const exact = global.filter((kind) => contextAllows(kind) && named.includes(kind));
-    if (exact.length === 1) return { kind: exact[0], slug: leading.rest, ambiguous: [] };
+    if (exact.length === 1) return { kind: requireTaxonomyValue(exact[0],"single directory match"), slug: leading.rest, ambiguous: [] };
     if (exact.length > 1) return { kind: null, slug: leading.rest, ambiguous: exact.map((entry) => entry.id) };
     const contextual = parentKindId === undefined ? [] : global.filter((kind) => kind.parentKindIds?.includes(parentKindId) === true);
     const ordinary = contextual.length > 0 ? contextual : global.filter((kind) => (kind.parentKindIds?.length ?? 0) === 0);
-    if (ordinary.length === 1) return { kind: ordinary[0], slug: leading.rest, ambiguous: [] };
+    if (ordinary.length === 1) return { kind: requireTaxonomyValue(ordinary[0],"single directory match"), slug: leading.rest, ambiguous: [] };
     const contexts = [parentKindId, ...ancestorKindIds].filter((kindId, index, rows): kindId is string => Boolean(kindId) && rows.indexOf(kindId) === index);
     const overlays = (index.memberKindsByName.get(emojiFold(`${identity.first}${identity.rest}`)) ?? [])
       .map(([id, spec]) => ({ id, distance: contexts.findIndex((kindId) => spec.ownerKindIds.includes(kindId)) }))
       .filter((entry) => entry.distance >= 0)
       .sort((left, right) => left.distance - right.distance || left.id.localeCompare(right.id));
     if (overlays.length > 0) {
-      const nearest = overlays.filter((entry) => entry.distance === overlays[0].distance);
-      if (nearest.length === 1) return { kind: { id: nearest[0].id, emoji: leading.emoji }, slug: leading.rest, ambiguous: [] };
+      const nearest = overlays.filter((entry) => entry.distance === requireTaxonomyValue(overlays[0],"overlays[0]").distance);
+      if (nearest.length === 1) return { kind: { id: requireTaxonomyValue(nearest[0],"nearest[0]").id, emoji: leading.emoji }, slug: leading.rest, ambiguous: [] };
       return { kind: null, slug: leading.rest, ambiguous: nearest.map((entry) => entry.id) };
+    }
+    if (index.patternMemberKinds.length > 0 && semanticMemberPatternEmojiAdmitted(leading.emoji)) {
+      const patterned = index.patternMemberKinds
+        .filter(([, , regex]) => regex.test(leading.rest))
+        .map(([id, spec]) => ({ id, distance: contexts.findIndex((kindId) => spec.ownerKindIds.includes(kindId)) }))
+        .filter((entry) => entry.distance >= 0)
+        .sort((left, right) => left.distance - right.distance || left.id.localeCompare(right.id));
+      if (patterned.length > 0) {
+        const nearest = patterned.filter((entry) => entry.distance === requireTaxonomyValue(patterned[0],"patterned[0]").distance);
+        if (nearest.length === 1) return { kind: { id: requireTaxonomyValue(nearest[0],"nearest[0]").id, emoji: leading.emoji }, slug: leading.rest, ambiguous: [] };
+        return { kind: null, slug: leading.rest, ambiguous: nearest.map((entry) => entry.id) };
+      }
     }
     return { kind: null, slug: leading.rest, ambiguous: ordinary.map((entry) => entry.id) };
   }
   const exact = (index.kindsByFoldedId.get(normalized.toLocaleLowerCase("und")) ?? []).filter((kind) => contextAllows(kind) && kind.inferWithoutEmoji !== false);
-  if (exact.length === 1) return { kind: exact[0], slug: normalized, ambiguous: [] };
+  if (exact.length === 1) return { kind: requireTaxonomyValue(exact[0],"single directory match"), slug: normalized, ambiguous: [] };
   if (exact.length > 1) return { kind: null, slug: normalized, ambiguous: exact.map((entry) => entry.id) };
   const matching = taxonomy.directoryKinds.filter((kind) => kind.inferWithoutEmoji !== false && kind.slugRegex.test(normalized));
   const contextual = parentKindId === undefined ? [] : matching.filter((kind) => kind.parentKindIds?.includes(parentKindId) === true);
   const matches = contextual.length > 0 ? contextual : matching.filter((kind) => (kind.parentKindIds?.length ?? 0) === 0);
-  return { kind: matches.length === 1 ? matches[0] : null, slug: normalized, ambiguous: matches.map((entry) => entry.id) };
+  return { kind: matches.length === 1 ? matches[0] ?? null : null, slug: normalized, ambiguous: matches.map((entry) => entry.id) };
 }
 
 function resolveFileKind(
@@ -920,12 +942,12 @@ function resolveFileKind(
     .flatMap(([id, spec]) => {
       if (!taxonomy.pathMatcher.matches(path, spec.pathPattern) || spec.parentDirectoryKindId !== undefined && spec.parentDirectoryKindId !== parentKindId || !new RegExp(spec.sourceFilenamePattern, "u").test(normalized)) return [];
       const extensions = spec.extensionChains.filter((chain) => folded.endsWith(chain.toLocaleLowerCase("und"))).sort((left, right) => right.length - left.length || left.localeCompare(right));
-      return extensions.length > 0 ? [{ id, spec, extension: extensions[0] }] : [];
+      return extensions.length > 0 ? [{ id, spec, extension: requireTaxonomyValue(extensions[0],"scoped extension") }] : [];
     })
     .sort((left, right) => left.id.localeCompare(right.id));
   if (scoped.length > 1) return { kind: null, extension: "", stem: normalized, ambiguous: scoped.map(({ id }) => `scoped:${id}`) };
   if (scoped.length === 1) {
-    const selected = scoped[0];
+    const selected = requireTaxonomyValue(scoped[0],"scoped[0]");
     const kind = { id: `scoped:${selected.id}`, emoji: selected.spec.emoji, extensionChains: selected.spec.extensionChains, role: selected.spec.role };
     const withoutExtension = normalized.slice(0, -selected.extension.length);
     const leading = splitLeadingEmoji(withoutExtension);
@@ -935,7 +957,7 @@ function resolveFileKind(
   if (forced) {
     const extensions = forced.extensionChains.filter((chain) => normalized.endsWith(chain)).sort((left, right) => right.length - left.length || left.localeCompare(right));
     if (extensions.length > 0) {
-      const extension = extensions[0];
+      const extension = requireTaxonomyValue(extensions[0],"extensions[0]");
       const withoutExtension = normalized.slice(0, -extension.length);
       const leading = splitLeadingEmoji(withoutExtension);
       return { kind: forced, extension, stem: leading.emoji && emojiFold(leading.emoji) === emojiFold(forced.emoji) ? leading.rest : withoutExtension, ambiguous: [] };
@@ -956,14 +978,14 @@ function resolveFileKind(
   if (candidates.length === 0) {
     const contentKind = contentKindId ? taxonomy.fileKinds.find((kind) => kind.id === contentKindId) : undefined;
     if (!contentKind) return { kind: null, extension: "", stem: normalized, ambiguous: [] };
-    const extension = [...contentKind.extensionChains].sort((left, right) => left.length - right.length || left.localeCompare(right))[0];
+    const extension = requireTaxonomyValue([...contentKind.extensionChains].sort((left, right) => left.length - right.length || left.localeCompare(right))[0],"[...contentKind.extensionChains].sort((left, right) => left.length - right.length || left.localeCompare(right))[0]");
     const leading = splitLeadingEmoji(normalized);
     const stem = (leading.emoji && emojiFold(leading.emoji) === emojiFold(contentKind.emoji) ? leading.rest : normalized).trim().replace(/[. ]+$/u, "");
     return { kind: contentKind, extension, stem, ambiguous: [] };
   }
-  const top = candidates.filter((entry) => entry.rule.priority === candidates[0].rule.priority && entry.predicates === candidates[0].predicates);
+  const top = candidates.filter((entry) => entry.rule.priority === requireTaxonomyValue(candidates[0],"candidates[0]").rule.priority && entry.predicates === requireTaxonomyValue(candidates[0],"candidates[0]").predicates);
   const kindIds = [...new Set(top.map((entry) => entry.rule.fileKindId))];
-  const extension = top[0].rule.extensionChain;
+  const extension = requireTaxonomyValue(top[0],"top[0]").rule.extensionChain;
   const withoutExtension = normalized.slice(0, normalized.length - extension.length);
   if (kindIds.length !== 1) return { kind: null, extension, stem: withoutExtension, ambiguous: top.map((entry) => `${entry.id}:${entry.rule.fileKindId}`) };
   const selected = taxonomy.fileKinds.find((kind) => kind.id === kindIds[0]);
@@ -1110,6 +1132,7 @@ function gitRows(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec = taxonomy
     .map((row) => {
       const tab = row.indexOf("\t");
       const [mode, objectId, stage] = row.slice(0, tab).split(" ");
+      if(tab<1||mode===undefined||objectId===undefined||stage===undefined)throw new Error("Exact Git stage header required");
       return { path: sourceRelative(row.slice(tab + 1)), mode, objectId, stage };
     })
     .filter((row) => row.stage === "0")
@@ -1291,7 +1314,7 @@ function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly own
     const owner = parts.slice(0, packageIndex).join("/");
     const ecosystemSegment = parts[packageIndex + 1] ?? "";
     const ecosystemIds = Object.keys(taxonomy.schema.ecosystems).filter((id) => emojiFold(id) === emojiFold(ecosystemSegment));
-    const selected = ecosystemIds.length === 1 && taxonomy.schema.packageBoundaryRules[ecosystemIds[0]] ? [ecosystemIds[0], taxonomy.schema.packageBoundaryRules[ecosystemIds[0]]] as const : null;
+    const selected = ecosystemIds.length === 1 && taxonomy.schema.packageBoundaryRules[requireTaxonomyValue(ecosystemIds[0],"ecosystemIds[0]")] ? [ecosystemIds[0], taxonomy.schema.packageBoundaryRules[requireTaxonomyValue(ecosystemIds[0],"ecosystemIds[0]")]] as const : null;
     return { owner, packageRoot: parts.slice(0, packageIndex + 2).join("/"), ecosystemId: selected?.[0] ?? null, rule: selected?.[1] ?? null };
   }
   return null;
@@ -1335,7 +1358,7 @@ function fixedSpecificity(contract: FixedContract): FixedSpecificity {
 }
 
 function compareFixedSpecificity(left: FixedSpecificity, right: FixedSpecificity): number {
-  for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return right[index] - left[index];
+  for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return requireTaxonomyValue(right[index],"right[index]") - requireTaxonomyValue(left[index],"left[index]");
   return 0;
 }
 
@@ -1406,13 +1429,13 @@ function matchingFixedContracts<T extends FixedContract>(path: string, contracts
     .map(([id, contract]) => ({ id, contract, specificity: fixedContractSpecificity(contracts, id) }))
     .sort((left, right) => compareFixedSpecificity(left.specificity, right.specificity) || left.id.localeCompare(right.id));
   if (matches.length === 0) return { selected: null, ambiguous: [] };
-  const top = matches.filter((entry) => equalFixedSpecificity(entry.specificity, matches[0].specificity));
-  return top.length === 1 ? { selected: [top[0].id, top[0].contract], ambiguous: [] } : { selected: null, ambiguous: top.map((entry) => entry.id) };
+  const top = matches.filter((entry) => equalFixedSpecificity(entry.specificity, requireTaxonomyValue(matches[0],"matches[0]").specificity));
+  return top.length === 1 ? { selected: [requireTaxonomyValue(top[0],"top[0]").id, requireTaxonomyValue(top[0],"top[0]").contract], ambiguous: [] } : { selected: null, ambiguous: top.map((entry) => entry.id) };
 }
 
 function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInfo: ReturnType<typeof packageLocation>): [string, ConfigurableEntryContract] | null {
   const rows = Object.entries(taxonomy.schema.configurableEntryContracts).filter(([, contract]) => basename(path).normalize("NFC") === contract.filename.normalize("NFC") && packageInfo?.ecosystemId === contract.ecosystemId);
-  return rows.length === 1 ? rows[0] : null;
+  return rows.length === 1 ? requireTaxonomyValue(rows[0],"rows[0]") : null;
 }
 
 function classifyPackageRole(path: string, kindId: string | null, fixedId: string | undefined, content: string | null, taxonomy: LoadedTaxonomy): TaxonomyPackageRole {
@@ -1426,7 +1449,7 @@ function classifyPackageRole(path: string, kindId: string | null, fixedId: strin
   const sourceKind = kindId ? taxonomy.schema.fileKinds[kindId]?.role === "source" : false;
   if (contractId && !sourceKind) return "configuration";
   if (!content) return contractId ? "unresolved" : "configuration";
-  const grammar = taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId];
+  const grammar = requireTaxonomyValue(taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId],"taxonomy.schema.packageGlueGrammar[disposition?.grammarId ?? location.rule.glueGrammarId]");
   if (contractId && !disposition) return "unresolved";
   const dispositionRole = disposition ? classifyPackageSourceDisposition(content, disposition, grammar) : undefined;
   const role = dispositionRole === "tool-metadata" ? dispositionRole : classifyPackageSource(content, grammar).role;
@@ -1876,11 +1899,11 @@ function lineLocation(content: string, start: number, label: string): string {
   let high = indexedLineStarts.length;
   while (low < high) {
     const middle = (low + high) >>> 1;
-    if (indexedLineStarts[middle] <= start) low = middle + 1;
+    if (requireTaxonomyValue(indexedLineStarts[middle],"indexedLineStarts[middle]") <= start) low = middle + 1;
     else high = middle;
   }
   const line = Math.max(1, low);
-  const column = start - indexedLineStarts[line - 1] + 1;
+  const column = start - requireTaxonomyValue(indexedLineStarts[line - 1],"indexedLineStarts[line - 1]") + 1;
   return `${label}:${line}:${column}@${start}`;
 }
 
@@ -1931,13 +1954,13 @@ function embeddedArgumentTokens(content: string, value: string, valueStart: numb
     let offset = match[0].indexOf(candidate);
     const assignment = candidate.match(/^--?[\w-]+=(.+)$/u);
     if (assignment) {
-      offset += candidate.indexOf(assignment[1]);
-      candidate = assignment[1];
+      offset += candidate.indexOf(requireTaxonomyValue(assignment[1],"assignment[1]"));
+      candidate = requireTaxonomyValue(assignment[1],"required argument value");
     }
     const workspace = candidate.match(/^\$\{(?:workspaceFolder|workspaceRoot)\}\/(.+)$/u);
     if (workspace) {
-      offset += candidate.indexOf(workspace[1]);
-      candidate = workspace[1];
+      offset += candidate.indexOf(requireTaxonomyValue(workspace[1],"workspace[1]"));
+      candidate = requireTaxonomyValue(workspace[1],"required argument value");
     }
     if (!candidate || /^(?:bun|node|python|python3|go|cargo|nx|run|test|build)$/u.test(candidate)) continue;
     const start = valueStart + match.index + offset;
@@ -1970,15 +1993,15 @@ function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): R
     } catch {
       continue;
     }
-    const raw = match[1];
+    const raw = requireTaxonomyValue(match[1],"match[1]");
     const start = match.index + 1;
     if (raw === value) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${ordinal++}]@${start}`, start, end: start + raw.length, value });
     const workspaceGlob = !key && raw === value ? value.match(/^\{workspaceRoot\}\/(.+?)(\/\*\*\/\*[^/]*)$/u) : null;
-    if (workspaceGlob) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value, targetValues: [workspaceGlob[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: workspaceGlob[2] } });
+    if (workspaceGlob) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value, targetValues: [requireTaxonomyValue(workspaceGlob[1],"workspaceGlob[1]")], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: requireTaxonomyValue(workspaceGlob[2],"workspace suffix") } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/.+\/\*\*/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-glob@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection glob has no proven decoded-to-raw offset map" });
     /** 🧷️ An Nx `{workspaceRoot}/<path>` value with no glob wildcard names one concrete file; `{projectRoot}/…` is left alone since it only ever appears as a `**\/*` glob in this repo. */
     const workspaceFile = !key && raw === value ? value.match(/^\{workspaceRoot\}\/([^*]+)$/u) : null;
-    if (workspaceFile) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value, targetValues: [workspaceFile[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: "" } });
+    if (workspaceFile) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value, targetValues: [requireTaxonomyValue(workspaceFile[1],"workspaceFile[1]")], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: "" } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/[^*]+$/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection file reference has no proven decoded-to-raw offset map" });
     if (!key && embeddedArgv) rows.push(...embeddedArgumentTokens(content, raw, start, adapter, "embedded-argv", true));
   }
@@ -1990,7 +2013,7 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
   const rows: ReferenceToken[] = [], headers = [...content.matchAll(TOML_TABLE_HEADER)];
   for (const match of content.matchAll(/"([^"\r\n]+)"|'([^'\r\n]+)'/gu)) {
     if (match.index === undefined) continue;
-    const value = match[1] ?? match[2];
+    const value = requireTaxonomyValue(match[1] ?? match[2],"quoted TOML value");
     const start = match.index + match[0].indexOf(value);
     const entrypoint = value.match(/^([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+):([A-Za-z_]\w*)$/u);
     let low = 0, high = headers.length;
@@ -2004,7 +2027,7 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
     const key = content.slice(lineStart, start).match(/^\s*([A-Za-z0-9_.-]+)\s*=\s*["']/u)?.[1];
     const label = section && key ? `${section}.${key}` : "toml-string";
     rows.push(entrypoint
-      ? { adapter, structuredLocation: lineLocation(content, start, "python-entrypoint"), start, end: start + value.length, value, targetValues: [entrypoint[1]], rewriteKind: "python-entrypoint", rewriteData: { suffix: `:${entrypoint[2]}` } }
+      ? { adapter, structuredLocation: lineLocation(content, start, "python-entrypoint"), start, end: start + value.length, value, targetValues: [requireTaxonomyValue(entrypoint[1],"entrypoint target")], rewriteKind: "python-entrypoint", rewriteData: { suffix: `:${entrypoint[2]}` } }
       : { adapter, structuredLocation: lineLocation(content, start, label), start, end: start + value.length, value });
   }
   return rows;
@@ -2036,13 +2059,13 @@ function rustStandaloneTokens(content: string): StandaloneReferenceTokens {
   }
   for (const match of content.matchAll(/\.join\(\s*"([^"]*🖼️assets\/🏗️modelDefinitions)"\s*\)/gu)) {
     if (match.index === undefined) continue;
-    const start = match.index + match[0].indexOf(match[1]);
-    rows.push({ adapter: "rust", structuredLocation: lineLocation(content, start, "artifact-catalog-root-join"), start, end: start + match[1].length, value: match[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "relative-root" } });
+    const start = match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]"));
+    rows.push({ adapter: "rust", structuredLocation: lineLocation(content, start, "artifact-catalog-root-join"), start, end: start + requireTaxonomyValue(match[1],"match[1]").length, value: requireTaxonomyValue(match[1],"required reference value"), rewriteKind: "artifact-catalog-prose", rewriteData: { form: "relative-root" } });
   }
   for (const match of content.matchAll(/^([ \t]*)((?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;)/gmu)) {
     if (match.index === undefined) continue;
-    const statement = match[2];
-    const start = match.index + match[1].length;
+    const statement = requireTaxonomyValue(match[2],"match[2]");
+    const start = match.index + requireTaxonomyValue(match[1],"match[1]").length;
     const name = match[3];
     rows.push({
       adapter: "rust",
@@ -2052,26 +2075,26 @@ function rustStandaloneTokens(content: string): StandaloneReferenceTokens {
       value: statement,
       targetValues: [`./${name}.rs`, `./${name}/mod.rs`],
       rewriteKind: "rust-mod",
-      rewriteData: { indentation: match[1], declaration: statement },
+      rewriteData: { indentation: requireTaxonomyValue(match[1],"required indentation"), declaration: statement },
     });
   }
   for (const match of content.matchAll(/(?:^|\n)[ \t]*(?:(?:\/\/\/)|(?:\/\/!)|(?:\/\/))([^\r\n]*)/gu)) {
     if (match.index === undefined) continue;
-    const fragment = match[1];
+    const fragment = requireTaxonomyValue(match[1],"match[1]");
     const start = match.index + match[0].indexOf(fragment);
     for (const quoted of fragment.matchAll(/`([^`]+)`/gu)) {
       if (quoted.index === undefined) continue;
-      const raw = quoted[1], rawStart = start + quoted.index + quoted[0].indexOf(raw);
+      const raw = requireTaxonomyValue(quoted[1],"quoted[1]"), rawStart = start + quoted.index + quoted[0].indexOf(raw);
       const segment = /\s/u.test(raw) ? raw.match(/(?:^|\s)([^\s]*[/.][^\s]*)$/u) : null;
-      const value = segment ? segment[1] : raw;
-      const tokenStart = segment ? rawStart + raw.lastIndexOf(segment[1]) : rawStart;
+      const value = requireTaxonomyValue(segment ? segment[1] : raw,"segment ? segment[1] : raw");
+      const tokenStart = segment ? rawStart + raw.lastIndexOf(requireTaxonomyValue(segment[1],"segment[1]")) : rawStart;
       if (!/[/.]/u.test(value)) continue;
       rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "rust-comment-path"), start: tokenStart, end: tokenStart + value.length, value });
     }
     const catalog = fragment.match(/((?:📚️examples\/)?🖼️assets\/🏗️modelDefinitions\/\*\/([^/\s`*]+)\/(\*\.json)?)/u);
     if (catalog) {
-      const tokenStart = start + fragment.indexOf(catalog[1]);
-      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "artifact-catalog-comment"), start: tokenStart, end: tokenStart + catalog[1].length, value: catalog[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "category-glob", category: catalog[2]!, members: catalog[3] ? "json" : "directory" } });
+      const tokenStart = start + fragment.indexOf(requireTaxonomyValue(catalog[1],"catalog[1]"));
+      rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "artifact-catalog-comment"), start: tokenStart, end: tokenStart + requireTaxonomyValue(catalog[1],"catalog[1]").length, value: requireTaxonomyValue(catalog[1],"required reference value"), rewriteKind: "artifact-catalog-prose", rewriteData: { form: "category-glob", category: catalog[2]!, members: catalog[3] ? "json" : "directory" } });
     }
   }
   return { tokens: rows, rustManifestAt, rustManifest, ...(rustManifest ? { rustInspection: inspection } : {}) };
@@ -2096,12 +2119,12 @@ function gherkinDescriptionInlineCodeSpans(content: string): readonly Readonly<{
     if (!line.trim()) { inline = 0; continue; }
     const runs = [...line.matchAll(/`+/gu)];
     for (let index = 0; index < runs.length; index++) {
-      const run = runs[index], start = run.index!;
-      if (inline) { if (run[0].length === inline) inline = 0; continue; }
+      const run = requireTaxonomyValue(runs[index],"runs[index]"), start = run.index!;
+      if (inline) { if (requireTaxonomyValue(run[0],"run[0]").length === inline) inline = 0; continue; }
       if ((line.slice(0, start).match(/\\+$/u)?.[0].length ?? 0) % 2) continue;
-      const close = runs.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate[0].length === run[0].length);
-      if (close < 0) { inline = run[0].length; continue; }
-      if (run[0].length === 1) rows.push({ start: offset + start + 1, end: offset + runs[close].index! });
+      const close = runs.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate[0].length === requireTaxonomyValue(run[0],"run[0]").length);
+      if (close < 0) { inline = requireTaxonomyValue(run[0],"run[0]").length; continue; }
+      if (requireTaxonomyValue(run[0],"run[0]").length === 1) rows.push({ start: offset + start + 1, end: offset + requireTaxonomyValue(runs[close],"runs[close]").index! });
       index = close;
     }
   }
@@ -2125,8 +2148,8 @@ export function ticketImportantProseReferenceAuthority(content: string): readonl
   const rows: TicketImportantProseReference[] = [];
   for (const match of content.matchAll(/\bsee\s+(📌️important\.md)(?=$|[\s"'`,.;:!?)}\]])/gu)) {
     if (match.index === undefined) continue;
-    const start = match.index + match[0].indexOf(match[1]);
-    rows.push({ start, end: start + match[1].length, structuredLocation: lineLocation(content, start, "typescript-ticket-leaf-prose"), value: "📌️important.md" });
+    const start = match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]"));
+    rows.push({ start, end: start + requireTaxonomyValue(match[1],"match[1]").length, structuredLocation: lineLocation(content, start, "typescript-ticket-leaf-prose"), value: "📌️important.md" });
   }
   return rows;
 }
@@ -2139,9 +2162,9 @@ export function typescriptLeadingDocumentationReferenceAuthority(content: string
   if (end < 0) return [];
   const rows: { start: number; end: number; value: string; structuredLocation: string }[] = [];
   for (const match of content.slice(start, end).matchAll(/(?<![\\`])`([^`\\\r\n]+)`(?!`)/gu)) {
-    if (!/[/.]/u.test(match[1]) || /\s/u.test(match[1])) continue;
+    if (!/[/.]/u.test(requireTaxonomyValue(match[1],"match[1]")) || /\s/u.test(requireTaxonomyValue(match[1],"match[1]"))) continue;
     const offset = start + match.index! + 1;
-    rows.push({ start: offset, end: offset + match[1].length, value: match[1], structuredLocation: lineLocation(content, offset, "typescript-leading-jsdoc-path") });
+    rows.push({ start: offset, end: offset + requireTaxonomyValue(match[1],"match[1]").length, value: requireTaxonomyValue(match[1],"required reference value"), structuredLocation: lineLocation(content, offset, "typescript-leading-jsdoc-path") });
   }
   return rows;
 }
@@ -2152,18 +2175,18 @@ function typescriptCommentPathReferenceAuthority(content: string): readonly Read
   for (const block of content.matchAll(/\/\*[\s\S]*?\*\//gu)) {
     if (block.index === undefined) continue;
     for (const match of block[0].matchAll(/(?<![\\`])`([^`\\\r\n]+)`(?!`)/gu)) {
-      if (!/[/.]/u.test(match[1]) || /\s/u.test(match[1])) continue;
+      if (!/[/.]/u.test(requireTaxonomyValue(match[1],"match[1]")) || /\s/u.test(requireTaxonomyValue(match[1],"match[1]"))) continue;
       const offset = block.index + match.index! + 1;
-      rows.push({ start: offset, end: offset + match[1].length, value: match[1], structuredLocation: lineLocation(content, offset, "typescript-comment-block-path") });
+      rows.push({ start: offset, end: offset + requireTaxonomyValue(match[1],"match[1]").length, value: requireTaxonomyValue(match[1],"required reference value"), structuredLocation: lineLocation(content, offset, "typescript-comment-block-path") });
     }
   }
   for (const match of content.matchAll(/(?:^|\n)[ \t]*\/\/([^\r\n]*)/gu)) {
     if (match.index === undefined) continue;
-    const fragment = match[1], fragmentStart = match.index + match[0].indexOf(fragment);
+    const fragment = requireTaxonomyValue(match[1],"match[1]"), fragmentStart = match.index + match[0].indexOf(fragment);
     for (const quoted of fragment.matchAll(/`([^`]+)`/gu)) {
-      if (quoted.index === undefined || !/[/.]/u.test(quoted[1]) || /\s/u.test(quoted[1])) continue;
-      const start = fragmentStart + quoted.index + quoted[0].indexOf(quoted[1]);
-      rows.push({ start, end: start + quoted[1].length, value: quoted[1], structuredLocation: lineLocation(content, start, "typescript-comment-line-path") });
+      if (quoted.index === undefined || !/[/.]/u.test(requireTaxonomyValue(quoted[1],"quoted[1]")) || /\s/u.test(requireTaxonomyValue(quoted[1],"quoted[1]"))) continue;
+      const start = fragmentStart + quoted.index + quoted[0].indexOf(requireTaxonomyValue(quoted[1],"quoted[1]"));
+      rows.push({ start, end: start + requireTaxonomyValue(quoted[1],"quoted[1]").length, value: requireTaxonomyValue(quoted[1],"required reference value"), structuredLocation: lineLocation(content, start, "typescript-comment-line-path") });
     }
   }
   return rows;
@@ -2174,8 +2197,8 @@ function dependencyCruiserBoundaryReferenceAuthority(content: string): Reference
   const rows: ReferenceToken[] = [];
   for (const array of content.matchAll(/\bconst\s+[A-Za-z_$][\w$]*\s*=\s*\[([\s\S]*?)\]/gu)) {
     if (array.index === undefined) continue;
-    const fragmentStart = array.index + array[0].indexOf(array[1]);
-    for (const element of regexTokens(array[1], "typescript", "dependency-cruiser-boundary", [/["']([^"']+)["']/gu])) {
+    const fragmentStart = array.index + array[0].indexOf(requireTaxonomyValue(array[1],"array[1]"));
+    for (const element of regexTokens(requireTaxonomyValue(array[1],"array[1]"), "typescript", "dependency-cruiser-boundary", [/["']([^"']+)["']/gu])) {
       if (!element.value.includes("/")) continue;
       rows.push({ ...element, start: fragmentStart + element.start, end: fragmentStart + element.end, structuredLocation: lineLocation(content, fragmentStart + element.start, "dependency-cruiser-boundary") });
     }
@@ -2204,34 +2227,34 @@ function typescriptCollectionSyntax(content: string): TypeScriptCollectionSyntax
   const tokens: TypeScriptCollectionToken[] = [], pairs = new Map<number, number>(), stack: number[] = [];
   let cursor = 0;
   while (cursor < content.length) {
-    if (/\s/u.test(content[cursor])) { cursor++; continue; }
+    if (/\s/u.test(requireTaxonomyValue(content[cursor],"content[cursor]"))) { cursor++; continue; }
     if (content.startsWith("//", cursor)) { const end = content.indexOf("\n", cursor + 2); cursor = end < 0 ? content.length : end + 1; continue; }
     if (content.startsWith("/*", cursor)) { const end = content.indexOf("*/", cursor + 2); if (end < 0) return null; cursor = end + 2; continue; }
-    const start = cursor, first = content[cursor];
+    const start = cursor, first = requireTaxonomyValue(content[cursor],"content[cursor]");
     let kind: TypeScriptCollectionToken["kind"] = "punctuation";
     if (first === '"' || first === "'" || first === "\u0060") {
       kind = first === "\u0060" ? "template" : "string";
       cursor++;
       while (cursor < content.length && content[cursor] !== first) {
         if (content[cursor] === "\\") { cursor += 2; continue; }
-        if (kind === "string" && /[\r\n]/u.test(content[cursor])) return null;
+        if (kind === "string" && /[\r\n]/u.test(requireTaxonomyValue(content[cursor],"content[cursor]"))) return null;
         cursor++;
       }
       if (cursor >= content.length) return null;
       cursor++;
     } else if (/[A-Za-z_$]/u.test(first)) {
       kind = "identifier";
-      while (cursor < content.length && /[A-Za-z0-9_$]/u.test(content[cursor])) cursor++;
+      while (cursor < content.length && /[A-Za-z0-9_$]/u.test(requireTaxonomyValue(content[cursor],"content[cursor]"))) cursor++;
     } else if (/[0-9]/u.test(first)) {
       kind = "number";
-      while (cursor < content.length && /[A-Za-z0-9_.]/u.test(content[cursor])) cursor++;
+      while (cursor < content.length && /[A-Za-z0-9_.]/u.test(requireTaxonomyValue(content[cursor],"content[cursor]"))) cursor++;
     } else if (first === "/" && (!tokens.length || /^(?:[([{=:;,!?]|=>|&&|\|\||return|throw|case)$/u.test(tokens.at(-1)!.text))) {
       kind = "regex";
       let characterClass = false;
       cursor++;
       while (cursor < content.length) {
         if (content[cursor] === "\\") { cursor += 2; continue; }
-        if (/[\r\n]/u.test(content[cursor])) return null;
+        if (/[\r\n]/u.test(requireTaxonomyValue(content[cursor],"content[cursor]"))) return null;
         if (content[cursor] === "[") characterClass = true;
         if (content[cursor] === "]") characterClass = false;
         if (content[cursor] === "/" && !characterClass) break;
@@ -2246,14 +2269,14 @@ function typescriptCollectionSyntax(content: string): TypeScriptCollectionSyntax
       if (!operator && !/[{}()[\].,;:?~!+\-*/%<>=&|^]/u.test(first)) return null;
       cursor += operator?.length ?? 1;
     }
-    const text = content.slice(start, cursor), group = stack.at(-1) ?? -1, scope = [...stack].reverse().find((index) => tokens[index].text === "{") ?? -1;
+    const text = content.slice(start, cursor), group = stack.at(-1) ?? -1, scope = [...stack].reverse().find((index) => requireTaxonomyValue(tokens[index],"tokens[index]").text === "{") ?? -1;
     const index = tokens.length;
     tokens.push({ text, start, end: cursor, kind, group, scope });
     if (kind !== "punctuation") continue;
     if (["(", "[", "{"].includes(text)) stack.push(index);
     else if ([")", "]", "}"].includes(text)) {
       const open = stack.pop();
-      if (open === undefined || "([{".indexOf(tokens[open].text) !== ")]}".indexOf(text)) return null;
+      if (open === undefined || "([{".indexOf(requireTaxonomyValue(tokens[open],"tokens[open]").text) !== ")]}".indexOf(text)) return null;
       pairs.set(open, index);
       pairs.set(index, open);
     }
@@ -2268,7 +2291,7 @@ function typescriptCollectionSegments(syntax: TypeScriptCollectionSyntax, start:
   for (let cursor = start; cursor < end; cursor++) {
     const close = syntax.pairs.get(cursor);
     if (close !== undefined && close > cursor) { cursor = close; continue; }
-    if (syntax.tokens[cursor].text === ",") { rows.push([left, cursor]); left = cursor + 1; }
+    if (requireTaxonomyValue(syntax.tokens[cursor],"syntax.tokens[cursor]").text === ",") { rows.push([left, cursor]); left = cursor + 1; }
   }
   if (left < end) rows.push([left, end]);
   return rows;
@@ -2298,11 +2321,11 @@ function typescriptCollectionChangedBinding(syntax: TypeScriptCollectionSyntax, 
   const assignment = (text?: string): boolean => /^(?:=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&=|\|\|=|\?\?=|\*\*=|<<=|>>=|>>>=|\+\+|--)$/u.test(text ?? "");
   return tokens.some((token, index) => {
     if (token.kind !== "identifier" || token.text !== name || index === declaration) return false;
-    if (assignment(tokens[index + 1]?.text) || ["++", "--"].includes(tokens[index - 1]?.text)) return true;
+    if (assignment(tokens[index + 1]?.text) || ["++", "--"].includes(requireTaxonomyValue(tokens[index - 1],"tokens[index - 1]")?.text)) return true;
     let cursor = index + 1;
-    while (tokens[cursor]?.text === "." && tokens[cursor + 1]?.kind === "identifier" || tokens[cursor]?.text === "[" && pairs.has(cursor)) cursor = tokens[cursor].text === "[" ? pairs.get(cursor)! + 1 : cursor + 2;
+    while (tokens[cursor]?.text === "." && tokens[cursor + 1]?.kind === "identifier" || tokens[cursor]?.text === "[" && pairs.has(cursor)) cursor = requireTaxonomyValue(tokens[cursor],"tokens[cursor]").text === "[" ? pairs.get(cursor)! + 1 : cursor + 2;
     if (cursor > index + 1 && assignment(tokens[cursor]?.text)) return true;
-    for (let group = token.group; group >= 0; group = tokens[group].group) if (assignment(tokens[(pairs.get(group) ?? -2) + 1]?.text)) return true;
+    for (let group = token.group; group >= 0; group = requireTaxonomyValue(tokens[group],"tokens[group]").group) if (assignment(tokens[(pairs.get(group) ?? -2) + 1]?.text)) return true;
     return false;
   });
 }
@@ -2334,18 +2357,19 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   const bind = (index: number): void => { if (tokens[index]?.kind === "identifier") bindings.set(tokens[index].text, [...(bindings.get(tokens[index].text) ?? []), index]); };
   const endOf = (start: number, stops: readonly string[]): number => {
     for (let cursor = start; cursor < tokens.length; cursor++) {
-      if (stops.includes(tokens[cursor].text)) return cursor;
+      if (stops.includes(requireTaxonomyValue(tokens[cursor],"tokens[cursor]").text)) return cursor;
       const close = pairs.get(cursor);
       if (close !== undefined && close > cursor) cursor = close;
     }
     return tokens.length;
   };
   for (let index = 0; index < tokens.length; index++) {
-    const token = tokens[index];
+    const token = requireTaxonomyValue(tokens[index],"tokens[index]");
+
     if (["const", "let", "var"].includes(token.text)) {
       let cursor = index + 1;
       while (cursor < tokens.length) {
-        const name = tokens[cursor];
+        const name = requireTaxonomyValue(tokens[cursor],"tokens[cursor]");
         if (name.kind !== "identifier") { const close = pairs.get(cursor); if (close !== undefined) for (let part = cursor + 1; part < close; part++) bind(part); break; }
         bind(cursor);
         const equal = endOf(cursor + 1, ["=", ",", ";", "of", "in", ")"]);
@@ -2363,8 +2387,8 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
       const close = pairs.get(importOpen), module = close === undefined ? undefined : tokens[close + 2];
       if (close !== undefined && tokens[close + 1]?.text === "from" && module?.kind === "string" && !module.text.includes("\\")) {
         for (const [start, end] of typescriptCollectionSegments(syntax, importOpen + 1, close)) {
-          const local = end - start === 3 && tokens[start + 1].text === "as" ? start + 2 : end - start === 1 ? start : -1;
-          if (local >= 0) { bind(local); imports.set(tokens[local].text, { index: local, module: module.text.slice(1, -1), name: tokens[start].text }); }
+          const local = end - start === 3 && requireTaxonomyValue(tokens[start + 1],"tokens[start + 1]").text === "as" ? start + 2 : end - start === 1 ? start : -1;
+          if (local >= 0) { bind(local); imports.set(requireTaxonomyValue(tokens[local],"tokens[local]").text, { index: local, module: module.text.slice(1, -1), name: requireTaxonomyValue(tokens[start],"tokens[start]").text }); }
         }
       }
     }
@@ -2387,10 +2411,10 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
   const changed = (name: string, declaration = -1): boolean => typescriptCollectionChangedBinding(syntax, name, declaration) || embedded.some((expression) => typescriptCollectionChangedBinding(expression, name));
   const immutable = (row?: Declaration): row is Declaration => Boolean(row && row.kind === "const" && bindings.get(row.name)?.length === 1 && !changed(row.name, row.index));
   const unique = (name: string): Declaration | undefined => declarations.get(name)?.length === 1 ? declarations.get(name)![0] : undefined;
-  const ancestor = (outer: number, inner: number): boolean => { for (let scope = inner; scope >= 0; scope = tokens[scope].scope) if (scope === outer) return true; return outer === -1; };
+  const ancestor = (outer: number, inner: number): boolean => { for (let scope = inner; scope >= 0; scope = requireTaxonomyValue(tokens[scope],"tokens[scope]").scope) if (scope === outer) return true; return outer === -1; };
   const staticValue = (start: number, end: number, scope: number, seen = new Set<string>()): string | null => {
     if (end - start !== 1) return null;
-    const token = tokens[start];
+    const token = requireTaxonomyValue(tokens[start],"tokens[start]");
     if (token.kind === "string") return token.text.includes("\\") ? null : token.text.slice(1, -1);
     if (token.kind === "identifier") {
       const row = unique(token.text);
@@ -2407,15 +2431,15 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
     return valid && !value.includes("$" + "{") ? value : null;
   };
   const imported = (index: number, module: string, name: string): boolean => {
-    const token = tokens[index], owner = imports.get(token?.text);
-    return Boolean(token?.kind === "identifier" && ![".", "?."].includes(tokens[index - 1]?.text) && owner?.module === module && owner.name === name && bindings.get(token.text)?.length === 1 && !changed(token.text, owner.index));
+    const token = requireTaxonomyValue(tokens[index],"tokens[index]"), owner = imports.get(token?.text);
+    return Boolean(token?.kind === "identifier" && ![".", "?."].includes(requireTaxonomyValue(tokens[index - 1],"tokens[index - 1]")?.text) && owner?.module === module && owner.name === name && bindings.get(token.text)?.length === 1 && !changed(token.text, owner.index));
   };
   const rootValue = (index: number): boolean => {
-    const row = unique(tokens[index]?.text);
-    return immutable(row) && row.end < index && ancestor(row.scope, tokens[index].scope) && tokens.slice(row.start, row.end).map((token) => token.text).join(" ") === "process . cwd ( )" && !bindings.has("process") && !changed("process");
+    const row = unique(requireTaxonomyValue(tokens[index],"tokens[index]")?.text);
+    return immutable(row) && row.end < index && ancestor(row.scope, requireTaxonomyValue(tokens[index],"tokens[index]").scope) && tokens.slice(row.start, row.end).map((token) => token.text).join(" ") === "process . cwd ( )" && !bindings.has("process") && !changed("process");
   };
   const loops: { index: number; item: number; collection: number; body: number; end: number }[] = [];
-  for (let index = 0; index < tokens.length; index++) if (tokens[index].text === "for" && tokens[index + 1]?.text === "(" && tokens[index + 2]?.text === "const" && tokens[index + 3]?.kind === "identifier" && tokens[index + 4]?.text === "of" && tokens[index + 5]?.kind === "identifier" && pairs.get(index + 1) === index + 6 && tokens[index + 7]?.text === "{") loops.push({ index, item: index + 3, collection: index + 5, body: index + 7, end: pairs.get(index + 7)! });
+  for (let index = 0; index < tokens.length; index++) if (requireTaxonomyValue(tokens[index],"tokens[index]").text === "for" && tokens[index + 1]?.text === "(" && tokens[index + 2]?.text === "const" && tokens[index + 3]?.kind === "identifier" && tokens[index + 4]?.text === "of" && tokens[index + 5]?.kind === "identifier" && pairs.get(index + 1) === index + 6 && tokens[index + 7]?.text === "{") loops.push({ index, item: index + 3, collection: index + 5, body: index + 7, end: pairs.get(index + 7)! });
   const relativeLeaf = (value: string): boolean => Boolean(value) && !value.startsWith("/") && !/^[A-Za-z]:/u.test(value) && !/[\\\u0000]/u.test(value) && !value.split("/").some((part) => !part || part === "." || part === "..");
   const rows: ReferenceToken[] = [];
   for (const entries of declarations.values()) {
@@ -2427,28 +2451,28 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
     if (!elements.length || elements.some(([start, end]) => { const value = staticValue(start, end, row.scope); return value === null || !relativeLeaf(value); })) continue;
     const uses = tokens.flatMap((token, index) => token.kind === "identifier" && token.text === row.name && index !== row.index ? [index] : []);
     if (embedded.some((expression) => expression.tokens.some((token) => token.kind === "identifier" && token.text === row.name))) continue;
-    if (uses.some((index) => !loops.some((loop) => loop.collection === index) && !(tokens[index - 1]?.text === "..." && tokens[tokens[index].group]?.text === "[" && [",", "]"].includes(tokens[index + 1]?.text)))) continue;
+    if (uses.some((index) => !loops.some((loop) => loop.collection === index) && !(tokens[index - 1]?.text === "..." && tokens[requireTaxonomyValue(tokens[index],"tokens[index]").group]?.text === "[" && [",", "]"].includes(requireTaxonomyValue(tokens[index + 1],"tokens[index + 1]")?.text)))) continue;
     const reader = loops.some((loop) => {
-      const item = unique(tokens[loop.item].text);
-      if (tokens[loop.collection].text !== row.name || row.end >= loop.index || row.scope !== tokens[loop.index].scope || !immutable(item) || item.index !== loop.item) return false;
+      const item = unique(requireTaxonomyValue(tokens[loop.item],"tokens[loop.item]").text);
+      if (requireTaxonomyValue(tokens[loop.collection],"tokens[loop.collection]").text !== row.name || row.end >= loop.index || row.scope !== requireTaxonomyValue(tokens[loop.index],"tokens[loop.index]").scope || !immutable(item) || item.index !== loop.item) return false;
       const joined = (start: number, end: number): boolean => {
         if (!imported(start, "node:path", "join") || tokens[start + 1]?.text !== "(" || pairs.get(start + 1) !== end - 1) return false;
         const arguments_ = typescriptCollectionSegments(syntax, start + 2, end - 1);
-        return arguments_.length === 2 && arguments_.every(([left, right]) => right - left === 1) && rootValue(arguments_[0][0]) && tokens[arguments_[1][0]].kind === "identifier" && tokens[arguments_[1][0]].text === item.name;
+        return arguments_.length === 2 && arguments_.every(([left, right]) => right - left === 1) && rootValue(requireTaxonomyValue(arguments_[0],"arguments_[0]")[0]) && requireTaxonomyValue(tokens[requireTaxonomyValue(arguments_[1],"arguments_[1]")[0]],"tokens[arguments_[1][0]]").kind === "identifier" && requireTaxonomyValue(tokens[requireTaxonomyValue(arguments_[1],"arguments_[1]")[0]],"tokens[arguments_[1][0]]").text === item.name;
       };
       for (let index = loop.body + 1; index < loop.end; index++) {
-        if (tokens[index].scope !== loop.body || !imported(index, "node:fs", "readFileSync") || tokens[index + 1]?.text !== "(" || functions.some(([start, end]) => start > loop.body && start <= index && index < end)) continue;
+        if (requireTaxonomyValue(tokens[index],"tokens[index]").scope !== loop.body || !imported(index, "node:fs", "readFileSync") || tokens[index + 1]?.text !== "(" || functions.some(([start, end]) => start > loop.body && start <= index && index < end)) continue;
         const close = pairs.get(index + 1), arguments_ = close === undefined ? [] : typescriptCollectionSegments(syntax, index + 2, close);
         if (!arguments_.length) continue;
-        const [start, end] = arguments_[0];
+        const [start, end] = requireTaxonomyValue(arguments_[0],"arguments_[0]");
         if (joined(start, end)) return true;
-        const alias = end - start === 1 && tokens[start].kind === "identifier" ? unique(tokens[start].text) : undefined;
+        const alias = end - start === 1 && requireTaxonomyValue(tokens[start],"tokens[start]").kind === "identifier" ? unique(requireTaxonomyValue(tokens[start],"tokens[start]").text) : undefined;
         if (immutable(alias) && alias.end < index && alias.scope === loop.body && joined(alias.start, alias.end)) return true;
       }
       return false;
     });
-    if (reader) for (const [index] of elements) if (tokens[index].kind === "string") {
-      const token = tokens[index], value = token.text.slice(1, -1), start = token.start + 1;
+    if (reader) for (const [index] of elements) if (requireTaxonomyValue(tokens[index],"tokens[index]").kind === "string") {
+      const token = requireTaxonomyValue(tokens[index],"tokens[index]"), value = token.text.slice(1, -1), start = token.start + 1;
       rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, start, "path-collection-for-of"), start, end: token.end - 1, value, physicalTargets: [value] });
     }
   }
@@ -2536,19 +2560,19 @@ function typescriptTokens(path: string, content: string): ReferenceToken[] {
   }
   for (const match of content.matchAll(/(🖼️assets\/🏗️modelDefinitions\/<modelDefinition>\/\{[\s\S]*?\})/gu)) {
     if (match.index === undefined) continue;
-    rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, match.index, "artifact-catalog-comment"), start: match.index, end: match.index + match[1].length, value: match[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "catalog-grammar" } });
+    rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, match.index, "artifact-catalog-comment"), start: match.index, end: match.index + requireTaxonomyValue(match[1],"match[1]").length, value: requireTaxonomyValue(match[1],"required reference value"), rewriteKind: "artifact-catalog-prose", rewriteData: { form: "catalog-grammar" } });
   }
   for (const match of content.matchAll(/(🖼️assets\/🏗️modelDefinitions\/)/gu)) {
-    if (match.index === undefined || rows.some((token) => token.start <= match.index! && token.end >= match.index! + match[1].length)) continue;
-    rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, match.index, "artifact-catalog-marker"), start: match.index, end: match.index + match[1].length, value: match[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "root-marker" } });
+    if (match.index === undefined || rows.some((token) => token.start <= match.index! && token.end >= match.index! + requireTaxonomyValue(match[1],"match[1]").length)) continue;
+    rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, match.index, "artifact-catalog-marker"), start: match.index, end: match.index + requireTaxonomyValue(match[1],"match[1]").length, value: requireTaxonomyValue(match[1],"required reference value"), rewriteKind: "artifact-catalog-prose", rewriteData: { form: "root-marker" } });
   }
   rows.push(...typescriptPathCollectionReferenceAuthority(content));
   const hasForOfCollection = typescriptCollectionHasForOf(content);
   for (const declaration of content.matchAll(/\bconst\s+((?:[A-Za-z_$][\w$]*(?:Sources|Paths|Files)|paths|sources|files))\s*=\s*\[([\s\S]*?)\]\s*(?:\.map\b|;)/gu)) {
     if (hasForOfCollection) continue;
     if (declaration.index === undefined || !new RegExp(`\\b${declaration[1]}\\b[\\s\\S]*?\\.map\\([\\s\\S]*?\\b(?:policyReadFileSafe|readFileSync|Bun\\.file)\\b`, "u").test(content.slice(declaration.index))) continue;
-    const fragmentStart = declaration.index + declaration[0].indexOf(declaration[2]);
-    for (const token of regexTokens(declaration[2], "typescript", "path-collection", [/["']([^"']+)["']/gu])) rows.push({ ...token, start: fragmentStart + token.start, end: fragmentStart + token.end, structuredLocation: lineLocation(content, fragmentStart + token.start, "path-collection") });
+    const fragmentStart = declaration.index + declaration[0].indexOf(requireTaxonomyValue(declaration[2],"declaration[2]"));
+    for (const token of regexTokens(requireTaxonomyValue(declaration[2],"declaration[2]"), "typescript", "path-collection", [/["']([^"']+)["']/gu])) rows.push({ ...token, start: fragmentStart + token.start, end: fragmentStart + token.end, structuredLocation: lineLocation(content, fragmentStart + token.start, "path-collection") });
   }
   return rows;
 }
@@ -2557,18 +2581,18 @@ function goTokens(path: string, content: string): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
   if (path.toLowerCase().endsWith(".go")) {
     rows.push(...regexTokens(content, "go", "go-import", [/^\s*(?:[\w.]+\s+)?"([^"]+)"\s*$/gmu]));
-    for (const match of content.matchAll(/^\s*\/\/go:(?:embed|generate)\s+([^\r\n]+)$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, match[1], match.index + match[0].indexOf(match[1]), "go", "go-directive"));
+    for (const match of content.matchAll(/^\s*\/\/go:(?:embed|generate)\s+([^\r\n]+)$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, requireTaxonomyValue(match[1],"match[1]"), match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]")), "go", "go-directive"));
     return rows;
   }
-  for (const match of content.matchAll(/\buse\s*\(([\s\S]*?)\)/gu)) if (match.index !== undefined) rows.push(...argumentTokens(content, match[1], match.index + match[0].indexOf(match[1]), "go", "go-work-use"));
-  for (const match of content.matchAll(/^\s*use\s+([^\r\n(][^\r\n]*)$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, match[1], match.index + match[0].indexOf(match[1]), "go", "go-work-use"));
-  for (const match of content.matchAll(/^\s*replace\s+[^\r\n=]+=>\s*([^\s]+).*$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, match[1], match.index + match[0].indexOf(match[1]), "go", "go-mod-replace"));
+  for (const match of content.matchAll(/\buse\s*\(([\s\S]*?)\)/gu)) if (match.index !== undefined) rows.push(...argumentTokens(content, requireTaxonomyValue(match[1],"match[1]"), match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]")), "go", "go-work-use"));
+  for (const match of content.matchAll(/^\s*use\s+([^\r\n(][^\r\n]*)$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, requireTaxonomyValue(match[1],"match[1]"), match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]")), "go", "go-work-use"));
+  for (const match of content.matchAll(/^\s*replace\s+[^\r\n=]+=>\s*([^\s]+).*$/gmu)) if (match.index !== undefined) rows.push(...argumentTokens(content, requireTaxonomyValue(match[1],"match[1]"), match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]")), "go", "go-mod-replace"));
   return rows;
 }
 
 function cmakeTokens(content: string): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
-  for (const match of content.matchAll(/\b(?:add_subdirectory|add_executable|add_library|target_sources|include|configure_file|set)\s*\(([\s\S]*?)\)/giu)) if (match.index !== undefined) rows.push(...argumentTokens(content, match[1], match.index + match[0].indexOf(match[1]), "native", "cmake-argument"));
+  for (const match of content.matchAll(/\b(?:add_subdirectory|add_executable|add_library|target_sources|include|configure_file|set)\s*\(([\s\S]*?)\)/giu)) if (match.index !== undefined) rows.push(...argumentTokens(content, requireTaxonomyValue(match[1],"match[1]"), match.index + match[0].indexOf(requireTaxonomyValue(match[1],"match[1]")), "native", "cmake-argument"));
   return rows;
 }
 
@@ -3388,7 +3412,7 @@ function resolveReferenceTokenPath(referencePath: string, token: ReferenceToken,
     return matches.length === 1 ? matches[0]! : null;
   }
   const matches = [...new Set((token.targetValues ?? [token.value]).map((value) => resolveReferencePath(referencePath, value, index)).filter((value): value is string => value !== null))];
-  return matches.length === 1 ? matches[0] : null;
+  return matches.length === 1 ? matches[0] ?? null : null;
 }
 
 const opaqueLeafNameLists = new WeakMap<object, readonly string[]>();
@@ -3481,7 +3505,8 @@ function rewriteReferenceToken(referencePath: string, sourceReferencePath: strin
 function quotedLiteralMatches(content: string): [number, string, string][] {
   const rows: [number, string, string][] = [];
   for (let index = 0; index < content.length; index++) {
-    const quote = content[index];
+    const quote = content.charAt(index);
+
     if (quote !== '"' && quote !== "'" && quote !== "`") continue;
     let cursor = index + 1, closed = false;
     while (cursor < content.length) {
@@ -3671,9 +3696,9 @@ function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableIn
   const files = [...entries.values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !taxonomyFixturePayloadPath(entry.sourcePath, taxonomy.discoverySchema) && (entry.size ?? 0) <= 16 * 1024 * 1024);
   if (store) precomputeReferenceDigests(store, repoRoot, files.filter((entry) => !isExcluded(entry.sourcePath, taxonomy)).map((entry) => [entry.sourcePath, entry.contentHash, entry.size ?? 0] as const), opaqueLeaves, workers, progress, cancelFile);
   report(progress, "inventory", "references", 0, files.length);
-  for (let index = 0; index < files.length; index++) {
+  for (const [index, entry] of files.entries()) {
     checkCancellation(repoRoot, cancelFile);
-    const entry = files[index];
+
     if (isExcluded(entry.sourcePath, taxonomy)) {
       report(progress, "inventory", "references", index + 1, files.length, entry.sourcePath);
       continue;
@@ -3775,7 +3800,7 @@ function artifactReferenceProjections(inventory: TaxonomyInventory, moves: reado
   const rows: ArtifactReferenceProjection[] = [];
   const entries = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry]));
   for (const { id, contract } of artifactProjectionContracts(taxonomy)) {
-    const catalog = taxonomy.schema.semanticPathProjectionCatalogContracts[contract.catalogContractId];
+    const catalog = requireTaxonomyValue(taxonomy.schema.semanticPathProjectionCatalogContracts[contract.catalogContractId],"projection catalog");
     if (!("contractKind" in catalog)) continue;
     for (const entry of inventory.entries.filter((candidate) => candidate.nodeKind === "directory")) {
       const location = artifactProjectionSourceLocation(entry.sourcePath, contract, taxonomy);
@@ -3820,7 +3845,7 @@ function catalogProjectionForToken(referencePath: string, token: ReferenceToken,
     const selectorMatches = selectors.length === 0 || selectors.some((selector) => selector.includes(artifactProjectionTail(context.sourceRoot)));
     return authorized && selectorMatches;
   });
-  if (matches.length === 1) return matches[0];
+  if (matches.length === 1) return matches[0] ?? null;
   if (matches.length > 1) return `Reference form matches multiple artifact projection owners: ${matches.map((row) => row.id).join(", ")}`;
   const cad = contexts.filter((context) => context.rationaleRule === "artifact-example-model-catalog-projection-v1");
   if (cad.length > 0) return selectors.length > 0 ? "Artifact selector or reference file does not match a registered source owner" : "Artifact catalog prose occurs outside an authorized owner or consumer location";
@@ -3853,7 +3878,7 @@ function renderCatalogGlob(referencePath: string, token: ReferenceToken, context
     }
     const rules = context.catalog.categoryRules.filter((rule) => suffix.includes(`/${rule.sourceDirectoryName}/`));
     if (rules.length !== 1) return { problem: `Artifact selector has no unique registered category: ${selector}` };
-    rendered.push(`${base}/**/${rules[0].sourceDirectoryName}/${rules[0].sourceShape === "nested-fixed-json" ? "**" : "*"}/🔣️.json`);
+    rendered.push(`${base}/**/${requireTaxonomyValue(rules[0],"rules[0]").sourceDirectoryName}/${requireTaxonomyValue(rules[0],"rules[0]").sourceShape === "nested-fixed-json" ? "**" : "*"}/🔣️.json`);
   }
   if (rendered.length === 0) {
     if (!/^\s*[A-Za-z_$][\w$]*\s*:\s*import\.meta\.glob\([^\r\n]+\),?\s*(?:as\s+[^;]+)?;?\s*(?:\r?\n)?$/u.test(token.value)) return { problem: "Zero-source artifact selectors cannot be removed without owning their complete object member" };
@@ -3951,7 +3976,7 @@ function exactOwnedReferenceTokens(path: string, content: string, catalog: Owner
   }
   for (const id of ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"]) {
     const selected = owners.filter((entry) => entry.referenceOwnerIds.includes(id));
-    if (selected.length === 0 || catalog.referenceOwners[id].ownerPath !== path) continue;
+    if (selected.length === 0 || requireTaxonomyValue(catalog.referenceOwners[id],"catalog.referenceOwners[id]").ownerPath !== path) continue;
     const forms = id === "repo-cli-dev-docs-go" ? [
       { oldValue: 'filepath.Join(rootDir, technology.Root, "README.md")', newValue: 'filepath.Join(rootDir, technology.Root, "📃️readme", "📝️.md")', count: 2 },
       { oldValue: 'filepath.Join(rootDir, bundle.Root, "README.md")', newValue: 'filepath.Join(rootDir, bundle.Root, "📃️readme", "📝️.md")', count: 2 },
@@ -3966,7 +3991,7 @@ function exactOwnedReferenceTokens(path: string, content: string, catalog: Owner
         continue;
       }
       for (let start = content.indexOf(form.oldValue); start >= 0; start = content.indexOf(form.oldValue, start + form.oldValue.length)) {
-        tokens.push({ adapter: id === "repo-cli-dev-docs-go" ? "go" : "rust", structuredLocation: lineLocation(content, start, "exact-owner-" + id + "-" + index), start, end: start + form.oldValue.length, value: form.oldValue, targetValues: [selected[0].sourcePath], rewriteKind: "exact-owner-reference", rewriteData: { newValue: form.newValue } });
+        tokens.push({ adapter: id === "repo-cli-dev-docs-go" ? "go" : "rust", structuredLocation: lineLocation(content, start, "exact-owner-" + id + "-" + index), start, end: start + form.oldValue.length, value: form.oldValue, targetValues: [requireTaxonomyValue(selected[0],"selected[0]").sourcePath], rewriteKind: "exact-owner-reference", rewriteData: { newValue: form.newValue } });
       }
     }
   }
@@ -3977,7 +4002,7 @@ function externalExactOwnedReferenceEntries(inventory: TaxonomyInventory, moves:
   if (!catalog || !moves.some((move) => move.rationaleRule === "readme-license-owner-projection-v1")) return [];
   const admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const moving = new Set(moves.map((move) => move.sourcePath));
-  const required = new Set(catalog.entries.filter((entry) => moving.has(entry.sourcePath)).flatMap((entry) => entry.referenceOwnerIds).filter((id) => ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].includes(id)).map((id) => catalog.referenceOwners[id].ownerPath));
+  const required = new Set(catalog.entries.filter((entry) => moving.has(entry.sourcePath)).flatMap((entry) => entry.referenceOwnerIds).filter((id) => ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].includes(id)).map((id) => requireTaxonomyValue(catalog.referenceOwners[id],"catalog.referenceOwners[id]").ownerPath));
   const paths = new Set(required);
   for (const entry of catalog.entries) {
     const source = assertLexicalInputOutsideOpaque(inventory.repoRoot, entry.sourcePath, "Exact owner reference", true);
@@ -4203,7 +4228,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   for (const context of artifactContexts) for (const problem of context.authorityProblems) unresolved.push(violation("projection-reference-authority-invalid", context.sourceRoot, `${context.id}: ${problem}`));
   const generatedOwnerSources = new Set(ownerCatalog?.entries.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
   for (const removal of removals) if (removal.authority.kind === "nested-cargo-generated-source") {
-    const authority = removal.authority, catalogContract = taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
+    const authority = removal.authority, catalogContract = requireTaxonomyValue(taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"],"nested Cargo contract");
     const row = packageCatalog?.packages.find((row) => row.id === authority.packageId), mapping = row?.mappings.find((mapping) => mapping.sourcePath === removal.sourcePath);
     const entry = inventory.entries.find((entry) => entry.sourcePath === removal.sourcePath);
     if (!mapping || mapping.disposition !== "generated" || authority.catalogPath !== catalogContract.authorityCatalogPath || authority.catalogContentHash !== catalogContract.authorityCatalogSha256 || authority.destinationPath !== mapping.destinationPath || removal.preimage.nodeKind !== "file" || removal.preimage.contentHash !== mapping.sourceHash || removal.preimage.size !== mapping.sourceSize || !entry || canonicalJson(inventoryLeafPreimage(entry)) !== canonicalJson(removal.preimage) || !row!.generatedSourceRetirements.some((item) => item.sourcePath === removal.sourcePath && item.destinationPath === authority.destinationPath && item.generatorContractId === authority.generatorContractId && item.sourceMode === removal.preimage.mode)) throw new Error("Generated source reference exclusion lacks exact retirement authority: " + removal.sourcePath);
@@ -4219,9 +4244,9 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     ...packages.flatMap((row) => row.mappings.map((mapping) => mapping.sourcePath)),
     ...policyStates.keys(),
   ]);
-  for (let index = 0; index < candidates.length; index++) {
+  for (const [index, entry] of candidates.entries()) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
-    const entry = candidates[index];
+
     if (isExcluded(entry.sourcePath, taxonomy)) continue;
     const incomingContent = incoming.contents.get(entry.sourcePath);
     let loaded: string | undefined;
@@ -4303,7 +4328,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
         unresolved.push(violation("immutable-plan-reference-unowned", entry.sourcePath, `${token.structuredLocation} is not an exact typed coordinate in a canonical digest-verified plan`));
         continue;
       }
-      const newValue = token.rewriteKind === "exact-owner-reference" ? token.rewriteData!.newValue : artifactRewrite?.newValue ?? (oldTarget && destination ? rewriteReferenceToken(finalReferencePath, entry.sourcePath, token, oldTarget, destination, inventory.repoRoot, inventory.entries) : token.rewriteData!.newValue);
+      const newValue = requireTaxonomyValue(token.rewriteKind === "exact-owner-reference" ? token.rewriteData!.newValue : artifactRewrite?.newValue ?? (oldTarget && destination ? rewriteReferenceToken(finalReferencePath, entry.sourcePath, token, oldTarget, destination, inventory.repoRoot, inventory.entries) : token.rewriteData!.newValue),"token.rewriteKind === \"exact-owner-reference\" ? token.rewriteData!.newValue : artifactRewrite?.newValue ?? (oldTarget && destination ? rewriteReferenceToken(finalReferencePath, entry.sourcePath, token, oldTarget, destination, inventory.repoRoot, inventory.entries) : token.rewriteData!.newValue)");
       if (oldTarget) accountedIncoming.add(`${oldTarget}\u0000${entry.sourcePath}`);
       if (newValue === token.value) continue;
       const edit = {
@@ -4607,12 +4632,12 @@ function projectionSourceAt(
   if (segments.length <= contract.implementationSegments.length) return null;
   const start = segments.length - contract.implementationSegments.length;
   const artifactRoot = physicalPrefix(start);
-  const ownerRegistry = taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId];
+  const ownerRegistry = requireTaxonomyValue(taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId],"source owner registry");
   const ownerMatches = memberNamesByFold(ownerRegistry).get(emojiFold(basename(artifactRoot))) ?? [];
   if (ownerMatches.length !== 1 && !(scope && (artifactRoot === scope || artifactRoot.startsWith(`${scope}/`)))) return null;
   const captures = new Map<SemanticProjectionCaptureField, string>();
-  for (let index = 0; index < contract.implementationSegments.length; index++) {
-    const segment = contract.implementationSegments[index];
+  for (const [index, segment] of contract.implementationSegments.entries()) {
+
     const currentPath = physicalPrefix(start + index + 1);
     const current = entries.get(currentPath);
     if (!current || current.nodeKind !== "directory") return null;
@@ -4630,11 +4655,11 @@ function projectionSourceAt(
       continue;
     }
     const sourceName = basename(current.sourcePath).normalize("NFC");
-    if (segment.capture === "scenarioId" && pathEmojiStatuteFindings([{ path: sourceName, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0 && new RegExp(taxonomy.schema.semanticDirectoryKinds[segment.kindId].slugPattern, "u").test(splitLeadingEmoji(sourceName).rest)) {
+    if (segment.capture === "scenarioId" && pathEmojiStatuteFindings([{ path: sourceName, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0 && new RegExp(requireTaxonomyValue(taxonomy.schema.semanticDirectoryKinds[segment.kindId],"directory kind").slugPattern, "u").test(splitLeadingEmoji(sourceName).rest)) {
       captures.set(segment.capture, splitLeadingEmoji(sourceName).rest);
       continue;
     }
-    const contextualUnprefixed = segment.capture === "scenarioId" && !splitLeadingEmoji(sourceName).emoji && new RegExp(taxonomy.schema.semanticDirectoryKinds[segment.kindId].slugPattern, "u").test(sourceName);
+    const contextualUnprefixed = segment.capture === "scenarioId" && !splitLeadingEmoji(sourceName).emoji && new RegExp(requireTaxonomyValue(taxonomy.schema.semanticDirectoryKinds[segment.kindId],"directory kind").slugPattern, "u").test(sourceName);
     if (kinds.get(currentPath) !== segment.kindId && !contextualUnprefixed) return null;
     const overriddenSubset = segment.capture === "subsetId" && taxonomy.discoverySchema.subsetDirectoryOverrides?.[dirname(currentPath)] !== undefined;
     const slug = contextualUnprefixed ? sourceName : overriddenSubset ? subsetIdForDirectoryName(dirname(currentPath), canonicalName, taxonomy.discoverySchema) : projectionDirectorySlug(canonicalName, segment.kindId, taxonomy);
@@ -4651,16 +4676,16 @@ function projectionSourceAt(
     artifactRoot,
     artifactId: splitLeadingEmoji(basename(artifactRoot)).rest || basename(artifactRoot),
     standardVersion,
-    standardDirectoryName: basename(source[1]),
+    standardDirectoryName: basename(requireTaxonomyValue(source[1],"source[1]")),
     subsetId,
-    subsetDirectoryName: basename(source[3]),
+    subsetDirectoryName: basename(requireTaxonomyValue(source[3],"source[3]")),
     mutationId,
-    mutationDirectoryName: basename(source[6]),
+    mutationDirectoryName: basename(requireTaxonomyValue(source[6],"source[6]")),
     sourceScenarioId,
-    sourceScenarioDirectoryName: basename(source[8]),
-    subsetRoot: source[3],
-    mutationRoot: source[6],
-    scenarioRoot: source[8],
+    sourceScenarioDirectoryName: basename(requireTaxonomyValue(source[8],"source[8]")),
+    subsetRoot: requireTaxonomyValue(source[3],"projection root"),
+    mutationRoot: requireTaxonomyValue(source[6],"projection root"),
+    scenarioRoot: requireTaxonomyValue(source[8],"projection root"),
   };
 }
 
@@ -4722,7 +4747,7 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
 function projectionCatalogEntryForSubset(entries: ReadonlyMap<string, MutableInventoryEntry>, subsetRoot: string, taxonomy: LoadedTaxonomy): MutableInventoryEntry | null {
   const oracleRoot = `${subsetRoot}/${taxonomy.discoverySchema.testOraclesDirName}`;
   const candidates = entrySubtree(entries, oracleRoot).filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && dirname(entry.sourcePath) === oracleRoot && basename(entry.normalizedPath) === "🔣️.json");
-  return candidates.length === 1 ? candidates[0] : null;
+  return candidates.length === 1 ? requireTaxonomyValue(candidates[0],"candidates[0]") : null;
 }
 
 function projectionCatalogsForMutationSource(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, sourceOwner: string, taxonomy: LoadedTaxonomy): { owner: string; path: string; entry: MutableInventoryEntry | null; vectors: readonly MutationProjectionVector[]; error?: string }[] {
@@ -4757,9 +4782,9 @@ function projectionDescendantPath(node: SemanticDescendantKindNode, taxonomy: Lo
 
 function canonicalProjectedMemberName(name: string, taxonomy: LoadedTaxonomy): string | null {
   const ids = taxonomy.schema.mutationCatalogProjection;
-  const sourceKind = taxonomy.schema.semanticProjectedMemberKinds[ids.projectedMemberKindId].sourceMemberKindId;
-  const matches = memberNamesByFold(taxonomy.schema.semanticDirectoryMemberKinds[sourceKind]).get(emojiFold(name.normalize("NFC"))) ?? [];
-  return matches.length === 1 ? matches[0] : null;
+  const sourceKind = requireTaxonomyValue(taxonomy.schema.semanticProjectedMemberKinds[ids.projectedMemberKindId],"projected member kind").sourceMemberKindId;
+  const matches = memberNamesByFold(requireTaxonomyValue(taxonomy.schema.semanticDirectoryMemberKinds[sourceKind],"source member kind")).get(emojiFold(name.normalize("NFC"))) ?? [];
+  return matches.length === 1 ? matches[0] ?? null : null;
 }
 
 function canonicalProjectedMutationOwner(name: string, identity: string, subsetRoot: string, taxonomy: LoadedTaxonomy): string | null {
@@ -4795,7 +4820,7 @@ function projectionBundleProblem(source: MutationProjectionSource, entries: Read
     return node.nodeType === "file" ? entry.fileKind === node.kindId : node.pathSegments.length === 0 && entry.sourcePath === source.scenarioRoot && node.kindId === contract.rootDirectoryKindId || kinds.get(entry.sourcePath) === node.kindId;
   };
   const missing = contract.requiredNodes.filter((node) => !matches(node));
-  if (missing.length > 0) return `bundle is missing ${projectionDescendantPath(missing[0], taxonomy) || "scenario root"}`;
+  if (missing.length > 0) return `bundle is missing ${projectionDescendantPath(requireTaxonomyValue(missing[0],"missing[0]"), taxonomy) || "scenario root"}`;
   for (const alternative of contract.exclusiveAlternatives) if (alternative.nodes.filter(matches).length !== 1) return `bundle must realize exactly one ${alternative.id} alternative`;
   const allowed = new Set([...contract.requiredNodes, ...contract.exclusiveAlternatives.flatMap((alternative) => alternative.nodes)].filter(matches).map((node) => `${node.nodeType}\u0000${projectionDescendantPath(node, taxonomy)}`));
   const extra = [...byKey.keys()].find((key) => !allowed.has(key));
@@ -4858,7 +4883,7 @@ function normalizeMutationCasePairs(
       const unmatchedSources = mutationSources.filter((source) => !assignments.has(source));
       const matchedVectors = new Set(assignments.values());
       const unmatchedVectors = vectors.filter((vector) => !matchedVectors.has(vector));
-      if (unmatchedSources.length === 1 && unmatchedVectors.length === 1) assignments.set(unmatchedSources[0], unmatchedVectors[0]);
+      if (unmatchedSources.length === 1 && unmatchedVectors.length === 1) assignments.set(requireTaxonomyValue(unmatchedSources[0],"unmatchedSources[0]"), requireTaxonomyValue(unmatchedVectors[0],"unmatched projection vector"));
       if (assignments.size !== mutationSources.length || assignments.size !== vectors.length) {
         for (const source of mutationSources) entries.get(source.scenarioRoot)?.violations.push(violation("projection-catalog-coverage", source.scenarioRoot, `Physical mutation ${mutationName} does not have an exact one-to-one vector registry`));
         continue;
@@ -4968,8 +4993,8 @@ function artifactProjectionSourceLocation(path: string, contract: SemanticPathPr
   const segments = path.split("/");
   for (let artifactIndex = 0; artifactIndex < segments.length; artifactIndex++) {
     if (segments[artifactIndex] !== contract.sourceArtifactMemberName) continue;
-    const owner = taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId];
-    if (!owner?.memberNames.includes(segments[artifactIndex]) || artifactIndex === 0 || segments[artifactIndex - 1] !== canonicalDirectoryName(taxonomy, "artifacts", "artifacts")) continue;
+    const owner = requireTaxonomyValue(taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId],"source owner registry");
+    if (!owner?.memberNames.includes(requireTaxonomyValue(segments[artifactIndex],"segments[artifactIndex]")) || artifactIndex === 0 || segments[artifactIndex - 1] !== canonicalDirectoryName(taxonomy, "artifacts", "artifacts")) continue;
     const sourceNames = segments.slice(artifactIndex + 1, artifactIndex + 1 + contract.sourceSegments.length);
     if (sourceNames.length !== contract.sourceSegments.length) continue;
     const matches = contract.sourceSegments.every((segment, index) => "literal" in segment ? sourceNames[index] === segment.literal : sourceNames[index] !== "");
@@ -5003,7 +5028,7 @@ function commonProjectionDirectory(paths: readonly string[], floor: string): str
   const parts = paths.map((path) => path.split("/"));
   const common: string[] = [];
   for (let index = 0; index < Math.min(...parts.map((row) => row.length)); index++) {
-    const segment = parts[0][index];
+    const segment = requireTaxonomyValue(requireTaxonomyValue(parts[0],"parts[0]")[index],"parts[0][index]");
     if (!parts.every((row) => row[index] === segment)) break;
     common.push(segment);
   }
@@ -5131,7 +5156,7 @@ function nestedCargoCatalog(repoRoot: string, taxonomy: LoadedTaxonomy["discover
 }
 
 function projectNestedCargoPackages(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy, prunableSourceParents: ReadonlySet<string>): void {
-  const { catalog, problem } = nestedCargoCatalogRecord(repoRoot, taxonomy.discoverySchema), catalogPath = taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"].authorityCatalogPath;
+  const { catalog, problem } = nestedCargoCatalogRecord(repoRoot, taxonomy.discoverySchema), catalogPath = requireTaxonomyValue(taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"],"taxonomy.discoverySchema.semanticPackageProjectionContracts[\"nested-cargo-packages-v1\"]").authorityCatalogPath;
   if (problem) entries.get(catalogPath)?.violations.push(violation("nested-cargo-catalog-invalid", catalogPath, problem));
   if (!catalog) return;
   for (const row of catalog.packages) {
@@ -5242,18 +5267,18 @@ function exactOwnedDestinationOccupancy(repoRoot: string, path: string): readonl
     const stat = lstatOrNull(absolute);
     if (!stat) break;
     if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Exact owner destination has an occupied non-directory parent: " + parent);
-    const matches = readdirSync(absolute).filter((child) => collisionKey(child, "vs16-fold") === collisionKey(segments[index], "vs16-fold"));
+    const matches = readdirSync(absolute).filter((child) => collisionKey(child, "vs16-fold") === collisionKey(requireTaxonomyValue(segments[index],"segments[index]"), "vs16-fold"));
     for (const match of matches) {
       const found = [owner, ...segments.slice(0, index), match, ...segments.slice(index + 1)].join("/");
       if (match !== segments[index] || index === segments.length - 1) occupied.push(found);
     }
-    if (!matches.includes(segments[index])) break;
+    if (!matches.includes(requireTaxonomyValue(segments[index],"segments[index]"))) break;
     parent += "/" + segments[index];
   }
   return occupied;
 }
 function exactOwnedEvidenceProblems(repoRoot: string, entry: OwnerProjectionEntry, catalog: OwnerProjectionPolicy): readonly string[] {
-  const evidence = catalog.ownerEvidence[entry.ownerEvidenceId];
+  const evidence = requireTaxonomyValue(catalog.ownerEvidence[entry.ownerEvidenceId],"catalog.ownerEvidence[entry.ownerEvidenceId]");
   const problems: string[] = [];
   for (const declared of evidence.evidencePaths) {
     const projected = catalog.entries.find((candidate) => candidate.sourcePath === declared);
@@ -5365,7 +5390,7 @@ function ticketImportantExactMutationCases(repoRoot: string): readonly TicketImp
     if (sourcePreimage.nodeKind !== "file" || row.disposition === "remove" && (sourcePreimage.size !== 0 || row.destinationPath !== null) || row.disposition === "move" && typeof row.destinationPath !== "string") throw new Error(`Ticket important exact mutation catalog case ${index} has invalid leaf evidence`);
     return { catalogPath, catalogContentHash, caseId: planString(row.id, `ticket important exact mutation catalog cases[${index}].id`), disposition: row.disposition, sourcePath: planPath(row.sourcePath, `ticket important exact mutation catalog cases[${index}].sourcePath`), destinationPath: row.destinationPath === null ? null : planPath(row.destinationPath, `ticket important exact mutation catalog cases[${index}].destinationPath`), sourcePreimage } as TicketImportantExactMutationAuthority;
   });
-  if (new Set(rows.map((entry) => entry.caseId)).size !== rows.length || new Set(rows.map((entry) => entry.sourcePath)).size !== rows.length || rows.some((entry, index) => index > 0 && generatorPathCompare(rows[index - 1].caseId, entry.caseId) >= 0)) throw new Error("Ticket important exact mutation catalog identities must be unique and bytewise sorted");
+  if (new Set(rows.map((entry) => entry.caseId)).size !== rows.length || new Set(rows.map((entry) => entry.sourcePath)).size !== rows.length || rows.some((entry, index) => index > 0 && generatorPathCompare(requireTaxonomyValue(rows[index - 1],"rows[index - 1]").caseId, entry.caseId) >= 0)) throw new Error("Ticket important exact mutation catalog identities must be unique and bytewise sorted");
   return rows;
 }
 
@@ -5568,8 +5593,9 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   const mutationLeaves = provenMutationLeafOwners(repoRoot, directories, admitted, sourceRead, taxonomy);
   report(options.progress, "inventory", "directories", 0, directories.length);
   for (let index = 0; index < directories.length; index++) {
+    const path = requireTaxonomyValue(directories[index],"directories[index]");
     checkCancellation(repoRoot, options.cancelFile);
-    const path = directories[index];
+
     const parentCanonical = canonicalDirectoryByPath.get(dirname(path)) ?? "";
     const parentContextId = directoryKindByPath.get(dirname(path)) ?? fixedDirectoryContractByPath.get(dirname(path));
     const canonical = canonicalDirectory(path, parentCanonical, parentContextId, ancestorDirectoryKindIds(path, directoryKindByPath), taxonomy, mutationLeaves);
@@ -5619,8 +5645,9 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   }
   for (const [parent, ids] of siblingIds) siblingFixedFilenameContractIdsByParent.set(parent, [...ids].sort(generatorPathCompare));
   for (let index = 0; index < leaves.length; index++) {
+    const row = requireTaxonomyValue(leaves[index],"leaves[index]");
     checkCancellation(repoRoot, options.cancelFile);
-    const row = leaves[index];
+
     const content = leafContentOf(repoRoot, row, sourceRead, leafStore);
     const parent = dirname(row.path) === "." ? "" : dirname(row.path);
     const contentKind: ContentKindHint = content.kind === "file" ? extensionlessContentKind(row.path, basename(row.path).includes(".") ? undefined : content.bytes(), taxonomy) : { kindId: null };
@@ -5998,10 +6025,10 @@ interface GeneratorPlanningResult {
 function projectedPath(path: string, entries: readonly TaxonomyInventoryEntry[]): string {
   const mappings = entries.filter((entry) => entry.sourcePath !== entry.normalizedPath && (path === entry.sourcePath || path.startsWith(`${entry.sourcePath}/`))).sort((left, right) => right.sourcePath.length - left.sourcePath.length || generatorPathCompare(left.sourcePath, right.sourcePath));
   if (mappings.length === 0) return path;
-  const longest = mappings[0].sourcePath.length;
+  const longest = requireTaxonomyValue(mappings[0],"mappings[0]").sourcePath.length;
   const destinations = new Set(mappings.filter((entry) => entry.sourcePath.length === longest).map((entry) => `${entry.normalizedPath}${path.slice(entry.sourcePath.length)}`));
   if (destinations.size !== 1) throw new Error(`Path projection is ambiguous for ${path}`);
-  return [...destinations][0];
+  return requireTaxonomyValue([...destinations][0],"unique projected destination");
 }
 
 /** 🧷️ Resolves a POSIX, drive-rooted, or UNC absolute target only when it is lexically inside the same repository root. */
@@ -6018,13 +6045,13 @@ export function repositoryLocalSymlinkTargetPath(repoRoot: string, target: strin
   const targetUnc = unc.exec(candidate);
   let suffix: string;
   if (rootDrive || targetDrive) {
-    if (!rootDrive || !targetDrive || rootDrive[1].toLowerCase() !== targetDrive[1].toLowerCase()) return null;
-    const rootTail = rootDrive[2].replace(/\/+$/u, "");
-    const targetTail = targetDrive[2];
+    if (!rootDrive || !targetDrive || requireTaxonomyValue(rootDrive[1],"rootDrive[1]").toLowerCase() !== requireTaxonomyValue(targetDrive[1],"targetDrive[1]").toLowerCase()) return null;
+    const rootTail = requireTaxonomyValue(rootDrive[2],"rootDrive[2]").replace(/\/+$/u, "");
+    const targetTail = requireTaxonomyValue(targetDrive[2],"targetDrive[2]");
     if (targetTail.toLowerCase() !== rootTail.toLowerCase() && !targetTail.toLowerCase().startsWith(`${rootTail.toLowerCase()}/`)) return null;
     suffix = targetTail.slice(rootTail.length).replace(/^\//u, "");
   } else if (rootUnc || targetUnc) {
-    if (!rootUnc || !targetUnc || rootUnc[1].toLowerCase() !== targetUnc[1].toLowerCase() || rootUnc[2].toLowerCase() !== targetUnc[2].toLowerCase()) return null;
+    if (!rootUnc || !targetUnc || requireTaxonomyValue(rootUnc[1],"rootUnc[1]").toLowerCase() !== requireTaxonomyValue(targetUnc[1],"targetUnc[1]").toLowerCase() || requireTaxonomyValue(rootUnc[2],"rootUnc[2]").toLowerCase() !== requireTaxonomyValue(targetUnc[2],"targetUnc[2]").toLowerCase()) return null;
     const rootTail = (rootUnc[3] ?? "").replace(/\/+$/u, "");
     const targetTail = targetUnc[3] ?? "";
     if (targetTail.toLowerCase() !== rootTail.toLowerCase() && !targetTail.toLowerCase().startsWith(`${rootTail.toLowerCase()}/`)) return null;
@@ -6179,13 +6206,13 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
         rows.push({ pointer, start: span!.start + (ownerIdentity ? prefix.length : 0), end: span!.end, value: escapedSource ? span!.rawValue! : ownerIdentity ? relativeValue : span!.value, kind: declaration.kind });
         return;
       }
-      const segment = segments[index];
+      const segment = requireTaxonomyValue(segments[index],"segments[index]");
       if (segment === "*") {
         if (!Array.isArray(value)) fail(`wildcard ${declaration.pointer} must select an array`);
         (value as unknown[]).forEach((child, childIndex) => visit(child, index + 1, `${pointer}/${childIndex}`));
       } else {
         if (value === null || typeof value !== "object" || !Object.hasOwn(value, segment) || Array.isArray(value) && !/^(?:0|[1-9][0-9]*)$/u.test(segment)) fail(`coordinate pointer ${declaration.pointer} is missing`);
-        visit((value as Record<string, unknown>)[segment], index + 1, `${pointer}/${segment.replaceAll("~", "~0").replaceAll("/", "~1")}`);
+        visit(requireTaxonomyValue((value as Record<string, unknown>)[segment],"(value as Record<string, unknown>)[segment]"), index + 1, `${pointer}/${segment.replaceAll("~", "~0").replaceAll("/", "~1")}`);
       }
     };
     visit(document, 0, "");
@@ -6202,15 +6229,15 @@ function markdownSourceCoordinateSpans(content: string): readonly Readonly<{ sta
     const line = match[0].replace(/(?:\r\n|\r|\n)$/u, ""), offset = match.index!;
     if (!line.trim()) { inline = 0; if (html === "block") html = ""; continue; }
     const prefix = line.replace(/^ {0,3}(?:[-+*][ \t]+|\d+[.)][ \t]+)/u, ""), marker = prefix.match(/^ {0,3}(`{3,}|~{3,})(.*)$/u);
-    if (fence) { if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = ""; continue; }
-    if (marker && !(marker[1][0] === "`" && marker[2].includes("`"))) { fence = marker[1]; inline = 0; continue; }
+    if (fence) { if (marker && requireTaxonomyValue(marker[1],"marker[1]")[0] === fence[0] && requireTaxonomyValue(marker[1],"marker[1]").length >= fence.length && !requireTaxonomyValue(marker[2],"marker[2]").trim()) fence = ""; continue; }
+    if (marker && !(requireTaxonomyValue(marker[1],"marker[1]")[0] === "`" && requireTaxonomyValue(marker[2],"marker[2]").includes("`"))) { fence = requireTaxonomyValue(marker[1],"fence marker"); inline = 0; continue; }
     if (html) { if (html === "comment" && line.includes("-->")) html = ""; continue; }
     if (line.includes("<!--")) { if (!line.slice(line.indexOf("<!--") + 4).includes("-->")) html = "comment"; inline = 0; continue; }
     if (/^ {0,3}</u.test(line)) { html = "block"; inline = 0; continue; }
     if (/^(?: {4}| *\t| {0,3}>)/u.test(line)) { inline = 0; continue; }
     const first = rows.length, blanks: (readonly [number, number])[] = [];
     const list = line.match(/^ {0,3}[-+*][ \t]+([^\s]+)[ \t]*$/u);
-    if (list && !inline) { const start = offset + line.indexOf(list[1]); rows.push({ start, end: start + list[1].length, form: "path-list-item" }); }
+    if (list && !inline) { const start = offset + line.indexOf(requireTaxonomyValue(list[1],"list[1]")); rows.push({ start, end: start + requireTaxonomyValue(list[1],"list[1]").length, form: "path-list-item" }); }
     const runs = [...line.matchAll(/`+/gu)], nextSameLength = new Array<number>(runs.length), lastByLength = new Map<number, number>();
     for (let index = runs.length - 1; index >= 0; index--) {
       nextSameLength[index] = lastByLength.get(runs[index]![0].length) ?? -1;
@@ -6338,12 +6365,12 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
   const owner = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   const taxonomyPath = sourceRelative(relative(repoRoot, taxonomy.path));
   const approvalDeclaration = owner?.contractKind === "exact-owner-path-catalog" ? Object.values(owner.currentSourceRevisions ?? {}).find(row => row.approvalPath === path) : undefined;
-  if (path !== taxonomyPath && path !== taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"].authorityCatalogPath && !(owner?.contractKind === "exact-owner-path-catalog" && path === owner.authorityCatalogPath) && !approvalDeclaration) return false;
+  if (path !== taxonomyPath && path !== requireTaxonomyValue(taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"],"nested Cargo contract").authorityCatalogPath && !(owner?.contractKind === "exact-owner-path-catalog" && path === owner.authorityCatalogPath) && !approvalDeclaration) return false;
   let cached = frozenCoordinateCache.get(bytes);
   if (!cached || cached.path !== path || cached.taxonomy !== taxonomy) {
     const content = Buffer.from(bytes).toString("utf8"), allowed = new Map<string, string>(), targets = new Set<string>();
     const ownerContract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
-    const packageContract = taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
+    const packageContract = requireTaxonomyValue(taxonomy.schema.semanticPackageProjectionContracts["nested-cargo-packages-v1"],"nested Cargo contract");
     const pointer = (value: string): string => value.replaceAll("~", "~0").replaceAll("/", "~1");
     const add = (location: string, value: string): void => { allowed.set(location, value); targets.add(value); };
     if (ownerContract?.contractKind === "exact-owner-path-catalog" && path === ownerContract.authorityCatalogPath && sha256(bytes) === ownerContract.authorityCatalogSha256) {
@@ -6544,7 +6571,7 @@ function planEmbeddedTicketRoots(inventory: TaxonomyInventory, taxonomy: LoadedT
       const manifestContract = matchingFixedContracts(manifestPath, taxonomy.schema.fixedFilenameContracts, taxonomy, null).selected;
       const manifestStat = lstatOrNull(absolutePath(inventory.repoRoot, manifestPath));
       if (rootContract?.[0] !== "ticket-slug" || manifestContract?.[0] !== "ticket-manifest" || !manifestStat?.isFile() || manifestStat.isSymbolicLink()) { violations.push(violation("embedded-ticket-root-authority-missing", entry.sourcePath, "Canonical ticket root and exact ticket manifest authority must exist")); continue; }
-      nested.set(sourceMetadataRoot, { sourceTicketRoot: parts.slice(0, index + 7).join("/"), canonicalTicketRoot, ticketId: `${splitLeadingEmoji(suffix[0]).rest}/${splitLeadingEmoji(suffix[1]).rest}/${splitLeadingEmoji(suffix[2]).rest}/${suffix[3]}` });
+      nested.set(sourceMetadataRoot, { sourceTicketRoot: parts.slice(0, index + 7).join("/"), canonicalTicketRoot, ticketId: `${splitLeadingEmoji(requireTaxonomyValue(suffix[0],"suffix[0]")).rest}/${splitLeadingEmoji(requireTaxonomyValue(suffix[1],"suffix[1]")).rest}/${splitLeadingEmoji(requireTaxonomyValue(suffix[2],"suffix[2]")).rest}/${suffix[3]}` });
     }
   }
   const occupancy = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry]));
@@ -6574,7 +6601,7 @@ function planEmbeddedTicketRoots(inventory: TaxonomyInventory, taxonomy: LoadedT
     const sorted = [...group].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     const occupied = occupancy.get(destinationPath);
     const evidenceIdentity = (entry: TaxonomyInventoryEntry): string => canonicalJson({ nodeKind: entry.nodeKind, contentHash: entry.contentHash, mode: entry.mode, size: entry.size, ownerId: entry.ownerId, fixedContractId: entry.fixedContractId, packageRole: entry.packageRole });
-    const identity = evidenceIdentity(sorted[0].entry);
+    const identity = evidenceIdentity(requireTaxonomyValue(sorted[0],"sorted[0]").entry);
     if (sorted.some((entry) => evidenceIdentity(entry.entry) !== identity) || (occupied && evidenceIdentity(occupied) !== identity)) { violations.push(violation("embedded-ticket-root-destination-conflict", destinationPath, "Many-to-one ticket evidence is not byte, mode, kind, size, owner, role and contract identical")); continue; }
     const installer = occupied ? null : sorted[0];
     if (installer) {
@@ -6608,7 +6635,7 @@ function planTrailingEvidenceRemovals(inventory: TaxonomyInventory): readonly Ta
     const parent = posix.dirname(entry.sourcePath);
     const identical = inventory.entries.filter((candidate) => candidate.nodeKind === entry.nodeKind && posix.dirname(candidate.sourcePath) === parent && candidate.contentHash === entry.contentHash && candidate.mode === entry.mode && candidate.size === entry.size && candidate.ownerId === entry.ownerId && candidate.fixedContractId === entry.fixedContractId && candidate.packageRole === entry.packageRole && candidate.sourcePath !== entry.sourcePath && !/^[. ]+$/u.test(basename(candidate.sourcePath))).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     if (identical.length === 0 || entry.referencesIn.length > 0) continue;
-    const retainedFinalPath = identical[0].normalizedPath;
+    const retainedFinalPath = requireTaxonomyValue(identical[0],"identical[0]").normalizedPath;
     const members: TaxonomyEvidenceMember[] = [{ sourcePath: entry.sourcePath, finalPath: retainedFinalPath, disposition: "remove" as const, preimage: inventoryLeafPreimage(entry) }, ...identical.map((candidate) => ({ sourcePath: candidate.sourcePath, finalPath: candidate.normalizedPath, disposition: "retain" as const, preimage: inventoryLeafPreimage(candidate) }))].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     const evidenceSetDigest = sha256(canonicalJson({ algorithm: "sha256-byte-mode-evidence-set-v1", members, retainedFinalPath }));
     const provisional = { sourcePath: entry.sourcePath, preimage: inventoryLeafPreimage(entry), authority: { kind: "byte-and-mode-identical" as const, evidenceSetDigest, retainedFinalPath, members }, rationaleRule: "redundant-ticket-evidence-v1" as const, ownerId: entry.ownerId };
@@ -6868,8 +6895,8 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
   const capture = inventoryCaptures.get(inventory);
   const catalogView = capture ? (capture.catalogView ??= registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema)) : registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
   const contracts = Object.entries(taxonomy.schema.generatorContracts).sort(([left], [right]) => left.localeCompare(right));
-  for (let index = 0; index < contracts.length; index++) {
-    const [id, contract] = contracts[index];
+  for (const [index, [id, contract]] of contracts.entries()) {
+
     if (contract.ownerPath && catalogView.kind(contract.ownerPath) !== "directory") continue;
     const roots = contract.outputRoots.map((root) => root.path).sort(generatorPathCompare);
     const outputEntries = roots.flatMap((root) => [...sortedSubtree(sortedEntries, root)]).map((path) => entriesBySource.get(path)!);
@@ -6893,12 +6920,12 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const inputMutation = patternMutation || Boolean(discoveredInputs && (discoveredInputs.some((input) => editedPaths.has(input.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
     if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification && !compilerOutputVerification) continue;
     try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy, evidenceRemovals)) continue; }
-    catch (error) { rows.push(violation("generator-activation-invalid", roots[0], `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
+    catch (error) { rows.push(violation("generator-activation-invalid", requireTaxonomyValue(roots[0],"roots[0]"), `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
     const inputs = discoveredInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView);
     const preOutputs = generatorTreeInventory(inventory.repoRoot, roots, taxonomy);
     const inputDigest = sha256(canonicalJson(inputs));
     const preOutputDigest = sha256(canonicalJson(preOutputs));
-    const path = roots[0];
+    const path = requireTaxonomyValue(roots[0],"roots[0]");
     if (contract.ownership !== "owned") {
       rows.push(violation(`generator-ownership-${contract.ownership}`, path, `Generator contract ${id} is ${contract.ownership}; ${contract.reason}; input ${inputDigest}, output ${preOutputDigest}`));
       continue;
@@ -7084,7 +7111,7 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
     ...embedded.violations,
     ...ticketImportantRemovals.violations,
   ];
-  for (const group of references.collisionGroups) if (group.sources.some((source) => !isEmbedded(source))) unresolved.push(violation(`collision-${group.comparison}`, group.paths[0] ?? group.sources[0], `Normalization collision ${group.id}: ${group.sources.join(", ")}`));
+  for (const group of references.collisionGroups) if (group.sources.some((source) => !isEmbedded(source))) unresolved.push(violation(`collision-${group.comparison}`, requireTaxonomyValue(group.paths[0],"group.paths[0]") ?? group.sources[0], `Normalization collision ${group.id}: ${group.sources.join(", ")}`));
   for (const digest of options.excludedTreeDigests) {
     if (digest.algorithm !== "sha256-merkle-v1") unresolved.push(violation("opaque-digest-algorithm", digest.relativeRoot, `Unsupported opaque digest algorithm ${digest.algorithm}`));
     if (!inventory.pathExclusions.includes(normalizeRelative(digest.relativeRoot))) unresolved.push(violation("opaque-digest-unregistered", digest.relativeRoot, "Opaque digest is not registered by taxonomy pathExclusions"));
@@ -7409,7 +7436,7 @@ function recoverCanonicalJsonCandidates(container: string, finalName: string, pr
   for (const name of readdirSync(container).sort(generatorPathCompare)) {
     if (name === finalName) continue;
     const match = /^write-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(splitLeadingEmoji(name).rest);
-    if (!match || !TRANSACTION_LEASE_TOKEN.test(match[2]) || name !== preparationName(Number.parseInt(match[1], 10), match[2])) throw new Error(`Canonical JSON write preparation name is invalid: ${name}`);
+    if (!match || !TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(match[2],"match[2]")) || name !== preparationName(Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10), requireTaxonomyValue(match[2],"match[2]"))) throw new Error(`Canonical JSON write preparation name is invalid: ${name}`);
     const root = join(container, name), rootStat = lstatOrNull(root);
     if (!rootStat?.isDirectory() || rootStat.isSymbolicLink()) throw new Error(`Canonical JSON write preparation must be a no-follow directory: ${name}`);
     const children = readdirSync(root).sort(generatorPathCompare);
@@ -7421,7 +7448,7 @@ function recoverCanonicalJsonCandidates(container: string, finalName: string, pr
       validate(previous);
     }
     if (children.length === 0) {
-      if (!serialized && transactionLeaseProcessIsAlive(Number.parseInt(match[1], 10))) throw new Error(`Canonical JSON write preparation is active for pid ${match[1]}`);
+      if (!serialized && transactionLeaseProcessIsAlive(Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10))) throw new Error(`Canonical JSON write preparation is active for pid ${match[1]}`);
       actions.push({ root, exchange: false, publish: false });
       continue;
     }
@@ -7429,7 +7456,7 @@ function recoverCanonicalJsonCandidates(container: string, finalName: string, pr
     if (leaf && (!leafStat?.isFile() || leafStat.isSymbolicLink())) throw new Error(`Canonical JSON write candidate must be a regular no-follow file: ${leaf}`);
     if (leaf && !canonicalJsonFile(leaf)) {
       if (previous) throw new Error(`Canonical JSON exchanged candidate is invalid: ${leaf}`);
-      if (!serialized && transactionLeaseProcessIsAlive(Number.parseInt(match[1], 10))) throw new Error(`Canonical JSON write preparation is active for pid ${match[1]}`);
+      if (!serialized && transactionLeaseProcessIsAlive(Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10))) throw new Error(`Canonical JSON write preparation is active for pid ${match[1]}`);
       actions.push({ root, exchange: false, publish: false });
       continue;
     }
@@ -7561,7 +7588,7 @@ function acquireTransactionLease(authority: TransactionRepositoryAuthority, atte
     for (const name of readdirSync(backupRoot).sort(generatorPathCompare)) {
       const match = /^lease-([1-9][0-9]*)-([0-9a-f-]+)-(preparing|stale)$/u.exec(splitLeadingEmoji(name).rest);
       if (!match) continue;
-      const root = join(backupRoot, name), pid = Number.parseInt(match[1], 10), token = match[2], state = match[3] as "preparing" | "stale";
+      const root = join(backupRoot, name), pid = Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10), token = requireTaxonomyValue(match[2],"match[2]"), state = match[3] as "preparing" | "stale";
       if (!Number.isSafeInteger(pid) || !TRANSACTION_LEASE_TOKEN.test(token) || name !== leasePreparationName(pid, token, state)) throw new Error(`Transaction lease preparation name is invalid: ${name}`);
       const stat = lstatOrNull(root);
       if (!stat?.isDirectory() || stat.isSymbolicLink()) throw new Error(`Transaction lease preparation must be a no-follow directory: ${name}`);
@@ -7713,7 +7740,7 @@ function readJournal(path: string, journalWriteDirectory: string, jsonWritePrepa
     const ids = value[key] as readonly unknown[];
     const pattern = key === "appliedEditPaths" || key === "sourceParentPrunePaths" ? undefined : PLAN_OPERATION_ID;
     const parsedIds = ids.map((entry, index) => pattern ? planString(entry, `taxonomy journal ${key}[${index}]`, pattern) : planPath(entry, `taxonomy journal ${key}[${index}]`));
-    if (new Set(parsedIds).size !== parsedIds.length || parsedIds.some((entry, index) => index > 0 && Buffer.from(parsedIds[index - 1]).compare(Buffer.from(entry)) >= 0)) throw new Error(`Taxonomy journal ${key} must be unique and bytewise sorted`);
+    if (new Set(parsedIds).size !== parsedIds.length || parsedIds.some((entry, index) => index > 0 && Buffer.from(requireTaxonomyValue(parsedIds[index - 1],"parsedIds[index - 1]")).compare(Buffer.from(entry)) >= 0)) throw new Error(`Taxonomy journal ${key} must be unique and bytewise sorted`);
   }
   for (const [logicalPath, backup] of Object.entries(value.backups)) {
     planPath(logicalPath, "taxonomy journal backup path");
@@ -7951,7 +7978,7 @@ function assertGeneratorNodeRecords(records: readonly TaxonomyGeneratorNodeRecor
     if (record.nodeKind !== "directory" && (!Number.isSafeInteger(record.size) || record.size < 0) || record.nodeKind === "symlink" && (sha256(record.target) !== record.contentHash || Buffer.byteLength(record.target) !== record.size)) throw new Error(`${label} contains incomplete no-follow leaf evidence: ${path}`);
     seen.add(path);
   }
-  if (records.some((record, index) => index > 0 && generatorPathCompare(records[index - 1].path, record.path) > 0)) throw new Error(`${label} must be path-sorted`);
+  if (records.some((record, index) => index > 0 && generatorPathCompare(requireTaxonomyValue(records[index - 1],"records[index - 1]").path, record.path) > 0)) throw new Error(`${label} must be path-sorted`);
 }
 
 function buildTargetRecord(repoRoot: string, ownerPath: string, target: string): UnknownRecord {
@@ -8069,7 +8096,7 @@ function assertTicketImportantRemovalAuthority(repoRoot: string, removal: Taxono
   if (removal.authority.kind !== "owner-manifest-status") return;
   const authority = removal.authority;
   if (dirname(removal.sourcePath) !== authority.ownerPath || basename(removal.sourcePath) !== "📌️important.md" || authority.manifestPath !== `${authority.ownerPath}/🎫️ticket.json`) throw new Error(`Ticket important removal escapes its owner: ${removal.sourcePath}`);
-  if (!taxonomy.pathMatcher.matches(authority.ownerPath, taxonomy.schema.fixedDirectoryContracts["ticket-slug"].pathPattern) || !taxonomy.pathMatcher.matches(authority.manifestPath, taxonomy.schema.fixedFilenameContracts["ticket-manifest"].pathPattern)) throw new Error(`Ticket important removal owner contracts changed: ${removal.sourcePath}`);
+  if (!taxonomy.pathMatcher.matches(authority.ownerPath, requireTaxonomyValue(taxonomy.schema.fixedDirectoryContracts["ticket-slug"],"ticket directory contract").pathPattern) || !taxonomy.pathMatcher.matches(authority.manifestPath, requireTaxonomyValue(taxonomy.schema.fixedFilenameContracts["ticket-manifest"],"ticket manifest contract").pathPattern)) throw new Error(`Ticket important removal owner contracts changed: ${removal.sourcePath}`);
   assertLeafPreimage(repoRoot, authority.manifestPath, authority.manifestPreimage);
   if (ticketManifestState(readFileSync(absolutePath(repoRoot, authority.manifestPath), "utf8")) !== "closed") throw new Error(`Ticket important removal manifest status changed: ${authority.manifestPath}`);
   const { authorityDigest: _digest, ...digestible } = authority;
@@ -8179,7 +8206,7 @@ function assertPlanOutsideTransaction(plan: TaxonomyPlan, transactionRoot: strin
     return false;
   };
   for (let leftIndex = 0; leftIndex < roles.length; leftIndex++) for (let rightIndex = leftIndex + 1; rightIndex < roles.length; rightIndex++) {
-    const left = roles[leftIndex], right = roles[rightIndex];
+    const left = requireTaxonomyValue(roles[leftIndex],"left mutable role"), right = requireTaxonomyValue(roles[rightIndex],"right mutable role");
     if (pathsOverlap(left.path, right.path) && !allowedOverlap(left, right)) throw new Error(`Plan mutable path roles overlap: ${left.role}:${left.path} <> ${right.role}:${right.path}`);
   }
 }
@@ -8441,7 +8468,7 @@ function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, j
     const pendingEditExchange = expected === 2 && pendingEditPaths.has(move.destinationPath) && states.every((state) => !state);
     if (!pendingEditExchange && (states.filter(Boolean).length !== 1 || !states[expected])) throw new Error(`resume-state-drift: move ${move.operationId}`);
     if (pendingEditExchange) continue;
-    const current = [source, stage, destination][expected];
+    const current = requireTaxonomyValue([source, stage, destination][expected],"[source, stage, destination][expected]");
     const installedLink = plan.symlinkTargetEdits.find((edit) => edit.sourcePath === move.sourcePath && edit.finalPath === move.destinationPath && journal.installedSymlinkTargetEditIds.includes(edit.operationId));
     if (!journal.appliedEditPaths.includes(move.destinationPath) && canonicalJson(leafPreimage(current)) !== canonicalJson(retargetedMovePreimage(move, installedLink))) throw new Error(`resume-state-drift: move preimage ${move.operationId}`);
   }
@@ -8451,14 +8478,14 @@ function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, j
     if (!journal.stagedEmbeddedRelocationIds.includes(entry.operationId) && journal.preparedEmbeddedRelocationIds.includes(entry.operationId) && !states[0] && states[1] && !states[2]) { journal.stagedEmbeddedRelocationIds.push(entry.operationId); reconciled = true; }
     const expected = journal.installedEmbeddedRelocationIds.includes(entry.operationId) ? 2 : journal.stagedEmbeddedRelocationIds.includes(entry.operationId) ? 1 : journal.preparedEmbeddedRelocationIds.includes(entry.operationId) && states[1] ? 1 : 0;
     if (states.filter(Boolean).length !== 1 || !states[expected]) throw new Error(`resume-state-drift: embedded relocation ${entry.operationId}`);
-    if (canonicalJson(leafPreimage([absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `relocation-${entry.operationId}`), absolutePath(repoRoot, entry.destinationPath)][expected])) !== canonicalJson(entry.preimage)) throw new Error(`resume-state-drift: embedded relocation preimage ${entry.operationId}`);
+    if (canonicalJson(leafPreimage(requireTaxonomyValue([absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `relocation-${entry.operationId}`), absolutePath(repoRoot, entry.destinationPath)][expected],"[absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `relocation-${entry.operationId}`), absolutePath(repoRoot, entry.destinationPath)][expected]"))) !== canonicalJson(entry.preimage)) throw new Error(`resume-state-drift: embedded relocation preimage ${entry.operationId}`);
   }
   for (const entry of plan.evidenceRemovals) {
     const states = present(absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `removal-${entry.operationId}`));
     if (!journal.stagedEvidenceRemovalIds.includes(entry.operationId) && journal.preparedEvidenceRemovalIds.includes(entry.operationId) && !states[0] && states[1]) { journal.stagedEvidenceRemovalIds.push(entry.operationId); reconciled = true; }
     const expected = journal.stagedEvidenceRemovalIds.includes(entry.operationId) ? 1 : journal.preparedEvidenceRemovalIds.includes(entry.operationId) && states[1] ? 1 : 0;
     if (states.filter(Boolean).length !== 1 || !states[expected]) throw new Error(`resume-state-drift: evidence removal ${entry.operationId}`);
-    if (canonicalJson(leafPreimage([absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `removal-${entry.operationId}`)][expected])) !== canonicalJson(entry.preimage)) throw new Error(`resume-state-drift: evidence removal preimage ${entry.operationId}`);
+    if (canonicalJson(leafPreimage(requireTaxonomyValue([absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `removal-${entry.operationId}`)][expected],"[absolutePath(repoRoot, entry.sourcePath), join(absolutePath(repoRoot, journal.stagingRoot), `removal-${entry.operationId}`)][expected]"))) !== canonicalJson(entry.preimage)) throw new Error(`resume-state-drift: evidence removal preimage ${entry.operationId}`);
     if (entry.authority.kind === "byte-and-mode-identical") for (const member of entry.authority.members.filter((candidate) => candidate.disposition === "retain")) {
       const owningMove = plan.moves.find((move) => move.sourcePath === member.sourcePath && move.destinationPath === member.finalPath);
       const retained = owningMove
@@ -8577,7 +8604,7 @@ function validateForwardGeneratorInputs(repoRoot: string, plan: TaxonomyPlan, jo
     try {
       const inputs = regeneration.inputs.map((input) => resumeGeneratorInputRecord(repoRoot, inputAuthority, journal, input, taxonomy));
       if (canonicalJson(inputs) !== canonicalJson(regeneration.inputs)) throw new Error(`resume-state-drift: regeneration inputs ${regeneration.id}`);
-      const contract = taxonomy.schema.generatorContracts[regeneration.contractId];
+      const contract = requireTaxonomyValue(taxonomy.schema.generatorContracts[regeneration.contractId],"taxonomy.schema.generatorContracts[regeneration.contractId]");
       const view = resumeGeneratorInputView(repoRoot, plan, regeneration, inputAuthority, journal, taxonomy);
       const paths = generatorInputPaths({ repoRoot }, contract, taxonomy, undefined, view);
       if (canonicalJson(paths) !== canonicalJson(regeneration.inputs.map(input => input.path))) {
@@ -8709,7 +8736,7 @@ function transactionBinaryWritePreparations(container: string, preparationName: 
   for (const name of readdirSync(container).sort(generatorPathCompare)) {
     const match = /^write-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(splitLeadingEmoji(name).rest);
     if (!match) continue;
-    const pid = Number.parseInt(match[1], 10), token = match[2];
+    const pid = Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10), token = requireTaxonomyValue(match[2],"match[2]");
     if (!Number.isSafeInteger(pid) || !TRANSACTION_LEASE_TOKEN.test(token) || name !== preparationName(pid, token)) throw new Error(`Transaction binary write preparation name is invalid: ${name}`);
     const root = join(container, name), stat = lstatOrNull(root);
     if (!stat?.isDirectory() || stat.isSymbolicLink()) throw new Error(`Transaction binary write preparation must be a no-follow directory: ${name}`);
@@ -8810,16 +8837,16 @@ function recoverTransactionBackups(repoRoot: string, plan: TaxonomyPlan, journal
     const rest = splitLeadingEmoji(name).rest;
     const final = /^([0-9a-f]{24})\.backup$/u.exec(name);
     if (final) {
-      const record = recordForStored(final[1], join(backupRoot, name));
-      records.set(final[1], record);
+      const record = recordForStored(requireTaxonomyValue(final[1],"final[1]"), join(backupRoot, name));
+      records.set(requireTaxonomyValue(final[1],"final[1]"), record);
       continue;
     }
     const match = /^backup-([0-9a-f]{24})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(rest);
-    if (!match || !TRANSACTION_LEASE_TOKEN.test(match[3])) {
+    if (!match || !TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(match[3],"match[3]"))) {
       if (rest.startsWith("restore-") || rest.startsWith("lease-")) continue;
       throw new Error(`Transaction backup root contains unauthorized evidence: ${name}`);
     }
-    const identity = match[1], pid = Number.parseInt(match[2], 10), token = match[3];
+    const identity = requireTaxonomyValue(match[1],"match[1]"), pid = Number.parseInt(requireTaxonomyValue(match[2],"match[2]"), 10), token = requireTaxonomyValue(match[3],"preparation token");
     if (name !== preparationName(identity, pid, token)) throw new Error(`Transaction backup preparation is not canonical: ${name}`);
     if (candidates.some((entry) => entry.identity === identity)) throw new Error(`Transaction backup root contains duplicate candidates for ${identity}`);
     const candidate = join(backupRoot, name);
@@ -8974,8 +9001,8 @@ function recoverRestorePreparations(repoRoot: string, plan: TaxonomyPlan, journa
     const rest = splitLeadingEmoji(name).rest;
     if (!rest.startsWith("restore-")) continue;
     const match = /^restore-([0-9a-f]{24})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(rest);
-    if (!match || !TRANSACTION_LEASE_TOKEN.test(match[3]) || name !== preparationName(match[1], Number.parseInt(match[2], 10), match[3])) throw new Error(`Restore preparation name is invalid: ${name}`);
-    const authority = byIdentity.get(match[1]);
+    if (!match || !TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(match[3],"match[3]")) || name !== preparationName(requireTaxonomyValue(match[1],"match[1]"), Number.parseInt(requireTaxonomyValue(match[2],"match[2]"), 10), requireTaxonomyValue(match[3],"preparation token"))) throw new Error(`Restore preparation name is invalid: ${name}`);
+    const authority = byIdentity.get(requireTaxonomyValue(match[1],"match[1]"));
     if (!authority || journal.state !== "rolling-back") throw new Error(`Restore preparation has no rolling-back journal authority: ${name}`);
     const root = join(backupRoot, name), leaf = join(root, `${match[1]}.backup`), postLeaf = join(root, `${match[1]}.post`), destination = absolutePath(repoRoot, authority.path);
     const stat = lstatOrNull(root);
@@ -9067,8 +9094,8 @@ function recoverReferenceEditPreparations(repoRoot: string, plan: TaxonomyPlan, 
     const rest = splitLeadingEmoji(name).rest;
     if (!rest.startsWith("edit-")) continue;
     const match = /^edit-([0-9a-f]{24})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(rest);
-    if (!match || !TRANSACTION_LEASE_TOKEN.test(match[3]) || name !== preparationName(match[1], Number.parseInt(match[2], 10), match[3]) || journal.state !== "editing") throw new Error(`Reference edit preparation is invalid or unreachable: ${name}`);
-    const path = editPaths.get(match[1]);
+    if (!match || !TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(match[3],"match[3]")) || name !== preparationName(requireTaxonomyValue(match[1],"match[1]"), Number.parseInt(requireTaxonomyValue(match[2],"match[2]"), 10), requireTaxonomyValue(match[3],"preparation token")) || journal.state !== "editing") throw new Error(`Reference edit preparation is invalid or unreachable: ${name}`);
+    const path = editPaths.get(requireTaxonomyValue(match[1],"match[1]"));
     if (!path || !journal.backups[path]) throw new Error(`Reference edit preparation has no frozen plan backup: ${name}`);
     const root = join(stageRoot, name), target = absolutePath(repoRoot, path), rootStat = lstatOrNull(root), expectedLeaf = `${match[1]}.edit`, expectedPreLeaf = `${match[1]}.pre`;
     if (!rootStat?.isDirectory() || rootStat.isSymbolicLink()) throw new Error(`Reference edit preparation must be a no-follow directory: ${name}`);
@@ -9145,18 +9172,18 @@ function assertRecoveryRootNames(
   for (const name of (lstatOrNull(stagingRoot) ? readdirSync(stagingRoot) : []).sort(generatorPathCompare)) {
     if (stageKnown.has(name)) continue;
     const match = /^edit-([0-9a-f]{24})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(splitLeadingEmoji(name).rest);
-    if (!match || !TRANSACTION_LEASE_TOKEN.test(match[3]) || name !== editPreparationName(match[1], Number.parseInt(match[2], 10), match[3])) throw new Error(`Transaction recovery staging root contains unauthorized evidence: ${name}`);
+    if (!match || !TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(match[3],"match[3]")) || name !== editPreparationName(requireTaxonomyValue(match[1],"match[1]"), Number.parseInt(requireTaxonomyValue(match[2],"match[2]"), 10), requireTaxonomyValue(match[3],"preparation token"))) throw new Error(`Transaction recovery staging root contains unauthorized evidence: ${name}`);
   }
   for (const name of (lstatOrNull(backupRoot) ? readdirSync(backupRoot) : []).sort(generatorPathCompare)) {
     if (/^[0-9a-f]{24}\.backup$/u.test(name)) continue;
     const rest = splitLeadingEmoji(name).rest;
     const leaf = /^(backup|restore)-([0-9a-f]{24})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(rest);
-    if (leaf && TRANSACTION_LEASE_TOKEN.test(leaf[4])) {
-      const expected = leaf[1] === "backup" ? backupPreparationName(leaf[2], Number.parseInt(leaf[3], 10), leaf[4]) : restorePreparationName(leaf[2], Number.parseInt(leaf[3], 10), leaf[4]);
+    if (leaf && TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(leaf[4],"leaf[4]"))) {
+      const expected = leaf[1] === "backup" ? backupPreparationName(requireTaxonomyValue(leaf[2],"leaf[2]"), Number.parseInt(requireTaxonomyValue(leaf[3],"leaf[3]"), 10), requireTaxonomyValue(leaf[4],"preparation token")) : restorePreparationName(requireTaxonomyValue(leaf[2],"leaf[2]"), Number.parseInt(requireTaxonomyValue(leaf[3],"leaf[3]"), 10), requireTaxonomyValue(leaf[4],"preparation token"));
       if (name === expected) continue;
     }
     const lease = /^lease-([1-9][0-9]*)-([0-9a-f-]+)-(preparing|stale)$/u.exec(rest);
-    if (lease && TRANSACTION_LEASE_TOKEN.test(lease[2]) && name === leasePreparationName(Number.parseInt(lease[1], 10), lease[2], lease[3] as "preparing" | "stale")) continue;
+    if (lease && TRANSACTION_LEASE_TOKEN.test(requireTaxonomyValue(lease[2],"lease[2]")) && name === leasePreparationName(Number.parseInt(requireTaxonomyValue(lease[1],"lease[1]"), 10), requireTaxonomyValue(lease[2],"lease[2]"), lease[3] as "preparing" | "stale")) continue;
     throw new Error(`Transaction recovery backup root contains unauthorized evidence: ${name}`);
   }
 }
@@ -9173,7 +9200,7 @@ function validateLeasePreparationEvidence(
   for (const name of readdirSync(backupRoot).sort(generatorPathCompare)) {
     const match = /^lease-([1-9][0-9]*)-([0-9a-f-]+)-(preparing|stale)$/u.exec(splitLeadingEmoji(name).rest);
     if (!match) continue;
-    const pid = Number.parseInt(match[1], 10), token = match[2], state = match[3] as "preparing" | "stale";
+    const pid = Number.parseInt(requireTaxonomyValue(match[1],"match[1]"), 10), token = requireTaxonomyValue(match[2],"match[2]"), state = match[3] as "preparing" | "stale";
     if (!TRANSACTION_LEASE_TOKEN.test(token) || name !== leasePreparationName(pid, token, state)) throw new Error(`Transaction lease preparation name is invalid: ${name}`);
     const root = join(backupRoot, name), stat = lstatOrNull(root);
     if (!stat?.isDirectory() || stat.isSymbolicLink()) throw new Error(`Transaction lease preparation must be a no-follow directory: ${name}`);
@@ -9417,7 +9444,7 @@ function artifactProjectionPostApplyViolations(repoRoot: string, plan: TaxonomyP
       const unexpected = [...actual].filter((row) => !expected.has(row));
       if (missing.length > 0 || unexpected.length > 0) rows.push(violation("projection-apply-descendants-invalid", rendered.destinationRoot, `${id} exact descendant mismatch: ${missing.length} missing, ${unexpected.length} unexpected`));
     }
-    if ([...groups.values()].reduce((count, group) => count + group.length, 0) !== moves.length && moves.length > 0) rows.push(violation("projection-apply-group-unresolved", moves[0].sourcePath, `${id} has moves outside its exact source root`));
+    if ([...groups.values()].reduce((count, group) => count + group.length, 0) !== moves.length && moves.length > 0) rows.push(violation("projection-apply-group-unresolved", requireTaxonomyValue(moves[0],"moves[0]").sourcePath, `${id} has moves outside its exact source root`));
   }
   return stableViolations(rows);
 }
@@ -9529,7 +9556,7 @@ function reconcileRollbackTuples(repoRoot: string, plan: TaxonomyPlan, journal: 
     if (!pendingRestoreExchange && states.filter(Boolean).length !== 1) throw new Error(`rollback-state-drift: move ${move.operationId}`);
     if (pendingRestoreExchange) continue;
     const index = states.findIndex(Boolean);
-    const current = [source, stage, destination][index];
+    const current = requireTaxonomyValue([source, stage, destination][index],"[source, stage, destination][index]");
     const installedLink = plan.symlinkTargetEdits.find((edit) => edit.sourcePath === move.sourcePath && edit.finalPath === move.destinationPath && journal.installedSymlinkTargetEditIds.includes(edit.operationId));
     let edited = false;
     let expectedPreimage = retargetedMovePreimage(move, installedLink);
@@ -9550,7 +9577,7 @@ function reconcileRollbackTuples(repoRoot: string, plan: TaxonomyPlan, journal: 
     const source = absolutePath(repoRoot, entry.sourcePath), stage = join(absolutePath(repoRoot, journal.stagingRoot), `relocation-${entry.operationId}`), destination = absolutePath(repoRoot, entry.destinationPath);
     const states = [present(source), present(stage), present(destination)];
     if (states.filter(Boolean).length !== 1) throw new Error(`rollback-state-drift: relocation ${entry.operationId}`);
-    const current = [source, stage, destination][states.findIndex(Boolean)];
+    const current = requireTaxonomyValue([source, stage, destination][states.findIndex(Boolean)],"[source, stage, destination][states.findIndex(Boolean)]");
     if (canonicalJson(leafPreimage(current)) !== canonicalJson(entry.preimage)) throw new Error(`rollback-state-drift: relocation preimage ${entry.operationId}`);
     if (states[0]) { remove(journal.installedEmbeddedRelocationIds, entry.operationId); remove(journal.stagedEmbeddedRelocationIds, entry.operationId); remove(journal.preparedEmbeddedRelocationIds, entry.operationId); }
     else if (states[1]) { remove(journal.installedEmbeddedRelocationIds, entry.operationId); add(journal.stagedEmbeddedRelocationIds, entry.operationId); add(journal.preparedEmbeddedRelocationIds, entry.operationId); }
@@ -9983,7 +10010,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       const childSlug = splitLeadingEmoji(name).rest;
       const preparation = /^prepare-([0-9]{6})-([1-9][0-9]*)-([0-9a-f-]+)$/u.exec(childSlug);
       if (preparation) {
-        const ordinal = preparation[1], pid = Number.parseInt(preparation[2], 10), token = preparation[3];
+        const ordinal = requireTaxonomyValue(preparation[1],"preparation[1]"), pid = Number.parseInt(requireTaxonomyValue(preparation[2],"preparation[2]"), 10), token = requireTaxonomyValue(preparation[3],"preparation[3]");
         if (!Number.isSafeInteger(pid) || !TRANSACTION_LEASE_TOKEN.test(token) || name !== attemptPreparationName(ordinal, pid, token)) throw new Error(`Unexpected transaction attempt preparation: ${name}`);
         const path = join(attemptsAbsolute, name);
         const stat = lstatOrNull(path);
@@ -10029,8 +10056,8 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     }
   }
   for (let index = 0; index < existingAttempts.length; index++) {
-    if (existingAttempts[index].ordinal !== String(index + 1).padStart(6, "0")) throw new Error("Transaction attempt ordinals are not contiguous");
-    if (index < existingAttempts.length - 1 && existingAttempts[index].journal.state !== "rolled-back") throw new Error("Only rolled-back attempts may precede another transaction attempt");
+    if (requireTaxonomyValue(existingAttempts[index],"existingAttempts[index]").ordinal !== String(index + 1).padStart(6, "0")) throw new Error("Transaction attempt ordinals are not contiguous");
+    if (index < existingAttempts.length - 1 && requireTaxonomyValue(existingAttempts[index],"existingAttempts[index]").journal.state !== "rolled-back") throw new Error("Only rolled-back attempts may precede another transaction attempt");
   }
   const unpublishedOrdinals = new Set<string>();
   const publishedOrdinals = new Set(existingAttempts.map((entry) => entry.ordinal));
@@ -10192,8 +10219,8 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     if (localTarget !== edit.logicalTargetSourcePath) throw new Error(`Symlink target authority is not repository-local or does not match its logical source: ${edit.sourcePath}`);
     const linkMoves = plan.moves.filter((move) => move.sourcePath === edit.sourcePath);
     const targetMoves = plan.moves.filter((move) => move.sourcePath === edit.logicalTargetSourcePath);
-    const expectedFinalPath = linkMoves.length === 0 ? edit.sourcePath : linkMoves.length === 1 ? linkMoves[0].destinationPath : "";
-    const expectedTargetFinalPath = targetMoves.length === 0 ? edit.logicalTargetSourcePath : targetMoves.length === 1 ? targetMoves[0].destinationPath : "";
+    const expectedFinalPath = linkMoves.length === 0 ? edit.sourcePath : linkMoves.length === 1 ? requireTaxonomyValue(linkMoves[0],"linkMoves[0]").destinationPath : "";
+    const expectedTargetFinalPath = targetMoves.length === 0 ? edit.logicalTargetSourcePath : targetMoves.length === 1 ? requireTaxonomyValue(targetMoves[0],"targetMoves[0]").destinationPath : "";
     if (edit.finalPath !== expectedFinalPath || edit.logicalTargetFinalPath !== expectedTargetFinalPath) throw new Error(`Symlink target projection does not match exact plan moves: ${edit.sourcePath}`);
     const expectedTarget = posix.relative(posix.dirname(expectedFinalPath), expectedTargetFinalPath);
     if (!expectedTarget || expectedTarget !== edit.newTarget || expectedTarget.startsWith("/") || posix.normalize(posix.join(posix.dirname(expectedFinalPath), expectedTarget)) !== expectedTargetFinalPath) throw new Error(`Symlink relative target does not resolve to its frozen logical target: ${edit.sourcePath}`);
@@ -10507,9 +10534,9 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     if (preflightReferenceBasis) validatePreflightReferenceBasis(preflightReferenceBasis, options.cancelFile, options.progress);
     journal.state = "staging";
     persistJournal(repoRoot, journalPath, journal);
-    for (let index = 0; index < plan.moves.length; index++) {
+    for (const [index, move] of plan.moves.entries()) {
       checkCancellation(repoRoot, options.cancelFile);
-      const move = plan.moves[index];
+
       const stage = join(absolutePath(repoRoot, journal.stagingRoot), move.operationId);
       if (!journal.preparedMoveIds.includes(move.operationId)) {
         journal.preparedMoveIds.push(move.operationId);
@@ -10558,9 +10585,9 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     injectFailure(options, "after-embedded-root-staging");
     journal.state = "installing";
     persistJournal(repoRoot, journalPath, journal);
-    for (let index = 0; index < plan.moves.length; index++) {
+    for (const [index, move] of plan.moves.entries()) {
       checkCancellation(repoRoot, options.cancelFile);
-      const move = plan.moves[index];
+
       const destination = absolutePath(repoRoot, move.destinationPath);
       const installed = journal.installedMoveIds.includes(move.operationId);
       if (!lstatOrNull(destination)) {
@@ -10612,9 +10639,9 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     const editGroups = new Map<string, ReferenceEdit[]>();
     for (const edit of plan.edits) editGroups.set(edit.path, [...(editGroups.get(edit.path) ?? []), edit]);
     const sortedEditGroups = [...editGroups.entries()].sort(([a], [b]) => a.localeCompare(b));
-    for (let index = 0; index < sortedEditGroups.length; index++) {
+    for (const [index, [path, edits]] of sortedEditGroups.entries()) {
       checkCancellation(repoRoot, options.cancelFile);
-      const [path, edits] = sortedEditGroups[index];
+
       if (!journal.appliedEditPaths.includes(path)) {
         const preimages = new Map(edits.map((edit) => [canonicalJson(edit.preimage), edit.preimage]));
         const preimage = [...preimages.values()][0];
@@ -10631,8 +10658,8 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     injectFailure(options, "after-edits");
     journal.state = "regenerating";
     persistJournal(repoRoot, journalPath, journal);
-    for (let index = 0; index < plan.regenerations.length; index++) {
-      const regeneration = plan.regenerations[index];
+    for (const [index, regeneration] of plan.regenerations.entries()) {
+
       checkCancellation(repoRoot, options.cancelFile);
       if (validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
       if (journal.completedRegenerationIds.includes(regeneration.id)) {
@@ -10666,9 +10693,9 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     injectFailure(options, "before-verify");
     const prunableSourceParents = emptySourceParents(repoRoot, plan, ticketRoot);
     const projectionState = artifactProjectionPostApplyViolations(repoRoot, plan, taxonomy, new Set(prunableSourceParents));
-    if (projectionState.length > 0) throw new Error(`Projection verification failed: ${projectionState[0].code} at ${projectionState[0].path}`);
+    if (projectionState.length > 0) throw new Error(`Projection verification failed: ${requireTaxonomyValue(projectionState[0],"projectionState[0]").code} at ${requireTaxonomyValue(projectionState[0],"projectionState[0]").path}`);
     const staleProjectionTokens = projectionStaleViolations(repoRoot, plan, taxonomy, undefined, options.explicitTicketDir);
-    if (staleProjectionTokens.length > 0) throw new Error(`Projection verification found ${staleProjectionTokens.length} stale old-hierarchy token(s): ${staleProjectionTokens[0].path}`);
+    if (staleProjectionTokens.length > 0) throw new Error(`Projection verification found ${staleProjectionTokens.length} stale old-hierarchy token(s): ${requireTaxonomyValue(staleProjectionTokens[0],"staleProjectionTokens[0]").path}`);
     if (actualAffectedDigest(repoRoot, plan, taxonomy) !== plan.expectedPostStateDigest) throw new Error("Post-state digest does not match plan expectation");
     const oldTargets = new Set<string>([...plan.moves.map((entry) => entry.sourcePath), ...plan.evidenceRemovals.map((entry) => entry.sourcePath)]);
     for (const root of plan.embeddedTicketRoots) for (const path of embeddedTargetPaths(plan, root)) oldTargets.add(path);
@@ -10707,7 +10734,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         if (!walStat?.isDirectory() || walStat.isSymbolicLink()) throw new Error("Taxonomy journal recovery has no canonical journal or direct WAL authority");
         const preparations = readdirSync(walRoot).filter((name) => name !== journalFilename);
         if (preparations.length !== 1) throw new Error("Taxonomy journal recovery has ambiguous previous-image authority");
-        const previous = join(walRoot, preparations[0], jsonPreviousName);
+        const previous = join(walRoot, requireTaxonomyValue(preparations[0],"preparations[0]"), jsonPreviousName);
         const previousStat = lstatOrNull(previous);
         if (!previousStat?.isFile() || previousStat.isSymbolicLink()) throw new Error("Taxonomy journal recovery previous-image authority is unavailable");
         const recovered = readJournal(previous, journalWriteDirectory, journalJsonWritePreparationName, jsonPreviousName);

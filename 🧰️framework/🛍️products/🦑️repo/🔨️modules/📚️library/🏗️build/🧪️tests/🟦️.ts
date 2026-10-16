@@ -1,3 +1,6 @@
+import "./🎟️phase/🟦️.ts";
+import "../📥️caller/🧪️tests/📥️birth/🟦️.ts";
+import "../🧭️selection/👁️watch/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

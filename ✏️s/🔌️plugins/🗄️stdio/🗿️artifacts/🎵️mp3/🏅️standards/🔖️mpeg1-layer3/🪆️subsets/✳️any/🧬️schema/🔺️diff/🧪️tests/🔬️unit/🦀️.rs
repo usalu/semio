@@ -1,4 +1,6 @@
-use super::*;
+use crate::{standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3v1Tag, standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3v2Tag, standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Frame, standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot};
+use crate::{standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Frame, standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3FrameHeader};
+use crate::standards::mpeg1_layer3::subsets::any::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

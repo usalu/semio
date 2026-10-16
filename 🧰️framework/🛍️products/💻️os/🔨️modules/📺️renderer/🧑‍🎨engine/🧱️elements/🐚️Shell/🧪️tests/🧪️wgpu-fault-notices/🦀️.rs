@@ -58,15 +58,15 @@ fn the_funnel_tells_the_recorded_refusal_and_mirrors_it_as_a_status() {
     let notices = app_notices(&corpus);
     let row = corpus["resolutions"].as_array().expect("resolutions").iter().find(|row| row["id"] == "placeholder from params").expect("the params row");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Native);
-    shell.locale_id = "de".into();
-    shell.chrome_build.refused_guest_fault = Some(refused(row, &notices, semio_framework::Severity::Warning));
-    shell.note_dispatch_fault("handle_action failed: generation3d.gumball.kind-unavailable: widget kind brep.mesh.translate is unavailable");
-    let told: Vec<(String, Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
+    shell.prefs.locale_id = "de".into();
+    shell.chrome.chrome_build.refused_guest_fault = Some(refused(row, &notices, semio_framework::Severity::Warning));
+    shell.prefs.note_dispatch_fault("handle_action failed: generation3d.gumball.kind-unavailable: widget kind brep.mesh.translate is unavailable", &mut shell.chrome);
+    let told: Vec<(String, Option<String>, Option<String>)> = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
     assert_eq!(told, [("status".to_string(), Some("Die Widget-Art brep.mesh.translate ist hier nicht verfügbar.".to_string()), Some("generation3d.gumball.kind-unavailable".to_string()))]);
-    assert!(shell.chrome_build.refused_guest_fault.is_none(), "the funnel consumes the recorded refusal");
-    shell.chrome_build.refused_guest_fault = Some(refused(row, &notices, semio_framework::Severity::Warning));
-    shell.note_dispatch_fault("surface render failed");
-    let notice = shell.transient_notice().expect("a banner is showing");
+    assert!(shell.chrome.chrome_build.refused_guest_fault.is_none(), "the funnel consumes the recorded refusal");
+    shell.chrome.chrome_build.refused_guest_fault = Some(refused(row, &notices, semio_framework::Severity::Warning));
+    shell.prefs.note_dispatch_fault("surface render failed", &mut shell.chrome);
+    let notice = shell.chrome.transient_notice().expect("a banner is showing");
     assert_eq!((notice.message.as_str(), notice.code.as_deref()), ("surface render failed", None), "a refusal naming another code is not this string's");
 }
 
@@ -91,10 +91,10 @@ fn a_refused_guest_channel_is_told_as_its_localized_notice() {
             (semio_framework_ui_locale::Locale::De, "de", format!("Dieses Plugin wurde für App-Kanal {guest} gebaut, diese App spricht aber App-Kanal {host} — Plugin neu bauen.")),
         ] {
             let mut shell = ShellState::new(Vec::new(), String::new(), locale, semio_framework_ui_locale::Terminology::Native);
-            shell.locale_id = locale_id.into();
-            let detail = shell.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), frame: None,kernel:None,actor_call:None, text: format!("create_app promise failed: {}", fault.describe()) });
+            shell.prefs.locale_id = locale_id.into();
+            let detail = shell.prefs.note_refused_open(crate::program_bridge::ProgramFault { fault: Some(fault.clone()), frame: None,kernel:None,actor_call:None, text: format!("create_app promise failed: {}", fault.describe()) }, &mut shell.chrome);
             assert_eq!(detail, expected, "{name} {locale_id}: the open's status keeps the localized notice");
-            let told: Vec<(String, Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
+            let told: Vec<(String, Option<String>, Option<String>)> = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
             assert_eq!(told, [("status".to_string(), Some(expected.clone()), Some(code.to_string()))], "{name} {locale_id}: told politely, described by its code");
             assert!(!detail.contains(code), "{name} {locale_id}: never the raw code");
             if locale == semio_framework_ui_locale::Locale::De {

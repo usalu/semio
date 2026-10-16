@@ -1,7 +1,20 @@
 //! 📨️ What an app emits: edits, tasks, child emissions, actions and the command macros.
-use super::child_emit_preparation::{ChildEmitPreparation, ChildEmitPreparationStep, OwnedChildEmit};
-use super::window_config::WindowConfigMutation;
-use super::window_transient::WindowTransientMutation;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "🛬️lifted/📦️preparation/🦀️.rs"]
+pub mod child_emit_preparation;
+#[allow(unused_imports)]
+pub use child_emit_preparation::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🪟️surface/🦀️.rs"]
+pub mod surface_contract;
+use crate::child_emit_preparation::ChildEmitPreparation;
+use crate::child_emit_preparation::ChildEmitPreparationStep;
+use crate::child_emit_preparation::OwnedChildEmit;
+use semio_framework_plugin_window_config::WindowConfigMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework::{kernel::{AppEvent, Effect, SchemaId}, Fault, FaultCode, FaultOrigin, ViewModel};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -25,13 +38,10 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use crate::app_contract::ArtifactApp;
-use crate::app_views::NoConfigMutation;
-use crate::app_views::NoDraftMutation;
+use semio_framework_plugin_decl_views::NoConfigMutation;
+use semio_framework_plugin_decl_views::NoDraftMutation;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-
-
 
 /// 📤️ What a pure `ArtifactApp::handle` emits: zero-or-more typed document operations (applied
 /// through the document store with a true inverse) and zero-or-more typed config operations (applied
@@ -226,12 +236,12 @@ impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation
     /// 🧵️ `⚛️reactor::spawn_task`'s sole consumer — decomposes the task into its plain-data
     /// bookkeeping fields plus the boxed closure, so the reactor (which has no reason to know
     /// about `AsyncTask` as a named type beyond spawning it) never has to reconstruct one.
-    pub(crate) fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn AsyncTaskRun<Mutation,ConfigMutation,DraftMutation>>) {
+    pub fn into_parts(self) -> (String, Option<String>, Option<Vec<u8>>, Box<dyn AsyncTaskRun<Mutation,ConfigMutation,DraftMutation>>) {
         (self.label, self.key, self.restart, self.run)
     }
 
     /// 🧊️ Retires a refused task cold; see [`dispose_cold_task_run`].
-    pub(crate) fn dispose_cold(self) {
+    pub fn dispose_cold(self) {
         dispose_cold_task_run(self.run);
     }
 }
@@ -242,7 +252,7 @@ impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation
 /// follow-up dispatch stays attributed to the same actor/instance even if a different one is
 /// active by the time the task resolves.
 pub struct TaskCtx {
-    pub host: crate::host::Host,
+    pub host: semio_framework_plugin_actor_host::Host,
     pub meta: ActionMeta,
 }
 
@@ -268,54 +278,6 @@ pub enum TaskResolution<Mutation, ConfigMutation = NoConfigMutation, DraftMutati
 }
 
 include!("../../🧵️task/🛬️source/🦀️.rs");
-
-/// 👥️🫧️ The two EPHEMERAL lanes' emission, deliberately separate from {@link Emit}.
-///
-/// 🎯️ Why not more fields on `Emit`: the document lanes (artifact/config/draft) all have an op
-/// log, an edit id, an undo group and a failure mode; presence and transient have NONE of those.
-/// They cannot fail, cannot be undone, never enter a checkpoint and never appear in the command
-/// log. Folding them into `Emit` would put five type parameters on ~1000 signatures to express a
-/// thing that shares none of `Emit`'s machinery — and would force every app that emits no
-/// presence to name its presence type anyway.
-///
-/// Apps opt in by overriding {@link ArtifactApp::ephemeral}; the default emits nothing, so an
-/// app with no shareable or UI-local state writes no code at all.
-#[derive(Debug)]
-pub struct EphemeralEmit<A: ArtifactApp> {
-    /// 👥️ Ephemeral SHARED — broadcast to peers, never persisted.
-    pub presence: Vec<A::PresenceMutation>,
-    /// 🫧️ Ephemeral LOCAL-ONLY — never leaves this client.
-    pub transient: Vec<A::TransientMutation>,
-    /// 🪟️ Ephemeral LOCAL-ONLY state addressed to an exact concrete window instance.
-    pub window_transient: Vec<WindowTransientMutation>,
-}
-
-impl<A: ArtifactApp> Default for EphemeralEmit<A> {
-    fn default() -> Self {
-        Self { presence: Vec::new(), transient: Vec::new(), window_transient: Vec::new() }
-    }
-}
-
-impl<A: ArtifactApp> EphemeralEmit<A> {
-    /// 👥️ Presence-only emission — the common case (a moved cursor, a changed selection).
-    pub async fn presence(presence: Vec<A::PresenceMutation>) -> Self {
-        Self { presence, transient: Vec::new(), window_transient: Vec::new() }
-    }
-
-    /// 🫧️ Transient-only emission — the common case (a hover, an in-flight gesture).
-    pub async fn transient(transient: Vec<A::TransientMutation>) -> Self {
-        Self { presence: Vec::new(), transient, window_transient: Vec::new() }
-    }
-
-    pub async fn window_transient(window_transient: Vec<WindowTransientMutation>) -> Self {
-        Self { presence: Vec::new(), transient: Vec::new(), window_transient }
-    }
-
-    /// 🈳️ Whether this emission touches neither ephemeral lane.
-    pub async fn is_empty(&self) -> bool {
-        self.presence.is_empty() && self.transient.is_empty() && self.window_transient.is_empty()
-    }
-}
 
 /// 🕹️ One app-initiated selection write riding alongside an ordinary action's own mutations —
 /// the ONLY way a reducer expresses "select what I just created/widened to" ("Select Same Kind",
@@ -358,18 +320,18 @@ fn serialize_child_genesis_reference<S: serde::Serializer>(reference: &ArtifactR
 }
 
 impl ChildEmitGenesis {
-    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         let release_bytes = if self.initial_pack.capacity() != 0 { self.initial_pack.capacity() } else {
             [&self.reference.artifact_id, &self.reference.dialect.artifact_kind, &self.reference.dialect.standard, &self.reference.dialect.subset].into_iter().find_map(|value| (value.capacity() != 0).then_some(value.capacity())).unwrap_or(0)
         };
         Ok(RetirementDemand { release_bytes, depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.initial_pack.capacity() == 0 && [&self.reference.artifact_id, &self.reference.dialect.artifact_kind, &self.reference.dialect.standard, &self.reference.dialect.subset].into_iter().all(|value| value.capacity() == 0)
     }
 
-    pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands()?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original child genesis release exceeds supplied depth")); }
@@ -428,7 +390,7 @@ impl ChildEmit {
     }
 
     /// ♻️ Retires one original child allocation under every independent caller currency.
-    pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands()?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original child release exceeds supplied depth")); }
@@ -455,7 +417,7 @@ impl ChildEmit {
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.genesis.is_none() && self.ops.capacity() == 0 && self.labels.capacity() == 0 && [&self.op_schema.0, &self.child_id, &self.slot, &self.owner].into_iter().all(|value| value.capacity() == 0)
     }
 
@@ -477,7 +439,7 @@ impl ChildEmit {
     }
 
     /// 📏️ Reads the next original physical allocation without increasing caller authority.
-    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if let Some(genesis) = self.genesis.as_ref() {
             if genesis.terminal_is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
             let mut demand = genesis.retirement_demands()?;
@@ -533,7 +495,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
     pub fn prepare_child_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{
         let idle=RetainedCloneProgress::default();
         if self.child_preparations.is_empty()&&self.child_preparations.capacity()==0{return Ok(ChildEmitPreparationStep::Ready(idle));}
-        let demand=self.child_preparation_demands(grant.maximum_copy_bytes).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?;
+        let demand=self.child_preparation_demands(grant.maximum_copy_bytes).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?;
         if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(ChildEmitPreparationStep::Pending(idle));}
         let Some(preparation)=self.child_preparations.front_mut()else{
             self.child_preparations=std::collections::VecDeque::new();
@@ -552,7 +514,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
             return Ok(match step{ChildEmitPreparationStep::Ready(progress)=>ChildEmitPreparationStep::Pending(progress),step=>step});
         }
         if owned{
-            let Some((metadata,batch,progress))=preparation.take_ready_owned(grant).map_err(|error|super::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
+            let Some((metadata,batch,progress))=preparation.take_ready_owned(grant).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
             if !progress.fits(grant){return Err(plugin_sdk_fault("original child source transfer exceeded its caller grant"));}
             self.owned_child_emits.push(OwnedChildEmit::new(metadata,batch));return Ok(ChildEmitPreparationStep::Pending(progress));
         }
@@ -590,7 +552,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
 
     /// ♻️ Keeps original child owners until their supplied grant admits one real release or transfer.
     pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault> {
-        let Some(demand) = self.child_close_demands(grant.maximum_copy_bytes).map_err(|error| super::child_emit_preparation::retirement_refusal_fault(&error))? else { return Ok(None); };
+        let Some(demand) = self.child_close_demands(grant.maximum_copy_bytes).map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))? else { return Ok(None); };
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("original emitted child close exceeds supplied depth")); }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(Some(PluginLifecycleStep::Progress(Default::default()))); }
         let child_grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -608,15 +570,15 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         if self.child_preparations.capacity() != 0 { self.child_preparations = std::collections::VecDeque::new(); }
         else if let Some(child) = self.owned_child_emits.last_mut() {
             if child.terminal_is_empty() { self.owned_child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            let step = child.close_granted(child_grant).map_err(|error| super::child_emit_preparation::retirement_refusal_fault(&error))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted typed child").map_err(|error| super::child_emit_preparation::retirement_refusal_fault(&error))?;
+            let step = child.close_granted(child_grant).map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted typed child").map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
             return Ok(Some(PluginLifecycleStep::Progress(step.progress())));
         }
         else if self.owned_child_emits.capacity() != 0 { self.owned_child_emits = Vec::new(); }
         else if let Some(child) = self.child_emits.last_mut() {
             if child.terminal_is_empty() { self.child_emits.pop(); return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
-            let step = child.close_one(child_grant).map_err(|error| super::child_emit_preparation::retirement_refusal_fault(&error))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted wire child").map_err(|error| super::child_emit_preparation::retirement_refusal_fault(&error))?;
+            let step = child.close_one(child_grant).map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child_grant, step, child.terminal_is_empty(), "original emitted wire child").map_err(|error| crate::child_emit_preparation::retirement_refusal_fault(&error))?;
             return Ok(Some(PluginLifecycleStep::Progress(step.progress())));
         }
         else { self.child_emits = Vec::new(); }
@@ -748,29 +710,6 @@ pub trait AppAction: Sized {
     async fn from_action_id(id: &str) -> Result<Self, String>;
 }
 
-/// 🏭️ Generates a closed per-app action enum plus its `AppAction` impl from a list of
-/// `Variant = "actionId"` pairs — the ids should match what's passed to `.mutation()/.view_action()/
-/// .shell_action()` on the app's `AppBuilder` so the declared action registry and the dispatch match
-/// can't drift apart silently.
-#[macro_export]
-macro_rules! app_action_enum {
-($vis:vis enum $Name:ident { $($Variant:ident = $id:literal),* $(,)? }) => {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    $vis enum $Name {
-        $($Variant),*
-    }
-
-    impl $crate::app_emission::AppAction for $Name {
-        async fn from_action_id(id: &str) -> Result<Self, String> {
-            match id {
-                $($id => Ok(Self::$Variant),)*
-                other => Err(Fault::from(format!("unknown action id {other}"))),
-            }
-        }
-    }
-};
-}
-
 /// 🎮️ Generates a closed per-app `ArtifactApp::Command` enum from `"id" => module::Payload`
 /// rows — the taxonomy-decomposed replacement for a hand-written
 /// `#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)] pub enum XCommand { #[dsl(key = "...")] Variant { .. }, .. }`
@@ -849,325 +788,6 @@ macro_rules! app_action_enum {
 pub trait ToolCommandCatalog {
     const TOOL_JOB_IDS: &'static [&'static str];
 }
-
-#[macro_export]
-macro_rules! app_commands {
-($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty, ctx = $Ctx:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
-    $(#[$meta])*
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-    $vis enum $Name {
-        $(
-            #[dsl(key = $key)]
-            $Payload($module::$Payload),
-        )*
-    }
-
-    impl $Name {
-        /// 🎯️ Exact manifest ids owned by this generated typed command schema.
-        pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];
-
-        /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
-        pub fn command_id(&self) -> &'static str {
-            match self {
-                $(Self::$Payload(_) => $id,)*
-            }
-        }
-
-        /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg, ctx)` — see
-        /// `🔖️KeyedAndContextualForms` for why `ctx` exists.
-        pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>, ctx: &mut $Ctx) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
-            match self {
-                $(Self::$Payload(payload) => $module::handle(payload, doc, cfg, ctx),)*
-            }
-        }
-    }
-
-    impl $crate::ToolCommandCatalog for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-    }
-
-    impl ::protocol::OpText for $Name {
-        fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = semio_framework_dsl_record::parse(
-                        body,
-                        &(spec_fn.ordinary)(),
-                        &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline },
-                    )?;
-                    return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
-        }
-        fn print_op(&self) -> String {
-            let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
-        }
-    }
-
-    impl ::protocol::OpBinary for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
-        }
-    }
-};
-
-($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
-    $(#[$meta])*
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-    $vis enum $Name {
-        $(
-            #[dsl(key = $key)]
-            $Payload($module::$Payload),
-        )*
-    }
-
-    impl $Name {
-        /// 🎯️ Exact manifest ids owned by this generated typed command schema.
-        pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];
-
-        /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
-        pub fn command_id(&self) -> &'static str {
-            match self {
-                $(Self::$Payload(_) => $id,)*
-            }
-        }
-
-        /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)`.
-        pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
-            match self {
-                $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
-            }
-        }
-    }
-
-    impl $crate::ToolCommandCatalog for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-    }
-
-    impl ::protocol::OpText for $Name {
-        fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = semio_framework_dsl_record::parse(
-                        body,
-                        &(spec_fn.ordinary)(),
-                        &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline },
-                    )?;
-                    return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
-        }
-        fn print_op(&self) -> String {
-            let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
-        }
-    }
-
-    impl ::protocol::OpBinary for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
-        }
-    }
-};
-
-($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Mutation:ty, $Config:ty, $ConfigMutation:ty { $($id:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
-    $(#[$meta])*
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-    $vis enum $Name {
-        $(
-            #[dsl(key = $id)]
-            $Payload($module::$Payload),
-        )*
-    }
-
-    impl $Name {
-        /// 🎯️ Exact manifest ids owned by this generated typed command schema.
-        pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];
-
-        /// 🏷️ Each row's `$id` — mirrors `ArtifactApp::command_id`'s per-command labeling need.
-        pub fn command_id(&self) -> &'static str {
-            match self {
-                $(Self::$Payload(_) => $id,)*
-            }
-        }
-
-        /// 🎯️ Matches each variant to `$module::handle(payload, doc, cfg)` — see `🔖️DispatchDesignChoice`
-        /// above for why this is concrete (not generic) in the app's own associated types.
-        pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::Emit<$Mutation, $ConfigMutation>, $crate::Fault> {
-            match self {
-                $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
-            }
-        }
-    }
-
-    impl $crate::ToolCommandCatalog for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-    }
-
-    impl ::protocol::OpText for $Name {
-        fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = semio_framework_dsl_record::parse(
-                        body,
-                        &(spec_fn.ordinary)(),
-                        &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline },
-                    )?;
-                    return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
-        }
-        fn print_op(&self) -> String {
-            let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
-        }
-    }
-
-    impl ::protocol::OpBinary for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
-        }
-    }
-};
-}
-
-/// 👁️ The read-only twin of [`app_commands!`] — same generated shape (enum, `TOOL_JOB_IDS`,
-/// `command_id`, `ToolCommandCatalog`, `OpText`/`OpBinary`), but `dispatch` returns
-/// [`ViewEmit`], so a viewer's typed command channel is STRUCTURALLY incapable of carrying an
-/// artifact or draft mutation (contract §2.2) — the read-only guarantee is a type property of
-/// the command enum itself, not a convention each payload module has to keep.
-#[macro_export]
-macro_rules! view_commands {
-($(#[$meta:meta])* $vis:vis enum $Name:ident for $Snapshot:ty, $Config:ty, $ConfigMutation:ty { $($id:literal as $key:literal => $module:ident :: $Payload:ident),* $(,)? }) => {
-    $(#[$meta])*
-    #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-    $vis enum $Name {
-        $(
-            #[dsl(key = $key)]
-            $Payload($module::$Payload),
-        )*
-    }
-
-    impl $Name {
-        /// 🎯️ Exact manifest ids owned by this generated typed command schema.
-        pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];
-
-        /// 🏷️ Each row's `$id` — the manifest action id, distinct from the `$key` wire keyword.
-        pub fn command_id(&self) -> &'static str {
-            match self {
-                $(Self::$Payload(_) => $id,)*
-            }
-        }
-
-        /// 👁️ Matches each variant to `$module::handle(payload, doc, cfg)`, whose return type is
-        /// `ViewEmit` — no artifact/draft lane exists to route.
-        pub fn dispatch(&self, doc: &$crate::ArtifactView<'_, $Snapshot>, cfg: &$crate::ConfigView<'_, $Config>) -> Result<$crate::ViewEmit<$ConfigMutation>, $crate::Fault> {
-            match self {
-                $(Self::$Payload(payload) => $module::handle(payload, doc, cfg),)*
-            }
-        }
-    }
-
-    impl $crate::ToolCommandCatalog for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-    }
-
-    impl ::protocol::OpText for $Name {
-        fn parse_op(line: &str) -> Result<Self, ::semio_framework_diagnostic::TextError> {
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = semio_framework_dsl_record::parse(
-                        body,
-                        &(spec_fn.ordinary)(),
-                        &semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline },
-                    )?;
-                    return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), ::semio_framework_diagnostic::TextSpan::at(1, 1)))
-        }
-        fn print_op(&self) -> String {
-            let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-            let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
-        }
-    }
-
-    impl ::protocol::OpBinary for $Name {
-        const TOOL_JOB_IDS: &'static [&'static str] = Self::TOOL_JOB_IDS;
-        fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
-        }
-    }
-};
-}
-
-/// 🧪️ Minimal serde-free end-to-end proof for `app_commands!`. The fake payloads deliberately do not
-/// implement `serde::Serialize`/`serde::Deserialize`, so restoring those derives on the generated enum
-/// is a compile-time regression. The fixture exercises enum construction, `command_id()`, `dispatch()`,
-/// and the `dsl::DslOps` wire round trip (`OpText`/`OpBinary`) via the same `store::test_support` helper every
-/// real `*_protocol` crate's own Command enum tests use (see e.g. `flow_protocol`'s
-/// `flow_command_text_binary_round_trips_document_mutating_variants`).
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-app-commands/🦀️.rs");
 
 /// 📨️ A host fact an app may answer with one of its own typed commands ([`ArtifactApp::host_event`]). Every event
 /// names the window it concerns: a host forwards a window's blur, pointer-capture loss and closing

@@ -5,8 +5,12 @@
 //! @see ../🟦️.ts — the TypeScript twin of preparation, application, inversion and location.
 //! @see ../../../🧬️schema/🔣️.json — `$defs/SnapshotPatch`, the wire schema of [`SnapshotPatch`].
 
-use super::{decode_pointer, snapshot_from_edit_source, validate_value, values_equivalent, SnapshotEditError, SnapshotEditEvent};
-use crate::{kernel, value_derive};
+use semio_s_artifact_stdio_contract_editing::{
+    array_index, decode_pointer, snapshot_from_edit_source, snapshot_schema_descriptor_for_dialect, validate_snapshot_schema_for_dialect, validate_value, values_equivalent, SnapshotEditError, SnapshotEditEvent, SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES,
+    SNAPSHOT_SCHEMA_VALIDATORS,
+};
+use semio_framework_os_kernel as kernel;
+use semio_framework_value_derive as value_derive;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use kernel::OpBinary;
@@ -487,7 +491,7 @@ fn apply_step<S: ToValue + FromValue>(snapshot: &mut S, step: &Step) -> Result<(
             match shape(snapshot, parent)? {
                 ValueShape::Object { .. } if object_key_index(snapshot, &path).is_ok() => return Err(path_error("snapshot-edit.key-exists", &path, format!("object key '{key}' already exists"))),
                 ValueShape::Array { len } => {
-                    super::array_index(key, len, &pointer(&path), true)?;
+                    array_index(key, len, &pointer(&path), true)?;
                 }
                 ValueShape::Object { .. } => {}
                 _ => return Err(path_error("snapshot-edit.not-container", &path, "the addressed parent is a scalar")),
@@ -611,7 +615,7 @@ fn schema_path<S: ToValue>(snapshot: &S, path: &[String]) -> Result<Vec<semio_fr
     for (position, segment) in path.iter().enumerate() {
         let parent = &path[..position];
         result.push(match shape(snapshot, parent)? {
-            ValueShape::Array { len } => SchemaFragmentPathSegment::Index(super::array_index(segment, len, &pointer(path), true)?),
+            ValueShape::Array { len } => SchemaFragmentPathSegment::Index(array_index(segment, len, &pointer(path), true)?),
             ValueShape::Object { .. } => SchemaFragmentPathSegment::Key(segment.clone()),
             _ => return Err(path_error("snapshot-edit.not-container", parent, "the addressed parent is a scalar")),
         });
@@ -667,7 +671,7 @@ fn project_context<S: ToValue>(snapshot: &S, path: &[semio_framework_schema::Sch
         }
     }
     let mut path = fragment_path(path);
-    let mut remaining = super::SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES;
+    let mut remaining = SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES;
     project(snapshot, &mut path, &mut remaining).map_err(|error| SchemaFragmentContextRefusal::new(error.to_string()))
 }
 
@@ -717,9 +721,9 @@ pub fn apply_validated_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: 
 /// 🧬️ Validates one path operation against the exact editor schema and its bounded post-edit context.
 pub fn apply_snapshot_patch_for_dialect<S: ToValue + FromValue + Clone>(snapshot: &S, patch: &SnapshotPatch, dialect: semio_framework_artifact_reference::Dialect, document_schema: &str) -> Result<S, SnapshotEditError> {
     let identity = snapshot.value_at_path(&["schema"]).map_err(|error| path_error("snapshot-edit.path-missing", &["schema".into()], error))?;
-    super::validate_snapshot_schema_for_dialect(&DslValue::Object(vec![("schema".into(), identity.clone())]), dialect, document_schema)?;
-    let id = super::snapshot_schema_descriptor_for_dialect(dialect, document_schema)?;
-    let validators = super::SNAPSHOT_SCHEMA_VALIDATORS.get_or_init(|| std::sync::RwLock::new(HashMap::new()));
+    validate_snapshot_schema_for_dialect(&DslValue::Object(vec![("schema".into(), identity.clone())]), dialect, document_schema)?;
+    let id = snapshot_schema_descriptor_for_dialect(dialect, document_schema)?;
+    let validators = SNAPSHOT_SCHEMA_VALIDATORS.get_or_init(|| std::sync::RwLock::new(HashMap::new()));
     if !validators.read().unwrap_or_else(|poisoned| poisoned.into_inner()).contains_key(&id) {
         let validator = semio_framework_schema::structural_validator_for(&id, "snapshot").map_err(|error| SnapshotEditError::new("snapshot-edit.invalid-schema-contract", "", error.to_string()))?;
         validators.write().unwrap_or_else(|poisoned| poisoned.into_inner()).insert(id.clone(), validator);
@@ -959,7 +963,7 @@ impl InversePlanner {
                     Some((key, parent)) => {
                         let position = match shape(snapshot, parent)? {
                             ValueShape::Object { .. } => object_key_index(snapshot, &segments)?.ok_or_else(Self::limit)?,
-                            _ => super::array_index(key, usize::MAX, &path, false)?,
+                            _ => array_index(key, usize::MAX, &path, false)?,
                         };
                         self.place(snapshot, parent, key, position, 1, &value)
                     }
@@ -974,7 +978,7 @@ impl InversePlanner {
                 let (key, parent) = segments.split_last().ok_or_else(Self::limit)?;
                 let position = match position {
                     Some(position) => index(position, &segments)?,
-                    None => super::array_index(key, usize::MAX, &path, false)?,
+                    None => array_index(key, usize::MAX, &path, false)?,
                 };
                 self.place(snapshot, parent, key, position, 0, &value)
             }

@@ -55,7 +55,7 @@ export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: 
     packages.set(row.pluginId, descriptor);
     dependencies.set(row.pluginId, edges);
     const metadata = known.get(row.pluginId);
-    targets.push({ pluginId: row.pluginId, wasmOut: row.moduleUrl, role: metadata?.role ?? "plugin", contributes: metadata?.contributes ?? [], consumes: metadata?.consumes ?? [], dependsOn: edges.map(edge => edge.pluginId), activationEvents: metadata?.activationEvents, capabilities: metadata?.capabilities, extends: metadata?.extends });
+    targets.push({ pluginId: row.pluginId, wasmOut: row.moduleUrl, role: metadata?.role ?? "plugin", contributes: metadata?.contributes ?? [], consumes: metadata?.consumes ?? [], dependsOn: edges.map(edge => edge.pluginId), activationEvents: metadata?.activationEvents, capabilities: metadata?.capabilities, extends: metadata?.extends, ...(descriptor.assets ? { assets: descriptor.assets } : {}) });
   }
   const moduleUrl = (id: string) => urls.get(id) ?? refused(`module ${id} is absent`);
   return { packages, dependencies, catalog: { plugins: targets.filter(row => row.role === "plugin"), extensions: targets.filter(row => row.role === "extension"), hosts: catalog.hosts, playgrounds: catalog.playgrounds, moduleUrl, extensionModuleUrl: moduleUrl } };

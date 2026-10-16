@@ -3,7 +3,7 @@
 
 use crate::standards::v6_0::subsets::document::io::encode_tiff_page_png;
 use crate::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-use crate::editor::tiff_any::component::config::{selected_ifd, TiffEditorConfig};
+use crate::editor::tiff_any::config::{selected_ifd, TiffEditorConfig};
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionId, ActionKind, ArgSchema, Buildable, BuiltNode, HasBase, HasChildren, PluginAssemblyError, Trigger, UiMapBuilder, UiValue, WindowKindDefinition, WindowKit};
 use semio_framework_ui_contract::{self as ui, Label as UiLabel};

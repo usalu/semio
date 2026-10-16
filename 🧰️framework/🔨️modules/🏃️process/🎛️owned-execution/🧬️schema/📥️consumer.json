@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Synchronous Owned Output Consumer Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "synchronous",
+    "finiteOutput",
+    "chargeBeforeConsume",
+    "drainBeforeReject",
+    "undefinedFailure"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "synchronous": {
+      "const": true
+    },
+    "finiteOutput": {
+      "const": true
+    },
+    "chargeBeforeConsume": {
+      "const": true
+    },
+    "drainBeforeReject": {
+      "const": true
+    },
+    "undefinedFailure": {
+      "const": "preserved"
+    }
+  }
+}

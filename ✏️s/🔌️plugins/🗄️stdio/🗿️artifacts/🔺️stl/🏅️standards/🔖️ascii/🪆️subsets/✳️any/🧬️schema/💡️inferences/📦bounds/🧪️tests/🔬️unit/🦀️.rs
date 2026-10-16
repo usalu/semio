@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
+use crate::standards::v_ascii::subsets::any::schema::inferences::bounds::*;
 use crate::STDIO_STL_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

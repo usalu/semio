@@ -1,0 +1,395 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "pages"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "snapshot"
+    },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": {
+        "$ref": "#/definitions/Page"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PrintPipelinePdfSnapshot",
+  "definitions": {
+    "Value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        {
+          "type": "array",
+          "maxItems": 262144,
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "type": "object",
+          "maxProperties": 32,
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "str",
+        "width",
+        "height",
+        "transform",
+        "fontName"
+      ],
+      "properties": {
+        "str": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "transform": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "number"
+          }
+        },
+        "fontName": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "Marked": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "beginMarkedContent",
+            "beginMarkedContentProps",
+            "endMarkedContent"
+          ]
+        },
+        "tag": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "Style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "ascent": {
+          "type": "number"
+        },
+        "descent": {
+          "type": "number"
+        },
+        "fontFamily": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "vertical": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "items",
+        "styles",
+        "operators",
+        "fonts"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 16384,
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/Text"
+              },
+              {
+                "$ref": "#/definitions/Marked"
+              }
+            ]
+          }
+        },
+        "styles": {
+          "type": "object",
+          "maxProperties": 16384,
+          "additionalProperties": {
+            "$ref": "#/definitions/Style"
+          }
+        },
+        "operators": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fnArray",
+            "argsArray"
+          ],
+          "properties": {
+            "fnArray": {
+              "type": "array",
+              "maxItems": 262144,
+              "items": {
+                "$ref": "#/definitions/Operation"
+              }
+            },
+            "argsArray": {
+              "type": "array",
+              "maxItems": 262144,
+              "items": {
+                "type": "array",
+                "maxItems": 262144,
+                "items": {
+                  "$ref": "#/definitions/Value"
+                }
+              }
+            }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "maxProperties": 16384,
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 4096
+              }
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "maximumPdfBytes": 67108864,
+        "maximumPages": 512,
+        "maximumPageTextItems": 16384,
+        "maximumPageOperators": 262144,
+        "maximumDataNodes": 2097152,
+        "maximumDataDepth": 32,
+        "maximumDataBytes": 134217728,
+        "maximumTextBytes": 16777216,
+        "maximumPagePixels": 16777216,
+        "maximumTotalPixels": 67108864,
+        "maximumPngBytes": 16777216,
+        "maximumPngTotalBytes": 67108864,
+        "maximumScale": 4,
+        "maximumErrorUnits": 8192,
+        "maximumWorkerOldGenerationMiB": 256
+      }
+    },
+    "Operation": {
+      "type": "string",
+      "enum": [
+        "dependency",
+        "setLineWidth",
+        "setLineCap",
+        "setLineJoin",
+        "setMiterLimit",
+        "setDash",
+        "setRenderingIntent",
+        "setFlatness",
+        "setGState",
+        "save",
+        "restore",
+        "transform",
+        "moveTo",
+        "lineTo",
+        "curveTo",
+        "curveTo2",
+        "curveTo3",
+        "closePath",
+        "rectangle",
+        "stroke",
+        "closeStroke",
+        "fill",
+        "eoFill",
+        "fillStroke",
+        "eoFillStroke",
+        "closeFillStroke",
+        "closeEOFillStroke",
+        "endPath",
+        "clip",
+        "eoClip",
+        "beginText",
+        "endText",
+        "setCharSpacing",
+        "setWordSpacing",
+        "setHScale",
+        "setLeading",
+        "setFont",
+        "setTextRenderingMode",
+        "setTextRise",
+        "moveText",
+        "setLeadingMoveText",
+        "setTextMatrix",
+        "nextLine",
+        "showText",
+        "showSpacedText",
+        "nextLineShowText",
+        "nextLineSetSpacingShowText",
+        "setCharWidth",
+        "setCharWidthAndBounds",
+        "setStrokeColorSpace",
+        "setFillColorSpace",
+        "setStrokeColor",
+        "setStrokeColorN",
+        "setFillColor",
+        "setFillColorN",
+        "setStrokeGray",
+        "setFillGray",
+        "setStrokeRGBColor",
+        "setFillRGBColor",
+        "setStrokeCMYKColor",
+        "setFillCMYKColor",
+        "shadingFill",
+        "beginInlineImage",
+        "beginImageData",
+        "endInlineImage",
+        "paintXObject",
+        "markPoint",
+        "markPointProps",
+        "beginMarkedContent",
+        "beginMarkedContentProps",
+        "endMarkedContent",
+        "beginCompat",
+        "endCompat",
+        "paintFormXObjectBegin",
+        "paintFormXObjectEnd",
+        "beginGroup",
+        "endGroup",
+        "beginAnnotation",
+        "endAnnotation",
+        "paintImageMaskXObject",
+        "paintImageMaskXObjectGroup",
+        "paintImageXObject",
+        "paintInlineImageXObject",
+        "paintInlineImageXObjectGroup",
+        "paintImageXObjectRepeat",
+        "paintImageMaskXObjectRepeat",
+        "paintSolidColorImageMask",
+        "constructPath",
+        "setStrokeTransparent",
+        "setFillTransparent",
+        "rawFillPath"
+      ]
+    },
+    "Job": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "snapshot"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "kind",
+            "pages",
+            "scale"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "kind": {
+              "const": "raster"
+            },
+            "pages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 512,
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 512
+              }
+            },
+            "scale": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 4
+            }
+          }
+        }
+      ]
+    }
+  }
+}

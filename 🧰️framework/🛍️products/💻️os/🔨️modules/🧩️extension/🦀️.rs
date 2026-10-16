@@ -1,11 +1,14 @@
 //! 🧩️ Runtime-installable `.sxt` extension package format — semio binary envelope over a
 //! deterministic deflate zip (`🛂️manifest.semio` + `component.wasm` + optional `assets/`).
+//!
+//! 🌉️ Host tooling: the crate is empty on `wasm32-wasip2`, the guest component target, which never installs an extension.
+#![cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 
 use std::collections::BTreeMap;
 
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipArchiveError, ZipWriter};
 
-use crate::os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
+use semio_framework_os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
 
 //#region 🔖️Errors
 /// ⚠️ Failures packing, unpacking, or verifying an `.sxt` extension package.

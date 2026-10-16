@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PrintPinnedMaterialPolicy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "maximumBytes",
+    "maximumFiles"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "toolchain",
+        "bundle",
+        "fonts"
+      ]
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 134217728
+    },
+    "maximumFiles": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumArchiveBytes": 33554432,
+        "maximumInflatedBytes": 134217728,
+        "maximumArchiveEntries": 4096,
+        "maximumMetadataBytes": 65536,
+        "maximumPathBytes": 256,
+        "maximumBundleBytes": 33554432,
+        "maximumBundleFiles": 512,
+        "maximumBundleFileBytes": 16777216,
+        "maximumFontBytes": 33554432,
+        "maximumFonts": 16
+      }
+    }
+  }
+}

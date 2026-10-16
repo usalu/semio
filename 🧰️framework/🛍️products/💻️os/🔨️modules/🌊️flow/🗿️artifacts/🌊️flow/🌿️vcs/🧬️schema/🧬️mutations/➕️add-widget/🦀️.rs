@@ -33,9 +33,3 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for AddWidget {
 }
 
 //#endregion 🎮️Behavior
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

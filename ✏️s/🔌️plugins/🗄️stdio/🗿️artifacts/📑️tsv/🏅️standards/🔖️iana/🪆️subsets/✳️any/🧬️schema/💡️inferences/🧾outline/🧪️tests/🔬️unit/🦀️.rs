@@ -1,4 +1,5 @@
-use super::*;
+use crate::TsvSnapshot;
+use crate::standards::iana::subsets::any::schema::inferences::outline::*;
 
 #[semio_framework_async_macros::async_test]
 async fn reports_widest_record_as_column_count() {

@@ -1,5 +1,5 @@
 {
-  "$comment": "🚚️ The one language-neutral declaration of the board-2d scene lane carrier — the board twin of 🚚️canvas2d-scene-lanes. Rust pins Board2dSceneLane / BOARD2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins BOARD2D_SCENE_LANES / board2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The fixture lane always publishes (the whole graph outgrows the 32 KiB surface doc on a 180-node board); the roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
+  "$comment": "🚚️ The one language-neutral declaration of the board-2d scene lane carrier — the board twin of 🚚️canvas2d-scene-lanes. Rust pins Board2dSceneLane / BOARD2D_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🖼️plane/🦀️.rs) against it; TypeScript pins BOARD2D_SCENE_LANES / board2dSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The fixture lane always publishes (the whole graph outgrows the 32 KiB surface doc on a 180-node board); the roundTrip toolRunTrace payload is the base64url of ⏯️tool-run/🧫️fixtures/📼️trace-pages.json deltas[0].",
   "schema": "board-2d@1",
   "laneKeyPrefix": "framework.scene.board2d.",
   "spineFields": [
@@ -23,6 +23,7 @@
     "lodMode",
     "transformFlags",
     "areaBrushSize",
+    "placementNaming",
     "lanes"
   ],
   "lanes": [
@@ -57,6 +58,7 @@
       "brushWeightsJson": "{}",
       "placementCompatibilityJson": "[]",
       "lodMode": "automatic",
+      "placementNaming": "{\"brushNodePrefix\":\"probe.node.\",\"brushEdgePrefix\":\"probe.edge.\"}",
       "toolRunTrace": "AAQBDQQBBAMCBCoDBAEECCAACBAYICgwOEBIUFhgaHB4gIiQmKCosLjAyNDY4Ojw-AICAwQCBAwCCEwABAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQAAwgCAQEECBABAAAAAAAAAAIAAAAAAAAACFsACAENBAEEAwIEKgMEAQQIIAAIEBggKDA4QEhQWGBocHiAiJCYoKiwuMDI0Njg6PD4AgQBAwgBAAQICAMAAAAAAAAABQgBAgYIAgkABwgBAgoICOsDAAAAAAAA"
     },
     "laneTexts": {
@@ -80,6 +82,7 @@
       "brushWeightsJson": "{}",
       "placementCompatibilityJson": "[]",
       "lodMode": "automatic",
+      "placementNaming": "{\"brushNodePrefix\":\"probe.node.\",\"brushEdgePrefix\":\"probe.edge.\"}",
       "lanes": [
         {
           "lane": "snapshot",

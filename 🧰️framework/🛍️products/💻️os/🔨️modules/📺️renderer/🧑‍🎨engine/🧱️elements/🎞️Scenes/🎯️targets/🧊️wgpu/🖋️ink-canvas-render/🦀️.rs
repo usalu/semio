@@ -15,14 +15,14 @@ use super::*;
 //#endregion InkCanvasState
 
 //#region InkCanvasRender
-pub(crate) fn ink_effective_bounds(block: &Value, overrides: &BTreeMap<String, Value>) -> InkBoundsF {
+pub fn ink_effective_bounds(block: &Value, overrides: &BTreeMap<String, Value>) -> InkBoundsF {
     match overrides.get(ink_item_id(block)) {
         Some(over) => ink_item_bounds(over),
         None => ink_item_bounds(block),
     }
 }
 
-pub(crate) fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
+pub fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
     let mut out = Vec::new();
     fn visit<'a>(blocks: &'a [Value], out: &mut Vec<&'a Value>) {
         for block in blocks {
@@ -38,7 +38,7 @@ pub(crate) fn flatten_ink_items(blocks: &[Value]) -> Vec<&Value> {
     out
 }
 
-pub(crate) fn ink_selection_bounds(blocks: &[Value], overrides: &BTreeMap<String, Value>, ids: &[String]) -> Option<InkBoundsF> {
+pub fn ink_selection_bounds(blocks: &[Value], overrides: &BTreeMap<String, Value>, ids: &[String]) -> Option<InkBoundsF> {
     let id_set: HashSet<&str> = ids.iter().map(String::as_str).collect();
     let selected: Vec<InkBoundsF> = flatten_ink_items(blocks).into_iter().filter(|block| id_set.contains(ink_item_id(block))).map(|block| ink_effective_bounds(block, overrides)).collect();
     if selected.is_empty() {
@@ -67,11 +67,11 @@ pub(crate) fn ink_text_plain(block: &Value) -> String {
         .unwrap_or_default()
 }
 
-pub(crate) fn ink_world_to_screen(camera: InkCameraF, inner: Rect, wx: f64, wy: f64) -> (f32, f32) {
+pub fn ink_world_to_screen(camera: InkCameraF, inner: Rect, wx: f64, wy: f64) -> (f32, f32) {
     (inner.x + (wx * camera.zoom + camera.x) as f32, inner.y + (wy * camera.zoom + camera.y) as f32)
 }
 
-pub(crate) fn ink_resize_handle_screen_pos(handle: &str, sx: f32, sy: f32, w: f32, h: f32, size: f32) -> (f32, f32) {
+pub fn ink_resize_handle_screen_pos(handle: &str, sx: f32, sy: f32, w: f32, h: f32, size: f32) -> (f32, f32) {
     let half = size * 0.5;
     let x = if handle.contains('w') {
         sx - half
@@ -230,13 +230,6 @@ fn positive_mod_f32(v: f32, m: f32) -> f32 {
     }
 }
 
-pub(crate) fn draw_ink_rect_outline(draw: &mut ui_wgpu::wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
-    draw.push_line(x, y, x + w, y, color, width);
-    draw.push_line(x + w, y, x + w, y + h, color, width);
-    draw.push_line(x + w, y + h, x, y + h, color, width);
-    draw.push_line(x, y + h, x, y, color, width);
-}
-
 fn draw_ink_grid(draw: &mut ui_wgpu::wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
     let major_px = (spacing * camera.zoom) as f32;
     if major_px < 2.0 {
@@ -296,7 +289,7 @@ fn draw_ink_selection_chrome(draw: &mut ui_wgpu::wgpu::DrawList, theme: &Theme, 
     }
 }
 
-pub(crate) fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(ink) = &scene.ink_canvas else {
         return render_placeholder("ink-canvas", bounds, ctx);

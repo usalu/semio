@@ -36,12 +36,12 @@ fn preference_events_replay_and_serialize_concurrent_commands() {
 fn explicit_arguments_override_environment_and_reject_mistakes() {
     let mut preferences = Preferences::default();
     preferences.apply(&Change::parse(r#"{"language":"de","renderer":"wgpu-native"}"#).unwrap());
-    let parsed = crate::args::parse(&["dashboard".into(), "--language".into(), "en".into(), "--layout".into(), "rows".into()]);
+    let parsed = dashboard_core::args::parse(&["dashboard".into(), "--language".into(), "en".into(), "--layout".into(), "rows".into()]);
     apply_arguments(&mut preferences, &parsed).unwrap();
     assert_eq!(preferences.language, "en");
     assert_eq!(preferences.layout, "rows");
     for argv in [vec!["dashboard", "--language", "xx"], vec!["dashboard", "--unknown", "yes"], vec!["dashboard", "--root"], vec!["dashboard", "--config", ""], vec!["dashboard", "--workspace", "yes"]] {
-        assert!(apply_arguments(&mut preferences, &crate::args::parse(&argv.into_iter().map(String::from).collect::<Vec<_>>())).is_err());
+        assert!(apply_arguments(&mut preferences, &dashboard_core::args::parse(&argv.into_iter().map(String::from).collect::<Vec<_>>())).is_err());
     }
 }
 
@@ -81,20 +81,20 @@ fn invalid_keymap_changes_are_rejected_before_they_can_be_published() {
 #[test]
 fn keymap_arguments_override_the_journal_and_reject_mistakes() {
     let mut preferences = Preferences::default();
-    let parsed = crate::args::parse(&["dashboard".into(), "--prefix".into(), "alt+x".into(), "--bindings".into(), r#"{"prefix.detach":["q"]}"#.into()]);
+    let parsed = dashboard_core::args::parse(&["dashboard".into(), "--prefix".into(), "alt+x".into(), "--bindings".into(), r#"{"prefix.detach":["q"]}"#.into()]);
     apply_arguments(&mut preferences, &parsed).unwrap();
     assert_eq!((preferences.prefix.as_str(), preferences.bindings["prefix.detach"][0].as_str()), ("alt+x", "q"));
     for argv in [vec!["dashboard", "--prefix", "x"], vec!["dashboard", "--bindings", "not-json"], vec!["dashboard", "--bindings", r#"{"prefix.nothing":["x"]}"#]] {
         let words: Vec<String> = argv.iter().map(|word| (*word).to_string()).collect();
-        assert!(apply_arguments(&mut preferences, &crate::args::parse(&words)).is_err(), "{argv:?}");
+        assert!(apply_arguments(&mut preferences, &dashboard_core::args::parse(&words)).is_err(), "{argv:?}");
     }
 }
 
 #[test]
 fn preferences_pre_select_only_the_launch_parameters_a_command_offers() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap();
-    let facts: crate::registry::Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
-    let registry = crate::registry::Registry::build(Path::new("workspace"), &facts);
+    let facts: dashboard_registry::Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
+    let registry = dashboard_registry::Registry::build(Path::new("workspace"), &facts);
     let preferences = Preferences { language: "de".into(), renderer: "wgpu-wasm".into(), ..Default::default() };
     let playground = registry.find("playground:puzzle3d").unwrap();
     let defaults = preferences.launch_defaults(&registry.parameters(playground));
@@ -173,7 +173,7 @@ fn p2_1_a_full_journal_is_compacted_instead_of_refusing_changes() {
 #[test]
 fn p2_1_a_broken_journal_never_stops_the_dashboard_from_starting() {
     let root = scratch("broken");
-    let parsed = crate::args::parse(&["dashboard".into(), "--config".into(), root.join("local.jsonl").display().to_string()]);
+    let parsed = dashboard_core::args::parse(&["dashboard".into(), "--config".into(), root.join("local.jsonl").display().to_string()]);
     fs::create_dir_all(&root).unwrap();
     fs::write(root.join("local.jsonl"), "this is not an event\n").unwrap();
     assert!(load(&root, &parsed).is_err(), "the strict loader still reports it");
@@ -186,7 +186,7 @@ fn p2_1_a_broken_journal_never_stops_the_dashboard_from_starting() {
 
 #[test]
 fn every_scenario_of_the_preferences_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/⚙️preferences/🥒️.feature"), &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/⚙️preferences/🥒️.feature"), &[
         include_str!("🦀️.rs"),
         include_str!("../../../🖥️terminal/🧪️tests/🔬️unit/🦀️.rs"),
         include_str!("../../../🖥️terminal/🚀️launcher/🧪️tests/🔬️unit/🦀️.rs"),

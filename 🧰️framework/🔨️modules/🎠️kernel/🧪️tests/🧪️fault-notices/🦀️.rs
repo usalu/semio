@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 fn every_corpus_fault_resolves_to_its_notice_framework_first() {
     let corpus: Value = serde_json::from_str(include_str!("../../../🛂️manifest/🧪️tests/🧫️fixtures/🧫️fault-notices/🔣️.json")).unwrap();
     let table = corpus["tables"].as_array().unwrap().iter().find(|table| table["id"] == corpus["appNotices"]).unwrap();
-    let notices: Vec<crate::manifest::FaultNoticeDefinition> = serde_json::from_value(table["notices"].clone()).unwrap();
+    let notices: Vec<crate::FaultNoticeDefinition> = serde_json::from_value(table["notices"].clone()).unwrap();
     for row in corpus["resolutions"].as_array().unwrap() {
         let declared = &row["fault"];
         let mut fault = Fault::new(FaultOrigin::App, declared["code"].as_str().unwrap().to_string(), declared["message"].as_str().unwrap_or(""));

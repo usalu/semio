@@ -1,0 +1,420 @@
+{
+ "schema": "semio.shell-components.v1",
+ "composerFields": [
+  {
+   "field": "chrome",
+   "struct": "ChromeState",
+   "crate": "shell-chrome-state"
+  },
+  {
+   "field": "surfaces",
+   "struct": "SurfaceState",
+   "crate": "shell-surfaces"
+  },
+  {
+   "field": "tutorial",
+   "struct": "TutorialState",
+   "crate": "shell-surfaces"
+  },
+  {
+   "field": "settle",
+   "struct": "SettleState",
+   "crate": "shell-surfaces"
+  },
+  {
+   "field": "plugins",
+   "struct": "PluginState",
+   "crate": "shell-plugins"
+  },
+  {
+   "field": "history",
+   "struct": "HistoryState",
+   "crate": "shell-history"
+  },
+  {
+   "field": "prefs",
+   "struct": "PrefsState",
+   "crate": "shell-prefs"
+  },
+  {
+   "field": "directory",
+   "struct": "DirectoryState",
+   "crate": "shell-directory"
+  },
+  {
+   "field": "sync",
+   "struct": "SyncState",
+   "crate": "shell-sync"
+  },
+  {
+   "field": "docs",
+   "struct": "DocumentState",
+   "crate": "shell-docs"
+  },
+  {
+   "field": "opening",
+   "struct": "OpeningState",
+   "crate": "shell-doc-open"
+  },
+  {
+   "field": "windows",
+   "struct": "WindowState",
+   "crate": "shell-windows"
+  },
+  {
+   "field": "dock",
+   "struct": "ShellDockState",
+   "crate": "shell-dock"
+  },
+  {
+   "field": "input",
+   "struct": "ShellInputState",
+   "crate": "shell-input"
+  },
+  {
+   "field": "commands",
+   "struct": "CommandState",
+   "crate": "shell-commands"
+  }
+ ],
+ "components": [
+  {
+   "struct": "ChromeState",
+   "crate": "shell-chrome-state",
+   "fields": [
+    "error",
+    "screen_w",
+    "screen_h",
+    "fullscreen_toggle_requested",
+    "fullscreen_active",
+    "presented_chrome_accessibility",
+    "presented_chrome_accessibility_generation",
+    "chrome_floor_scope",
+    "dispatch_origin",
+    "chrome_build",
+    "chrome_present"
+   ]
+  },
+  {
+   "struct": "SurfaceState",
+   "crate": "shell-surfaces",
+   "fields": [
+    "world3d_states",
+    "world3d_window_ids",
+    "retired_world3d_states",
+    "world3d_close_cancels",
+    "component_world3d_retirement",
+    "world3d_retirement_epoch",
+    "world3d_retirement_sequence",
+    "world3d_retirement_fault",
+    "world3d_status",
+    "world3d_status_pill_trace",
+    "node_graph_states",
+    "tiled_map_states",
+    "icon_render_states",
+    "board2d_states"
+   ]
+  },
+  {
+   "struct": "TutorialState",
+   "crate": "shell-surfaces",
+   "fields": [
+    "tutorial",
+    "tutorial_pending_document_ops"
+   ]
+  },
+  {
+   "struct": "SettleState",
+   "crate": "shell-surfaces",
+   "fields": [
+    "deferred_actions",
+    "settling",
+    "owed_refresh_scope",
+    "settle_pump",
+    "shell_io_pending"
+   ]
+  },
+  {
+   "struct": "PluginState",
+   "crate": "shell-plugins",
+   "fields": [
+    "plugins",
+    "extensions",
+    "plugin_filter",
+    "host_capability",
+    "space_mode",
+    "tool_run_panel_runs",
+    "plugin_faults",
+    "surface_faults",
+    "app_catalogue_json",
+    "app_catalogue_instance",
+    "active_example_id",
+    "pending_extension_invocations",
+    "default_app_pins",
+    "plugin_install"
+   ]
+  },
+  {
+   "struct": "HistoryState",
+   "crate": "shell-history",
+   "fields": [
+    "history_cursor",
+    "history_entries",
+    "history_current_checkpoint_id",
+    "history_time_travel",
+    "history_reprojection",
+    "time_travel_focus",
+    "time_travel_polled_at_ms",
+    "local_folder_bindings",
+    "local_folder_reattach_tried",
+    "local_folder_direct_reattach",
+    "host_route_folder"
+   ]
+  },
+  {
+   "struct": "PrefsState",
+   "crate": "shell-prefs",
+   "fields": [
+    "appearance_id",
+    "locale_id",
+    "terminology_id",
+    "driver_id",
+    "driver_draft",
+    "driver_save_label",
+    "theme_draft",
+    "theme_save_label",
+    "merge_policy",
+    "pending_theme_import",
+    "open_conflicts",
+    "selected_conflict_id",
+    "conflicts_seeded"
+   ]
+  },
+  {
+   "struct": "DirectoryState",
+   "crate": "shell-directory",
+   "fields": [
+    "agent_chat_draft",
+    "identity",
+    "verified_session_authority",
+    "identity_offline",
+    "identity_env",
+    "shell_session_id",
+    "identity_retry_at_ms",
+    "identity_bootstrap_rx",
+    "identity_bootstrap_task",
+    "directory_client",
+    "agent_bridge",
+    "agent_bridge_offer_scope",
+    "inference_port",
+    "inference_port_status",
+    "directory_home",
+    "directory_transport",
+    "directory_cancel",
+    "directory_commands",
+    "hub_workspace",
+    "hub_sign_in_task",
+    "hub_spaces_task",
+    "hub_workspace_open",
+    "space_administration",
+    "space_administration_epoch",
+    "presence_peers",
+    "presence_surface",
+    "presence_self",
+    "presence_pointer"
+   ]
+  },
+  {
+   "struct": "SyncState",
+   "crate": "shell-sync",
+   "fields": [
+    "sync_backbone_uri",
+    "sync_card_kind",
+    "sync_card_draft",
+    "sync_card_anchor",
+    "document_host",
+    "sync_channel",
+    "next_sync_binding_generation",
+    "sync_terminal_fault",
+    "sync_status",
+    "sync_link",
+    "hub_documents",
+    "sync_bootstrap_progress",
+    "sync_reseed",
+    "last_uncommitted_edit_at_ms",
+    "auto_checkin_pending",
+    "checkpoint_dispatched",
+    "checkin_dialog_draft",
+    "hub_check_in"
+   ]
+  },
+  {
+   "struct": "DocumentState",
+   "crate": "shell-docs",
+   "fields": [
+    "session",
+    "window_ui",
+    "panel_documents",
+    "spawned_ui",
+    "spawned_session",
+    "app_document_identities",
+    "closing_documents",
+    "window_actions_documents",
+    "window_search_documents",
+    "window_projection_documents",
+    "window_measures_documents"
+   ]
+  },
+  {
+   "struct": "OpeningState",
+   "crate": "shell-doc-open",
+   "fields": [
+    "uri_history",
+    "uri_index",
+    "open_space_id",
+    "pending_shell_uri_apply",
+    "pending_file_opens",
+    "import_transfers",
+    "import_transfer_next",
+    "last_envelope_dsl",
+    "document_services",
+    "document_opening",
+    "icon_export",
+    "document_execution_target_lease"
+   ]
+  },
+  {
+   "struct": "WindowState",
+   "crate": "shell-windows",
+   "fields": [
+    "active_window_id",
+    "noted_active_window",
+    "host_event_active_window",
+    "engagement_expanded",
+    "engagement_activated",
+    "measures_folded",
+    "measures_expanded",
+    "measures_width",
+    "measures_resize_origin_width",
+    "engagement_inputs",
+    "measures_resize_window_id",
+    "window_topology_actions",
+    "window_topology_publications",
+    "window_topology_action_tokens",
+    "next_window_topology_action_token",
+    "window_topology_refresh_owed",
+    "window_topology_journal_dispatch_owed",
+    "active_utilities",
+    "active_utility_by_window",
+    "action_panel_folded",
+    "search_panel_folded",
+    "utility_bar_folded",
+    "projection_pane_folded",
+    "world_projection_template",
+    "window_icon_overrides",
+    "window_title_overrides",
+    "action_panel_expanded",
+    "tool_measures",
+    "window_engagements",
+    "window_measures_minted",
+    "utility_collection_expanded",
+    "contributor_instances"
+   ]
+  },
+  {
+   "struct": "ShellDockState",
+   "crate": "shell-dock",
+   "fields": [
+    "panel_anchors",
+    "dock_tabs",
+    "dock_override",
+    "dock_collapsed_branches",
+    "dock_tab_drag",
+    "dock_loaded_app_id",
+    "panel_resize_origin_width",
+    "dock",
+    "split_resize_path",
+    "split_resize_index",
+    "split_resize_axis_total",
+    "dock_drag",
+    "pending_dock_drag",
+    "dock_view",
+    "dock_instance_owner",
+    "dock_input_identity",
+    "tree_windows",
+    "tree_window_served",
+    "dock_canvas_bounds",
+    "dock_axis_separator",
+    "dock_drop_tab_bars",
+    "dock_drop_bodies",
+    "dock_window_plan",
+    "dock_plan_trace",
+    "layout_override",
+    "split_resize_origin",
+    "split_resize_secondary_path",
+    "split_resize_secondary_index",
+    "split_resize_secondary_axis_total",
+    "split_resize_secondary_origin",
+    "layout_save_label",
+    "user_layouts",
+    "mobile_panel_visible",
+    "mobile_panel_path",
+    "window_content_rects",
+    "window_silhouettes"
+   ]
+  },
+  {
+   "struct": "ShellInputState",
+   "crate": "shell-input",
+   "fields": [
+    "scroll_offsets",
+    "overlay_state",
+    "collapsed_sections",
+    "tree_open_states",
+    "accessibility_focused_control_id",
+    "interaction_selection",
+    "open_selects",
+    "context_menu",
+    "right_click",
+    "tree_drag",
+    "tree_hovered_id",
+    "widget_maps",
+    "widget_maps_staging",
+    "pending_tree_drag",
+    "tree_drag_origin",
+    "pending_chrome_release",
+    "chrome_pointer_owner",
+    "keybinding_capture_control_id",
+    "retained_hit_windows",
+    "retained_hit_windows_staging",
+    "retained_scene_hits",
+    "retained_scene_hits_staging",
+    "presented_input_epoch",
+    "next_presented_input_epoch",
+    "presented_input_candidate",
+    "presented_input_geometry",
+    "presented_input_geometry_staging",
+    "retained_body_rects_staging",
+    "pane_overlay_hits",
+    "retained_hover_window"
+   ]
+  },
+  {
+   "struct": "CommandState",
+   "crate": "shell-commands",
+   "fields": [
+    "search_open",
+    "find_open",
+    "search_query",
+    "search_selected",
+    "find_query",
+    "find_items",
+    "find_selected",
+    "staged_action_args",
+    "expanded_command_id",
+    "staged_command_args",
+    "search_possibles_open"
+   ]
+  }
+ ]
+}

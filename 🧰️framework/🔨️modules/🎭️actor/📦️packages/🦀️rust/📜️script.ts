@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
+import {verifyProducedWasmPackageV1} from "../../../🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import {executeCargoRequestV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {buildRepositoryWasmWebV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { relative, resolve } from "node:path";
 /** 🦀️ Registers the actor package tasks and semantic typegen commands. */
 
@@ -64,13 +65,13 @@ class OriginalContextNativeScript extends BundleScript {
 class OwnershipScript extends BundleScript{async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-ownership");await runActorSourceLawsV1(this.root,this.repoRoot,this.invocation);}}
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildWasmWebV1({control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
+    await buildRepositoryWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/actor/rs",
       wasmBaseName: "framework_actor",
       pkg: { name: "@semio-tech/framework-actor-rs", files: ["framework_actor_bg.wasm", "framework_actor.js", "framework_actor.d.ts", "framework_actor_bg.wasm.d.ts"], main: "framework_actor.js", module: "framework_actor.js", types: "framework_actor.d.ts" },
-    }, readWasmBuildPolicyV1(process.env,this.root));
+    });
   }
 }
 

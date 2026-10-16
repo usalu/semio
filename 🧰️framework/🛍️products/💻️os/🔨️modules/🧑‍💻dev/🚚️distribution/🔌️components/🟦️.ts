@@ -1,5 +1,8 @@
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { join } from "node:path";
+import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️publication/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { canvasRuntimeAssetSources } from "../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts";
 import { parseInstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
@@ -34,17 +37,18 @@ export function selectProductionBrowserComponents(input: unknown, variant: strin
   return { version: 1, profile: readBuildMode(mode), components };
 }
 
-/** 📦️ Resolves immutable component, browser-support and font owners for one production closure. */
+/** 📦️ Resolves immutable component, browser-support, font and canvas runtime asset owners for one production closure. */
 export function productionBrowserSources(workspace: string, input: unknown): readonly BrowserArtifactSource[] {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid production browser components");
   const plan = input as ProductionBrowserComponents;
   if (Object.keys(plan).sort().join() !== "components,profile,version" || plan.version !== 1 || !schema.properties.profile.enum.includes(plan.profile) || !Array.isArray(plan.components) || plan.components.length < 1 || plan.components.length > 256) throw new Error("Invalid production browser component fields");
-  const base = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules"), modules = builtPluginModulesRootIn(workspace, plan.profile);
+  const modules = builtPluginModulesRootIn(workspace, plan.profile);
   const pluginRoute = MODULE_PLUGIN_ROUTE.slice(1), extensionRoute = MODULE_EXTENSION_ROUTE.slice(1), shimDirectory = pluginRoute + "/" + PREVIEW2_VENDOR_RELATIVE;
   const sources: BrowserArtifactSource[] = [
     { root: join(modules, PREVIEW2_VENDOR_RELATIVE), destination: shimDirectory, owner: "browser-support:preview2" },
     { root: join(modules, MODULE_SHARD_DIRECTORY), destination: pluginRoute + "/" + MODULE_SHARD_DIRECTORY, owner: "browser-support:shard" },
-    { root: join(base, "♾️infinite/📦️packages/🦀️rust/dist/fonts"), destination: pluginRoute + "/" + MODULE_VENDOR_DIRECTORY, owner: "infinite:fonts" },
+    { root: fontAssetPublicationRootV1(repositoryCachePartitionRootDataV1(workspace, "products"), plan.profile), destination: pluginRoute + "/" + MODULE_VENDOR_DIRECTORY, owner: "infinite:fonts" },
+    ...canvasRuntimeAssetSources(repositoryCachePartitionRootDataV1(workspace, "products"), plan.profile),
   ];
   const admittedComponents = plan.components.map(component => ({ ...component, directoryName: parseInstallationDirectoryV1(component.directoryName) }));
   const ids = new Set<string>();
@@ -57,7 +61,7 @@ export function productionBrowserSources(workspace: string, input: unknown): rea
     if (typeof component.directoryName !== "string" || component.directoryName.length > componentSchema.directoryName.maxLength || !directoryPattern.test(component.directoryName) || component.directoryName.normalize("NFC") !== component.directoryName) throw new Error("Invalid production browser component directory");
     const directory = moduleDirectoryName(component.pluginId, admittedComponents);
     const receipt = readComponentReceiptV1(join(modules, directory, COMPONENT_RECEIPT_FILE));
-    if (receipt.pluginId !== component.pluginId || receipt.profile !== buildModePolicy(plan.profile).wasmProfile) throw new Error(`Production browser component ${component.pluginId} is a ${receipt.profile} module, expected ${buildModePolicy(plan.profile).wasmProfile}; run its materialize target`);
+    if (receipt.pluginId !== component.pluginId || receipt.profile !== buildModePolicy(plan.profile).cargoProfile) throw new Error(`Production browser component ${component.pluginId} is a ${receipt.profile} module, expected ${buildModePolicy(plan.profile).cargoProfile}; run its materialize target`);
     sources.push({ root: join(modules, directory), destination: (component.role === "extension" ? extensionRoute : pluginRoute) + "/" + directory, owner: componentModuleOwnerV1(component.cratePath), shimDirectory });
   }
   return sources;

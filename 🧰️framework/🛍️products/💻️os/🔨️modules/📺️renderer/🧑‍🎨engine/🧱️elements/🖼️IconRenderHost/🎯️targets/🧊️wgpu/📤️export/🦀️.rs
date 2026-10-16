@@ -7,15 +7,14 @@ mod gpu;
 mod scene;
 #[path = "📐️svg/🦀️.rs"]
 mod svg;
-pub(crate) use gpu::{IconGpuPngExport, IconGpuPngRejected};
-pub(crate) use scene::{IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected};
-pub(crate) use scene::close_prepared;
-pub(crate) use svg::{IconSvgExport, IconSvgRejected};
-#[path = "📥️asset/🦀️.rs"]
-pub(crate) mod asset;
+pub use gpu::{IconGpuPngExport, IconGpuPngRejected};
+pub use scene::{IconExportFormat, IconExportPreparedScene, IconExportScenePreparation, IconExportSceneRejected};
+pub use scene::close_prepared;
+pub use svg::{IconSvgExport, IconSvgRejected};
+pub use semio_framework_os_renderer_wgpu_asset_authority::icon_export_asset as asset;
 
 #[derive(Debug)]
-pub(crate) enum IconExportFault {
+pub enum IconExportFault {
     Message(String),
     World(infinite_world::world::WorldDynamicFault),
     Original(semio_framework_job::OriginalTurnFailure),

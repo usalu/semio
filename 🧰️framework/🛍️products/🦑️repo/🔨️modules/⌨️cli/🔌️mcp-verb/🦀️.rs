@@ -1,5 +1,6 @@
 //! 🔌️ The production repository the repo MCP server serves: every tool reaches the domain owner the matching verb reaches, every resource reads through the repository GraphQL surface.
 
+use semio_framework_repo_cli_event_stream::format_markdown_result;
 use semio_framework_repo_graphql::{Executor, RepoContext};
 use semio_framework_repo_graphql_fs::FsRepoContext;
 //#region 🔌️McpVerb
@@ -101,7 +102,7 @@ fn ticket_id(path: &str) -> Result<semio_framework_repo_tickets::TicketId, Handl
 fn entity_result(key: &str, entity: Json, extra: &[String]) -> RepositoryResult {
     let mut data = Map::new();
     data.insert(key.to_string(), entity);
-    let mut lines = vec![crate::event_stream::format_markdown_result("graphql", &Json::Object(data))];
+    let mut lines = vec![format_markdown_result("graphql", &Json::Object(data))];
     lines.extend(extra.iter().cloned());
     RepositoryResult { text: lines.join("\n"), structured: None, is_error: false }
 }

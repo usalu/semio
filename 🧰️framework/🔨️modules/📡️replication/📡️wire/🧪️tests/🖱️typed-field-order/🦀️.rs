@@ -1,6 +1,6 @@
 //! 🖱️ Shared typed field-order controls preserve the full JSON oracle and optional field semantics.
 use super::*;
-use crate::value::{DslValue, FromValue, ToValue};
+use semio_framework_value::{DslValue, FromValue, ToValue};
 
 /// 🧬️ Compares complete typed producer occurrences to serde's canonical map oracle for every neutral case.
 #[test]

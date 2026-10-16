@@ -3,7 +3,8 @@
   "entries": [
     "📄️document.tex",
     "📦️library",
-    "🔨️modules/🕸️graph/📐️.tex"
+    "🔨️modules/🕸️graph/📐️.tex",
+    "📘️chapters"
   ],
   "inputs": {
     "📄️document.tex": "\\documentclass{fixture}\\n\\input{🔨️modules/🕸️graph/📐️}\\nsymbol 📐️ remains\\n",
@@ -11,7 +12,8 @@
     "📦️library/fixture-graph.sty": "\\ProvidesPackage{fixture-graph}\\n\\input{🔨️modules/🕸️graph/📐️.tex}\\n",
     "📦️library/references.bib": "@misc{graph, note={🔨️modules/🕸️graph/📐️.tex and 🔨️modules/🕸️graph/📐️}}\\n",
     "📦️library/unchanged.txt": "unrelated 🔨️modules/🕸️graph/📐️.tex bytes\\n",
-    "🔨️modules/🕸️graph/📐️.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n"
+    "🔨️modules/🕸️graph/📐️.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n",
+    "📘️chapters/📕️intro.tex": "\\input{📦️library/fixture}\\input{📘️chapters/📕️intro}"
   },
   "outputs": {
     "document.tex": "\\documentclass{fixture}\\n\\input{modules/graph/_}\\nsymbol 📐️ remains\\n",
@@ -19,7 +21,8 @@
     "library/fixture-graph.sty": "\\ProvidesPackage{fixture-graph}\\n\\input{modules/graph/_.tex}\\n",
     "library/references.bib": "@misc{graph, note={modules/graph/_.tex and modules/graph/_}}\\n",
     "library/unchanged.txt": "unrelated 🔨️modules/🕸️graph/📐️.tex bytes\\n",
-    "modules/graph/_.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n"
+    "modules/graph/_.tex": "\\newcommand{\\FixtureGraphMarker}{graph implementation reached}\\n",
+    "chapters/intro.tex": "\\input{library/fixture}\\input{chapters/intro}"
   },
   "sourceKind": {
     "canonicalPath": "🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",

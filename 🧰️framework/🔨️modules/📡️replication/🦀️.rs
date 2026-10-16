@@ -6,9 +6,10 @@
 //! Byte layout is frozen and cross-language: `🧪️tests/🧫️fixtures/📡️wire` holds the 20 canonical frames that
 //! the Rust and TypeScript codecs must both reproduce byte-identically.
 
-use crate::format::{Blake3Hasher, FrameCursor, RecoveryMode, SprWriter};
+use crate::{FrameCursor, RecoveryMode};
 use semio_framework_replication_error::ProtocolError;
-use crate::wire::{ProtocolLimits, RecordHasher};
+use semio_framework_replication_wire_core::ProtocolLimits;
+use semio_framework_replication_crypto::RecordHasher;
 
 //#region 🔖️Sync
 /// 🔗️ Zero-copy: one contiguous borrowed byte span of whole record frames covering an edit-ordinal
@@ -32,15 +33,15 @@ pub async fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Ran
     if ordinals.start >= ordinals.end {
         return Err(ProtocolError::Malformed { what: "extract_range ordinals", offset: 0, detail: "range must be non-empty (start < end).await".to_string() });
     }
-    let recovery = crate::format::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
+    let recovery = crate::recover(&protocol_bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await?;
     let trusted = &protocol_bytes[..recovery.bytes_recovered as usize];
 
-    let mut cursor = FrameCursor::new(trusted, crate::format::HEADER_SIZE as u64).await;
+    let mut cursor = FrameCursor::new(trusted, crate::HEADER_SIZE as u64).await;
     let mut ordinal = 0u64;
     let mut start_offset: Option<u64> = None;
     let mut end_offset: Option<u64> = None;
     while let Some(frame) = cursor.next_frame().await? {
-        if frame.kind == crate::REC_EDIT {
+        if frame.kind == semio_framework_replication_wire_core::REC_EDIT {
             if start_offset.is_none() && ordinal >= ordinals.start {
                 start_offset = Some(frame.offset);
             }
@@ -81,7 +82,7 @@ pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(),
 /// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame
 /// bytes)` digest in `slice` into one combined digest, in frame order.
 async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
-    let hasher = crate::format::Blake3Hasher;
+    let hasher = semio_framework_replication_wire_core::Blake3Hasher;
     let mut cursor = FrameCursor::new(slice, 0).await;
     let mut concat = Vec::new();
     while let Some(frame) = cursor.next_frame().await? {

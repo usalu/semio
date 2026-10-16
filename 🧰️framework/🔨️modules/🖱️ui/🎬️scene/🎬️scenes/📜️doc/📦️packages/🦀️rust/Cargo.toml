@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-scene-doc"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The SceneDoc contract, lane carriers and references, pack wire macro and value-codec primitives shared by every product scene — wasm-safe"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-doc"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+protocol = { path = "../../../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-ui-scene-pack = { path = "../../../../📦️pack/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+fnv = "1.0.7"
+serde_json = { version = "1.0.140" }

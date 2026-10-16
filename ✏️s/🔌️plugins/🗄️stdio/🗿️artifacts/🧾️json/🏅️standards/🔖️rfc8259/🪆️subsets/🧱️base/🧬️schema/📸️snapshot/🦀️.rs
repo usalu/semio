@@ -4,7 +4,7 @@
 //! through `f64`). No `serde_json::Value` anywhere in this file.
 
 #[path="🔢️number/🦀️.rs"]
-pub(crate) mod number;
+pub mod number;
 
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;

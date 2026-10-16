@@ -14,25 +14,27 @@ import { useCallback, useState, type ReactElement } from "react";
 
 import { TiledMapHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@semio-tech/framework";
+import overlayFixture from "../🧪️tests/🧫️fixtures/🗺️overlay-descriptor/🔣️.json";
 
 //#region SceneFixtures
+/** 🗺️ The shared neutral descriptor: the neutral bands plus a small test policy declaring pickable `paths` and `pins` overlays, which the wgpu surface tests sync too. */
 const VECTOR_SCENE: TiledMapScene = {
-  mapDescriptorJson: JSON.stringify({ positions: [{ id: "hq", label: "HQ", name: "Headquarters" }] }),
+  mapDescriptorJson: JSON.stringify(overlayFixture.mapDescriptor),
   cameraJson: '{"x":0,"y":0,"zoom":1}',
   renderMode: "vector",
-  vectorStyle: "colored",
+  vectorStyle: "default",
   lodMode: "automatic",
   tileUrlTemplate: "/storybook-missing-tiles/{z}/{x}/{y}.png",
   vectorTileUrlTemplate: "/storybook-missing-tiles/vector/{z}/{x}/{y}.pbf",
   layerVisibilityJson: "{}",
   layerStrokeScaleJson: "{}",
-  selectionJson: "[]",
-  hoverJson: "{}",
+  selectionJson: JSON.stringify(overlayFixture.selection),
+  hoverJson: JSON.stringify(overlayFixture.hover),
   selectionMethod: "rectangle",
   selectionMode: "feature",
 };
 
-const IMAGE_SCENE: TiledMapScene = { ...VECTOR_SCENE, renderMode: "image", vectorStyle: "figureGround" };
+const IMAGE_SCENE: TiledMapScene = { ...VECTOR_SCENE, renderMode: "image" };
 //#endregion SceneFixtures
 
 //#region StoryHost
@@ -70,9 +72,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const VectorRender: Story = {
-  args: { scene: VECTOR_SCENE, controllerId: "gis-play", surfaceId: "gis.play.map" },
+  args: { scene: VECTOR_SCENE, controllerId: "map-story", surfaceId: "map-story.map" },
 };
 
 export const ImageRender: Story = {
-  args: { scene: IMAGE_SCENE, controllerId: "gis-play", surfaceId: "gis.play.map-image" },
+  args: { scene: IMAGE_SCENE, controllerId: "map-story", surfaceId: "map-story.map-image" },
 };

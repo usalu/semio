@@ -1,5 +1,8 @@
+use crate::{schema::snapshot::BcfCamera, schema::snapshot::BcfColoring, schema::snapshot::BcfComment, schema::snapshot::BcfComponents, schema::snapshot::BcfPoint3, schema::snapshot::BcfRawPart, schema::snapshot::BcfTopic, schema::snapshot::BcfViewpoint, schema::snapshot::BcfVisibility, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
+use crate::standards::v2_1::subsets::any::io::{bcf_version_bytes};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v2_1::subsets::any::io::*;
 use crate::schema::diff::BcfDiff;
 use crate::schema::mutations::{
     insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot, set_parts,

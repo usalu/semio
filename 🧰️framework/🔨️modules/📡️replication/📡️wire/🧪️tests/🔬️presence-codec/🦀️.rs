@@ -51,7 +51,7 @@ async fn presence_peer_decoder_matches_neutral_bounded_exact_corpus() {
         if row["accepted"].as_bool().unwrap() {
             let decoded = result.unwrap_or_else(|error| panic!("{id}: {error}"));
             assert_eq!(encode_presence_peer(&decoded).await, fixture_hex(row["canonicalHex"].as_str().unwrap()), "{id}");
-            let mut semantic = serde_json::Value::from(crate::value::ToValue::to_value(&decoded));
+            let mut semantic = serde_json::Value::from(semio_framework_value::ToValue::to_value(&decoded));
             semantic.as_object_mut().unwrap().entry("views").or_insert_with(|| serde_json::json!([]));
             let mut expected = row["expected"].clone();
             normalize_json_numbers(&mut semantic);
@@ -70,7 +70,7 @@ async fn presence_peer_decoder_rejects_hostile_counts_before_allocation() {
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["id"].as_str().unwrap().starts_with("huge-")) {
         let bytes = fixture_bytes(row);
         assert!(bytes.len() < 32, "hostile count fixture must stay short");
-        assert!(matches!(decode_presence_peer(&bytes).await, Err(crate::ProtocolError::LimitExceeded(_))), "{}", row["id"].as_str().unwrap());
+        assert!(matches!(decode_presence_peer(&bytes).await, Err(semio_framework_replication_error::ProtocolError::LimitExceeded(_))), "{}", row["id"].as_str().unwrap());
     }
 }
 
@@ -132,9 +132,9 @@ async fn presence_peer_active_tool_round_trips() {
     };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
-    let value = crate::value::ToValue::to_value(&peer);
+    let value = semio_framework_value::ToValue::to_value(&peer);
     assert_eq!(serde_json::Value::from(value.clone())["activeTool"], serde_json::json!("select"));
-    let round: PresencePeer = crate::value::FromValue::from_value(value).unwrap();
+    let round: PresencePeer = semio_framework_value::FromValue::from_value(value).unwrap();
     assert_eq!(round, peer);
 }
 
@@ -170,28 +170,28 @@ async fn presence_peer_rejects_unknown_flag_bits() {
     // Hand-built rather than mutating an encode output: flags is a varint_u64. Bit 15 is one past
     // the frozen 0..=14 range (bit 14 = typing). The next field to take bit 15 must move this.
     let mut bytes = Vec::new();
-    crate::write_str(&mut bytes, "peer-5");
-    crate::wire::write_varint_u64(&mut bytes, 1 << 15);
-    crate::wire::write_varint_u64(&mut bytes, 1000);
+    semio_framework_replication_wire_core::write_str(&mut bytes, "peer-5");
+    semio_framework_replication_wire_core::write_varint_u64(&mut bytes, 1 << 15);
+    semio_framework_replication_wire_core::write_varint_u64(&mut bytes, 1000);
     let err = decode_presence_peer(&bytes).await.unwrap_err();
-    assert!(matches!(err, crate::ProtocolError::Malformed { what: "presence peer flags", .. }));
+    assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "presence peer flags", .. }));
 
     // Bit 12 IS known: missing body is a truncated-text error, not an unknown-flag refusal.
     let mut bit_twelve = Vec::new();
-    crate::write_str(&mut bit_twelve, "peer-5");
-    crate::wire::write_varint_u64(&mut bit_twelve, 1 << 12);
-    crate::wire::write_varint_u64(&mut bit_twelve, 1000);
+    semio_framework_replication_wire_core::write_str(&mut bit_twelve, "peer-5");
+    semio_framework_replication_wire_core::write_varint_u64(&mut bit_twelve, 1 << 12);
+    semio_framework_replication_wire_core::write_varint_u64(&mut bit_twelve, 1000);
     assert!(decode_presence_peer(&bit_twelve).await.is_err());
 
     // Bit 11 IS known: missing body / bad principal-kind tag.
     let mut bit_eleven = Vec::new();
-    crate::write_str(&mut bit_eleven, "peer-5");
-    crate::wire::write_varint_u64(&mut bit_eleven, 1 << 11);
-    crate::wire::write_varint_u64(&mut bit_eleven, 1000);
-    assert!(matches!(decode_presence_peer(&bit_eleven).await.unwrap_err(), crate::ProtocolError::Malformed { what: "presence peer principal kind", .. }));
+    semio_framework_replication_wire_core::write_str(&mut bit_eleven, "peer-5");
+    semio_framework_replication_wire_core::write_varint_u64(&mut bit_eleven, 1 << 11);
+    semio_framework_replication_wire_core::write_varint_u64(&mut bit_eleven, 1000);
+    assert!(matches!(decode_presence_peer(&bit_eleven).await.unwrap_err(), semio_framework_replication_error::ProtocolError::Malformed { what: "presence peer principal kind", .. }));
     let mut unknown_kind = bit_eleven.clone();
     unknown_kind.push(2);
-    assert!(matches!(decode_presence_peer(&unknown_kind).await.unwrap_err(), crate::ProtocolError::Malformed { what: "presence peer principal kind", .. }));
+    assert!(matches!(decode_presence_peer(&unknown_kind).await.unwrap_err(), semio_framework_replication_error::ProtocolError::Malformed { what: "presence peer principal kind", .. }));
 }
 
 /// 🤖️ The agent principal round-trips through BOTH codecs and survives an absent field as the
@@ -222,13 +222,13 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
         let bytes = encode_presence_peer(&peer).await;
         assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer, "binary codec, {kind:?}");
 
-        let value = crate::value::ToValue::to_value(&peer);
-        let decoded: PresencePeer = crate::value::FromValue::from_value(value).expect("JSON codec round-trips");
+        let value = semio_framework_value::ToValue::to_value(&peer);
+        let decoded: PresencePeer = semio_framework_value::FromValue::from_value(value).expect("JSON codec round-trips");
         assert_eq!(decoded, peer, "JSON codec, {kind:?}");
     }
 
     // 🔤️ The JSON spelling is the wire name, and an unknown one is a typed refusal, never `human`.
-    let encoded = crate::value::ToValue::to_value(&PresencePeer {
+    let encoded = semio_framework_value::ToValue::to_value(&PresencePeer {
         actor: "a".into(),
         connected_at_ms: 1,
         label: None,
@@ -248,13 +248,13 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
         typing: Vec::new(),
     });
     assert_eq!(serde_json::Value::from(encoded.clone())["principalKind"], serde_json::json!("agent"));
-    let crate::value::DslValue::Object(mut fields) = encoded else { panic!("a peer encodes as an object") };
+    let semio_framework_value::DslValue::Object(mut fields) = encoded else { panic!("a peer encodes as an object") };
     for (key, entry) in &mut fields {
         if key == "principalKind" {
-            *entry = crate::value::DslValue::String("administrator".into());
+            *entry = semio_framework_value::DslValue::String("administrator".into());
         }
     }
-    assert!(<PresencePeer as crate::value::FromValue>::from_value(crate::value::DslValue::Object(fields)).is_err(), "an unknown principalKind is refused, never silently human");
+    assert!(<PresencePeer as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Object(fields)).is_err(), "an unknown principalKind is refused, never silently human");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -278,9 +278,9 @@ async fn presence_peer_tool_run_round_trips_every_state_with_wire_spelling() {
             let peer = PresencePeer { actor: "peer-6".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: Some(PresenceToolRun { tool_id: "fill".into(), state, stage: 2, completed: 3, total }), principal_kind: None, active_tool: None, history_edit: None, typing: Vec::new() };
             let bytes = encode_presence_peer(&peer).await;
             assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
-            let value = crate::value::ToValue::to_value(&peer);
+            let value = semio_framework_value::ToValue::to_value(&peer);
             assert_eq!(serde_json::Value::from(value.clone())["toolRun"]["state"], spelling);
-            assert_eq!(<PresencePeer as crate::value::FromValue>::from_value(value).unwrap(), peer);
+            assert_eq!(<PresencePeer as semio_framework_value::FromValue>::from_value(value).unwrap(), peer);
         }
     }
     assert_eq!(PresenceToolRunState::from_wire_name("idle"), None);
@@ -301,15 +301,15 @@ async fn presence_peer_history_edit_round_trips_every_stage_with_wire_spelling()
         encode_presence_history_edit(&history_edit, &mut body);
         assert!(bytes.ends_with(&body), "the frame body is the peer's own history edit section");
         assert_eq!(decode_presence_history_edit(&body).unwrap(), history_edit);
-        let value = crate::value::ToValue::to_value(&peer);
+        let value = semio_framework_value::ToValue::to_value(&peer);
         assert_eq!(serde_json::Value::from(value.clone())["historyEdit"], serde_json::json!({ "mutationId": "e-2#0", "stage": spelling, "drafts": 3 }));
-        assert_eq!(<PresencePeer as crate::value::FromValue>::from_value(value).unwrap(), peer);
+        assert_eq!(<PresencePeer as semio_framework_value::FromValue>::from_value(value).unwrap(), peer);
     }
     assert_eq!(PresenceHistoryEditStage::from_wire_name("inactive"), None, "an inactive session publishes no summary");
     let mut bad_stage = Vec::new();
-    crate::write_str(&mut bad_stage, "e-2#0");
+    semio_framework_replication_wire_core::write_str(&mut bad_stage, "e-2#0");
     bad_stage.push(5);
-    crate::wire::write_varint_u64(&mut bad_stage, 0);
+    semio_framework_replication_wire_core::write_varint_u64(&mut bad_stage, 0);
     assert!(decode_presence_history_edit(&bad_stage).is_err(), "an unknown stage tag is refused");
     let mut trailing = Vec::new();
     encode_presence_history_edit(&PresenceHistoryEdit { mutation_id: "e-2#0".into(), stage: PresenceHistoryEditStage::Editing, drafts: 0 }, &mut trailing);
@@ -325,24 +325,24 @@ async fn presence_peer_typing_preview_round_trips_and_refuses_hostile_runs() {
     let peer = PresencePeer { actor: "peer-9".into(), connected_at_ms: 1, label: None, presence_pack: None, user_id: None, role: None, drag_ghost_json: None, interaction: None, color: None, surface: None, views: Vec::new(), ui: None, tool_run: None, principal_kind: None, active_tool: None, history_edit: None, typing: typing.clone() };
     let bytes = encode_presence_peer(&peer).await;
     assert_eq!(decode_presence_peer(&bytes).await.unwrap(), peer);
-    let value = crate::value::ToValue::to_value(&peer);
+    let value = semio_framework_value::ToValue::to_value(&peer);
     assert_eq!(serde_json::Value::from(value.clone())["typing"], serde_json::json!([{ "windowId": "writer.main", "deleted": "", "insert": "hello wör" }, { "windowId": "query", "deleted": "MATCH", "insert": "RETURN" }]));
-    assert_eq!(<PresencePeer as crate::value::FromValue>::from_value(value).unwrap(), peer);
+    assert_eq!(<PresencePeer as semio_framework_value::FromValue>::from_value(value).unwrap(), peer);
     let quiet = PresencePeer { typing: Vec::new(), ..peer.clone() };
     let quiet_bytes = encode_presence_peer(&quiet).await;
     assert_eq!(decode_presence_peer(&quiet_bytes).await.unwrap(), quiet);
     assert!(quiet_bytes.len() < bytes.len(), "an empty preview costs no bytes");
-    assert!(serde_json::Value::from(crate::value::ToValue::to_value(&quiet)).get("typing").is_none(), "no run, no field");
+    assert!(serde_json::Value::from(semio_framework_value::ToValue::to_value(&quiet)).get("typing").is_none(), "no run, no field");
     let flagged = |runs: u64, excerpt: &str| {
         let mut out = Vec::new();
-        crate::write_str(&mut out, "peer-9");
-        crate::wire::write_varint_u64(&mut out, 1 << 14);
-        crate::wire::write_varint_u64(&mut out, 1);
-        crate::wire::write_varint_u64(&mut out, runs);
+        semio_framework_replication_wire_core::write_str(&mut out, "peer-9");
+        semio_framework_replication_wire_core::write_varint_u64(&mut out, 1 << 14);
+        semio_framework_replication_wire_core::write_varint_u64(&mut out, 1);
+        semio_framework_replication_wire_core::write_varint_u64(&mut out, runs);
         for _ in 0..runs {
-            crate::write_str(&mut out, "w");
-            crate::write_str(&mut out, "");
-            crate::write_str(&mut out, excerpt);
+            semio_framework_replication_wire_core::write_str(&mut out, "w");
+            semio_framework_replication_wire_core::write_str(&mut out, "");
+            semio_framework_replication_wire_core::write_str(&mut out, excerpt);
         }
         out
     };

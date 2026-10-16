@@ -48,7 +48,7 @@ fn read_tightness(a:Option<&str>)->Result<Option<TightnessClass>, ValueError>{ma
 fn insert_action(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,n:usize,a:&LoadCaseActions)->Result<(), ValueError>{p.insert_float(table,&[Cell::Integer(parent),ordinal(n)?,Cell::Text(&a.id),Cell::Text(&a.kind),Cell::Text(&a.category),Cell::Text(&a.source),Cell::Real(a.g_k_line),Cell::Real(a.q_k_line),Cell::Real(a.point_force),Cell::Real(a.m_k),Cell::Real(a.n_k),Cell::Real(a.v_k),Cell::Real(a.t_k),Cell::Real(a.v_k_punch)],ACTION)?;Ok(())}
 fn read_action(a:FloatRow<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<LoadCaseActions, ValueError>{Ok(LoadCaseActions{id:text(a,3,c)?,kind:text(a,4,c)?,category:text(a,5,c)?,source:text(a,6,c)?,g_k_line:a.real(7)?,q_k_line:a.real(8)?,point_force:a.real(9)?,m_k:a.real(10)?,n_k:a.real(11)?,v_k:a.real(12)?,t_k:a.real(13)?,v_k_punch:a.real(14)?})}
 /// 🪪️ Optional relational capability of the concrete artifact owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1992Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1992Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 fn visit_rows(s:&En1992Snapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
   p.insert_key_float("en1992_document",1,&[Cell::Text(annex(s.annex)),Cell::Text(&s.title),Cell::Real(s.design_working_life_years),Cell::Real(s.delta_c_dev),Cell::Text(&s.cement_type)],DOCUMENT)?;
   for(n,v)in s.concrete_grades.iter().enumerate(){p.insert_float("en1992_concrete_grade",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&v.id),Cell::Text(&v.name),Cell::Real(v.f_ck)],CONCRETE)?;}

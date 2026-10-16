@@ -17,22 +17,12 @@ use semio_framework_job_worker::{BatchJobSession,WorkerJobSessionAdmissionReject
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::{mem::size_of, sync::Arc};
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
+use crate::{FrameBuildInputs, FrameDirectives};
 
 //#region 📥️FrameBuildInputs
-/// 📥️ The fixed scalar `Send`-safe slice of `AppRuntime` this job needs.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct FrameBuildInputs {
-    pub wheel_zoom_deadline_ms: f64,
-    pub now_ms: f64,
-}
 //#endregion 📥️FrameBuildInputs
 
 //#region 📤️FrameDirectives
-/// 📤️ The worker's fixed scalar candidate, revalidated against live state before use.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-pub(crate) struct FrameDirectives {
-    pub wheel_zoom_deadline_cleared: bool,
-}
 //#endregion 📤️FrameDirectives
 
 //#region 🧩️FrameBuildJob
@@ -189,7 +179,7 @@ enum ActiveFramePhase {
 
 struct ActiveFrameBuild {
     retained: RetainedCloneGrant,
-    runtime: crate::RuntimeMailbox,
+    runtime: crate::AppMailbox,
     handle: crate::AppHandle,
     operation: OperationId,
     generation: Generation,
@@ -295,7 +285,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
 }
 
 impl ActiveFrameBuild {
-    fn new(runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
+    fn new(runtime: crate::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
         let handle = runtime.downgrade();
         let phase = ActiveFramePhase::DeadlineAdmission { job:Some(FrameBuildJob::new(inputs)),params:None,cancel_retirement:None };
         Self { retained, runtime, handle, operation, generation, cancel:std::mem::ManuallyDrop::new(Some(cancel)), cancel_retirement:None, presentation_generation:generation, preview_sequence: 0, phase, retiring_phase:None, deadline_receipt_received:false, deadline_outcome_pending:None, deadline_acknowledged:false, deadline_refused_receipt:None, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
@@ -599,7 +589,7 @@ fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
 
 impl FrameBuildHandle {
     /// 🎟️ Admits and advances the existing frame owner with the initiating business authority.
-    pub(crate) fn poll_runtime_on_original_caller(&mut self,runtime:crate::RuntimeMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<crate::AppFramePresentation>,OriginalTurnFailure>{
+    pub(crate) fn poll_runtime_on_original_caller(&mut self,runtime:crate::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<crate::AppFramePresentation>,OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
         if self.rejected.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame caller cannot take a cold rejected owner").into())}
         self.latest_requested_generation=presentation_generation;
@@ -698,7 +688,7 @@ impl FrameBuildHandle {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
         if self.closing {
             return None;
         }
@@ -818,7 +808,7 @@ impl FrameBuildHandle {
     /// `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
     /// is the authority that gate was standing in for.
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<crate::AppFramePresentation> {
         if self.closing || web_sys::window().is_some() {
             return None;
         }

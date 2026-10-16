@@ -1,17 +1,17 @@
 /// 🧪️ Independent schema fixture authority is explicit at every original camera test boundary.
-pub(crate) fn camera_fixture_grant() -> semio_framework_job::RetainedCloneGrant {
+pub fn camera_fixture_grant() -> semio_framework_job::RetainedCloneGrant {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../⏱️camera/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     serde_json::from_value(fixture["rootGrant"].clone()).unwrap()
 }
 
 pub(crate) struct CameraFixtureLease { grant: semio_framework_job::RetainedCloneGrant }
 
-pub(crate) fn camera_fixture_lease(grant: semio_framework_job::RetainedCloneGrant) -> CameraFixtureLease {
+pub fn camera_fixture_lease(grant: semio_framework_job::RetainedCloneGrant) -> CameraFixtureLease {
     install_scene_camera_authority(grant).unwrap();
     CameraFixtureLease { grant }
 }
 
-pub(crate) fn clear_camera_fixture(grant: semio_framework_job::RetainedCloneGrant) {
+pub fn clear_camera_fixture(grant: semio_framework_job::RetainedCloneGrant) {
     install_scene_camera_authority(grant).unwrap();
     for _ in 0..2048 {
         let step = close_scene_camera_storage(grant).unwrap();
@@ -92,11 +92,11 @@ fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_o
         assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")) && !ENGINE_CANVAS_STANDALONE.contains(&format!("pub fn {function}(")), "{function} must not remain production-capable");
         assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
     }
-    for function in ["node_graph_wheel", "node_graph_pointer_down", "node_graph_pointer_move", "node_graph_pointer_up", "tiled_map_wheel", "puzzle_board_pointer_move", "puzzle_board_pointer_up", "puzzle_board_pointer_leave", "puzzle_board_wheel"] {
+    for function in ["node_graph_wheel", "node_graph_pointer_down", "node_graph_pointer_move", "node_graph_pointer_up", "tiled_map_wheel", "board2d_pointer_move", "board2d_pointer_up", "board2d_pointer_leave", "board2d_wheel"] {
         assert!(ENGINE_CANVAS_STANDALONE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
         assert!(!ENGINE_CANVAS_SOURCE.contains(&format!("pub fn {function}(")), "{function} must not be reachable from the production ⚙️EngineCanvas target");
     }
-    for function in ["tiled_map_pointer_down", "tiled_map_pointer_move", "tiled_map_pointer_up", "puzzle_board_pointer_move", "puzzle_board_pointer_up", "puzzle_board_pointer_leave", "puzzle_board_wheel"] {
+    for function in ["tiled_map_pointer_down", "tiled_map_pointer_move", "tiled_map_pointer_up", "board2d_pointer_move", "board2d_pointer_up", "board2d_pointer_leave", "board2d_wheel"] {
         assert!(STANDALONE_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
     }
 }
@@ -527,7 +527,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
 }
 
 #[cfg(test)]
-pub(crate) fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
+pub fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
     let mut max_x = f32::NEG_INFINITY;
@@ -556,7 +556,7 @@ pub(crate) fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: R
 }
 
 #[cfg(test)]
-pub(crate) fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
+pub fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_json: Option<&str>, navigator_viewport: &Viewport, navigator_inner: Rect) -> Option<Rect> {
     let content_viewport_json = content_viewport_json?;
     let content_camera = Viewport::from_json(content_camera_json);
     let size: Value = serde_json::from_str(content_viewport_json).ok()?;
@@ -603,7 +603,7 @@ fn test_find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
-pub(crate) fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
+pub fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
     let mut flat = flatten_ink_items(blocks);
     flat.reverse();
     flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
@@ -1016,29 +1016,26 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
                     points = vec![(start_x, start_y), (sx as f32, sy as f32)];
                 }
                 let crossing = engine_canvas::map_marquee_crossing(&method, start_x, sx as f32);
-                let (positions, routes) = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
+                let ids = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, &method, &points, crossing)).unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
                     ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
-                        "positions": positions,
-                        "routes": routes,
+                        "ids": ids,
                         "mode": merge_mode,
                     }),
                 ));
             } else if distance < MAP_MARQUEE_THRESHOLD_PX {
                 let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
                 let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
-                let (kind, id) = (hit.get("kind").and_then(|value| value.as_str()), hit.get("id").and_then(|value| value.as_str()));
-                if let (Some(kind), Some(id)) = (kind, id) {
+                if let Some(id) = hit.get("id").and_then(|value| value.as_str()) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
                         ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
-                            "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
-                            "routes": if kind == "route" { vec![id] } else { Vec::<&str>::new() },
+                            "ids": [id],
                             "mode": merge_mode,
                         }),
                     ));
@@ -1057,27 +1054,27 @@ pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, 
 
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
-    engine_canvas::puzzle_board_pointer_move(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
+pub fn board2d_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
+    engine_canvas::board2d_pointer_move(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
-    engine_canvas::puzzle_board_pointer_up(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
+pub fn board2d_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
+    engine_canvas::board2d_pointer_up(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
 #[cfg(test)]
-pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
-    engine_canvas::puzzle_board_pointer_leave(surface_id, controller_id, alt)
+pub fn board2d_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
+    engine_canvas::board2d_pointer_leave(surface_id, controller_id, alt)
 }
 
 #[cfg(test)]
-pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
-    engine_canvas::puzzle_board_wheel(surface_id, controller_id, inner, x, y, delta)
+pub fn board2d_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
+    engine_canvas::board2d_wheel(surface_id, controller_id, inner, x, y, delta)
 }
 
 #[cfg(test)]
-pub(crate) fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
+pub fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, scroll: f32) -> usize {
     let Some(editor) = &scene.text_editor else {
         return 0;
     };
@@ -1101,7 +1098,7 @@ pub(crate) fn cursor_from_click(scene: &UiComponentSceneNode, inner: Rect, x: f3
 }
 
 #[cfg(test)]
-pub(crate) fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
+pub fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
     let mut index = 0usize;
     for (line_index, line) in text.lines().enumerate() {
         let next = index + line.len() + 1;

@@ -20,15 +20,15 @@ fn icon_export_effect_admits_large_batches_and_scopes_cancellation_to_existing_r
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         let groups = scenario["groups"].as_array().unwrap();
         for index in 0..=groups.len() {
-            if scenario["cancelBeforeGroup"].as_u64() == Some(index as u64) { shell.cancel_icon_export(); }
+            if scenario["cancelBeforeGroup"].as_u64() == Some(index as u64) { shell.opening.cancel_icon_export(); }
             if index == groups.len() { break; }
             let items = (0..groups[index].as_u64().unwrap()).map(|item| semio_framework::kernel::IconRenderExportItem {
                 filename: format!("{index}-{item}.png"), request: semio_framework::DslValue::from(&fixture["invalid"][0]["request"]),
             }).collect();
-            shell.queue_host_effects("export-queue-law", vec![semio_framework::kernel::Effect::IconRenderExport { items }]);
+            WindowActionsCtx::of(&mut shell).queue_host_effects("export-queue-law", vec![semio_framework::kernel::Effect::IconRenderExport { items }]);
         }
         let expected = &scenario["expected"];
-        let batch = shell.icon_export.as_mut().expect("every export effect is admitted");
+        let batch = shell.opening.icon_export.as_mut().expect("every export effect is admitted");
         assert_eq!(batch.counts().1, expected["admitted"].as_u64().unwrap() as usize, "{}", scenario["name"]);
         for _ in 0..2048 {
             let before = batch.items.iter().map(|group| group.items.len()).sum::<usize>();
@@ -42,7 +42,7 @@ fn icon_export_effect_admits_large_batches_and_scopes_cancellation_to_existing_r
         assert_eq!(batch.discarded, expected["discarded"].as_u64().unwrap() as usize);
         assert_eq!(batch.phase_key(), expected["phase"].as_str().unwrap());
         assert_eq!(batch.completed, 0);
-        assert!(shell.error.is_none());
+        assert!(shell.chrome.error.is_none());
         caller.finish();
     }
 }
@@ -92,17 +92,17 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = fixture();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.queue_host_effects("export-law", vec![semio_framework::kernel::Effect::IconRenderExport { items: requests(&fixture) }]);
-    assert!(shell.settle_pump_pending());
+    WindowActionsCtx::of(&mut shell).queue_host_effects("export-law", vec![semio_framework::kernel::Effect::IconRenderExport { items: requests(&fixture) }]);
+    assert!(PointerCtx::of(&mut shell).settle_pump_pending());
     let mut cursor = super::super::ShellChromeChildCursor::default();
     let mut draw = ui_wgpu::wgpu::DrawList::default();
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
     let mut input = ui_wgpu::wgpu::InputState::default();
     for _ in 0..1024 {
-        if shell.render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &ui_wgpu::wgpu::Theme::default(), 1280.0) { break; }
+        if PanelsViewCtx::of(&mut shell).render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &ui_wgpu::wgpu::Theme::default(), 1280.0) { break; }
     }
     input.publish_hits();
-    let nodes = shell.chrome_accessibility_nodes(input.hits());
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits());
     let cancel = nodes.iter().find(|node| node.key == CONTROL_ID).expect("export cancel button");
     assert_eq!(cancel.role, "button");
     assert!(cancel.focusable && cancel.tabbable && cancel.actionable);
@@ -117,13 +117,13 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
         node_id: cancel.node_id,
         node_key: cancel.key.clone(),
     };
-    shell.presented_chrome_accessibility = nodes;
-    shell.presented_chrome_accessibility_generation = 1;
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).unwrap());
-    for _ in 0..64 { caller.turn(|cx|shell.advance_icon_export(cx)).unwrap(); }
-    assert!(shell.icon_export.as_ref().unwrap().terminal_is_empty());
-    assert_eq!(shell.icon_export.as_ref().unwrap().phase_key(), "cancelled");
-    assert!(caller.turn(|cx|shell.close_icon_export_step(cx)).unwrap());
+    shell.chrome.presented_chrome_accessibility = nodes;
+    shell.chrome.presented_chrome_accessibility_generation = 1;
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).unwrap());
+    for _ in 0..64 { caller.turn(|cx|shell.opening.advance_icon_export(cx)).unwrap(); }
+    assert!(shell.opening.icon_export.as_ref().unwrap().terminal_is_empty());
+    assert_eq!(shell.opening.icon_export.as_ref().unwrap().phase_key(), "cancelled");
+    assert!(caller.turn(|cx|shell.opening.close_icon_export_step(cx)).unwrap());
     caller.finish();
 }
 

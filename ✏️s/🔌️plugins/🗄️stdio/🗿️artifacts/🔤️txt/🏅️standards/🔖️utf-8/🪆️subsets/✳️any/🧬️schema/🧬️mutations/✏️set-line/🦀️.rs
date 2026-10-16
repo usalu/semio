@@ -73,7 +73,5 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
 //#endregion ⚙️Semantics
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

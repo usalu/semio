@@ -10,7 +10,7 @@ import {resolve} from "node:path";
 class WorkflowSqliteTestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   const mode=segments[0];if(segments.length>1||(mode!==undefined&&mode!=="source"&&mode!=="native"))throw Error("Unknown Workflow SQLite test mode");
-  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-workflow", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation);
+  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-workflow-schema-laws", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation);
   if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:60000});
  }
 }
@@ -22,4 +22,4 @@ class WorkflowSqliteVerifyScript extends BundleScript{
   await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"workflow-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
  }
 }
-await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-workflow",{commands:{"test-snapshot-sqlite":WorkflowSqliteTestScript,verify:WorkflowSqliteVerifyScript}});
+await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-workflow",{packages:["semio-framework-artifact-workflow-workflow","semio-framework-artifact-workflow-workflow-graph","semio-framework-artifact-workflow-workflow-snapshot","semio-framework-artifact-workflow-workflow-schema","semio-framework-artifact-workflow-workflow-schema-laws"],commands:{"test-snapshot-sqlite":WorkflowSqliteTestScript,verify:WorkflowSqliteVerifyScript}});

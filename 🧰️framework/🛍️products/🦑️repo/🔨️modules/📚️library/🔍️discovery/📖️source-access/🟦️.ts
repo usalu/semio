@@ -113,16 +113,39 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`,
   `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`,
   `${OS_ENGINE}/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`,
-  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs",
-  `${OS_INFINITE_DIRECTED}/➕️normal/🦀️.rs`,
-  `${OS_INFINITE_DIRECTED}/🕸️dag/🦀️.rs`,
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs",
+  `${OS_INFINITE_DIRECTED}/➕️normal/🗃️model/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/➕️normal/🖼️scene/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/➕️normal/🎯️focus/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/➕️normal/🕹️gestures/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/➕️normal/🪣️fill/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/➕️normal/🧭️host/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/🕸️dag/🗃️model/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/🕸️dag/🕸️graph/🦀️.rs`,
+  `${OS_INFINITE_DIRECTED}/🕸️dag/🧭️host/🦀️.rs`,
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
-  "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/⏭️cursor/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧱️primitives/🦀️.rs",
   "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs",
   "🌎️hub/🏗️bootstrap/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/⚙️runtime/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/📒️ledgers/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/🧱️models/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/🧠️state/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/🛰️session-routes/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/📨️document-routes/🦀️.rs",
+  "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs",
   `${OS_ENGINE}/🧱️elements/🛠️ShellHelpers/🟦️.tsx`,
   `${OS_ENGINE}/🧱️elements/🌐️World3dHost/🟦️.tsx`,
   `${OS_ENGINE}/🧱️elements/🏛️ShellHost/🟦️.tsx`,
@@ -130,12 +153,12 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
 ];
 
-/** 🌳️ Lists the repo-relative files of a split source's module tree (the root first, then its mounted children) through the symlink-refusing policy read. */
+/** 🌳️ Lists the repo-relative files of a split source's module tree (the root first, then its mounted children) through the symlink-refusing policy read; the crates of the renderer partition are not followed unless `crates: true` is passed, because the canonical test-mount rule of the evidence reader does not know the crate roots' `🧪️tests/🦀️.rs` stubs. */
 export function policyModuleTreeFiles(repoRoot: string, relPath: string, options: Omit<ModuleTreeOptions, "read"> = {}): string[] {
-  return listModuleTree(join(repoRoot, relPath), { ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) }).map((path) => relative(repoRoot, path).split(sep).join("/"));
+  return listModuleTree(join(repoRoot, relPath), { crates: false, ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) }).map((path) => relative(repoRoot, path).split(sep).join("/"));
 }
 
 /** 📖️ Reads a split source as the one text the unsplit file held: the root and every mounted child, through the symlink-refusing policy read. */
 export function policyReadModuleTreeSource(repoRoot: string, relPath: string, options: Omit<ModuleTreeOptions, "read"> = {}): string {
-  return readModuleTreeSource(join(repoRoot, relPath), { ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) });
+  return readModuleTreeSource(join(repoRoot, relPath), { crates: false, ...options, read: (path) => policyReadFileSafe(repoRoot, relative(repoRoot, path)) });
 }

@@ -15,7 +15,7 @@
 # `os-hub credential set` seeds the first user with no server running and `POST /auth/sessions`
 # mints the session, so `OS_HUB_CREDENTIAL_SIGN_IN=true` is enough. A bare `os-hub` process boots.
 # The launcher, `bun`, Nx and the repository are all dev-loop concerns and none of them belong in a
-# server image; `bun nx run os-hub:dev` is still the right entrypoint for a *development* container,
+# server image; `bun repo run os-hub:dev` is still the right entrypoint for a *development* container,
 # and that is not what this file is for.
 #
 #   docker build -f 🌎️hub/Dockerfile -t semio/os-hub .              # context = repository root

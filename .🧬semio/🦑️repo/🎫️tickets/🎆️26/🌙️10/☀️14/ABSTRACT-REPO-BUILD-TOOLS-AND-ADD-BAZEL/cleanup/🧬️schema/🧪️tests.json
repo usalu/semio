@@ -1,0 +1,177 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "inventoryCases",
+    "rejectedInventories",
+    "ownerCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "platform",
+          "generated",
+          "candidate",
+          "mounts",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "generated": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "candidate": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "mounts": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "inventoryCases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "platform",
+          "text",
+          "paths"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "paths": {
+            "type": "array",
+            "maxItems": 16,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rejectedInventories": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "text"
+        ],
+        "properties": {
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        }
+      }
+    },
+    "ownerCases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "managedProtected",
+          "protected",
+          "live",
+          "dry",
+          "exists",
+          "admitted",
+          "removed"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "managedProtected": {
+            "type": "boolean"
+          },
+          "protected": {
+            "type": "boolean"
+          },
+          "live": {
+            "type": "boolean"
+          },
+          "dry": {
+            "type": "boolean"
+          },
+          "exists": {
+            "type": "boolean"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "removed": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

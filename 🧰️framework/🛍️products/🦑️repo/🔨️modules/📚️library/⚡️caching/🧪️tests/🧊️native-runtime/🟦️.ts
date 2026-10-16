@@ -12,7 +12,7 @@ function writeNativeComponentInputs(directory: string, pluginId: string, bytes: 
   const pack = Buffer.from(`semantic descriptor of ${pluginId}`);
   writeFileSync(join(directory, "descriptor.json"), JSON.stringify({ manifest: { pluginId } }));
   writeFileSync(join(directory, "descriptor.semio"), pack);
-  writeFileSync(join(directory, "🧾️receipt.json"), encodeComponentReceiptV1({ schema: "semio.plugin.component-receipt/v1", pluginId, packageId: `semio:${pluginId}`, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: receiptWasmSha256, wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "1".repeat(64), provenanceSha256: "2".repeat(64) }));
+  writeFileSync(join(directory, "🧾️receipt.json"), encodeComponentReceiptV1({ schema: "semio.plugin.component-receipt/v1", pluginId, packageId: `semio:${pluginId}`, profile: "release", target: "wasm32-wasip2", wasmSha256: receiptWasmSha256, wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "1".repeat(64), provenanceSha256: "2".repeat(64) }));
 }
 
 /** 🧊️ Qualifies native variant prerequisites and completed component publication through native Nx. */

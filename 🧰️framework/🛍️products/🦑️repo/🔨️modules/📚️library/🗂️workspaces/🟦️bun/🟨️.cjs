@@ -2,8 +2,9 @@ const fs = require("node:fs");
 const { dirname, isAbsolute, join, relative, resolve } = require("node:path");
 const { ownsPayloadPlan } = require("../📦️payload/🟨️.cjs");
 const { createHash } = require("node:crypto");
+const limits = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.PhysicalLimits.const });
 const slash = (path) => path.replaceAll("\\", "/");
-const ownershipPath = join(__dirname, "../🔣️policy.json"), ownershipSource = fs.readFileSync(ownershipPath, "utf8");
+const ownershipPath = join(__dirname, "../🔣️policy.json"), ownershipSource = readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes);
 const {workspaceTestingCollectionRoot: collectionRoot} = require("../🟨️.cjs");
 const opaque = new Set(["🗑️generated", "node_modules", "target", "dist", "build", "storybook-static", "temp", "coverage", "🔌️plugin-modules", "compose"]);
 
@@ -36,11 +37,34 @@ const sourcePrefix = pattern => {
 };
 const bounded = (root, path) => {
   const full = resolve(root, path), local = relative(root, full);
-  if (local === ".." || local.startsWith("../") || local.startsWith("..\\") || isAbsolute(local)) throw Error(`Bun workspace escapes repository: ${path}`);
+  if (full.length > limits.maximumPathUnits || local === ".." || local.startsWith("../") || local.startsWith("..\\") || isAbsolute(local)) throw Error(`Bun workspace escapes repository or path capacity: ${path}`);
   return full;
 };
 
-const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: new Map() });
+const physicalBudget = () => ({ texts: new Map(), bytes: 0, lists: new Map(), entries: 0 });
+const context = root => ({ root, inventory: new Map(), documents: new Map(), texts: new Map(), selected: new Map(), observations: new Map(), physical: physicalBudget() });
+function sameManifest(left, right) { return ["dev", "ino", "mode", "nlink", "size", "mtimeNs", "ctimeNs", "birthtimeNs"].every(key => left[key] === right[key]); }
+/** 📏️ Reads a bounded actual descriptor and refuses substitution, truncation or growth before returning text. */
+function readManifestText(path, budget, maximum = limits.maximumManifestBytes) {
+  if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
+  const before = fs.lstatSync(path, { bigint: true });
+  if (!before.isFile()) throw Error("Bun workspace requires a regular manifest: " + path);
+  if (before.size < 0n || before.size > BigInt(maximum)) throw Error("Bun manifest byte capacity exceeded: " + path);
+  const size = Number(before.size), prior = budget?.texts.get(path) ?? 0, total = (budget?.bytes ?? 0) - prior + size;
+  if (budget && (!budget.texts.has(path) && budget.texts.size >= limits.maximumTextDocuments || total > limits.maximumAggregateManifestBytes)) throw Error("Bun aggregate manifest byte capacity exceeded: " + path);
+  const descriptor = fs.openSync(path, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+  let failed = false;
+  try {
+    if (!sameManifest(before, fs.fstatSync(descriptor, { bigint: true }))) throw Error("Bun current manifest changed during descriptor admission: " + path);
+    const bytes = Buffer.alloc(size), probe = Buffer.alloc(1); let offset = 0;
+    while (offset < size) { const count = fs.readSync(descriptor, bytes, offset, Math.min(size - offset, limits.readChunkBytes), offset); if (!count) throw Error("Bun current manifest changed during descriptor read: " + path); offset += count; }
+    if (fs.readSync(descriptor, probe, 0, 1, size) || !sameManifest(before, fs.fstatSync(descriptor, { bigint: true })) || !sameManifest(before, fs.lstatSync(path, { bigint: true }))) throw Error("Bun current manifest changed during descriptor read: " + path);
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    if (budget) { budget.texts.set(path, size); budget.bytes = total; }
+    return text;
+  } catch (error) { failed = true; throw error; }
+  finally { try { fs.closeSync(descriptor); } catch (error) { if (!failed) throw error; } }
+}
 /** 🎯️ Admits one explicit immutable ownership selection without creating operation authority. */
 function ownershipSelection(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Explicit Bun ownership selection required");
@@ -159,22 +183,28 @@ function ownershipChange(operation, path, previous, current) {
   }
   return { operation, path, added, removed, typeChanged, total, omitted: Math.max(0, total - 8) };
 }
-function nativeOperations(observations, root) {
+function nativeOperations(observations, root, budget = physicalBudget()) {
   const retain = (operation, path, value) => {
     if (!observations) return;
     const key = JSON.stringify([operation, path]), previous = observations.get(key);
     if (previous && JSON.stringify(previous.value) !== JSON.stringify(value)) throw Error("Bun current ownership changed during verification: " + path + "; change=" + JSON.stringify(ownershipChange(operation, path, previous.value, value)));
-    if (!previous) observations.set(key, { operation, path, value });
+    if (!previous) { if (observations.size >= limits.maximumObservations) throw Error("Bun ownership observation capacity exceeded"); observations.set(key, { operation, path, value }); }
   };
   return {
     state(path) {
+      if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
       try {
         const entry = fs.lstatSync(path), kind = entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
         retain("state", path, [kind, String(entry.dev), String(entry.ino), entry.mode]); return kind;
       } catch (error) { if (error.code === "ENOENT") { retain("state", path, ["missing"]); return "missing"; } throw error; }
     },
     list(path) {
-      const entries = fs.readdirSync(path, { withFileTypes: true }).map(entry => ({ name: entry.name, kind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other" })).sort((a, b) => Buffer.from(a.name).compare(Buffer.from(b.name)));
+      if (this.state(path) !== "directory") throw Error("Bun workspace requires a real directory: " + path);
+      const entries = [], directory = fs.opendirSync(path, { bufferSize: 1 }), prior = budget.lists.get(path) ?? 0; let failed = false;
+      try { for (let entry; (entry = directory.readSync()) !== null;) { if (entries.length >= limits.maximumDirectoryEntries || budget.entries - prior + entries.length + 1 > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path); entries.push({ name: entry.name, kind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other" }); } }
+      catch (error) { failed = true; throw error; } finally { try { directory.closeSync(); } catch (error) { if (!failed) throw error; } }
+      if (this.state(path) !== "directory") throw Error("Bun workspace requires a real directory: " + path);
+      budget.entries = budget.entries - prior + entries.length; budget.lists.set(path, entries.length); entries.sort((a, b) => Buffer.from(a.name).compare(Buffer.from(b.name)));
       retain("list", path, observations ? entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !opaque.has(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name)))) : entries); return entries;
     },
     readText(path) {
@@ -182,7 +212,7 @@ function nativeOperations(observations, root) {
       for (let current = dirname(path); ; current = dirname(current)) { ancestry.push(current); if (current === dirname(current)) break; }
       for (const current of ancestry.reverse()) if (this.state(current) !== "directory") throw Error("Bun workspace ancestor must be a real directory: " + current);
       if (this.state(path) !== "file") throw Error("Bun workspace requires a regular manifest: " + path);
-      return fs.readFileSync(path, "utf8");
+      return readManifestText(path, budget);
     },
   };
 }
@@ -204,7 +234,7 @@ function* publicationPlan(owner, selection, verifyPublished) {
 /** 🛡️ Fences the last caller continuation before native publication or a completed report. */
 function currentFence(owner, operations, signal) {
   signal.throwIfAborted();
-  if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
   for (const observation of owner.observations.values()) { signal.throwIfAborted(); executeOperation(operations, observation); }
   for (const [path, text] of owner.texts) {
     signal.throwIfAborted();
@@ -215,8 +245,8 @@ function currentFence(owner, operations, signal) {
 async function controlledOwnership(root, selection, control, verifyPublished, computation = publicationPlan) {
   selection = ownershipSelection(selection);
   if (!control || !(control.signal instanceof AbortSignal) || typeof control.advance !== "function") throw Error("Original Bun workspace control required");
-  if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
-  const owner = context(root), operations = nativeOperations(owner.observations, owner.root), plan = computation(owner, selection, verifyPublished); let step, completedOperations = 0;
+  if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+  const owner = context(root), operations = nativeOperations(owner.observations, owner.root, owner.physical), plan = computation(owner, selection, verifyPublished); let step, completedOperations = 0;
   try {
     control.signal.throwIfAborted(); step = plan.next();
     while (!step.done) {
@@ -227,7 +257,7 @@ async function controlledOwnership(root, selection, control, verifyPublished, co
       step = plan.next(value);
     }
     control.signal.throwIfAborted();
-    if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
     currentFence(owner, operations, control.signal);
     return { report: step.value, owner, completedOperations };
   } finally { plan.return(); }
@@ -236,10 +266,10 @@ async function controlledOwnership(root, selection, control, verifyPublished, co
 async function inspectBunWorkspaceOwnership(root, selection, control) { return (await controlledOwnership(root, selection, control, true)).report; }
 /** 📣️ Publishes every affected scope before installation while preserving current Source guards. */
 async function publishCurrentOwnership(root, selection, control) {
-  const current = await controlledOwnership(root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root);
+  const current = await controlledOwnership(root, selection, control, false), { report, owner } = current, operations = nativeOperations(owner.observations, owner.root, owner.physical);
   const validate = async () => {
     control.signal.throwIfAborted();
-    if (fs.readFileSync(ownershipPath, "utf8") !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
+    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during publication");
     for (const observation of owner.observations.values()) {
       control.signal.throwIfAborted(); executeOperation(operations, observation);
       await control.advance({ operation: observation.operation, path: observation.path, completedOperations: ++current.completedOperations });
@@ -278,6 +308,45 @@ async function withPublishedBunWorkspaceOwnershipV1(root, selection, control, bo
   try { const result = await body(Object.freeze({ scopes, recheck })); await recheck(); return result; }
   finally { live = false; }
 }
+/** 👓️ Retains the original verified Source observations without publishing or writing. */
+async function withCurrentBunWorkspaceOwnershipV1(root, selection, control, body) {
+  if (typeof body !== "function") throw Error("Original Bun readonly callback required");
+  const current = await controlledOwnership(root, selection, control, true), owner = current.owner, operations = nativeOperations(owner.observations, owner.root, owner.physical);
+  const scopes = Object.freeze(current.report.scopes.map(scope => Object.freeze({ manifest: scope.manifest, packages: Object.freeze([...scope.packages]) }))), pending = new Set();
+  let live = true, accepting = true, acceptedFailed = false, acceptedFailure;
+  const guard = () => { if (!live) throw Error("Original Bun readonly callback released"); control.signal.throwIfAborted(); };
+  const validate = async () => {
+    guard();
+    if (readManifestText(ownershipPath, undefined, limits.maximumPolicyBytes) !== ownershipSource) throw Error("Bun current ownership policy changed during verification");
+    for (const observation of owner.observations.values()) {
+      guard(); executeOperation(operations, observation);
+      await control.advance({ operation: observation.operation, path: observation.path, completedOperations: ++current.completedOperations }); guard();
+    }
+    for (const [path, text] of owner.texts) {
+      guard(); const target = bounded(root, path);
+      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during verification: " + path);
+      await control.advance({ operation: "readText", path: target, completedOperations: ++current.completedOperations }); guard();
+      if (operations.readText(target) !== text) throw Error("Bun current manifest changed during verification: " + path);
+    }
+    guard(); currentFence(owner, operations, control.signal); guard();
+  };
+  const recheck = () => {
+    if (!live || !accepting) return Promise.reject(Error("Original Bun readonly callback released"));
+    if (pending.size >= limits.maximumPendingRechecks) return Promise.reject(Error("Bun readonly pending recheck capacity exceeded"));
+    const task = Promise.resolve().then(validate); pending.add(task);
+    void task.then(() => { pending.delete(task); }, error => { pending.delete(task); if (!acceptedFailed) { acceptedFailed = true; acceptedFailure = error; } });
+    return task;
+  };
+  let bodyFailed = false, bodyFailure, result;
+  try { result = await body(Object.freeze({ scopes, recheck })); } catch (error) { bodyFailed = true; bodyFailure = error; }
+  accepting = false;
+  try {
+    while (pending.size) await Promise.allSettled([...pending]);
+    if (bodyFailed) throw bodyFailure;
+    if (acceptedFailed) throw acceptedFailure;
+    await validate(); return result;
+  } finally { live = false; }
+}
 /** 🧭️ Enumerates current declared owner manifests without scanning their package trees. */
 async function discoverCurrentBunWorkspaceScopesV1(root, selection, control) {
   const computation = function* (owner, selected) {
@@ -289,4 +358,4 @@ async function discoverCurrentBunWorkspaceScopesV1(root, selection, control) {
   const current = await controlledOwnership(root, selection, control, false, computation);
   return Object.freeze(current.report.map(scope => Object.freeze({ ...scope, declaration: Object.freeze({ ...scope.declaration, members: Object.freeze([...scope.declaration.members]), owners: Object.freeze([...scope.declaration.owners]) }) })));
 }
-module.exports = { withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages };
+module.exports = { withCurrentBunWorkspaceOwnershipV1, withPublishedBunWorkspaceOwnershipV1, discoverCurrentBunWorkspaceScopesV1, parseBunWorkspaceDeclaration, readBunRepositoryMembership, bunRepositoryMembership, bunWorkspacePackages, bunWorkspaceNativePatterns, inspectBunWorkspaceOwnership, publishBunWorkspaceOwnership, discoverBunWorkspaces: root => bunRepositoryMembership(root).scopes, bunRepositoryPackages: root => bunRepositoryMembership(root).packages };

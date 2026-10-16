@@ -1,8 +1,10 @@
 //! 🧩️ The declarative app builder, its specs and validators, example sources and the built app definition.
+
 use semio_framework_value::DslValue;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
 use semio_framework::AppDefinition;
-use semio_framework::{clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id, kernel::CapabilityRequirement, note_shell_command_action_definition, record_tutorial_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition, start_tutorial_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, IconName, InteractionDefinition, InteractionRef, IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds, NOTE_SHELL_COMMAND_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID};
+use semio_framework::{clipboard_action_definitions, element_id_segment, history_action_definitions, is_element_id, kernel::CapabilityRequirement, note_shell_command_action_definition, set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, ExampleDefinition, IconName, InteractionDefinition, InteractionRef, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds, NOTE_SHELL_COMMAND_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID, UI_FOOTER_ELEMENT_ID, UI_NAVBAR_ELEMENT_ID};
+use semio_framework::onboarding::{record_tutorial_action_definition, start_introduction_action_definition, start_tutorial_action_definition, IntroductionDefinition, IntroductionInteractionKind, TutorialDefinition, RECORD_TUTORIAL_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::REVERT_TO_COMMAND_ACTION_ID;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
@@ -22,7 +24,7 @@ use std::collections::BTreeMap;
 use std::collections::{HashMap, HashSet};
 use semio_framework_ui_locale::LocalizedLabel;
 /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
-/// as `ui_wgpu::wgpu::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
+/// as `semio_framework_ui_layout::layout::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
 /// consumer" reasoning as `KeybindingActionDescriptor` below, so this stays bare (no name collision
 /// with the contract's differently-named `MenuRef` to guard against, unlike that one).
 /// 🏷️ The ui crate's NON-node domains, named explicitly rather than glob-imported: localized
@@ -30,21 +32,21 @@ use semio_framework_ui_locale::LocalizedLabel;
 /// flow. The node schema moved to the contract, but these never did — they are separate concerns
 /// that happen to share a home crate, and a second glob here would silently shadow the contract's
 /// own types with the old ones, quietly undoing the migration.
-use ui_wgpu::wgpu::collect_window_kind_ids_from_layout;
+use semio_framework_ui_layout::layout::collect_window_kind_ids_from_layout;
 /// 🔗️ `manifest::Keybinding.action` (FORBIDDEN file, `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`)
-/// is still declared as `ui_wgpu::wgpu::ActionDescriptor` and was not part of this migration's scope
+/// is still declared as `semio_framework_ui_layout::layout::ActionDescriptor` and was not part of this migration's scope
 /// — it is a separate, un-migrated manifest domain (declarative keybinding data), not one of the
 /// ~30 UI-tree helpers this packet converts. Aliased rather than left bare so every OTHER
 /// `ActionDescriptor`-shaped construction in this file reads as the genuine `ActionBinding` gap it
 /// is, instead of silently resolving to this one foreign survivor.
-use ui_wgpu::wgpu::ActionDescriptor as KeybindingActionDescriptor;
-use ui_wgpu::wgpu::NamedLayout;
-use ui_wgpu::wgpu::WindowEngagement;
-use ui_wgpu::wgpu::WindowEngagementSlot;
-use ui_wgpu::wgpu::WindowLayout;
-use ui_wgpu::wgpu::WindowMeasure;
-use ui_wgpu::wgpu::WindowOptions;
-use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_ui_layout::layout::ActionDescriptor as KeybindingActionDescriptor;
+use semio_framework_ui_layout::layout::NamedLayout;
+use semio_framework_ui_layout::layout::WindowEngagement;
+use semio_framework_ui_layout::layout::WindowEngagementSlot;
+use semio_framework_ui_layout::layout::WindowLayout;
+use semio_framework_ui_layout::layout::WindowMeasure;
+use semio_framework_ui_layout::layout::WindowOptions;
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
 /// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
@@ -63,32 +65,24 @@ use semio_framework_artifact_reference::ArtifactDialect;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::surface_app_id;
 use semio_framework::AppRole;
-use crate::app_contract::viewer_rejects_action;
+use semio_framework_plugin_decl_app::viewer_rejects_action;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
-use crate::app_views::cancellation_action_definition;
-use crate::window_surface::contract_surface_kind;
-use crate::window_surface::legacy_surface_kind;
+use semio_framework_plugin_decl_views::tool_run_contract::FRAMEWORK_TOOL_RUN_BODY_KEY;
+use semio_framework_plugin_decl_views::cancellation_action_definition;
+use semio_framework_plugin_window_transient::contract_surface_kind;
+use semio_framework_plugin_window_transient::legacy_surface_kind;
 #[cfg(test)]
-use crate::window_kits::AppActionRegistry;
+use semio_framework_plugin_decl_app::VIEWER_REJECTED_ACTION_IDS;
 #[cfg(test)]
-use crate::app_contract::VIEWER_REJECTED_ACTION_IDS;
-#[cfg(test)]
-use crate::reserved_jobs::join_framework_shared_action_dispositions;
-#[cfg(test)]
-use crate::app_contract::is_time_travel_action_id;
-#[cfg(test)]
-use crate::window_kits::UI_COMMAND_VALUE_DEPTH;
-#[cfg(test)]
-use crate::window_kits::UiCommandJsonProducer;
-#[cfg(test)]
-use crate::window_kits::UiCommandJsonStep;
-#[cfg(test)]
-use crate::window_kits::merge_ui_values;
-#[cfg(test)]
-use crate::window_kits::ui_value_to_dsl_retained;
+use semio_framework_plugin_decl_app::is_time_travel_action_id;
 
+#[path = "🖐️gumball-audience/🦀️.rs"]
+mod gumball_audience;
 
+/// 🧩️ The reserved contributions every built app hosts: the framework's features, then the gumball audience rule.
+fn builder_reserved_contributions() -> Vec<semio_framework::ReservedContribution> {
+    semio_framework::FRAMEWORK_RESERVED_CONTRIBUTIONS.iter().copied().chain([gumball_audience::RESERVED]).collect()
+}
 
 pub struct ModeSpec {
     pub id: String,
@@ -257,8 +251,8 @@ fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &st
 /// 👻️ Every `IntroductionPoint` a gesture references (one for click/scroll kinds, two for drag/orbit) —
 /// shared by tutorial gesture-cue validation; only `Element` points are grammar-checked (the other
 /// addressing schemes name windows/entities/curves, not the `ui.*` element-id vocabulary).
-fn introduction_gesture_points(gesture: &semio_framework::IntroductionGesture) -> Vec<&semio_framework::IntroductionPoint> {
-    use semio_framework::IntroductionGesture;
+fn introduction_gesture_points(gesture: &semio_framework::onboarding::IntroductionGesture) -> Vec<&semio_framework::onboarding::IntroductionPoint> {
+    use semio_framework::onboarding::IntroductionGesture;
     match gesture {
         IntroductionGesture::LeftClick { at } | IntroductionGesture::RightClick { at } | IntroductionGesture::DoubleClick { at } | IntroductionGesture::Scroll { at, .. } => {
             vec![at]
@@ -278,11 +272,11 @@ pub struct AppBuilder {
     label: LocalizedLabel,
     document: Vec<String>,
     icon_id: Option<IconName>,
-    pub(crate) controller_id: String,
-    modes: Vec<ModeSpec>,
+    pub controller_id: String,
+    pub modes: Vec<ModeSpec>,
     default_mode_id: Option<String>,
-    window_kinds: Vec<WindowKindSpec>,
-    panel_tabs: Vec<PanelTabSpec>,
+    pub window_kinds: Vec<WindowKindSpec>,
+    pub panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
     actions: Vec<ActionDefinition>,
     utilities: Vec<UtilityDefinition>,
@@ -295,8 +289,8 @@ pub struct AppBuilder {
     terminology_breadcrumbs: HashMap<String, Vec<String>>,
     introduction: Option<IntroductionDefinition>,
     tutorials: Vec<TutorialDefinition>,
-    dialogs: Vec<DialogDefinition>,
-    artifact_kinds: Vec<ArtifactKindSpec>,
+    pub dialogs: Vec<DialogDefinition>,
+    pub artifact_kinds: Vec<ArtifactKindSpec>,
     media_inputs: Vec<MediaPortSpec>,
     media_outputs: Vec<MediaPortSpec>,
     config: ConfigSpec,
@@ -888,20 +882,20 @@ impl AppBuilder {
         for tab in &self.panel_tabs {
             validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
         }
-        if panel_tab_ids.insert(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
+        if panel_tab_ids.insert(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
             self.panel_tabs.push(PanelTabSpec::framework(
-                PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
-                LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
+                PanelTabKind::App(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
+                LocalizedLabel::native(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_LABEL, "Verlauf"),
                 PanelGroup::Settings,
                 Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
                 Vec::new(),
             ));
         }
         let declares_tool_run = self.tools.iter().any(|tool| tool.run.is_some()) || self.utilities.iter().any(|utility| utility.run.is_some());
-        if declares_tool_run && panel_tab_ids.insert(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()) {
+        if declares_tool_run && panel_tab_ids.insert(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()) {
             self.panel_tabs.push(PanelTabSpec::framework(
-                PanelTabKind::App(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()),
-                LocalizedLabel::native(ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, "Werkzeugläufe"),
+                PanelTabKind::App(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID.to_string()),
+                LocalizedLabel::native(semio_framework_ui_layout::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, "Werkzeugläufe"),
                 PanelGroup::Details,
                 Some(FRAMEWORK_TOOL_RUN_BODY_KEY.to_string()),
                 Vec::new(),
@@ -930,11 +924,12 @@ impl AppBuilder {
             }
             validate_arg_defs(&self.id, &format!("action {}", action.id), &action.args);
         }
+        let reserved = builder_reserved_contributions();
         for action in self.actions.iter().chain(self.window_kinds.iter().flat_map(|window| window.actions.iter())) {
-            if let Some(expected) = semio_framework::framework_fixed_audience_violation(action) {
+            if let Some(expected) = semio_framework::reserved_audience_violation(&reserved, action) {
                 return Err(PluginAssemblyError::new(
                     "app-definition.invalid",
-                    format!("app {} declares the framework gumball verb {} with audience {:?}; the one rule for every gumball user is {:?}", self.id, action.id, semio_framework::resolve_audience(action), expected),
+                    format!("app {} declares the reserved verb {} with audience {:?}; its reserved contribution fixes {:?}", self.id, action.id, semio_framework::resolve_audience(action), expected),
                 ));
             }
         }
@@ -1002,7 +997,7 @@ impl AppBuilder {
         let (dialect, role) = semio_framework::parse_surface_app_id(&self.id).map_err(|error| PluginAssemblyError::new("app-definition.invalid", format!("app id {} must be a canonical surface id: {error}", self.id)))?;
         let app_declared_actions = !self.actions.is_empty();
         let mut actions = self.actions;
-        for framework_action in history_action_definitions().into_iter().chain(clipboard_action_definitions()).filter(|action| role != AppRole::Viewer || !viewer_rejects_action(&action.id)) {
+        for framework_action in history_action_definitions().into_iter().chain(semio_framework::reserved_app_actions(&reserved)).chain(clipboard_action_definitions()).filter(|action| role != AppRole::Viewer || !viewer_rejects_action(&action.id)) {
             if declared_action_ids.insert(framework_action.id.clone()) {
                 actions.push(framework_action);
             }
@@ -1195,22 +1190,22 @@ impl AppBuilder {
             if !(tutorial_ids.insert(tutorial.id.clone())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate tutorial id {}", self.id, tutorial.id)));
             }
-            if let Err(reason) = semio_framework::validate_tutorial(tutorial) {
+            if let Err(reason) = semio_framework::onboarding::validate_tutorial(tutorial) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason)));
             }
             let owner = format!("tutorial {}", tutorial.id);
-            let mut ui_changes: Vec<&semio_framework::TutorialUiChange> = Vec::new();
+            let mut ui_changes: Vec<&semio_framework::onboarding::TutorialUiChange> = Vec::new();
             for keyframe in &tutorial.tracks.ui {
-                if let semio_framework::TutorialUiSample::Delta { changes } = &keyframe.sample {
+                if let semio_framework::onboarding::TutorialUiSample::Delta { changes } = &keyframe.sample {
                     ui_changes.extend(changes.iter());
                 }
             }
             for change in ui_changes {
                 match change {
-                    semio_framework::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } if !declared_utility_ids.contains(utility_id) => {
+                    semio_framework::onboarding::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } if !declared_utility_ids.contains(utility_id) => {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} references undeclared utility {}", self.id, owner, utility_id)));
                     }
-                    semio_framework::TutorialUiChange::ActiveTool { id: Some(tool_id) } if !declared_tool_ids.contains(tool_id) => {
+                    semio_framework::onboarding::TutorialUiChange::ActiveTool { id: Some(tool_id) } if !declared_tool_ids.contains(tool_id) => {
                         return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} references undeclared tool {}", self.id, owner, tool_id)));
                     }
                     _ => {}
@@ -1228,29 +1223,33 @@ impl AppBuilder {
             }
             for event in &tutorial.tracks.events {
                 match &event.kind {
-                    semio_framework::TutorialEventKind::Action { action, .. } => {
+                    semio_framework::onboarding::TutorialEventKind::Action { action, .. } => {
                         if !(declared_action_ids.contains(action)) {
                             return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} event references undeclared action {}", self.id, owner, action)));
                         }
                     }
-                    semio_framework::TutorialEventKind::Command { command, .. } => {
+                    semio_framework::onboarding::TutorialEventKind::Command { command, .. } => {
                         if !(declared_command_ids.contains(command)) {
                             return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} {} event references undeclared command {}", self.id, owner, command)));
                         }
                     }
-                    semio_framework::TutorialEventKind::Key { .. } => {}
+                    semio_framework::onboarding::TutorialEventKind::Key { .. } => {}
                 }
             }
             for gesture_cue in &tutorial.tracks.gestures {
                 for point in introduction_gesture_points(&gesture_cue.gesture) {
-                    if let semio_framework::IntroductionPoint::Element { id, .. } = point {
+                    if let semio_framework::onboarding::IntroductionPoint::Element { id, .. } = point {
                         validate_referenced_element_id(&self.id, &owner, "gesture", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                     }
                 }
             }
         }
-        if role != AppRole::Viewer && !self.dialogs.iter().any(|dialog| dialog.id == semio_framework::HISTORY_EDIT_FINALIZE_DIALOG_ID) {
-            self.dialogs.push(semio_framework::history_edit_finalize_dialog());
+        if role != AppRole::Viewer {
+            for dialog in semio_framework::reserved_editor_dialogs(&reserved) {
+                if !self.dialogs.iter().any(|declared| declared.id == dialog.id) {
+                    self.dialogs.push(dialog);
+                }
+            }
         }
         let mut dialog_ids = HashSet::new();
         for dialog in &self.dialogs {
@@ -1364,7 +1363,7 @@ impl AppBuilder {
         };
         for action in semio_framework::interaction_action_definitions(&definition)
             .into_iter()
-            .chain(semio_framework::tool_run_action_definitions(&definition))
+            .chain(semio_framework::reserved_window_actions(&reserved, &definition))
             .chain([cancellation_action_definition(), semio_framework::host_event_action_definition()])
             .chain(semio_framework::document_transfer_action_definitions())
         {
@@ -1401,8 +1400,6 @@ impl AppBuilder {
 #[cfg(test)]
 include!("../../🧪️tests/🔬️app-merge-ui-values/🦀️.rs");
 
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-app-builder/🦀️.rs");
 
 /// 📚️ How an example leaf carries its document body. `Inline` is a body that already exists as a
 /// string when the bundle is assembled; `Deferred` is a body that is DERIVED from authored

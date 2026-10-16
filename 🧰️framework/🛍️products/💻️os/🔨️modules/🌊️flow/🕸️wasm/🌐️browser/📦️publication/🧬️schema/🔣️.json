@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "namespace": "flow",
+        "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust",
+        "packageName": "@semio-tech/flow-core",
+        "nativeFiles": [
+          "flow_core_bg.wasm",
+          "flow_core.js",
+          "flow_core.d.ts",
+          "flow_core_bg.wasm.d.ts"
+        ],
+        "browser": "🌐️browser/🟨️.js",
+        "host": "🖥️host/🟨️.js",
+        "declaration": "🌐️browser/🟦️.d.ts"
+      }
+    },
+    "DeliveryIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "command"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "command": {
+          "enum": [
+            "build",
+            "serve"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -10,6 +10,11 @@ description = "Product-neutral replication contract: lane-tagged client/server f
 role = "framework"
 id = "replication"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
@@ -23,63 +28,35 @@ path = "../../🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/�
 
 [features]
 # 🗜️ Deflate segment compression (`CodecId(1)`); off by default so the pure contract stays dependency-light.
-deflate = ["dep:semio-framework-deflate"]
+deflate = ["dep:semio-framework-deflate", "semio-framework-replication-codec/deflate", "semio-framework-replication-format/deflate"]
 
 [dependencies]
-semio-framework-replication-error = { path = "../../⚠️error/📦️packages/🦀️rust" }
-semio-framework-replication-crypto = { path = "../../🔐️crypto/📦️packages/🦀️rust" }
-semio-framework-pack-source = { path = "../../../🎒️pack/🚰️source/📦️packages/🦀️rust" }
-semio-framework-mutation-diff={path="../../🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
-semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
-semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-value.workspace = true
-semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust", optional = true }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-# 🚨️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01, TENTH seam pass): STILL
-# NOT movable to `[dev-dependencies]`, for three remaining reasons — see `📓️orderedmap-tenth-seam.md`.
-# The ninth-seam pass's blocker (1) (the `to_dsl_value`/`from_dsl_value` and `encode_wire_serialized`/
-# `decode_wire_serialized` bridges) stays resolved, unchanged from before. Blocker (2)'s FOURTH
-# item — `🌱️value/🗂️ordered/🦀️.rs`'s `OrderedMap<V>: Serialize` (the real `os-kernel` neural-engine
-# `Dictionary` caller) — is now ALSO resolved this pass: `Dictionary`, `Value`, `Atom`, `Neuron`,
-# `Tree`, `FieldSpec`, `Schema`, `ChannelSpec`, `OperatorInfo`, `VariadicSpec`, `Cardinality` (all in
-# `💻️os/🧠️neural/⚙️engine/🦀️.rs`) and `🌊️flow/🧩️extensions/🕸️wasm/🦀️.rs`'s `FlowExtension*` family
-# moved to `ToValue`/`FromValue` + `pack::json`; `OrderedMap<V>: Serialize` is now `#[cfg(test)]`-only.
-# THREE items of blocker (2) remain live and unconverted, each independently sufficient to keep
-# `serde`/`serde_json` here — confirmed still present by direct read, not carried forward stale:
-# - `🌱️value/🦀️.rs`'s `impl serde::Serialize/Deserialize for DslValue` (a deliberate, still-live
-#   transitional bridge for OTHER serde-deriving types that hold a `DslValue` field, e.g. `ui_wgpu`'s
-#   `ActionDescriptor`) and `impl From<&DslValue> for serde_json::Value` (real, actively-called
-#   JSON-export/UI-boundary bridges, confirmed via `✏️s/🔌️plugins/🗄️stdio`/`🏭️process` and the
-#   `wgpu` UI target's own callers).
-# - `🌱️value/🗂️ordered/🧺️set/🦀️.rs`'s `OrderedSet: Serialize + Deserialize` (real callers in
-#   `💻️os/🔨️modules/🌊️flow/**` and the `🌀️procedural` plugins).
-# - `InteractionState` and its `🕹️interaction/**` siblings, hit DIRECTLY via
-#   `serde_json::to_string`/`from_str`/`from_slice`/`from_value`
-#   (`💻️os/🔨️modules/🔌️plugin/🦀️.rs:9860,9864,9875`, `🕹️interaction/📃️query`/`📡️live`), never
-#   through `encode_wire_serialized` — separate follow-up work, not covered by this pass.
-# Do not attempt further per-type removal by grep-for-`serde_json`-near-the-name alone — the
-# `MutationDescriptor` finding in `📓️replication-serde-removal.md` proved that method misses
-# derive-based fan-out in `os-kernel`/`os` consumer structs; only a real `cargo check
-# -p semio-framework-os-kernel` after the edit proves a type is safe to drop. This pass's own
-# fan-out (`FieldSpec`/`Schema`/`ChannelSpec`/`OperatorInfo`, and `os-flow`'s `FlowExtension*`
-# family) was found the same way — by removing the impl and reading the compiler, not by grepping.
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-
-# 🌉️ `⚠️diagnostic`'s `fault_to_js`/`result_fault_to_js` hand a `Fault` across the JS boundary as a
-# `JsValue`; `🧩️puzzle`'s `🌉️wasm` bridge calls them on ~20 lines, so the dep is retired together
-# with those two functions and their callers, not ahead of them. Gated `not(target_env = "p2")`
-# because `target_arch = "wasm32"` is TRUE for the WASI component target too — the same exclusion
-# `💻️os`'s own browser-bridge block uses, and the reason those two functions carry the same cfg.
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-wasm-bindgen = "0.2.106"
+semio-framework-mutation-diff = { path = "../../🎮️mutation/🔺️diff/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-causal = { path = "../../🔗️causal/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../⚙️codec/📦️packages/🦀️rust" }
+semio-framework-replication-command-ingress = { path = "../../📡️wire/🎮️command/📥️ingress/📦️packages/🦀️rust" }
+semio-framework-replication-conflict = { path = "../../⚔️conflict/📦️packages/🦀️rust" }
+semio-framework-replication-crypto = { path = "../../🔐️crypto/📦️packages/🦀️rust" }
+semio-framework-replication-edit = { path = "../../🎮️mutation/✏️edit/📦️packages/🦀️rust" }
+semio-framework-replication-error = { path = "../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-format = { path = "../../📐️format/📦️packages/🦀️rust" }
+semio-framework-replication-frames = { path = "../../📡️wire/📦️packages/🦀️rust" }
+semio-framework-replication-history = { path = "../../🔗️causal/🔀️transition/📦️packages/🦀️rust" }
+semio-framework-replication-history-index = { path = "../../🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust" }
+semio-framework-replication-ids = { path = "../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-replication-interaction = { path = "../../📡️wire/🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-replication-local-interaction = { path = "../../📡️wire/🏠️local-interaction/📦️packages/🦀️rust" }
+semio-framework-replication-mutation = { path = "../../🎮️mutation/📦️packages/🦀️rust" }
+semio-framework-replication-mutation-messages = { path = "../../🎮️mutation/📨️messages/📦️packages/🦀️rust" }
+semio-framework-replication-presence = { path = "../../📡️wire/👥️presence/📦️packages/🦀️rust" }
+semio-framework-replication-wire-core = { path = "../../🧾️wire/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
 
 [dev-dependencies]
-blake3 = "1.8.2"
-semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

@@ -1,12 +1,26 @@
 use super::*;
-use crate::{DbError, DurabilityClass, Profile};
+use db_ids::ActorId;
+use db_ids::ArtifactId;
+use db_engine::ArtifactSpec;
+use db_engine_base::Consistency;
+use db_engine::Database;
+use db_engine::DatabaseShutdownControl;
+use db_ids::DbLimits;
+use db_durability::Frontier;
+use db_policy::MailboxCapacities;
+use db_engine_base::Query;
+use db_engine_base::QueryStream;
+use db_ids::check_len;
+use db_durability::DurabilityClass;
+use db_ids::DbError;
+use db_policy::Profile;
 
 async fn decode_query_json(mut stream: QueryStream) -> serde_json::Value {
     let mut bytes = Vec::new();
     for fragment in stream.get(0).and_then(|entry| entry.value()).expect("retained query value").fragments() {
         bytes.extend_from_slice(fragment);
     }
-    let value = document::decode_pathmap_json(&bytes).await.unwrap();
+    let value = db_artifact_contract::decode_pathmap_json(&bytes).await.unwrap();
     while stream.close_step().unwrap() {}
     assert!(stream.terminal_is_empty());
     value
@@ -36,8 +50,8 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     }
@@ -53,17 +67,17 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
 /// 🔖️Database`/`//#region 🔖️Family` would fail this test to compile.
 #[semio_framework_async_macros::async_test]
 async fn full_round_trip_reachable_purely_through_facade_reexports() {
-    if !crate::db_storage::process_isolated_law("db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports") {
+    if !db_io_driver::process_isolated_law("db_facade::tests::full_round_trip_reachable_purely_through_facade_reexports") {
         return;
     }
-    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
+    let _history_capacity = db_artifact_history::history_capacity_test_lock();
     let root = tempdir("round-trip").await;
     let mut database = Database::open_at(test_pool(), &root, Profile::Dev).await.unwrap();
     let document = protocol::ArtifactId("doc-1".to_string());
     let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
-    let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
-    let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
+    let batch = db_artifact_contract::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
+    let receipt = db_actor::block_on(handle.submit(batch, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
     assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
     assert_eq!(receipt.frontier.head_seq, 1);
     assert!(receipt.conflicts.is_empty());
@@ -112,50 +126,50 @@ async fn database_error_type_is_reachable_at_the_facade_root() {
 /// internal test suite.
 #[semio_framework_async_macros::async_test]
 async fn every_family_submodule_reexports_its_headline_public_surface() {
-    let limits = ids::DbLimits::default();
+    let limits = db_ids::DbLimits::default();
     assert!(limits.max_command_bytes > 0);
-    ids::check_len(1, 2, "smoke").unwrap();
+    db_ids::check_len(1, 2, "smoke").unwrap();
 
-    let (_address, _receiver) = actor::mailbox::<u8>(policy::MailboxCapacities::default());
+    let (_address, _receiver) = db_actor::mailbox::<u8>(db_policy::MailboxCapacities::default());
 
-    let mut map: state::PMap<String, i32> = state::PMap::new();
+    let mut map: db_state::PMap<String, i32> = db_state::PMap::new();
     map = map.insert("k".to_string(), 1);
     assert_eq!(map.len(), 1);
 
-    let memory_storage = storage::MemoryStorage::new(crate::db_storage::db_io_test_pool());
-    let _: storage::DbBackend = storage::DbBackend::Memory(memory_storage.await.unwrap());
+    let memory_storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool());
+    let _: db_storage::DbBackend = db_storage::DbBackend::Memory(memory_storage.await.unwrap());
 
-    assert_eq!(wal::WAL_SEGMENT_HEADER, 0x40);
-    assert!(wal::is_wal_record_kind(wal::WAL_COMMAND));
+    assert_eq!(db_wal_log::WAL_SEGMENT_HEADER, 0x40);
+    assert!(db_wal_log::is_wal_record_kind(db_wal_log::WAL_COMMAND));
 
-    assert_eq!(snapshot::SnapshotOrigin::FullBaseline, snapshot::SnapshotOrigin::FullBaseline);
+    assert_eq!(db_snapshot::SnapshotOrigin::FullBaseline, db_snapshot::SnapshotOrigin::FullBaseline);
 
-    assert_eq!(index::IndexKind::ALL.len(), 10);
+    assert_eq!(db_index::IndexKind::ALL.len(), 10);
 
-    let touch = conflict::CommandKind::from("write");
+    let touch = db_conflict::CommandKind::from("write");
     assert_eq!(touch.0, "write");
 
-    let value: query::Value = 42i64.into();
-    assert_eq!(value, query::Value::Int(42));
+    let value: db_query::Value = 42i64.into();
+    assert_eq!(value, db_query::Value::Int(42));
 
-    let preview_id = preview::PreviewId("preview-1".to_string());
+    let preview_id = db_preview::PreviewId("preview-1".to_string());
     assert_eq!(preview_id.to_string(), "preview-1");
 
-    let tenant = security::TenantId::from("tenant-1");
+    let tenant = db_security::TenantId::from("tenant-1");
     assert_eq!(tenant.to_string(), "tenant-1");
 
-    let budget = compact::CompactionBudget::default();
+    let budget = db_compact::CompactionBudget::default();
     assert!(budget.max_wal_segments > 0);
 
-    let node = cluster::NodeId::from("node-1");
+    let node = db_cluster::NodeId::from("node-1");
     assert_eq!(node.to_string(), "node-1");
 
-    let sink = observe::MemorySink::new();
+    let sink = db_observe::MemorySink::new();
     assert!(sink.lines().await.is_empty());
 
-    let from = durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string()));
-    let to = durability::Frontier { head_seq: 3, commit_seq: 3, ..durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string())) };
-    let delta = sync::frontier_delta(&from, &to).await.unwrap();
+    let from = db_durability::Frontier::genesis(db_ids::ArtifactId("doc-1".to_string()));
+    let to = db_durability::Frontier { head_seq: 3, commit_seq: 3, ..db_durability::Frontier::genesis(db_ids::ArtifactId("doc-1".to_string())) };
+    let delta = db_sync::frontier_delta(&from, &to).await.unwrap();
     assert_eq!(delta.commands, 3);
 }
 //#endregion 🔖️Family submodule smoke

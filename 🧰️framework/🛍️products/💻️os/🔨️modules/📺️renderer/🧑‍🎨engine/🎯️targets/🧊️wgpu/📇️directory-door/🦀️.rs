@@ -129,7 +129,7 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryTransport for Bro
             return Err(TransportError::Cancelled);
         }
         let request = encode_directory_door_request(method, url, bearer, body.as_deref())?;
-        let answer = crate::shell::host_io_call(&request, None).await.map_err(TransportError::Io)?;
+        let answer = crate::host_io_call(&request, None).await.map_err(TransportError::Io)?;
         if ctx.cancel.is_cancelled().await {
             return Err(TransportError::Cancelled);
         }
@@ -140,7 +140,7 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryTransport for Bro
         if ctx.cancel.is_cancelled().await {
             return Err(TransportError::Cancelled);
         }
-        let answer = crate::shell::host_io_call(&encode_directory_door_binary_request(url, bearer, accept)?, None).await.map_err(TransportError::Io)?;
+        let answer = crate::host_io_call(&encode_directory_door_binary_request(url, bearer, accept)?, None).await.map_err(TransportError::Io)?;
         if ctx.cancel.is_cancelled().await {
             return Err(TransportError::Cancelled);
         }
@@ -225,7 +225,4 @@ pub type ShellDirectoryClient = semio_framework_os_kernel::os_directory::client:
 //#endregion 🔖️Seam
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../../../🧪️tests/📇️wgpu-directory-door/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

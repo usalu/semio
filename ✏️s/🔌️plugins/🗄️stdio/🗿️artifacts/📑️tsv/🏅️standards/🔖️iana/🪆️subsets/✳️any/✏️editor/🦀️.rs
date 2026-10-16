@@ -204,7 +204,7 @@ impl protocol::OpBinary for TsvEditorCommand {
 
 //#region 🧵️RetainedRoutes
 /// 🪟️ The verb the `TableWindowKit` mints for `🪟️main` — declared by the framework, reduced only here.
-const TSV_KIT_ACTION_ID: &str = "set-cell";
+pub const TSV_KIT_ACTION_ID: &str = "set-cell";
 /// 🧵️ The app-owned retained routes this editor declares: the example switch and `set-cell`.
 /// `validate_ui_dispatch_classification` refuses any verb that is not `Migrated`, and `Migrated`
 /// only survives the guest's `interactive-job.catalog-incomplete` boot check when this roster, the
@@ -256,7 +256,7 @@ fn tsv_retained_contract() -> ToolExecutionContract {
 /// whose asset IS this app's curated document; every other id — including the empty id the shell
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
+pub fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
     if example_id == crate::examples::demo::ID {
         <TsvSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -268,7 +268,7 @@ fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
 /// `ArtifactEditor::command_from_action`'s default refuses EVERY id, which is why the boot example,
 /// every navbar pick and every Actions-pane row died before reaching a command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn tsv_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TsvEditorCommand, Fault> {
+pub fn tsv_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TsvEditorCommand, Fault> {
     if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(TsvEditorCommand::EditSnapshot { event });
     }
@@ -312,7 +312,7 @@ fn tsv_retained_extent(_command: &TsvEditorCommand, _snapshot: &TsvSnapshot, _in
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
 /// its document, `set-cell` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn tsv_emit(command: &TsvEditorCommand, snapshot: &TsvSnapshot) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn tsv_emit(command: &TsvEditorCommand, snapshot: &TsvSnapshot) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     tsv_emit_at_revision(command, snapshot, None)
 }
 
@@ -687,3 +687,110 @@ pub fn create_tsv_editor() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
+}
+//#endregion 🧩️ArtifactItems
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+/// 📜 Schema-owned package definition.
+pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("../../../../../📜️artifact-definition.json");
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+
+pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
+    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
+}
+}
+//#endregion 🧩️ArtifactItems4
+
+//#region 🧩️ArtifactItems5
+pub mod artifact_items_5 {
+use crate::{STDIO_TSV_DOCUMENT_SCHEMA};
+pub use crate::standards::iana::subsets::any::schema::mutations::TsvMutation;
+pub use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+
+pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA);
+    codec.extension = "tsv";
+    codec.pack_schema_hash = pack::record::schema_hash(&TsvSnapshot::__dsl_spec());
+    codec
+}
+}
+//#endregion 🧩️ArtifactItems5
+
+//#region 🧩️ArtifactItems6
+pub mod artifact_items_6 {
+use crate::{formats};
+use crate::{STDIO_TSV_DOCUMENT_SCHEMA};
+use crate::{native_codec};
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+pub use crate::standards::iana::subsets::any::schema::mutations::TsvMutation;
+pub use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+    let factories = native_codecs();
+    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
+    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
+}
+
+pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
+    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.tsv.v1", artifact: "tsv", kind: artifact_kind, codec: native_codec }]
+}
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("tsv", definition()?, declaration)
+}
+
+/// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
+/// and the `stdio.tsv` document codec the linked `stdio.native.tsv.v1` receipt instantiates.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "s.stdio.tsv".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Tsv", "Tsv"),
+        source_format: STDIO_TSV_DOCUMENT_SCHEMA.into(),
+        component_kind: "stdio".into(),
+        dimension: "data".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+        schema: STDIO_TSV_DOCUMENT_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
+//#endregion 🔖️ArtifactKind
+}
+//#endregion 🧩️ArtifactItems6
+
+//#region 🧩️ArtifactItems7
+pub mod artifact_items_7 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{assembly, definition, native_codecs};
+use crate::{formats};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "tsv", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems7

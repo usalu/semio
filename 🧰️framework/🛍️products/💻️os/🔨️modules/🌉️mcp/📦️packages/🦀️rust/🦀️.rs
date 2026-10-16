@@ -1,115 +1,57 @@
-//! 🌉️ `semio-framework-os-mcp` glue — mounts every `🌉️mcp` facet (`⚠️errors`/`🧬️schema`/`🧭️protocol`/
-//! `🚚️transport`/`🎫️handles`/`📒️audit`/`🧵️bridge`/`🗂️catalog`/`🔎️search`/`🧠️context`/`🧪️conformance`/
-//! `🔀️dispatch`/`🛡️policy`/`🏠️workspace`/`📇️registry`/`🗿️artifact`/`💡️inference`/`🖥️ui`/`💬️prompts`)
-//! plus the module root, exactly as
-//! `🏃️run`/`🖥️shell`'s own glue files mount theirs.
+//! 🌉️ Gateway runtime, entrypoint and facade.
 
-// 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: `store`
-// is `semio-framework-os-kernel` under the SAME alias `🏃️run/🦀️.rs` uses for it — a single alias
-// (not also `dsl`/`protocol`, `🏃️run`'s own convention) because this crate's own `🧭️protocol` facet
-// (P1a, the MCP JSON-RPC protocol core) already owns the name `protocol` at this crate's root;
-// `semio_framework_os_kernel`'s crate-root glob re-exports (`os_dsl::*`/`os_store::*`/`os_spr::*`,
-// verified in that crate's own `../../📦️packages/🦀️rust/🦀️.rs`) make every item `🏠️workspace` needs (`ArtifactDsl`,
-// `ArtifactPack`, `Mutation`, `MutationDiff`, `OpText`, `OpBinary`, `ArtifactStore`,
-// `create_document_envelope`, `TextError`, `TextSpan`, `sync::*`) reachable through this one alias.
 extern crate semio_framework_os_kernel as store;
 
 #[cfg(test)]
-#[path="../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
-#[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER: semio_framework_os_mcp_foundation::test_allocation::RequestedAllocator = semio_framework_os_mcp_foundation::test_allocation::RequestedAllocator;
 
-#[path = "../../⚠️errors/🦀️.rs"]
-pub mod errors;
-
-#[path = "../../🧬️schema/🦀️.rs"]
-pub mod schema;
-
-#[path = "../../🧭️protocol/🦀️.rs"]
-#[macro_use]
-pub mod protocol;
-
-#[path = "../../🚚️transport/🦀️.rs"]
-pub mod transport;
-
-#[path = "../../🎫️handles/🦀️.rs"]
-pub mod handles;
-
-#[path = "../../📒️audit/🦀️.rs"]
-pub mod audit;
-
-#[path = "../../🧵️bridge/🦀️.rs"]
-pub mod bridge;
-
-#[path = "../../🛰️rendezvous/🦀️.rs"]
-pub mod rendezvous;
-
-#[path = "../../🤖️agent-credential/🦀️.rs"]
-pub mod agent_credential;
-
-#[path = "../../🔐️owner-only/🦀️.rs"]
-pub mod owner_only;
-
-#[path = "../../🗂️catalog/🦀️.rs"]
-pub mod catalog;
-
-#[path = "../../🔎️search/🦀️.rs"]
-pub mod search;
-
-#[path = "../../🧠️context/🦀️.rs"]
-pub mod context;
-
-// 📣️ Server→client notifications (`resources/updated`, `resources/list_changed`, `progress`) and the
-// per-connection subscription/progress bookkeeping that decides who gets each one. NOT glob
-// re-exported at the crate root: its `publish`/`paginate`/`Page` are deliberately generic names that
-// would collide with the flat facet namespace, and every call site reads better as `notify::…`.
-#[path = "../../📣️notify/🦀️.rs"]
-pub mod notify;
-
-#[path = "../../🧪️conformance/🦀️.rs"]
-pub mod conformance;
+#[path = "../../🏗️bootstrap/🦀️.rs"]
+pub mod entrypoint;
 
 #[cfg(test)]
-#[path = "../../🧪️tests/🧱️source-builders/🦀️.rs"]
-pub(crate) mod source_builders;
+#[path = "../../🧪️tests/🔬️bin-quick/🦀️.rs"]
+mod entrypoint_quick;
 
-#[path = "../../🔀️dispatch/🦀️.rs"]
-#[macro_use]
-pub mod actions;
+#[cfg(test)]
+#[path = "../../💡️inference/🧪️tests/🔬️inference-jobs/🦀️.rs"]
+mod inference_inference_jobs;
 
-#[path = "../../🛡️policy/🦀️.rs"]
-pub mod policy;
-
-#[path = "../../🏠️workspace/🦀️.rs"]
-pub mod workspace;
-
-#[path = "../../📇️registry/🦀️.rs"]
-pub mod registry;
-
-#[path = "../../🗿️artifact/🦀️.rs"]
-pub mod artifact;
-
-#[path = "../../💡️inference/🦀️.rs"]
-pub mod inference;
-
-#[path = "../../🖥️ui/🦀️.rs"]
-pub mod ui;
-
-// 🐚️ The live-shell artifact route — the `ArtifactChannel` whose other end is the human's running
-// shell. Mounted after `🖥️ui` (it uses that facet's `BridgeSlot`/`active_shell_connection`) and
-// after `🏠️workspace` (whose `ArtifactChannels` closes the implementor set it joins).
-#[path = "../../🐚️channel/🦀️.rs"]
-pub mod shell_channel;
-
-#[path = "../../💬️prompts/🦀️.rs"]
-pub mod prompts;
+#[cfg(test)]
+#[path = "../../📣️notify/🧪️tests/🔬️quick/🦀️.rs"]
+mod notify_quick;
 
 #[path = "../../🦀️.rs"]
 mod root;
-pub use root::*;
 
-#[path="../../🏗️bootstrap/🦀️.rs"]
-pub mod entrypoint;
-pub use entrypoint::run_mcp_entrypoint;
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️quick/🦀️.rs"]
+mod root_quick;
+
+#[cfg(test)]
+#[path = "../../🏠️workspace/🧪️tests/🔬️quick/🦀️.rs"]
+mod workspace_quick;
+
+pub mod agent_credential {
+    pub use semio_framework_os_mcp_foundation::agent_credential::{CredentialExchangeProtocolV1, CredentialExchangeRequestV1, DelegatedCredentialV1, DelegatedSessionGrantV1, read_delegated_credential_file_v1};
+}
+pub mod catalog {
+    pub use semio_framework_os_mcp_catalog::catalog::{CatalogSource, compile};
+}
+pub mod protocol {
+    pub use semio_framework_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry};
+}
+pub mod inference {
+    pub use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceApprovalRequestV1, HubInferenceEventPageV1, HubInferenceSubmitRequestV1, InferenceHubMethodV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceRouteErrorV1, approve_hub_inference_job, cancel_hub_inference_job, read_hub_inference_job_events, submit_hub_inference_job, undo_hub_inference_approval};
+    pub use semio_framework_os_mcp_inference_hub::service::{RemoteInferenceProtocolV1, install_remote_inference_protocols_v1};
+}
+pub mod workspace {
+    pub use semio_framework_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
+    pub use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{load_package_descriptor};
+    pub mod remote {
+        pub use semio_framework_os_mcp_hub_remote::remote::{exchange_delegated_session_v1};
+    }
+}
+pub use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+pub use semio_framework_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace};
+pub use crate::entrypoint::run_mcp_entrypoint;

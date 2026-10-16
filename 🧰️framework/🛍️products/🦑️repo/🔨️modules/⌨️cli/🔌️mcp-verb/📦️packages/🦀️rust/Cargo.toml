@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-cli-mcp-verb"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "semio repo CLI MCP repository: the production repository the repo MCP server and the mcp verb serve"
+
+[package.metadata.semio]
+role = "library"
+id = "repo-cli-mcp-verb"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-repo-cli-event-stream = { path = "../../../📡️event-stream/📦️packages/🦀️rust" }
+semio-framework-repo-graphql = { path = "../../../../🔗️graphql/📦️packages/🦀️rust" }
+semio-framework-repo-graphql-fs = { path = "../../../../🔗️graphql/🗄️fs-context/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-mcp = { path = "../../../../🔌️mcp/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-yaml = { path = "../../../../🧾️yaml/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[dev-dependencies]

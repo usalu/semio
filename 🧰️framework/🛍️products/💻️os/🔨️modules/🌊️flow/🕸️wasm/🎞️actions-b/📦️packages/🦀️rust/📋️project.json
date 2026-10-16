@@ -1,0 +1,8 @@
+{
+  "name": "semio-framework-os-flow-wasm-actions-b",
+  "projectType": "library",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

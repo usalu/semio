@@ -1,0 +1,44 @@
+{
+ "name": "dag",
+ "crateName": "semio_framework_artifact_infinite_dag",
+ "real": [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag"
+ ],
+ "snap": {
+  "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag": "dag"
+ },
+ "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🦀️.rs",
+ "children": [
+  {
+   "ident": "semio_framework_artifact_infinite_dag_vcs",
+   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+   "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/📦️packages/🦀️rust",
+   "alias": "vcs"
+  }
+ ],
+ "cfgs": {
+  "native": [],
+  "test": [
+   "--test"
+  ],
+  "wasm": [
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "wasmtest": [
+   "--test",
+   "--target",
+   "wasm32-unknown-unknown"
+  ],
+  "p2": [
+   "--target",
+   "wasm32-wasip2"
+  ],
+  "p2test": [
+   "--test",
+   "--target",
+   "wasm32-wasip2"
+  ]
+ },
+ "textNormalize": []
+}

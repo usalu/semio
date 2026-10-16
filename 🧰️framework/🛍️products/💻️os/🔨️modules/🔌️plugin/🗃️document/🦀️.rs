@@ -1859,8 +1859,7 @@ where
     }
 }
 
-#[path="../🌱️initialization/🏪️catalog/🦀️.rs"]
-mod original_catalog_constructor;
+use semio_framework_plugin_operation::original_catalog_constructor;
 
 pub use original_catalog_constructor::{ArtifactStoreConstructorKind,ArtifactStoreConstructorPhase};
 

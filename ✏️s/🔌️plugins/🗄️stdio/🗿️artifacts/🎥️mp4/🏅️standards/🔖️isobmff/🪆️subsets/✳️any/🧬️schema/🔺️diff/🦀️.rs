@@ -240,10 +240,10 @@ pub struct Mp4SampleDiff {
     pub sync: Option<bool>,
 }
 
-fn apply_sample_diff(base: &Mp4Sample, d: &Mp4SampleDiff) -> Mp4Sample {
+pub fn apply_sample_diff(base: &Mp4Sample, d: &Mp4SampleDiff) -> Mp4Sample {
     Mp4Sample { data: d.data.clone().unwrap_or_else(|| base.data.clone()), duration: d.duration.unwrap_or(base.duration), cts_offset: d.cts_offset.unwrap_or(base.cts_offset), sync: d.sync.unwrap_or(base.sync) }
 }
-fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) {
+pub fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) {
     *item = apply_sample_diff(item, d);
 }
 
@@ -253,7 +253,7 @@ fn inverse_sample_diff(d: &Mp4SampleDiff, base: &Mp4Sample) -> Mp4SampleDiff {
 fn sample_diff_is_empty(d: &Mp4SampleDiff) -> bool {
     d.data.is_none() && d.duration.is_none() && d.cts_offset.is_none() && d.sync.is_none()
 }
-fn absorb_sample_rows(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
+pub fn absorb_sample_rows(a: &mut Mp4SampleDiff, b: Mp4SampleDiff) {
     if b.data.is_some() {
         a.data = b.data;
     }
@@ -509,7 +509,5 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
 //#endregion 🔖️Diff
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🔖️Tests

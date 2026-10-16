@@ -67,6 +67,7 @@
         "kind": {
           "enum": [
             "compiler-workspace",
+            "compiler-state",
             "artifact-publication",
             "artifact-restore"
           ]
@@ -170,14 +171,48 @@
     "ImageMaintenanceRequest": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "wait"],
-      "properties": {"version": {"const": 1}, "wait": {"type": "boolean"}}
+      "required": [
+        "version",
+        "wait"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "wait": {
+          "type": "boolean"
+        }
+      }
     },
     "ImageMaintenanceResult": {
       "description": "Closed nonblocking admission or the exact original maintenance callback value.",
       "oneOf": [
-        {"type": "object", "additionalProperties": false, "required": ["acquired"], "properties": {"acquired": {"const": false}}},
-        {"type": "object", "additionalProperties": false, "required": ["acquired", "value"], "properties": {"acquired": {"const": true}, "value": {}}}
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquired"
+          ],
+          "properties": {
+            "acquired": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acquired",
+            "value"
+          ],
+          "properties": {
+            "acquired": {
+              "const": true
+            },
+            "value": {}
+          }
+        }
       ]
     },
     "ImageRequest": {
@@ -254,6 +289,96 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        }
+      }
+    },
+    "ImageMaintenanceCustody": {
+      "description": "Disposition data alone grants no authority; kernel-ex carries a privately issued live proof.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "proof"
+          ],
+          "properties": {
+            "kind": {
+              "const": "kernel-ex"
+            },
+            "proof": {
+              "type": "object",
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "fresh-private"
+            }
+          }
+        }
+      ]
+    },
+    "ImageRetirementExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiptSha256",
+        "dev",
+        "ino",
+        "size",
+        "allocatedBytes"
+      ],
+      "properties": {
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "allocatedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ImageRetirementRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "wait"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "wait": {
+          "type": "boolean"
+        },
+        "expectedImage": {
+          "$ref": "#/definitions/ImageRetirementExpectation"
         }
       }
     }

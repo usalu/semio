@@ -6,10 +6,15 @@
 //! response or a `CallToolResult{isError:true}` payload from a `GatewayError`), never the reverse,
 //! so a future backend crate can construct one without pulling in JSON-RPC framing at all.
 
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
-use serde::{Deserialize, Serialize};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Serialize;
 
 //#region 🔖️GatewayErrorCode
+
 /// 🏷️ The twelve gateway failure codes every capability surface can raise — see this file's module
 /// doc for the frozen source of truth.
 // 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent (the derive
@@ -65,9 +70,11 @@ impl GatewayErrorCode {
         }
     }
 }
+
 //#endregion 🔖️GatewayErrorCode
 
 //#region 🔖️GatewayError
+
 /// 🌉️ `serde_json::Value` ↔ `DslValue` bridge for `GatewayError::details`, built on `🌱️value/🦀️.rs`'s
 /// own infallible `From<&DslValue>`/`From<&serde_json::Value>` impls — a wire-shape-preserving
 /// round-trip, never lossy.
@@ -90,7 +97,7 @@ pub struct GatewayError {
     pub message: String,
     #[serde(default)]
     #[value(default, serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
-    pub(crate) details: serde_json::Value,
+    pub details: serde_json::Value,
     pub retryable: bool,
 }
 
@@ -108,7 +115,7 @@ impl GatewayError {
         Self { code, message: message.into(), details: serde_json::Value::Null, retryable: false }
     }
 
-    pub(crate) fn with_details(mut self, details: serde_json::Value) -> Self {
+    pub fn with_details(mut self, details: serde_json::Value) -> Self {
         self.details = details;
         self
     }
@@ -121,21 +128,19 @@ impl GatewayError {
     /// 🧾️ Structured payload for an MCP `CallToolResult{isError:true, structuredContent: ..}` — a
     /// TOOL-execution failure, never turned into a JSON-RPC error response (`protocol`'s dispatcher
     /// is the single call site that makes this choice; see its own module doc).
-    pub(crate) fn to_tool_error_payload(&self) -> serde_json::Value {
+    pub fn to_tool_error_payload(&self) -> serde_json::Value {
         serde_json::json!({ "code": self.code, "message": self.message, "details": self.details, "retryable": self.retryable })
     }
 
     /// 🧾️ `(json_rpc_code, message, data)` for a JSON-RPC error response — used only when a
     /// `GatewayError` represents a PROTOCOL failure (malformed request, unknown method/capability id
     /// resolved before any tool body ran).
-    pub(crate) fn to_json_rpc_parts(&self) -> (i64, String, serde_json::Value) {
+    pub fn to_json_rpc_parts(&self) -> (i64, String, serde_json::Value) {
         (self.code.json_rpc_code(), self.message.clone(), serde_json::json!({ "gatewayCode": self.code, "details": self.details, "retryable": self.retryable }))
     }
 }
+
 //#endregion 🔖️GatewayError
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

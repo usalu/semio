@@ -3,7 +3,7 @@ use crate::standards::v1_4::subsets::base::io::text::snapshot::demo_pdf_snapshot
 
 /// 🧫️ The real committed document every 1.4 test case runs on — 65 pages, a classic
 /// cross-reference table, page 1 typeset at A4.
-const THESIS: &[u8] = include_bytes!("../../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
+static THESIS: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf")).expect("the committed fixture is readable").into_boxed_slice()));
 
 /// 🧪️ `codec_retention_law`: decode→encode→decode is stable on everything this standard's
 /// snapshot carries — every page, its extent and its shown text.
@@ -31,14 +31,14 @@ async fn codec_retention_law_round_trips_every_page() {
 /// to come back as a one-page, 607-byte skeleton. Every page must survive decode AND encode.
 #[semio_framework_async_macros::async_test]
 async fn the_real_65_page_thesis_survives_decode_and_re_encode() {
-    let decoded = decode_pdf(THESIS).expect("the committed thesis decodes");
+    let decoded = decode_pdf(*THESIS).expect("the committed thesis decodes");
     assert_eq!(decoded.pages.len(), 65, "the thesis has 65 pages and every one of them must be read");
     let first = &decoded.pages[0];
     assert!((first.width - 595.276).abs() < 1e-3 && (first.height - 841.89).abs() < 1e-3, "page 1 is typeset at A4, got {}x{}", first.width, first.height);
     assert!(first.text.contains("SemIO"), "page 1's shown text must be recovered, got {:?}", first.text);
 
     let bytes = encode_pdf(&decoded).expect("re-encode");
-    assert_ne!(bytes, THESIS, "a re-encode from the model alone can never be a byte pass-through");
+    assert_ne!(bytes, *THESIS, "a re-encode from the model alone can never be a byte pass-through");
     let again = decode_pdf(&bytes).expect("the re-encoded document decodes");
     assert_eq!(again.pages.len(), 65, "re-encoding must not drop a single page");
     assert_eq!(again.pages[0].text, first.text, "page 1's shown text must survive the re-encode");

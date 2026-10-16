@@ -1,4 +1,18 @@
-use super::*;
+use crate::editor::png::modes::edit::windows::main;
+use crate::standards::v1_2::subsets::any::schema::mutations::PngMutation;
+use crate::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
+use crate::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
+use semio_framework_plugin::{retained_command::ArtifactRetainedCommandInputs, retained_command::ArtifactRetainedCommandPayload};
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::ToolOperationSpec;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::NoConfig;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::png::{png_editor_command_id, png_editor_command_from_action, PngPixelRegionFactory};
+use crate::editor::png::*;
 
 fn rgba_snapshot(width: u32, height: u32, pixels: Vec<u8>) -> PngSnapshot {
     let projection = crate::standards::v1_2::subsets::any::io::PngProjection {
@@ -317,4 +331,4 @@ fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::PngEditor, || semio_framework_plugin::App { definition: super::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::png::PngEditor, || semio_framework_plugin::App { definition: crate::editor::png::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

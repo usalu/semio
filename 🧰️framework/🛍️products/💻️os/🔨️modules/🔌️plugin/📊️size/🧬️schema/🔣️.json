@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Breakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "totalBytes",
+        "codeBytes",
+        "dataBytes",
+        "nameBytes",
+        "otherCustomBytes",
+        "functionCount",
+        "memoryInitialPages",
+        "memoryMaxPages"
+      ],
+      "properties": {
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "codeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dataBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nameBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "otherCustomBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "functionCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "memoryInitialPages": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "memoryMaxPages": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "report": "📊️size-report.json",
+        "owner": "browser:size-report",
+        "namespace": "reports/size"
+      }
+    }
+  }
+}

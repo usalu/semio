@@ -1219,7 +1219,7 @@ diff --git a/dist/src/hasher/native-task-hasher-impl.js b/dist/src/hasher/native
 +        const sourceEnvironments = sourceClosureTaskEnvironments(this.workspaceRoot, instructions, perTaskEnvs);
 +        const observed = Date.now();
 +        const hashes = this.hasher.hashPlans(plans, sourceEnvironments, cwd ?? process.cwd(), shouldCollectInputs); if (process.env.SEMIO_NX_NATIVE_SOURCE_SNAPSHOT !== undefined) { frozen.authorizers.selectedNativeWorkspaceRootV1(this.workspaceRoot); for (const task of tasks) { const target = this.semioProjectGraph.nodes[task.target.project]?.data.targets?.[task.target.target]; if (target?.metadata?.semio?.rustUnit?.version !== 1) continue; const actual = new Set(hashes[task.id]?.inputs?.files ?? []); for (const input of target.inputs ?? []) if (typeof input === "string" && input.startsWith("{workspaceRoot}/") && !actual.has(input.slice("{workspaceRoot}/".length))) throw Error("Admitted compiler Source absent from actual Native hashing instructions: " + input); } }
-+        const hashed = Date.now(), result = tasks.map((t) => ({ ...hashes[t.id], semioSourceInputs: { version: 1, values: Object.fromEntries(Object.entries(sourceEnvironments[t.id]).filter(([name]) => /^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/.test(name) && instructions[t.id].includes(`env:${name}`))) } }));
++        const hashed = Date.now(), result = tasks.map((t) => ({ ...hashes[t.id], semioRustUnit: frozen.authorizers.readNxRustCacheExpectationV1(this.semioProjectGraph.nodes[t.target.project]?.data.targets?.[t.target.target]?.metadata?.semio?.rustUnit), semioSourceInputs: { version: 1, values: Object.fromEntries(Object.entries(sourceEnvironments[t.id]).filter(([name]) => /^SEMIO_(?:SOURCE_CLOSURE|CARGO_LOCK)_[a-f0-9]{64}$/.test(name) && instructions[t.id].includes(`env:${name}`))) } }));
 +        if (measured) console.log(`[nx] Native task hashes tasks=${tasks.length} planMs=${planned - started} sourceMs=${observed - planned} nativeMs=${hashed - observed} receiptMs=${Date.now() - hashed}`);
 +        return result;
      }
@@ -1228,27 +1228,49 @@ diff --git a/dist/src/hasher/native-task-hasher-impl.js b/dist/src/hasher/native
 diff --git a/dist/src/hasher/task-hasher.js b/dist/src/hasher/task-hasher.js
 --- a/dist/src/hasher/task-hasher.js
 +++ b/dist/src/hasher/task-hasher.js
-@@ -83,6 +83,7 @@
+@@ -83,6 +83,8 @@
              value: (0, file_hasher_1.hashArray)([res.value, command]),
              details: {
                  command,
 +                semioSourceInputs: res.semioSourceInputs,
++                semioRustUnit: res.semioRustUnit,
                  nodes: res.details,
                  implicitDeps: {},
                  runtime: {},
 diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 --- a/dist/src/tasks-runner/cache.js
 +++ b/dist/src/tasks-runner/cache.js
-@@ -61,1 +61,1 @@
+@@ -58,7 +58,7 @@
+     constructor(options) {
+         this.options = options;
+         this.nxJson = (0, nx_json_1.readNxJson)();
 -        this.cache = new native_1.NxCache(workspace_root_1.workspaceRoot, cache_directory_1.cacheDir, (0, db_connection_1.getDbConnection)(), undefined, resolveMaxCacheSize(this.nxJson));
 +        this.cache = new native_1.NxCache(workspace_root_1.workspaceRoot, cache_directory_1.cacheDir, (0, db_connection_1.getDbConnection)({ directory: cache_directory_1.cacheDir }), undefined, resolveMaxCacheSize(this.nxJson));
-@@ -85,1 +85,1 @@
+         this.isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+     }
+     async init() {
+@@ -82,7 +82,7 @@
+             // attempt remote cache
+             const res = await this.remoteCache.retrieve(task.hash, this.cache.cacheDirectory);
+             if (res) {
 -                this.applyRemoteCacheResults(task.hash, res, task.outputs);
-+                await this.applyRemoteCacheResults(task, res, task.outputs);
-@@ -137,1 +137,1 @@
++                if (!await this.applyRemoteCacheResults(task, res, task.outputs)) return null;
+                 return {
+                     ...res,
+                     terminalOutput: res.terminalOutput ?? '',
+@@ -134,7 +134,7 @@
+             await Promise.all(remoteMisses.map(async (task) => {
+                 const res = await this.remoteCache.retrieve(task.hash, this.cache.cacheDirectory);
+                 if (res) {
 -                    this.applyRemoteCacheResults(task.hash, res, task.outputs);
-+                    await this.applyRemoteCacheResults(task, res, task.outputs);
-@@ -151,7 +151,20 @@
++                    if (!await this.applyRemoteCacheResults(task, res, task.outputs)) return;
+                     results.set(task.hash, {
+                         ...res,
+                         terminalOutput: res.terminalOutput ?? '',
+@@ -148,21 +148,48 @@
+     getUsedCacheSpace() {
+         return this.cache.getCacheSize();
+     }
 -    applyRemoteCacheResults(hash, res, outputs) {
 -        return this.cache.applyRemoteCacheResults(hash, res, outputs);
 +    recordCacheTaskDetails(task) {
@@ -1256,32 +1278,58 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +        new native_1.TaskDetails((0, db_connection_1.getDbConnection)({ directory: cache_directory_1.cacheDir })).recordTaskDetails([{ hash: task.hash, project: task.target.project, target: task.target.target, configuration: task.target.configuration }]);
 +    }
 +    async applyRemoteCacheResults(task, res, outputs) {
-+        const publish = () => { this.recordCacheTaskDetails(task); return this.cache.applyRemoteCacheResults(task.hash, res, outputs); };
-+        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return publish();
++        const publish = async () => { if (!frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) return false; if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false; if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)), res.outputsPath)) return false; this.recordCacheTaskDetails(task); this.cache.applyRemoteCacheResults(task.hash, res, outputs); return true; };
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
 +        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
 +        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, res.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', async () => publish());
      }
      async put(task, terminalOutput, outputs, code) {
-+        if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined) { const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) { console.log(`[nx] Selected graph source changed during ${task.id}; cache promotion withheld`); return; } }
-+        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureReceiptHolds !== 'function') throw Error('Immutable sourceClosureReceiptHolds authority required'); const { sourceClosureReceiptHolds } = frozen.authorizers;
-+        if (!sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
-         return tryAndRetry(async () => {
-+            if (Buffer.byteLength(terminalOutput ?? "", "utf8") > 134217728) throw Error("Native cache terminal output exceeds Original publication budget");
-+            const publish = () => { this.recordCacheTaskDetails(task); return this.cache.put(task.hash, terminalOutput, outputs, code); };
-+            const expandedOutputs = process.env.SEMIO_NX_FIXED_STORAGE === undefined ? publish() : await frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', async () => publish());
+-        return tryAndRetry(async () => {
 -            const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
-             // Notify TaskIOService of actual output files
-@@ -164,2 +177,6 @@
+-            // Notify TaskIOService of actual output files
+-            (0, task_io_service_1.getTaskIOService)().notifyTaskOutputs(task.id, expandedOutputs);
+-            if (this.remoteCache) {
+-                await this.remoteCache.store(task.hash, this.cache.cacheDirectory, terminalOutput, code);
+-            }
+-        });
+-    }
 -    copyFilesFromCache(_, cachedResult, outputs) {
 -        return tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.requireOriginalNxRustCachePromotionV1 !== 'function') throw Error('Immutable Rust cache promotion authority required');
++        const verifySource = async () => {
++            if (!frozen.authorizers.sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) return false;
++            if (process.env.SEMIO_NX_SELECTED_GRAPH_RECEIPT !== undefined && !await frozen.authorizers.originalSelectedGraphHandoffHoldsV1(workspace_root_1.workspaceRoot, __filename)) return false;
++            return true;
++        };
++        if (!await verifySource()) return;
++        const promote = async () => {
++            if (!await verifySource()) return;
++            if (!await frozen.authorizers.requireOriginalNxRustCachePromotionV1(task.hashDetails?.semioRustUnit, outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output)))) { console.log(`[nx] Output changed during ${task.id}; cache promotion withheld`); return; }
++            return tryAndRetry(async () => {
++                if (Buffer.byteLength(terminalOutput ?? '', 'utf8') > 134217728) throw Error('Native cache terminal output exceeds Original publication budget');
++                this.recordCacheTaskDetails(task);
++                const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
++                (0, task_io_service_1.getTaskIOService)().notifyTaskOutputs(task.id, expandedOutputs);
++                if (this.remoteCache) {
++                    if (!await verifySource()) return;
++                    await this.remoteCache.store(task.hash, this.cache.cacheDirectory, terminalOutput, code);
++                }
++                return expandedOutputs;
++            });
++        };
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', promote);
++    }
 +    async copyFilesFromCache(_, cachedResult, outputs) {
 +        const copy = () => tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
 +        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return copy();
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
 +        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
 +        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, cachedResult.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'shared', copy);
-@@ -369,6 +386,9 @@
+     }
+     removeOldCacheRecords() {
+         return this.cache.removeOldCacheRecords();
+@@ -369,10 +396,12 @@
          return results;
      }
      async put(task, terminalOutput, outputs, code) {
@@ -1290,7 +1338,12 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +        if (!sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
          return tryAndRetry(async () => {
              /**
-              * This is the directory with the cached artifacts
+-             * This is the directory with the cached artifacts
+-             */
++             * This is the directory with the cached artifacts             */
+             const td = (0, path_1.join)(this.cachePath, task.hash);
+             const tdCommit = (0, path_1.join)(this.cachePath, `${task.hash}.commit`);
+             // might be left overs from partially-completed cache invocations
 diff --git a/dist/src/project-graph/project-graph.js b/dist/src/project-graph/project-graph.js
 --- a/dist/src/project-graph/project-graph.js
 +++ b/dist/src/project-graph/project-graph.js

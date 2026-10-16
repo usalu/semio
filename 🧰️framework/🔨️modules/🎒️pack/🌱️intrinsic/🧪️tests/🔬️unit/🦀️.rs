@@ -1,5 +1,5 @@
 //! 🧪️ The language-neutral intrinsic corpus preserves values, framing and caller authority.
-use crate::intrinsic::{decode, IntrinsicFormat};
+use crate::{decode, IntrinsicFormat};
 use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordFields, RecordLayout, RecordSpec, RecordValue, Shape};
 use semio_framework_value::{DslValue, NativeDecodeControl};
 const FIELD_ID: u16 = 1;
@@ -12,7 +12,7 @@ fn value(row: &Value) -> DslValue {
 fn encoded(value: DslValue, format: IntrinsicFormat) -> Vec<u8> {
     let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(FIELD_ID, "value", Shape::Value)]);
     let record = RecordValue { fields: [(FIELD_ID, FieldValue::Value(value))].into_iter().collect() };
-    match format { IntrinsicFormat::Body => crate::record::encode_record_body(&spec, &record, &Default::default()).unwrap(), IntrinsicFormat::Document => crate::record::encode_document(&spec, &record, &Default::default()).unwrap() }
+    match format { IntrinsicFormat::Body => semio_framework_pack_record::encode_record_body(&spec, &record, &Default::default()).unwrap(), IntrinsicFormat::Document => semio_framework_pack_record::encode_document(&spec, &record, &Default::default()).unwrap() }
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn intrinsic_decoding_refuses_an_absent_or_foreign_document_field() {
     for fields in [RecordFields::default(), [(2, FieldValue::Value(DslValue::Null))].into_iter().collect()] {
         let id = if fields.get(&2).is_some() { 2 } else { FIELD_ID };
         let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(id, "value", Shape::Value)]);
-        let bytes = crate::record::encode_document(&spec, &RecordValue { fields }, &Default::default()).unwrap();
+        let bytes = semio_framework_pack_record::encode_document(&spec, &RecordValue { fields }, &Default::default()).unwrap();
         let mut callback = |_| true;
         let mut control = NativeDecodeControl::new(16_777_216, &mut callback);
         assert!(decode(&bytes, IntrinsicFormat::Document, &Default::default(), &mut control).is_err());
@@ -73,6 +73,6 @@ fn intrinsic_decoding_obeys_the_original_caller_cancellation_and_allocation_ceil
 #[test]
 fn intrinsic_document_schema_refusal_does_not_allocate_unadmitted_constructor(){
  let bytes=encoded(DslValue::Null,IntrinsicFormat::Document);let mut allow=|_|true;let mut control=NativeDecodeControl::new(0,&mut allow);
- let((kind,diagnostic),requests,releases)=crate::test_allocation::observe_backing(||{let error=decode(&bytes,IntrinsicFormat::Document,&Default::default(),&mut control).expect_err("zero ownership must refuse");let diagnostic=match &error{crate::PackRefusal::ValueRefusal(error)=>match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()},_=>0};let kind=error.kind();drop(error);(kind,diagnostic)});
+ let((kind,diagnostic),requests,releases)=crate::test_allocation::observe_backing(||{let error=decode(&bytes,IntrinsicFormat::Document,&Default::default(),&mut control).expect_err("zero ownership must refuse");let diagnostic=match &error{semio_framework_pack_error::PackRefusal::ValueRefusal(error)=>match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()},_=>0};let kind=error.kind();drop(error);(kind,diagnostic)});
  assert_eq!(kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(requests,releases);assert_eq!(requests,control.owned_bytes()+diagnostic,"only the actual refusal diagnostic may be allocated after denied schema admission");
 }

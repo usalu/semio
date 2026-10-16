@@ -17,7 +17,7 @@ test("cancellation intent preserves pending and already settled originals",()=>{
 test("mounted gesture keeps actual issuer and separately funded maintenance",()=>{
  const machine=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");
  const plugin=readFileSync(resolve(import.meta.dir,"../../../../🦀️.rs"),"utf8");
- const fields=readFileSync(resolve(import.meta.dir,"../../../../🧵️retained-command/🧬️context/📸️fields/🦀️.rs"),"utf8");
+ const fields=readFileSync(resolve(import.meta.dir,"../../../../📜️declaration/🧩️app/🛬️lifted/📸️fields/🦀️.rs"),"utf8");
  for(const token of["GestureCapture","GestureOperation","gesture_retirement_demand","gesture_retirement_step(grant)","request_gesture_cancellation","begin_gesture_retirement"])expect(machine.includes(token),token).toBe(true);
  for(const token of["gesture_operations.remove","Arc::new(GestureSlot"])expect(machine.includes(token),token).toBe(false);
  for(const token of["gesture: GestureCapture<A::Mutation>","gesture: GestureCapture::detached()"])expect(plugin.includes(token),token).toBe(true);

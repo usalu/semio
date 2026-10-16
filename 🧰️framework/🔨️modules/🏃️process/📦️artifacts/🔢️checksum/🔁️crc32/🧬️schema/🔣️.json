@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Crc32Chunk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "previous",
+    "bytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "previous": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "bytes": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumChunkBytes": 65536,
+        "maximumChecksum": 4294967295
+      }
+    }
+  }
+}

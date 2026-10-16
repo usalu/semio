@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "order": [
+    "parent-authenticates-paid-scratch",
+    "parent-writes-finite-request",
+    "child-receives-parent-original",
+    "child-authenticates-owned-request",
+    "actual-compiler-nonzero-without-signal",
+    "capture-bounded-log-before-cleanup",
+    "rethrow-exact-primary",
+    "child-original-fails",
+    "emit-terminal-diagnostic-data",
+    "parent-joins-and-verifies-status-hash-data"
+  ],
+  "report": {
+    "version": 1,
+    "kind": "compiler-refusal",
+    "requestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "status": 1,
+    "signal": null,
+    "log": "! Package semio Error: actual rejected source.\n"
+  },
+  "mutations": [
+    {
+      "field": "status",
+      "value": 0
+    },
+    {
+      "field": "status",
+      "value": null
+    },
+    {
+      "field": "signal",
+      "value": "SIGKILL"
+    },
+    {
+      "field": "requestSha256",
+      "value": "wrong"
+    },
+    {
+      "field": "log",
+      "value": ""
+    },
+    {
+      "field": "extra",
+      "value": true
+    }
+  ],
+  "callerCases": [
+    "geo-planar-domain",
+    "thermodynamic-domain",
+    "biofabric-representation-domain",
+    "engineering-reference-domain",
+    "scientific-record-domain",
+    "scientific-mode-domain",
+    "public-xy-admission",
+    "graph-reference",
+    "neural-reference",
+    "domain-reference-controls",
+    "critical-controls",
+    "domain-scalar-controls",
+    "family-containment"
+  ],
+  "terminalCases": [
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": false,
+        "remainingMilliseconds": 1
+      },
+      "accepted": true
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": false,
+        "remainingMilliseconds": null
+      },
+      "accepted": true
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": true,
+        "compilerCancelled": false,
+        "remainingMilliseconds": 100
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": true,
+        "remainingMilliseconds": 100
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": false,
+        "remainingMilliseconds": 0
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": true,
+        "compilerCancelled": true,
+        "remainingMilliseconds": 0
+      },
+      "accepted": false
+    }
+  ]
+}

@@ -94,15 +94,15 @@ fn app_owned(ids: BTreeSet<String>, owned: &BTreeSet<String>) -> BTreeSet<String
 
 #[semio_framework_async_macros::async_test]
 async fn studio_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_factory() {
-    let definition = engine::space::create_space_app().await.definition;
+    let definition = semio_hub_space_app::create_space_app().await.definition;
     let (fixture_migrated, fixture_host_only) = migrated_and_host_only(STUDIO_FIXTURE);
-    let owned = factory_tool_ids::<engine::space::SpaceCommandJobFactory>();
+    let owned = factory_tool_ids::<semio_hub_space_app::SpaceCommandJobFactory>();
     assert!(unclassified_ids(&definition).is_empty(), "an unclassified id aborts build_definition at runtime");
     assert_eq!(app_owned(migrated_ids(&definition), &owned), fixture_migrated, "the studio's migrated ids must equal its fixture's");
     assert_eq!(owned, fixture_migrated, "the owned factory must claim exactly the migrated ids");
-    assert_eq!(factory_contract_ids::<engine::space::SpaceCommandJobFactory>(), owned, "every claimed tool needs a publication contract");
-    assert_eq!(factory_host_only_ids::<engine::space::SpaceCommandJobFactory>(), fixture_host_only);
-    assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
+    assert_eq!(factory_contract_ids::<semio_hub_space_app::SpaceCommandJobFactory>(), owned, "every claimed tool needs a publication contract");
+    assert_eq!(factory_host_only_ids::<semio_hub_space_app::SpaceCommandJobFactory>(), fixture_host_only);
+    assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
     for tool in ["setAppRegistrations", "openSpace", "openInstance", "importSpacePackPayload", "spawnApp"] {
         assert!(owned.contains(tool), "the shell dispatches {tool} on every studio session");
     }
@@ -145,13 +145,13 @@ async fn space_index_declares_every_fixture_migrated_id_and_backs_it_with_the_ow
 /// registered factory's — the proof macro can only take literals, so the literals are pinned here.
 #[semio_framework_async_macros::async_test]
 async fn tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against() {
-    assert_eq!(engine::space::S_PLAY_APP_ID, "s.space.studio@1/*#editor");
-    assert_eq!(<engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA, "os.workflow");
+    assert_eq!(semio_hub_space_foundation::S_PLAY_APP_ID, "s.space.studio@1/*#editor");
+    assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA, "os.workflow");
     assert_eq!(<semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DIALECT.artifact_kind, "s.space.home");
     assert_eq!(<semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA, "s.home");
     assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DIALECT.artifact_kind, "s.space.space");
     assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA, "s.space");
-    assert_eq!(<engine::space::SpaceCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <engine::space::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA);
+    assert_eq!(<semio_hub_space_app::SpaceCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <semio_hub_space_app::SpaceApp as ArtifactApp>::DOCUMENT_SCHEMA);
     assert_eq!(<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <semio_s_artifact_space_home::editor::home::HomeApp as ArtifactEditor>::DOCUMENT_SCHEMA);
     assert_eq!(<semio_s_artifact_space_space::editor::space_index::SpaceIndexRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::DOCUMENT_SCHEMA, <semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor as ArtifactEditor>::DOCUMENT_SCHEMA);
 }
@@ -235,10 +235,10 @@ async fn plugin_assembly_succeeds_and_registers_all_five_surfaces() {
 /// `deleteVirtualFileSystemNode`; the host's local catalog added `applyLocalCatalogDocument`) and the space index's 14.
 #[semio_framework_async_macros::async_test]
 async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
-    let mut studio = VcsArtifactApp::<engine::space::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&engine::space::create_space_app().await.definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
+    let mut studio = VcsArtifactApp::<semio_hub_space_app::SpaceApp>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_hub_space_app::create_space_app().await.definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
     let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
     let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor()), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
-    assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 40);
+    assert_eq!(<semio_hub_space_app::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 40);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
     artifact_app_laws::close_registered_fixture_app(&mut studio);

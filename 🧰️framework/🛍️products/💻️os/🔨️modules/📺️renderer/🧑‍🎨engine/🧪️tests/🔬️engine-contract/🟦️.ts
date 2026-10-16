@@ -177,7 +177,7 @@ import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️
 
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/⚖️action-semantics.json";
 import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/📚️example-picker.json";
-import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🎞️tutorial-document-track.json";
+import tutorialDocumentFixture from "../../../../../../../🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures/🎞️tutorial-document-track.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/👥️presence-overlay.json";
@@ -1944,7 +1944,7 @@ import {
 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
-import { Canvas2dHost, canvasLayerDisplayLabel, worldToScreenLogical, readCanvas2dSurfaceColors, Board2dHost, applyBoard2dHighlightedIds, board2dCameraActionArgs, beginPuzzle2dPeerGesture, collectPuzzle2dLiveMirrorMutations, board2dGranularityById, board2dHoverActionArgs, latestBoard2dHoverId, parseBoard2dSuggestionMenu, board2dSuggestionMenuOwnsWindow, board2dSuggestionMenuItems, coalesceBoard2dEvents, parseBoard2dTransformFlags, board2dStatusJson, endPuzzle2dPeerGesture, mapContextMenuSpecs, surfaceContextMenuTitleKey, suggestionMenuItems, notifyPuzzle2dPeersGestureEnded, parsePuzzle2dCatalogueDragPayload, board2dPeers, puzzle2dDropPreviewJson, puzzle2dPeerOwnsGesture, puzzle2dScreenToWorld, puzzle2dWorldToScreen, pushPuzzle2dLiveMirrorMutations, registerBoard2dPeer, unregisterBoard2dPeer, NodeGraphHost, FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, flowCatalogueItemDescriptor, flowSurfaceRenderAllowed, flowRankCatalogueSuggestions, flowSpotlightSuggestionListScrollClass, nodeGraphHoverActionArgs, nodeGraphSelectionActionArgs, world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, nodeGraphPickChannel, nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, parseCatalogueAppDragPayload, parseDagSliderOverlays, dagSliderValueText, GraphSliderOverlays, resolveHostSnapshotWidgetInstanceId, Paint2dHost, TableHost, tableStepperClampedDelta, tableStepperKeyDelta, resolveMapInteractionSync, GraphTimelineHost, TextEditorHost, lineRangeAt, multiSpanReplace, World3dHost, worldGhostMeshUrl, parsePuzzle3dCatalogueDragPayload, mergeWorldViewportCamera, raycastGroundPoint, resolveMeshStyle, resolveMeshSelectionPreviewStyle, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, isCurveOnlyWorldMesh, meshBoundsCorners, resolveVortexPointerDownIntent, worldMeshMaterialRevision, worldVortexMaterialRevision, resolveWorldMergeMode, resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, shouldReattachWorldViewportCamera, worldCameraPoseApproxEqual, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, snapWorldPointToGrid, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dFrameVisibleOverlayOffered, world3dProjectionContentFrameMounted, world3dCameraDomJson, worldInstancePickBlocked, parseWorldTerrainStyle, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, clearWorldSelectionPreview, getWorldSelectionPreview, clearWorldGumballTransformPreview, getWorldGumballTransformPreview, setWorldGumballTransformPreview, subscribeWorldGumballTransformPreview, pushPuzzle2dDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, setWorldSelectionPreview, subscribeWorldSelectionPreview, worldCatalogueDropHostContainsPoint, InkCanvasHost, inkItemBounds, eraseInkStrokePointsInItem, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem, appBreadcrumb, appWindowLabel, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, serializeCommandIngressForActor, serializePerActor, applyUiRefreshResponseToCache, resolveAppBreadcrumb, buildUtilityRibbonSegments, buildActiveUtilityByWindowId, buildUiRefreshRequest, dedupeUtilityNodesById, flattenPanelTabLeaves, groupUtilityNodesByCategory, initialShellState, selectOpenConflicts, selectQuarantinedConflicts, isFlowGraphScene, mergeRecordPreservingIdentity, parseShellRoute, pluginAvailabilityRouteV1, pluginShouldReceiveContributions, pluginShouldEstablishSession, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction, mintDirectoryCommandRequestId, retainDirectoryCommandResult, DIRECTORY_COMMAND_RESULT_SLOTS, type DirectoryCommandResultSlotV1, type DirectoryCommandReceiptV1, type ShellAction, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, computeSyncPillState, syncPillText, ShellFaultBoundary, preserveJsonIdentity, reconcileUtilityPath, studioPanelFocusingSpawned, viewStateWithSpacePanel, findPressedUtilityLeafId, resolveUtilityNodes, resolveUtilities, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, shellLabel, shellTabIcon, syncShellLabelLocale, uiIntentToActionDescriptor, actionStageKey, actionRequiresStagedForm, resolveKeybindingIntent, resolveUtilityActivation, isWorldTransformGumballMode, worldGumballConfigForProjection, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, WindowActionPane, resolveCommands, commandAddressKey, commandCategories, buildCommandCategoryTree, buildCommandCategoryTabs, buildOsCommands, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage, type ResolvedCommand, type ResolvedActionArgDef, type ResolvedActionDefinition, type ResolvedToolDefinition, shellReducer, shellStateUnchanged, sortUtilityNodes, spawnedWindowChromeForKind, UtilityTree, type UiRefreshCache, UIFind, UIFindProvider, uiNodeToTreePanelConfig, UISearch, type UISearchItem, useUIFind, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1, createFrameworkDisplayPanelTabs, type DisplayHostApi, createFrameworkSettingsPanelTab, createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, type MarketplaceHostApi, type MarketplacePluginEntry, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, introductionTargetsWindow, windowMeasureTreeContainsId, renderWindowMeasuresTree, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, sceneToSyncPack, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering, SyncAttachCard } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { Canvas2dHost, canvasLayerDisplayLabel, worldToScreenLogical, readCanvas2dSurfaceColors, Board2dHost, applyBoard2dHighlightedIds, board2dCameraActionArgs, beginBoardPeerGesture, collectBoardLiveMirrorMutations, board2dGranularityById, board2dHoverActionArgs, latestBoard2dHoverId, parseBoard2dSuggestionMenu, board2dSuggestionMenuOwnsWindow, board2dSuggestionMenuItems, coalesceBoard2dEvents, parseBoard2dTransformFlags, board2dStatusJson, endBoardPeerGesture, mapContextMenuSpecs, surfaceContextMenuTitleKey, suggestionMenuItems, notifyBoardPeersGestureEnded, parseBoardCatalogueDragPayload, board2dPeers, boardDropPreviewJson, boardPeerOwnsGesture, boardScreenToWorld, boardWorldToScreen, pushBoardLiveMirrorMutations, registerBoard2dPeer, unregisterBoard2dPeer, NodeGraphHost, FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, flowCatalogueItemDescriptor, flowSurfaceRenderAllowed, flowRankCatalogueSuggestions, flowSpotlightSuggestionListScrollClass, nodeGraphHoverActionArgs, nodeGraphSelectionActionArgs, world3dHoverActionArgs, world3dSelectionActionArgs, interactionTargetsForInstances, WORLD3D_DEFAULT_INTERACTION_GRANULARITY, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dMarkerInteractionTarget, world3dInstanceInteractionTarget, world3dInstanceInteractionTargets, world3dSelectionTargetsActionArgs, nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, nodeGraphPickChannel, nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, parseCatalogueAppDragPayload, parseDagSliderOverlays, dagSliderValueText, GraphSliderOverlays, resolveHostSnapshotWidgetInstanceId, Paint2dHost, TableHost, tableStepperClampedDelta, tableStepperKeyDelta, resolveMapInteractionSync, GraphTimelineHost, TextEditorHost, lineRangeAt, multiSpanReplace, World3dHost, worldGhostMeshUrl, parsePuzzle3dCatalogueDragPayload, mergeWorldViewportCamera, raycastGroundPoint, resolveMeshStyle, resolveMeshSelectionPreviewStyle, semanticColorsFromPalette, celebrateWorldInstances, isWorldInstanceCelebrating, isCurveOnlyWorldMesh, meshBoundsCorners, resolveVortexPointerDownIntent, worldMeshMaterialRevision, worldVortexMaterialRevision, resolveWorldMergeMode, resolveWorldContextMenuTarget, world3dContextMenuSurfaceV1, shouldReattachWorldViewportCamera, worldCameraPoseApproxEqual, buildWorldCameraDispatchArgs, worldCameraSetCameraDispatchArgs, snapWorldPointToGrid, world3dViewportCameraSeedKey, world3dFitProjectionContent, world3dFramingInstances, world3dFrameVisibleOverlayOffered, world3dProjectionContentFrameMounted, world3dCameraDomJson, worldInstancePickBlocked, parseWorldTerrainStyle, clearWorldCatalogueDropPreview, getWorldCatalogueDropPreview, clearWorldSelectionPreview, getWorldSelectionPreview, clearWorldGumballTransformPreview, getWorldGumballTransformPreview, setWorldGumballTransformPreview, subscribeWorldGumballTransformPreview, pushBoardDropPreview, registerWorldCatalogueDropHost, setWorldCatalogueDropPreview, subscribeWorldCatalogueDropPreview, setWorldSelectionPreview, subscribeWorldSelectionPreview, worldCatalogueDropHostContainsPoint, InkCanvasHost, inkItemBounds, eraseInkStrokePointsInItem, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem, appBreadcrumb, appWindowLabel, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, serializeCommandIngressForActor, serializePerActor, applyUiRefreshResponseToCache, resolveAppBreadcrumb, buildUtilityRibbonSegments, buildActiveUtilityByWindowId, buildUiRefreshRequest, dedupeUtilityNodesById, flattenPanelTabLeaves, groupUtilityNodesByCategory, initialShellState, selectOpenConflicts, selectQuarantinedConflicts, isFlowGraphScene, mergeRecordPreservingIdentity, parseShellRoute, pluginAvailabilityRouteV1, pluginShouldReceiveContributions, pluginShouldEstablishSession, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction, mintDirectoryCommandRequestId, retainDirectoryCommandResult, DIRECTORY_COMMAND_RESULT_SLOTS, type DirectoryCommandResultSlotV1, type DirectoryCommandReceiptV1, type ShellAction, AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, computeSyncPillState, syncPillText, ShellFaultBoundary, preserveJsonIdentity, reconcileUtilityPath, studioPanelFocusingSpawned, viewStateWithSpacePanel, findPressedUtilityLeafId, resolveUtilityNodes, resolveUtilities, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, shellLabel, shellTabIcon, syncShellLabelLocale, uiIntentToActionDescriptor, actionStageKey, actionRequiresStagedForm, resolveKeybindingIntent, resolveUtilityActivation, isWorldTransformGumballMode, worldGumballConfigForProjection, gumballTransformDeltaBetweenPoses, gumballIdentityDelta, worldPaintStep, WORLD_PAINT_IDLE, world3dGumballSelectionArgsV1, world3dRelocateDragTargetV1, world3dRelocateDispatchArgsV1, world3dVolumeBrushOriginV1, world3dVolumeBrushCommits, gumballLivePreviewDeltaBetweenPoses, applyGumballLivePreviewDeltaToPose, WindowActionPane, resolveCommands, commandAddressKey, commandCategories, buildCommandCategoryTree, buildCommandCategoryTabs, buildOsCommands, createLatestAsyncDispatcher, createDirectionalAsyncDispatcher, createInFlightSkippingInterval, createCoalescingActionDispatcher, dispatchOsCommand, classifyWindowLayoutChange, buildNoteShellCommandAction, isShellOwnedCommandId, encodeEffectActionInvocation, encodeEffectCommandInvocation, TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad, isEphemeralShellBrand, clearDurableShellStorage, type ResolvedCommand, type ResolvedActionArgDef, type ResolvedActionDefinition, type ResolvedToolDefinition, shellReducer, shellStateUnchanged, sortUtilityNodes, spawnedWindowChromeForKind, UtilityTree, type UiRefreshCache, UIFind, UIFindProvider, uiNodeToTreePanelConfig, UISearch, type UISearchItem, useUIFind, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1, createFrameworkDisplayPanelTabs, type DisplayHostApi, createFrameworkSettingsPanelTab, createFrameworkMarketplacePanelTab, type MarketplaceExtensionEntry, type MarketplaceHostApi, type MarketplacePluginEntry, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, resolveFrameworkLayoutSeed, retitleWindowLayoutNode, introductionTargetsWindow, windowMeasureTreeContainsId, renderWindowMeasuresTree, buildToolTabs, toolCategoryOpenPath, toolLeafInactiveRepress, toolIdFromPanelTabId, reconcileToolTabSelection, toolPanelTreeContentRevision, type ToolTabSelection, sceneToSyncPack, FrameworkOsShell, TutorialRecorder, synthesizeLocalizedLabel, resolveManifestLabel, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering, SyncAttachCard } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { suggestionMenuOwnsWindow } from "../../🧱️elements/🎣️suggestion-submenu/🟦️.ts";
 import {
   windowActionPaneNode,
@@ -5654,7 +5654,7 @@ it("keeps hover out of the board-events batch — it travels on the framework in
   });
 
   it("collects live mirror mutations: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
-    const mutations = collectPuzzle2dLiveMirrorMutations([
+    const mutations = collectBoardLiveMirrorMutations([
       { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
       { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
       { name: "brushPreview", payload: {} },
@@ -5684,7 +5684,7 @@ it("keeps hover out of the board-events batch — it travels on the framework in
   });
 
   it("board 2d gumball: transformPreview frames mirror into sibling panes exactly like a drag's final moves", () => {
-    const mutations = collectPuzzle2dLiveMirrorMutations([
+    const mutations = collectBoardLiveMirrorMutations([
       { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 3, y: 4 }] } },
       {
         name: "transformPreview",
@@ -5725,17 +5725,17 @@ it("keeps hover out of the board-events batch — it travels on the framework in
   });
 
   it("collects live mirror mutations: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
-    expect(collectPuzzle2dLiveMirrorMutations([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
+    expect(collectBoardLiveMirrorMutations([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
       preselect: { ids: ["a", "b"], removedIds: ["c"] },
       clearPreselect: false,
       selectionIds: null,
     });
-    expect(collectPuzzle2dLiveMirrorMutations([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
+    expect(collectBoardLiveMirrorMutations([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
       selectionIds: ["a"],
       preselect: null,
       clearPreselect: true,
     });
-    expect(collectPuzzle2dLiveMirrorMutations([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
+    expect(collectBoardLiveMirrorMutations([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
       selectionIds: ["a", "b"],
       preselect: null,
       clearPreselect: true,
@@ -5765,12 +5765,12 @@ it("keeps hover out of the board-events batch — it travels on the framework in
   it("peer gesture ownership: begin/end tracks the owning surfaceId; a pane never defers against its own gesture", () => {
     const scope = flowSessionLoader.createBoardPeerScope();
     registerBoard2dPeer(scope, "puzzle2d-play", "pane.a", { session: boardTestSession(), onPeerGestureEnded: () => {} });
-    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
-    beginPuzzle2dPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
-    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
-    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(true);
-    endPuzzle2dPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
-    expect(puzzle2dPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(false);
+    expect(boardPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
+    beginBoardPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
+    expect(boardPeerOwnsGesture(scope, "puzzle2d-play", "pane.a")).toBe(false);
+    expect(boardPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(true);
+    endBoardPeerGesture(scope, "puzzle2d-play", "pane.a", scope.peers.get("puzzle2d-play")?.get("pane.a") ?? null);
+    expect(boardPeerOwnsGesture(scope, "puzzle2d-play", "pane.b")).toBe(false);
   });
 
   it("pushes live mirror mutations into peer sessions, skipping the source pane", () => {
@@ -5787,7 +5787,7 @@ it("keeps hover out of the board-events batch — it travels on the framework in
     registerBoard2dPeer(scope, "mirror-test", "pane.source", makePeer("pane.source"));
     registerBoard2dPeer(scope, "mirror-test", "pane.sibling", makePeer("pane.sibling"));
 
-    pushPuzzle2dLiveMirrorMutations(scope, "mirror-test", "pane.source", {
+    pushBoardLiveMirrorMutations(scope, "mirror-test", "pane.source", {
       positions: [{ id: "alpha", x: 1, y: 2 }],
       selectionIds: ["alpha"],
       preselect: null,
@@ -5809,7 +5809,7 @@ it("keeps hover out of the board-events batch — it travels on the framework in
     registerBoard2dPeer(scope, "notify-test", "pane.source", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.source", flushed }) });
     registerBoard2dPeer(scope, "notify-test", "pane.sibling", { session: {} as never, onPeerGestureEnded: (flushed) => ended.push({ pane: "pane.sibling", flushed }) });
 
-    notifyPuzzle2dPeersGestureEnded(scope, "notify-test", "pane.source", true);
+    notifyBoardPeersGestureEnded(scope, "notify-test", "pane.source", true);
     expect(ended).toEqual([{ pane: "pane.sibling", flushed: true }]);
 
     unregisterBoard2dPeer(scope, "notify-test", "pane.source", scope.peers.get("notify-test")?.get("pane.source") ?? null);
@@ -5980,15 +5980,15 @@ it("keeps hover out of the board-events batch — it travels on the framework in
 
   it("parses a catalogue drag payload and builds a drop-preview JSON", () => {
     const encoded = JSON.stringify({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 });
-    const payload = parsePuzzle2dCatalogueDragPayload(encoded);
+    const payload = parseBoardCatalogueDragPayload(encoded);
     expect(payload).toEqual({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24, width: undefined, height: undefined, iconKind: undefined });
     expect(payload).not.toBeNull();
-    expect(JSON.parse(puzzle2dDropPreviewJson(payload!, 100, 200))).toMatchObject({ nodeKind: "seed", x: 100, y: 200, shape: "circle", radius: 24 });
+    expect(JSON.parse(boardDropPreviewJson(payload!, 100, 200))).toMatchObject({ nodeKind: "seed", x: 100, y: 200, shape: "circle", radius: 24 });
   });
 
   it("rejects a catalogue drag payload without a kindId", () => {
-    expect(parsePuzzle2dCatalogueDragPayload(JSON.stringify({ catalogSlice: "nodes" }))).toBeNull();
-    expect(parsePuzzle2dCatalogueDragPayload(null)).toBeNull();
+    expect(parseBoardCatalogueDragPayload(JSON.stringify({ catalogSlice: "nodes" }))).toBeNull();
+    expect(parseBoardCatalogueDragPayload(null)).toBeNull();
   });
 
   it("parses a puzzle 3d catalogue drag payload and snaps drop origins to the grid", () => {
@@ -6422,9 +6422,9 @@ it("keeps hover out of the board-events batch — it travels on the framework in
     registerBoard2dPeer(scope, "fixture-preview", "pane.source", makePeer("pane.source"));
     registerBoard2dPeer(scope, "fixture-preview", "pane.sibling", makePeer("pane.sibling"));
 
-    const preview = puzzle2dDropPreviewJson({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 }, 10, 20);
-    pushPuzzle2dDropPreview(scope, "fixture-preview", preview);
-    pushPuzzle2dDropPreview(scope, "fixture-preview", null);
+    const preview = boardDropPreviewJson({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 }, 10, 20);
+    pushBoardDropPreview(scope, "fixture-preview", preview);
+    pushBoardDropPreview(scope, "fixture-preview", null);
 
     expect(calls).toEqual([
       { pane: "pane.source", method: "setDropPreviewJson", arg: preview },
@@ -6443,27 +6443,27 @@ it("keeps hover out of the board-events batch — it travels on the framework in
 
   it("inverts the canonical screen-to-world transform for a fixture drop", () => {
     const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
-    const world = puzzle2dScreenToWorld(cameraJson, { w: 800, h: 600 }, { x: 400, y: 300 });
+    const world = boardScreenToWorld(cameraJson, { w: 800, h: 600 }, { x: 400, y: 300 });
     expect(world).toEqual({ x: 120, y: 80 });
   });
 
-  it("puzzle2dWorldToScreen is the exact inverse of puzzle2dScreenToWorld", () => {
+  it("boardWorldToScreen is the exact inverse of boardScreenToWorld", () => {
     const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
     const containerSize = { w: 800, h: 600 };
     // 🎯️ The camera's own world position always maps to the viewport center.
-    expect(puzzle2dWorldToScreen(cameraJson, containerSize, { x: 120, y: 80 })).toEqual({ x: 400, y: 300 });
+    expect(boardWorldToScreen(cameraJson, containerSize, { x: 120, y: 80 })).toEqual({ x: 400, y: 300 });
     for (const screen of [
       { x: 0, y: 0 },
       { x: 400, y: 300 },
       { x: 733, y: 12 },
     ]) {
-      const world = puzzle2dScreenToWorld(cameraJson, containerSize, screen);
+      const world = boardScreenToWorld(cameraJson, containerSize, screen);
       expect(world).not.toBeNull();
-      const roundTrip = puzzle2dWorldToScreen(cameraJson, containerSize, world!);
+      const roundTrip = boardWorldToScreen(cameraJson, containerSize, world!);
       expect(roundTrip!.x).toBeCloseTo(screen.x, 5);
       expect(roundTrip!.y).toBeCloseTo(screen.y, 5);
     }
-    expect(puzzle2dWorldToScreen("not json", containerSize, { x: 0, y: 0 })).toBeNull();
+    expect(boardWorldToScreen("not json", containerSize, { x: 0, y: 0 })).toBeNull();
   });
 
   it("does not use geometry kind as a canvas layer overlay label", () => {

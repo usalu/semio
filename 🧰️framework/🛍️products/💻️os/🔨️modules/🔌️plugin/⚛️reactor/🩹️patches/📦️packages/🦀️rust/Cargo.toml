@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-reactor-patches"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pending patches and patch tracker of the plugin reactor"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-patches"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+original-actor-context-testing = []
+
+[dependencies]
+semio-framework-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }

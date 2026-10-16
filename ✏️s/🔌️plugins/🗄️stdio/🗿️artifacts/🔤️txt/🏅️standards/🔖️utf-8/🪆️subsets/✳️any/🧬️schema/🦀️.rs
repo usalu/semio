@@ -105,7 +105,12 @@ pub fn txt_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems
+pub mod artifact_items {
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_TXT_DOCUMENT_SCHEMA: &str = "stdio.txt";
+}
+//#endregion 🧩️ArtifactItems

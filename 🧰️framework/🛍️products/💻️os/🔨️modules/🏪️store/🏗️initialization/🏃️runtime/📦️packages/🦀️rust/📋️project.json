@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-store-initialization-runtime-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

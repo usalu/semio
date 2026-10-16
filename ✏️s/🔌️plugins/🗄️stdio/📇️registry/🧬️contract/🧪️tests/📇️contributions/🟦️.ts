@@ -14,7 +14,7 @@ export function runContributionChecks(): number {
     for (const removed of row.remove) {
       const candidate = selected.filter((owner) => owner !== removed);
       const available = new Set(candidate.map((owner) => `s.stdio.${owner}`));
-      const valid = candidate.every((owner) => load(`../../🧫️fixtures/📇️contributions/${owner}.json`).dependencies.every((dependency: string) => available.has(dependency)));
+      const valid = candidate.every((owner) => load(`../🧫️fixtures/📇️contributions/${owner}.json`).dependencies.every((dependency: string) => available.has(dependency)));
       accepted &&= valid;
       if (valid) selected = candidate;
     }
@@ -23,8 +23,8 @@ export function runContributionChecks(): number {
     checks += 2;
   }
   for (const row of fixtures.registrationCases) {
-    const left = load(`../../🧫️fixtures/📇️contributions/${row.first}.json`);
-    const right = load(`../../🧫️fixtures/📇️contributions/${row.second}.json`);
+    const left = load(`../🧫️fixtures/📇️contributions/${row.first}.json`);
+    const right = load(`../🧫️fixtures/📇️contributions/${row.second}.json`);
     const disjoint = (key: string) => left.representations[0][key].every((claim: string) => !right.representations[0][key].includes(claim));
     assert.equal(left.id !== right.id && left.directory !== right.directory && disjoint("mimes") && disjoint("extensions"), row.accepted);
     checks++;
@@ -43,7 +43,7 @@ export function runContributionChecks(): number {
     assert.equal(row.constraint ? constraint(source) : true, row.accepted);
     checks++;
   }
-  const contract = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+  const contract = readFileSync(new URL("../../🏗️assembly/🦀️.rs", import.meta.url), "utf8");
   assert.doesNotMatch(contract, /source\.artifact\s*==\s*"[^"]+"/u, "general contribution contract contains artifact-owned policy");
   checks++;
   const registry = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");

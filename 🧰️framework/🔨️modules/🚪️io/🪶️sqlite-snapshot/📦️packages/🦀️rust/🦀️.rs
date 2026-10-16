@@ -1,8 +1,7 @@
 //! 📦️ Standalone package for relational SQLite artifact snapshot interchange.
 
 #[cfg(test)]
-#[path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 
 #[cfg(test)]
 #[global_allocator]

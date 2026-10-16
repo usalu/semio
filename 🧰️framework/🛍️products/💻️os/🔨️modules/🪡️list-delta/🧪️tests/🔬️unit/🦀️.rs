@@ -4,8 +4,9 @@
 //! sequences over fail-closed rows and proves every displaced or abandoned row went through the cold-disposal hook.
 
 use crate::__value_derive::{FromValue, ToValue};
-use crate::list_delta::{ItemList, KeyOf, Parts, RowPatch};
-use crate::{list_delta, row_patch, ApplyCapability};
+use crate::{ItemList, KeyOf, Parts, RowPatch};
+use crate::{list_delta, row_patch};
+use semio_framework_mutation_diff::ApplyCapability;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, crate::__dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
@@ -34,12 +35,12 @@ thread_local! {
 
 fn capability() -> ApplyCapability {
     if CAPABILITY.with(|cell| cell.get()).is_none() {
-        crate::apply_diff(&ItemDelta::default(), &Vec::new()).expect("the empty delta applies");
+        semio_framework_mutation_diff::apply_diff(&ItemDelta::default(), &Vec::new()).expect("the empty delta applies");
     }
     CAPABILITY.with(|cell| cell.get()).expect("the central applier handed the delta its capability")
 }
 
-impl crate::DiffAlgebra<Vec<Item>> for ItemDelta {
+impl semio_framework_mutation_diff::DiffAlgebra<Vec<Item>> for ItemDelta {
     fn inverse(&self, base: &Vec<Item>) -> Self {
         ItemDelta::inverse(self, base)
     }
@@ -48,8 +49,8 @@ impl crate::DiffAlgebra<Vec<Item>> for ItemDelta {
     }
 }
 
-impl crate::MutationDiff<Vec<Item>> for ItemDelta {
-    fn apply(&self, base: &Vec<Item>, capability: ApplyCapability) -> crate::MutationApplyResult<Vec<Item>> {
+impl semio_framework_mutation_diff::MutationDiff<Vec<Item>> for ItemDelta {
+    fn apply(&self, base: &Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<Vec<Item>> {
         CAPABILITY.with(|cell| cell.set(Some(capability)));
         self.commit_onto(base, capability)
     }
@@ -58,8 +59,8 @@ impl crate::MutationDiff<Vec<Item>> for ItemDelta {
     }
 }
 
-fn commit(delta: &ItemDelta, base: &[Item]) -> crate::MutationApplyResult<Vec<Item>> {
-    crate::apply_diff(delta, &base.to_vec())
+fn commit(delta: &ItemDelta, base: &[Item]) -> semio_framework_mutation_diff::MutationApplyResult<Vec<Item>> {
+    semio_framework_mutation_diff::apply_diff(delta, &base.to_vec())
 }
 
 struct Rng(u64);
@@ -253,7 +254,7 @@ struct FragilePatch {
 }
 
 impl RowPatch<Fragile> for FragilePatch {
-    fn commit_into(&self, row: &mut Fragile, _capability: ApplyCapability) -> crate::MutationApplyResult<()> {
+    fn commit_into(&self, row: &mut Fragile, _capability: ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<()> {
         if let Some(value) = self.value {
             row.value = value;
         }

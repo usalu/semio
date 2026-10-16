@@ -18,11 +18,11 @@ fn shell_with_nested_app_settings() -> ShellState {
     let fixture = accessibility_fixture();
     let selection = &fixture["nestedPanelSelection"];
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
-    shell.sync_dock_tabs();
-    shell.session = None;
-    let branch = shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).iter_mut().find(|tab| tab.id == selection["rootId"].as_str().expect("root id")).expect("settings branch");
+    SessionCtx::of(&mut shell).sync_dock_tabs();
+    shell.docs.session = None;
+    let branch = shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomRight).iter_mut().find(|tab| tab.id == selection["rootId"].as_str().expect("root id")).expect("settings branch");
     branch.children.insert(0, DockTabNode::leaf(selection["appFirstLeafId"].as_str().expect("app settings id"), "App Settings", "settings", -1));
-    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
     shell
 }
 
@@ -61,7 +61,7 @@ fn theme_editor_control_ids(shell: &ShellState) -> Vec<String> {
         }
     }
     let mut out = Vec::new();
-    walk(&shell.build_settings_theme_ui(), &mut out);
+    walk(&shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs), &mut out);
     out
 }
 
@@ -70,9 +70,9 @@ fn shell_with_open_theme_section(section: &str) -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let parts: Vec<_> = section.split('.').collect();
     let root = parts.iter().take(4).copied().collect::<Vec<_>>().join(".");
-    shell.set_canonical_tree_open(&root, true);
+    shell.input.set_canonical_tree_open(&root, true);
     for end in 5..=parts.len() {
-        shell.set_canonical_tree_open(&parts[..end].join("."), true);
+        shell.input.set_canonical_tree_open(&parts[..end].join("."), true);
     }
     shell
 }
@@ -82,7 +82,7 @@ fn theme_publication_fixture() -> Value {
 }
 
 fn retained_theme_control_state(shell: &ShellState, surface: &str, control_id: &str) -> String {
-    let document = shell.panel_documents.get(surface).expect("Theme retained document");
+    let document = shell.docs.panel_documents.get(surface).expect("Theme retained document");
     let read = document.try_read().expect("Theme retained document is readable");
     let key = format!("{surface}/{control_id}");
     for ordinal in 0..read.len() {
@@ -106,37 +106,37 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
     let surface = fixture["surfaceId"].as_str().expect("surface id");
     assert!(!fixture["requiresGuestRefresh"].as_bool().expect("guest refresh contract"));
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.chrome_build.preferences.theme_id = "semio".into();
-    shell.chrome_build.preferences.custom_themes.remove("custom.retained-publication");
-    shell.clear_theme_draft();
-    shell.theme_save_label.clear();
-    shell.set_canonical_tree_open("framework.settings.theme.colors", true);
+    shell.chrome.chrome_build.preferences.theme_id = "semio".into();
+    shell.chrome.chrome_build.preferences.custom_themes.remove("custom.retained-publication");
+    shell.prefs.clear_theme_draft();
+    shell.prefs.theme_save_label.clear();
+    shell.input.set_canonical_tree_open("framework.settings.theme.colors", true);
     let primary_row = 1 + 6 + 1 + shell_theme_document_base().colors.keys().position(|key| key == "primary").expect("primary color row");
-    shell.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), (primary_row + 2) as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
-    let initial = shell.publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme owns a retained document");
-    shell.panel_documents.insert(surface.into(), initial);
+    shell.input.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), (primary_row + 2) as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
+    let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme owns a retained document");
+    shell.docs.panel_documents.insert(surface.into(), initial);
     let mut missing = Vec::new();
 
     for step in fixture["workflow"].as_array().expect("theme workflow") {
         let action = step["action"].as_str().expect("action");
-        let before = shell.panel_documents.get(surface).unwrap().header().expect("Theme header before mutation");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(&step["arguments"])) })).expect("theme host mutation");
-        let after = shell.panel_documents.get(surface).unwrap().header().expect("Theme header after mutation");
+        let before = shell.docs.panel_documents.get(surface).unwrap().header().expect("Theme header before mutation");
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(&step["arguments"])) })).expect("theme host mutation");
+        let after = shell.docs.panel_documents.get(surface).unwrap().header().expect("Theme header after mutation");
         if after.revision == before.revision || after.generation <= before.generation {
             missing.push(action.to_string());
-            shell.republish_shell_panel_document(surface).expect("test continuation republishes the missing Theme successor");
+            SessionCtx::of(&mut shell).republish_shell_panel_document(surface).expect("test continuation republishes the missing Theme successor");
         }
         for observation in step["observations"].as_array().expect("theme observations") {
             let control_id = observation["controlId"].as_str().expect("control id");
             assert_eq!(retained_theme_control_state(&shell, surface, control_id), observation["expectedState"].as_str().expect("expected state"), "{action}:{control_id}");
         }
-        assert!(shell.closing_documents.terminal_is_empty(), "{action} retires the exact replaced Theme owner");
-        assert!(shell.owed_refresh_scope.asks_for_nothing(), "{action} stays host-owned");
+        assert!(shell.docs.closing_documents.terminal_is_empty(), "{action} retires the exact replaced Theme owner");
+        assert!(shell.settle.owed_refresh_scope.asks_for_nothing(), "{action} stays host-owned");
     }
     delete_custom_theme("custom.retained-publication");
     delete_custom_theme("custom.imported-publication");
     set_active_theme_id("semio");
-    shell.clear_theme_draft();
+    shell.prefs.clear_theme_draft();
     assert!(missing.is_empty(), "Theme mutations missing retained publication: {missing:?}");
 }
 
@@ -144,13 +144,13 @@ fn theme_host_mutations_republish_the_mounted_retained_leaf_without_guest_refres
 fn invalid_theme_field_and_import_inputs_keep_the_exact_retained_revision() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let surface = FRAMEWORK_SETTINGS_THEME_TAB_ID;
-    let initial = shell.publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme retained document");
+    let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme retained document");
     let before = initial.header().expect("initial Theme header");
-    shell.panel_documents.insert(surface.into(), initial);
+    shell.docs.panel_documents.insert(surface.into(), initial);
     for (action, arguments) in [("setThemeRadius", serde_json::json!({ "key": "nodeDefault", "value": "not-a-number" })), ("applyImportedTheme", serde_json::json!({ "value": "{}" }))] {
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(arguments)) })).expect("invalid Theme input is ignored");
-        assert_eq!(shell.panel_documents.get(surface).unwrap().header().expect("retained Theme header"), before, "{action} does not mint a successor");
-        assert!(shell.closing_documents.terminal_is_empty(), "{action} retires no owner");
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: Some(semio_framework::DslValue::from(arguments)) })).expect("invalid Theme input is ignored");
+        assert_eq!(shell.docs.panel_documents.get(surface).unwrap().header().expect("retained Theme header"), before, "{action} does not mint a successor");
+        assert!(shell.docs.closing_documents.terminal_is_empty(), "{action} retires no owner");
     }
 }
 
@@ -227,15 +227,15 @@ fn the_colors_section_mints_reacts_row_ids_in_ascending_key_order() {
 #[test]
 fn theme_groups_expand_independently_and_scrolling_reaches_every_color() {
     let mut shell = shell_with_open_theme_section("framework.settings.theme.colors");
-    shell.set_canonical_tree_open("framework.settings.theme.spacing", true);
-    let UiNode::Tree(tree) = shell.build_settings_theme_ui() else { panic!("🌳️ theme body is a tree") };
+    shell.input.set_canonical_tree_open("framework.settings.theme.spacing", true);
+    let UiNode::Tree(tree) = shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs) else { panic!("🌳️ theme body is a tree") };
     assert!(tree.sections.iter().find(|section| section.id == "framework.settings.theme.colors").is_some_and(|section| section.default_open == Some(true)));
     assert!(tree.sections.iter().find(|section| section.id == "framework.settings.theme.spacing").is_some_and(|section| section.default_open == Some(true)));
 
     let expected: std::collections::BTreeSet<String> = shell_theme_document_base().colors.keys().map(|key| format!("framework.settings.theme.colors.{key}")).collect();
     let mut reached = std::collections::BTreeSet::new();
     for row in (0..expected.len() + 24).step_by(6) {
-        shell.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
+        shell.input.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
         reached.extend(theme_editor_control_ids(&shell).into_iter().filter(|id| expected.contains(id)));
     }
     assert_eq!(reached, expected, "📜️ every color row enters a retained viewport while scrolling");
@@ -294,8 +294,8 @@ fn the_metrics_section_is_two_levels_and_names_both_coordinates() {
     let key = document.metrics[&section].keys().next().expect("🎨️ a metric section has entries");
     assert!(open_ids.contains(&format!("framework.settings.theme.metrics.{section}.{key}")), "🎨️ the open section shows its rows");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": section, "key": key, "value": "42" }));
-    assert_eq!(shell.theme_document().metrics[&section][key], ThemeNumber::Scalar(42.0), "🎨️ React's `setThemeMetric(section, key, value)`");
+    shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": section, "key": key, "value": "42" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).metrics[&section][key], ThemeNumber::Scalar(42.0), "🎨️ React's `setThemeMetric(section, key, value)`");
 }
 
 /// ⚖️ LAW (§B8 appearances): per-appearance paints are React's three-level tree (appearance → group →
@@ -312,7 +312,7 @@ fn the_appearance_section_offers_reacts_paint_and_alpha_rows() {
     let expected = ["framework.settings.theme.appearances.light.chrome.base", "framework.settings.theme.appearances.light.chrome.base.alpha"];
     let mut reached = std::collections::BTreeSet::new();
     for row in (0..96).step_by(4) {
-        group_open.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
+        group_open.input.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
         reached.extend(theme_editor_control_ids(&group_open).into_iter().filter(|id| expected.contains(&id.as_str())));
     }
     for id in expected {
@@ -362,20 +362,20 @@ fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
     let baseline = ui_contract::ui_value_headroom();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for (suffix, _) in SHELL_THEME_EDITOR_SECTIONS {
-        shell.set_canonical_tree_open(&format!("framework.settings.theme.{suffix}"), true);
+        shell.input.set_canonical_tree_open(&format!("framework.settings.theme.{suffix}"), true);
     }
     for section in shell_theme_document_base().metrics.keys() {
-        shell.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true);
+        shell.input.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true);
     }
     for appearance in ["light", "dark"] {
-        shell.set_canonical_tree_open(&format!("framework.settings.theme.appearances.{appearance}"), true);
+        shell.input.set_canonical_tree_open(&format!("framework.settings.theme.appearances.{appearance}"), true);
         for (group, _) in SHELL_THEME_APPEARANCE_GROUPS {
-            shell.set_canonical_tree_open(&format!("framework.settings.theme.appearances.{appearance}.{group}"), true);
+            shell.input.set_canonical_tree_open(&format!("framework.settings.theme.appearances.{appearance}.{group}"), true);
         }
     }
     for row in (0..960).step_by(24) {
-        shell.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
-        let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui()).unwrap_or_else(|error| panic!("🎨️ the all-open theme leaf publishes at row {row}: {error}"));
+        shell.input.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
+        let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs)).unwrap_or_else(|error| panic!("🎨️ the all-open theme leaf publishes at row {row}: {error}"));
         assert!(records.len() <= ui_contract::UI_DOCUMENT_NODES, "🎨️ row {row} publishes {} records over the {} ceiling", records.len(), ui_contract::UI_DOCUMENT_NODES);
         drop(records);
         while !ui_contract::close_ui_value_page_one() {}
@@ -387,12 +387,12 @@ fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
 #[test]
 fn reset_disabled_state_matches_reacts_baseline_predicate() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.chrome_build.preferences.theme_id = "semio".into();
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui()).expect("clean theme document");
+    shell.chrome.chrome_build.preferences.theme_id = "semio".into();
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs)).expect("clean theme document");
     let reset = records.iter().find(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")).expect("reset control");
     assert!(reset.disabled);
-    shell.theme_draft = Some(shell_theme_document_base().clone());
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui()).expect("dirty theme document");
+    shell.prefs.theme_draft = Some(shell_theme_document_base().clone());
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs)).expect("dirty theme document");
     let reset = records.iter().find(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")).expect("reset control");
     assert!(!reset.disabled);
 }
@@ -421,10 +421,10 @@ fn the_general_leaf_offers_reacts_merge_policy_selector() {
             _ => {}
         }
     }
-    walk(&shell.build_settings_general_ui(), &mut selects);
+    walk(&shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs), &mut selects);
     let (_, options) = selects.iter().find(|(id, _)| id == "framework.settings.mergePolicy").expect("⚖️ React's merge-policy row has a wgpu twin");
     assert_eq!(options, &vec!["LaissezFaire".to_string(), "Normal".to_string(), "Vigilant".to_string()], "⚖️ React's `MERGE_POLICY_OPTIONS`, verbatim");
-    assert_eq!(shell.merge_policy, SHELL_DEFAULT_MERGE_POLICY, "⚖️ a fresh authority is `Normal`, `protocol::MergePolicy::default()`");
+    assert_eq!(shell.prefs.merge_policy, SHELL_DEFAULT_MERGE_POLICY, "⚖️ a fresh authority is `Normal`, `protocol::MergePolicy::default()`");
 }
 
 /// ⚖️ LAW (§B3): the theme leaf carries React's export/import pair and its save box, and an exported
@@ -436,7 +436,7 @@ fn the_theme_leaf_offers_reacts_export_import_and_save_controls() {
     for id in ["framework.settings.theme.select", "framework.settings.theme.saveLabel", "framework.settings.theme.save", "framework.settings.theme.reset", "framework.settings.theme.export", "framework.settings.theme.import"] {
         assert!(ids.contains(&id.to_string()), "🎨️ {id} is one of React's theme-leaf controls");
     }
-    let document = shell.theme_document();
+    let document = shell.prefs.theme_document(&shell.chrome);
     let text = document.canonical_json().expect("💾️ the canonical 2-space JSON React's `serializeUiTheme` writes");
     assert_eq!(ThemeDocument::parse(&text), Some(document), "💾️ export/import is lossless, so a theme crosses between renderers");
     assert_eq!(custom_theme_id_for_label("My Nice Theme"), Some("custom.my-nice-theme".to_string()), "💾️ React's `saveTheme` slug");
@@ -454,22 +454,22 @@ fn an_editor_commit_keeps_the_rows_authored_coordinates() {
     assert_eq!(json["value"], "#00ff00", "🔀️ …beside the committed value");
 
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_theme_editor_commit("setThemeColor", &serde_json::json!({ "key": "primary", "value": "#00ff00" }));
-    assert_eq!(shell.theme_document().colors["primary"], "#00ff00", "🎨️ React's `setThemeColor`");
-    shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({ "key": "compact", "value": "5px" }));
-    assert_eq!(shell.theme_document().spacing["compact"], "5px", "🎨️ React's `setThemeSpacing`");
-    shell.apply_theme_editor_commit("setThemeFontStack", &serde_json::json!({ "key": "sans", "value": "Fixture Sans" }));
-    assert_eq!(shell.theme_document().font_stacks["sans"], "Fixture Sans", "🎨️ React's `setThemeFontStack`");
-    shell.apply_theme_editor_commit("setThemeStroke", &serde_json::json!({ "key": "edgeBase", "value": "7" }));
-    assert_eq!(shell.theme_document().strokes["edgeBase"], ThemeNumber::Scalar(7.0), "🎨️ React's `setThemeStroke`");
-    shell.apply_theme_editor_commit("setThemeRadius", &serde_json::json!({ "key": "nodeDefault", "value": "11" }));
-    assert_eq!(shell.theme_document().radii["nodeDefault"], ThemeNumber::Scalar(11.0), "🎨️ React's `setThemeRadius`");
-    shell.apply_theme_editor_commit("setThemeOpacity", &serde_json::json!({ "key": "gridMinorAlpha", "value": "0.25" }));
-    assert_eq!(shell.theme_document().opacities["gridMinorAlpha"], ThemeNumber::Scalar(0.25), "🎨️ React's `setThemeOpacity`");
-    shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": "camera", "key": "zoomMin", "value": "0.2" }));
-    assert_eq!(shell.theme_document().metrics["camera"]["zoomMin"], ThemeNumber::Scalar(0.2), "🎨️ React's `setThemeMetric`");
-    shell.apply_theme_editor_commit("setThemeAppearancePaint", &serde_json::json!({ "appearance": "light", "group": "chrome", "paint": "base", "channel": "hex", "value": "#101112" }));
-    let reference = shell.theme_document().appearances["light"]["chrome"]["base"].clone();
+    shell.prefs.apply_theme_editor_commit("setThemeColor", &serde_json::json!({ "key": "primary", "value": "#00ff00" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).colors["primary"], "#00ff00", "🎨️ React's `setThemeColor`");
+    shell.prefs.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({ "key": "compact", "value": "5px" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).spacing["compact"], "5px", "🎨️ React's `setThemeSpacing`");
+    shell.prefs.apply_theme_editor_commit("setThemeFontStack", &serde_json::json!({ "key": "sans", "value": "Fixture Sans" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).font_stacks["sans"], "Fixture Sans", "🎨️ React's `setThemeFontStack`");
+    shell.prefs.apply_theme_editor_commit("setThemeStroke", &serde_json::json!({ "key": "edgeBase", "value": "7" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).strokes["edgeBase"], ThemeNumber::Scalar(7.0), "🎨️ React's `setThemeStroke`");
+    shell.prefs.apply_theme_editor_commit("setThemeRadius", &serde_json::json!({ "key": "nodeDefault", "value": "11" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).radii["nodeDefault"], ThemeNumber::Scalar(11.0), "🎨️ React's `setThemeRadius`");
+    shell.prefs.apply_theme_editor_commit("setThemeOpacity", &serde_json::json!({ "key": "gridMinorAlpha", "value": "0.25" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).opacities["gridMinorAlpha"], ThemeNumber::Scalar(0.25), "🎨️ React's `setThemeOpacity`");
+    shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({ "section": "camera", "key": "zoomMin", "value": "0.2" }), &shell.chrome);
+    assert_eq!(shell.prefs.theme_document(&shell.chrome).metrics["camera"]["zoomMin"], ThemeNumber::Scalar(0.2), "🎨️ React's `setThemeMetric`");
+    shell.prefs.apply_theme_editor_commit("setThemeAppearancePaint", &serde_json::json!({ "appearance": "light", "group": "chrome", "paint": "base", "channel": "hex", "value": "#101112" }), &shell.chrome);
+    let reference = shell.prefs.theme_document(&shell.chrome).appearances["light"]["chrome"]["base"].clone();
     assert_eq!(reference.hex.as_deref(), Some("#101112"), "🖌️ React's `setThemeAppearancePaint` replaces the ref outright");
     assert!(reference.alpha.is_some(), "🖌️ …carrying the row's current alpha, as React's colour input does");
 }
@@ -489,7 +489,7 @@ fn chrome_controls_publish_accessible_names_and_shortcuts() {
         HitTarget { rect: Rect::new(1.0, 2.0, 3.0, 4.0), event: None, control_id: Some("playground.navbar.roles.editor".to_string()), kind: HitKind::NavbarItem, drag_axis: None, drag_data: None },
         HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some("framework.panelTab.settings.general".to_string()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None },
     ];
-    let published = shell.chrome_accessibility_nodes(&hits);
+    let published = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
     let nodes: Vec<_> = hits.iter().map(|hit| published.iter().find(|node| Some(node.key.as_str()) == hit.control_id.as_deref()).expect("registered chrome target is announced")).collect();
     assert_eq!(nodes[0].label.as_deref(), Some("Editor"), "♿️ the announced name is the text the chip painted");
     assert_eq!(nodes[0].role, "button", "♿️ a navbar item announces as a button, as React's element does");
@@ -556,7 +556,7 @@ fn fullscreen_and_utility_painters_publish_reacts_pressed_buttons_on_their_actua
         }
     }
 
-    let nodes = shell.chrome_accessibility_nodes(input.staged_hits());
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.staged_hits());
     for row in [fullscreen, &semantics["utility"]["button"], &semantics["utility"]["toggle"], &semantics["utility"]["collection"]] {
         let id = row["id"].as_str().expect("control id");
         let node = nodes.iter().find(|node| node.key == id).unwrap_or_else(|| panic!("missing {id}"));
@@ -613,34 +613,34 @@ fn accessibility_activation_updates_settings_pressed_button_projection() {
     let fixture = accessibility_fixture();
     let selection = &fixture["nestedPanelSelection"];
     let mut shell = shell_with_nested_app_settings();
-    shell.anchor_state_mut(PanelAnchor::BottomRight).path.clear();
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).path.clear();
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_PANEL_ID.into()), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
-    shell.publish_retained_hit_registry(&mut input);
-    let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    let initial = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
     assert_eq!(initial.pressed, Some(false));
     assert_eq!(initial.role, "button");
     assert!(initial.checked.is_none());
-    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the Settings branch button reflects its now-visible anchor");
-    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, fixture["settingsTabStrip"]["pressedFollowsSelectionWhenFolded"].as_bool(), "folding removes the active fill while retaining React's pressed selection");
+    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
+    assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the Settings branch button reflects its now-visible anchor");
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
+    assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].pressed, fixture["settingsTabStrip"]["pressedFollowsSelectionWhenFolded"].as_bool(), "folding removes the active fill while retaining React's pressed selection");
 
-    assert_eq!(shell.reveal_dock_tab(FRAMEWORK_SETTINGS_THEME_TAB_ID), Some(PanelAnchor::BottomRight));
+    assert_eq!(shell.dock.reveal_dock_tab(FRAMEWORK_SETTINGS_THEME_TAB_ID), Some(PanelAnchor::BottomRight));
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
-    shell.publish_retained_hit_registry(&mut input);
-    let general = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    let general = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
     assert_eq!(general.pressed, Some(false));
     assert!(general.selected.is_none());
-    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the activated General leaf publishes aria-pressed=true");
+    let target = ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
+    assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the activated General leaf publishes aria-pressed=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
-    assert_eq!(shell.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected);
-    assert_ne!(shell.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["appFirstLeafId"].as_str());
-    let records = panel_ui_records(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, &shell.build_settings_general_ui()).expect("General retained projection");
+    assert_eq!(shell.dock.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected);
+    assert_ne!(shell.dock.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["appFirstLeafId"].as_str());
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, &shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs)).expect("General retained projection");
     let required = selection["requiredControlId"].as_str().expect("required control id");
     assert!(records.iter().any(|record| record.key.as_str().ends_with(required)), "the selected General document publishes Appearance");
     drop(records);
@@ -661,10 +661,10 @@ fn pointer_activation_resolves_every_nested_leaf_from_root_to_target_independent
         let mut input = InputState::default();
         input.register_hit(HitTarget { rect: Rect::new(x, y, width, height), event: None, control_id: Some(selection["targetLeafId"].as_str().expect("target leaf").into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
         input.publish_hits();
-        semio_framework_async::block_on(shell.handle_pointer_button(x + width * 0.5, y + height * 0.5, true, 0, &mut input, &Theme::default())).expect("nested panel pointer activation");
-        assert_eq!(shell.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected, "{} panel rectangle", rect["id"].as_str().expect("rectangle id"));
-        assert_eq!(shell.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["targetLeafId"].as_str());
-        assert_ne!(shell.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["appFirstLeafId"].as_str());
+        semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x + width * 0.5, y + height * 0.5, true, 0, &mut input, &Theme::default())).expect("nested panel pointer activation");
+        assert_eq!(shell.dock.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected, "{} panel rectangle", rect["id"].as_str().expect("rectangle id"));
+        assert_eq!(shell.dock.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["targetLeafId"].as_str());
+        assert_ne!(shell.dock.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["appFirstLeafId"].as_str());
     }
 }
 
@@ -673,27 +673,27 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(1.0, 2.0, 3.0, 4.0), event: None, control_id: Some("ui.search.toggle".to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    shell.publish_retained_hit_registry(&mut input);
-    let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key.clone() };
 
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("focus dispatch"));
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].focused, true);
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("activation dispatch"));
-    assert!(shell.search_open, "the real chrome handler toggles search once");
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("focus dispatch"));
+    assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits())[0].focused, true);
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("activation dispatch"));
+    assert!(shell.commands.search_open, "the real chrome handler toggles search once");
 
     let stale = ui_render::AccessibilityTarget { window_generation: target.window_generation + 1, ..target.clone() };
-    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&stale, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("stale dispatch"));
-    assert!(shell.search_open, "a stale generation cannot toggle the live control");
+    assert!(!semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&stale, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("stale dispatch"));
+    assert!(shell.commands.search_open, "a stale generation cannot toggle the live control");
     let reused = ui_render::AccessibilityTarget { node_key: "ui.find.toggle".to_string(), ..target };
-    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&reused, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("reused identity dispatch"));
-    assert!(shell.search_open, "a mismatched node id and key cannot activate another control");
+    assert!(!semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&reused, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("reused identity dispatch"));
+    assert!(shell.commands.search_open, "a mismatched node id and key cannot activate another control");
 }
 
 fn settings_toggle_shell() -> ShellState {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
+    shell.dock.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
     shell
 }
 
@@ -705,8 +705,8 @@ fn generation_rule_hit(rect_key: &str) -> HitTarget<ActionDescriptor> {
 
 fn settings_toggle_address(shell: &ShellState, input: &InputState<ActionDescriptor>) -> ui_render::AccessibilityTarget {
     let control = accessibility_fixture()["presentedChrome"]["generationRule"]["controlId"].as_str().expect("generation rule control").to_string();
-    let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
-    ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
+    let node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == control).expect("Settings mirror node");
+    ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: node.node_id, node_key: node.key }
 }
 
 #[test]
@@ -714,16 +714,16 @@ fn a_mirror_address_stays_live_across_frames_that_present_the_same_chrome() {
     let mut shell = settings_toggle_shell();
     let mut input = InputState::default();
     input.register_hit(generation_rule_hit("firstRect"));
-    shell.publish_retained_hit_registry(&mut input);
-    let (initial_epoch, delayed) = (shell.presented_input_epoch, settings_toggle_address(&shell, &input));
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    let (initial_epoch, delayed) = (shell.input.presented_input_epoch, settings_toggle_address(&shell, &input));
 
     while input.retire_hit_step() {}
     input.register_hit(generation_rule_hit("sameChromeRect"));
-    shell.publish_retained_hit_registry(&mut input);
-    assert!(shell.presented_input_epoch > initial_epoch, "every presented frame owns its own input epoch");
-    assert_eq!(shell.presented_chrome_accessibility_generation, delayed.window_generation, "an unchanged chrome keeps the generation the mirror addresses");
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("idle-frame Settings activation"));
-    assert!(shell.anchor_open(PanelAnchor::BottomRight), "a mirror one idle frame behind still activates the live control exactly once");
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    assert!(shell.input.presented_input_epoch > initial_epoch, "every presented frame owns its own input epoch");
+    assert_eq!(shell.chrome.presented_chrome_accessibility_generation, delayed.window_generation, "an unchanged chrome keeps the generation the mirror addresses");
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("idle-frame Settings activation"));
+    assert!(shell.dock.anchor_open(PanelAnchor::BottomRight), "a mirror one idle frame behind still activates the live control exactly once");
 }
 
 #[test]
@@ -731,16 +731,16 @@ fn a_chrome_focus_update_keeps_the_following_activation_address_live() {
     let mut shell = settings_toggle_shell();
     let mut input = InputState::default();
     input.register_hit(generation_rule_hit("firstRect"));
-    shell.publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     let target = settings_toggle_address(&shell, &input);
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     while input.retire_hit_step() {}
     input.register_hit(generation_rule_hit("sameChromeRect"));
-    shell.publish_retained_hit_registry(&mut input);
-    assert_eq!(shell.presented_chrome_accessibility_generation == target.window_generation, accessibility_fixture()["presentedChrome"]["generationRule"]["focusOnlyKeepsGeneration"].as_bool().unwrap());
-    assert!(shell.presented_chrome_accessibility.iter().find(|node| node.key == target.node_key).unwrap().focused);
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).unwrap());
-    assert!(shell.anchor_open(PanelAnchor::BottomRight));
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    assert_eq!(shell.chrome.presented_chrome_accessibility_generation == target.window_generation, accessibility_fixture()["presentedChrome"]["generationRule"]["focusOnlyKeepsGeneration"].as_bool().unwrap());
+    assert!(shell.chrome.presented_chrome_accessibility.iter().find(|node| node.key == target.node_key).unwrap().focused);
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).unwrap());
+    assert!(shell.dock.anchor_open(PanelAnchor::BottomRight));
 }
 
 #[test]
@@ -748,19 +748,19 @@ fn a_delayed_chrome_mirror_address_cannot_activate_after_the_chrome_changes() {
     let mut shell = settings_toggle_shell();
     let mut input = InputState::default();
     input.register_hit(generation_rule_hit("firstRect"));
-    shell.publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     let delayed = settings_toggle_address(&shell, &input);
 
     while input.retire_hit_step() {}
     input.register_hit(generation_rule_hit("changedChromeRect"));
-    shell.publish_retained_hit_registry(&mut input);
-    assert!(shell.presented_chrome_accessibility_generation > delayed.window_generation, "a changed chrome projection owns a new generation");
-    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("delayed Settings activation"));
-    assert!(!shell.anchor_open(PanelAnchor::BottomRight), "a delayed address cannot mutate the changed chrome");
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    assert!(shell.chrome.presented_chrome_accessibility_generation > delayed.window_generation, "a changed chrome projection owns a new generation");
+    assert!(!semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("delayed Settings activation"));
+    assert!(!shell.dock.anchor_open(PanelAnchor::BottomRight), "a delayed address cannot mutate the changed chrome");
 
     let current = settings_toggle_address(&shell, &input);
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&current, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("current Settings activation"));
-    assert!(shell.anchor_open(PanelAnchor::BottomRight), "the current mirror address activates exactly once");
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&current, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("current Settings activation"));
+    assert!(shell.dock.anchor_open(PanelAnchor::BottomRight), "the current mirror address activates exactly once");
 }
 
 #[test]
@@ -770,22 +770,22 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     let tabs = contract["tabs"].as_array().expect("Settings tabs").iter().enumerate().map(|(order, tab)| DockTabNode::leaf(tab["id"].as_str().unwrap(), tab["label"].as_str().unwrap(), "settings", order as i32)).collect::<Vec<_>>();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, tabs));
-    shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), contract["activeId"].as_str().unwrap().into()];
-    shell.anchor_state_mut(anchor).visible = true;
+    shell.dock.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, tabs));
+    shell.dock.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), contract["activeId"].as_str().unwrap().into()];
+    shell.dock.anchor_state_mut(anchor).visible = true;
     let theme = Theme::default();
     let panel = Rect::new(0.0, 0.0, contract["availableWidth"].as_f64().unwrap() as f32, 240.0);
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
-    shell.paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
-    shell.publish_retained_hit_registry(&mut input);
+    ChromeViewCtx::of(&mut shell).paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
 
     let expected = contract["tabs"].as_array().unwrap().iter().map(|tab| tab["id"].as_str().unwrap()).collect::<Vec<_>>();
     let pointer_ids = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelTab).filter_map(|hit| hit.control_id.as_deref()).collect::<Vec<_>>();
     assert!(pointer_ids.len() < expected.len(), "the constrained pointer row exposes only nonempty clipped chips");
-    let semantic = shell.chrome_accessibility_nodes(input.hits());
+    let semantic = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits());
     for id in &expected {
         let node = semantic.iter().find(|node| node.key == *id).expect("every declared Settings control survives pointer clipping");
         assert_eq!(node.role, contract["role"].as_str().unwrap());
@@ -798,14 +798,14 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     let tail_id = contract["tailIds"][1].as_str().unwrap();
     let tail = semantic.iter().find(|node| node.key == tail_id).expect("semantic tail tab");
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
-    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("tail tab activation"));
-    assert_eq!(shell.anchor_state(anchor).active_tab(), Some(tail_id));
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: tail.node_id, node_key: tail.key.clone() };
+    assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("tail tab activation"));
+    assert_eq!(shell.dock.anchor_state(anchor).active_tab(), Some(tail_id));
 
     while input.retire_hit_step() {}
     let mut draw = DrawList::default();
-    shell.paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
-    shell.publish_retained_hit_registry(&mut input);
+    ChromeViewCtx::of(&mut shell).paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     assert!(input.hits().iter().any(|hit| hit.kind == HitKind::PanelTab && hit.control_id.as_deref() == Some(tail_id)), "the next accepted pointer row reveals the accessibility-selected tail");
 }
 
@@ -814,18 +814,18 @@ fn mobile_panel_buttons_publish_their_painted_names_and_pressed_state_once() {
     let fixture = accessibility_fixture();
     let contract = &fixture["settingsTabStrip"];
     let mut shell = settings_toggle_shell();
-    shell.screen_w = 390.0;
-    shell.mobile_panel_visible = true;
-    shell.mobile_panel_path = vec![contract["activeId"].as_str().unwrap().into()];
-    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = true;
-    shell.anchor_state_mut(PanelAnchor::BottomRight).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()];
+    shell.chrome.screen_w = 390.0;
+    shell.dock.mobile_panel_visible = true;
+    shell.dock.mobile_panel_path = vec![contract["activeId"].as_str().unwrap().into()];
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).visible = true;
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()];
     let tabs = contract["tabs"].as_array().unwrap().iter().take(2).enumerate().map(|(order, row)| DockTabNode::leaf(row["id"].as_str().unwrap(), row["label"].as_str().unwrap(), "settings", order as i32)).collect::<Vec<_>>();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::default();
-    shell.paint_mobile_tab_bar(&mut draw, &mut atlas, &IconAtlas::default(), &mut input, &Theme::default(), Rect::new(0.0, 0.0, 390.0, 40.0), &tabs);
-    shell.publish_retained_hit_registry(&mut input);
-    let nodes = shell.chrome_accessibility_nodes(input.hits());
+    ChromeViewCtx::of(&mut shell).paint_mobile_tab_bar(&mut draw, &mut atlas, &IconAtlas::default(), &mut input, &Theme::default(), Rect::new(0.0, 0.0, 390.0, 40.0), &tabs);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits());
     for tab in tabs {
         let key = format!("shell.panel.tab.mobile.{}", tab.id);
         let matching = nodes.iter().filter(|node| node.key == key).collect::<Vec<_>>();
@@ -844,10 +844,10 @@ fn mobile_panel_buttons_publish_their_painted_names_and_pressed_state_once() {
 #[test]
 fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let badged = shell.chrome_control_label("playground.navbar.roles.editor", "Editor");
+    let badged = shell.chrome.chrome_control_label("playground.navbar.roles.editor", "Editor");
     assert!(badged.starts_with("Editor "), "⌨️ the badge follows the label, as React's `ms-auto` span does");
-    assert_eq!(shell.chrome_control_label("playground.navbar.roles.editor", &badged), badged, "⌨️ idempotent: a builder that already badged its own label is left alone");
-    assert_eq!(shell.chrome_control_label("playground.navbar.fixture", "Concrete Forest"), "Concrete Forest", "⌨️ an unbound control carries no badge, as `useControlHotkey` answers `undefined`");
+    assert_eq!(shell.chrome.chrome_control_label("playground.navbar.roles.editor", &badged), badged, "⌨️ idempotent: a builder that already badged its own label is left alone");
+    assert_eq!(shell.chrome.chrome_control_label("playground.navbar.fixture", "Concrete Forest"), "Concrete Forest", "⌨️ an unbound control carries no badge, as `useControlHotkey` answers `undefined`");
 }
 
 /// ⚖️ LAW (§E2/§E3): full-screen belongs to the platform-scoped OS command registry, while the
@@ -855,7 +855,7 @@ fn a_bound_chrome_control_carries_its_chord_inline_exactly_once() {
 #[test]
 fn the_flagged_keybinding_rows_match_reacts_registry() {
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let fullscreen = shell.build_os_commands().into_iter().find(|command| command.id == "os.toggleFullscreen").expect("fullscreen OS command");
+    let fullscreen = shell.docs.build_os_commands(&shell.chrome).into_iter().find(|command| command.id == "os.toggleFullscreen").expect("fullscreen OS command");
     assert!(fullscreen.keybindings.iter().any(|binding| binding.chord == "control+meta+f" && binding.platform == Some(semio_framework::manifest::Platform::MacOs)));
     assert_eq!(fullscreen.keybindings.iter().filter(|binding| binding.chord == "f11").count(), 2);
     assert!(!SHELL_SHORTCUT_ROWS.iter().any(|(id, _)| *id == "os.toggleFullscreen"), "the control-badge fallback is not an executable shell shortcut");
@@ -886,17 +886,17 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             let maximized = layout == "maximized";
             let stacked = layout == "stacked";
             let stacked_active = fixture["stackedActiveId"].as_str().unwrap();
-            shell.locale_id = locale["id"].as_str().unwrap().into();
-            shell.screen_w = 1280.0;
-            shell.screen_h = 720.0;
+            shell.prefs.locale_id = locale["id"].as_str().unwrap().into();
+            shell.chrome.screen_w = 1280.0;
+            shell.chrome.screen_h = 720.0;
             if stacked {
-                shell.dock.root = crate::dock::DockNode::Stack {
-                    windows: shell.dock.window_instances().into_iter().map(|(id, kind)| crate::dock::DockStackTab::instance(id, kind, ui_wgpu::wgpu::WindowStackCorner::TopLeft)).collect(),
+                shell.dock.dock.root = crate::dock::DockNode::Stack {
+                    windows: shell.dock.dock.window_instances().into_iter().map(|(id, kind)| crate::dock::DockStackTab::instance(id, kind, ui_wgpu::wgpu::WindowStackCorner::TopLeft)).collect(),
                     active: stacked_active.into(),
                 };
             }
             if maximized {
-                shell.dock.toggle_maximize(&vec![0]);
+                shell.dock.dock.toggle_maximize(&vec![0]);
             }
             with_chrome_control_names(|names| names.clear());
             let mut input = InputState::<ActionDescriptor>::default();
@@ -908,18 +908,18 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             let mut overlay = None;
             let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
             let mut cursor = ShellChromeChildCursor { phase: 1, rect: Some(bounds), ..Default::default() };
-            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
-            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
-            for index in 0..shell.dock_window_plan.len() {
+            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            for index in 0..shell.dock.dock_window_plan.len() {
                 cursor.item = index;
                 cursor.phase = 3;
-                caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+                caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             }
             cursor.phase = 5;
-            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
-            assert!(shell.presented_chrome_accessibility.is_empty());
-            shell.publish_retained_input_for_test(&mut input, &theme);
-            let published = shell.presented_chrome_accessibility.clone();
+            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            assert!(shell.chrome.presented_chrome_accessibility.is_empty());
+            PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+            let published = shell.chrome.presented_chrome_accessibility.clone();
             for window in fixture["windows"].as_array().unwrap().iter().take(if maximized { 1 } else { 2 }) {
                 let id = window["id"].as_str().unwrap();
                 let title = window["title"].as_str().unwrap();
@@ -941,12 +941,12 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
                     let key = format!("{}.{}", select.key, action);
                     let expected = locale[if action == "focus" && maximized { "unfocus" } else { action }].as_str().unwrap().replace("{{target}}", title);
                     let control = published.iter().find(|node| node.key == key).expect("published dock action");
-                    assert_eq!(control.label.as_deref(), Some(expected.as_str()), "{}:{key}", shell.locale_id);
+                    assert_eq!(control.label.as_deref(), Some(expected.as_str()), "{}:{key}", shell.prefs.locale_id);
                 }
             }
-            shell.locale_id = "candidate-only".into();
+            shell.prefs.locale_id = "candidate-only".into();
             with_chrome_control_names(|names| names.clear());
-            assert_eq!(shell.presented_chrome_accessibility, published, "unaccepted candidate cannot relabel the displayed frame");
+            assert_eq!(shell.chrome.presented_chrome_accessibility, published, "unaccepted candidate cannot relabel the displayed frame");
             caller.retire_world(&mut world);
         }
     }
@@ -962,20 +962,20 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     with_chrome_control_names(|names| names.clear());
     note_chrome_control_name("accepted", Some("Accepted label"));
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 20.0, 20.0), event: None, control_id: Some("accepted".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    let accepted = shell.presented_chrome_accessibility.clone();
-    let accepted_generation = shell.presented_chrome_accessibility_generation;
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    let accepted = shell.chrome.presented_chrome_accessibility.clone();
+    let accepted_generation = shell.chrome.presented_chrome_accessibility_generation;
     for index in 0..SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY {
         note_chrome_control_name(&format!("discarded.{index}"), Some("Discarded label"));
     }
     while input.retire_hit_step() {}
     input.register_hit(HitTarget { rect: Rect::new(30.0, 0.0, 20.0, 20.0), event: None, control_id: Some("discarded.0".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    let discarded = shell.seal_presented_input_candidate(&theme).expect("sealed chrome candidate");
-    assert_eq!(shell.presented_chrome_accessibility, accepted);
-    assert!(shell.discard_presented_input_candidate(discarded));
-    assert!(!shell.acknowledge_presented_input(&mut input, discarded), "late acknowledgement cannot publish discarded chrome");
-    assert_eq!(shell.presented_chrome_accessibility, accepted);
-    assert_eq!(shell.presented_chrome_accessibility_generation, accepted_generation);
+    let discarded = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("sealed chrome candidate");
+    assert_eq!(shell.chrome.presented_chrome_accessibility, accepted);
+    assert!(shell.input.discard_presented_input_candidate(discarded));
+    assert!(!PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, discarded), "late acknowledgement cannot publish discarded chrome");
+    assert_eq!(shell.chrome.presented_chrome_accessibility, accepted);
+    assert_eq!(shell.chrome.presented_chrome_accessibility_generation, accepted_generation);
     assert_eq!(input.hit_at(10.0, 10.0).and_then(|hit| hit.control_id.as_deref()), Some("accepted"));
     assert!(input.hit_at(40.0, 10.0).is_none());
     let mut cursor = ShellChromeFrameCursor::default();
@@ -985,21 +985,21 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
     let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    caller.turn(|cx|shell.render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
+    caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
     assert!(with_chrome_control_names(|names| names.is_empty()));
-    assert_eq!(shell.presented_chrome_accessibility, accepted);
+    assert_eq!(shell.chrome.presented_chrome_accessibility, accepted);
     note_chrome_control_name("successor", Some("Successor label"));
     while input.retire_hit_step() {}
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 20.0, 20.0), event: None, control_id: Some("successor".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    shell.publish_retained_input_for_test(&mut input, &theme);
-    let current = &shell.presented_chrome_accessibility;
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
+    let current = &shell.chrome.presented_chrome_accessibility;
     assert!(current.iter().any(|node| node.key == "successor" && node.label.as_deref() == Some("Successor label")));
     assert!(!current.iter().any(|node| node.key.starts_with("discarded.") || node.key == "accepted"));
     let successor = current.clone();
-    let successor_generation = shell.presented_chrome_accessibility_generation;
-    assert!(!shell.acknowledge_presented_input(&mut input, discarded));
-    assert_eq!(shell.presented_chrome_accessibility, successor);
-    assert_eq!(shell.presented_chrome_accessibility_generation, successor_generation);
+    let successor_generation = shell.chrome.presented_chrome_accessibility_generation;
+    assert!(!PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, discarded));
+    assert_eq!(shell.chrome.presented_chrome_accessibility, successor);
+    assert_eq!(shell.chrome.presented_chrome_accessibility_generation, successor_generation);
     caller.retire_world(&mut world);
     caller.finish();
 }
@@ -1036,7 +1036,7 @@ fn passive_chrome_regions_are_not_announced_as_buttons() {
             }
         })
         .collect::<Vec<_>>();
-    let nodes = shell.chrome_accessibility_nodes(&hits);
+    let nodes = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(&hits);
     for row in cases {
         assert_eq!(nodes.iter().any(|node| Some(node.key.as_str()) == row["id"].as_str()), row["announced"].as_bool().unwrap());
     }
@@ -1098,27 +1098,27 @@ fn theme_geometry_editor_commits_only_resolved_compact_lengths_and_reference_met
     let fixture = theme_geometry_fixture();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for case in fixture["cases"].as_array().expect("valid geometry cases") {
-        shell.clear_theme_draft();
-        shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":"dom", "key":"rootRemPx", "value":case["rootRemPx"].to_string()}));
-        shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":case["compact"]}));
-        assert_eq!(shell.theme_document().spacing["compact"], case["compact"].as_str().expect("compact length"));
+        shell.prefs.clear_theme_draft();
+        shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":"dom", "key":"rootRemPx", "value":case["rootRemPx"].to_string()}), &shell.chrome);
+        shell.prefs.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":case["compact"]}), &shell.chrome);
+        assert_eq!(shell.prefs.theme_document(&shell.chrome).spacing["compact"], case["compact"].as_str().expect("compact length"));
     }
     for compact in fixture["invalid"].as_array().expect("invalid lengths") {
-        shell.clear_theme_draft();
-        let before = shell.theme_document();
-        shell.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":compact}));
-        assert_eq!(shell.theme_document(), before, "invalid compact committed: {compact}");
-        assert!(shell.theme_draft.is_none());
+        shell.prefs.clear_theme_draft();
+        let before = shell.prefs.theme_document(&shell.chrome);
+        shell.prefs.apply_theme_editor_commit("setThemeSpacing", &serde_json::json!({"key":"compact", "value":compact}), &shell.chrome);
+        assert_eq!(shell.prefs.theme_document(&shell.chrome), before, "invalid compact committed: {compact}");
+        assert!(shell.prefs.theme_draft.is_none());
     }
     for row in fixture["invalidMetrics"].as_array().expect("invalid geometry metric rows") {
-        shell.clear_theme_draft();
-        let before = shell.theme_document();
+        shell.prefs.clear_theme_draft();
+        let before = shell.prefs.theme_document(&shell.chrome);
         let text = row["value"].to_string();
-        shell.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":row["section"], "key":row["key"], "value":text}));
-        assert_eq!(shell.theme_document(), before, "invalid metric committed: {row}");
-        assert!(shell.theme_draft.is_none());
+        shell.prefs.apply_theme_editor_commit("setThemeMetric", &serde_json::json!({"section":row["section"], "key":row["key"], "value":text}), &shell.chrome);
+        assert_eq!(shell.prefs.theme_document(&shell.chrome), before, "invalid metric committed: {row}");
+        assert!(shell.prefs.theme_draft.is_none());
     }
-    shell.clear_theme_draft();
+    shell.prefs.clear_theme_draft();
     println!("[DEBUG] theme editor accepted {} resolved CSS lengths and atomically refused {} unresolved lengths plus {} invalid geometry metrics", fixture["cases"].as_array().unwrap().len(), fixture["invalid"].as_array().unwrap().len(), fixture["invalidMetrics"].as_array().unwrap().len());
 }
 
@@ -1142,7 +1142,7 @@ fn theme_geometry_compact_authoring_has_localized_label_and_description() {
     let ui = &schema["properties"]["compact"]["x-semio-ui"];
     let shell = shell_with_open_theme_section("framework.settings.theme.spacing");
     for (locale, is_de) in [("en", false), ("de", true)] {
-        let tree = shell.build_settings_theme_editor_tree(shell_theme_document_base(), is_de);
+        let tree = shell.input.build_settings_theme_editor_tree(shell_theme_document_base(), is_de, &shell.chrome, &shell.prefs);
         let row = find_row(&tree).expect("visible compact spacing row");
         let label = ui["label"][locale].as_str().expect("localized compact label");
         let description = ui["description"][locale].as_str().expect("localized compact description");
@@ -1159,10 +1159,10 @@ fn theme_geometry_metric_authoring_exposes_shared_localized_guidance() {
     let contract: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🧬️contract/🔣️.json")).expect("geometry contract");
     let bindings: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/📐️geometry/🔣️.json")).expect("geometry bindings");
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.set_canonical_tree_open("framework.settings.theme.metrics", true);
-    for section in ["chrome", "dom", "typography"] { shell.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true); }
+    shell.input.set_canonical_tree_open("framework.settings.theme.metrics", true);
+    for section in ["chrome", "dom", "typography"] { shell.input.set_canonical_tree_open(&format!("framework.settings.theme.metrics.{section}"), true); }
     for (locale, is_de) in [("en", false), ("de", true)] {
-        let section = shell.theme_metrics_section(shell_theme_document_base(), is_de, &mut 0, &(0..usize::MAX));
+        let section = shell.input.theme_metrics_section(shell_theme_document_base(), is_de, &mut 0, &(0..usize::MAX));
         let rows: BTreeMap<_, _> = section.items.iter().flat_map(|group| group.items.iter().flatten()).map(|row| (row.id.as_str(), row)).collect();
         let mut expected: Vec<(&str, &str, &str)> = bindings["bindings"].as_array().unwrap().iter().map(|binding| (binding["section"].as_str().unwrap(), binding["key"].as_str().unwrap(), "nonnegativeScalar")).collect();
         expected.push(("dom", "rootRemPx", "positiveRoot"));

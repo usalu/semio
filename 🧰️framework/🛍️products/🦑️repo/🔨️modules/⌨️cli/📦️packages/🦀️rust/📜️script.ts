@@ -3,7 +3,7 @@ import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸�
 import {runRepositoryPublishedCargoExecutableV1} from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** ⚙️ Builds/tests the `semio-framework-repo-cli` crate and execs its `semio-repo` binary (nx bridge for `repo/cli/rs`). */
+/** ⚙️ Builds/tests the `semio-framework-repo-cli` crate and execs its `semio-repo` binary (owned build route for `repo/cli/rs`). */
 import { join } from "node:path";
 import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -11,7 +11,7 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-const crate = "semio-framework-repo-cli";
+const crates = ["semio-framework-repo-cli-event-stream", "semio-framework-repo-cli-command-framework", "semio-framework-repo-cli-mcp-verb", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs", "semio-framework-repo-cli"];
 
 class BuildScript extends BundleScript {
   async run(segments:string[]):Promise<void>{await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,segments);}
@@ -24,7 +24,7 @@ class BuildCliScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest);
   }
 }
 

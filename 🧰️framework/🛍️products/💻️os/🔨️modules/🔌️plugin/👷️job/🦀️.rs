@@ -65,7 +65,7 @@ use store::{ArtifactStore, Mutation, MutationDiff};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
+use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.

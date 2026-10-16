@@ -253,18 +253,16 @@ test("Rust icon bindings retain the source path and the public identity separate
   const functionSource = (name: string): string => sources.flatMap((syntax) => syntax.statements.filter(ts.isFunctionDeclaration).filter((node) => node.name?.text === name).map((node) => node.getText(syntax).replace(/^export /u, "")))[0]!;
   for (const row of fixture.assetIconPaths.filter((row: any) => row.expected !== null)) {
     const icons = Object.fromEntries(row.expected.map(({ id }: { id: string }) => [id, `<svg id="${id}" />`]));
-    for (const [renderer, mirror] of [["renderRust", "🖼️icon_svgs"], ["renderRustMetabolism", "🌱️metabolism_svgs"]]) {
-      const definitions = ["iconIdToRustVariant", renderer].map(functionSource).join("\n");
-      const expected = row.expected.map(({ id, path }: { id: string; path: string }) => ({ path: join("output", mirror, path), content: icons[id] })).sort((left: any, right: any) => left.path.localeCompare(right.path));
+    for (const [renderer, mirror] of [["renderRust", "🖼️icon_svgs"], ["renderRustMetabolism", null]] as const) {
+      const definitions = ["iconIdToRustVariant", "escapeRustString", renderer].map(functionSource).join("\n");
+      const expected = mirror === null ? [] : row.expected.map(({ id, path }: { id: string; path: string }) => ({ path: join("output", mirror, path), content: icons[id] })).sort((left: any, right: any) => left.path.localeCompare(right.path));
       for (const compile of [(code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code), (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
         const render = new Function("join", `${compile(definitions)}\nreturn ${renderer};`)(join);
         const artifacts = render(icons, "output", row.expected);
         expect(artifacts.filter((artifact: any) => artifact.path.endsWith(".svg")).sort((left: any, right: any) => left.path.localeCompare(right.path))).toEqual(expected);
         const binding = artifacts.find((artifact: any) => artifact.path.endsWith(".rs")).content;
-        for (const { id, path } of row.expected) {
-          expect(binding).toContain(`#[serde(rename = "${id}")]`);
-          expect(binding).toContain(`include_str!("../${mirror}/${path}")`);
-        }
+        expect(binding).not.toContain("include_str!");
+        for (const { id } of row.expected) expect(binding).toContain(`#[serde(rename = "${id}")]`);
       }
     }
   }

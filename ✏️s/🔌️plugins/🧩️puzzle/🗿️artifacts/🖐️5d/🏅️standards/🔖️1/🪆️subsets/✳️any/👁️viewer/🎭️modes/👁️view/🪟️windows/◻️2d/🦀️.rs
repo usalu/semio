@@ -159,6 +159,7 @@ fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
         transform_flags: None,
         area_brush_size: None,
         domain_id: None,
+        placement_naming: None,
         suggestion_menu_json: None,
         tool_run_trace: None,
         lanes: Vec::new(),

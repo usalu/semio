@@ -119,9 +119,9 @@ impl crate::wgpu::scene_slots::SceneHost for NoSceneHost {
         &mut self,
         _slot: &crate::wgpu::scene_slots::SceneSlot<'_>,
         cursor: &mut crate::wgpu::scene_slots::ScenePaintCursor,
-        _draw: &mut crate::wgpu::draw::DrawList,
+        _draw: &mut crate::wgpu::draw_types::DrawList,
         _atlas: &mut FontAtlas,
-        _icons: Option<&crate::wgpu::draw::IconAtlas>,
+        _icons: Option<&crate::wgpu::draw_types::IconAtlas>,
     ) -> crate::wgpu::scene_slots::ScenePaintStep {
         cursor.finish()
     }
@@ -188,7 +188,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     let draw = ui.frame::<NoSceneHost>("procedural-main", 1200.0, 800.0, &mut atlas, None, None).expect("a mounted document paints");
     let layers = draw.layers.iter().filter(|layer| !layer.ui_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.raster_instances.is_empty()).count();
     let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    let glyphs: usize = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == crate::wgpu::draw::KIND_GLYPH).count();
+    let glyphs: usize = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH).count();
     assert!(layers >= law["expected"]["paint"]["drawCallsAtLeast"].as_u64().expect("draw calls") as usize, "expected at least one non-empty draw layer, got {layers}");
     assert!(instances >= law["expected"]["paint"]["uiInstancesAtLeast"].as_u64().expect("instances") as usize, "expected painted quads, got {instances}");
     assert!(glyphs >= law["expected"]["paint"]["glyphInstancesAtLeast"].as_u64().expect("glyphs") as usize, "expected shaped glyphs, got {glyphs}");
@@ -841,7 +841,7 @@ fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: crate::wgpu::
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
-    let mut target = crate::wgpu::draw::DrawList::default();
+    let mut target = crate::wgpu::draw_types::DrawList::default();
     for spent in 0..budget {
         if ui.layout_is_dirty(window_id) {
             ui.request_layout(window_id);

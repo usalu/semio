@@ -4,34 +4,34 @@
 
 use directory::os_directory::io::text::access_policy::directory_access_permits;
 use futures::StreamExt;
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::artifact_authority::creation::ArtifactCreationCommitAuthorityV1;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
 use directory::os_directory::access_policy::{DirectoryAccessActionV1, DirectoryAccessRoleV1};
-use semio_hub::directory::model::{AuthSessionKind, DirectoryPrincipalV1, DocumentScope, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole};
-use semio_hub::directory::{HubDirectories, HubDirectory, SocketGrantCapability};
+use semio_hub_directory_contract::model::{AuthSessionKind, DirectoryPrincipalV1, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::SocketGrantCapability;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
-use crate::state::HubState;
 use crate::open_plan::DocumentOpenPlanAuthorityV1;
 use crate::guard::session_access_roles;
-use crate::access_grants::socket_binding_validity;
-use crate::document_socket::document_plan_socket_validity;
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 🔖️State
-pub(crate) const SOCKET_GRANT_TTL_MS: i64 = 30_000;
+pub const SOCKET_GRANT_TTL_MS: i64 = 30_000;
 
-pub(crate) const SOCKET_GRANT_LEDGER_CAPACITY: usize = 4_096;
+pub const SOCKET_GRANT_LEDGER_CAPACITY: usize = 4_096;
 
-pub(crate) const SOCKET_GRANT_BINDING_PENDING_CAPACITY: usize = 64;
+pub const SOCKET_GRANT_BINDING_PENDING_CAPACITY: usize = 64;
 
-pub(crate) const SOCKET_PROTOCOL_V1: &str = "semio.socket.v1";
+pub const SOCKET_PROTOCOL_V1: &str = "semio.socket.v1";
 
-pub(crate) const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
+pub const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum SocketBindingKeyV1 {
+pub enum SocketBindingKeyV1 {
     User(String),
     Session(String),
     DirectorySpaceAuthority { space_id: String },
@@ -40,14 +40,14 @@ pub(crate) enum SocketBindingKeyV1 {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum SocketAudienceV1 {
+pub enum SocketAudienceV1 {
     Document(DocumentScope),
     Directory { auth_session_id: String, authorization_generation: u64 },
     DirectoryScoped(DocumentScope),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum SocketSubjectV1 {
+pub enum SocketSubjectV1 {
     Session {
         session_id: String,
         user_id: String,
@@ -64,7 +64,7 @@ pub(crate) enum SocketSubjectV1 {
 }
 
 impl SocketSubjectV1 {
-    pub(crate) fn binding(&self) -> SocketBindingKeyV1 {
+    pub fn binding(&self) -> SocketBindingKeyV1 {
         match self {
             Self::Session { session_id, .. } => SocketBindingKeyV1::Session(session_id.clone()),
             Self::Share { share_id, .. } => SocketBindingKeyV1::Share(share_id.clone()),
@@ -72,7 +72,7 @@ impl SocketSubjectV1 {
     }
 
     /// 🎚️ Who a session subject asks every space-role question as; a share asks none.
-    pub(crate) fn principal(&self) -> Option<DirectoryPrincipalV1<'_>> {
+    pub fn principal(&self) -> Option<DirectoryPrincipalV1<'_>> {
         match self {
             Self::Session { user_id, session_kind, device_instance_id, .. } => Some(DirectoryPrincipalV1 { user_id, session_kind: *session_kind, device_instance_id }),
             Self::Share { .. } => None,
@@ -80,7 +80,7 @@ impl SocketSubjectV1 {
     }
 
     /// 🎭️ The roles this socket subject holds under the declared access policy.
-    pub(crate) fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
+    pub fn access_roles(&self) -> Vec<DirectoryAccessRoleV1> {
         match self {
             Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, *role),
             Self::Share { .. } => vec![DirectoryAccessRoleV1::Share],
@@ -89,7 +89,7 @@ impl SocketSubjectV1 {
 
     /// ✍️ Whether this subject is issued a writable surface. The plan decides it from roles alone; the
     /// space-kind-limited denies (an archive) are enforced where each write is admitted.
-    pub(crate) fn surface_writable(&self) -> bool {
+    pub fn surface_writable(&self) -> bool {
         directory_access_permits(&self.access_roles(), DirectoryAccessActionV1::DocumentWrite, None)
     }
 
@@ -103,14 +103,14 @@ impl SocketSubjectV1 {
     /// 👤️ How this subject is named in a trace record. A share is deliberately reported by
     /// its share id rather than by whoever redeemed it: the hub does not know that person, and
     /// inventing an identity for an observability field would be the worst possible place to.
-    pub(crate) fn trace_principal(&self) -> String {
+    pub fn trace_principal(&self) -> String {
         match self {
             Self::Session { user_id, .. } => format!("user:{user_id}"),
             Self::Share { share_id, .. } => format!("share:{share_id}"),
         }
     }
 
-    pub(crate) async fn revalidate(&self, directory: &HubDirectories, audience: &SocketAudienceV1, at_ms: i64) -> SocketBindingValidityV1 {
+    pub async fn revalidate(&self, directory: &HubDirectories, audience: &SocketAudienceV1, at_ms: i64) -> SocketBindingValidityV1 {
         match (self, audience) {
             (Self::Session { session_id, user_id, authorization_generation, role, expires_at_ms, .. }, SocketAudienceV1::Document(scope)) => {
                 match directory.socket_session_binding(session_id, user_id, *authorization_generation, Some(&scope.space_id), at_ms).await {
@@ -146,14 +146,14 @@ impl SocketSubjectV1 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum SocketBindingValidityV1 {
+pub enum SocketBindingValidityV1 {
     Active,
     Unauthorized,
     Unavailable,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum SocketGrantStateV1 {
+pub enum SocketGrantStateV1 {
     Pending,
     Consumed,
 }
@@ -162,22 +162,22 @@ pub(crate) enum SocketGrantStateV1 {
 /// or — for a document socket — only the credential binding its upgrade re-authenticates. A document
 /// socket is admitted by its session or share credential, so no secret is ever minted for it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum SocketGrantKeyV1 {
+pub enum SocketGrantKeyV1 {
     Capability([u8; 32]),
     CredentialBinding,
 }
 
 #[derive(Clone)]
-pub(crate) struct SocketGrantRecordV1 {
-    pub(crate) selector: String,
-    pub(crate) key: SocketGrantKeyV1,
-    pub(crate) audience: SocketAudienceV1,
-    pub(crate) actor_id: String,
-    pub(crate) subject: SocketSubjectV1,
-    pub(crate) document_plan: Option<Arc<DocumentOpenPlanAuthorityV1>>,
-    pub(crate) issued_at_ms: i64,
-    pub(crate) expires_at_ms: i64,
-    pub(crate) state: SocketGrantStateV1,
+pub struct SocketGrantRecordV1 {
+    pub selector: String,
+    pub key: SocketGrantKeyV1,
+    pub audience: SocketAudienceV1,
+    pub actor_id: String,
+    pub subject: SocketSubjectV1,
+    pub document_plan: Option<Arc<DocumentOpenPlanAuthorityV1>>,
+    pub issued_at_ms: i64,
+    pub expires_at_ms: i64,
+    pub state: SocketGrantStateV1,
 }
 
 pub(crate) fn socket_record_bindings(subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<SocketBindingKeyV1> {
@@ -194,13 +194,13 @@ pub(crate) fn socket_record_bindings(subject: &SocketSubjectV1, audience: &Socke
 }
 
 impl SocketGrantRecordV1 {
-    pub(crate) fn bindings(&self) -> Vec<SocketBindingKeyV1> {
+    pub fn bindings(&self) -> Vec<SocketBindingKeyV1> {
         socket_record_bindings(&self.subject, &self.audience)
     }
 }
 
-pub(crate) struct SocketGrantAdmissionV1 {
-    pub(crate) record: SocketGrantRecordV1,
+pub struct SocketGrantAdmissionV1 {
+    pub record: SocketGrantRecordV1,
 }
 
 #[derive(Default)]
@@ -211,8 +211,8 @@ pub(crate) struct SocketGrantLedgerInnerV1 {
 }
 
 #[derive(Default)]
-pub(crate) struct SocketGrantLedgerV1 {
-    pub(crate) inner: Mutex<SocketGrantLedgerInnerV1>,
+pub struct SocketGrantLedgerV1 {
+    pub inner: Mutex<SocketGrantLedgerInnerV1>,
 }
 
 /// 🔐️ How one caller holds an authority binding. Everything that USES an authority — a socket
@@ -221,13 +221,13 @@ pub(crate) struct SocketGrantLedgerV1 {
 /// CHANGES the authority — a membership or space transition, a revocation, an administrator effect —
 /// holds it `Exclusive`, and waits for the uses already admitted to finish, then fences new ones.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) enum SocketBindingModeV1 {
+pub enum SocketBindingModeV1 {
     Shared,
     Exclusive,
 }
 
 /// 🎟️ One held authority binding (see [`SocketBindingModeV1`]); dropping it releases the binding.
-pub(crate) enum SocketBindingGuardV1 {
+pub enum SocketBindingGuardV1 {
     Shared(#[allow(dead_code)] tokio::sync::OwnedRwLockReadGuard<()>),
     Exclusive(#[allow(dead_code)] tokio::sync::OwnedRwLockWriteGuard<()>),
 }
@@ -235,13 +235,13 @@ pub(crate) enum SocketBindingGuardV1 {
 /// 🚦️ The hub's authority gates: one reader-writer gate per authority binding, and one writer
 /// gate per document, which serializes the writes of every writer of that document.
 #[derive(Default)]
-pub(crate) struct SocketBindingGatesV1 {
+pub struct SocketBindingGatesV1 {
     pub(crate) inner: Mutex<BTreeMap<SocketBindingKeyV1, std::sync::Weak<tokio::sync::RwLock<()>>>>,
     document_writes: Mutex<BTreeMap<DocumentScope, std::sync::Weak<tokio::sync::Mutex<()>>>>,
 }
 
 impl SocketBindingGatesV1 {
-    pub(crate) fn gate(&self, binding: SocketBindingKeyV1) -> Arc<tokio::sync::RwLock<()>> {
+    pub fn gate(&self, binding: SocketBindingKeyV1) -> Arc<tokio::sync::RwLock<()>> {
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         inner.retain(|_, gate| gate.strong_count() > 0);
         if let Some(gate) = inner.get(&binding).and_then(std::sync::Weak::upgrade) {
@@ -253,7 +253,7 @@ impl SocketBindingGatesV1 {
     }
 
     /// ✍️ The one writer gate of `scope`'s document.
-    pub(crate) fn document_write(&self, scope: &DocumentScope) -> Arc<tokio::sync::Mutex<()>> {
+    pub fn document_write(&self, scope: &DocumentScope) -> Arc<tokio::sync::Mutex<()>> {
         let mut writes = self.document_writes.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         writes.retain(|_, gate| gate.strong_count() > 0);
         if let Some(gate) = writes.get(scope).and_then(std::sync::Weak::upgrade) {
@@ -268,7 +268,7 @@ impl SocketBindingGatesV1 {
         self.share_bindings(socket_record_bindings(subject, audience)).await
     }
 
-    pub(crate) async fn share_bindings(&self, bindings: Vec<SocketBindingKeyV1>) -> Vec<SocketBindingGuardV1> {
+    pub async fn share_bindings(&self, bindings: Vec<SocketBindingKeyV1>) -> Vec<SocketBindingGuardV1> {
         self.acquire(bindings.into_iter().map(|binding| (binding, SocketBindingModeV1::Shared)).collect()).await
     }
 
@@ -290,7 +290,7 @@ impl SocketBindingGatesV1 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum SocketGrantLedgerErrorV1 {
+pub enum SocketGrantLedgerErrorV1 {
     Rejected,
     Capacity,
 }
@@ -336,7 +336,7 @@ impl SocketGrantLedgerV1 {
 
     /// 🎫️ A directory socket's pending grant, answering only to `capability`. Document audiences are
     /// refused: they are admitted by credential binding through [`Self::admit_document`].
-    pub(crate) fn issue(&self, capability: &SocketGrantCapability, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64) -> Result<(), SocketGrantLedgerErrorV1> {
+    pub fn issue(&self, capability: &SocketGrantCapability, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64) -> Result<(), SocketGrantLedgerErrorV1> {
         if matches!(audience, SocketAudienceV1::Document(_)) {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
@@ -345,7 +345,7 @@ impl SocketGrantLedgerV1 {
 
     /// 📝️ A document socket's pending admission: keyed by nothing but its credential binding, consumed
     /// by the upgrade that re-authenticates that credential. Returns the ledger selector.
-    pub(crate) fn admit_document(&self, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64, document_plan: Arc<DocumentOpenPlanAuthorityV1>) -> Result<String, SocketGrantLedgerErrorV1> {
+    pub fn admit_document(&self, audience: SocketAudienceV1, actor_id: String, subject: SocketSubjectV1, issued_at_ms: i64, expires_at_ms: i64, document_plan: Arc<DocumentOpenPlanAuthorityV1>) -> Result<String, SocketGrantLedgerErrorV1> {
         if !matches!(audience, SocketAudienceV1::Document(_)) {
             return Err(SocketGrantLedgerErrorV1::Rejected);
         }
@@ -395,10 +395,10 @@ impl SocketGrantLedgerV1 {
     }
 
     fn capability_matches(record: &SocketGrantRecordV1, capability: &SocketGrantCapability) -> bool {
-        matches!(record.key, SocketGrantKeyV1::Capability(digest) if semio_hub::directory::constant_time_digest_eq(&digest, &capability.secret_digest()))
+        matches!(record.key, SocketGrantKeyV1::Capability(digest) if semio_hub_directory_contract::constant_time_digest_eq(&digest, &capability.secret_digest()))
     }
 
-    pub(crate) fn pending(&self, capability: &SocketGrantCapability, audience: &SocketAudienceV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+    pub fn pending(&self, capability: &SocketGrantCapability, audience: &SocketAudienceV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
@@ -420,7 +420,7 @@ impl SocketGrantLedgerV1 {
 
     /// 🧭️ The oldest pending document grant issued to this session or share binding for exactly this
     /// audience; its actor is the one the upgrade is admitted as.
-    pub(crate) fn pending_document_binding(&self, audience: &SocketAudienceV1, binding: &SocketBindingKeyV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+    pub fn pending_document_binding(&self, audience: &SocketAudienceV1, binding: &SocketBindingKeyV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let record = inner
@@ -433,7 +433,7 @@ impl SocketGrantLedgerV1 {
         Ok(record)
     }
 
-    pub(crate) fn consume(&self, candidate: &SocketGrantRecordV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+    pub fn consume(&self, candidate: &SocketGrantRecordV1, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let bindings = candidate.bindings();
@@ -458,7 +458,7 @@ impl SocketGrantLedgerV1 {
         Ok(consumed)
     }
 
-    pub(crate) fn register_live(&self, record: &SocketGrantRecordV1) -> Result<(String, Arc<tokio::sync::Notify>), SocketGrantLedgerErrorV1> {
+    pub fn register_live(&self, record: &SocketGrantRecordV1) -> Result<(String, Arc<tokio::sync::Notify>), SocketGrantLedgerErrorV1> {
         let id = directory::os_identity::time_ordered_id();
         let notify = Arc::new(tokio::sync::Notify::new());
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
@@ -472,13 +472,13 @@ impl SocketGrantLedgerV1 {
         Ok((id, notify))
     }
 
-    pub(crate) fn unregister_live(&self, record: &SocketGrantRecordV1, live_id: &str) {
+    pub fn unregister_live(&self, record: &SocketGrantRecordV1, live_id: &str) {
         let Ok(mut inner) = self.inner.lock() else { return };
         Self::remove_live_indexes(&mut inner, record, live_id);
         inner.records.remove(&record.selector);
     }
 
-    pub(crate) fn is_live(&self, record: &SocketGrantRecordV1, live_id: &str) -> bool {
+    pub fn is_live(&self, record: &SocketGrantRecordV1, live_id: &str) -> bool {
         let Ok(inner) = self.inner.lock() else { return false };
         inner.records.get(&record.selector).is_some_and(|stored| {
             stored.state == SocketGrantStateV1::Consumed
@@ -490,7 +490,7 @@ impl SocketGrantLedgerV1 {
         })
     }
 
-    pub(crate) fn invalidate_binding(&self, binding: SocketBindingKeyV1) {
+    pub fn invalidate_binding(&self, binding: SocketBindingKeyV1) {
         let notifiers = {
             let Ok(mut inner) = self.inner.lock() else { return };
             let pending = inner.pending_by_binding.get(&binding).cloned().unwrap_or_default();
@@ -527,11 +527,11 @@ impl SocketGrantLedgerV1 {
     }
 }
 
-pub(crate) struct SocketLiveLeaseV1 {
-    pub(crate) ledger: Arc<SocketGrantLedgerV1>,
-    pub(crate) record: SocketGrantRecordV1,
-    pub(crate) id: String,
-    pub(crate) notify: Arc<tokio::sync::Notify>,
+pub struct SocketLiveLeaseV1 {
+    pub ledger: Arc<SocketGrantLedgerV1>,
+    pub record: SocketGrantRecordV1,
+    pub id: String,
+    pub notify: Arc<tokio::sync::Notify>,
 }
 
 impl Drop for SocketLiveLeaseV1 {
@@ -540,23 +540,4 @@ impl Drop for SocketLiveLeaseV1 {
     }
 }
 
-pub(crate) async fn socket_live_authority(state: &HubState, record: &SocketGrantRecordV1, live_id: &str) -> Result<Vec<SocketBindingGuardV1>, SocketBindingValidityV1> {
-    socket_live_authority_with_bindings(state, record, live_id, record.bindings()).await
-}
-
-pub(crate) async fn socket_live_authority_with_bindings(state: &HubState, record: &SocketGrantRecordV1, live_id: &str, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<SocketBindingGuardV1>, SocketBindingValidityV1> {
-    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.share_bindings(bindings)).await.map_err(|_| SocketBindingValidityV1::Unavailable)?;
-    let validity = socket_binding_validity(state, &record.subject, &record.audience).await;
-    if validity != SocketBindingValidityV1::Active {
-        return Err(validity);
-    }
-    let plan_validity = document_plan_socket_validity(state, record, None).await;
-    if plan_validity != SocketBindingValidityV1::Active {
-        return Err(plan_validity);
-    }
-    if !state.socket_grants.is_live(record, live_id) {
-        return Err(SocketBindingValidityV1::Unauthorized);
-    }
-    Ok(admission)
-}
 //#endregion 🔖️State

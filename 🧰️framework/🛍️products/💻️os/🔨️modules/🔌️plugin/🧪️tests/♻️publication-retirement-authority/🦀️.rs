@@ -259,11 +259,11 @@ impl ArtifactApp for RetirementApp {
 /// 🔭️ Drives ONE rejected publication through the shared retirement law and reports how many
 /// incomplete turns it answered with `Ok` before its terminal turn.
 fn mounted_rejection(app:&crate::artifact_instance::VcsArtifactApp<RetirementApp>,pending:PendingArtifactStorePublication<RetirementApp>)->crate::typed_operation::MountedTypedCommandFullOperation<RetirementApp>{
- let revision=app.store.content_revision_now();
- let operation=semio_framework_job::Operation::new(semio_framework_job::OperationId(1),semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),semio_framework_job::Generation(app.store.generation_now()),17);
- let lease=app.tool_cancellations.clone().begin(crate::tool_cancellation::ToolOperationKey{app_instance_id:7,document:crate::tool_cancellation::ArtifactDocumentAuthority(7),operation_id:operation.operation,base_revision:operation.base_revision,generation:operation.generation}).expect("original cancellation lease");
+ let revision=app.stores.store.content_revision_now();
+ let operation=semio_framework_job::Operation::new(semio_framework_job::OperationId(1),semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),semio_framework_job::Generation(app.stores.store.generation_now()),17);
+ let lease=app.tools.tool_cancellations.clone().begin(crate::tool_cancellation::ToolOperationKey{app_instance_id:7,document:crate::tool_cancellation::ArtifactDocumentAuthority(7),operation_id:operation.operation,base_revision:operation.base_revision,generation:operation.generation}).expect("original cancellation lease");
  crate::typed_operation::MountedTypedCommandFullOperation{
-  verb:String::new(),meta:crate::app_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.store.generation_now(),config_generation:app.config_store.generation_now(),draft_generation:app.draft_store.generation_now(),presence_generation:app.presence_store.generation_now(),transient_generation:app.transient_store.generation_now(),
+  verb:String::new(),meta:crate::app_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:revision,artifact_generation:app.stores.store.generation_now(),config_generation:app.stores.config_store.generation_now(),draft_generation:app.stores.draft_store.generation_now(),presence_generation:app.stores.presence_store.generation_now(),transient_generation:app.stores.transient_store.generation_now(),
   window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:Some(lease),worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:Some(pending),pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:crate::store_publication::MountedTypedCommandFullOperationStage::Publishing
  }
 }
@@ -275,7 +275,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
  let reason=row["supersededFault"].as_str().unwrap();
  assert!(pending.is_closing());
  assert_eq!(pending.fault(),Some(reason));
- let generations=(app.store.generation_now(),app.config_store.generation_now(),app.draft_store.generation_now(),app.presence_store.generation_now(),app.transient_store.generation_now());
+ let generations=(app.stores.store.generation_now(),app.stores.config_store.generation_now(),app.stores.draft_store.generation_now(),app.stores.presence_store.generation_now(),app.stores.transient_store.generation_now());
  let mut mounted=mounted_rejection(app,pending);
  let mut turns=0;
  for _ in 0..8192{
@@ -298,7 +298,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
   turns+=1;
  }
  assert!(mounted.pending_artifact_publication.is_none()&&!mounted.pending_publication_outcome.pending(),"original body and frame close before delivery");
- assert_eq!(generations,(app.store.generation_now(),app.config_store.generation_now(),app.draft_store.generation_now(),app.presence_store.generation_now(),app.transient_store.generation_now()),"rejected private candidate never commits");
+ assert_eq!(generations,(app.stores.store.generation_now(),app.stores.config_store.generation_now(),app.stores.draft_store.generation_now(),app.stores.presence_store.generation_now(),app.stores.transient_store.generation_now()),"rejected private candidate never commits");
  if lane==crate::tool_contract::TypedOperationResultLane::WindowTransient{
   assert!(mounted.terminal_fault.is_none()&&mounted.result_page.is_none(),"window transient retains its deliberate lenient policy");
   mounted.stage=crate::store_publication::MountedTypedCommandFullOperationStage::Retiring;
@@ -312,7 +312,7 @@ async fn drive_rejected_retirement(app:&mut crate::artifact_instance::VcsArtifac
   assert!(mounted.take_result_page().is_none(),"fault terminal cannot repeat before ACK");
   assert!(mounted.acknowledge_result_page(page.token).unwrap());
  }
- app.tool_operations.insert_admitted(1,mounted);
+ app.tools.tool_operations.insert_admitted(1,mounted);
  turns
 }
 
@@ -384,121 +384,121 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
     let operation = semio_framework_job::OperationId(1);
     let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
-    let window_config_authority = app.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
-    let window_transient_authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
+    let window_config_authority = app.stores.window_config_store.capture(Some(&view)).await.expect("window config capture").expect("registered window config owner");
+    let window_transient_authority = app.stores.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
 
     for row in &rows {
         let mut superseding_owner: Option<PendingArtifactStorePublication<RetirementApp>> = None;
         let mut pending = match row["id"].as_str().expect("fixture lane id") {
             "artifact" => {
                 let publication = app
-                    .store
-                    .begin_apply_batch(operation, app.store.generation_now(), app.store.content_revision_now(), "fixture".into(), vec![document_mutation(1)], store::os_store::store_schema::HistoryLane::Document, app.artifact_one_item_factory.as_ref(), None)
+                    .stores.store
+                    .begin_apply_batch(operation, app.stores.store.generation_now(), app.stores.store.content_revision_now(), "fixture".into(), vec![document_mutation(1)], store::os_store::store_schema::HistoryLane::Document, app.stores.artifact_one_item_factory.as_ref(), None)
                     .unwrap_or_else(|rejected| panic!("artifact publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], transaction: None }, &mut identity).await).expect("superseding document write");
+                crate::with_authoring_identity!(|identity| app.stores.store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![document_mutation(9)], transaction: None }, &mut identity).await).expect("superseding document write");
                 let mut publication = publication;
-                assert!(app.store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded document publication is rejected");
+                assert!(app.stores.store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded document publication is rejected");
                 PendingArtifactStorePublication::Artifact(publication)
             }
             "config" => {
                 let publication = app
-                    .config_store
+                    .stores.config_store
                     .begin_apply_batch(
                         operation,
-                        app.config_store.generation_now(),
-                        app.config_store.content_revision_now(),
+                        app.stores.config_store.generation_now(),
+                        app.stores.config_store.content_revision_now(),
                         "fixture".into(),
                         vec![config_mutation("first")],
                         store::os_store::store_schema::HistoryLane::Document,
-                        app.config_one_item_factory.as_ref(),
+                        app.stores.config_one_item_factory.as_ref(),
                         None,
                     )
                     .unwrap_or_else(|rejected| panic!("config publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.config_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding config write");
+                crate::with_authoring_identity!(|identity| app.stores.config_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding config write");
                 let mut publication = publication;
-                assert!(app.config_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded config publication is rejected");
+                assert!(app.stores.config_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded config publication is rejected");
                 PendingArtifactStorePublication::Config(publication)
             }
             "draft" => {
                 let publication = app
-                    .draft_store
+                    .stores.draft_store
                     .begin_apply_batch(
                         operation,
-                        app.draft_store.generation_now(),
-                        app.draft_store.content_revision_now(),
+                        app.stores.draft_store.generation_now(),
+                        app.stores.draft_store.content_revision_now(),
                         "fixture".into(),
                         vec![config_mutation("first")],
                         store::os_store::store_schema::HistoryLane::Document,
-                        app.draft_one_item_factory.as_ref(),
+                        app.stores.draft_one_item_factory.as_ref(),
                         None,
                     )
                     .unwrap_or_else(|rejected| panic!("draft publication admitted: {}", rejected.into_owners().0));
-                crate::with_authoring_identity!(|identity| app.draft_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding draft write");
+                crate::with_authoring_identity!(|identity| app.stores.draft_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![config_mutation("superseding")], transaction: None }, &mut identity).await).expect("superseding draft write");
                 let mut publication = publication;
-                assert!(app.draft_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded draft publication is rejected");
+                assert!(app.stores.draft_store.advance_apply_batch(&mut publication, grant).is_err(), "the superseded draft publication is rejected");
                 PendingArtifactStorePublication::Draft(publication)
             }
             "presence" => {
-                let generation = app.presence_store.generation_now();
-                let factory = app.presence_one_item_factory.clone().expect("presence preparation factory");
-                let retirement = app.presence_local_root_retirement_factory.clone();
+                let generation = app.stores.presence_store.generation_now();
+                let factory = app.stores.presence_one_item_factory.clone().expect("presence preparation factory");
+                let retirement = app.stores.presence_local_root_retirement_factory.clone();
                 let mut publication = app
-                    .presence_store
+                    .stores.presence_store
                     .begin_publish_one(operation, generation, ChangePublicationPresence { revision: 1 }.into(), Some(factory.as_ref()), retirement.clone())
                     .unwrap_or_else(|rejected| panic!("presence publication admitted: {}", rejected.into_owners().0));
-                let mut superseding = app.presence_store.begin_publish_one(operation, generation, ChangePublicationPresence { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding presence publication admitted");
-                publish_ephemeral(&mut superseding, grant, |publication, grant| app.presence_store.advance_publish_one(publication, grant));
+                let mut superseding = app.stores.presence_store.begin_publish_one(operation, generation, ChangePublicationPresence { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding presence publication admitted");
+                publish_ephemeral(&mut superseding, grant, |publication, grant| app.stores.presence_store.advance_publish_one(publication, grant));
                 superseding_owner = Some(PendingArtifactStorePublication::Presence(superseding));
-                assert!(app.presence_store.advance_publish_one(&mut publication, grant).is_err(), "the superseded presence publication is rejected");
+                assert!(app.stores.presence_store.advance_publish_one(&mut publication, grant).is_err(), "the superseded presence publication is rejected");
                 PendingArtifactStorePublication::Presence(publication)
             }
             "transient" => {
-                let generation = app.transient_store.generation_now();
-                let factory = app.transient_one_item_factory.clone().expect("transient preparation factory");
-                let retirement = app.transient_local_root_retirement_factory.clone();
+                let generation = app.stores.transient_store.generation_now();
+                let factory = app.stores.transient_one_item_factory.clone().expect("transient preparation factory");
+                let retirement = app.stores.transient_local_root_retirement_factory.clone();
                 let mut publication = app
-                    .transient_store
+                    .stores.transient_store
                     .begin_publish_one(operation, generation, ChangePublicationTransient { revision: 1 }.into(), Some(factory.as_ref()), retirement.clone())
                     .unwrap_or_else(|rejected| panic!("transient publication admitted: {}", rejected.into_owners().0));
-                let mut superseding = app.transient_store.begin_publish_one(operation, generation, ChangePublicationTransient { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding transient publication admitted");
-                publish_ephemeral(&mut superseding, grant, |publication, grant| app.transient_store.advance_publish_one(publication, grant));
+                let mut superseding = app.stores.transient_store.begin_publish_one(operation, generation, ChangePublicationTransient { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding transient publication admitted");
+                publish_ephemeral(&mut superseding, grant, |publication, grant| app.stores.transient_store.advance_publish_one(publication, grant));
                 superseding_owner = Some(PendingArtifactStorePublication::Transient(superseding));
-                assert!(app.transient_store.advance_publish_one(&mut publication, grant).is_err(), "the superseded transient publication is rejected");
+                assert!(app.stores.transient_store.advance_publish_one(&mut publication, grant).is_err(), "the superseded transient publication is rejected");
                 PendingArtifactStorePublication::Transient(publication)
             }
             "windowConfig" => {
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = admit_window_config_publication(&mut app.window_config_store, operation, &window_config_authority, mutation("first"), grant.retained_grant());
-                let mut superseding = admit_window_config_publication(&mut app.window_config_store, operation, &window_config_authority, mutation("superseding"), grant.retained_grant());
+                let mut publication = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("first"), grant.retained_grant());
+                let mut superseding = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("superseding"), grant.retained_grant());
                 for _ in 0..4_096 {
-                    if matches!(app.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+                    if matches!(app.stores.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());
                         break;
                     }
                 }
                 superseding_owner = Some(PendingArtifactStorePublication::WindowConfig(superseding));
-                assert!(app.window_config_store.advance(publication.as_mut(), grant).is_err(), "the superseded window config publication is rejected");
+                assert!(app.stores.window_config_store.advance(publication.as_mut(), grant).is_err(), "the superseded window config publication is rejected");
                 PendingArtifactStorePublication::WindowConfig(publication)
             }
             "windowTransient" => {
                 let mutation = |revision| WindowTransientMutation::of::<RetirementWindowTransientOwner>("publication-retirement-window-left", ChangePublicationTransient { revision }.into());
-                let mut publication = app.window_transient_store.begin(operation, &window_transient_authority, mutation(11)).expect("window transient publication admitted");
-                let mut superseding = app.window_transient_store.begin(operation, &window_transient_authority, mutation(12)).expect("superseding window transient publication admitted");
+                let mut publication = app.stores.window_transient_store.begin(operation, &window_transient_authority, mutation(11)).expect("window transient publication admitted");
+                let mut superseding = app.stores.window_transient_store.begin(operation, &window_transient_authority, mutation(12)).expect("superseding window transient publication admitted");
                 for _ in 0..4_096 {
-                    if matches!(app.window_transient_store.advance(superseding.as_mut(), grant).expect("superseding window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+                    if matches!(app.stores.window_transient_store.advance(superseding.as_mut(), grant).expect("superseding window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(superseding.acknowledge());
                         break;
                     }
                 }
                 superseding_owner = Some(PendingArtifactStorePublication::WindowTransient(superseding));
-                assert!(app.window_transient_store.advance(publication.as_mut(), grant).is_err(), "the superseded window transient publication is rejected");
+                assert!(app.stores.window_transient_store.advance(publication.as_mut(), grant).is_err(), "the superseded window transient publication is rejected");
                 PendingArtifactStorePublication::WindowTransient(publication)
             }
             other => panic!("fixture declares an unknown publication lane {other}"),
         };
         let retiring_turns = drive_rejected_retirement(&mut app,pending,row).await;
         assert!(retiring_turns >= minimum_turns, "{} drained its rejection over {retiring_turns} incomplete turns, every one of which used to be a fault", row["id"]);
-        assert!(app.tool_operations.get(1).is_some_and(|owner|owner.pending_artifact_publication.is_none()), "{} retired terminal-empty", row["id"]);
+        assert!(app.tools.tool_operations.get(1).is_some_and(|owner|owner.pending_artifact_publication.is_none()), "{} retired terminal-empty", row["id"]);
         if let Some(mut owner) = superseding_owner {
             retire_accepted(&mut owner, grant);
         }
@@ -522,14 +522,14 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     let operation = semio_framework_job::OperationId(2);
     let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let view = retirement_view();
-    let mut authority = app.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
+    let mut authority = app.stores.window_transient_store.capture(Some(&view)).expect("window transient capture").expect("registered window transient owner");
     let captured_generation = authority.generation;
     let mutation = |revision| WindowTransientMutation::of::<RetirementWindowTransientOwner>(window_id, ChangePublicationTransient { revision }.into());
 
-    let mut rejected = app.window_transient_store.begin(operation, &authority, mutation(expected["capturedRevision"].as_u64().expect("captured revision"))).expect("captured authority admits its first publication");
-    let mut superseding = app.window_transient_store.begin(operation, &authority, mutation(expected["supersedingRevision"].as_u64().expect("superseding revision"))).expect("superseding publication admitted");
+    let mut rejected = app.stores.window_transient_store.begin(operation, &authority, mutation(expected["capturedRevision"].as_u64().expect("captured revision"))).expect("captured authority admits its first publication");
+    let mut superseding = app.stores.window_transient_store.begin(operation, &authority, mutation(expected["supersedingRevision"].as_u64().expect("superseding revision"))).expect("superseding publication admitted");
     for _ in 0..4_096 {
-        if matches!(app.window_transient_store.advance(superseding.as_mut(), grant).expect("superseding window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+        if matches!(app.stores.window_transient_store.advance(superseding.as_mut(), grant).expect("superseding window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
             assert!(superseding.acknowledge());
             break;
         }
@@ -541,31 +541,31 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
         }
     }
     assert!(superseding.terminal_is_empty());
-    assert!(app.window_transient_store.advance(rejected.as_mut(), grant).is_err());
+    assert!(app.stores.window_transient_store.advance(rejected.as_mut(), grant).is_err());
 
     let mut pending = PendingArtifactStorePublication::<RetirementApp>::WindowTransient(rejected);
     let row = fixture["lanes"].as_array().expect("fixture lanes").iter().find(|row| row["id"] == "windowTransient").expect("window transient row").clone();
     let turns = drive_rejected_retirement(&mut app,pending,&row).await;
-    assert!(app.tool_operations.get(1).is_some_and(|owner|owner.pending_artifact_publication.is_none()));
+    assert!(app.tools.tool_operations.get(1).is_some_and(|owner|owner.pending_artifact_publication.is_none()));
 
-    let stale = app.window_transient_store.begin(operation, &authority, mutation(expected["rejectedRevision"].as_u64().expect("rejected revision")));
+    let stale = app.stores.window_transient_store.begin(operation, &authority, mutation(expected["rejectedRevision"].as_u64().expect("rejected revision")));
     assert_eq!(stale.is_ok(), expected["staleAuthorityBeginAccepted"].as_bool().expect("stale begin expectation"));
     drop(stale);
     let mut refreshed=false;
     for _ in 0..4096 {
-        let demand=app.window_transient_store.refresh_demands(&authority,512).expect("original refresh demand");
+        let demand=app.stores.window_transient_store.refresh_demands(&authority,512).expect("original refresh demand");
         let turn=granted(demand);
-        let step=app.window_transient_store.refresh(&mut authority,turn).expect("window transient authority refreshes onto the live generation");
+        let step=app.stores.window_transient_store.refresh(&mut authority,turn).expect("window transient authority refreshes onto the live generation");
         let progress=match step { crate::component::window_mutation::WindowAuthorityRefreshStep::Pending(progress)=>progress, crate::component::window_mutation::WindowAuthorityRefreshStep::Ready(progress)=>{refreshed=true;progress} };
         assert!(progress.fits(turn));
         if refreshed {break;}
     }
     assert!(refreshed,"original authority completes only after funded displaced snapshot capture");
     assert_eq!(authority.generation > captured_generation, expected["refreshedGenerationExceedsCaptured"].as_bool().expect("refreshed generation expectation"));
-    let mut re_begun = app.window_transient_store.begin(operation, &authority, mutation(expected["reBeginRevision"].as_u64().expect("re-begin revision"))).expect("refreshed authority admits a new publication");
+    let mut re_begun = app.stores.window_transient_store.begin(operation, &authority, mutation(expected["reBeginRevision"].as_u64().expect("re-begin revision"))).expect("refreshed authority admits a new publication");
     assert!(expected["refreshedAuthorityBeginAccepted"].as_bool().expect("refreshed begin expectation"));
     for _ in 0..4_096 {
-        if matches!(app.window_transient_store.advance(re_begun.as_mut(), grant).expect("re-begun window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
+        if matches!(app.stores.window_transient_store.advance(re_begun.as_mut(), grant).expect("re-begun window transient advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
             assert!(re_begun.acknowledge());
             break;
         }
@@ -578,7 +578,7 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
     }
     assert!(re_begun.terminal_is_empty());
     drop(authority);
-    eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
+    eprintln!("window transient retired a rejected authority over {turns} Ok turns, refused a stale re-begin, and admitted the refreshed one at generation {}", app.stores.window_transient_store.capture(Some(&view)).unwrap().unwrap().generation);
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
@@ -592,17 +592,17 @@ async fn window_transient_re_begin_needs_the_refreshed_live_generation() {
 async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let authority = app.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
+    let authority = app.stores.window_transient_store.capture(Some(&retirement_view())).expect("window transient capture").expect("registered window transient owner");
     let generation = authority.generation;
-    let revision = app.store.content_revision_now();
+    let revision = app.stores.store.content_revision_now();
     let operation = semio_framework_job::Operation::new(
         semio_framework_job::allocate_operation_id(),
         semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width"))),
-        semio_framework_job::Generation(app.store.generation_now()),
+        semio_framework_job::Generation(app.stores.store.generation_now()),
         17,
     );
     let lease = app
-        .tool_cancellations
+        .tools.tool_cancellations
         .clone()
         .begin(crate::tool_cancellation::ToolOperationKey { app_instance_id: 7, document: crate::tool_cancellation::ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
         .expect("cancellation lease");
@@ -663,7 +663,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         assert_eq!(ephemeral.window_transient.iter().map(WindowTransientMutation::window_id).collect::<Vec<_>>(), ["publication-retirement-window-right"], "attempt {attempt}: the refused mutation is kept, never dropped");
         assert!(mounted.pending_artifact_publication.is_none() && mounted.result_page.is_none(), "attempt {attempt}: nothing was published or answered");
     }
-    assert_eq!(app.window_transient_store.capture(Some(&retirement_view())).expect("capture").expect("owner").generation, generation, "the window transient never moved");
+    assert_eq!(app.stores.window_transient_store.capture(Some(&retirement_view())).expect("capture").expect("owner").generation, generation, "the window transient never moved");
     mounted.publication = None;
     mounted.window_transient_authority = None;
     drop(mounted);

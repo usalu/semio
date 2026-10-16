@@ -1,0 +1,40 @@
+{
+  "protocol": {
+    "version": 1,
+    "synchronous": true,
+    "finiteOutput": true,
+    "chargeBeforeConsume": true,
+    "drainBeforeReject": true,
+    "undefinedFailure": "preserved"
+  },
+  "cases": [
+    {
+      "name": "ignored-stdout",
+      "bytes": "\u00e9\n7",
+      "limit": 4,
+      "action": "collect",
+      "accepted": true
+    },
+    {
+      "name": "charged-first",
+      "bytes": "12345",
+      "limit": 4,
+      "action": "collect",
+      "accepted": false
+    },
+    {
+      "name": "thrown-undefined",
+      "bytes": "7",
+      "limit": 4,
+      "action": "undefined",
+      "accepted": false
+    },
+    {
+      "name": "promise-refused",
+      "bytes": "7",
+      "limit": 4,
+      "action": "promise",
+      "accepted": false
+    }
+  ]
+}

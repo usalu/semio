@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-codec-factory"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The artifact codec factory and codec reduction helpers of the Store"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-codec-factory"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-codec-registry = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-replay = { path = "../../../../🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-fields = { path = "../../../🧬️owned-schema/🧱️fields/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]

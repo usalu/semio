@@ -1,6 +1,6 @@
 //! 🧬️ Transparent roster for the lawful and intentionally unlawful law-test commands.
 
-use crate::os_spr::{MutationLeaf, OpText};
+use semio_framework_os_spr::{MutationLeaf, OpText};
 
 //#region 🧬️Leaves
 #[path = "➕️add-counter/🦀️.rs"]

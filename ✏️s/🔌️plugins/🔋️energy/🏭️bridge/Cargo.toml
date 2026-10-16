@@ -24,6 +24,3 @@ semio-s-artifact-energy-model-editor-edit = { path = "../🗿️artifacts/🔋�
 semio-s-artifact-energy-model-mutations = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-snapshot = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-viewer = { path = "../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
-
-[profile.prototype]
-inherits = "dev"

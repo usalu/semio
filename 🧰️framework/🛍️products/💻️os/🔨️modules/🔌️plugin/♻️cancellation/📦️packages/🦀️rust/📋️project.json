@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-operation-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "fixture",
+    "filesystemBytes",
+    "maximumPhysicalBytes",
+    "expectedImage",
+    "maximumLeaseDatabaseBytes",
+    "retirement"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "fixture": {
+      "const": "🗑️generated/initial-authority"
+    },
+    "filesystemBytes": {
+      "const": 66060288
+    },
+    "maximumPhysicalBytes": {
+      "const": 67108864
+    },
+    "expectedImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "size"
+      ],
+      "properties": {
+        "dev": {
+          "const": 16777232
+        },
+        "ino": {
+          "const": 336463257
+        },
+        "size": {
+          "const": 66060288
+        }
+      }
+    },
+    "maximumLeaseDatabaseBytes": {
+      "const": 16384
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "platform",
+        "request"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "final-retire"
+        },
+        "platform": {
+          "const": "darwin"
+        },
+        "request": {
+          "const": {
+            "version": 1,
+            "wait": false,
+            "expectedImage": {
+              "receiptSha256": "cbf4906714eab0e828f8a98400c39e94508c0eab916150490813c9ec3b6c60e3",
+              "dev": 16777232,
+              "ino": 336463257,
+              "size": 66060288,
+              "allocatedBytes": 66060288
+            }
+          }
+        }
+      }
+    }
+  }
+}

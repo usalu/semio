@@ -1,33 +1,36 @@
 
-use super::*;
+
 use crate::demo_space_projection;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::unit_tests::context::{apply_mutations, seed_draw_plugin, seed_multi_port_plugins, studio_emit, test_surface_id};
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_app::unit_tests::context::{apply_mutations, seed_draw_plugin, seed_multi_port_plugins, studio_emit, test_surface_id};
 use std::collections::HashSet;
+use semio_hub_space_foundation::config::{ActiveNodeSetting, SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_commands_authoring::spawn_app::SpawnApp;
+use semio_framework_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SpawnApp(SpawnApp { plugin_id: "draw".into(), app_id: "draw".into(), x: 80.0, y: 80.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(crate::engine::space::commands::remove_app_instance::RemoveAppInstance { node_id: None }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(crate::engine::space::commands::delete_selection::DeleteSelection {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(crate::engine::space::commands::copy_app_instance::CopyAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(crate::engine::space::commands::duplicate_app_instance::DuplicateAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(crate::engine::space::commands::paste_app_instance::PasteAppInstance {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(crate::engine::space::commands::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(crate::engine::space::commands::patch_media_nodes::PatchMediaNodes {
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: Some("n1".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RemoveAppInstance(semio_hub_space_commands_authoring::remove_app_instance::RemoveAppInstance { node_id: None }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DeleteSelection(semio_hub_space_commands_authoring::delete_selection::DeleteSelection {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CopyAppInstance(semio_hub_space_commands_authoring::copy_app_instance::CopyAppInstance {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DuplicateAppInstance(semio_hub_space_commands_authoring::duplicate_app_instance::DuplicateAppInstance {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PasteAppInstance(semio_hub_space_commands_authoring::paste_app_instance::PasteAppInstance {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::RenameAppInstance(semio_hub_space_commands_authoring::rename_app_instance::RenameAppInstance { label: Some("Renamed".into()) }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchMediaNodes(semio_hub_space_commands_media::patch_media_nodes::PatchMediaNodes {
         node_ids: vec!["n1".into()],
         field: "position".into(),
         axis: Some("x".into()),
         value: "120".into(),
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(crate::engine::space::commands::patch_app_instances::PatchAppInstances {
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::PatchAppInstances(semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances {
         node_ids: vec!["n1".into()],
         field: "label".into(),
         value: "Batch Label".into(),
     }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(crate::engine::space::commands::reorganize_workflow::ReorganizeWorkflow {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(semio_hub_space_commands_authoring::reorganize_workflow::ReorganizeWorkflow {}));
 }
 
 /// ⚖️ LAW: a palette drop is ONE relative `move-nodes` leaf — the offset from the node's base position — with no
@@ -38,7 +41,7 @@ async fn move_media_node_emits_one_relative_move() {
     let config = SpaceConfig::default();
     let base = projection.graph.nodes.first().expect("node").clone();
     let node_id = base.id.clone();
-    let emit = studio_emit(&projection, &config, &SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).await.expect("handle");
+    let emit = studio_emit(&projection, &config, &SpaceCommand::MoveMediaNode(semio_hub_space_commands_authoring::move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).await.expect("handle");
     assert!(matches!(emit.artifact_mutations.as_slice(), [WorkflowMutation::MoveNodes(leaf)] if leaf.node_ids == [node_id.clone()] && leaf.dx == 120.0 - base.x && leaf.dy == 160.0 - base.y), "{:?}", emit.artifact_mutations);
     let node = apply_mutations(&projection, &emit.artifact_mutations).await.graph.nodes.into_iter().find(|row| row.id == node_id).expect("node");
     assert!((node.x - 120.0).abs() < 0.01);
@@ -77,7 +80,7 @@ async fn patch_app_instances_updates_labels() {
     let config = SpaceConfig::default();
     let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
     let emit =
-        studio_emit(&projection, &config, &SpaceCommand::PatchAppInstances(crate::engine::space::commands::patch_app_instances::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() })).await.expect("handle");
+        studio_emit(&projection, &config, &SpaceCommand::PatchAppInstances(semio_hub_space_commands_authoring::patch_app_instances::PatchAppInstances { node_ids: ids.clone(), field: "label".into(), value: "Batch Label".into() })).await.expect("handle");
     let next = apply_mutations(&projection, &emit.artifact_mutations).await;
     let labels: Vec<String> = next.graph.nodes.iter().filter(|node| ids.contains(&node.id)).map(|node| node.label.clone()).collect();
     assert!(labels.iter().all(|label| label == "Batch Label"));
@@ -105,7 +108,7 @@ async fn undo_redo_round_trip_on_spawn() {
     // 🧬️ Registry-backed: `SpaceApp` publishes a `bounded_first_step_tool_proofs!` roster, and an
     // empty `AppActionRegistry` declares none of them as `Migrated`, so the registry-LESS
     // `VcsArtifactApp::new` fails construction with `interactive-job.catalog-authority`.
-    let mut app = crate::engine::space::unit_tests::context::app_with_registry().await;
+    let mut app = semio_hub_space_app::unit_tests::context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,

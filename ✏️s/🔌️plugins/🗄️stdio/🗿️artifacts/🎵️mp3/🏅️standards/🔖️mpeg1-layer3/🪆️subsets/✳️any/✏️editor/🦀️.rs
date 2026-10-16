@@ -374,7 +374,78 @@ pub fn create_mp3_editor() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
+
+//#region 🧩️ArtifactItems9
+pub mod artifact_items_9 {
+use crate::{definition};
+use crate::{formats};
+use crate::{STDIO_MP3_DOCUMENT_SCHEMA};
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+pub use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
+pub use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+
+//#region 🔖️Declaration
+/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE g5) — replaces
+/// the side-effecting `crate::standards::mpeg1_layer3::engine::register()` call the
+/// plugin root used to make imperatively. `.composers(...)` reaches this subset's `🚪️io`-level
+/// `io_registry` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES dissolved the old
+/// `⚙️engine`; the registry moved to `🚪️io`, distinct from this file's own `🚪️DerivedIoRegistry`
+/// shadow, whose `entries()` returns `&[&ComposerEntry]` — the wrong type for `.composers()`, which
+/// wants `&'static [ComposerEntry]`) by its fully qualified path, per the silent-rebind hazard this
+/// ticket calls out. `.document_codec_bare::<Mp3Snapshot, Mp3Mutation>(...)` folds in what
+/// `subsets::any::io::register()`'s `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<..>())`
+/// call did — mp3 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
+/// to.
+/// 🧩️ Binds this executable root to its sole schema-owned definition.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
+    semio_s_artifact_stdio_contract::runtime_assembly("mp3", definition()?, declaration)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+    let formats = formats()?;
+    semio_framework_plugin::ArtifactDeclaration::builder(definition)
+        .schema(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
+        .formats(formats)
+        .inferences([crate::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
+        .composers(crate::standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
+        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") })
+        .try_build()
+}
+//#endregion 🔖️Declaration
+}
+//#endregion 🧩️ArtifactItems9
+
+//#region 🧩️ArtifactItems10
+pub mod artifact_items_10 {
+use crate::{ARTIFACT_DEFINITION_SCHEMA};
+use crate::{definition};
+use crate::{assembly};
+use crate::{formats};
+use crate::{native_codecs};
+
+pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
+    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "mp3", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
+}
+}
+//#endregion 🧩️ArtifactItems10
+
+//#region 🧩️ArtifactItems11
+pub mod artifact_items_11 {
+use crate::{artifact_kind};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+
+//#region 🔖️Dialect
+/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
+/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
+/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
+/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
+/// sibling `editor` module.
+pub const MP3_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") };
+//#endregion 🔖️Dialect
+}
+//#endregion 🧩️ArtifactItems11

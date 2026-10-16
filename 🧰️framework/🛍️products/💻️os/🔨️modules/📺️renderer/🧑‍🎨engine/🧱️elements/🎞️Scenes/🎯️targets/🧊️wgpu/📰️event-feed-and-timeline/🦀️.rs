@@ -7,8 +7,8 @@ use super::*;
 /// `ui_wgpu::wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct EventFeedEntryJson {
-    pub(crate) id: String,
+pub struct EventFeedEntryJson {
+    pub id: String,
     #[serde(default)]
     timestamp_ms: i64,
     #[serde(default)]
@@ -21,8 +21,8 @@ pub(crate) struct EventFeedEntryJson {
     tone: Option<String>,
 }
 
-pub(crate) fn host_temporal_now_ms() -> i64 {
-    crate::app_now_ms() as i64
+pub fn host_temporal_now_ms() -> i64 {
+    crate::host_base::app_now_ms() as i64
 }
 
 fn event_feed_time_id(timestamp_ms: i64) -> String {
@@ -55,7 +55,7 @@ fn refuse_host_temporal_reply(token: AdmittedSurfaceToken, generation: u64) {
     });
 }
 
-pub(crate) fn host_temporal_reply(host_id: &str, request: &ui_contract::HostTemporalFormatRequestV1) -> Option<ui_contract::HostTemporalFormatReplyV1> {
+pub fn host_temporal_reply(host_id: &str, request: &ui_contract::HostTemporalFormatRequestV1) -> Option<ui_contract::HostTemporalFormatReplyV1> {
     if !request.validate() {
         return None;
     }
@@ -69,9 +69,9 @@ pub(crate) fn host_temporal_reply(host_id: &str, request: &ui_contract::HostTemp
         {
             let host_id = host_id.to_string();
             let request = request.clone();
-            crate::spawn_app_task(async move {
+            crate::host_base::spawn_app_task(async move {
                 let envelope = json!({ "op": "format-temporal-values", "nowMs": request.now_ms, "values": &request.values }).to_string();
-                match crate::shell::host_io_call(&envelope, None).await.ok().and_then(|answer| serde_json::from_str::<ui_contract::HostTemporalFormatReplyV1>(&answer).ok()) {
+                match crate::host_base::host_io_call(&envelope, None).await.ok().and_then(|answer| serde_json::from_str::<ui_contract::HostTemporalFormatReplyV1>(&answer).ok()) {
                     Some(reply) => {
                         let _ = publish_host_temporal_reply(token, generation, &request, reply);
                     }
@@ -90,7 +90,7 @@ pub(crate) fn host_temporal_reply(host_id: &str, request: &ui_contract::HostTemp
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).and_then(|state| state.host_temporal.visible().cloned()).filter(|reply| reply.matches(request)))
 }
 
-pub(crate) fn seal_host_temporal_candidates(epoch: u64) {
+pub fn seal_host_temporal_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.host_temporal.seal(epoch);
@@ -98,7 +98,7 @@ pub(crate) fn seal_host_temporal_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_host_temporal_candidates(epoch: u64) {
+pub fn acknowledge_host_temporal_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.host_temporal.acknowledge(epoch);
@@ -106,7 +106,7 @@ pub(crate) fn acknowledge_host_temporal_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_host_temporal_candidates(epoch: u64) {
+pub fn discard_host_temporal_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.host_temporal.discard(epoch);
@@ -114,47 +114,47 @@ pub(crate) fn discard_host_temporal_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn stage_vfs_accessibility_controls(host_id: &str, controls: Vec<VfsAccessibilityControl>) {
+pub fn stage_vfs_accessibility_controls(host_id: &str, controls: Vec<VfsAccessibilityControl>) {
     mutate_scene_state(host_id, |state| state.vfs_accessibility.stage(controls));
 }
 
-pub(crate) fn stage_block_list_accessibility_controls(host_id: &str, controls: Vec<BlockListAccessibilityControl>) {
+pub fn stage_block_list_accessibility_controls(host_id: &str, controls: Vec<BlockListAccessibilityControl>) {
     mutate_scene_state(host_id, |state| state.block_list_accessibility.stage(controls));
 }
 
-pub(crate) fn stage_event_feed_accessibility_controls(host_id: &str, controls: Vec<EventFeedAccessibilityControl>) {
+pub fn stage_event_feed_accessibility_controls(host_id: &str, controls: Vec<EventFeedAccessibilityControl>) {
     mutate_scene_state(host_id, |state| state.event_feed_accessibility.stage(controls));
 }
 
-pub(crate) fn stage_graph_timeline_accessibility_controls(host_id: &str, controls: Vec<GraphTimelineAccessibilityControl>) {
+pub fn stage_graph_timeline_accessibility_controls(host_id: &str, controls: Vec<GraphTimelineAccessibilityControl>) {
     mutate_scene_state(host_id, |state| state.graph_timeline_accessibility.stage(controls));
 }
 
-pub(crate) fn stage_table_stepper_accessibility_cells(host_id: &str, cells: Vec<TableStepperAccessibilityCell>) {
+pub fn stage_table_stepper_accessibility_cells(host_id: &str, cells: Vec<TableStepperAccessibilityCell>) {
     mutate_scene_state(host_id, |state| state.table_accessibility.stage(cells));
 }
 
-pub(crate) fn stage_table_editable_text_accessibility_cells(host_id: &str, cells: Vec<TableEditableTextAccessibilityCell>) {
+pub fn stage_table_editable_text_accessibility_cells(host_id: &str, cells: Vec<TableEditableTextAccessibilityCell>) {
     mutate_scene_state(host_id, |state| state.table_editable_accessibility.stage(cells));
 }
 
-pub(crate) fn stage_table_button_accessibility_cells(host_id: &str, cells: Vec<TableButtonAccessibilityCell>) {
+pub fn stage_table_button_accessibility_cells(host_id: &str, cells: Vec<TableButtonAccessibilityCell>) {
     mutate_scene_state(host_id, |state| state.table_button_accessibility.stage(cells));
 }
 
-pub(crate) fn accepted_table_stepper_accessibility_cells(host_id: &str) -> Vec<TableStepperAccessibilityCell> {
+pub fn accepted_table_stepper_accessibility_cells(host_id: &str) -> Vec<TableStepperAccessibilityCell> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn accepted_table_editable_text_accessibility_cells(host_id: &str) -> Vec<TableEditableTextAccessibilityCell> {
+pub fn accepted_table_editable_text_accessibility_cells(host_id: &str) -> Vec<TableEditableTextAccessibilityCell> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_editable_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn accepted_table_button_accessibility_cells(host_id: &str) -> Vec<TableButtonAccessibilityCell> {
+pub fn accepted_table_button_accessibility_cells(host_id: &str) -> Vec<TableButtonAccessibilityCell> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_button_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn seal_table_stepper_accessibility_candidates(epoch: u64) {
+pub fn seal_table_stepper_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_accessibility.seal(epoch);
@@ -162,7 +162,7 @@ pub(crate) fn seal_table_stepper_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn seal_table_editable_text_accessibility_candidates(epoch: u64) {
+pub fn seal_table_editable_text_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_editable_accessibility.seal(epoch);
@@ -170,7 +170,7 @@ pub(crate) fn seal_table_editable_text_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn seal_table_button_accessibility_candidates(epoch: u64) {
+pub fn seal_table_button_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_button_accessibility.seal(epoch);
@@ -178,7 +178,7 @@ pub(crate) fn seal_table_button_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_table_stepper_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_table_stepper_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_accessibility.acknowledge(epoch);
@@ -186,7 +186,7 @@ pub(crate) fn acknowledge_table_stepper_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_table_editable_text_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_table_editable_text_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_editable_accessibility.acknowledge(epoch);
@@ -194,7 +194,7 @@ pub(crate) fn acknowledge_table_editable_text_accessibility_candidates(epoch: u6
     });
 }
 
-pub(crate) fn acknowledge_table_button_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_table_button_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_button_accessibility.acknowledge(epoch);
@@ -202,7 +202,7 @@ pub(crate) fn acknowledge_table_button_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_table_stepper_accessibility_candidates(epoch: u64) {
+pub fn discard_table_stepper_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_accessibility.discard(epoch);
@@ -210,7 +210,7 @@ pub(crate) fn discard_table_stepper_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_table_editable_text_accessibility_candidates(epoch: u64) {
+pub fn discard_table_editable_text_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_editable_accessibility.discard(epoch);
@@ -218,7 +218,7 @@ pub(crate) fn discard_table_editable_text_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_table_button_accessibility_candidates(epoch: u64) {
+pub fn discard_table_button_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_button_accessibility.discard(epoch);
@@ -226,23 +226,23 @@ pub(crate) fn discard_table_button_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn accepted_vfs_accessibility_controls(host_id: &str) -> Vec<VfsAccessibilityControl> {
+pub fn accepted_vfs_accessibility_controls(host_id: &str) -> Vec<VfsAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.vfs_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn accepted_block_list_accessibility_controls(host_id: &str) -> Vec<BlockListAccessibilityControl> {
+pub fn accepted_block_list_accessibility_controls(host_id: &str) -> Vec<BlockListAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.block_list_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn accepted_event_feed_accessibility_controls(host_id: &str) -> Vec<EventFeedAccessibilityControl> {
+pub fn accepted_event_feed_accessibility_controls(host_id: &str) -> Vec<EventFeedAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.event_feed_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn accepted_graph_timeline_accessibility_controls(host_id: &str) -> Vec<GraphTimelineAccessibilityControl> {
+pub fn accepted_graph_timeline_accessibility_controls(host_id: &str) -> Vec<GraphTimelineAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.graph_timeline_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn vfs_accessibility_control_survives_candidate(host_id: &str, target: &VfsAccessibilityFocusTarget, epoch: u64) -> bool {
+pub fn vfs_accessibility_control_survives_candidate(host_id: &str, target: &VfsAccessibilityFocusTarget, epoch: u64) -> bool {
     SCENE_STATE.with(|cell| {
         let surfaces = cell.borrow();
         let Some(presentation) = surfaces.get(host_id).map(|state| &state.vfs_accessibility) else { return false };
@@ -251,7 +251,7 @@ pub(crate) fn vfs_accessibility_control_survives_candidate(host_id: &str, target
     })
 }
 
-pub(crate) fn seal_vfs_accessibility_candidates(epoch: u64) {
+pub fn seal_vfs_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.vfs_accessibility.seal(epoch);
@@ -259,7 +259,7 @@ pub(crate) fn seal_vfs_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_vfs_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_vfs_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.vfs_accessibility.acknowledge(epoch);
@@ -267,7 +267,7 @@ pub(crate) fn acknowledge_vfs_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_vfs_accessibility_candidates(epoch: u64) {
+pub fn discard_vfs_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.vfs_accessibility.discard(epoch);
@@ -275,7 +275,7 @@ pub(crate) fn discard_vfs_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn seal_block_list_accessibility_candidates(epoch: u64) {
+pub fn seal_block_list_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.block_list_accessibility.seal(epoch);
@@ -283,7 +283,7 @@ pub(crate) fn seal_block_list_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_block_list_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_block_list_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.block_list_accessibility.acknowledge(epoch);
@@ -291,7 +291,7 @@ pub(crate) fn acknowledge_block_list_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_block_list_accessibility_candidates(epoch: u64) {
+pub fn discard_block_list_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.block_list_accessibility.discard(epoch);
@@ -299,7 +299,7 @@ pub(crate) fn discard_block_list_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn stage_world3d_accessibility_controls(host_id: &str, controls: Vec<World3dAccessibilityControl>) {
+pub fn stage_world3d_accessibility_controls(host_id: &str, controls: Vec<World3dAccessibilityControl>) {
     mutate_scene_state(host_id, |state| {
         if state.world3d_accessibility.candidate.as_ref().or(state.world3d_accessibility.queued_candidate.as_ref()).is_none_or(|staged| *staged != controls) && state.world3d_accessibility.accepted != controls {
             state.world3d_accessibility.stage(controls);
@@ -307,11 +307,11 @@ pub(crate) fn stage_world3d_accessibility_controls(host_id: &str, controls: Vec<
     });
 }
 
-pub(crate) fn accepted_world3d_accessibility_controls(host_id: &str) -> Vec<World3dAccessibilityControl> {
+pub fn accepted_world3d_accessibility_controls(host_id: &str) -> Vec<World3dAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.world3d_accessibility.accepted.clone()).unwrap_or_default())
 }
 
-pub(crate) fn seal_world3d_accessibility_candidates(epoch: u64) {
+pub fn seal_world3d_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.world3d_accessibility.seal(epoch);
@@ -319,7 +319,7 @@ pub(crate) fn seal_world3d_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_world3d_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_world3d_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.world3d_accessibility.acknowledge(epoch);
@@ -327,7 +327,7 @@ pub(crate) fn acknowledge_world3d_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_world3d_accessibility_candidates(epoch: u64) {
+pub fn discard_world3d_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.world3d_accessibility.discard(epoch);
@@ -335,7 +335,7 @@ pub(crate) fn discard_world3d_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn seal_event_feed_accessibility_candidates(epoch: u64) {
+pub fn seal_event_feed_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.event_feed_accessibility.seal(epoch);
@@ -343,7 +343,7 @@ pub(crate) fn seal_event_feed_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_event_feed_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_event_feed_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.event_feed_accessibility.acknowledge(epoch);
@@ -351,7 +351,7 @@ pub(crate) fn acknowledge_event_feed_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_event_feed_accessibility_candidates(epoch: u64) {
+pub fn discard_event_feed_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.event_feed_accessibility.discard(epoch);
@@ -359,7 +359,7 @@ pub(crate) fn discard_event_feed_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn seal_graph_timeline_accessibility_candidates(epoch: u64) {
+pub fn seal_graph_timeline_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.graph_timeline_accessibility.seal(epoch);
@@ -367,7 +367,7 @@ pub(crate) fn seal_graph_timeline_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn acknowledge_graph_timeline_accessibility_candidates(epoch: u64) {
+pub fn acknowledge_graph_timeline_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.graph_timeline_accessibility.acknowledge(epoch);
@@ -375,7 +375,7 @@ pub(crate) fn acknowledge_graph_timeline_accessibility_candidates(epoch: u64) {
     });
 }
 
-pub(crate) fn discard_graph_timeline_accessibility_candidates(epoch: u64) {
+pub fn discard_graph_timeline_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.graph_timeline_accessibility.discard(epoch);
@@ -402,7 +402,7 @@ struct EventFeedLayout {
     time_font_size: f32,
 }
 
-pub(crate) fn event_feed_layout(bounds: Rect, theme: &Theme) -> EventFeedLayout {
+pub fn event_feed_layout(bounds: Rect, theme: &Theme) -> EventFeedLayout {
     EventFeedLayout {
         inner: bounds.inset(theme.padding_standard),
         card_gap: theme.gap_standard,
@@ -413,7 +413,7 @@ pub(crate) fn event_feed_layout(bounds: Rect, theme: &Theme) -> EventFeedLayout 
     }
 }
 
-pub(crate) fn event_feed_row_height(entry: &EventFeedEntryJson, layout: &EventFeedLayout) -> f32 {
+pub fn event_feed_row_height(entry: &EventFeedEntryJson, layout: &EventFeedLayout) -> f32 {
     layout.card_padding * 2.0 + layout.line_height * if entry.detail.is_some() { 2.0 } else { 1.0 }
 }
 
@@ -428,7 +428,7 @@ fn event_feed_visible_card(card: Rect, inner: Rect) -> Option<Rect> {
 /// band contains `y`. Row activation sends `{ surfaceId, id }` — the payload
 /// `📡️EventFeedHost/🟦️.tsx`'s own `onClick` sends; this renderer used to send `{ entryId }`, which
 /// no host reads.
-pub(crate) fn event_feed_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
+pub fn event_feed_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
     let feed = scene.event_feed.as_ref()?;
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
     let layout = event_feed_layout(bounds, theme);
@@ -484,7 +484,7 @@ fn event_feed_accessibility_controls(
         .collect()
 }
 
-pub(crate) fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
     let control = accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
     let action = control.action.as_ref()?;
     let feed = scene.event_feed.as_ref()?;
@@ -498,7 +498,7 @@ pub(crate) fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, ke
 /// optional icon, time-of-day and weighted tone title, plus an optional detail line. When `follow` is
 /// set the feed snaps to its bottom every frame (log-tail behaviour); a manual wheel-scroll on a
 /// following feed is overridden on the next render, the same tradeoff a live log tail makes.
-pub(crate) fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(feed) = &scene.event_feed else {
         stage_event_feed_accessibility_controls(&scene.host_id, Vec::new());
@@ -704,7 +704,7 @@ fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, au
     let rect = Rect::new(x, y, size, size);
     ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, size * 0.5);
     let inside = [rect.x + 1.0, rect.y + 1.0, rect.w - 2.0, rect.h - 2.0];
-    let image = author.and_then(|author| author.avatar.as_deref()).and_then(|source| crate::interpreter::current_ui_image_key(image_id, source));
+    let image = author.and_then(|author| author.avatar.as_deref()).and_then(|source| semio_framework_os_renderer_wgpu_scene_canvas2d::current_ui_image_key(image_id, source));
     if let Some(key) = image {
         ctx.draw.push_rounded_raster_quad(&key, inside, [0.0, 0.0, 1.0, 1.0], 1.0, (size - 2.0) * 0.5);
         return;
@@ -754,7 +754,7 @@ fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme
 }
 
 /// 📏️ [`graph_timeline_label_track_width`] of one scene's own columns.
-pub(crate) fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
+pub fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
     let columns: Vec<HistoryColumnJson> = scene.graph_timeline.as_ref().and_then(|history| serde_json::from_str(&history.columns_json).ok()).unwrap_or_default();
     graph_timeline_label_track_width(&columns, theme, atlas)
 }
@@ -796,7 +796,7 @@ fn graph_timeline_accessible_name(column: &HistoryColumnJson) -> String {
     if column.labels.is_empty() { column.checkpoint_id.clone() } else { column.labels.join(", ") }
 }
 
-pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, label_track: f32) -> Vec<GraphTimelineAccessibilityControl> {
+pub fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, label_track: f32) -> Vec<GraphTimelineAccessibilityControl> {
     let Some(history) = scene.graph_timeline.as_ref() else { return Vec::new() };
     let Ok(columns) = serde_json::from_str::<Vec<HistoryColumnJson>>(&history.columns_json) else { return Vec::new() };
     let layout = graph_timeline_layout(bounds, &columns, theme, label_track);
@@ -823,7 +823,7 @@ pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode
         .collect()
 }
 
-pub(crate) fn graph_timeline_accessibility_activate(
+pub fn graph_timeline_accessibility_activate(
     scene: &UiComponentSceneNode,
     key: &str,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
@@ -845,7 +845,7 @@ pub(crate) fn graph_timeline_accessibility_activate(
 /// 🪢️ `color-mix(in oklab, var(--muted-foreground) 40%, transparent)` on the lane guides and
 /// parent connectors in `graph-timeline-host.tsx` — a translucent line; opaque `theme.separator`
 /// previously read as visibly heavier than React's thin, faded rail.
-pub(crate) fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let columns: Vec<HistoryColumnJson> = scene.graph_timeline.as_ref().and_then(|history| serde_json::from_str(&history.columns_json).ok()).unwrap_or_default();
     let label_track = graph_timeline_label_track_width(&columns, theme, ctx.atlas);
@@ -972,7 +972,7 @@ pub(crate) fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, 
     ctx.draw.pop_scissor();
 }
 /// 🎯️ Resolves the painted labels and graph area; description cells never check out a checkpoint.
-pub(crate) fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
+pub fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
     let history = scene.graph_timeline.as_ref()?;
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
     let layout = graph_timeline_layout(bounds, &columns, theme, graph_timeline_painted_label_track(&scene.host_id));

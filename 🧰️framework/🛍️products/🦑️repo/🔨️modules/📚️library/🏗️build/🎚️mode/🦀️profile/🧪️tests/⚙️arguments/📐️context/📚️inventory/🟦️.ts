@@ -1,0 +1,14 @@
+import{opendir,lstat}from"node:fs/promises";
+import{join,relative,resolve}from"node:path";
+import{settleCargoContextObservationV1}from"../🟦️.ts";
+import corpus from"../🔣️.json"with{type:"json"};
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+export interface CargoContextInventoryLimitsV1{readonly maximumEntries:number;readonly maximumFiles:number;readonly maximumBytes:number}
+/** 📚️ Streams a complete observer tree while charging every entry before retaining its name. */
+export async function captureCargoContextInventoryV1(directory:string,control:ResourceLeaseControl,requested:CargoContextInventoryLimitsV1={maximumEntries:corpus.limits.maximumEntries,maximumFiles:corpus.limits.maximumFiles,maximumBytes:corpus.limits.maximumArtifactBytes}):Promise<Readonly<{inventory:readonly Readonly<{path:string;kind:"directory"|"file";bytes:number}>[];entries:number;files:number;bytes:number}>>{
+ if(validateJsonSchemaSubset(schema.definitions.InventoryLimits,requested,schema).length)throw Error("Closed context inventory limits required");const limits=Object.freeze({...requested}),root=resolve(directory),protocol=schema.definitions.InventoryProtocol.const,inventory:{path:string;kind:"directory"|"file";bytes:number}[]=[];let entries=0,files=0,bytes=0;
+ const charge=()=>{checkResourceLeaseControl(control);if(entries>=limits.maximumEntries)throw Error("Context inventory entry bound exceeded");entries++;};
+ const visit=async(path:string,charged=false):Promise<void>=>{checkResourceLeaseControl(control);if(!charged)charge();const facts=await lstat(path),own=relative(root,path).replaceAll("\\","/");if(facts.isSymbolicLink())throw Error("Context inventory symlink refused");if(facts.isDirectory()){inventory.push({path:own,kind:"directory",bytes:0});const handle=await opendir(path,{bufferSize:protocol.directoryBufferSize}),names=await settleCargoContextObservationV1(async()=>{const names:string[]=[];for(;;){checkResourceLeaseControl(control);const entry=await handle.read();if(entry===null)break;charge();names.push(entry.name);if(entries%protocol.yieldEveryEntries===0)await control.yieldContinuation();}return names;},[()=>handle.close()]);for(const name of names.sort())await visit(join(path,name),true);}else if(facts.isFile()){if(files>=limits.maximumFiles||facts.size>limits.maximumBytes-bytes)throw Error("Context inventory file/byte bound exceeded");files++;bytes+=facts.size;inventory.push({path:own,kind:"file",bytes:facts.size});}else throw Error("Context inventory type refused");};await visit(root);checkResourceLeaseControl(control);return Object.freeze({inventory:Object.freeze(inventory.map(row=>Object.freeze(row))),entries,files,bytes});
+}

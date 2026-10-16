@@ -1,4 +1,5 @@
 import {test,expect} from "bun:test";
+import "./📥️consumption/🟦️.ts";
 import {Database} from "bun:sqlite";
 import {mkdirSync,mkdtempSync,symlinkSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";

@@ -1,19 +1,18 @@
+import{PRINT_PDF_OPS_V1 as OPS,printPdfPageV1,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,type PrintPdfPageV1}from"../../../📦️artifacts/📖️pdf/🟦️.ts";
+import type{PrintExecutionV1}from"../../../📦️artifacts/🎛️operation/🟦️.ts";
 /** ⚛️ Verifies physical diagram containment and text separation against independent D3 and PDF.js. */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { getDocument, OPS, Util } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { scaleLinear } from "d3-scale";
 import { geoOrthographic } from "d3-geo";
-import { compileVizProbeDocument } from "../../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { withCompiledVizProbeDocumentV1 } from "../../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "./🔣️.json";
 
 /** 🔬️ Compiles stock and authored physics parameters without weakening their physical values. */
-export async function compileNativePhysicsContainment(workDir: string): Promise<void> {
+export async function compileNativePhysicsContainment(execution:PrintExecutionV1): Promise<void> {
   const cases = process.env.PRINT_NATIVE_PHYSICS_PHASE === "potential" ? fixture.cases.filter(entry => "potential" in entry) : process.env.PRINT_NATIVE_PHYSICS_PHASE === "transitions" ? fixture.cases.filter(entry => "transitionLabels" in entry) : process.env.PRINT_NATIVE_PHYSICS_PHASE === "captions" ? fixture.cases.filter(entry => "mathGlyphs" in entry) : fixture.cases;
   const failures: string[] = [];
   for (const theme of ["light", "dark"]) {
-    const root = join(workDir, theme), body = cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{physics-containment}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=${fixture.frame[0]},height=${fixture.frame[1]}]\\begin{scope}[local bounding box=physics-result]\\PhysicsMeasure\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{scope}\\ExplSyntaxOn\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{physics-result}{south~west}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{physics-result}{south~west}}\\semio_viz_probe_values:nx{physics/min}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{physics-result}{north~east}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{physics-result}{north~east}}\\semio_viz_probe_values:nx{physics/max}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\ExplSyntaxOff\\end{VizFigure}` }));
-    const records = await compileVizProbeDocument({ case: "physics-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\PhysicsMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Physics Containment}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    const body = cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{physics-containment}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=${fixture.frame[0]},height=${fixture.frame[1]}]\\begin{scope}[local bounding box=physics-result]\\PhysicsMeasure\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{scope}\\ExplSyntaxOn\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{physics-result}{south~west}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{physics-result}{south~west}}\\semio_viz_probe_values:nx{physics/min}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{physics-result}{north~east}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{physics-result}{north~east}}\\semio_viz_probe_values:nx{physics/max}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/(\\dim_to_fp:n{100mm}/100)},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/(\\dim_to_fp:n{100mm}/100)}}\\ExplSyntaxOff\\end{VizFigure}` }));
+    await withCompiledVizProbeDocumentV1({ case: "physics-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\PhysicsMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Physics Containment}", "\\author{Semio}", "\\date{}"], body }, { execution, scenario: undefined },async({records,probe})=>{
     let referenceCount = 0;
     for (const entry of cases) {
       const own = records.filter(record => record.scenario === entry.id), min = own.find(record => record.key === "physics/min")!.values.map(Number), max = own.find(record => record.key === "physics/max")!.values.map(Number);
@@ -58,24 +57,24 @@ export async function compileNativePhysicsContainment(workDir: string): Promise<
         }
       }
     }
-    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise;
+    const pdf = await probe.inspect();
     let pages = 0, potentialReferences = 0, potentialCaptions = 0;
-    try {
-      for (let page = 1; page <= pdf.numPages; page++) {
-        const pdfPage = await pdf.getPage(page), items = (await pdfPage.getTextContent()).items.flatMap(item => "str" in item ? [item] : []), text = items.map(item => item.str).join(" "), entry = cases.find(entry => text.includes(entry.id));
+    {
+      for (let page = 1; page <= pdf.pages.length; page++) {
+        const pdfPage = printPdfPageV1(pdf,page), items = (await pdfPage).items.flatMap(item => "str" in item ? [item] : []), text = items.map(item => item.str).join(" "), entry = cases.find(entry => text.includes(entry.id));
         if (entry && "potential" in entry && entry.potential && entry.labels) {
-          const operators = await pdfPage.getOperatorList(), stack: number[][] = [], curves: { local: number[][]; page: number[][] }[] = [];
+          const operators = await pdfPage.operators, stack: number[][] = [], curves: { local: number[][]; page: number[][] }[] = [];
           let matrix = [1, 0, 0, 1, 0, 0];
           for (const [index, operation] of operators.fnArray.entries()) {
-            const args = operators.argsArray[index];
+            const args=printPdfArrayV1(operators.argsArray[index]);
             if (operation === OPS.save) stack.push([...matrix]);
             else if (operation === OPS.restore) matrix = stack.pop() ?? [1, 0, 0, 1, 0, 0];
-            else if (operation === OPS.transform) matrix = Util.transform(matrix, args);
+            else if (operation === OPS.transform) matrix = printPdfTransformV1(matrix,printPdfVectorV1(args,6));
             else if (operation === OPS.constructPath) {
-              const path = args[1]?.[0];
+              const path = printPdfVectorV1(printPdfArrayV1(args[1])[0]);
               if (path?.length === fixture.potentialPathPoints * 3 && path[0] === 0 && Array.from({ length: fixture.potentialPathPoints - 1 }, (_, point) => path[(point + 1) * 3]).every(value => value === 1)) {
                 const local = Array.from({ length: fixture.potentialPathPoints }, (_, point) => [Number(path[point * 3 + 1]), Number(path[point * 3 + 2])]);
-                curves.push({ local, page: local.map(point => { const projected = [...point]; Util.applyTransform(projected, matrix); return projected; }) });
+                curves.push({ local, page: local.map(point => { const projected = [...point]; printPdfApplyV1(projected, matrix); return projected; }) });
               }
             }
           }
@@ -114,8 +113,9 @@ export async function compileNativePhysicsContainment(workDir: string): Promise<
         if (/[\uFFFD\uFFFF]/u.test(text)) failures.push(`${theme}/page${page}: invalid extracted physics glyph`);
         pages++;
       }
-    } finally { await pdf.destroy(); }
+    }
     console.log(`[native-physics] ${theme}: ${cases.length} compiled cases, ${referenceCount} D3 physical projections, ${potentialReferences} D3 PDF potential points, ${potentialCaptions} actual path/caption checks, ${pages} PDF.js pages consumed`);
+    });
   }
   if (failures.length) throw Error(`${failures.length} physics containment/projection failures:\n${failures.join("\n")}`);
   console.log("[native-physics] stock/authored forces, motion, levels, bands, optics and Stokes containment PASS");

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput } from "../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput, type RustToken } from "../../../../📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 /** 📎️ Cfg-selected authored input; compiler dep-info must still qualify generated ownership. */
 export interface RustSourceInputV1 { readonly path: string; readonly digest: string; readonly bytes: number; readonly activeBytes: number; readonly activeLines: number; readonly kind: "source" | "embedded"; }
@@ -92,6 +92,44 @@ export function rustCfgMatchesV1(source: string, cfg: readonly string[]): boolea
   return evaluate(0, tokens.length);
 }
 
+const rustItemKeywords = new Set(["fn", "struct", "enum", "trait", "impl", "type", "mod", "static", "use", "extern", "macro_rules", "let"]);
+const rustCfgContinuations = new Set(["else", ".", "?", "=>", "=", "|"]);
+
+/** 🔺️ Whether the `<` at `index` opens generic arguments: after `::` (turbofish), after a CamelCase type name or in prefix position (after `:`, `=`, `,`, `&`, …),
+ * never after an operand, which makes it a comparison.
+ * @see https://doc.rust-lang.org/reference/paths.html#paths-in-expressions */
+function rustOpensGenerics(tokens: readonly RustToken[], index: number): boolean {
+  const previous = tokens[index - 1];
+  if (previous === undefined || previous.text === "::") return true;
+  if (previous.kind === "identifier") return /^\p{Lu}.*\p{Ll}/u.test(previous.text);
+  return previous.kind === "punctuation" && ![")", "]", "}"].includes(previous.text);
+}
+
+/** 🪚️ Finds the last token of the construct owned by a cfg-false attribute: the item, statement, field, argument or arm that starts at `start` and stays inside the
+ * delimiter group that ends at `limit`. It ends at the first top-level `;` or `,` (consumed), at the closing `}` of a body (plus a directly trailing `;` or `,`, with
+ * the continuations `else`, `.`, `?`, `=>`, `=` and `|` kept in the same construct), or, when the group closes first, at the last token before `limit` (a last field,
+ * argument, arm or tail expression has no terminator). Commas inside generic arguments never end it, and commas never end items or `let` statements.
+ * @see https://doc.rust-lang.org/reference/attributes.html */
+function rustCfgOwnedEnd(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, limit: number): number {
+  if (start >= limit) throw Error("Unsupported cfg-owned Rust item");
+  const head = rustVisibility(tokens, pairs, start).next, word = tokens[head]?.text ?? "", next = tokens[head + 1]?.text ?? "";
+  const itemLike = rustItemKeywords.has(word) || word === "const" && next !== "{" || (word === "unsafe" || word === "async") && ["fn", "impl", "trait", "extern", "mod", "unsafe"].includes(next) || word === "union" && tokens[head + 1]?.kind === "identifier";
+  let angle = 0;
+  for (let index = start; index < limit; index++) {
+    const text = tokens[index]!.text, close = pairs.get(index);
+    if (text === "<" && (angle > 0 || rustOpensGenerics(tokens, index))) { angle++; continue; }
+    if (angle > 0 && (text === ">" || text === ">>")) { angle = Math.max(0, angle - text.length); continue; }
+    if (text === ";" || angle === 0 && (text === "{" || text === "," && !itemLike)) {
+      const last = close !== undefined && close > index ? close : index;
+      if (text === "{" && rustCfgContinuations.has(tokens[last + 1]?.text ?? "")) { index = last; angle = 0; continue; }
+      return tokens[last + 1]?.text === ";" || tokens[last + 1]?.text === "," ? last + 1 : last;
+    }
+    if (close !== undefined && close > index) index = close;
+  }
+  if (angle > 0) throw Error("Unsupported cfg-owned Rust item");
+  return limit - 1;
+}
+
 /** ✂️ Selects authored Rust tokens by compiler cfg; generated code still requires compiler dep-info. A `macro_rules!` body stays authored text:
  * its attributes (`#[cfg($scope)]`) are selected where the macro expands, not where it is defined.
  * @see https://doc.rust-lang.org/reference/macros-by-example.html */
@@ -99,6 +137,13 @@ export function selectRustSourceV1(source: string, cfg: readonly string[]): stri
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), edits: { start: number; end: number; text: string }[] = [];
   const enclosure=new Map<number,number>(),stack:number[]=[];for(let index=0;index<tokens.length;index++){if(stack.length)enclosure.set(index,stack.at(-1)!);if(tokens[index]?.text==="{")stack.push(index);else if(tokens[index]?.text==="}")stack.pop();}
   if (tokens.some((token, index) => ["(", ")", "[", "]", "{", "}"].includes(token.text) && !pairs.has(index))) throw Error("Unbalanced Rust source delimiter");
+  const limits = new Int32Array(tokens.length), groups: number[] = [];
+  for (let index = 0; index < tokens.length; index++) {
+    const text = tokens[index]!.text;
+    if (text === ")" || text === "]" || text === "}") groups.pop();
+    limits[index] = groups.length ? pairs.get(groups.at(-1)!)! : tokens.length;
+    if (text === "(" || text === "[" || text === "{") groups.push(index);
+  }
   const attribute = (start: number, end: number): string | null => {
     const head = tokens[start]?.text;
     if (head !== "cfg" && head !== "cfg_attr") return source.slice(tokens[start]!.start, tokens[end - 1]!.end);
@@ -128,10 +173,7 @@ export function selectRustSourceV1(source: string, cfg: readonly string[]): stri
     if (!attrs.ranges.some(([a]) => ["cfg", "cfg_attr"].includes(tokens[a]?.text ?? ""))) { index = attrs.next - 1; continue; }
     const selected = attrs.ranges.map(([a, b]) => attribute(a, b));
     if (selected.includes(null)) {
-      const boundary = rustFindTopLevel(tokens, pairs, attrs.next, tokens.length, new Set([";", ",", "{"]));
-      if (boundary < 0) throw Error("Unsupported cfg-owned Rust item");
-      let last = pairs.get(boundary) ?? boundary;
-      if (tokens[last + 1]?.text === ";" || tokens[last + 1]?.text === ",") last++;
+      const last = rustCfgOwnedEnd(tokens, pairs, attrs.next, limits[index]!);
       edits.push({ start: tokens[index]!.start, end: tokens[last]!.end, text: "" });
       index = last;
     } else {

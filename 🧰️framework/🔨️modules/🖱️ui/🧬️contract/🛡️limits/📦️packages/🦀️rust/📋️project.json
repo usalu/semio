@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-contract-validation-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

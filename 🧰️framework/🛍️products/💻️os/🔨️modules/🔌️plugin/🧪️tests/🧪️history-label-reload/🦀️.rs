@@ -189,7 +189,7 @@ async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String
 /// 🆕️ A fresh registered instance of the fixture app, opened by `actor`.
 async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
     let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.into()));
+    assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     app
 }
 //#endregion 🧰️Harness
@@ -217,7 +217,7 @@ async fn history_labels_survive_a_text_and_a_pack_reload_in_every_locale() {
     artifact_app_laws::load_document(&mut repacked, &live.document_pack().await.expect("document pack"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pack reload");
     for (who, app) in [("live", &mut live), ("text reload", &mut reloaded), ("pack reload", &mut repacked)] {
         assert_eq!(edit_rows(app).await, expected, "{who}: every row keeps its verb and its English and German label");
-        assert_eq!(app.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
+        assert_eq!(app.stores.store.envelope().vcs.edits.iter().map(|edit| edit.verb.clone()).collect::<Vec<_>>(), verbs, "{who}: every edit carries the verb that authored it");
     }
     for app in [&mut live, &mut reloaded, &mut repacked] {
         artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");

@@ -15,10 +15,10 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
     for locale in fixture["locales"].as_array().unwrap() {
         for viewport in fixture["viewports"].as_array().unwrap() {
             let mut shell = shell();
-            shell.locale_id = locale["id"].as_str().unwrap().into();
-            shell.dock.root = DockNode::Stack { windows: vec![], active: String::new() };
-            shell.dock.active_window_id = None;
-            shell.active_window_id = None;
+            shell.prefs.locale_id = locale["id"].as_str().unwrap().into();
+            shell.dock.dock.root = DockNode::Stack { windows: vec![], active: String::new() };
+            shell.dock.dock.active_window_id = None;
+            shell.windows.active_window_id = None;
             let theme = Theme::default();
             let bounds = Rect::new(20.0, 40.0, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
             let mut draw = DrawList::default();
@@ -30,23 +30,23 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
             let mut complete = false;
             for _ in 0..1_024 {
-                let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
-                complete = caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
-                let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
+                let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
+                complete = caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
+                let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).count();
                 assert!(after.saturating_sub(before) <= 1, "each grant paints at most one notice glyph");
                 if complete { break; }
             }
             assert!(complete);
-            assert!(shell.dock_window_plan.is_empty());
-            assert!(!shell.dock_drop_bodies.is_empty());
+            assert!(shell.dock.dock_window_plan.is_empty());
+            assert!(!shell.dock.dock_drop_bodies.is_empty());
             assert!(input.staged_hits().is_empty(), "prose adds no phantom window or scroll target");
-            let glyphs: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).collect();
+            let glyphs: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH).collect();
             assert!(!glyphs.is_empty(), "the empty dock paints its localized instruction");
             assert!(glyphs.iter().all(|glyph| glyph.color == [theme.text_muted.r, theme.text_muted.g, theme.text_muted.b, theme.text_muted.a]));
             let text = locale["text"].as_str().unwrap();
             let notice_bounds = bounds.inset(theme.panel_inset);
-            assert_eq!(text, shell_chrome_string("display.emptyShell", shell.locale_id == "de"));
-            let layout = empty_dock_notice_lines(&mut atlas, notice_bounds, &theme, shell.locale_id == "de");
+            assert_eq!(text, shell_chrome_string("display.emptyShell", shell.prefs.locale_id == "de"));
+            let layout = empty_dock_notice_lines(&mut atlas, notice_bounds, &theme, shell.prefs.locale_id == "de");
             let tolerance = fixture["centerTolerance"].as_f64().unwrap() as f32;
             for (_, rect) in &layout {
                 assert!((rect.x + rect.w * 0.5 - notice_bounds.x - notice_bounds.w * 0.5).abs() <= tolerance);
@@ -82,8 +82,8 @@ fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {
 #[test]
 fn display_window_and_projection_rows_publish_reacts_drag_payload_without_click_actions() {
     let mut shell = shell();
-    shell.session.as_mut().unwrap().app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
-    let value = serde_json::to_value(shell.build_display_windows_ui()).expect("display ui json");
+    shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    let value = serde_json::to_value(shell.docs.build_display_windows_ui(&shell.prefs)).expect("display ui json");
     let fixture = fixture();
     let mime = fixture["mime"].as_str().unwrap();
     for (id, template) in [("framework.display.windows.main.kind", None), ("framework.display.windows.main.projection.parallel", Some("parallel"))] {
@@ -119,27 +119,27 @@ fn encoded_layout_templates_resolve_the_same_initial_top_and_three_point_looks_a
 #[test]
 fn final_close_then_display_open_restores_an_active_persisted_window() {
     let mut shell = shell();
-    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
-    shell.dock.active_window_id = Some("main".into());
-    shell.active_window_id = Some("main".into());
-    assert!(shell.close_dock_window("main"));
-    assert!(shell.dock.collect_window_ids().is_empty());
+    shell.dock.dock.root = DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.dock.active_window_id = Some("main".into());
+    shell.windows.active_window_id = Some("main".into());
+    assert!(SessionCtx::of(&mut shell).close_dock_window("main"));
+    assert!(shell.dock.dock.collect_window_ids().is_empty());
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
-    shell.plan_dock_windows(Rect::new(0.0, 0.0, 800.0, 600.0), &theme, &mut atlas);
-    assert_eq!(shell.dock_drop_bodies.len(), 1, "an empty dock remains a full drop target");
-    assert!(shell.dock_window_plan.is_empty(), "an empty drop target never becomes an empty-id window");
-    assert!(shell.open_display_window("main", Some("top")));
-    assert_eq!(shell.active_window_id.as_deref(), Some("main-2"));
-    assert_eq!(shell.dock.collect_window_ids(), vec!["main-2"]);
-    assert_eq!(shell.world_projection_template.get("main-2").map(String::as_str), Some("top"));
-    assert!(shell.window_topology_actions.is_empty(), "React's drag-only Display palette gives the direct host action no transfer journal");
-    assert_eq!(shell.window_topology_publications.len(), 1);
-    assert_eq!(shell.window_topology_publications[0].journal_token, None);
-    shell.plan_dock_windows(Rect::new(0.0, 0.0, 800.0, 600.0), &theme, &mut atlas);
-    assert_eq!(shell.dock_window_plan.len(), 1);
-    assert!(shell.dock_drop_bodies[0].1.w > 0.0 && shell.dock_drop_bodies[0].1.h > 0.0);
-    let persisted = serde_json::to_value(shell.layout_override.as_ref().expect("persisted layout")).unwrap();
+    ChromeViewCtx::of(&mut shell).plan_dock_windows(Rect::new(0.0, 0.0, 800.0, 600.0), &theme, &mut atlas);
+    assert_eq!(shell.dock.dock_drop_bodies.len(), 1, "an empty dock remains a full drop target");
+    assert!(shell.dock.dock_window_plan.is_empty(), "an empty drop target never becomes an empty-id window");
+    assert!(shell.dock.open_display_window("main", Some("top"), &mut shell.settle, &shell.docs, &mut shell.windows));
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some("main-2"));
+    assert_eq!(shell.dock.dock.collect_window_ids(), vec!["main-2"]);
+    assert_eq!(shell.windows.world_projection_template.get("main-2").map(String::as_str), Some("top"));
+    assert!(shell.windows.window_topology_actions.is_empty(), "React's drag-only Display palette gives the direct host action no transfer journal");
+    assert_eq!(shell.windows.window_topology_publications.len(), 1);
+    assert_eq!(shell.windows.window_topology_publications[0].journal_token, None);
+    ChromeViewCtx::of(&mut shell).plan_dock_windows(Rect::new(0.0, 0.0, 800.0, 600.0), &theme, &mut atlas);
+    assert_eq!(shell.dock.dock_window_plan.len(), 1);
+    assert!(shell.dock.dock_drop_bodies[0].1.w > 0.0 && shell.dock.dock_drop_bodies[0].1.h > 0.0);
+    let persisted = serde_json::to_value(shell.dock.layout_override.as_ref().expect("persisted layout")).unwrap();
     assert!(persisted.to_string().contains("\"instanceId\":\"main-2\""));
     assert!(persisted.to_string().contains("\"templateId\":\"top\""));
 }
@@ -147,9 +147,9 @@ fn final_close_then_display_open_restores_an_active_persisted_window() {
 #[test]
 fn template_pointer_drag_promotes_and_escape_cancels_without_mutating_the_dock() {
     let mut shell = shell();
-    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
-    shell.dock.active_window_id = Some("main".into());
-    let before = shell.dock.root.clone();
+    shell.dock.dock.root = DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.dock.active_window_id = Some("main".into());
+    let before = shell.dock.dock.root.clone();
     let mut input = InputState::<ActionDescriptor>::default();
     input.register_hit(HitTarget {
         rect: Rect::new(0.0, 0.0, 200.0, 30.0),
@@ -160,74 +160,74 @@ fn template_pointer_drag_promotes_and_escape_cancels_without_mutating_the_dock()
         drag_data: Some(window_template_drag_data("main", None)),
     });
     input.publish_hits();
-    semio_framework_async::block_on(shell.handle_pointer_button(20.0, 15.0, true, 0, &mut input, &Theme::default())).unwrap();
-    assert!(shell.pending_dock_drag.as_ref().is_some_and(|(payload, _)| payload.kind == DockDragKind::NewWindow));
-    shell.handle_pointer_move(40.0, 15.0, true, &mut input, &Theme::default());
-    assert!(shell.dock_drag.is_some());
-    shell.handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
-    assert!(shell.pending_dock_drag.is_none() && shell.dock_drag.is_none());
-    assert_eq!(shell.dock.root, before);
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(20.0, 15.0, true, 0, &mut input, &Theme::default())).unwrap();
+    assert!(shell.dock.pending_dock_drag.as_ref().is_some_and(|(payload, _)| payload.kind == DockDragKind::NewWindow));
+    PointerCtx::of(&mut shell).handle_pointer_move(40.0, 15.0, true, &mut input, &Theme::default());
+    assert!(shell.dock.dock_drag.is_some());
+    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    assert!(shell.dock.pending_dock_drag.is_none() && shell.dock.dock_drag.is_none());
+    assert_eq!(shell.dock.dock.root, before);
 }
 
 #[test]
 fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
     let mut shell = shell();
     for id in ["world", "world-2"] {
-        assert!(shell.dock.split_root_with_window(id, crate::dock::DockSide::Right), "the committed dock holds {id}");
+        assert!(shell.dock.dock.split_root_with_window(id, crate::dock::DockSide::Right), "the committed dock holds {id}");
     }
-    shell.dock_window_plan = vec![("world".into(), Rect::new(0.0, 0.0, 100.0, 100.0)), ("world-2".into(), Rect::new(100.0, 0.0, 100.0, 100.0))];
+    shell.dock.dock_window_plan = vec![("world".into(), Rect::new(0.0, 0.0, 100.0, 100.0)), ("world-2".into(), Rect::new(100.0, 0.0, 100.0, 100.0))];
     let mut retired_token = None;
     for id in ["world", "world-2"] {
         let mut state = World3dState::new(id.into(), "controller".into());
-        state.bounds = if id == "world" { Rect::new(0.0, 0.0, 100.0, 100.0) } else { Rect::new(100.0, 0.0, 100.0, 100.0) };
-        let token = shell.world3d_states.try_insert(id.into(), state).unwrap_or_else(|_| panic!("world admitted"));
-        shell.world3d_window_ids.insert(id.into(), id.into());
+        state.session.bounds = if id == "world" { Rect::new(0.0, 0.0, 100.0, 100.0) } else { Rect::new(100.0, 0.0, 100.0, 100.0) };
+        let token = shell.surfaces.world3d_states.try_insert(id.into(), state).unwrap_or_else(|_| panic!("world admitted"));
+        shell.surfaces.world3d_window_ids.insert(id.into(), id.into());
         if id == "world" {
             retired_token = Some(token);
         }
-        shell.world3d_status.insert(id.into(), "status".into());
-        shell.world3d_status_pill_trace.insert(id.into(), "pill".into());
-        shell.active_utility_by_window.insert(id.into(), "utility".into());
-        shell.action_panel_folded.insert(id.into(), false);
-        shell.utility_bar_folded.insert(id.into(), false);
-        shell.projection_pane_folded.insert(id.into(), false);
-        shell.world_projection_template.insert(id.into(), "top".into());
-        shell.search_possibles_open.insert(id.into(), true);
-        shell.settle_pump.watches.insert(id.into(), ShellSettleWatch::default());
+        shell.surfaces.world3d_status.insert(id.into(), "status".into());
+        shell.surfaces.world3d_status_pill_trace.insert(id.into(), "pill".into());
+        shell.windows.active_utility_by_window.insert(id.into(), "utility".into());
+        shell.windows.action_panel_folded.insert(id.into(), false);
+        shell.windows.utility_bar_folded.insert(id.into(), false);
+        shell.windows.projection_pane_folded.insert(id.into(), false);
+        shell.windows.world_projection_template.insert(id.into(), "top".into());
+        shell.commands.search_possibles_open.insert(id.into(), true);
+        shell.settle.settle_pump.watches.insert(id.into(), ShellSettleWatch::default());
     }
-    assert!(shell.scene_surface_contains(50.0, 50.0));
-    assert!(shell.dock.close_window("world"), "the dock — the retention authority — closes the window");
-    shell.dock_window_plan.remove(0);
-    shell.sync_engine_surface_states();
-    assert!(!shell.world3d_states.contains_key("world"));
-    assert_eq!(shell.retired_world3d_states.len(), 1, "scene ownership drains off the input path through bounded maintenance");
-    assert!(shell.world3d_states.get_token(retired_token.unwrap()).is_none(), "late work cannot recover the retired generation");
-    assert!(!shell.scene_surface_contains(50.0, 50.0));
-    assert!(shell.scene_surface_contains(150.0, 50.0));
+    assert!(shell.surfaces.scene_surface_contains(50.0, 50.0));
+    assert!(shell.dock.dock.close_window("world"), "the dock — the retention authority — closes the window");
+    shell.dock.dock_window_plan.remove(0);
+    SessionCtx::of(&mut shell).sync_engine_surface_states();
+    assert!(!shell.surfaces.world3d_states.contains_key("world"));
+    assert_eq!(shell.surfaces.retired_world3d_states.len(), 1, "scene ownership drains off the input path through bounded maintenance");
+    assert!(shell.surfaces.world3d_states.get_token(retired_token.unwrap()).is_none(), "late work cannot recover the retired generation");
+    assert!(!shell.surfaces.scene_surface_contains(50.0, 50.0));
+    assert!(shell.surfaces.scene_surface_contains(150.0, 50.0));
     for absent in [
-        shell.world3d_status.contains_key("world"),
-        shell.world3d_status_pill_trace.contains_key("world"),
-        shell.active_utility_by_window.contains_key("world"),
-        shell.action_panel_folded.contains_key("world"),
-        shell.utility_bar_folded.contains_key("world"),
-        shell.projection_pane_folded.contains_key("world"),
-        shell.world_projection_template.contains_key("world"),
-        shell.search_possibles_open.contains_key("world"),
-        shell.settle_pump.watches.contains_key("world"),
+        shell.surfaces.world3d_status.contains_key("world"),
+        shell.surfaces.world3d_status_pill_trace.contains_key("world"),
+        shell.windows.active_utility_by_window.contains_key("world"),
+        shell.windows.action_panel_folded.contains_key("world"),
+        shell.windows.utility_bar_folded.contains_key("world"),
+        shell.windows.projection_pane_folded.contains_key("world"),
+        shell.windows.world_projection_template.contains_key("world"),
+        shell.commands.search_possibles_open.contains_key("world"),
+        shell.settle.settle_pump.watches.contains_key("world"),
     ] {
         assert!(!absent, "retired window state survived");
     }
     let reopened = World3dState::new("world".into(), "controller-new".into());
-    let token = shell.world3d_states.try_insert("world".into(), reopened).unwrap_or_else(|_| panic!("reopened id is a fresh generation"));
+    let token = shell.surfaces.world3d_states.try_insert("world".into(), reopened).unwrap_or_else(|_| panic!("reopened id is a fresh generation"));
     assert_ne!(token, retired_token.unwrap());
-    assert!(shell.world3d_states.get_token(token).is_some());
+    assert!(shell.surfaces.world3d_states.get_token(token).is_some());
     for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
-        if shell.retired_world3d_states.is_empty() {
+        if shell.surfaces.retired_world3d_states.is_empty() {
             break;
         }
-        shell.advance_world3d_retirement_step();
+        shell.surfaces.advance_world3d_retirement_step();
     }
-    assert!(shell.retired_world3d_states.is_empty(), "the test drives the retired owner to terminal empty before teardown");
+    assert!(shell.surfaces.retired_world3d_states.is_empty(), "the test drives the retired owner to terminal empty before teardown");
 }
 
 #[test]

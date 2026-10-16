@@ -1,4 +1,25 @@
 //! 🔌️ The assembled plugin program and its app instances.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "../../⚛️reactor/🪟️surfaces/🦀️.rs"]
+pub mod surface_context;
+#[doc(hidden)]
+#[path = "🛬️lifted/🏃️runtime/🦀️.rs"]
+pub mod plugin_runtime;
+#[allow(unused_imports)]
+pub use plugin_runtime::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/💡️inference/🦀️.rs"]
+pub mod artifact_inference;
+#[allow(unused_imports)]
+pub use artifact_inference::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🚪️gateway/🦀️.rs"]
+pub mod inference_gateway;
+#[allow(unused_imports)]
+pub use inference_gateway::*;
 use semio_framework::AppDefinition;
 use semio_framework::manifest::{CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use semio_framework::{kernel::{ActorId, ArtifactKind, CapabilityRequirement, InvocationResult, Rights, Scope}, ActionKind, CommandDefinition, Fault, PluginManifest};
@@ -8,36 +29,34 @@ use std::collections::{HashMap, HashSet};
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
 /// `semio_framework_os`'s artifact catalog registry share one definition.
 use semio_framework::ArtifactKindSpec;
-use crate::plugin_app::NoPluginApp;
-use crate::app_builder::App;
-use crate::plugin_app::PluginApp;
-use crate::app_emission::ActionMeta;
-use crate::artifact_declaration::FlowExtensionDescriptor;
-use crate::artifact_declaration::HostMediaHandlerDescriptor;
-use crate::artifact_declaration::HostMediaRuntimeError;
-use crate::artifact_declaration::MeshImportRequest;
-use crate::artifact_declaration::MeshImportResult;
-use crate::artifact_declaration::TwoDSvgExportRequest;
-use crate::artifact_declaration::TwoDSvgExportResult;
-use crate::artifact_identity::ArtifactDefinitionRegistry;
-use crate::artifact_inference::ArtifactInferenceExecutionError;
+use semio_framework_plugin_reactor_app::NoPluginApp;
+use semio_framework_plugin_app_builder::App;
+use semio_framework_plugin_reactor_app::PluginApp;
+use semio_framework_plugin_decl_emission::ActionMeta;
+use semio_framework_plugin_decl_registry::FlowExtensionDescriptor;
+use semio_framework_plugin_decl_registry::HostMediaHandlerDescriptor;
+use semio_framework_plugin_decl_registry::HostMediaRuntimeError;
+use semio_framework_plugin_decl_registry::MeshImportRequest;
+use semio_framework_plugin_decl_registry::MeshImportResult;
+use semio_framework_plugin_decl_registry::TwoDSvgExportRequest;
+use semio_framework_plugin_decl_registry::TwoDSvgExportResult;
+use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
+use semio_framework_plugin_decl_registry::artifact_inference::ArtifactInferenceExecutionError;
 use crate::inference_gateway::wire_artifact_infer_from_cold;
 use crate::artifact_inference::wire_list_artifact_inference_services_with_routes;
-use crate::artifact_registration::PluginRuntimeRegistry;
-use crate::artifact_registration::WireArtifactMutationPlanRequest;
-use crate::artifact_registration::WireArtifactMutationPlanResult;
-use crate::reserved_jobs::join_framework_shared_action_dispositions;
+use semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry;
+use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanRequest;
+use semio_framework_plugin_decl_registry::artifact_registration::WireArtifactMutationPlanResult;
+use semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::surface_contract::ArtifactCodecTableV1;
-
-
+use semio_framework_plugin_decl_surface::ArtifactCodecTableV1;
 
 /// 🗃️ sdk-dedyn (O1/§1.5): generic over the per-plugin app enum `PA: PluginApp` — replaces
 /// `Box<dyn PluginApp>`.
 pub struct AppInstance<PA: PluginApp = NoPluginApp> {
     pub id: u32,
     pub app: PA,
-    pub(crate) surface_contexts: crate::reactor::surface_context::SurfaceContexts,
+    pub surface_contexts: crate::surface_context::SurfaceContexts,
 }
 
 /// 🔌️ A plugin-owned command executes at the program boundary, never through an arbitrary
@@ -51,7 +70,7 @@ pub type PluginCommandHandler = Box<dyn Fn(&semio_framework::manifest::CommandIn
 pub trait PluginProgram: Send {
     type App: PluginApp;
     fn manifest(&self) -> PluginManifest;
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<Self::App>;
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<Self::App>;
     fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
 }
 
@@ -93,23 +112,23 @@ impl<PA: PluginApp> Plugin<PA> {
     }
 
     /// 🛂️ Keeps descriptor authority on the exact immutable plugin assembly.
-    pub(crate) fn with_descriptor_extras(mut self, extras: crate::plugin_runtime::PluginDescriptorExtras) -> Self {
+    pub fn with_descriptor_extras(mut self, extras: crate::plugin_runtime::PluginDescriptorExtras) -> Self {
         self.descriptor_extras = extras;
         self
     }
 
     /// 🪪️ Reads descriptor fields belonging to this plugin, never the last assembled plugin.
-    pub(crate) fn descriptor_extras(&self) -> &crate::plugin_runtime::PluginDescriptorExtras {
+    pub fn descriptor_extras(&self) -> &crate::plugin_runtime::PluginDescriptorExtras {
         &self.descriptor_extras
     }
 
     /// 📦️ Descriptor declarations for this plugin's DEFERRED example bodies — see the field.
-    pub(crate) fn deferred_example_assets(&self) -> &[semio_framework::AssetDeclaration] {
+    pub fn deferred_example_assets(&self) -> &[semio_framework::AssetDeclaration] {
         &self.deferred_example_assets
     }
 
     /// 🧬️ Installs the fully preflighted declaration authority before external rows commit.
-    pub(crate) fn with_runtime_registry(mut self, runtime: PluginRuntimeRegistry) -> Self {
+    pub fn with_runtime_registry(mut self, runtime: PluginRuntimeRegistry) -> Self {
         self.runtime = runtime;
         self
     }
@@ -144,19 +163,19 @@ impl<PA: PluginApp> Plugin<PA> {
         self.runtime.host_media_handlers.two_d_svg_export(request)
     }
 
-    pub(crate) fn wire_list_artifact_inference_services(&self) -> Vec<u8> {
+    pub fn wire_list_artifact_inference_services(&self) -> Vec<u8> {
         wire_list_artifact_inference_services_with_routes(self.runtime.inference_services(), self.runtime.routed_inferences())
     }
 
-    pub(crate) fn wire_artifact_infer_cold(&self, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    pub fn wire_artifact_infer_cold(&self, request: &[u8],operation:u64,generation:u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
         wire_artifact_infer_from_cold(self.runtime.inference_services(), request,operation,generation,cx)
     }
 
-    pub(crate) fn wire_list_artifact_mutations(&self) -> Vec<u8> {
+    pub fn wire_list_artifact_mutations(&self) -> Vec<u8> {
         store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&self.runtime.mutation_roster_entries()))
     }
 
-    pub(crate) fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
+    pub fn wire_artifact_mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, Fault> {
         let request: WireArtifactMutationPlanRequest =
             store::pack_rt::decode_wire_value(request).map_err(|error| plugin_sdk_fault(error.to_string())).and_then(|value| semio_framework_value::FromValue::from_value(value).map_err(|error| plugin_sdk_fault(error.to_string())))?;
         if request.mutation_id.trim().is_empty() {
@@ -235,7 +254,7 @@ impl<PA: PluginApp> Plugin<PA> {
     ///
     /// 📦️ A deferred body never becomes a manifest string, so its descriptor declaration
     /// has to be taken from the leaf HERE — `describe` only ever sees the (empty) row.
-    pub(crate) fn register_app_factory(mut self, mut app: App, factory: AppFactory<PA>) -> Self {
+    pub fn register_app_factory(mut self, mut app: App, factory: AppFactory<PA>) -> Self {
         let mut factory = factory;
         join_framework_shared_action_dispositions(&mut app.definition);
         join_framework_shared_action_dispositions(&mut factory.definition);
@@ -254,7 +273,7 @@ impl<PA: PluginApp> Plugin<PA> {
         self
     }
 
-    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
+    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
         self.apps.get(app_id).map(|factory| (factory.create)(&factory.definition, actor, mounted_policy, identity))
     }
 
@@ -278,21 +297,11 @@ impl<PA: PluginApp> PluginProgram for Plugin<PA> {
         self.manifest.clone()
     }
 
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
         Plugin::create_app(self, app_id, actor, mounted_policy, identity)
     }
 
     fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         Plugin::handle_plugin_command(self, invocation, meta)
     }
-}
-
-/// 🎭️ The definition travels WITH the bare fn pointer — same reason `SurfaceDeclaration.factory`
-/// does (a monomorphized non-capturing `fn` item cannot close over `def`).
-pub(crate) struct AppFactory<PA> {
-    pub definition: AppDefinition,
-    /// 🚫️async: E4 fn-pointer slot
-    pub create: for<'a, 'b> fn(&AppDefinition, ActorId, crate::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA,
-    pub document_schema: &'static str,
-    pub codec: ArtifactCodecTableV1,
 }

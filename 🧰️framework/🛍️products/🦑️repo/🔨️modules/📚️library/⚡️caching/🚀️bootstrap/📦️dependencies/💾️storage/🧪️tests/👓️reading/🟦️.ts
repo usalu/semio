@@ -1,0 +1,29 @@
+import{test,expect}from"bun:test";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import ts from"typescript";
+import{readFileSync}from"node:fs";
+import*as storage from"../../🟦️.ts";
+import schema from"../../🧬️schema/📥️install.json"with{type:"json"};
+import bindingsSchema from"../../🧬️schema/📥️bindings.json"with{type:"json"};
+import corpus from"./🔣️.json"with{type:"json"};
+test("dependency reader exact ready receipt follows neutral DATA with independent Ajv and SQLite",()=>{
+ const validate=new Ajv({strict:true}).compile(bindingsSchema),expected=corpus.expected,read=(storage as unknown as Record<string,unknown>).requireJavascriptDependencyBindingReceiptV1;
+ expect(typeof read).toBe("function");const verify=read as(value:unknown,generation:string,bindings:typeof expected.bindings)=>void;
+ expect(validate(expected)).toBe(true);expect(()=>verify(expected,expected.generation,expected.bindings)).not.toThrow();
+ const db=new Database(":memory:");try{db.exec("create table binding(source text primary key,target text unique)");for(const row of expected.bindings)db.query("insert into binding values(?,?)").run(row.sourceDirectory,row.targetDirectory);expect(db.query("select source,target from binding order by source").all()).toEqual(expected.bindings.map(row=>({source:row.sourceDirectory,target:row.targetDirectory})));for(const mutation of corpus.mutations){const value=structuredClone(expected)as any;if(mutation.field==="generation"||mutation.field==="extra")value[mutation.field]=mutation.value;else value.bindings[0][mutation.field]=mutation.value;expect(()=>verify(value,expected.generation,expected.bindings),mutation.name).toThrow();if(mutation.field==="extra")expect(validate(value)).toBe(false);}}
+ finally{db.close();}console.log("[DEBUG] Exact dependency generation and binding DATA refuse mismatches against independent Ajv and SQLite");
+});
+test("dependency reader actual owner separates readonly inspection shared consumption and exclusive installation",()=>{
+ const protocol=schema.$defs.ReadProtocol.const;expect(new Ajv({strict:true}).compile({const:protocol.steps})(corpus.order)).toBe(true);
+ const path=new URL("../../🟦️.ts",import.meta.url),file=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),owners=new Map(file.statements.filter(ts.isFunctionDeclaration).filter(node=>node.name).map(node=>[node.name!.text,node]));
+ const reader=owners.get("withJavascriptDependencyReadStorageV1");expect(reader).toBeDefined();const source=reader!.getText(file);expect(source).toContain('mode:"shared"');expect(source).toContain("inspectJavascriptDependencyInputsV1(");expect(source).toContain("requireJavascriptDependencyBindingReceiptV1(");expect(source).toContain("withRequestedIssuedResourceControlV1(");expect(source).toContain("recheckJavascriptDependencyInputsV1(");expect(source).toContain("withCurrentBunWorkspaceOwnershipV1(");expect(source).not.toContain("withPublishedBunWorkspaceOwnershipV1(");expect(source).not.toContain("stageJavascriptDependencyInputsV1(");expect(source).not.toContain("bindJavascriptDependencyDirectoriesV1(");
+ const inspect=owners.get("inspectJavascriptDependencyInputsV1");expect(inspect).toBeDefined();const effects:string[]=[];function visit(node:ts.Node):void{if(ts.isCallExpression(node)&&/^(mkdirSync|writeFileSync|renameSync|symlinkSync|rmSync)$/u.test(node.expression.getText(file)))effects.push(node.expression.getText(file));ts.forEachChild(node,visit);}visit(inspect!);expect(effects).toEqual([]);expect(owners.get("stageJavascriptDependencyInputsV1")!.getText(file)).toContain("inspectJavascriptDependencyInputsV1(");expect(owners.get("withJavascriptDependencyStorageV1")!.getText(file)).toContain('mode:"exclusive"');
+ console.log("[DEBUG] Actual dependency owner keeps projection read-only and retains shared custody through canonical consumption drainage and final checks");
+});
+
+test("dependency reader neutral capacity bounds all projected source and descriptor reads",()=>{const policy=schema.$defs.ProjectionPolicy.const;expect(new Ajv({strict:true}).compile({const:policy.maximumPackages})(corpus.capacity.packageLimit)).toBe(true);expect(corpus.capacity.fileLimit).toBe(policy.maximumFileBytes);expect(corpus.capacity.aggregateLimit).toBe(policy.maximumSourceBytes);expect(()=>storage.javascriptDependencyPackagePathsV1(".",Array.from({length:policy.maximumPackages},(_,index)=>"w/"+index))).toThrow();const source=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8");expect(source).toContain("maximumSourceBytes");expect(source).toContain("maximumSourceEntries");expect(source).toContain("readSync(");console.log("[DEBUG] Closed projection package, entry, individual and aggregate extents have explicit bounds");});
+
+test("dependency reader all actual installed receipt consumers use bounded descriptor owner",()=>{const path=new URL("../../../🟦️.ts",import.meta.url),file=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true),owner=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="prepareJavascriptDependencies");expect(owner).toBeDefined();const source=owner!.getText(file);expect(source).toContain("readJavascriptDependencyBindingReceiptV1(");expect(source).toContain("requireJavascriptDependencyBindingReceiptV1(");expect(source).not.toContain('readFileSync(receipt,');console.log("[DEBUG] Actual installer ready-generation reuse shares the bounded descriptor and exact receipt validator with consumers");});
+
+test("dependency reader private finite policy cannot change through public schema DATA",()=>{const policy=schema.$defs.ProjectionPolicy.const,prior=policy.maximumPackages;try{policy.maximumPackages=1;expect(storage.javascriptDependencyPackagePathsV1(".",["w"])).toEqual([".","w"]);}finally{policy.maximumPackages=prior;}console.log("[DEBUG] Mutating public schema DATA cannot change the privately captured dependency package bound");});

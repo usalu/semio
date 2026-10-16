@@ -1,53 +1,35 @@
-import { buildBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { printDocuments, printDocument, printDocumentOutputDirectory, printLibrarySources, printSourceDateEpoch } from "./📇️catalog/🟦️.ts";
-import { prepareTectonic, preparedTectonic } from "./🔧️toolchain/📜️script.ts";
-import { preparedPrintBundle } from "./📚️bundle/📜️script.ts";
-import { stagePrintSources, printCompilerName } from "../📥️source-staging/🟦️.ts";
-import { createRequire } from "node:module";
-import { pathToFileURL } from "node:url";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { spawn } from "node:child_process";
-import { basename, dirname, join, relative } from "node:path";
-
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { printFontSearchPaths, stagePrintFonts } from "../🔤print-font-catalog/🟦️.ts";
-import { resolvePrintPanelGlassStyle, type PrintTheme } from "../🎨print-design-token-paints/🟦️.ts";
-
-//#region 🖨️TectonicTemplateCompilation
-export type PrintTemplate = { readonly id: string; readonly texPath: string };
-
-export type PrintTemplatePdfNames = { readonly light: string; readonly dark: string };
-
-type PrintPanelManifestEntry = {
-  readonly id: string;
-  readonly page: number;
-  readonly xPt: number;
-  readonly yPt: number;
-  readonly wPt: number;
-  readonly hPt: number;
-};
-
-const workspaceRoot = getWorkspaceRoot();
-const productRoot = join(workspaceRoot, "🧰️framework", "🛍️products", "📓️print");
-const panelGlassDirectoryName = ".semio-panel-glass";
-const darkTexDirectoryName = ".semio-dark";
-const panelRenderDpi = 200;
-const pointsPerInch = 72;
-const TEMPLATES: readonly PrintTemplate[] = printDocuments().filter(document => document.collection === "templates");
-
-/** 🖨️ Lists the registered print templates. */
-export function registeredPrintTemplates(): readonly PrintTemplate[] {
-  return TEMPLATES;
-}
-
-/** 🖨️ Returns the light and dark PDF names for one registered TeX path. */
-export function printTemplatePdfNames(texPath: string): PrintTemplatePdfNames {
-  const basenameWithoutExtension = basename(texPath, ".tex");
-  return { light: `${basenameWithoutExtension}.pdf`, dark: `${basenameWithoutExtension}-dark.pdf` };
-}
-
-/** 🌗️ Derives the generated dark TeX source from the canonical light source. */
+import{inspectPrintPdfV1,type PrintPdfSnapshotV1}from"../../📦️artifacts/📖️pdf/🟦️.ts";
+import{withRequestedIssuedResourceControlV1}from"./../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{capturePrintCompilerRefusalV1}from"./📥️refusal/🟦️.ts";
+import{createHash}from"node:crypto";
+import{lstat,mkdir,readFile,unlink,writeFile}from"node:fs/promises";
+import{basename,dirname,isAbsolute,join,relative,sep}from"node:path";
+import{pathToFileURL}from"node:url";
+import{captureOwnedCommandResultV1,OwnedCommandFailure}from"./../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withPrintStorageTaskV1,type PrintExecutionV1,type PrintStorageTaskV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
+import{printArtifactLayoutV1,printScratchOwnerV1}from"../../📦️artifacts/🟦️.ts";
+import{withPreparedPrintMaterialV1,readPrintMaterialFileV1}from"../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
+import{withArtifactScratchV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{stagePrintSources,printCompilerName,type StagedPrintSourcesV1}from"../📥️source-staging/🟦️.ts";
+import{printDocuments,printDocument,printLibrarySources,printSourceDateEpoch}from"./📇️catalog/🟦️.ts";
+import{printCompilationIntentV1,type PrintDocumentIntentV1,type PrintProbeIntentV1,type PrintCompilationIntentV1}from"./📋️intent/🟦️.ts";
+import{printPanelManifestV1,renderPrintPanelImagesV1}from"./🪟️panels/🟦️.ts";
+import limits from"./📋️intent/🧬️schema/🔣️.json"with{type:"json"};
+export type{PrintDocumentIntentV1,PrintProbeIntentV1,PrintGeneratedDocumentIntentV1}from"./📋️intent/🟦️.ts";
+/** 📇️ Names a registered authored TeX template. */
+export interface PrintTemplate{readonly id:string;readonly texPath:string}
+/** 🌓️ Names exact consumer-facing light and dark PDFs. */
+export interface PrintTemplatePdfNames{readonly light:string;readonly dark:string}
+const product="🧰️framework/🛍️products/📓️print",policy=limits.definitions.Policy.const;
+/** 📇️ Lists authored template DATA without opening a compiler or cache. */
+export function registeredPrintTemplates():readonly PrintTemplate[]{return printDocuments().filter(document=>document.collection==="templates");}
+/** 🖨️ Derives PDF names from the authored document filename. */
+export function printTemplatePdfNames(texPath:string):PrintTemplatePdfNames{const stem=basename(texPath,".tex");return Object.freeze({light:stem+".pdf",dark:stem+"-dark.pdf"});}
+/** 🌗️ Derives the dark variant from the canonical light Source. */
 export function deriveDarkPrintTexSource(lightSource: string): string {
   if (/\btheme=dark\b/.test(lightSource)) throw new Error("source already has theme=dark; use the light source as canonical");
   const themed = /\btheme=light\b/.test(lightSource) ? lightSource.replace(/\btheme=light\b/, "theme=dark") : lightSource.replace(/(\\documentclass\[[^\]]*)\]/, "$1,theme=dark]");
@@ -57,225 +39,23 @@ export function deriveDarkPrintTexSource(lightSource: string): string {
   return `${magic}% Generated by print/script.ts deriveDarkTexSource — do not edit or commit.\n${body.slice(magic.length)}`;
 }
 
-/** 📦️ Compiles one document and atomically publishes only its consumer-facing PDFs. */
-export async function buildRegisteredPrintTemplate(id: string, signal?: AbortSignal): Promise<void> {
-  const document = printDocument(id);
-  await publishPrintArtifact({ id, sourceRoot: productRoot, texPath: document.texPath, sources: document.sources, output: printDocumentOutputDirectory(id), owner: `@semio-tech/print:build-${id}`, dark: true }, signal);
-}
-
-export type PrintArtifact = { readonly id: string; readonly sourceRoot: string; readonly texPath: string; readonly sources: readonly string[]; readonly output: string; readonly owner: string; readonly dark: boolean };
-
-/** 📄️ Publishes a caller-owned document from staged inputs using the pinned shared compiler. */
-export async function publishPrintArtifact(document: PrintArtifact, signal?: AbortSignal): Promise<void> {
-  if (!/^[a-z]+(?:-[a-z0-9]+)*$/.test(document.id)) throw new Error(`Invalid Print artifact id: ${document.id}`);
-  const tectonic = preparedTectonic(workspaceRoot);
-  const temporaryRoot = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated/print") : join(workspaceRoot, ".🧬semio/🦑️repo/⚡️cache/print");
-  mkdirSync(temporaryRoot, { recursive: true });
-  const temporary = mkdtempSync(join(temporaryRoot, `${document.id}-`));
-  try {
-    signal?.throwIfAborted();
-    const library = join(temporary, "library"), staged = stagePrintSources(document.sourceRoot, document.sources, join(temporary, "source")), output = join(temporary, "compiled"), texPath = staged.get(document.texPath);
-    stagePrintSources(productRoot, printLibrarySources(), library);
-    if (!texPath) throw new Error(`Print document is absent from its source set: ${document.texPath}`);
-    if (document.dark) await compileLightAndDark(tectonic, texPath, output, library, signal);
-    else await compilePrintDocumentWithPanels(tectonic, texPath, output, dirname(texPath), library, signal);
-    const names = printTemplatePdfNames(document.texPath);
-    const files = new Map((document.dark ? Object.values(names) : [names.light]).map(name => [name, join(output, printCompilerName(name))]));
-    for (const file of files.values()) if (readFileSync(file).subarray(0, 5).toString() !== "%PDF-") throw new Error(`Invalid compiled PDF: ${file}`);
-    signal?.throwIfAborted();
-    await stageRepositoryArtifacts(document.output, document.owner, files, { signal });
-    console.log(`[print] Published ${document.id}: ${files.size} PDFs`);
-  } finally { rmSync(temporary, { recursive: true, force: true }); }
-}
-
-/** 🔤️ The tracked fonts staged once per process for probe compilations. */
-let stagedPrintFonts: Promise<{ readonly total: number }> | undefined;
-
-/**
- * 🧪️ Compiles one staged TeX document exactly once — light only, no panel-glass pass — against the
- * print library staged beside it, with the pinned compiler and the tracked fonts prepared on first use. Probe documents use
- * it to read the records their pages emit.
- */
-export async function compilePrintTexOnce(texPath: string, outDirectory: string, workDirectory: string, signal?: AbortSignal): Promise<void> {
-  const tectonic = await prepareTectonic(workspaceRoot, signal);
-  stagedPrintFonts ??= stagePrintFonts(workspaceRoot);
-  await stagedPrintFonts;
-  const library = join(workDirectory, ".semio-library");
-  rmSync(library, { recursive: true, force: true });
-  stagePrintSources(productRoot, printLibrarySources(), library);
-  await compilePrintDocument(tectonic, texPath, outDirectory, workDirectory, library, signal);
-}
-
-/** 🪟️ Renders registered panel-glass PNGs from a first-pass template PDF. */
-export async function renderPrintPanelGlass(options: { readonly manifestPath: string; readonly pdfPath: string; readonly glassDirectory: string; readonly theme: PrintTheme }): Promise<void> {
-  const entries = parsePanelManifest(options.manifestPath);
-  if (entries.length === 0) return;
-  const style = resolvePrintPanelGlassStyle(options.theme);
-  const [tintRed, tintGreen, tintBlue] = parseHex(style.tintHex);
-  const tintAlpha = Math.round(style.alpha * 255);
-  const scale = panelRenderDpi / pointsPerInch;
-  const blurSigma = Math.max(1.5, (style.blurPixels * scale) / 9);
-  const { createCanvas, Path2D, DOMMatrix } = loadPdfCanvas();
-  (globalThis as unknown as { Path2D?: typeof Path2D }).Path2D ??= Path2D;
-  (globalThis as unknown as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix ??= DOMMatrix;
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const sharp = (await import("sharp")).default;
-  const document = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(options.pdfPath)), useSystemFonts: true }).promise;
-  const pageCache = new Map<number, { readonly png: Buffer; readonly widthPt: number; readonly heightPt: number }>();
-  mkdirSync(options.glassDirectory, { recursive: true });
-  for (const entry of entries) {
-    let rendered = pageCache.get(entry.page);
-    if (!rendered) {
-      const page = await document.getPage(entry.page);
-      const viewport = page.getViewport({ scale });
-      const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("panel glass canvas 2d unavailable");
-      await page.render({ canvas: canvas as unknown as HTMLCanvasElement, canvasContext: context as unknown as CanvasRenderingContext2D, viewport }).promise;
-      rendered = { png: canvas.toBuffer("image/png"), widthPt: (page.view[2] ?? 0) - (page.view[0] ?? 0), heightPt: (page.view[3] ?? 0) - (page.view[1] ?? 0) };
-      pageCache.set(entry.page, rendered);
-    }
-    const left = Math.max(0, Math.round(entry.xPt * scale));
-    const top = Math.max(0, Math.round((rendered.heightPt - entry.yPt - entry.hPt) * scale));
-    const width = Math.max(1, Math.round(entry.wPt * scale));
-    const height = Math.max(1, Math.round(entry.hPt * scale));
-    const tint = Buffer.alloc(width * height * 4);
-    for (let index = 0; index < width * height; index += 1) {
-      const offset = index * 4;
-      tint[offset] = tintRed;
-      tint[offset + 1] = tintGreen;
-      tint[offset + 2] = tintBlue;
-      tint[offset + 3] = tintAlpha;
-    }
-    const image = await sharp(rendered.png)
-      .extract({ left: Math.min(left, Math.max(0, Math.round(rendered.widthPt * scale) - 1)), top: Math.min(top, Math.max(0, Math.round(rendered.heightPt * scale) - 1)), width, height })
-      .removeAlpha()
-      .blur(blurSigma)
-      .modulate({ saturation: style.saturation })
-      .composite([{ input: tint, raw: { width, height, channels: 4 }, blend: "over" }])
-      .png({ compressionLevel: 9 })
-      .toBuffer();
-    writeFileSync(join(options.glassDirectory, `${entry.id}.png`), image);
-    console.log(`[TRACE] print panel glass ${entry.id} page ${entry.page}`);
-  }
-  writeFileSync(join(options.glassDirectory, ".ready"), "");
-}
-
-function loadPdfCanvas(): {
-  readonly createCanvas: (width: number, height: number) => import("@napi-rs/canvas").Canvas;
-  readonly Path2D: typeof import("@napi-rs/canvas").Path2D;
-  readonly DOMMatrix: typeof import("@napi-rs/canvas").DOMMatrix;
-} {
-  const pdfjsEntry = join(workspaceRoot, "node_modules", "pdfjs-dist", "legacy", "build", "pdf.mjs");
-  const canvas = createRequire(pdfjsEntry)("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
-  return { createCanvas: canvas.createCanvas, Path2D: canvas.Path2D, DOMMatrix: canvas.DOMMatrix };
-}
-
-function parsePanelManifest(path: string): PrintPanelManifestEntry[] {
-  const text = readFileSync(path, "utf8").trim();
-  if (!text) return [];
-  return text.split("\n").map((line) => {
-    const [id, page, xPt, yPt, wPt, hPt] = line.split(";").map((part) => part.trim());
-    if (!id || !page || !xPt || !yPt || !wPt || !hPt) throw new Error(`invalid panel manifest line: ${line}`);
-    return { id, page: Number.parseInt(page, 10), xPt: parsePoints(xPt), yPt: parsePoints(yPt), wPt: parsePoints(wPt), hPt: parsePoints(hPt) };
-  });
-}
-
-function parsePoints(value: string): number {
-  return Number.parseFloat(value.replace(/pt$/i, ""));
-}
-
-function parseHex(hex: string): [number, number, number] {
-  const value = hex.trim().replace(/^#/, "");
-  if (value.length === 3) return [Number.parseInt(value[0]! + value[0]!, 16), Number.parseInt(value[1]! + value[1]!, 16), Number.parseInt(value[2]! + value[2]!, 16)];
-  const integer = Number.parseInt(value, 16);
-  return [(integer >> 16) & 0xff, (integer >> 8) & 0xff, integer & 0xff];
-}
-
-async function compileLightAndDark(tectonic: string, lightTexPath: string, outDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
-  const lightDirectory = dirname(lightTexPath);
-  await compilePrintDocumentWithPanels(tectonic, lightTexPath, outDirectory, lightDirectory, libraryRoot, signal);
-  const darkPath = writeDerivedDarkTex(lightTexPath);
-  await compilePrintDocumentWithPanels(tectonic, darkPath, outDirectory, lightDirectory, libraryRoot, signal);
-}
-
-async function compilePrintDocumentWithPanels(tectonic: string, texPath: string, outDirectory: string, workDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
-  const jobname = basename(texPath, ".tex");
-  resetPanelArtifacts(outDirectory, jobname);
-  await compilePrintDocument(tectonic, texPath, outDirectory, workDirectory, libraryRoot, signal);
-  const manifest = panelManifestPath(outDirectory, jobname);
-  if (existsSync(manifest) && parsePanelManifest(manifest).length > 0) {
-    signal?.throwIfAborted();
-    await renderPrintPanelGlass({ manifestPath: manifest, pdfPath: join(outDirectory, `${jobname}.pdf`), glassDirectory: panelGlassDirectory(outDirectory, jobname), theme: detectTheme(texPath) });
-    await compilePrintDocument(tectonic, texPath, outDirectory, workDirectory, libraryRoot, signal);
-  }
-}
-
-// 🪟 Tectonic parses --bundle as a URL first; on Windows a bare "C:\…" path reads
-// as the scheme "c" and is rejected with "doesn't specify a valid bundle", so the
-// directory bundle is handed over as a percent-encoded file URL (which also keeps
-// the emoji cache segments intact) on every platform.
-export function printBundleArgument(directory: string): string {
-  return pathToFileURL(directory).href;
-}
-
-async function compilePrintDocument(tectonic: string, texPath: string, outDirectory: string, workDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
-  const jobname = basename(texPath, ".tex");
-  mkdirSync(outDirectory, { recursive: true });
-  clearStaleTableOfContentsFiles(workDirectory, outDirectory, jobname);
-  clearStaleTableOfContentsFiles(dirname(texPath), outDirectory, jobname);
-  const libraryPackages = join(libraryRoot, printCompilerName("🖋️latex")), searchPaths = [libraryPackages, libraryRoot, workDirectory, outDirectory, ...printFontSearchPaths()];
-  signal?.throwIfAborted();
-  await new Promise<void>((accept, reject) => {
-    const child = spawn(tectonic, ["--bundle", printBundleArgument(preparedPrintBundle(workspaceRoot)), "--keep-logs", "--keep-intermediates", "-Z", "deterministic-mode", ...searchPaths.flatMap((path) => ["-Z", `search-path=${path}`]), "--outdir", outDirectory, relative(workDirectory, texPath).replaceAll("\\", "/")], { cwd: workDirectory, env: tectonicEnvironment(workDirectory, outDirectory, libraryRoot), signal, stdio: "inherit", timeout: buildBudgetMs() });
-    let failure: Error | undefined;
-    child.once("error", error => { failure = error; });
-    child.once("close", code => failure ? reject(failure) : code === 0 ? accept() : reject(new Error(`Tectonic compilation failed: ${code}`)));
-  });
-  const pdf = join(outDirectory, `${jobname}.pdf`);
-  if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
-  console.log(`[TRACE] print built ${relative(workspaceRoot, pdf)}`);
-}
-
-function writeDerivedDarkTex(lightTexPath: string): string {
-  const darkDirectory = join(dirname(lightTexPath), darkTexDirectoryName);
-  mkdirSync(darkDirectory, { recursive: true });
-  const darkPath = join(darkDirectory, `${basename(lightTexPath, ".tex")}-dark.tex`);
-  writeFileSync(darkPath, deriveDarkPrintTexSource(readFileSync(lightTexPath, "utf8")), "utf8");
-  return darkPath;
-}
-
-function tectonicEnvironment(workDirectory: string, outDirectory: string, libraryRoot: string): NodeJS.ProcessEnv {
-  const separator = process.platform === "win32" ? ";" : ":";
-  const paths = [outDirectory, workDirectory, join(libraryRoot, printCompilerName("🖋️latex")), libraryRoot];
-  return { ...process.env, SOURCE_DATE_EPOCH: printSourceDateEpoch(), TZ: "UTC", TEXINPUTS: paths.map(path => `${path}//${separator}${path}${separator}`).join("") };
-}
-
-function clearStaleTableOfContentsFiles(workDirectory: string, outDirectory: string, jobname: string): void {
-  for (const extension of [".sctoc", ".semio-toc", ".register-toc", ".window-breaks"]) {
-    for (const directory of [workDirectory, outDirectory]) {
-      const path = join(directory, `${jobname}${extension}`);
-      if (existsSync(path)) rmSync(path);
-    }
-  }
-}
-
-function panelManifestPath(outDirectory: string, jobname: string): string {
-  return join(outDirectory, `${jobname}.panels`);
-}
-
-function panelGlassDirectory(outDirectory: string, jobname: string): string {
-  return join(outDirectory, panelGlassDirectoryName, jobname);
-}
-
-function resetPanelArtifacts(outDirectory: string, jobname: string): void {
-  const manifest = panelManifestPath(outDirectory, jobname);
-  const glass = panelGlassDirectory(outDirectory, jobname);
-  if (existsSync(manifest)) rmSync(manifest);
-  if (existsSync(glass)) rmSync(glass, { recursive: true });
-}
-
-function detectTheme(texPath: string): PrintTheme {
-  return /\btheme\s*=\s*dark\b/.test(readFileSync(texPath, "utf8")) ? "dark" : "light";
-}
-//#endregion 🖨️TectonicTemplateCompilation
+/** 📦️ Encodes a local TeX bundle as an explicit file URL on every platform. */
+export function printBundleArgument(directory:string):string{return pathToFileURL(directory).href;}
+/** 🧪️ Exposes finite compiled files only inside the retained funded scratch callback. */
+export interface CompiledPrintProbeV1{readonly pdfPath:string;readonly directory:string;readonly texPath:string;readonly control:ResourceLeaseControl;inspect():Promise<PrintPdfSnapshotV1>;read(name:string,maximumBytes:number):Promise<Uint8Array>;recheck():Promise<void>}
+interface CompilerContext{readonly task:PrintStorageTaskV1;readonly destination:ArtifactDestinationV1;readonly sink:ArtifactDestinationContextV1;readonly control:ResourceLeaseControl;readonly executable:string;readonly bundle:string;readonly fonts:string;readonly recheckInputs:()=>Promise<void>}
+function withCompilerV1<T>(execution:PrintExecutionV1,body:(context:CompilerContext)=>Promise<T>):Promise<T>{return withPrintStorageTaskV1(execution.operation,execution.phaseControl,async(accepted,task)=>{const diagnostics=task.store("diagnostics");return withArtifactScratchV1({workspace:task.workspace,invocation:task.invocation,storage:diagnostics.storage,control:diagnostics.control,phaseControl:task.phaseControl,request:{version:1,mode:task.mode,owner:printScratchOwnerV1("compiler")}},destination=>withArtifactDestinationTaskV1(destination,task.invocation,sink=>withPreparedPrintMaterialV1(accepted,"tectonic",sink.control,tool=>withPreparedPrintMaterialV1(accepted,"tex",tool.control,bundle=>withPreparedPrintMaterialV1(accepted,"fonts",bundle.control,async fonts=>{if(!tool.executable)throw Error("Retained Print compiler executable required");return body(Object.freeze({task,destination,sink,control:fonts.control,executable:tool.executable,bundle:bundle.directory,fonts:fonts.directory,recheckInputs:async()=>{await tool.recheck();await bundle.recheck();await fonts.recheck();}}));})))));});}
+async function stageCompilationV1(context:CompilerContext,intent:PrintCompilationIntentV1):Promise<Readonly<{texPath:string;library:string;source:StagedPrintSourcesV1|undefined;shared:StagedPrintSourcesV1;output:string}>>{const{sink,task,destination}=context,library=join(sink.directory,"library"),shared=await stagePrintSources(destination,task.invocation,join(task.workspace,product),{version:1,directory:"library",entries:printLibrarySources()},context.control),output=join(sink.directory,"compiled");await mkdir(output);let texPath:string,source:StagedPrintSourcesV1|undefined;if(intent.kind!=="document"){const directory=join(sink.directory,"source");await mkdir(directory);texPath=join(directory,intent.name);await writeFile(texPath,intent.source,{flag:"wx"});let bytes=0;const resources=new Map<string,string>();for(const resource of intent.resources??[]){const path=join(task.workspace,...resource.source.split("/")),content=await readPrintMaterialFileV1(path,Math.min(policy.maximumResourceFileBytes,policy.maximumResourceBytes-bytes),context.control);bytes+=content.byteLength;const hash=createHash("sha256").update(content).digest("hex"),prior=resources.get(path);if(prior!==undefined&&prior!==hash)throw Error("Consumed Print resource Source changed between uses");resources.set(path,hash);const target=join(directory,...resource.name.split("/"));if(target.length>256)throw Error("Finite Print resource destination required");await mkdir(dirname(target),{recursive:true});await writeFile(target,content,{flag:"wx"});}source=Object.freeze({files:new Map<string,string>(),recheck:async()=>{for(const[path,hash]of resources)if(createHash("sha256").update(await readPrintMaterialFileV1(path,policy.maximumResourceFileBytes,context.control)).digest("hex")!==hash)throw Error("Consumed Print resource Source changed");}});}else{source=await stagePrintSources(destination,task.invocation,join(task.workspace,intent.sourceRoot),{version:1,directory:"source",entries:intent.sources},context.control);const selected=source.files.get(intent.texPath);if(!selected)throw Error("Print document is absent from its complete staged Source");texPath=selected;}return Object.freeze({texPath,library,source,shared,output});}
+function environment(context:CompilerContext,workDirectory:string,outDirectory:string,libraryRoot:string):Readonly<Record<string,string|undefined>>{const separator=process.platform==="win32"?";":":",paths=[outDirectory,workDirectory,join(libraryRoot,printCompilerName("🖋️latex")),libraryRoot,context.fonts],data:Record<string,string|undefined>={...context.task.store("tools").environment,...context.sink.environment,HOME:context.sink.directory,USERPROFILE:context.sink.directory,XDG_CACHE_HOME:context.sink.directory,LOCALAPPDATA:context.sink.directory,APPDATA:context.sink.directory,TECTONIC_CACHE_DIR:context.sink.directory,SOURCE_DATE_EPOCH:printSourceDateEpoch(),TZ:"UTC",TEXINPUTS:paths.map(path=>`${path}//${separator}${path}${separator}`).join("")};delete data.SEMIO_SCRIPT_PROCESS_INVOCATION;delete data.NODE_OPTIONS;delete data.BUN_OPTIONS;return Object.freeze(data);}
+async function compileV1(context:CompilerContext,texPath:string,output:string,workDirectory:string,library:string):Promise<void>{checkResourceLeaseControl(context.control);const search=[join(library,printCompilerName("🖋️latex")),library,workDirectory,output,context.fonts],args=["--bundle",printBundleArgument(context.bundle),"--keep-logs","--keep-intermediates","-Z","deterministic-mode",...search.flatMap(path=>["-Z",`search-path=${path}`]),"--outdir",output,relative(workDirectory,texPath).replaceAll("\\","/")];const result=await captureOwnedCommandResultV1(context.executable,args,workDirectory,{control:context.control,env:environment(context,workDirectory,output,library),output:readNativeCallerAuthorityV1(context.task.invocation.capabilities).transport});if(result.status!==0||result.signal!==null){const primary=new OwnedCommandFailure("Print compiler",{version:1,status:result.status,signal:result.signal});await capturePrintCompilerRefusalV1(primary,join(output,basename(texPath,".tex")+".log"),context.control);throw primary;}const pdf=await readPrintMaterialFileV1(join(output,basename(texPath,".tex")+".pdf"),policy.maximumPdfBytes,context.control);if(new TextDecoder().decode(pdf.subarray(0,5))!=="%PDF-")throw Error("Compiled Print PDF signature required");checkResourceLeaseControl(context.control);}
+async function optionalText(path:string,maximumBytes:number,control:ResourceLeaseControl):Promise<string|undefined>{try{await lstat(path);}catch(error){if(error&&typeof error==="object"&&"code"in error&&error.code==="ENOENT")return undefined;throw error;}return new TextDecoder("utf-8",{fatal:true}).decode(await readPrintMaterialFileV1(path,maximumBytes,control));}
+async function compilePanelsV1(context:CompilerContext,texPath:string,output:string,workDirectory:string,library:string):Promise<void>{await compileV1(context,texPath,output,workDirectory,library);const job=basename(texPath,".tex"),manifest=await optionalText(join(output,job+".panels"),policy.maximumPanelManifestBytes,context.control);if(!manifest||!printPanelManifestV1(manifest).length)return;const pdf=await readPrintMaterialFileV1(join(output,job+".pdf"),policy.maximumPdfBytes,context.control),tex=new TextDecoder().decode(await readPrintMaterialFileV1(texPath,policy.maximumProbeBytes,context.control)),images=await renderPrintPanelImagesV1(context.destination,context.task.invocation,context.control,{pdf,manifest,theme:/\btheme\s*=\s*dark\b/u.test(tex)?"dark":"light"}),directory=join(output,".semio-panel-glass",job);await mkdir(directory,{recursive:true});for(const image of images){checkResourceLeaseControl(context.control);await writeFile(join(directory,image.id+".png"),image.bytes,{flag:"wx"});}await writeFile(join(directory,".ready"),"",{flag:"wx"});await compileV1(context,texPath,output,workDirectory,library);}
+async function recheckCompilationV1(context:CompilerContext,staged:Awaited<ReturnType<typeof stageCompilationV1>>):Promise<void>{await staged.source?.recheck();await staged.shared.recheck();await context.recheckInputs();checkResourceLeaseControl(context.control);}
+/** 🧪️ Compiles once without hidden preparation and retains all inputs and outputs through the consumer callback. */
+export function withCompiledPrintProbeV1<T>(execution:PrintExecutionV1,value:unknown,body:(probe:CompiledPrintProbeV1)=>Promise<T>):Promise<T>{const intent=printCompilationIntentV1(value);if(typeof body!=="function")throw Error("Actual Print probe consumer required");return withCompilerV1(execution,async context=>{const staged=await stageCompilationV1(context,intent);await compileV1(context,staged.texPath,staged.output,dirname(staged.texPath),staged.library);await recheckCompilationV1(context,staged);let outcome:{value:T}|{error:unknown};try{outcome={value:await withRequestedIssuedResourceControlV1(context.control,0,async control=>{const probe:CompiledPrintProbeV1=Object.freeze({pdfPath:join(staged.output,basename(staged.texPath,".tex")+".pdf"),directory:staged.output,texPath:staged.texPath,control,inspect:async()=>{checkResourceLeaseControl(control);const pdf=await readPrintMaterialFileV1(join(staged.output,basename(staged.texPath,".tex")+".pdf"),policy.maximumPdfBytes,control);return inspectPrintPdfV1({operation:execution.operation,phaseControl:control},context.destination,pdf);},read:async(name:string,maximumBytes:number)=>{checkResourceLeaseControl(control);if(!name||isAbsolute(name)||name.includes("\\")||name.includes(":")||name.split("/").some(part=>!part||part==="."||part==="..")||!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>policy.maximumPdfBytes)throw Error("Finite owned Print probe read required");return readPrintMaterialFileV1(join(staged.output,...name.split("/")),maximumBytes,control);},recheck:async()=>{checkResourceLeaseControl(control);await recheckCompilationV1(context,staged);checkResourceLeaseControl(control);}});return body(probe);})};}catch(error){outcome={error};}try{await recheckCompilationV1(context,staged);}catch(error){if("value"in outcome)throw error;}if("error"in outcome)throw outcome.error;return outcome.value;});}
+/** 📤️ Publishes only the declared PDFs into the actual fixed per-mode product slot. */
+export function publishPrintArtifact(execution:PrintExecutionV1,value:unknown):Promise<Readonly<{files:number}>>{const intent=printCompilationIntentV1(value);if(intent.kind==="probe")throw Error("Declared Print document publication required");return withCompilerV1(execution,async context=>{const staged=await stageCompilationV1(context,intent);await compilePanelsV1(context,staged.texPath,staged.output,dirname(staged.texPath),staged.library);if(intent.dark){const directory=join(dirname(staged.texPath),".semio-dark");await mkdir(directory);const path=join(directory,basename(staged.texPath,".tex")+"-dark.tex"),source=new TextDecoder("utf-8",{fatal:true}).decode(await readPrintMaterialFileV1(staged.texPath,policy.maximumProbeBytes,context.control));await writeFile(path,deriveDarkPrintTexSource(source),{flag:"wx"});await compilePanelsV1(context,path,staged.output,dirname(staged.texPath),staged.library);}await recheckCompilationV1(context,staged);const names=printTemplatePdfNames(intent.kind==="document"?intent.texPath:intent.name),compiled=printTemplatePdfNames(staged.texPath),files=new Map<string,string>((intent.dark?[[names.light,compiled.light],[names.dark,compiled.dark]]:[[names.light,compiled.light]]).map(([name,file])=>{if(name===undefined||file===undefined)throw Error("Exact Print publication name required");return[name,join(staged.output,file)]as const;})),products=context.task.store("products"),directory=printArtifactLayoutV1(products.root,{version:1,kind:"document",mode:context.task.mode,namespace:intent.namespace,id:intent.id}).directory;for(const path of files.values()){const bytes=await readPrintMaterialFileV1(path,policy.maximumPdfBytes,context.control);if(new TextDecoder().decode(bytes.subarray(0,5))!=="%PDF-")throw Error("Published Print PDF required");}await withRepositoryArtifactDestinationV1({workspace:context.task.workspace,invocation:context.task.invocation,storage:products.storage,control:products.control,phaseControl:context.control,directory},destination=>stageRepositoryArtifacts(destination,`@semio-tech/${intent.namespace}:build-${intent.id}`,files));await recheckCompilationV1(context,staged);return Object.freeze({files:files.size});});}
+/** 📖️ Holds a published document's exact artifact reader through its actual accepted consumer. */
+export function withPublishedPrintDocumentV1<T>(execution:PrintExecutionV1,namespace:PrintDocumentIntentV1["namespace"],id:string,body:(artifact:RepositoryArtifactV1)=>Promise<T>):Promise<T>{return withPrintStorageTaskV1(execution.operation,execution.phaseControl,async(_operation,context)=>{const store=context.store("products"),directory=printArtifactLayoutV1(store.root,{version:1,kind:"document",mode:context.mode,namespace,id}).directory;return withRepositoryArtifactV1({workspace:context.workspace,invocation:context.invocation,storage:store.storage,control:store.control,phaseControl:context.phaseControl,request:{version:1,path:directory,owner:`@semio-tech/${namespace}:build-${id}`,maximumBytes:policy.maximumPdfBytes*2+65536,maximumFiles:2}},reader=>withRepositoryArtifactTaskV1(reader,context.invocation,body));});}
+/** 🖨️ Builds one exact registered template without exposing a free publication path. */
+export function buildRegisteredPrintTemplate(execution:PrintExecutionV1,id:string):Promise<Readonly<{files:number}>>{const document=printDocument(id);return publishPrintArtifact(execution,{version:1,kind:"document",namespace:"print",id,sourceRoot:product,texPath:document.texPath,sources:document.sources,dark:true});}

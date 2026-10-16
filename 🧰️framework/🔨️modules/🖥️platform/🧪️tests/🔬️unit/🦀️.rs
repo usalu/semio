@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::ui::{ModeDefinition, WindowKindDefinition};
+use semio_framework_manifest_app_surface::{ModeDefinition, WindowKindDefinition};
 use semio_framework_ui_locale::LocalizedLabel;
 
 #[semio_framework_async_macros::async_test]
@@ -9,15 +9,15 @@ async fn adds_first_app_as_active() {
     platform
         .add_app(AppDefinition {
             id: "draw-play".into(),
-            role: crate::ui::AppRole::Editor,
-            dialect: crate::ArtifactDialect { artifact_kind: "s.test.draw-play".into(), standard: "1".into(), subset: "*".into() },
+            role: semio_framework_manifest_arg_schema::AppRole::Editor,
+            dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.test.draw-play".into(), standard: "1".into(), subset: "*".into() },
             label: LocalizedLabel::data("Draw"),
             breadcrumb: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
-            modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+            modes: semio_framework_manifest_app_surface::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
-            window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+            window_kinds: semio_framework_manifest_app_surface::WindowKinds::one(WindowKindDefinition {
                 initial_utility_id: None,
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
@@ -51,9 +51,9 @@ async fn adds_first_app_as_active() {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: crate::ConfigSpec::empty().await,
-            command_grammar: crate::CommandGrammar::empty().await,
-            io: crate::AppIo::default(),
+            config: semio_framework_manifest_app_surface::ConfigSpec::empty().await,
+            command_grammar: semio_framework_manifest_app_surface::CommandGrammar::empty().await,
+            io: semio_framework_manifest_media::AppIo::default(),
             fault_notices: Vec::new(),
         })
         .await;
@@ -63,15 +63,15 @@ async fn adds_first_app_as_active() {
 async fn minimal_app(id: &str) -> AppDefinition {
     AppDefinition {
         id: id.into(),
-        role: crate::ui::AppRole::Editor,
-        dialect: crate::ArtifactDialect { artifact_kind: format!("s.test.{id}"), standard: "1".into(), subset: "*".into() },
+        role: semio_framework_manifest_arg_schema::AppRole::Editor,
+        dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: format!("s.test.{id}"), standard: "1".into(), subset: "*".into() },
         label: LocalizedLabel::data(id),
         breadcrumb: vec!["semio".into(), id.into()],
         icon_id: None,
         controller_id: id.into(),
-        modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+        modes: semio_framework_manifest_app_surface::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".into(),
-        window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+        window_kinds: semio_framework_manifest_app_surface::WindowKinds::one(WindowKindDefinition {
             initial_utility_id: None,
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
@@ -105,9 +105,9 @@ async fn minimal_app(id: &str) -> AppDefinition {
         media_inputs: Vec::new(),
         media_outputs: Vec::new(),
         artifact_kinds: Vec::new(),
-        config: crate::ConfigSpec::empty().await,
-        command_grammar: crate::CommandGrammar::empty().await,
-        io: crate::AppIo::default(),
+        config: semio_framework_manifest_app_surface::ConfigSpec::empty().await,
+        command_grammar: semio_framework_manifest_app_surface::CommandGrammar::empty().await,
+        io: semio_framework_manifest_media::AppIo::default(),
         fault_notices: Vec::new(),
     }
 }

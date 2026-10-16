@@ -19,7 +19,8 @@ fn run_retained_window_load_lane(name: &str, body: impl FnOnce() + Send + 'stati
 }
 
 /// 🎟️ Funds exactly one quoted retirement turn with at least the given copy floor and one level of depth.
-pub(super) fn quoted(demand: semio_framework_value::RetirementDemand, copy_floor: usize) -> RetainedCloneGrant {
+#[doc(hidden)]
+pub fn quoted(demand: semio_framework_value::RetirementDemand, copy_floor: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(copy_floor), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 

@@ -1099,7 +1099,7 @@ pub const WORLD3D_GRID_PIPELINE: PipelineSpec = PipelineSpec {
 
 /// 🖼️ Textured world quad (position + uv, per-instance model + Basic appearance) — the reference underlay every
 /// `ScenePass3d::textured_draws` entry carries. Built as `world3d_textured_pipeline` in
-/// `🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs` since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c; the
+/// `🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs` since ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W5c; the
 /// spec below is read off that construction, not inferred.
 pub const WORLD3D_TEXTURED_SHADER: &str = r#"struct Globals {
 view_proj: mat4x4<f32>,

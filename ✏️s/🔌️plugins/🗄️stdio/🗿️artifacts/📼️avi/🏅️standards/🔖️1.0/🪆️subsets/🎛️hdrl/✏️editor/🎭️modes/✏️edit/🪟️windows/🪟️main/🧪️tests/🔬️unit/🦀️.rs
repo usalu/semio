@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
+use semio_framework_ui_locale::Locale;
+use crate::editor::avi::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

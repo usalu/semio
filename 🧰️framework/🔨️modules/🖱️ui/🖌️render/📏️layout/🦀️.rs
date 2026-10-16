@@ -16,6 +16,7 @@
 //! hand-picked tokens to the full [`ui_contract::SpaceToken`] ramp that packet `contract-layout`
 //! defined after this file's wgpu-old ancestor was written.
 
+use semio_framework_ui_render_text::Measurement;
 use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
 //#region 🔖️Layout
@@ -52,29 +53,12 @@ impl AvailableSpace {
     }
 }
 
-/// 📏️ The outcome of measuring one leaf's intrinsic content against the available space taffy offers
-/// it. `Pending`/`Failed` are how master.md's decision #1 ("a dependency that is not ready is reported
-/// as a pending measurement with a placeholder size — never awaited") is expressed in this crate: an
-/// unshaped `TextSystem` run or an undecoded image resource is a `Pending` result carrying whatever
-/// placeholder size the caller judges reasonable (e.g. the last known size, or a fixed minimum), never
-/// a blocked call. Whoever completes that dependency (packet `render-text`'s shaping, the resource
-/// registry's decode) is responsible for invalidating the window once it lands — this type only
-/// records that the frame just built proceeded on a placeholder.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Measurement {
-    Ready { width: f32, height: f32 },
-    Pending { placeholder_width: f32, placeholder_height: f32 },
-    Failed,
-}
-
-impl Measurement {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn size(self) -> taffy::geometry::Size<f32> {
-        match self {
-            Self::Ready { width, height } => taffy::geometry::Size { width, height },
-            Self::Pending { placeholder_width, placeholder_height } => taffy::geometry::Size { width: placeholder_width, height: placeholder_height },
-            Self::Failed => taffy::geometry::Size::ZERO,
-        }
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn measurement_size(measurement: Measurement) -> taffy::geometry::Size<f32> {
+    match measurement {
+        Measurement::Ready { width, height } => taffy::geometry::Size { width, height },
+        Measurement::Pending { placeholder_width, placeholder_height } => taffy::geometry::Size { width: placeholder_width, height: placeholder_height },
+        Measurement::Failed => taffy::geometry::Size::ZERO,
     }
 }
 
@@ -244,7 +228,7 @@ fn style_from_absolute(absolute: &AbsoluteLayout) -> taffy::Style {
 //#region 🖇️LayoutCx
 
 /// 🎯️ Rounds a resolved logical-pixel coordinate to the nearest whole logical pixel. Distinct from
-/// [`crate::tessellate::snap_to_device_pixels`]'s later, dpr-aware **physical**-pixel snap in
+/// `tessellate::snap_to_device_pixels`'s later, dpr-aware **physical**-pixel snap in
 /// `Scene::finish` — this one exists because taffy's own flexbox remainder distribution can hand back
 /// coordinates like `33.333336` from perfectly clean integer inputs, and rounding that noise out here,
 /// once, ahead of every consumer, is cheaper and more predictable than every consumer re-deriving the
@@ -313,7 +297,7 @@ impl<'a> LayoutCx<'a> {
             let height_space = AvailableSpace::from_taffy(known_dimensions.height.map_or(available_space.height, taffy::AvailableSpace::Definite));
             let measurement = measure(width_space, height_space);
             had_pending |= matches!(measurement, Measurement::Pending { .. });
-            measurement.size()
+            measurement_size(measurement)
         });
         self.had_pending = had_pending;
     }
@@ -323,9 +307,9 @@ impl<'a> LayoutCx<'a> {
     /// same way `paint_node`'s `origin_x + origin_y` accumulation did in the wgpu-old target), snapped
     /// to the nearest whole logical pixel.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn resolved(&self, id: LayoutNodeId) -> crate::scene::LayoutRect {
+    pub fn resolved(&self, id: LayoutNodeId) -> crate::LayoutRect {
         let layout = self.taffy.layout(id.0).expect("resolved called with a LayoutNodeId that has not been computed");
-        crate::scene::LayoutRect::new(snap_logical(layout.location.x), snap_logical(layout.location.y), snap_logical(layout.size.width), snap_logical(layout.size.height))
+        crate::LayoutRect::new(snap_logical(layout.location.x), snap_logical(layout.location.y), snap_logical(layout.size.width), snap_logical(layout.size.height))
     }
 
     /// 🕳️ Whether [`Self::compute`] answered at least one leaf's measurement with `Measurement::Pending`

@@ -1,6 +1,10 @@
 //! 🎮️ The command framework: typed flags and operands, the command declaration, the argv parser, the invocation and its configuration.
 
-use super::*;
+use semio_framework_repo_cli_event_stream::{graphql_events, render, Event, Format, EXIT_OK};
+use semio_framework_repo_graphql_fs::FsRepoContext;
+use serde_json::{Map, Value as Json};
+use std::collections::BTreeMap;
+use std::io::Write;
 
 //#region 🧭️RepoCli
 //#region 🎮️CommandFramework
@@ -18,7 +22,7 @@ pub enum FlagValue {
 
 impl FlagValue {
     /// 🧾️ The projection value: a duration in milliseconds, a list always an array.
-    pub(crate) fn projection(&self) -> Json {
+    pub fn projection(&self) -> Json {
         match self {
             FlagValue::Text(text) => Json::String(text.clone()),
             FlagValue::Bool(flag) => Json::Bool(*flag),

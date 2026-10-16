@@ -5,7 +5,7 @@
 //! `🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json`, whose TypeScript runner holds React's board to it.
 
 use super::*;
-use crate::canvas_presence::tests::{numeric, peer};
+use crate::shell::section_fixtures::{numeric, peer};
 use serde_json::Value;
 use store_sync::PresenceViewKind;
 
@@ -50,16 +50,16 @@ fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> ShellState {
 /// routing reads to let a published board surface claim a move.
 fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, InputState<ActionDescriptor>) {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
-    shell.dock_tabs = ShellDock::default();
+    shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock.dock_tabs = ShellDock::default();
     let scene = ui_wgpu::wgpu::Board2dScene::base("{}".into(), camera.to_string(), true);
     let surface = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &scene).expect("bounded Board2d scene encodes");
     let records = vec![shell_input_tests::tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
-    let document = shell.publish_surface_records(window_id, records).expect("board document publishes");
-    shell.dock_window_plan = vec![(window_id.to_string(), bounds)];
+    let document = shell.windows.publish_surface_records(window_id, records).expect("board document publishes");
+    shell.dock.dock_window_plan = vec![(window_id.to_string(), bounds)];
     let input = shell_input_tests::paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
-    shell.sync_engine_surface_states();
-    assert_eq!(shell.board2d_states.len(), 1, "the painted board registered its surface");
+    SessionCtx::of(&mut shell).sync_engine_surface_states();
+    assert_eq!(shell.surfaces.board2d_states.len(), 1, "the painted board registered its surface");
     (shell, input)
 }
 
@@ -77,8 +77,8 @@ fn a_painted_board_publishes_its_scene_camera_and_the_world_point_under_the_shel
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
     for case in fixture()["publish"].as_array().expect("publish cases").iter().map(under_own_window) {
         let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
-        shell.presence_pointer = case["pointer"].as_array().map(|pointer| (pointer[0].as_f64().expect("x") as f32, pointer[1].as_f64().expect("y") as f32));
-        let (views, _) = shell.board_presence_views();
+        shell.directory.presence_pointer = case["pointer"].as_array().map(|pointer| (pointer[0].as_f64().expect("x") as f32, pointer[1].as_f64().expect("y") as f32));
+        let (views, _) = shell.directory.board_presence_views(&shell.surfaces);
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
     }
 }
@@ -88,10 +88,10 @@ fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
     let _serialized = crate::engine_canvas::engine_surface_law_guard();
     for case in fixture()["paint"].as_array().expect("paint cases").iter().map(under_own_window) {
         let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
-        shell.presence_peers = case["roster"].as_array().expect("roster").iter().map(peer).collect();
-        assert!(shell.board_peer_overlays().is_empty(), "{}: nothing is painted before the hub named this connection's actor", case["id"]);
-        shell.presence_self = Some((case["myActor"].as_str().expect("my actor").to_string(), case["localColor"].as_u64().expect("local color") as u8));
-        let overlays = shell.board_peer_overlays();
+        shell.directory.presence_peers = case["roster"].as_array().expect("roster").iter().map(peer).collect();
+        assert!(shell.directory.board_peer_overlays(&shell.surfaces).is_empty(), "{}: nothing is painted before the hub named this connection's actor", case["id"]);
+        shell.directory.presence_self = Some((case["myActor"].as_str().expect("my actor").to_string(), case["localColor"].as_u64().expect("local color") as u8));
+        let overlays = shell.directory.board_peer_overlays(&shell.surfaces);
         assert_eq!(overlays.len(), 1, "{}: one painted board", case["id"]);
         let (_, overlays) = &overlays[0];
         let cursors: Vec<Value> = overlays
@@ -121,11 +121,11 @@ fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_it
         let (shell, input) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         let mut interaction = shell_input_tests::pointer_interaction(shell, input);
         let (x, y) = (case["pointer"][0].as_f64().expect("x") as f32, case["pointer"][1].as_f64().expect("y") as f32);
-        if interaction.shell.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
+        if interaction.shell.input.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
             claimed += 1;
         }
         semio_framework_async::block_on(interaction.handle_pointer_move(shell_input_tests::mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
-        let (views, _) = interaction.shell.board_presence_views();
+        let (views, _) = interaction.shell.directory.board_presence_views(&interaction.shell.surfaces);
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
     }
     assert!(claimed >= 1, "at least one routed move is claimed by the painted board surface (the path that froze the presence pointer)");

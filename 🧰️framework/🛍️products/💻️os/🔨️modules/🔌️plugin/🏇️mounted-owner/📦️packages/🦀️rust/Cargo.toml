@@ -29,6 +29,3 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 serde_json = "1.0.149"
 semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 
-[profile.dev]
-debug = false
-incremental = false

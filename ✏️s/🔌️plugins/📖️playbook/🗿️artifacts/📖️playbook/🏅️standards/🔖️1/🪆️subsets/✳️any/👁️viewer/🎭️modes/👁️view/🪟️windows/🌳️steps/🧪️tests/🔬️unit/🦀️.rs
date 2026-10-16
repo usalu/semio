@@ -1,4 +1,6 @@
-use super::*;
+use crate::PlaybookSpec;
+use semio_framework_plugin::app::TreeWindowKit;
+use crate::viewer::playbook::modes::view::windows::steps::*;
 use crate::playbook::{PlaybookBlock, PlaybookStep};
 
 fn spec_with_steps(title: Option<&str>, steps: Vec<PlaybookStep>) -> crate::PlaybookSpec {

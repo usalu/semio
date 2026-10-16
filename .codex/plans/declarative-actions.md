@@ -49,7 +49,7 @@ Expressions remain declarative JSON. Add a `kernel.call` expression form only fo
 - Add schema/parser tests that reject action documents containing legacy executable fields such as `run`, `code`, `function`, or unknown step operations.
 - Add catalog tests proving every built-in action ID resolves from JSON assets and `ActionRegistry.withBuiltins()` contains no code-backed built-ins.
 - Keep existing interaction e2e coverage: `primitive.box`, transforms, curves, measures, selection, anchor creation, and command interactions must still commit successfully.
-- Run with `bun nx run @spatial/js-core:test` and `bun nx run @spatial/js-kernel-brepjs:test`.
+- Run with `bun repo run @spatial/js-core:test` and `bun repo run @spatial/js-kernel-brepjs:test`.
 
 ## Assumptions
 

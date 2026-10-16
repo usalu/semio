@@ -23,5 +23,22 @@
       "minimum": 0,
       "maximum": 86400000
     }
+  },
+  "definitions": {
+    "ExpectedKeys": {
+      "const": {
+        "invocation": [
+          "policy",
+          "control",
+          "capabilities"
+        ],
+        "control": [
+          "signal",
+          "remainingMilliseconds",
+          "publish",
+          "yieldContinuation"
+        ]
+      }
+    }
   }
 }

@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-artifact-flow-flow-document"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow document: the persisted host snapshot, its mutation catalogue and the native text, binary and SQLite representations"
+
+[package.metadata.semio]
+role = "artifact"
+id = "flow-flow-document"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-flow-flow-model = { path = "../../../🧱️model/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-replication = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+neural_engine = { path = "../../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }

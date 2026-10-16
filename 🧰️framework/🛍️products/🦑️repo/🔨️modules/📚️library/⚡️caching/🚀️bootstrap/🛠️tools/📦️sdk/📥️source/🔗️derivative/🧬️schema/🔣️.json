@@ -1,1 +1,251 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Material":{"type":"object","additionalProperties":false,"required":["version","kind","snapshot","sourceIndex","ownedPackages"],"properties":{"version":{"const":1},"kind":{"const":"shared-pristine"},"snapshot":{"type":"string","pattern":"^[a-f0-9]{64}$"},"sourceIndex":{"type":"string","pattern":"^[a-f0-9]{64}$"},"ownedPackages":{"const":["nx"]}}},"Request":{"type":"object","additionalProperties":false,"required":["path","kind"],"properties":{"path":{"type":"string","pattern":"^node_modules/(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$","maxLength":256},"kind":{"enum":["file","directory","link"]}}},"Index":{"type":"object","additionalProperties":false,"required":["version","snapshot","entries"],"properties":{"version":{"const":1},"snapshot":{"type":"string","pattern":"^[a-f0-9]{64}$"},"entries":{"type":"array","maxItems":200000,"items":{"type":"object","additionalProperties":false,"required":["path","kind"],"properties":{"path":{"type":"string","maxLength":256},"kind":{"enum":["file","directory","link"]},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"bytes":{"type":"integer","minimum":0,"maximum":8589934592},"executable":{"type":"boolean"},"target":{"type":"string","maxLength":256}}}}}},"Policy":{"const":{"version":1,"maximumEntries":200000,"maximumIndexBytes":16777216,"maximumInputBytes":16777216,"maximumPath":256,"maximumOwnedBytes":67108864,"maximumInputFiles":32,"index":".semio-sdk-source.json","chunkBytes":65536,"continuationEntries":128}},"RuntimeEnvironment":{"const":{"BUN_RUNTIME_TRANSPILER_CACHE_PATH":"0","NODE_DISABLE_COMPILE_CACHE":"1"}},"RefusedRuntimeEnvironment":{"const":["BUN_OPTIONS","NODE_OPTIONS","NODE_V8_COVERAGE"]}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "snapshot",
+        "sourceIndex",
+        "ownedPackages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "shared-pristine"
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceIndex": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "ownedPackages": {
+          "const": [
+            "nx"
+          ]
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^node_modules/(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000]+$",
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link"
+          ]
+        }
+      }
+    },
+    "Index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "snapshot",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 200000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "kind"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory",
+                  "link"
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 8589934592
+              },
+              "executable": {
+                "type": "boolean"
+              },
+              "target": {
+                "type": "string",
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumEntries": 200000,
+        "maximumIndexBytes": 16777216,
+        "maximumInputBytes": 16777216,
+        "maximumPath": 256,
+        "maximumOwnedBytes": 67108864,
+        "maximumInputFiles": 32,
+        "index": ".semio-sdk-source.json",
+        "chunkBytes": 65536,
+        "continuationEntries": 128
+      }
+    },
+    "RuntimeEnvironment": {
+      "const": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      }
+    },
+    "RefusedRuntimeEnvironment": {
+      "const": [
+        "BUN_OPTIONS",
+        "NODE_OPTIONS",
+        "NODE_V8_COVERAGE"
+      ]
+    },
+    "CloneTraversal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "bytesPerFile",
+        "maximumFullParentWalks"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 64
+        },
+        "bytesPerFile": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "maximumFullParentWalks": {
+          "const": 1
+        }
+      }
+    },
+    "ReaderTraversal": {
+      "const": {
+        "files": 32,
+        "bytesPerFile": 64,
+        "minimumConcurrent": 2,
+        "maximumConcurrent": 16,
+        "failureStat": 3,
+        "maximumFileStats": 1
+      }
+    },
+    "CopyControlCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "stage",
+        "accepted",
+        "used"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "enum": [
+            "same",
+            "narrowed",
+            "forged",
+            "cancelled",
+            "expired",
+            "cancel-await",
+            "expire-await",
+            "seal",
+            "owner-cancel-await",
+            "cancel-reacquire",
+            "cancel-seal-release-failure",
+            "cancel-reacquire-release-failure"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "used": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SealControlCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "accepted",
+        "opens",
+        "writes"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "phase",
+            "cancel-import",
+            "cancel-open",
+            "undefined-write",
+            "cancel-write"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "opens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "writes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

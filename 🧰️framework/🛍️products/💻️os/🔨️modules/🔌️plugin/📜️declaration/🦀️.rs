@@ -1,4 +1,22 @@
 //! 📜️ Artifact declarations: the declaration builder, document codecs, capability sources, host media handlers and flow extensions.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "📇️registration/🦀️.rs"]
+pub mod artifact_registration;
+#[doc(hidden)]
+#[path = "🌳️tree/🦀️.rs"]
+pub mod declarations;
+#[doc(hidden)]
+#[path = "🛬️lifted/💡️inference/🦀️.rs"]
+pub mod artifact_inference;
+#[allow(unused_imports)]
+pub use artifact_inference::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🔌️program/🦀️.rs"]
+pub mod plugin_program;
 use semio_framework::kernel::CapabilityRequirement;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -17,17 +35,17 @@ use semio_framework::ArtifactKindSpec;
 /// 2). Defined in `semio_framework` so plugins and the OS product
 /// share one definition without an inverted dependency; re-exported here verbatim.
 use {semio_framework_artifact_reference::{ArtifactDialect, Dialect}, semio_framework_os_kernel::io::{ComposerEntry, SubsetValidatorEntry}};
-use crate::app_contract::ArtifactApp;
-use crate::artifact_identity::ArtifactCapabilityKind;
-use crate::artifact_identity::ArtifactDefinition;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_identity::ArtifactCapabilityKind;
+use semio_framework_plugin_identity::ArtifactDefinition;
 use semio_framework_plugin_ownership::sdk_fault::ArtifactDefinitionError;
-use crate::artifact_identity::ArtifactDefinitionRegistry;
-use crate::artifact_identity::ArtifactIdentity;
-use crate::artifact_identity::ArtifactIdentityClaim;
-use crate::artifact_identity::ArtifactIdentityNamespace;
+use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
+use semio_framework_plugin_identity::ArtifactIdentity;
+use semio_framework_plugin_identity::ArtifactIdentityClaim;
+use semio_framework_plugin_identity::ArtifactIdentityNamespace;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::artifact_identity::preflight_artifact_identity;
-use crate::artifact_identity::require_declared_capability_or_record;
+use semio_framework_plugin_identity::preflight_artifact_identity;
+use semio_framework_plugin_identity::require_declared_capability_or_record;
 use crate::artifact_inference::ArtifactInferenceService;
 
 
@@ -45,16 +63,16 @@ use crate::artifact_inference::ArtifactInferenceService;
 /// only the transactional assembly plan ever walks it.
 pub struct ArtifactDeclaration {
     kind: String,
-    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    pub(crate) inference_services: Vec<ArtifactInferenceService>,
-    pub(crate) composers: Vec<&'static ComposerEntry>,
-    pub(crate) formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
-    pub(crate) subset_validators: Vec<&'static SubsetValidatorEntry>,
-    pub(crate) languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
-    pub(crate) document_codecs: Vec<DocumentCodecSpec>,
-    pub(crate) migrations: Vec<store::os_store::codec_registry::DialectMigration>,
-    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub inference_services: Vec<ArtifactInferenceService>,
+    pub composers: Vec<&'static ComposerEntry>,
+    pub formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
+    pub subset_validators: Vec<&'static SubsetValidatorEntry>,
+    pub languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
+    pub document_codecs: Vec<DocumentCodecSpec>,
+    pub migrations: Vec<store::os_store::codec_registry::DialectMigration>,
+    pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     /// 🧒️🔗️ Pulled from `<Snapshot as ArtifactCompositionFields>::{child_slots,link_slots}` via
     /// `.composition::<Snapshot>()` — never settable directly (UCAS review, 2026-08-12): the
     /// derive-emitted trait impl IS the truth, so a hand-written list would be unwritable rather
@@ -66,8 +84,8 @@ pub struct ArtifactDeclaration {
     child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
     #[allow(dead_code, reason = "manifest-completeness capture, no reader yet — see comment above")]
     link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
-    pub(crate) capabilities: Vec<CapabilityRequirement>,
-    pub(crate) definition: ArtifactDefinition,
+    pub capabilities: Vec<CapabilityRequirement>,
+    pub definition: ArtifactDefinition,
     definition_error: Option<ArtifactDefinitionError>,
 }
 
@@ -105,20 +123,20 @@ pub struct DeclarationReady;
 /// missing-mandatory-field-is-a-compile-error shape.
 pub struct ArtifactDeclarationBuilder<State> {
     kind: String,
-    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    pub(crate) inference_services: Vec<ArtifactInferenceService>,
-    pub(crate) composers: Vec<&'static ComposerEntry>,
-    pub(crate) formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
-    pub(crate) subset_validators: Vec<&'static SubsetValidatorEntry>,
-    pub(crate) languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
-    pub(crate) document_codecs: Vec<DocumentCodecSpec>,
-    pub(crate) migrations: Vec<store::os_store::codec_registry::DialectMigration>,
-    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub inference_services: Vec<ArtifactInferenceService>,
+    pub composers: Vec<&'static ComposerEntry>,
+    pub formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
+    pub subset_validators: Vec<&'static SubsetValidatorEntry>,
+    pub languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
+    pub document_codecs: Vec<DocumentCodecSpec>,
+    pub migrations: Vec<store::os_store::codec_registry::DialectMigration>,
+    pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     child_slots: &'static [::semio_framework_schema_composition::ChildSlotSpec],
     link_slots: &'static [::semio_framework_schema_composition::LinkSlotSpec],
-    pub(crate) capabilities: Vec<CapabilityRequirement>,
-    pub(crate) definition: ArtifactDefinition,
+    pub capabilities: Vec<CapabilityRequirement>,
+    pub definition: ArtifactDefinition,
     definition_error: Option<ArtifactDefinitionError>,
     _state: std::marker::PhantomData<State>,
 }
@@ -475,15 +493,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// exists to keep.
 pub struct DocumentCodecSpec {
     schema: String,
-    pub(crate) dialect: Dialect,
+    pub dialect: Dialect,
     extension: &'static str,
     codec: fn(String) -> store::os_store::serialization::ArtifactCodec,
-    pub(crate) app_id: String,
+    pub app_id: String,
     foreign: bool,
 }
 
 impl DocumentCodecSpec {
-    pub(crate) async fn of<A: ArtifactApp>() -> Self
+    pub async fn of<A: ArtifactApp>() -> Self
     where
         A::Mutation: Sync,
     {
@@ -497,7 +515,7 @@ impl DocumentCodecSpec {
         DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension: <A::Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: app.instance_id().await.to_string(), foreign: false }
     }
 
-    pub(crate) fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self
+    pub fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self
     where
         A::Mutation: Sync,
     {
@@ -515,7 +533,7 @@ impl DocumentCodecSpec {
     /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
     /// exists. Registers straight against `store::os_store::codec_registry::register_document_codec`, bypassing
     /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
-    pub(crate) fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
+    pub fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
     where
         Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
         Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
@@ -530,16 +548,16 @@ impl DocumentCodecSpec {
         DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: String::new(), foreign: false }
     }
 
-    pub(crate) fn codec(&self) -> store::os_store::serialization::ArtifactCodec {
+    pub fn codec(&self) -> store::os_store::serialization::ArtifactCodec {
         (self.codec)(self.schema.clone())
     }
 
-    pub(crate) fn binding(&self, channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel, contributor: &str, artifact_kind: Option<String>, codec: &store::os_store::serialization::ArtifactCodec) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
+    pub fn binding(&self, channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel, contributor: &str, artifact_kind: Option<String>, codec: &store::os_store::serialization::ArtifactCodec) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
         let apps = if self.app_id.is_empty() { Vec::new() } else { vec![self.app_id.to_string()] };
         semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(channel, contributor, artifact_kind, apps, Some(self.dialect.into()), None, codec)
     }
 
-    pub(crate) fn preflight_foreign(&self, document_app_ids: &BTreeSet<String>) -> Result<(), PluginAssemblyError> {
+    pub fn preflight_foreign(&self, document_app_ids: &BTreeSet<String>) -> Result<(), PluginAssemblyError> {
         if !self.foreign {
             return Ok(());
         }
@@ -670,7 +688,7 @@ impl ArtifactDeclaration {
     }
 
     /// 🛡️ Validates this declaration into one plugin-owned registry without side effects.
-    pub(crate) fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
+    pub fn preflight(&self, plugin_id: &str, definitions: &mut ArtifactDefinitionRegistry) -> Result<(), PluginAssemblyError> {
         preflight_artifact_identity(plugin_id, &self.kind)?;
         self.register_definitions(definitions).map_err(PluginAssemblyError::definition)?;
         self.preflight_channels()?;
@@ -692,7 +710,7 @@ impl ArtifactDeclaration {
     /// 🏠️ Validates a declaration another package owns for hosting in `plugin_id`'s guest, without side effects: the
     /// kind is owned by a plugin `plugin_id` directly depends on — never by `plugin_id` itself, which declares its own
     /// kinds — and every channel stays inside it. The definition is not registered: it stays its owner's.
-    pub(crate) fn preflight_hosted(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency]) -> Result<(), PluginAssemblyError> {
+    pub fn preflight_hosted(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency]) -> Result<(), PluginAssemblyError> {
         let kind = ArtifactKindId::parse(self.kind.as_str()).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical <domain>.<plugin>.<artifact> grammar"))?;
         if kind.plugin() == plugin_id {
             return Err(PluginAssemblyError::new("plugin-assembly.hosted-artifact-owner", format!("plugin {plugin_id:?} hosts {:?}, a kind it owns and declares", self.kind)));
@@ -852,7 +870,7 @@ impl HostMediaHandlerDeclaration {
         Ok(())
     }
 
-    pub(crate) fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
+    pub fn preflight(&self, owner: &str, declared_media_kinds: &BTreeMap<String, ArtifactKindSpec>) -> Result<(), PluginAssemblyError> {
         ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
         self.validate_shape()?;
         let self_id = self.id.as_str();
@@ -1051,7 +1069,7 @@ impl FlowExtensionDeclaration {
         self.manifest.validate()
     }
 
-    pub(crate) fn preflight(&self, owner: &str) -> Result<(), PluginAssemblyError> {
+    pub fn preflight(&self, owner: &str) -> Result<(), PluginAssemblyError> {
         ArtifactIdentity::parse(owner.to_string()).map_err(PluginAssemblyError::definition)?;
         self.validate_shape()
     }
@@ -1085,17 +1103,17 @@ impl RegisteredHostMediaHandler {
     }
 }
 
-pub(crate) struct HostMediaHandlerRegistry {
+pub struct HostMediaHandlerRegistry {
     by_id: BTreeMap<String, RegisteredHostMediaHandler>,
     by_target: BTreeMap<(HostMediaHandlerKind, String), String>,
 }
 
 impl HostMediaHandlerRegistry {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { by_id: BTreeMap::new(), by_target: BTreeMap::new() }
     }
 
-    pub(crate) fn from_declarations(owner: &str, declarations: &[HostMediaHandlerDeclaration]) -> Result<Self, PluginAssemblyError> {
+    pub fn from_declarations(owner: &str, declarations: &[HostMediaHandlerDeclaration]) -> Result<Self, PluginAssemblyError> {
         let mut registry = Self::new();
         for declaration in declarations {
             registry.register(owner, declaration)?;
@@ -1121,11 +1139,11 @@ impl HostMediaHandlerRegistry {
         Ok(())
     }
 
-    pub(crate) fn descriptors(&self) -> Vec<HostMediaHandlerDescriptor> {
+    pub fn descriptors(&self) -> Vec<HostMediaHandlerDescriptor> {
         self.by_id.values().map(|entry| entry.descriptor.clone()).collect()
     }
 
-    pub(crate) fn mesh_import(&self, request: &MeshImportRequest) -> Result<MeshImportResult, HostMediaRuntimeError> {
+    pub fn mesh_import(&self, request: &MeshImportRequest) -> Result<MeshImportResult, HostMediaRuntimeError> {
         let entry = self.lookup(HostMediaHandlerKind::MeshImport, &request.artifact_kind, &request.artifact_schema)?;
         let HostMediaExecutable::MeshImport(importer) = entry.executable else {
             return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no mesh executable", request.artifact_kind) });
@@ -1133,7 +1151,7 @@ impl HostMediaHandlerRegistry {
         importer(&request.mesh).map(|document| MeshImportResult { document }).map_err(|message| HostMediaRuntimeError { code: "host-media.mesh-import".into(), message })
     }
 
-    pub(crate) fn two_d_svg_export(&self, request: &TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
+    pub fn two_d_svg_export(&self, request: &TwoDSvgExportRequest) -> Result<TwoDSvgExportResult, HostMediaRuntimeError> {
         let entry = self.lookup(HostMediaHandlerKind::TwoDSvgExport, &request.artifact_kind, &request.artifact_schema)?;
         let HostMediaExecutable::TwoDSvgExport(renderer) = entry.executable else {
             return Err(HostMediaRuntimeError { code: "host-media.executable-kind".into(), message: format!("host-media target {:?} has no 2D SVG executable", request.artifact_kind) });
@@ -1156,17 +1174,17 @@ impl HostMediaHandlerRegistry {
     }
 }
 
-pub(crate) struct FlowExtensionRegistry {
+pub struct FlowExtensionRegistry {
     by_id: BTreeMap<String, FlowExtensionDescriptor>,
     by_extension_id: BTreeMap<String, String>,
 }
 
 impl FlowExtensionRegistry {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { by_id: BTreeMap::new(), by_extension_id: BTreeMap::new() }
     }
 
-    pub(crate) fn from_declarations(owner: &str, declarations: &[FlowExtensionDeclaration]) -> Result<Self, PluginAssemblyError> {
+    pub fn from_declarations(owner: &str, declarations: &[FlowExtensionDeclaration]) -> Result<Self, PluginAssemblyError> {
         let mut registry = Self::new();
         for declaration in declarations {
             registry.register(owner, declaration)?;
@@ -1190,7 +1208,7 @@ impl FlowExtensionRegistry {
         Ok(())
     }
 
-    pub(crate) fn descriptors(&self) -> Vec<FlowExtensionDescriptor> {
+    pub fn descriptors(&self) -> Vec<FlowExtensionDescriptor> {
         self.by_id.values().cloned().collect()
     }
 }

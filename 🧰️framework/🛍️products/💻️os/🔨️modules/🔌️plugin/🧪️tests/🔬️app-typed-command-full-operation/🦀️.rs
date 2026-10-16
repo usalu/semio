@@ -3,18 +3,14 @@ mod typed_command_full_operation_tests {
     use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-    /// 🧵️ Source text of the mounted artifact instance: the parent file followed by its impl-band children in file order.
+    /// 📖️ One module tree of the plugin SDK, read at run time from the manifest folder of the hosting crate instead of embedded: the root file first, then every file it mounts in declaration order.
+    fn module_source(relative: &str) -> String {
+        semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").join(relative)).expect("the module tree reads")
+    }
+
+    /// 🧵️ Source text of the mounted artifact instance: its module tree, the parent file followed by every impl band in declaration order.
     fn instance_source() -> String {
-        [
-            include_str!("../../🧵️instance/🦀️.rs"),
-            include_str!("../../🧵️instance/🚪️ingress/🦀️.rs"),
-            include_str!("../../🧵️instance/📨️dispatch/🦀️.rs"),
-            include_str!("../../🧵️instance/🖼️render/🦀️.rs"),
-            include_str!("../../🧵️instance/🧷️command-routes/🦀️.rs"),
-            include_str!("../../🧵️instance/🧾️typed-operations/🦀️.rs"),
-            include_str!("../../🧵️instance/🔌️plugin-app-impl/🦀️.rs"),
-        ]
-        .concat()
+        module_source("🧵️instance/🦀️.rs")
     }
 
     const FIXTURE: &str = include_str!("../../🧵️retained-command/🔄️full-operation/🧪️tests/🧫️fixtures/🔣️.json");
@@ -352,16 +348,16 @@ mod typed_command_full_operation_tests {
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
-            let revision = app.store.content_revision_now();
+            let revision = app.stores.store.content_revision_now();
             let operation = semio_framework_job::Operation::new(
                 semio_framework_job::allocate_operation_id(),
                 semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
-                semio_framework_job::Generation(app.store.generation_now()),
+                semio_framework_job::Generation(app.stores.store.generation_now()),
                 17,
             );
-            let cancellations = app.tool_cancellations.clone();
+            let cancellations = app.tools.tool_cancellations.clone();
             let lease = cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
-            let before = app.presence_store.local_read().unwrap();
+            let before = app.stores.presence_store.local_read().unwrap();
             let mut mounted = MountedTypedCommandFullOperation::<A> {
                 verb: "setGraphParameter".into(),
                 meta: ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None },
@@ -413,7 +409,7 @@ mod typed_command_full_operation_tests {
             };
             if boundary != "producer" {
                 let pending =
-                    app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
+                    app.stores.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap();
                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
                 let target = match boundary {
                     "preparation" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -449,8 +445,8 @@ mod typed_command_full_operation_tests {
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
             assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
-            assert_eq!(serde_json::json!({ "committed": app.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
-            assert_eq!(std::ptr::eq(before.get(), app.presence_store.local()), !case["committed"].as_bool().unwrap());
+            assert_eq!(serde_json::json!({ "committed": app.stores.presence_store.generation_now() != 0 }), serde_json::json!({ "committed": case["committed"] }));
+            assert_eq!(std::ptr::eq(before.get(), app.stores.presence_store.local()), !case["committed"].as_bool().unwrap());
             assert!(!mounted.ui_pending);
             let token = cancelled.token;
             assert!(mounted.acknowledge_result_page(token).unwrap());
@@ -576,12 +572,12 @@ mod typed_command_full_operation_tests {
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
-                let before = app.store.snapshot_root();
-                let revision = app.store.content_revision_now();
-                let generation = app.store.generation_now();
+                let before = app.stores.store.snapshot_root();
+                let revision = app.stores.store.content_revision_now();
+                let generation = app.stores.store.generation_now();
                 let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(generation), 1);
                 let lease = app
-                    .tool_cancellations
+                    .tools.tool_cancellations
                     .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation })
                     .unwrap();
                 let mut mounted = MountedTypedCommandFullOperation::<A> {
@@ -635,7 +631,7 @@ mod typed_command_full_operation_tests {
                 };
                 if boundary != "producer" {
                     let pending =
-                        app.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], HistoryLane::Document, Some(&factory), None).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
+                        app.stores.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], HistoryLane::Document, Some(&factory), None).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
                     let target = match boundary {
                         "preparation" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -691,7 +687,7 @@ mod typed_command_full_operation_tests {
                 };
                 assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
                 let committed = case["committed"].as_bool().unwrap();
-                let actual = serde_json::json!({ "count": observe(&app.store.snapshot_root()), "generation": app.store.generation_now() - generation, "sameRoot": std::sync::Arc::ptr_eq(&before, &app.store.snapshot_root()) });
+                let actual = serde_json::json!({ "count": observe(&app.stores.store.snapshot_root()), "generation": app.stores.store.generation_now() - generation, "sameRoot": std::sync::Arc::ptr_eq(&before, &app.stores.store.snapshot_root()) });
                 let expected = serde_json::json!({ "count": if committed { 42 } else { 0 }, "generation": u64::from(committed), "sameRoot": !committed });
                 assert_eq!(actual, expected, "{boundary}, delayed ACK={delayed_ack}");
                 assert!(mounted.acknowledge_result_page(final_page.token).unwrap());
@@ -943,24 +939,24 @@ mod typed_command_full_operation_tests {
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
-        app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
-        assert_eq!(serde_json::json!(app.can_admit_typed_operation(collision)), fixture["slotReservation"]["collisionAdmitted"]);
-        assert!(!app.can_admit_typed_operation(first));
-        app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
-        assert!(app.can_admit_typed_operation(collision));
-        let revision = app.store.content_revision_now();
+        app.tools.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
+        assert_eq!(serde_json::json!(app.tools.can_admit_typed_operation(collision)), fixture["slotReservation"]["collisionAdmitted"]);
+        assert!(!app.tools.can_admit_typed_operation(first));
+        app.tools.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
+        assert!(app.tools.can_admit_typed_operation(collision));
+        let revision = app.stores.store.content_revision_now();
         for id in [1, 2] {
             let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
             let lease =
-                app.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
+                app.tools.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
             let pending = if id == 2 {
                 Some(PendingArtifactStorePublication::Presence(
-                    app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap(),
+                    app.stores.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap(),
                 ))
             } else {
                 None
             };
-            app.tool_operations.insert_admitted(
+            app.tools.tool_operations.insert_admitted(
                 id,
                 MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(),
@@ -1014,13 +1010,13 @@ mod typed_command_full_operation_tests {
             );
         }
         for _ in 0..fixture["fairness"]["secondPublishesWithinMetadataVisits"].as_u64().unwrap() {
-            if app.presence_store.generation_now() == 1 {
+            if app.stores.presence_store.generation_now() == 1 {
                 break;
             }
             app.advance_typed_operation_publication_one(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
         }
-        assert_eq!(app.presence_store.generation_now(), 1);
-        let stuck = app.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
+        assert_eq!(app.stores.presence_store.generation_now(), 1);
+        let stuck = app.tools.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
         while let Some(page) = app.take_typed_operation_result_page(7) {
@@ -1028,7 +1024,7 @@ mod typed_command_full_operation_tests {
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
             if operation == 1 {
-                let acknowledged = app.tool_operations.get_mut(1).expect("the terminated operation stays mounted").acknowledge_result_page(page.token).expect("the terminated operation's own fault page is acknowledgeable");
+                let acknowledged = app.tools.tool_operations.get_mut(1).expect("the terminated operation stays mounted").acknowledge_result_page(page.token).expect("the terminated operation's own fault page is acknowledgeable");
                 assert!(acknowledged, "a terminated operation must accept the ACK for the page it minted");
             }
         }
@@ -1040,7 +1036,7 @@ mod typed_command_full_operation_tests {
         for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
             let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
             let page = TypedOperationResultPage::try_new(TypedOperationResultToken { receiver: 7, operation: id, generation: 0, sequence: 0, attempt: 1 }, TypedOperationResultLane::Terminal, b"presented ACK waiter").unwrap();
-            app.tool_operations.insert_admitted(
+            app.tools.tool_operations.insert_admitted(
                 id,
                 MountedTypedCommandFullOperation::<A> {
                     verb: String::new(),
@@ -1093,43 +1089,43 @@ mod typed_command_full_operation_tests {
                 },
             );
         }
-        app.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
-        assert!(app.tool_operations.get(1).unwrap().publication.is_some());
+        app.tools.tool_operations.get_mut(1).unwrap().stage = MountedTypedCommandFullOperationStage::Retiring;
+        assert!(app.tools.tool_operations.get(1).unwrap().publication.is_some());
         let quoted = app.mounted_policy.close;
         let released = app.retire_typed_operation_unit(1, quoted).unwrap();
         assert!(matches!(released, PluginLifecycleStep::Progress(progress) if progress.fits(quoted) && progress != Default::default()), "one bounded retirement unit releases the retiring operation's publication: {released:?}");
-        assert!(app.tool_operations.get(1).unwrap().publication.is_none());
-        assert_eq!(app.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
-        assert!(app.tool_operations.get(2).unwrap().result_page_presented);
+        assert!(app.tools.tool_operations.get(1).unwrap().publication.is_none());
+        assert_eq!(app.tools.tool_operations.get(2).unwrap().stage, MountedTypedCommandFullOperationStage::AwaitingAck);
+        assert!(app.tools.tool_operations.get(2).unwrap().result_page_presented);
         for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
-            drop(app.tool_operations.remove(id).expect("remove synthetic presented ACK waiter"));
+            drop(app.tools.tool_operations.remove(id).expect("remove synthetic presented ACK waiter"));
         }
-        let cancellation_state = app.tool_cancellations.state.clone();
+        let cancellation_state = app.tools.tool_cancellations.state.clone();
         let lock = cancellation_state.lock().unwrap();
         for _ in 0..64 {
-            if app.tool_operations.get(1).unwrap().terminal_is_empty() {
+            if app.tools.tool_operations.get(1).unwrap().terminal_is_empty() {
                 break;
             }
             let quoted = app.mounted_policy.close;
             app.retire_typed_operation_unit(1, quoted).unwrap();
         }
-        assert!(app.tool_operations.get(1).unwrap().terminal_is_empty());
-        assert_eq!(app.tool_cancellations.active_operation_count(), 2);
-        app.maintenance_stage = 18;
-        app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
+        assert!(app.tools.tool_operations.get(1).unwrap().terminal_is_empty());
+        assert_eq!(app.tools.tool_cancellations.active_operation_count(), 2);
+        app.maintenance.maintenance_stage = 18;
+        app.maintenance.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
         let quoted = app.mounted_policy.maintenance;
         let locked_step = app.maintenance_step(quoted).unwrap();
         assert!(
             matches!(locked_step, PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) if progress.fits(quoted)),
             "a bounded maintenance turn never exceeds its own grant: {locked_step:?}"
         );
-        assert_eq!(app.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
-        assert_eq!(app.tool_cancellations.active_operation_count(), 2);
+        assert_eq!(app.maintenance.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
+        assert_eq!(app.tools.tool_cancellations.active_operation_count(), 2);
         drop(lock);
-        app.maintenance_stage = 18;
+        app.maintenance.maintenance_stage = 18;
         let quoted = app.mounted_policy.maintenance;
         app.maintenance_step(quoted).unwrap();
-        assert_eq!(app.tool_cancellations.active_operation_count(), 1);
+        assert_eq!(app.tools.tool_cancellations.active_operation_count(), 1);
         close_app(&mut app, "fairness fixture close");
         assert!(app.close_terminal_is_empty());
     }
@@ -1417,7 +1413,7 @@ mod typed_command_full_operation_tests {
     /// is asserted directly, as the order decoder → gate → reducer entry.
     #[test]
     fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
-        let source = [include_str!("../../🧵️retained-command/🔄️full-operation/🦀️.rs").to_string(), instance_source()].concat();
+        let source = [module_source("🧵️retained-command/🔄️full-operation/🦀️.rs"), module_source("👷️job/🛬️lifted/🔄️full-operation/🦀️.rs"), instance_source()].concat();
         let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
         let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
         let job = &source[start..end];
@@ -1500,7 +1496,7 @@ mod typed_command_full_operation_tests {
         assert!(source.contains("take_typed_operation_event"));
         assert!(source.contains("take_typed_operation_ui_scope"));
 
-        let reactor = [include_str!("../../⚛️reactor/🦀️.rs"), include_str!("../../⚛️reactor/🔄️turn/🦀️.rs")].concat();
+        let reactor = [module_source("⚛️reactor/🦀️.rs"), module_source("⚛️reactor/🔄️turn/🦀️.rs")].concat();
         assert!(reactor.contains("output.typed_operation_results.iter()"));
         assert!(reactor.contains("page.renderer_exchange_bytes()"));
         assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));

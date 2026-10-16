@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-replication-history"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "History transitions: fold, drafts, checkpoints, alternatives, supersession and the transition codec."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-history"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "history_supersede_fold"
+path = "../../🧪️tests/🔬️supersede-fold/🦀️.rs"
+
+[dependencies]
+semio-framework-replication-causal = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-replication-crypto = { path = "../../../../🔐️crypto/📦️packages/🦀️rust" }
+semio-framework-replication-edit = { path = "../../../../🎮️mutation/✏️edit/📦️packages/🦀️rust" }
+semio-framework-replication-error = { path = "../../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication-history-index = { path = "../../🔁️fold/🗂️index/📦️packages/🦀️rust" }
+semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+
+[dev-dependencies]
+blake3 = "1.8.2"
+semio-framework-replication-conflict = { path = "../../../../⚔️conflict/📦️packages/🦀️rust" }
+semio-framework-replication-mutation = { path = "../../../../🎮️mutation/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

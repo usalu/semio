@@ -24,7 +24,6 @@ use semio_framework_ui_contract_budget::{UI_DOCUMENT_NODES,UI_NODE_BINDINGS,UI_D
 
 //#region 🌳️Snapshot
 pub type UiNodeChildren = crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>;
-pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_NODE_BINDINGS>;
 pub type UiSnapshotNodes = crate::UiFixedList<UiNodeRecord, UI_DOCUMENT_NODES>;
 #[path = "../♻️retirement/🩹️patch/🦀️.rs"]
 mod patch_storage;
@@ -33,9 +32,6 @@ pub use patch_storage::{UiPatchAllocationError, UiPatchOps, UiPendingPatchOp};
 mod pending_whole_patch;
 pub use pending_whole_patch::UiPendingPatch;
 
-#[cfg(test)]
-#[path = "../♻️retirement/🩹️patch/🧪️tests/🩹️patch/🦀️.rs"]
-mod patch_storage_tests;
 
 pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
     let mut bindings = UiNodeBindings::default();
@@ -44,16 +40,6 @@ pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
     }
     Some(bindings)
 }
-/// 🎞️ The transient visual emphasis a node is entering — orthogonal to `activity`/`disabled`. A node
-/// carrying neither is in its steady state; the renderer clears this once the transition has played.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(crate = "::semio_framework_value", rename_all = "camelCase")]
-pub enum TransitionHint {
-    Introducing,
-    Celebrating,
-}
-
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn is_false(value: &bool) -> bool {
     !*value
@@ -88,6 +74,9 @@ pub struct UiNodeRecord {
 }
 
 impl UiNodeRecord {
+    /// 📃️ Constructs a semantic row before actual document admission owns it.
+    pub fn with_component(id:UiNodeId,key:crate::UiText,component:crate::Component)->Self{Self{id,key,component,layout:Default::default(),style:Default::default(),activity:Default::default(),disabled:false,transition:None,accessibility:Default::default(),bindings:Default::default(),menu:None,children:Default::default()}}
+
     pub fn credited_clone(&self) -> Option<Self> {
         Some(Self {
             id: self.id,
@@ -368,12 +357,6 @@ impl<'a> Iterator for UiSubtreeIter<'a> {
 #[path = "../🎟️resident/🦀️.rs"]
 mod resident;
 pub use resident::*;
-#[cfg(test)]
-#[path = "../🎟️resident/🌳️root/🧪️tests/🌳️root/🦀️.rs"]
-mod resident_root_tests;
-#[cfg(test)]
-#[path = "../🎟️resident/🔄️refresh/🧪️tests/🔄️refresh/🦀️.rs"]
-mod resident_refresh_tests;
 pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;
 
@@ -773,7 +756,7 @@ use typed_retirement::{close_document_owner, hand_back_document_owner};
 #[path = "../⚖️compare/📃️document/🦀️.rs"]
 mod document_component_compare;
 pub use document_component_compare::{UiDocumentCompareAdmission, UiDocumentCompareError, UiDocumentComponentCompare};
-#[path = "../📃️document/🎟️assembly/🦀️.rs"]
+#[path = "🎟️assembly/🦀️.rs"]
 mod document_assembly;
 pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyIdentity, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease
@@ -919,24 +902,15 @@ fn uncontended(step: Result<UiDocumentAssemblyProgress, UiDocumentAssemblyError>
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../📃️document/🧪️tests/📜️paged-text/🦀️.rs"]
-mod paged_text_tests;
-#[cfg(test)]
-#[path = "../📃️document/🎟️assembly/🧪️tests/🎟️assembly/🦀️.rs"]
+#[path = "🎟️assembly/🧪️tests/🎟️assembly/🦀️.rs"]
 mod document_assembly_tests;
 #[cfg(test)]
 #[path = "../⚖️compare/📃️document/🧪️tests/📃️document/🦀️.rs"]
 mod document_component_compare_tests;
-#[cfg(test)]
-#[path = "../♻️retirement/🩹️patch/📨️pending/📦️whole/🧪️tests/📦️whole/🦀️.rs"]
-mod pending_whole_patch_tests;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️document-unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[path = "../../🧪️tests/📃️document-lease-owner-move/🦀️.rs"]
-mod document_lease_owner_move_tests;
 //#endregion 🧪️Tests
 
 //#endregion 🔖️Document

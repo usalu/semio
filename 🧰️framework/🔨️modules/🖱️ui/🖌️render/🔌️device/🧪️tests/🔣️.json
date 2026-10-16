@@ -1,0 +1,162 @@
+{
+  "limits": {
+    "bytes": 1048576,
+    "dimension": 4096
+  },
+  "cases": [
+    {
+      "id": "buffer-exact",
+      "descriptor": {
+        "kind": "buffer",
+        "bytes": 1048576,
+        "width": 1,
+        "height": 1,
+        "layers": 1,
+        "mips": 1,
+        "samples": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "buffer-over",
+      "descriptor": {
+        "kind": "buffer",
+        "bytes": 1048577,
+        "width": 1,
+        "height": 1,
+        "layers": 1,
+        "mips": 1,
+        "samples": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "texture-rgba",
+      "descriptor": {
+        "kind": "texture",
+        "bytes": 1024,
+        "width": 16,
+        "height": 16,
+        "layers": 1,
+        "mips": 1,
+        "samples": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "texture-short",
+      "descriptor": {
+        "kind": "texture",
+        "bytes": 1023,
+        "width": 16,
+        "height": 16,
+        "layers": 1,
+        "mips": 1,
+        "samples": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "texture-mips",
+      "descriptor": {
+        "kind": "texture",
+        "bytes": 1364,
+        "width": 16,
+        "height": 16,
+        "layers": 1,
+        "mips": 5,
+        "samples": 1
+      },
+      "accepted": true
+    },
+    {
+      "id": "texture-extra-mip",
+      "descriptor": {
+        "kind": "texture",
+        "bytes": 1368,
+        "width": 16,
+        "height": 16,
+        "layers": 1,
+        "mips": 6,
+        "samples": 1
+      },
+      "accepted": false
+    },
+    {
+      "id": "texture-device-dimension",
+      "descriptor": {
+        "kind": "texture",
+        "bytes": 20000,
+        "width": 5000,
+        "height": 1,
+        "layers": 1,
+        "mips": 1,
+        "samples": 1
+      },
+      "accepted": false
+    }
+  ],
+  "ownership": [
+    {
+      "id": "returned-exact",
+      "before": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "returned": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "retained": [],
+      "valid": true
+    },
+    {
+      "id": "retained-exact",
+      "before": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "returned": [],
+      "retained": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "valid": true
+    },
+    {
+      "id": "lost-admission",
+      "before": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "returned": [
+        "texture",
+        "view"
+      ],
+      "retained": [],
+      "valid": false
+    },
+    {
+      "id": "duplicated-admission",
+      "before": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "returned": [
+        "admission"
+      ],
+      "retained": [
+        "admission",
+        "texture",
+        "view"
+      ],
+      "valid": false
+    }
+  ]
+}

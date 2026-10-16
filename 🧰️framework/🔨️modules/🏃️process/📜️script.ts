@@ -52,6 +52,8 @@ class TestScript extends BundleScript {
       "native-build-mode": { source: "🏗️build/🧪️tests/🏗️native/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "go-build-mode": { source: "📦️artifacts/🐹️go-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "compiler-capacity": { source: "🏗️build/🎟️capacity/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
+      "compiler-capacity-inheritance": {source:"🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
+      "compiler-capacity-custodian": {source:"🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "native-queued-cancellation": { source: "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick, testNamePattern: "queued exclusive compiler cancellation|unit graph compilation cancellation|native build plan is schema-first|profile mode selection|unlaned same-profile Cargo jobs|the original finite caller budget" },
       "cargo-target-recipe": {source:"📦️artifacts/🏗️native-build/🎯️recipe/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},
       "cargo-overlap": {source:"📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},

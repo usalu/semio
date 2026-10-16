@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-ledger"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The Store edit-message ledger, cursor revision accumulator, history commit reservation and edit retirement"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-ledger"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+hot-path-census = []
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-message-ledger = { path = "../../📨️messages/📦️packages/🦀️rust" }
+semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-retirement-owner = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

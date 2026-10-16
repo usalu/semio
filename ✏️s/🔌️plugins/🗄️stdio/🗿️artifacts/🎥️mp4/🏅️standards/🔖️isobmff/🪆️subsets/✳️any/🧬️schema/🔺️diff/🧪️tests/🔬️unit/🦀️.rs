@@ -1,4 +1,6 @@
-use super::*;
+use crate::{standards::isobmff::subsets::any::schema::snapshot::Mp4Codec, standards::isobmff::subsets::any::schema::snapshot::Mp4Ftyp, standards::isobmff::subsets::any::schema::snapshot::Mp4Movie, standards::isobmff::subsets::any::schema::snapshot::Mp4Sample, standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot, standards::isobmff::subsets::any::schema::snapshot::Mp4Track, standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata};
+use crate::standards::isobmff::subsets::any::schema::diff::{apply_sample_diff, apply_sample_diff_mut, absorb_sample_rows};
+use crate::standards::isobmff::subsets::any::schema::diff::*;
 use crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA;
 
 fn sample(n: u8) -> Mp4Sample {
@@ -88,7 +90,7 @@ fn absorb_modify_then_remove_drops_the_modification() {
 
 #[test]
 fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
-    let bytes = include_bytes!("../../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let empty = Mp4Diff::default();

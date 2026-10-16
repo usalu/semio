@@ -9,13 +9,13 @@ pub use operations::{ArtifactPreparedOperations,ArtifactPreparedOperationsOwner}
 
 /// 🧱️ Payload extent and total physical capacity belong to the embedding operation owner.
 pub struct ArtifactPreparedOperationOutput {
-    bytes:ManuallyDrop<PagedList<u8,{isize::MAX as usize}>>,
-    contiguous:ManuallyDrop<Option<Vec<u8>>>,
+    pub bytes:ManuallyDrop<PagedList<u8,{isize::MAX as usize}>>,
+    pub contiguous:ManuallyDrop<Option<Vec<u8>>>,
     contiguous_complete:bool,
     maximum_payload_bytes:usize,
-    maximum_capacity_bytes:usize,
-    closing:bool,
-    closed:bool,
+    pub maximum_capacity_bytes:usize,
+    pub closing:bool,
+    pub closed:bool,
 }
 
 fn refusal(error:PagedListError)->ValueError {

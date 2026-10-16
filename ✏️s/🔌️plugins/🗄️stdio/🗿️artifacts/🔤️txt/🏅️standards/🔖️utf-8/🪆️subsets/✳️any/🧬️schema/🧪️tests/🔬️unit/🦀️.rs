@@ -1,6 +1,8 @@
+use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
 use crate::standards::v_utf_8::subsets::any::io::text::snapshot::demo_txt_snapshot;
 use crate::standards::v_utf_8::subsets::any::io::text::snapshot::empty_txt_snapshot;
-use super::*;
+use crate::standards::v_utf_8::subsets::any::schema::*;
 use crate::schema::mutations::InsertLineMutation;
 use crate::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
 

@@ -1,1 +1,38 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","definitions":{"Protocol":{"const":{"version":1,"maximumObservationBytes":4194304,"maximumViewBytes":4456448,"leaseShards":64,"namespace":"configuration","entry":"view.json","publicationResource":"cargo:configuration-publication"}},"Phase":{"type":"object","additionalProperties":false,"required":["phase","admitted"],"properties":{"phase":{"enum":["open","consuming","retired"]},"admitted":{"type":"boolean"}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumObservationBytes": 4194304,
+        "maximumViewBytes": 4456448,
+        "leaseShards": 64,
+        "namespace": "configuration",
+        "entry": "view.json",
+        "publicationResource": "cargo:configuration-publication",
+        "maximumPendingOperations": 32,
+        "maximumPolicyBytes": 262144
+      }
+    },
+    "Phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "admitted"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "open",
+            "consuming",
+            "retired"
+          ]
+        },
+        "admitted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

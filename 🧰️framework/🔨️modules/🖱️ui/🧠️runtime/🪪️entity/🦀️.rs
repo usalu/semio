@@ -239,6 +239,16 @@ impl EntityStore {
         self.effects.defer.drain(..).collect()
     }
 
+    /// 🔔️ The entities whose change notification is still queued, in queue order.
+    pub fn pending_notifications(&self) -> impl Iterator<Item = EntityId> + '_ {
+        self.effects.notify.iter().copied()
+    }
+
+    /// 🔔️ The entities whose emitted event is still queued, in queue order.
+    pub fn pending_emit_sources(&self) -> impl Iterator<Item = EntityId> + '_ {
+        self.effects.emit.iter().map(|(id, _)| *id)
+    }
+
     /// 📤️ Hands the embedder every future queued via `Context::spawn_local` since the last drain.
     /// This crate never polls a future itself — the embedder's executor owns that.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

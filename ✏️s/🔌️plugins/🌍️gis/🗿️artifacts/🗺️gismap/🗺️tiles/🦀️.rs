@@ -1,4 +1,9 @@
 //! 🗺️ Schema-owned Web Mercator tile planning with a finite coordinate inventory.
+//!
+//! The child [`gis_policy`] owns the level-of-detail bands, tile pyramid and vector-tile cartography every GIS map renders by.
+
+#[path = "🌍️gis-policy/🦀️.rs"]
+pub mod gis_policy;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MapTileBounds { pub west: f64, pub south: f64, pub east: f64, pub north: f64 }

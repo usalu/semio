@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
-    use crate::format::VerificationLevel;
-    use crate::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
+    use semio_framework_pack_format::VerificationLevel;
+    use semio_framework_replication_codec::{ByteRange, CodecId, KIND_DOCUMENT, KIND_SCHEMA};
 
     /// 🎲️ Per-test unique scratch directory under `std::env::temp_dir()` — no external
     /// `tempfile` crate dependency, per the contract's std-only preference.
@@ -18,7 +18,7 @@ mod tests {
     //#region 🔖️File
     #[semio_framework_async_macros::async_test]
     async fn file_source_sink_write_then_read_back() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("file_rw");
         let path = dir.join("blob.bin");
         let payload = b"hello pack_io world, this is a test payload";
@@ -64,7 +64,7 @@ mod tests {
     //#region 🔖️Atomic
     #[test]
     fn write_atomic_produces_full_content_and_no_stray_tmp_file() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("atomic_ok");
         let path = dir.join("doc.spk");
         let bytes = b"atomic write payload";
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn write_atomic_never_exposes_a_partial_target_from_a_simulated_interrupted_write() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("atomic_interrupt");
         let path = dir.join("doc.spk");
         let original = b"original committed content";
@@ -112,17 +112,17 @@ mod tests {
     /// used here only to compute a valid `doc_span.len` for a hand-built `Manifest`.
     async fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {
         let mut len_bytes = Vec::new();
-        crate::write_varint_u64(&mut len_bytes, payload_len as u64);
+        semio_framework_replication_codec::write_varint_u64(&mut len_bytes, payload_len as u64);
         (1 + 1 + len_bytes.len() + payload_len + 4) as u64
     }
 
     fn no_compression_options() -> WriteOptions {
-        WriteOptions { required_flags: 0, optional_flags: crate::format::OPTIONAL_STREAMED, codec: CodecId(0) }
+        WriteOptions { required_flags: 0, optional_flags: semio_framework_pack_format::OPTIONAL_STREAMED, codec: CodecId(0) }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn streaming_writer_full_session_multiple_segments_and_a_chunk_round_trips() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("stream_session");
         let path = dir.join("session.spk");
         let doc_payload = b"the streamed document body";
@@ -141,7 +141,7 @@ mod tests {
         let manifest = Manifest {
             schema_name: String::new(),
             schema_hash: [0u8; 32],
-            doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
+            doc_span: ByteRange { offset: semio_framework_pack_format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
             doc_frame_count: 1,
             symbols_span: ByteRange { offset: 0, len: 0 },
             chunk_table_span: ByteRange { offset: 0, len: 0 },
@@ -155,7 +155,7 @@ mod tests {
 
         let source = FilePackSource::open(&path, context.clone()).unwrap();
         let limits = PackLimits::default();
-        let pack_file = crate::format::PackFile::open_manifest(source, &limits, VerificationLevel::Standard).await.unwrap();
+        let pack_file = semio_framework_pack_format::PackFile::open_manifest(source, &limits, VerificationLevel::Standard).await.unwrap();
 
         let loaded_manifest = pack_file.manifest().unwrap();
         assert_eq!(loaded_manifest.doc_frame_count, 1);
@@ -180,7 +180,7 @@ mod tests {
 
     //#region 🔖️Recover
     async fn build_valid_session_file(dir: &Path, name: &str) -> std::path::PathBuf {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let path = dir.join(name);
         let doc_payload = b"recoverable document body";
         let chunk_payload = b"recoverable chunk payload";
@@ -196,7 +196,7 @@ mod tests {
         let manifest = Manifest {
             schema_name: String::new(),
             schema_hash: [0u8; 32],
-            doc_span: ByteRange { offset: crate::format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
+            doc_span: ByteRange { offset: semio_framework_pack_format::HEADER_SIZE as u64, len: uncompressed_segment_wire_len(doc_payload.len()).await },
             doc_frame_count: 1,
             symbols_span: ByteRange { offset: 0, len: 0 },
             chunk_table_span: ByteRange { offset: 0, len: 0 },
@@ -212,19 +212,19 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_with_footer_stripped_still_recovers_every_body_segment() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("recover_no_footer");
         let path = build_valid_session_file(&dir, "truncated_footer.spk").await;
         let limits = PackLimits::default();
 
         let full_len = std::fs::metadata(&path).unwrap().len();
         let file = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
-        file.set_len(full_len - crate::format::FOOTER_SIZE as u64).unwrap();
+        file.set_len(full_len - semio_framework_pack_format::FOOTER_SIZE as u64).unwrap();
         drop(file);
 
         // Superblock open must fail (no valid footer) — this is the scenario recover_file is for.
         let source = FilePackSource::open(&path, context.clone()).unwrap();
-        assert!(crate::format::PackFile::open_superblock(source, &limits).await.is_err());
+        assert!(semio_framework_pack_format::PackFile::open_superblock(source, &limits).await.is_err());
 
         let report = recover_file(&path, &limits, context.clone()).await.unwrap();
         // document, chunk, chunk_table (since one chunk was written), manifest, end.
@@ -235,7 +235,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_truncated_mid_segment_recovers_a_strict_prefix_without_panicking() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("recover_mid_segment");
         let path = build_valid_session_file(&dir, "truncated_mid.spk").await;
         let limits = PackLimits::default();
@@ -243,7 +243,7 @@ mod tests {
         let full_len = std::fs::metadata(&path).unwrap().len();
         // Cut well past the footer AND into the tail of the body stream, guaranteeing the
         // last segment present (the `End` marker) is itself truncated mid-frame.
-        let cut_len = full_len - crate::format::FOOTER_SIZE as u64 - 3;
+        let cut_len = full_len - semio_framework_pack_format::FOOTER_SIZE as u64 - 3;
         let file = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
         file.set_len(cut_len).unwrap();
         drop(file);
@@ -258,7 +258,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn recover_file_on_a_file_too_short_for_a_header_errors_never_panics() {
-        let (context, _cancellation, _progress) = crate::io::caller_test_policy::context();
+        let (context, _cancellation, _progress) = crate::caller_test_policy::context();
         let dir = scratch_dir("recover_too_short");
         let path = dir.join("empty.spk");
         std::fs::write(&path, b"short").unwrap();

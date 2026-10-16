@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "availableMilliseconds": null,
+      "reserveMilliseconds": 10000,
+      "accepted": true,
+      "bodyMilliseconds": null,
+      "cleanupMilliseconds": 10000
+    },
+    {
+      "availableMilliseconds": 20000,
+      "reserveMilliseconds": 10000,
+      "accepted": true,
+      "bodyMilliseconds": 10000,
+      "cleanupMilliseconds": 20000
+    },
+    {
+      "availableMilliseconds": 15000,
+      "reserveMilliseconds": 10000,
+      "accepted": true,
+      "bodyMilliseconds": 5000,
+      "cleanupMilliseconds": 15000
+    },
+    {
+      "availableMilliseconds": 10000,
+      "reserveMilliseconds": 10000,
+      "accepted": false,
+      "bodyMilliseconds": null,
+      "cleanupMilliseconds": null
+    },
+    {
+      "availableMilliseconds": 9999,
+      "reserveMilliseconds": 10000,
+      "accepted": false,
+      "bodyMilliseconds": null,
+      "cleanupMilliseconds": null
+    }
+  ]
+}

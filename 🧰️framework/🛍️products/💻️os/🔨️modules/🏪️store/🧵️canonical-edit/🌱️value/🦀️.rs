@@ -1,7 +1,7 @@
 //! 🌱️ Indexed framework dynamic-value projection for Store canonical JSON encoding.
 
 use super::{ARTIFACT_CANONICAL_JSON_DEPTH, ArtifactCanonicalJson, ArtifactCanonicalJsonNode, ArtifactCanonicalJsonText};
-use crate::DslValue;
+use semio_framework_value::DslValue;
 use protocol::value::DslValueSource;
 
 #[path = "🪪️admission/🦀️.rs"]

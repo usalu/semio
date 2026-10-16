@@ -3,11 +3,7 @@
 //! The editor scene document, the typing delivery state and echo ledger, the explicit draft settings and the public
 //! text editor pointer, key, wheel and action API.
 
-use super::engine_surface_registry::{
-    retire_string_page, EngineSurfaceRegistry, EngineSurfaceToken, ENGINE_SURFACES,
-    ENGINE_SURFACE_CAPACITY,
-};
-use super::node_graph::engine_canvas_fault_log;
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, ENGINE_SURFACE_CAPACITY, EngineSurfaceRegistry, EngineSurfaceToken, TEXT_EDITOR_PENDING_ECHO_CAPACITY, TextEditorDeliveryInFlight, TextEditorDeliveryPublication, TextEditorDeliverySnapshot, TextEditorDraftPublication, TextEditorTypingEnd, TextEditorTypingRun, engine_canvas_fault_log, retire_string_page, text_editor_now_ms};
 use framework_editor::EditorHost;
 #[cfg(target_arch = "wasm32")]
 use js_sys;
@@ -18,7 +14,7 @@ use ui_wgpu::wgpu::{ActionDescriptor, KeyAction, PointerModifiers, Rect, UiCompo
 //#region ✍️EditorSceneDocument
 /// 📏️ The bytes one decoded editor scene may own — the authority React's twin grants the same decode
 /// (`session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, …)`, `🧱️elements/✏️TextEditor/🟦️.tsx`).
-pub(super) const TEXT_EDITOR_SCENE_OWNED_BYTES: usize = 16_777_216;
+pub const TEXT_EDITOR_SCENE_OWNED_BYTES: usize = 16_777_216;
 
 /// ↔️ One byte range of the canonical scene: the selection, an occurrence.
 #[derive(Clone, Copy, serde::Deserialize, serde::Serialize)]
@@ -207,7 +203,7 @@ fn text_editor_scene_field<T: serde::de::DeserializeOwned>(member: &str, raw: Op
 /// own edit leaves both out, so the local draft and its caret stay (React's `sceneWithoutEchoedTextV1`). A member this
 /// host cannot read is left out — unchanged in the engine, by the document's own rule — and named in the second answer;
 /// it is never guessed.
-pub(super) fn text_editor_scene_document(editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> (String, Vec<String>) {
+pub fn text_editor_scene_document(editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> (String, Vec<String>) {
     let mut faults = Vec::new();
     let selection = if carries_text { text_editor_scene_field::<EditorSceneSelectionField>("selectionJson", editor.selection_json.as_deref(), &mut faults) } else { None };
     let occurrences = text_editor_scene_field::<EditorSceneOccurrenceFields>("occurrencesJson", editor.occurrences_json.as_deref(), &mut faults);
@@ -242,7 +238,7 @@ pub(super) fn text_editor_scene_document(editor: &ui_wgpu::wgpu::TextEditorScene
 /// 🎬️ Commits one contract scene into its editor host: the canonical document ([`text_editor_scene_document`]) decoded
 /// under a bounded authority ([`TEXT_EDITOR_SCENE_OWNED_BYTES`]) and handed to `EditorHost::synchronize_scene`. A member
 /// the builder left out is told on the console; a document the engine refuses is the caller's `Err` — never silence.
-pub(super) fn synchronize_text_editor_host(host: &mut EditorHost, editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> Result<(), String> {
+pub fn synchronize_text_editor_host(host: &mut EditorHost, editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> Result<(), String> {
     let (document, faults) = text_editor_scene_document(editor, carries_text);
     for fault in &faults {
         engine_canvas_fault_log(&format!("[text-editor] scene member left unchanged — {fault}"));
@@ -254,245 +250,6 @@ pub(super) fn synchronize_text_editor_host(host: &mut EditorHost, editor: &ui_wg
     Ok(())
 }
 //#endregion ✍️EditorSceneDocument
-
-const TEXT_EDITOR_PENDING_ECHO_CAPACITY: usize = 256;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct TextEditorDeliverySnapshot {
-    pub(super) controller_id: String,
-    pub(super) surface_id: String,
-    pub(super) text: String,
-    pub(super) start: usize,
-    pub(super) end: usize,
-}
-
-/// ⌨️ The editor's open typing run as its host sees it (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
-/// window folds every `textEdit` delivery that names the buffer (`typing`) into ONE run; the host ends it on idle, on a pure
-/// caret move, when the editor loses focus and when the page is hidden, with one commit signal, never one edit per keystroke.
-#[derive(Clone, Debug, PartialEq)]
-struct TextEditorTypingRun {
-    pub(super) controller_id: String,
-    pub(super) surface_id: String,
-    last_ms: f64,
-}
-
-/// 🏁️ Why the host ends an open typing run before its idle bound (the `typingCommit` reasons of the text-splice corpus
-/// `hostSignals`): the editor lost keyboard focus, or the page was hidden or left.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TextEditorTypingEnd {
-    Blur,
-    Hidden,
-}
-
-impl TextEditorTypingEnd {
-    /// 🏷️ The `typingCommit` reason the commit signal carries.
-    pub fn reason(self) -> &'static str {
-        match self {
-            Self::Blur => "blur",
-            Self::Hidden => "hidden",
-        }
-    }
-}
-
-/// ⏰️ The host clock the typing run's idle bound reads.
-#[cfg(target_arch = "wasm32")]
-fn text_editor_now_ms() -> f64 {
-    js_sys::Date::now()
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn text_editor_now_ms() -> f64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_secs_f64() * 1000.0).unwrap_or(0.0)
-}
-
-struct TextEditorDeliveryInFlight {
-    source: EngineSurfaceToken,
-    pub(super) token: std::num::NonZeroU64,
-    pub(super) snapshot: TextEditorDeliverySnapshot,
-    pending_members: u8,
-}
-
-struct TextEditorDraftPublication {
-    source: String,
-    restore: Option<String>,
-    pub(super) action: ui_wgpu::wgpu::RetainedStringAction,
-}
-
-struct TextEditorDeliveryPublication {
-    source: String,
-    pub(super) action: ui_wgpu::wgpu::RetainedStringAction,
-    pub(super) snapshot: TextEditorDeliverySnapshot,
-    include_selection: bool,
-}
-
-#[derive(Default)]
-pub(super) struct TextEditorDeliveryState {
-    pub(super) active: Option<TextEditorDeliveryInFlight>,
-    latest: Option<TextEditorDeliverySnapshot>,
-    publication: Option<TextEditorDeliveryPublication>,
-    pub(super) pending_echoes: VecDeque<String>,
-    acknowledged: Option<String>,
-    pub(super) read_only: bool,
-    selection_undeclared: bool,
-    pub(super) explicit_dirty: bool,
-    pub(super) explicit_base: Option<String>,
-    pub(super) explicit_changes: Option<String>,
-    pub(super) explicit_conflict: bool,
-    pub(super) explicit_past: VecDeque<String>,
-    pub(super) explicit_future: VecDeque<String>,
-    pub(super) explicit_snapshot: Option<String>,
-    pub(super) explicit_publication: Option<TextEditorDraftPublication>,
-    pub(super) explicit_active: Option<std::num::NonZeroU64>,
-    pub(super) explicit_error: Option<String>,
-    typing: Option<TextEditorTypingRun>,
-    typing_end: Option<TextEditorTypingEnd>,
-}
-
-impl TextEditorDeliveryState {
-    pub(super) fn reconcile_buffer(&mut self, buffer: &str) -> bool {
-        if let Some(index) = self.pending_echoes.iter().position(|pending| pending == buffer) {
-            self.pending_echoes.drain(..=index);
-            self.acknowledged = Some(buffer.to_owned());
-            return false;
-        }
-        if self.acknowledged.as_deref() == Some(buffer) {
-            return false;
-        }
-        self.pending_echoes.clear();
-        self.acknowledged = Some(buffer.to_owned());
-        true
-    }
-
-    pub(super) fn offer(&mut self, snapshot: TextEditorDeliverySnapshot) {
-        if self.latest.as_ref() == Some(&snapshot) || self.active.as_ref().is_some_and(|active| active.snapshot == snapshot) {
-            return;
-        }
-        if self.publication.as_ref().is_some_and(|publication| publication.snapshot != snapshot) {
-            self.publication = None;
-        }
-        self.latest = Some(snapshot);
-    }
-
-    /// 🏁️ Marks the open typing run (or the one its in-flight keystroke opens) to end for `end` once nothing is in flight;
-    /// `false` when the editor neither types nor has a delivery in flight.
-    fn end_typing(&mut self, end: TextEditorTypingEnd) -> bool {
-        let typing = self.typing.is_some() || self.active.is_some() || self.latest.is_some() || self.publication.is_some();
-        if typing {
-            self.typing_end = Some(end);
-        }
-        typing
-    }
-
-    pub(super) fn guest_has_text(&self, text: &str) -> bool {
-        self.pending_echoes.back().map_or_else(|| self.acknowledged.as_deref() == Some(text), |pending| pending == text)
-    }
-
-    pub(super) fn note_dispatched(&mut self, source: EngineSurfaceToken, token: std::num::NonZeroU64, include_edit: bool, include_selection: bool) -> bool {
-        if self.active.is_some() {
-            return false;
-        }
-        let Some(snapshot) = self.latest.take() else { return false };
-        if include_edit {
-            if self.pending_echoes.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
-                self.pending_echoes.pop_front();
-            }
-            self.pending_echoes.push_back(snapshot.text.clone());
-        }
-        let pending_members = u8::from(include_edit) | (u8::from(include_selection) << 1);
-        self.active = Some(TextEditorDeliveryInFlight { source, token, snapshot, pending_members });
-        true
-    }
-
-    pub(super) fn remove_pending_echo(&mut self, text: &str) -> bool {
-        let Some(index) = self.pending_echoes.iter().position(|pending| pending == text) else { return false };
-        self.pending_echoes.remove(index);
-        true
-    }
-
-    pub(super) fn close_string(value: &mut String) -> bool {
-        retire_string_page(value)
-    }
-
-    fn close_snapshot(snapshot: &mut TextEditorDeliverySnapshot) -> bool {
-        Self::close_string(&mut snapshot.text) || Self::close_string(&mut snapshot.surface_id) || Self::close_string(&mut snapshot.controller_id)
-    }
-
-    pub(super) fn close_step(&mut self) -> bool {
-        if self.latest.as_mut().is_some_and(Self::close_snapshot) {
-            return false;
-        }
-        self.latest = None;
-        if self.publication.as_mut().is_some_and(|publication| Self::close_string(&mut publication.source) || Self::close_snapshot(&mut publication.snapshot)) {
-            return false;
-        }
-        self.publication = None;
-        if self.active.as_mut().is_some_and(|active| Self::close_snapshot(&mut active.snapshot)) {
-            return false;
-        }
-        self.active = None;
-        if self.pending_echoes.back_mut().is_some_and(Self::close_string) {
-            return false;
-        }
-        if self.pending_echoes.pop_back().is_some() {
-            return false;
-        }
-        if self.acknowledged.as_mut().is_some_and(Self::close_string) {
-            return false;
-        }
-        self.acknowledged = None;
-        self.read_only = false;
-        self.selection_undeclared = false;
-        self.explicit_dirty = false;
-        if self.explicit_base.as_mut().is_some_and(Self::close_string) {
-            return false;
-        }
-        self.explicit_base = None;
-        if self.explicit_changes.as_mut().is_some_and(Self::close_string) {
-            return false;
-        }
-        self.explicit_changes = None;
-        self.explicit_conflict = false;
-        if self.explicit_past.back_mut().is_some_and(Self::close_string) || self.explicit_future.back_mut().is_some_and(Self::close_string) {
-            return false;
-        }
-        self.explicit_past.pop_back();
-        self.explicit_future.pop_back();
-        if !self.explicit_past.is_empty() || !self.explicit_future.is_empty() {
-            return false;
-        }
-        self.explicit_snapshot = None;
-        self.explicit_publication = None;
-        self.explicit_active = None;
-        self.explicit_error = None;
-        if self.typing.as_mut().is_some_and(|run| Self::close_string(&mut run.controller_id) || Self::close_string(&mut run.surface_id)) {
-            return false;
-        }
-        self.typing = None;
-        self.typing_end = None;
-        true
-    }
-
-    pub(super) fn terminal_is_empty(&self) -> bool {
-        self.active.is_none()
-            && self.latest.is_none()
-            && self.publication.is_none()
-            && self.pending_echoes.is_empty()
-            && self.acknowledged.is_none()
-            && !self.read_only
-            && !self.selection_undeclared
-            && !self.explicit_dirty
-            && self.explicit_base.is_none()
-            && !self.explicit_conflict
-            && self.explicit_past.is_empty()
-            && self.explicit_future.is_empty()
-            && self.explicit_snapshot.is_none()
-            && self.explicit_publication.is_none()
-            && self.explicit_active.is_none()
-            && self.explicit_error.is_none()
-            && self.typing.is_none()
-            && self.typing_end.is_none()
-    }
-}
 
 //#region TextEditor
 
@@ -510,7 +267,7 @@ pub(crate) struct TextEditorExplicitDraftSettings {
 }
 
 /// 📝 Reads the strict explicit-commit text draft settings shared with the React host.
-pub(crate) fn text_editor_explicit_draft_settings(scene: &UiComponentSceneNode) -> Option<TextEditorExplicitDraftSettings> {
+pub fn text_editor_explicit_draft_settings(scene: &UiComponentSceneNode) -> Option<TextEditorExplicitDraftSettings> {
     let settings = scene.text_editor.as_ref()?.settings_json.as_deref()?;
     let Value::Object(settings) = serde_json::from_str::<Value>(settings).ok()? else { return None };
     if settings.get("readOnly") != Some(&Value::Bool(false)) || settings.get("commit")?.as_str()? != "explicit" {
@@ -611,7 +368,7 @@ fn emit_text_editor_actions(
     })
 }
 
-pub(crate) enum TextEditorActionOutcome<'a> {
+pub enum TextEditorActionOutcome<'a> {
     Accepted,
     Refused(&'a str),
     Cancelled,
@@ -631,7 +388,7 @@ fn text_editor_receipt_token(sequence: u64, slot: usize) -> Option<std::num::Non
     std::num::NonZeroU64::new((sequence << 8) | slot as u64)
 }
 
-pub(crate) fn has_pending_text_editor_outbox() -> bool {
+pub fn has_pending_text_editor_outbox() -> bool {
     ENGINE_SURFACES.with(|cell| {
         cell.borrow().slots.iter().any(|slot| {
             slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.explicit_publication.is_some() || surface.editor_delivery.publication.is_some() || surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some() || surface.editor_delivery.typing.is_some() || surface.editor_delivery.typing_end.is_some())
@@ -706,7 +463,7 @@ fn drive_text_editor_typing_end(registry: &mut EngineSurfaceRegistry, input: &mu
     Ok(false)
 }
 
-pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let now_ms = text_editor_now_ms();
@@ -799,7 +556,7 @@ pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputStat
     })
 }
 
-pub(crate) fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: TextEditorActionOutcome<'_>) {
+pub fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: TextEditorActionOutcome<'_>) {
     if receipt.source != ui_wgpu::wgpu::ActionQueueReceiptSource::CanvasTextEditor { return; }
     let index = (receipt.token.get() & 0xff) as usize;
     ENGINE_SURFACES.with(|cell| {
@@ -903,7 +660,7 @@ fn write_text_editor_draft_value(builder: &mut ui_wgpu::wgpu::BoundedActionBuild
 }
 
 /// 💾 Publishes the current local draft through its configured artifact-owned action.
-pub(crate) fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(settings) = text_editor_explicit_draft_settings(scene) else { return Ok(false) };
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
@@ -930,7 +687,7 @@ pub(crate) fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode
     })
 }
 
-pub(crate) enum TextEditorRetainedActionStep {
+pub enum TextEditorRetainedActionStep {
     Idle,
     Pending,
     Ready(TextEditorRetainedActionBatch),
@@ -942,7 +699,7 @@ pub(crate) struct TextEditorRetainedActionBatch {
 }
 
 /// 📄 Copies one bounded source page and yields the single artifact action only after completion.
-pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetainedActionStep, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn drive_text_editor_retained_action_step() -> Result<TextEditorRetainedActionStep, ui_wgpu::wgpu::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
@@ -1025,7 +782,7 @@ pub(crate) fn drive_text_editor_retained_action_step() -> Result<TextEditorRetai
     })
 }
 
-pub(crate) fn text_editor_cancel_explicit_publication(scene: &UiComponentSceneNode) -> bool {
+pub fn text_editor_cancel_explicit_publication(scene: &UiComponentSceneNode) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let Some(surface) = registry.get_mut(&scene.host_id) else { return false };
@@ -1044,7 +801,7 @@ pub(crate) struct TextEditorExplicitDraftStatus {
     pub error: Option<String>,
 }
 
-pub(crate) fn text_editor_explicit_draft_status(scene: &UiComponentSceneNode) -> TextEditorExplicitDraftStatus {
+pub fn text_editor_explicit_draft_status(scene: &UiComponentSceneNode) -> TextEditorExplicitDraftStatus {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.borrow();
         let Some(surface) = registry.get(&scene.host_id) else { return TextEditorExplicitDraftStatus { pending: false, cancellable: false, progress: 0.0, error: None } };
@@ -1059,7 +816,7 @@ pub(crate) fn text_editor_explicit_draft_status(scene: &UiComponentSceneNode) ->
 }
 
 /// 🗑️ Restores the persisted scene buffer and clears the native local draft.
-pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -> bool {
+pub fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -> bool {
     let Some(editor) = scene.text_editor.as_ref() else { return false };
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
@@ -1086,7 +843,7 @@ pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -
 }
 
 /// ↩️ Moves within the native local draft history without dispatching document history actions.
-pub(crate) fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNode, redo: bool) -> bool {
+pub fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNode, redo: bool) -> bool {
     let Some(editor) = scene.text_editor.as_ref() else { return false };
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
@@ -1114,12 +871,12 @@ pub(crate) fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNo
 }
 
 /// 📝 Reports whether the native editor has an unapplied explicit draft.
-pub(crate) fn text_editor_explicit_draft_is_dirty(scene: &UiComponentSceneNode) -> bool {
+pub fn text_editor_explicit_draft_is_dirty(scene: &UiComponentSceneNode) -> bool {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|entry| entry.editor_delivery.explicit_dirty))
 }
 
 /// ⚔️ Reports whether a persisted collaborator edit diverged from the local draft base.
-pub(crate) fn text_editor_explicit_draft_has_conflict(scene: &UiComponentSceneNode) -> bool {
+pub fn text_editor_explicit_draft_has_conflict(scene: &UiComponentSceneNode) -> bool {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|entry| entry.editor_delivery.explicit_conflict))
 }
 

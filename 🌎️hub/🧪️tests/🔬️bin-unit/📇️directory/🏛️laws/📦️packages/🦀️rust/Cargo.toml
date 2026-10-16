@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-directory-route-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Directory route laws: administration, directory events and commands, space pages and presence"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-directory-route-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-document-routes/testkit", "semio-hub-ledgers/testkit", "semio-hub-route-models/testkit", "semio-hub-runtime/testkit", "semio-hub-session-routes/testkit", "semio-hub-state/testkit"]
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+semio-hub-directory-service = { workspace = true }
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-document-routes = { workspace = true, features = ["testkit"] }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-route-models = { workspace = true, features = ["testkit"] }
+semio-hub-route-testkit = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-state = { workspace = true, features = ["testkit"] }
+semio-hub-testing = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+tokio-tungstenite = "0.26"
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+serde_json = { workspace = true }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+axum = { version = "0.8", features = ["ws"] }
+semio-framework-async = { workspace = true }

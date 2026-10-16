@@ -32,7 +32,3 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts
     }
 }
 //#endregion ⚙️Semantics
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

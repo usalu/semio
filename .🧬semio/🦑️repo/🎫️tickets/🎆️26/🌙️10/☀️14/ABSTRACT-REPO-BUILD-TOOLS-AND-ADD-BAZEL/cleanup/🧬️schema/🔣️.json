@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "generated",
+    "maximumMountBytes",
+    "maximumMountEntries",
+    "maximumAncestorEntries",
+    "maximumElapsedMilliseconds",
+    "execution",
+    "maximumCensusEntries"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "const": "plan"
+    },
+    "generated": {
+      "const": "🗑️generated"
+    },
+    "maximumMountBytes": {
+      "const": 8388608
+    },
+    "maximumMountEntries": {
+      "const": 16384
+    },
+    "maximumAncestorEntries": {
+      "const": 32
+    },
+    "maximumElapsedMilliseconds": {
+      "const": 60000
+    },
+    "execution": {
+      "const": "final-mac-session; explicit Root release and all ticket writers closed required"
+    },
+    "maximumCensusEntries": {
+      "const": 262144
+    }
+  }
+}

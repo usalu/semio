@@ -89,6 +89,9 @@ pub struct TrustedPluginModuleIndexV1 {
     pub modules: Vec<TrustedPluginModuleIndexEntryV1>,
 }
 
+#[path = "../../📥️runtime/🦀️.rs"]
+pub mod native_catalog;
+
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️scope-schema-exports/🦀️.rs"]
 mod scope_schema_exports;

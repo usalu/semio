@@ -18,588 +18,23 @@
 //! trade-off (`semio://ui/selection` omits per-artifact object selection, which `ShellState` does
 //! not model).
 
-use crate::bridge::{BridgeHandle, GatewayToShell, ShellConnectionId, ShellToGateway};
-
-/// 🔌️ The late-bound `/bridge` handle. `McpServer` is built BEFORE the HTTP transport creates its
-/// `BridgeHandle` (the handle is minted from the transport's own worker pool, so hoisting its
-/// construction would mean a second pool), and `stdio` never serves `/bridge` at all — so the tool
-/// registry captures this slot at build time and the transport fills it in once, on `start`. An
-/// unfilled slot is exactly the "no bridge at all" tier, not an error.
-pub type BridgeSlot = Arc<OnceLock<Arc<BridgeHandle>>>;
-
-/// 🔎️ Resolves the slot to the live handle, if one was ever published into it.
-fn resolve_bridge(slot: Option<&BridgeSlot>) -> Option<&Arc<BridgeHandle>> {
-    slot.and_then(|slot| slot.get())
-}
-use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::handles::{mint_id, HandleKind};
-use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
-use crate::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
-use crate::workspace::HeadlessWorkspace;
-use semio_framework_value::{FromValue, ToValue};
-use serde::Serialize;
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
-use std::time::{Duration, Instant};
-
-//#region 🔖️Clock
-/// 🕐️ Wall-clock milliseconds — same one-real-clock-read-site convention `🦀️.rs::now_ms`
-/// and every other facet's own copy already follow (each facet stays independently testable).
-fn now_ms() -> u64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
-}
-//#endregion 🔖️Clock
-
-//#region 🔖️ShellCommandDispatch
-/// ⏱️ How long `ui_focus`/`ui_reveal` block waiting for the attached shell's `ShellCommandResult`
-/// before giving up — a shell that never replies must never hang a tool call forever.
-const SHELL_COMMAND_TIMEOUT_MS: u64 = 4_000;
-const SHELL_COMMAND_POLL_INTERVAL_MS: u64 = 20;
-
-static SHELL_COMMAND_SEQ: AtomicU64 = AtomicU64::new(1);
-
-fn next_shell_command_seq() -> u64 {
-    SHELL_COMMAND_SEQ.fetch_add(1, Ordering::Relaxed)
-}
-
-/// 🕳️ No `BridgeHandle` at all — this gateway serves no `/bridge`, so no shell can ever attach to
-/// it: it was started with `--no-bridge`, or its loopback listener could not be bound or offered
-/// (the gateway's stderr names which). The details name the rendezvous a shell would have dialled.
-fn bridge_not_running_error() -> GatewayError {
-    GatewayError::new(
-        GatewayErrorCode::PluginUnavailable,
-        "this gateway serves no `/bridge`, so no shell can attach to it — it was started with `--no-bridge` or its loopback listener could not be offered; restart this MCP server without `--no-bridge`",
-    )
-    .with_details(serde_json::json!({
-        "liveOsSessionsNow": crate::rendezvous::live_os_sessions().len(),
-        "sessionsDirectory": crate::rendezvous::sessions_dir().to_string_lossy(),
-        "bindWith": ["stdio (without --no-bridge)", "http"],
-    }))
-    .retryable()
-}
-
-/// 🕳️ A `BridgeHandle` exists but no shell connection is live — the normal headless state, not a
-/// bug. The gateway's offer is already published, so a shell started now dials it on its own.
-fn no_shell_attached_error() -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no shell is attached to `/bridge` yet — start `bun run dashboard run playground:s` (it dials this gateway on its own) and retry").retryable()
-}
-
-/// 🧭️ The connection this facet routes `ShellCommand`/`semio://window…` reads through — the
-/// highest (most recently registered) `ShellConnectionId`, i.e. the most-recently-connected shell.
-/// `🧵️bridge` carries no notion of "the" primary shell yet; a later packet that needs explicit
-/// multi-shell targeting adds a `shellId` argument to these tools without touching this fallback.
-pub(crate) fn active_shell_connection(bridge: &BridgeHandle) -> Option<ShellConnectionId> {
-    bridge.connections().into_iter().max()
-}
-
-/// 📤️ Encodes `command_json` the same way `AgentBridge`'s renderer-side hook does (opaque JSON
-/// bytes inside `GatewayToShell::ShellCommand.command` — `🧵️bridge`'s own design note: the codec
-/// never interprets these bytes), sends it to the active shell connection, and blocks (bounded by
-/// `timeout`, polling `BridgeHandle::last_command_result`) for a `ShellCommandResult` whose
-/// `in_reply_to` matches the `seq` this call minted. A stale/unrelated result already sitting on the
-/// connection is never mistaken for this call's reply (`in_reply_to` must match exactly).
-fn dispatch_shell_command_with_timeout(bridge: &BridgeHandle, command_json: serde_json::Value, timeout: Duration) -> Result<(), GatewayError> {
-    let connection_id = active_shell_connection(bridge).ok_or_else(no_shell_attached_error)?;
-    let seq = next_shell_command_seq();
-    let payload = serde_json::to_vec(&command_json).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("failed to encode ShellCommand payload: {error}")))?;
-    if !bridge.send_to(connection_id, GatewayToShell::ShellCommand { seq, command: payload }) {
-        return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "the attached shell's connection closed while dispatching this command").retryable());
-    }
-    let deadline = Instant::now() + timeout;
-    loop {
-        if let Some((in_reply_to, ok, fault)) = bridge.last_command_result(connection_id) {
-            if in_reply_to == seq {
-                return if ok { Ok(()) } else { Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, fault.unwrap_or_else(|| "the shell rejected this command".to_string()))) };
-            }
-        }
-        if Instant::now() >= deadline {
-            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("the attached shell did not reply to this command within {}ms", timeout.as_millis())).retryable());
-        }
-        std::thread::sleep(Duration::from_millis(SHELL_COMMAND_POLL_INTERVAL_MS));
-    }
-}
-
-fn dispatch_shell_command(bridge: &BridgeHandle, command_json: serde_json::Value) -> Result<(), GatewayError> {
-    dispatch_shell_command_with_timeout(bridge, command_json, Duration::from_millis(SHELL_COMMAND_TIMEOUT_MS))
-}
-//#endregion 🔖️ShellCommandDispatch
-
-//#region 🔖️JobRegistry
-/// 🚦 One plugin-agnostic job's lifecycle — `Pending` (registered, not yet started), `Running`
-/// (progress may update), then exactly one terminal state.
-// 🌱️ `rename_all = "SCREAMING_SNAKE_CASE"` has no `#[value(rename_all = …)]` equivalent — spelled
-// out per-variant instead, same wire names.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, ToValue, FromValue)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum JobStatus {
-    #[value(rename = "PENDING")]
-    Pending,
-    #[value(rename = "RUNNING")]
-    Running,
-    #[value(rename = "AWAITING_APPROVAL")]
-    AwaitingApproval,
-    #[value(rename = "SUCCEEDED")]
-    Succeeded,
-    #[value(rename = "FAILED")]
-    Failed,
-    #[value(rename = "CANCELLED")]
-    Cancelled,
-}
-
-impl JobStatus {
-    fn is_terminal(self) -> bool {
-        matches!(self, JobStatus::Succeeded | JobStatus::Failed | JobStatus::Cancelled)
-    }
-}
-
-struct JobRecord {
-    kind: String,
-    status: JobStatus,
-    progress: Option<f64>,
-    message: Option<String>,
-    result: Option<serde_json::Value>,
-    error: Option<GatewayError>,
-    cancel_requested: bool,
-    on_cancel: Option<Box<dyn FnOnce() + Send>>,
-    events: Vec<JobEvent>,
-    next_ordinal: u64,
-}
-
-impl JobRecord {
-    fn append(&mut self, kind: &str, progress: Option<f64>, message: Option<String>) {
-        if self.events.len() == JOB_EVENT_JOURNAL_CAPACITY {
-            self.events.remove(0);
-        }
-        self.next_ordinal += 1;
-        self.events.push(JobEvent { ordinal: self.next_ordinal, kind: kind.to_string(), at_ms: now_ms(), progress, message });
-    }
-}
-
-/// 🧾️ How many journal rows one job retains — the oldest row leaves first, and a reader behind the
-/// window sees the gap in the returned rows' own `ordinal`s rather than a silently renumbered stream.
-pub const JOB_EVENT_JOURNAL_CAPACITY: usize = 256;
-
-/// 🗓️ One append-only lifecycle fact of one job, ordered by `ordinal`: `accepted`, `progress`,
-/// `cancel-requested`, `awaiting-approval`, `approved`, and exactly one terminal `succeeded`/`failed`/
-/// `cancelled` — plus whatever domain facts the job's own producer records. The journal is the job's
-/// event stream; `JobSnapshot` is only its current fold.
-#[derive(Debug, Clone, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JobEvent {
-    pub ordinal: u64,
-    pub kind: String,
-    pub at_ms: u64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub progress: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
-}
-
-/// 📃️ One cursor-paged read of a job's journal: every row after `after`, and the cursor to read on from.
-#[derive(Debug, Clone, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct JobEventPage {
-    pub events: Vec<JobEvent>,
-    pub next_cursor: u64,
-}
-
-/// 📸️ `job_get`/`semio://job/{id}`'s answer shape — real fields only, never fabricated: `progress`/
-/// `message`/`result`/`error` are `None` until the producer that owns this job id reports them.
-#[derive(Debug, Clone)]
-pub struct JobSnapshot {
-    pub job_id: String,
-    pub kind: String,
-    pub status: JobStatus,
-    pub progress: Option<f64>,
-    pub message: Option<String>,
-    pub result: Option<serde_json::Value>,
-    pub error: Option<GatewayError>,
-    pub cancel_requested: bool,
-}
-
-impl JobSnapshot {
-    fn to_json(&self) -> serde_json::Value {
-        serde_json::json!({
-            "jobId": self.job_id,
-            "kind": self.kind,
-            "status": self.status,
-            "progress": self.progress,
-            "message": self.message,
-            "result": self.result,
-            "error": self.error.as_ref().map(GatewayError::to_tool_error_payload),
-            "cancelRequested": self.cancel_requested,
-        })
-    }
-}
-
-/// 🧵️ The plugin-agnostic job seam `job_get`/`job_cancel` read/act through, and every job producer
-/// (W5's inference-as-a-job, a future tessellation/export job, …) mints ids into and reports
-/// progress/results into — see [`job_registry`] for the one process-wide instance every tool
-/// handler and resource reader in this file shares. Cancellation is cooperative: `request_cancel`
-/// flips `cancel_requested` (and, for a `Pending` job with no producer running yet, finishes it
-/// immediately — there is nothing to interrupt); a `Running` job's own producer is expected to poll
-/// [`JobRegistry::is_cancel_requested`] and call [`JobRegistry::mark_cancelled`] once it has
-/// actually stopped. This facet never force-kills work it does not own.
-pub struct JobRegistry {
-    jobs: Mutex<HashMap<String, JobRecord>>,
-}
-
-impl Default for JobRegistry {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl JobRegistry {
-    pub fn new() -> Self {
-        Self { jobs: Mutex::new(HashMap::new()) }
-    }
-
-    /// 🆕️ Mints a fresh `job_`-prefixed id (same `mint_id`/`HandleKind::Job` scheme `🎫️handles`
-    /// already reserves for jobs) and registers it `Pending`.
-    pub fn begin(&self, kind: &str) -> String {
-        self.begin_with_id(mint_id(HandleKind::Job, now_ms()), kind)
-    }
-
-    /// 🆕️ Registers `job_id` `Pending` under an id the caller already minted elsewhere — the seam a
-    /// producer that ALSO wants `crate::handles::HandleTable`'s session-owned/expiring handle (for
-    /// its authorization/TTL semantics, which this registry does not provide) uses to track the SAME
-    /// id's mutable progress/result here: mint the `HandleTable` entry first with
-    /// `HandleKind::Job`/`mint_id`, then call this with that exact id.
-    ///
-    /// 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
-    /// progress token currently active on this thread covers all of them by construction — no
-    /// producer has to opt in, and none can silently forget to.
-    pub fn begin_with_id(&self, job_id: impl Into<String>, kind: &str) -> String {
-        let job_id = job_id.into();
-        let mut record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false, on_cancel: None, events: Vec::new(), next_ordinal: 0 };
-        record.append("accepted", None, None);
-        self.jobs.lock().expect("job registry lock poisoned").insert(job_id.clone(), record);
-        crate::notify::bind_job_to_active_scope(&job_id);
-        job_id
-    }
-
-    /// 📈️ Real progress from the job's own producer — a no-op (`false`) once the job is terminal.
-    pub fn report_progress(&self, job_id: &str, progress: f64, message: Option<String>) -> bool {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let accepted = match jobs.get_mut(job_id) {
-            Some(record) if !record.status.is_terminal() && record.status != JobStatus::AwaitingApproval => {
-                record.status = JobStatus::Running;
-                record.progress = Some(progress.clamp(0.0, 1.0));
-                if message.is_some() {
-                    record.message = message.clone();
-                }
-                record.append("progress", record.progress, message.clone());
-                true
-            }
-            _ => false,
-        };
-        drop(jobs);
-        if accepted {
-            crate::notify::job_progress_changed(job_id, progress, message.as_deref());
-        }
-        accepted
-    }
-
-    /// 📈️ A terminal transition is the client's LAST progress row (1.0 for a success), then
-    /// the binding is released so a long-lived stdio process never accumulates one entry per
-    /// job it ever ran.
-    fn finish(&self, job_id: &str, status: JobStatus, result: Option<serde_json::Value>, error: Option<GatewayError>) -> bool {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let accepted = match jobs.get_mut(job_id) {
-            Some(record) if !record.status.is_terminal() => {
-                record.status = status;
-                record.on_cancel = None;
-                if result.is_some() {
-                    record.result = result;
-                }
-                record.error = error;
-                if status == JobStatus::Succeeded {
-                    record.progress = Some(1.0);
-                }
-                let kind = match status {
-                    JobStatus::Succeeded => "succeeded",
-                    JobStatus::Failed => "failed",
-                    _ => "cancelled",
-                };
-                let message = record.error.as_ref().map(|error| error.message.clone());
-                record.append(kind, record.progress, message);
-                true
-            }
-            _ => false,
-        };
-        drop(jobs);
-        if accepted {
-            if status == JobStatus::Succeeded {
-                crate::notify::job_progress_changed(job_id, 1.0, Some("succeeded"));
-            }
-            crate::notify::release_job_binding(job_id);
-        }
-        accepted
-    }
-
-    pub fn succeed(&self, job_id: &str, result: serde_json::Value) -> bool {
-        self.finish(job_id, JobStatus::Succeeded, Some(result), None)
-    }
-
-    pub fn fail(&self, job_id: &str, error: GatewayError) -> bool {
-        self.finish(job_id, JobStatus::Failed, None, Some(error))
-    }
-
-    /// ✅️ Called by a job's own producer once its work loop has actually observed
-    /// [`JobRegistry::is_cancel_requested`] and stopped — never called by `job_cancel` itself.
-    pub fn mark_cancelled(&self, job_id: &str) -> bool {
-        self.finish(job_id, JobStatus::Cancelled, None, None)
-    }
-
-    /// 🛑️ The cooperative cancellation flag a job's own producer polls from inside its work loop.
-    pub fn is_cancel_requested(&self, job_id: &str) -> bool {
-        self.jobs.lock().expect("job registry lock poisoned").get(job_id).map(|record| record.cancel_requested).unwrap_or(false)
-    }
-
-    /// 🔗️ Binds the producer's own interrupt to `job_id`: `request_cancel` fires it once, outside the
-    /// registry lock, so a `job_cancel` or `notifications/cancelled` reaches work that is blocked in a
-    /// guest instead of waiting for it to poll. A cancel that already landed fires it immediately.
-    pub fn bind_cancel(&self, job_id: &str, hook: impl FnOnce() + Send + 'static) {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let Some(record) = jobs.get_mut(job_id) else { return };
-        if record.status.is_terminal() {
-            return;
-        }
-        if !record.cancel_requested {
-            record.on_cancel = Some(Box::new(hook));
-            return;
-        }
-        drop(jobs);
-        hook();
-    }
-
-    /// 🛑️ `job_cancel`'s real effect: flips the cooperative flag and fires the producer's bound
-    /// interrupt; a still-`Pending` job (nothing running yet to interrupt) finishes as `Cancelled`
-    /// immediately, a `Running` one waits for its producer to call [`JobRegistry::mark_cancelled`].
-    /// `NOT_FOUND`/`PRECONDITION_FAILED` for an unknown or already-terminal id — never a silent no-op.
-    pub fn request_cancel(&self, job_id: &str) -> Result<JobSnapshot, GatewayError> {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let record = jobs.get_mut(job_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such job: {job_id}")))?;
-        if record.status.is_terminal() {
-            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("job {job_id} already finished as {:?} — nothing to cancel", record.status)));
-        }
-        record.cancel_requested = true;
-        record.append("cancel-requested", None, None);
-        if matches!(record.status, JobStatus::Pending | JobStatus::AwaitingApproval) {
-            record.status = JobStatus::Cancelled;
-            record.append("cancelled", None, None);
-        }
-        let hook = record.on_cancel.take();
-        let snapshot = record_snapshot(job_id, record);
-        drop(jobs);
-        if let Some(hook) = hook {
-            hook();
-        }
-        Ok(snapshot)
-    }
-
-    pub fn snapshot(&self, job_id: &str) -> Option<JobSnapshot> {
-        let jobs = self.jobs.lock().expect("job registry lock poisoned");
-        jobs.get(job_id).map(|record| record_snapshot(job_id, record))
-    }
-
-    /// ⏸️ The producer's work is done and its effect waits on an explicit approval: the job parks,
-    /// non-terminal, with the proposal as its result. A cancel now withdraws the proposal and ends
-    /// the job; [`Self::resume_approved`] hands it back to its producer to commit.
-    pub fn await_approval(&self, job_id: &str, proposal: serde_json::Value) -> bool {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let Some(record) = jobs.get_mut(job_id).filter(|record| !record.status.is_terminal()) else { return false };
-        record.status = JobStatus::AwaitingApproval;
-        record.progress = Some(1.0);
-        record.result = Some(proposal);
-        record.append("awaiting-approval", record.progress, None);
-        true
-    }
-
-    /// ▶️ Consumes a parked approval exactly once: `true` only for a job still `AwaitingApproval`,
-    /// which is `Running` again when this returns, so two approvals of one proposal can never both
-    /// commit.
-    pub fn resume_approved(&self, job_id: &str) -> bool {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let Some(record) = jobs.get_mut(job_id).filter(|record| record.status == JobStatus::AwaitingApproval) else { return false };
-        record.status = JobStatus::Running;
-        record.append("approved", record.progress, None);
-        true
-    }
-
-    /// 🗓️ Records one producer-owned domain fact in the job's journal; refused once the job is terminal.
-    pub fn record_event(&self, job_id: &str, kind: &str, message: Option<String>) -> bool {
-        let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let Some(record) = jobs.get_mut(job_id).filter(|record| !record.status.is_terminal()) else { return false };
-        record.append(kind, None, message);
-        true
-    }
-
-    /// 📃️ Every journal row after `after`, oldest first, at most `limit` of them.
-    pub fn events(&self, job_id: &str, after: u64, limit: usize) -> Option<JobEventPage> {
-        let jobs = self.jobs.lock().expect("job registry lock poisoned");
-        let record = jobs.get(job_id)?;
-        let events: Vec<JobEvent> = record.events.iter().filter(|event| event.ordinal > after).take(limit).cloned().collect();
-        let next_cursor = events.last().map_or(after, |last| last.ordinal);
-        Some(JobEventPage { events, next_cursor })
-    }
-}
-
-fn record_snapshot(job_id: &str, record: &JobRecord) -> JobSnapshot {
-    JobSnapshot { job_id: job_id.to_string(), kind: record.kind.clone(), status: record.status, progress: record.progress, message: record.message.clone(), result: record.result.clone(), error: record.error.clone(), cancel_requested: record.cancel_requested }
-}
-
-static JOB_REGISTRY: OnceLock<JobRegistry> = OnceLock::new();
-
-/// 🌍️ The one process-wide [`JobRegistry`] `job_get`/`job_cancel`/`semio://job/{id}` and every job
-/// producer share — a process-global singleton (mirroring `🧵️bridge::BridgeHandle`'s own one-per-
-/// process shape) rather than a constructor argument, so a future job-producing facet (W5) needs
-/// only this function, never a change to `register_ui_tools`'s/`read_ui_resource`'s signatures.
-pub fn job_registry() -> &'static JobRegistry {
-    JOB_REGISTRY.get_or_init(JobRegistry::new)
-}
-//#endregion 🔖️JobRegistry
-
-//#region 🔖️Schemas
-// 📐️ Every `ui_*`/`job_*` tool schema is a named export of `🧬️schema/🦀️.rs` (scope `os.mcp`),
-// imported above — this facet stamps none of its own.
-//#endregion 🔖️Schemas
-
-//#region 🔖️Capabilities
-fn ui_focus_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("ui.focus".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Ui,
-        audience: CapabilityAudience::Agent,
-        title: "Focus Window".to_string(),
-        description: "Focuses a window on the attached shell (omit windowId to clear focus).".to_string(),
-        artifact_kind: None,
-        use_when: vec!["focus a window".to_string(), "bring a window to the front".to_string()],
-        input_schema: ui_focus_input_schema(),
-        output_schema: ui_focus_output_schema(),
-        effects: Default::default(),
-        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.control".into())], ..Default::default() },
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "ui_focus".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("focus".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn ui_reveal_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("ui.reveal".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Ui,
-        audience: CapabilityAudience::Agent,
-        title: "Reveal In Panel".to_string(),
-        description: "Makes a panel visible and navigates it to the given path on the attached shell.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["reveal an item in a panel".to_string(), "show this in the explorer".to_string()],
-        input_schema: ui_reveal_input_schema(),
-        output_schema: ui_reveal_output_schema(),
-        effects: Default::default(),
-        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.control".into())], ..Default::default() },
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "ui_reveal".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("reveal".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn job_get_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("job.get".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Job,
-        audience: CapabilityAudience::Agent,
-        title: "Get Job".to_string(),
-        description: "Reads the status/progress/result of one plugin-agnostic job by id.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["check on a running job".to_string(), "is this job done yet".to_string()],
-        input_schema: job_get_input_schema(),
-        output_schema: job_snapshot_output_schema("job.get"),
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "job_get".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("job".to_string()), category: Some("job".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-fn job_cancel_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("job.cancel".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Job,
-        audience: CapabilityAudience::Agent,
-        title: "Cancel Job".to_string(),
-        description: "Requests cooperative cancellation of one running or pending job by id.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["cancel a running job".to_string(), "stop this job".to_string()],
-        input_schema: job_cancel_input_schema(),
-        output_schema: job_snapshot_output_schema("job.cancel"),
-        effects: Default::default(),
-        policy: Default::default(),
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "job_cancel".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("stop".to_string()), category: Some("job".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-
-//#region 💬️ConversationCapability
-/// 💬️ `conversation.reply` — the agent's own voice in the shell's agent panel. It is the only
-/// gateway capability that writes PROSE rather than state, so it declares its own scope
-/// (`shell.converse`, reached through the `conversation.write` MCP scope) rather than borrowing
-/// `ui.control`'s window/navigation grants: an agent that may not move a window may still explain
-/// itself, and an agent granted nothing may not put text in front of a human at all.
-fn conversation_reply_capability() -> CapabilityDefinition {
-    CapabilityDefinition {
-        id: CapabilityRef("conversation.reply".to_string()),
-        version: 1,
-        owner: CapabilityOwner::Gateway,
-        kind: CapabilityKind::Ui,
-        audience: CapabilityAudience::Agent,
-        title: "Reply In Chat".to_string(),
-        description: "Publishes one chunk of the agent's own free-text turn into the shell's agent panel.".to_string(),
-        artifact_kind: None,
-        use_when: vec!["answer the human in the chat panel".to_string(), "ask a clarifying question".to_string(), "say what you are about to do".to_string()],
-        input_schema: conversation_reply_input_schema(),
-        output_schema: conversation_reply_output_schema(),
-        effects: Default::default(),
-        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.converse".into())], ..Default::default() },
-        execution: Default::default(),
-        exposure: ToolExposure::Direct { tool_name: "conversation_reply".to_string() },
-        presentation: CapabilityPresentation { icon_id: Some("message".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
-        examples: Vec::new(),
-        source: CapabilitySource::Gateway,
-    }
-}
-//#endregion 💬️ConversationCapability
-
-/// 🖥️ The UI + job capabilities, folded into `CatalogSource.gateway` alongside `🦀️.rs`'s
-/// own `core_tool_capabilities()` — same pattern, disjoint ids (`ui.*`/`job.*` vs `capabilities.*`/
-/// `context.*`), so both compile into the SAME catalog with zero collision risk.
-pub fn ui_capabilities() -> Vec<CapabilityDefinition> {
-    vec![ui_focus_capability(), ui_reveal_capability(), conversation_reply_capability(), job_get_capability(), job_cancel_capability()]
-}
-//#endregion 🔖️Capabilities
+use std::sync::Arc;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use semio_framework_os_mcp_bridge::session::BridgeHandle;
+use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection, bridge_not_running_error, dispatch_shell_command, no_shell_attached_error, resolve_bridge};
+use semio_framework_os_mcp_bridge_codec::bridge::{GatewayToShell, ShellToGateway, truncate_conversation_text};
+use semio_framework_os_mcp_capabilities::capability_declarations::{conversation_reply_capability, ui_focus_capability, ui_reveal_capability};
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, PolicyEngine, authorize_capability_scopes};
+use semio_framework_os_mcp_schema::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
+use semio_framework_os_mcp_wire::job_registry::job_registry;
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
 
 //#region 🔖️ToolHandlers
+
 fn input_invalid(message: impl Into<String>) -> CallToolResult {
     CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::InputInvalid, message.into()))
 }
@@ -670,14 +105,14 @@ fn job_cancel_handler(arguments: serde_json::Value) -> CallToolResult {
 /// `tools/list`, regardless of tier (§ module doc). `_workspace` is accepted (not yet read) for
 /// seam symmetry with `read_ui_resource`/a later packet that scopes jobs to one workspace; today's
 /// job seam is the process-wide [`job_registry`], deliberately workspace-independent.
-pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, _workspace: Option<Arc<HeadlessWorkspace>>, principal: crate::policy::AgentPrincipal) {
+pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, _workspace: Option<Arc<HeadlessWorkspace>>, principal: AgentPrincipal) {
     let mut ui_focus = Tool::new("ui_focus", ui_focus_input_schema());
     ui_focus.title = Some("Focus Window".to_string());
     ui_focus.description = Some("Focuses a window on the attached shell (omit windowId to clear focus).".to_string());
     ui_focus.output_schema = Some(ui_focus_output_schema());
     let (focus_bridge, focus_principal, focus_capability) = (bridge.clone(), principal.clone(), ui_focus_capability());
     registry
-        .register(ui_focus, move |arguments| match crate::policy::authorize_capability_scopes(&focus_principal, &focus_capability) {
+        .register(ui_focus, move |arguments| match authorize_capability_scopes(&focus_principal, &focus_capability) {
             Ok(()) => ui_focus_handler(resolve_bridge(focus_bridge.as_ref()), arguments),
             Err(error) => CallToolResult::tool_error(&error),
         })
@@ -689,7 +124,7 @@ pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<Bri
     ui_reveal.output_schema = Some(ui_reveal_output_schema());
     let (reveal_bridge, reveal_principal, reveal_capability) = (bridge.clone(), principal, ui_reveal_capability());
     registry
-        .register(ui_reveal, move |arguments| match crate::policy::authorize_capability_scopes(&reveal_principal, &reveal_capability) {
+        .register(ui_reveal, move |arguments| match authorize_capability_scopes(&reveal_principal, &reveal_capability) {
             Ok(()) => ui_reveal_handler(resolve_bridge(reveal_bridge.as_ref()), arguments),
             Err(error) => CallToolResult::tool_error(&error),
         })
@@ -709,6 +144,7 @@ pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<Bri
 }
 
 //#region 💬️ConversationReply
+
 /// 🔢️ The gateway's own reply-turn counter, for a client that streams without minting ids of its
 /// own. Process-wide like [`job_registry`], for the same reason: the shell keys rows by this id and
 /// two connections must never hand it the same one.
@@ -718,7 +154,7 @@ static NEXT_REPLY_ID: AtomicU64 = AtomicU64::new(1);
 /// shell. It answers `shells: 0` (never an error) when nobody is looking, because a gateway with no
 /// shell attached is an ordinary tier, not a failure; it refuses only when the principal was never
 /// granted `shell.converse`, when `text` is missing, or when no `/bridge` exists at all.
-fn conversation_reply_handler(policy: &crate::policy::PolicyEngine, principal: &crate::policy::AgentPrincipal, bridge: Option<&Arc<BridgeHandle>>, arguments: serde_json::Value) -> CallToolResult {
+pub(crate) fn conversation_reply_handler(policy: &PolicyEngine, principal: &AgentPrincipal, bridge: Option<&Arc<BridgeHandle>>, arguments: serde_json::Value) -> CallToolResult {
     let capability = conversation_reply_capability();
     if let Err(error) = policy.authorize_scopes(principal, &capability) {
         return CallToolResult::tool_error(&error);
@@ -747,7 +183,7 @@ fn conversation_reply_handler(policy: &crate::policy::PolicyEngine, principal: &
     let Some(bridge) = bridge else {
         return CallToolResult::tool_error(&bridge_not_running_error());
     };
-    let frame = GatewayToShell::AgentReply { reply_id: reply_id.clone(), in_reply_to, text: crate::bridge::truncate_conversation_text(text), complete };
+    let frame = GatewayToShell::AgentReply { reply_id: reply_id.clone(), in_reply_to, text: truncate_conversation_text(text), complete };
     let shells = match bridge.broadcast(frame) {
         Ok(shells) => shells,
         Err(_) => return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::Internal, "the shell bridge refused this reply — it exceeds the bridge's per-broadcast admission budget").retryable()),
@@ -761,7 +197,7 @@ fn conversation_reply_handler(policy: &crate::policy::PolicyEngine, principal: &
 /// 💬️ Registers `conversation_reply`. Separate from [`register_ui_tools`] because it is the one
 /// tool here that is scope-gated, and therefore the one that needs the connection's own principal
 /// and policy engine rather than only the bridge slot.
-pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, actions: Arc<crate::actions::ActionAdapter>, principal: crate::policy::AgentPrincipal) {
+pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, actions: Arc<ActionAdapter>, principal: AgentPrincipal) {
     let mut conversation_reply = Tool::new("conversation_reply", conversation_reply_input_schema());
     conversation_reply.title = Some("Reply In Chat".to_string());
     conversation_reply.description = Some("Publishes one chunk of your own free-text turn into the shell's agent panel, so the human reads your answer where they typed their question. Pass the same replyId with complete=false to stream.".to_string());
@@ -770,10 +206,13 @@ pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: 
         .register(conversation_reply, move |arguments| conversation_reply_handler(actions.policy(), &principal, resolve_bridge(bridge.as_ref()), arguments))
         .expect("conversation_reply is a valid tool name");
 }
+
 //#endregion 💬️ConversationReply
+
 //#endregion 🔖️ToolHandlers
 
 //#region 🔖️ShellStateProjection
+
 /// 🧭️ The attached shell's last full `ShellState` snapshot, decoded as raw JSON — `🧵️bridge`'s own
 /// design note says `state`/`command` bytes are opaque, AgentBridge encodes/decodes them as JSON on
 /// the renderer side, so this facet mirrors that instead of taking a new compile-time dependency on
@@ -951,6 +390,7 @@ pub fn read_ui_resource(uri: &str, bridge: Option<&BridgeSlot>, _workspace: Opti
         _ => None,
     }
 }
+
 /// 💬️ The receiving half of the agent chat panel: every turn the human typed at the agent since the
 /// last read, oldest first. A READ DRAINS the queue — MCP resources have no server-push, so the
 /// agent polls this uri, and a turn it has already been handed must not be handed to it twice.
@@ -968,10 +408,11 @@ fn read_agent_messages_resource(bridge: Option<&Arc<BridgeHandle>>) -> Result<Ve
     let body = serde_json::json!({ "connection": connection.to_string(), "messages": messages, "drained": true });
     Ok(vec![ResourceContent { uri: "semio://ui/agent-messages".to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }])
 }
+
 //#endregion 🔖️ShellStateProjection
 
+//#region 🔖️Schemas
+//#endregion 🔖️Schemas
+
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

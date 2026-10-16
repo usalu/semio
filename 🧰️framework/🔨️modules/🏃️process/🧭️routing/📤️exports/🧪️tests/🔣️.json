@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "export": {
+    "name": "createIssuedResourceControlV1",
+    "source": "./📥️invocation/🏃️process/🟦️.ts"
+  },
+  "cases": [
+    {
+      "phase": "live",
+      "milliseconds": 0,
+      "accepted": true
+    },
+    {
+      "phase": "live",
+      "milliseconds": 15,
+      "accepted": true
+    },
+    {
+      "phase": "live",
+      "milliseconds": -1,
+      "accepted": false
+    },
+    {
+      "phase": "live",
+      "milliseconds": 0.5,
+      "accepted": false
+    },
+    {
+      "phase": "forged",
+      "milliseconds": 0,
+      "accepted": false
+    },
+    {
+      "phase": "cancelled",
+      "milliseconds": 0,
+      "accepted": false
+    },
+    {
+      "phase": "released",
+      "milliseconds": 0,
+      "accepted": false
+    }
+  ]
+}

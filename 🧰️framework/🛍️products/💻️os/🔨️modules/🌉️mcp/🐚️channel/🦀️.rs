@@ -25,34 +25,23 @@
 //! so a client can never be wrong about which document owner it is talking to. The headless channel
 //! remains the path whenever no shell is attached — it is a fallback, not a deprecated lane.
 
-use crate::actions::{AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
-use crate::bridge::{BridgeHandle, BridgeInstanceRef, GatewayToShell, ShellConnectionId};
-use crate::schema::RevisionStamp;
-use crate::ui::BridgeSlot;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use std::time::Duration;
+use std::time::Instant;
+use semio_framework_os_mcp_bridge::session::{BridgeHandle, ShellConnectionId};
+use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, active_shell_connection};
+use semio_framework_os_mcp_bridge_codec::bridge::{BridgeInstanceRef, GatewayToShell};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityOwner, Catalog};
+use semio_framework_os_mcp_foundation::base64_codec::{BASE64_ALPHABET, encode_base64};
+use semio_framework_os_mcp_foundation::reports::RevisionStamp;
+use semio_framework_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, Fault, MutationOrigin, PreparedOps};
+use semio_framework_os_mcp_port::policy::AgentPrincipal;
 
 //#region 🔖️Base64
-/// 🔤️ The byte fields this codec carries (`ops` lanes, an artifact's pack/spr, exported media) are
-/// opaque binary. JSON has no byte type, so they travel as standard base64 — 1.33× rather than the
-/// ~4× a number array costs against a bridge outbox whose per-frame credit is fixed.
-const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-pub fn encode_base64(bytes: &[u8]) -> String {
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b0 = chunk[0];
-        let b1 = *chunk.get(1).unwrap_or(&0);
-        let b2 = *chunk.get(2).unwrap_or(&0);
-        out.push(BASE64_ALPHABET[(b0 >> 2) as usize] as char);
-        out.push(BASE64_ALPHABET[(((b0 & 0x03) << 4) | (b1 >> 4)) as usize] as char);
-        out.push(if chunk.len() > 1 { BASE64_ALPHABET[(((b1 & 0x0f) << 2) | (b2 >> 6)) as usize] as char } else { '=' });
-        out.push(if chunk.len() > 2 { BASE64_ALPHABET[(b2 & 0x3f) as usize] as char } else { '=' });
-    }
-    out
-}
 
 /// 🔡️ Total inverse of [`encode_base64`] — `None` for any string that is not well-formed base64,
 /// never a partial decode and never a panic (these bytes arrive from another process).
@@ -90,9 +79,11 @@ pub fn decode_base64(text: &str) -> Option<Vec<u8>> {
     }
     Some(out)
 }
+
 //#endregion 🔖️Base64
 
 //#region 🔖️PayloadCodec
+
 /// 🏷️ The version every payload of this codec carries. The frame envelope (`🧵️bridge`) has its own
 /// `BRIDGE_VERSION`; this is the *payload* contract inside `AppCommand.command` and each
 /// `AppFrames.frames[i]`, which the two banks (`🐚️channel/🦀️.rs` and `🔗️AgentBridge/🟦️.tsx`) must
@@ -187,9 +178,11 @@ pub fn decode_app_frame(value: &serde_json::Value) -> Result<AppFrame, String> {
         other => Err(format!("shell AppFrame payload declares unknown kind `{other}`")),
     }
 }
+
 //#endregion 🔖️PayloadCodec
 
 //#region 🔖️Selection
+
 /// 🔀️ Which document owner a session's artifact verbs execute against — the value
 /// `ContextSummary.channel` reports.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -214,8 +207,8 @@ impl ChannelKind {
 /// `PLUGIN_UNAVAILABLE` naming the lost shell — never a silent re-route onto a DIFFERENT document
 /// owner in the middle of a transaction.
 pub struct SessionChannelBinding {
-    bridge: Option<BridgeSlot>,
-    decided: Mutex<Option<ChannelKind>>,
+    pub bridge: Option<BridgeSlot>,
+    pub(crate) decided: Mutex<Option<ChannelKind>>,
 }
 
 impl SessionChannelBinding {
@@ -227,7 +220,7 @@ impl SessionChannelBinding {
     /// its own hub-bound guests under its agent principal, never through the human's attached shell — that route would
     /// author them as the human, and would fail whenever the human has not opened the document. The attached shell still
     /// carries approvals, conversation and UI verbs (measured on the live user path, ticket 26/09/23, G12 session 14c).
-    pub fn for_principal(principal: &crate::policy::AgentPrincipal, bridge: Option<BridgeSlot>) -> Self {
+    pub fn for_principal(principal: &AgentPrincipal, bridge: Option<BridgeSlot>) -> Self {
         Self::new(if principal.delegated_by.is_some() { None } else { bridge })
     }
 
@@ -236,7 +229,7 @@ impl SessionChannelBinding {
     /// `AppCommand`, so it is not a candidate.
     pub fn relay_connection(&self) -> Option<(Arc<BridgeHandle>, ShellConnectionId)> {
         let handle = self.bridge.as_ref()?.get()?;
-        let id = crate::ui::active_shell_connection(handle)?;
+        let id = active_shell_connection(handle)?;
         handle.shell_flags(id).relay_app_commands.then(|| (Arc::clone(handle), id))
     }
 
@@ -260,18 +253,22 @@ impl SessionChannelBinding {
         *self.decided.lock().expect("session channel binding lock poisoned")
     }
 }
+
 //#endregion 🔖️Selection
 
 //#region 🔖️ShellArtifactChannel
+
 /// ⏱️ How long one `AppCommand` may wait for the shell's `AppFrames` reply. Generous compared with
 /// `ui_focus`'s 4 s because this lane carries real mutations through a real plugin guest turn — but
 /// bounded, because a shell that stops answering must not hang a tool call forever.
 pub const SHELL_APP_COMMAND_TIMEOUT_MS: u64 = 60_000;
+
 /// ⏳️ How long a command waits for the attached shell to publish an open instance of its plugin before it is refused
 /// by name. A shell that just landed in a space is still opening the space's document when an agent's first edit
 /// arrives — measured on the live user path (de, 7800 p24): the agent's `addBlock` 5 s after the landing found only
 /// the space home, the note's instance followed moments later (ticket 26/09/23, G12 session 14c).
 pub const SHELL_INSTANCE_WAIT_MS: u64 = 10_000;
+
 const SHELL_APP_COMMAND_POLL_INTERVAL_MS: u64 = 10;
 
 static SHELL_APP_COMMAND_SEQ: AtomicU64 = AtomicU64::new(1);
@@ -292,9 +289,9 @@ fn fault(code: &str, message: impl Into<String>) -> Fault {
 /// one, and otherwise by a sticky binding this channel remembers per `instance`, so every leg of a
 /// prepare/commit/undo saga lands on the SAME live instance that ran the first leg.
 pub struct ShellArtifactChannel {
-    binding: Arc<SessionChannelBinding>,
-    catalog: Arc<crate::catalog::Catalog>,
-    bound: Mutex<HashMap<u32, String>>,
+    pub binding: Arc<SessionChannelBinding>,
+    pub catalog: Arc<Catalog>,
+    pub bound: Mutex<HashMap<u32, String>>,
     /// 🎯️ The plugin this channel's artifact belongs to, when the caller already knows it — the
     /// artifact's own kind names its owner, and `artifact_create`/`artifact_open`/`artifact_snapshot`
     /// all resolve that owner before they open a channel. Without it a capability-less command
@@ -314,7 +311,7 @@ enum InstanceResolution {
 }
 
 impl ShellArtifactChannel {
-    pub fn new(binding: Arc<SessionChannelBinding>, catalog: Arc<crate::catalog::Catalog>) -> Self {
+    pub fn new(binding: Arc<SessionChannelBinding>, catalog: Arc<Catalog>) -> Self {
         Self { binding, catalog, bound: Mutex::new(HashMap::new()), plugin: None, timeout: Duration::from_millis(SHELL_APP_COMMAND_TIMEOUT_MS), instance_wait: Duration::from_millis(SHELL_INSTANCE_WAIT_MS) }
     }
 
@@ -350,7 +347,7 @@ impl ShellArtifactChannel {
     /// `RoutingArtifactChannel` performs, so the two channels can never disagree about ownership.
     fn owning_plugin(&self, capability_id: &str) -> Option<String> {
         match &self.catalog.get(capability_id)?.owner {
-            crate::catalog::CapabilityOwner::Plugin { plugin_id, .. } => Some(plugin_id.clone()),
+            CapabilityOwner::Plugin { plugin_id, .. } => Some(plugin_id.clone()),
             _ => None,
         }
     }
@@ -491,14 +488,12 @@ impl ArtifactChannel for ShellArtifactChannel {
 
     /// 🐚️ The attached shell owns this session's guest and its document; the gateway has nothing of
     /// its own to bring up, so activation only honours the caller's cancel.
-    fn activate(&mut self, _instance: u32, scope: &crate::actions::ActivationScope) -> Result<(), Fault> {
+    fn activate(&mut self, _instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         scope.checkpoint()
     }
 }
+
 //#endregion 🔖️ShellArtifactChannel
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

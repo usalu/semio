@@ -66,12 +66,12 @@ fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_
     let mut callback=|_|true;
     let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let outcome = (DecodedBuffers::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant())).unwrap();
+    let outcome = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant())).unwrap();
     assert_eq!(outcome.value.table("decoded_buffer").unwrap().single_row().unwrap().blob(1).unwrap(), snapshot.buffers[0]);
     ORDINARY_DECODER_CALLS.with(|count| assert_eq!(count.get() as u64, case["ordinaryCalls"].as_u64().unwrap()));
     CONTROLLED_DECODER_CALLS.with(|count| assert_eq!(count.get() as u64, case["controlledCalls"].as_u64().unwrap()));
     let mut reached = false;
-    let result = (DecodedBuffers::sqlite_codec().export)(
+    let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)(
         "fixture.buffers/v1",
         &dialect,
         &crate::io_schema::IoPayload::Binary(bytes),
@@ -279,13 +279,13 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         let mut callback=|_|true;
         let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let result = (DecodedBuffers::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
+        let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes.clone()), &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
         let decoded = case["decoded"].as_bool().unwrap();
         assert_eq!(result.is_ok(), decoded, "{}: {result:?}", case["id"]);
         COMPLETED_DECODERS.with(|count| assert_eq!(count.get(), usize::from(decoded), "{}", case["id"]));
         close_original_recipient(&mut native);
         COMPLETED_DECODERS.with(|count| count.set(0));
-        let result = (DecodedBuffers::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes), &mut SqliteSnapshotControl::new(&mut |event| event.phase != SqliteSnapshotPhase::DecodeNative, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
+        let result = (<DecodedBuffers as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec().export)("fixture.buffers/v1", &dialect, &crate::io_schema::IoPayload::Binary(bytes), &mut SqliteSnapshotControl::new(&mut |event| event.phase != SqliteSnapshotPhase::DecodeNative, limits),&mut NativeSnapshotDecodeOwner::new(&mut native,caller_grant()));
         assert!(result.is_err());
         COMPLETED_DECODERS.with(|count| assert_eq!(count.get(), 0));
         close_original_recipient(&mut native);

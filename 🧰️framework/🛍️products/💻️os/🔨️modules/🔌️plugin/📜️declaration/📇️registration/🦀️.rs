@@ -14,16 +14,16 @@ use semio_framework_ui_locale::LocalizedLabel;
 /// share one definition without an inverted dependency; re-exported here verbatim.
 use semio_framework_os_kernel::io::{ComposerEntry, SubsetValidatorEntry};
 #[cfg(test)]
-use crate::app_contract::ArtifactApp;
+use semio_framework_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
 use crate::declarations;
-use crate::artifact_declaration::ArtifactDeclaration;
-use crate::artifact_declaration::DocumentCodecSpec;
-use crate::artifact_declaration::FlowExtensionDeclaration;
-use crate::artifact_declaration::FlowExtensionRegistry;
-use crate::artifact_declaration::HostMediaHandlerDeclaration;
-use crate::artifact_declaration::HostMediaHandlerRegistry;
-use crate::artifact_identity::ArtifactDefinitionRegistry;
+use crate::ArtifactDeclaration;
+use crate::DocumentCodecSpec;
+use crate::FlowExtensionDeclaration;
+use crate::FlowExtensionRegistry;
+use crate::HostMediaHandlerDeclaration;
+use crate::HostMediaHandlerRegistry;
+use semio_framework_plugin_identity::ArtifactDefinitionRegistry;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 use crate::artifact_inference::ArtifactInferenceService;
 use crate::artifact_inference::ArtifactInferenceServiceKey;
@@ -31,29 +31,29 @@ use crate::artifact_inference::ArtifactInferenceServiceMetadata;
 use crate::artifact_inference::ArtifactInferenceServiceRegistry;
 use semio_framework_plugin_ownership::store_lifecycle::OwnerMutationRoster;
 #[cfg(test)]
-use crate::artifact_identity::ArtifactDefinition;
+use semio_framework_plugin_identity::ArtifactDefinition;
 #[cfg(test)]
-use crate::artifact_identity::ArtifactIdentity;
+use semio_framework_plugin_identity::ArtifactIdentity;
 #[cfg(test)]
-use crate::surface_contract::EditorApp;
+use semio_framework_plugin_decl_surface::EditorApp;
 
 
 
 /// 🧭️ One immutable plugin runtime catalogue assembled before any shared registry commit.
-pub(crate) struct ArtifactRegistrationPlan {
-    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    pub(crate) inference_services: Vec<ArtifactInferenceService>,
+pub struct ArtifactRegistrationPlan {
+    pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub inference_services: Vec<ArtifactInferenceService>,
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
-    pub(crate) formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
-    pub(crate) subset_validators: Vec<&'static SubsetValidatorEntry>,
-    pub(crate) composers: Vec<&'static ComposerEntry>,
+    pub formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
+    pub subset_validators: Vec<&'static SubsetValidatorEntry>,
+    pub composers: Vec<&'static ComposerEntry>,
     languages: Vec<semio_framework_dsl::LanguageSpec>,
     document_codecs: Vec<store::os_store::serialization::ArtifactCodec>,
     document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
     native_snapshots: Vec<semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration>,
-    pub(crate) migrations: Vec<store::os_store::codec_registry::DialectMigration>,
-    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub migrations: Vec<store::os_store::codec_registry::DialectMigration>,
+    pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
     owner: String,
     host_media_handlers: Vec<HostMediaHandlerDeclaration>,
@@ -63,7 +63,7 @@ pub(crate) struct ArtifactRegistrationPlan {
 impl ArtifactRegistrationPlan {
     /// 🧾️ Collects every channel of the owned `declarations` and of the `hosted` ones, except the hosted inference
     /// services: those stay listed and executed by their owner's assembly alone.
-    pub(crate) fn from_declarations(
+    pub fn from_declarations(
         declarations: &[ArtifactDeclaration],
         hosted: &[ArtifactDeclaration],
         app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
@@ -123,7 +123,7 @@ impl ArtifactRegistrationPlan {
     }
 
     /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
-    pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
+    pub fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
         let Self {
             schemas,
             inferences,
@@ -186,19 +186,14 @@ impl ArtifactRegistrationPlan {
     }
 }
 
-#[cfg(test)]
-mod original_codec_binding_laws {
-    use super::*;
-    include!("../../🧪️tests/🪪️codec-binding/🦀️.rs");
-}
 
 /// 🧬️ Authoritative per-plugin runtime declarations. It is complete before global IO/store rows mutate.
-pub(crate) struct PluginRuntimeRegistry {
+pub struct PluginRuntimeRegistry {
     definitions: ArtifactDefinitionRegistry,
     document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
-    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     inference_services: ArtifactInferenceServiceRegistry,
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
     /// 🕳️ Collected at `into_runtime` time and never consumed. Languages: plugin inits also register grammars one by one
@@ -208,14 +203,14 @@ pub(crate) struct PluginRuntimeRegistry {
     languages: Vec<semio_framework_dsl::LanguageSpec>,
     #[allow(dead_code, reason = "captured but unwired — see comment above")]
     app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
-    pub(crate) host_media_handlers: HostMediaHandlerRegistry,
-    pub(crate) flow_extensions: FlowExtensionRegistry,
+    pub host_media_handlers: HostMediaHandlerRegistry,
+    pub flow_extensions: FlowExtensionRegistry,
     owner_mutations: BTreeMap<String, WireMutationRosterEntry>,
     contributed_mutations: BTreeMap<String, ContributedMutationRuntimeEntry>,
 }
 
 impl PluginRuntimeRegistry {
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self {
             definitions: ArtifactDefinitionRegistry::new(),
             document_bindings: Vec::new(),
@@ -233,11 +228,11 @@ impl PluginRuntimeRegistry {
         }
     }
 
-    pub(crate) fn inference_services(&self) -> &ArtifactInferenceServiceRegistry {
+    pub fn inference_services(&self) -> &ArtifactInferenceServiceRegistry {
         &self.inference_services
     }
 
-    pub(crate) fn routed_inferences(&self) -> &[ArtifactInferenceServiceMetadata] {
+    pub fn routed_inferences(&self) -> &[ArtifactInferenceServiceMetadata] {
         &self.routed_inferences
     }
 
@@ -251,13 +246,13 @@ impl PluginRuntimeRegistry {
         &self.document_bindings
     }
 
-    pub(crate) fn retain_document_bindings(&mut self, bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>) {
+    pub fn retain_document_bindings(&mut self, bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>) {
         self.document_bindings.extend(bindings);
     }
 
     /// 📚️ Adds the plugin-level shared schema documents (`PluginBuilder::schema_documents`) to the ones
     /// [`Self::publish_declared_catalogs`] commits.
-    pub(crate) fn share_schema_documents(&mut self, documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>) {
+    pub fn share_schema_documents(&mut self, documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>) {
         self.schema_documents.extend(documents);
     }
 
@@ -266,7 +261,7 @@ impl PluginRuntimeRegistry {
     /// what a contract or input schema of any plugin may `$ref` without publishing it. Every app construction runs it (the
     /// catalog tolerates exact duplicates), so an instance resolves those references whether or not a plugin assembly ran in
     /// its process (design §23).
-    pub(crate) fn publish_framework_schema_documents() -> Result<(), ::semio_framework_schema_registry::SchemaExportRegistryError> {
+    pub fn publish_framework_schema_documents() -> Result<(), ::semio_framework_schema_registry::SchemaExportRegistryError> {
         semio_framework_value::register_value_schema_exports()?;
         store::register_store_schema_exports()?;
         store::io_schema::register_io_schema_exports()
@@ -278,7 +273,7 @@ impl PluginRuntimeRegistry {
     /// preflighted then committed, exact duplicates tolerated, a conflicting descriptor fatal. The snapshot-edit route
     /// resolves an editor's document schema there; unpublished, every stdio editor edit was refused
     /// `snapshot-edit.schema-unregistered`.
-    pub(crate) fn publish_declared_catalogs(&self) -> Result<(), PluginAssemblyError> {
+    pub fn publish_declared_catalogs(&self) -> Result<(), PluginAssemblyError> {
         let documents_error = |error: ::semio_framework_schema_registry::SchemaExportRegistryError| PluginAssemblyError::new("plugin-assembly.declaration-schema-documents", error.to_string());
         Self::publish_framework_schema_documents().map_err(documents_error)?;
         for documents in &self.schema_documents {
@@ -288,7 +283,7 @@ impl PluginRuntimeRegistry {
         ::semio_framework_schema_registry::register_artifact_inference_descriptors(self.inferences.clone()).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))
     }
 
-    pub(crate) fn extend_contributions(
+    pub fn extend_contributions(
         &mut self,
         inference_services: Vec<ArtifactInferenceService>,
         owner_rosters: &[OwnerMutationRoster],
@@ -328,14 +323,14 @@ impl PluginRuntimeRegistry {
         Ok(())
     }
 
-    pub(crate) fn mutation_roster_entries(&self) -> Vec<WireMutationRosterEntry> {
+    pub fn mutation_roster_entries(&self) -> Vec<WireMutationRosterEntry> {
         let mut entries: Vec<_> = self.owner_mutations.values().cloned().collect();
         entries.extend(self.contributed_mutations.values().map(|entry| entry.roster.clone()));
         entries.sort_by(|left, right| left.mutation_id.cmp(&right.mutation_id));
         entries
     }
 
-    pub(crate) fn contributed_mutation_plan(&self, mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
+    pub fn contributed_mutation_plan(&self, mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
         let entry = self.contributed_mutations.get(mutation_id).ok_or_else(|| ContributedMutationExecutionError::new("artifact-mutation.not-registered", format!("no contributed mutation service for {mutation_id:?}")))?;
         if entry.roster.artifact_kind.as_deref() != Some(artifact_kind) {
             return Err(ContributedMutationExecutionError::new("artifact-mutation.artifact-kind-mismatch", format!("mutation {mutation_id:?} targets {:?}, request claims {artifact_kind:?}", entry.roster.artifact_kind)));
@@ -345,7 +340,7 @@ impl PluginRuntimeRegistry {
 }
 
 /// 📌️ Atomically commits all external IO/store registry rows after the local runtime is frozen.
-pub(crate) fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
+pub fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
     semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
 }
 
@@ -359,7 +354,7 @@ pub(crate) fn commit_artifact_registration_plan(assembly: &semio_framework_schem
 pub struct ArtifactContribution {
     artifact_kind: String,
     mutations: Vec<ContributedMutationSpec>,
-    pub(crate) inference_services: Vec<ArtifactInferenceService>,
+    pub inference_services: Vec<ArtifactInferenceService>,
     inference_depends_on: BTreeMap<String, Vec<String>>,
 }
 
@@ -460,7 +455,7 @@ impl ArtifactContribution {
     /// `commit_contributed_mutation_services`) now that `plugin_id` (the contributor) is known.
     /// Pure — no registry side effects; the caller runs `register_contributions` on the result
     /// before committing anything.
-    pub(crate) fn resolve(self, plugin_id: &str) -> (semio_framework::ArtifactContributionDescriptor, Vec<ArtifactInferenceService>, Vec<(String, ContributedMutationRuntimeEntry)>) {
+    pub fn resolve(self, plugin_id: &str) -> (semio_framework::ArtifactContributionDescriptor, Vec<ArtifactInferenceService>, Vec<(String, ContributedMutationRuntimeEntry)>) {
         let mut mutation_metadata = Vec::with_capacity(self.mutations.len());
         let mut mutation_runtime = Vec::with_capacity(self.mutations.len());
         for spec in self.mutations {
@@ -536,7 +531,7 @@ include!("../../🧪️tests/🔬️app-owned-contribution-error/🦀️.rs");
 /// `artifact_kind` must equal the contribution's own target. Called by both
 /// `PluginBuilder::try_build` and `ExtensionBundle::contributes` — see those call sites for how the
 /// pure `&[ArtifactContributionDescriptor]` this validates is assembled first.
-pub(crate) fn register_contributions(plugin_id: &str, dependencies: &[semio_framework::PluginDependency], contributions: &[semio_framework::ArtifactContributionDescriptor]) -> Result<(), ContributionRegistrationError> {
+pub fn register_contributions(plugin_id: &str, dependencies: &[semio_framework::PluginDependency], contributions: &[semio_framework::ArtifactContributionDescriptor]) -> Result<(), ContributionRegistrationError> {
     for descriptor in contributions {
         let target = ArtifactKindId::parse(&descriptor.artifact_kind).map_err(|_| ContributionRegistrationError::InvalidArtifactKind(descriptor.artifact_kind.clone()))?;
         let owner = target.plugin();
@@ -582,7 +577,7 @@ pub(crate) fn register_contributions(plugin_id: &str, dependencies: &[semio_fram
 /// `<domain>.<plugin>.<artifact>` grammar `preflight_artifact_identity` already forces on every declared
 /// kind — never a second dependency list to keep in sync. Returns one message per breaching
 /// surface, in manifest order; empty means the manifest is admissible.
-pub(crate) fn surface_dependency_breaches(manifest: &PluginManifest) -> Vec<String> {
+pub fn surface_dependency_breaches(manifest: &PluginManifest) -> Vec<String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let owned: BTreeSet<&str> = manifest.artifact_kinds.iter().map(|spec| spec.id.as_str()).collect();
@@ -607,7 +602,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// ownership of the owner moves into the host (demonstrator embedding the cad/gis/procedural/process/sourcing editors
 /// re-owned their kinds and made every hub creation of them ambiguous, 2026-09-29). Runs after the surface dependency
 /// gate, so every owner named here is a declared dependency.
-pub(crate) fn host_foreign_surface_kinds(manifest: &mut PluginManifest) {
+pub fn host_foreign_surface_kinds(manifest: &mut PluginManifest) {
     let owned: BTreeSet<String> = manifest.artifact_kinds.iter().map(|spec| spec.id.clone()).collect();
     for app in &mut manifest.apps {
         if owned.contains(&app.dialect.artifact_kind) {
@@ -771,8 +766,8 @@ pub struct WireArtifactMutationPlanResult {
 // 🌱️ `K: CompositeMutationKind<..>` now bounds on `semio_framework_value::ToValue`/`semio_framework_value::FromValue`
 // (see that trait's own doc), so this wire bridge speaks the first-party codec directly —
 // no more `to_dsl_value`/`from_dsl_value` serde bridge, no `serde_json` in the loop.
-#[cfg(test)]
-pub(crate) async fn encode_contributed_wire<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
+#[doc(hidden)]
+pub async fn encode_contributed_wire<T: semio_framework_value::ToValue>(value: &T) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(value))
 }
 
@@ -817,7 +812,7 @@ async fn commit_owner_mutation_roster(providers: &[OwnerMutationRoster]) -> Resu
 
 /// 📌️ Commits every resolved contribution's `(mutation_id, runtime entry)` pair — same
 /// idempotent-or-typed-conflict discipline as `commit_owner_mutation_roster`.
-pub(crate) async fn commit_contributed_mutation_services(entries: Vec<(String, ContributedMutationRuntimeEntry)>) -> Result<(), PluginAssemblyError> {
+pub async fn commit_contributed_mutation_services(entries: Vec<(String, ContributedMutationRuntimeEntry)>) -> Result<(), PluginAssemblyError> {
     let mut registry = contributed_mutation_registry().await.write().map_err(|_| PluginAssemblyError::new("plugin-assembly.contribution-mutation-registry", "contributed mutation registry is poisoned"))?;
     for (mutation_id, entry) in entries {
         if let Some(existing) = registry.get(&mutation_id) {
@@ -833,7 +828,7 @@ pub(crate) async fn commit_contributed_mutation_services(entries: Vec<(String, C
 
 /// 📖️ This process's deterministic mutation roster (owner + contributed rows, sorted by
 /// `mutation_id`) — `plugin_runtime::wire_list_artifact_mutations`'s data source.
-pub(crate) async fn mutation_roster_entries() -> Vec<WireMutationRosterEntry> {
+pub async fn mutation_roster_entries() -> Vec<WireMutationRosterEntry> {
     let mut entries: Vec<WireMutationRosterEntry> = owner_mutation_roster_registry().await.read().map(|registry| registry.values().cloned().collect()).unwrap_or_default();
     entries.extend(contributed_mutation_registry().await.read().map(|registry| registry.values().map(|entry| entry.roster.clone()).collect::<Vec<_>>()).unwrap_or_default());
     entries.sort_by(|a, b| a.mutation_id.cmp(&b.mutation_id));
@@ -843,7 +838,7 @@ pub(crate) async fn mutation_roster_entries() -> Vec<WireMutationRosterEntry> {
 /// 🎯️ Runs a registered contributed mutation's plan against `snapshot_pack`/`payload`, first
 /// verifying `artifact_kind` echoes the mutation's own registered target — mirrors
 /// `wire_artifact_infer`'s `validate_wire_request_metadata` discipline for the mutation-plan seam.
-pub(crate) async fn contributed_mutation_plan(mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
+pub async fn contributed_mutation_plan(mutation_id: &str, artifact_kind: &str, snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError> {
     let registry = contributed_mutation_registry().await.read().map_err(|_| ContributedMutationExecutionError::new("artifact-mutation.unavailable", "contributed mutation registry is poisoned"))?;
     let entry = registry.get(mutation_id).ok_or_else(|| ContributedMutationExecutionError::new("artifact-mutation.not-registered", format!("no contributed mutation service for {mutation_id:?}")))?;
     if entry.roster.artifact_kind.as_deref() != Some(artifact_kind) {

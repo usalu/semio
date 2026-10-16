@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "prefix": "tr-",
+  "maximumEntries": 32,
+  "partitions": [
+    "tools",
+    "leases"
+  ]
+}

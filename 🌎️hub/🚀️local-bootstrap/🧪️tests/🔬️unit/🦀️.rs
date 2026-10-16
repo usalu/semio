@@ -23,7 +23,7 @@ impl IdentityVerificationControl for AdmissionClock {
         self.cancelled.load(Ordering::Acquire)
     }
 
-    fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+    fn report(&self, progress: semio_hub_directory_contract::IdentityVerificationProgress) {
         self.admitted_units.store(progress.completed_units, Ordering::Release);
     }
 }
@@ -37,7 +37,7 @@ impl IdentityVerificationControl for CancelAtCommit {
         self.cancelled.load(Ordering::Acquire)
     }
 
-    fn report(&self, progress: crate::directory::IdentityVerificationProgress) {
+    fn report(&self, progress: semio_hub_directory_contract::IdentityVerificationProgress) {
         if progress.completed_units == progress.total_units {
             self.cancelled.store(true, Ordering::Release);
         }
@@ -173,7 +173,7 @@ fn local_bootstrap_hmac_matches_neutral_node_oracle_and_rejects_boundaries() {
 
 #[tokio::test]
 async fn local_session_commit_survives_cancellation_observed_by_final_progress() {
-    let sqlite = crate::directory::sqlite::SqliteDirectory::connect(":memory:").await.expect("sqlite");
+    let sqlite = semio_hub_directory_sqlite::SqliteDirectory::connect(":memory:").await.expect("sqlite");
     let directory = Arc::new(HubDirectories::from(sqlite));
     directory.create_user("local-commit@bootstrap.invalid", "Local Commit", None, Some("commit-subject"), Some(LOCAL_BOOTSTRAP_IDENTITY_PROVIDER)).await.expect("profile user");
     let control = CancelAtCommit { cancelled: AtomicBool::new(false), now_ms: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("clock").as_millis() as i64 };

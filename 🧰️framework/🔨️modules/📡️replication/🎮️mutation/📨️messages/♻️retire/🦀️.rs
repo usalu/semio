@@ -1,5 +1,7 @@
 //! ♻️ Exact ownership retirement for an original diagnostic ledger and its context text.
-use crate::{EditMessages, MutationMessage, MutationMessageRetirement, MutationReplayOutcome};
+use semio_framework_replication_conflict::{EditMessages, MutationReplayOutcome};
+use semio_framework_replication_mutation::MutationMessage;
+use crate::MutationMessageRetirement;
 use semio_framework_value::{ErasedSnapshotRetirement, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::{ManuallyDrop, size_of};
 

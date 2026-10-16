@@ -75,92 +75,6 @@ async function distributionPreflight(plan: DistributionBundlePlan, layout: Distr
   return previous;
 }
 
-/** 🏗️ Runs the real compiler without copy hooks, capturing main and worker input byte witnesses. */
-/** 🔁 The one crossing between the owned build contract and the build tool that consumes it.
- * `🏗️builder/🌐️vite` states the production configuration in the tool-independent owned shapes of
- * `🛠️build-tooling` — readonly arrays, structural server and plugin hooks — which is exactly why the
- * tool's own mutable declarations cannot be reached by assignment. The two descriptions cover the
- * same runtime objects, and this is the single place a distribution build hands one to the other. */
-function buildToolConfig(config: OwnedBuildConfig): InlineConfig {
-  return config as unknown as InlineConfig;
-}
-
-async function renderDistributionBundle(workspace: string, artifactRoot: string): Promise<DistributionBundlePlan> {
-  const scriptDirectory = dirname(fileURLToPath(import.meta.url)), playDirectory = resolve(scriptDirectory, "../.."), authorityDirectory = join(playDirectory, "🚚️distribution");
-  const authority = parseDistributionStaticInputs(JSON.parse(readFileSync(join(authorityDirectory, "🔗️inputs.json"), "utf8")));
-  const witnesses = new Map<string, DistributionInput>(), pending = new Map<string, Promise<void>>();
-  const observe = (id: string): Promise<void> => {
-    if (id.includes("\0")) return Promise.resolve();
-    const absolute = resolve(playDirectory, id.split(/[?#]/u)[0]!);
-    if (!existsSync(absolute) || !statSync(absolute).isFile()) return Promise.resolve();
-    const canonical = realpathSync(absolute), path = relative(realpathSync(workspace), canonical).replaceAll("\\", "/").normalize("NFC");
-    if (path === ".." || path.startsWith("..")) throw new Error(`Compiler input escapes workspace: ${id}`);
-    if (runtimeFixturePathV1(path)) throw new Error("Production compiler input belongs to a testing fixture collection: " + path);
-    if (path.startsWith(relative(workspace, join(playDirectory, DISTRIBUTION_LAYOUT.directory)).replaceAll("\\", "/") + "/")) throw new Error(`Compiler input consumes its own output: ${path}`);
-    const current = pending.get(path);
-    if (current) return current;
-    const operation = distributionFileWitness(canonical, path).then(row => { witnesses.set(path, row); if (witnesses.size % 500 === 0) distributionProgress(`recorded ${witnesses.size} compiler input witnesses`); });
-    pending.set(path, operation);
-    return operation;
-  };
-  for (const path of [...new Set([...authority.paths, ...await distributionStaticSourcePaths(workspace, authority.moduleEntries)])]) {
-    if (path.startsWith("/") || path.includes("\\") || path.split("/").some(part => !part || part === "." || part === "..") || !existsSync(join(workspace, path))) throw new Error(`Missing or unsafe distribution static input: ${path}`);
-    await observe(join(workspace, path));
-  }
-  for (const row of [...DISTRIBUTION_LAYOUT.chunks, ...DISTRIBUTION_LAYOUT.assets]) if (row.kind !== "name") await observe(join(workspace, row.source));
-  await observe(join(workspace, DISTRIBUTION_LAYOUT.entry.source));
-  const collector = () => ({
-    name: "semio-distribution-input-witness", enforce: "pre" as const,
-    async load(id: string) { await observe(id); return null; },
-    async buildEnd(this: { getWatchFiles(): string[] }) {
-      const files = this.getWatchFiles();
-      distributionProgress(`collecting ${files.length} compiler watch inputs`);
-      for (const path of files) await observe(path);
-      distributionProgress("compiler watch inputs collected");
-    },
-  });
-  const defaultVariant = requirePlaygroundVariant(runtimeCatalogBuildInventoryV1().defaultVariant);
-  const original = { SEMIO_PLUGIN: process.env.SEMIO_PLUGIN, SEMIO_RENDERER: process.env.SEMIO_RENDERER, SEMIO_BRAND: process.env.SEMIO_BRAND };
-  process.env.SEMIO_PLUGIN = defaultVariant;
-  process.env.SEMIO_RENDERER = "react";
-  process.env.SEMIO_BRAND = "";
-  let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
-  try {
-    const target = runtimeCatalogBuildInventoryV1().playgrounds.find((row) => row.variant === defaultVariant);
-    if (!target) throw new Error("Missing default host build contribution");
-    const contribution = loadDevContribution(workspace, target);
-    const configPath = contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : fileURLToPath(new URL("../../🏗️builder/🌐️vite/🟦️.ts", import.meta.url));
-    const { build } = await import("vite"), { default: createConfig } = await import(pathToFileURL(configPath).href);
-    const config = buildToolConfig(await createConfig({ command: "build", mode: "production", isSsrBuild: false, isPreview: false }));
-    distributionProgress("actual production configuration loaded");
-    const workerPlugins = config.worker?.plugins;
-    result = await build({ ...config, configFile: false, publicDir: false, logLevel: "silent", cacheDir: join(artifactRoot, "vite-distribution-cache"), plugins: [collector(), ...(config.plugins ?? [])], worker: { ...config.worker, plugins: () => [collector(), ...(workerPlugins?.() ?? [])] }, build: { ...config.build, write: false, emptyOutDir: false, outDir: join(artifactRoot, "distribution-unwritten") } });
-  } finally {
-    for (const [name, value] of Object.entries(original)) if (value === undefined) delete process.env[name]; else process.env[name] = value;
-  }
-  const files = new Map<string, Uint8Array>();
-  distributionProgress("compiler returned output bytes");
-  for (const bundle of Array.isArray(result) ? result : [result]) {
-    if (!("output" in bundle)) throw new Error("Distribution generation cannot use a watch-mode compiler");
-    for (const item of bundle.output) {
-      if (files.has(item.fileName)) throw new Error(`Duplicate compiler output: ${item.fileName}`);
-      distributionOutputOwner(DISTRIBUTION_LAYOUT, item.fileName);
-      files.set(item.fileName, Buffer.from(item.type === "chunk" ? item.code : item.source));
-    }
-  }
-  distributionProgress(`rechecking ${witnesses.size} compiler input witnesses`);
-  for (const row of witnesses.values()) {
-    const current = await distributionFileWitness(join(workspace, row.path), row.path);
-    if (current.bytes !== row.bytes || current.sha256 !== row.sha256) throw new Error(`Compiler input changed during production build: ${row.path}`);
-  }
-  const manifest = parseDistributionManifest({
-    version: 1, contractId: "dev-distribution-bundle", layoutSha256: createHash("sha256").update(readFileSync(join(authorityDirectory, "📇️layout.json"))).digest("hex"),
-    inputs: [...witnesses.values()].sort((left, right) => distributionPathOrder(left.path, right.path)),
-    outputs: [...files].map(([path, bytes]) => ({ ownerId: distributionOutputOwner(DISTRIBUTION_LAYOUT, path), path, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") })).sort((left, right) => distributionPathOrder(left.path, right.path)),
-  }, DISTRIBUTION_LAYOUT);
-  return { manifest, files };
-}
-
 /** 🧾️ Emits the bounded generator protocol; copied static namespaces are separate owners. */
 function distributionPreviewProtocol(plan: DistributionBundlePlan, workspace: string, destination: string) {
   const rootPath = relative(workspace, destination).replaceAll("\\", "/"), nodes: { path: string; nodeKind: "directory" | "file"; mode: number; bytesBase64: string }[] = [];
@@ -176,4 +90,4 @@ function distributionPreviewProtocol(plan: DistributionBundlePlan, workspace: st
   return { contractId: "dev-distribution-bundle", schemaVersion: 1, nodes, staleRemovals: [] as string[] };
 }
 
-export { type DistributionBundlePlan, distributionExistingPaths, distributionPreflight, distributionPreviewProtocol, distributionProgress, renderDistributionBundle };
+export { type DistributionBundlePlan, distributionExistingPaths, distributionPreflight, distributionPreviewProtocol, distributionProgress };

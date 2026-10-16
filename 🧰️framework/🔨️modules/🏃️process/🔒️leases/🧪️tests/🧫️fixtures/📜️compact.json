@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "ownerBytes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "owner": "AAECAwQFBgcICQoLDA0ODw",
+  "arrivalBase": 36,
+  "arrivalDigits": 10,
+  "pidBase": 36,
+  "pidDigits": 7,
+  "cases": [
+    {
+      "arrivedAtMs": 0,
+      "pid": 1,
+      "expected": "0000000000-0000001-AAECAwQFBgcICQoLDA0ODw"
+    },
+    {
+      "arrivedAtMs": 1,
+      "pid": 35,
+      "expected": "0000000001-000000z-AAECAwQFBgcICQoLDA0ODw"
+    },
+    {
+      "arrivedAtMs": 35,
+      "pid": 36,
+      "expected": "000000000z-0000010-AAECAwQFBgcICQoLDA0ODw"
+    },
+    {
+      "arrivedAtMs": 36,
+      "pid": 12345,
+      "expected": "0000000010-00009ix-AAECAwQFBgcICQoLDA0ODw"
+    },
+    {
+      "arrivedAtMs": 1791542284955,
+      "pid": 12345,
+      "expected": "00mv0u0q6z-00009ix-AAECAwQFBgcICQoLDA0ODw"
+    },
+    {
+      "arrivedAtMs": 281474976710655,
+      "pid": 9999999999,
+      "expected": "2rrvthnxtr-4ldqpdr-AAECAwQFBgcICQoLDA0ODw"
+    }
+  ],
+  "rejected": [
+    {
+      "arrivedAtMs": -1,
+      "pid": 1
+    },
+    {
+      "arrivedAtMs": 281474976710656,
+      "pid": 1
+    },
+    {
+      "arrivedAtMs": 1,
+      "pid": 0
+    },
+    {
+      "arrivedAtMs": 1,
+      "pid": 10000000000
+    },
+    {
+      "arrivedAtMs": 1.5,
+      "pid": 1
+    }
+  ],
+  "rejectedTickets": [
+    "000000000000-0000000001-AAECAwQFBgcICQoLDA0ODw",
+    "0-1-AAECAwQFBgcICQoLDA0ODw",
+    "00MV0U0Q6Z-00009ix-AAECAwQFBgcICQoLDA0ODw",
+    "zzzzzzzzzz-0000001-AAECAwQFBgcICQoLDA0ODw",
+    "0000000000-zzzzzzz-AAECAwQFBgcICQoLDA0ODw",
+    "0000000000-0000001-colon:owner"
+  ]
+}

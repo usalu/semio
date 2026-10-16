@@ -1,0 +1,18 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-contract-conformance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Native conformance of canonical UI document ownership and wire semantics"
+[lints]
+workspace = true
+[package.metadata.semio]
+role = "framework"
+rust-source-boundary = { maxSourceBytes = 262144, maxSourceFiles = 32, maxActiveLines = 4000 }
+[lib]
+path = "../../🦀️.rs"
+[dev-dependencies]
+semio-framework-ui-contract = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-ui-contract-values = { path = "../../../🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json.workspace = true

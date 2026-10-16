@@ -4265,7 +4265,7 @@
       "https://json.schemas.assets.semio-tech.com/framework/ui/styling/schema.json": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/3d": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔣️.json",
-      "https://semio.tech/schema/ui/host-temporal-format.v1.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧬️schema/🔣️.json",
+      "https://semio.tech/schema/ui/host-temporal-format.v1.json": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧬️schema/🔣️.json",
       "https://semio.tech/schema/world3d/modelling": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/📏️world3d-modelling/🔣️.json",
       "semio.canvas2d.framing": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🧬️schema/🔣️.json",
       "semio.ui.scene.block-list.v1": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🔣️.json",

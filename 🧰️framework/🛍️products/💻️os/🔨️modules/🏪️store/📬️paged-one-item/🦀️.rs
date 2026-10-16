@@ -4,12 +4,16 @@
 //! grant and the footprint counts only the mutation. A [`PagedOneItemEdit`] contributes the bounded in-place edit of the
 //! exclusive clone; this module owns the sealed source, the clone, the sealer and the whole grant-based close ladder.
 
-use crate::{
-    admit_artifact_batch_digest, os_store::snapshot_read::artifact_retirement_admit_owned, os_store::snapshot_read::artifact_retirement_box_close_step, os_store::snapshot_read::artifact_retirement_box_demands, os_store::snapshot_read::artifact_retirement_owned_birth_demands, ArtifactCanonicalJsonTree, ArtifactOwnedValueRetirementFactory, ArtifactStoreBatchDigest, os_store::one_item::ArtifactStoreOneItemCheckpoint,
-    os_store::one_item::ArtifactStoreOneItemFootprint, os_store::one_item::ArtifactStoreOneItemGrant, os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, os_store::one_item_publication::ArtifactStoreOneItemPreparation, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory, os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest, os_store::one_item::ArtifactStoreOneItemPreparationStep, os_store::one_item_publication::ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, Edit,
-    ErasedSnapshotRetirement, os_store::store_schema::HistoryLane, Mutation, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory, os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES, os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
-};
-use crate::os_spr::ActorId;
+use semio_framework_os_store_one_item_publication::batch_digest::{admit_artifact_batch_digest, ArtifactStoreBatchDigest};
+use semio_framework_value_snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, SnapshotRead};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
+use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
+use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
+use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
+use semio_framework_os_spr::{Edit, Mutation};
+use semio_framework_os_store_command::HistoryLane;
+use semio_framework_os_spr::ActorId;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneBirthDemand, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};
@@ -155,26 +159,26 @@ enum Phase {
 }
 
 struct PagedOneItemPreparation<S: RetainedClone, M, E: PagedOneItemEdit<S, M>> {
-    base: ManuallyDrop<Option<SnapshotRead<S>>>,
-    source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
-    cursor: ManuallyDrop<Option<S::Cursor>>,
-    post: ManuallyDrop<Option<S>>,
-    edit: E,
+    pub base: ManuallyDrop<Option<SnapshotRead<S>>>,
+    pub source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
+    pub cursor: ManuallyDrop<Option<S::Cursor>>,
+    pub post: ManuallyDrop<Option<S>>,
+    pub edit: E,
     pending_inverse: ManuallyDrop<Option<Vec<M>>>,
     clone_capacity_bytes: usize,
-    mutation: ManuallyDrop<Option<M>>,
-    authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
-    mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
-    snapshot_retirement: ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<S>>>>,
-    factory_close: ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
-    sealer: ManuallyDrop<Option<ArtifactStoreOneItemSealer<S, M>>>,
+    pub mutation: ManuallyDrop<Option<M>>,
+    pub authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
+    pub mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
+    pub snapshot_retirement: ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<S>>>>,
+    pub factory_close: ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
+    pub sealer: ManuallyDrop<Option<ArtifactStoreOneItemSealer<S, M>>>,
     external_retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    retirement: RetainedCloneClose,
-    checkpoint: ArtifactStoreOneItemCheckpoint,
+    pub retirement: RetainedCloneClose,
+    pub checkpoint: ArtifactStoreOneItemCheckpoint,
     seal_base_checkpoint: Option<ArtifactStoreOneItemCheckpoint>,
-    phase: Phase,
-    cancelled: bool,
-    closing: bool,
+    pub phase: Phase,
+    pub cancelled: bool,
+    pub closing: bool,
 }
 
 impl<S, M, E> PagedOneItemPreparation<S, M, E>
@@ -183,7 +187,7 @@ where
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
-    fn record(&mut self, progress: RetainedCloneProgress) -> ArtifactStoreOneItemPreparationStep {
+    pub fn record(&mut self, progress: RetainedCloneProgress) -> ArtifactStoreOneItemPreparationStep {
         if progress == RetainedCloneProgress::default() {
             return ArtifactStoreOneItemPreparationStep::Blocked;
         }
@@ -492,7 +496,7 @@ where
     M: semio_framework_value::retirement::RetireOwned + Send + 'static,
     E: PagedOneItemEdit<S, M>,
 {
-    fn terminal(&self) -> bool {
+    pub fn terminal(&self) -> bool {
         self.closing
             && self.edit.terminal_is_empty()
             && self.base.is_none()
@@ -510,7 +514,7 @@ where
             && self.factory_close.iter().all(Option::is_none)
     }
 
-    fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let nested = |mut value: RetirementDemand| -> Result<RetirementDemand, ValueError> {
             value.depth = value.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "structural preparation depth overflow"))?;
             Ok(value)

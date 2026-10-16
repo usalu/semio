@@ -1,9 +1,15 @@
 //! 🔎️ Checkpoint verification: preflight completion, publication frontiers, checkpoint publication and verification.
 
-use super::*;
+use semio_hub_inference_runtime_contract::{APPROVAL_MAX_RECORDS, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalReceiptV1, GisMapCommitConflictArmV1, GisMapCommitIdentityV1, GisMapCommitOperationV1, GisMapJournalReceiptV1, GisMapParentSnapshotV1, gis_map_commit_conflict, gis_map_storage_refusal, record_prepare_conflict};
+use std::sync::Arc;
+use directory::os_directory::{ArtifactFrontier, DocumentScope};
+use semio_hub_inference_binding::ComposedMapCommitBindingV1;
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1, sha256};
+use semio_hub_inference::wal::InferenceWalTargetV1;
+use crate::{RetainedGisMapApprovalCommitterV1, RetainedGisMapDocumentStateV1};
 
-impl RetainedGisMapApprovalCommitterV1 {
-    pub(super) async fn finish_preflight(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1, observed: &db::CheckpointPublicationSnapshot) -> Result<(), GisMapApprovalCommitErrorV1> {
+impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
+    pub(super) async fn finish_preflight(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1<B>, observed: &db::CheckpointPublicationSnapshot) -> Result<(), GisMapApprovalCommitErrorV1> {
         if !Self::checkpoint_matches_frontier(observed, observed.authority_generation, &candidate.base_frontier, &candidate.scope) {
             return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PreflightCheckpointDiffers));
         }
@@ -40,7 +46,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    pub(super) fn publication_frontier(scope: &DocumentScope, snapshot: &db::CheckpointPublicationSnapshot) -> Option<ArtifactFrontier> {
+    pub fn publication_frontier(scope: &DocumentScope, snapshot: &db::CheckpointPublicationSnapshot) -> Option<ArtifactFrontier> {
         Some(ArtifactFrontier {
             document_id: scope.document_id.clone(),
             head_edit_ordinal: snapshot.frontier.head_seq,
@@ -107,7 +113,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     base_frontier: identity.base_frontier.clone(),
                     handle: owners.handle.clone(),
                     actor_snapshot,
-                    pair: crate::artifact_authority::ArtifactPair { pack: files.pack, spr: files.spr },
+                    pair: semio_hub_artifact_authority::ArtifactPair { pack: files.pack, spr: files.spr },
                     journal_receipt: receipt.clone(),
                 },
                 document_write.clone(),
@@ -217,7 +223,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyApplyVerifier),
                     other => gis_map_storage_refusal(&other),
                 })?;
-                (applied, semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() })
+                (applied, semio_hub_inference::schema::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() })
             }
         };
         let mut documents = self.documents.lock().await;

@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-store-one-item-publication"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The retained one-item publication protocol: live authority, prepared owner, seal, sealer and operation-wire vocabulary"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-one-item-publication"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-canonical-json = { path = "../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-job = { workspace = true }
+semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-command = { path = "../../../../📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]

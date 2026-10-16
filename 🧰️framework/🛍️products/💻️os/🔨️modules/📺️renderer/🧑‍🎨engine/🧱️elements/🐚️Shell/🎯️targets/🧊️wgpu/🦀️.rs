@@ -234,6 +234,749 @@ pub use storage_prefs_and_i18n::*;
 mod theme_file_import_and_accessibility;
 pub use theme_file_import_and_accessibility::*;
 
+//#region 🧬️RendererWp4Components
+#[path = "📥️staging/🎚️chrome-state/🧬️component/🦀️.rs"]
+mod staged_chrome_state__component;
+pub use staged_chrome_state__component::*;
+#[path = "📥️staging/🫧️surfaces/🧬️component/🦀️.rs"]
+mod staged_surfaces__component;
+pub use staged_surfaces__component::*;
+#[path = "📥️staging/🧲️plugins/🧬️component/🦀️.rs"]
+mod staged_plugins__component;
+pub use staged_plugins__component::*;
+#[path = "📥️staging/⏪️history/🧬️component/🦀️.rs"]
+mod staged_history__component;
+pub use staged_history__component::*;
+#[path = "📥️staging/🎛️prefs/🧬️component/🦀️.rs"]
+mod staged_prefs__component;
+pub use staged_prefs__component::*;
+#[path = "📥️staging/📒️directory/🧬️component/🦀️.rs"]
+mod staged_directory__component;
+pub use staged_directory__component::*;
+#[path = "📥️staging/🔃️sync/🧬️component/🦀️.rs"]
+mod staged_sync__component;
+pub use staged_sync__component::*;
+#[path = "📥️staging/📄️docs/🧬️component/🦀️.rs"]
+mod staged_docs__component;
+pub use staged_docs__component::*;
+#[path = "📥️staging/📂️doc-open/🧬️component/🦀️.rs"]
+mod staged_doc_open__component;
+pub use staged_doc_open__component::*;
+#[path = "📥️staging/🔲️windows/🧬️component/🦀️.rs"]
+mod staged_windows__component;
+pub use staged_windows__component::*;
+#[path = "📥️staging/⚓️dock/🧬️component/🦀️.rs"]
+mod staged_dock__component;
+pub use staged_dock__component::*;
+#[path = "📥️staging/🕹️input/🧬️component/🦀️.rs"]
+mod staged_input__component;
+pub use staged_input__component::*;
+#[path = "📥️staging/🎹️commands/🧬️component/🦀️.rs"]
+mod staged_commands__component;
+pub use staged_commands__component::*;
+//#endregion 🧬️RendererWp4Components
+
+//#region 📥️RendererWp4Staging
+// 🪓️ Step S0 of PLAN-RENDERER-WGPU-CRATES.md: the ShellState members and WP5-bound free items by crate, one module per (crate, chunk).
+#[path = "📥️staging/⏳️async/📨️command-dispatch/🦀️.rs"]
+mod staged_async__command_dispatch;
+pub(crate) use staged_async__command_dispatch::*;
+#[path = "📥️staging/⏳️async/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_async__chrome_overlays_and_tour;
+pub use staged_async__chrome_overlays_and_tour::*;
+#[path = "📥️staging/⏳️async/🧩️session-and-topology/🦀️.rs"]
+mod staged_async__session_and_topology;
+pub(crate) use staged_async__session_and_topology::*;
+#[path = "📥️staging/🎚️chrome-state/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_chrome_state__keyboard_and_palette;
+#[path = "📥️staging/🎚️chrome-state/⏪️time-travel/🦀️.rs"]
+mod staged_chrome_state__time_travel;
+pub(crate) use staged_chrome_state__time_travel::*;
+#[path = "📥️staging/🎚️chrome-state/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_chrome_state__dock_model_and_measures;
+pub use staged_chrome_state__dock_model_and_measures::*;
+#[path = "📥️staging/🎚️chrome-state/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_chrome_state__settings_and_dock_persistence;
+#[path = "📥️staging/🎚️chrome-state/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_chrome_state__theme_file_import_and_accessibility;
+pub use staged_chrome_state__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🎚️chrome-state/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_chrome_state__chrome_dialog_and_tooltips;
+#[path = "📥️staging/🎚️chrome-state/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_chrome_state__storage_prefs_and_i18n;
+pub use staged_chrome_state__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🎚️chrome-state/🔖️identity-and-types/🦀️.rs"]
+mod staged_chrome_state__identity_and_types;
+pub use staged_chrome_state__identity_and_types::*;
+#[path = "📥️staging/🎚️chrome-state/🖱️pointer-input/🦀️.rs"]
+mod staged_chrome_state__pointer_input;
+pub use staged_chrome_state__pointer_input::*;
+#[path = "📥️staging/🎚️chrome-state/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_chrome_state__chrome_frame_and_main_window;
+#[path = "📥️staging/🎚️chrome-state/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_chrome_state__chrome_overlays_and_tour;
+pub use staged_chrome_state__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🎚️chrome-state/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_chrome_state__window_actions_and_commands;
+pub(crate) use staged_chrome_state__window_actions_and_commands::*;
+#[path = "📥️staging/🎚️chrome-state/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_chrome_state__chrome_paint_and_navbar;
+pub use staged_chrome_state__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🫧️surfaces/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_surfaces__keyboard_and_palette;
+#[path = "📥️staging/🫧️surfaces/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_surfaces__settings_and_dock_persistence;
+#[path = "📥️staging/🫧️surfaces/🎓️tutorial-runtime/🦀️.rs"]
+mod staged_surfaces__tutorial_runtime;
+pub use staged_surfaces__tutorial_runtime::*;
+#[path = "📥️staging/🫧️surfaces/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_surfaces__theme_file_import_and_accessibility;
+pub use staged_surfaces__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🫧️surfaces/🎬️shell-actions/🦀️.rs"]
+mod staged_surfaces__shell_actions;
+#[path = "📥️staging/🫧️surfaces/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_surfaces__space_admin_and_settle;
+pub use staged_surfaces__space_admin_and_settle::*;
+#[path = "📥️staging/🫧️surfaces/🖱️pointer-input/🦀️.rs"]
+mod staged_surfaces__pointer_input;
+pub use staged_surfaces__pointer_input::*;
+#[path = "📥️staging/🫧️surfaces/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_surfaces__chrome_frame_and_main_window;
+#[path = "📥️staging/🫧️surfaces/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_surfaces__chrome_overlays_and_tour;
+#[path = "📥️staging/🫧️surfaces/🧩️session-and-topology/🦀️.rs"]
+mod staged_surfaces__session_and_topology;
+#[path = "📥️staging/🫧️surfaces/🧭️navbar-footer-and-overlays/🦀️.rs"]
+mod staged_surfaces__navbar_footer_and_overlays;
+#[path = "📥️staging/🫧️surfaces/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_surfaces__chrome_paint_and_navbar;
+pub use staged_surfaces__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🫧️surfaces/🧵️shell-async-runners/🦀️.rs"]
+mod staged_surfaces__shell_async_runners;
+pub(crate) use staged_surfaces__shell_async_runners::*;
+#[path = "📥️staging/🧲️plugins/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_plugins__settings_and_dock_persistence;
+#[path = "📥️staging/🧲️plugins/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_plugins__space_admin_and_settle;
+pub use staged_plugins__space_admin_and_settle::*;
+#[path = "📥️staging/🧲️plugins/📨️command-dispatch/🦀️.rs"]
+mod staged_plugins__command_dispatch;
+pub(crate) use staged_plugins__command_dispatch::*;
+#[path = "📥️staging/🧲️plugins/🔖️identity-and-types/🦀️.rs"]
+mod staged_plugins__identity_and_types;
+pub use staged_plugins__identity_and_types::*;
+#[path = "📥️staging/🧲️plugins/🐚️shell-parent/🦀️.rs"]
+mod staged_plugins__shell_parent;
+pub(crate) use staged_plugins__shell_parent::*;
+#[path = "📥️staging/🧲️plugins/🧩️session-and-topology/🦀️.rs"]
+mod staged_plugins__session_and_topology;
+pub(crate) use staged_plugins__session_and_topology::*;
+#[path = "📥️staging/🧲️plugins/🧾️panel-records/🦀️.rs"]
+mod staged_plugins__panel_records;
+pub(crate) use staged_plugins__panel_records::*;
+#[path = "📥️staging/⏪️history/⏪️time-travel/🦀️.rs"]
+mod staged_history__time_travel;
+#[path = "📥️staging/⏪️history/📎️local-folders/🦀️.rs"]
+mod staged_history__local_folders;
+pub(crate) use staged_history__local_folders::*;
+#[path = "📥️staging/⏪️history/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_history__storage_prefs_and_i18n;
+pub use staged_history__storage_prefs_and_i18n::*;
+#[path = "📥️staging/⏪️history/🔖️identity-and-types/🦀️.rs"]
+mod staged_history__identity_and_types;
+pub use staged_history__identity_and_types::*;
+#[path = "📥️staging/🎛️prefs/⏪️time-travel/🦀️.rs"]
+mod staged_prefs__time_travel;
+pub(crate) use staged_prefs__time_travel::*;
+#[path = "📥️staging/🎛️prefs/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_prefs__dock_model_and_measures;
+pub use staged_prefs__dock_model_and_measures::*;
+#[path = "📥️staging/🎛️prefs/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_prefs__settings_and_dock_persistence;
+#[path = "📥️staging/🎛️prefs/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_prefs__theme_file_import_and_accessibility;
+pub use staged_prefs__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🎛️prefs/📎️local-folders/🦀️.rs"]
+mod staged_prefs__local_folders;
+pub(crate) use staged_prefs__local_folders::*;
+#[path = "📥️staging/🎛️prefs/📨️command-dispatch/🦀️.rs"]
+mod staged_prefs__command_dispatch;
+#[path = "📥️staging/🎛️prefs/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_prefs__storage_prefs_and_i18n;
+pub use staged_prefs__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🎛️prefs/🔖️identity-and-types/🦀️.rs"]
+mod staged_prefs__identity_and_types;
+pub use staged_prefs__identity_and_types::*;
+#[path = "📥️staging/🎛️prefs/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_prefs__chrome_frame_and_main_window;
+#[path = "📥️staging/🎛️prefs/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_prefs__chrome_overlays_and_tour;
+pub use staged_prefs__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🎛️prefs/🧩️session-and-topology/🦀️.rs"]
+mod staged_prefs__session_and_topology;
+#[path = "📥️staging/🎛️prefs/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_prefs__window_actions_and_commands;
+pub(crate) use staged_prefs__window_actions_and_commands::*;
+#[path = "📥️staging/🎛️prefs/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_prefs__chrome_paint_and_navbar;
+pub use staged_prefs__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🎛️prefs/🧾️panel-records/🦀️.rs"]
+mod staged_prefs__panel_records;
+pub(crate) use staged_prefs__panel_records::*;
+#[path = "📥️staging/📒️directory/⏪️time-travel/🦀️.rs"]
+mod staged_directory__time_travel;
+pub(crate) use staged_directory__time_travel::*;
+#[path = "📥️staging/📒️directory/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_directory__settings_and_dock_persistence;
+#[path = "📥️staging/📒️directory/🎬️shell-actions/🦀️.rs"]
+mod staged_directory__shell_actions;
+#[path = "📥️staging/📒️directory/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_directory__space_admin_and_settle;
+pub use staged_directory__space_admin_and_settle::*;
+#[path = "📥️staging/📒️directory/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_directory__chrome_dialog_and_tooltips;
+#[path = "📥️staging/📒️directory/📨️command-dispatch/🦀️.rs"]
+mod staged_directory__command_dispatch;
+#[path = "📥️staging/📒️directory/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_directory__storage_prefs_and_i18n;
+pub use staged_directory__storage_prefs_and_i18n::*;
+#[path = "📥️staging/📒️directory/🔖️identity-and-types/🦀️.rs"]
+mod staged_directory__identity_and_types;
+pub use staged_directory__identity_and_types::*;
+#[path = "📥️staging/📒️directory/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_directory__chrome_frame_and_main_window;
+#[path = "📥️staging/📒️directory/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_directory__chrome_overlays_and_tour;
+#[path = "📥️staging/📒️directory/🧩️session-and-topology/🦀️.rs"]
+mod staged_directory__session_and_topology;
+#[path = "📥️staging/📒️directory/🧭️navbar-footer-and-overlays/🦀️.rs"]
+mod staged_directory__navbar_footer_and_overlays;
+#[path = "📥️staging/📒️directory/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_directory__chrome_paint_and_navbar;
+pub use staged_directory__chrome_paint_and_navbar::*;
+#[path = "📥️staging/📒️directory/🧵️shell-async-runners/🦀️.rs"]
+mod staged_directory__shell_async_runners;
+pub(crate) use staged_directory__shell_async_runners::*;
+#[path = "📥️staging/📒️directory/🧾️panel-records/🦀️.rs"]
+mod staged_directory__panel_records;
+pub(crate) use staged_directory__panel_records::*;
+#[path = "📥️staging/🔃️sync/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_sync__settings_and_dock_persistence;
+#[path = "📥️staging/🔃️sync/🎬️shell-actions/🦀️.rs"]
+mod staged_sync__shell_actions;
+#[path = "📥️staging/🔃️sync/📎️local-folders/🦀️.rs"]
+mod staged_sync__local_folders;
+#[path = "📥️staging/🔃️sync/📤️icon-export/🦀️.rs"]
+mod staged_sync__icon_export;
+pub(crate) use staged_sync__icon_export::*;
+#[path = "📥️staging/🔃️sync/📨️command-dispatch/🦀️.rs"]
+mod staged_sync__command_dispatch;
+#[path = "📥️staging/🔃️sync/🔖️identity-and-types/🦀️.rs"]
+mod staged_sync__identity_and_types;
+pub use staged_sync__identity_and_types::*;
+#[path = "📥️staging/🔃️sync/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_sync__chrome_frame_and_main_window;
+#[path = "📥️staging/🔃️sync/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_sync__chrome_paint_and_navbar;
+pub use staged_sync__chrome_paint_and_navbar::*;
+#[path = "📥️staging/📄️docs/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_docs__keyboard_and_palette;
+pub(crate) use staged_docs__keyboard_and_palette::*;
+#[path = "📥️staging/📄️docs/⏪️time-travel/🦀️.rs"]
+mod staged_docs__time_travel;
+pub(crate) use staged_docs__time_travel::*;
+#[path = "📥️staging/📄️docs/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_docs__settings_and_dock_persistence;
+pub(crate) use staged_docs__settings_and_dock_persistence::*;
+#[path = "📥️staging/📄️docs/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_docs__theme_file_import_and_accessibility;
+pub use staged_docs__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/📄️docs/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_docs__space_admin_and_settle;
+pub use staged_docs__space_admin_and_settle::*;
+#[path = "📥️staging/📄️docs/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_docs__chrome_dialog_and_tooltips;
+#[path = "📥️staging/📄️docs/📎️local-folders/🦀️.rs"]
+mod staged_docs__local_folders;
+pub(crate) use staged_docs__local_folders::*;
+#[path = "📥️staging/📄️docs/📨️command-dispatch/🦀️.rs"]
+mod staged_docs__command_dispatch;
+#[path = "📥️staging/📄️docs/🔖️identity-and-types/🦀️.rs"]
+mod staged_docs__identity_and_types;
+pub use staged_docs__identity_and_types::*;
+#[path = "📥️staging/📄️docs/🖱️pointer-input/🦀️.rs"]
+mod staged_docs__pointer_input;
+#[path = "📥️staging/📄️docs/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_docs__chrome_frame_and_main_window;
+#[path = "📥️staging/📄️docs/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_docs__chrome_overlays_and_tour;
+pub use staged_docs__chrome_overlays_and_tour::*;
+#[path = "📥️staging/📄️docs/🧩️session-and-topology/🦀️.rs"]
+mod staged_docs__session_and_topology;
+#[path = "📥️staging/📄️docs/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_docs__window_actions_and_commands;
+pub(crate) use staged_docs__window_actions_and_commands::*;
+#[path = "📥️staging/📄️docs/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_docs__chrome_paint_and_navbar;
+pub use staged_docs__chrome_paint_and_navbar::*;
+#[path = "📥️staging/📄️docs/🧵️shell-async-runners/🦀️.rs"]
+mod staged_docs__shell_async_runners;
+pub(crate) use staged_docs__shell_async_runners::*;
+#[path = "📥️staging/📄️docs/🧾️panel-records/🦀️.rs"]
+mod staged_docs__panel_records;
+pub(crate) use staged_docs__panel_records::*;
+#[path = "📥️staging/📂️doc-open/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_doc_open__keyboard_and_palette;
+#[path = "📥️staging/📂️doc-open/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_doc_open__settings_and_dock_persistence;
+#[path = "📥️staging/📂️doc-open/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_doc_open__theme_file_import_and_accessibility;
+pub use staged_doc_open__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/📂️doc-open/🎬️shell-actions/🦀️.rs"]
+mod staged_doc_open__shell_actions;
+#[path = "📥️staging/📂️doc-open/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_doc_open__space_admin_and_settle;
+pub use staged_doc_open__space_admin_and_settle::*;
+#[path = "📥️staging/📂️doc-open/📤️icon-export/🦀️.rs"]
+mod staged_doc_open__icon_export;
+pub(crate) use staged_doc_open__icon_export::*;
+#[path = "📥️staging/📂️doc-open/📨️command-dispatch/🦀️.rs"]
+mod staged_doc_open__command_dispatch;
+#[path = "📥️staging/📂️doc-open/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_doc_open__storage_prefs_and_i18n;
+pub use staged_doc_open__storage_prefs_and_i18n::*;
+#[path = "📥️staging/📂️doc-open/🔖️identity-and-types/🦀️.rs"]
+mod staged_doc_open__identity_and_types;
+pub use staged_doc_open__identity_and_types::*;
+#[path = "📥️staging/📂️doc-open/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_doc_open__chrome_frame_and_main_window;
+#[path = "📥️staging/📂️doc-open/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_doc_open__chrome_overlays_and_tour;
+#[path = "📥️staging/📂️doc-open/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_doc_open__chrome_paint_and_navbar;
+pub use staged_doc_open__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🔲️windows/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_windows__dock_model_and_measures;
+pub use staged_windows__dock_model_and_measures::*;
+#[path = "📥️staging/🔲️windows/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_windows__settings_and_dock_persistence;
+#[path = "📥️staging/🔲️windows/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_windows__space_admin_and_settle;
+pub use staged_windows__space_admin_and_settle::*;
+#[path = "📥️staging/🔲️windows/📨️command-dispatch/🦀️.rs"]
+mod staged_windows__command_dispatch;
+#[path = "📥️staging/🔲️windows/🖱️pointer-input/🦀️.rs"]
+mod staged_windows__pointer_input;
+pub use staged_windows__pointer_input::*;
+#[path = "📥️staging/🔲️windows/🐚️shell-parent/🦀️.rs"]
+mod staged_windows__shell_parent;
+pub(crate) use staged_windows__shell_parent::*;
+#[path = "📥️staging/🔲️windows/🧩️session-and-topology/🦀️.rs"]
+mod staged_windows__session_and_topology;
+#[path = "📥️staging/🔲️windows/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_windows__window_actions_and_commands;
+pub(crate) use staged_windows__window_actions_and_commands::*;
+#[path = "📥️staging/🔲️windows/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_windows__chrome_paint_and_navbar;
+pub use staged_windows__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🔲️windows/🧾️panel-records/🦀️.rs"]
+mod staged_windows__panel_records;
+pub(crate) use staged_windows__panel_records::*;
+#[path = "📥️staging/⚓️dock/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_dock__keyboard_and_palette;
+pub(crate) use staged_dock__keyboard_and_palette::*;
+#[path = "📥️staging/⚓️dock/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_dock__dock_model_and_measures;
+pub use staged_dock__dock_model_and_measures::*;
+#[path = "📥️staging/⚓️dock/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_dock__settings_and_dock_persistence;
+pub(crate) use staged_dock__settings_and_dock_persistence::*;
+#[path = "📥️staging/⚓️dock/🎓️tutorial-runtime/🦀️.rs"]
+mod staged_dock__tutorial_runtime;
+pub use staged_dock__tutorial_runtime::*;
+#[path = "📥️staging/⚓️dock/🎬️shell-actions/🦀️.rs"]
+mod staged_dock__shell_actions;
+#[path = "📥️staging/⚓️dock/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_dock__chrome_dialog_and_tooltips;
+#[path = "📥️staging/⚓️dock/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_dock__storage_prefs_and_i18n;
+pub use staged_dock__storage_prefs_and_i18n::*;
+#[path = "📥️staging/⚓️dock/🔖️identity-and-types/🦀️.rs"]
+mod staged_dock__identity_and_types;
+pub use staged_dock__identity_and_types::*;
+#[path = "📥️staging/⚓️dock/🖱️pointer-input/🦀️.rs"]
+mod staged_dock__pointer_input;
+pub(crate) use staged_dock__pointer_input::*;
+#[path = "📥️staging/⚓️dock/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_dock__chrome_frame_and_main_window;
+#[path = "📥️staging/⚓️dock/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_dock__chrome_overlays_and_tour;
+#[path = "📥️staging/⚓️dock/🐚️shell-parent/🦀️.rs"]
+mod staged_dock__shell_parent;
+pub(crate) use staged_dock__shell_parent::*;
+#[path = "📥️staging/⚓️dock/🧩️session-and-topology/🦀️.rs"]
+mod staged_dock__session_and_topology;
+#[path = "📥️staging/⚓️dock/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_dock__window_actions_and_commands;
+#[path = "📥️staging/⚓️dock/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_dock__chrome_paint_and_navbar;
+pub use staged_dock__chrome_paint_and_navbar::*;
+#[path = "📥️staging/⚓️dock/🧾️panel-records/🦀️.rs"]
+mod staged_dock__panel_records;
+pub(crate) use staged_dock__panel_records::*;
+#[path = "📥️staging/⚓️dock/🪟️tree-windows/🦀️.rs"]
+mod staged_dock__tree_windows;
+pub(crate) use staged_dock__tree_windows::*;
+#[path = "📥️staging/🕹️input/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_input__keyboard_and_palette;
+#[path = "📥️staging/🕹️input/⏪️time-travel/🦀️.rs"]
+mod staged_input__time_travel;
+pub(crate) use staged_input__time_travel::*;
+#[path = "📥️staging/🕹️input/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_input__settings_and_dock_persistence;
+#[path = "📥️staging/🕹️input/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_input__theme_file_import_and_accessibility;
+pub use staged_input__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🕹️input/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_input__space_admin_and_settle;
+pub use staged_input__space_admin_and_settle::*;
+#[path = "📥️staging/🕹️input/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_input__chrome_dialog_and_tooltips;
+#[path = "📥️staging/🕹️input/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_input__storage_prefs_and_i18n;
+pub use staged_input__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🕹️input/🔖️identity-and-types/🦀️.rs"]
+mod staged_input__identity_and_types;
+pub use staged_input__identity_and_types::*;
+#[path = "📥️staging/🕹️input/🖱️pointer-input/🦀️.rs"]
+mod staged_input__pointer_input;
+pub use staged_input__pointer_input::*;
+#[path = "📥️staging/🕹️input/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_input__chrome_frame_and_main_window;
+pub(crate) use staged_input__chrome_frame_and_main_window::*;
+#[path = "📥️staging/🕹️input/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_input__chrome_overlays_and_tour;
+pub use staged_input__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🕹️input/🧩️session-and-topology/🦀️.rs"]
+mod staged_input__session_and_topology;
+#[path = "📥️staging/🕹️input/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_input__window_actions_and_commands;
+pub(crate) use staged_input__window_actions_and_commands::*;
+#[path = "📥️staging/🕹️input/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_input__chrome_paint_and_navbar;
+pub use staged_input__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🕹️input/🧾️panel-records/🦀️.rs"]
+mod staged_input__panel_records;
+pub(crate) use staged_input__panel_records::*;
+#[path = "📥️staging/🎹️commands/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_commands__keyboard_and_palette;
+#[path = "📥️staging/🎹️commands/🧩️session-and-topology/🦀️.rs"]
+mod staged_commands__session_and_topology;
+#[path = "📥️staging/🎹️commands/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_commands__window_actions_and_commands;
+pub(crate) use staged_commands__window_actions_and_commands::*;
+#[path = "📥️staging/🐙️state/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_state__theme_file_import_and_accessibility;
+pub use staged_state__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🐙️state/🔖️identity-and-types/🦀️.rs"]
+mod staged_state__identity_and_types;
+pub use staged_state__identity_and_types::*;
+#[path = "📥️staging/🐙️state/🧩️session-and-topology/🦀️.rs"]
+mod staged_state__session_and_topology;
+#[path = "📥️staging/🚶️session/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_session__keyboard_and_palette;
+#[path = "📥️staging/🚶️session/⏪️time-travel/🦀️.rs"]
+mod staged_session__time_travel;
+pub use staged_session__time_travel::*;
+#[path = "📥️staging/🚶️session/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_session__dock_model_and_measures;
+pub use staged_session__dock_model_and_measures::*;
+#[path = "📥️staging/🚶️session/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_session__settings_and_dock_persistence;
+pub use staged_session__settings_and_dock_persistence::*;
+#[path = "📥️staging/🚶️session/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_session__theme_file_import_and_accessibility;
+pub use staged_session__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🚶️session/🎬️shell-actions/🦀️.rs"]
+mod staged_session__shell_actions;
+#[path = "📥️staging/🚶️session/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_session__space_admin_and_settle;
+pub use staged_session__space_admin_and_settle::*;
+#[path = "📥️staging/🚶️session/🐚️shell-parent/🦀️.rs"]
+mod staged_session__shell_parent;
+pub use staged_session__shell_parent::*;
+#[path = "📥️staging/🚶️session/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_session__chrome_dialog_and_tooltips;
+#[path = "📥️staging/🚶️session/📎️local-folders/🦀️.rs"]
+mod staged_session__local_folders;
+#[path = "📥️staging/🚶️session/📨️command-dispatch/🦀️.rs"]
+mod staged_session__command_dispatch;
+#[path = "📥️staging/🚶️session/🔖️identity-and-types/🦀️.rs"]
+mod staged_session__identity_and_types;
+pub use staged_session__identity_and_types::*;
+#[path = "📥️staging/🚶️session/🖱️pointer-input/🦀️.rs"]
+mod staged_session__pointer_input;
+#[path = "📥️staging/🚶️session/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_session__chrome_frame_and_main_window;
+#[path = "📥️staging/🚶️session/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_session__chrome_overlays_and_tour;
+pub use staged_session__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🚶️session/🧩️session-and-topology/🦀️.rs"]
+mod staged_session__session_and_topology;
+pub use staged_session__session_and_topology::*;
+#[path = "📥️staging/🚶️session/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_session__window_actions_and_commands;
+pub use staged_session__window_actions_and_commands::*;
+#[path = "📥️staging/🚶️session/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_session__chrome_paint_and_navbar;
+pub use staged_session__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🚶️session/🧺️bundle/🦀️.rs"]
+mod staged_session__bundle;
+pub use staged_session__bundle::*;
+#[path = "📥️staging/🚶️session/🧾️panel-records/🦀️.rs"]
+mod staged_session__panel_records;
+pub use staged_session__panel_records::*;
+#[path = "📥️staging/🚶️session/🪟️tree-windows/🦀️.rs"]
+mod staged_session__tree_windows;
+#[path = "📥️staging/🪝️window-actions/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_window_actions__dock_model_and_measures;
+pub use staged_window_actions__dock_model_and_measures::*;
+#[path = "📥️staging/🪝️window-actions/⚙️settings-and-dock-persistence/🦀️.rs"]
+mod staged_window_actions__settings_and_dock_persistence;
+#[path = "📥️staging/🪝️window-actions/🎓️tutorial-runtime/🦀️.rs"]
+mod staged_window_actions__tutorial_runtime;
+pub use staged_window_actions__tutorial_runtime::*;
+#[path = "📥️staging/🪝️window-actions/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_window_actions__theme_file_import_and_accessibility;
+pub use staged_window_actions__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🪝️window-actions/🎬️shell-actions/🦀️.rs"]
+mod staged_window_actions__shell_actions;
+pub use staged_window_actions__shell_actions::*;
+#[path = "📥️staging/🪝️window-actions/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_window_actions__space_admin_and_settle;
+pub use staged_window_actions__space_admin_and_settle::*;
+#[path = "📥️staging/🪝️window-actions/📎️local-folders/🦀️.rs"]
+mod staged_window_actions__local_folders;
+pub use staged_window_actions__local_folders::*;
+#[path = "📥️staging/🪝️window-actions/📨️command-dispatch/🦀️.rs"]
+mod staged_window_actions__command_dispatch;
+#[path = "📥️staging/🪝️window-actions/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_window_actions__storage_prefs_and_i18n;
+pub use staged_window_actions__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🪝️window-actions/🔖️identity-and-types/🦀️.rs"]
+mod staged_window_actions__identity_and_types;
+pub use staged_window_actions__identity_and_types::*;
+#[path = "📥️staging/🪝️window-actions/🖱️pointer-input/🦀️.rs"]
+mod staged_window_actions__pointer_input;
+pub use staged_window_actions__pointer_input::*;
+#[path = "📥️staging/🪝️window-actions/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_window_actions__chrome_overlays_and_tour;
+pub use staged_window_actions__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🪝️window-actions/🧩️session-and-topology/🦀️.rs"]
+mod staged_window_actions__session_and_topology;
+#[path = "📥️staging/🪝️window-actions/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_window_actions__window_actions_and_commands;
+pub use staged_window_actions__window_actions_and_commands::*;
+#[path = "📥️staging/🪝️window-actions/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_window_actions__chrome_paint_and_navbar;
+pub use staged_window_actions__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🪝️window-actions/🧵️shell-async-runners/🦀️.rs"]
+mod staged_window_actions__shell_async_runners;
+pub use staged_window_actions__shell_async_runners::*;
+#[path = "📥️staging/🪝️window-actions/🧺️bundle/🦀️.rs"]
+mod staged_window_actions__bundle;
+pub use staged_window_actions__bundle::*;
+#[path = "📥️staging/🪝️window-actions/🧾️panel-records/🦀️.rs"]
+mod staged_window_actions__panel_records;
+pub use staged_window_actions__panel_records::*;
+#[path = "📥️staging/🔀️actions/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_actions__keyboard_and_palette;
+#[path = "📥️staging/🔀️actions/⏪️time-travel/🦀️.rs"]
+mod staged_actions__time_travel;
+#[path = "📥️staging/🔀️actions/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_actions__theme_file_import_and_accessibility;
+pub use staged_actions__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🔀️actions/🎬️shell-actions/🦀️.rs"]
+mod staged_actions__shell_actions;
+pub use staged_actions__shell_actions::*;
+#[path = "📥️staging/🔀️actions/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_actions__space_admin_and_settle;
+pub use staged_actions__space_admin_and_settle::*;
+#[path = "📥️staging/🔀️actions/📎️local-folders/🦀️.rs"]
+mod staged_actions__local_folders;
+#[path = "📥️staging/🔀️actions/📨️command-dispatch/🦀️.rs"]
+mod staged_actions__command_dispatch;
+#[path = "📥️staging/🔀️actions/🔖️identity-and-types/🦀️.rs"]
+mod staged_actions__identity_and_types;
+pub use staged_actions__identity_and_types::*;
+#[path = "📥️staging/🔀️actions/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_actions__chrome_overlays_and_tour;
+pub use staged_actions__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🔀️actions/🧩️session-and-topology/🦀️.rs"]
+mod staged_actions__session_and_topology;
+#[path = "📥️staging/🔀️actions/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_actions__window_actions_and_commands;
+pub use staged_actions__window_actions_and_commands::*;
+#[path = "📥️staging/🔀️actions/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_actions__chrome_paint_and_navbar;
+pub use staged_actions__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🔀️actions/🧺️bundle/🦀️.rs"]
+mod staged_actions__bundle;
+pub use staged_actions__bundle::*;
+#[path = "📥️staging/🔀️actions/🧾️panel-records/🦀️.rs"]
+mod staged_actions__panel_records;
+pub use staged_actions__panel_records::*;
+#[path = "📥️staging/🖐️pointer/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_pointer__keyboard_and_palette;
+pub use staged_pointer__keyboard_and_palette::*;
+#[path = "📥️staging/🖐️pointer/🎓️tutorial-runtime/🦀️.rs"]
+mod staged_pointer__tutorial_runtime;
+#[path = "📥️staging/🖐️pointer/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_pointer__theme_file_import_and_accessibility;
+#[path = "📥️staging/🖐️pointer/🎬️shell-actions/🦀️.rs"]
+mod staged_pointer__shell_actions;
+#[path = "📥️staging/🖐️pointer/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_pointer__space_admin_and_settle;
+pub use staged_pointer__space_admin_and_settle::*;
+#[path = "📥️staging/🖐️pointer/📨️command-dispatch/🦀️.rs"]
+mod staged_pointer__command_dispatch;
+#[path = "📥️staging/🖐️pointer/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_pointer__storage_prefs_and_i18n;
+pub use staged_pointer__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🖐️pointer/🔖️identity-and-types/🦀️.rs"]
+mod staged_pointer__identity_and_types;
+pub use staged_pointer__identity_and_types::*;
+#[path = "📥️staging/🖐️pointer/🖱️pointer-input/🦀️.rs"]
+mod staged_pointer__pointer_input;
+pub use staged_pointer__pointer_input::*;
+#[path = "📥️staging/🖐️pointer/🧩️session-and-topology/🦀️.rs"]
+mod staged_pointer__session_and_topology;
+#[path = "📥️staging/🖐️pointer/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_pointer__window_actions_and_commands;
+pub use staged_pointer__window_actions_and_commands::*;
+#[path = "📥️staging/🖐️pointer/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_pointer__chrome_paint_and_navbar;
+pub use staged_pointer__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🖐️pointer/🧵️shell-async-runners/🦀️.rs"]
+mod staged_pointer__shell_async_runners;
+pub use staged_pointer__shell_async_runners::*;
+#[path = "📥️staging/🖐️pointer/🧺️bundle/🦀️.rs"]
+mod staged_pointer__bundle;
+pub use staged_pointer__bundle::*;
+#[path = "📥️staging/🖍️view-paint/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_view_paint__dock_model_and_measures;
+pub use staged_view_paint__dock_model_and_measures::*;
+#[path = "📥️staging/🖍️view-paint/🎓️tutorial-runtime/🦀️.rs"]
+mod staged_view_paint__tutorial_runtime;
+pub use staged_view_paint__tutorial_runtime::*;
+#[path = "📥️staging/🖍️view-paint/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_view_paint__theme_file_import_and_accessibility;
+pub use staged_view_paint__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🖍️view-paint/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_view_paint__space_admin_and_settle;
+pub use staged_view_paint__space_admin_and_settle::*;
+#[path = "📥️staging/🖍️view-paint/🔑️storage-prefs-and-i18n/🦀️.rs"]
+mod staged_view_paint__storage_prefs_and_i18n;
+pub use staged_view_paint__storage_prefs_and_i18n::*;
+#[path = "📥️staging/🖍️view-paint/🔖️identity-and-types/🦀️.rs"]
+mod staged_view_paint__identity_and_types;
+pub use staged_view_paint__identity_and_types::*;
+#[path = "📥️staging/🖍️view-paint/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_view_paint__chrome_frame_and_main_window;
+pub use staged_view_paint__chrome_frame_and_main_window::*;
+#[path = "📥️staging/🖍️view-paint/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_view_paint__chrome_overlays_and_tour;
+pub use staged_view_paint__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🖍️view-paint/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_view_paint__chrome_paint_and_navbar;
+pub use staged_view_paint__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🍱️view-chrome/⚓️dock-model-and-measures/🦀️.rs"]
+mod staged_view_chrome__dock_model_and_measures;
+#[path = "📥️staging/🍱️view-chrome/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_view_chrome__theme_file_import_and_accessibility;
+pub use staged_view_chrome__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🍱️view-chrome/🏛️space-admin-and-settle/🦀️.rs"]
+mod staged_view_chrome__space_admin_and_settle;
+pub use staged_view_chrome__space_admin_and_settle::*;
+#[path = "📥️staging/🍱️view-chrome/🖱️pointer-input/🦀️.rs"]
+mod staged_view_chrome__pointer_input;
+#[path = "📥️staging/🍱️view-chrome/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_view_chrome__chrome_frame_and_main_window;
+pub use staged_view_chrome__chrome_frame_and_main_window::*;
+#[path = "📥️staging/🍱️view-chrome/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_view_chrome__chrome_overlays_and_tour;
+pub use staged_view_chrome__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🍱️view-chrome/🧭️navbar-footer-and-overlays/🦀️.rs"]
+mod staged_view_chrome__navbar_footer_and_overlays;
+#[path = "📥️staging/🍱️view-chrome/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_view_chrome__chrome_paint_and_navbar;
+pub use staged_view_chrome__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🍱️view-chrome/🧺️bundle/🦀️.rs"]
+mod staged_view_chrome__bundle;
+pub use staged_view_chrome__bundle::*;
+#[path = "📥️staging/🗨️view-overlays/⏪️time-travel/🦀️.rs"]
+mod staged_view_overlays__time_travel;
+pub use staged_view_overlays__time_travel::*;
+#[path = "📥️staging/🗨️view-overlays/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_view_overlays__theme_file_import_and_accessibility;
+pub use staged_view_overlays__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🗨️view-overlays/💬️chrome-dialog-and-tooltips/🦀️.rs"]
+mod staged_view_overlays__chrome_dialog_and_tooltips;
+pub use staged_view_overlays__chrome_dialog_and_tooltips::*;
+#[path = "📥️staging/🗨️view-overlays/📎️local-folders/🦀️.rs"]
+mod staged_view_overlays__local_folders;
+pub use staged_view_overlays__local_folders::*;
+#[path = "📥️staging/🗨️view-overlays/🔖️identity-and-types/🦀️.rs"]
+mod staged_view_overlays__identity_and_types;
+pub use staged_view_overlays__identity_and_types::*;
+#[path = "📥️staging/🗨️view-overlays/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_view_overlays__chrome_overlays_and_tour;
+pub use staged_view_overlays__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🗨️view-overlays/🧭️navbar-footer-and-overlays/🦀️.rs"]
+mod staged_view_overlays__navbar_footer_and_overlays;
+#[path = "📥️staging/🗨️view-overlays/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_view_overlays__chrome_paint_and_navbar;
+pub use staged_view_overlays__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🗨️view-overlays/🧺️bundle/🦀️.rs"]
+mod staged_view_overlays__bundle;
+pub use staged_view_overlays__bundle::*;
+#[path = "📥️staging/🪀️view-panels/⌨️keyboard-and-palette/🦀️.rs"]
+mod staged_view_panels__keyboard_and_palette;
+#[path = "📥️staging/🪀️view-panels/🎨️theme-file-import-and-accessibility/🦀️.rs"]
+mod staged_view_panels__theme_file_import_and_accessibility;
+pub use staged_view_panels__theme_file_import_and_accessibility::*;
+#[path = "📥️staging/🪀️view-panels/🎬️shell-actions/🦀️.rs"]
+mod staged_view_panels__shell_actions;
+#[path = "📥️staging/🪀️view-panels/📤️icon-export/🦀️.rs"]
+mod staged_view_panels__icon_export;
+#[path = "📥️staging/🪀️view-panels/🔖️identity-and-types/🦀️.rs"]
+mod staged_view_panels__identity_and_types;
+pub use staged_view_panels__identity_and_types::*;
+#[path = "📥️staging/🪀️view-panels/🖱️pointer-input/🦀️.rs"]
+mod staged_view_panels__pointer_input;
+#[path = "📥️staging/🪀️view-panels/🖼️chrome-frame-and-main-window/🦀️.rs"]
+mod staged_view_panels__chrome_frame_and_main_window;
+pub use staged_view_panels__chrome_frame_and_main_window::*;
+#[path = "📥️staging/🪀️view-panels/🗨️chrome-overlays-and-tour/🦀️.rs"]
+mod staged_view_panels__chrome_overlays_and_tour;
+pub use staged_view_panels__chrome_overlays_and_tour::*;
+#[path = "📥️staging/🪀️view-panels/🧭️navbar-footer-and-overlays/🦀️.rs"]
+mod staged_view_panels__navbar_footer_and_overlays;
+#[path = "📥️staging/🪀️view-panels/🧰️window-actions-and-commands/🦀️.rs"]
+mod staged_view_panels__window_actions_and_commands;
+#[path = "📥️staging/🪀️view-panels/🧱️chrome-paint-and-navbar/🦀️.rs"]
+mod staged_view_panels__chrome_paint_and_navbar;
+pub use staged_view_panels__chrome_paint_and_navbar::*;
+#[path = "📥️staging/🪀️view-panels/🧺️bundle/🦀️.rs"]
+mod staged_view_panels__bundle;
+pub use staged_view_panels__bundle::*;
+pub(crate) use semio_framework_os_renderer_wgpu_host_base::host_io_call;
+#[cfg(test)]
+#[path = "../../🧪️tests/🧰️section-fixtures/🦀️.rs"]
+pub(crate) mod section_fixtures;
+pub(crate) use shell_vocab::shell_chrome_string;
+//#endregion 📥️RendererWp4Staging
+
 #[cfg(test)]
 /// 🔎️ The whole Shell module as the one text the unsplit file held: this file and every child split out of it, for the source-text laws. The four modules that were already mounted before the split (`icon_export`, `tree_windows`, `time_travel`, `local_folders`) stay out, as they were out of that text.
 pub(crate) const SHELL_SOURCE: &str = concat!(
@@ -257,7 +1000,280 @@ pub(crate) const SHELL_SOURCE: &str = concat!(
     include_str!("🧭️navbar-footer-and-overlays/🦀️.rs"),
     include_str!("💬️chrome-dialog-and-tooltips/🦀️.rs"),
     include_str!("🔑️storage-prefs-and-i18n/🦀️.rs"),
-    include_str!("🎨️theme-file-import-and-accessibility/🦀️.rs")
+    include_str!("🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/⏳️async/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/⏳️async/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/⏳️async/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🐚️shell-parent/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/⏪️history/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/⏪️history/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/⏪️history/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/⏪️history/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/📤️icon-export/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/📤️icon-export/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🐚️shell-parent/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🐚️shell-parent/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🪟️tree-windows/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/🎹️commands/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🎹️commands/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🎹️commands/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🐙️state/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🐙️state/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🐙️state/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🐚️shell-parent/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/🚶️session/🪟️tree-windows/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/⚙️settings-and-dock-persistence/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🪝️window-actions/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🔀️actions/🧾️panel-records/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/📨️command-dispatch/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🧩️session-and-topology/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🧵️shell-async-runners/🦀️.rs"),
+    include_str!("📥️staging/🖐️pointer/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🎓️tutorial-runtime/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🔑️storage-prefs-and-i18n/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🖍️view-paint/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/⚓️dock-model-and-measures/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🏛️space-admin-and-settle/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🍱️view-chrome/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/⏪️time-travel/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/💬️chrome-dialog-and-tooltips/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/📎️local-folders/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🗨️view-overlays/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/⌨️keyboard-and-palette/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🎨️theme-file-import-and-accessibility/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🎬️shell-actions/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/📤️icon-export/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🔖️identity-and-types/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🖱️pointer-input/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🖼️chrome-frame-and-main-window/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🗨️chrome-overlays-and-tour/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🧭️navbar-footer-and-overlays/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🧰️window-actions-and-commands/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🧱️chrome-paint-and-navbar/🦀️.rs"),
+    include_str!("📥️staging/🪀️view-panels/🧺️bundle/🦀️.rs"),
+    include_str!("📥️staging/🎚️chrome-state/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🫧️surfaces/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🧲️plugins/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/⏪️history/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🎛️prefs/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/📒️directory/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🔃️sync/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/📄️docs/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/📂️doc-open/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🔲️windows/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/⚓️dock/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🕹️input/🧬️component/🦀️.rs"),
+    include_str!("📥️staging/🎹️commands/🧬️component/🦀️.rs")
 );
 
 //#region ShellLifecycle
@@ -303,699 +1319,42 @@ mod appearance_tour_and_footer_pill_tests;
 //#endregion ShellChrome
 
 //#region ShellTypes
-const SHELL_EXTENSION_LEDGER_CAPACITY: usize = 256;
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ShellExtensionStoreRecord {
-    pub extension_id: String,
-    pub directory_name: String,
-    pub version: String,
-    pub label: String,
-    #[serde(rename = "extends")]
-    pub extends_host: String,
-    pub module_url: String,
-    pub package_hash: String,
-    pub installed_at: u64,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ShellExtensionLoadStatus {
-    Available,
-    Loaded,
-    Failed(String),
-}
-
-#[derive(Clone)]
-pub struct ShellExtensionProjection {
-    pub record: ShellExtensionStoreRecord,
-    pub enabled: bool,
-    pub load_status: ShellExtensionLoadStatus,
-    program: Option<ProgramBridgeEntry>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct WindowIconOverride {
-    plugin_id: String,
-    app_id: String,
-    app_instance_id: u32,
-    icon_id: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct WindowTitleOverride {
-    plugin_id: String,
-    app_id: String,
-    app_instance_id: u32,
-    title: String,
-}
-
-/// 🪟️ Separates framework layout application from the effective React Mode prop identity.
-struct DockInputIdentity {
-    source: Option<WindowLayout>,
-    mode_layout: Option<WindowLayout>,
-    roster: Vec<String>,
-}
-
-/// 🧭️ Projects the structural fields observed by React Mode without presentation-only titles.
-fn dock_mode_layout_identity(layout: &WindowLayout) -> WindowLayout {
-    use ui_wgpu::wgpu::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
-    fn stack(node: &mut WindowLayoutStackNode) {
-        node.active_window_kind_id = None;
-        for leaf in &mut node.children {
-            leaf.title = None;
-            leaf.window_kind_id = leaf.instance_id.take().unwrap_or_else(|| leaf.window_kind_id.clone());
-            leaf.template_id = None;
-        }
-    }
-    fn axis(node: &mut WindowLayoutAxisNode) {
-        for child in &mut node.children {
-            match child {
-                WindowLayoutChild::Axis(child) => axis(child),
-                WindowLayoutChild::Stack(child) => stack(child),
-            }
-        }
-    }
-    let mut projected = layout.clone();
-    match &mut projected.root {
-        WindowLayoutRoot::Axis(node) => axis(node),
-        WindowLayoutRoot::Stack(node) => stack(node),
-    }
-    projected
-}
-
+/// 🐙️ The shell state: exactly the fifteen component structs, which own the fields and the methods of the former god object.
 pub struct ShellState {
-    pub plugins: Vec<ProgramBridgeEntry>,
-    pub extensions: Vec<ShellExtensionProjection>,
-    pub plugin_filter: String,
-    pub host_capability: Option<&'static PluginHostConfig>,
-    pub space_mode: bool,
-    pub session: Option<ActiveSession>,
-    pub window_ui: HashMap<String, UiDocumentLease>,
-    pub panel_documents: HashMap<String, UiDocumentLease>,
-    tool_run_panel_runs: std::collections::BTreeSet<u64>,
-    pub spawned_ui: Option<UiDocumentLease>,
-    pub spawned_session: Option<ActiveSession>,
-    app_document_identities: crate::media_slots::DocumentIdentityRegistry,
-    closing_documents: ShellDocumentRetirementRegistry,
-    pub active_window_id: Option<String>,
-    /// 🪟️ The active window the guest's command history was last told about, so a REAL activation is
-    /// noted exactly once — the wgpu twin of React's `handleActiveWindowChange` change guard
-    /// (`🏛️ShellHost/🟦️.tsx`'s `if (value) noteShellCommand("shell.windowActivate", …)`), which only
-    /// fires on a changed value. Re-seeded, never noted, when the session instance changes, because a
-    /// successor's landing window is a mount rather than a user activation.
-    noted_active_window: Option<(u32, String)>,
-    /// 📨️ The active window the program was last told about for host events, so the pane that loses the activation is
-    /// blurred exactly once ([`Self::arm_window_blur_host_event`]).
-    host_event_active_window: Option<(u32, String)>,
-    /// 🧭️ Every anchor's own open/size/active-path chrome, slotted by `PanelAnchor::index` — the
-    /// wgpu twin of React's `panels[anchor]` reducer state.
-    pub panel_anchors: [PanelAnchorState; 8],
-    /// 🧭️ The live per-anchor tab trees, `apply_dock_skeleton(default_dock, dock_override)`.
-    pub dock_tabs: ShellDock,
-    /// 🗄️ The persisted arrangement override, `None` while the dock equals its computed default.
-    pub dock_override: Option<DockSkeleton>,
-    /// 🌳️ Branch ids folded shut in an anchor's tab bar, keyed `{anchor}/{branchId}`.
-    pub dock_collapsed_branches: HashMap<String, bool>,
-    /// 🎯️ The tab id a pointer is dragging between anchors, plus the anchor it started in.
-    pub dock_tab_drag: Option<(String, PanelAnchor)>,
-    /// 🗄️ The app id whose persisted dock layer is currently loaded — the change detector that reloads
-    /// the override on an app switch without clobbering a reveal on every other chrome sync.
-    dock_loaded_app_id: Option<String>,
-    pub scroll_offsets: HashMap<String, f32>,
-    pub overlay_state: OverlayState,
-    pub collapsed_sections: HashMap<String, bool>,
-    pub tree_open_states: BTreeMap<String, bool>,
-    accessibility_focused_control_id: Option<String>,
-    pub interaction_selection: HashMap<String, semio_framework::DomainSelection>,
-    pub open_selects: HashMap<String, bool>,
-    pub context_menu: Option<ContextMenuState>,
-    pub search_open: bool,
-    pub find_open: bool,
-    pub appearance_id: String,
-    pub locale_id: String,
-    pub terminology_id: String,
-    pub right_click: RightClickState,
-    pub uri_history: Vec<String>,
-    pub uri_index: usize,
-    pub open_space_id: Option<String>,
-    pub pending_shell_uri_apply: bool,
-    pub panel_resize_origin_width: f32,
-    pub error: Option<String>,
-    /// 🧯 One entry per plugin whose boot activation faulted — the per-plugin status that replaces
-    /// the old "any `create_app` failure aborts the whole shell boot" rule. A trapped actor belongs
-    /// to exactly one plugin: every OTHER plugin, and the requested app itself, must still boot.
-    pub plugin_faults: Vec<ShellPluginFault>,
-    /// 🧯 One entry per surface whose document could not be rendered this refresh. The shell keeps
-    /// painting every OTHER surface and shows this one as a typed fault card, instead of failing the
-    /// boot — see [`ShellSurfaceFault`].
-    pub surface_faults: Vec<ShellSurfaceFault>,
-    /// 📐️ The content root, in LOGICAL (CSS) pixels — the SAME unit as every chrome constant
-    /// (`chrome_px`, `navbar_height`, `footer_height`, `control_height`, the resize-handle hit
-    /// widths, every font size), which are read verbatim from the generated `ui_styling` tokens
-    /// React's DOM consumes. The surface scale factor never reaches this pair: it sizes the GPU
-    /// surface, the projection divisor and the glyph/icon atlas raster, and nothing else. Sizing this
-    /// in physical pixels while the constants stayed logical was the HiDPI placement bug — ticket
-    /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g (`📓️w1g-dpi-logical-units.md`).
-    pub screen_w: f32,
-    pub screen_h: f32,
-    pub world3d_states: AdmittedSurfaceMap<World3dState>,
-    pub world3d_window_ids: HashMap<String, String>,
-    /// 🪦 Closed World3d owners, detached from input immediately and drained one bounded step per
-    /// frame before Drop. Keys include a shell epoch so reopening the same window id is independent.
-    pub retired_world3d_states: VecDeque<(String, World3dState)>,
-    /// 🧯️ Closed World3d owners whose `cancel(CaptureLost)` waits for one drive of their world authority before they retire,
-    /// with the sightings so far ([`ShellState::world3d_close_cancel_settled`]).
-    world3d_close_cancels: BTreeMap<String, u8>,
-    component_world3d_retirement: Option<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>,
-    world3d_retirement_epoch: u64,
-    world3d_retirement_sequence: u64,
-    world3d_retirement_fault: Option<infinite_world::world::WorldDynamicFault>,
-    /// 🛑️ Per-World3d-surface compute status, mirrored out of the scene by the same per-frame attach
-    /// walk that mirrors bounds. The CANCEL CONTRACT (`cancellable` + `cancelAction`) is read from
-    /// here and from nowhere else, so the shell offers a stop affordance without ever learning a
-    /// domain verb from code — see `world3d_cancel_affordance`.
-    pub world3d_status: HashMap<String, String>,
-    /// ⏳️ The last compute-status pill label announced per World3d surface, so the trace prints once
-    /// per CHANGE rather than once per frame — the pill itself is recomputed from `world3d_status`
-    /// every grant and holds no state of its own.
-    pub world3d_status_pill_trace: HashMap<String, String>,
-    pub node_graph_states: AdmittedSurfaceMap<NodeGraphSurface>,
-    /// 🛍️ The active app instance's APP-STATIC operator/palette catalogue, fetched once per instance
-    /// from the reserved `framework.section.catalogue` retained surface and pushed into every live
-    /// node-graph engine host. Mirrors the React shell's `appCatalogue`
-    /// (`🐚️Shell/🟦️.tsx`) and its `uiRefreshWantsCatalogue` "full scope only" rule: the payload is
-    /// app-static, so an instance fetches it exactly once and never on a scene change.
-    /// Never carried on a `NodeGraphScene` — see `ArtifactApp::app_catalogue_json`.
-    pub app_catalogue_json: String,
-    /// 🛍️ Which app instance [`Self::app_catalogue_json`] was fetched for — the cache key that makes
-    /// the fetch once-per-instance rather than once-per-refresh.
-    pub app_catalogue_instance: Option<u32>,
-    pub tiled_map_states: AdmittedSurfaceMap<TiledMapSurface>,
-    pub icon_render_states: HashMap<String, World3dState>,
-    pub board2d_states: AdmittedSurfaceMap<Board2dSurface>,
-    pub dock: DockState,
-    pub search_query: String,
-    pub search_selected: usize,
-    pub find_query: String,
-    pub split_resize_path: Option<Vec<usize>>,
-    pub split_resize_index: usize,
-    pub split_resize_axis_total: f32,
-    pub active_example_id: Option<String>,
-    pub find_items: ShellFindItems,
-    pub find_selected: usize,
-    pub engagement_expanded: HashMap<String, bool>,
-    pub engagement_activated: HashMap<String, bool>,
-    pub measures_folded: HashMap<String, bool>,
-    pub measures_expanded: HashMap<String, bool>,
-    pub measures_width: HashMap<String, f32>,
-    pub measures_resize_origin_width: f32,
-    pub engagement_inputs: HashMap<String, String>,
-    pub driver_id: String,
-    /// 🚗️ Session-local unsaved driver document. Its seven axes immediately replace the live
-    /// resolved chrome while the owned preference record remains untouched until Save.
-    pub driver_draft: Option<OsUiDriver>,
-    /// 🚗️ React's `driverSaveLabel`, cleared after a successful save.
-    pub driver_save_label: String,
-    pub tree_drag: Option<TreeDragState>,
-    pub tree_hovered_id: Option<String>,
-    pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
-    widget_maps_staging: WidgetInteractionMaps<ActionDescriptor>,
-    pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
-    pub tree_drag_origin: (f32, f32),
-    pub dock_drag: Option<DockDragState>,
-    pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
-    /// 🪟️ The tab whose label is held down, selected on release — React's `onSelectTab` fires from
-    /// the label BUTTON's click, while a drag can only start from the tab's own grip chip.
-    /// 🖱️ The exact chrome control armed by a primary press and eligible to activate only when the
-    /// matching release lands on that same control. Shared by dock tab labels and palette rows.
-    pub pending_chrome_release: Option<String>,
-    chrome_pointer_owner: Option<ui_render::PointerId>,
-    /// 🖼️ The render-only dock tree this frame paints, hit-tests and solves drop zones against —
-    /// `DockState::render_view` of the committed [`Self::dock`]: the mobile flat stack below React's
-    /// breakpoint, the docked-out tree while a drag floats, and the committed tree otherwise. Written
-    /// once per frame by `plan_dock_windows`, so the plan, the chrome and the pointer never disagree.
-    pub dock_view: DockState,
-    /// 🪪️ App instance whose layout was last reconciled into `dock`; commands are refused while a
-    /// successor session is mounted but its dock has not crossed `sync_dock` yet.
-    dock_instance_owner: Option<(String, u32, String)>,
-    /// 🪟️ Effective incoming layout and ordered window IDs last accepted by the dock.
-    dock_input_identity: Option<DockInputIdentity>,
-    /// 🪟️ Host-owned tree windows of every body this shell paints — what crosses as `ViewModel.tree_windows`.
-    tree_windows: tree_windows::TreeWindowScheduler,
-    /// 🧠️ Per body, what the observer learned from the guest's answers (`TreeWindowServedMemoryV1`).
-    tree_window_served: HashMap<String, Vec<(String, ui_wgpu::wgpu::tree_window::TreeWindowServedMemory)>>,
-    pub dock_canvas_bounds: Rect,
-    /// 📐️ Separator metric captured with this frame's dock plan so later pointer resize math uses
-    /// the same themed physical geometry that paint, drop targets and body publication used.
-    pub dock_axis_separator: f32,
-    pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
-    pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
-    /// 🪟️ The windows this frame's chrome walk paints, in dock order, each with the content rect the
-    /// dock solved for it. Written once per frame by `render_main_window_step`'s plan phase and read
-    /// by its body loop — the wgpu twin of React's `shellLayout` pane walk. Before this existed the
-    /// walk painted `active_window_id` alone over the whole body, so an app whose authored mode
-    /// layout places two windows (generation3d's edit mode = Flow + Preview, `[68, 32]`) only ever
-    /// laid out one of them and the other's engine surface was never created
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub dock_window_plan: Vec<(String, Rect)>,
-    /// 🐛️ Last `[TRACE] ` dock-plan line, so the trace prints on CHANGE rather than once per frame.
-    dock_plan_trace: Option<String>,
-    pub layout_override: Option<ui_wgpu::wgpu::WindowLayout>,
-    pub split_resize_origin: Vec<f32>,
-    pub split_resize_secondary_path: Option<Vec<usize>>,
-    pub split_resize_secondary_index: usize,
-    pub split_resize_secondary_axis_total: f32,
-    pub split_resize_secondary_origin: Vec<f32>,
-    pub measures_resize_window_id: Option<String>,
-    pub deferred_actions: Vec<ActionDescriptor>,
-    /// 🪟️ Physical window transfers journal through the ordinary guest action lane, but only after
-    /// the Full refresh publishes the required retained body. Direct Display opens intentionally
-    /// have no React journal. The shared queue gives every attempted note one admission or refusal.
-    window_topology_actions: ui_wgpu::wgpu::BoundedActionQueue,
-    /// 🪟️ Required initial-body identities, retry counts and journal outcomes bounded to the action
-    /// queue's item capacity so a refusing guest cannot grow host ownership without limit.
-    window_topology_publications: VecDeque<WindowTopologyPublication>,
-    /// 🧾️ Stable logical identities parallel to the fixed-credit action queue. A later body may
-    /// publish before an earlier refusing peer without stealing that peer's action.
-    window_topology_action_tokens: VecDeque<u64>,
-    next_window_topology_action_token: u64,
-    window_topology_refresh_owed: bool,
-    /// 📯️ A successful cohort released at least one body-gated journal. This alone permits
-    /// deferred dispatch ahead of the next retry; unrelated deferred guest work never delays the
-    /// first topology refresh.
-    window_topology_journal_dispatch_owed: bool,
-    /// 🔁️ Guards `flush_deferred_actions`'s convergence loop against re-entry: a nested flush (one a
-    /// dispatched action itself asks for) stays a plain drain so the outer loop keeps the single
-    /// authority over how many times the window bodies are re-entered.
-    settling: bool,
-    /// 🐢️ The union of every [`UiDirtyScope`] declared since the last refresh pass drained it — this
-    /// shell's half of React's `createUiRefreshCoalescerV1` owed slot. Producers (a dispatched
-    /// action's `InvocationResult::ui_scope`, a command's, an extension answer's, plus whatever the
-    /// HOST dirtied by applying that pass's own effects) only DECLARE dirt here; `refresh_ui` is the
-    /// one place that takes it. Starts [`UiDirtyScope::None`], so a refresh nobody owes anything to
-    /// re-renders nothing at all.
-    owed_refresh_scope: UiDirtyScope,
-    /// 🫀️ The runtime-owned settle lane's shell half — see [`ShellSettlePump`]. Producers only ARM it
-    /// ([`Self::owe_settle`]); the frame loop is the one caller of [`Self::settle_pump_step`].
-    settle_pump: ShellSettlePump,
-    /// 📥️ Extension invocations the guest asked for, parked until a flush that owns `&mut self`
-    /// can run them AND fold their answers' own effects back in — see `flush_deferred_actions`.
-    #[cfg(target_arch = "wasm32")]
-    pending_extension_invocations: Vec<PendingExtensionInvocation>,
-    /// 📤️ File-open requests the guest asked for, parked on the SAME flush for the same reason.
-    #[cfg(target_arch = "wasm32")]
-    pending_file_opens: Vec<PendingFileOpen>,
-    #[cfg(not(target_arch = "wasm32"))]
-    shell_io_pending: std::collections::VecDeque<PendingShellIo>,
-    /// 📥️ Picked-file imports moving into the session's program chunk by chunk, oldest first ([`ImportTransfer`]).
-    pub(crate) import_transfers: VecDeque<ImportTransfer>,
-    import_transfer_next: u64,
-    pub fullscreen_toggle_requested: bool,
-    pub fullscreen_active: bool,
-    pub active_utilities: Vec<UtilityNode>,
-    /// 🧰️ Host-owned active utility per window kind (never a document field, never a VCS operation).
-    /// Replaces the deleted `active_utility_id`/`find_active_utility_id` "first pressed toggle" heuristic.
-    pub active_utility_by_window: HashMap<String, String>,
-    /// 📇️ Per-window Actions-rail fold state (absent = folded, the default).
-    pub action_panel_folded: HashMap<String, bool>,
-    /// 🔎️ Per-window Search-pane fold state (absent = folded, the default).
-    pub search_panel_folded: HashMap<String, bool>,
-    /// 🧰️ Per-window Utilities-rail fold state — React's `Window` `utilityBarFolded`
-    /// (`useState(true)`, `🪟️Window/🟦️.tsx:176`), so absent = folded.
-    pub utility_bar_folded: HashMap<String, bool>,
-    /// 🔀️ Per-window Projection-pane fold state — React's `WorldOrbitProjectionSwitchPane`
-    /// `useState(true)` (`🌐️World3dHost/🟦️.tsx:5190`), so absent = folded.
-    pub projection_pane_folded: HashMap<String, bool>,
-    /// 🔀️ Per-window selected projection template id — the wgpu twin of React's
-    /// `externalPendingProjectionSpec`, VIEW STATE ONLY and never dispatched, exactly as
-    /// `handleProjectionKindChange` records (`🌐️World3dHost/🟦️.tsx:6574`). Absent =
-    /// [`WORLD_PROJECTION_DEFAULT_TEMPLATE_ID`], the template React's own
-    /// `worldProjectionDefaults("threePoint")` fallback resolves to for a perspective orbit.
-    pub world_projection_template: HashMap<String, String>,
-    /// 🖼️ Renderer-local `SetWindowIconContext` state, owned by the exact mounted app instance and
-    /// bounded by the same 64-window view-context contract as the dock roster.
-    window_icon_overrides: HashMap<String, WindowIconOverride>,
-    window_title_overrides: HashMap<String, WindowTitleOverride>,
-    /// 📇️ Per-window expanded action id (the accordion-open staged arg form).
-    pub action_panel_expanded: HashMap<String, String>,
-    /// 📝️ Staged action argument values keyed `"{window_id}:{action_id}"` — edits buffer here
-    /// and never dispatch until Execute (Architecture Decision 8, P2).
-    pub staged_action_args: HashMap<String, serde_json::Map<String, Value>>,
-    /// 🎛️ The command whose staged form the Commands panel should show expanded — the twin of
-    /// React's `SET_COMMAND_EXPANDED`, set when an arg-carrying command is picked from the palette
-    /// (`command-form:` in `activate_search_item`). Keyed by `command_address_stable_key`.
-    pub expanded_command_id: Option<String>,
-    /// 📝️ Staged command argument values keyed by `command_address_stable_key` — the twin of
-    /// React's `STAGE_COMMAND_ARG`/`RESET_COMMAND_ARGS` buffer, which Execute reads and nothing else
-    /// dispatches from.
-    pub staged_command_args: HashMap<String, serde_json::Map<String, Value>>,
-    /// ⌨️ The shortcut row whose next key event is a CHORD WRITE rather than a shell verb —
-    /// React's `keybindingCaptureControlId` (`🏛️ShellHost/🟦️.tsx`).
-    pub keybinding_capture_control_id: Option<String>,
-    /// 👁️✏️ Pinned default app per `"<dialectCoordinate>/<role>"` — the projection React reads
-    /// off `OpeningPreferences`, each value `"<pluginId> <appId>"` or `"none"`.
-    pub default_app_pins: HashMap<String, String>,
-    /// 🎨️ The unsaved theme document this session is editing — React's `uiThemeDraft`
-    /// (`SET_UI_THEME_DRAFT`). `Some` is exactly React's `themeDirty`.
-    pub theme_draft: Option<ThemeDocument>,
-    /// 🎨️ The theme `Save` box — React's `themeSaveLabel`, session-local exactly as its
-    /// `useState` is.
-    pub theme_save_label: String,
-    /// ⚖️ This session's merge policy — React's `shellState.merge.mergePolicy`, the value the
-    /// `framework.settings.mergePolicy` selector writes. `"LaissezFaire" | "Normal" | "Vigilant"`,
-    /// React's own option values.
-    pub merge_policy: String,
-    /// 📤️ Whether a theme IMPORT picker is parked for the gesture lane — a picker is gated on
-    /// user activation, so it rides the same narrow door `pending_file_opens` does.
-    pub pending_theme_import: bool,
-    /// 🖥️ The `framework.display.layout` leaf's save-name box — React's `layoutSaveLabel`
-    /// (`📌️ChromePanels/🟦️.tsx`'s `DisplayHostApi`). Session-local, exactly as React's `useState` is.
-    pub layout_save_label: String,
-    /// 🖥️ Layouts the user saved through `framework.display.save` — React's `displayUserLayouts`, the
-    /// `origin: "user"` half of the roster, projected from the `os.config.ui-preferences` log and written back as
-    /// `setNamedLayout` events ([`ShellState::load_persisted_named_layouts`]/[`ShellState::persist_named_layouts`]).
-    /// The app's own `named_layouts` supply the `origin: "builtin"` half.
-    pub user_layouts: Vec<ui_wgpu::wgpu::NamedLayout>,
-    /// ⚔️ This session's open first-class conflicts — React's `selectOpenConflicts(shellState)`
-    /// over `🐚️Shell`'s `merge.conflicts`. Seeded once per session from
-    /// `ProgramBridgeEntry::read_conflicts` and replaced by every `resolve_conflict` reply, which is
-    /// React's own `AppCommand::ReadConflicts` seed plus reply-carried roster.
-    pub open_conflicts: Vec<ShellConflictRow>,
-    /// ⚔️ The conflict row whose diff preview is expanded — React's `selectedConflictId`.
-    pub selected_conflict_id: Option<String>,
-    /// ⚔️ Whether this session already asked the guest for its conflict roster, so the seed
-    /// costs one exchange per session rather than one per frame.
-    pub conflicts_seeded: bool,
-    /// 🛠️ Live tool measures keyed by TOOL id — React's `toolMeasuresByToolId` ref, read off
-    /// [`ProgramBridgeEntry::tool_measures_section`] on the same refresh pass window measures ride.
-    pub tool_measures: HashMap<String, Vec<WindowMeasure>>,
-    /// 💬️ The `framework.chat` composer's unsent text. The transcript itself is NOT held here:
-    /// it is [`crate::agent_bridge::AgentBridgeState::conversation`], the live bridge conversation
-    /// (`GatewayToShell::AgentToolCall`/`AgentToolResult`/`ApprovalRequested` in,
-    /// `ShellToGateway::AgentMessage` out), exactly as React's `useAgentBridge().conversation` is.
-    pub agent_chat_draft: String,
-    /// 📱️ The single mobile panel's own chrome — React's `mobilePanelVisible`/`mobilePanelPath`,
-    /// the flattened counterpart of the eight `PanelAnchorState`s.
-    pub mobile_panel_visible: bool,
-    pub mobile_panel_path: Vec<String>,
-    pub sync_backbone_uri: Option<String>,
-    pub sync_card_kind: Option<String>,
-    pub sync_card_draft: String,
-    pub sync_card_anchor: Option<(f32, f32)>,
-    pub last_envelope_dsl: Option<String>,
-    /// 🏛️ Shell-lifetime document-host actor registry, the kernel's `ArtifactHost` on both
-    /// targets ([`SHELL_DOCUMENT_TRANSPORTS`] names which transports its actor serves).
-    pub document_host: ArtifactHost,
-    /// 🧵️ The currently attached document's live actor channel.
-    pub sync_channel: Option<ShellSyncChannel>,
-    next_sync_binding_generation: u64,
-    sync_terminal_fault: Option<String>,
-    /// 🚦️ Latest sync health for the active document's status badge.
-    pub sync_status: Option<ArtifactSyncStatus>,
-    /// 🔌️ The hub link of the document this shell last attached ([`store_sync::sync::DocumentLink`]'s status):
-    /// the Sync card speaks it while it is short and after it turned terminal, until the next open.
-    pub sync_link: DocumentLinkStatus,
-    /// 📶️ Target-neutral remote state for every document still attached to this shell. Native actor
-    /// status events and browser-host publications enter through the same bounded projection.
-    pub hub_documents: BTreeMap<String, ShellHubRemoteV1>,
-    pub sync_bootstrap_progress: Option<(u64, u64, u32, u32)>,
-    /// 🛟️ The canonical-pair reseed a rebootstrapping hub document is waiting for ([`ShellState::advance_sync_reseed`]).
-    sync_reseed: Option<ShellSyncReseed>,
-    /// 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the restored-or-
-    /// minted session, `None` with no hub env (unchanged local-only behaviour) or before boot's
-    /// bootstrap thread reports back. Native only, see this region's header note above.
-    pub identity: Option<Identity>,
-    /// 🔐️ Exact public `/auth/sessions/me` authority that verified `identity`. This is cleared with
-    /// the client and never inferred from a cached identity or a mutable UI boolean.
-    pub verified_session_authority: Option<DirectorySessionAuthorityV1>,
-    /// 📶️ Set when `mint_or_restore` degraded to the last cached identity because the hub was
-    /// unreachable — never blocks, never clears `identity` itself.
-    pub identity_offline: bool,
-    /// 🌱️ `S_HUB_URL`/`S_USER`/`S_DATA_DIR`, resolved once at `boot()` — `None` means "no hub env",
-    /// the sentinel every identity/binding/directory code path below checks first.
-    pub identity_env: Option<IdentityEnv>,
-    /// 🎭️ Per-process session id — the `{sessionId}` half of contract §C0's `user:{userId}#{sessionId}`
-    /// actor grammar, minted once in `ShellState::new` and stable for this process's lifetime.
-    pub shell_session_id: String,
-    /// ⏳️ Browser identity retry floor — see [`BROWSER_IDENTITY_RETRY_MS`].
-    #[cfg(target_arch = "wasm32")]
-    identity_retry_at_ms: u64,
-    /// 📡️ Non-blocking identity result channel, completed by a retained-waker pool future.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub identity_bootstrap_rx: Option<std::sync::mpsc::Receiver<Result<IdentityOutcome, String>>>,
-    /// 🛑️ Cancellable handle for the finite-turn identity bootstrap future.
-    #[cfg(not(target_arch = "wasm32"))]
-    identity_bootstrap_task: Option<std::sync::Arc<ShellPoolFuture>>,
-    /// 📇️ The hub directory client used to issue `os.directory.*` commands (§C6) — constructed once
-    /// identity resolves, holding the session token.
-    pub directory_client: Option<std::sync::Arc<ShellDirectoryClient>>,
-    /// 🌉️ The MCP agent bridge's TRANSPORT (packet W15e). Holds the socket and the dial ladder; the
-    /// consumer it feeds is `chrome_build.agent`, which stays transport-free. Disarmed — and therefore
-    /// inert — until a supervisor hands over a config, exactly as React's own `discoverAgentBridgeConfig`
-    /// answering `null` leaves its hook `disabled`.
-    pub agent_bridge: crate::agent_bridge_door::AgentBridgeTransport,
-    /// 🛰️ The scope this shell asks the agent-bridge supervisor with ([`AgentBridgeOfferScopeOwnerV1`]).
-    pub agent_bridge_offer_scope: AgentBridgeOfferScopeOwnerV1,
-    /// 💡️ The one retained host-owned inference port, live only while its document's execution
-    /// target is verified. It is never a document command and nothing it holds is persisted.
-    #[cfg(not(target_arch = "wasm32"))]
-    inference_port: Option<std::sync::Arc<ShellInferenceRunner>>,
-    #[cfg(not(target_arch = "wasm32"))]
-    document_services: Vec<InstalledServiceContributionV1>,
-    /// 💡️ The last status the retained port published, rendered by the shell's own chrome.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub inference_port_status: Option<InstalledServiceStatusV1>,
-    /// 🎬️ The ONE lazy plugin install this shell runs at a time, retained for exactly as long as it
-    /// takes — the wgpu twin of React's `pluginOpInFlightRef` + `SET_PLUGIN_STATUS` pair. Its phase is
-    /// what chrome reads; its `cancel` is what [`Self::cancel_plugin_install`] fires. Never persisted,
-    /// never a document command.
-    pub plugin_install: Option<ShellPluginInstall>,
-    /// 🚪️ The ONE document open in flight or settled, advanced by the frame pump
-    /// ([`Self::advance_document_opening`]) and painted as its own band with a cancel control.
-    pub document_opening: Option<ShellDocumentOpening>,
-    icon_export: Option<icon_export::IconExportBatch>,
-    /// 🪪️ The verified execution-target lease fields for the open document. Native document opening
-    /// retains only a canonical surface-id preference today — `document_socket_surface_from_descriptor`
-    /// was deliberately downgraded from a forgeable partial authority by the execution-target-lease
-    /// lane — so nothing native fills this in yet and every port refuses with a localized terminal. Both builds retain
-    /// the lease a hub document's open admitted and drop it on detach; only the native inference port reads it.
-    pub document_execution_target_lease: Option<semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
-    /// 🏠️ Shell-lifetime Home projection and its fetch → terminal Config receipt → ACK → live owner.
-    #[cfg(not(target_arch = "wasm32"))]
-    directory_home: Option<DirectoryHomeProjection>,
-    /// 🔌️ ONE `NativeDirectoryTransport` (cheap to `.clone()` — see its own doc), shared by every
-    /// `DirectoryClient` this shell constructs so they all draw on the SAME `HttpPool` byte budget/
-    /// outstanding-request accounting rather than each minting a disjoint pool.
-    pub directory_transport: ShellDirectoryTransport,
-    /// 🛑️ Shell-lifetime cancellation root shared by identity, requests, and the directory runner.
-    pub directory_cancel: CancelToken,
-    /// 🎮️ Bounded FIFO of sealed, idempotency-correlated `os.directory.*` operations plus their
-    /// transient result slot — flushed opportunistically every frame once `directory_client` exists
-    /// (contract §C6: "commands queue in the shell (bounded, in-memory) and flush on reconnect").
-    /// Each entry keeps its exact request bytes, so a retry is the SAME command to the hub's
-    /// digest-keyed idempotency store and can never mint a second invitation.
-    pub directory_commands: ShellDirectoryCommandQueueV1,
-    /// 🔐️ The hub workspace state behind the `/hub` overlay — hub book, session phase, space rows,
-    /// roster and drafts. Target-neutral: the surface is the same retained tree on both arms, and
-    /// only the transport underneath it is split.
-    pub hub_workspace: crate::hub_connection::HubWorkspaceState,
-    /// 🔐️ The sign-in whose network legs are in flight off the interaction state ([`ShellHubTask`]).
-    hub_sign_in_task: Option<ShellHubTask<ShellHubSignInAnswer>>,
-    /// 🏘️ The spaces read in flight, on the same kind of task.
-    hub_spaces_task: Option<ShellHubTask<ShellHubSpacesAnswer>>,
-    pub hub_workspace_open: bool,
-    /// 🏛️ The one retained native space-administration operation (fixed capacity: exactly one).
-    /// Its page, receipt, and one-shot invite capability are erased by every terminal transition, so
-    /// an identity change, a 401/403, or a scoped 4401 leaves nothing administrable behind.
-    pub space_administration: Option<ShellSpaceAdministrationOperationV1>,
-    /// 🔢️ Monotonic operation epoch; a late turn for a replaced operation is dropped, never applied.
-    pub space_administration_epoch: u64,
-    /// 👥️ ticket §5 — shell-LOCAL presence roster from the currently attached document's
-    /// `ArtifactEvent::Presence`, deliberately NOT folded into the shared kernel `ViewModel`.
-    pub presence_peers: Vec<PresencePeer>,
-    /// 👥️ The canonical surface id (`surface_app_id`) the CURRENTLY attached document's hub binding
-    /// used, if any — `presence_peers` is scoped to this surface; a document opened without a hub
-    /// binding (local-only) carries `None` and renders no roster.
-    pub presence_surface: Option<String>,
-    /// 🪪️ This shell's own hub-admitted presence identity on the attached document — the actor and
-    /// palette index the hub's `Session` frame named. Board overlays never paint it, and the local
-    /// colour is the hub's, never a guess (React's `publishLocalPresenceActorV1`).
-    pub presence_self: Option<(String, u8)>,
-    /// 🖱️ The last pointer position the shell saw, in logical screen space — what a board window's
-    /// presence view turns into the world point under the pointer on the next heartbeat.
-    pub presence_pointer: Option<(f32, f32)>,
-    /// 🧾️ ticket §C5 — this session's live history projection (`history_cursor`/`history_entries`
-    /// mirror the React shell's `historyProjection` reducer), fed by `ReadHistory`
-    /// (session/document mount, `replace=true`) and `AppFrame::Invocation.history_patch` (every
-    /// dispatch response, `replace=false`) — see `fold_history_patch`/`observe_invocation_history`.
-    pub history_cursor: u64,
-    pub history_entries: BTreeMap<String, semio_framework::kernel::HistoryEntry>,
-    /// 🧾️ The most recent checkpoint id `HistoryPatch.currentCheckpointId` reported — compared against
-    /// its previous value to detect "a checkpoint landed" (§C5 item 6, `TouchArtifact`).
-    pub history_current_checkpoint_id: Option<String>,
-    /// ⏪️ The live history-edit session `HistoryPatch.timeTravel` last carried (`None` = no session) — what the
-    /// time-travel band, the pane chips and the `ui.timeTravel.*` chords read (see `⏪️time-travel`).
-    history_time_travel: Option<semio_framework::kernel::HistoryTimeTravel>,
-    /// 📡️ The history change `HistoryPatch.reprojection` last said replays before adoption (`None` = none waits) — what the
-    /// reprojection band and its live status read (see `⏪️time-travel`, audit W1E-3).
-    history_reprojection: Option<semio_framework::kernel::HistoryReprojection>,
-    /// 🎯️ Where keyboard focus goes once the session edge that named it reaches the screen, and until when its target
-    /// may take before the band fallback (`⏪️time-travel` `TimeTravelFocus`).
-    time_travel_focus: Option<(time_travel::TimeTravelFocus, f64)>,
-    /// ⏱️ When the native shell last re-read the history for replay progress (`TIME_TRAVEL_POLL_MS` apart).
-    #[cfg(not(target_arch = "wasm32"))]
-    time_travel_polled_at_ms: f64,
-    /// 📁️ This device's remembered folder bindings (`os.config.local-folders`), loaded once and kept current by every
-    /// commit (see `📎️local-folders`).
-    local_folder_bindings: Option<semio_framework_os_config::opening_config::mutations::LocalFolderBindings>,
-    /// 🔁️ The document whose remembered folder the direct reattach already tried, so a failure is offered, not retried.
-    local_folder_reattach_tried: Option<String>,
-    /// 🚪️ Whether this build reopens a remembered folder by itself (native) or offers it for the person's gesture
-    /// (browser) — `📎️local-folders`'s `LOCAL_FOLDER_DIRECT_REATTACH`.
-    local_folder_direct_reattach: bool,
-    /// 🌐️ The folder- or file-bound document the browser build keeps through the dev host's backbone route.
-    #[cfg(any(target_arch = "wasm32", test))]
-    host_route_folder: Option<local_folders::HostRouteFolder>,
-    /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
-    /// `AutoCheckinScheduler::notify` resetting its idle timer on every call, not just increases);
-    /// `None` whenever nothing is uncommitted.
-    pub last_uncommitted_edit_at_ms: Option<i64>,
-    /// 📌️ The auto check-in poll's own `pending` latch (`AutoCheckinScheduler`'s twin): set the
-    /// instant an auto checkpoint is dispatched, cleared the moment `uncommitted_edit_count` returns
-    /// to 0 (a landed checkpoint) — the storm guard `auto_checkin_should_fire` reads.
-    pub auto_checkin_pending: bool,
-    /// 📌️ §C5 item 6 — set right before ANY checkpoint (auto/explicit/close) THIS shell itself asked
-    /// for; cleared once the resulting `history_current_checkpoint_id` change is observed and
-    /// `TouchArtifact` fires — distinguishes "a checkpoint we asked for landed" from "the session just
-    /// mounted with a pre-existing checkpoint" (mirrors React's `checkpointDispatchedRef`).
-    pub checkpoint_dispatched: bool,
-    /// 📌️ ticket §C5 item 3 — explicit check-in's own message-prompt dialog: `None` when closed,
-    /// `Some(draft)` while open. This hand-painted footer chrome has no generic text-input widget (the
-    /// `🟦️Interpreter` pipeline's `UiEvent::TextInput` is deliberately bypassed here, same as
-    /// `render_presence_bar`'s own design note) — mirrors the pre-existing `sync_card_kind`/
-    /// `sync_card_draft` shell-owned keyboard-routed draft-field idiom instead of inventing a new one.
-    pub checkin_dialog_draft: Option<String>,
-    /// 📌️ The one hub Check In this shell drives for its mounted hub document: requested the moment
-    /// a checkpoint this shell asked for lands, submitted once the document's sync status names an
-    /// acknowledged head, then polled to a terminal status (the React twin is the worker's
-    /// `driveDocumentCheckIn`). Its status is the footer's hub badge suffix.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub hub_check_in: Option<ShellHubCheckInV1>,
-    pub window_engagements: HashMap<String, WindowEngagement>,
-    /// 🎬️ Each live window instance's projected Actions pane document — see
-    /// `//#region 🎬️WindowActionsAndSearchPanes`.
-    pub window_actions_documents: HashMap<String, UiDocumentLease>,
-    /// 🔎️ Each live window instance's projected Search pane document — the same region's twin.
-    pub window_search_documents: HashMap<String, UiDocumentLease>,
-    /// 🔀️ Each live World window instance's retained Projection tree — the bottom-right Pane body.
-    pub window_projection_documents: HashMap<String, UiDocumentLease>,
-    /// 🔎️ Per-window possibles-chevron state — React's `Search` `possiblesExpanded`
-    /// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10771`), so absent = collapsed.
-    pub search_possibles_open: HashMap<String, bool>,
-    /// 📏️ Each live window instance's projected Measures overlay document — see `//#region 📏️WindowMeasures`.
-    pub window_measures_documents: HashMap<String, UiDocumentLease>,
-    /// 🪪️ `(revision, generation)` last minted per Measures overlay surface — the ledger
-    /// `ui_document_ingress_generation` reads, kept across retirements so a reopened overlay moves forward.
-    pub window_measures_minted: HashMap<String, (u64, u64)>,
-    pub utility_collection_expanded: HashMap<String, bool>,
-    pub contributor_instances: HashMap<String, u32>,
-    /// 🖱️ Last-rendered full window content bounds per window id — used to apply the active utility's
-    /// cursor while the pointer is inside that window's silhouette (Architecture Decision 8, P5).
-    pub window_content_rects: HashMap<String, Rect>,
-    /// 🎯️ Control id → the retained body that minted it this frame build, and the rect that body was
-    /// painted into. The registry `InputState` keeps is flat and carries no owner, so this is what
-    /// tells a document hit (route it into that body's retained tree, in that body's own local
-    /// coordinates) from a chrome hit (route it through the shell's own handlers). Panels and dock
-    /// windows are one map: both paint a retained document, and only their rect differs
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    ///
-    /// 🎯️ Double-buffered against `ui_wgpu::wgpu::HitRegistry` and published in the same step: this
-    /// is the owner map of the last COMPLETE chrome walk, so an id `InputState::hit_at` resolves is
-    /// always one this map can name. `retained_hit_windows_staging` is the map the walk in progress
-    /// is filling.
-    pub retained_hit_windows: HashMap<String, (String, Rect)>,
-    retained_hit_windows_staging: HashMap<String, (String, Rect)>,
-    retained_scene_hits: HashMap<String, (Rect, crate::element_contracts::ScenePointerTarget)>,
-    retained_scene_hits_staging: HashMap<String, (Rect, crate::element_contracts::ScenePointerTarget)>,
-    presented_input_epoch: u64,
-    next_presented_input_epoch: Option<u64>,
-    presented_input_candidate: Option<PresentedInputCandidateWitness>,
-    presented_input_geometry: PresentedInputGeometry,
-    presented_input_geometry_staging: PresentedInputGeometry,
-    retained_body_rects_staging: Vec<(String, Rect)>,
-    presented_chrome_accessibility: Vec<ui_contract::AccessibilityProjectionNode>,
-    /// ♿️ The presented epoch at which `presented_chrome_accessibility` last CHANGED — the generation the
-    /// ARIA mirror addresses the chrome by. It advances with the projection, not with every presented
-    /// frame, so a mirror that lags one idle frame still addresses the live chrome.
-    presented_chrome_accessibility_generation: u64,
-    /// 🪟️ The pane-overlay chip rows this frame's windows registered, held back until every window
-    /// BODY has been walked and registered before the first docked panel.
-    ///
-    /// ⚖️ `InputState::hit_at` resolves in reverse registration order, so this deferral is React's
-    /// own three-level stack read as an order: a chip outranks the window body and the world surface
-    /// it is painted inside (`--z-pane: 20` over `--z-window: 10`) and LOSES to any docked panel
-    /// floating over it (`--z-panel: 30`, `🖱️ui/🎨️styling/🖌️ui/🎨️.css:834-836`). React states the
-    /// same rule in prose where it mounts the chips — "window pane toggles stay on their authored
-    /// anchors behind anchored chrome panels; panels paint above `z-window` and occlude overlap
-    /// without shifting pane chrome" (`🪟️Window/🟦️.tsx:200`).
-    ///
-    /// 🩸️ The rows used to be registered AFTER the panels, which made a covered chip outrank the
-    /// panel over it — the opposite of React, where the press lands on the panel. Measured on the
-    /// React reference with the Catalogue panel open over the top pane: pressing
-    /// `framework.window.puzzle3dMainTop.{engagement,search}.toggle` journalled the catalogue row's
-    /// own `addObjectKind` and left every fold closed
-    /// (`🗑️generated/parity-run-12/steps.json` steps 9-10, ticket
-    /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12d-pane-chip-ids-and-projection-toggle.md` §1).
-    pane_overlay_hits: Vec<HitTarget<ActionDescriptor>>,
-    /// 🏠️ The surface scope the chrome walk has established for this frame, read by
-    /// [`Self::render_main_window_step`] through `ui_wgpu::wgpu::shell_floor_paints` — React's
-    /// `shellFloorPaints` (`🔨️modules/🏠️shell-floor-presentation/🟦️.ts:14`). `FrameSetup` fills the
-    /// whole surface at [`Level::Base`], which makes the main window's own identical base fill a
-    /// second paint of the same colour over the same pixels; React suppresses exactly that.
-    chrome_floor_scope: Option<ui_wgpu::wgpu::SurfaceScope>,
-    /// 👋️ The retained body a pointer move was last routed into, so the move that LEAVES it is
-    /// routed there too. `events::EventRouter` is edge-triggered on the moves it receives, so a body
-    /// that stops receiving them keeps `NodeFlags::HOVERED` on whatever it last resolved.
-    pub retained_hover_window: Option<String>,
-    /// 🪟️ Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
-    pub window_silhouettes: HashMap<String, WindowSilhouette>,
-    /// 🎬️ Active tutorial playback/recording runtime, if any — see `//#region 🎬️Tutorial` (below
-    /// `ShellChrome`) for `TutorialRuntime`'s full shape, lifecycle, and the player/recorder it drives.
-    pub tutorial: Option<TutorialRuntime>,
-    /// 🎬️ Document-track operations queued by a tutorial tick/seek this frame, drained and applied
-    /// asynchronously right after `render_chrome` returns (mirrors how `AppRuntime::frame` already defers
-    /// `scene_events`/wheel actions through `spawn_app_task` for the same reason: the plugin bridge's
-    /// `apply_mutations`/`handle_action` calls are async, but chrome rendering isn't).
-    pub tutorial_pending_document_ops: Vec<TutorialPendingDocOp>,
-    /// 🪪️ Who issued the dispatch currently crossing [`Self::dispatch_action`], for the chrome
-    /// ledger's `origin` column — React's `InputOriginV1`. A chrome press, a keybinding, a palette
-    /// entry and a panel row are all `user`; a pointer/camera stream an engine surface derived from
-    /// raw input is `gesture`, which is the one origin React never turns into a notice
-    /// (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`: "a 60 Hz `setCamera` that the guest refuses would
-    /// otherwise toast once per throttle window for as long as the user orbits"). Set by
-    /// [`Self::dispatch_gesture_action`] for the frame's deferred surface actions and nothing else.
-    dispatch_origin: &'static str,
-    chrome_build: ShellChromeBuildState,
-    chrome_present: ShellChromePresentState,
+    pub chrome: ChromeState,
+    pub surfaces: SurfaceState,
+    pub tutorial: TutorialState,
+    pub settle: SettleState,
+    pub plugins: PluginState,
+    pub history: HistoryState,
+    pub prefs: PrefsState,
+    pub directory: DirectoryState,
+    pub sync: SyncState,
+    pub docs: DocumentState,
+    pub opening: OpeningState,
+    pub windows: WindowState,
+    pub dock: ShellDockState,
+    pub input: ShellInputState,
+    pub commands: CommandState,
 }
 //#endregion ShellTypes
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for ShellState {
     fn drop(&mut self) {
-        self.directory_cancel.cancel_now();
-        if let Some(task) = self.identity_bootstrap_task.take() {
+        self.directory.directory_cancel.cancel_now();
+        if let Some(task) = self.directory.identity_bootstrap_task.take() {
             task.cancel();
         }
-        if let Some(mut home) = self.directory_home.take() {
+        if let Some(mut home) = self.directory.directory_home.take() {
             if let Some((plugin_id, instance_id)) = home.take_destroy_authority() {
-                if let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id) {
+                if let Some(program) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == plugin_id) {
                     program.destroy_app(instance_id);
                 }
             }
         }
-        for pending in &self.shell_io_pending {
+        for pending in &self.settle.shell_io_pending {
             if let Some(task) = &pending.task {
                 task.cancel();
             }

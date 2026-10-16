@@ -5,7 +5,7 @@
 /// payload codecs. `out`/`input` follow `crate::codec::ByteWriter`/`ByteReader` conventions exactly
 /// (they take `&mut crate::codec::ByteWriter` / `&mut crate::codec::ByteReader<'_>` directly — no
 /// reimplementation of the varint/byte primitives).
-use crate::codec::{ByteReader, ByteWriter};
+use semio_framework_replication_codec::{ByteReader, ByteWriter};
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_value::ValueRefusalKind;
 

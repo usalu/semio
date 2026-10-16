@@ -175,14 +175,26 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
   return candidates;
 }
 
-/** @emoji 🧱️ Stubs missing wasm pkg imports until `bun repo run …:wasm` artifacts exist. */
-export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlugin {
+/** 🌊️ Carries closed Source or selected-publication paths as DATA without opening a compiler or store. */
+export type FlowWasmDeliveryV1=Readonly<{version:1;kind:"source";browser:string;host:string}>|Readonly<{version:1;kind:"publication";root:string}>;
+
+/** 🧱️ Resolves the explicit Flow facet before generic missing-package stubs. */
+export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWasmDeliveryV1): OwnedBuildPlugin {
+  if(validateJsonSchemaSubset(providerSchema.definitions.FlowWasmDeliveryV1,delivery).length)throw Error("Closed explicit Flow delivery required");
+  for(const path of delivery.kind==="source"?[delivery.browser,delivery.host]:[delivery.root])if(!isAbsolute(path)||resolve(path)!==path)throw Error("Canonical bounded Flow delivery paths required");
   return {
     name: "playground-flow-wasm-dev-stub",
     enforce: "pre",
     resolveId(id, importer) {
       if (!importer || id.startsWith(PLAYGROUND_WASM_STUB_PREFIX)) return undefined;
       const cleanId = id.split("?", 1)[0] ?? id;
+      const flowName=cleanId==="@semio-tech/flow-core"?"flow_core.js":cleanId.startsWith("@semio-tech/flow-core/")?cleanId.slice("@semio-tech/flow-core/".length).replace(/^pkg\//u,""):/(?:^|\/)🕸️bindings\/flow_core\.js$/u.test(cleanId)?"flow_core.js":undefined;
+      if(flowName!==undefined){
+        if(["🌐️flow-browser.js","🌐️browser/🟨️.js"].includes(flowName))return delivery.kind==="source"?delivery.browser:join(delivery.root,"🌐️browser/🟨️.js");
+        if(["🖥️flow-host.js","🖥️host/🟨️.js"].includes(flowName))return delivery.kind==="source"?delivery.host:join(delivery.root,"🖥️host/🟨️.js");
+        if(flowName!=="flow_core.js")throw Error("Closed Flow package subpath required");
+        return delivery.kind==="source"?`${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`:join(delivery.root,"flow_core.js");
+      }
       // 🗂️ A module the browser requests directly arrives as Vite's own `/@fs/<absolute path>` URL, not
       // as the specifier the importer wrote. Testing that URL for existence always fails, which used to
       // hand back the "wasm pkg not built" stub for a pkg that is sitting right there on disk.
@@ -197,6 +209,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlu
       const candidates: string[] = [];
       if (workspacePkg) {
         const [, pkgName, subpath] = workspacePkg;
+        if(pkgName===undefined)throw Error("Matched workspace package name required");
         candidates.push(...workspaceWasmPkgResolveCandidates(repoRoot, pkgName, subpath));
       } else {
         candidates.push(resolve(repoRoot, fsId));
@@ -1026,7 +1039,9 @@ function namedImportSpecifiersForModule(source: string, moduleId: string): strin
   const names: string[] = [];
   let match: RegExpExecArray | null;
   while ((match = re.exec(source))) {
-    for (const part of match[1].split(",")) {
+    const imports=match[1];
+    if(imports===undefined)throw Error("Matched named import clause required");
+    for (const part of imports.split(",")) {
       const trimmed = part.trim();
       if (!trimmed) continue;
       const name = trimmed

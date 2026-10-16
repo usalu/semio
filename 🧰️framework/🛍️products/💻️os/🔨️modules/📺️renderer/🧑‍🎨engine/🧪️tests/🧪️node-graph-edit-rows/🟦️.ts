@@ -59,7 +59,7 @@ describe("node-graph edit rows", () => {
     expect(wgpu).not.toContain("setHostSnapshot");
     expect(wgpu).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
     expect(wgpu).not.toContain('builder.string(Some("operation")');
-    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
+    const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     for (const operation of ["connect", "disconnect", "move", "setSlider", "insertPort"]) expect(dag).toContain(`sink.text("operation", "${operation}")?`);
   });
 });

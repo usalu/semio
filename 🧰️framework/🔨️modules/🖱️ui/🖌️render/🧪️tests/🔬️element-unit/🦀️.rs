@@ -1,5 +1,6 @@
 
 use super::*;
+use crate::ReconciliationKey;
 
 #[test]
 fn equal_parent_and_key_produce_the_same_element_id() {
@@ -98,14 +99,14 @@ fn any_element_paint_before_request_layout_panics() {
     }
 
     // Uses `paint` (needs only `PaintCx`, which needs only the already-landed
-    // `crate::scene::SceneBuilder`) rather than `prepaint` (which would need a
+    // `crate::SceneBuilder`) rather than `prepaint` (which would need a
     // `crate::TextSystem` value that does not exist until packet `render-text` lands) so this
     // test can run against this packet alone.
     let mut any = AnyElement::new(Probe);
-    let mut resources = crate::resource::ResourceRegistry::default();
+    let mut resources = crate::ResourceRegistry::default();
     let mut retained = RetainedStore::default();
     let mut arena = FrameArena::default();
-    let mut scene = crate::scene::SceneBuilder::default();
+    let mut scene = crate::SceneBuilder::default();
     let mut cx = PaintCx { shared: SharedFrameCx { arena: &mut arena, resources: &mut resources, retained: &mut retained, time_seconds: 0.0 }, scene: &mut scene };
     any.paint(ElementId::new(None, &ReconciliationKey::Explicit("x".into())), Bounds::default(), &mut cx);
 }

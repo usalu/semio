@@ -7,9 +7,9 @@
 //! This file is a routing table: `handle` → `LayoutCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
+use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, LayoutBounds, Page, PageOverride};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework::action_bus::RetainedToolWireInput;
@@ -1050,9 +1050,25 @@ const LAYOUT_LABEL_EXCERPT_CHARS: usize = 24;
 //#endregion 🪧️EntityLabels
 
 //#region 🔖️LayoutPlayApp
+/// 📦️ The built-in text fonts the layout package declares as package assets, for the plugin assembly's `PluginBuilder::asset`.
+pub use semio_s_artifact_layout_layout_engine::scene::text_font_asset_declarations;
+
 /// 🧪️ Stateless app shell; exact window owners hold persisted view preferences and ephemeral input.
-#[derive(Default)]
 pub struct LayoutPlayApp;
+
+impl Default for LayoutPlayApp {
+    /// 📥️ Opening an app instance is where the host's package assets are readable: the built-in text fonts the host preloaded
+    /// on `Event::InstanceOpen` are installed into the layout engine here, before any story is shaped. A host that delivered
+    /// none leaves the engine on its own native door or on the layout font alone.
+    fn default() -> Self {
+        use semio_s_artifact_layout_layout_engine::scene::{TextFontsInstallError, install_package_text_fonts};
+        match install_package_text_fonts(semio_framework_plugin::reactor::package_asset) {
+            Ok(()) | Err(TextFontsInstallError::AlreadyInstalled | TextFontsInstallError::PackageAssetMissing { .. }) => {}
+            Err(error) => eprintln!("[ERROR] layout: the host's built-in text fonts were refused: {error}"),
+        }
+        Self
+    }
+}
 
 impl LayoutPlayApp {
     fn render_body(

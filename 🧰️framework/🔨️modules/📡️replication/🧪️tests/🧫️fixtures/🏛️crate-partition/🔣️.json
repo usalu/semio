@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "facade": {
+    "package": "semio-framework-replication",
+    "manifest": "📦️packages/🦀️rust/Cargo.toml",
+    "entry": "📦️packages/🦀️rust/🦀️.rs"
+  },
+  "peers": [
+    "semio-framework-replication-error",
+    "semio-framework-replication-crypto",
+    "semio-framework-mutation-diff"
+  ],
+  "budget": {
+    "maximumActiveLines": 3500,
+    "maximumFiles": 28,
+    "maximumBytes": 230000
+  },
+  "excluded": [
+    "⚠️error/",
+    "🔐️crypto/",
+    "🎮️mutation/🔺️diff/",
+    "🎮️mutation/🚫️error/",
+    "node_modules/"
+  ],
+  "unmounted": [
+    "🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/📄️paged-digest/🦀️.rs",
+    "🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
+    "🔗️causal/🔀️transition/🧪️tests/🔬️supersede-fold/🦀️.rs"
+  ],
+  "crates": [
+    {
+      "package": "semio-framework-replication-ids",
+      "manifest": "🆔️ids/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🆔️ids/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-codec",
+      "manifest": "⚙️codec/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "⚙️codec/📦️packages/🦀️rust/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-interaction",
+      "manifest": "📡️wire/🕹️interaction/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📡️wire/🕹️interaction/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-history-index",
+      "manifest": "🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔗️causal/🔀️transition/🔁️fold/🗂️index/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-command-ingress",
+      "manifest": "📡️wire/🎮️command/📥️ingress/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📡️wire/🎮️command/📥️ingress/🦀️.rs",
+      "level": 0,
+      "dependencies": [],
+      "devDependencies": [],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-wire-core",
+      "manifest": "🧾️wire/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧾️wire/📦️packages/🦀️rust/🦀️.rs",
+      "level": 1,
+      "dependencies": [
+        "semio-framework-replication-codec"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-crypto",
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-local-interaction",
+      "manifest": "📡️wire/🏠️local-interaction/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📡️wire/🏠️local-interaction/🦀️.rs",
+      "level": 1,
+      "dependencies": [
+        "semio-framework-replication-interaction"
+      ],
+      "devDependencies": [],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-format",
+      "manifest": "📐️format/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📐️format/📦️packages/🦀️rust/🦀️.rs",
+      "level": 2,
+      "dependencies": [
+        "semio-framework-replication-codec",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-crypto",
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-mutation",
+      "manifest": "🎮️mutation/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎮️mutation/🦀️.rs",
+      "level": 2,
+      "dependencies": [
+        "semio-framework-replication-ids",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-mutation-diff"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-presence",
+      "manifest": "📡️wire/👥️presence/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📡️wire/👥️presence/🦀️.rs",
+      "level": 2,
+      "dependencies": [
+        "semio-framework-replication-interaction",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-edit",
+      "manifest": "🎮️mutation/✏️edit/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎮️mutation/✏️edit/🦀️.rs",
+      "level": 3,
+      "dependencies": [
+        "semio-framework-replication-ids",
+        "semio-framework-replication-mutation",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-crypto"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-causal",
+      "manifest": "🔗️causal/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔗️causal/📦️packages/🦀️rust/🦀️.rs",
+      "level": 4,
+      "dependencies": [
+        "semio-framework-replication-codec",
+        "semio-framework-replication-edit",
+        "semio-framework-replication-ids",
+        "semio-framework-replication-mutation",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-mutation-diff",
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-conflict",
+      "manifest": "⚔️conflict/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "⚔️conflict/🦀️.rs",
+      "level": 5,
+      "dependencies": [
+        "semio-framework-replication-causal",
+        "semio-framework-replication-ids",
+        "semio-framework-replication-mutation",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [
+        "semio-framework-replication-edit"
+      ],
+      "peerDependencies": []
+    },
+    {
+      "package": "semio-framework-replication-history",
+      "manifest": "🔗️causal/🔀️transition/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔗️causal/🔀️transition/🦀️.rs",
+      "level": 5,
+      "dependencies": [
+        "semio-framework-replication-causal",
+        "semio-framework-replication-edit",
+        "semio-framework-replication-history-index",
+        "semio-framework-replication-ids",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [
+        "semio-framework-replication-conflict",
+        "semio-framework-replication-mutation"
+      ],
+      "peerDependencies": [
+        "semio-framework-replication-crypto",
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-frames",
+      "manifest": "📡️wire/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📡️wire/🦀️.rs",
+      "level": 5,
+      "dependencies": [
+        "semio-framework-replication-causal",
+        "semio-framework-replication-ids",
+        "semio-framework-replication-wire-core"
+      ],
+      "devDependencies": [],
+      "peerDependencies": [
+        "semio-framework-replication-error"
+      ]
+    },
+    {
+      "package": "semio-framework-replication-mutation-messages",
+      "manifest": "🎮️mutation/📨️messages/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎮️mutation/📨️messages/📦️packages/🦀️rust/🦀️.rs",
+      "level": 6,
+      "dependencies": [
+        "semio-framework-replication-conflict",
+        "semio-framework-replication-mutation"
+      ],
+      "devDependencies": [
+        "semio-framework-replication-ids"
+      ],
+      "peerDependencies": [
+        "semio-framework-mutation-diff"
+      ]
+    }
+  ]
+}

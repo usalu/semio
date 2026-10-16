@@ -1,4 +1,14 @@
-use super::*;
+use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
+use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::html::{HTML_KIT_ACTION_ID, html_example_snapshot, html_command_from_action, html_emit};
+use crate::editor::html::*;
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode};
 
 #[test]

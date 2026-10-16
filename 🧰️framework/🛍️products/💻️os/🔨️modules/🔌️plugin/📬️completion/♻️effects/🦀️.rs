@@ -1,5 +1,5 @@
 //! 📤️ Known host effect fields keep original typed owners through exact deferred retirement.
-use crate::Effect;
+use semio_framework::Effect;
 use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};
 use std::mem::ManuallyDrop;
 pub struct CompletionEffect(pub Effect);

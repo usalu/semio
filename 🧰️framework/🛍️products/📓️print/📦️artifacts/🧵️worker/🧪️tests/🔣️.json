@@ -1,0 +1,25 @@
+{
+  "cases": [
+    {
+      "events": [
+        "complete",
+        "exit"
+      ],
+      "fails": false
+    },
+    {
+      "events": [
+        "error",
+        "exit"
+      ],
+      "fails": true
+    },
+    {
+      "events": [
+        "undefined",
+        "exit"
+      ],
+      "fails": true
+    }
+  ]
+}

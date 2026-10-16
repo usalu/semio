@@ -56,7 +56,7 @@ pub struct PresentedMediaSlot {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct PresentedMediaOwner {
+pub struct PresentedMediaOwner {
     pub plugin_id: String,
     pub controller_id: String,
     pub app_instance_id: u32,
@@ -65,21 +65,21 @@ pub(crate) struct PresentedMediaOwner {
 
 
 #[derive(Default)]
-pub(crate) struct DocumentIdentityRegistry {
+pub struct DocumentIdentityRegistry {
     next_request: u64,
     states: std::collections::HashMap<(String, u32), (u64, Option<String>)>,
 }
 
 impl DocumentIdentityRegistry {
-    pub(crate) fn retain(&mut self, mut keep: impl FnMut(&(String, u32)) -> bool) {
+    pub fn retain(&mut self, mut keep: impl FnMut(&(String, u32)) -> bool) {
         self.states.retain(|key, _| keep(key));
     }
 
-    pub(crate) fn remove(&mut self, key: &(String, u32)) {
+    pub fn remove(&mut self, key: &(String, u32)) {
         self.states.remove(key);
     }
 
-    pub(crate) fn begin(&mut self, key: (String, u32)) -> Option<u64> {
+    pub fn begin(&mut self, key: (String, u32)) -> Option<u64> {
         if !self.states.contains_key(&key) && self.states.len() == 128 { return None; }
         let request = self.next_request.checked_add(1)?;
         self.next_request = request;
@@ -87,7 +87,7 @@ impl DocumentIdentityRegistry {
         Some(request)
     }
 
-    pub(crate) fn accept(&mut self, key: &(String, u32), request: u64, instance_id: u32, document_id: Option<String>) -> bool {
+    pub fn accept(&mut self, key: &(String, u32), request: u64, instance_id: u32, document_id: Option<String>) -> bool {
         if key.1 != instance_id || document_id.as_ref().is_some_and(|id| !(1..=512).contains(&id.chars().count())) { return false; }
         let Some(state) = self.states.get_mut(key) else { return false };
         if state.0 != request { return false; }
@@ -95,7 +95,7 @@ impl DocumentIdentityRegistry {
         true
     }
 
-    pub(crate) fn document(&self, key: &(String, u32)) -> Option<&str> {
+    pub fn document(&self, key: &(String, u32)) -> Option<&str> {
         self.states.get(key)?.1.as_deref()
     }
 }
@@ -114,18 +114,18 @@ fn valid_rect(rect: Rect) -> bool {
     [rect.x, rect.y, rect.w, rect.h].iter().all(|value| value.is_finite()) && rect.w > 0.0 && rect.h > 0.0
 }
 
-pub(crate) fn rects_overlap(left: Rect, right: Rect) -> bool {
+pub fn rects_overlap(left: Rect, right: Rect) -> bool {
     left.x < right.x + right.w && left.x + left.w > right.x && left.y < right.y + right.h && left.y + left.h > right.y
 }
 
-pub(crate) fn body_occluder(body: Rect, frames: impl Iterator<Item = Rect>) -> Rect {
+pub fn body_occluder(body: Rect, frames: impl Iterator<Item = Rect>) -> Rect {
     frames.filter(|frame| body.x >= frame.x && body.y >= frame.y && body.x + body.w <= frame.x + frame.w && body.y + body.h <= frame.y + frame.h)
         .min_by(|left, right| (left.w * left.h).total_cmp(&(right.w * right.h))).unwrap_or(body)
 }
 
 /// 🪪️ Refuses any resource whose authority differs from the accepted shell owner.
 #[cfg(test)]
-pub(crate) fn resource_matches_owner(props: &serde_json::Value, owner: &PresentedMediaOwner) -> bool {
+pub fn resource_matches_owner(props: &serde_json::Value, owner: &PresentedMediaOwner) -> bool {
     props.get("resource").is_some_and(|resource| {
         resource.is_null()
             || (resource.get("controllerId").and_then(serde_json::Value::as_str) == Some(owner.controller_id.as_str())
@@ -136,7 +136,7 @@ pub(crate) fn resource_matches_owner(props: &serde_json::Value, owner: &Presente
 
 /// 📐️ Walks one strictly presented tree and composes its leaves with the accepted shell body.
 #[cfg(test)]
-pub(crate) fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, body: Rect, owner: &PresentedMediaOwner, slots: &mut Vec<PresentedMediaSlot>) -> bool {
+pub fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, body: Rect, owner: &PresentedMediaOwner, slots: &mut Vec<PresentedMediaSlot>) -> bool {
     let Some(root) = tree.root else { return true };
     if !valid_bounds(body) || !(1..=512).contains(&window_id.chars().count()) || !(1..=256).contains(&owner.plugin_id.chars().count()) || !(1..=256).contains(&owner.controller_id.chars().count()) || !(1..=512).contains(&owner.parent_document_id.chars().count()) {
         return true;
@@ -202,10 +202,10 @@ pub(crate) fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: 
 mod tests;
 
 #[path="📥️props/🦀️.rs"]
-pub(crate) mod original_props;
+pub mod original_props;
 
 #[path="📤️slot/🦀️.rs"]
-pub(crate) mod original_slot;
+pub mod original_slot;
 
 #[path="🎟️collect/🦀️.rs"]
-pub(crate) mod original_collect;
+pub mod original_collect;

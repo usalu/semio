@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -7,7 +8,7 @@
 import { scaleLinear } from "d3-scale";
 import { curveLinear, curveStepAfter, curveStepBefore, line as d3Line, stack, type CurveFactory } from "d3-shape";
 import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { compileVizProbe, probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -46,7 +47,7 @@ const grid = (value: number): number => {
 
 /** 🎯️ Every `geometry/path` record of one compiled fixture, in emission order. */
 async function paths(ctx: AdapterContext, fixture: string): Promise<number[][]> {
-  const records = await compileVizProbe(ctx.input(`shared://📈️charts-line-area/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileAdapterVizProbeV1(ctx,ctx.input(`shared://📈️charts-line-area/${fixture}`), { caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(records, DECIMALS)
     .filter((record) => record.key === "geometry/path")
     .map((record) => record.values.map(Number));

@@ -1,8 +1,8 @@
 //! 🛍️ S Studio app — app catalogue panel: the drag-source tree of every registered plugin app,
 //! nested by canonical document breadcrumb.
 
-use crate::engine::space::terminology::SStudioLabels;
-use crate::engine::space::S_PLAY_CATALOGUE_BODY_KEY;
+use semio_hub_space_foundation::terminology::SStudioLabels;
+use semio_hub_space_foundation::S_PLAY_CATALOGUE_BODY_KEY;
 use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
 use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
 use semio_framework_ui_locale::{Locale, Terminology};
@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID.into()),
+        kind: PanelTabKind::App(semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID.into()),
         label: semio_framework_ui_locale::LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(S_PLAY_CATALOGUE_BODY_KEY.into()),
@@ -69,7 +69,7 @@ fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, nod
             item = item.description(UiText::try_from_str(&app.yields).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue description admission failed"))?);
         }
         let mut drag_data = UiFixedMap::default();
-        let key = UiText::try_from_str(crate::engine::space::S_PLAY_CATALOGUE_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag mime admission failed"))?;
+        let key = UiText::try_from_str(semio_hub_space_foundation::S_PLAY_CATALOGUE_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag mime admission failed"))?;
         let value = UiText::try_from_string(semio_framework_pack_json::json!({ "pluginId": app.plugin_id.as_str(), "appId": app.app_id.as_str(), "label": app.label.as_str() }).to_string())
             .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag payload admission failed"))?;
         drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue drag map admission failed"))?;
@@ -84,7 +84,7 @@ fn app_catalogue_item(windows: &TreeWindows<'_>, id_path: &str, label: &str, nod
 pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut document = AppCatalogueNode::default();
     for entry in workflow_palette() {
-        if entry.app_id == crate::engine::space::S_PLAY_APP_ID {
+        if entry.app_id == semio_hub_space_foundation::S_PLAY_APP_ID {
             continue;
         }
         let registration = os_app_registration(&entry.plugin_id, &entry.app_id);
@@ -109,10 +109,10 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, window
     if let Some(app) = document.app {
         roots.push(CatalogueRoot { segment: app.app_id.clone(), label: app.label.clone(), node: AppCatalogueNode { children: BTreeMap::new(), app: Some(app) } });
     }
-    PanelTreeBuilder::new(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID)?
+    PanelTreeBuilder::new(semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID)?
         .window_section(
             windows,
-            crate::engine::space::S_PLAY_CATALOGUE_TAB_ID,
+            semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID,
             Some(ui::Label::try_from(labels.apps_section.as_str()).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "space catalogue section label admission failed"))?),
             true,
             &roots,

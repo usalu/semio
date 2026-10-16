@@ -18,7 +18,7 @@ impl TrustedArtifactCodec for GenesisFixtureCodec {
         self.validations.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         context.checkpoint()
     }
-    async fn apply_operation(&self, _pair: ArtifactPair, _operation: &super::super::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    async fn apply_operation(&self, _pair: ArtifactPair, _operation: &semio_hub_artifact_authority::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         panic!("genesis must not apply an edit")
     }
 }
@@ -46,7 +46,7 @@ struct GenesisControl {
     stages: std::sync::Mutex<Vec<AuthorityProgressStage>>,
 }
 
-impl super::super::AuthorityOperationControl for GenesisControl {
+impl semio_hub_artifact_authority::AuthorityOperationControl for GenesisControl {
     fn now_ms(&self) -> u64 {
         self.now
     }
@@ -103,7 +103,7 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
             validations: std::sync::atomic::AtomicUsize::new(0),
         };
         let mut request = ArtifactGenesisRequest { scope: expected.scope.clone(), kind_id: identity.artifact_kind.clone() };
-        let mut limits = super::super::AuthorityLimits::maximum();
+        let mut limits = semio_hub_artifact_authority::AuthorityLimits::maximum();
         match case {
             "empty-pack" => codec.pair.pack.clear(),
             "empty-spr" => codec.pair.spr.clear(),
@@ -122,12 +122,12 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
             assert_eq!(actual.descriptor, descriptor);
             assert_eq!(actual.candidate.checkpoint, expected);
             assert_eq!(actual.candidate.pair, codec.pair);
-            let encoded = super::super::checkpoint_id_encoding_v1(&actual.candidate.checkpoint).unwrap();
+            let encoded = semio_hub_artifact_authority::checkpoint_id_encoding_v1(&actual.candidate.checkpoint).unwrap();
             assert_eq!(directory::os_directory::io::binary::artifact_hash::hex_lower(&encoded), fixture["expected"]["checkpointEncodingHex"]);
             assert!(encoded.starts_with(fixture["genesisDomain"].as_str().unwrap().as_bytes()));
             let mut parented = actual.candidate.checkpoint;
             parented.parent_checkpoint_id = Some(ArtifactHash([1; 32]));
-            assert!(super::super::checkpoint_id_encoding_v1(&parented).is_err());
+            assert!(semio_hub_artifact_authority::checkpoint_id_encoding_v1(&parented).is_err());
             assert_eq!(*control.stages.lock().unwrap(), [AuthorityProgressStage::Preflight, AuthorityProgressStage::CatalogResolved, AuthorityProgressStage::OutputValidated, AuthorityProgressStage::Derived]);
             assert_eq!(codec.validations.load(std::sync::atomic::Ordering::SeqCst), 1, "the genesis pair is validated once: a second validation of the same bytes re-ran the whole guest for nothing");
         } else {
@@ -143,7 +143,7 @@ struct StallBoundControl {
     now: std::sync::Arc<std::sync::atomic::AtomicU64>,
 }
 
-impl super::super::AuthorityOperationControl for StallBoundControl {
+impl semio_hub_artifact_authority::AuthorityOperationControl for StallBoundControl {
     fn now_ms(&self) -> u64 {
         self.now.load(std::sync::atomic::Ordering::Relaxed)
     }
@@ -172,7 +172,7 @@ impl TrustedArtifactCodec for SlowGenesisCodec {
     async fn validate_pair(&self, _pair: &ArtifactPair, _stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()
     }
-    async fn apply_operation(&self, _pair: ArtifactPair, _operation: &super::super::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    async fn apply_operation(&self, _pair: ArtifactPair, _operation: &semio_hub_artifact_authority::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         panic!("genesis must not apply an edit")
     }
 }
@@ -224,28 +224,12 @@ async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
             checkpoints,
         };
         let request = ArtifactGenesisRequest { scope: expected.scope.clone(), kind_id: identity.artifact_kind.clone() };
-        let context = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, super::super::AuthorityLimits::maximum(), &control).expect("a non-zero stall span is a bound");
+        let context = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, semio_hub_artifact_authority::AuthorityLimits::maximum(), &control).expect("a non-zero stall span is a bound");
         let result = materialize_selected_genesis(&codec, request, identity, dialect.clone(), &context).await;
         assert_eq!(result.is_ok(), admitted, "{label}: spent {} ms against a {ARTIFACT_CREATION_DEADLINE_MS} ms deadline and a {ARTIFACT_CREATION_STALL_BOUND_MS} ms stall bound", clock.load(std::sync::atomic::Ordering::Relaxed) - 1_000);
         assert!(clock.load(std::sync::atomic::Ordering::Relaxed) - 1_000 > ARTIFACT_CREATION_DEADLINE_MS, "{label}: the case is vacuous unless the work outlives the old absolute deadline");
         if let Err(error) = result {
             assert_eq!(error, AuthorityError::Stalled, "{label}: a wedged creation is refused for not advancing, never for taking long");
-        }
-    }
-}
-
-#[test]
-fn directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json")).unwrap();
-    for row in fixture["cases"].as_array().unwrap() {
-        let events: Vec<directory::os_directory::DirectoryEvent> = semio_framework_pack_json::from_json_str(&row["events"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let client = events.iter().fold(directory::os_directory::DirectoryReadModel::default(), directory::os_directory::fold);
-        assert_eq!(client.spaces["space-fixture"].indexed_documents.len(), row["clientRows"].as_u64().unwrap() as usize, "{}", row["id"]);
-        let mut backend = crate::directory::MemoryArtifactProjection::default();
-        let result = backend.fold_atomically(&events);
-        assert_eq!(result.is_ok(), row["backendAccepted"].as_bool().unwrap(), "{}: {result:?}", row["id"]);
-        if result.is_err() {
-            assert_eq!(backend, crate::directory::MemoryArtifactProjection::default());
         }
     }
 }

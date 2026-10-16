@@ -1,8 +1,10 @@
 //! 🔬️ The generic JSON-valued probe document: snapshot, diff, mutation, store and the codecs it mounts.
 
 use store::SpaceMember as _;
+use crate::probe_json;
 
 //#region 🔖️ProbeDocument
+
 /// 🧪️ A generic, single-JSON-value document kind this crate owns outright — used ONLY to exercise
 /// the real `store::sync::ArtifactHost` / `ArtifactStore` / backbone-propagation pipeline end to end
 /// (§6 of the packet brief: "a commit made headlessly propagates to any live shell on the same
@@ -11,10 +13,12 @@ use store::SpaceMember as _;
 /// `os.agent.probe/v1` is namespaced under `os.agent.*` precisely so it can never collide with a real
 /// plugin schema id.
 pub const PROBE_SCHEMA: &str = "os.agent.probe/v1";
-pub const PROBE_PACK_SCHEMA_HASH: &str = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
-pub(super) const PROBE_SURFACE_ID: &str = "os.mcp.probe.editor";
 
-pub(super) fn probe_record_spec() -> semio_framework_dsl_record::RecordSpec {
+pub const PROBE_PACK_SCHEMA_HASH: &str = "0302ac7cf70cd2452759542a24931331935527fb9388bb6967cbc0575ccf728e";
+
+pub const PROBE_SURFACE_ID: &str = "os.mcp.probe.editor";
+
+pub fn probe_record_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(Some("probe"), semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "value", semio_framework_dsl_record::Shape::Value)])
 }
 
@@ -24,12 +28,6 @@ pub struct ProbeSnapshot(pub semio_framework_value::DslValue);
 impl Default for ProbeSnapshot {
     fn default() -> Self { Self(semio_framework_value::DslValue::Null) }
 }
-
-#[path = "../🚪️io/🔤️json/🦀️.rs"]
-mod probe_json;
-
-#[path = "../🪶️sqlite/🦀️.rs"]
-mod probe_sqlite;
 
 impl pack::snapshot::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
@@ -67,9 +65,10 @@ impl pack::snapshot::ArtifactPack for ProbeSnapshot {
         Some(probe_record_spec())
     }
 }
+
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ProbeSnapshot {
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -88,6 +87,7 @@ impl semio_framework_value::ToValue for ProbeSnapshot {
     }
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(&self.0, control) }
 }
+
 impl semio_framework_value::FromValue for ProbeSnapshot {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         probe_json::validate(&value)?;
@@ -130,6 +130,7 @@ impl semio_framework_value::ToValue for ProbeDiff {
     }
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(&self.0, control) }
 }
+
 impl semio_framework_value::FromValue for ProbeDiff {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         probe_json::validate(&value)?;
@@ -252,7 +253,7 @@ pub fn ensure_probe_codec_registered() {
 /// accumulator, the checkpoint/local-actor ids), the tail/current snapshot roots, the backbone, the
 /// causal DAG, and finally the envelope shell — in the exact order `ArtifactStore::drop`'s witness
 /// checks them.
-pub(super) fn probe_store_owners() -> store::os_store::document_store_owners::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
+pub fn probe_store_owners() -> store::os_store::document_store_owners::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
     store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ProbeSnapshot, ProbeMutation>().expect("Probe first-party store retirement catalog")
 }
 
@@ -267,7 +268,7 @@ pub(super) fn probe_store_owners() -> store::os_store::document_store_owners::Do
 /// concurrently with this thread — never something a plain busy-spin can force — so a `Blocked` step
 /// yields the thread briefly instead of re-polling immediately, giving that background thread real
 /// wall-clock time to finish tearing the actor down.
-pub(super) fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
+pub fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
     const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 20_000;
     const PROBE_STORE_CLOSE_BLOCKED_BACKOFF: std::time::Duration = std::time::Duration::from_millis(1);
     for _ in 0..PROBE_STORE_CLOSE_MAXIMUM_TURNS {
@@ -290,5 +291,5 @@ pub(super) fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
     }
     eprintln!("[probe-store-close] did not reach terminal-empty within its bounded turn budget");
 }
-//#endregion 🔖️ProbeDocument
 
+//#endregion 🔖️ProbeDocument

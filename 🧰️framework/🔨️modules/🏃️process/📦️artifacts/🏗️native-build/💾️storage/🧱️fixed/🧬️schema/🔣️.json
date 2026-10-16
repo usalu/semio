@@ -1,1 +1,87 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"semio:native-fixed-platform:v1","type":"object","additionalProperties":false,"required":["version","root","image","filesystemBytes","maximumPhysicalBytes"],"properties":{"version":{"const":1},"root":{"type":"string","minLength":1,"maxLength":256},"image":{"type":"string","minLength":1,"maxLength":256},"filesystemBytes":{"type":"integer","minimum":33554432,"maximum":1099511627776},"maximumPhysicalBytes":{"type":"integer","minimum":33554432,"maximum":1099511627776}},"definitions":{"ImageReceipt":{"type":"object","additionalProperties":false,"required":["version","platform","dev","ino","size","mapping"],"properties":{"version":{"const":1},"platform":{"enum":["linux","win32"]},"dev":{"type":"integer","minimum":0},"ino":{"type":"integer","minimum":0},"size":{"type":"integer","minimum":1,"maximum":1099511627776},"mapping":{"type":"string","minLength":1,"maxLength":4096}}}}}
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:native-fixed-platform:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "root",
+    "image",
+    "filesystemBytes",
+    "maximumPhysicalBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "image": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "filesystemBytes": {
+      "type": "integer",
+      "minimum": 33554432,
+      "maximum": 1099511627776
+    },
+    "maximumPhysicalBytes": {
+      "type": "integer",
+      "minimum": 33554432,
+      "maximum": 1099511627776
+    }
+  },
+  "definitions": {
+    "ImageReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "dev",
+        "ino",
+        "size",
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32"
+          ]
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1099511627776
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        }
+      }
+    }
+  }
+}

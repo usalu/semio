@@ -15,7 +15,7 @@ import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurfac
  * @param {import("../📝️declaration/🤖️generated/🟦️.d.ts").FlowBrowserOptions} [options] the owned browser ABI options
  * @returns {Promise<import("../📝️declaration/🤖️generated/🟦️.d.ts").FlowBrowserRuntime>} the runtime this module's own published declaration describes
  */
-export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, bindings, compilerFonts, ...hostOptions } = {}) {
+export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, bindings, runtimeAssets, ...hostOptions } = {}) {
   if (source === undefined) throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;
   let surfaceBindings = bindings;
@@ -35,9 +35,9 @@ export async function createFlowBrowserRuntime({ source, imports = {}, instantia
   }
   const memory = exports?.memory;
   if (!exports || !(memory instanceof WebAssembly.Memory)) throw new Error("Flow Wasm instance must export memory");
-  if (compilerFonts !== undefined) {
-    if (typeof surfaceBindings?.flowSetCompilerFonts !== "function") throw new Error("compiler fonts need Flow bindings with flowSetCompilerFonts");
-    surfaceBindings.flowSetCompilerFonts(compilerFonts.math, compilerFonts.serif, compilerFonts.serifItalic, compilerFonts.mono, compilerFonts.emoji);
+  if (runtimeAssets !== undefined) {
+    if (typeof surfaceBindings?.semioSetRuntimeAssets !== "function") throw new Error("runtime assets need Flow bindings with semioSetRuntimeAssets");
+    surfaceBindings.semioSetRuntimeAssets(runtimeAssets.math, runtimeAssets.serif, runtimeAssets.serifItalic, runtimeAssets.mono, runtimeAssets.emoji, runtimeAssets.labelFont, runtimeAssets.iconPack);
   }
   const host = createFlowHost({ ...hostOptions, exports, memory });
   const sessions = new Set();

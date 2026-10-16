@@ -11,6 +11,7 @@ type State = { locale: string; retained: string[]; constructions: number };
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 const interpreter = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🦀️.rs");
 const contracts = resolve(import.meta.dir, "../../../../🎯️targets/🧊️wgpu/🧬️element-contracts/🦀️.rs");
+const retainedCell = resolve(import.meta.dir, "../../../../🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🧩️retained-ui-engine/🦀️.rs");
 
 test("closed independent lifecycle corpus retains exact admission and thread identities", () => {
   const actual = [];
@@ -44,7 +45,7 @@ test("nonDefault construction is lazy and scoped rather than implicit", () => {
 });
 
 test("actual Rust worker source requires owned factories and explicit locale admission", () => {
-  const source = readModuleTreeSource(interpreter) + readFileSync(contracts, "utf8");
+  const source = readModuleTreeSource(interpreter) + readFileSync(contracts, "utf8") + readFileSync(retainedCell, "utf8");
   expect(source).not.toMatch(/impl<T: Default|test_worker_cell<T: Default/);
   expect(source.includes("initialize: fn() -> T")).toBe(true);
   expect(source.includes("get_or_init(|| Mutex::new((self.initialize)()))")).toBe(true);

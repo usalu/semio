@@ -1,10 +1,11 @@
+import {frameworkOsViteArtifactPathsV1} from "../../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { resolveAssetDeliveryModeV1 } from "../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
-import { COMPILER_FONTS_DIRECTORY } from "../../../../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -18,18 +19,17 @@ export function wgpuCompletedProfileV1(): "prototype" | "release" {
 /** 📂️ Owns the completed native/browser roots shared by server mounts and runtime graph verification. */
 export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") {
   return {
-    compilerRoot: resolve(root, "../📦️packages/🦀️rust/dist", "wasm-" + profile),
+    compilerRoot: frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(workspace, "products"), profile).renderer.directory,
     bootRoot: resolve(root, "../🚀️browser-boot/🤖️generated"),
     libraryRoot: resolve(root, "../🎬️renderer-boot/🤖️generated"),
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
-    fontRoot: resolve(workspace, COMPILER_FONTS_DIRECTORY),
   };
 }
 export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
-  const moduleRoot = pluginModulesRoot();
-  const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
+  const moduleRoot = builtPluginModulesRootIn(workspace,profile);
+  const runtime = developmentRuntimeRoot(workspace, variant!, profile, "wgpu");
   const config = createWgpuBrowserConfig({
     workspace, root, profile, variant,
     catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(),

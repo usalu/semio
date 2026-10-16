@@ -1,0 +1,56 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-kernel-db-fault-testing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db fault and deterministic-simulation test support: seeded simulation runtime, crash harness and the cross-crate laws"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-fault-testing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_fault_testing"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel-db-actor = { path = "../../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact-contract = { path = "../../../../🗿️artifact/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-artifact-engine = { path = "../../../../🗿️artifact/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-registry = { path = "../../../../🗄️storage/📇️io-registry/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-query = { path = "../../../../🔍️query/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-state = { path = "../../../../🔘️state/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../../../🗄️storage/🗃️memory/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-sync = { path = "../../../../🔄️sync/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-storage-fs = { path = "../../../../🗄️storage/📁️fs/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../../../🗄️storage/🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-sync = { path = "../../../../🔄️sync/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

@@ -1,6 +1,12 @@
 //! 🧾️ The commit contract: route errors, approval requests, receipts, the ingress and write authority ports, the checkpoint publisher port and the unavailable committer.
 
-use super::*;
+use std::sync::{Arc, Mutex};
+use directory::os_directory::{ArtifactFrontier, DocumentScope};
+use semio_hub_inference::wal::CommittedInferenceWalWitnessV1;
+use std::future::Future;
+use semio_hub_inference::{InferenceErrorV1, InferencePrivateBytesV1};
+use crate::job_types_and_port::InferenceMapBaseV1;
+use semio_hub_inference_binding::MapBindingRefusalV1;
 
 /// 🚦️ The one stable failure vocabulary the four authenticated inference routes may publish.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -66,6 +72,16 @@ impl From<InferenceErrorV1> for InferenceRouteErrorV1 {
     }
 }
 
+impl From<MapBindingRefusalV1> for InferenceRouteErrorV1 {
+    fn from(refusal: MapBindingRefusalV1) -> Self {
+        match refusal {
+            MapBindingRefusalV1::Undecodable | MapBindingRefusalV1::Execution => Self::Invalid,
+            MapBindingRefusalV1::Arity | MapBindingRefusalV1::Inapplicable | MapBindingRefusalV1::Composition => Self::Conflict,
+            MapBindingRefusalV1::Bounds => Self::Bounds,
+        }
+    }
+}
+
 /// 🧾️ Everything the atomic parent+existing-child composition transaction needs, all server-derived.
 pub struct GisMapApprovalCommitRequestV1<'a> {
     /// 🕸️ The composed child members the frozen base Map already owns, in stable-member order.
@@ -95,7 +111,7 @@ pub struct GisMapApprovalUndoCommitRequestV1<'a> {
     pub composed_children: &'a [String],
     pub scope: &'a DocumentScope,
     pub actor: &'a str,
-    pub target: &'a super::super::sqlite::GisMapApprovalUndoTargetV1,
+    pub target: &'a semio_hub_inference_ledger::GisMapApprovalUndoTargetV1,
     pub idempotency_key: &'a str,
     pub mutation_id: &'a str,
     pub command_hash: &'a str,
@@ -119,21 +135,21 @@ pub trait GisMapApprovalIngressAuthorityV1: Send + Sync {
 
 /// 🔒 One exact Hub document-write exclusion held from actor recheck through durable verification.
 pub struct GisMapDocumentWriteAuthorityV1 {
-    pub(super) gate: Arc<tokio::sync::Mutex<()>>,
-    pub(super) request: Arc<GisMapApprovalRequestTokenV1>,
+    pub gate: Arc<tokio::sync::Mutex<()>>,
+    pub request: Arc<GisMapApprovalRequestTokenV1>,
     pub(super) _guard: tokio::sync::OwnedMutexGuard<()>,
 }
 
-pub(super) struct GisMapApprovalRequestTokenV1;
+pub struct GisMapApprovalRequestTokenV1;
 
 impl GisMapDocumentWriteAuthorityV1 {
-    pub(super) async fn acquire(gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>) -> Self {
+    pub async fn acquire(gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>) -> Self {
         let guard = gate.clone().lock_owned().await;
         Self { gate, request, _guard: guard }
     }
 }
 
-pub(super) type GisMapDocumentWriteLeaseV1 = Arc<GisMapDocumentWriteAuthorityV1>;
+pub type GisMapDocumentWriteLeaseV1 = Arc<GisMapDocumentWriteAuthorityV1>;
 
 /// ⛔️ Why a typed composition publication refused; never a partial or optimistic outcome.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -177,12 +193,12 @@ pub enum GisMapCommitConflictArmV1 {
     DrivePublishedIdentityAndStoresDiffer,
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 static LAST_GIS_MAP_COMMIT_CONFLICT_ARM: std::sync::Mutex<Option<GisMapCommitConflictArmV1>> = std::sync::Mutex::new(None);
 
 /// 🧾️ Answers the unchanged `Conflict` after recording which arm produced it.
 pub fn gis_map_commit_conflict(arm: GisMapCommitConflictArmV1) -> GisMapApprovalCommitErrorV1 {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_GIS_MAP_COMMIT_CONFLICT_ARM.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(arm);
     }
@@ -191,7 +207,7 @@ pub fn gis_map_commit_conflict(arm: GisMapCommitConflictArmV1) -> GisMapApproval
 }
 
 /// 🔬️ The last recorded conflict arm of this process, for laws that only see the taxonomy.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_gis_map_commit_conflict_arm() -> Option<GisMapCommitConflictArmV1> {
     *LAST_GIS_MAP_COMMIT_CONFLICT_ARM.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
@@ -201,8 +217,8 @@ static LAST_ABANDONED_ASSEMBLY_TURN: std::sync::Mutex<Option<String>> = std::syn
 /// 🧾️ Records what ONE abandoned `Assembly` turn did, so a law that only sees "still Assembly after
 /// its budget" learns whether the turn is spinning on `Progress(<phase>)` or looping on a named
 /// `Err`. `Continue` and `Retry` are the same symptom and different defects.
-pub(super) fn record_abandoned_assembly_turn(outcome: &str) {
-    #[cfg(test)]
+pub fn record_abandoned_assembly_turn(outcome: &str) {
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_ABANDONED_ASSEMBLY_TURN.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(outcome.to_owned());
     }
@@ -215,8 +231,8 @@ static LAST_GIS_MAP_PREPARE_CONFLICT: std::sync::Mutex<Option<String>> = std::sy
 /// `prepare_retained_document` returns a bare `Conflict` from six arms, so a request refused before
 /// the drive loop ever runs prints neither a conflict arm nor an identity mismatch — it names
 /// nothing at all. This names the state and the false conjunct.
-pub(super) fn record_prepare_conflict(reason: &str) {
-    #[cfg(test)]
+pub fn record_prepare_conflict(reason: &str) {
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_GIS_MAP_PREPARE_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason.to_owned());
     }
@@ -224,7 +240,7 @@ pub(super) fn record_prepare_conflict(reason: &str) {
 }
 
 /// 🔬️ The last retained-document join refusal of this process.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_gis_map_prepare_conflict() -> Option<String> {
     LAST_GIS_MAP_PREPARE_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
 }
@@ -233,8 +249,8 @@ static LAST_GIS_MAP_IDENTITY_MISMATCH: std::sync::Mutex<Option<&'static str>> = 
 
 /// 🧾️ Records which conjunct of a retained-identity join was false, so a `Conflict` against an
 /// already-retained publication names a field instead of a bool.
-pub(super) fn record_identity_mismatch(field: &'static str) {
-    #[cfg(test)]
+pub fn record_identity_mismatch(field: &'static str) {
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_GIS_MAP_IDENTITY_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(field);
     }
@@ -242,26 +258,26 @@ pub(super) fn record_identity_mismatch(field: &'static str) {
 }
 
 /// 🔬️ The last retained-identity join mismatch of this process.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_gis_map_identity_mismatch() -> Option<&'static str> {
     *LAST_GIS_MAP_IDENTITY_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 /// 🔬️ The last abandoned `Assembly` turn of this process.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_abandoned_assembly_turn() -> Option<String> {
     LAST_ABANDONED_ASSEMBLY_TURN.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 static LAST_GIS_MAP_STORAGE_REFUSAL: Mutex<Option<String>> = Mutex::new(None);
 
 /// 🧾️ The one constructor of a retained approval's `Storage` refusal. It records the exact source
 /// line that refused and the authority's own error, so a law that only sees `Err(Storage)` learns
 /// where and why without a second diagnostic channel.
 #[track_caller]
-pub(super) fn gis_map_storage_refusal(error: &dyn std::fmt::Debug) -> GisMapApprovalCommitErrorV1 {
-    #[cfg(test)]
+pub fn gis_map_storage_refusal(error: &dyn std::fmt::Debug) -> GisMapApprovalCommitErrorV1 {
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_GIS_MAP_STORAGE_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(format!("{}: {error:?}", std::panic::Location::caller()));
     }
@@ -270,7 +286,7 @@ pub(super) fn gis_map_storage_refusal(error: &dyn std::fmt::Debug) -> GisMapAppr
 }
 
 /// 🔬️ The last `Storage` refusal of a retained approval in this process.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_gis_map_storage_refusal() -> Option<String> {
     LAST_GIS_MAP_STORAGE_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
 }
@@ -283,8 +299,8 @@ static LAST_CLOSE_STORE_STEP: std::sync::Mutex<Option<String>> = std::sync::Mute
 /// closer. Retrying it spun `close().await` on `yield_now` for ever, so a caller awaiting close
 /// without a timeout hung with nothing named. This says which of `value`/`drawing`/`parent` refused
 /// and with how many reads still out.
-pub(super) fn record_close_store_step(outcome: &str) {
-    #[cfg(test)]
+pub fn record_close_store_step(outcome: &str) {
+    #[cfg(any(test, feature = "testkit"))]
     {
         *LAST_CLOSE_STORE_STEP.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(outcome.to_owned());
     }
@@ -292,7 +308,7 @@ pub(super) fn record_close_store_step(outcome: &str) {
 }
 
 /// 🔬️ The last owned-Store retirement step of this process.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn last_close_store_step() -> Option<String> {
     LAST_CLOSE_STORE_STEP.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
 }
@@ -300,8 +316,8 @@ pub fn last_close_store_step() -> Option<String> {
 /// 🧾️ The recorded reason of the turn the driver is leaving on, so the driver's own exit record can
 /// carry the arm that produced it instead of overwriting it. Reads the empty string outside tests,
 /// where nothing is recorded at all.
-pub(super) fn recorded_abandoned_assembly_turn() -> String {
-    #[cfg(test)]
+pub fn recorded_abandoned_assembly_turn() -> String {
+    #[cfg(any(test, feature = "testkit"))]
     {
         return LAST_ABANDONED_ASSEMBLY_TURN.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone().unwrap_or_else(|| String::from("unrecorded"));
     }
@@ -314,22 +330,22 @@ pub struct GisMapApprovalReceiptV1 {
     pub witness: CommittedInferenceWalWitnessV1,
     pub document_generation: u64,
     pub applied: bool,
-    pub undo: semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1,
+    pub undo: semio_hub_inference::schema::GisMapApprovalUndoHandleV1,
     pub frontier: directory::os_directory::EditedArtifactFrontierV1,
 }
 
 /// 🎁️ Public approval result stripped of the private WAL witness.
 pub struct GisMapApprovalOutcomeV1 {
     pub applied: bool,
-    pub undo: semio_s_artifact_gis_gismap::inference_schema::GisMapApprovalUndoHandleV1,
+    pub undo: semio_hub_inference::schema::GisMapApprovalUndoHandleV1,
 }
 
-pub(super) struct GisMapPreparedUndoCommandV1 {
-    pub(super) operation_id: String,
-    pub(super) proposal_hash: String,
-    pub(super) mutation_id: String,
-    pub(super) command_hash: String,
-    pub(super) command: InferencePrivateBytesV1,
+pub struct GisMapPreparedUndoCommandV1 {
+    pub operation_id: String,
+    pub proposal_hash: String,
+    pub mutation_id: String,
+    pub command_hash: String,
+    pub command: InferencePrivateBytesV1,
 }
 
 /// ↩️ Internal durable inverse outcome with its second committed-WAL witness.
@@ -347,7 +363,7 @@ pub struct GisMapApprovalCheckpointRequestV1 {
     pub base_frontier: ArtifactFrontier,
     pub handle: db::ArtifactHandle,
     pub actor_snapshot: db::CheckpointPublicationSnapshot,
-    pub pair: crate::artifact_authority::ArtifactPair,
+    pub pair: semio_hub_artifact_authority::ArtifactPair,
     pub journal_receipt: directory::os_store::durable_group::DurableOwnedGroupJournalReceiptV1,
 }
 

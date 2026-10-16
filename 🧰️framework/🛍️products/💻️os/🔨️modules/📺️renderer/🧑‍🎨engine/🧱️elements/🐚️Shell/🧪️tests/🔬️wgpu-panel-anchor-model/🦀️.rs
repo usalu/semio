@@ -28,15 +28,15 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
     };
     for law in fixture["cases"].as_array().unwrap() {
         let mut shell = fresh_state();
-        shell.space_mode = true;
-        shell.session = Some(session(&fixture["host"]));
-        shell.spawned_session = if law["retired"] == true { None } else { Some(session(&fixture["spawned"])) };
+        shell.plugins.space_mode = true;
+        shell.docs.session = Some(session(&fixture["host"]));
+        shell.docs.spawned_session = if law["retired"] == true { None } else { Some(session(&fixture["spawned"])) };
         if law["sharedController"] == true {
-            shell.spawned_session.as_mut().unwrap().app.controller_id = fixture["host"]["controllerId"].as_str().unwrap().into();
+            shell.docs.spawned_session.as_mut().unwrap().app.controller_id = fixture["host"]["controllerId"].as_str().unwrap().into();
         }
         if law["sharedApp"] == true {
-            let child = shell.spawned_session.as_mut().unwrap();
-            let host = shell.session.as_ref().unwrap();
+            let child = shell.docs.spawned_session.as_mut().unwrap();
+            let host = shell.docs.session.as_ref().unwrap();
             child.plugin_id = host.plugin_id.clone();
             child.app.id = host.app.id.clone();
             child.app.controller_id = host.app.controller_id.clone();
@@ -48,17 +48,17 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
                 expected.as_mut().unwrap()[field] = fixture["host"][field].clone();
             }
         }
-        let owner = shell.action_session(&action);
+        let owner = shell.docs.action_session(&action, &shell.plugins);
         assert_eq!(owner.map(|s| (s.plugin_id.as_str(), s.instance_id, s.app.id.as_str())), expected.as_ref().map(|v| (v["pluginId"].as_str().unwrap(), v["instanceId"].as_u64().unwrap() as u32, v["appId"].as_str().unwrap())), "{}", law["id"]);
         if let Some(surface) = law["surface"].as_str().filter(|id| *id == "main" || *id == "spawned") {
             if expected.is_some() {
-                assert_eq!(shell.window_document_session(surface).map(|s| s.instance_id), owner.map(|s| s.instance_id), "{}", law["id"]);
+                assert_eq!(shell.docs.window_document_session(surface, &shell.plugins).map(|s| s.instance_id), owner.map(|s| s.instance_id), "{}", law["id"]);
             }
         }
         if let Some(owner) = owner {
-            let live = shell.live_view_state(owner);
+            let live = SessionCtx::of(&mut shell).live_view_state(owner);
             assert!(live.window_instances.iter().any(|window| Some(&window.id) == owner.view_state.window_id.as_ref()), "{}", law["id"]);
-            let invocation = shell.session_action_invocation(owner, &action, &live).expect("exact owner action address");
+            let invocation = shell.prefs.session_action_invocation(owner, &action, &live).expect("exact owner action address");
             assert_eq!(invocation.address.plugin_id, owner.plugin_id);
             assert_eq!(invocation.address.app_id, owner.app.id);
             assert_eq!(Some(&invocation.address.window_instance_id), owner.view_state.window_id.as_ref());
@@ -66,18 +66,18 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
                 assert_eq!(invocation.arguments.get("windowId").and_then(DslValue::as_str), owner.view_state.window_id.as_deref());
             }
             let command_owner = semio_framework::manifest::CommandOwnerAddress::App { plugin_id: owner.plugin_id.clone(), app_id: owner.app.id.clone() };
-            assert!(shell.command_session(&command_owner, owner.view_state.window_id.as_deref()).is_some_and(|session| ShellState::same_session(session, owner)));
+            assert!(shell.docs.command_session(&command_owner, owner.view_state.window_id.as_deref(), &shell.plugins).is_some_and(|session| same_session(session, owner)));
         }
         println!("[DEBUG] WGPU spawned routing {}: {:?}", law["id"], owner.map(|s| (&s.plugin_id, s.instance_id, &s.app.id)));
         if law["ownerPath"] == "/spawned" {
-            let selected = shell.action_session(&action).unwrap().clone();
-            let host_panel = shell.session.as_ref().unwrap().view_state.panel_json.clone();
+            let selected = shell.docs.action_session(&action, &shell.plugins).unwrap().clone();
+            let host_panel = shell.docs.session.as_ref().unwrap().view_state.panel_json.clone();
             let panel = serde_json::json!({"ownerApp": selected.app.id});
             let operations = vec![serde_json::json!({"operation": "setPanel", "panel": panel}).to_string()];
-            let result = semio_framework_async::block_on(shell.apply_ops_inner(&operations, true, UiDirtyScope::None, Some(selected)));
+            let result = semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_ops_inner(&operations, true, UiDirtyScope::None, Some(selected)));
             assert_eq!(result.unwrap_err(), "session program missing");
-            assert_eq!(shell.session.as_ref().unwrap().view_state.panel_json, host_panel);
-            assert_eq!(shell.spawned_session.as_ref().unwrap().view_state.panel_json, Some(panel.to_string()));
+            assert_eq!(shell.docs.session.as_ref().unwrap().view_state.panel_json, host_panel);
+            assert_eq!(shell.docs.spawned_session.as_ref().unwrap().view_state.panel_json, Some(panel.to_string()));
             println!("[DEBUG] WGPU spawned panel projection {}: {}", law["id"], panel);
         }
     }
@@ -124,8 +124,8 @@ pub(super) fn host_test_shell() -> ShellState {
     let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
     let mut shell = ShellState::new(vec![bridge], "space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     static HOST: PluginHostConfig = PluginHostConfig { plugin_id: "space", landing_app_id: "home", host_app_id: "studio" };
-    shell.host_capability = Some(&HOST);
-    shell.space_mode = true;
+    shell.plugins.host_capability = Some(&HOST);
+    shell.plugins.space_mode = true;
     let base = SpacePanelState {
         active_panel_tab: "s-play-catalogue".into(),
         spawned_apps: vec![
@@ -137,8 +137,8 @@ pub(super) fn host_test_shell() -> ShellState {
     let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view_state.active_mode_id = Some(studio.default_mode_id.clone());
     view_state.active_window_kind_id = Some(studio.window_kinds.first().id.clone());
-    view_state.panel_json = Some(ShellState::panel_json(&base).expect("strict base panel"));
-    shell.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 77, app: studio, view_state });
+    view_state.panel_json = Some(panel_json(&base).expect("strict base panel"));
+    shell.docs.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 77, app: studio, view_state });
     shell
 }
 
@@ -146,45 +146,45 @@ pub(super) fn host_test_shell() -> ShellState {
 fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriage() {
     let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/📌️panel-state/🔣️.json")).expect("panel fixture");
     let base: SpacePanelState = serde_json::from_value(fixture["base"].clone()).expect("fixture base");
-    let encoded = ShellState::panel_json(&base).expect("strict panel JSON");
+    let encoded = panel_json(&base).expect("strict panel JSON");
     assert!(encoded.starts_with('{'));
     let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.panel_json = Some(encoded.clone());
-    assert_eq!(ShellState::panel_state_from_view(&view).expect("strict decode"), Some(base.clone()));
+    assert_eq!(panel_state_from_view(&view).expect("strict decode"), Some(base.clone()));
     view.panel_json = Some(serde_json::json!({ "activePanelTab": "s-play-catalogue", "spawnedApps": [], "programs": [] }).to_string());
-    assert_eq!(ShellState::panel_state_from_view(&view).unwrap_err(), "host-panel.invalid-json");
+    assert_eq!(panel_state_from_view(&view).unwrap_err(), "host-panel.invalid-json");
     let mut duplicate = base.clone();
     duplicate.spawned_apps.push(base.spawned_apps[0].clone());
-    assert_eq!(ShellState::panel_json(&duplicate).unwrap_err(), "host-panel.duplicate-spawned-identity");
+    assert_eq!(panel_json(&duplicate).unwrap_err(), "host-panel.duplicate-spawned-identity");
     let mut missing_focus = base;
     missing_focus.active_spawned_id = Some("spawned-missing".into());
-    assert_eq!(ShellState::panel_json(&missing_focus).unwrap_err(), "host-panel.invalid-active-spawned");
+    assert_eq!(panel_json(&missing_focus).unwrap_err(), "host-panel.invalid-active-spawned");
 }
 
 #[test]
 fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_and_home_projection() {
     let mut shell = host_test_shell();
-    let before = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    let before = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect("configured leaf is host-owned");
-    let after = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
+    let after = panel_state_from_view(&shell.docs.session.as_ref().unwrap().view_state).unwrap().unwrap();
     assert_eq!(after.active_panel_tab, "s-play-inspector");
     assert_eq!(after.spawned_apps, before.spawned_apps);
     assert_eq!(after.active_spawned_id, before.active_spawned_id);
-    assert!(shell.anchor_open(PanelAnchor::TopRight), "a Details-group leaf reveals the top-right anchor");
-    assert_eq!(shell.anchor_state(PanelAnchor::TopRight).active_tab(), Some("s-play-inspector"));
+    assert!(shell.dock.anchor_open(PanelAnchor::TopRight), "a Details-group leaf reveals the top-right anchor");
+    assert_eq!(shell.dock.anchor_state(PanelAnchor::TopRight).active_tab(), Some("s-play-inspector"));
 
-    let accepted_json = shell.session.as_ref().unwrap().view_state.panel_json.clone();
+    let accepted_json = shell.docs.session.as_ref().unwrap().view_state.panel_json.clone();
     let container_error =
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
+        semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
     assert_eq!(container_error, "host-panel.tab-is-not-configured-leaf");
-    assert_eq!(shell.session.as_ref().unwrap().view_state.panel_json, accepted_json);
-    let stale_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
+    assert_eq!(shell.docs.session.as_ref().unwrap().view_state.panel_json, accepted_json);
+    let stale_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
     assert_eq!(stale_error, "host-panel.tab-is-not-configured-leaf");
-    let missing_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
+    let missing_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
     assert_eq!(missing_error, "host-panel.invalid-tab-id");
 
-    let guest_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+    let guest_error = semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
         .expect_err("unclaimed controller reaches the missing guest fixture");
     assert!(!guest_error.starts_with("host-panel."), "unclaimed route must expose the actual missing guest failure: {guest_error}");
 
@@ -193,32 +193,32 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     let mut home_view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     home_view.active_mode_id = Some(home.default_mode_id.clone());
     home_view.active_window_kind_id = Some(home.window_kinds.first().id.clone());
-    home_view.panel_json = Some(ShellState::panel_json(&home_panel).unwrap());
-    shell.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
-    shell.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) }))
+    home_view.panel_json = Some(panel_json(&home_panel).unwrap());
+    shell.directory.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
+    shell.docs.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) }))
         .expect("active host session owns its configured leaf");
-    let restored = shell.directory_home.as_ref().unwrap().active_session();
-    let restored_panel = ShellState::panel_state_from_view(&restored.view_state).unwrap().unwrap();
+    let restored = shell.directory.directory_home.as_ref().unwrap().active_session();
+    let restored_panel = panel_state_from_view(&restored.view_state).unwrap().unwrap();
     assert_eq!(restored_panel.active_panel_tab, "home-library");
     assert_eq!(restored_panel.spawned_apps, after.spawned_apps);
     assert_eq!(restored_panel.active_spawned_id, after.active_spawned_id);
-    assert!(shell.anchor_open(PanelAnchor::BottomLeft), "a Display-group leaf reveals the bottom-left anchor");
-    assert_eq!(shell.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("home-library"));
+    assert!(shell.dock.anchor_open(PanelAnchor::BottomLeft), "a Display-group leaf reveals the bottom-left anchor");
+    assert_eq!(shell.dock.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("home-library"));
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn host_panel_view_context_replaces_stale_session_identity_for_every_native_call() {
     let mut shell = host_test_shell();
-    let session = shell.session.as_mut().expect("session");
+    let session = shell.docs.session.as_mut().expect("session");
     session.view_state.session_identity = Some(ViewSessionIdentity { user_id: "stale".into(), display_name: "Stale".into() });
-    let session = shell.session.as_ref().expect("session").clone();
-    assert_eq!(shell.live_view_state(&session).session_identity, None, "an unauthenticated host must remove a persisted stale identity");
-    shell.identity = Some(Identity { user_id: "user-a".into(), email: "a@example.test".into(), display_name: "Ada".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 1 });
-    assert_eq!(shell.live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-a".into(), display_name: "Ada".into() }));
-    shell.identity = Some(Identity { user_id: "user-b".into(), email: "b@example.test".into(), display_name: "Berta".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 2 });
-    assert_eq!(shell.live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-b".into(), display_name: "Berta".into() }));
+    let session = shell.docs.session.as_ref().expect("session").clone();
+    assert_eq!(SessionCtx::of(&mut shell).live_view_state(&session).session_identity, None, "an unauthenticated host must remove a persisted stale identity");
+    shell.directory.identity = Some(Identity { user_id: "user-a".into(), email: "a@example.test".into(), display_name: "Ada".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 1 });
+    assert_eq!(SessionCtx::of(&mut shell).live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-a".into(), display_name: "Ada".into() }));
+    shell.directory.identity = Some(Identity { user_id: "user-b".into(), email: "b@example.test".into(), display_name: "Berta".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 2 });
+    assert_eq!(SessionCtx::of(&mut shell).live_view_state(&session).session_identity, Some(ViewSessionIdentity { user_id: "user-b".into(), display_name: "Berta".into() }));
 }
 
 #[test]
@@ -268,11 +268,11 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
         let anchor_id = case["anchor"].as_str().expect("anchor");
         let anchor = PanelAnchor::from_str(anchor_id).expect("known fixture anchor");
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        *shell.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf("fixture.resize", "Resize", "panel-right", 0)];
-        shell.anchor_state_mut(anchor).path = vec!["fixture.resize".into()];
-        shell.anchor_state_mut(anchor).visible = true;
+        *shell.dock.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf("fixture.resize", "Resize", "panel-right", 0)];
+        shell.dock.anchor_state_mut(anchor).path = vec!["fixture.resize".into()];
+        shell.dock.anchor_state_mut(anchor).visible = true;
         let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
-        let panel = shell.anchor_rect(anchor, body, &theme);
+        let panel = ChromeViewCtx::of(&mut shell).anchor_rect(anchor, body, &theme);
         let mut draw = DrawList::default();
         draw.set_screen_height(800.0);
         let mut atlas = FontAtlas::builtin();
@@ -280,7 +280,7 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..32).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx))), "{anchor_id} panel walk completes");
+        assert!((0..32).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx))), "{anchor_id} panel walk completes");
         input.publish_hits();
         let actual: Vec<&HitTarget<ActionDescriptor>> = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelResize).collect();
         let expected = case["handles"].as_array().expect("handles");
@@ -341,9 +341,9 @@ fn fixture_dock_shell() -> ShellState {
         .collect();
     app.panel_tabs.push(PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()), label: LocalizedLabel::data("History"), group: PanelGroup::Settings, body_key: Some("framework/history".into()), children: vec![] });
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    shell.sync_backbone_uri = Some("folder:///tmp/fixture".into());
-    shell.sync_dock_tabs();
+    shell.docs.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.sync.sync_backbone_uri = Some("folder:///tmp/fixture".into());
+    SessionCtx::of(&mut shell).sync_dock_tabs();
     shell
 }
 
@@ -355,7 +355,7 @@ fn fixture_dock_shell() -> ShellState {
 fn default_dock_matches_the_shared_react_fixture() {
     let fixture = default_dock_fixture();
     let shell = fixture_dock_shell();
-    let skeleton = dock_skeleton_of(&shell.default_dock());
+    let skeleton = dock_skeleton_of(&SessionCtx::of(&mut shell).default_dock());
     let expected: DockSkeleton = serde_json::from_value(fixture["expected"].clone()).expect("fixture skeleton");
     assert_eq!(skeleton.version, 3);
     for anchor in PanelAnchor::ALL {
@@ -372,7 +372,7 @@ fn default_dock_matches_the_shared_react_fixture() {
 #[test]
 fn default_dock_puts_the_command_branch_on_bottom_middle() {
     let shell = fixture_dock_shell();
-    let dock = shell.default_dock();
+    let dock = SessionCtx::of(&mut shell).default_dock();
     let branch = dock.tabs(PanelAnchor::BottomMiddle).first().expect("bottom-middle carries the Command branch");
     assert_eq!(branch.id, FRAMEWORK_CATEGORY_COMMAND_ID);
     assert!(branch.is_branch(), "the Command branch nests its category leaves");
@@ -430,13 +430,13 @@ fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
     let theme = Theme::default();
     let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor(PanelAnchor::TopLeft);
-    let alone = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock.toggle_anchor(PanelAnchor::TopLeft);
+    let alone = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert_eq!(alone.h, body.h + (theme.navbar_height + theme.control_height) * 0.5 - theme.control_height);
-    shell.toggle_anchor(PanelAnchor::BottomLeft);
-    let shared = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock.toggle_anchor(PanelAnchor::BottomLeft);
+    let shared = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert!(shared.h < alone.h * 0.6, "🧭️ opening the column's other anchor must shrink this one's band");
-    assert_eq!(shell.open_anchors(), vec![PanelAnchor::TopLeft, PanelAnchor::BottomLeft]);
+    assert_eq!(shell.dock.open_anchors(), vec![PanelAnchor::TopLeft, PanelAnchor::BottomLeft]);
 }
 
 /// 🧭️ React's `chromeHostedOpenPanelPositionStyle`: an OPEN top anchor is pulled
@@ -451,8 +451,8 @@ fn an_open_top_panel_is_pulled_into_the_navbar_band_like_reacts_chrome_hosted_st
     let overhang = (theme.navbar_height + theme.control_height) * 0.5;
     let body = Rect::new(0.0, theme.navbar_height, 1600.0, 1000.0 - theme.navbar_height - theme.footer_height);
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor(PanelAnchor::TopLeft);
-    let rect = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock.toggle_anchor(PanelAnchor::TopLeft);
+    let rect = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert!((rect.y - (body.y - overhang + theme.control_height)).abs() < 0.01, "🧭️ a top child panel starts after its chrome-owned root row: {rect:?}");
     assert!(rect.y < theme.navbar_height, "🧭️ …which is inside the navbar band React parks the folded toggle in");
     assert!((rect.h - (body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ and its band omits the chrome-owned root-row height");
@@ -467,12 +467,12 @@ fn a_bottom_anchor_overhangs_into_the_footer_and_a_middle_anchor_keeps_the_body(
     let overhang = (theme.navbar_height + theme.control_height) * 0.5;
     let body = Rect::new(0.0, theme.navbar_height, 1600.0, 1000.0 - theme.navbar_height - theme.footer_height);
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor(PanelAnchor::BottomLeft);
-    let bottom = shell.anchor_rect(PanelAnchor::BottomLeft, body, &theme);
+    shell.dock.toggle_anchor(PanelAnchor::BottomLeft);
+    let bottom = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::BottomLeft, body, &theme);
     assert!((bottom.y + bottom.h - (body.y + body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ a bottom child panel ends at its footer-owned root row: {bottom:?}");
     let mut middle_shell = fixture_dock_shell();
-    middle_shell.toggle_anchor(PanelAnchor::LeftMiddle);
-    let middle = middle_shell.anchor_rect(PanelAnchor::LeftMiddle, body, &theme);
+    middle_shell.dock.toggle_anchor(PanelAnchor::LeftMiddle);
+    let middle = ChromeViewCtx::of(&mut middle_shell).anchor_rect(PanelAnchor::LeftMiddle, body, &theme);
     assert!((middle.y + middle.h * 0.5 - (body.y + body.h * 0.5)).abs() < 0.01, "🧭️ a middle anchor centres on the body itself: {middle:?}");
 }
 
@@ -485,10 +485,10 @@ fn the_panel_band_no_longer_moves_with_the_dock_window_plan() {
     let theme = Theme::default();
     let body = Rect::new(0.0, theme.navbar_height, 1600.0, 900.0);
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor(PanelAnchor::TopLeft);
-    let empty_plan = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
-    shell.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(3.0, body.y + 32.0, 530.0, 800.0))];
-    let planned = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock.toggle_anchor(PanelAnchor::TopLeft);
+    let empty_plan = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(3.0, body.y + 32.0, 530.0, 800.0))];
+    let planned = ChromeViewCtx::of(&mut shell).anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert_eq!(empty_plan.y, planned.y, "🧭️ the dock's tab bar no longer pushes the panel down");
     assert_eq!(empty_plan.h, planned.h);
 }
@@ -498,12 +498,12 @@ fn the_panel_band_no_longer_moves_with_the_dock_window_plan() {
 #[test]
 fn panel_anchor_snapshot_reports_the_open_anchor_and_its_active_leaf() {
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
-    let top_left = shell.panel_anchor_snapshot(PanelAnchor::TopLeft);
+    shell.dock.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
+    let top_left = shell.dock.panel_anchor_snapshot(PanelAnchor::TopLeft);
     assert!(top_left.visible);
     assert_eq!(top_left.size, DEFAULT_PANEL_WIDTH_PX);
     assert_eq!(top_left.active_tab.as_deref(), Some("fixture.workbench"));
-    assert_eq!(shell.panel_anchor_snapshot(PanelAnchor::BottomLeft), PanelAnchorSnapshot::default(), "a folded anchor reports nothing");
+    assert_eq!(shell.dock.panel_anchor_snapshot(PanelAnchor::BottomLeft), PanelAnchorSnapshot::default(), "a folded anchor reports nothing");
 }
 
 /// 🪟️ **The surface-census law.** What `dumpChrome` publishes beside the hit registry: this frame's
@@ -514,14 +514,14 @@ fn panel_anchor_snapshot_reports_the_open_anchor_and_its_active_leaf() {
 #[test]
 fn the_chrome_surface_census_separates_panes_from_docked_panels() {
     let mut shell = fixture_dock_shell();
-    shell.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(0.0, 54.0, 600.0, 900.0)), ("puzzle3d-main-perspective".to_string(), Rect::new(600.0, 54.0, 600.0, 900.0))];
+    shell.dock.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(0.0, 54.0, 600.0, 900.0)), ("puzzle3d-main-perspective".to_string(), Rect::new(600.0, 54.0, 600.0, 900.0))];
     assert_eq!(
-        shell.chrome_surface_census(),
+        shell.input.chrome_surface_census(&shell.chrome, &shell.dock),
         vec![("puzzle3d-main-top".to_string(), "window", "puzzle3d-main-top".to_string()), ("puzzle3d-main-perspective".to_string(), "window", "puzzle3d-main-perspective".to_string())],
         "🪟️ a shell with no open anchor publishes its panes and nothing else"
     );
-    shell.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
-    let census = shell.chrome_surface_census();
+    shell.dock.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
+    let census = shell.input.chrome_surface_census(&shell.chrome, &shell.dock);
     assert_eq!(
         census.iter().filter(|(_, level, _)| *level == "panel").map(|(id, _, element)| (id.as_str(), element.as_str())).collect::<Vec<_>>(),
         vec![("fixture.workbench", "framework.panelTab.fixture.workbench")],
@@ -536,25 +536,25 @@ fn the_chrome_surface_census_separates_panes_from_docked_panels() {
 fn all_eight_anchors_open_independently() {
     let mut shell = fixture_dock_shell();
     for anchor in PanelAnchor::ALL {
-        *shell.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf(format!("leaf.{}", anchor.as_str()), "Leaf", "circle-dot", 0)];
+        *shell.dock.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf(format!("leaf.{}", anchor.as_str()), "Leaf", "circle-dot", 0)];
     }
     for anchor in PanelAnchor::ALL {
-        shell.toggle_anchor(anchor);
+        shell.dock.toggle_anchor(anchor);
     }
-    assert_eq!(shell.open_anchors().len(), 8);
-    shell.toggle_anchor(PanelAnchor::TopLeft);
-    assert!(!shell.anchor_open(PanelAnchor::TopLeft));
-    assert_eq!(shell.open_anchors().len(), 7, "folding one anchor leaves the other seven alone");
+    assert_eq!(shell.dock.open_anchors().len(), 8);
+    shell.dock.toggle_anchor(PanelAnchor::TopLeft);
+    assert!(!shell.dock.anchor_open(PanelAnchor::TopLeft));
+    assert_eq!(shell.dock.open_anchors().len(), 7, "folding one anchor leaves the other seven alone");
 }
 
 /// 🧭️ An anchor carrying no tab never opens — no empty glass box over the canvas.
 #[test]
 fn an_empty_anchor_never_opens() {
     let mut shell = fixture_dock_shell();
-    assert!(shell.dock_tabs.tabs(PanelAnchor::LeftMiddle).is_empty());
-    shell.anchor_state_mut(PanelAnchor::LeftMiddle).visible = true;
-    assert!(!shell.anchor_open(PanelAnchor::LeftMiddle));
-    assert!(!shell.open_anchors().contains(&PanelAnchor::LeftMiddle));
+    assert!(shell.dock.dock_tabs.tabs(PanelAnchor::LeftMiddle).is_empty());
+    shell.dock.anchor_state_mut(PanelAnchor::LeftMiddle).visible = true;
+    assert!(!shell.dock.anchor_open(PanelAnchor::LeftMiddle));
+    assert!(!shell.dock.open_anchors().contains(&PanelAnchor::LeftMiddle));
 }
 
 /// 🧭️ `left_panel_open`/`right_panel_open` survive only as COLUMN projections of their two corner
@@ -562,14 +562,14 @@ fn an_empty_anchor_never_opens() {
 #[test]
 fn column_projections_follow_their_corner_anchors() {
     let mut shell = fixture_dock_shell();
-    assert!(!shell.left_panel_open() && !shell.right_panel_open());
-    shell.toggle_anchor(PanelAnchor::BottomLeft);
-    assert!(shell.left_panel_open(), "the left column is open while EITHER of its corners is");
-    assert!(!shell.right_panel_open());
-    shell.toggle_column(true);
-    assert!(!shell.left_panel_open(), "the column chord folds every anchor in that column");
-    shell.toggle_column(true);
-    assert!(shell.anchor_open(PanelAnchor::TopLeft), "reopening a folded column reopens its top corner");
+    assert!(!shell.dock.left_panel_open() && !shell.dock.right_panel_open());
+    shell.dock.toggle_anchor(PanelAnchor::BottomLeft);
+    assert!(shell.dock.left_panel_open(), "the left column is open while EITHER of its corners is");
+    assert!(!shell.dock.right_panel_open());
+    shell.dock.toggle_column(true);
+    assert!(!shell.dock.left_panel_open(), "the column chord folds every anchor in that column");
+    shell.dock.toggle_column(true);
+    assert!(shell.dock.anchor_open(PanelAnchor::TopLeft), "reopening a folded column reopens its top corner");
 }
 
 #[test]
@@ -588,7 +588,7 @@ fn reconcile_path_drills_a_branch_to_its_first_leaf_and_drops_vanished_tabs() {
 #[test]
 fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
     let shell = fixture_dock_shell();
-    let default_dock = shell.default_dock();
+    let default_dock = SessionCtx::of(&mut shell).default_dock();
     let mut skeleton = dock_skeleton_of(&default_dock);
     skeleton.anchors.insert("top-left".to_string(), Vec::new());
     skeleton.anchors.insert("left-middle".to_string(), vec![DockTabSkeleton { id: "fixture.workbench".into(), children: None, trees: Some(vec![dock_leaf_tree_unit_id("fixture.workbench")]) }]);
@@ -603,7 +603,7 @@ fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
 #[test]
 fn apply_dock_skeleton_is_identity_for_none_and_drops_unknown_ids() {
     let shell = fixture_dock_shell();
-    let default_dock = shell.default_dock();
+    let default_dock = SessionCtx::of(&mut shell).default_dock();
     assert_eq!(apply_dock_skeleton(&default_dock, None), default_dock);
     let mut stale = DockSkeleton::default();
     stale.anchors.insert("top-middle".to_string(), vec![DockTabSkeleton { id: "tab.that.no.longer.exists".into(), children: None, trees: None }]);
@@ -617,7 +617,7 @@ fn apply_dock_skeleton_is_identity_for_none_and_drops_unknown_ids() {
 #[test]
 fn move_tab_in_dock_reanchors_a_tab_and_refuses_self_drops() {
     let shell = fixture_dock_shell();
-    let mut dock = shell.default_dock();
+    let mut dock = SessionCtx::of(&mut shell).default_dock();
     let target = DockTabMoveTarget { anchor: PanelAnchor::RightMiddle, parent_path: Vec::new(), index: 0 };
     assert!(move_tab_in_dock(&mut dock, "fixture.workbench", &target));
     assert_eq!(dock.locate("fixture.workbench").map(|(anchor, _)| anchor), Some(PanelAnchor::RightMiddle));
@@ -643,8 +643,8 @@ fn move_tab_in_dock_reanchors_a_tab_and_refuses_self_drops() {
 fn dock_override_round_trips_through_the_os_shell_config_document() {
     let mut shell = fixture_dock_shell();
     let target = DockTabMoveTarget { anchor: PanelAnchor::TopMiddle, parent_path: Vec::new(), index: 0 };
-    assert!(shell.move_dock_tab("fixture.details", &target));
-    let moved = shell.dock_override.clone().expect("a rearranged dock stops matching its default");
+    assert!(SessionCtx::of(&mut shell).move_dock_tab("fixture.details", &target));
+    let moved = shell.dock.dock_override.clone().expect("a rearranged dock stops matching its default");
 
     let mut config = serde_json::json!({ "version": 1, "preferences": {} });
     write_os_shell_config_layer_in(&mut config, "dockLayouts", Some("fixture-app"), Some(&moved));
@@ -653,11 +653,11 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
 
     let loaded: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("the per-app layer reads back");
     assert!(dock_skeletons_equal(Some(&loaded), Some(&moved)));
-    let reloaded = apply_dock_skeleton(&shell.default_dock(), Some(&loaded));
+    let reloaded = apply_dock_skeleton(&SessionCtx::of(&mut shell).default_dock(), Some(&loaded));
     assert_eq!(reloaded.locate("fixture.details").map(|(anchor, _)| anchor), Some(PanelAnchor::TopMiddle));
-    assert_eq!(dock_skeleton_of(&reloaded), dock_skeleton_of(&shell.dock_tabs));
+    assert_eq!(dock_skeleton_of(&reloaded), dock_skeleton_of(&shell.dock.dock_tabs));
 
-    let default_skeleton = dock_skeleton_of(&shell.default_dock());
+    let default_skeleton = dock_skeleton_of(&SessionCtx::of(&mut shell).default_dock());
     write_os_shell_config_layer_in(&mut config, "dockLayouts", None, Some(&default_skeleton));
     let still_app: DockSkeleton = read_os_shell_config_layer(&config, "dockLayouts", Some("fixture-app")).expect("per-app layer still wins");
     assert!(dock_skeletons_equal(Some(&still_app), Some(&moved)));
@@ -668,8 +668,8 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
     assert!(read_os_shell_config_layer::<DockSkeleton>(&config, "dockLayouts", Some("fixture-app")).is_none());
 
     let back = DockTabMoveTarget { anchor: PanelAnchor::TopRight, parent_path: Vec::new(), index: 0 };
-    assert!(shell.move_dock_tab("fixture.details", &back));
-    assert!(shell.dock_override.is_none(), "a dock back at its computed default persists no override");
+    assert!(SessionCtx::of(&mut shell).move_dock_tab("fixture.details", &back));
+    assert!(shell.dock.dock_override.is_none(), "a dock back at its computed default persists no override");
 }
 
 /// 🗄️ The per-anchor chrome round trip: visibility, size and active path survive a reload, and an
@@ -677,9 +677,9 @@ fn dock_override_round_trips_through_the_os_shell_config_document() {
 #[test]
 fn dock_ui_state_round_trips_visibility_size_and_path() {
     let mut shell = fixture_dock_shell();
-    shell.toggle_anchor_tab(PanelAnchor::BottomRight, "fixture.settings");
-    shell.anchor_state_mut(PanelAnchor::BottomRight).size = 412.0;
-    let snapshot = shell.dock_ui_snapshot();
+    shell.dock.toggle_anchor_tab(PanelAnchor::BottomRight, "fixture.settings");
+    shell.dock.anchor_state_mut(PanelAnchor::BottomRight).size = 412.0;
+    let snapshot = shell.dock.dock_ui_snapshot();
     assert_eq!(snapshot.version, 3);
     assert_eq!(snapshot.anchors.get("bottom-right").and_then(|entry| entry.size), Some(412.0));
     assert!(snapshot.anchors.get("top-left").is_none(), "a default anchor stores nothing");
@@ -690,11 +690,11 @@ fn dock_ui_state_round_trips_visibility_size_and_path() {
     assert_eq!(loaded, snapshot);
 
     let mut target = fixture_dock_shell();
-    target.apply_dock_ui(&loaded);
-    assert!(target.anchor_open(PanelAnchor::BottomRight));
-    assert_eq!(target.anchor_state(PanelAnchor::BottomRight).size, 412.0);
-    assert_eq!(target.anchor_state(PanelAnchor::BottomRight).active_tab(), Some("fixture.settings"));
-    assert!(!target.anchor_open(PanelAnchor::TopLeft));
+    target.dock.apply_dock_ui(&loaded);
+    assert!(target.dock.anchor_open(PanelAnchor::BottomRight));
+    assert_eq!(target.dock.anchor_state(PanelAnchor::BottomRight).size, 412.0);
+    assert_eq!(target.dock.anchor_state(PanelAnchor::BottomRight).active_tab(), Some("fixture.settings"));
+    assert!(!target.dock.anchor_open(PanelAnchor::TopLeft));
 }
 
 /// 🗄️ `persist_dock_ui_if_changed`'s dirty-check: the first call after a real change persists, and a
@@ -707,16 +707,16 @@ fn dock_ui_state_round_trips_visibility_size_and_path() {
 #[test]
 fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
     let mut shell = fixture_dock_shell();
-    shell.chrome_present.last_persisted_dock_ui = Some(shell.dock_ui_snapshot());
-    shell.toggle_anchor(PanelAnchor::TopLeft);
-    shell.persist_dock_ui_if_changed();
-    let persisted = shell.chrome_present.last_persisted_dock_ui.clone().expect("first call must persist");
+    shell.chrome.chrome_present.last_persisted_dock_ui = Some(shell.dock.dock_ui_snapshot());
+    shell.dock.toggle_anchor(PanelAnchor::TopLeft);
+    shell.dock.persist_dock_ui_if_changed(&mut shell.chrome, &shell.docs);
+    let persisted = shell.chrome.chrome_present.last_persisted_dock_ui.clone().expect("first call must persist");
     assert!(persisted.anchors.get("top-left").and_then(|entry| entry.visible).unwrap_or(false));
 
-    shell.chrome_present.last_persisted_dock_ui = Some(persisted.clone());
-    shell.persist_dock_ui_if_changed();
-    assert_eq!(shell.chrome_present.last_persisted_dock_ui.as_ref(), Some(&persisted), "unchanged state must not re-persist");
-    assert_eq!(shell.chrome_present.last_persisted_dock_skeleton, Some(shell.dock_override.clone()));
+    shell.chrome.chrome_present.last_persisted_dock_ui = Some(persisted.clone());
+    shell.dock.persist_dock_ui_if_changed(&mut shell.chrome, &shell.docs);
+    assert_eq!(shell.chrome.chrome_present.last_persisted_dock_ui.as_ref(), Some(&persisted), "unchanged state must not re-persist");
+    assert_eq!(shell.chrome.chrome_present.last_persisted_dock_skeleton, Some(shell.dock.dock_override.clone()));
 }
 //#endregion 🗄️DockOverrideRoundTrip
 
@@ -727,16 +727,16 @@ fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
 #[test]
 fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
     let mut state = fresh_state();
-    state.chrome_build.preferences.theme_id = "semio".to_string();
-    let builtin = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.build_settings_theme_ui()).expect("built-in theme editor projection");
+    state.chrome.chrome_build.preferences.theme_id = "semio".to_string();
+    let builtin = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.input.build_settings_theme_ui(&state.chrome, &state.prefs)).expect("built-in theme editor projection");
     assert!(builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.select")), "the canonical tree publishes the theme picker");
     assert!(builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")), "the canonical tree publishes Reset");
     assert!(!builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.delete")), "a built-in theme publishes no Delete control");
     drop(builtin);
     while !ui_contract::close_ui_value_page_one() {}
 
-    state.chrome_build.preferences.theme_id = "custom.wp-audit-test".to_string();
-    let custom = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.build_settings_theme_ui()).expect("custom theme editor projection");
+    state.chrome.chrome_build.preferences.theme_id = "custom.wp-audit-test".to_string();
+    let custom = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.input.build_settings_theme_ui(&state.chrome, &state.prefs)).expect("custom theme editor projection");
     assert!(custom.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")), "a custom theme retains Reset");
     assert!(custom.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.delete")), "a custom theme publishes Delete");
     drop(custom);
@@ -753,7 +753,7 @@ fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
 fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
     let fixture = default_dock_fixture();
     let shell = fixture_dock_shell();
-    let dock = shell.default_dock();
+    let dock = SessionCtx::of(&mut shell).default_dock();
     let roots: Vec<&str> = dock.tabs(PanelAnchor::BottomRight).iter().map(|tab| tab.id.as_str()).collect();
     assert_eq!(roots, vec![FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_MARKETPLACE_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID], "⚙️ bottom-right carries Settings, Marketplace, Task Manager, then History");
     let branch = dock.tabs(PanelAnchor::BottomRight).first().expect("the Settings branch");
@@ -773,24 +773,24 @@ fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
 #[test]
 fn every_shell_owned_leaf_projects_into_retained_records() {
     let shell = fixture_dock_shell();
-    let dock = shell.default_dock();
-    for tab_id in shell.shell_owned_panel_leaves() {
+    let dock = SessionCtx::of(&mut shell).default_dock();
+    for tab_id in shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs) {
         if tab_id == crate::hub_connection::FRAMEWORK_HUB_PANEL_ID {
             assert!(dock.locate(&tab_id).is_none(), "🧾️ Hub is the route-owned overlay React opens from its footer/command, never a dock substitute");
         } else {
             assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
         }
         let node = match tab_id.as_str() {
-            FRAMEWORK_SETTINGS_GENERAL_TAB_ID => shell.build_settings_general_ui(),
-            FRAMEWORK_SETTINGS_THEME_TAB_ID => shell.build_settings_theme_ui(),
-            FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID => shell.build_settings_keybindings_ui(),
-            FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID => shell.build_settings_default_apps_ui(),
-            FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => shell.build_settings_conflicts_ui(),
-            FRAMEWORK_MARKETPLACE_TAB_ID => shell.build_marketplace_ui(),
-            FRAMEWORK_SYNC_PANEL_TAB_ID => shell.build_sync_attach_ui(),
-            FRAMEWORK_TASK_MANAGER_PANEL_ID => shell.build_task_manager_ui(),
-            FRAMEWORK_CHAT_PANEL_ID => shell.build_agent_chat_ui(),
-            other => shell.build_command_category_ui(other.trim_start_matches(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX)),
+            FRAMEWORK_SETTINGS_GENERAL_TAB_ID => shell.docs.build_settings_general_ui(&shell.chrome, &shell.prefs),
+            FRAMEWORK_SETTINGS_THEME_TAB_ID => shell.input.build_settings_theme_ui(&shell.chrome, &shell.prefs),
+            FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID => shell.input.build_settings_keybindings_ui(&shell.chrome, &shell.prefs),
+            FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID => shell.prefs.build_settings_default_apps_ui(&shell.plugins),
+            FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => shell.prefs.build_settings_conflicts_ui(),
+            FRAMEWORK_MARKETPLACE_TAB_ID => SessionCtx::of(&mut shell).build_marketplace_ui(),
+            FRAMEWORK_SYNC_PANEL_TAB_ID => shell.sync.build_sync_attach_ui(&shell.prefs),
+            FRAMEWORK_TASK_MANAGER_PANEL_ID => shell.opening.build_task_manager_ui(&shell.prefs),
+            FRAMEWORK_CHAT_PANEL_ID => shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs),
+            other => SessionCtx::of(&mut shell).build_command_category_ui(other.trim_start_matches(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX)),
         };
         let records = panel_ui_records(&tab_id, &node).unwrap_or_else(|error| panic!("🧾️ {tab_id} must project: {error}"));
         assert!(!records.is_empty(), "🧾️ {tab_id} projected an empty document");
@@ -859,14 +859,14 @@ fn keybinding_rows_flag_the_earlier_owner_of_a_shared_chord() {
 #[test]
 fn an_armed_capture_writes_the_next_chord_as_an_override() {
     let mut shell = fresh_state();
-    shell.keybinding_capture_control_id = Some("ui.nav.up".into());
+    shell.input.keybinding_capture_control_id = Some("ui.nav.up".into());
     let modifiers = PointerModifiers { ctrl: true, alt: true, shift: true, ..PointerModifiers::default() };
-    assert!(shell.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::ArrowUp, &modifiers), "⌨️ the capture consumes the event");
-    assert_eq!(shell.chrome_build.preferences.keybinding_overrides.get("ui.nav.up").map(String::as_str), Some("ctrl+alt+shift+arrowup"));
-    assert_eq!(shell.keybinding_capture_control_id, None, "⌨️ one gesture, one write, then disarmed");
-    shell.keybinding_capture_control_id = Some("ui.nav.back".into());
-    assert!(shell.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::Escape, &modifiers), "⌨️ Escape cancels and still consumes");
-    assert!(!shell.chrome_build.preferences.keybinding_overrides.contains_key("ui.nav.back"), "⌨️ a cancelled capture writes nothing");
+    assert!(shell.input.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::ArrowUp, &modifiers, &mut shell.chrome), "⌨️ the capture consumes the event");
+    assert_eq!(shell.chrome.chrome_build.preferences.keybinding_overrides.get("ui.nav.up").map(String::as_str), Some("ctrl+alt+shift+arrowup"));
+    assert_eq!(shell.input.keybinding_capture_control_id, None, "⌨️ one gesture, one write, then disarmed");
+    shell.input.keybinding_capture_control_id = Some("ui.nav.back".into());
+    assert!(shell.input.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut shell.chrome), "⌨️ Escape cancels and still consumes");
+    assert!(!shell.chrome.chrome_build.preferences.keybinding_overrides.contains_key("ui.nav.back"), "⌨️ a cancelled capture writes nothing");
 }
 
 /// ⌨️ Every shortcut row the Keybindings leaf paints is addressable and every chord it prints is the
@@ -874,8 +874,8 @@ fn an_armed_capture_writes_the_next_chord_as_an_override() {
 #[test]
 fn the_keybindings_leaf_paints_one_row_per_shortcut() {
     let mut shell = fresh_state();
-    shell.chrome_build.preferences.keybinding_overrides.insert("ui.search.toggle".into(), "ctrl+j".into());
-    let UiNode::Stack(panel) = shell.build_settings_keybindings_ui() else { panic!("expected a stack root") };
+    shell.chrome.chrome_build.preferences.keybinding_overrides.insert("ui.search.toggle".into(), "ctrl+j".into());
+    let UiNode::Stack(panel) = shell.input.build_settings_keybindings_ui(&shell.chrome, &shell.prefs) else { panic!("expected a stack root") };
     let UiNode::Section(section) = panel.children.first().expect("the keybindings section") else { panic!("expected a section") };
     assert_eq!(section.children.len(), SHELL_SHORTCUT_ROWS.len(), "⌨️ one row per declared shortcut");
     let ids: Vec<String> = section.children.iter().filter_map(|node| if let UiNode::Stack(row) = node { row.id.clone() } else { None }).collect();
@@ -927,11 +927,11 @@ fn two_hugging_anchors_in_one_column_never_overlap() {
 fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
     let fixture = default_dock_fixture();
     let mut shell = fixture_dock_shell();
-    shell.screen_w = 1280.0;
-    assert!(!shell.mobile_panel_active(), "📱️ a desktop viewport keeps the eight anchors");
-    shell.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
-    assert!(shell.mobile_panel_active(), "📱️ the breakpoint itself is mobile (React's `max-width: 767px` is inclusive)");
-    let ids: Vec<String> = shell.mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
+    shell.chrome.screen_w = 1280.0;
+    assert!(!shell.chrome.mobile_panel_active(), "📱️ a desktop viewport keeps the eight anchors");
+    shell.chrome.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    assert!(shell.chrome.mobile_panel_active(), "📱️ the breakpoint itself is mobile (React's `max-width: 767px` is inclusive)");
+    let ids: Vec<String> = SessionCtx::of(&mut shell).mobile_panel_tabs().into_iter().map(|tab| tab.id).collect();
     let expected: Vec<String> = fixture["mobilePanelTabs"]["ids"].as_array().expect("fixture mobile ids").iter().map(|id| id.as_str().expect("id").to_string()).collect();
     assert_eq!(ids, expected, "📱️ the flattened order is the fixture's");
 }
@@ -941,7 +941,7 @@ fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
 #[test]
 fn the_mobile_panel_path_drills_a_branch_to_its_first_leaf() {
     let shell = fixture_dock_shell();
-    let tabs = shell.mobile_panel_tabs();
+    let tabs = SessionCtx::of(&mut shell).mobile_panel_tabs();
     let path = mobile_panel_reconcile_path(&tabs, &[FRAMEWORK_SETTINGS_PANEL_ID.to_string()]);
     assert_eq!(path.first().map(String::as_str), Some(FRAMEWORK_SETTINGS_PANEL_ID));
     assert_eq!(path.last().map(String::as_str), Some("fixture.settings"), "📱️ drilled to the branch's first leaf");
@@ -957,11 +957,11 @@ fn the_mobile_panel_path_drills_a_branch_to_its_first_leaf() {
 #[test]
 fn the_command_dock_opens_the_expanded_commands_staged_form() {
     let mut shell = fresh_state();
-    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("an arg-carrying os command");
+    let entry = shell.docs.resolved_commands(&shell.chrome, &shell.plugins).into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("an arg-carrying os command");
     let key = command_address_stable_key(&entry.address);
     let category = entry.definition.category.clone();
-    shell.expanded_command_id = Some(key.clone());
-    let UiNode::Tree(panel) = shell.build_command_category_ui(&category) else { panic!("expected a Tree root") };
+    shell.commands.expanded_command_id = Some(key.clone());
+    let UiNode::Tree(panel) = SessionCtx::of(&mut shell).build_command_category_ui(&category) else { panic!("expected a Tree root") };
     let form = panel.sections.first().expect("the expanded form is the FIRST section, so a bottom anchor paints it above the list");
     assert_eq!(form.id, format!("command.category.{category}.form"));
     assert_eq!(form.default_open, None, "React TreeDataSection defaults closed");
@@ -989,7 +989,7 @@ fn the_command_dock_opens_the_expanded_commands_staged_form() {
 #[test]
 fn execute_is_disabled_until_every_required_argument_is_staged() {
     let mut shell = fresh_state();
-    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && ShellState::resolved_execute_args(&entry.definition.args, &serde_json::Map::new()).is_none()).and_then(|entry| {
+    let entry = shell.docs.resolved_commands(&shell.chrome, &shell.plugins).into_iter().find(|entry| entry.definition.in_palette && resolved_execute_args(&entry.definition.args, &serde_json::Map::new()).is_none()).and_then(|entry| {
         let arg = entry.definition.args.iter().find(|arg| arg.required && arg.default.is_none())?;
         let value = match arg.control() {
             semio_framework::ActionArgControl::Select { options } => serde_json::Value::String(options.first()?.value.clone()),
@@ -1003,9 +1003,9 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
     let Some((key, category, arg_id, value)) = entry else {
         return;
     };
-    shell.expanded_command_id = Some(key.clone());
+    shell.commands.expanded_command_id = Some(key.clone());
     let disabled = |shell: &ShellState| {
-        let UiNode::Tree(panel) = shell.build_command_category_ui(&category) else { panic!("Tree root") };
+        let UiNode::Tree(panel) = SessionCtx::of(&mut shell).build_command_category_ui(&category) else { panic!("Tree root") };
         let form = panel.sections.first().expect("form section");
         form.header_toolbar
             .as_ref()
@@ -1015,7 +1015,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
             .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)))
     };
     assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
-    shell.staged_command_args.entry(key).or_default().insert(arg_id, value);
+    shell.commands.staged_command_args.entry(key).or_default().insert(arg_id, value);
     assert!(!disabled(&shell), "🎛️ staging it enables Execute");
 }
 //#endregion 🎛️StagedCommandForm
@@ -1026,7 +1026,7 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
 fn welcomed_shell() -> ShellState {
     let mut shell = fresh_state();
     let welcome = crate::agent_bridge::GatewayToShell::Welcome { bridge_version: crate::agent_bridge::BRIDGE_VERSION, connection: "connection-1".into(), principal: "agent:local".into() };
-    shell.apply_agent_bridge_frame(&welcome.encode()).expect("a Welcome frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&welcome.encode()).expect("a Welcome frame decodes");
     shell
 }
 
@@ -1070,11 +1070,11 @@ fn chat_button_action(root: &UiNode, id: &str) -> Option<ActionDescriptor> {
 #[test]
 fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     let mut shell = welcomed_shell();
-    assert!(chat_entry_ids(&shell.build_agent_chat_ui()).is_empty(), "💬️ no bridge activity, no rows");
+    assert!(chat_entry_ids(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs)).is_empty(), "💬️ no bridge activity, no rows");
 
     let call = crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), arguments: "{\"artifactId\":\"doc-1\"}".into() };
-    shell.apply_agent_bridge_frame(&call.encode()).expect("an AgentToolCall frame decodes");
-    let running = shell.build_agent_chat_ui();
+    shell.chrome.apply_agent_bridge_frame(&call.encode()).expect("an AgentToolCall frame decodes");
+    let running = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&running), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ the tool call is one addressable row");
     let mut lines = Vec::new();
     chat_panel_lines(&running, &mut lines);
@@ -1085,8 +1085,8 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     assert!(panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &running).is_ok(), "💬️ the conversation projects as publishable panel records");
 
     let result = crate::agent_bridge::GatewayToShell::AgentToolResult { invocation_id: "inv_7".into(), tool_name: "artifact_open".into(), ok: true, summary: "opened doc-1".into() };
-    shell.apply_agent_bridge_frame(&result.encode()).expect("an AgentToolResult frame decodes");
-    let settled = shell.build_agent_chat_ui();
+    shell.chrome.apply_agent_bridge_frame(&result.encode()).expect("an AgentToolResult frame decodes");
+    let settled = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert_eq!(chat_entry_ids(&settled), vec!["framework.chat.entry.toolCall.inv_7".to_string()], "💬️ one row per invocation, never two");
     let mut settled_lines = Vec::new();
     chat_panel_lines(&settled, &mut settled_lines);
@@ -1103,22 +1103,22 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
     let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");
     let mut shell = welcomed_shell();
-    shell.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    shell.chrome.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
     let control_id = format!("framework.chat.cancel.{invocation_id}");
-    let action = chat_button_action(&shell.build_agent_chat_ui(), &control_id).expect("a running call publishes its cancel control");
+    let action = chat_button_action(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs), &control_id).expect("a running call publishes its cancel control");
     assert_eq!(action.action, "cancelToolCall");
     assert_eq!(action.args.as_ref().and_then(|args| args.get("invocationId")).and_then(DslValue::as_str), Some(invocation_id));
-    semio_framework_async::block_on(shell.dispatch_action(action)).expect("framework owns cancellation");
-    let frames = shell.take_agent_bridge_outbox();
+    semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(action)).expect("framework owns cancellation");
+    let frames = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(frames.len(), 1);
     assert_eq!(crate::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), crate::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
-    let cancelling = shell.build_agent_chat_ui();
+    let cancelling = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert!(chat_button_action(&cancelling, &control_id).is_none(), "a cancelling row cannot send a duplicate control action");
     let mut cancelling_lines = Vec::new();
     chat_panel_lines(&cancelling, &mut cancelling_lines);
     assert!(cancelling_lines.contains(&"Cancelling…".to_string()), "optimistic state is visible: {cancelling_lines:?}");
 
-    shell
+    shell.chrome
         .apply_agent_bridge_frame(
             &crate::agent_bridge::GatewayToShell::AgentToolResult {
                 invocation_id: invocation_id.into(),
@@ -1129,19 +1129,19 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
             .encode(),
         )
         .expect("terminal result frame");
-    let settled = shell.build_agent_chat_ui();
+    let settled = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert!(chat_button_action(&settled, &control_id).is_none());
     let mut settled_lines = Vec::new();
     chat_panel_lines(&settled, &mut settled_lines);
     assert!(settled_lines.contains(&"Failed".to_string()) && settled_lines.iter().any(|line| line.contains("cancelled by user")), "the gateway result settles the row: {settled_lines:?}");
 
     let mut offline = welcomed_shell();
-    offline.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
-    offline.chrome_build.agent.note_socket_closed();
-    let offline_action = chat_button_action(&offline.build_agent_chat_ui(), &control_id).expect("React leaves a running row's control mounted while its sender can refuse");
-    semio_framework_async::block_on(offline.dispatch_action(offline_action)).expect("framework owns cancellation");
-    assert!(offline.take_agent_bridge_outbox().is_empty(), "a disconnected cancel changes and sends nothing");
-    assert!(matches!(&offline.chrome_build.agent.conversation[0], crate::agent_bridge::AgentConversationEntry::ToolCall { state: crate::agent_bridge::AgentToolCallState::Running, .. }));
+    offline.chrome.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    offline.chrome.chrome_build.agent.note_socket_closed();
+    let offline_action = chat_button_action(&offline.directory.build_agent_chat_ui(&offline.chrome, &offline.prefs), &control_id).expect("React leaves a running row's control mounted while its sender can refuse");
+    semio_framework_async::block_on(ActionsCtx::of(&mut offline).dispatch_action(offline_action)).expect("framework owns cancellation");
+    assert!(offline.chrome.take_agent_bridge_outbox().is_empty(), "a disconnected cancel changes and sends nothing");
+    assert!(matches!(&offline.chrome.chrome_build.agent.conversation[0], crate::agent_bridge::AgentConversationEntry::ToolCall { state: crate::agent_bridge::AgentToolCallState::Running, .. }));
 }
 
 /// 💬️ The composer: a turn typed here leaves as a real `ShellToGateway::AgentMessage` and is echoed
@@ -1150,23 +1150,23 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
 #[test]
 fn the_chat_composer_sends_one_agent_message_per_turn_and_keeps_an_unsendable_draft() {
     let mut offline = fresh_state();
-    offline.agent_chat_draft = "hello".into();
-    assert!(!offline.send_agent_chat_draft(), "💬️ no socket, nothing sent");
-    assert_eq!(offline.agent_chat_draft, "hello", "💬️ and the human's text is not discarded");
+    offline.directory.agent_chat_draft = "hello".into();
+    assert!(!offline.directory.send_agent_chat_draft(&mut offline.chrome), "💬️ no socket, nothing sent");
+    assert_eq!(offline.directory.agent_chat_draft, "hello", "💬️ and the human's text is not discarded");
 
     let mut shell = welcomed_shell();
-    let _ = shell.take_agent_bridge_outbox();
-    assert!(!shell.send_agent_chat_draft(), "💬️ a blank draft sends nothing");
-    shell.agent_chat_draft = "  move it  ".into();
-    assert!(shell.send_agent_chat_draft(), "💬️ a connected shell sends");
-    assert!(shell.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
-    let outbox = shell.take_agent_bridge_outbox();
+    let _ = shell.chrome.take_agent_bridge_outbox();
+    assert!(!shell.directory.send_agent_chat_draft(&mut shell.chrome), "💬️ a blank draft sends nothing");
+    shell.directory.agent_chat_draft = "  move it  ".into();
+    assert!(shell.directory.send_agent_chat_draft(&mut shell.chrome), "💬️ a connected shell sends");
+    assert!(shell.directory.agent_chat_draft.is_empty(), "💬️ the draft clears on send");
+    let outbox = shell.chrome.take_agent_bridge_outbox();
     assert_eq!(outbox.len(), 1, "💬️ exactly one frame per turn");
     match crate::agent_bridge::ShellToGateway::decode(&outbox[0]).expect("the outbox frame decodes") {
         crate::agent_bridge::ShellToGateway::AgentMessage { text, .. } => assert_eq!(text, "move it", "💬️ trimmed, React's own `trimmed`"),
         other => panic!("💬️ expected an AgentMessage, got {other:?}"),
     }
-    let panel = shell.build_agent_chat_ui();
+    let panel = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     assert!(chat_entry_ids(&panel).iter().any(|id| id.starts_with("framework.chat.entry.userMessage.")), "💬️ the turn is echoed into the feed");
     let mut lines = Vec::new();
     chat_panel_lines(&panel, &mut lines);
@@ -1185,7 +1185,7 @@ fn the_chat_composer_sends_one_agent_message_per_turn_and_keeps_an_unsendable_dr
 #[test]
 fn a_persisted_skeleton_carries_each_leafs_tree_unit() {
     let shell = fixture_dock_shell();
-    let skeleton = dock_skeleton_of(&shell.default_dock());
+    let skeleton = dock_skeleton_of(&SessionCtx::of(&mut shell).default_dock());
     fn walk(entries: &[DockTabSkeleton]) {
         for entry in entries {
             match entry.children.as_deref() {
@@ -1212,7 +1212,7 @@ fn a_persisted_skeleton_carries_each_leafs_tree_unit() {
 fn default_dock_display_branch_carries_the_framework_display_leaves() {
     let fixture = default_dock_fixture();
     let shell = fixture_dock_shell();
-    let dock = shell.default_dock();
+    let dock = SessionCtx::of(&mut shell).default_dock();
     let bottom_left = dock.tabs(PanelAnchor::BottomLeft);
     let branch = bottom_left.first().expect("bottom-left opens with the framework Display branch");
     assert_eq!(branch.id, fixture["displayBranch"]["id"].as_str().expect("fixture display branch id"));
@@ -1222,14 +1222,14 @@ fn default_dock_display_branch_carries_the_framework_display_leaves() {
     assert!(bottom_left.iter().any(|tab| tab.id == "fixture.display"), "🧭️ an app's display-group tab is a SIBLING of the branch, not one of its children");
     assert!(!branch.children.iter().any(|child| child.id == "fixture.display"));
     let empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(empty_app_shell.default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
+    assert!(SessionCtx::of(&mut empty_app_shell).default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
 }
 
 /// 🧭️ A dock whose chrome bands are exactly what the shared fixture declares.
 fn banded_dock_shell() -> ShellState {
     let mut shell = fixture_dock_shell();
-    shell.dock_override = None;
-    shell.sync_dock_tabs();
+    shell.dock.dock_override = None;
+    SessionCtx::of(&mut shell).sync_dock_tabs();
     shell
 }
 
@@ -1249,27 +1249,27 @@ fn navbar_bands_match_the_react_chrome_band_fixture() {
         .iter()
         .flat_map(|anchor| {
             let anchor = PanelAnchor::from_str(anchor).expect("fixture anchor");
-            shell.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
+            shell.dock.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
         })
         .collect();
     for (index, (anchor, id)) in expected_leading.iter().enumerate() {
-        let (actual_anchor, actual) = shell.navbar_leading_tab_row_item(index).expect("the leading band carries every top-left tab");
+        let (actual_anchor, actual) = ChromeViewCtx::of(&mut shell).navbar_leading_tab_row_item(index).expect("the leading band carries every top-left tab");
         assert_eq!((actual_anchor.as_str(), actual.id.as_str()), (anchor.as_str(), id.as_str()), "📑️ leading navbar slot {index}");
     }
-    assert!(shell.navbar_leading_tab_row_item(expected_leading.len()).is_none(), "📑️ the leading band ends with top-left's last tab");
+    assert!(ChromeViewCtx::of(&mut shell).navbar_leading_tab_row_item(expected_leading.len()).is_none(), "📑️ the leading band ends with top-left's last tab");
     let mut expected_trailing: Vec<(String, String)> = trailing
         .iter()
         .flat_map(|anchor| {
             let anchor = PanelAnchor::from_str(anchor).expect("fixture anchor");
-            shell.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
+            shell.dock.dock_tabs.tabs(anchor).iter().map(move |node| (anchor.as_str().to_string(), node.id.clone())).collect::<Vec<_>>()
         })
         .collect();
     expected_trailing.reverse();
     for (index, (anchor, id)) in expected_trailing.iter().enumerate() {
-        let (actual_anchor, actual) = shell.navbar_trailing_tab_row_item(index).expect("the trailing band carries every top-middle/top-right tab");
+        let (actual_anchor, actual) = ChromeViewCtx::of(&mut shell).navbar_trailing_tab_row_item(index).expect("the trailing band carries every top-middle/top-right tab");
         assert_eq!((actual_anchor.as_str(), actual.id.as_str()), (anchor.as_str(), id.as_str()), "📑️ trailing navbar paint slot {index}");
     }
-    assert!(shell.navbar_trailing_tab_row_item(expected_trailing.len()).is_none());
+    assert!(ChromeViewCtx::of(&mut shell).navbar_trailing_tab_row_item(expected_trailing.len()).is_none());
     assert!(!expected_leading.is_empty() && !expected_trailing.is_empty(), "🧭️ the fixture app populates both navbar bands");
 }
 
@@ -1285,7 +1285,7 @@ fn footer_bands_match_the_react_chrome_band_fixture() {
     let lead_x = theme.padding_standard;
     let mut rows = Vec::new();
     for index in 0..64 {
-        let Some((anchor, node, rect)) = shell.footer_tab_row_rect(&mut atlas, &theme, index, width, 0.0, btn_h) else { break };
+        let Some((anchor, node, rect)) = PanelsViewCtx::of(&mut shell).footer_tab_row_rect(&mut atlas, &theme, index, width, 0.0, btn_h) else { break };
         rows.push((anchor, node.id.clone(), rect));
     }
     assert!(!rows.is_empty(), "the fixture dock populates the footer");
@@ -1301,7 +1301,7 @@ fn footer_bands_match_the_react_chrome_band_fixture() {
         let rows = band(name);
         let (Some(first), Some(last)) = (rows.first(), rows.last()) else { continue };
         let span = (last.2.x + last.2.w) - first.2.x;
-        let layout = shell.footer_chrome_layout(&mut atlas, &theme, width, 0.0, btn_h);
+        let layout = PanelsViewCtx::of(&mut shell).footer_chrome_layout(&mut atlas, &theme, width, 0.0, btn_h);
         let free = [ShellChromeBandSpan { left: 0.0, right: layout.center.free.left }, ShellChromeBandSpan { left: layout.center.free.right, right: width }];
         let expected = shell_chrome_centered_band(width, &free, span).centered.left;
         assert!((first.2.x - expected).abs() < 0.01, "📑️ {name} sits where the shared centred-band rule (`navbarCenteredLeftV1`, whole pixels inside the band) places it: first={first:?}, last={last:?}, span={span}, expected={expected}");

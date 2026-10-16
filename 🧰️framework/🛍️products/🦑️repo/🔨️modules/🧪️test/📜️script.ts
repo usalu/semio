@@ -14,7 +14,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
 import { runMutationInventoryProviderChecksV1 } from "./🏭️inventory/🔌️providers/🧪️tests/🟦️.ts";
 import { join } from "node:path";
 import { orchestratorBudgetOpts, runCmd } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { Script, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter,createIssuedResourceControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import {withRepositoryTestArtifactsV1} from "./💾️storage/🟦️.ts";
 import { OracleScript, ParityScript, SubjectScript } from "./⚖️parity/📋️orchestration/🟦️.ts";
@@ -105,4 +105,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("manifest", ManifestScript)
   .register("acceptance", AcceptanceScript);
 
-await runRepoScriptMain(router, import.meta.url,{beforeDispatch:async(argv,invocation)=>{await withRepositoryTestArtifactsV1(router.repoRoot,invocation,()=>router.run([...argv],invocation),argv[0]==="clean"||argv[0]==="gc"?"exclusive":"shared");return true;}});
+await runRepoScriptMain(router, import.meta.url,{beforeDispatch:async(argv,invocation)=>{await withRepositoryTestArtifactsV1(router.repoRoot,invocation,createIssuedResourceControlV1(invocation,"test:artifacts",0),()=>router.run([...argv],invocation),argv[0]==="clean"||argv[0]==="gc"?"exclusive":"shared");return true;}});

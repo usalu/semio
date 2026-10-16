@@ -1,0 +1,46 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-artifact-authority"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hub-owned canonical artifact authority, failure-atomic immutable publication ports and the artifact chunk CAS"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-artifact-authority"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-artifact-reference = { path = "../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-plugin-host = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
+sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }
+neo4rs = { version = "0.8" }
+
+[dev-dependencies]
+semio-hub-directory-contract = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+serde_json = { workspace = true }
+semio-framework = { path = "../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }

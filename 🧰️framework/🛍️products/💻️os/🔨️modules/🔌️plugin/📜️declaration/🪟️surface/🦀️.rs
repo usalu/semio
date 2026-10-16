@@ -1,15 +1,20 @@
 //! 🪟️ Editor and viewer surfaces: `ArtifactEditor`, `ArtifactViewer`, their app wrappers, builders, declarations and the artifact codec table.
-#[cfg(test)] use crate::document_ingress::ArtifactStoreConstructorPhase;
-#[cfg(test)] use crate::document_ingress::ArtifactStoreConstructorKind;
-#[cfg(test)] use crate::__semio_dispatch_PluginApp;
-use crate::MountedOwnerPhaseV1;
+#![feature(associated_type_defaults)]
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "../📥️natural-file/🦀️.rs"]
+pub mod natural_file_import;
+use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::MountedOwnerTurnV1;
+use semio_framework_plugin_mounted_owner::MountedOwnerTurnV1;
 use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
-use super::window_config::WindowConfigOwnerRegistry;
+use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use super::window_config::WindowConfigPack;
-use super::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_window_config::WindowConfigPack;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
 use protocol::{OpBinary, OpText};
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -19,9 +24,12 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation};
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
 use semio_framework::AppDefinition;
-use semio_framework::{kernel::{ActorId, ClipboardError, ClipboardFragment, Effect, PastePlacement}, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName, InteractionDefinition, InteractionRef, InteractionVerb, IntroductionDefinition, MediaForm, MediaPortSpec, ModeDefinition, PanelGroup, PanelTabDefinition, ToolDefinition, ToolRef, TutorialDefinition, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition};
+use semio_framework::{kernel::{ActorId, ClipboardError, ClipboardFragment, Effect, PastePlacement}, ActionArgDef, ActionDefinition, ActionKind, ActionRef, AppIo, CapabilityAudience, CommandDefinition, CommandGrammar, ConfigSpec, DialogDefinition, Fault, FaultCode, FaultFrom, FaultOrigin, IconName, InteractionDefinition, InteractionRef, InteractionVerb, MediaForm, MediaPortSpec, ModeDefinition, PanelGroup, PanelTabDefinition, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, ViewModel, WindowKindDefinition};
+use semio_framework::onboarding::{IntroductionDefinition, TutorialDefinition};
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework::{kernel::{AppEvent, HistoryPatch, InvocationResult}, ToolRunTraceCursor};
+use semio_framework::{kernel::{AppEvent, HistoryPatch, InvocationResult}};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+use semio_framework_tool_run::ToolRunTraceCursor;
 use semio_framework_2d::compute::EngineHandles;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
@@ -46,12 +54,12 @@ use std::pin::Pin;
 use pack::snapshot::ArtifactPack;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore, MemberFactory, Mutation, MutationDiff, NoMembers, SpaceMember};
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::ContextMenuItemSpec;
-use ui_wgpu::wgpu::ContextMenuRequest;
-use ui_wgpu::wgpu::NamedLayout;
-use ui_wgpu::wgpu::WindowEngagement;
-use ui_wgpu::wgpu::WindowLayout;
-use ui_wgpu::wgpu::WindowMeasure;
+use semio_framework_ui_layout::layout::ContextMenuItemSpec;
+use semio_framework_ui_layout::layout::ContextMenuRequest;
+use semio_framework_ui_layout::layout::NamedLayout;
+use semio_framework_ui_layout::layout::WindowEngagement;
+use semio_framework_ui_layout::layout::WindowLayout;
+use semio_framework_ui_layout::layout::WindowMeasure;
 /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
 /// `semio-framework-os` already depend on it) the same way the legacy format enum used to — re-exported
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
@@ -74,115 +82,89 @@ use semio_framework_artifact_reference::SubsetId;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework::{surface_app_id, AppRole};
 #[cfg(test)]
-use crate::app_views::NoConfig;
+use semio_framework_plugin_decl_views::NoConfig;
 #[cfg(test)]
-use crate::app_views::NoConfigMutation;
+use semio_framework_plugin_decl_views::NoConfigMutation;
 #[cfg(test)]
-use crate::app_views::NoPresence;
+use semio_framework_plugin_decl_views::NoPresence;
 #[cfg(test)]
-use crate::app_views::NoPresenceMutation;
+use semio_framework_plugin_decl_views::NoPresenceMutation;
 #[cfg(test)]
-use crate::plugin_program::Plugin;
+use semio_framework_plugin_window_transient::built_text_to_component_tree;
 #[cfg(test)]
-use crate::window_surface::built_text_to_component_tree;
+use semio_framework_plugin_decl_app::MediaConsumption;
 #[cfg(test)]
-use crate::app_contract::MediaConsumption;
+use semio_framework_plugin_decl_app::MediaArtifactError;
 #[cfg(test)]
-use crate::app_contract::MediaArtifactError;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult;
 #[cfg(test)]
-use crate::app_contract::MediaArtifact;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
 #[cfg(test)]
-use crate::media_contract::ArtifactMediaExportResult;
+use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
 #[cfg(test)]
-use crate::media_contract::ArtifactMediaExportPoll;
+use semio_framework_plugin_decl_app::EphemeralSnapshot;
 #[cfg(test)]
-use crate::media_contract::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_app::TransactionPrepareOutcome;
 #[cfg(test)]
-use crate::peer_roster::PresenceRosterOutcome;
+use semio_framework_plugin_decl_emission::ActionMeta;
 #[cfg(test)]
-use crate::peer_roster::PresenceRosterAdmission;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicContract;
 #[cfg(test)]
-use crate::app_contract::EphemeralSnapshot;
-#[cfg(test)]
-use crate::app_contract::TransactionPrepareOutcome;
-#[cfg(test)]
-use crate::tool_jobs::TransactionProposalDraft;
-#[cfg(test)]
-use crate::tool_jobs::EmitWire;
-#[cfg(test)]
-use crate::reserved_jobs::FrameworkReservedCommitProgress;
-#[cfg(test)]
-use crate::app_emission::ActionMeta;
-#[cfg(test)]
-use crate::store_publication::ComposedGestureResult;
-#[cfg(test)]
-use crate::tool_jobs::TypedOperationCompletion;
-#[cfg(test)]
-use crate::tool_jobs::TypedOperationUiProgress;
-#[cfg(test)]
-use crate::tool_jobs::TypedOperationResultToken;
-#[cfg(test)]
-use crate::tool_jobs::TypedOperationResultPage;
-#[cfg(test)]
-use crate::tool_contract::ArtifactToolPublicContract;
-#[cfg(test)]
-use crate::tool_contract::ToolOwnerWitness;
-use crate::app_builder::AppBuilder;
-use crate::app_builder::ExampleSource;
-use crate::app_builder::PanelTabSpec;
-use crate::window_kits::AppActionRegistry;
-use crate::app_contract::ArtifactApp;
-use crate::app_contract::NATURAL_FILE_PORT;
-use crate::app_contract::NaturalFileCodec;
-use crate::app_contract::NaturalFileDecodeOwner;
-use crate::app_contract::document_load_emit;
-use crate::app_contract::natural_file_input_bytes;
-use crate::app_emission::Emit;
-use crate::app_emission::EphemeralEmit;
-use crate::app_emission::HostEvent;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use crate::app_testing::artifact_app_laws;
-use crate::app_views::AppRenderOperationContext;
-use crate::app_views::ArtifactView;
-use crate::app_views::ConfigView;
-use crate::app_views::DraftView;
-use crate::app_views::InteractionView;
-use crate::app_views::NoDraft;
-use crate::app_views::NoDraftMutation;
-use crate::app_views::PresenceView;
-use crate::window_transient::TransientView;
-use crate::artifact_io::ArtifactBuilder;
+use semio_framework_plugin_decl_app::tool_contract::ToolOwnerWitness;
+use semio_framework_plugin_app_builder::AppBuilder;
+use semio_framework_plugin_app_builder::ExampleSource;
+use semio_framework_plugin_app_builder::PanelTabSpec;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_decl_app::ArtifactApp;
+use semio_framework_plugin_decl_app::NATURAL_FILE_PORT;
+use semio_framework_plugin_decl_app::NaturalFileCodec;
+use semio_framework_plugin_decl_app::NaturalFileDecodeOwner;
+use semio_framework_plugin_decl_app::document_load_emit;
+use semio_framework_plugin_decl_app::natural_file_input_bytes;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_framework_plugin_decl_emission::HostEvent;
+use semio_framework_plugin_decl_views::AppRenderOperationContext;
+use semio_framework_plugin_decl_views::ArtifactView;
+use semio_framework_plugin_decl_views::ConfigView;
+use semio_framework_plugin_decl_views::DraftView;
+use semio_framework_plugin_decl_views::InteractionView;
+use semio_framework_plugin_decl_views::NoDraft;
+use semio_framework_plugin_decl_views::NoDraftMutation;
+use semio_framework_plugin_decl_views::PresenceView;
+use semio_framework_plugin_window_transient::window_transient::TransientView;
+use semio_framework_plugin_abi::ArtifactBuilder;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use crate::media_contract::ArtifactMediaExportJobRequest;
-use crate::tool_contract::ArtifactReservedToolJob;
+use semio_framework_plugin_decl_app::media_contract::ArtifactMediaExportJobRequest;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
-use crate::app_emission::ArtifactMutationOutcome;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
-use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use crate::tool_contract::ArtifactInstanceOperationOwner;
-use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
-use crate::tool_contract::ArtifactOwnedToolJobRequest;
-use crate::tool_contract::ArtifactReservedToolInput;
-use crate::tool_contract::ArtifactReservedToolJobRequest;
-use crate::tool_contract::ArtifactToolCompletionValue;
-use crate::tool_contract::ArtifactToolFactoryRegistry;
-use crate::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolInput;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
+use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
 use crate::natural_file_import::NaturalFileImportJob;
-use crate::tool_run_contract::ToolRunJob;
-use crate::tool_run_contract::ToolRunJobRequest;
-use crate::tool_run_contract::ToolRunRetargetableJob;
-use crate::window_kits::merge_ui_values;
-use crate::window_surface::UiAssemblyResult;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
+use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_window_kits::merge_ui_values;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 pub trait ArtifactEditor: Default + Send + 'static {
     /// 📬️ Borrows this editor's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{super::completion_retirement::derived_completion_birth_bytes(value)}
+    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<EditorApp<Self>>)->Option<usize>{semio_framework_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the editor completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{super::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<EditorApp<Self>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 📐️ Declares the physical authority frame needed to retain this editor's original mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 
@@ -347,11 +329,9 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
-    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
-
-
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         None
@@ -404,14 +384,14 @@ pub trait ArtifactEditor: Default + Send + 'static {
     /// Framework-owned by default — `EditorApp<E>` forwards THIS answer, so a `None` here
     /// would strip the `ArtifactApp` default and break registered-fixture close.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 👥️ Grants exact typed retirement for peer presence snapshots to this editor adapter.
     /// Framework-owned by default, for the same reason as `ArtifactApp`'s twin: `EditorApp<E>`
     /// forwards THIS answer, so a `None` here would take the framework's default back out.
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🧹️ Grants bounded displaced-transient-root retirement to this editor adapter.
@@ -455,7 +435,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -560,8 +540,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> crate::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=(||{
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
 
@@ -825,9 +805,9 @@ pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
 /// carry an artifact or draft mutation. `ViewerApp<V>` below is the sole `ArtifactApp` implementor.
 pub trait ArtifactViewer: Default + Send + 'static {
     /// 📬️ Borrows this viewer's original typed completion retirement birth.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{super::completion_retirement::derived_completion_birth_bytes(value)}
+    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{semio_framework_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the viewer completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{super::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 🧮️ Declares the physical authority frame for this viewer's decoded editor-authored mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 
@@ -882,7 +862,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -890,7 +870,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🎭️ Always `Viewer` in practice — defaulted so implementors never restate it.
@@ -1014,12 +994,11 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🎞️ Builds an owned resumable producer for an explicitly registered viewer media-output port.
-    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
 
     /// 🧹️ Supplies the exact bounded disposer for snapshots retained by viewer output jobs.
-
 
     /// 📬️ Grants retained one-item config preparation to this viewer adapter.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -1040,7 +1019,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     /// Framework-owned by default — `ViewerApp<V>` forwards THIS answer, so a `None` here
     /// would strip the `ArtifactApp` default and break registered-fixture close.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🧹️ Grants bounded displaced-transient-root retirement to this viewer adapter.
@@ -1111,8 +1090,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> crate::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=(||{
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render(body_key, doc, cfg, view_state)
 
@@ -1197,38 +1176,6 @@ pub trait ArtifactViewer: Default + Send + 'static {
             Ok(media) => Ok(MediaFingerprint::of(&media)),
             Err(error) => Err(error),
         }
-    }
-}
-
-/// 👁️ What a viewer may emit — structurally cannot carry an artifact or draft mutation (contract
-/// §2.2): the read-only guarantee is a type property, not a runtime check.
-pub struct ViewEmit<ConfigMutation> {
-    pub config_mutations: Vec<ConfigMutation>,
-    pub effects: Vec<Effect>,
-    pub ui_dirty: UiDirtyScope,
-}
-
-impl<ConfigMutation> Default for ViewEmit<ConfigMutation> {
-    fn default() -> Self {
-        Self { config_mutations: Vec::new(), effects: Vec::new(), ui_dirty: UiDirtyScope::default() }
-    }
-}
-
-impl<ConfigMutation> ViewEmit<ConfigMutation> {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    /// 🧮️ A config-operation emission carrying `config_mutations` and nothing else.
-    pub fn config(config_mutations: Vec<ConfigMutation>) -> Self {
-        Self { config_mutations, ..Default::default() }
-    }
-    /// 🐚️ A single host effect and no config operations.
-    pub fn effect(effect: Effect) -> Self {
-        Self { effects: vec![effect], ..Default::default() }
-    }
-    /// 🐢️ Narrows which rendered UI sections this emission invalidates.
-    pub fn dirty(ui_dirty: UiDirtyScope) -> Self {
-        Self { ui_dirty, ..Default::default() }
     }
 }
 
@@ -1322,7 +1269,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         E::build_reserved_tool_job(request)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_media_export_job(request,body,cx)
     }
 
@@ -1519,7 +1466,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> crate::OriginalRenderResult<ComponentTree> {
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         E::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
@@ -1748,7 +1695,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         V::build_reserved_tool_job(request)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         V::build_media_export_job(request,body,cx)
     }
 
@@ -1831,7 +1778,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> crate::OriginalRenderResult<ComponentTree> {
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
         V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
@@ -1923,7 +1870,7 @@ impl Editor {
 /// runtime rejection.
 pub struct ViewerBuilder {
     inner: Box<AppBuilder>,
-    pub(crate) dialect: ArtifactDialect,
+    pub dialect: ArtifactDialect,
 }
 
 /// ✏️ Fluent editor surface builder (contract §2.4) — every `AppBuilder` method, `.mutation(...)`
@@ -1937,7 +1884,7 @@ pub struct ViewerBuilder {
 /// `AppBuilder` value itself only ever lives in the frame of the one method that moves it.
 pub struct EditorBuilder {
     inner: Box<AppBuilder>,
-    pub(crate) dialect: ArtifactDialect,
+    pub dialect: ArtifactDialect,
 }
 
 impl ViewerBuilder {
@@ -2133,7 +2080,7 @@ fn subset_example_table() -> &'static std::sync::Mutex<HashMap<Dialect, Vec<Exam
     TABLE.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
 }
 
-pub(crate) fn remember_subset_examples(dialect: Dialect, examples: &[ExampleSource]) {
+pub fn remember_subset_examples(dialect: Dialect, examples: &[ExampleSource]) {
     if examples.is_empty() {
         return;
     }

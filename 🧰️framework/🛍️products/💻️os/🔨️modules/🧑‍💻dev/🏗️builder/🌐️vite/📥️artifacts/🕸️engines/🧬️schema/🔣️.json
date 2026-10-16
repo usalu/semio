@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "facet"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "facet": {
+      "enum": [
+        "renderer",
+        "play",
+        "distribution"
+      ]
+    }
+  },
+  "definitions": {
+    "Factories": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "engine"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "maxLength": 128,
+            "pattern": "^(?:@[a-z0-9-]+/)?[a-z0-9][a-z0-9._-]*$"
+          },
+          "engine": {
+            "enum": [
+              "./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+              "./🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+              "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+              "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

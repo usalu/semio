@@ -55,7 +55,7 @@ test("component description verifies the shipped bytes with its native emitter p
   const manifest = join(workspace, crate, "Cargo.toml"), name = (Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package: { name: string } }).package.name;
   const deliverable = componentDeliverableV1(join(workspace, crate), name, SHIPPED_COMPONENT_PROFILE);
   const { admitNativeBuildPlanV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts")).href);
-  const plan = admitNativeBuildPlanV1({ version: 1, passes: [{ id: "shipped", manifest, packages: [{ name, manifest }], target: "wasm32-wasip2", profile: SHIPPED_COMPONENT_PROFILE, output: "dist/components/release" }] });
+  const plan = admitNativeBuildPlanV1({ version: 1, passes: [{ id: "shipped", manifest, packages: [{ name, manifest }], target: "wasm32-wasip2", profile: SHIPPED_COMPONENT_PROFILE }] });
   const pass = plan.passes[0], stages = componentDriverStagesV1(workspace)({ pass, package: pass.packages[0], wasm: deliverable.wasm, staged: deliverable.wasm });
   expect(stages.find((stage: any) => stage.name === "describe")).toBeDefined();
   expect(stages.find((stage: any) => stage.name === "publish").after).toContain("describe");

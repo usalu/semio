@@ -11,28 +11,31 @@ use directory::os_directory;
 use directory::os_directory::{DirectorySessionAuthorityV1, DirectorySessionKindV1};
 use futures::StreamExt;
 use semio_framework_trace::record::TraceOutcome;
-use semio_hub::artifact_authority::creation::ArtifactCreationCommitAuthorityV1;
-use semio_hub::auth::rate_limit::{RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
-use semio_hub::auth::password::PasswordCredentialV1;
+use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
+use semio_hub_auth::rate_limit::{RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
+use semio_hub_auth::password::PasswordCredentialV1;
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
-use semio_hub::auth::agent::{decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentErrorV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1, CreateAgentDelegationRequestV1};
-use semio_hub::auth::{decide_credential_change, decide_credential_sign_in, AuthErrorCodeV1, AuthErrorV1, CredentialChangeDecisionV1, CredentialChangeRequestV1, CredentialSignInDecisionV1, CredentialSignInRequestV1, CredentialSubjectV1, SessionMintResponseV1};
-use semio_hub::directory::model::{AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CredentialAuditFactV1};
-use semio_hub::directory::{HubDirectory, identity_subject_digest, AgentDelegationCapability, IdentityAssertionVerifier, SessionCapability};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_auth::agent::{decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1, CreateAgentDelegationRequestV1};
+use semio_hub_auth::{decide_credential_change, decide_credential_sign_in, AuthErrorCodeV1, CredentialChangeDecisionV1, CredentialChangeRequestV1, CredentialSignInDecisionV1, CredentialSignInRequestV1, CredentialSubjectV1, SessionMintResponseV1};
+use semio_hub_directory_contract::model::{AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CredentialAuditFactV1};
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::{identity_subject_digest, AgentDelegationCapability, IdentityAssertionVerifier, SessionCapability};
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Deserialize;
-use crate::support::{now_ms, bearer, directory_error_status};
-use crate::state::HubState;
-use crate::socket_grants::{SocketBindingKeyV1, SocketBindingModeV1};
-use crate::guard::{session_access_roles, access_permits_in_space};
-use crate::access_grants::socket_text_bounded;
-use crate::document_socket::DOCUMENT_SOCKET_FRAME_DEADLINE;
-use crate::directory_commands::AuthedUser;
-use crate::directory_events::directory_event_page_session_binding_v1;
-use db::db_storage::PayloadStorage as _;
+use semio_hub_runtime::support::{now_ms, bearer, directory_error_status};
+use semio_hub_state::HubState;
+use semio_hub_ledgers::socket_grants::{SocketBindingKeyV1, SocketBindingModeV1};
+use semio_hub_ledgers::guard::session_access_roles;
+use crate::guard::access_permits_in_space;
+use semio_hub_ledgers::access_grants::socket_text_bounded;
+use semio_hub_route_models::document_socket::DOCUMENT_SOCKET_FRAME_DEADLINE;
+use semio_hub_route_models::directory_commands::AuthedUser;
+use semio_hub_route_models::directory_events::directory_event_page_session_binding_v1;
+use db::storage::PayloadStorage as _;
+use semio_hub_route_models::session_agent::{AgentDelegationQueryV1, agent_error_response, auth_error_response};
 
 //#region 🔖️Directory
-pub(crate) async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DirectorySessionAuthorityV1>, StatusCode> {
+pub async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DirectorySessionAuthorityV1>, StatusCode> {
     let span = state.span("server.auth.session.read");
     let Some(token) = bearer(&headers) else {
         span.refused("no-bearer");
@@ -95,7 +98,7 @@ pub(crate) async fn get_session_me(headers: HeaderMap, State(state): State<HubSt
 /// directory fact, and the same revocation is applied to the server instance's live session set: a
 /// key removed from one and left in the other is a key that still opens a door somewhere, so the two
 /// move together or the caller learns the sign-out did not complete.
-pub(crate) async fn post_session_sign_out(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> StatusCode {
+pub async fn post_session_sign_out(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> StatusCode {
     let span = state.span("server.auth.session.revoke");
     if !body.is_empty() {
         span.refused("malformed-request");
@@ -163,7 +166,7 @@ pub(crate) async fn post_session_sign_out(headers: HeaderMap, State(state): Stat
 /// refused — appends a `credential-sign-in` fact before the response is written, so the
 /// authentication log is the record of what happened. The minted session itself is
 /// `issue_auth_session`'s own `session-issued` fact; nothing here writes a session row.
-pub(crate) async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.session.mint");
     let Ok(request) = serde_json::from_slice::<CredentialSignInRequestV1>(&body) else {
         span.refused("malformed-request");
@@ -210,13 +213,13 @@ pub(crate) async fn post_auth_session(State(state): State<HubState>, body: Bytes
             auth_error_response(code, None)
         }
         CredentialSignInDecisionV1::Mint { user_id, ttl_secs } => {
-            let Ok(identity_subject_digest) = identity_subject_digest(semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER, verified.email()) else {
+            let Ok(identity_subject_digest) = identity_subject_digest(semio_hub_auth::CREDENTIAL_IDENTITY_PROVIDER, verified.email()) else {
                 span.refused("malformed-request");
                 return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
             };
             let issue = AuthSessionIssue {
                 user_id,
-                identity_provider: semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER.into(),
+                identity_provider: semio_hub_auth::CREDENTIAL_IDENTITY_PROVIDER.into(),
                 identity_subject_digest,
                 ttl_secs,
                 device_instance_id: verified.device_instance_id().to_string(),
@@ -259,7 +262,7 @@ pub(crate) async fn post_auth_session(State(state): State<HubState>, body: Bytes
 /// A principal that has no credential at all is refused exactly like a wrong password: the first
 /// credential for a principal is issued by the operator verb `os-hub credential set`, which needs
 /// filesystem access to `OS_HUB_DATA` and is therefore not reachable over the network at all.
-pub(crate) async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.credential.change");
     let Some(token) = bearer(&headers) else {
         span.refused("no-bearer");
@@ -360,7 +363,7 @@ pub(crate) async fn post_auth_credential(headers: HeaderMap, State(state): State
 /// fact inside `set_password_credential`'s transaction, so only refusals are recorded here.
 async fn journal_credential_change_refusal(state: &HubState, user_id: &str, reason_code: &str, correlation_id: &str) {
     let fact = CredentialAuditFactV1 {
-        event_kind: semio_hub::auth::CREDENTIAL_CHANGED_EVENT.into(),
+        event_kind: semio_hub_auth::CREDENTIAL_CHANGED_EVENT.into(),
         target_user_id: Some(user_id.to_string()),
         actor_user_id: Some(user_id.to_string()),
         outcome_code: "failure".into(),
@@ -375,7 +378,7 @@ async fn journal_credential_change_refusal(state: &HubState, user_id: &str, reas
 /// refusal into an admission — the response was already decided before this is called.
 async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&str>, outcome_code: &str, reason_code: Option<&str>, correlation_id: &str, peer_class: &str) {
     let fact = CredentialAuditFactV1 {
-        event_kind: semio_hub::auth::CREDENTIAL_SIGN_IN_EVENT.into(),
+        event_kind: semio_hub_auth::CREDENTIAL_SIGN_IN_EVENT.into(),
         target_user_id: target_user_id.map(str::to_string),
         actor_user_id: None,
         outcome_code: outcome_code.to_string(),
@@ -384,23 +387,6 @@ async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&st
         peer_class: peer_class.to_string(),
     };
     let _ = state.directory.append_credential_audit(&fact).await;
-}
-
-/// 🛑️ The one shape every credential sign-in refusal is served in.
-/// 🤖️ Every agent-delegation refusal is served exactly like a credential refusal: the code's
-/// own status, `no-store`, and a `retry-after` header whenever the limiter is the reason.
-fn agent_error_response(error: AgentErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
-    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    let mut body = AgentErrorV1::new(error);
-    body.retry_after_ms = retry_after_ms;
-    let mut response = (status, Json(body)).into_response();
-    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
-    if let Some(retry_after_ms) = retry_after_ms {
-        if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
-            response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
-        }
-    }
-    response
 }
 
 /// 🤖️ Resolves the signed-in human behind a delegation-administration call: a live session
@@ -427,8 +413,8 @@ async fn delegating_principal(state: &HubState, headers: &HeaderMap) -> Result<A
 /// listing for this space is the smallest read that answers it — no new directory method and no
 /// second authentication. A delegation revoked between the grant and the socket simply has no row,
 /// which the caller reads as an unnamed agent rather than as a person.
-pub(crate) async fn agent_delegation_for_session(state: &HubState, space_id: &str, delegating_user_id: &str, delegation_id: &str) -> Option<AgentDelegationRow> {
-    let rows = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.list_agent_delegations(space_id, delegating_user_id, semio_hub::directory::AGENT_DELEGATION_PAGE_MAX)).await.ok()?.ok()?;
+pub async fn agent_delegation_for_session(state: &HubState, space_id: &str, delegating_user_id: &str, delegation_id: &str) -> Option<AgentDelegationRow> {
+    let rows = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.list_agent_delegations(space_id, delegating_user_id, semio_hub_directory_contract::AGENT_DELEGATION_PAGE_MAX)).await.ok()?.ok()?;
     rows.into_iter().find(|row| row.delegation_id == delegation_id)
 }
 
@@ -450,7 +436,7 @@ async fn journal_agent_fact(state: &HubState, event_kind: &str, user_id: &str, o
 /// credential to an AI agent. The caller must be an **author** of the target space: a spectator
 /// cannot manufacture an editing principal out of a read-only membership. The response carries the
 /// token exactly once; nothing stores it, and no later route can read it back.
-pub(crate) async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.agent.delegate");
     let session = match delegating_principal(&state, &headers).await {
         Ok(session) => session,
@@ -486,18 +472,18 @@ pub(crate) async fn post_agent_delegation(headers: HeaderMap, State(state): Stat
         }
     }
     let correlation_id = directory::os_identity::time_ordered_id();
-    let Ok(issued) = semio_hub::directory::prepare_agent_delegation(verified.space_id(), &session.user_id, verified.agent_label(), verified.audience(), verified.ttl_secs(), now_ms()) else {
+    let Ok(issued) = semio_hub_directory_contract::prepare_agent_delegation(verified.space_id(), &session.user_id, verified.agent_label(), verified.audience(), verified.ttl_secs(), now_ms()) else {
         span.refused("malformed-request");
         return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
     };
     if state.directory.create_agent_delegation(&issued, &correlation_id, "server").await.is_err() {
-        journal_agent_fact(&state, semio_hub::directory::AGENT_DELEGATED_EVENT, &session.user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "server").await;
+        journal_agent_fact(&state, semio_hub_directory_contract::AGENT_DELEGATED_EVENT, &session.user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "server").await;
         span.failed("directory-unavailable");
         return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
     }
     let receipt = AgentDelegationReceiptV1 {
-        schema: semio_hub::auth::agent::AGENT_DELEGATION_RECEIPT_SCHEMA.into(),
-        agent_principal_id: semio_hub::auth::agent::agent_principal_id(&issued.record.id),
+        schema: semio_hub_auth::agent::AGENT_DELEGATION_RECEIPT_SCHEMA.into(),
+        agent_principal_id: semio_hub_auth::agent::agent_principal_id(&issued.record.id),
         delegation_id: issued.record.id.clone(),
         agent_label: issued.record.agent_label.clone(),
         space_id: issued.record.space_id.clone(),
@@ -514,7 +500,7 @@ pub(crate) async fn post_agent_delegation(headers: HeaderMap, State(state): Stat
 /// 🤖️ `GET /auth/agent-delegations?space=<id>` — every delegation this human created in this
 /// space, revoked ones included so the UI can show what was withdrawn. Never a token, never a
 /// selector, and never another human's delegations.
-pub(crate) async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDelegationQueryV1>, State(state): State<HubState>) -> Response {
+pub async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDelegationQueryV1>, State(state): State<HubState>) -> Response {
     let span = state.span("server.auth.agent.list");
     let session = match delegating_principal(&state, &headers).await {
         Ok(session) => session,
@@ -527,7 +513,7 @@ pub(crate) async fn get_agent_delegations(headers: HeaderMap, Query(query): Quer
         span.refused("malformed-request");
         return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
     }
-    match state.directory.list_agent_delegations(&query.space, &session.user_id, semio_hub::directory::AGENT_DELEGATION_PAGE_MAX).await {
+    match state.directory.list_agent_delegations(&query.space, &session.user_id, semio_hub_directory_contract::AGENT_DELEGATION_PAGE_MAX).await {
         Ok(rows) => {
             let body = AgentDelegationListV1::new(rows.into_iter().map(AgentDelegationSummaryV1::from_row).collect());
             let mut response = Json(body).into_response();
@@ -554,7 +540,7 @@ pub(crate) async fn get_agent_delegations(headers: HeaderMap, Query(query): Quer
 /// withdrawal —, and every frame after it re-reads the revoked session and is refused. So `204` means
 /// no further edit of that agent can be accepted and its sockets are closing (ticket 26/09/23 G10 S4:
 /// on 7800 a connected agent was refused in one run and still edited in the other).
-pub(crate) async fn post_agent_delegation_revoke(Path(delegation_id): Path<String>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_agent_delegation_revoke(Path(delegation_id): Path<String>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.agent.revoke");
     if !body.is_empty() {
         span.refused("malformed-request");
@@ -611,7 +597,7 @@ pub(crate) async fn post_agent_delegation_revoke(Path(delegation_id): Path<Strin
 /// agent its own principal at the presence layer, in the actor string on every edit, and in
 /// per-actor undo. `device_instance_id` carries the delegation id, which is how revoking the
 /// delegation finds and kills exactly the sessions it minted.
-pub(crate) async fn post_agent_session(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+pub async fn post_agent_session(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.agent.session");
     let Some(token) = bearer(&headers) else {
         span.refused("invalid-delegation");
@@ -640,7 +626,7 @@ pub(crate) async fn post_agent_session(headers: HeaderMap, State(state): State<H
             return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
         }
     };
-    let preflight = semio_hub::directory::agent_session_preflight(record.as_ref(), &capability, request.audience, now_ms());
+    let preflight = semio_hub_directory_contract::agent_session_preflight(record.as_ref(), &capability, request.audience, now_ms());
     let ttl_secs = match decide_agent_session(preflight) {
         AgentSessionDecisionV1::Mint { ttl_secs } => ttl_secs,
         AgentSessionDecisionV1::Refuse(code) => {
@@ -653,13 +639,13 @@ pub(crate) async fn post_agent_session(headers: HeaderMap, State(state): State<H
         return agent_error_response(AgentErrorCodeV1::InvalidDelegation, None);
     };
     let correlation_id = directory::os_identity::time_ordered_id();
-    let Ok(identity_subject_digest) = identity_subject_digest(semio_hub::directory::AGENT_IDENTITY_PROVIDER, &record.id) else {
+    let Ok(identity_subject_digest) = identity_subject_digest(semio_hub_directory_contract::AGENT_IDENTITY_PROVIDER, &record.id) else {
         span.refused("malformed-request");
         return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
     };
     let issue = AuthSessionIssue {
         user_id: record.delegating_user_id.clone(),
-        identity_provider: semio_hub::directory::AGENT_IDENTITY_PROVIDER.into(),
+        identity_provider: semio_hub_directory_contract::AGENT_IDENTITY_PROVIDER.into(),
         identity_subject_digest,
         ttl_secs,
         device_instance_id: record.id.clone(),
@@ -669,11 +655,11 @@ pub(crate) async fn post_agent_session(headers: HeaderMap, State(state): State<H
     };
     match state.directory.issue_auth_session(&issue).await {
         Ok(session) => {
-            journal_agent_fact(&state, semio_hub::directory::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "success", Some(record.audience.as_str()), &correlation_id, "agent").await;
+            journal_agent_fact(&state, semio_hub_directory_contract::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "success", Some(record.audience.as_str()), &correlation_id, "agent").await;
             let minted = AgentSessionMintResponseV1 {
-                schema: semio_hub::auth::agent::AGENT_SESSION_REQUEST_SCHEMA.into(),
+                schema: semio_hub_auth::agent::AGENT_SESSION_REQUEST_SCHEMA.into(),
                 token: session.capability.expose_once(),
-                agent_principal_id: semio_hub::auth::agent::agent_principal_id(&record.id),
+                agent_principal_id: semio_hub_auth::agent::agent_principal_id(&record.id),
                 agent_label: record.agent_label.clone(),
                 space_id: record.space_id.clone(),
                 audience: record.audience,
@@ -685,32 +671,11 @@ pub(crate) async fn post_agent_session(headers: HeaderMap, State(state): State<H
             response
         }
         Err(_) => {
-            journal_agent_fact(&state, semio_hub::directory::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "agent").await;
+            journal_agent_fact(&state, semio_hub_directory_contract::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "agent").await;
             span.failed("directory-unavailable");
             agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None)
         }
     }
 }
 
-/// 🔎️ `?space=<id>` — the one query parameter the delegation listing takes.
-#[derive(Deserialize)]
-pub(crate) struct AgentDelegationQueryV1 {
-    pub(crate) space: String,
-}
-
-pub(crate) fn auth_error_response(error: AuthErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
-    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    let body = match retry_after_ms {
-        Some(retry_after_ms) => AuthErrorV1::rate_limited(retry_after_ms),
-        None => AuthErrorV1::new(error),
-    };
-    let mut response = (status, Json(body)).into_response();
-    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
-    if let Some(retry_after_ms) = retry_after_ms {
-        if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
-            response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
-        }
-    }
-    response
-}
 //#endregion 🔖️Directory

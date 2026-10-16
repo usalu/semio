@@ -489,6 +489,42 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 45_000 });
       return;
     }
+    if (segments[0] === "crate-tree") {
+      if (segments.length !== 1) throw new Error("Expected test crate-tree");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "lib-wiring-budget") {
+      if (segments.length !== 1) throw new Error("Expected test lib-wiring-budget");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📏️lib-wiring-budget/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "rust-mount-emitters") {
+      if (segments.length !== 1) throw new Error("Expected test rust-mount-emitters");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️rust-mount-emitters/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "mutation-family") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-family");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-family/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "mutation-family"), budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "mutation-leaf-generics") {
+      if (segments.length !== 1) throw new Error("Expected test mutation-leaf-generics");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-leaf-generics/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 180_000 });
+      return;
+    }
+    if (segments[0] === "package-asset-constants") {
+      if (segments.length !== 1) throw new Error("Expected test package-asset-constants");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️package-asset-constants/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "root-artifact-schema-law-source") {
       if (segments.length !== 1) throw new Error("Expected test root-artifact-schema-law-source");
       const { level } = resolveTestLevel([], "quick");
@@ -952,13 +988,13 @@ class FixtureOwnershipTestScript extends BundleScript {
     
     
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [
-          { package: "semio-framework-surface", target: { kind: "lib" }, laws: [
+          { package: "semio-framework-surface-paint", target: { kind: "lib" }, laws: [
             "paint_stroke_refuses_locked_layers_and_locked_ancestors",
           ] },
-          { package: "semio-framework-artifact-flow-flow", target: { kind: "lib" }, laws: [
+          { package: "semio-framework-artifact-flow-flow-model", target: { kind: "lib" }, laws: [
             "authored_slider_labels_survive_json_dag_and_chrome",
           ] },
-          { package: "semio-framework-os-flow", target: { kind: "lib" }, laws: [
+          { package: "semio-framework-os-flow-host", target: { kind: "lib" }, laws: [
             "slider_ghost_descriptor_requires_authored_label",
           ] },
           { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [

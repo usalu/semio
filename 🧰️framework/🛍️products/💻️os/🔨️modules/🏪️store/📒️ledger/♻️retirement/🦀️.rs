@@ -5,31 +5,25 @@
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::ValueError;
-use crate::os_spr::{Edit, Mutation};
+use semio_framework_os_spr::{Edit, Mutation};
 use std::sync::Arc;
-use super::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, retirement_owner_close, retirement_owner_demands};
-use super::snapshot_read::{ArtifactStoreEditRetirement, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreOperationRowOwners};
+use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_owner_demands};
+use crate::lifted_snapshot_read::{ArtifactStoreEditRetirement, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreOperationRowOwners};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
-use crate::os_vcs::Change;
-#[cfg(target_arch = "wasm32")]
-use super::serialization::{ArtifactCodecApplyFuture};
-use crate::os_pack::pack_rt;
-#[cfg(target_arch = "wasm32")]
-use super::codec_registry::{ComponentDocumentCodecFuture};
-#[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
+use semio_framework_os_vcs::Change;
+
+use semio_framework_os_pack::pack_rt;
 
 impl<Mu> From<semio_framework_value::list::PagedList<Mu, {usize::MAX}>> for ArtifactStoreOperationRowOwners<Mu> {
     fn from(rows: semio_framework_value::list::PagedList<Mu, {usize::MAX}>) -> Self { Self::Inverse(rows) }
 }
 
 impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
-    fn last(&self) -> Option<&Mu> { match self { Self::Forwards(rows) => rows.last(), Self::Inverse(rows) => rows.last() } }
-    fn pop(&mut self) -> Option<Mu> { match self { Self::Forwards(rows) => rows.pop(), Self::Inverse(rows) => rows.pop() } }
-    fn terminal_is_empty(&self) -> bool { match self { Self::Forwards(rows) => rows.is_empty() && (rows.capacity() == 0 || size_of::<Mu>() == 0), Self::Inverse(rows) => rows.terminal_is_empty() } }
-    fn release_demand(&self) -> Result<usize, ValueError> {
+    pub fn last(&self) -> Option<&Mu> { match self { Self::Forwards(rows) => rows.last(), Self::Inverse(rows) => rows.last() } }
+    pub fn pop(&mut self) -> Option<Mu> { match self { Self::Forwards(rows) => rows.pop(), Self::Inverse(rows) => rows.pop() } }
+    pub fn terminal_is_empty(&self) -> bool { match self { Self::Forwards(rows) => rows.is_empty() && (rows.capacity() == 0 || size_of::<Mu>() == 0), Self::Inverse(rows) => rows.terminal_is_empty() } }
+    pub fn release_demand(&self) -> Result<usize, ValueError> {
         match self {
             Self::Forwards(rows) => rows.capacity().checked_mul(size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow")),
             Self::Inverse(rows) => rows.next_release_allocation_bytes().map_err(ValueError::from),
@@ -56,21 +50,21 @@ impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
 }
 
 /// 🧹️ Retires each original operation and its backing through admitted current domain authority.
-pub(crate) struct ArtifactStoreOperationRowsRetirement<Mu> {
-    rows: std::mem::ManuallyDrop<ArtifactStoreOperationRowOwners<Mu>>,
-    identity: std::mem::ManuallyDrop<Option<String>>,
-    active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    pending: std::mem::ManuallyDrop<Option<Mu>>,
-    factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>>,
-    closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
-    strings: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<String>>>>,
+pub struct ArtifactStoreOperationRowsRetirement<Mu> {
+    pub rows: std::mem::ManuallyDrop<ArtifactStoreOperationRowOwners<Mu>>,
+    pub identity: std::mem::ManuallyDrop<Option<String>>,
+    pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub pending: std::mem::ManuallyDrop<Option<Mu>>,
+    pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>>,
+    pub closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
+    pub strings: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<String>>>>,
 }
 
 impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
     pub(crate) fn new(rows: impl Into<ArtifactStoreOperationRowOwners<Mu>>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>) -> Self { Self { rows: std::mem::ManuallyDrop::new(rows.into()), identity: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), pending: std::mem::ManuallyDrop::new(None), factory: std::mem::ManuallyDrop::new(Some(factory)), closing_factory: std::mem::ManuallyDrop::new(None), strings: std::mem::ManuallyDrop::new(None) } }
-    pub(crate) fn with_identity(mut self, identity: String) -> Self { *self.identity = Some(identity); self }
-    pub(crate) fn with_strings(mut self, strings: Vec<String>) -> Self { *self.strings = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(strings).unwrap_or_else(|_| unreachable!("String Vec declares controlled retirement"))); self }
-    pub(crate) fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn with_identity(mut self, identity: String) -> Self { *self.identity = Some(identity); self }
+    pub fn with_strings(mut self, strings: Vec<String>) -> Self { *self.strings = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(strings).unwrap_or_else(|_| unreachable!("String Vec declares controlled retirement"))); self }
+    pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         if let Some(row) = self.pending.as_ref().or_else(|| self.rows.last()) { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: self.factory.as_ref().expect("operation payload retains its factory").retirement_birth_bytes(row), depth: 2, ..Default::default() }); }
         if !self.rows.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.rows.release_demand()?, depth: 1, ..Default::default() }); }
@@ -133,16 +127,16 @@ impl<Mu> Drop for ArtifactStoreOperationRowsRetirement<Mu> {
     fn drop(&mut self) { assert!(std::thread::panicking() || (self.rows.terminal_is_empty() && self.identity.is_none() && self.active.is_none() && self.pending.is_none() && self.strings.is_none() && self.factory.is_none() && self.closing_factory.is_none()), "operation row retirement retains exact original owners until bounded terminal"); if self.rows.terminal_is_empty() { unsafe { std::mem::ManuallyDrop::drop(&mut self.rows); } } }
 }
 
-pub(crate) struct ArtifactStoreDecodedEditRetirement<Mutation> {
-    edit: std::mem::ManuallyDrop<Option<Edit<Mutation>>>,
-    active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    mutation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>>,
-    closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
-    pending_mutation: std::mem::ManuallyDrop<Option<Mutation>>,
+pub struct ArtifactStoreDecodedEditRetirement<Mutation> {
+    pub edit: std::mem::ManuallyDrop<Option<Edit<Mutation>>>,
+    pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    pub mutation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>>,
+    pub closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
+    pub pending_mutation: std::mem::ManuallyDrop<Option<Mutation>>,
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct ArtifactStoreDecodedEditRetirementFactory<Mutation> {
+pub struct ArtifactStoreDecodedEditRetirementFactory<Mutation> {
     #[factory_child]
     pub(crate) mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
 }
@@ -155,7 +149,7 @@ impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct ArtifactStoreChangeRetirementFactory;
+pub struct ArtifactStoreChangeRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &Change) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
@@ -168,7 +162,7 @@ impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
     pub(crate) fn new(edit: Edit<Mutation>, mutation_factory: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self {
         Self { edit: std::mem::ManuallyDrop::new(Some(edit)), active: std::mem::ManuallyDrop::new(None), pending_mutation: std::mem::ManuallyDrop::new(None), mutation_factory: std::mem::ManuallyDrop::new(Some(mutation_factory)), closing_factory: std::mem::ManuallyDrop::new(None) }
     }
-    fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         let mutation = self.pending_mutation.as_ref().or_else(|| self.edit.as_ref().and_then(|edit| edit.inverse.last().or_else(|| edit.forwards.last())));
         if let Some(mutation) = mutation { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: self.mutation_factory.as_ref().expect("pending edit retains original mutation factory").retirement_birth_bytes(mutation), depth: 2, ..Default::default() }); }

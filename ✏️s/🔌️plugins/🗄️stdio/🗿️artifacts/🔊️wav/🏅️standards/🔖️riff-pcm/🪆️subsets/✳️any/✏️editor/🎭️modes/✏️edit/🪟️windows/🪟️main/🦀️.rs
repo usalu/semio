@@ -22,9 +22,9 @@ pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 const CONTROLLER_ID: &str = "s.stdio.wav@riff-pcm/*#editor";
 const MATRIX_CHANNEL_LIMIT: usize = 8;
-const SAMPLE_TABLE_ID: &str = "wav-samples";
+pub const SAMPLE_TABLE_ID: &str = "wav-samples";
 const FORMAT_TABLE_ID: &str = "wav-format";
-const CHANNEL_TABLE_ID: &str = "wav-channels";
+pub const CHANNEL_TABLE_ID: &str = "wav-channels";
 const FRAME_TABLE_ID: &str = "wav-frames";
 
 pub fn definition() -> WindowKindDefinition {
@@ -72,7 +72,7 @@ fn sample_text(data: &WavData, index: usize) -> Option<String> {
     }
 }
 
-fn action(name: &str) -> semio_framework_plugin::UiAssemblyResult<ActionId> {
+pub fn action(name: &str) -> semio_framework_plugin::UiAssemblyResult<ActionId> {
     ActionId::try_v1(CONTROLLER_ID, name).ok_or_else(|| PluginAssemblyError::new("stdio.wav.action", format!("invalid action {name}")))
 }
 

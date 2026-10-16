@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-flow-wasm-domain"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow wasm session domain: adapter state, argument preflight, program state, VCS feature, surface presentation and protocol contract"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-wasm-domain"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
+semio-framework-canvas = { path = "../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-job = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-replication = { workspace = true }
+serde_json = "1"
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_webgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = "0.2.106"
+js-sys = "0.3.83"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

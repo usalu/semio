@@ -1589,7 +1589,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     /// field mutation. Persisted local-only for now (no `ConfigStore`/disk binding wired yet — see
     /// `set_default_app`'s doc); a real multi-session deployment would fold this from a durable op
     /// log at boot instead of starting empty every run.
-    opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences,
+    opening_preferences: semio_framework_os_config::opening_config::OpeningPreferences,
     /// 🧬️ `open`'s real body mints the returned handle from this counter — see that method.
     next_handle: u32,
     /// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): `Kernel::activate`
@@ -1668,7 +1668,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             instance_directory: Arc::new(semio_framework_plugin_host::InstanceDirectory::new()),
             transaction_coordinator: Arc::new(semio_framework_plugin_host::HostTransactionCoordinator::new()),
             app_router: Arc::new(semio_framework_plugin_host::AppRouter::new()),
-            opening_preferences: semio_framework_plugin_host::opening_config::OpeningPreferences::default(),
+            opening_preferences: semio_framework_os_config::opening_config::OpeningPreferences::default(),
             next_handle: 1,
             plugin_ordinals: HashMap::new(),
             instances: HashMap::new(),
@@ -1902,6 +1902,22 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// needs a `GuestRuntime` seam on `🔌️plugin/🖥️host/🦀️.rs`, out of `path_scope` this
     /// packet (lease-requested, see `📓️terra-R1-report.md`) — so a plugin with no committed
     /// descriptor fails loudly here instead of silently instantiating to compensate.
+    /// 🎁️ The package assets `plugin_id`'s committed descriptor declares, read as files below the repository root above that
+    /// descriptor and checked against their declared size and SHA-256 (`semio_framework_plugin_host::package_assets`), for the
+    /// `assets` of its `Event::InstanceOpen`. A plugin that declares none, or whose descriptor sits outside a repository,
+    /// delivers none.
+    fn package_assets_for(&self, plugin_id: &str) -> Result<Vec<(String, Vec<u8>)>, RunError> {
+        let descriptor = self.read_committed_descriptor(plugin_id)?;
+        if descriptor.assets.is_empty() {
+            return Ok(Vec::new());
+        }
+        let root = self.descriptor_path_for_plugin.get(plugin_id).and_then(|path| semio_framework_plugin_host::package_assets::repository_root_above(path));
+        match root {
+            Some(root) => semio_framework_plugin_host::package_assets::package_file_assets(&root, &descriptor.assets).map_err(|message| RunError::Host(format!("plugin `{plugin_id}`: {message}"))),
+            None => Ok(Vec::new()),
+        }
+    }
+
     fn read_committed_descriptor(&self, plugin_id: &str) -> Result<PackageDescriptor, RunError> {
         let Some(path) = self.descriptor_path_for_plugin.get(plugin_id) else {
             return Err(RunError::Host(format!(
@@ -2179,8 +2195,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 format!("`{}` is not a registered {} surface for `{}`", app.app_id, role.as_str(), dialect.to_coordinate()),
             ));
         }
-        let mutation = semio_framework_plugin_host::opening_config::mutations::set_default_app::set_default_app(dialect, role, app);
-        semio_framework_plugin_host::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
+        let mutation = semio_framework_os_config::opening_config::mutations::set_default_app::set_default_app(dialect, role, app);
+        semio_framework_os_config::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
 
@@ -2191,8 +2207,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub fn clear_default_app(&mut self, artifact_kind: &str, standard: &str, subset: &str, role_wire: u8) -> Result<(), semio_framework::Fault> {
         let role = opening_role_from_wire(role_wire)?;
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: artifact_kind.to_string(), standard: standard.to_string(), subset: subset.to_string() };
-        let mutation = semio_framework_plugin_host::opening_config::mutations::clear_default_app::clear_default_app(dialect, role);
-        semio_framework_plugin_host::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
+        let mutation = semio_framework_os_config::opening_config::mutations::clear_default_app::clear_default_app(dialect, role);
+        semio_framework_os_config::opening_config::apply_opening_config_mutation(&mut self.opening_preferences, &mutation).map_err(|error| semio_framework::Fault::from(error.to_string()))?;
         Ok(())
     }
     //#endregion 🔖️OpeningCommands
@@ -2232,12 +2248,13 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(activation_refusal_error)?;
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
+        let assets = self.package_assets_for(plugin_id)?;
         let open_event = Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance_handle, request_sequence: 1 },
             app_id: AppInstanceId(app_id.to_string()),
             actor: "local".to_string(),
             config: Vec::new(),
-            assets: Vec::new(),
+            assets,
             capabilities: Vec::new(),
             quotas: QuotaSchema::default(),
         };

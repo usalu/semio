@@ -1,11 +1,10 @@
 //! 💾️ 💾️ S Studio app command — `open-space`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, ClipboardSetting, FocusedNodeSetting, SpaceIdSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, ClipboardSetting, FocusedNodeSetting, SpaceIdSetting};
 
 use semio_framework_artifact_space_space::{empty_space_snapshot, SpaceKind, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "open-space")]
@@ -14,7 +13,7 @@ pub struct OpenSpace {
 }
 
 pub fn handle(payload: &OpenSpace, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    use crate::engine::space::engine::resolve_future;
+    use semio_hub_space_operations::resolve_future;
     let space_id = &payload.space_id;
     // 🚧️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot`, not a
     // `space::SpaceSnapshot`-backed catalog entry — the "demo" id fallback below synthesizes a

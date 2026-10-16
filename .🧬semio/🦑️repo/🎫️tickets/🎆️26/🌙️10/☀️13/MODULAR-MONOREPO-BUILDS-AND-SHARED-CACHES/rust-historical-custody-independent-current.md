@@ -1,0 +1,23 @@
+# Rust Historical Custody Independent Current Audit
+
+2026-10-15. Read-only source audit of the current opaque writer epoch, after reading `rust-headroom-inventory-current.md` latest epoch and `rust-historical-custody-current.md`. Inspected actual Core leases, Mac image provider, fixed provider used by Linux/Windows, neutral Native contract, historical owner/policy and historical boundary test source. No tests, canonical preview, retirement, SDK capture or other runtime operations were performed. Only this report was written.
+
+## Findings
+
+No actionable authority finding in the inspected current historical path.
+
+Core `process/🔒️leases/🟦️.ts` snapshots accepted ordinary/queued lease options before effects. SQLite transaction selection and private/public records therefore use the same captured mode. The opaque token has no release port and resolves only through a module-private WeakMap. Capture first requires genuine exclusive custody, then exact accepted control, resolved directory and logical resource. Recheck requires live issuance, exclusive private mode, exact control and signal, directory/resource/guard path and matching public lease metadata. Copied tokens/leases and promoted readers cannot supply private issuance. Public demotion refuses; retirement flips the same private live bit before rollback. Queued wrappers are mapped to the same retained private transaction record, rather than reconstructed authority. Actual issued control checking precedes proof acceptance, so expired/foreign controls do not qualify.
+
+Native's neutral custody union explicitly separates `kernel-ex` from `fresh-private`. Mac persistent and fixed-platform providers create kernel-ex only after acquiring the actual exclusive lease and supply a proof derived from that lease/control. Their finally blocks release that lease after the callback settles. Fresh Mac private-image maintenance supplies only fresh-private. Both shared provider implementations snapshot opening options with a frozen spread before retained access, so later original option getter results cannot switch the captured directory/resource/control. Linux/Windows route through the inspected fixed provider; their runtime is not qualified here.
+
+Historical `budget/📜️history/🟦️.ts` refuses fresh-private, verifies the actual kernel-ex proof against the exact immutable namespace/resource/path, authenticates RC6013 through its genuine code reader and compares old witness records to its immutable receipt. It does not refresh those hashes from current Source. It reads the original mode-specific charge from the actual opened image root and recovers/checks the committed original allocation before constructing build/target roots under that same root.
+
+The private scope maps only the genuinely narrowed issued child control; copied/foreign/retired/broadened scopes fail exact matching. Its stored proof is checked using the exact opening control, not the narrowed child's distinct control. The historical callback is wrapped by `withRequestedIssuedResourceControlV1`, whose actual scope drain keeps the outer image callback and its EX reservation alive through accepted operations. Scope live state is retired only after that boundary returns/fails; the Native provider releases EX outside it. Final success rechecks proof, charge, sealed code and image. Existing failure-path finally ordering retains EX through the child drain even when success rechecks are skipped.
+
+The inspected historical tests cover immutable request admission, actual mode charge, ten SQLite-classified exact/foreign/copy/broadening cases, detached lower failure propagated beyond its owner and subsequent EX reacquisition. Reported BOTH Core/Native/old-CLI/scope outcomes are evidence supplied by their owners, not independently rerun results.
+
+## Qualification Limits
+
+This review does not independently reproduce the unchanged old-CLI reader/future-opener SQLite interleavings, inspect every lower scanner/deletion implementation or prove OS behavior on Linux/Windows. Opaque proof validation binds the private live transaction and authored guard path; it is not a new defense against an uncooperative actor replacing the SQLite inode outside the existing guard protocol. Generic Native callbacks must themselves await or register accepted work; the historical caller does so through its genuine issued scope. No blanket Native detached-work guarantee is inferred.
+
+No SDK authority change was made or qualified in this epoch. This source review supplies no permission to retire, no canonical headroom result and no Source-to-frozen SDK continuity claim. Root can evaluate its separately authorized next read-only preview using the existing guarded path; actual admission and recensus remain decisive.

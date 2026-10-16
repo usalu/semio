@@ -1,0 +1,54 @@
+{
+  "valid": [
+    {
+      "version": 1,
+      "directory": "source",
+      "entries": [
+        "🖋️latex",
+        "🔨️modules/🕸️graph/📐️.tex"
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "directory": "../escape",
+      "entries": [
+        "main.tex"
+      ]
+    },
+    {
+      "version": 1,
+      "directory": "source",
+      "entries": [
+        "../escape"
+      ]
+    },
+    {
+      "version": 1,
+      "directory": "source",
+      "entries": [
+        "a",
+        "a"
+      ]
+    }
+  ],
+  "names": [
+    {
+      "source": "📐️.tex",
+      "staged": "_.tex"
+    },
+    {
+      "source": "🖋️latex",
+      "staged": "semio-latex"
+    },
+    {
+      "source": "📄️paper.tex",
+      "staged": "paper.tex"
+    },
+    {
+      "source": "plain.tex",
+      "staged": "plain.tex"
+    }
+  ]
+}

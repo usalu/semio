@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "CopiedMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "snapshot"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "immutable-binary-objects"
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "maximumEntries": 200000,
+        "maximumBytes": 8589934592,
+        "maximumPath": 256,
+        "rootEntries": [
+          ".semio-authorizer-compiler.json",
+          ".semio-authorizer-source.json",
+          ".semio-nx-sdk-binaries.json",
+          ".semio-nx-tooling.json",
+          ".semio-sdk-material.json",
+          "bun.lock",
+          "node_modules",
+          "package.json",
+          "patches",
+          "semio-authorizers.mjs"
+        ]
+      }
+    }
+  }
+}

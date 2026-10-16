@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::LineEnding;
+use crate::TxtSnapshot;
+use crate::standards::v_utf_8::subsets::any::schema::mutation_support::*;
 
 #[test]
 fn carrier_product_matrix_matches_the_production_snapshot_codec() {

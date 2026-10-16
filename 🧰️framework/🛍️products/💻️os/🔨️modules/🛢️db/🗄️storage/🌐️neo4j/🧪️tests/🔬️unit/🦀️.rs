@@ -1,5 +1,5 @@
 use super::*;
-use crate::db_storage::db_io_maintenance_step;
+use db_io_driver::db_io_maintenance_step;
 
 #[semio_framework_async_macros::async_test]
 async fn lost_neo4j_facade_retires_the_real_owned_config_without_a_service() {

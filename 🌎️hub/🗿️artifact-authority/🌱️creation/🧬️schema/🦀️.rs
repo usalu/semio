@@ -1,7 +1,7 @@
 //! 📚️ Immutable creation facts bind one intent to one private pair and one public triple.
 
 use super::ArtifactCreationActorV1;
-use crate::directory::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationDialectV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1, SpaceArtifactCreationStatusV1};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DocumentDescriptor, DocumentOwner, DocumentScope};
 use semio_framework_artifact_reference::ArtifactDialect;
@@ -142,7 +142,7 @@ pub struct ArtifactCreationAcceptanceV1 {
 
 /// 🎟️ A non-cloneable execution grant exists only for the newly committed accepted fact.
 pub struct ArtifactCreationExecutionV1 {
-    pub(super) intent: ArtifactCreationIntentV1,
+    pub intent: ArtifactCreationIntentV1,
 }
 
 impl ArtifactCreationExecutionV1 {
@@ -172,9 +172,9 @@ pub struct ArtifactCreationFactAppendV1 {
 /// ⚛️ One reserved genesis publishes exactly three events and its private completion together.
 pub struct DocumentGenesisAppendV1 {
     pub intent: ArtifactCreationIntentV1,
-    pub events: [crate::directory::events::NewDirectoryEvent; 3],
+    pub events: [semio_hub_directory_contract::NewDirectoryEvent; 3],
     pub checkpoint: ArtifactCheckpoint,
-    pub reservation: crate::artifact_authority::chunk_cas::ArtifactCasReservation,
+    pub reservation: semio_hub_artifact_authority::chunk_cas::ArtifactCasReservation,
     pub now_ms: u64,
 }
 
@@ -261,7 +261,6 @@ fn hash(value: &str) -> bool {
 }
 
 /// 🔏️ Scope is length-prefixed before the canonical client intent; no route alias can collide.
-
 
 impl ArtifactCreationIntentV1 {
     /// 🚪️ Coordinates are derived from the accepted catalog binding, not supplied as a ready reply.

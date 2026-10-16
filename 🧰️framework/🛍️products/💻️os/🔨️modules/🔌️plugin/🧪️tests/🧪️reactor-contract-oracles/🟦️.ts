@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🪪️ One neutral admission row of the guest-lifecycle production corpus. */
 type GuestLifecycleCase = { readonly id: string; readonly exact: boolean; readonly live: boolean; readonly capacity: boolean; readonly accepted: boolean };
@@ -55,7 +56,7 @@ export function guestLifecycleOracle(): number {
     assert.equal(row.exact && row.live && row.capacity, row.accepted, row.id);
     assert.equal(admit(row), row.accepted, row.id);
   }
-  const reactor = readFileSync(new URL("../../⚛️reactor/🦀️.rs", import.meta.url), "utf8");
+  const reactor = readModuleTreeSource(new URL("../../⚛️reactor/🦀️.rs", import.meta.url));
   assert(reactor.includes("pub use turn::poll_kernel;"), "production reducer must be native-testable");
   const turn = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
   assert(!turn.includes("plugin_destroy_app(runtime"), "exact captured close must not admit twice");

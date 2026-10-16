@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "name": "receipt exactly 256",
+      "directoryLength": 245,
+      "leaseLength": 16,
+      "filename": "fixed.img",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 1
+    },
+    {
+      "name": "receipt exceeds 256",
+      "directoryLength": 246,
+      "leaseLength": 16,
+      "filename": "fixed.img",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "backing exceeds 256",
+      "directoryLength": 247,
+      "leaseLength": 16,
+      "filename": "fixed.vhd",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "root exceeds 256",
+      "directoryLength": 255,
+      "leaseLength": 16,
+      "filename": "fixed.img",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "lease exceeds 256",
+      "directoryLength": 16,
+      "leaseLength": 257,
+      "filename": "fixed.img",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "directory not canonical",
+      "directoryLength": 16,
+      "leaseLength": 16,
+      "filename": "fixed.img",
+      "canonicalDirectory": false,
+      "canonicalLease": true,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "lease not canonical",
+      "directoryLength": 16,
+      "leaseLength": 16,
+      "filename": "fixed.vhd",
+      "canonicalDirectory": true,
+      "canonicalLease": false,
+      "expectedAcquisitions": 0
+    },
+    {
+      "name": "lease exactly 256",
+      "directoryLength": 16,
+      "leaseLength": 256,
+      "filename": "fixed.vhd",
+      "canonicalDirectory": true,
+      "canonicalLease": true,
+      "expectedAcquisitions": 1
+    }
+  ]
+}

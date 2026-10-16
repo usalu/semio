@@ -13,21 +13,21 @@ pub struct ForeignTarget {
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids`/`UndoPolicy`
 /// (this crate sits below `os-kernel`). Mirrors `#[serde(rename_all = "camelCase")]` field naming
 /// and the `dialect` sparse-emission by hand.
-impl crate::value::ToValue for ForeignTarget {
-    fn to_value(&self) -> crate::value::DslValue {
+impl semio_framework_value::ToValue for ForeignTarget {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         let mut entries = vec![
-            ("artifactId".to_string(), crate::value::ToValue::to_value(&self.artifact_id)),
-            ("artifactKind".to_string(), crate::value::ToValue::to_value(&self.artifact_kind)),
+            ("artifactId".to_string(), semio_framework_value::ToValue::to_value(&self.artifact_id)),
+            ("artifactKind".to_string(), semio_framework_value::ToValue::to_value(&self.artifact_kind)),
         ];
         if self.dialect.is_some() {
-            entries.push(("dialect".to_string(), crate::value::ToValue::to_value(&self.dialect)));
+            entries.push(("dialect".to_string(), semio_framework_value::ToValue::to_value(&self.dialect)));
         }
-        crate::value::DslValue::object(entries)
+        semio_framework_value::DslValue::object(entries)
     }
 }
-impl crate::value::FromValue for ForeignTarget {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
+impl semio_framework_value::FromValue for ForeignTarget {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
             return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for ForeignTarget, found {value:?}")));
         };
         let mut artifact_id = None;
@@ -35,9 +35,9 @@ impl crate::value::FromValue for ForeignTarget {
         let mut dialect = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "artifactId" => artifact_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactId"))?),
-                "artifactKind" => artifact_kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactKind"))?),
-                "dialect" => dialect = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("dialect"))?,
+                "artifactId" => artifact_id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("artifactId"))?),
+                "artifactKind" => artifact_kind = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("artifactKind"))?),
+                "dialect" => dialect = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("dialect"))?,
                 _ => {}
             }
         }
@@ -54,26 +54,26 @@ impl crate::value::FromValue for ForeignTarget {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ForeignStep {
     pub target: ForeignTarget,
-    pub mutation_id: crate::ids::SchemaId,
+    pub mutation_id: semio_framework_replication_ids::SchemaId,
     pub payload: Vec<u8>,
     pub label: String,
 }
 
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin above
 /// documents.
-impl crate::value::ToValue for ForeignStep {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("target".to_string(), crate::value::ToValue::to_value(&self.target)),
-            ("mutationId".to_string(), crate::value::ToValue::to_value(&self.mutation_id)),
-            ("payload".to_string(), crate::value::ToValue::to_value(&self.payload)),
-            ("label".to_string(), crate::value::ToValue::to_value(&self.label)),
+impl semio_framework_value::ToValue for ForeignStep {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)),
+            ("mutationId".to_string(), semio_framework_value::ToValue::to_value(&self.mutation_id)),
+            ("payload".to_string(), semio_framework_value::ToValue::to_value(&self.payload)),
+            ("label".to_string(), semio_framework_value::ToValue::to_value(&self.label)),
         ])
     }
 }
-impl crate::value::FromValue for ForeignStep {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
+impl semio_framework_value::FromValue for ForeignStep {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
             return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for ForeignStep, found {value:?}")));
         };
         let mut target = None;
@@ -82,10 +82,10 @@ impl crate::value::FromValue for ForeignStep {
         let mut label = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "target" => target = Some(<ForeignTarget as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
-                "mutationId" => mutation_id = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
-                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
-                "label" => label = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?),
+                "target" => target = Some(<ForeignTarget as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
+                "mutationId" => mutation_id = Some(<semio_framework_replication_ids::SchemaId as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("mutationId"))?),
+                "payload" => payload = Some(<Vec<u8> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                "label" => label = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("label"))?),
                 _ => {}
             }
         }
@@ -146,7 +146,7 @@ impl ForeignStepCopy {
  /// 🎟️ Admits allocation-free source aliases and empty inline owners; no payload is copied.
  pub fn admit(source:ForeignStepSource<'_>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ForeignStepSource<'_>)>{
   if !permits(grant,0,0){return Err((refusal(if grant.maximum_items==0{ValueRefusalKind::WorkLimit}else{ValueRefusalKind::DepthLimit}),source));}
-  let output=ForeignStep{target:ForeignTarget{artifact_id:String::new(),artifact_kind:String::new(),dialect:source.dialect.map(|_|String::new())},mutation_id:crate::ids::SchemaId(String::new()),payload:Vec::new(),label:String::new()};
+  let output=ForeignStep{target:ForeignTarget{artifact_id:String::new(),artifact_kind:String::new(),dialect:source.dialect.map(|_|String::new())},mutation_id:semio_framework_replication_ids::SchemaId(String::new()),payload:Vec::new(),label:String::new()};
   Ok((Self{identity:source.identity(),owner:ForeignStepOwner::new(output),phase:0,allocated:false,cancelled:false},RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
  fn check(&self,source:ForeignStepSource<'_>)->Result<(),ValueError>{if self.identity!=source.identity(){Err(refusal(ValueRefusalKind::InvariantViolated))}else{Ok(())}}
@@ -324,3 +324,11 @@ impl Drop for ForeignStepsPreparation {fn drop(&mut self){assert!(std::thread::p
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path = "../../🚪️io/📝️text/🧵️canonical/🌐️foreign/🦀️.rs"]
+mod canonical_tree;
+
+mod owned_retirement {
+    use super::*;
+    semio_framework_value::artifact_retire_struct!(ForeignTarget{artifact_id,artifact_kind,dialect});
+}

@@ -1,6 +1,9 @@
 //! 🔤️ Wire conversions, descriptor and checkpoint validation, and the in-memory artifact projection.
 
 use super::*;
+use semio_hub_directory_contract::{ARTIFACT_CHECKPOINT_LINEAGE_MAX, ARTIFACT_PRIVATE_LOCATOR_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX, NewDirectoryEvent, actor_user_id};
+use semio_hub_directory_contract::model::{AuthSessionRecord, SocketSessionBindingStatus, SpaceRole};
+use directory::os_directory::DocumentScope;
 
 //#region 🔖️Wire
 // 🔗️ This crate's storage-row vocabulary (`SpaceRole`, plain `kind`/`visibility` strings — see
@@ -8,44 +11,6 @@ use super::*;
 // wire vocabulary the schema crate owns (`DirectorySpaceRole`/`DirectorySpaceKind`/
 // `DirectorySpaceVisibility`, imported above, never redeclared). Free functions, not inherent impls
 // on the wire types — they are foreign here, so the orphan rule blocks `impl DirectorySpaceRole {}`.
-
-/// 🔁️ Local storage role -> wire role (used when an event body needs the wire enum but the value
-/// in hand came from a projection read, e.g. an `InviteRecord`). `pub(crate)` — every backend's
-/// `//#region 🔖️Projections` uses the reverse direction (`role_from_wire(role).as_str()`) to get
-/// the exact `"author"`/`"spectator"` string its `CHECK` constraint speaks.
-pub(crate) fn role_to_wire(role: SpaceRole) -> DirectorySpaceRole {
-    match role {
-        SpaceRole::Author => DirectorySpaceRole::Author,
-        SpaceRole::Spectator => DirectorySpaceRole::Spectator,
-    }
-}
-
-/// 🔁️ Wire role -> local storage role (used when a `HubDirectory` method that still speaks the
-/// storage vocabulary — e.g. `create_invite` — needs a role that arrived as a `DirectoryCommand` field).
-pub(crate) fn role_from_wire(role: DirectorySpaceRole) -> SpaceRole {
-    match role {
-        DirectorySpaceRole::Author => SpaceRole::Author,
-        DirectorySpaceRole::Spectator => SpaceRole::Spectator,
-    }
-}
-
-/// 🔡️ Wire space-kind -> the exact lowercase string every backend's `CHECK (kind IN (...))`
-/// constraint speaks; used only by each backend's `//#region 🔖️Projections`.
-pub(crate) fn kind_to_str(kind: DirectorySpaceKind) -> &'static str {
-    match kind {
-        DirectorySpaceKind::Atelier => "atelier",
-        DirectorySpaceKind::Studio => "studio",
-        DirectorySpaceKind::Archive => "archive",
-    }
-}
-
-/// 🔡️ Wire visibility -> the exact lowercase string every backend's `CHECK` constraint speaks.
-pub(crate) fn visibility_to_str(visibility: DirectorySpaceVisibility) -> &'static str {
-    match visibility {
-        DirectorySpaceVisibility::Private => "private",
-        DirectorySpaceVisibility::Public => "public",
-    }
-}
 
 /// 🧬️ Rejects descriptors that cannot safely select and verify a cold-open codec.
 pub fn validate_document_descriptor(descriptor: &DocumentDescriptor) -> DirectoryResult<()> {
@@ -92,7 +57,7 @@ pub fn published_artifact_checkpoint(checkpoint: &ArtifactCheckpoint) -> Publish
     }
 }
 
-pub(super) fn checkpoint_identity_input(checkpoint: &PublishedArtifactCheckpoint) -> ArtifactCheckpoint {
+pub fn checkpoint_identity_input(checkpoint: &PublishedArtifactCheckpoint) -> ArtifactCheckpoint {
     ArtifactCheckpoint {
         scope: checkpoint.scope.clone(),
         checkpoint_id: checkpoint.checkpoint_id,
@@ -110,7 +75,7 @@ fn valid_hash(hash: ArtifactHash) -> bool {
     hash.0 != [0; 32]
 }
 
-pub(super) fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+pub fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
     if checkpoint.scope.space_id.is_empty()
         || checkpoint.scope.document_id.is_empty()
         || checkpoint.baseline_frontier.document_id != checkpoint.scope.document_id
@@ -133,14 +98,14 @@ pub(super) fn validate_checkpoint_shape(checkpoint: &PublishedArtifactCheckpoint
         return Err(DirectoryError::Conflict("artifact checkpoint metadata is invalid".into()));
     }
     let identity = checkpoint_identity_input(checkpoint);
-    let encoded = crate::artifact_authority::checkpoint_id_encoding_v1(&identity).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    let encoded = semio_hub_artifact_authority::checkpoint_id_encoding_v1(&identity).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
     if (ArtifactHash(Sha256::digest(&encoded))) != checkpoint.checkpoint_id {
         return Err(DirectoryError::Conflict("artifact checkpoint identity does not match its canonical metadata".into()));
     }
     Ok(())
 }
 
-pub(super) fn validate_retention_shape(retention: &ArtifactRetention) -> DirectoryResult<()> {
+pub fn validate_retention_shape(retention: &ArtifactRetention) -> DirectoryResult<()> {
     if retention.scope.space_id.is_empty()
         || retention.scope.document_id.is_empty()
         || retention.retained_floor.document_id != retention.scope.document_id
@@ -157,7 +122,7 @@ pub(super) fn validate_retention_shape(retention: &ArtifactRetention) -> Directo
 }
 
 /// 🔐️ Defends the backend-only atomic append seam even when called outside the service.
-pub(crate) fn validate_verified_checkpoint_append(event: &NewDirectoryEvent, checkpoint: &ArtifactCheckpoint) -> DirectoryResult<PublishedArtifactCheckpoint> {
+pub fn validate_verified_checkpoint_append(event: &NewDirectoryEvent, checkpoint: &ArtifactCheckpoint) -> DirectoryResult<PublishedArtifactCheckpoint> {
     if event.actor.kind != DirectoryActorKind::System {
         return Err(DirectoryError::Unauthorized);
     }
@@ -176,12 +141,12 @@ pub(crate) fn validate_verified_checkpoint_append(event: &NewDirectoryEvent, che
     }
 }
 
-pub(super) fn frontier_strictly_advances(previous: &ArtifactFrontier, next: &ArtifactFrontier) -> bool {
+pub fn frontier_strictly_advances(previous: &ArtifactFrontier, next: &ArtifactFrontier) -> bool {
     previous.document_id == next.document_id && next.head_edit_ordinal > previous.head_edit_ordinal && next.last_commit_seq > previous.last_commit_seq
 }
 
 /// 🧱️ Transaction and replay projections validate the durable parent before changing the active head.
-pub(crate) fn validate_published_checkpoint_lineage(descriptor: &DocumentDescriptor, active: Option<&PublishedArtifactCheckpoint>, count: u64, candidate: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+pub fn validate_published_checkpoint_lineage(descriptor: &DocumentDescriptor, active: Option<&PublishedArtifactCheckpoint>, count: u64, candidate: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
     validate_checkpoint_shape(candidate)?;
     if descriptor.space_id != candidate.scope.space_id || descriptor.document_id != candidate.scope.document_id || descriptor_digest_v1(descriptor).ok() != Some(candidate.descriptor_digest_v1) || count >= ARTIFACT_CHECKPOINT_LINEAGE_MAX {
         return Err(DirectoryError::Conflict("artifact checkpoint durable descriptor or lineage bound differs".into()));
@@ -208,11 +173,11 @@ pub(crate) fn validate_published_checkpoint_lineage(descriptor: &DocumentDescrip
 }
 
 /// 🌱️ Validates the exact prepared creation and its fixed author/author/system event packet.
-pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1) -> DirectoryResult<()> {
+pub fn validate_document_genesis_append_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1) -> DirectoryResult<()> {
     let Some(prepared) = operation.prepared.as_ref() else {
         return Err(DirectoryError::Conflict("genesis creation has no durable prepared pair".into()));
     };
-    crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &operation.intent)?;
+    semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, &operation.intent)?;
     if operation.intent != append.intent
         || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing
         || operation.revision != 2
@@ -226,7 +191,7 @@ pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOp
     if canonical != prepared.checkpoint {
         return Err(DirectoryError::Conflict("genesis checkpoint differs from prepared bytes".into()));
     }
-    crate::artifact_authority::chunk_cas::validate_artifact_cas_publication_v1(&append.reservation.plan, &append.checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+    semio_hub_artifact_authority::chunk_cas::validate_artifact_cas_publication_v1(&append.reservation.plan, &append.checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
     validate_published_checkpoint_lineage(&prepared.descriptor, None, 0, &published_artifact_checkpoint(&append.checkpoint))?;
     let expected = [
         DirectoryEventBody::DocumentAnnounced { descriptor: prepared.descriptor.clone() },
@@ -251,7 +216,7 @@ pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOp
 }
 
 /// 🧾️ Only the transaction's actual dense public triple can construct its completion fact.
-pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1, events: &[DirectoryEvent]) -> DirectoryResult<ArtifactCreationFactV1> {
+pub fn document_genesis_completion_v1(operation: &ArtifactCreationOperationV1, append: &DocumentGenesisAppendV1, events: &[DirectoryEvent]) -> DirectoryResult<ArtifactCreationFactV1> {
     validate_document_genesis_append_v1(operation, append)?;
     if events.len() != 3
         || events[0].seq == 0
@@ -266,8 +231,8 @@ pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperati
         request_id: append.intent.request.request_id.clone(),
         revision: 3,
         recorded_at_ms: append.now_ms,
-        body: crate::artifact_authority::creation::ArtifactCreationFactBodyV1::Committed {
-            receipt: crate::artifact_authority::creation::ArtifactCreationReceiptV1 {
+        body: semio_hub_artifact_creation::ArtifactCreationFactBodyV1::Committed {
+            receipt: semio_hub_artifact_creation::ArtifactCreationReceiptV1 {
                 ready: append.intent.ready(),
                 checkpoint_id: append.checkpoint.checkpoint_id,
                 descriptor_digest_v1: append.checkpoint.descriptor_digest_v1,
@@ -295,7 +260,7 @@ pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperati
 /// ownership predicate here would refuse real documents. The cross-package binding is declared where
 /// the catalog is in scope: `validate_descriptor_open_target` pins the dialect to the owning app and
 /// `validate_document_genesis_append_v1` pins this entry to the accepted intent.
-pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &DocumentDescriptor) -> DirectoryResult<::directory::os_directory::DirectoryIndexedDocumentViewV1> {
+pub fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &DocumentDescriptor) -> DirectoryResult<::directory::os_directory::DirectoryIndexedDocumentViewV1> {
     let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else {
         return Err(DirectoryError::Conflict("document index event required".into()));
     };
@@ -323,7 +288,7 @@ pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &
 /// publication. The entry's own grammar is already admitted by `DocumentIndexEntryV1::validate`
 /// before the row can exist, and `document_index_projection_v1` above pins the row to this same
 /// descriptor and digest.
-pub(crate) fn validate_checkpoint_index_v1(index: Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1>, descriptor: &DocumentDescriptor, checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
+pub fn validate_checkpoint_index_v1(index: Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1>, descriptor: &DocumentDescriptor, checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
     if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1) {
         Ok(())
     } else {
@@ -336,8 +301,8 @@ pub(crate) fn validate_checkpoint_index_v1(index: Option<&::directory::os_direct
 pub struct MemoryArtifactProjection {
     pub(super) descriptors: HashMap<DocumentScope, DocumentDescriptor>,
     pub(super) index: HashMap<DocumentScope, ::directory::os_directory::DirectoryIndexedDocumentViewV1>,
-    pub(super) checkpoints: HashMap<DocumentScope, Vec<PublishedArtifactCheckpoint>>,
-    pub(super) retention: HashMap<DocumentScope, ArtifactRetention>,
+    pub checkpoints: HashMap<DocumentScope, Vec<PublishedArtifactCheckpoint>>,
+    pub retention: HashMap<DocumentScope, ArtifactRetention>,
 }
 
 impl MemoryArtifactProjection {
@@ -368,7 +333,7 @@ impl MemoryArtifactProjection {
         Ok(())
     }
 
-    pub(super) fn fold(&mut self, event: &DirectoryEvent) -> DirectoryResult<()> {
+    pub fn fold(&mut self, event: &DirectoryEvent) -> DirectoryResult<()> {
         match &event.body {
             DirectoryEventBody::DocumentAnnounced { descriptor } => {
                 self.descriptors.insert(DocumentScope::new(&descriptor.space_id, &descriptor.document_id), descriptor.clone());
@@ -429,3 +394,67 @@ impl MemoryArtifactProjection {
     }
 }
 //#endregion 🔖️Wire
+
+//#region 🔖️Service
+/// 🛑️ A projection refusal whose transaction can be rolled back before any commit attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DirectoryProjectionRejectionV1 {
+    MissingSpace { space_id: String },
+    ArchivedAuthor { space_id: String },
+    ArchivedDocument { space_id: String },
+}
+
+impl DirectoryProjectionRejectionV1 {
+    /// 🧯️ Exposes the semantic refusal without claiming a retry-safe transport outcome.
+    pub fn into_error(self) -> DirectoryError {
+        DirectoryError::Conflict(match self {
+            Self::MissingSpace { space_id } => format!("space '{space_id}' no longer exists"),
+            Self::ArchivedAuthor { space_id } => format!("space '{space_id}' is an archive; no author memberships are allowed"),
+            Self::ArchivedDocument { space_id } => format!("space '{space_id}' is an archive; document publication is forbidden"),
+        })
+    }
+}
+
+/// 🧮️ Extracts the transactional space authority needed by archive-sensitive projections.
+pub fn directory_projection_space_v1(body: &DirectoryEventBody) -> Option<&str> {
+    match body {
+        DirectoryEventBody::SpaceArchived { space_id } | DirectoryEventBody::MemberUpserted { space_id, .. } | DirectoryEventBody::InviteRedeemed { space_id, .. } => Some(space_id),
+        DirectoryEventBody::DocumentAnnounced { descriptor } => Some(&descriptor.space_id),
+        DirectoryEventBody::DocumentIndexed { scope, .. } => Some(&scope.space_id),
+        DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => Some(&checkpoint.scope.space_id),
+        _ => None,
+    }
+}
+
+/// 🏛️ Evaluates intrinsic event invariants against the space read under the backend writer lock.
+pub fn directory_projection_rejection_v1(body: &DirectoryEventBody, space_kind: Option<&str>) -> Option<DirectoryProjectionRejectionV1> {
+    let space_id = directory_projection_space_v1(body)?;
+    if space_kind.is_none() {
+        return Some(DirectoryProjectionRejectionV1::MissingSpace { space_id: space_id.into() });
+    }
+    if space_kind == Some("archive") && matches!(body, DirectoryEventBody::MemberUpserted { role: DirectorySpaceRole::Author, .. } | DirectoryEventBody::InviteRedeemed { role: DirectorySpaceRole::Author, .. }) {
+        return Some(DirectoryProjectionRejectionV1::ArchivedAuthor { space_id: space_id.into() });
+    }
+    if space_kind == Some("archive") && matches!(body, DirectoryEventBody::DocumentAnnounced { .. } | DirectoryEventBody::DocumentIndexed { .. } | DirectoryEventBody::ArtifactCheckpointPublished { .. }) {
+        return Some(DirectoryProjectionRejectionV1::ArchivedDocument { space_id: space_id.into() });
+    }
+    None
+}
+
+/// 🔏️ Only an acknowledged rollback may produce RejectedBeforeCommit; every uncertain error stays Err.
+#[derive(Clone, Debug)]
+pub enum DirectoryAppendOutcomeV1 {
+    Appended(Vec<DirectoryEvent>),
+    RejectedBeforeCommit(DirectoryProjectionRejectionV1),
+}
+//#endregion 🔖️Service
+
+/// 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
+/// under its principal's ceiling ([`HubDirectory::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
+pub async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
+    let Some(space_id) = space_id else { return Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: record.expires_at, session_kind: record.session_kind }) };
+    Ok(match directory.principal_ceiling(record.principal()).await?.cap(space_id, membership) {
+        Some(role) => SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms: record.expires_at, session_kind: record.session_kind },
+        None => SocketSessionBindingStatus::MembershipLost,
+    })
+}

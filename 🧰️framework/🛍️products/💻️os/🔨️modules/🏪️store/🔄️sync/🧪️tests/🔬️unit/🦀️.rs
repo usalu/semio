@@ -260,7 +260,7 @@ impl ArtifactPack for DemoSnapshot {
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DemoSnapshot {
 fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -1015,7 +1015,7 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
                             schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                             plugin_id: "trusted-plugin".into(),
                             package_id: "semio:trusted-plugin".into(),
-                            profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                            profile: crate::os_component_receipt::ComponentProfileV1::Release,
                             target: crate::os_component_receipt::COMPONENT_TARGET.into(),
                             wasm_sha256: "6".repeat(64),
                             wasm_bytes: 1024,
@@ -1637,7 +1637,7 @@ mod actor_tests {
                             schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
                             plugin_id: "mock-plugin".into(),
                             package_id: "semio:mock-plugin".into(),
-                            profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                            profile: crate::os_component_receipt::ComponentProfileV1::Release,
                             target: crate::os_component_receipt::COMPONENT_TARGET.into(),
                             wasm_sha256: "6".repeat(64),
                             wasm_bytes: 1024,

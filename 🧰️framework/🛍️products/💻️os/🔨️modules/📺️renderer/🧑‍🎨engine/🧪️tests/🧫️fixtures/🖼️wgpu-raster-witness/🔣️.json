@@ -1,7 +1,7 @@
 {
   "fixture": "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️raster-witness-lifecycle/🔣️.json",
-  "drawSource": "../../../../🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs",
-  "gpuSource": "../../../../🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs",
+  "drawSource": "../../../../🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs",
+  "gpuSource": "../../../../🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs",
   "rendererSource": "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
   "engineCanvasSource": "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs",
   "rustLaw": "../../../../🖱️ui/🧪️tests/🖼️raster-witness-lifecycle/🦀️.rs"

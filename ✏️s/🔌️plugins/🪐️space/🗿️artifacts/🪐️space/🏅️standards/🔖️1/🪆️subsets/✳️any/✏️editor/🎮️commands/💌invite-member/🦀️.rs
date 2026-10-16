@@ -20,7 +20,4 @@ pub fn handle(payload: &InviteMember, doc: &ArtifactView<'_, SSpaceSnapshot>, _c
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

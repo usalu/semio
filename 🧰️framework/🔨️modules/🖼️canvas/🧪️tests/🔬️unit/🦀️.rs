@@ -1,12 +1,11 @@
-
-use super::camera::{Camera, Viewport, screen_to_world, world_to_screen};
-use super::lod::{Lod, LodScale};
 use super::text;
 use super::theme;
 use super::{Point, Scene};
+use semio_framework_canvas_assets::testkit::install_repository_assets;
 
 #[test]
 fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {
+    install_repository_assets();
     let mut scene = Scene::new();
     text::append_label(&mut scene, "A", Point::new(10.0, 10.0), 12.0, theme::default_icon_fg(), theme::default_icon_bg());
     let logical = scene.path_count();
@@ -18,6 +17,7 @@ fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {
 
 #[test]
 fn append_label_renders_glyphs() {
+    install_repository_assets();
     let mut scene = Scene::new();
     text::append_label(&mut scene, "Zürich", Point::new(40.0, 40.0), 14.0, theme::default_icon_fg(), theme::default_icon_bg());
     assert!(!scene.path_count().eq(&0));
@@ -37,6 +37,7 @@ fn label_advance_excludes_outer_padding() {
 
 #[test]
 fn label_byte_world_x_is_narrower_than_char_width_estimate() {
+    install_repository_assets();
     let line = "MATCH";
     let x0 = text::label_byte_world_x(line, 0, 0.0, 14.0);
     let x5 = text::label_byte_world_x(line, 5, 0.0, 14.0);
@@ -50,26 +51,4 @@ fn label_extent_matches_append_label_box() {
     assert!(w > 32.0);
     assert!(h >= 16.0);
     assert_eq!(text::label_extent("  ", 12.0), (0.0, 0.0));
-}
-
-#[test]
-fn camera_round_trip() {
-    let camera = Camera { x: 10.0, y: -5.0, zoom: 2.0 };
-    let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
-    let world = Point::new(12.0, 3.0);
-    let screen = world_to_screen(&camera, &viewport, world);
-    let back = screen_to_world(&camera, &viewport, screen);
-    assert!((back.x - world.x).abs() < 1e-9);
-    assert!((back.y - world.y).abs() < 1e-9);
-}
-
-#[test]
-fn lod_scale_resolve() {
-    const LODS: &[Lod] =
-        &[Lod { id: "minimap", name: "Minimap", description: "min", max_zoom: 0.15 }, Lod { id: "overview", name: "Overview", description: "ov", max_zoom: 0.35 }, Lod { id: "micro", name: "Micro", description: "mi", max_zoom: f64::INFINITY }];
-    let scale = LodScale { lods: LODS };
-    assert_eq!(scale.resolve(0.1).id, "minimap");
-    assert_eq!(scale.resolve(0.2).id, "overview");
-    assert_eq!(scale.resolve(3.0).id, "micro");
-    assert_eq!(scale.index_of("overview"), Some(1));
 }

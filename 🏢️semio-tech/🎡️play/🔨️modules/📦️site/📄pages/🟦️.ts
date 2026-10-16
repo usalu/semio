@@ -114,7 +114,7 @@ export function publishPlayPages(siteDir: string, pagesDir: string, apex: string
 export const PLAY_MODULE_CATALOG_FILE = "🧾️catalog.json";
 
 /** 🧾️ One runtime module bound to its receipt and its published files (`PlayModuleBindingV1`). */
-export type PlayModuleBindingV1 = Readonly<{ pluginId: string; route: string; directory: string; receipt: Readonly<{ profile: "wasm-prototype" | "wasm-release"; wasmSha256: string; wasmBytes: number; semanticDescriptorSha256: string; sourceTreeDigest: string; provenanceSha256: string }>; files: readonly Readonly<{ path: string; sha256: string; bytes: number }>[] }>;
+export type PlayModuleBindingV1 = Readonly<{ pluginId: string; route: string; directory: string; receipt: Readonly<{ profile: "prototype" | "release"; wasmSha256: string; wasmBytes: number; semanticDescriptorSha256: string; sourceTreeDigest: string; provenanceSha256: string }>; files: readonly Readonly<{ path: string; sha256: string; bytes: number }>[] }>;
 
 /** 🧾️ The runtime module catalog of one deployment (`PlayModuleCatalogV1`). */
 export type PlayModuleCatalogV1 = Readonly<{ schemaVersion: 1; modules: readonly PlayModuleBindingV1[] }>;
@@ -127,15 +127,15 @@ function filesBelow(directory: string, prefix = ""): string[] {
 /** 📦️ Binds the runtime into an already bundled site: copies every runtime module, the browser support and the fonts from their producers' owned outputs,
  * then writes the module catalog that binds each module directory to its receipt and to the digest of every file it publishes. The bundle itself never
  * embeds compiled bytes, so it is built before any component links. */
-export async function bindPlayRuntimeAssetsV1(siteDir: string, workspace: string, signal?: AbortSignal): Promise<PlayModuleCatalogV1> {
-  await copyBrowserArtifacts(siteDir, playRuntimeAssetSources(workspace, readBuildMode(process.env.SEMIO_BUILD_MODE)), signal ? { signal } : {});
+export async function bindPlayRuntimeAssetsV1(siteDir: string, workspace: string, mode:"prototype"|"release",signal?: AbortSignal): Promise<PlayModuleCatalogV1> {
+  await copyBrowserArtifacts(siteDir, playRuntimeAssetSources(workspace,mode), signal ? { signal } : {});
   const modules: PlayModuleBindingV1[] = [];
   for (const route of [MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE].map(routeDirectory)) {
     const root = join(siteDir, route);
     if (!existsSync(root)) continue;
     for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(root, entry.name, COMPONENT_RECEIPT_FILE))).map((entry) => entry.name).sort()) {
       const receipt = readComponentReceiptV1(join(root, directory, COMPONENT_RECEIPT_FILE));
-      const profile = buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)).wasmProfile;
+      const profile = buildModePolicy(mode).cargoProfile;
       if (receipt.profile !== profile) throw new Error(`Play ${profile} publication cannot bind ${directory}: ${receipt.profile}`);
       modules.push({ pluginId: receipt.pluginId, route, directory, receipt: { profile, wasmSha256: receipt.wasmSha256, wasmBytes: receipt.wasmBytes, semanticDescriptorSha256: receipt.semanticDescriptorSha256, sourceTreeDigest: receipt.sourceTreeDigest, provenanceSha256: receipt.provenanceSha256 }, files: filesBelow(join(root, directory)).map((path) => { const bytes = readFileSync(join(root, directory, path)); return { path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.byteLength }; }) });
     }

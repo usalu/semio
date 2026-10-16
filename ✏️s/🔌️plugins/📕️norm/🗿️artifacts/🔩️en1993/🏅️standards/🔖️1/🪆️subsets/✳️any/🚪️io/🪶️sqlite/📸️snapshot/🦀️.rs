@@ -39,7 +39,7 @@ fn read_annex(s:&str)->Result<AnnexChoice, ValueError>{match s{"En"=>Ok(AnnexCho
 fn write_forces(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,values:&[ForceAction])->Result<(), ValueError>{for(n,a)in values.iter().enumerate(){p.insert_float(table,&[Cell::Integer(parent),ordinal(n)?,Cell::Text(&a.id),Cell::Text(&a.load_case_id),Cell::Real(a.force)],FORCE)?;}Ok(())}
 fn read_forces(rows:Vec<FloatRow<'_>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<ForceAction>, ValueError>{let mut out=Vec::new();for a in ordered(rows,parent,c)?{checkpoint(c,out.len(),0)?;out.push(ForceAction{id:text(a,3,c)?,load_case_id:text(a,4,c)?,force:a.real(5)?});}Ok(out)}
 /// 🪪️ Optional relational capability supplied by the steel artifact owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1993Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1993Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 impl En1993Snapshot{
  fn write_sqlite_rows(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  p.insert_key("en1993_document",1,&[Cell::Text(annex(self.annex))])?;

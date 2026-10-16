@@ -1,5 +1,8 @@
+import {withPlaygroundSessionV1} from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
 import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{withInfiniteFontArtifactV1}from"../../../♾️infinite/🔤️fonts/👓️reading/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {checkScriptInvocation,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
@@ -59,26 +62,24 @@ import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️pl
 
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "prototype" | "release";
-    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <prototype|release>");
+    const [variant, renderer, selectedProfile] = args, profile = selectedProfile;
+    if (args.length !== 3 || typeof variant!=="string" || (renderer!=="react"&&renderer!=="wgpu") || (profile!=="prototype"&&profile!=="release") || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <prototype|release>");
     const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
-    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
-    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
+    await withPlaygroundSessionV1(this.repoRoot,this.invocation,variant,async(session,projection)=>{
     if (session.variant !== variant) throw new Error("Activation session identity mismatch");
-    const runtime = developmentRuntimeRoot(this.root, variant, profile, renderer as "react" | "wgpu"), receiptRoot = join(runtime, "activation");
-    const catalog = new Map(readGeneratedCatalogProjection().entries.map((entry) => [entry.pluginId, entry]));
+    const runtime = developmentRuntimeRoot(this.repoRoot, variant, profile, renderer as "react" | "wgpu"), receiptRoot = join(runtime, "activation");
+    const catalog = new Map(projection.entries.map((entry) => [entry.pluginId, entry]));
     const controller = new AbortController(), cancel = (): void => controller.abort();
     for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, cancel);
     try {
       const support = new Map<string, string>();
       for (const directory of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) for (const [name, path] of artifactFiles(join(moduleRoot, directory))) support.set(join(directory, name), path);
-      support.set(FONT_ASSET, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET));
-      const supportDigest = await activationFilesDigest(support, controller.signal), completed = [];
+      const fontControl=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"activation:font-digest",60000),0,controller.signal),supportDigest=await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,fontControl,async artifact=>{support.set(FONT_ASSET,join(artifact.path,FONT_ASSET));try{return await activationFilesDigest(support,fontControl.signal);}finally{support.delete(FONT_ASSET);}}),completed = [];
       // 🩺️ HEALTHY SET: the receipt names what is ACTIVATED, so a component that never staged must be
       // absent from it rather than carry a digest of nothing — that absence is what makes the serve's
       // own freshness pass report it `unactivated` instead of the host pretending it is there.
       const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
-      const healthy = healthyPreparedComponents(verdicts, playgroundCatalog.find((row) => row.variant === variant)?.pluginId ?? variant);
+      const healthy = healthyPreparedComponents(verdicts, playgroundCatalog().find((row) => row.variant === variant)?.pluginId ?? variant);
       for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
       if (healthy.refusal) throw new Error(healthy.refusal);
       // Content-hash warm path: when every prepared module already records the current
@@ -115,18 +116,19 @@ class ActivationScript extends BundleScript {
         controller.signal.throwIfAborted();
         const target = catalog.get(plugin.pluginId);
         if (!target) throw new Error(`Missing activation catalog entry: ${plugin.pluginId}`);
-        if (target.role === "extension") await publishActivatedExtension(target, join(moduleRoot, moduleDirectoryName(plugin.pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt, controller.signal);
+        if (target.role === "extension") await publishActivatedExtension(this.repoRoot,this.invocation,target, join(moduleRoot, moduleDirectoryName(plugin.pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories)), join(runtime, "extensions"), plugin.artifactSha256, plugin.rebuiltAt, controller.signal);
       }
       controller.signal.throwIfAborted();
       const changed = publishActivationReceipt(receiptRoot, receipt);
       console.log(`Activated ${variant} ${renderer} ${profile}: ${receipt.plugins.length} completed components (${changed ? "changed" : "unchanged"})`);
     } finally { for (const signal of ["SIGINT", "SIGTERM"] as const) process.removeListener(signal, cancel); }
+    });
   }
 }
 
 /** 🎯️ Resolves the authored activation producer for one admitted playground runtime. */
 export function playgroundActivationTargetV1(variant: string, profile: "prototype" | "release", renderer: "react" | "wgpu"): string {
-  if (!playgroundCatalog.some(row => row.variant === variant)) throw Error(`Missing generated playground ${variant}`);
+  if (!playgroundCatalog().some(row => row.variant === variant)) throw Error(`Missing generated playground ${variant}`);
   return `@semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`;
 }
 

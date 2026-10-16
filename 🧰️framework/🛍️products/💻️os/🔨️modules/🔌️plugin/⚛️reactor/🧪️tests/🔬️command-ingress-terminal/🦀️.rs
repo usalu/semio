@@ -1,3 +1,8 @@
+/// 📖️ The reactor turn module tree, read at run time from the manifest folder of the hosting crate instead of embedded.
+fn turn_source() -> String {
+    semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../⚛️reactor/🔄️turn/🦀️.rs")).expect("the reactor turn module tree reads")
+}
+
 #[test]
 fn accepted_final_page_completes_without_a_follow_up_turn() {
     let cursor = semio_framework::kernel::CommandPageCursor { owner: 7, generation: 11, command_index: 0, command_count: 1, instance: 13, seq: 17, kind: 19, page_index: 0, page_count: 1, item_count: 0, metadata: 0 };
@@ -22,7 +27,7 @@ fn accepted_final_page_preserves_a_terminal_fault() {
 
 #[test]
 fn async_actor_poll_awaits_exchange_and_render_work() {
-    let source = include_str!("../../🔄️turn/🦀️.rs");
+    let source = turn_source();
     let start = source.find("pub async fn poll_kernel<").expect("native kernel poll");
     let end = source[start..].find("fn route_exchange_output").map(|offset| start + offset).expect("poll implementation boundary");
     let poll = &source[start..end];
@@ -70,7 +75,7 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
 fn every_admitted_command_page_leaves_the_turn_with_a_named_status() {
     let contract = drain_contract();
     let named = contract["reactorStatuses"]["unownedPageFault"].as_str().expect("fault code declared").to_string();
-    let source = include_str!("../../🔄️turn/🦀️.rs");
+    let source = turn_source();
     let start = source.find("if let Some((cursor, page)) = command_page {").expect("the page admission chain");
     let end = source[start..].find("command_ingress = command_ingress_while_owned").map(|offset| start + offset).expect("the chain ends at the ownership rule");
     let chain = &source[start..end];

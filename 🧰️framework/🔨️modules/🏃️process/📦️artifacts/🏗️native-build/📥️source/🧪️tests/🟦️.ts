@@ -1,11 +1,13 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve,relative } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readRustSourceClosureV1, rustCfgMatchesV1, selectRustSourceV1 } from "../🟦️.ts";
 
-const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { name: string; cfg: string[]; source: string; expected: string }[]; closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[] };
+const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { name: string; cfg: string[]; source: string; expected: string; oracle?: boolean }[]; closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[] };
 const normalize = (source: string) => source.replace(/\s+/gu, " ").trim();
 test("portable cfg source corpus is closed and validated by Ajv", () => {
   const validate = new Ajv().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/schema.json"), "utf8")));
@@ -16,6 +18,24 @@ for (const row of corpus.cases) test(row.name, () => expect(normalize(selectRust
 test("malformed conditional expressions fail closed", () => {
   for (const condition of ["not(test, unix)", "feature", "all(test", "feature = 42"]) expect(() => selectRustSourceV1(`#[cfg(${condition})] mod unsafe_mount;`, [])).toThrow();
 });
+test("a cfg-false attribute with nothing to own fails closed", () => {
+  for (const source of ["fn f() { #[cfg(test)] }", "struct S { a: u8, #[cfg(test)] }", "#[cfg(test)]"]) expect(() => selectRustSourceV1(source, [])).toThrow("Unsupported cfg-owned Rust item");
+});
+const expand = (directory: string, source: string, cfg: string[]) => {
+  const file = join(directory, "oracle.rs"), flags = cfg.flatMap(value => ["--cfg", value.includes("=") ? value.replace(/=(.*)$/u, '="$1"') : value]);
+  writeFileSync(file, source);
+  const run = spawnSync(process.env.RUSTC ?? "rustc", ["-Zunpretty=expanded", "--edition", "2021", "--crate-type", "lib", "--crate-name", "oracle", "-Awarnings", ...flags, file], { encoding: "utf8", env: { ...process.env, RUSTC_BOOTSTRAP: "1" } });
+  if (run.status !== 0) throw Error(`rustc rejected ${JSON.stringify(source)}: ${run.stderr}`);
+  return run.stdout;
+};
+test("independent rustc cfg expansion agrees with the selected source of every oracle vector", () => {
+  const directory = mkdtempSync(join(tmpdir(), "rust-cfg-oracle-"));
+  try {
+    const rows = corpus.cases.filter(row => row.oracle);
+    expect(rows.length).toBeGreaterThanOrEqual(20);
+    for (const row of rows) expect(expand(directory, selectRustSourceV1(row.source, row.cfg), []), row.name).toBe(expand(directory, row.source, row.cfg));
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+}, 120_000);
 test("independent SQLite Boolean evaluation agrees with nested cfg predicates", () => {
   const database = new Database(":memory:");
   try {

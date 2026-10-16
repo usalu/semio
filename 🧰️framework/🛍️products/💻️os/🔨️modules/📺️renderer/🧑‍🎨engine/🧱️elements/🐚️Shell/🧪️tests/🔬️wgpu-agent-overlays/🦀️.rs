@@ -53,12 +53,12 @@ fn shell_chrome_deadlines_follow_the_shared_wall_to_monotonic_contract() {
     for row in fixture["cases"].as_array().expect("deadline cases") {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         if let Some(started_ms) = row["tooltipStartedMs"].as_f64() {
-            shell.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms });
+            shell.chrome.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms });
         }
         if let Some(shown_at_ms) = row["noticeShownMs"].as_f64() {
-            shell.chrome_build.show_transient_notice(fixture["text"]["notice"].as_str().expect("notice text"), semio_framework::Severity::Info, None, shown_at_ms);
+            shell.chrome.chrome_build.show_transient_notice(fixture["text"]["notice"].as_str().expect("notice text"), semio_framework::Severity::Info, None, shown_at_ms);
         }
-        let actual = shell.next_chrome_deadline(row["monotonicNowSeconds"].as_f64().expect("monotonic now"), row["wallNowMs"].as_f64().expect("wall now"));
+        let actual = shell.surfaces.next_chrome_deadline(row["monotonicNowSeconds"].as_f64().expect("monotonic now"), row["wallNowMs"].as_f64().expect("wall now"), &shell.chrome, &shell.tutorial);
         match row["expectedDeadlineSeconds"].as_f64() {
             Some(expected) => assert!((actual.expect("deadline") - expected).abs() < 0.000_001, "{}", row["id"]),
             None => assert!(actual.is_none(), "{}", row["id"]),
@@ -69,9 +69,9 @@ fn shell_chrome_deadlines_follow_the_shared_wall_to_monotonic_contract() {
 #[test]
 fn shell_chrome_deadline_refuses_non_finite_clock_samples() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms: 1_000.0 });
-    assert!(shell.next_chrome_deadline(f64::NAN, 1_100.0).is_none());
-    assert!(shell.next_chrome_deadline(1.0, f64::INFINITY).is_none());
+    shell.chrome.chrome_build.tooltip_hover = Some(ChromeTooltipHover { control_id: "fixture.tooltip".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms: 1_000.0 });
+    assert!(shell.surfaces.next_chrome_deadline(f64::NAN, 1_100.0, &shell.chrome, &shell.tutorial).is_none());
+    assert!(shell.surfaces.next_chrome_deadline(1.0, f64::INFINITY, &shell.chrome, &shell.tutorial).is_none());
 }
 
 #[test]
@@ -133,11 +133,11 @@ fn dispatch_faults_are_classified_the_way_reacts_three_call_sites_classify_them(
 #[test]
 fn a_failed_dispatch_raises_a_banner_instead_of_the_persistent_error_line() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.note_dispatch_fault("guest refused: viewer.read-only");
-    let notice = shell.transient_notice().expect("a banner is showing");
+    shell.prefs.note_dispatch_fault("guest refused: viewer.read-only", &mut shell.chrome);
+    let notice = shell.chrome.transient_notice().expect("a banner is showing");
     assert_eq!(notice.severity, semio_framework::Severity::Info);
     assert_eq!(notice.code.as_deref(), Some(VIEWER_READ_ONLY_FAULT_CODE));
-    assert!(shell.error.is_none(), "a transient fault must not park in the persistent error line");
+    assert!(shell.chrome.error.is_none(), "a transient fault must not park in the persistent error line");
 }
 //#endregion 🧯️TransientNotice
 
@@ -146,19 +146,19 @@ fn a_failed_dispatch_raises_a_banner_instead_of_the_persistent_error_line() {
 fn a_simulated_approval_requested_frame_opens_the_modal() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let summary = r#"{"capabilityId":"artifact.mutate","diffSummary":"+3 −1","risk":"high","requestedBy":"agent:local"}"#;
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: summary.into() }.encode()).expect("frame decodes");
-    assert!(shell.chrome_build.agent.has_pending_approvals());
-    shell.chrome_build.agent_approvals.observe(&shell.chrome_build.agent.pending_approvals);
-    assert!(shell.chrome_build.agent_approvals.is_open(&shell.chrome_build.agent.pending_approvals));
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: summary.into() }.encode()).expect("frame decodes");
+    assert!(shell.chrome.chrome_build.agent.has_pending_approvals());
+    shell.chrome.chrome_build.agent_approvals.observe(&shell.chrome.chrome_build.agent.pending_approvals);
+    assert!(shell.chrome.chrome_build.agent_approvals.is_open(&shell.chrome.chrome_build.agent.pending_approvals));
 }
 
 #[test]
 fn the_modal_paints_the_capability_diff_and_risk_of_every_parked_request() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let summary = r#"{"capabilityId":"artifact.mutate","diffSummary":"+3 −1","risk":"high","requestedBy":"agent:local"}"#;
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: summary.into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: summary.into() }.encode()).expect("frame decodes");
     let theme = Theme::dark();
-    let ops = shell.agent_approvals_paint_ops(1280.0, 800.0, &theme);
+    let ops = OverlaysViewCtx::of(&mut shell).agent_approvals_paint_ops(1280.0, 800.0, &theme);
     let painted: Vec<&str> = ops
         .iter()
         .filter_map(|op| match op {
@@ -182,10 +182,10 @@ fn the_modal_paints_the_capability_diff_and_risk_of_every_parked_request() {
 fn each_decision_button_emits_the_matching_approval_resolved_frame() {
     for decision in ApprovalDecision::ALL {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate".into() }.encode()).expect("frame decodes");
-        shell.resolve_agent_approval_control(&approval_decision_control_id("appr_1", decision));
-        assert!(!shell.chrome_build.agent.has_pending_approvals(), "{decision:?} clears the request");
-        let outbound = shell.take_agent_bridge_outbox();
+        shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate".into() }.encode()).expect("frame decodes");
+        shell.chrome.resolve_agent_approval_control(&approval_decision_control_id("appr_1", decision));
+        assert!(!shell.chrome.chrome_build.agent.has_pending_approvals(), "{decision:?} clears the request");
+        let outbound = shell.chrome.take_agent_bridge_outbox();
         assert_eq!(outbound.len(), 1, "{decision:?} emits exactly one frame");
         let frame = ShellToGateway::decode(&outbound[0]).expect("the emitted frame is on the wire format");
         assert_eq!(frame, ShellToGateway::Approval { approval_id: "appr_1".into(), decision, note: None });
@@ -195,20 +195,20 @@ fn each_decision_button_emits_the_matching_approval_resolved_frame() {
 #[test]
 fn dismissing_the_modal_leaves_the_request_parked() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate".into() }.encode()).expect("frame decodes");
-    shell.chrome_build.agent_approvals.observe(&shell.chrome_build.agent.pending_approvals);
-    shell.resolve_agent_approval_control(APPROVALS_CLOSE_CONTROL_ID);
-    assert!(shell.chrome_build.agent.has_pending_approvals(), "dismissing is not deciding");
-    assert!(!shell.chrome_build.agent_approvals.is_open(&shell.chrome_build.agent.pending_approvals));
-    assert_eq!(shell.take_agent_bridge_outbox().len(), 0, "a dismissal never answers the gateway");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate".into() }.encode()).expect("frame decodes");
+    shell.chrome.chrome_build.agent_approvals.observe(&shell.chrome.chrome_build.agent.pending_approvals);
+    shell.chrome.resolve_agent_approval_control(APPROVALS_CLOSE_CONTROL_ID);
+    assert!(shell.chrome.chrome_build.agent.has_pending_approvals(), "dismissing is not deciding");
+    assert!(!shell.chrome.chrome_build.agent_approvals.is_open(&shell.chrome.chrome_build.agent.pending_approvals));
+    assert_eq!(shell.chrome.take_agent_bridge_outbox().len(), 0, "a dismissal never answers the gateway");
 }
 
 #[test]
 fn a_plain_text_summary_still_lists_a_change_summary_line() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate selection".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "translate selection".into() }.encode()).expect("frame decodes");
     let theme = Theme::dark();
-    let ops = shell.agent_approvals_paint_ops(1280.0, 800.0, &theme);
+    let ops = OverlaysViewCtx::of(&mut shell).agent_approvals_paint_ops(1280.0, 800.0, &theme);
     assert!(ops.iter().any(|op| matches!(op, AgentApprovalPaintOp::Text { value, .. } if value.contains("translate selection"))));
 }
 //#endregion ✅️AgentApprovals
@@ -218,11 +218,11 @@ fn a_plain_text_summary_still_lists_a_change_summary_line() {
 fn presence_frames_move_the_shells_own_indicator() {
     use crate::agent_presence::AgentPresenceTone;
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert_eq!(shell.agent_presence_tone(), AgentPresenceTone::Disconnected);
-    shell.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "c".into(), principal: "p".into() }.encode()).expect("frame decodes");
-    assert_eq!(shell.agent_presence_tone(), AgentPresenceTone::Connected);
-    shell.apply_agent_bridge_frame(&GatewayToShell::AgentPresence { active: true, label: "compile".into(), invocation_id: None }.encode()).expect("frame decodes");
-    assert_eq!(shell.agent_presence_tone(), AgentPresenceTone::Working);
+    assert_eq!(shell.chrome.agent_presence_tone(), AgentPresenceTone::Disconnected);
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "c".into(), principal: "p".into() }.encode()).expect("frame decodes");
+    assert_eq!(shell.chrome.agent_presence_tone(), AgentPresenceTone::Connected);
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::AgentPresence { active: true, label: "compile".into(), invocation_id: None }.encode()).expect("frame decodes");
+    assert_eq!(shell.chrome.agent_presence_tone(), AgentPresenceTone::Working);
 }
 
 #[test]
@@ -257,7 +257,7 @@ fn the_tooltip_delay_matches_the_react_chrome_control_hint() {
 // paging its auto-scrolled `<ol>` produces, and Enter-to-send on the composer.
 
 fn chat_feed_node(shell: &ShellState) -> UiNode {
-    let body = shell.build_agent_chat_ui();
+    let body = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs);
     let UiNode::Stack(panel) = body else { panic!("the chat panel body is a stack") };
     panel.children.into_iter().find(|child| matches!(child, UiNode::Stack(stack) if stack.id.as_deref() == Some("framework.chat.feed"))).expect("the feed is its own node under React's id")
 }
@@ -284,8 +284,8 @@ fn an_empty_transcript_paints_reacts_own_empty_line_inside_the_feed() {
 #[test]
 fn every_row_carries_reacts_two_data_attributes() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{}".into() }.encode()).expect("frame decodes");
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "let me".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{}".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "let me".into() }.encode()).expect("frame decodes");
     let rows = chat_feed_rows(&shell);
     assert_eq!(rows.len(), 2);
     assert_eq!(row_attributes(&rows[0]).get("data-semio-agent-chat-entry").map(String::as_str), Some("toolCall"));
@@ -297,8 +297,8 @@ fn every_row_carries_reacts_two_data_attributes() {
 #[test]
 fn a_tool_result_settles_its_own_row_in_place_rather_than_opening_a_second_one() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{\"id\":1}".into() }.encode()).expect("frame decodes");
-    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), ok: false, summary: "refused".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{\"id\":1}".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), ok: false, summary: "refused".into() }.encode()).expect("frame decodes");
     let rows = chat_feed_rows(&shell);
     assert_eq!(rows.len(), 1, "one call, one row");
     assert_eq!(row_attributes(&rows[0]).get("data-agent-chat-state").map(String::as_str), Some("failed"));
@@ -307,8 +307,8 @@ fn a_tool_result_settles_its_own_row_in_place_rather_than_opening_a_second_one()
 #[test]
 fn a_resolved_approval_reports_its_own_decision_state() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "mutate".into() }.encode()).expect("frame decodes");
-    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalResolved { approval_id: "appr_1".into(), decision: ApprovalDecision::Once }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "mutate".into() }.encode()).expect("frame decodes");
+    shell.chrome.apply_agent_bridge_frame(&GatewayToShell::ApprovalResolved { approval_id: "appr_1".into(), decision: ApprovalDecision::Once }.encode()).expect("frame decodes");
     assert_eq!(row_attributes(&chat_feed_rows(&shell)[0]).get("data-agent-chat-state").map(String::as_str), Some("resolved"));
 }
 
@@ -317,11 +317,11 @@ fn a_resolved_approval_reports_its_own_decision_state() {
 fn the_feed_paints_the_newest_window_the_way_reacts_auto_scrolled_list_shows_it() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for index in 0..(AGENT_CHAT_VISIBLE_ENTRIES + 6) {
-        shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: format!("inv_{index}"), tool_name: format!("tool-{index}"), arguments: String::new() }.encode()).expect("frame decodes");
+        shell.chrome.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: format!("inv_{index}"), tool_name: format!("tool-{index}"), arguments: String::new() }.encode()).expect("frame decodes");
     }
     let rows = chat_feed_rows(&shell);
     assert_eq!(rows.len(), AGENT_CHAT_VISIBLE_ENTRIES, "the window is bounded, not the conversation");
-    assert_eq!(shell.chrome_build.agent.conversation.len(), AGENT_CHAT_VISIBLE_ENTRIES + 6, "nothing is discarded, only unpainted");
+    assert_eq!(shell.chrome.chrome_build.agent.conversation.len(), AGENT_CHAT_VISIBLE_ENTRIES + 6, "nothing is discarded, only unpainted");
     let UiNode::Stack(last) = rows.last().expect("a row") else { panic!("a row is a stack") };
     assert_eq!(last.id.as_deref(), Some(format!("framework.chat.entry.toolCall.inv_{}", AGENT_CHAT_VISIBLE_ENTRIES + 5).as_str()));
 }
@@ -329,7 +329,7 @@ fn the_feed_paints_the_newest_window_the_way_reacts_auto_scrolled_list_shows_it(
 #[test]
 fn the_composer_sends_on_enter_the_way_reacts_textarea_does() {
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    let UiNode::Stack(panel) = shell.build_agent_chat_ui() else { panic!("the chat panel body is a stack") };
+    let UiNode::Stack(panel) = shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs) else { panic!("the chat panel body is a stack") };
     let draft = panel
         .children
         .iter()
@@ -349,11 +349,11 @@ fn the_chat_composer_projects_its_explicit_localized_accessible_name_without_usi
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💬️chat-input-accessibility/🔣️.json")).expect("chat accessibility fixture");
     for row in fixture["cases"].as_array().expect("chat cases") {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-        shell.locale_id = row["locale"].as_str().expect("locale").into();
+        shell.prefs.locale_id = row["locale"].as_str().expect("locale").into();
         if row["bridge"] == "open" {
-            shell.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "fixture".into(), principal: "agent".into() }.encode()).expect("open bridge fixture");
+            shell.chrome.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "fixture".into(), principal: "agent".into() }.encode()).expect("open bridge fixture");
         }
-        let records = panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &shell.build_agent_chat_ui()).expect("Chat projects to retained records");
+        let records = panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs)).expect("Chat projects to retained records");
         let draft = records.iter().find(|record| record.key.as_str().ends_with("/framework.chat.draft")).expect("retained Chat draft");
         let expected_name = row["accessibleName"].as_str().expect("accessible name");
         let expected_placeholder = row["placeholder"].as_str().expect("placeholder");
@@ -378,32 +378,32 @@ fn test_identity() -> Identity {
 #[test]
 fn no_operation_means_no_sheet_exactly_as_react_mounts_nothing() {
     let shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    assert!(shell.space_administration_plan().is_none());
+    assert!(shell.directory.space_administration_plan(&shell.prefs).is_none());
 }
 
 #[test]
 fn opening_without_an_identity_mounts_nothing_rather_than_an_empty_sheet() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.open_space_administration("space-1");
-    assert!(shell.space_administration_plan().is_none(), "administration needs a signed-in identity, and says so by showing nothing");
+    shell.directory.open_space_administration("space-1");
+    assert!(shell.directory.space_administration_plan(&shell.prefs).is_none(), "administration needs a signed-in identity, and says so by showing nothing");
 }
 
 #[test]
 fn the_close_control_retires_the_operation() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.identity = Some(test_identity());
-    shell.open_space_administration("space-1");
-    assert!(shell.space_administration_plan().is_some(), "an identity plus a space id mounts the sheet");
-    shell.resolve_space_administration_control(crate::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID);
-    assert!(shell.space_administration_plan().is_none());
+    shell.directory.identity = Some(test_identity());
+    shell.directory.open_space_administration("space-1");
+    assert!(shell.directory.space_administration_plan(&shell.prefs).is_some(), "an identity plus a space id mounts the sheet");
+    shell.directory.resolve_space_administration_control(crate::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID, &shell.prefs);
+    assert!(shell.directory.space_administration_plan(&shell.prefs).is_none());
 }
 
 #[test]
 fn the_sheet_leads_with_reacts_own_title_and_the_operations_live_status() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.identity = Some(test_identity());
-    shell.open_space_administration("space-7");
-    let plan = shell.space_administration_plan().expect("a sheet");
+    shell.directory.identity = Some(test_identity());
+    shell.directory.open_space_administration("space-7");
+    let plan = shell.directory.space_administration_plan(&shell.prefs).expect("a sheet");
     assert_eq!(plan.space_id, "space-7");
     assert_eq!(plan.title, "Space administration");
     assert_eq!(plan.status, shell_space_administration_status(ShellSpaceAdministrationPhaseV1::Loading, false), "the status line is the phase, not a row");
@@ -413,9 +413,9 @@ fn the_sheet_leads_with_reacts_own_title_and_the_operations_live_status() {
 #[test]
 fn the_invite_copy_control_is_withheld_rather_than_offered_and_silently_losing_the_capability() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
-    shell.identity = Some(test_identity());
-    shell.open_space_administration("space-1");
-    let plan = shell.space_administration_plan().expect("a sheet");
+    shell.directory.identity = Some(test_identity());
+    shell.directory.open_space_administration("space-1");
+    let plan = shell.directory.space_administration_plan(&shell.prefs).expect("a sheet");
     assert!(plan.rows.iter().all(|row| row.control_id != "os.space-administration.invite.copy"));
 }
 //#endregion 🛂️SpaceAdministrationSheet

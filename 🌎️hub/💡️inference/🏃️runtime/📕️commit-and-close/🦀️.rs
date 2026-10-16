@@ -1,9 +1,13 @@
 //! 📕️ The retained commit, the undo commit and the closing sequence.
 
-use super::*;
+use std::sync::Arc;
+use semio_hub_inference_binding::ComposedMapCommitBindingV1;
+use semio_hub_inference_runtime_contract::{GisMapApprovalCommitErrorV1, GisMapApprovalCommitRequestV1, GisMapApprovalReceiptV1, GisMapApprovalRequestTokenV1, GisMapApprovalUndoCommitReceiptV1, GisMapApprovalUndoCommitRequestV1, GisMapClosingStoresV1, GisMapCommitConflictArmV1, GisMapCommitIdentityV1, GisMapDocumentStoresV1, GisMapDocumentWriteAuthorityV1, GisMapDocumentWriteLeaseV1, GisMapParentSnapshotV1, document_key, gis_map_commit_conflict, gis_map_storage_refusal, record_close_store_step};
+use crate::{GisMapApprovalRequestOwnerV1, GisMapClosingCursorV1, GisMapCommitTurnV1, RetainedGisMapApprovalCommitterV1, RetainedGisMapDocumentStateV1};
+use std::sync::atomic::Ordering;
 
-impl RetainedGisMapApprovalCommitterV1 {
-    pub(super) async fn commit_retained(&self, request: GisMapApprovalCommitRequestV1<'_>, mut owner: GisMapApprovalRequestOwnerV1, preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1)) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
+impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
+    pub(super) async fn commit_retained(&self, request: GisMapApprovalCommitRequestV1<'_>, mut owner: GisMapApprovalRequestOwnerV1<B>, preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1<B>)) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
         self.resume_parked_requests();
         self.resume_parked_prepared();
         let (mut identity, snapshot) = preflight;
@@ -53,8 +57,8 @@ impl RetainedGisMapApprovalCommitterV1 {
     pub(super) async fn commit_undo_retained(
         &self,
         request: GisMapApprovalUndoCommitRequestV1<'_>,
-        mut owner: GisMapApprovalRequestOwnerV1,
-        preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1),
+        mut owner: GisMapApprovalRequestOwnerV1<B>,
+        preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1<B>),
     ) -> Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1> {
         self.resume_parked_requests();
         self.resume_parked_prepared();
@@ -101,7 +105,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         result
     }
 
-    pub(super) fn closing(owners: GisMapDocumentStoresV1, document_write: Option<GisMapDocumentWriteLeaseV1>) -> RetainedGisMapDocumentStateV1 {
+    pub(super) fn closing(owners: GisMapDocumentStoresV1<B>, document_write: Option<GisMapDocumentWriteLeaseV1>) -> RetainedGisMapDocumentStateV1<B> {
         owners.fence.invalidate();
         RetainedGisMapDocumentStateV1::Closing(GisMapClosingStoresV1 { owners, phase: 0, document_write })
     }
@@ -359,7 +363,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
             };
             if let Some((identity, generation, receipt)) = verification {
-                self.verify(&key, &identity, generation, receipt, super::super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await?;
+                self.verify(&key, &identity, generation, receipt, semio_hub_inference::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await?;
                 self.announce_state_change();
                 continue;
             }

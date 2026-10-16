@@ -94,7 +94,7 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
 
 
 
-test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyArgumentsV1(operation.mode)).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});let called=false;for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,async()=>{called=true;})).rejects.toThrow("Original JavaScript repository required");expect(called).toBe(false);});
+test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyArgumentsV1(operation.mode)).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});let called=false;for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,{} as never,async()=>{called=true;})).rejects.toThrow("Original JavaScript repository required");expect(called).toBe(false);});
 
 test("an independent Node bundle executes the same authored command corpus", async () => {
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;

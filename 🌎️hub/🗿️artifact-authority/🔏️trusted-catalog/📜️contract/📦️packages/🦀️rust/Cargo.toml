@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-trusted-catalog-contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Trusted-catalog contract: bundle schema, opened roots, browser actor and plugin module sources"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-trusted-catalog-contract"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+integration-fixtures = []
+testkit = ["semio-hub-artifact-authority/testkit"]
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-async = { workspace = true }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-schema-registry = { workspace = true }
+semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }

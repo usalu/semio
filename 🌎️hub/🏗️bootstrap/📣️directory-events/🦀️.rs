@@ -15,166 +15,34 @@ use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, ClientFrame};
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::TraceOutcome;
-use semio_hub::artifact_authority::creation::ArtifactCreationCommitAuthorityV1;
+use semio_hub_artifact_creation::ArtifactCreationCommitAuthorityV1;
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
-use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::model::{DirectoryPrincipalV1, DocumentScope};
-use semio_hub::directory::{HubDirectories, HubDirectory, DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, LocalBootstrapTransport, AUTH_TEXT_MAX_BYTES};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_directory_contract::model::DirectoryPrincipalV1;
+use directory::os_directory::DocumentScope;
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::{LocalBootstrapTransport, AUTH_TEXT_MAX_BYTES};
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use crate::support::{DirectoryJson, now_ms, bearer, directory_error_status};
-use crate::state::HubState;
-use crate::socket_grants::{SOCKET_PROTOCOL_V1, SocketBindingKeyV1, SocketAudienceV1, SocketSubjectV1, SocketBindingValidityV1, SocketGrantRecordV1, SocketGrantAdmissionV1, SocketLiveLeaseV1, socket_live_authority_with_bindings};
-use crate::guard::session_access_roles;
-use crate::access_grants::{socket_text_bounded, socket_binding_validity};
-#[cfg(test)]
-use crate::access_grants::pause_global_directory_send_for_test;
+use semio_hub_runtime::support::{DirectoryJson, now_ms, bearer, directory_error_status};
+use semio_hub_state::HubState;
+use semio_hub_ledgers::socket_grants::{SOCKET_PROTOCOL_V1, SocketAudienceV1, SocketBindingValidityV1, SocketGrantRecordV1, SocketGrantAdmissionV1, SocketLiveLeaseV1};
+use crate::socket_grants::socket_live_authority_with_bindings;
+use semio_hub_ledgers::guard::session_access_roles;
+use semio_hub_ledgers::access_grants::socket_text_bounded;
+use semio_hub_session_routes::access_grants::socket_binding_validity;
+#[cfg(any(test, feature = "testkit"))]
+use semio_hub_session_routes::access_grants::pause_global_directory_send_for_test;
 use crate::document_socket::{consume_scoped_directory_socket_grant, consume_directory_socket_grant, verified_rebootstrap_control};
-use crate::directory_commands::{AuthedUser, resolve_bearer_user, resolve_optional_bearer_user, CredentialOptionalRefusalV1, role_wire, DirectorySpaceAccessDecisionV1, directory_space_access_decision};
-use crate::lifecycle::hub_shutdown_close_frame;
-use db::db_storage::PayloadStorage as _;
+use semio_hub_route_models::directory_commands::{AuthedUser, CredentialOptionalRefusalV1, role_wire, DirectorySpaceAccessDecisionV1, directory_space_access_decision};
+use semio_hub_session_routes::directory_commands::{resolve_bearer_user, resolve_optional_bearer_user};
+use semio_hub_runtime::lifecycle::hub_shutdown_close_frame;
+use db::storage::PayloadStorage as _;
+use semio_hub_route_models::directory_events::{DIRECTORY_EVENT_PAGE_DEADLINE_MS, DirectoryEventLaneV1, DirectoryEventPageHttpControl, DirectoryEventPageHttpRequest, DirectoryScopedWsV1Query, DirectoryWsV1Query, EventsQuery, ScopedDirectoryFrameDecisionV1, directory_event_lane_v1, directory_event_page_bytes_bound, directory_event_page_event_visible, directory_event_page_request_admission, directory_event_page_session_binding_v1, directory_message_bindings, directory_message_matches_scope, directory_reader_access_change, directory_space_message_bindings, directory_stream_message_space, load_all_directory_events, note_directory_space_created, seal_directory_event_page_v1, send_directory_message};
 
 //#region 🔖️Directory
-pub(crate) trait DirectoryEventPageSource {
-    async fn directory_event_head(&self) -> Result<u64, DirectoryError>;
-    async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError>;
-}
-
-impl DirectoryEventPageSource for HubDirectories {
-    async fn directory_event_head(&self) -> Result<u64, DirectoryError> {
-        HubDirectory::head_seq(self).await
-    }
-
-    async fn directory_event_page(&self, since: u64, limit: usize) -> Result<Vec<DirectoryEvent>, DirectoryError> {
-        HubDirectory::events_since(self, since, limit).await
-    }
-}
-
-/// 📖️ Reads a bounded complete suffix in fixed pages, cursoring by observed sequence.
-pub(crate) async fn load_all_directory_events<S: DirectoryEventPageSource + ?Sized>(directory: &S, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryError> {
-    let head = directory.directory_event_head().await?;
-    let expected = head.saturating_sub(since);
-    if expected > DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS {
-        return Err(DirectoryError::Conflict(format!("directory event suffix exceeds fixed maximum {DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS}")));
-    }
-    let mut cursor = since;
-    let capacity = usize::try_from(expected).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-    let mut events = Vec::with_capacity(capacity);
-    loop {
-        let page = directory.directory_event_page(cursor, DIRECTORY_EVENT_READ_MAX).await?;
-        let page_len = page.len();
-        if page_len == 0 {
-            break;
-        }
-        for event in &page {
-            if event.seq <= cursor {
-                return Err(DirectoryError::Backend("directory event page did not strictly advance its cursor".into()));
-            }
-            cursor = event.seq;
-        }
-        events.extend(page);
-        if u64::try_from(events.len()).map_err(|error| DirectoryError::Conflict(error.to_string()))? > DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS {
-            return Err(DirectoryError::Conflict(format!("directory event suffix exceeds fixed maximum {DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS}")));
-        }
-        if page_len < DIRECTORY_EVENT_READ_MAX {
-            break;
-        }
-    }
-    Ok(events)
-}
-
-#[derive(Deserialize)]
-pub(crate) struct EventsQuery {
-    pub(crate) since: Option<u64>,
-    pub(crate) limit: Option<usize>,
-}
-
-fn directory_event_page_request_admission(uri: &axum::http::Uri) -> Result<u64, StatusCode> {
-    let query = uri.query().ok_or(StatusCode::BAD_REQUEST)?;
-    if query.contains('&') || query.contains('%') || query.contains('+') {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    let (name, value) = query.split_once('=').ok_or(StatusCode::BAD_REQUEST)?;
-    if name != "after" || value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) || (value.len() > 1 && value.starts_with('0')) {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    let after = value.parse::<u64>().map_err(|_| StatusCode::BAD_REQUEST)?;
-    if after > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    Ok(after)
-}
-
-pub(crate) fn directory_event_page_session_binding_v1(caller: &AuthedUser) -> Result<[u8; 32], StatusCode> {
-    let session_len = u32::try_from(caller.session_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let user_len = u32::try_from(caller.user_id.len()).map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let mut hash = Sha256::new();
-    hash.update(b"semio/hub/directory-event-page/session-binding/v1\0");
-    hash.update(&session_len.to_be_bytes());
-    hash.update(caller.session_id.as_bytes());
-    hash.update(&user_len.to_be_bytes());
-    hash.update(caller.user_id.as_bytes());
-    hash.update(&caller.authorization_generation.to_be_bytes());
-    hash.update(&caller.expires_at.to_be_bytes());
-    Ok(hash.finalize().into())
-}
-
-const DIRECTORY_EVENT_PAGE_DEADLINE_MS: u64 = 5_000;
-
-pub(crate) struct DirectoryEventPageHttpControl {
-    pub(crate) cancelled: std::sync::atomic::AtomicBool,
-    pub(crate) active: std::sync::atomic::AtomicBool,
-}
-
-impl DirectoryEventPageHttpControl {
-    pub(crate) fn new() -> Self {
-        Self { cancelled: std::sync::atomic::AtomicBool::new(false), active: std::sync::atomic::AtomicBool::new(true) }
-    }
-
-    pub(crate) fn checkpoint(&self) -> Result<(), StatusCode> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
-            Err(StatusCode::SERVICE_UNAVAILABLE)
-        } else {
-            Ok(())
-        }
-    }
-
-    pub(crate) fn cancel(&self) {
-        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
-    }
-
-    pub(crate) fn release(&self) {
-        self.active.store(false, std::sync::atomic::Ordering::Release);
-    }
-}
-
-struct DirectoryEventPageHttpRequest {
-    control: Arc<DirectoryEventPageHttpControl>,
-    response_owned: bool,
-}
-
-impl DirectoryEventPageHttpRequest {
-    pub(crate) fn new(control: Arc<DirectoryEventPageHttpControl>) -> Self {
-        Self { control, response_owned: false }
-    }
-
-    pub(crate) fn finish_response_owned(&mut self) {
-        self.response_owned = true;
-        self.control.release();
-    }
-}
-
-impl Drop for DirectoryEventPageHttpRequest {
-    fn drop(&mut self) {
-        if !self.response_owned {
-            self.control.cancel();
-            self.control.release();
-        }
-    }
-}
 
 async fn revalidate_directory_event_page_caller(state: &HubState, caller: &AuthedUser, binding: [u8; 32]) -> Result<AuthedUser, StatusCode> {
     let session = state.directory.authenticate_session(&caller.capability).await.map_err(|_| StatusCode::UNAUTHORIZED)?.ok_or(StatusCode::UNAUTHORIZED)?;
@@ -192,57 +60,6 @@ async fn revalidate_directory_event_page_caller(state: &HubState, caller: &Authe
 async fn directory_member_space_ids(state: &HubState, principal: DirectoryPrincipalV1<'_>) -> Result<BTreeSet<String>, StatusCode> {
     let ceiling = state.directory.principal_ceiling(principal).await.map_err(directory_error_status)?;
     Ok(state.directory.list_spaces_for_user(principal.user_id).await.map_err(directory_error_status)?.into_iter().filter(|(space, role)| ceiling.cap(&space.id, Some(*role)).is_some()).map(|(space, _)| space.id).collect())
-}
-
-/// 🌐️ Which lane a directory event page serves: the directory (every event the caller may see, never a preference) or the
-/// caller's own preferences (`user.preference-recorded` of the caller, nothing else). Both share one seq, one receipt and
-/// one page machinery; an event of the other lane is skipped like an invisible one.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum DirectoryEventLaneV1 {
-    Directory,
-    Preferences,
-}
-
-/// 🌐️ The page lane an event belongs to: a `user.preference-recorded` event rides only the preference lane.
-fn directory_event_lane_v1(event: &DirectoryEvent) -> DirectoryEventLaneV1 {
-    match event.body {
-        os_directory::DirectoryEventBody::UserPreferenceRecorded { .. } => DirectoryEventLaneV1::Preferences,
-        _ => DirectoryEventLaneV1::Directory,
-    }
-}
-
-fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &DirectoryEvent, caller: &AuthedUser) -> bool {
-    match event.space_id.as_deref() {
-        Some(space_id) => member_spaces.contains(space_id),
-        None => event.user_id.as_deref() == Some(caller.user_id.as_str()),
-    }
-}
-
-/// 📏️ An upper bound of the sealed page's JSON length: `envelope_bytes` is the page with no events at its
-/// widest (`throughSeqInclusive` = `u64::MAX`, `hasMore` = `false`), plus each event's own JSON and one comma between
-/// two. A page within this bound fits without sealing it; only a page near the limit is sealed exactly, so building a
-/// page is linear in its rows (every row used to re-seal the whole page so far: quadratic).
-fn directory_event_page_bytes_bound(envelope_bytes: usize, event_bytes: usize, events: usize) -> usize {
-    envelope_bytes.saturating_add(event_bytes).saturating_add(events.saturating_sub(1))
-}
-
-fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, through: u64, has_more: bool, events: Vec<DirectoryEvent>) -> Result<DirectoryEventPageV1, DirectoryEventPageErrorV1> {
-    let mut page = DirectoryEventPageV1 {
-        schema: "semio.directory.event-page.v1".into(),
-        session_binding_sha256: os_directory::io::binary::artifact_hash::hex_lower(&binding),
-        authorization_generation: generation,
-        after_seq_exclusive: after,
-        through_seq_inclusive: through,
-        has_more,
-        events,
-        receipt_sha256: String::new(),
-    };
-    page.receipt_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(page.canonical_unsigned_json().as_bytes()));
-    if semio_framework_pack_json::to_json_string(&page).len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
-        return Err(DirectoryEventPageErrorV1::TooLarge);
-    }
-    page.validate()?;
-    Ok(page)
 }
 
 async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, after: u64, control: &DirectoryEventPageHttpControl, lane: DirectoryEventLaneV1) -> Result<DirectoryEventPageV1, StatusCode> {
@@ -317,12 +134,12 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
     seal_directory_event_page_v1(binding, caller.authorization_generation, after, through, stopped_for_bytes || raw_len == DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, events).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-pub(crate) async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
+pub async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
     serve_directory_event_page_v1(uri, headers, state, DirectoryEventLaneV1::Directory).await
 }
 
 /// 🌐️ `GET /directory/preference-page/v1?after=` — the caller's own preference lane on the directory page machinery.
-pub(crate) async fn get_directory_preference_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
+pub async fn get_directory_preference_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
     serve_directory_event_page_v1(uri, headers, state, DirectoryEventLaneV1::Preferences).await
 }
 
@@ -391,7 +208,7 @@ async fn event_visible(state: &HubState, event: &DirectoryEvent, caller: Option<
 /// 🛡️ The single privacy boundary for every directory WebSocket frame. Realtime connection
 /// and presence telemetry requires current membership even for public spaces; public visibility
 /// exposes directory metadata, not who is online or their account email.
-pub(crate) async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMessage, caller: Option<&AuthedUser>) -> bool {
+pub async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMessage, caller: Option<&AuthedUser>) -> bool {
     let Some(caller) = caller else { return false };
     if !caller_active(state, caller).await {
         return false;
@@ -413,69 +230,13 @@ async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>,
     Ok(events.into_iter().filter(|event| directory_event_page_event_visible(&member_spaces, event, caller)).collect())
 }
 
-pub(crate) async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, CredentialOptionalRefusalV1> {
+pub async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, CredentialOptionalRefusalV1> {
     let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
     Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await?))
 }
 
-/// 🌐️ Outbound global telemetry borrows a space authority without indexing the global lease by it.
-pub(crate) fn directory_stream_message_space(message: &DirectoryStreamMessage) -> Option<&str> {
-    match message {
-        DirectoryStreamMessage::Event { event } => event.space_id.as_deref(),
-        DirectoryStreamMessage::Connection { connection, .. } => Some(&connection.space_id),
-        DirectoryStreamMessage::Presence { space_id, .. } => Some(space_id),
-        DirectoryStreamMessage::RebootstrapRequired { control } => Some(&control.scope.space_id),
-        DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => None,
-    }
-}
-
-/// 🔑️ The `access-changed` frame one delivered-or-skipped directory event owes a GLOBAL directory socket's own reader
-/// ([`directory_access_change_for_reader`]); scoped sockets and non-session subjects owe none.
-fn directory_reader_access_change(record: &SocketGrantRecordV1, created_on_socket: &BTreeSet<String>, message: &DirectoryStreamMessage) -> Option<DirectoryStreamMessage> {
-    let (SocketAudienceV1::Directory { .. }, SocketSubjectV1::Session { user_id, .. }) = (&record.audience, &record.subject) else { return None };
-    directory_access_change_for_reader(user_id, created_on_socket, message)
-}
-
-/// 🔑️ A grant or redemption naming `reader_user_id` for a space whose `space.created` the socket never delivered to it
-/// (the space's earlier events became readable behind the reader's cursor), or a removal naming it (its events became
-/// unreadable) — the reader's visible directory moved, so it re-reads from the origin. Law: fixture `🔑️access-changed-v1`.
-pub(crate) fn directory_access_change_for_reader(reader_user_id: &str, created_on_socket: &BTreeSet<String>, message: &DirectoryStreamMessage) -> Option<DirectoryStreamMessage> {
-    let DirectoryStreamMessage::Event { event } = message else { return None };
-    let (space_id, change) = match &event.body {
-        os_directory::DirectoryEventBody::MemberUpserted { space_id, user_id: member, .. } | os_directory::DirectoryEventBody::InviteRedeemed { space_id, user_id: member, .. } if member == reader_user_id && !created_on_socket.contains(space_id) => (space_id, os_directory::DirectoryAccessChange::Granted),
-        os_directory::DirectoryEventBody::MemberRemoved { space_id, user_id: member } if member == reader_user_id => (space_id, os_directory::DirectoryAccessChange::Revoked),
-        _ => return None,
-    };
-    Some(DirectoryStreamMessage::AccessChanged { space_id: space_id.clone(), change })
-}
-
-/// 🏗️ Remembers every space whose `space.created` a global directory socket delivered, so a membership in it is not an
-/// access change for that reader (it already read the space from its first event).
-fn note_directory_space_created(created_on_socket: &mut BTreeSet<String>, message: &DirectoryStreamMessage) {
-    if let DirectoryStreamMessage::Event { event } = message {
-        if let os_directory::DirectoryEventBody::SpaceCreated { space_id, .. } = &event.body {
-            created_on_socket.insert(space_id.clone());
-        }
-    }
-}
-
-fn directory_space_message_bindings(record: &SocketGrantRecordV1, space_id: Option<&str>) -> Vec<SocketBindingKeyV1> {
-    let mut bindings = record.bindings();
-    if let (SocketAudienceV1::Directory { .. }, SocketSubjectV1::Session { user_id, .. }, Some(space_id)) = (&record.audience, &record.subject, space_id) {
-        bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() });
-        bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.to_owned() });
-    }
-    bindings.sort();
-    bindings.dedup();
-    bindings
-}
-
-pub(crate) fn directory_message_bindings(record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> Vec<SocketBindingKeyV1> {
-    directory_space_message_bindings(record, directory_stream_message_space(message))
-}
-
-pub(crate) async fn socket_directory_membership_visibility(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
+pub async fn socket_directory_membership_visibility(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
     let Some(principal) = record.subject.principal() else { return SocketBindingValidityV1::Unauthorized };
     let Some(space_id) = directory_stream_message_space(message) else {
         return if matches!(message, DirectoryStreamMessage::AccessChanged { .. }) || matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(principal.user_id)) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
@@ -492,58 +253,9 @@ pub(crate) async fn socket_directory_membership_visibility(state: &HubState, rec
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ScopedDirectoryFrameDecisionV1 {
-    Deliver,
-    SkipUnrelated,
-    CloseUnauthorized,
-    CloseUnavailable,
-}
-
-pub(crate) fn directory_message_matches_scope(scope: &DocumentScope, message: &DirectoryStreamMessage) -> bool {
-    match message {
-        DirectoryStreamMessage::Event { event } => match &event.body {
-            os_directory::DirectoryEventBody::DocumentAnnounced { descriptor } => descriptor.space_id == scope.space_id && descriptor.document_id == scope.document_id,
-            os_directory::DirectoryEventBody::DocumentIndexed { scope: indexed, .. } => indexed == scope,
-            os_directory::DirectoryEventBody::ArtifactCheckpointPublished { checkpoint } => checkpoint.scope == *scope,
-            os_directory::DirectoryEventBody::ArtifactRetentionAdvanced { retention } => retention.scope == *scope,
-            os_directory::DirectoryEventBody::UserCreated { .. }
-            | os_directory::DirectoryEventBody::SpaceCreated { .. }
-            | os_directory::DirectoryEventBody::SpaceRenamed { .. }
-            | os_directory::DirectoryEventBody::SpaceVisibilityChanged { .. }
-            | os_directory::DirectoryEventBody::SpaceArchived { .. }
-            | os_directory::DirectoryEventBody::SpaceDeleted { .. }
-            | os_directory::DirectoryEventBody::MemberUpserted { .. }
-            | os_directory::DirectoryEventBody::MemberRemoved { .. }
-            | os_directory::DirectoryEventBody::InviteRedeemed { .. }
-            | os_directory::DirectoryEventBody::UserPreferenceRecorded { .. } => false,
-        },
-        DirectoryStreamMessage::Connection { connection, .. } => connection.space_id == scope.space_id && connection.document_id == scope.document_id,
-        DirectoryStreamMessage::Presence { space_id, document_id, .. } => space_id == &scope.space_id && document_id == &scope.document_id,
-        DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => false,
-        DirectoryStreamMessage::RebootstrapRequired { control } => control.scope == *scope,
-    }
-}
-
-#[derive(Default, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct DirectoryWsV1Query {
-    #[serde(default)]
-    pub(crate) since: u64,
-    pub(crate) space_id: Option<String>,
-    pub(crate) document_id: Option<String>,
-}
-
-#[derive(Default, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct DirectoryScopedWsV1Query {
-    #[serde(default)]
-    pub(crate) since: u64,
-}
-
 /// 📝️ The directory lane's admission span (`server.directory.socket`), the same shape the
 /// document lane reports: one record for the upgrade decision and one for the session's lifetime.
-pub(crate) async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+pub async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let span = state.span("server.directory.socket");
     let scope = match (query.space_id, query.document_id) {
         (Some(space_id), Some(document_id)) if socket_text_bounded(&space_id) && socket_text_bounded(&document_id) => Some(DocumentScope::new(space_id, document_id)),
@@ -574,7 +286,7 @@ pub(crate) async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<Di
         .into_response()
 }
 
-pub(crate) async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DirectoryScopedWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+pub async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DirectoryScopedWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let span = state.span("server.directory.socket").space(space_id.clone()).artifact(document_id.clone());
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
         span.refused("bounds");
@@ -597,11 +309,6 @@ pub(crate) async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id,
             session_span.cancelled("closed");
         })
         .into_response()
-}
-
-async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, message: &DirectoryStreamMessage) -> bool {
-    let text = semio_framework_pack_json::to_json_string(message);
-    sender.send(Message::Text(text.into())).await.is_ok()
 }
 
 async fn send_socket_directory_message(

@@ -33,28 +33,6 @@ use super::*;
  *
  * Per surface rather than per window: two editor panes of one window each own their popups, the same
  * way two mounted `TextEditor` hosts each own their own React state. */
-#[derive(Clone, Debug, Default)]
-pub(crate) struct TextEditorUiState {
-    completions_open: bool,
-    completion_index: usize,
-    pub(crate) rename: Option<TextEditorRenameDraft>,
-    /// 🖱️ A context-menu row this surface answers itself, parked until the next paint — the shell
-    /// resolves and clears its menu without an `InputState` in hand, and every local row commits
-    /// through the bounded action queue, which only the paint walk carries.
-    pub(crate) pending_menu_action: Option<(String, f32, f32)>,
-}
-
-/// ✏️ One live rename gesture: the spans the commit rewrites and the name typed so far — React's
-/// `renameDraft` (`{ occurrences, text }`).
-#[derive(Clone, Debug)]
-struct TextEditorRenameDraft {
-    pub(crate) occurrences: Vec<(usize, usize)>,
-    pub(crate) text: String,
-}
-
-pub(crate) fn text_editor_ui(host_id: &str) -> TextEditorUiState {
-    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.text_editor_ui.clone()).unwrap_or_default())
-}
 
 fn mutate_text_editor_ui<R: Default>(host_id: &str, apply: impl FnOnce(&mut TextEditorUiState) -> R) -> R {
     SCENE_STATE.with(|cell| cell.borrow_mut().get_or_insert_with(host_id.to_owned(), SceneSurfaceState::default).map(|state| apply(&mut state.text_editor_ui)).unwrap_or_default())
@@ -135,7 +113,7 @@ fn multi_span_replace(text: &str, occurrences: &[(usize, usize)], next_name: &st
 /// 📍️ Anchor (page space) for the completions dropdown: near the caret, falling back to a fixed
 /// offset if the host isn't ready yet — mirrors React's `renamePosition ? … : { left: 12, top: 12 }`.
 fn text_editor_popup_anchor(scene: &UiComponentSceneNode, inner: Rect) -> (f32, f32) {
-    engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
+    semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
 }
 
 fn text_editor_completion_row_rect(anchor: (f32, f32), theme: &Theme, index: usize) -> Rect {
@@ -152,7 +130,7 @@ const TEXT_EDITOR_COMPLETION_WIDTH: f32 = 220.0;
 const TEXT_EDITOR_RENAME_WIDTH: f32 = 180.0;
 /// 🧾️ The retained-item grant one editor overlay paint needs: the two popup frames plus a bounded
 /// completion list (the dropdown is a dropdown, not a document — React never scrolls it either).
-pub(crate) const TEXT_EDITOR_OVERLAY_ITEMS: usize = 256;
+pub const TEXT_EDITOR_OVERLAY_ITEMS: usize = 256;
 
 /** 🍿️ Paints the editor's popup chrome ABOVE the composited `EditorHost` texture: the
  * completions dropdown and the live rename input. Drawn in the scene's own last cursor phase, so it
@@ -165,7 +143,7 @@ pub(crate) const TEXT_EDITOR_OVERLAY_ITEMS: usize = 256;
  * (`ShellState::open_context_menu`), which is what carries React's title row, submenu nesting,
  * keyboard navigation and dismissal rules. The seven rows React handles locally rather than
  * dispatching to the guest are executed by [`text_editor_local_menu_action`] from that menu. */
-pub(crate) fn render_text_editor_overlays(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_text_editor_overlays(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let Some(editor) = scene.text_editor.as_ref() else {
         return;
     };
@@ -197,10 +175,10 @@ fn text_editor_explicit_draft_button_rects(bounds: Rect, theme: &Theme) -> (Rect
 }
 
 fn render_text_editor_explicit_draft_controls(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let Some(settings) = engine_canvas::text_editor_explicit_draft_settings(scene) else { return };
-    let dirty = engine_canvas::text_editor_explicit_draft_is_dirty(scene);
-    let conflicted = engine_canvas::text_editor_explicit_draft_has_conflict(scene);
-    let status = engine_canvas::text_editor_explicit_draft_status(scene);
+    let Some(settings) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene) else { return };
+    let dirty = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_is_dirty(scene);
+    let conflicted = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_has_conflict(scene);
+    let status = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
     let (discard, apply) = text_editor_explicit_draft_button_rects(bounds, ctx.theme);
     let footer = Rect::new(bounds.x, discard.y - 8.0, bounds.w, discard.h + 16.0);
     ctx.draw.push_rounded([footer.x, footer.y, footer.w, footer.h], ctx.theme.panel, 0.0);
@@ -328,10 +306,10 @@ pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<
     let Some(item) = completions.get(active).or_else(|| completions.first()) else {
         return Ok(false);
     };
-    let (_, caret) = engine_canvas::text_editor_caret(scene);
+    let (_, caret) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
     let prefix_start = identifier_prefix_start(&editor.buffer, caret);
     let insert = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
-    let applied = engine_canvas::text_editor_apply_completion_into(scene, prefix_start, caret, &insert, input)?;
+    let applied = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_completion_into(scene, prefix_start, caret, &insert, input)?;
     text_editor_close_completions(&scene.host_id);
     Ok(applied)
 }
@@ -367,7 +345,7 @@ pub fn text_editor_update_rename(scene: &UiComponentSceneNode, next_text: &str) 
         return false;
     };
     let (preview, occurrences) = multi_span_replace(&editor.buffer, &draft.occurrences, next_text);
-    engine_canvas::text_editor_preview_rename(scene, &preview, &occurrences);
+    semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &preview, &occurrences);
     mutate_text_editor_ui(&scene.host_id, |state| {
         if let Some(draft) = state.rename.as_mut() {
             draft.text = next_text.to_string();
@@ -412,7 +390,7 @@ pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
         return false;
     }
     if let Some(editor) = scene.text_editor.as_ref() {
-        engine_canvas::text_editor_preview_rename(scene, &editor.buffer, &[]);
+        semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_preview_rename(scene, &editor.buffer, &[]);
     }
     mutate_text_editor_ui(&scene.host_id, |state| state.rename = None);
     true
@@ -435,15 +413,15 @@ pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, 
             text_editor_open_completions(scene);
         }
         "selectToken" => {
-            engine_canvas::text_editor_select_span_into(scene, inner, x, y, input)?;
+            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_select_span_into(scene, inner, x, y, input)?;
         }
         "selectLine" => {
-            let (_, caret) = engine_canvas::text_editor_caret(scene);
+            let (_, caret) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_caret(scene);
             let (start, end) = text_editor_line_range(&editor.buffer, caret);
-            engine_canvas::text_editor_set_selection_into(scene, start, end, input)?;
+            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, start, end, input)?;
         }
         "selectAll" => {
-            engine_canvas::text_editor_set_selection_into(scene, 0, editor.buffer.len(), input)?;
+            semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_set_selection_into(scene, 0, editor.buffer.len(), input)?;
         }
         "commitRename" | "rename" => {
             if !text_editor_start_rename(scene, input) {
@@ -478,25 +456,25 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
 /** ⌨️ The popup half of one keystroke, offered BEFORE the buffer sees it — React's
  * `onKeyDown` prelude (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`): `Ctrl/Cmd+Space` opens completions,
  * `F2` starts a rename, and while either popup is open its own arrow/commit/dismiss keys win over
- * editing. `false` leaves the key to `engine_canvas::text_editor_apply_key_into`. */
+ * editing. `false` leaves the key to `semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_key_into`. */
 pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let ui = text_editor_ui(&scene.host_id);
     let accelerator = modifiers.ctrl || modifiers.meta;
-    if engine_canvas::text_editor_explicit_draft_settings(scene).is_some() {
+    if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
         if accelerator && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("z")) {
-            return Ok(engine_canvas::text_editor_move_explicit_draft_history(scene, modifiers.shift));
+            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, modifiers.shift));
         }
         if modifiers.ctrl && matches!(key, KeyAction::Char(ch) if ch.eq_ignore_ascii_case("y")) {
-            return Ok(engine_canvas::text_editor_move_explicit_draft_history(scene, true));
+            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_move_explicit_draft_history(scene, true));
         }
         if accelerator && matches!(key, KeyAction::Enter) {
-            return engine_canvas::text_editor_apply_explicit_draft_into(scene, input);
+            return semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
         }
         if matches!(key, KeyAction::Escape) {
-            if engine_canvas::text_editor_cancel_explicit_publication(scene) {
+            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
                 return Ok(true);
             }
-            return Ok(engine_canvas::text_editor_discard_explicit_draft(scene));
+            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
         }
     }
     if let Some(draft) = ui.rename.as_ref() {
@@ -544,23 +522,23 @@ pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
-    if engine_canvas::text_editor_explicit_draft_settings(scene).is_some() {
+    if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
         let (discard, apply) = text_editor_explicit_draft_button_rects(inner, &scene_input_theme());
         if discard.contains(x, y) {
-            if engine_canvas::text_editor_explicit_draft_status(scene).pending {
+            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene).pending {
                 return Ok(true);
             }
-            return Ok(engine_canvas::text_editor_discard_explicit_draft(scene));
+            return Ok(semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_discard_explicit_draft(scene));
         }
         if apply.contains(x, y) {
-            let status = engine_canvas::text_editor_explicit_draft_status(scene);
+            let status = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_status(scene);
             if status.pending && !status.cancellable {
                 return Ok(true);
             }
-            if engine_canvas::text_editor_cancel_explicit_publication(scene) {
+            if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_cancel_explicit_publication(scene) {
                 return Ok(true);
             }
-            return engine_canvas::text_editor_apply_explicit_draft_into(scene, input);
+            return semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_explicit_draft_into(scene, input);
         }
     }
     if text_editor_ui(&scene.host_id).completions_open {

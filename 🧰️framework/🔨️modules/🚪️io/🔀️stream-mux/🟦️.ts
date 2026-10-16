@@ -149,6 +149,7 @@ export function decodeStreamMuxServerFrameV1(textFrame: string): StreamMuxDecode
 /** 🖨️ Canonical text of a frame: `kind` first, then the fields in contract order, no whitespace. */
 export function encodeStreamMuxFrameV1(frame: StreamMuxClientFrameV1 | StreamMuxServerFrameV1): string {
   const shape = (Object.hasOwn(CLIENT_SHAPES, frame.kind) ? CLIENT_SHAPES : SERVER_SHAPES)[frame.kind];
+  if(!shape)throw Error("Authored stream-mux frame kind required");
   const ordered: Record<string, unknown> = { kind: frame.kind };
   const source = frame as unknown as Record<string, unknown>;
   for (const [field] of shape) ordered[field] = field === "resume" && source[field] !== null ? { epoch: (source[field] as StreamMuxResumeV1).epoch, seq: (source[field] as StreamMuxResumeV1).seq } : source[field];

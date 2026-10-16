@@ -1,3 +1,4 @@
+import{compileAdapterVizProbeV1}from"./../📥️invocation/🟦️.ts";
 /** 🪶️ Adapter for `plot-grammar`: `\SemioVizPlot`, the one call of taxonomy §79.
  *
  * Subject: `semio-viz-plot`, probed through `semio-viz-probe` — the channel registry for the
@@ -8,7 +9,7 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { planVizChart } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
-import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { type ProbeProjection, type ProbeRecord, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors
 const CASE = "plot-grammar";
@@ -36,7 +37,7 @@ function grid(values: readonly number[]): number[] {
 
 /** 🎯️ Compiles the committed fixture and returns the records of one scenario. */
 async function records(ctx: AdapterContext): Promise<ProbeRecord[]> {
-  return roundProbeNumbers(await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
+  return roundProbeNumbers(await compileAdapterVizProbeV1(ctx,ctx.input(FIXTURE), { caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
 }
 
 /** 📍️ The mapped rows of a probed plot, flattened as `x0, y0, x1, y1, …`. The mark kernel's own

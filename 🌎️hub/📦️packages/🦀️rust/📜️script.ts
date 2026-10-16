@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+import {withDescriptorEmitterV1,withDescriptorEmitterTaskV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -45,7 +49,7 @@ import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/�
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import type { TestBrowserHostRootsV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🟦️.ts";
 import { stageTestBrowserHostV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts";
-import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import {parseFreshProcessPolicyV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
 import cargoCommandLimits from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
 import {repositoryCargoPreparationStorageV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -79,6 +83,86 @@ import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReade
 import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubBinaryPath, hubDevBinaryPath, LOCAL_HUB_ADMINISTRATOR_PROFILE, LOCAL_HUB_ADMINISTRATOR_SUBJECT, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
+/** 🌳️ The crate roots that carry the `os-hub` binary's code, in dependency order; the binary's own root closes the list. */
+const HUB_BIN_CRATE_ROOTS = ["⚙️runtime", "📒️ledgers", "🧱️models", "🧠️state", "🛰️session-routes", "📨️document-routes", "🛣️routes"] as const;
+
+/** 🌳️ The module trees of every crate that carries the `os-hub` binary's code, concatenated in dependency order. */
+function readHubBinSource(repoRoot: string): string {
+  return [...HUB_BIN_CRATE_ROOTS.map((dir) => join(repoRoot, "🌎️hub/🏗️bootstrap", dir, "🦀️.rs")), join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs")].map((root) => readModuleTreeSource(root)).join("\n");
+}
+
+/** 🧪️ Every hub package that owns tests: the `os-hub` verbs that run the whole suite select these. */
+const HUB_TEST_PACKAGES: readonly string[] = [
+  "semio-hub",
+  "semio-hub-artifact-authority",
+  "semio-hub-artifact-checkin",
+  "semio-hub-artifact-creation",
+  "semio-hub-auth",
+  "semio-hub-boot-laws",
+  "semio-hub-component-codec-laws",
+  "semio-hub-directory",
+  "semio-hub-directory-backend-laws",
+  "semio-hub-directory-laws",
+  "semio-hub-directory-neo4j",
+  "semio-hub-directory-postgres",
+  "semio-hub-directory-route-laws",
+  "semio-hub-directory-service",
+  "semio-hub-document-routes",
+  "semio-hub-hostile-input-laws",
+  "semio-hub-inference-catalog",
+  "semio-hub-inference-contract-laws",
+  "semio-hub-inference-laws",
+  "semio-hub-inference-ledger",
+  "semio-hub-lag-rebootstrap",
+  "semio-hub-local-bootstrap",
+  "semio-hub-native-openable",
+  "semio-hub-observability",
+  "semio-hub-open-plan-laws",
+  "semio-hub-presence-route-laws",
+  "semio-hub-refusal",
+  "semio-hub-route-models",
+  "semio-hub-runtime",
+  "semio-hub-session-route-laws",
+  "semio-hub-session-routes",
+  "semio-hub-stores",
+  "semio-hub-trusted-catalog-contract",
+  "semio-hub-trusted-catalog-contract-laws",
+  "semio-hub-trusted-catalog-laws",
+];
+
+/** 🗺️ One exact-law group per owning crate for laws written as `[package, law]` pairs, in order of first appearance; `--features integration-fixtures` reaches only the crates that declare it. */
+function hubLawGroups(laws: ReadonlyArray<readonly [string, string]>, cargoArgs: readonly string[] = []): ExactCargoLawGroup[] {
+  const owners = new Map<string, string[]>();
+  for (const [owner, law] of laws) owners.set(owner, [...(owners.get(owner) ?? []), law]);
+  const fixturePackages: ReadonlySet<string> = new Set(["semio-hub", "semio-hub-boot-laws", "semio-hub-component-codec-laws", "semio-hub-hostile-input-laws", "semio-hub-inference", "semio-hub-inference-contract-laws", "semio-hub-inference-runtime", "semio-hub-trusted-catalog", "semio-hub-trusted-catalog-contract", "semio-hub-trusted-catalog-laws"]);
+  return [...owners].map(([owner, ls]) => {
+    const feature = cargoArgs.indexOf("--features");
+    const args = feature >= 0 && cargoArgs[feature + 1] === "integration-fixtures" && !fixturePackages.has(owner) ? cargoArgs.filter((_, index) => index !== feature && index !== feature + 1) : cargoArgs;
+    return { package: owner, target: owner === "semio-hub" ? { kind: "bin" as const, name: "os-hub" } : { kind: "lib" as const }, ...(args.length ? { cargoArgs: args } : {}), laws: ls };
+  });
+}
+
+/** 🔏️ The trusted-catalog crate root together with the contract and descriptor roots it was carved into. */
+function readTrustedCatalogSource(repoRoot: string): string {
+  return ["🦀️.rs", "📜️contract/🦀️.rs", "🧾️descriptor/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog", file), "utf8")).join("\n");
+}
+
+/** 🏃️ The inference runtime module trees together with the committer and contract crates it was carved into. */
+function readHubInferenceRuntimeSource(repoRoot: string): string {
+  return ["🦀️.rs", "🔐️committer/🦀️.rs", "📜️contract/🦀️.rs"].map((file) => readModuleTreeSource(join(repoRoot, "🌎️hub/💡️inference/🏃️runtime", file))).join("\n");
+}
+
+/** 🌐️ The neo4j directory backend together with the row decoders it was carved into. */
+function readNeo4jDirectorySource(repoRoot: string): string {
+  return ["🦀️.rs", "🧰️rows/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j", file), "utf8")).join("\n");
+}
+
+/** 🧪️ The shared fixtures and the unit laws of the `os-hub` route laws crates, concatenated. */
+function readHubBinTestSource(repoRoot: string): string {
+  const base = join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit");
+  return ["🧰️testkit/🦀️.rs", "🚀️boot/🔬️unit/🦀️.rs", "🧭️open-plan/🔬️unit/🦀️.rs", "📇️directory/🔬️unit/🦀️.rs", "👥️presence/🔬️unit/🦀️.rs", "🔐️session/🔬️unit/🦀️.rs", "🎲️hostile-input/🔬️unit/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8")).join("\n");
+}
+
 //#region 🧱️SourceGateRunners
 /** 🕸️ Supplies Hub's actual actor publication capability to the neutral runtime graph verifier. */
 class RuntimeFixtureGraphScript extends BundleScript {
@@ -91,7 +175,7 @@ class RuntimeFixtureGraphScript extends BundleScript {
 
 /** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
 class HubDocumentSweepScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");await runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments);}
+ async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");const {withIssuedResourceControlV1}=await import("../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");await withIssuedResourceControlV1(this.invocation,"hub:document-sweep",0,phase=>runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments,this.invocation,phase));}
 }
 class HubIoMatrixScript extends BundleScript {
  async run(segments:string[]):Promise<void>{const {runIoMatrixCli}=await import("../../🧪️tests/🚪️io-matrix/🟦️.ts");await runIoMatrixCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🚪️io-matrix"),segments);}
@@ -1353,7 +1437,7 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
             componentBlake3: "44".repeat(32),
             descriptorByteSha256: "55".repeat(32),
             executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
-            componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "socket-grant-probe", packageId: "semio:socket-grant-probe", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: "33".repeat(32), wasmBytes: 4096, semanticDescriptorSha256: "55".repeat(32), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) },
+            componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "socket-grant-probe", packageId: "semio:socket-grant-probe", profile: "release", target: "wasm32-wasip2", wasmSha256: "33".repeat(32), wasmBytes: 4096, semanticDescriptorSha256: "55".repeat(32), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) },
           },
           artifact: { kind: "native.socket-grant.probe", schema: "native.socket-grant.probe/v1", packSchemaHash: probePackSchemaHash },
           parentDialect: { artifactKind: "native.socket-grant.probe", standard: "1", subset: "*" },
@@ -2538,7 +2622,7 @@ class SetupScript extends BundleScript {
  * `SEMIO_TEST_ARTIFACT_DIR` and panics without it, so a plain `bun repo run os-hub:test` would report panics
  * instead of assertions. */
 function hubTestArtifactRoot(root: string): string {
-  const path = join(root, "🗑️generated", "test-artifacts");
+  const path = join(root, "../../🧪️tests/🗂️artifact-root/📦️packages/🦀️rust/🗑️generated/test-artifacts");
   mkdirSync(path, { recursive: true, mode: 0o700 });
   return path;
 }
@@ -2573,7 +2657,7 @@ class ComponentCodecCheckScript extends BundleScript {
     if(!oracle(fixture)) throw new Error(JSON.stringify(oracle.errors));
     resolveTestLevel([],segments[0]==="budget"?"exhaustive":"quick");
     const filter=segments[0]==="budget"?"actual_gis_owned_codec_honors":"actual_component_codec_exports";
-    await runRepositoryCargoTests(["semio-hub"], this.repoRoot, this.invocation, ["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
+    await runRepositoryCargoTests(["semio-hub-component-codec-laws"], this.repoRoot, this.invocation, ["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
   }
 }
 
@@ -2583,7 +2667,7 @@ class TestScript extends BundleScript {
     const [head, ...tail] = rest;
     const allFeatures = head === "all-features";
     process.env.SEMIO_TEST_ARTIFACT_DIR ??= hubTestArtifactRoot(this.root);
-    await runRepositoryCargoTests(["semio-hub"], this.repoRoot, this.invocation, allFeatures ? ["--all-features", ...tail] : rest);
+    await runRepositoryCargoTests(HUB_TEST_PACKAGES, this.repoRoot, this.invocation, allFeatures ? ["--all-features", ...tail] : rest);
   }
 }
 
@@ -2593,9 +2677,9 @@ class TestScript extends BundleScript {
  * of its own on the claim, the neo4j laws one at a time over the claim's emptied graph (`db_storage::claimed_backend`).
  * They are `#[ignore]`d outside a claim and never start a server of their own (preamble rule 22).
  * `directory-live-lanes [postgres|neo4j]`: without a lane, every lane whose claim environment is present. */
-const DIRECTORY_LIVE_LANES: Readonly<Record<string, Readonly<{ filter: string; claimed: string; threads: number }>>> = {
-  postgres: { filter: "directory::postgres", claimed: "OS_HUB_DATABASE_URL", threads: 2 },
-  neo4j: { filter: "directory::neo4j", claimed: "OS_HUB_NEO4J_URI", threads: 1 },
+const DIRECTORY_LIVE_LANES: Readonly<Record<string, Readonly<{ filters: ReadonlyArray<readonly [string, string]>; claimed: string; threads: number }>>> = {
+  postgres: { filters: [["semio-hub-directory-backend-laws", "postgres_tests"], ["semio-hub-directory-laws", "postgres_creation_tests"]], claimed: "OS_HUB_DATABASE_URL", threads: 2 },
+  neo4j: { filters: [["semio-hub-directory-backend-laws", "neo4j_tests"], ["semio-hub-directory-laws", "neo4j_creation_tests"]], claimed: "OS_HUB_NEO4J_URI", threads: 1 },
 };
 
 class DirectoryLiveLanesScript extends BundleScript {
@@ -2606,8 +2690,8 @@ class DirectoryLiveLanesScript extends BundleScript {
     const unclaimed = lanes.filter((name) => !process.env[DIRECTORY_LIVE_LANES[name]!.claimed]);
     if (unclaimed.length) throw new Error(`directory-live-lanes ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
     for (const lane of lanes) {
-      const { filter, threads } = DIRECTORY_LIVE_LANES[lane]!;
-      runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", filter, "--", "--include-ignored", `--test-threads=${threads}`], this.root);
+      const { filters, threads } = DIRECTORY_LIVE_LANES[lane]!;
+      for (const [owner, filter] of filters) runCargo(["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", filter, "--", "--include-ignored", `--test-threads=${threads}`], this.root);
     }
   }
 }
@@ -2623,10 +2707,10 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
  * route, the enumerated typed refusals, and the generative law (drawn mutations of every route's own request and drawn
  * frame sequences on both sockets, shrunk findings) — the last once per seed. */
 const HOSTILE_INPUT_LAWS = {
-  draws: "hostile_generative::long::hostile_draws_reproduce_the_language_neutral_vectors",
-  coverage: "the_hostile_input_fixture_covers_every_registered_route",
-  refusals: "every_route_answers_hostile_input_with_a_typed_signed_refusal",
-  generative: "hostile_generative::long::every_route_and_socket_survives_generated_hostile_input",
+  draws: ["semio-hub-hostile-input-laws", "hostile_generative::long::hostile_draws_reproduce_the_language_neutral_vectors"],
+  coverage: ["semio-hub-boot-laws", "the_hostile_input_fixture_covers_every_registered_route"],
+  refusals: ["semio-hub-boot-laws", "every_route_answers_hostile_input_with_a_typed_signed_refusal"],
+  generative: ["semio-hub-hostile-input-laws", "hostile_generative::long::every_route_and_socket_survives_generated_hostile_input"],
 } as const;
 
 /** 🎲️ `hostile-input-check [--seeds <n,…> | --seed-range <from>..<to>] [--locale en|de]` — the hub's hostile-input
@@ -2651,8 +2735,8 @@ class HostileInputCheckScript extends BundleScript {
     await withAcceptanceRecord(this.repoRoot, "hub-hostile-input", async () => {
       const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
       const oracle = spawnSync("bunx", ["vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
-      const law = (name: string, seed?: number): Promise<{ status: number; lines: string[] }> =>
-        runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
+      const law = ([owner, name]: readonly [string, string], seed?: number): Promise<{ status: number; lines: string[] }> =>
+        runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
       const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));
       const enumerated: Record<string, boolean> = {};
       for (const name of ["draws", "coverage", "refusals"] as const) {
@@ -2700,8 +2784,8 @@ class HostileInputCheckScript extends BundleScript {
 
 class ArtifactCasCheckScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", "artifact_cas_maintenance", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-artifact-authority", "-p", "semio-hub-directory-laws", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-hostile-input-laws", "--lib", "artifact_cas_maintenance", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
   }
 }
@@ -2779,8 +2863,8 @@ class AdminDirectoryAuthorityCheckScript extends BundleScript {
     if (phase === "native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
+            package: "semio-hub-directory-route-laws",
+            target: { kind: "lib" },
             laws: ["admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated", "admin_short_effects_retain_principal_until_their_actual_side_effect", "admin_directory_commands_hold_exact_principal_without_confusing_space_role"],
           },
         ],progress(event) {
@@ -2841,7 +2925,7 @@ async function proveShareIssuanceAtomicity(repoRoot: string): Promise<number> {
 
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const neo4j = readNeo4jDirectorySource(repoRoot);
   const method = (source: string, name: string): string => {
     const start = source.indexOf(`async fn ${name}(`);
     return source.slice(start, source.indexOf("\n    async fn ", start + 1));
@@ -2924,9 +3008,9 @@ class ShareIssuanceAtomicityCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
+            package: "semio-hub-directory-backend-laws",
             target: { kind: "lib" },
-            laws: ["directory::sqlite::tests::share_issuance_atomically_requires_the_persisted_scope_and_preserves_archived_spectator_read"],
+            laws: ["sqlite_tests::share_issuance_atomically_requires_the_persisted_scope_and_preserves_archived_spectator_read"],
           },
         ],progress(event) {
           console.log(`share-issuance-atomicity ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`);
@@ -3010,7 +3094,7 @@ async function proveRetainedShortAdmin(repoRoot: string): Promise<number> {
   } finally {
     oracle.close();
   }
-  const source = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const source = readHubBinSource(repoRoot);
   const routeStart = source.indexOf("fn admin_effect_receipt_claim(");
   const route = source.slice(routeStart, source.indexOf("async fn admin_overview(", routeStart));
   const staleStart = source.indexOf("async fn reconcile_stale_admin_acceptance(");
@@ -3025,7 +3109,7 @@ async function proveRetainedShortAdmin(repoRoot: string): Promise<number> {
   const directory = readHubDirectorySource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const neo4j = readNeo4jDirectorySource(repoRoot);
   const sourceClosed = (candidateRoute: string, candidateStale: string, candidateOwner: string, candidateRuntime: string, candidateSchema: string): boolean => {
     const candidateRetained = candidateRoute.slice(candidateRoute.indexOf("let retained = async move"), candidateRoute.indexOf("if state.admin_operation_tasks.spawn("));
     return (
@@ -3183,9 +3267,14 @@ class RetainedShortAdminCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
-            laws: ["retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact", "retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_reconciliation_is_exact"],
+            package: "semio-hub-hostile-input-laws",
+            target: { kind: "lib" },
+            laws: ["retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact"],
+          },
+          {
+            package: "semio-hub-directory-route-laws",
+            target: { kind: "lib" },
+            laws: ["retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_reconciliation_is_exact"],
           },
         ],progress(event) {
           console.log(`retained-short-admin ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`);
@@ -3278,7 +3367,7 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
       oracle.close();
     }
 
-    const hubSource = readModuleTreeSource(join(this.root, "../../🏗️bootstrap/🦀️.rs"));
+    const hubSource = readHubBinSource(this.repoRoot);
     if (!directoryMessageAuthoritySourceConforms(hubSource)) throw new Error("directory global sender lacks a single retained transient message authority union");
     const mutants = [
       hubSource.replace("directory_message_bindings(record, message)).await", "record.bindings()).await"),
@@ -3291,16 +3380,14 @@ class DirectoryMessageAuthorityCheckScript extends BundleScript {
     if (phase === "native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
-            laws: [
-              "directory_global_message_bindings_decode_wire_without_indexing_unrelated_memberships",
-              "directory_global_socket_delivery_and_revocation_share_one_transient_authority_order",
-              "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
-              "scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
-              "socket_directory_visibility_requires_membership_even_for_public_spaces",
-              "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock",
-            ],
+            package: "semio-hub-directory-route-laws",
+            target: { kind: "lib" },
+            laws: ["directory_global_message_bindings_decode_wire_without_indexing_unrelated_memberships", "directory_global_socket_delivery_and_revocation_share_one_transient_authority_order", "socket_directory_visibility_requires_membership_even_for_public_spaces", "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock"],
+          },
+          {
+            package: "semio-hub-open-plan-laws",
+            target: { kind: "lib" },
+            laws: ["scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership", "scoped_directory_socket_message_matching_is_body_exact_and_removal_private"],
           },
         ],progress(event) {
           console.log("directory-message-authority " + event.stage + ": " + (event.law ?? event.package) + " artifacts=" + event.artifactDir);
@@ -3353,16 +3440,16 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
     if (phase === "all" || phase === "process") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
+            package: "semio-hub-open-plan-laws",
+            target: { kind: "lib" },
             cargoArgs: ["--all-features"],
-            laws: [
-              "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
-              "scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
-              "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
-              "scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
-              "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
-            ],
+            laws: ["scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership", "scoped_directory_socket_message_matching_is_body_exact_and_removal_private", "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event", "scoped_directory_socket_admin_removal_uses_the_same_membership_fence"],
+          },
+          {
+            package: "semio-hub-hostile-input-laws",
+            target: { kind: "lib" },
+            cargoArgs: ["--all-features"],
+            laws: ["scoped_directory_socket_removal_and_delivery_have_one_total_membership_order"],
           },
         ],progress(event) {
           console.log(`scoped-directory-socket-process ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -3409,26 +3496,26 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   if (String(fixture.schema) !== "semio.hub.native-artifact-provider-frontier/v1" || String(fixture.configuredWithoutProvider) !== "reject") throw new Error("native artifact provider frontier envelope differs");
   if (String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || fixture.production.receiptAuthority !== "compiled-kind-schema-roster"
     || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
-  const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+  const manifest = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const pluginPackages = fixture.production.pluginDependencies.map((plugin) => "semio-hub-" + plugin);
   const document = Bun.TOML.parse(manifest) as { dependencies: Record<string, { workspace?: boolean; optional?: boolean }> };
   for (const dependency of pluginPackages) {
     const local = document.dependencies[dependency];
-    if (local?.workspace !== true || local.optional === true) throw new Error(dependency + " is not an unconditional workspace dependency of the production Hub");
+    if (local?.workspace !== true || local.optional === true) throw new Error(dependency + " is not an unconditional workspace dependency of the native provider crate");
   }
-  const authorityRoot = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🦀️.rs"), "utf8");
-  if (!/\n\n#\[path = "📇️native-openable-provider\/🦀️\.rs"\]\s+pub mod native_openable_provider;/u.test(authorityRoot)) throw new Error("native provider module is no longer an unconditional production module");
-  const trusted = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+  const hubManifest = Bun.TOML.parse(readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { dependencies: Record<string, { workspace?: boolean; optional?: boolean }> };
+  const providerCrate = hubManifest.dependencies["semio-hub-native-openable"];
+  if (providerCrate?.workspace !== true || providerCrate.optional === true) throw new Error("native provider crate is no longer an unconditional production dependency of the Hub");
+  const trusted = readTrustedCatalogSource(repoRoot);
   if (!trusted.includes("pub trait NativeCodecProviderSourceV1: Sync") || trusted.includes("use super::native_openable_provider::NativeCodecProviderSetV1;")) throw new Error("trusted catalog core still owns a concrete native plugin provider");
   const provider = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
   if (!provider.includes('pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "' + fixture.production.providerId + '";') || !provider.includes("pub fn native_openable_provider_receipt_count()"))
     throw new Error("production provider identity or receipt closure drifted");
-  const startup = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const startup = readHubBinSource(repoRoot);
   if (
     !startup.includes("providers: Option<&dyn NativeCodecProviderSourceV1>") ||
     !startup.includes("configured trusted catalog requires the native-artifact-execution provider") ||
-    !startup.includes('#[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]') ||
-    !readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs"), "utf8").includes("configured_catalog_without_a_native_provider_fails_closed")
+    !readHubBinTestSource(repoRoot).includes("configured_catalog_without_a_native_provider_fails_closed")
   )
     throw new Error("headless configured-catalog startup no longer fails closed");
   console.log(
@@ -3468,7 +3555,7 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     limits.relayDeadlineMs !== EXECUTION_TARGET_RELAY_DEADLINE_MS
   )
     throw new Error("execution-target relay bound drift");
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const selection = hub.slice(hub.indexOf("async fn document_execution_target_selection("), hub.indexOf("async fn issue_document_execution_target("));
   const finalFence = selection.slice(selection.indexOf("fields.validate()"));
   if (
@@ -3476,8 +3563,7 @@ async function proveExecutionTargetRelay(repoRoot: string): Promise<number> {
     !finalFence.includes("subject.revalidate(") ||
     !finalFence.includes("state.directory.head_seq().await") ||
     !finalFence.includes("DocumentOpenPlanErrorCodeV1::Stale") ||
-    !hub.includes('#[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]') ||
-    !readFileSync(join(repoRoot, "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs"), "utf8").includes('fixture["fences"]')
+    !readHubBinTestSource(repoRoot).includes('fixture["fences"]')
   )
     throw new Error("execution-target final authorization/revision fence or native corpus missing");
   const admittedRoute = hubSchemaExport(repoRoot, "schema://hub.directory/ExecutionTargetAssetRouteV1");
@@ -3730,9 +3816,14 @@ class ExecutionTargetRelayCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs() },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
-            laws: ["configured_catalog_without_a_native_provider_fails_closed", "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"],
+            package: "semio-hub-boot-laws",
+            target: { kind: "lib" },
+            laws: ["configured_catalog_without_a_native_provider_fails_closed"],
+          },
+          {
+            package: "semio-hub-open-plan-laws",
+            target: { kind: "lib" },
+            laws: ["execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body", "execution_target_selection_final_fence_matches_neutral_races"],
           },
         ],progress(event) {
           console.log(`execution-target-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -3754,8 +3845,8 @@ class BrowserBrokerCheckScript extends BundleScript {
 class CanonicalPairCheckScript extends BundleScript {
   run(): void {
     const env = { ...process.env, RUST_MIN_STACK: "268435456" };
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "canonical_pair", "--", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "canonical_pair_route", "--", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-hub-lag-rebootstrap", "--lib", "canonical_pair", "--", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-hub-boot-laws", "--lib", "canonical_pair_route", "--", "--test-threads=1"], this.root, env);
     runCmd("bun", ["repo", "run", "os-hub-ts:test", "--", "quick", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root, env);
   }
@@ -4142,10 +4233,10 @@ function documentOpenPublicKeysAreRedacted(value: unknown): boolean {
 async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
   const fixturePath = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Record<string, any>;
-  const hubSource = readModuleTreeSource(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hubSource = readHubBinSource(repoRoot);
   const routePaths = [...hubSource.matchAll(/\.route\(\s*"([^"]+)"/g)].map((match) => match[1]!);
   const productionSource = hubSource.slice(0, hubSource.indexOf("\nmod tests {"));
-  const catalogSource = readFileSync(resolve(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+  const catalogSource = readTrustedCatalogSource(repoRoot);
   if (
     !catalogSource.includes("pub parent_dialect: semio_framework::ArtifactDialect") ||
     !productionSource.includes("parent_dialect: selected.parent_dialect") ||
@@ -4842,23 +4933,16 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
           laws: ["catalog_projection_budget_matches_serde_and_refuses_before_overdraw", "catalog_projection_preflight_matches_actual_serde_payload_bytes"],
         },
         {
-          package: "semio-hub",
-          target: { kind: "lib", name: "semio_hub" },
-          laws: [
-            "native_openable_provider_consumes_exact_complete_stdio_factory_closure",
-            "native_openable_provider_rejects_missing_extra_and_duplicate_receipts_without_publication",
-            "native_openable_provider_rejects_identity_hash_schema_and_factory_substitution",
-            "descriptor_owned_surface_is_required_before_any_catalog_or_codec_publication",
-            "vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
-            "linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile",
-            "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
-            "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
-            "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target",
-            "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
-          ],
+          package: "semio-hub-native-openable",
+          target: { kind: "lib" },
+          laws: ["native_openable_provider_consumes_exact_complete_stdio_factory_closure", "native_openable_provider_rejects_missing_extra_and_duplicate_receipts_without_publication", "native_openable_provider_rejects_identity_hash_schema_and_factory_substitution", "vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication", "linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile", "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog"],
         },
-        { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: ["native_openable_stdio_provider_is_the_only_atomic_readiness_transition"] },
+        {
+          package: "semio-hub-trusted-catalog-laws",
+          target: { kind: "lib" },
+          laws: ["descriptor_owned_surface_is_required_before_any_catalog_or_codec_publication", "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure", "trusted_descriptor_wire_materialization_matches_neutral_boundaries", "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target", "trusted_profile_generation_binds_zero_target_package_and_every_codec_row"],
+        },
+        { package: "semio-hub-hostile-input-laws", target: { kind: "lib" }, laws: ["native_openable_stdio_provider_is_the_only_atomic_readiness_transition"] },
       ], progress(event) {
         console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
       } };
@@ -4888,18 +4972,14 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
     if (segments.includes("--oracle-only")) return;
     const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
         {
-          package: "semio-hub",
-          target: { kind: "lib", name: "semio_hub" },
-          laws: [
-            "selected_native_providers_are_descriptor_verified_dependency_first_and_only_selected",
-            "selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure",
-            "selected_native_provider_descriptor_and_cancellation_fences_precede_publication",
-            "linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog",
-            "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure",
-            "trusted_descriptor_wire_materialization_matches_neutral_boundaries",
-            "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target",
-            "trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
-          ],
+          package: "semio-hub-trusted-catalog-laws",
+          target: { kind: "lib" },
+          laws: ["selected_native_providers_are_descriptor_verified_dependency_first_and_only_selected", "selected_native_provider_failure_substitution_and_conflict_publish_no_partial_closure", "selected_native_provider_descriptor_and_cancellation_fences_precede_publication", "linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure", "trusted_descriptor_wire_materialization_matches_neutral_boundaries", "local_stdio_gis_profile_is_exact_two_packages_thirty_one_codecs_and_opens_every_package_target", "trusted_profile_generation_binds_zero_target_package_and_every_codec_row"],
+        },
+        {
+          package: "semio-hub-native-openable",
+          target: { kind: "lib" },
+          laws: ["linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog"],
         },
       ], progress(event) {
         console.log(`native-catalog-selection ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -4918,17 +4998,16 @@ class DocumentBrowserActorIdentityCheckScript extends BundleScript {
         segments[0] === "--catalog-native"
           ? [
               {
-                package: "semio-hub",
-                target: { kind: "lib", name: "semio_hub" },
-                laws: [
-                  "artifact_authority::trusted_catalog::browser_actor::tests::trusted_browser_actor_metadata_and_generation_match_neutral_corpus",
-                  "artifact_authority::trusted_catalog::tests::trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication",
-                  "artifact_authority::trusted_catalog::tests::selected_execution_target_assets_are_generation_and_digest_bound",
-                  "artifact_authority::trusted_catalog::tests::verified_trusted_catalog_document_open_generation_and_resolution_are_exact",
-                  "artifact_authority::trusted_catalog::tests::trusted_profile_generation_binds_zero_target_package_and_every_codec_row",
-                ],
+                package: "semio-hub-trusted-catalog-contract-laws",
+                target: { kind: "lib" },
+                laws: ["browser_actor_tests::trusted_browser_actor_metadata_and_generation_match_neutral_corpus"],
               },
-              { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: ["tests::execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body"] },
+              {
+                package: "semio-hub-trusted-catalog-laws",
+                target: { kind: "lib" },
+                laws: ["unit::trusted_browser_actor_loader_verifies_retains_and_cancels_before_publication", "unit::selected_execution_target_assets_are_generation_and_digest_bound", "unit::verified_trusted_catalog_document_open_generation_and_resolution_are_exact", "unit::trusted_profile_generation_binds_zero_target_package_and_every_codec_row"],
+              },
+              { package: "semio-hub-open-plan-laws", target: { kind: "lib" }, laws: ["tests::execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body"] },
             ]
           : [
               {
@@ -4978,18 +5057,19 @@ class TrustedCatalogOpenedRootCheckScript extends BundleScript {
     if (segments[0] === undefined) return;
     const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
-          package: "semio-hub",
-          target: { kind: "lib", name: "semio_hub" },
-          laws: [
-            "artifact_authority::trusted_catalog::tests::trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors",
-            "artifact_authority::trusted_catalog::tests::trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe",
-            "artifact_authority::trusted_catalog::tests::trusted_catalog_relative_paths_match_the_neutral_no_link_corpus",
-          ],
+          package: "semio-hub-trusted-catalog-laws",
+          target: { kind: "lib" },
+          laws: ["unit::trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors", "unit::trusted_catalog_opened_handle_is_swap_stable_bounded_and_cancel_safe", "unit::trusted_catalog_relative_paths_match_the_neutral_no_link_corpus"],
         },
         {
-          package: "semio-hub",
-          target: { kind: "bin", name: "os-hub" },
-          laws: ["tests::trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root", "tests::configured_catalog_without_a_native_provider_fails_closed", "tests::quick::native_openable_stdio_provider_is_the_only_atomic_readiness_transition"],
+          package: "semio-hub-boot-laws",
+          target: { kind: "lib" },
+          laws: ["tests::trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root", "tests::configured_catalog_without_a_native_provider_fails_closed"],
+        },
+        {
+          package: "semio-hub-hostile-input-laws",
+          target: { kind: "lib" },
+          laws: ["tests::quick::native_openable_stdio_provider_is_the_only_atomic_readiness_transition"],
         },
       ],progress(event) {
         console.log(`trusted-catalog-opened-root-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -5026,25 +5106,25 @@ class OpenPlanCheckScript extends BundleScript {
     };
     const schemaTarget = ["-p", "semio-framework-os-kernel", "--lib"];
     const schemaLaw = exactLaw(schemaTarget, "document_open_plan_v1_matches_language_neutral_fixture");
-    const catalogTarget = ["-p", "semio-hub", "--lib"];
+    const catalogTarget = ["-p", "semio-hub-trusted-catalog-laws", "--lib"];
     const catalogLaw = exactLaw(catalogTarget, "verified_trusted_catalog_document_open_generation_and_resolution_are_exact");
-    const ledgerLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped");
-    const revocationLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
-    const exchangeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant");
-    const routeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
-    const wipeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes");
-    const issueLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable");
-    const consumeLaw = exactLaw(["--bin", "os-hub"], "document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint");
+    const ledgerLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped");
+    const revocationLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_admin_revocation_invalidates_session_and_share_bindings");
+    const exchangeLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant");
+    const routeLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use");
+    const wipeLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes");
+    const issueLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable");
+    const consumeLaw = exactLaw(["-p", "semio-hub-open-plan-laws", "--lib"], "document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint");
     console.log(`document-open-plan-laws: schema=${schemaLaw} catalog=${catalogLaw} ledger=${ledgerLaw} revocation=${revocationLaw} exchange=${exchangeLaw} route=${routeLaw} wipe=${wipeLaw} issue=${issueLaw} consume=${consumeLaw}`);
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", ...schemaTarget, schemaLaw, "--", "--exact", "--test-threads=1"], this.root, env);
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", ...catalogTarget, catalogLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", ledgerLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", revocationLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", exchangeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", routeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", wipeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", issueLaw, "--", "--exact", "--test-threads=1"], this.root, env);
-    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub", consumeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", ledgerLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", revocationLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", exchangeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", routeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", wipeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", issueLaw, "--", "--exact", "--test-threads=1"], this.root, env);
+    runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-open-plan-laws", "--lib", consumeLaw, "--", "--exact", "--test-threads=1"], this.root, env);
   }
 }
 
@@ -5068,14 +5148,14 @@ class OpenPlanServerCheckScript extends BundleScript {
       return matches[0]!;
     };
     const laws = [
-      { target: ["--lib"], suffix: "verified_trusted_catalog_document_open_generation_and_resolution_are_exact" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_admin_revocation_invalidates_session_and_share_bindings" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable" },
-      { target: ["--bin", "os-hub"], suffix: "document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint" },
+      { target: ["-p", "semio-hub-trusted-catalog-laws", "--lib"], suffix: "verified_trusted_catalog_document_open_generation_and_resolution_are_exact" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_admin_revocation_invalidates_session_and_share_bindings" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_socket_grant" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_cancel_safe_and_exchangeable" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "document_open_plan_socket_consume_revalidates_surface_descriptor_catalog_revision_and_checkpoint" },
     ].map((law) => ({ ...law, name: exactLaw(law.target, law.suffix) }));
     console.log(`document-open-plan-server-laws: qualification=default-feature-subset exact=${laws.length} laws=${laws.map((law) => law.name).join(",")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root, env);
@@ -5466,12 +5546,12 @@ function proveExecutionTargetLeaseSource(repoRoot: string): void {
   if (!region.includes("descriptor.executionProtocol") || !region.includes("DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1")) throw new Error("browser execution-target lease lost compiled app-channel admission");
   if (!region.includes("state.docAbort.signal")) throw new Error("browser execution-target lease no longer shares the document cancellation scope");
   if (!worker.includes('plan.surface.rendererTarget !== "react" && (leaseFields === undefined')) throw new Error("browser plan authority no longer gates a non-react renderer on a live lease");
-  const bin = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const bin = readHubBinSource(repoRoot);
   for (const asset of ["manifest", "component", "descriptor", "browser-actor"]) {
     if (!bin.includes(`/spaces/{space_id}/documents/{id}/execution-target/${asset}`)) throw new Error(`hub execution-target ${asset} route is not mounted`);
   }
   if (!bin.includes("assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id)")) throw new Error("hub execution-target routes no longer resolve through the exact-selection accessor");
-  const catalog = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+  const catalog = readTrustedCatalogSource(repoRoot);
   if (!catalog.includes("pub fn assets_for_current_selection(") || !catalog.includes("if current_generation != self.generation_id")) throw new Error("trusted catalog exact-selection accessor is absent or not generation-bound");
   const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
   if (client.includes("matches_surface") || client.includes("DocumentSocketSurfaceExpectationV1")) throw new Error("native directory client kept a partial surface predicate");
@@ -5501,8 +5581,8 @@ class ExecutionTargetLeaseCheckScript extends BundleScript {
       return matches[0]!;
     };
     const laws = [
-      { target: ["--lib"], suffix: "selected_execution_target_assets_are_generation_and_digest_bound" },
-      { target: ["--bin", "os-hub"], suffix: "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body" },
+      { target: ["-p", "semio-hub-trusted-catalog-laws", "--lib"], suffix: "selected_execution_target_assets_are_generation_and_digest_bound" },
+      { target: ["-p", "semio-hub-open-plan-laws", "--lib"], suffix: "execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body" },
       { target: ["-p", "semio-framework-os-kernel", "--lib"], suffix: "execution_target_lease_compares_every_plan_and_verified_byte_field" },
     ].map((law) => ({ ...law, name: exactLaw(law.target, law.suffix) }));
     console.log(`execution-target-lease-laws: qualification=default-feature-subset exact=${laws.length} laws=${laws.map((law) => law.name).join(",")}`);
@@ -6153,13 +6233,12 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,
-        { pluginId: "gis", cargoPackage: "semio-hub-gis-component", componentPackageId: "semio:gis", outputName: "semio_hub_gis_component.wasm", componentProfile: "wasm-release" },
-        target,
+        { pluginId: "gis", cargoPackage: "semio-hub-gis-component", componentPackageId: "semio:gis", outputName: "semio_hub_gis_component.wasm", componentProfile: "release" },
         stage,
-        {...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
-        (lease) =>
+        {...build.control,compiler:scriptCompilerAdmissionControlV1(this.invocation,"fresh:gis",Math.floor(build.control.remainingMs())),invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
+        (lease,evidence) =>
           lease.consume((component) =>
-            buildClosedBrowserActorArtifactV1(component, this.invocation, {
+            buildClosedBrowserActorArtifactV1(component, this.invocation, evidence.control, {
               cancelled: () => build.control.cancelled() || build.control.remainingMs() <= 0,
               progress: (phase, completed, total) => build.control.checkpoint("gis-child-" + phase, completed, total),
             }),
@@ -6276,7 +6355,7 @@ async function proveSpacePublicBoundaryFixture(repoRoot: string): Promise<void> 
 class SpacePublicBoundaryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveSpacePublicBoundaryFixture(this.repoRoot);
-    const target = ["test", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"];
+    const target = ["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", "semio-hub-directory-route-laws", "--lib"];
     const suffixes = [
       "space_public_boundary_real_routes_emit_discriminated_public_member_author_and_private_404",
       "space_public_boundary_public_event_route_denies_raw_directory_events",
@@ -6681,10 +6760,11 @@ async function proveGisMapApprovalUndoFixture(repoRoot: string): Promise<number>
     const actual = { outcome, walEvents: outcome === "applied" && !replay ? 1 : 0, publications: outcome === "applied" && !replay ? 1 : 0, replayed: replay };
     if (JSON.stringify(actual) !== JSON.stringify(trace.expected)) throw new Error(`GIS Map approval undo trace mismatch: ${trace.name}`);
   }
-  const runtime = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"));
+  const runtime = readHubInferenceRuntimeSource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"), "utf8");
   const wal = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧾️wal", "🦀️.rs"), "utf8");
-  const mcp = readFileSync(join(repoRoot, "🧰️framework", "\u{1F6CD}\uFE0Fproducts", "💻️os", "🔨️modules", "🌉️mcp", "🔀️dispatch", "🦀️.rs"), "utf8");
+  const mcpDispatch = join(repoRoot, "🧰️framework", "\u{1F6CD}\uFE0Fproducts", "💻️os", "🔨️modules", "🌉️mcp", "🔀️dispatch");
+  const mcp = readFileSync(join(mcpDispatch, "🦀️.rs"), "utf8") + readFileSync(join(mcpDispatch, "🔌️channel-port", "🦀️.rs"), "utf8");
   const conforms = (runtimeSource: string, sqliteSource: string, walSource: string, mcpSource: string): boolean =>
     runtimeSource.includes("GisMapApprovalUndoTargetV1") &&
     runtimeSource.includes("undo_gis_map_approval") &&
@@ -6773,7 +6853,7 @@ async function proveGisInferenceRetainedRuntimeFixture(repoRoot: string): Promis
     };
     if (JSON.stringify(actual) !== JSON.stringify(trace.expected)) throw new Error(`retained GIS inference trace mismatch: ${trace.name}`);
   }
-  const runtime = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"));
+  const runtime = readHubInferenceRuntimeSource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🪶️sqlite", "🦀️.rs"), "utf8");
   const conforms = (runtimeSource: string, sqliteSource: string): boolean => {
     const supervisor = runtimeSource.slice(runtimeSource.indexOf("struct InferenceRunKeyV1"), runtimeSource.indexOf("/// 🏃️ The hub's only inference authority"));
@@ -6848,8 +6928,8 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
     }
     throw new Error(`GIS inference checkpoint control exact oracle admitted hostile ${index}`);
   }
-  const runtime = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"));
-  const hubBin = readModuleTreeSource(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"));
+  const runtime = readHubInferenceRuntimeSource(repoRoot);
+  const hubBin = readHubBinSource(repoRoot);
   const runner = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "📜️script.ts"), "utf8");
   // 🧬️The frame TYPE is a `hub.inference` scope export and is declared in the scope module; the
   // runtime owns only the framing that reads and writes it over the inherited descriptor.
@@ -7090,7 +7170,12 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
       })
   )
     throw new Error("retained fixed-three committer contract drifted");
-  const runtime = readModuleTreeSource(join(repoRoot, "🌎️hub", "💡️inference", "🏃️runtime", "🦀️.rs"));
+  const runtime = readHubInferenceRuntimeSource(repoRoot);
+  const gisBinding = readModuleTreeSource(join(repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "💡️inference", "🦀️.rs"));
+  if (runtime.includes("semio_s_artifact_") || !runtime.includes("impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B>"))
+    throw new Error("the retained committer names an artifact crate instead of staying generic over the registered composed-map binding");
+  for (const symbol of ["impl ComposedMapCommitBindingV1 for GisMapInferenceBindingV1", "impl MapInferenceProposalBindingV1 for GisMapInferenceBindingV1", "gis_map_parent_stamped_one_item_preparation_factory"])
+    if (!gisBinding.includes(symbol)) throw new Error(`GIS Map inference binding source is missing ${symbol}`);
   for (const symbol of [
     "RetainedGisMapApprovalCommitterV1",
     "RetainedGisMapDocumentStateV1",
@@ -7112,7 +7197,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     "abandon_prepared_approval",
     "owners.fence.clone()",
     "RetainedGisMapDocumentStateV1::Publishing",
-    "gis_map_parent_stamped_one_item_preparation_factory",
+    "B::parent_preparation_factory(",
     "sole committed WAL event",
   ])
     if (!runtime.includes(symbol)) throw new Error(`retained GIS Map committer source is missing ${symbol}`);
@@ -7125,7 +7210,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     throw new Error("initial actor generation zero cannot reach exact fenced ledger reconciliation");
   }
   const retainedCommitter = runtime.slice(runtime.indexOf("pub struct RetainedGisMapApprovalCommitterV1"), runtime.indexOf("/// 🗺️ The server-materialized Map base"));
-  const storeConstruction = retainedCommitter.slice(retainedCommitter.indexOf("fn parent_store("), retainedCommitter.indexOf("fn derived_children("));
+  const storeConstruction = gisBinding.slice(gisBinding.indexOf("fn parent_store("), gisBinding.indexOf("pub fn gis_map_region_preview("));
   const verify = retainedCommitter.slice(retainedCommitter.indexOf("async fn verify("), retainedCommitter.indexOf("async fn commit_retained("));
   const publishCall = verify.indexOf("self.publish_checkpoint(");
   const reconcileCall = verify.indexOf(".reconcile_committed_approval(");
@@ -7137,8 +7222,9 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     !storeConstruction.includes('artifact_kind: "s.stdio.semio"') ||
     !storeConstruction.includes('slot: "drawing"') ||
     !storeConstruction.includes('slot: "value"') ||
-    !retainedCommitter.includes("let drawing_id = snapshot.drawing.child_id.clone();") ||
-    !retainedCommitter.includes("let value_id = snapshot.value.child_id.clone();") ||
+    !gisBinding.includes("let drawing_id = snapshot.drawing.child_id.clone();") ||
+    !gisBinding.includes("let value_id = snapshot.value.child_id.clone();") ||
+    !retainedCommitter.includes("B::member_stores(&key, snapshot, actor)") ||
     retainedCommitter.includes("ArtifactHandle::submit") ||
     publishCall < 0 ||
     reconcileCall <= publishCall ||
@@ -7147,7 +7233,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
     documentWriteRelease <= checkpointAppliedCall
   )
     throw new Error("retained GIS Map committer capacity, write authority, typed journal, or publication-before-apply boundary drifted");
-  const hubBin = readModuleTreeSource(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"));
+  const hubBin = readHubBinSource(repoRoot);
   // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🏗️bootstrap/🦀️.rs`, so the law
   // names are asserted against the whole test tree — a further test-layout move cannot silently red this.
   const hubBinLaws = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
@@ -7329,13 +7415,15 @@ async function proveGisMapFrozenBindingFixture(repoRoot: string): Promise<number
   }
   if (remainingPaths.size !== 0) throw new Error(`frozen binding fields lack substitution coverage: ${[...remainingPaths].join(", ")}`);
   const catalog = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "📇️catalog", "🦀️.rs"), "utf8");
+  const gisBinding = readFileSync(join(repoRoot, "🌎️hub", "🧩️compositions", "🌍️gis", "💡️inference", "🦀️.rs"), "utf8");
+  if (!gisBinding.includes("semio_s_artifact_gis_gismap::gis_map_inference_service()")) throw new Error("the GIS Map inference binding no longer registers the literal native executable");
   const trusted = readFileSync(join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🦀️.rs"), "utf8");
-  const startup = readModuleTreeSource(join(repoRoot, "🌎️hub", "🏗️bootstrap", "🦀️.rs"));
+  const startup = readHubBinSource(repoRoot);
   const required = [
     "VerifiedGisMapArtifactBindingV1",
     "Arc<VerifiedTrustedCatalog>",
     "selected_document_open",
-    "gis_map_inference_service",
+    "proposals.inference_service()",
     "executable_identity",
     "component_blake3",
     "descriptor_byte_sha256",
@@ -7430,15 +7518,16 @@ class CanonicalArchitectureScript extends BundleScript {
     const { proveLocalSessionBrokerContract } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️tests/🔬️contract/🟦️.ts");
     const { nextestArtifactLocation } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     await proveLocalSessionBrokerContract(nextestArtifactLocation(this.repoRoot).directory);
-    await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub", target: { kind: "lib" }, laws: [
-        "every_manifest_case_is_accepted_exactly_when_the_fixture_says_so",
-        "only_the_canonical_manifest_bytes_decode_and_both_digests_agree_with_the_fixture",
-        "every_listed_file_verifies_against_its_own_bytes_and_tampering_is_refused",
-        "every_index_case_is_accepted_exactly_when_the_fixture_says_so",
-        "every_file_is_served_with_the_fixture_media_type",
-        "an_assembled_module_is_the_fixture_manifest_and_writes_content_addressed_files",
-        "a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_and_refuses_a_tampered_one",
-      ] }]});
+    await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
+      package: "semio-hub-trusted-catalog-contract-laws",
+      target: { kind: "lib" },
+      laws: ["every_manifest_case_is_accepted_exactly_when_the_fixture_says_so", "only_the_canonical_manifest_bytes_decode_and_both_digests_agree_with_the_fixture", "every_listed_file_verifies_against_its_own_bytes_and_tampering_is_refused", "every_index_case_is_accepted_exactly_when_the_fixture_says_so", "every_file_is_served_with_the_fixture_media_type", "an_assembled_module_is_the_fixture_manifest_and_writes_content_addressed_files"],
+    },
+    {
+      package: "semio-hub-trusted-catalog-laws",
+      target: { kind: "lib" },
+      laws: ["a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_and_refuses_a_tampered_one"],
+    }]});
   }
 }
 
@@ -8535,7 +8624,7 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
   );
   assert(fixture.denials.every((row: any) => row.providerCalls === 0 && row.codecPublished === false));
   const source = moduleRustSource(root);
-  const startup = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const startup = readHubBinSource(repoRoot);
   const required = [
     "TrustedCatalogDataRoot",
     "TrustedCatalogGenerationRoot",
@@ -8946,9 +9035,9 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     if (pair.pluginId !== "gis" || pair.packageId !== "semio:gis" || pair.version !== "0.1.0" || pair.role !== "plugin" || pair.execution !== "isolated") throw new Error("fresh descriptor identity differs");
     return pair;
   };
-  const receipt = componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", ...binding, profile: "wasm-release", target: "wasm32-wasip2", wasmBytes: 4096, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "43".repeat(32), provenanceSha256: "44".repeat(32) });
+  const receipt = componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", ...binding, profile: "release", target: "wasm32-wasip2", wasmBytes: 4096, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "43".repeat(32), provenanceSha256: "44".repeat(32) });
   if (freshPair(jsonBytes, packBytes).semanticSha256 !== binding.semanticDescriptorSha256 || !componentReceiptBindsV1(receipt, binding)) throw new Error("fresh semantic descriptor and its receipt do not bind");
-  if (componentReceiptBindsV1({ ...receipt, profile: "wasm-prototype" }, binding) || componentReceiptBindsV1(receipt, { ...binding, semanticDescriptorSha256: "45".repeat(32) })) throw new Error("fresh receipt law admitted a non-shipped or foreign binding");
+  if (componentReceiptBindsV1({ ...receipt, profile: "prototype" }, binding) || componentReceiptBindsV1(receipt, { ...binding, semanticDescriptorSha256: "45".repeat(32) })) throw new Error("fresh receipt law admitted a non-shipped or foreign binding");
   const hostilePairs = [
     [Buffer.from(JSON.stringify({ ...descriptor, manifest: { ...descriptor.manifest, version: "9.9.9" } })), packBytes],
     [jsonBytes, Buffer.concat([packBytes, Buffer.from([0])])],
@@ -9606,7 +9695,7 @@ function trustedBootstrapWriteFixturePluginModule(root: string, module: TrustedB
 
 /** 🧾️ The shipped receipt a never-executed fixture component carries for exactly these bytes and this semantic descriptor. */
 function trustedBootstrapFixtureReceipt(identity: Readonly<{ pluginId: string; packageId: string }>, component: Readonly<{ byteLength: number; sha256: string }>, descriptorSha256: string): ComponentReceiptV1 {
-  return componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", pluginId: identity.pluginId, packageId: identity.packageId, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: component.sha256, wasmBytes: component.byteLength, semanticDescriptorSha256: descriptorSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) });
+  return componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", pluginId: identity.pluginId, packageId: identity.packageId, profile: "release", target: "wasm32-wasip2", wasmSha256: component.sha256, wasmBytes: component.byteLength, semanticDescriptorSha256: descriptorSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) });
 }
 
 /** 🧫️ Constructs only neutral descriptor projections for physical publication-fence laws. */
@@ -10310,7 +10399,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
   const observationStage = join(trustedRoot, `provenance-staging-${nonce}`);
   mkdirSync(observationStage, { mode: 0o700 });
   const buildControl = trustedBootstrapBuildControl(buildBudgetMs());
-  const control={...buildControl.control,invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
+  const control={...buildControl.control,invocation,compiler:scriptCompilerAdmissionControlV1(invocation,"trusted-catalog:build",Math.floor(buildControl.control.remainingMs())),process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
   const checkBuild = () => {
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
   };
@@ -10320,9 +10409,9 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
       if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
       control.checkpoint("capture-codecs", 0, 8);
     });
-    const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "wasm-release" as const }));
+    const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "release" as const }));
     const receipts = new Map<string, FreshComponentReceiptV1>();
-    const compilerInvocations = new Map<string, readonly string[]>();
+    const compilerInvocations = new Map<string, readonly Readonly<{path:string;kind:"component"|"emitter";artifact:string}>[]>();
     const actorProducers = new Map<string, Omit<ActorProducerV1,"compiler"> & {compilerName:string}>();
     const descriptorClaims = new Map<string, TrustedBootstrapDescriptorClaimsV1>();
     const browserActors = new Map<string, TrustedBootstrapBrowserActorV1>();
@@ -10340,14 +10429,10 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
       mkdirSync(stage, { recursive: true, mode: 0o700 });
       let derivedActor: ClosedBrowserActorArtifactV1 | undefined;
       try {
-        const { receipt, derived: componentSha256, compilerInvocations: invocations } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
-          lease.consume(async (component) => createHash("sha256").update(component).digest("hex")),
-        );
-        if (!invocations || invocations.length !== 2) throw new Error("fresh trusted package compiler observations are missing");
-        compilerInvocations.set(request.pluginId, invocations);
-        const tooling = join(observationStage, "packages", request.pluginId, "tooling"); mkdirSync(tooling, {recursive:true,mode:0o700});
-        const emitterPath = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
-        cpSync(emitterPath, join(tooling, basename(emitterPath)), {errorOnExist:true,force:false});
+        const {receipt,derived:componentSha256}=await produceFreshComponentV1(repoRoot,request,stage,control,async(lease,evidence)=>lease.consume(async component=>{
+          const digest=createHash("sha256").update(component).digest("hex"),tooling=join(observationStage,"packages",request.pluginId,"tooling"),observed=join(observationStage,"packages",request.pluginId,"captured");mkdirSync(tooling,{recursive:true,mode:0o700});mkdirSync(observed,{recursive:true,mode:0o700});const retained:{path:string;kind:"component"|"emitter";artifact:string}[]=[];
+          await evidence.withEmitter(async tool=>{cpSync(tool.path,join(tooling,basename(tool.path)),{errorOnExist:true,force:false});for(const [index,row]of evidence.observations.entries()){const record=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(row.bytes)),matches=record.units.flatMap(unit=>unit.artifacts.filter(artifact=>artifact.sha256===(row.kind==="component"?digest:tool.sha256)));if(matches.length!==1)throw Error("One exact actual component/tool compiler witness required");const path=join(observed,String(index)+".json");trustedBootstrapWriteNew(path,row.bytes,checkBuild);retained.push({path,kind:row.kind,artifact:matches[0]!.path});}await tool.recheck();});if(!retained.some(row=>row.kind==="component")||!retained.some(row=>row.kind==="emitter"))throw Error("Actual component and tool observations required");compilerInvocations.set(request.pluginId,Object.freeze(retained));return digest;
+        }));
         if (componentSha256 !== receipt.component.sha256 || (derivedActor && derivedActor.componentSha256 !== componentSha256)) throw new Error(`fresh ${request.pluginId} derivation differs from its verified component`);
         if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
         const descriptor = trustedBootstrapReadRegular(join(stage, "descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "fresh compiled descriptor protocol", checkBuild);
@@ -10381,8 +10466,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
           codecs[request.pluginId] = [];
           unownedKinds.set(request.pluginId, hostedKinds.unowned);
         } else {
-          const emitter = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
-          const answered = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
+          const answered=await withDescriptorEmitterV1(repoRoot,invocation,scriptCompilerAdmissionControlV1(invocation,"fresh:codecs",Math.floor(control.remainingMs())),emitter=>withDescriptorEmitterTaskV1(emitter,invocation,async tool=>{const result=trustedBootstrapComponentCodecRowsV1(repoRoot,tool.path,join(stage,"component.wasm"),join(target,"component-codecs.json"),manifestKinds);await tool.recheck();return result;}));
           codecs[request.pluginId] = answered.rows;
           unownedKinds.set(request.pluginId, answered.unowned);
         }
@@ -10391,7 +10475,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
         if (pluginOpensDocuments) {
           const componentBytes = trustedBootstrapReadRegular(join(stage, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `fresh ${request.pluginId} component for closed actor`, checkBuild);
           try {
-            derivedActor = await buildClosedBrowserActorArtifactV1(componentBytes, invocation, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
+            derivedActor = await buildClosedBrowserActorArtifactV1(componentBytes, invocation, control.compiler, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
           } finally {
             componentBytes.fill(0);
           }
@@ -10536,9 +10620,8 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
     const packageProducers: PackageProducerV1[] = [];
     for(const identity of selectedClosure){
       const request=requests.find(row=>row.pluginId===identity.pluginId)!,target=join(buildRoot,`${identity.pluginId}-target`),packageRoot=join(generationRoot,"packages",identity.pluginId),metadataRoot=join(observationRoot,"packages",identity.pluginId);
-      const originalComponent=join(target,"wasm32-wasip2",request.componentProfile,request.outputName),originalEmitter=join(target,"debug",process.platform==="win32"?"semio-framework-plugin-describe.exe":"semio-framework-plugin-describe");
-      const invocations=compilerInvocations.get(identity.pluginId)!;
-      const cargoInvocations=[];for(const [index,source]of invocations.entries())cargoInvocations.push(await retainTrustedCargoInvocationV1(source,join(metadataRoot,"cargo",basename(source)),new Map(index===0?[[originalComponent,join(packageRoot,"component.wasm")]]:[[originalEmitter,join(metadataRoot,"tooling",basename(originalEmitter))]]),observationControl));
+      const invocations=compilerInvocations.get(identity.pluginId);if(!invocations?.length)throw Error("Captured actual compiler observations required");
+      const cargoInvocations=[];for(const row of invocations){const source=join(metadataRoot,"captured",basename(row.path)),staged=row.kind==="component"?join(packageRoot,"component.wasm"):join(metadataRoot,"tooling",basename(row.artifact));cargoInvocations.push(await retainTrustedCargoInvocationV1(source,join(metadataRoot,"cargo",basename(row.path)),new Map([[row.artifact,staged]]),observationControl));}
       let browserActor: PackageProducerV1["browserActor"] = null;
       const actor=actorProducers.get(identity.pluginId);
       if(actor){const {compilerName,...record}=actor;const actorRecord:ActorProducerV1={...record,compiler:await observePhysicalFileV1(join(observationRoot,"compilers",compilerName),observationControl)};const actorPath=join(metadataRoot,"browser-producer.json");trustedBootstrapWriteNew(actorPath,Buffer.from(JSON.stringify(actorRecord)+"\n"),checkBuild);browserActor=await observePhysicalFileV1(actorPath,observationControl);}
@@ -11248,10 +11331,18 @@ async function proveTrustedPublicationCli(invocation: ScriptInvocation, repoRoot
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = process.env.CARGO_TARGET_DIR;
   if (!artifactRoot || !cargoTargetDir || !isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("publication CLI laws require exact ticket-owned artifact and Cargo roots");
-  await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd: repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: [
-      "trusted_catalog_command::tests::trusted_publication_transport_matches_neutral_arguments_and_input_bounds",
-      "tests::check_in_process_fixture_emits_verified_gis_ledger_and_catalog",
-    ] }],invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 180_000 },progress(event) { console.log(`trusted-publication-cli-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
+  await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd: repoRoot,...exactCargoStageEnvironments(),groups: [{
+    package: "semio-hub",
+    target: { kind: "bin", name: "os-hub" },
+    cargoArgs: ["--features", "integration-fixtures"],
+    laws: ["trusted_catalog_command::tests::trusted_publication_transport_matches_neutral_arguments_and_input_bounds"],
+  },
+  {
+    package: "semio-hub-boot-laws",
+    target: { kind: "lib" },
+    cargoArgs: ["--features", "integration-fixtures"],
+    laws: ["tests::check_in_process_fixture_emits_verified_gis_ledger_and_catalog"],
+  }],invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 180_000 },progress(event) { console.log(`trusted-publication-cli-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
   await runCargo(["build", "--manifest-path", "Cargo.toml", "--features", "integration-fixtures", "--bin", "os-hub"], hubRoot);
   const binaryPath = join(cargoTargetDir, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
   const fixtureData = join(artifactRoot, "check-in-process-fixture", "data");
@@ -11523,24 +11614,7 @@ async function proveNativeDeficitFixture(repoRoot: string): Promise<void> {
 class GisInferenceLedgerCheckScript extends BundleScript {
   async run(): Promise<void> {
     runCmd("bun", ["./📜️script.ts", "gis-inference-ledger-oracle"], { cwd: this.root, budgetMs: 60_000 });
-    const suffixes = [
-      "gis_inference_sqlite_ledger_executes_neutral_traces_with_private_first_terminal_wins",
-      "gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounded",
-      "gis_inference_sqlite_concurrent_connections_have_one_durable_request_winner",
-      "gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_exactly_once",
-      "inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces",
-      "inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay_before_release",
-      "inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch",
-      "inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof",
-      "inference_catalog_projection_requires_exact_scope_package_and_declared_service",
-      "inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_actor_vectors",
-      "inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands",
-      "loader_retains_exact_bytes_and_independent_identities_before_atomic_codec_activation",
-      "verified_trusted_catalog_document_open_generation_and_resolution_are_exact",
-      "inference_approval_request_accepts_only_job_digest_and_exact_body_bound",
-      "inference_live_author_rechecks_real_sqlite_session_scope_role_revocation_and_cancellation",
-      "gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication",
-    ];
+    const suffixes = [["semio-hub-inference-ledger", "gis_inference_sqlite_ledger_executes_neutral_traces_with_private_first_terminal_wins"], ["semio-hub-inference-ledger", "gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounded"], ["semio-hub-inference-ledger", "gis_inference_sqlite_concurrent_connections_have_one_durable_request_winner"], ["semio-hub-inference-ledger", "gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_exactly_once"], ["semio-hub-inference-contract-laws", "inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces"], ["semio-hub-inference-contract-laws", "inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay_before_release"], ["semio-hub-inference-contract-laws", "inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch"], ["semio-hub-inference-contract-laws", "inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof"], ["semio-hub-inference-catalog", "inference_catalog_projection_requires_exact_scope_package_and_declared_service"], ["semio-hub-inference-contract-laws", "inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_actor_vectors"], ["semio-hub-inference-contract-laws", "inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands"], ["semio-hub-trusted-catalog-laws", "loader_retains_exact_bytes_and_independent_identities_before_atomic_codec_activation"], ["semio-hub-trusted-catalog-laws", "verified_trusted_catalog_document_open_generation_and_resolution_are_exact"], ["semio-hub-inference-contract-laws", "inference_approval_request_accepts_only_job_digest_and_exact_body_bound"], ["semio-hub-inference-catalog", "inference_live_author_rechecks_real_sqlite_session_scope_role_revocation_and_cancellation"], ["semio-hub-trusted-catalog-laws", "gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication"]];
     const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,groups: [
         { package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn"] },
         {
@@ -11548,7 +11622,7 @@ class GisInferenceLedgerCheckScript extends BundleScript {
           target: { kind: "lib", name: "db" },
           laws: ["db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return", "db_io_saturated_task_retry_wakes_parked_caller_without_unrelated_ingress"],
         },
-        { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: suffixes },
+        ...hubLawGroups(suffixes),
       ],progress(event) {
         console.log(`gis-inference-ledger ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
       }});
@@ -11565,7 +11639,7 @@ class GisMapFrozenBindingCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("gis-map-frozen-binding-check accepts only --native");
     await proveGisMapFrozenBindingFixture(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable", "gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub-inference-catalog", target: { kind: "lib" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable"] }, { package: "semio-hub-trusted-catalog-laws", target: { kind: "lib" }, laws: ["gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],progress(event) {
           console.log(`gis-map-frozen-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
       for (const receipt of receipts) console.log(`gis-map-frozen-binding-receipt: ${JSON.stringify(receipt)}`);
@@ -12344,6 +12418,7 @@ async function proveGisMapTwoAuthorShellProcess(invocation: ScriptInvocation, re
   assert.equal(selected?.descriptor?.path, "packages/gis/descriptor.semio");
   const generationRoot = dirname(prepared.current.bundlePath);
   const browserHost = await stageTestBrowserHostV1({
+    invocation,
     control: scriptCompilerAdmissionControlV1(invocation, "browser-host:stage", 0),
     artifactRoot: prepared.artifactRoot,
     selectedGis: {
@@ -12806,32 +12881,13 @@ class GisMapProposalCheckScript extends BundleScript {
     if (segments.length > 1 || !["--source", "--native", "--process"].includes(mode)) throw new Error("usage: gis-map-proposal-check [--source|--native|--process]");
     const hostile = await proveGisMapProposalApprovalFixture(this.repoRoot);
     if (mode === "--native" || mode === "--process") {
-      const libraryLaws = [
-        "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
-        "gis_map_proposal_is_private_to_its_original_author_owner",
-        "gis_map_approval_fails_closed_without_a_composition_transaction_and_never_auto_applies",
-        "gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply",
-        "gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer",
-        "gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admission",
-        "gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vocabulary",
-      ];
-      const routeLaws = [
-        "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write",
-        "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair",
-        "gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding",
-        "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation",
-        "inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded",
-        "gis_map_inference_runtime_close_signals_and_joins_actual_codec_work",
-        "gis_map_inference_revocation_after_compute_refuses_late_publication",
-        "gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller",
-        "gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift",
-        "gis_map_approval_is_idempotent_across_duplicate_requests_and_restart",
-      ];
-      if (mode === "--process") routeLaws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
+      const libraryLaws = [["semio-hub-inference-laws", "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation"], ["semio-hub-inference-laws", "gis_map_proposal_is_private_to_its_original_author_owner"], ["semio-hub-inference-laws", "gis_map_approval_fails_closed_without_a_composition_transaction_and_never_auto_applies"], ["semio-hub-inference-laws", "gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply"], ["semio-hub-inference-laws", "gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer"], ["semio-hub-inference-laws", "gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admission"], ["semio-hub-inference-laws", "gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vocabulary"]];
+      const routeLaws = [["semio-hub-boot-laws", "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write"], ["semio-hub-boot-laws", "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair"], ["semio-hub-boot-laws", "gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding"], ["semio-hub-boot-laws", "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation"], ["semio-hub-boot-laws", "inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded"], ["semio-hub-boot-laws", "gis_map_inference_runtime_close_signals_and_joins_actual_codec_work"], ["semio-hub-boot-laws", "gis_map_inference_revocation_after_compute_refuses_late_publication"], ["semio-hub-boot-laws", "gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller"], ["semio-hub-boot-laws", "gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift"], ["semio-hub-boot-laws", "gis_map_approval_is_idempotent_across_duplicate_requests_and_restart"]];
+      if (mode === "--process") routeLaws.push(["semio-hub-boot-laws", "check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]);
       const laws = [...libraryLaws, ...routeLaws];
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
-          { package: "semio-hub", target: { kind: "lib", name: "semio_hub" }, laws: libraryLaws },
-          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: routeLaws },
+          ...hubLawGroups(libraryLaws),
+          ...hubLawGroups(routeLaws, ["--features", "integration-fixtures"]),
         ],progress(event) {
           console.log(`gis-map-proposal ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
@@ -12996,7 +13052,7 @@ class LocalBootstrapLaunchCheckScript extends BundleScript {
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build through Nx without additional arguments");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
     signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
   }
 }
@@ -13024,7 +13080,7 @@ class PublishScript extends BundleScript {
 class BuildDevScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev through Nx without additional arguments");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
@@ -13365,7 +13421,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "--publication-native") {
       await proveTrustedGenerationStageFixture(this.repoRoot);
       await proveTrustedPublicationFixture(this.repoRoot);
-      await runRepositoryCargoTests(["semio-hub"], this.repoRoot, this.invocation, ["--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
+      await runRepositoryCargoTests(["semio-hub-trusted-catalog-contract-laws", "semio-hub-trusted-catalog-laws"], this.repoRoot, this.invocation, ["--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
       return;
     }
     if (segments.length === 1 && segments[0] === "--publication-source") {
@@ -13401,9 +13457,9 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       producer.includes("ownerRoot")
     )
       throw new Error("fresh component producer is not isolated, descriptor-verified, receipt-bound, bounded, close-before-cleanup, or side-effect free");
-    const catalogSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
+    const catalogSource = readTrustedCatalogSource(this.repoRoot);
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
-    const runtimeSource = readModuleTreeSource(resolve(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs")).split("\nmod tests {")[0]!;
+    const runtimeSource = readHubBinSource(this.repoRoot).split("\nmod tests {")[0]!;
     const registrySource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts"), "utf8");
     const runtimeCompact = runtimeSource.replace(/\s+/g, "");
     const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
@@ -13530,7 +13586,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
         hubBuildControl.close();
       }
       if (segments[0] === "--two-author-shell") runCargo(["build", "-p", "semio-framework-os-mcp", "--bins"], this.repoRoot, hubEnv);
-      if (segments[0] === "--two-author-shell") await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,env: hubEnv,nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--features", "integration-fixtures"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],progress(event) { console.log(`two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
+      if (segments[0] === "--two-author-shell") await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,env: hubEnv,nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-hub-boot-laws", target: { kind: "lib" }, cargoArgs: ["--features", "integration-fixtures"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],progress(event) { console.log(`two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
       const receipt = await materializeTrustedCatalogBundle(this.invocation, this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES), binary);
@@ -13624,14 +13680,14 @@ class AdminBackendCheckScript extends BundleScript {
       return matches[0]!;
     };
     const laws = [
-      { target: ["--lib"], suffix: "admin_operation_audit_concurrent_first_writer_is_idempotent_and_first_terminal_wins" },
-      { target: ["--lib"], suffix: "admin_bounded_overview_space_and_document_projections_enforce_exact_page_boundary" },
-      { target: ["--bin", "os-hub"], suffix: "admin_intent_wire_taxonomy_rejects_generic_and_unknown_commands" },
-      { target: ["--bin", "os-hub"], suffix: "admin_document_cursor_is_principal_route_and_exact_page_bound" },
-      { target: ["--bin", "os-hub"], suffix: "admin_response_pages_stop_before_exact_byte_max_and_reject_one_oversized_row" },
-      { target: ["--bin", "os-hub"], suffix: "admin_rebuild_slots_are_atomic_and_abort_closes_once" },
+      { target: ["-p", "semio-hub-directory-laws", "--lib"], suffix: "admin_operation_audit_concurrent_first_writer_is_idempotent_and_first_terminal_wins" },
+      { target: ["-p", "semio-hub-directory-laws", "--lib"], suffix: "admin_bounded_overview_space_and_document_projections_enforce_exact_page_boundary" },
+      { target: ["-p", "semio-hub-directory-route-laws", "--lib"], suffix: "admin_intent_wire_taxonomy_rejects_generic_and_unknown_commands" },
+      { target: ["-p", "semio-hub-directory-route-laws", "--lib"], suffix: "admin_document_cursor_is_principal_route_and_exact_page_bound" },
+      { target: ["-p", "semio-hub-hostile-input-laws", "--lib"], suffix: "admin_response_pages_stop_before_exact_byte_max_and_reject_one_oversized_row" },
+      { target: ["-p", "semio-hub-directory-route-laws", "--lib"], suffix: "admin_rebuild_slots_are_atomic_and_abort_closes_once" },
     ].map((law) => ({ ...law, name: exactLaw(law.target, law.suffix) }));
-    const postgresLaw = { target: ["--lib"], suffix: "admin_operation_audit_concurrent_absent_request_rereads_established_receipt" };
+    const postgresLaw = { target: ["-p", "semio-hub-directory-backend-laws", "--lib"], suffix: "admin_operation_audit_concurrent_absent_request_rereads_established_receipt" };
     const postgres = { ...postgresLaw, name: exactLaw(postgresLaw.target, postgresLaw.suffix) };
     console.log(`admin-backend-laws: ${[...laws, postgres].map((law) => law.name).join(",")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root);
@@ -13646,12 +13702,12 @@ class AdminBackendCheckScript extends BundleScript {
 class AdminLiveJourneyCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixture = await adminLiveJourneyFixture(this.repoRoot);
-    const laws = ["local_bootstrap::tests::local_bootstrap_idle_listener_survives_until_admission_and_admitted_frame_is_deadline_bounded", "directory::sqlite::tests::projection_rebuild_preserves_live_credential_invite_and_session_bindings"];
-    for (const law of laws) {
-      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    const laws = [["semio-hub-local-bootstrap", "tests::local_bootstrap_idle_listener_survives_until_admission_and_admitted_frame_is_deadline_bounded"], ["semio-hub-directory-backend-laws", "sqlite_tests::projection_rebuild_preserves_live_credential_invite_and_session_bindings"]];
+    for (const [owner, law] of laws) {
+      const listed = runProbe("cargo", ["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", law, "--", "--list"], { cwd: this.root, ...orchestratorBudgetOpts() });
       const matches = listed.stdout.split("\n").filter((line) => line === `${law}: test`);
       if (listed.status !== 0 || matches.length !== 1) throw new Error(`admin-live-journey-check expected exactly one ${law} law, selected ${matches.length}`);
-      runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
+      runCargo(["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", law, "--", "--exact", "--test-threads=1"], this.root);
     }
     buildAdminSpa(this.repoRoot);
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
@@ -13892,10 +13948,10 @@ async function proveDirectoryEventPageRouteV1(repoRoot: string): Promise<number>
   if (sessionContract({ ...fixture.session, unknown: true }) || sessionContract({ ...fixture.session, bindingSha256: `${fixture.session.bindingSha256}00` }) || sessionContract({ ...fixture.session, authorizationGeneration: 0 }))
     throw new Error("directory event page route session contract admitted an unknown or concatenated binding");
   const shared = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const neo4j = readNeo4jDirectorySource(repoRoot);
   const sourceClosed = (contract: string, route: string, sq: string, pg: string, neo: string): boolean => {
     const admissionStart = route.indexOf("fn directory_event_page_request_admission");
     const admissionEnd = route.indexOf("\n}\n", admissionStart);
@@ -14476,8 +14532,8 @@ async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixt
   }
 }
 
-function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture): void {
-  const moduleRoot = join(pluginModulesRootIn(repoRoot), fixture.home.moduleDirectory);
+function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture, mode:"prototype"|"release"): void {
+  const moduleRoot = join(builtPluginModulesRootIn(repoRoot,mode),fixture.home.moduleDirectory);
   const manifest = JSON.parse(readFileSync(join(moduleRoot, "🔣️.json"), "utf8")) as Record<string, any>;
   const descriptorSha256 = createHash("sha256").update(readFileSync(join(moduleRoot, "🛂️.descriptor.semio"))).digest("hex");
   const app = manifest.manifest?.apps?.find((candidate: Record<string, any>) => candidate.id === fixture.home.appId);
@@ -14501,6 +14557,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
   repoRoot: string,
   fixture: DirectoryHomeBrowserProcessFixture,
   source: Readonly<{ page: LiveDirectoryEventPageV1; userId: string; displayName: string; baseUrl: string }>,
+  mode:"prototype"|"release",
 ): Promise<void> {
   const bundleModule = async (entrypoint: string): Promise<string> => {
     const bundle = await Bun.build({ entrypoints: [entrypoint], target: "browser", format: "esm", sourcemap: "none", define: { "import.meta.vitest": "undefined" } });
@@ -14511,7 +14568,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx")),
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx")),
   ]);
-  const pluginRoot = pluginModulesRootIn(repoRoot);
+  const pluginRoot=builtPluginModulesRootIn(repoRoot,mode);
   const mime = (path: string): string => (path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8");
   const physicalPluginPath = (urlPath: string): string | undefined => {
     const prefix = "/🔌️plugin-modules/";
@@ -14626,12 +14683,12 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
   }
 }
 
-async function proveDirectoryHomeBrowserProcessJourney(repoRoot: string, root: string, fixture: DirectoryHomeBrowserProcessFixture): Promise<void> {
+async function proveDirectoryHomeBrowserProcessJourney(repoRoot: string, root: string, fixture: DirectoryHomeBrowserProcessFixture,mode:"prototype"|"release"): Promise<void> {
   const binary = hubBinaryPath(repoRoot);
   if (!existsSync(binary)) throw new Error(`directory Home browser process blocked before discovery: os-hub binary absent at ${binary}`);
   const source = await proveDirectoryEventPageV1Process(repoRoot, root);
-  assertDirectoryHomeBrowserComponentAttestation(repoRoot, fixture);
-  await proveDirectoryHomeBrowserStaticWasmProcessRuntime(repoRoot, fixture, source);
+  assertDirectoryHomeBrowserComponentAttestation(repoRoot,fixture,mode);
+  await proveDirectoryHomeBrowserStaticWasmProcessRuntime(repoRoot,fixture,source,mode);
 }
 
 type ScopedPresenceBrowserAuthorityCase = Readonly<{
@@ -14873,7 +14930,7 @@ class DirectoryHomeBrowserProcessCheckScript extends BundleScript {
     if (phase === "runtime" || phase === "process") await proveDirectoryHomeBrowserControllerRuntime(this.repoRoot, fixture);
     if (phase === "process") {
       runCmd("cargo", ["build", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], { cwd: this.root, budgetMs: buildBudgetMs() });
-      await proveDirectoryHomeBrowserProcessJourney(this.repoRoot, this.root, fixture);
+      await proveDirectoryHomeBrowserProcessJourney(this.repoRoot,this.root,fixture,readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode);
     }
     console.log(`directory-home-browser-process-check: phase=${phase} traces=${fixture.traces.length} hostile=${fixture.hostile.length}`);
   }
@@ -15334,38 +15391,19 @@ class DirectoryCommandReceiptCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "authority", "invites", "native", "process"].includes(phase)) throw new Error("directory-command-receipt-check accepts source, authority, invites, native, or process");
     const checks = (await proveDirectoryCommandReceiptV1(this.repoRoot)) + (await proveDirectoryCommandAuthorityV1(this.repoRoot)) + (await proveInviteRedemptionTransaction(this.repoRoot));
     if (phase === "authority" || phase === "invites" || phase === "native" || phase === "process") {
-      const laws = [
-        "directory_command_authority_revalidates_after_durable_revocation_before_fence",
-        "directory_command_authority_holds_admitted_command_until_receipt_before_demotion",
-        "directory_command_authority_demotion_invalidates_only_affected_scope_once",
-        "directory_command_authority_invite_revocation_requires_the_exact_owned_space",
-        "directory_invite_redemption_obeys_current_space_state_and_readonly_replay",
-        "directory_invite_redemption_revalidates_after_hint_before_fence",
-        "directory_invite_redemption_admitted_fence_precedes_archive",
-        "directory_invite_redemption_scope_hint_is_capability_bound",
-        "directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids",
-        "directory_command_receipt_v1_route_denies_cross_user_spectator_and_digest_substitution",
-        "directory_command_receipt_v1_route_bounds_request_and_receipt_bytes",
-        "directory_command_receipt_v1_store_resolves_a_lost_reply_and_survives_restart",
-      ];
+      const laws = [["semio-hub-directory-route-laws", "directory_command_authority_revalidates_after_durable_revocation_before_fence"], ["semio-hub-directory-route-laws", "directory_command_authority_holds_admitted_command_until_receipt_before_demotion"], ["semio-hub-directory-route-laws", "directory_command_authority_demotion_invalidates_only_affected_scope_once"], ["semio-hub-directory-route-laws", "directory_command_authority_invite_revocation_requires_the_exact_owned_space"], ["semio-hub-directory-route-laws", "directory_invite_redemption_obeys_current_space_state_and_readonly_replay"], ["semio-hub-directory-route-laws", "directory_invite_redemption_revalidates_after_hint_before_fence"], ["semio-hub-directory-route-laws", "directory_invite_redemption_admitted_fence_precedes_archive"], ["semio-hub-directory-route-laws", "directory_invite_redemption_scope_hint_is_capability_bound"], ["semio-hub-directory-route-laws", "directory_command_receipt_v1_route_is_request_idempotent_for_concurrent_identical_ids"], ["semio-hub-directory-route-laws", "directory_command_receipt_v1_route_denies_cross_user_spectator_and_digest_substitution"], ["semio-hub-directory-route-laws", "directory_command_receipt_v1_route_bounds_request_and_receipt_bytes"], ["semio-hub-directory-route-laws", "directory_command_receipt_v1_store_resolves_a_lost_reply_and_survives_restart"]];
       for (const group of [
-        { package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, laws: phase === "invites" ? laws.slice(4, 8) : laws.slice(0, 8) },
+        ...hubLawGroups(phase === "invites" ? laws.slice(4, 8) : laws.slice(0, 8)),
         ...(phase === "invites"
           ? [
               {
-                package: "semio-hub",
-                target: { kind: "lib" as const },
-                laws: [
-                  "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
-                  "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
-                  "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
-                  "directory::tests::invite_archive_projection_serializes_independent_service_decisions",
-                  "directory::tests::directory_command_uncertain_commit_retains_claim_and_never_reexecutes",
-                ],
+                package: "semio-hub-directory-laws",
+                target: { kind: "lib" },
+                laws: ["unit::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild", "unit::invite_redemption_projection_failure_rolls_back_claim_event_and_membership", "unit::invite_redemption_commit_and_publication_precede_the_next_directory_command", "unit::invite_archive_projection_serializes_independent_service_decisions", "unit::directory_command_uncertain_commit_retains_claim_and_never_reexecutes"],
               },
             ]
           : []),
-        ...(["authority", "invites"].includes(phase) ? [] : [{ package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: laws.slice(8) }]),
+        ...(["authority", "invites"].includes(phase) ? [] : hubLawGroups(laws.slice(8), ["--all-features"])),
       ].sort((left, right) => Number(left.target.kind === "bin") - Number(right.target.kind === "bin"))) {
         const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [group],progress(event) {
             console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -15411,9 +15449,9 @@ async function proveDocumentCheckInV1(repoRoot: string): Promise<number> {
     if (Boolean(validateStatus(parseJson(row.source))) !== row.schemaValid || parseDocumentCheckInStatusV1(row.source) !== null) throw new Error(`check-in invalid status differs: ${row.name}`);
     checks++;
   }
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const job = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📌️check-in/🦀️.rs"), "utf8");
-  const ledger = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
+  const ledger = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs"), "utf8");
   const store = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const codec = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs"), "utf8");
   const wit = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"), "utf8");
@@ -15605,26 +15643,33 @@ class SpaceArtifactCreationCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "sqlite", "postgres", "neo4j", "native"].includes(phase)) throw new Error("space-artifact-creation-check accepts source, sqlite, postgres, neo4j, or native");
     proveSpaceArtifactCreationContractV1(this.repoRoot);
     if (phase !== "source") {
-      const sqliteLaws = ["artifact_authority::creation::tests::creation_contract_matches_neutral_intents_and_ready_only_coordinates", "artifact_authority::creation::tests::directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound", "directory::sqlite::tests::document_index_neutral_transactions_survive_projection_rebuild", "artifact_authority::creation::tests::genesis_materialization_binds_exact_zero_history_and_independent_sha256", "artifact_authority::creation::operation::tests::creation_facts_follow_neutral_terminal_and_exact_pair_transitions", "directory::sqlite::creation_tests::genesis_neutral_transactions_are_atomic_replayable_and_authorized", "directory::sqlite::creation_tests::genesis_delivery_lease_serializes_invalidation_and_requires_replay", "directory::sqlite::creation_tests::genesis_accepted_only_recovery_has_no_prepared_or_public_side_effects", "directory::sqlite::creation_tests::genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt"];
-      sqliteLaws.push("directory::tests::memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one", "directory::tests::artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws", "directory::tests::artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replayable", "directory::tests::artifact_chunk_cas_retention_space_delete_and_dry_run_preserve_live_bytes", "directory::tests::artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite");
-      sqliteLaws.push("directory::tests::artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_authority", "directory::tests::artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preserves_exact_bytes");
-      const backend = phase === "postgres" ? { laws: ["directory::postgres::creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_postgres"] }
-        : phase === "neo4j" ? { laws: ["directory::neo4j::creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_neo4j"] }
+      const sqliteLaws = [["semio-hub-artifact-creation", "tests::creation_contract_matches_neutral_intents_and_ready_only_coordinates"], ["semio-hub-directory-laws", "unit::directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound"], ["semio-hub-directory-backend-laws", "sqlite_tests::document_index_neutral_transactions_survive_projection_rebuild"], ["semio-hub-artifact-creation", "tests::genesis_materialization_binds_exact_zero_history_and_independent_sha256"], ["semio-hub-artifact-creation", "operation::tests::creation_facts_follow_neutral_terminal_and_exact_pair_transitions"], ["semio-hub-directory-laws", "sqlite_creation_tests::quick::genesis_neutral_transactions_are_atomic_replayable_and_authorized"], ["semio-hub-directory-laws", "sqlite_creation_tests::genesis_delivery_lease_serializes_invalidation_and_requires_replay"], ["semio-hub-directory-laws", "sqlite_creation_tests::long::genesis_accepted_only_recovery_has_no_prepared_or_public_side_effects"], ["semio-hub-directory-laws", "sqlite_creation_tests::genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt"]];
+      sqliteLaws.push(["semio-hub-directory-laws", "unit::memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one"], ["semio-hub-directory-laws", "unit::artifact_public_scalars_and_private_locators_obey_exact_max_plus_one_laws"], ["semio-hub-directory-laws", "unit::artifact_checkpoint_publication_is_atomic_bounded_idempotent_and_replayable"], ["semio-hub-directory-laws", "unit::artifact_chunk_cas_retention_space_delete_and_dry_run_preserve_live_bytes"], ["semio-hub-directory-laws", "unit::artifact_chunk_cas_two_service_sweep_and_reservation_race_is_serialized_before_rewrite"]);
+      sqliteLaws.push(["semio-hub-directory-laws", "unit::artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_authority"], ["semio-hub-directory-laws", "unit::artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preserves_exact_bytes"]);
+      const backend = phase === "postgres" ? { laws: [["semio-hub-directory-laws", "postgres_creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_postgres"]] }
+        : phase === "neo4j" ? { laws: [["semio-hub-directory-laws", "neo4j_creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_neo4j"]] }
           : { laws: sqliteLaws };
       const groups: ExactCargoLawGroup[] = [
-        { package: "semio-hub", target: { kind: "lib" }, laws: backend.laws },
+        ...hubLawGroups(backend.laws),
       ];
       if (phase === "native") {
         groups.push({
-          package: "semio-hub",
-          target: { kind: "bin", name: "os-hub" },
+          package: "semio-hub-boot-laws",
+          target: { kind: "lib" },
           cargoArgs: ["--features", "integration-fixtures"],
-          laws: [
-            "tests::artifact_creation_admission_cannot_activate_after_shutdown_deadline",
-            "tests::space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed",
-            "tests::document_open_and_execution_target_refuse_descriptor_or_index_without_genesis",
-            "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live",
-          ],
+          laws: ["tests::artifact_creation_admission_cannot_activate_after_shutdown_deadline"],
+        },
+        {
+          package: "semio-hub-hostile-input-laws",
+          target: { kind: "lib" },
+          cargoArgs: ["--features", "integration-fixtures"],
+          laws: ["tests::long::space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed"],
+        },
+        {
+          package: "semio-hub-open-plan-laws",
+          target: { kind: "lib" },
+          cargoArgs: [],
+          laws: ["tests::document_open_and_execution_target_refuse_descriptor_or_index_without_genesis", "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live"],
         });
       }
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups,progress(event) { console.log(`space-artifact-creation ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
@@ -15640,19 +15685,10 @@ class CheckInCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("check-in-check accepts source, native, or process");
     const checks = await proveDocumentCheckInV1(this.repoRoot);
     if (phase === "native" || phase === "process") {
-      const laws = [
-        "check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it",
-        "check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned",
-        "check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author",
-      ];
-      if (phase === "process") laws.push("check_in_process_fixture_emits_verified_gis_ledger_and_catalog");
+      const laws = [["semio-hub-hostile-input-laws", "check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it"], ["semio-hub-hostile-input-laws", "check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned"], ["semio-hub-hostile-input-laws", "check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author"]];
+      if (phase === "process") laws.push(["semio-hub-boot-laws", "check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]);
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
-          {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
-            cargoArgs: ["--features", "integration-fixtures"],
-            laws,
-          },
+          ...hubLawGroups(laws, ["--features", "integration-fixtures"]),
         ],progress(event) {
           console.log(`check-in-${phase} ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
@@ -15675,26 +15711,16 @@ class DirectoryEventPageV1CheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("directory-event-page-v1-check accepts source, native, or process");
     const checks = await proveDirectoryEventPageRouteV1(this.repoRoot);
     if (phase === "native" || phase === "process") {
-      const laws = [
-        "directory_event_page_v1_route_scans_raw_holes_bounds_canonical_receipt_and_visibility",
-        "directory_event_page_v1_route_revalidates_session_generation_after_read_before_response",
-        "directory_event_page_v1_route_stops_at_canonical_byte_prefix_without_skipping_visible_seq",
-        "directory_event_page_v1_append_admission_is_transactional_for_sqlite_postgres_and_neo4j",
-        "directory_event_page_v1_route_rejects_noncanonical_query_and_stale_bearer_without_body",
-      ];
+      const laws = [["semio-hub-directory-route-laws", "directory_event_page_v1_route_scans_raw_holes_bounds_canonical_receipt_and_visibility"], ["semio-hub-directory-route-laws", "directory_event_page_v1_route_revalidates_session_generation_after_read_before_response"], ["semio-hub-directory-route-laws", "directory_event_page_v1_route_stops_at_canonical_byte_prefix_without_skipping_visible_seq"], ["semio-hub-directory-route-laws", "directory_event_page_v1_append_admission_is_transactional_for_sqlite_postgres_and_neo4j"], ["semio-hub-directory-route-laws", "directory_event_page_v1_route_rejects_noncanonical_query_and_stale_bearer_without_body"]];
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
-          { package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--all-features"], laws },
+          ...hubLawGroups(laws, ["--all-features"]),
           ...(phase === "native"
             ? [
                 {
-                  package: "semio-hub",
-                  target: { kind: "lib" as const, name: "semio_hub" },
+                  package: "semio-hub-directory-backend-laws",
+                  target: { kind: "lib" },
                   cargoArgs: ["--all-features"],
-                  laws: [
-                    "directory::sqlite::tests::directory_event_page_v1_append_admission_is_transactional_sqlite",
-                    "directory::postgres::tests::directory_event_page_v1_append_admission_is_transactional_postgres",
-                    "directory::neo4j::tests::directory_event_page_v1_append_admission_is_transactional_neo4j",
-                  ],
+                  laws: ["sqlite_tests::directory_event_page_v1_append_admission_is_transactional_sqlite", "postgres_tests::directory_event_page_v1_append_admission_is_transactional_postgres", "neo4j_tests::directory_event_page_v1_append_admission_is_transactional_neo4j"],
                 },
               ]
             : []),
@@ -15976,10 +16002,10 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
 
   const contract = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts"), "utf8");
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const neo4j = readNeo4jDirectorySource(repoRoot);
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const space = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs"), "utf8");
   const sourceClosed = (rust: string, ts: string, route: string, sq: string, pg: string, neo: string, browser: string, home: string): boolean => {
@@ -16042,15 +16068,10 @@ class SpaceAdministrationCheckScript extends BundleScript {
     if (phase === "native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
+            package: "semio-hub-directory-route-laws",
+            target: { kind: "lib" },
             cargoArgs: [],
-            laws: [
-              "space_administration_page_v1_route_returns_the_author_windows_with_a_canonical_receipt",
-              "space_administration_page_v1_route_denies_a_spectator_the_author_windows",
-              "space_administration_page_v1_route_denies_a_removed_member_and_leaks_no_rows",
-              "space_administration_page_v1_route_rejects_a_noncanonical_query_and_a_foreign_cursor",
-            ],
+            laws: ["space_administration_page_v1_route_returns_the_author_windows_with_a_canonical_receipt", "space_administration_page_v1_route_denies_a_spectator_the_author_windows", "space_administration_page_v1_route_denies_a_removed_member_and_leaks_no_rows", "space_administration_page_v1_route_rejects_a_noncanonical_query_and_a_foreign_cursor"],
           },
         ],progress(event) {
           console.log(`space-administration-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -16163,7 +16184,7 @@ async function provePresenceLeaseFixture(repoRoot: string): Promise<number> {
     { ...fixture.vectors[0]!.expected.final[0]!, unknown: true },
   ];
   if (summaryHostiles.some((candidate) => presenceSummary(candidate))) throw new Error("presence lease scope-summary contract admitted an unbounded projection");
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const sourceClosed = (source: string): boolean => {
     const publish = source.indexOf("self.fanout_for(key).send(ServerFrame::Presence");
     const directory = source.indexOf("self.directory_service.publish(DirectoryStreamMessage::Presence", publish);
@@ -16325,7 +16346,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     if ((normalized !== undefined) !== vector.expected.accepted || (normalized?.toString("hex") ?? null) !== vector.expected.normalizedPeerHex) throw new Error(`presence normalization vector failed: ${vector.name}`);
   }
   console.log(`presence-normalization-independent-oracle: AJV=1 LEB128=1 exact-vectors=${fixture.vectors.length}`);
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const start = hub.indexOf("async fn refresh_document_presence(");
   const end = hub.indexOf("async fn refresh_presence(", start);
   const ingress = hub.slice(start, end);
@@ -16351,16 +16372,9 @@ class PresenceNormalizationCheckScript extends BundleScript {
     if (phase === "native") {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
-            package: "semio-hub",
-            target: { kind: "bin", name: "os-hub" },
-            laws: [
-              "presence_normalization_matches_neutral_authority_and_no_effect_rejections",
-              "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh",
-              "presence_lease_reconnect_rejects_old_live_refresh_and_close",
-              "presence_lease_expires_server_clocked_visibility_without_socket_close",
-              "presence_lease_enforces_shared_roster_bounds_and_actor_order",
-              "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
-            ],
+            package: "semio-hub-presence-route-laws",
+            target: { kind: "lib" },
+            laws: ["presence_normalization_matches_neutral_authority_and_no_effect_rejections", "presence_normalization_socket_overwrites_identity_and_rejects_without_refresh", "presence_lease_reconnect_rejects_old_live_refresh_and_close", "presence_lease_expires_server_clocked_visibility_without_socket_close", "presence_lease_enforces_shared_roster_bounds_and_actor_order", "presence_lease_restart_is_empty_and_directory_presence_is_member_only"],
           },
         ],progress(event) {
           console.log(`presence-normalization-native ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -16395,7 +16409,7 @@ class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (!hub.includes(`fn ${law}(`) || !hub.includes("with_graceful_shutdown") || !hub.includes("test_state_with_directory")) throw new Error("missing composed SQLite shutdown/reopen acceptance journey");
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, laws: [law] }],progress(event) {
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: hubLawGroups([["semio-hub-directory-route-laws", law]]),progress(event) {
           console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
       for (const receipt of receipts) console.log(`admin-presence-target-recovery-native-receipt: ${JSON.stringify(receipt)}`);
@@ -16410,15 +16424,10 @@ class PresenceLeaseCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native", "process"].includes(phase)) throw new Error("presence-lease-check accepts source, native, or process");
     const checks = await provePresenceLeaseFixture(this.repoRoot);
     if (phase === "native" || phase === "process") {
-      const hubLaws = [
-        "presence_lease_reconnect_rejects_old_live_refresh_and_close",
-        "presence_lease_expires_server_clocked_visibility_without_socket_close",
-        "presence_lease_enforces_shared_roster_bounds_and_actor_order",
-        "presence_lease_restart_is_empty_and_directory_presence_is_member_only",
-      ];
-      const hubGroup = { package: "semio-hub", target: { kind: "bin" as const, name: "os-hub" }, cargoArgs: ["--all-features"], laws: hubLaws };
+      const hubLaws = [["semio-hub-presence-route-laws", "presence_lease_reconnect_rejects_old_live_refresh_and_close"], ["semio-hub-presence-route-laws", "presence_lease_expires_server_clocked_visibility_without_socket_close"], ["semio-hub-presence-route-laws", "presence_lease_enforces_shared_roster_bounds_and_actor_order"], ["semio-hub-presence-route-laws", "presence_lease_restart_is_empty_and_directory_presence_is_member_only"]];
+      const hubGroups = hubLawGroups(hubLaws, ["--all-features"]);
       const groups =
-        phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, hubGroup] : [hubGroup];
+        phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, ...hubGroups] : hubGroups;
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: phase === "native" ? this.repoRoot : this.root,...exactCargoStageEnvironments(),groups,progress(event) {
           console.log(`presence-lease-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
@@ -16613,7 +16622,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
   const directory = readHubDirectorySource(repoRoot);
   const sqlite = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🪶️sqlite/🦀️.rs"), "utf8");
   const postgres = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(repoRoot, "🌎️hub/📇️directory/🌐️neo4j/🦀️.rs"), "utf8");
+  const neo4j = readNeo4jDirectorySource(repoRoot);
   const body = (source: string, signature: string): string => {
     const offset = source.indexOf(signature);
     const start = source.indexOf("{", offset);
@@ -16672,7 +16681,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
     if (sourceClosed(hostile[0]!, hostile[1]!, hostile[2]!, hostile[3]!)) throw new Error(`invite redemption source oracle admitted removed transaction fence ${index}`);
   });
 
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   const stateAuthorityClosed = (shared: string, sq: string, pg: string, neo: string, server: string): boolean => {
     const preflight = body(shared, "pub(crate) fn invite_redemption_preflight(");
     const hint = body(shared, "pub(crate) fn verify_invite_redemption_scope_hint(");
@@ -16765,20 +16774,15 @@ class InviteRedemptionTransactionCheckScript extends BundleScript {
     const checks = await proveInviteRedemptionTransaction(this.repoRoot);
     const lawGroups =
       segments[0] === "--postgres"
-        ? [{ package: "semio-hub", target: { kind: "lib" as const }, laws: ["directory::postgres::tests::invite_redemption_claim_matches_neutral_contract"] }]
+        ? [{ package: "semio-hub-directory-backend-laws", target: { kind: "lib" }, laws: ["postgres_tests::invite_redemption_claim_matches_neutral_contract"] }]
         : segments[0] === "--neo4j"
-          ? [{ package: "semio-hub", target: { kind: "lib" as const }, laws: ["directory::neo4j::tests::invite_redemption_claim_matches_neutral_contract"] }]
+          ? [{ package: "semio-hub-directory-backend-laws", target: { kind: "lib" }, laws: ["neo4j_tests::invite_redemption_claim_matches_neutral_contract"] }]
           : segments[0] === "--native"
             ? [
                 {
-                  package: "semio-hub",
-                  target: { kind: "lib" as const },
-                  laws: [
-                    "directory::tests::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild",
-                    "directory::tests::invite_redemption_projection_failure_rolls_back_claim_event_and_membership",
-                    "directory::tests::invite_redemption_commit_and_publication_precede_the_next_directory_command",
-                    "directory::tests::invite_archive_projection_serializes_independent_service_decisions",
-                  ],
+                  package: "semio-hub-directory-laws",
+                  target: { kind: "lib" },
+                  laws: ["unit::invite_redemption_sqlite_claim_is_exactly_once_across_concurrency_restart_and_rebuild", "unit::invite_redemption_projection_failure_rolls_back_claim_event_and_membership", "unit::invite_redemption_commit_and_publication_precede_the_next_directory_command", "unit::invite_archive_projection_serializes_independent_service_decisions"],
                 },
               ]
             : [];
@@ -16799,9 +16803,9 @@ class DirectoryOrderedPublicationCheckScript extends BundleScript {
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
           {
-            package: "semio-hub",
+            package: "semio-hub-directory-laws",
             target: { kind: "lib" },
-            laws: ["directory::tests::directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order"],
+            laws: ["unit::directory_append_and_live_broadcast_share_one_writer_guard_and_projection_order"],
           },
         ], progress(event) {
           console.log(`directory-ordered-publication ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
@@ -17020,7 +17024,7 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
   const marker = runner.indexOf("\nasync function proveDirectorySpaceJourneyV1Process(");
   if (marker < 0) throw new Error("space journey process runner is not present");
   const runnerBody = runner.slice(marker, runner.indexOf("\nclass SpaceJourneyCheckScript", marker));
-  const hub = readModuleTreeSource(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"));
+  const hub = readHubBinSource(repoRoot);
   checks += spaceJourneyFixtureLaws(fixture, hub, runnerBody);
   for (const hostile of spaceJourneyHostiles(fixture)) {
     let admitted = true;

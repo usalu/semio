@@ -1,3 +1,4 @@
+import{type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {createHash} from "node:crypto";
 import {join,isAbsolute} from "node:path";
 import {mkdir,mkdtemp,rm} from "node:fs/promises";
@@ -15,8 +16,8 @@ export function storybookStorageLayoutV1(root:string,mode:string,scope:string):{
 /** 🧮️ Bounds writer lock metadata while isolating ordinary independent Storybook scopes. */
 export function storybookWriterResourceV1(scope:string):string{return "repository-storybook:"+(parseInt(createHash("sha256").update(scope).digest("hex").slice(0,2),16)%schema.definitions.Protocol.const.writerShards);}
 /** 🎟️ Retains actual finite product storage and original single writer until build settlement. */
-export async function withStorybookStorageV1<T>(workspace:string,mode:string,scope:string,invocation:ScriptInvocation,body:(store:RepositoryCacheStoreV1,layout:ReturnType<typeof storybookStorageLayoutV1>,temporary:string)=>Promise<T>):Promise<T>{
- return withRepositoryCacheStoreV1(workspace,"products",invocation,async store=>{const layout=storybookStorageLayoutV1(store.root,mode,scope),lease=await acquireResourceLease({directory:join(workspace,".cache/b/l/m/data"),resource:storybookWriterResourceV1(scope),mode:"exclusive",signal:store.control.signal,control:store.control});let temporary:string|undefined;
+export async function withStorybookStorageV1<T>(workspace:string,mode:string,scope:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,layout:ReturnType<typeof storybookStorageLayoutV1>,temporary:string)=>Promise<T>):Promise<T>{
+ return withRepositoryCacheStoreV1(workspace,"products",invocation,phaseControl,async store=>{const layout=storybookStorageLayoutV1(store.root,mode,scope),lease=await acquireResourceLease({directory:join(workspace,".cache/b/l/m/data"),resource:storybookWriterResourceV1(scope),mode:"exclusive",signal:store.control.signal,control:store.control});let temporary:string|undefined;
   try{for(const path of Object.values(layout))requireNativeStoragePathV1(store.root,path);await store.recheck();await mkdir(layout.temporary,{recursive:true});temporary=await mkdtemp(join(layout.temporary,"b-"));return await body(store,layout,temporary);}finally{if(temporary)await rm(temporary,{recursive:true,force:true});lease.release();}
  });
 }

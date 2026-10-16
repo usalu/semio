@@ -2,9 +2,6 @@
 
 use super::*;
 
-//#region SceneInput
-pub(crate) const MAP_MARQUEE_THRESHOLD_PX: f32 = 6.0;
-
 /// 🖱️ ONE canvas-2d pointer sample in the shape `📐️Canvas2dHost`'s gesture lane publishes it
 /// (`🧱️elements/📐️Canvas2dHost/🟦️.tsx:426-446`): `x`/`y` are SCREEN-LOGICAL pixels inside the surface
 /// rect and `width`/`height` its logical size, because every plugin reader converts them itself —
@@ -127,7 +124,7 @@ fn write_canvas_double_click_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatc
     })
 }
 
-pub(crate) fn canvas_state_snapshot(surface_id: &str) -> (Viewport, bool) {
+pub fn canvas_state_snapshot(surface_id: &str) -> (Viewport, bool) {
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).map(|state| (state.viewport, matches!(state.drag.as_ref().map(|drag| &drag.mode), Some(SceneDragMode::PanViewport)))).unwrap_or((Viewport::default(), false)))
 }
 
@@ -138,17 +135,12 @@ fn canvas_camera(surface_id: &str) -> (f64, f64, f64) {
     (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom))
 }
 
-pub(crate) fn canvas_active_utility(scene: &UiComponentSceneNode) -> Option<String> {
-    let layers: Vec<CanvasLayer> = serde_json::from_str(scene.canvas_2d.as_ref()?.layers_json.as_str()).ok()?;
-    layers.into_iter().find(|layer| layer.role.as_deref() == Some("meta")).and_then(|layer| layer.utility)
-}
-
 fn canvas_gesture_matches(active: &CanvasGesture, pointer_id: ui_render::PointerId, window_id: &str, host_id: &str, document_generation: u64) -> bool {
     active.pointer_id == pointer_id && active.window_id == window_id && active.host_id == host_id && active.document_generation == document_generation
 }
 
 fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    if crate::canvas2d_gumball::cancel_into(pointer_id, "captureLost", input)? {
+    if semio_framework_os_renderer_wgpu_canvas2d_host::cancel_into(pointer_id, "captureLost", input)? {
         return Ok(true);
     }
     let Some(active) = CANVAS_GESTURE.with(|cell| {
@@ -161,7 +153,7 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     }) else {
         return Ok(false);
     };
-    if crate::interpreter::ui_document_close_pending_for(&active.window_id) {
+    if crate::element_contracts::ui_document_close_pending_for(&active.window_id) {
         CANVAS_GESTURE.with(|cell| cell.borrow_mut().take(active.pointer_id));
         return Ok(true);
     }
@@ -212,7 +204,7 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     Ok(true)
 }
 
-pub(crate) fn cancel_canvas_pointer_gesture(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_pointer_gesture(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_pointer_gesture_into(None, input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -222,7 +214,7 @@ pub(crate) fn cancel_canvas_pointer_gesture(input: &mut ui_wgpu::wgpu::InputStat
     }
 }
 
-pub(crate) fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_pointer_gesture_into(Some(pointer_id), input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -233,8 +225,8 @@ pub(crate) fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId
 }
 
 /// 🧹️ Releases one Canvas input owner after the exact window token has entered close.
-pub(crate) fn retire_canvas_window_step(window_id: &str) -> bool {
-    if crate::canvas2d_gumball::retire_window(window_id) {
+pub fn retire_canvas_window_step(window_id: &str) -> bool {
+    if semio_framework_os_renderer_wgpu_canvas2d_host::retire_window(window_id) {
         return true;
     }
     if CANVAS_GESTURE.with(|cell| {
@@ -255,8 +247,8 @@ pub(crate) fn retire_canvas_window_step(window_id: &str) -> bool {
     })
 }
 
-pub(crate) fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) {
-    crate::canvas2d_gumball::request_cancel(|window, _, _| window == window_id);
+pub fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) {
+    semio_framework_os_renderer_wgpu_scene_state::request_cancel(|window, _, _| window == window_id);
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.window_id == window_id) {
             active.cancellation_requested = true;
@@ -269,22 +261,8 @@ pub(crate) fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) 
     });
 }
 
-pub(crate) fn request_canvas_pointer_gesture_cancel_for_host(host_id: &str) {
-    crate::canvas2d_gumball::request_cancel(|_, host, _| host == host_id);
-    CANVAS_GESTURE.with(|cell| {
-        for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.host_id == host_id) {
-            active.cancellation_requested = true;
-        }
-    });
-    CANVAS_CATALOGUE_HOVER.with(|cell| {
-        if let Some(active) = cell.borrow_mut().as_mut().filter(|active| active.host_id == host_id) {
-            active.cancellation_requested = true;
-        }
-    });
-}
-
-pub(crate) fn request_stale_canvas_authority_cancel(mut generation_is_live: impl FnMut(&str, u64) -> bool) {
-    crate::canvas2d_gumball::request_cancel(|window, _, generation| !generation_is_live(window, generation));
+pub fn request_stale_canvas_authority_cancel(mut generation_is_live: impl FnMut(&str, u64) -> bool) {
+    semio_framework_os_renderer_wgpu_scene_state::request_cancel(|window, _, generation| !generation_is_live(window, generation));
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten() {
             if !generation_is_live(&active.window_id, active.document_generation) {
@@ -299,8 +277,8 @@ pub(crate) fn request_stale_canvas_authority_cancel(mut generation_is_live: impl
     });
 }
 
-pub(crate) fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
-    if let Some(pointer_id) = crate::canvas2d_gumball::cancel_due() {
+pub fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    if let Some(pointer_id) = semio_framework_os_renderer_wgpu_canvas2d_host::cancel_due() {
         return cancel_canvas_pointer_gesture_for(pointer_id, input);
     }
     let gesture_due = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.cancellation_requested).map(|active| active.pointer_id));
@@ -315,7 +293,7 @@ pub(crate) fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState
 }
 
 pub(crate) fn cancel_stale_canvas_authority(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    crate::canvas2d_gumball::cancel_stale_into(window_id, host_id, document_generation, input)?;
+    semio_framework_os_renderer_wgpu_canvas2d_host::cancel_stale_into(window_id, host_id, document_generation, input)?;
     let stale_gesture = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation).map(|active| active.pointer_id));
     if let Some(pointer_id) = stale_gesture {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
@@ -339,7 +317,7 @@ pub fn canvas_pointer_move_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
-    if let Some(handled) = crate::canvas2d_gumball::pointer_move_into(scene, inner, pointer_id, window_id, document_generation, x, y, canvas_camera(&scene.host_id), input)? {
+    if let Some(handled) = semio_framework_os_renderer_wgpu_canvas2d_host::pointer_move_into(scene, inner, pointer_id, window_id, document_generation, x, y, canvas_camera(&scene.host_id), input)? {
         return Ok(handled);
     }
     let active = CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).filter(|active| canvas_gesture_matches(active, pointer_id, window_id, &scene.host_id, document_generation)).cloned());
@@ -416,7 +394,7 @@ pub fn canvas_pointer_button_into(
     if down && CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).is_some()) {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
     }
-    if let Some(handled) = crate::canvas2d_gumball::pointer_button_into(scene, inner, pointer_id, window_id, document_generation, x, y, down, button, canvas_camera(&scene.host_id), input)? {
+    if let Some(handled) = semio_framework_os_renderer_wgpu_canvas2d_host::pointer_button_into(scene, inner, pointer_id, window_id, document_generation, x, y, down, button, canvas_camera(&scene.host_id), input)? {
         return Ok(handled);
     }
     if down && !CANVAS_GESTURE.with(|cell| cell.borrow().has_capacity_for(pointer_id)) {
@@ -515,7 +493,7 @@ pub fn canvas_pointer_button_into(
     Ok(true)
 }
 
-pub(crate) const CANVAS_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+pub const CANVAS_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 const CANVAS_CATALOGUE_TYPE_CAPACITY: usize = 32;
 const CANVAS_CATALOGUE_PAYLOAD_BYTE_CAPACITY: usize = 64 * 1024;
 const CANVAS_DRAG_OVER_THROTTLE_MS: f64 = 50.0;
@@ -533,16 +511,7 @@ fn canvas_catalogue_leave_action(hover: &CanvasCatalogueHover) -> ActionDescript
     canvas_addressed_action(&hover.controller_id, &hover.surface_id, "canvasDragLeave", semio_framework::dsl_value!({}))
 }
 
-pub(crate) fn write_scene_action_batch(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let bytes = actions.iter().try_fold(0usize, |sum, action| sum.checked_add(scene_action_bytes(action)?).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits))?;
-    let mut batch = input.reserve_actions(actions.len(), bytes)?;
-    for action in actions {
-        write_scene_action_to_batch(&mut batch, action, scene_action_bytes(action)?)?;
-    }
-    batch.publish_with(commit)
-}
-
-pub(crate) fn canvas_catalogue_drag_over_into(
+pub fn canvas_catalogue_drag_over_into(
     scene: &UiComponentSceneNode,
     inner: Rect,
     window_id: &str,
@@ -604,7 +573,7 @@ pub(crate) fn canvas_catalogue_drag_over_into(
 
 fn cancel_canvas_catalogue_drag_into(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(active) = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone()) else { return Ok(false) };
-    if crate::interpreter::ui_document_close_pending_for(&active.window_id) || scene_host_retiring(&active.host_id) {
+    if crate::element_contracts::ui_document_close_pending_for(&active.window_id) || scene_host_retiring(&active.host_id) {
         CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow_mut().take());
         return Ok(true);
     }
@@ -619,7 +588,7 @@ fn cancel_canvas_catalogue_drag_into(input: &mut ui_wgpu::wgpu::InputState<Actio
     Ok(true)
 }
 
-pub(crate) fn cancel_canvas_catalogue_drag(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_catalogue_drag(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     match cancel_canvas_catalogue_drag_into(input) {
         Ok(cancelled) => cancelled,
         Err(fault) => {
@@ -629,7 +598,7 @@ pub(crate) fn cancel_canvas_catalogue_drag(input: &mut ui_wgpu::wgpu::InputState
     }
 }
 
-pub(crate) fn canvas_catalogue_drop_into(
+pub fn canvas_catalogue_drop_into(
     scene: &UiComponentSceneNode,
     inner: Rect,
     window_id: &str,
@@ -663,7 +632,7 @@ pub(crate) fn canvas_catalogue_drop_into(
     Ok(true)
 }
 
-pub(crate) fn cancel_canvas_interactions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn cancel_canvas_interactions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     let gesture = cancel_canvas_pointer_gesture(input);
     let catalogue = cancel_canvas_catalogue_drag(input);
     gesture || catalogue
@@ -684,7 +653,7 @@ pub fn canvas_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f
     true
 }
 
-pub(crate) fn passive_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, delta: f32) -> bool {
+pub fn passive_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, delta: f32) -> bool {
     if !bounds.contains(x, y) {
         return false;
     }
@@ -700,20 +669,10 @@ pub(crate) fn passive_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x:
     true
 }
 
-//#region SceneRowTransfer
-/// 🧩️ `PALETTE_DRAG_MIME` in `🧩️BlockListHost/🟦️.tsx:41` — the block-kind mime its palette rows set
-/// and its step cards read back.
-pub(crate) const BLOCK_LIST_PALETTE_DRAG_MIME: &str = "application/x-semio-block-list-block-kind";
-
 /// 📏️ How far a press must travel before it counts as a drag rather than a click — the same 5 px the
 /// shell's own tree drag uses, and the reason a plain row click still selects instead of transferring.
 const SCENE_TRANSFER_DRAG_SLOP_SQUARED: f32 = 25.0;
 const SCENE_TRANSFER_PAYLOAD_BYTE_CAPACITY: usize = 64 * 1024;
-
-pub(crate) struct SceneListTransferStart {
-    pub(crate) source: SceneListTransferSource,
-    pub(crate) rect: Rect,
-}
 
 fn scene_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
     match scene.component_kind {
@@ -761,7 +720,7 @@ fn arm_scene_list_transfer(pointer_id: ui_render::PointerId, window_id: &str, sc
     })
 }
 
-pub(crate) fn cancel_scene_list_transfer() -> bool {
+pub fn cancel_scene_list_transfer() -> bool {
     let retired = SCENE_LIST_TRANSFER.with(|cell| cell.borrow_mut().active.take());
     if let Some(session) = retired.as_ref() {
         mutate_scene_state(&session.source_host_id, |state| state.pointer_was_down = false);
@@ -769,7 +728,7 @@ pub(crate) fn cancel_scene_list_transfer() -> bool {
     retired.is_some()
 }
 
-pub(crate) fn cancel_scene_list_transfer_for_pointer(pointer_id: ui_render::PointerId) -> bool {
+pub fn cancel_scene_list_transfer_for_pointer(pointer_id: ui_render::PointerId) -> bool {
     let retired = SCENE_LIST_TRANSFER.with(|cell| {
         let mut authority = cell.borrow_mut();
         if authority.active.as_ref().is_some_and(|active| active.pointer_id == pointer_id) {
@@ -784,7 +743,7 @@ pub(crate) fn cancel_scene_list_transfer_for_pointer(pointer_id: ui_render::Poin
     retired.is_some()
 }
 
-pub(crate) fn cancel_scene_list_transfer_for_window(window_id: &str) -> bool {
+pub fn cancel_scene_list_transfer_for_window(window_id: &str) -> bool {
     let retired = SCENE_LIST_TRANSFER.with(|cell| {
         let mut authority = cell.borrow_mut();
         if authority.active.as_ref().is_some_and(|active| active.source_window_id == window_id) {
@@ -847,11 +806,6 @@ fn scene_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x
     }
 }
 
-struct SceneListTransferRelease {
-    suppress_click: bool,
-    pub(crate) action: Option<ActionDescriptor>,
-}
-
 fn release_scene_list_transfer(pointer_id: ui_render::PointerId, scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, window_id: &str, document_generation: u64, driver_drag: UiDriverDrag, theme: &Theme) -> Option<SceneListTransferRelease> {
     cancel_scene_list_transfer_if_stale(window_id, &scene.host_id, document_generation, driver_drag);
     let session = SCENE_LIST_TRANSFER.with(|cell| {
@@ -869,54 +823,12 @@ fn release_scene_list_transfer(pointer_id: ui_render::PointerId, scene: &UiCompo
 }
 //#endregion SceneRowTransfer
 
-/// ⌨️🖱️ The modifier set a scene press carries, as `UiEvent`'s pointer variants deliver it. Kept as
-/// this module's own tiny `Copy` type rather than threading `ui_wgpu::wgpu::EventModifiers` through
-/// every hit signature, so the merge-mode policy below has ONE home.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct SceneModifiers {
-    pub shift: bool,
-    pub ctrl: bool,
-    pub alt: bool,
-    pub meta: bool,
-}
-
-impl From<ui_wgpu::wgpu::EventModifiers> for SceneModifiers {
-    fn from(modifiers: ui_wgpu::wgpu::EventModifiers) -> Self {
-        Self { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
-    }
-}
-
-impl SceneModifiers {
-    /// 🍎️ The platform-neutral "add to the selection" key — `event.metaKey || event.ctrlKey`, exactly
-    /// as `VirtualFileSystem`'s own row handler folds it (`⚙️VirtualFileSystem/🟦️.tsx:520`).
-    pub fn additive(self) -> bool {
-        self.ctrl || self.meta
-    }
-
-    /// 🎯️ The wgpu twin of `interactionMergeFromModifiers` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:945`) — the ONE
-    /// click-select modifier→merge policy every surface routes through. Priority is shift, then
-    /// ctrl/meta, then alt, so a chord holding more than one picks the first that matches and shift
-    /// always wins a range pick. Distinct from `paint2d_merge_mode`'s marquee-drag policy, which never
-    /// produces `range` because a drag has no ordered topology to range over.
-    pub fn interaction_merge(self) -> &'static str {
-        if self.shift {
-            "range"
-        } else if self.additive() {
-            "invertive"
-        } else if self.alt {
-            "subtractive"
-        } else {
-            "replace"
-        }
-    }
-}
-
 /** 🖱️ The generic (non-bespoke, non-Canvas2d/Ink/TextEditor/Paint2d) per-event press route.
  * Every list kind resolves the press against its own painted row
  * geometry and publishes the action React's matching host dispatches — a row select, a header sort, a
  * stepper delta, a feed activation, a checkpoint checkout, a block add/remove/move, a virtual file
  * system double-click. The action is published on RELEASE, mirroring a DOM `click`. */
-pub(crate) fn passive_scene_pointer_button(
+pub fn passive_scene_pointer_button(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     pointer_id: ui_render::PointerId,
@@ -995,7 +907,7 @@ pub(crate) fn passive_scene_pointer_button(
 /** 🖱️ The generic per-event move route: every list kind's own hover authority
  * (`SceneSurfaceState::hovered_control_id`), which the next paint reads back to highlight the row
  * under the pointer. */
-pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, window_id: &str, document_generation: u64, driver_drag: UiDriverDrag) -> bool {
+pub fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, window_id: &str, document_generation: u64, driver_drag: UiDriverDrag) -> bool {
     update_scene_list_transfer(pointer_id, window_id, &scene.host_id, document_generation, driver_drag, x, y);
     if !bounds.contains(x, y) {
         return false;
@@ -1018,20 +930,7 @@ pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: R
  * `onClick`/`onSort`/`onSelectionChange` handler sends. A `None` action is a target that only owns
  * hover/selection state: a stepper's read-only centre segment, a disabled reorder button — React
  * stops propagation on exactly those, so the row click underneath must not fire either. */
-pub(crate) struct SceneListHit {
-    pub(crate) control_id: String,
-    pub(crate) action: Option<ActionDescriptor>,
-    /// 📁️ Set when the press landed on a virtual-file-system row's own expand/collapse chevron,
-    /// which mutates renderer-local expansion state instead of dispatching a program action.
-    pub(crate) toggle_expanded: Option<String>,
-}
 //#endregion SceneRuntime
-
-impl SceneListHit {
-    pub(crate) fn row(control_id: String, action: Option<ActionDescriptor>) -> Self {
-        Self { control_id, action, toggle_expanded: None }
-    }
-}
 
 /** 📃️ Surface kinds this module paints as a scrolling list of rows and resolves pointer input
  * for by re-deriving that same row geometry. They register no usable retained hit target of their own
@@ -1045,7 +944,7 @@ pub(crate) fn scene_kind_is_list(kind: SurfaceKind) -> bool {
 /// 🎯️ Resolves `(x, y)` inside a list surface. `activate` is `false` for a hover sample: the action
 /// is then not built at all, which keeps a pointer move free of both the allocation and — for the
 /// virtual file system — the selection-anchor mutation `vfs_selection_for_click` performs.
-pub(crate) fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
+pub fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
     match scene.component_kind {
         SurfaceKind::Table => table_hit(scene, bounds, x, y, theme, modifiers, driver_drag),
         SurfaceKind::VirtualFileSystem => vfs_hit(scene, bounds, x, y, theme, activate, modifiers),
@@ -1059,7 +958,7 @@ pub(crate) fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32,
 /// 🖱️ Double-click edge detection for the one list kind that has a double-click verb (the virtual
 /// file system's `navigateUri`). Records this press as the surface's last click either way, so the
 /// NEXT press within the 400 ms window can answer it.
-pub(crate) fn scene_double_click_action(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<ActionDescriptor> {
+pub fn scene_double_click_action(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Option<ActionDescriptor> {
     let target = hit_double_click_target(scene, inner, x, y)?;
     let now = now_ms();
     let prior = scene_state(&scene.host_id);

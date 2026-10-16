@@ -1,8 +1,8 @@
 use super::*;
-use crate::os_pack::CodecId;
-use crate::os_spr::format::{SprWriter, WriteOptions};
-use crate::os_spr::history::{HistoryEdit, HistoryLog, HistoryTransitionRecord, OpPayload};
-use crate::os_spr::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
+use semio_framework_os_pack::CodecId;
+use crate::format::{SprWriter, WriteOptions};
+use crate::history::{HistoryEdit, HistoryLog, HistoryTransitionRecord, OpPayload};
+use crate::wire::{DictBuilder, REC_EDIT, REQUIRED_HASH_CHAIN};
 
 //#region 🔖️Snapshot
 async fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
@@ -63,7 +63,7 @@ async fn flush_dict_delta<S: semio_framework_pack_source::PackSink>(writer: &mut
             payload.write_varint_u64(entry.len() as u64);
             payload.write_bytes(entry.as_bytes());
         }
-        writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await.unwrap();
+        writer.write_record(crate::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await.unwrap();
         *base = len;
     }
 }
@@ -77,22 +77,22 @@ async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
     let mut dict = DictBuilder::new();
     let mut dict_base = 0u32;
 
-    let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict).await;
+    let doc_payload = crate::history::encode_doc("doc-1", "schema-1", &mut dict).await;
     flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
-    writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
+    writer.write_record(crate::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
     for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
         let _ = i;
-        let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).await.unwrap();
+        let payload = crate::history::encode_edit(edit, &mut dict, |_| None).await.unwrap();
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
     }
 
     let snapshot = sample_record(None, 1, SnapshotBodyKind::EmbeddedPack, Some(snapshot_body.to_vec())).await;
-    writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot).await, CodecId(0)).await.unwrap();
+    writer.write_record(crate::REC_PROJECTION, false, &encode_snapshot(&snapshot).await, CodecId(0)).await.unwrap();
 
     for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
-        let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).await.unwrap();
+        let payload = crate::history::encode_edit(&edit, &mut dict, |_| None).await.unwrap();
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
     }
@@ -171,11 +171,11 @@ async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index()
     let mut log = HistoryLog { doc_id: "doc-2".to_string(), schema: "schema-2".to_string(), ..Default::default() };
     log.edits.push(sample_edit("edit-0", "op-0"));
     log.edits.push(sample_edit("edit-1", "op-1"));
-    let commit = crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+    let commit = crate::HistoryTransition::Commit(crate::TransitionCheckpoint {
         checkpoint_id: "cp-1".to_string(),
         parent_id: None,
         change_id: "change-1".to_string(),
-        mutation_ids: vec![crate::os_spr::MutationId("edit-0#0".to_string()), crate::os_spr::MutationId("edit-1#0".to_string())],
+        mutation_ids: vec![crate::MutationId("edit-0#0".to_string()), crate::MutationId("edit-1#0".to_string())],
         description: None,
         saved_at: "t-change-1".to_string(),
         authors: Vec::new(),
@@ -183,10 +183,10 @@ async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index()
         timestamp: "t-cp-1".to_string(),
         line_id: None,
     });
-    let envelope = crate::os_spr::history_transition_envelope(&commit, &crate::os_spr::ArtifactId("doc-2".to_string()), &crate::os_spr::ActorId("alice".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });
+    let envelope = crate::history_transition_envelope(&commit, &crate::ArtifactId("doc-2".to_string()), &crate::ActorId("alice".into()), Vec::new(), crate::HybridLogicalTimestamp { actor: 1, physical_ms: 1, logical: 0 });
     log.transitions.push(HistoryTransitionRecord::from_envelope(&envelope));
 
-    let bytes = crate::os_spr::history::encode_history(&log, &crate::os_spr::history::EncodeOptions::default()).await.unwrap();
+    let bytes = crate::history::encode_history(&log, &crate::history::EncodeOptions::default()).await.unwrap();
     let initial_pack = b"BASE";
 
     let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtCheckpoint("cp-1".to_string()), &ProtocolLimits::default()).await.unwrap();
@@ -205,16 +205,16 @@ async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() 
     let mut dict = DictBuilder::new();
     let mut dict_base = 0u32;
 
-    let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict).await;
+    let doc_payload = crate::history::encode_doc("doc-3", "schema-3", &mut dict).await;
     flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
-    writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
+    writer.write_record(crate::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
     // A snapshot whose stored body_hash does not match its body — must be treated as corrupt.
     let mut bad_record = sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3])).await;
     bad_record.body_hash = [0xFFu8; 32];
-    writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record).await, CodecId(0)).await.unwrap();
+    writer.write_record(crate::REC_PROJECTION, false, &encode_snapshot(&bad_record).await, CodecId(0)).await.unwrap();
 
-    let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).await.unwrap();
+    let payload = crate::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).await.unwrap();
     flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
     writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
     writer.commit().await.unwrap();

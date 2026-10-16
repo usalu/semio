@@ -1,4 +1,6 @@
-use super::*;
+use crate::PLAYBOOK_DIALECT;
+use semio_framework_plugin::Viewer;
+use crate::viewer::playbook::*;
 use semio_framework_plugin::ArtifactViewer;
 
 #[semio_framework_async_macros::async_test]

@@ -1,24 +1,36 @@
+//! 🧱️ Artifact_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
-use super::*;
-use crate::catalog::{CapabilityAudience, Catalog, CatalogSource, compile};
-use crate::protocol::ToolRegistry;
+use std::sync::Arc;
+use crate::artifact::{base64_encode, register_artifact_tools};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
+use semio_framework_os_mcp_port::policy::AgentPrincipal;
+use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_framework_os_mcp_schema::schema::{UNTRUSTED_CONTENT_NOTICE, UNTRUSTED_CONTENT_SCHEMA, artifact_create_input_schema, artifact_create_output_schema, artifact_export_input_schema, artifact_export_output_schema, artifact_open_input_schema, artifact_open_output_schema, artifact_snapshot_input_schema, artifact_snapshot_output_schema, artifact_validate_input_schema, artifact_validate_output_schema};
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, GatewayBackend, InMemoryToolRegistry, ToolRegistry};
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 const ARTIFACT_TOOL_NAMES: [&str; 5] = ["artifact_open", "artifact_create", "artifact_validate", "artifact_snapshot", "artifact_export"];
 
 /// 🪪️ A principal holding every scope the artifact tools declare.
-fn full_principal() -> crate::policy::AgentPrincipal {
-    crate::policy::AgentPrincipal::from_scope_names("agent:test", "test", &["workspace.read".to_string(), "artifact.write".to_string()], None)
+fn full_principal() -> AgentPrincipal {
+    AgentPrincipal::from_scope_names("agent:test", "test", &["workspace.read".to_string(), "artifact.write".to_string()], None)
 }
 
 #[test]
 fn every_artifact_tool_refuses_a_principal_without_its_scope_before_it_reads_its_arguments() {
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, None, crate::policy::AgentPrincipal::from_scope_names("agent:reader", "reader", &["workspace.read".to_string()], None));
+    register_artifact_tools(&mut registry, None, AgentPrincipal::from_scope_names("agent:reader", "reader", &["workspace.read".to_string()], None));
     let created = registry.call("artifact_create", serde_json::json!({})).expect("artifact_create registered");
     assert!(created.is_error);
     assert_eq!(created.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "a read-only principal is refused before any argument or workspace check: {:?}", created.structured_content);
     let mut none = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut none, None, crate::policy::AgentPrincipal::from_scope_names("agent:nobody", "nobody", &[], None));
+    register_artifact_tools(&mut none, None, AgentPrincipal::from_scope_names("agent:nobody", "nobody", &[], None));
     for tool in ARTIFACT_TOOL_NAMES {
         let answer = none.call(tool, serde_json::json!({})).expect("tool registered");
         assert_eq!(answer.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "{tool} without any scope");
@@ -223,7 +235,7 @@ fn outside_untrusted(value: &serde_json::Value, envelopes: &mut Vec<serde_json::
         serde_json::Value::Object(map) => serde_json::Value::Object(
             map.iter()
                 .filter_map(|(key, member)| {
-                    if key == "untrusted" && member["schema"] == crate::schema::UNTRUSTED_CONTENT_SCHEMA {
+                    if key == "untrusted" && member["schema"] == UNTRUSTED_CONTENT_SCHEMA {
                         envelopes.push(member.clone());
                         None
                     } else {
@@ -247,7 +259,7 @@ fn tool_result_json(result: &CallToolResult) -> serde_json::Value {
 
 #[test]
 fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
+    let law: serde_json::Value = serde_json::from_str(fixture_text("../../../🗿️artifact/🧪️tests/🧫️fixtures/🧷️untrusted-content-law.json")).expect("law fixture parses");
     let canary = law["canary"].as_str().expect("canary");
     let needles = canary_needles(canary);
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -266,10 +278,10 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
         assert_eq!(envelopes.len(), 1, "one envelope per carrier: {carried}");
         let envelope = &envelopes[0];
         assert!(names_canary(&envelope["content"].to_string(), &needles), "the carrier must really carry the document's canary: {envelope}");
-        assert_eq!(envelope["notice"], crate::schema::UNTRUSTED_CONTENT_NOTICE);
+        assert_eq!(envelope["notice"], UNTRUSTED_CONTENT_NOTICE);
         assert_eq!(envelope["provenance"]["source"], "artifact-body");
         assert_eq!(envelope["provenance"]["artifactId"], "doc-canary");
-        assert_eq!(envelope["provenance"]["artifactKind"], crate::workspace::PROBE_SCHEMA);
+        assert_eq!(envelope["provenance"]["artifactKind"], PROBE_SCHEMA);
         assert_eq!(envelope["provenance"]["authors"], serde_json::json!({ "kind": "local-principal", "principal": "agent:test" }));
         assert_eq!(envelope["provenance"]["revision"]["contentSha256"], framework_hash::sha256_hex(&[pack.as_slice(), spr.as_slice()].concat()));
         assert!(!envelope["provenance"]["revision"]["headEditId"].as_str().unwrap_or_default().is_empty(), "a committed probe names its head: {envelope}");

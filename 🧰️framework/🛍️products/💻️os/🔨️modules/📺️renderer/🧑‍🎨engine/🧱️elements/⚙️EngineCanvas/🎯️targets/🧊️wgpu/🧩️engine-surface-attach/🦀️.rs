@@ -3,20 +3,12 @@
 //! Attaching a retained scene to an engine surface and projecting its per-kind state: surface registrations,
 //! the node graph, tiled map, board, raster and text editor scene syncs and the raster composite progress.
 
-use super::board2d::board2d_granularity_by_id;
-use super::engine_surface_registry::{
-    ensure_engine_surface, BoardSyncCache, EngineSurface, EngineSurfaceId, EngineSurfaceSnapshot,
-    EngineSurfaceToken, MapSyncCache, NodeGraphEngine, NodeGraphSyncCache, RasterSyncCache,
-    ENGINE_SURFACES, ENGINE_SURFACE_CAPACITY,
-};
-use super::node_graph::{
-    engine_canvas_debug_log, engine_canvas_fault_log, log_graph_geometry_census,
-};
-#[cfg(test)]
-use super::prepared_engine_canvas::EngineCanvasPresenter;
-use super::prepared_engine_canvas::{StagedEngineScene, STAGED_ENGINE_SCENES};
-use super::text_editor::{synchronize_text_editor_host, text_editor_explicit_draft_settings};
-use super::tiled_map::{parse_map_hover, reserve_map_tile_fetches};
+use semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_granularity_by_id;
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{BoardSyncCache, ENGINE_SURFACES, ENGINE_SURFACE_CAPACITY, EngineSurface, EngineSurfaceId, EngineSurfaceSnapshot, EngineSurfaceToken, MapSyncCache, NodeGraphEngine, NodeGraphSyncCache, RasterSyncCache, engine_camera_from_json, engine_canvas_debug_log, engine_canvas_fault_log, ensure_engine_surface};
+use semio_framework_os_renderer_wgpu_engine_graph::node_graph::log_graph_geometry_census;
+use semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::{StagedEngineScene, STAGED_ENGINE_SCENES};
+use semio_framework_os_renderer_wgpu_engine_text::text_editor::{synchronize_text_editor_host, text_editor_explicit_draft_settings};
+use semio_framework_os_renderer_wgpu_engine_board::tiled_map::reserve_map_tile_fetches;
 use crate::element_contracts::WorkerCell;
 use canvas::Color;
 use flow::FlowHost;
@@ -31,10 +23,7 @@ use std::collections::HashMap;
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 use ui_wgpu::wgpu::{Rect, Rgba, SurfaceKind, Theme, UiComponentSceneNode};
-
-#[cfg(test)]
-#[path = "../../../🧪️tests/🩺️metrics-invalidation-drain/🦀️.rs"]
-mod metrics_invalidation_drain_tests;
+use infinite_canvas::{board_set_camera, board_set_grid_visible};
 
 //#region 🧩️EngineSurfaceAttach
 /// 🧩️ The per-kind payload one attached surface projects into the shell's own bespoke pointer state
@@ -67,7 +56,7 @@ pub enum EngineSurfaceKindDetail {
 pub struct EngineSurfaceRegistration {
     pub host_id: String,
     pub surface_id: String,
-    pub(crate) engine_token: Option<EngineSurfaceToken>,
+    pub engine_token: Option<EngineSurfaceToken>,
     /// 🪟️ The window instance whose body this surface is painted into — the shell's one retention
     /// authority for it.
     pub window_id: String,
@@ -166,15 +155,15 @@ fn node_graph_lod_from_json(engine: &mut NodeGraphEngine, lod_json: &str) {
     let forced = value.get("forcedLabel").or_else(|| value.get("lod")).and_then(Value::as_str);
     match engine {
         NodeGraphEngine::Flow(host) => {
-            host.set_automatic_lod(automatic);
+            host.style.set_automatic_lod(automatic);
             if let Some(label) = forced {
-                host.set_forced_draw_lod_label(label);
+                host.style.set_forced_draw_lod_label(label);
             }
         }
         NodeGraphEngine::Dag(host) => {
-            host.dag.set_automatic_lod(automatic);
+            host.dag.viewport.set_automatic_lod(automatic);
             if let Some(label) = forced {
-                host.dag.set_forced_draw_lod_label(label);
+                host.dag.viewport.set_forced_draw_lod_label(label);
             }
         }
     }
@@ -187,8 +176,8 @@ fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, p
             None => host.set_hover(node_id),
         },
         NodeGraphEngine::Dag(host) => match port_id {
-            Some(port) => host.dag.set_hover_channel(node_id, Some(port)),
-            None => host.dag.set_hover(node_id),
+            Some(port) => set_hover_channel(&mut host.dag.viewport, &mut host.dag.graph, node_id, Some(port)),
+            None => host.dag.graph.set_hover(node_id),
         },
     }
 }
@@ -197,7 +186,7 @@ fn node_graph_apply_hover(engine: &mut NodeGraphEngine, node_id: Option<&str>, p
 /// empty graph, which has nothing to wait for. An opening camera decided against neither is a
 /// decision taken too early.
 fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
-    dag.content_world_bounds().is_some() || dag.host_snapshot.nodes.is_empty()
+    dag.graph.content_world_bounds().is_some() || dag.graph.host_snapshot.nodes.is_empty()
 }
 
 /// 🕸️ Feeds one `NodeGraphScene` into a live engine host, field by field, applying only what
@@ -257,7 +246,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
     if cache.selection.as_ref() != Some(&graph.selection) {
         match engine {
             NodeGraphEngine::Flow(host) => host.set_selection(&graph.selection),
-            NodeGraphEngine::Dag(host) => host.dag.set_selection(&graph.selection),
+            NodeGraphEngine::Dag(host) => host.dag.graph.set_selection(&graph.selection),
         }
         cache.selection = Some(graph.selection.clone());
         changed = true;
@@ -276,7 +265,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
                 NodeGraphEngine::Flow(host) => host.set_preview_off_json(json),
                 NodeGraphEngine::Dag(host) => {
                     if let Ok(ids) = serde_json::from_str::<Vec<String>>(json) {
-                        host.dag.set_dimmed(&ids);
+                        set_dimmed(&mut host.dag.graph, &mut host.dag.paint, &ids);
                     }
                 }
             }
@@ -300,12 +289,12 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
                     host.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
                     decided = node_graph_frames_content(&host.dag);
                 }
-                NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
+                NodeGraphEngine::Flow(host) => board_set_camera(&mut host.scene, &mut host.outbox, viewport.x, viewport.y, viewport.zoom),
                 NodeGraphEngine::Dag(host) if first => {
-                    host.dag.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
+                    adopt_camera_or_fit(&mut host.dag.viewport, &mut host.dag.graph, viewport.x, viewport.y, viewport.zoom);
                     decided = node_graph_frames_content(&host.dag);
                 }
-                NodeGraphEngine::Dag(host) => host.dag.set_camera(viewport.x, viewport.y, viewport.zoom),
+                NodeGraphEngine::Dag(host) => host.dag.graph.set_camera(viewport.x, viewport.y, viewport.zoom),
             }
         }
         if decided {
@@ -315,7 +304,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
     } else if snapshot_changed {
         let refitted = match engine {
             NodeGraphEngine::Flow(host) => host.refit_camera_if_content_left_view(),
-            NodeGraphEngine::Dag(host) => host.dag.refit_camera_if_content_left_view(),
+            NodeGraphEngine::Dag(host) => refit_camera_if_content_left_view(&mut host.dag.viewport, &mut host.dag.graph),
         };
         changed |= refitted;
     }
@@ -338,10 +327,10 @@ fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGrap
         if let Some(json) = graph.status_json.as_deref() {
             let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
             let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
-            if let Ok(statuses)=crate::infinite::board::io::text::dag_input::decode_dag_node_statuses_json(json,&mut control){
+            if let Ok(statuses)=infinite_canvas::board::io::text::dag_input::decode_dag_node_statuses_json(json,&mut control){
                 match engine {
                     NodeGraphEngine::Flow(host)=>host.set_node_statuses(&statuses),
-                    NodeGraphEngine::Dag(host)=>host.dag.set_node_statuses(&statuses),
+                    NodeGraphEngine::Dag(host)=>set_node_statuses(&mut host.dag.graph, &mut host.dag.paint, &statuses),
                 }
             }
         }
@@ -355,7 +344,7 @@ fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &mut NodeGrap
             let stale: Vec<String> = value.get("stale").and_then(Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_owned)).collect()).unwrap_or_default();
             match engine {
                 NodeGraphEngine::Flow(host) => host.set_computing_progress(active, &stale),
-                NodeGraphEngine::Dag(host) => host.dag.set_computing_progress(active, &stale),
+                NodeGraphEngine::Dag(host) => set_computing_progress(&mut host.dag.graph, &mut host.dag.paint, active, &stale),
             }
         }
         cache.computing_json = graph.computing_json.clone();
@@ -414,45 +403,10 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
 /// 🧩️ Records one attached surface for the shell's per-frame mirror. Every kind goes through it —
 /// including `World3d`, whose host lives in the shell's own `world3d_states` — so the shell has ONE
 /// drained witness of what the chrome walk actually painted this frame.
-pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool, engine_token: Option<EngineSurfaceToken>) {
+pub fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool, engine_token: Option<EngineSurfaceToken>) {
     ATTACHED_SURFACES.with(|cell| {
         cell.borrow_mut().upsert(EngineSurfaceRegistration { host_id: scene.host_id.clone(), surface_id: scene.surface_id.clone(), engine_token, window_id: window_id.to_string(), bounds, controller_id: scene.controller_id.clone(), detail, created })
     });
-}
-
-/// 🎥️ A `{x, y, zoom}` camera document — the shape React's `parseCameraJson`/`parseBoardCamera` read
-/// and the shape both hosts' `set_camera` take.
-pub(super) fn engine_camera_from_json(json: &str) -> Option<(f64, f64, f64)> {
-    let value = serde_json::from_str::<Value>(json).ok()?;
-    let x = value.get("x").and_then(Value::as_f64)?;
-    let y = value.get("y").and_then(Value::as_f64)?;
-    let zoom = value.get("zoom").and_then(Value::as_f64).filter(|zoom| *zoom > 0.0)?;
-    Some((x, y, zoom))
-}
-
-/// 🗺️ The wgpu twin of React's `resolveMapInteractionSync` — routes win over positions, and the hover
-/// only reaches the host when its kind matches the granularity the selection resolved to.
-///
-/// @see `🧱️elements/🧭️TiledMapHost/🟦️.tsx` — `resolveMapInteractionSync`
-fn map_interaction_from_scene(selection_json: &str, hover_json: &str) -> (&'static str, Vec<String>, Option<String>) {
-    let selection = serde_json::from_str::<Value>(selection_json).unwrap_or(Value::Null);
-    let ids = |key: &str| selection.get(key).and_then(Value::as_array).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_owned)).collect::<Vec<_>>()).unwrap_or_default();
-    let positions = ids("positions");
-    let routes = ids("routes");
-    let hover = parse_map_hover(hover_json);
-    let hover_kind = hover.get("kind").and_then(Value::as_str).map(str::to_owned);
-    let granularity = if !routes.is_empty() {
-        "route"
-    } else if !positions.is_empty() {
-        "position"
-    } else if hover_kind.as_deref() == Some("route") {
-        "route"
-    } else {
-        "position"
-    };
-    let selected = if granularity == "route" { routes } else { positions };
-    let hovered = (hover_kind.as_deref() == Some(granularity)).then(|| hover.get("id").and_then(Value::as_str).map(str::to_owned)).flatten();
-    (granularity, selected, hovered)
 }
 
 /// 🎨️ The map palette this shell theme implies, in the rgba8 document `MapHost::set_map_theme_from_json`
@@ -479,7 +433,7 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
-        host.set_size(width, height, 1.0);
+        host.scene.set_size(width, height, 1.0);
         cache.size_key = Some(size_key);
         changed = true;
     }
@@ -520,15 +474,14 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::
         changed = true;
     }
     if cache.selection_json.as_deref() != Some(map.selection_json.as_str()) || cache.hover_json.as_deref() != Some(map.hover_json.as_str()) {
-        let (granularity, selected, hovered) = map_interaction_from_scene(&map.selection_json, &map.hover_json);
-        host.sync_interaction(granularity, &selected, hovered.as_deref());
+        host.sync_interaction_json(&map.selection_json, &map.hover_json);
         cache.selection_json = Some(map.selection_json.clone());
         cache.hover_json = Some(map.hover_json.clone());
         changed = true;
     }
     if cache.camera_json.as_deref() != Some(map.camera_json.as_str()) {
         match engine_camera_from_json(&map.camera_json) {
-            Some((x, y, zoom)) => host.set_camera(x, y, zoom),
+            Some((x, y, zoom)) => board_set_camera(&mut host.scene, &mut host.outbox, x, y, zoom),
             None => host.fit_world_camera(),
         }
         cache.camera_json = Some(map.camera_json.clone());
@@ -576,17 +529,17 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
 ///
 /// 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
 /// selectable-kind filter decides which granularity a pick may reach at all.
-pub(super) fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &ui_wgpu::wgpu::Board2dScene, width: u32, height: u32) -> bool {
+pub fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyncCache, board: &ui_wgpu::wgpu::Board2dScene, width: u32, height: u32) -> bool {
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
-        host.set_size(width, height, 1.0);
+        host.scene.set_size(width, height, 1.0);
         cache.size_key = Some(size_key);
         changed = true;
     }
     let snapshot_applied = cache.snapshot_json.as_deref() != Some(board.snapshot_json.as_str());
     if snapshot_applied {
-        {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(host,&board.snapshot_json,&mut control)};
+        {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board.snapshot_json,&mut control)};
         cache.granularity_by_id = board2d_granularity_by_id(&board.snapshot_json);
         cache.snapshot_json = Some(board.snapshot_json.clone());
         changed = true;
@@ -596,47 +549,51 @@ pub(super) fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &m
         changed = true;
     }
     if cache.glyph_catalogs_json.as_deref() != Some(board.glyph_catalogs_json.as_str()) {
-        let _ = host.set_board_kind_catalogs_from_json(&board.glyph_catalogs_json);
+        let _ = host.style.set_board_kind_catalogs_from_json(&board.glyph_catalogs_json);
         cache.glyph_catalogs_json = Some(board.glyph_catalogs_json.clone());
         changed = true;
     }
+    if cache.placement_naming != board.placement_naming {
+        let _ = host.style.set_placement_naming_json(board.placement_naming.as_deref());
+        cache.placement_naming = board.placement_naming.clone();
+    }
     if cache.placement_compatibility_json.as_deref() != Some(board.placement_compatibility_json.as_str()) {
-        let _ = host.set_handle_link_compat_from_json(&board.placement_compatibility_json);
+        let _ = host.style.set_handle_link_compat_from_json(&board.placement_compatibility_json);
         cache.placement_compatibility_json = Some(board.placement_compatibility_json.clone());
         changed = true;
     }
     let selectable_kinds = (board.selectable_nodes, board.selectable_edges, board.selectable_handles);
     if snapshot_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) || cache.selectable_kinds != Some(selectable_kinds) {
-        host.set_selection_options(&board.selection_method, "replace", selectable_kinds.0, selectable_kinds.1, selectable_kinds.2);
+        host.focus.set_selection_options(&board.selection_method, "replace", selectable_kinds.0, selectable_kinds.1, selectable_kinds.2);
         cache.selection_method = Some(board.selection_method.clone());
         cache.selectable_kinds = Some(selectable_kinds);
         changed = true;
     }
     if cache.grid_visible != Some(board.grid_visible) {
-        host.set_grid_visible(board.grid_visible);
+        board_set_grid_visible(&mut host.scene, &mut host.style, board.grid_visible);
         cache.grid_visible = Some(board.grid_visible);
         changed = true;
     }
     if snapshot_applied || cache.selection_json.as_deref() != Some(board.selection_json.as_str()) {
         let ids = serde_json::from_str::<Vec<String>>(&board.selection_json).unwrap_or_default();
-        host.set_selection_ids_silent(&ids);
+        set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &ids);
         cache.selection_json = Some(board.selection_json.clone());
         changed = true;
     }
     if snapshot_applied || cache.highlighted_ids_json.as_deref() != Some(board.highlighted_ids_json.as_str()) {
-        host.set_highlighted_ids(serde_json::from_str::<Vec<String>>(&board.highlighted_ids_json).unwrap_or_default());
+        host.focus.set_highlighted_ids(serde_json::from_str::<Vec<String>>(&board.highlighted_ids_json).unwrap_or_default());
         cache.highlighted_ids_json = Some(board.highlighted_ids_json.clone());
         changed = true;
     }
     if snapshot_applied || cache.camera_json.as_deref() != Some(board.camera_json.as_str()) {
         if let Some((x, y, zoom)) = engine_camera_from_json(&board.camera_json) {
-            host.set_camera_silent(x, y, zoom);
+            set_camera_silent(&mut host.scene, &mut host.outbox, x, y, zoom);
         }
         cache.camera_json = Some(board.camera_json.clone());
         changed = true;
     }
     if cache.hovered_id.as_deref() != board.hovered_id.as_deref() {
-        host.set_hovered_id_silent(board.hovered_id.clone());
+        host.focus.set_hovered_id_silent(board.hovered_id.clone());
         cache.hovered_id = board.hovered_id.clone();
         changed = true;
     }
@@ -647,12 +604,12 @@ pub(super) fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &m
         changed = true;
     }
     if cache.grid_snap_enabled != Some(board.grid_snap_enabled) {
-        host.set_grid_snap_enabled(board.grid_snap_enabled);
+        host.style.set_grid_snap_enabled(board.grid_snap_enabled);
         cache.grid_snap_enabled = Some(board.grid_snap_enabled);
         changed = true;
     }
     if cache.grid_factor != Some(board.grid_factor) {
-        let _ = host.set_grid_factor(board.grid_factor);
+        let _ = host.style.set_grid_factor(board.grid_factor);
         cache.grid_factor = Some(board.grid_factor);
         changed = true;
     }
@@ -668,10 +625,10 @@ pub(super) fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &m
     }
     if cache.lod_mode.as_deref() != Some(board.lod_mode.as_str()) {
         if board.lod_mode == "automatic" {
-            host.set_automatic_lod(true);
+            host.style.set_automatic_lod(true);
         } else {
-            host.set_automatic_lod(false);
-            host.set_forced_draw_lod_label(&board.lod_mode);
+            host.style.set_automatic_lod(false);
+            host.style.set_forced_draw_lod_label(&board.lod_mode);
         }
         cache.lod_mode = Some(board.lod_mode.clone());
         changed = true;
@@ -679,14 +636,14 @@ pub(super) fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &m
     let transform_flags = board.transform_flags.clone().unwrap_or_else(|| BOARD2D_DEFAULT_TRANSFORM_FLAGS_JSON.to_string());
     if cache.transform_flags.as_deref() != Some(transform_flags.as_str()) {
         let (move_enabled, rotate_enabled) = board2d_transform_flags_from_json(&transform_flags);
-        host.set_transform_flags(move_enabled, rotate_enabled);
+        set_transform_flags(&mut host.scene, &mut host.gestures, move_enabled, rotate_enabled);
         cache.transform_flags = Some(transform_flags);
         changed = true;
     }
     let area_brush_size = board.area_brush_size.clone().unwrap_or_else(|| BOARD2D_DEFAULT_AREA_BRUSH_SIZE_JSON.to_string());
     if cache.area_brush_size.as_deref() != Some(area_brush_size.as_str()) {
         let (width, height) = board2d_area_brush_size_from_json(&area_brush_size);
-        host.set_area_brush_extent(width, height);
+        host.gestures.set_area_brush_extent(width, height);
         cache.area_brush_size = Some(area_brush_size);
         changed = true;
     }
@@ -740,13 +697,13 @@ fn append_board_tool_run_trace(painted: &mut canvas::Scene, host: &infinite_canv
     if entry.board_trace.is_empty() {
         return;
     }
-    let origin = host.world_to_screen(canvas::Point::new(0.0, 0.0));
-    let unit = host.world_to_screen(canvas::Point::new(1.0, 0.0));
+    let origin = host.scene.world_to_screen(canvas::Point::new(0.0, 0.0));
+    let unit = host.scene.world_to_screen(canvas::Point::new(1.0, 0.0));
     let zoom = (unit.x - origin.x).hypot(unit.y - origin.y);
     let highlight = palette.testing.with_alpha(1.0);
     for draw in entry.board_trace.placement_draws(palette, tool_run_trace::ToolRunTraceVisibility::default()) {
         let Some(shape) = entry.board_trace_shapes.get(draw.shape as usize) else { continue };
-        let center = host.world_to_screen(canvas::Point::new(f64::from(draw.position[0]), f64::from(draw.position[1])));
+        let center = host.scene.world_to_screen(canvas::Point::new(f64::from(draw.position[0]), f64::from(draw.position[1])));
         let (sin, cos) = f64::from(draw.rotation).sin_cos();
         let transform = canvas::Affine::new([zoom * cos, zoom * sin, -zoom * sin, zoom * cos, center.x, center.y]);
         let color = canvas::Color::new([draw.color.r, draw.color.g, draw.color.b, draw.color.a]);
@@ -772,13 +729,13 @@ fn append_board_tool_run_trace(painted: &mut canvas::Scene, host: &infinite_canv
 
 /// 🧭️ The `toolRunTraceCursor` every board surface echoes, keyed by the window it paints into — merged into the live view
 /// state next to `world3d_tool_run_trace_cursors`.
-pub fn board2d_tool_run_trace_cursors() -> HashMap<String, semio_framework::ToolRunTraceCursor> {
+pub fn board2d_tool_run_trace_cursors() -> HashMap<String, semio_framework_tool_run::ToolRunTraceCursor> {
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().values_mut().filter(|entry| entry.board_host.is_some()).filter_map(|entry| Some((entry.board_sync_cache.tool_run_trace_window_id.clone()?, entry.board_trace.cursor()?))).collect())
 }
 
 /// 🔍️ Resident trace records and footprints of one board surface, for the attach law.
 #[cfg(test)]
-pub(crate) fn board2d_tool_run_trace_state(surface_id: &str) -> Option<(usize, usize, usize)> {
+pub fn board2d_tool_run_trace_state(surface_id: &str) -> Option<(usize, usize, usize)> {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.borrow_mut();
         let entry = registry.get(surface_id)?;
@@ -847,7 +804,7 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
-        host.set_size(width, height, 1.0);
+        host.scene.set_size(width, height, 1.0);
         cache.size_key = Some(size_key);
         changed = true;
     }
@@ -904,7 +861,7 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
     let camera_json = if navigator { host.navigator_fit_camera_json(f64::from(width), f64::from(height)) } else { paint.camera_json.clone() };
     if cache.camera_json.as_deref() != Some(camera_json.as_str()) {
         if let Some((x, y, zoom)) = engine_camera_from_json(&camera_json) {
-            host.set_camera(x, y, zoom);
+            board_set_camera(&mut host.scene, &mut host.outbox, x, y, zoom);
         }
         cache.camera_json = Some(camera_json);
         changed = true;
@@ -982,7 +939,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
         let mut changed = created;
         let size_key = format!("{width}x{height}");
         if entry.editor_sync_cache.size_key.as_deref() != Some(size_key.as_str()) {
-            host.set_size(width, height, 1.0);
+            host.scene.set_size(width, height, 1.0);
             entry.editor_sync_cache.size_key = Some(size_key);
             changed = true;
         }
@@ -1116,7 +1073,7 @@ pub(crate) struct RasterCompositeProgress {
 }
 
 /// 🧩️ Advances raster preparation within one frame-build grant, retaining the previous presented image.
-pub(crate) fn advance_raster_composite(scene: &UiComponentSceneNode) -> RasterCompositeProgress {
+pub fn advance_raster_composite(scene: &UiComponentSceneNode) -> RasterCompositeProgress {
     if scene.component_kind != SurfaceKind::Paint2d {
         return RasterCompositeProgress { completed: 0, done: true };
     }

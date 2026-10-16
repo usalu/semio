@@ -274,6 +274,15 @@ pub(crate) fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjU
     Ok(ObjUnknownStatement { line_index, raw })
 }
 
+#[cfg(test)]
+#[test]
+fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_binary_diff_twin() {
+    let value = ObjUnknownStatement { line_index: u64::MAX, raw: "# Quelle 🎨".into() };
+    let mut bytes = Vec::new();
+    enc_unknown_bin(&value, &mut bytes);
+    assert_eq!(dec_unknown_bin(&mut store::ByteReader::new(&bytes)).unwrap(), value);
+}
+
 /// 🧪️ P2-FG1: real field-by-field binary twins of `#region 🔖️DiffValueCodecs` above — each
 /// per-item sparse patch encodes its fields in fixed declaration order via
 /// [`write_option_bin`]/[`write_tristate_bin`] (no tag byte needed per field, unlike an enum

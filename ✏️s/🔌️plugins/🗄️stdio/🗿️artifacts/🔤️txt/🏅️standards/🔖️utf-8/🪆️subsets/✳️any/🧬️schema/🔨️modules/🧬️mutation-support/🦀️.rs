@@ -92,7 +92,5 @@ pub fn native_snapshot_error(snapshot: &TxtSnapshot) -> Option<String> {
 //#endregion 🔖️Carrier
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

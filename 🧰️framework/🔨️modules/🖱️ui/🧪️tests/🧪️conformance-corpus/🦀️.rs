@@ -57,7 +57,7 @@ fn test_clock() -> Option<u64> {
 struct NoSceneHost;
 
 impl crate::wgpu::scene_slots::SceneHost for NoSceneHost {
-    fn paint_slot_step(&mut self, _slot: &crate::wgpu::scene_slots::SceneSlot<'_>, cursor: &mut crate::wgpu::scene_slots::ScenePaintCursor, _draw: &mut crate::wgpu::draw::DrawList, _atlas: &mut FontAtlas, _icons: Option<&crate::wgpu::draw::IconAtlas>) -> crate::wgpu::scene_slots::ScenePaintStep {
+    fn paint_slot_step(&mut self, _slot: &crate::wgpu::scene_slots::SceneSlot<'_>, cursor: &mut crate::wgpu::scene_slots::ScenePaintCursor, _draw: &mut crate::wgpu::draw_types::DrawList, _atlas: &mut FontAtlas, _icons: Option<&crate::wgpu::draw_types::IconAtlas>) -> crate::wgpu::scene_slots::ScenePaintStep {
         cursor.finish()
     }
 }

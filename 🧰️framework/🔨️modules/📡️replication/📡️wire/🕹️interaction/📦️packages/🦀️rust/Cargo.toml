@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-replication-interaction"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Interaction vocabulary: hover and selection specs, domain topology, the selection and hover machines and state validation."
+
+[package.metadata.semio]
+role = "framework"
+id = "replication-interaction"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value.workspace = true
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

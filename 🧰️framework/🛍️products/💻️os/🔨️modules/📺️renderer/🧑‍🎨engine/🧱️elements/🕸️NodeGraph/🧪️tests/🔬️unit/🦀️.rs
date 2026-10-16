@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_os_infinite::dag_draw_lod_label;
 #[test]
 fn fixture_from_workflow_json() {
     let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
@@ -20,7 +21,7 @@ fn graph_host_syncs_selection_from_framework_interaction_state() {
     host.sync_from_payload(&payload).expect("sync");
     let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
     host.sync_interaction(Some(&selection), None);
-    assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+    assert_eq!(host.dag.graph.selected_node_ids(), vec!["a"]);
 }
 
 #[test]
@@ -41,9 +42,9 @@ fn graph_host_pointer_up_after_plain_click_gathers_one_pick_target() {
 fn set_canvas_theme_dark_applies_board_palette() {
     let mut host = GraphHost::default();
     host.set_canvas_theme_dark(true);
-    let dark_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    let dark_stroke = host.dag.viewport.canvas_theme.node_stroke.to_rgba8();
     host.set_canvas_theme_dark(false);
-    let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    let light_stroke = host.dag.viewport.canvas_theme.node_stroke.to_rgba8();
     assert_ne!(dark_stroke.r, light_stroke.r);
 }
 
@@ -164,10 +165,10 @@ fn graph_host_joins_node_prefixed_port_ids_onto_one_engine_edge() {
         ..Default::default()
     })
     .expect("sync");
-    assert_eq!(host.dag.host_snapshot.edges.len(), 1);
-    assert_eq!(host.dag.host_snapshot.edges[0].source, "a@number");
-    assert_eq!(host.dag.host_snapshot.edges[0].target, "b@");
-    assert_eq!(host.dag.engine.edges.len(), 1, "prefixed scene port ids must still create an engine edge");
+    assert_eq!(host.dag.graph.host_snapshot.edges.len(), 1);
+    assert_eq!(host.dag.graph.host_snapshot.edges[0].source, "a@number");
+    assert_eq!(host.dag.graph.host_snapshot.edges[0].target, "b@");
+    assert_eq!(host.dag.graph.engine.edges.len(), 1, "prefixed scene port ids must still create an engine edge");
 }
 
 #[test]
@@ -184,7 +185,7 @@ fn graph_host_refuses_a_synapse_whose_port_is_missing_on_the_widget() {
         ..Default::default()
     })
     .expect("sync");
-    assert_eq!(host.dag.engine.edges.len(), 0, "missing target port must not paint a dangling wire");
+    assert_eq!(host.dag.graph.engine.edges.len(), 0, "missing target port must not paint a dangling wire");
 }
 
 #[test]
@@ -337,7 +338,7 @@ fn graph_host_sync_from_payload_dims_preview_off_nodes() {
     let mut payload = payload_with_node("a");
     payload.preview_off_json = Some(r#"["a"]"#.into());
     host.sync_from_payload(&payload).expect("sync");
-    assert_eq!(host.dag.dimmed_node_ids(), vec!["a".to_string()]);
+    assert_eq!(dimmed_node_ids(&host.dag.graph, &host.dag.paint), vec!["a".to_string()]);
 }
 
 #[test]
@@ -346,7 +347,7 @@ fn graph_host_sync_from_payload_applies_lod_settings() {
     let mut payload = payload_with_node("a");
     payload.lod_json = Some(r#"{"automatic":false,"lod":"micro","proximityDistance":12.5,"gridVisible":false,"gridSnapEnabled":true,"gridFactor":2.0}"#.into());
     host.sync_from_payload(&payload).expect("sync");
-    assert_eq!(host.dag.draw_lod_label(), "micro");
+    assert_eq!(dag_draw_lod_label(&host.dag.viewport, &host.dag.graph), "micro");
 }
 
 #[test]
@@ -355,7 +356,7 @@ fn graph_host_sync_from_payload_applies_computing_progress() {
     let mut payload = payload_with_node("a");
     payload.computing_json = Some(r#"{"active":"a","stale":[]}"#.into());
     host.sync_from_payload(&payload).expect("sync");
-    assert_eq!(host.dag.hovered_node_id(), None);
+    assert_eq!(hovered_node_id(&host.dag.viewport, &host.dag.graph), None);
 }
 
 #[test]
@@ -363,7 +364,7 @@ fn graph_host_sync_from_scene_json_parses_raw_json() {
     let mut host = GraphHost::default();
     let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1}}"#;
     host.sync_from_scene_json(scene).expect("sync");
-    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.graph.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -377,7 +378,7 @@ fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
     let dsl = semio_framework_value::DslValue::from(&scene);
     let bytes = store::pack_rt::encode_pack_value(&dsl);
     host.sync_from_scene_pack(&bytes).expect("sync");
-    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+    assert_eq!(host.dag.graph.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
 }
 
 #[test]
@@ -428,10 +429,10 @@ fn graph_host_selected_node_ids_json_matches_selection() {
 fn graph_host_wheel_screen_pan_without_zoom_gesture() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
-    let before = host.dag.host_snapshot.camera.y;
+    let before = host.dag.graph.host_snapshot.camera.y;
     host.wheel_screen(200.0, 200.0, 0.0, 10.0, false);
-    assert!(host.dag.host_snapshot.camera.y < before);
-    assert_eq!(host.dag.host_snapshot.camera.zoom, 1.0);
+    assert!(host.dag.graph.host_snapshot.camera.y < before);
+    assert_eq!(host.dag.graph.host_snapshot.camera.zoom, 1.0);
 }
 
 /// 🖱️ A sideways wheel (trackpad horizontal scroll, a two-finger pinch's sideways drift) pans the camera
@@ -456,7 +457,7 @@ fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
     let mut host = GraphHost::default();
     host.set_viewport(400, 400, 1.0);
     host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
-    assert!(host.dag.host_snapshot.camera.zoom > 1.0);
+    assert!(host.dag.graph.host_snapshot.camera.zoom > 1.0);
 }
 
 /// 🖱️ A whole scroll gesture is board work: every tick moves the camera here, and nothing needs to
@@ -535,7 +536,7 @@ fn graph_pointer_plan_matches_direct_click_and_rejects_stale_revision() {
     assert!(planned.commit_pointer(down));
     let up = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Up, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("up plan");
     assert!(planned.commit_pointer(up));
-    assert_eq!(direct.dag.selected_node_ids(), planned.dag.selected_node_ids());
+    assert_eq!(direct.dag.graph.selected_node_ids(), planned.dag.graph.selected_node_ids());
 
     let stale = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: true }).expect("stale plan");
     planned.set_viewport(401, 400, 1.0);
@@ -552,7 +553,7 @@ fn graph_host_pointer_click_selects_node() {
     host.set_viewport(400, 400, 1.0);
     host.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
     host.pointer_up_screen(200.0, 200.0, false, false, false);
-    assert_eq!(host.dag.selected_node_ids(), vec!["a".to_string()]);
+    assert_eq!(host.dag.graph.selected_node_ids(), vec!["a".to_string()]);
 }
 
 #[test]

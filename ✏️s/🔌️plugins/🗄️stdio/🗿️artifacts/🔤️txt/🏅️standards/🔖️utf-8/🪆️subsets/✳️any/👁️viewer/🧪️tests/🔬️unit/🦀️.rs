@@ -1,4 +1,7 @@
-use super::*;
+use crate::viewer::txt::modes::view::windows::main;
+use semio_framework_plugin::ArtifactViewer;
+use semio_framework_plugin::Viewer;
+use crate::viewer::txt::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_txt_viewer_builds_a_definition_for_the_viewer_role() {

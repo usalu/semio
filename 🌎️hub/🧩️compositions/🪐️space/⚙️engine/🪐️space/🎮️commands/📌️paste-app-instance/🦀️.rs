@@ -1,6 +1,6 @@
 //! 🧩️ 🧩️ S Studio app command — `paste-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
@@ -13,7 +13,7 @@ async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot)
     for node_id in source_ids {
         let Some(node) = projection.graph.nodes.iter().find(|row| row.id == node_id) else { continue };
         let label = format!("{} Copy", node.label);
-        if let Some((operation, new_id)) = crate::engine::space::engine::add_workflow_node_operation(&node.plugin_id, &node.app_id, Some(&label), node.x + 40.0, node.y + 40.0).await {
+        if let Some((operation, new_id)) = semio_hub_space_operations::add_workflow_node_operation(&node.plugin_id, &node.app_id, Some(&label), node.x + 40.0, node.y + 40.0).await {
             new_active_node_id = Some(new_id);
             artifact_mutations.push(operation);
         }
@@ -24,11 +24,10 @@ async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot)
 
 //#endregion 🔖️DuplicateAndPaste
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "paste-app-instance")]
 pub struct PasteAppInstance {}
 
 pub fn handle(_payload: &PasteAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(duplicate_nodes(cfg.snapshot.clipboard_node_ids.clone(), doc.snapshot)))
+    Ok(semio_hub_space_operations::resolve_future(duplicate_nodes(cfg.snapshot.clipboard_node_ids.clone(), doc.snapshot)))
 }

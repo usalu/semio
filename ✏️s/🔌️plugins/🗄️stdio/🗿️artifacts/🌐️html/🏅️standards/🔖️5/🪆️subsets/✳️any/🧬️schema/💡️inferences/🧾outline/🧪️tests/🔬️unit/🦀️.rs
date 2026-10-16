@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v5::subsets::any::schema::snapshot::HtmlNode;
+use crate::HtmlSnapshot;
+use crate::standards::v5::subsets::any::schema::inferences::outline::*;
 
 #[semio_framework_async_macros::async_test]
 async fn counts_elements_depth_and_text_over_nested_structure() {

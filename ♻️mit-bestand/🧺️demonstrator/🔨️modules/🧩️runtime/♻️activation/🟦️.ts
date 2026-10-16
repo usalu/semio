@@ -49,7 +49,7 @@ export function demonstratorActivationLanes(): readonly string[] {
 
 /** 🗂️ One lane's framework-owned receipt directory. */
 export function demonstratorActivationLaneReceiptDirectory(workspace: string, lane: string): string {
-  return join(developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "prototype", "react"), "activation");
+  return join(developmentRuntimeRoot(workspace, lane, "prototype", "react"), "activation");
 }
 
 /** 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */
@@ -110,7 +110,7 @@ export function publishDemonstratorUnionReceipt(workspace: string): { readonly r
 /** 🧾️ Requires the exact completed Demonstrator component union before starting its development host. */
 export function readDemonstratorActivation(workspace: string) {
   const { receiptDirectory, receipt, laneReceiptDirectories } = publishDemonstratorUnionReceipt(workspace);
-  const primary = developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), DEMONSTRATOR_PRIMARY_ACTIVATION_LANE, "prototype", "react");
+  const primary = developmentRuntimeRoot(workspace, DEMONSTRATOR_PRIMARY_ACTIVATION_LANE, "prototype", "react");
   return { receiptDirectory, extensionsDirectory: join(primary, "extensions"), receipt, laneReceiptDirectories };
 }
 //#endregion 🔖️DemonstratorUnionReceipt

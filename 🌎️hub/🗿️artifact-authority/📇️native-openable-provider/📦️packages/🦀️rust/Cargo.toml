@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-native-openable"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hub-private static native openable catalog provider"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-native-openable"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+semio-hub-stdio-catalog = { workspace = true }
+semio-hub-gis = { workspace = true }
+semio-hub-vcs = { workspace = true }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-plugin = { workspace = true }

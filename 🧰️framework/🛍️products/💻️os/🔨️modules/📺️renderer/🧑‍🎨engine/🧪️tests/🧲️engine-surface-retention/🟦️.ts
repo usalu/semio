@@ -312,7 +312,7 @@ describe("🧲️ engine surfaces are retained by their window instance, not by 
   }
 
   test("the wgpu shell names the same authority and retires on it alone", () => {
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(shell).toContain("fn mirror_engine_surface_states(");
     expect(shell).toContain("live_window_ids.contains(&surface.window_id.as_str())");
     const registration = readModuleTreeSource(join(engineRoot, "🧱️elements", "⚙️EngineCanvas", "🎯️targets", "🧊️wgpu", "🦀️.rs"));

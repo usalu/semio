@@ -45,7 +45,7 @@ export function playActivationLanes(): readonly string[] {
 
 /** 🗂️ One lane's framework-owned development runtime root. */
 function playLaneRuntimeRoot(workspace: string, lane: string): string {
-  return developmentRuntimeRoot(join(workspace, OS_DEV_PACKAGE_ROOT), lane, "prototype", "react");
+  return developmentRuntimeRoot(workspace, lane, "prototype", "react");
 }
 
 /** 🗂️ Every lane's receipt directory, in lane order — what the union watcher subscribes to. */

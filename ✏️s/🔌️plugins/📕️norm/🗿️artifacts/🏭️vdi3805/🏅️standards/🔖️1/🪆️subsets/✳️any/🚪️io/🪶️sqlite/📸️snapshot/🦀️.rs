@@ -109,7 +109,7 @@ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase, ValueError>{project(self,control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{reconstruct(database,control)}
 }
-pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Vdi3805Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn sqlite_codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<Vdi3805Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 
 #[path="🛂️admission/🦀️.rs"]
 pub(crate)mod admission;

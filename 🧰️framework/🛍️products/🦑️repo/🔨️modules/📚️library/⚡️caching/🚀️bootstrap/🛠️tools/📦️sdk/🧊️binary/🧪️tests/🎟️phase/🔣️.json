@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "phase": "live",
+      "accepted": true,
+      "reads": 1
+    },
+    {
+      "phase": "spread",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "sibling",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "cancel-before",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "cancel-image",
+      "accepted": false,
+      "reads": 0
+    },
+    {
+      "phase": "cancel-final",
+      "accepted": false,
+      "reads": 1
+    }
+  ],
+  "streams": [
+    {
+      "stage": "success",
+      "outcome": "success"
+    },
+    {
+      "stage": "read",
+      "outcome": "cancel"
+    },
+    {
+      "stage": "write",
+      "outcome": "cancel"
+    },
+    {
+      "stage": "yield",
+      "outcome": "cancel"
+    },
+    {
+      "stage": "stat",
+      "outcome": "cancel"
+    },
+    {
+      "stage": "undefined-close",
+      "outcome": "body"
+    },
+    {
+      "stage": "frozen-close",
+      "outcome": "body"
+    },
+    {
+      "stage": "success-close",
+      "outcome": "close"
+    },
+    {
+      "stage": "close",
+      "outcome": "cancel"
+    }
+  ]
+}

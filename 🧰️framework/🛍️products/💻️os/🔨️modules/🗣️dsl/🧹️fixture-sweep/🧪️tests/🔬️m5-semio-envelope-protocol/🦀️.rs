@@ -1,7 +1,7 @@
 use semio_framework_dsl::parse_protocol;
 use semio_framework_dsl::verify_protocol_source;
 use semio_framework_dsl::walk_protocol;
-use crate::os_store::semio_format::{wrap_binary, Component, SemioEnvelope};
+use semio_framework_os_kernel::os_store::semio_format::{wrap_binary, Component, SemioEnvelope};
 
 const PROTOCOL: &str = include_str!("../../../../🧬️semio/📡️protocol/📡️.protocol.semio");
 

@@ -5,7 +5,7 @@ use std::sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc};
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
 fn queued() -> SurfaceReconcileHandbackKey {
     let data = fixture();
-    let owner = SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new(data["surface"].as_str().unwrap()), data["generation"].as_u64().unwrap()).unwrap();
+    let owner = SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::from_text(data["surface"].as_str().unwrap()), data["generation"].as_u64().unwrap()).unwrap();
     let key = owner.handback_key().unwrap();
     drop(owner);
     key
@@ -70,7 +70,7 @@ fn retained_handback_poison_is_fault_without_mutating_queued_owner() {
     let poisoned = std::thread::spawn(|| { let _guard = SURFACE_RECONCILE_HANDBACKS.lock().unwrap(); panic!("fixture registry poison"); });
     assert!(poisoned.join().is_err());
     let observed = format!("{:?}", close_surface_reconcile_handback_one());
-    let unchanged = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|error| error.into_inner()).slots[key.slot].state.as_ref().unwrap().current.as_ref().unwrap().retire_scalar == 0;
+    let unchanged = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|error| error.into_inner()).slots[key.slot].state.as_ref().unwrap().current.as_ref().unwrap().shadow.retire_scalar() == 0;
     SURFACE_RECONCILE_HANDBACKS.clear_poison();
     drain();
     assert!(unchanged);

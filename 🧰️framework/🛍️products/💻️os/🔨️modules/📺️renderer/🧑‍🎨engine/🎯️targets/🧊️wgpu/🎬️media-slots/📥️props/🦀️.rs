@@ -4,20 +4,20 @@ use semio_framework_pack_json::{JsonGrammarCursor,JsonReadLimits,JsonMemberPolic
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub(crate) struct PresentedParamsFailure{pub(crate) cause:JsonError,pub(crate) receipt_refusal:Option<ValueError>,pub(crate) progress:RetainedCloneProgress}
+pub struct PresentedParamsFailure{pub cause:JsonError,pub receipt_refusal:Option<ValueError>,pub progress:RetainedCloneProgress}
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub(crate) enum PresentedParamsStepFailure{Grammar(PresentedParamsFailure),Original(OriginalTurnFailure)}
+pub enum PresentedParamsStepFailure{Grammar(PresentedParamsFailure),Original(OriginalTurnFailure)}
 impl From<ValueError> for PresentedParamsStepFailure{fn from(source:ValueError)->Self{Self::Original(source.into())}}
 
-pub(crate) struct OriginalPresentedParams{source:usize,length:usize,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,ledger:Option<u64>,parser:ControlledRetirement<JsonGrammarCursor<DslValue>>,closing:bool}
+pub struct OriginalPresentedParams{source:usize,length:usize,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,ledger:Option<u64>,parser:ControlledRetirement<JsonGrammarCursor<DslValue>>,closing:bool}
 impl OriginalPresentedParams{
- pub(crate) fn admit(source:&str,limits:JsonReadLimits,cx:&mut StepContext<'_>)->Result<Option<Self>,PresentedParamsStepFailure>{
+ pub fn admit(source:&str,limits:JsonReadLimits,cx:&mut StepContext<'_>)->Result<Option<Self>,PresentedParamsStepFailure>{
   let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
   let original=semio_framework_pack_json::JsonSourceCursor::<_,DslValue>::new(source,JsonMemberPolicy::Reject,limits)?;let(_,parser)=original.into_grammar();
   let parser=ControlledRetirement::new(parser).unwrap_or_else(|_|unreachable!("first-party JSON grammar supports controlled retirement"));
   cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(Some(Self{source:source.as_ptr()as usize,length:source.len(),identity:(cx.operation(),cx.generation()),clock:cx.clock_source(),deadline:cx.deadline_us(),ledger:None,parser,closing:false}))
  }
- pub(crate) fn advance(&mut self,source:&str,output:&mut Option<DslValue>,native:&mut NativeDecodeControl<'_>,cx:&mut StepContext<'_>)->Result<bool,PresentedParamsStepFailure>{
+ pub fn advance(&mut self,source:&str,output:&mut Option<DslValue>,native:&mut NativeDecodeControl<'_>,cx:&mut StepContext<'_>)->Result<bool,PresentedParamsStepFailure>{
   self.check_caller(cx)?;
   if self.closing||(self.source,self.length)!=(source.as_ptr()as usize,source.len())||self.ledger.is_some_and(|original|original!=native.ledger_identity()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"accepted media params source differs from original caller loan").into())}
   if output.is_some(){return Ok(true)}
@@ -29,8 +29,8 @@ impl OriginalPresentedParams{
   match(complete,receipt_refusal){(Ok(ready),None)=>Ok(ready),(Err(cause),receipt_refusal)=>Err(PresentedParamsStepFailure::Grammar(PresentedParamsFailure{cause,receipt_refusal,progress})),(Ok(_),Some(refusal))=>Err(PresentedParamsStepFailure::Original(refusal.into()))}
  }
  fn check_caller(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.identity!=(cx.operation(),cx.generation())||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"accepted media params require their initiating caller clock and deadline"))}Ok(())}
- pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if self.parser.terminal_is_empty(){return Ok(true)}let demand=self.parser.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.parser.step(grant))?;Ok(self.parser.terminal_is_empty())}
- pub(crate) fn terminal_is_empty(&self)->bool{self.parser.terminal_is_empty()}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if self.parser.terminal_is_empty(){return Ok(true)}let demand=self.parser.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.parser.step(grant))?;Ok(self.parser.terminal_is_empty())}
+ pub fn terminal_is_empty(&self)->bool{self.parser.terminal_is_empty()}
 }
 
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original accepted params failure projection changed")}

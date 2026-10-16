@@ -3,8 +3,50 @@ cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = [
+    "🏗️bootstrap/⚙️runtime/📦️packages/🦀️rust",
+    "🏗️bootstrap/📒️ledgers/📦️packages/🦀️rust",
+    "🏗️bootstrap/📨️document-routes/📦️packages/🦀️rust",
+    "🏗️bootstrap/🛣️routes/📦️packages/🦀️rust",
+    "🏗️bootstrap/🛰️session-routes/📦️packages/🦀️rust",
+    "🏗️bootstrap/🧠️state/📦️packages/🦀️rust",
+    "🏗️bootstrap/🧱️models/📦️packages/🦀️rust",
+    "💡️inference/🏃️runtime/📜️contract/📦️packages/🦀️rust",
+    "💡️inference/🏃️runtime/📦️packages/🦀️rust",
+    "💡️inference/🏃️runtime/🔐️committer/📦️packages/🦀️rust",
+    "💡️inference/🏃️runtime/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "💡️inference/📇️catalog/📦️packages/🦀️rust",
+    "💡️inference/📦️packages/🦀️rust",
+    "💡️inference/🔗️binding/📦️packages/🦀️rust",
+    "💡️inference/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "💡️inference/🪶️sqlite/📦️packages/🦀️rust",
+    "📇️directory/🌐️neo4j/📦️packages/🦀️rust",
+    "📇️directory/🌐️neo4j/🧰️rows/📦️packages/🦀️rust",
+    "📇️directory/🐘️postgres/📦️packages/🦀️rust",
+    "📇️directory/📜️contract/📦️packages/🦀️rust",
+    "📇️directory/📦️packages/🦀️rust",
+    "📇️directory/🔀️dispatch/📦️packages/🦀️rust",
+    "📇️directory/🛠️service/📦️packages/🦀️rust",
+    "📇️directory/🧪️tests/🏛️backend-laws/📦️packages/🦀️rust",
+    "📇️directory/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "📇️directory/🪶️sqlite/📦️packages/🦀️rust",
+    "📊️observability/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
+    "🔐️auth/📦️packages/🦀️rust",
     "🔐️auth/🔌️client/📦️packages/🦀️rust",
+    "🗄️stores/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🌱️creation/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/📦️packages/🦀️rust",
+    "🗿️artifact-authority/📇️native-openable-provider/📦️packages/🦀️rust",
+    "🗿️artifact-authority/📌️check-in/📦️packages/🦀️rust",
+    "🗿️artifact-authority/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🔏️trusted-catalog/📜️contract/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🔏️trusted-catalog/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🏛️contract-laws/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "🗿️artifact-authority/🔏️trusted-catalog/🧾️descriptor/📦️packages/🦀️rust",
+    "🚀️local-bootstrap/📦️packages/🦀️rust",
+    "🚧️refusal/📦️packages/🦀️rust",
+    "🛰️lag-rebootstrap/📦️packages/🦀️rust",
     "🧩️compositions/✒️writer/📦️packages/🦀️rust",
     "🧩️compositions/✒️writer/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/➗️mathematical/📦️packages/🦀️rust",
@@ -91,10 +133,26 @@ members = [
     "🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🧱️block/📦️packages/🦀️rust",
     "🧩️compositions/🧱️block/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/⚙️engine/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🖼️media/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🛠️authoring/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/🧪️tests/🏛️laws/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/⚙️engine/🪐️space/🧱️foundation/📦️packages/🦀️rust",
     "🧩️compositions/🪐️space/📦️packages/🦀️rust",
     "🧩️compositions/🪐️space/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/🧩️component/📦️packages/🦀️rust",
+    "🧪️tests/🔏️trusted-catalog-profile/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/🎲️hostile-input/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/👥️presence/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/📇️directory/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/🔐️session/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/🚀️boot/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/🧭️open-plan/🏛️laws/📦️packages/🦀️rust",
+    "🧪️tests/🔬️bin-unit/🧰️testkit/📦️packages/🦀️rust",
+    "🧪️tests/🗂️artifact-root/📦️packages/🦀️rust",
+    "🧪️tests/🧩️component-codecs/🏛️laws/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -496,177 +554,66 @@ semio-hub-stdio-office = { path = "../🌎️hub/🧩️compositions/🗄️stdi
 semio-hub-stdio-semio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust" }
 semio-hub-stdio-binary = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust" }
 semio-hub-gis = { path = "../🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust" }
+semio-hub-inference-binding = { path = "../🌎️hub/💡️inference/🔗️binding/📦️packages/🦀️rust" }
+semio-hub-space-laws = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-space-app = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/📦️packages/🦀️rust" }
+semio-hub-space-commands-media = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🖼️media/📦️packages/🦀️rust" }
+semio-hub-space-commands-authoring = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎮️commands/🛠️authoring/📦️packages/🦀️rust" }
+semio-hub-space-operations = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/⚙️engine/📦️packages/🦀️rust" }
+semio-hub-space-foundation = { path = "../🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🧱️foundation/📦️packages/🦀️rust" }
+semio-hub-hostile-input-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-presence-route-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/👥️presence/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-session-route-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/🔐️session/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-directory-route-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/📇️directory/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-open-plan-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-boot-laws = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/🚀️boot/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-route-testkit = { path = "../🌎️hub/🧪️tests/🔬️bin-unit/🧰️testkit/📦️packages/🦀️rust" }
+semio-hub-routes = { path = "../🌎️hub/🏗️bootstrap/🛣️routes/📦️packages/🦀️rust" }
+semio-hub-document-routes = { path = "../🌎️hub/🏗️bootstrap/📨️document-routes/📦️packages/🦀️rust" }
+semio-hub-session-routes = { path = "../🌎️hub/🏗️bootstrap/🛰️session-routes/📦️packages/🦀️rust" }
+semio-hub-state = { path = "../🌎️hub/🏗️bootstrap/🧠️state/📦️packages/🦀️rust" }
+semio-hub-route-models = { path = "../🌎️hub/🏗️bootstrap/🧱️models/📦️packages/🦀️rust" }
+semio-hub-ledgers = { path = "../🌎️hub/🏗️bootstrap/📒️ledgers/📦️packages/🦀️rust" }
+semio-hub-runtime = { path = "../🌎️hub/🏗️bootstrap/⚙️runtime/📦️packages/🦀️rust" }
+semio-hub-directory-backend-laws = { path = "../🌎️hub/📇️directory/🧪️tests/🏛️backend-laws/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog-contract-laws = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🏛️contract-laws/📦️packages/🦀️rust" }
+semio-hub-inference-contract-laws = { path = "../🌎️hub/💡️inference/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-inference-laws = { path = "../🌎️hub/💡️inference/🏃️runtime/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-inference-runtime = { path = "../🌎️hub/💡️inference/🏃️runtime/📦️packages/🦀️rust" }
+semio-hub-inference-committer = { path = "../🌎️hub/💡️inference/🏃️runtime/🔐️committer/📦️packages/🦀️rust" }
+semio-hub-inference-runtime-contract = { path = "../🌎️hub/💡️inference/🏃️runtime/📜️contract/📦️packages/🦀️rust" }
+semio-hub-inference-catalog = { path = "../🌎️hub/💡️inference/📇️catalog/📦️packages/🦀️rust" }
+semio-hub-inference-ledger = { path = "../🌎️hub/💡️inference/🪶️sqlite/📦️packages/🦀️rust" }
+semio-hub-inference = { path = "../🌎️hub/💡️inference/📦️packages/🦀️rust" }
+semio-hub-component-codec-laws = { path = "../🌎️hub/🧪️tests/🧩️component-codecs/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog-fixtures = { path = "../🌎️hub/🧪️tests/🔏️trusted-catalog-profile/📦️packages/🦀️rust" }
+semio-hub-observability = { path = "../🌎️hub/📊️observability/📦️packages/🦀️rust" }
+semio-hub-local-bootstrap = { path = "../🌎️hub/🚀️local-bootstrap/📦️packages/🦀️rust" }
+semio-hub-lag-rebootstrap = { path = "../🌎️hub/🛰️lag-rebootstrap/📦️packages/🦀️rust" }
+semio-hub-stores = { path = "../🌎️hub/🗄️stores/📦️packages/🦀️rust" }
+semio-hub-auth = { path = "../🌎️hub/🔐️auth/📦️packages/🦀️rust" }
+semio-hub-native-openable = { path = "../🌎️hub/🗿️artifact-authority/📇️native-openable-provider/📦️packages/🦀️rust" }
+semio-hub-artifact-checkin = { path = "../🌎️hub/🗿️artifact-authority/📌️check-in/📦️packages/🦀️rust" }
+semio-hub-artifact-creation-service = { path = "../🌎️hub/🗿️artifact-authority/🌱️creation/🧑‍🏭️service-v1/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog-laws = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog-descriptor = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧾️descriptor/📦️packages/🦀️rust" }
+semio-hub-trusted-catalog-contract = { path = "../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/📜️contract/📦️packages/🦀️rust" }
+semio-hub-directory-laws = { path = "../🌎️hub/📇️directory/🧪️tests/🏛️laws/📦️packages/🦀️rust" }
+semio-hub-directory-service = { path = "../🌎️hub/📇️directory/🛠️service/📦️packages/🦀️rust" }
+semio-hub-directory-dispatch = { path = "../🌎️hub/📇️directory/🔀️dispatch/📦️packages/🦀️rust" }
+semio-hub-directory-neo4j = { path = "../🌎️hub/📇️directory/🌐️neo4j/📦️packages/🦀️rust" }
+semio-hub-directory-neo4j-rows = { path = "../🌎️hub/📇️directory/🌐️neo4j/🧰️rows/📦️packages/🦀️rust" }
+semio-hub-directory-postgres = { path = "../🌎️hub/📇️directory/🐘️postgres/📦️packages/🦀️rust" }
+semio-hub-directory-sqlite = { path = "../🌎️hub/📇️directory/🪶️sqlite/📦️packages/🦀️rust" }
+semio-hub-directory = { path = "../🌎️hub/📇️directory/📦️packages/🦀️rust" }
+semio-hub-artifact-creation = { path = "../🌎️hub/🗿️artifact-authority/🌱️creation/📦️packages/🦀️rust" }
+semio-hub-artifact-authority = { path = "../🌎️hub/🗿️artifact-authority/📦️packages/🦀️rust" }
+semio-hub-directory-contract = { path = "../🌎️hub/📇️directory/📜️contract/📦️packages/🦀️rust" }
+semio-hub-refusal = { path = "../🌎️hub/🚧️refusal/📦️packages/🦀️rust" }
+semio-hub-testing = { path = "../🌎️hub/🧪️tests/🗂️artifact-root/📦️packages/🦀️rust" }
 semio-hub-vcs = { path = "../🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust" }
-[profile.dev]
-debug = false
-incremental = false
 
-[profile.dev.build-override]
-opt-level = 3
-
-# ⚡️ The plugin runtime every native dev host embeds (the semio MCP gateway, the hub, native shells) is
-# optimized even in the dev profile. At `opt-level = 0` the wasmtime component-model machinery around
-# every guest crossing and host call, and cranelift compiling a 129 MB unoptimized guest, dominated the
-# guest's own work. Measured on the wfc genesis `inference_run` over the semio MCP: 112.7 s with this
-# set unoptimized vs 63.9 s optimized (ticket 26/09/23, `📓️wp-g5.md`), and a first solve after a guest
-# rebuild waited ~9 min for its unoptimized cranelift compile. Only these crates change, so a rebuild
-# costs their own compile plus a relink of their dependents (1 min 44 s measured).
-[profile.dev.package.wasmtime]
-opt-level = 3
-
-[profile.dev.package.wasmtime-environ]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-core]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-cranelift]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-fiber]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-unwinder]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-cache]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-component-util]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-jit-debug]
-opt-level = 3
-
-[profile.dev.package.wasmtime-internal-jit-icache-coherence]
-opt-level = 3
-
-[profile.dev.package.wasmtime-wasi]
-opt-level = 3
-
-[profile.dev.package.wasmtime-wasi-io]
-opt-level = 3
-
-[profile.dev.package.cranelift-codegen]
-opt-level = 3
-
-[profile.dev.package.cranelift-frontend]
-opt-level = 3
-
-[profile.dev.package.cranelift-entity]
-opt-level = 3
-
-[profile.dev.package.cranelift-bforest]
-opt-level = 3
-
-[profile.dev.package.cranelift-bitset]
-opt-level = 3
-
-[profile.dev.package.cranelift-control]
-opt-level = 3
-
-[profile.dev.package.cranelift-native]
-opt-level = 3
-
-[profile.dev.package.cranelift-codegen-shared]
-opt-level = 3
-
-[profile.dev.package.cranelift-assembler-x64]
-opt-level = 3
-
-[profile.dev.package.regalloc2]
-opt-level = 3
-
-[profile.dev.package.wasmparser]
-opt-level = 3
-
-[profile.dev.package.pulley-interpreter]
-opt-level = 3
-
-[profile.dev.package.gimli]
-opt-level = 3
-
-[profile.dev.package.object]
-opt-level = 3
-
-[profile.dev.package.wit-parser]
-opt-level = 3
-
-# 🧮️ The owned wasm interpreter (`semio-framework-plugin-interpreter`) runs every trusted-catalog
-# verification `codec.pack-schema-hash` on the hub's startup path. At `opt-level = 0` a debug hub spent
-# >11 min of one core interpreting writer/draw/puzzle during catalog load and the candidate readiness
-# wait gave up (ticket 26/09/23 W1 §4.6, sampled: 100 % in `CoreInstance::execute_machine`).
-[profile.dev.package.semio-framework-plugin-interpreter]
-opt-level = 3
-
-# 🔐️ The repository's own SHA-256 carries every hub credential check: a sign-in derives PBKDF2-HMAC-SHA256
-# at 210 000 iterations. At `opt-level = 0` one derivation took ~2 s on an idle debug hub and 8.5 s on hub
-# 7800 under load (ticket 26/09/23 H9 session 12), all inside the compression function; optimizing this
-# one small crate makes a dev hub's sign-in cost what a release hub's does.
-[profile.dev.package.semio-framework-hash]
-opt-level = 3
-
-# 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
-# 🎚️ Shared native optimizer policy lives in .cargo/config.toml; this owner opts into path trimming.
-[profile.release]
-trim-paths = "object"
-
-# `# 🪶️ WASM inherits central native release policy and overrides size/runtime settings.
-#
-# - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
-#   few extra percent of size; the wasm-opt -Oz post-pass of module materialization gets the "z"-class
-#   shrink without paying that runtime cost in every plugin.
-# - lto "thin" (not "fat"): fat LTO re-links every plugin cdylib individually — 2-4x slower per plugin
-#   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
-# - codegen-units = 16: measured on the raster hub (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT,
-#   2026-10-13): 317 s / 8.2 GB peak vs 612 s / 10.6 GB at 1, for +11% raw but only +2.4% brotli bytes on the wire
-#   (5.13 vs 5.01 MB); the ElemSection::writeBody crash no longer reproduces with the current toolchain.
-# - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
-#   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
-# - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
-#   session state would only cost disk in the shared build-dir (`.cargo/config.toml` `build.build-dir`).
-# - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
-#   `Location` strings (wasm32-wasip2 already aborts on panic, so `panic` is not overridden).
-[profile.wasm-release]
-inherits = "release"
-opt-level = "s"
-lto = "thin"
-codegen-units = 16
-strip = "symbols"
-incremental = false
-trim-paths = "object"
-
-# 🔁️ The single-plugin browser iteration loop only (`bun nx run workspace:components iterate <plugin-id>`): never in a
-# release graph, never described for commit, never shipped. Inherits the shipped profile's target settings and trades
-# size and speed for compile latency — incremental, no LTO, 256 codegen units, assertions on, symbols kept. Its bytes
-# reach no receipt but a local `wasm-prototype` one and stay under the local-only `ITERATE_COMPONENT_MAX_BYTES` (512 MiB).
-[profile.wasm-prototype]
-inherits = "wasm-release"
-debug = 1
-opt-level = 1
-lto = false
-codegen-units = 256
-incremental = true
-debug-assertions = true
-overflow-checks = true
-strip = "none"
-
-# 🎚️ An iterated plugin still meets the framework's 8 ms interactive-step contract: below `opt-level = 2` a lowpoly
-# render turn tessellates its seeded mesh in 10-11.5 ms and the runtime traps it with `plugin.internal.interactive-ceiling`.
-[profile.wasm-prototype.package.semio-framework-os-flow]
-opt-level = 2
-
-# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
-[profile.wasm-prototype.package.semio-framework-os-kernel-neural-engine]
-opt-level = 2
-
-# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
-[profile.wasm-prototype.package.semio-framework-replication]
-opt-level = 2
-
-# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
-[profile.wasm-prototype.package.semio-framework-pack]
-opt-level = 2
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

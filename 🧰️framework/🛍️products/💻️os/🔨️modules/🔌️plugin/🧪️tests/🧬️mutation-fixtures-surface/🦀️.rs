@@ -216,7 +216,7 @@ impl pack::snapshot::ArtifactPack for SurfaceSnapshot {
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SurfaceSnapshot {
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())
+        Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
 }
 
@@ -926,7 +926,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
     let turn = row["accountBytesPerTurn"].as_u64().expect("account turn bytes");
     let cancel_after = row["cancelAfterAccountedBytes"].as_u64().expect("cancelled accounted bytes");
-    let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data,turn);
+    let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), data,turn);
     let mut first = crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle;
     for _ in 0..64 {
         first = surface_natural_file_step(&mut cancelled,cx);
@@ -958,7 +958,7 @@ async fn natural_file_monolithic_decoder_refuses_and_retires_on_original_caller(
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).unwrap();let row=&fixture["registeredEditor"];
     let oversized = usize::try_from(row["oversizedOctetCount"].as_u64().expect("oversized octet count")).expect("usize octet count");
     let maximum = u64::try_from(oversized - 1).expect("bounded maximum work");
-    let (mut refused, refused_completion, refused_snapshot, refused_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), vec![0; oversized], maximum);
+    let (mut refused, refused_completion, refused_snapshot, refused_history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), vec![0; oversized], maximum);
     for expected in [maximum, u64::try_from(oversized).expect("oversized progress")] {
         match surface_natural_file_outcome(&mut refused,cx) {
             crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
@@ -1005,7 +1005,7 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     let oracle = data.chunks_exact(4).map(|word| i32::from_be_bytes(word.try_into().expect("four-byte word"))).try_fold(0_i32, i32::checked_add).expect("independent checked sum");
     assert_eq!(oracle, last_word);
 
-    let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data, work);
+    let (mut job, completion, snapshot, history) = surface_natural_file_reserved_job(app.stores.store.snapshot_read().expect("surface store read"), data, work);
     let mut checkpoints = 0;
     let mut last_progress = 0;
     loop {
@@ -1111,10 +1111,10 @@ async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
-    assert_eq!(app.store.envelope().id, real_id);
-    assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-    assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-    assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+    assert_eq!(app.stores.store.envelope().id, real_id);
+    assert_eq!(app.stores.config_store.envelope().id, format!("{real_id}-config"));
+    assert_eq!(app.stores.draft_store.envelope().id, format!("{real_id}-draft"));
+    assert_eq!(app.stores.interaction_store.envelope().id, format!("{real_id}-interaction"));
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
@@ -1127,10 +1127,10 @@ async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
-    assert_eq!(app.store.envelope().id, real_id);
-    assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-    assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-    assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+    assert_eq!(app.stores.store.envelope().id, real_id);
+    assert_eq!(app.stores.config_store.envelope().id, format!("{real_id}-config"));
+    assert_eq!(app.stores.draft_store.envelope().id, format!("{real_id}-draft"));
+    assert_eq!(app.stores.interaction_store.envelope().id, format!("{real_id}-interaction"));
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
@@ -1217,8 +1217,8 @@ async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once()
         let consumer = completion.clone();
         let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs {
             command: SurfaceEditorCommand::Increment,
-            snapshot_read:app.store.snapshot_read().expect("Store issues the actual command donor"),
-            snapshot:app.store.snapshot_owner(), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
+            snapshot_read:app.stores.store.snapshot_read().expect("Store issues the actual command donor"),
+            snapshot:app.stores.store.snapshot_owner(), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
             interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
             operation: crate::app_views::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id:cx.operation().0,generation:cx.generation().0,canonical_base_revision:[0;32],retained:SURFACE_ONE_UNIT_POLICY, authoring_seed: "unit-authority".into() }, completion,
         }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work));
@@ -1305,16 +1305,16 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 262_144, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
         for _ in 0..3 {
             let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-            let (generation, revision) = app.store.one_item_publication_identity();
+            let (generation, revision) = app.stores.store.one_item_publication_identity();
             let mut original = Some(vec![SurfaceMutation::from(SetSurfaceCount { value: 1 })]);
             let pointer = original.as_ref().unwrap().as_ptr();
             let birth = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::owned_mutation_batch_birth_bytes().unwrap();
             let (mutations, _) = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::admit_owned_mutation_batch(&mut original, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: birth, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap().unwrap();
             let request = store::MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(7101), expected_generation: generation, expected_revision: revision, actor: protocol::LOCAL_ACTOR_ID.into(), group_id: Some("private-neutral-three-lane".into()), transaction: None, mutations };
             let mut lane = PrivateOwnedPublicationLane::new(request);
-            let admitted = lane.next_capacity_byte_demand(&app.store).unwrap();
+            let admitted = lane.next_capacity_byte_demand(&app.stores.store).unwrap();
             for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
-                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
+                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.stores.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
                 assert_eq!(step, store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(events.requested_bytes, 0);
                 assert_eq!(events.released_bytes, 0);
@@ -1346,7 +1346,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
-            assert_eq!(apps.iter().map(|app| app.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
+            assert_eq!(apps.iter().map(|app| app.stores.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
             turns += 1;
             assert!(turns < 4096);
             if lanes[index].staged() { index += 1; }
@@ -1415,25 +1415,25 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
         let dialect = ArtifactDialect { artifact_kind: "neutral.parent".into(), standard: "1".into(), subset: "*".into() };
         let private_genesis_actor = semio_framework_value::SharedUtf8::from("actor:private-genesis");
         for _ in 0..stop {
-            let capacity = group.next_input_capacity_byte_demand(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor).unwrap();
+            let capacity = group.next_input_capacity_byte_demand(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor).unwrap();
             assert!(capacity <= grant.maximum_capacity_bytes);
             for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), capacity.checked_sub(1).map(|maximum_capacity_bytes| RetainedCloneGrant { maximum_capacity_bytes, ..grant })].into_iter().flatten() {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         }
         let mut original_group_caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7391),semio_framework_job::Generation(3),grant,||Some(1),1_000_000,1);
-        let mut graph = app.composition.graph_mut().await;
+        let mut graph = app.child_composition.composition.graph_mut().await;
         for _ in 0..100_000 {
             if group.terminal_is_empty() { break; }
             let demand = group.retirement_demands(grant.maximum_copy_bytes).unwrap();
             assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
             let exact=grant;
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut app.store,&mut app.children,&mut graph,&app.child_content_root,incoming,loan)?;Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
             assert!(step.progress().unwrap().fits(exact));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().unwrap().retained_capacity_bytes, step.progress().unwrap().released_bytes));
         }

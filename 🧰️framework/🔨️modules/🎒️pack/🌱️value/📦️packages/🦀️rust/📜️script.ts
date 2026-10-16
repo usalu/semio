@@ -33,7 +33,9 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const {rest} = resolveTestLevel(segments);
     const manifestPath=resolve(this.root,"../../../📦️packages/🦀️rust/Cargo.toml");
-    await runCargoTestsV1({manifestPath,packages:["semio-framework-pack"],cwd:resolve(this.root,"../../../📦️packages/🦀️rust"),extraArgs:["--lib","record::",...rest]},readCargoTestPolicyV1(process.env),this.repoRoot, this.invocation);
+    const policy=readCargoTestPolicyV1(process.env);
+    await runCargoTestsV1({manifestPath,packages:["semio-framework-pack-record-schema","semio-framework-pack-record-retained","semio-framework-pack-record-encode","semio-framework-pack-record-preflight","semio-framework-pack-record"],cwd:resolve(this.root,"../../../📦️packages/🦀️rust"),extraArgs:["--lib",...rest]},policy,this.repoRoot, this.invocation);
+    await runCargoTestsV1({manifestPath,packages:["semio-framework-pack"],cwd:resolve(this.root,"../../../📦️packages/🦀️rust"),extraArgs:["--test","pack_record_laws","--test","pack_record_schema_laws",...rest]},policy,this.repoRoot, this.invocation);
   }
 }
 

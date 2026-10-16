@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "type-eof",
+      "language": "ts",
+      "source": "export type End =",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "generic-eof",
+      "language": "ts",
+      "source": "export type End<T",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "interface-eof",
+      "language": "ts",
+      "source": "export interface",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "property-eof",
+      "language": "ts",
+      "source": "export interface End { value:",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "enum-eof",
+      "language": "ts",
+      "source": "export enum",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "class-eof",
+      "language": "ts",
+      "source": "export class",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "parameter-eof",
+      "language": "ts",
+      "source": "export class End { method(",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "member-eof",
+      "language": "ts",
+      "source": "export const value = object.",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "string-eof",
+      "language": "ts",
+      "source": "export const value = 'tail",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "regex-eof",
+      "language": "ts",
+      "source": "export const value = /unterminated",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "template-eof",
+      "language": "ts",
+      "source": "export const value = `tail${",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "unicode-escape-eof",
+      "language": "ts",
+      "source": "export const value = \"\\u{",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "jsx-eof",
+      "language": "tsx",
+      "source": "export const value = <Item",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "namespace-eof",
+      "language": "ts",
+      "source": "export namespace",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "alias-eof",
+      "language": "ts",
+      "source": "import { Name as",
+      "completeness": "incomplete"
+    },
+    {
+      "id": "conditional-eof",
+      "language": "ts",
+      "source": "export type Name = Left extends Right ?",
+      "completeness": "incomplete"
+    }
+  ]
+}

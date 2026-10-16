@@ -141,8 +141,8 @@ fn document_operator_records(dag: &semio_framework_os_infinite_directed_presenta
 pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
     let (nodes, edges, operators) = with_host(host_snapshot, |host| {
-        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
-        let operators = document_operator_records(&host.dag.host_snapshot, &nodes);
+        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
+        let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
         (nodes, edges, operators)
     });
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };

@@ -1166,7 +1166,7 @@ pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, Wind
     }
 }
 
-pub(crate) fn dock_cap_depth(theme: &Theme) -> f32 {
+pub fn dock_cap_depth(theme: &Theme) -> f32 {
     theme.control_height + theme.padding_standard * 2.0
 }
 
@@ -1199,7 +1199,7 @@ fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: 
 /// 📑️ React caps a mode-dock tab at `max-w-[12rem]` and lets its label `truncate` inside that cap
 /// (`🔨️modules/🎛️chrome-control-presentation/🟦️.ts:35`, `modeDockTabClassName`) — 12 × the 16 px root
 /// font size. Without it a long window title widened the tab bar without limit.
-pub(crate) const MODE_DOCK_TAB_MAX_WIDTH_PX: f32 = 192.0;
+pub const MODE_DOCK_TAB_MAX_WIDTH_PX: f32 = 192.0;
 
 /// 📱️ The shell's `mobile` breakpoint — `UI_MOBILE_MAX_WIDTH_PX`
 /// (`🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts`), read in LOGICAL (CSS) pixels. That module is the ONE
@@ -1246,7 +1246,7 @@ fn dock_tab_chip(atlas: &mut FontAtlas, theme: &Theme, label: &str, action_count
 
 /// ✂️ The longest leading run of `label` that still fits `max_w` once an ellipsis is appended — what
 /// `text-overflow: ellipsis` does for React's truncated tab labels. Never splits a `char`.
-pub(crate) fn truncate_label_to_width(atlas: &mut FontAtlas, label: &str, size: f32, max_w: f32) -> String {
+pub fn truncate_label_to_width(atlas: &mut FontAtlas, label: &str, size: f32, max_w: f32) -> String {
     const ELLIPSIS: &str = "…";
     if atlas.measure_text(label, size).0 <= max_w {
         return label.to_string();
@@ -1281,7 +1281,7 @@ fn dock_tab_action_width(theme: &Theme) -> f32 {
 /// 🩸️ The grip was missing entirely and the shell started a tab drag from ANYWHERE on the tab; React
 /// starts one only from this chip (`onPointerDown` on the `DragHandle`) and keeps the label button a
 /// pure select target.
-pub(crate) fn dock_tab_actions(show_maximize: bool, maximized: bool) -> Vec<(&'static str, &'static str)> {
+pub fn dock_tab_actions(show_maximize: bool, maximized: bool) -> Vec<(&'static str, &'static str)> {
     let mut actions = Vec::with_capacity(3);
     if show_maximize {
         actions.push(("focus", if maximized { "minimize-2" } else { "maximize-2" }));
@@ -1679,7 +1679,7 @@ fn register_join_corner_hits(ctx: &mut DockRenderContext<'_>, path: &[usize], sp
 }
 
 /// 📑️ One tab's width with no action chips — its icon slot, gap, label and both side paddings.
-pub(crate) fn dock_tab_content_width(atlas: &mut FontAtlas, theme: &Theme, label: &str) -> f32 {
+pub fn dock_tab_content_width(atlas: &mut FontAtlas, theme: &Theme, label: &str) -> f32 {
     dock_tab_chrome_width(theme, 0) + atlas.measure_text(label, theme.font_size_small).0
 }
 
@@ -2131,17 +2131,13 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     let viewport_height = ctx.draw.screen_height();
-    let mut widget_ctx = crate::interpreter::framework_widget_context(ctx.draw, None, ctx.atlas, Some(ctx.icons), ctx.input, ctx.theme, &mut scroll, &mut collapsed, &mut selects, None, viewport_height);
+    let mut widget_ctx = semio_framework_os_renderer_wgpu_contracts::framework_widget_context(ctx.draw, None, ctx.atlas, Some(ctx.icons), ctx.input, ctx.theme, &mut scroll, &mut collapsed, &mut selects, None, viewport_height);
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }
 
 //#endregion DockFreeFunctions
 
 //#region DockTests
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
-mod tests;
-
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🪟️app-mode-layouts/🦀️.rs"]
 mod app_mode_layout_tests;

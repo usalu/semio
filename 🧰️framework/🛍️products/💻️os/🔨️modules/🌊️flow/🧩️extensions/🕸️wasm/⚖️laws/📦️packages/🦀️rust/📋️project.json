@@ -1,0 +1,8 @@
+{
+  "name": "semio-framework-os-flow-extensions-laws",
+  "projectType": "library",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

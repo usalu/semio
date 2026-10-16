@@ -14,10 +14,10 @@ use semio_framework_ui_contract::BuiltNode;
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_framework_ui_contract::*;
 use semio_framework_ui_locale::LocalizedLabel;
-use crate::window_kits::WindowKit;
-use crate::window_surface::UiAssemblyResult;
-use crate::window_surface::scene_surface;
-use crate::window_surface::window_kind_definition;
+use crate::WindowKit;
+use semio_framework_plugin_interaction::UiAssemblyResult;
+use semio_framework_plugin_window_transient::scene_surface;
+use semio_framework_plugin_window_transient::window_kind_definition;
 
 
 
@@ -46,8 +46,8 @@ impl WindowKit for MeshWindowKit {
     }
 
     fn render(view: &MeshView) -> UiAssemblyResult<BuiltNode> {
-        let sun_config = crate::world3d_host::WorldSunConfig::default();
-        let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
+        let sun_config = crate::world3d_sun::WorldSunConfig::default();
+        let scene = crate::world3d_sun::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
         scene_surface(Self::KIND_ID, SurfaceKind::World3d, &scene)
     }
 }

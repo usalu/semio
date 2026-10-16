@@ -18,8 +18,8 @@ export function releaseRequestUrl(request: string, origins: Readonly<Record<stri
 }
 
 /** 📦 Serves the four emitted deployment pages, preserving file responses, cache and CORS metadata. */
-export function servePublishedPlay(pages: string): { readonly baseURL: string; readonly origins: Readonly<Record<string, string>>; stop(): Promise<void> } {
-  const names = ["play", "map", "media", "modules"];
+export function servePublishedPlay(pages: string, names: readonly string[]): { readonly baseURL: string; readonly origins: Readonly<Record<string, string>>; stop(): Promise<void> } {
+  if(!names.includes("play")||new Set(names).size!==names.length||names.some(name=>!["play","map","media","modules"].includes(name)))throw Error("Distinct committed Play families required");
   for (const name of names) {
     const root = join(pages, name);
     if (!existsSync(join(root, "CNAME")) || (name === "play" && !existsSync(join(root, "index.html")))) throw new Error(`Missing published Play page ${root}; run the fresh build first`);
@@ -47,6 +47,6 @@ export function servePublishedPlay(pages: string): { readonly baseURL: string; r
       servers.push(server);
       origins[`https://${playPageHost(name, "play.semio-tech.com")}`] = server.url.origin;
     }
-    return { baseURL: servers[0]!.url.href, origins, async stop() { await Promise.all(servers.map(server => server.stop(true))); } };
+    return { baseURL: servers[0]!.url.href, origins, async stop() { const settled=await Promise.allSettled(servers.map(server=>server.stop(true)));const failures=settled.flatMap(row=>row.status==="rejected"?[row.reason]:[]);if(failures.length)throw new AggregateError(failures,"Play listeners failed to close"); } };
   } catch (error) { for (const server of servers) server.stop(true); throw error; }
 }

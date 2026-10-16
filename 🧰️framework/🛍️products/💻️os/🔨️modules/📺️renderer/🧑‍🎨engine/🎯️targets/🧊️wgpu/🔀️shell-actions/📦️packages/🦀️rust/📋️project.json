@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-shell-actions-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

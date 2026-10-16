@@ -47,13 +47,13 @@ function sourceAdmissionLstat(repoRoot: string, path: string): Stats | null {
   const segments = path.split("/");
   let absolute = repoRoot;
   for (let index = 0; index + 1 < segments.length; index++) {
-    absolute = join(absolute, segments[index]);
+    const segment=segments[index];if(segment===undefined)throw new Error("Required source ancestry segment is missing");absolute = join(absolute, segment);
     const stat = lstatOrNull(absolute);
     if (!stat) return null;
     if (stat.isSymbolicLink() || !stat.isDirectory()) throw new UnsafeDirectoryAncestorError(`Source admission candidate has unsafe ancestry: ${path}`);
     ancestors.push({ path: absolute, stat });
   }
-  const observed = lstatOrNull(join(absolute, segments[segments.length - 1]));
+  const leaf=segments.at(-1);if(leaf===undefined)throw new Error("Required source leaf is missing");const observed = lstatOrNull(join(absolute, leaf));
   verifyNoFollowDirectoryChain(ancestors);
   return observed;
 }
@@ -67,7 +67,7 @@ function sourceAdmissionAncestryObserver(repoRoot: string): { readonly lstat: (r
       const segments = path.split("/");
       let absolute = repoRoot;
       for (let index = 0; index + 1 < segments.length; index++) {
-        absolute = join(absolute, segments[index]);
+        const segment=segments[index];if(segment===undefined)throw new Error("Required source ancestry segment is missing");absolute = join(absolute, segment);
         let stat = directories.get(absolute);
         if (stat === undefined) {
           const observed = lstatOrNull(absolute);
@@ -78,7 +78,7 @@ function sourceAdmissionAncestryObserver(repoRoot: string): { readonly lstat: (r
         if (stat === null) return null;
         if (stat === "unsafe") throw new UnsafeDirectoryAncestorError(`Source admission candidate has unsafe ancestry: ${path}`);
       }
-      return lstatOrNull(join(absolute, segments[segments.length - 1]));
+      const leaf=segments.at(-1);if(leaf===undefined)throw new Error("Required source leaf is missing");return lstatOrNull(join(absolute, leaf));
     },
     verify: (): void => verifyNoFollowDirectoryChain(ancestors),
   };
@@ -207,7 +207,7 @@ export function sourceAdmissionGitRows(repoRoot: string, pathspec: TaxonomyScope
     const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
     const path = row.slice(tab + 1);
     if (tab < 1 || !match || !sourceAdmissionSafePath(path)) throw new Error("Git stage output has an invalid header or source path");
-    return { path, entry: { mode: match[1], objectId: match[2], stage: Number(match[3]) } };
+    const mode=match[1],objectId=match[2],stage=match[3];if(mode===undefined||objectId===undefined||stage===undefined)throw new Error("Exact Git stage capture required");return { path, entry: { mode, objectId, stage: Number(stage) } };
   });
   if (receipt && sourceAdmissionIndexObservation(repoRoot) === receipt) {
     if (sourceAdmissionIndexObservations.size >= 64) sourceAdmissionIndexObservations.delete(sourceAdmissionIndexObservations.keys().next().value!);

@@ -19,7 +19,7 @@ use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable as Gi
 /// copy-pasted shared types" rule) — this migration is the one legitimate cross-standard bridge
 /// point, converting field-for-field (identical shape: `sorted: bool`, `colors: Vec<GifRgb>`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
+pub fn migrate_color_table(table: &Gif87aColorTable) -> Gif89aColorTable {
     Gif89aColorTable { sorted: table.sorted, colors: table.colors.iter().map(|c| Gif89aRgb { r: c.r, g: c.g, b: c.b }).collect() }
 }
 //#endregion ColorTableConv
@@ -98,7 +98,5 @@ pub fn register() {
 //#endregion Registration
 
 //#region Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion Tests

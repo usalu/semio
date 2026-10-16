@@ -117,24 +117,24 @@ pub struct ArtifactCasReservation {
     pub generation: u64,
     pub write_epoch: u64,
     pub expires_at_ms: u64,
-    coordinator_id: [u8; 32],
-    physical_epoch: u64,
+    pub coordinator_id: [u8; 32],
+    pub physical_epoch: u64,
 }
 
 impl ArtifactCasReservation {
-    pub(crate) const fn unfenced(plan: ArtifactCasOwnershipPlanV1, generation: u64, write_epoch: u64, expires_at_ms: u64) -> Self {
+    pub const fn unfenced(plan: ArtifactCasOwnershipPlanV1, generation: u64, write_epoch: u64, expires_at_ms: u64) -> Self {
         Self { plan, generation, write_epoch, expires_at_ms, coordinator_id: [0; 32], physical_epoch: 0 }
     }
 
-    pub(crate) const fn fenced(plan: ArtifactCasOwnershipPlanV1, generation: u64, write_epoch: u64, expires_at_ms: u64, coordinator_id: [u8; 32], physical_epoch: u64) -> Self {
+    pub const fn fenced(plan: ArtifactCasOwnershipPlanV1, generation: u64, write_epoch: u64, expires_at_ms: u64, coordinator_id: [u8; 32], physical_epoch: u64) -> Self {
         Self { plan, generation, write_epoch, expires_at_ms, coordinator_id, physical_epoch }
     }
 
-    pub(crate) const fn coordinator_id(&self) -> &[u8; 32] {
+    pub const fn coordinator_id(&self) -> &[u8; 32] {
         &self.coordinator_id
     }
 
-    pub(crate) const fn physical_epoch(&self) -> u64 {
+    pub const fn physical_epoch(&self) -> u64 {
         self.physical_epoch
     }
 }
@@ -147,15 +147,15 @@ impl std::fmt::Debug for ArtifactCasReservation {
 
 /// 🛡️ Opaque proof binding one directory reachability recheck to a CAS physical epoch.
 pub struct ArtifactCasDeleteFence {
-    object: ArtifactCasObjectKey,
-    ledger_generation: u64,
-    coordinator_id: [u8; 32],
-    physical_epoch: u64,
-    lease_token: [u8; 32],
+    pub object: ArtifactCasObjectKey,
+    pub ledger_generation: u64,
+    pub coordinator_id: [u8; 32],
+    pub physical_epoch: u64,
+    pub lease_token: [u8; 32],
 }
 
 impl ArtifactCasDeleteFence {
-    pub(crate) fn new(object: ArtifactCasObjectKey, ledger_generation: u64, coordinator_id: [u8; 32], physical_epoch: u64, lease_token: [u8; 32]) -> Self {
+    pub fn new(object: ArtifactCasObjectKey, ledger_generation: u64, coordinator_id: [u8; 32], physical_epoch: u64, lease_token: [u8; 32]) -> Self {
         Self { object, ledger_generation, coordinator_id, physical_epoch, lease_token }
     }
 
@@ -163,19 +163,19 @@ impl ArtifactCasDeleteFence {
         self.ledger_generation
     }
 
-    pub(crate) const fn object(&self) -> &ArtifactCasObjectKey {
+    pub const fn object(&self) -> &ArtifactCasObjectKey {
         &self.object
     }
 
-    pub(crate) const fn coordinator_id(&self) -> &[u8; 32] {
+    pub const fn coordinator_id(&self) -> &[u8; 32] {
         &self.coordinator_id
     }
 
-    pub(crate) const fn physical_epoch(&self) -> u64 {
+    pub const fn physical_epoch(&self) -> u64 {
         self.physical_epoch
     }
 
-    pub(crate) const fn lease_token(&self) -> &[u8; 32] {
+    pub const fn lease_token(&self) -> &[u8; 32] {
         &self.lease_token
     }
 
@@ -584,7 +584,7 @@ fn validate_object(key: &ArtifactCasObjectKey, bytes: &[u8]) -> Result<(), Autho
 /// 🧠 Collision-checked dependency-free memory CAS.
 #[derive(Default)]
 pub struct MemoryArtifactChunkCasStorage {
-    state: Mutex<MemoryArtifactCasState>,
+    pub state: Mutex<MemoryArtifactCasState>,
 }
 
 #[derive(Default)]
@@ -720,7 +720,6 @@ fn open_artifact_cas_leaf(path: &Path, write: bool, create: bool) -> std::io::Re
         Ok(file)
     }
 }
-
 
 impl FsArtifactChunkCasStorage {
     /// 🏗️ Creates and validates one non-symlink dedicated storage root.
@@ -1560,7 +1559,7 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
 
 /// 🫙️ Manifest-based immutable blob adapter used by both publication and rebootstrap.
 pub struct ArtifactChunkBlobStore<S> {
-    storage: S,
+    pub storage: S,
 }
 
 impl<S> ArtifactChunkBlobStore<S> {

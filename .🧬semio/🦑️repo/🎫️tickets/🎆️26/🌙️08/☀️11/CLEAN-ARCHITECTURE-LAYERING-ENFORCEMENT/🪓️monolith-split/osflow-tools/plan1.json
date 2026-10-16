@@ -1,0 +1,14 @@
+{
+ "geometry": ["🌐️geometry/🦀️.rs"],
+ "mesh": ["🎒️mesh/🦀️.rs"],
+ "drawing": ["🖍️drawing/🦀️.rs"],
+ "operators": ["📔️registry/🦀️.rs","🗂️catalogue/🦀️.rs","🌉️bridge/🦀️.rs","🧩️extensions/🧬️schema/🦀️.rs"],
+ "extensions": ["🧩️extensions/🕸️wasm/🦀️.rs"],
+ "vcs": ["🌿️vcs/🦀️.rs","📝️forms/🧬️schema/🦀️.rs"],
+ "host-core": ["🖥️host/⚠️errors/🦀️.rs","🖥️host/🏠️flow-host/🦀️.rs","🖥️host/✏️host-authoring/🦀️.rs","🖥️host/🌳️host-evaluation-history/🦀️.rs","🖥️host/🏁️host-close/🦀️.rs","🖥️host/🛍️host-catalogue/🦀️.rs","🖥️host/🔌️ports/🦀️.rs","🖥️host/📐️widget-size/🦀️.rs","🖥️host/📤️publication/🖼️display/🦀️.rs","🖥️host/🧹️retirement/🦀️.rs","🖥️host/📥️evaluation-source/🦀️.rs"],
+ "host-session": ["🖥️host/🧾️eval-session-state/🦀️.rs","🖥️host/⏱️eval-session/🦀️.rs","🖥️host/🔭️preview-status/🦀️.rs","🖥️host/🚦️eval-status/🦀️.rs","🖥️host/🌊️node-graph-extras/🦀️.rs","🖥️host/📤️publication/🎟️session/🦀️.rs","🖥️host/📤️publication/📡️invocation/🦀️.rs","🖥️host/📥️preview/🦀️.rs","🖥️host/📥️evaluation/🦀️.rs"],
+ "wasm-domain": ["🕸️wasm/🧩️domain-adapter/🦀️.rs","🕸️wasm/🌿️vcs-feature/🦀️.rs","🕸️wasm/🛠️adapter-ops/🦀️.rs","🕸️wasm/🔤️argument-helpers/🦀️.rs","🕸️wasm/🖼️surface-presentation/🦀️.rs","🕸️wasm/📡️protocol/🦀️.rs"],
+ "wasm-actions-a": ["🕸️wasm/🎬️actions-a/🦀️.rs","🕸️wasm/🧵️dag-input/🦀️.rs"],
+ "wasm-actions-b": ["🕸️wasm/🎞️actions-b/🦀️.rs"],
+ "wasm": ["🕸️wasm/🌉️domain-impl/🦀️.rs","🕸️wasm/🧭️dispatch/🦀️.rs","🕸️wasm/🔗️linear-memory/🦀️.rs","🕸️wasm/📡️protocol/🌉️bridge/🦀️.rs","🕸️wasm/📡️protocol/🪢️domain/🦀️.rs"]
+}

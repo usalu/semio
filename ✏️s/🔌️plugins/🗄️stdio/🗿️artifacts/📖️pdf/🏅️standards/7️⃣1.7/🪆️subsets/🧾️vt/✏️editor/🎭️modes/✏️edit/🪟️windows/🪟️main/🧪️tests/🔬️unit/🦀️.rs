@@ -21,6 +21,6 @@ fn render_paints_the_page_text_on_the_canvas() {
     let node = render(&document).expect("page canvas");
     let surface = first_surface(&node).expect("canvas surface");
     let semio_framework_ui_contract::Component::Surface(props) = &surface.component else { unreachable!() };
-    let scene: semio_framework_plugin::Canvas2dScene = semio_framework_plugin::decode_surface_doc(props).expect("canvas scene");
+    let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("canvas scene");
     assert!(scene.layers_json.contains("Semio"), "{}", scene.layers_json);
 }

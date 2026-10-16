@@ -416,7 +416,7 @@ struct StoredNode {
     kind: DrawingKind,
     node: DrawingNode,
     transform: Affine2D,
-    fill: Option<FillStyle>,
+    pub fill: Option<FillStyle>,
     stroke: Option<StrokeStyle>,
     #[serde(default, with = "optional_path_segments")]
     clip: Option<Vec<semio_framework_2d::PathSegment>>,
@@ -438,7 +438,7 @@ impl StoredNode {
 /// not a persisted artifact store.
 pub struct DrawingStore {
     cache: semio_framework_2d::compute::EngineCache,
-    live: HashSet<String>,
+    pub live: HashSet<String>,
 }
 
 impl Default for DrawingStore {
@@ -491,7 +491,7 @@ impl DrawingStore {
         self.derive_node(&entry)
     }
 
-    fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, semio_framework_2d::DrawingError> {
+    pub fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, semio_framework_2d::DrawingError> {
         if !self.live.contains(handle.as_str()) {
             return Err(semio_framework_2d::DrawingError::MissingHandle(handle.as_str().to_string()));
         }

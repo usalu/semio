@@ -7,15 +7,21 @@
 //! test exists to pin down, not a nicety. Zero dependency on the kernel/plugin/channel/actor crates,
 //! matching this crate's own root doc.
 
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::schema::InvocationReport;
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
-use serde::{Deserialize, Serialize};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use serde::Deserialize;
+use serde::Serialize;
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use crate::errors::{GatewayError, GatewayErrorCode};
+use crate::reports::InvocationReport;
 
 //#region 🔖️HandleKind
+
 /// 🏷️ The seven handle kinds this gateway mints — prefix + default TTL are the frozen source of
 /// truth (`📌️sol-P1b-packet.md` §2.2's TTL table); `Session` alone is sliding (refreshed on every
 /// successful [`HandleTable::resolve`]) rather than fixed-TTL.
@@ -70,9 +76,11 @@ impl HandleKind {
         }
     }
 }
+
 //#endregion 🔖️HandleKind
 
 //#region 🔖️SessionHandle
+
 /// 🆔️ The owning session's `sess_`-prefixed id — a newtype (rather than a bare `String`) so
 /// [`HandleTable::resolve`]'s owner comparison can never be accidentally satisfied by comparing the
 /// wrong kind of string.
@@ -91,9 +99,11 @@ impl std::fmt::Display for SessionHandle {
         write!(formatter, "{}", self.0)
     }
 }
+
 //#endregion 🔖️SessionHandle
 
 //#region 🔖️Attachment
+
 /// 🔗️ What a handle is bound to — distinct from `AgentSession.attachment` (`📋️master.md` §2.4's
 /// headless/shell workspace binding, a later packet's concern). `Other` is the escape hatch a later
 /// packet's own payload-specific binding uses without growing this enum.
@@ -106,9 +116,11 @@ pub enum Attachment {
     Artifact { artifact_id: String },
     Other { label: String },
 }
+
 //#endregion 🔖️Attachment
 
 //#region 🔖️HandleRecord
+
 /// 🧾️ `HandleRecord{kind, owner, bound_to, expires_ms, payload}` — the one row shape every handle
 /// kind shares; `payload` is the kind-specific structured body (a later packet's concern what goes in
 /// it, e.g. a `PreparedActionReport` for `Prepared`).
@@ -132,9 +144,11 @@ pub struct HandleRecord {
     #[value(serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
     pub payload: serde_json::Value,
 }
+
 //#endregion 🔖️HandleRecord
 
 //#region 🔖️IdGeneration
+
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// 🎲️ ULID-ish (time + monotonic counter + process-local entropy, blake3-mixed) id generation — no
@@ -147,14 +161,16 @@ pub fn mint_id(kind: HandleKind, now_ms: u64) -> String {
     let digest = framework_hash::hash_bytes(entropy.as_bytes());
     format!("{}{}", kind.prefix(), &digest[..26])
 }
+
 //#endregion 🔖️IdGeneration
 
 //#region 🔖️HandleTable
+
 /// 🗃️ In-memory handle table — mint/resolve/revoke/GC. A later packet (P6/P7) wires a real
 /// `GatewayBackend` implementation against one shared instance; `NullBackend` has none yet.
 #[derive(Default)]
 pub struct HandleTable {
-    records: Mutex<BTreeMap<String, HandleRecord>>,
+    pub(crate) records: Mutex<BTreeMap<String, HandleRecord>>,
 }
 
 impl HandleTable {
@@ -231,9 +247,11 @@ impl HandleTable {
         self.len() == 0
     }
 }
+
 //#endregion 🔖️HandleTable
 
 //#region 🔖️IdempotencyStore
+
 /// ⏱️ 24h TTL (`📋️master.md` §3.3 "Idempotency") — `📌️sol-P1b-packet.md` §2.2's frozen window.
 pub const IDEMPOTENCY_TTL_MS: u64 = 24 * 60 * 60_000;
 
@@ -241,7 +259,7 @@ pub const IDEMPOTENCY_TTL_MS: u64 = 24 * 60 * 60_000;
 /// the seam `action.invoke{idempotencyKey}` (a later packet) reads through.
 #[derive(Default)]
 pub struct IdempotencyStore {
-    entries: Mutex<BTreeMap<(String, String), (InvocationReport, u64)>>,
+    pub entries: Mutex<BTreeMap<(String, String), (InvocationReport, u64)>>,
 }
 
 impl IdempotencyStore {
@@ -274,10 +292,8 @@ impl IdempotencyStore {
         self.entries.lock().expect("idempotency store lock poisoned").len()
     }
 }
+
 //#endregion 🔖️IdempotencyStore
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 //! 🧪️ Exact-request export asset delivery and cancellation across slot reuse.
 use super::*;
 
-fn retire(token: WorldAssetRequestToken) {
+pub fn retire(token: WorldAssetRequestToken) {
     let mut authority = crate::renderer_asset_io().lock().unwrap();
     authority.cancel_request(token);
     for _ in 0..4096 {

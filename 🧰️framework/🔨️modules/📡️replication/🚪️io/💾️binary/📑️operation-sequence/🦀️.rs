@@ -1,5 +1,5 @@
 //! 📑️ Controlled count-and-length operation sequence framing over original octet slices.
-use crate::value::{NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
 fn word(value:usize,buffer:&mut[u8;10])->usize{let mut value=value as u64;let mut length=0;loop{buffer[length]=(value&127)as u8;value>>=7;length+=1;if value==0{return length;}buffer[length-1]|=128;}}
 /// ✍️ Admits exact output before framing the original operation octets under caller cancellation.
 pub fn encode(operations:&[Vec<u8>],control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,ValueError>{control.scoped_stage(|control|{

@@ -9,7 +9,7 @@ mod tests {
     }
 
     async fn pages(bytes: &[u8]) -> DbIoPages {
-        crate::db_storage::db_io_copy_pages(bytes).unwrap().await.unwrap()
+        db_io_registry::db_io_copy_pages(bytes).unwrap().await.unwrap()
     }
 
     async fn assert_payload_roundtrip(storage: &SqliteStorage, bytes: Vec<u8>) {
@@ -50,7 +50,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn payload_roundtrip_obeys_neutral_page_boundaries_and_arbitrary_bytes() {
         let fixture: PageLifecycleFixture = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧬️page-lifecycle/🔣️.json")).unwrap();
-        let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = SqliteStorage::open_in_memory(db_io_driver::db_io_test_pool()).await.unwrap();
 
         assert_payload_roundtrip(&storage, Vec::new()).await;
         for length in fixture.lengths {
@@ -67,7 +67,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn typed_lane_is_lossless_at_page_boundary_and_zero() {
-        let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = SqliteStorage::open_in_memory(db_io_driver::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "typed-sqlite".into();
         let writer = storage.acquire_writer(&document).await.unwrap();
         storage.create_segment(&writer, 0).await.unwrap();
@@ -82,7 +82,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn wal_segment_state_observes_active_sealed_and_missing_rows() {
-        let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = SqliteStorage::open_in_memory(db_io_driver::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "typed-sqlite-state".into();
         let writer = storage.acquire_writer(&document).await.unwrap();
         storage.create_segment(&writer, 0).await.unwrap();
@@ -100,7 +100,7 @@ mod tests {
         let child_mode = std::env::var("SEMIO_SQLITE_WRITER_CHILD_MODE").ok();
         let child_path = std::env::var_os("SEMIO_SQLITE_WRITER_CHILD_PATH").map(std::path::PathBuf::from);
         if let (Some(mode), Some(path)) = (child_mode, child_path) {
-            let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &path).await.unwrap();
+            let storage = SqliteStorage::open(db_io_driver::db_io_test_pool(), &path).await.unwrap();
             let document: ArtifactId = "sqlite-writer-alias".into();
             let sentinel = std::env::var_os("SEMIO_SQLITE_WRITER_CHILD_SENTINEL").unwrap();
             match mode.as_str() {
@@ -128,8 +128,8 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         let database = root.join("writer.sqlite3");
         let alias = root.join(".").join("writer.sqlite3");
-        let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &database).await.unwrap();
-        let contender = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &alias).await.unwrap();
+        let storage = SqliteStorage::open(db_io_driver::db_io_test_pool(), &database).await.unwrap();
+        let contender = SqliteStorage::open(db_io_driver::db_io_test_pool(), &alias).await.unwrap();
         let document: ArtifactId = "sqlite-writer-alias".into();
         let writer = storage.acquire_writer(&document).await.unwrap();
         assert!(matches!(contender.acquire_writer(&document).await, Err(DbError::Conflict(_))));
@@ -178,7 +178,7 @@ mod tests {
         let root = base.join(format!("sqlite-readers-{}-{nonce}", std::process::id()));
         std::fs::create_dir_all(&root).unwrap();
         let database = root.join("readers.sqlite3");
-        let storage = SqliteStorage::open(crate::db_storage::db_io_test_pool(), &database).await.unwrap();
+        let storage = SqliteStorage::open(db_io_driver::db_io_test_pool(), &database).await.unwrap();
         let document: ArtifactId = "sqlite-readers".into();
         let writer = storage.acquire_writer(&document).await.unwrap();
         let blobs: Vec<Vec<u8>> = fixture.lengths.iter().map(|length| (0..*length).map(|index| (index % fixture.pattern_modulo + fixture.pattern_addend) as u8).collect()).collect();
@@ -218,7 +218,7 @@ mod tests {
                 .map(|(index, bytes, family)| {
                     let hash = &hashes[index];
                     scope.spawn(move || {
-                        crate::db_actor::block_on(async move {
+                        db_actor::block_on(async move {
                             let key = index as u64 + 1;
                             let read = match family {
                                 "wal" => storage_ref.read(document_ref, key, ByteRange { offset: 0, len: bytes.len() as u64 }).await,
@@ -262,7 +262,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn typed_list_and_catalog_cas_are_stable() {
-        let storage = SqliteStorage::open_in_memory(crate::db_storage::db_io_test_pool()).await.unwrap();
+        let storage = SqliteStorage::open_in_memory(db_io_driver::db_io_test_pool()).await.unwrap();
         let document: ArtifactId = "typed-list".into();
         storage.write_generation(&document, 2, pages(b"two").await).await.unwrap();
         storage.write_generation(&document, 1, pages(b"one").await).await.unwrap();

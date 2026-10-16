@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::v5::subsets::any::schema::snapshot::HtmlAttr, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot};
+use crate::standards::v5::subsets::any::schema::diff::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -1,5 +1,6 @@
 use super::*;
-use crate::value::{ordered::SharedOwner,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+use semio_framework_value::ordered::SharedOwner;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn cases()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap()}
@@ -13,7 +14,7 @@ fn close(mut cursor:LocalInteractionRootUpdate,bytes:usize)->usize{
     for _ in 0..500000{if cursor.terminal_is_empty(){return released;}let grant=grant(&cursor,bytes);let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());let progress=step.progress();assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);released+=account(step,grant,LocalInteractionWork::Retirement);}
     panic!("update owner failed to reach exact terminal")
 }
-fn retire(cursor:Result<crate::value::retirement::controlled::ControlledRetirement<LocalInteractionRoot>,(crate::value::ValueError,LocalInteractionRoot)>,bytes:usize)->usize{super::retained_root_tests::drain(cursor,bytes)}
+fn retire(cursor:Result<semio_framework_value::retirement::controlled::ControlledRetirement<LocalInteractionRoot>,(semio_framework_value::ValueError,LocalInteractionRoot)>,bytes:usize)->usize{super::retained_root_tests::drain(cursor,bytes)}
 
 #[test]
 fn local_interaction_retained_update_three_fields_are_atomic_and_exact() {
@@ -25,17 +26,17 @@ fn local_interaction_retained_update_three_fields_are_atomic_and_exact() {
             let patch = LocalInteractionRootPatch::from_cold(from_json(case["restore"]["domains"]["graph"].clone()));
             let pointer = patch.selection().map(SharedOwner::as_ptr);
             let mut update = root.begin_domain_patch(SharedOwner::from_cold("graph".into()), patch);
-            let admitted=grant(&update,bytes);assert_eq!(update.advance(RetainedCloneGrant {maximum_items:0,..admitted}).unwrap().progress(),crate::value::retained_clone::RetainedCloneProgress::default());
-            let(error,birth,free)=crate::test_allocation::observe_backing(||update.advance(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap_err());assert_eq!(error.kind,crate::value::ValueRefusalKind::DepthLimit);assert_eq!((birth,free),(0,0));
+            let admitted=grant(&update,bytes);assert_eq!(update.advance(RetainedCloneGrant {maximum_items:0,..admitted}).unwrap().progress(),semio_framework_value::retained_clone::RetainedCloneProgress::default());
+            let(error,birth,free)=crate::test_allocation::observe_backing(||update.advance(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap_err());assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::DepthLimit);assert_eq!((birth,free),(0,0));
             for _ in 0..10_000 {
                 if update.is_complete() { break; }
                 assert!(update.take().is_none());
                 advance(&mut update,bytes);
-                assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&root)), case["before"]);
+                assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&root)), case["before"]);
             }
             assert!(update.is_complete());
             let result = update.take().unwrap();
-            assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&result)), case["expected"]);
+            assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&result)), case["expected"]);
             if let Some(pointer) = pointer { assert_eq!(result.selection().get("graph").unwrap() as *const _, pointer); }
             close(update, bytes); retire(root.retire(), bytes); retire(result.retire(), bytes);
         }

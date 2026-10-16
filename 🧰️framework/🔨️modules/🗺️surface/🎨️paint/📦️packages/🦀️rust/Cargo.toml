@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-surface-paint"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Surface paint: raster layers, strokes, masks, compositing and the browser RasterSession bridge"
+
+[package.metadata.semio]
+role = "framework"
+id = "surface-paint"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+canvas = { path = "../../../../🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+semio-framework-async = { workspace = true }
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+
+[dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }

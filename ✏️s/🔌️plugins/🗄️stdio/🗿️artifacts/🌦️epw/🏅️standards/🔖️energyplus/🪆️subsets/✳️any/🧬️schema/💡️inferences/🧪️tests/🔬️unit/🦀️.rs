@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+use crate::standards::energyplus::subsets::any::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

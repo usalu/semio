@@ -144,14 +144,16 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_playbook_playbook_schema::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_playbook_playbook_viewer::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_playbook_playbook_snapshot::standards::v1::subsets::any::io::binary::inferences;
+}
 
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{PlaybookDiff, PlaybookMutation, PlaybookSnapshot};

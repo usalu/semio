@@ -298,7 +298,7 @@ impl AuthErrorV1 {
 /// the local-bootstrap pipe alone and `/readyz` keeps reporting `publicSessionIssuance: false`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CredentialSignInPolicyV1 {
-    enabled: bool,
+    pub enabled: bool,
     session_ttl_secs: i64,
     mint_iterations: u32,
 }
@@ -439,3 +439,7 @@ pub fn decide_credential_change(policy: CredentialSignInPolicyV1, request: &Veri
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️credential-source-order/🦀️.rs"]
+mod credential_source_order_oracle;

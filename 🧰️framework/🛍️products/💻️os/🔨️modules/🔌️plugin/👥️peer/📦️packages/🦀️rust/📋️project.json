@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-peer-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

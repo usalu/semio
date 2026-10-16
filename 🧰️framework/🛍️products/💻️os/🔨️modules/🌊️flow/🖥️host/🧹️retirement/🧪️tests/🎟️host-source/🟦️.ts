@@ -6,7 +6,7 @@ import stableStringify from "fast-json-stable-stringify";
 /** 🏠️ Original host ownership agrees with its original fields and independent JSONPatch and UTF8 oracles. */
 export function testHostSourceCustodyContract():void{
  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️host-source/🔣️.json",import.meta.url),"utf8"));
- const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");const definition=source.slice(source.indexOf("pub struct FlowHost {"),source.indexOf("impl Default for FlowHost"));
+ const source=readFileSync(new URL("../../../🏠️flow-host/🦀️.rs",import.meta.url),"utf8");const definition=source.slice(source.indexOf("pub struct FlowHost {"),source.indexOf("impl Default for FlowHost"));
  const sourceFields=Array.from(definition.matchAll(/^\s*(?:pub(?:\([^)]*\))?\s+)?([a-z_]+)\s*:/gm),(match)=>match[1]);assert.deepEqual(sourceFields,fixture.sourceFields);
  const retirement=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");assert.ok(retirement.includes("pending_evaluation:Option<FlowEvaluationWork>"));
  for(const field of ["pending_evaluation","evaluation_revision","evaluation_progress","pending_remaining"]){assert.ok(retirement.includes("   "+field+","));assert.ok(retirement.includes(field+":"+field));}

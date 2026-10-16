@@ -6,7 +6,7 @@ import {join} from "node:path";
 import {buildParserReceiptMatchesV1} from "../🟦️.ts";
 import {ensureBuildEnvironmentV1} from "../../📜️script.ts";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦️.ts";
-import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 const require=createRequire(import.meta.url),Ajv=require("ajv").default;
@@ -20,8 +20,8 @@ test("neutral bootstrap parser receipt requires exact binding and material",()=>
 });
 
 test("actual issued bootstrap parser readiness avoids repeated whole workspace synchronization",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"bootstrap-parser-ready",maximumElapsedMilliseconds:120000},createNativeBuildCallerCapabilitiesV1(process.cwd(),["show","projects"],"nx",process.env),Date.now()),async original=>{
- let installs=0,published=0;const installer=async(root:string,invocation:typeof original)=>{expect(root).toBe(process.cwd());expect(invocation).toBe(original);installs++;},publish=()=>{published++;};
- await ensureBuildEnvironmentV1(process.cwd(),original,installer,publish);const first=installs,started=performance.now();await ensureBuildEnvironmentV1(process.cwd(),original,installer,publish);
+ const phaseControl=createIssuedResourceControlV1(original,"bootstrap:parser-fixture",0);let installs=0,published=0;const installer=async(root:string,invocation:typeof original)=>{expect(root).toBe(process.cwd());expect(invocation).toBe(original);installs++;},publish=()=>{published++;};
+ await ensureBuildEnvironmentV1(process.cwd(),original,phaseControl,installer,publish);const first=installs,started=performance.now();await ensureBuildEnvironmentV1(process.cwd(),original,phaseControl,installer,publish);
  expect(installs).toBe(first);expect(published).toBe(2);
  const oracle=createRequire(join(process.cwd(),"package.json")),typescript=oracle("typescript"),toml=oracle("@iarna/toml");expect(typescript.preProcessFile('import "./actual-source";').importedFiles.map((row:any)=>row.fileName)).toEqual(["./actual-source"]);expect(toml.parse('owned = "parser"')).toEqual({owned:"parser"});
  console.log("[DEBUG] Actual issued parser admission "+JSON.stringify({milliseconds:performance.now()-started,installs,typescript:typescript.version,toml:JSON.parse(readFileSync(oracle.resolve("@iarna/toml/package.json"),"utf8")).version}));

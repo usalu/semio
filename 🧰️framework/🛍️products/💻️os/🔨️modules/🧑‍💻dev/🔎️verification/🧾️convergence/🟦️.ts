@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
+import { developmentRuntimeRoot, builtPluginModulesRootIn, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
@@ -20,9 +20,9 @@ export function stagedConvergence(repoRoot: string, variant: string): Readonly<{
   const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
   const registry = readGeneratedCatalogProjection().entries;
   const inventory = registryModuleDirectories(registry);
-  const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "prototype", "react"), "activation"));
+  const receipt = readActivationReceipt(join(developmentRuntimeRoot(repoRoot, variant, "prototype", "react"), "activation"));
   const activated = new Set(receipt.plugins.map((row) => row.pluginId));
-  const modules = pluginModulesRoot();
+  const modules = builtPluginModulesRootIn(repoRoot,"prototype");
   const rows = registry.map((entry) => {
     const deliverable = componentDeliverableV1(join(repoRoot, entry.cratePath), entry.packageName, SHIPPED_COMPONENT_PROFILE);
     const receipt = existsSync(deliverable.receipt) ? readComponentReceiptV1(deliverable.receipt) : undefined;

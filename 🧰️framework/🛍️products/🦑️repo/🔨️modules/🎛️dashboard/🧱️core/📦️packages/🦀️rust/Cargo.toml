@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-core"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard core: the invocation split into verb, segments and flags, the plugin and playground catalog, the dev environment of a playground session and the content hash every persistent name derives from"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-core"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+serde_json = { workspace = true }

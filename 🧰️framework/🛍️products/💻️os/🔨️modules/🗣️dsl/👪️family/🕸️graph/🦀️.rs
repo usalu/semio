@@ -157,7 +157,4 @@ async fn parse_node(tokens: &[semio_framework_dsl::SpannedToken], mut pos: usize
 //#endregion 🔖️Chain
 
 //#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🔖️Tests

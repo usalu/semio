@@ -68,8 +68,8 @@ class PagedHistoryStackScript extends BundleScript {
       const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
           "os_vcs::tests::paged_history_stack_traversal_follows_the_portable_deque_vectors",
           "os_vcs::tests::history_branch_provenance_follows_portable_required_wire_vectors",
-          "os_store::component::canonical_edit::tests::edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
-          "os_store::component::canonical_edit::tests::canonical_authority_final_unicode_strings_retire_under_single_byte_grants",
+          "os_store::component::canonical_edit_tests::edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
+          "os_store::component::canonical_edit_tests::canonical_authority_final_unicode_strings_retire_under_single_byte_grants",
         ] }]});
       for (const receipt of receipts) console.log("paged-history-stack-native-receipt: " + JSON.stringify(receipt));
     }
@@ -736,9 +736,9 @@ class WalWriterAuthorityCheckScript extends BundleScript {
  * `wal-writer-fence-live [sqlite|postgres|neo4j]…`: without a lane, `sqlite` plus every claimed lane whose environment
  * is present. */
 const WAL_WRITER_FENCE_LANES: Readonly<Record<string, Readonly<{ law: string; claimed?: string }>>> = {
-  sqlite: { law: "db_storage::writer::fence_conformance::sqlite_wal_writer_fence_holds_every_shared_law" },
-  postgres: { law: "db_storage::writer::fence_conformance::postgres_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_DATABASE_URL" },
-  neo4j: { law: "db_storage::writer::fence_conformance::neo4j_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_NEO4J_URI" },
+  sqlite: { law: "fence_conformance::sqlite_wal_writer_fence_holds_every_shared_law" },
+  postgres: { law: "fence_conformance::postgres_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_DATABASE_URL" },
+  neo4j: { law: "fence_conformance::neo4j_wal_writer_fence_holds_every_shared_law", claimed: "OS_HUB_NEO4J_URI" },
 };
 
 class WalWriterFenceLiveScript extends BundleScript {
@@ -750,7 +750,7 @@ class WalWriterFenceLiveScript extends BundleScript {
     if (unclaimed.length) throw new Error(`wal-writer-fence-live ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
     for (const lane of lanes) {
       console.log(`wal-writer-fence-live ${lane}: ${WAL_WRITER_FENCE_LANES[lane]!.law}`);
-      await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres,neo4j", "--lib", "--", "--exact", WAL_WRITER_FENCE_LANES[lane]!.law, "--include-ignored", "--test-threads=1"], this.root);
+      await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📦️packages/🦀️rust/Cargo.toml"), "--lib", "--", "--exact", WAL_WRITER_FENCE_LANES[lane]!.law, "--include-ignored", "--test-threads=1"], this.root);
     }
   }
 }
@@ -762,7 +762,7 @@ class PostgresRoundTripsLiveScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("postgres-round-trips-live takes no arguments");
     if (!process.env.OS_HUB_DATABASE_URL) throw new Error("postgres-round-trips-live needs the claimed shared server: run it under `os-hub-ts backend run postgres -- …`");
-    await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"), "--features", "sqlite,postgres", "--lib", "--", "db_storage_postgres::round_trips::", "--include-ignored"], this.root);
+    await runCargo(["test", "--manifest-path", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/📦️packages/🦀️rust/Cargo.toml"), "--lib", "--", "round_trips::", "--include-ignored"], this.root);
   }
 }
 
@@ -1788,7 +1788,7 @@ class CommandTransportSourceTestScript extends BundleScript {
 }
 /** 🪪️ Keeps all original CLI and SPR I/O laws beside actual retained caller-context laws. */
 class CommandTransportNativeTestScript extends BundleScript {
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_) | test(os_pack::cli::tests::) | test(os_spr::cli::tests::) | test(os_spr::io::native::tests::)","--no-fail-fast"]);}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-pack-tools"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-spr-cli"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-spr"], this.repoRoot, this.invocation, ["--lib","-E","test(io::native::tests::)","--no-fail-fast"]);}
 }
 
 class ListRecordNativeTestScript extends BundleScript {

@@ -1,9 +1,30 @@
+//! 🧱️ Ui_quick of the tools-gateway crate: Artifact, ui, context resource and prompt tools.
 
-use super::*;
-use crate::protocol::ToolRegistry;
+use std::sync::Arc;
+use std::sync::OnceLock;
+use std::time::Duration;
+use std::time::Instant;
+use crate::ui::{conversation_reply_handler, read_ui_resource, register_ui_tools, ui_resource_templates, ui_resources};
+use semio_framework_os_mcp_bridge::session::{AgentConversation, BridgeHandle};
+use semio_framework_os_mcp_bridge::shell_command_dispatch::{BridgeSlot, dispatch_shell_command_with_timeout};
+use semio_framework_os_mcp_bridge_codec::bridge::{AGENT_CONVERSATION_MAX_TEXT, GatewayToShell, SELF_PUBLISHING_CONVERSATION_TOOLS, ShellToGateway, truncate_conversation_text};
+use semio_framework_os_mcp_capabilities::capability_declarations::ui_capabilities;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityKind, ToolExposure};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_foundation::handles::HandleTable;
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
+use semio_framework_os_mcp_wire::job_registry::{JobRegistry, JobStatus, job_registry};
+use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot, RecordingSink, ResourceSubscriptions, notification_slot};
+use semio_framework_os_mcp_wire::protocol::{InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
 
-fn ui_principal(scopes: &[&str]) -> crate::policy::AgentPrincipal {
-    crate::policy::AgentPrincipal::from_scope_names("agent:test", "test", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
+
+fn ui_principal(scopes: &[&str]) -> AgentPrincipal {
+    AgentPrincipal::from_scope_names("agent:test", "test", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
 }
 
 #[test]
@@ -38,7 +59,7 @@ fn all_four_tools_register_under_valid_mcp_names_with_object_top_level_schemas()
     let names = ["ui_focus", "ui_reveal", "job_get", "job_cancel"];
     for name in names {
         let tool = tools.iter().find(|tool| tool.name == name).unwrap_or_else(|| panic!("missing tool {name}"));
-        assert!(crate::protocol::is_valid_tool_name(&tool.name));
+        assert!(is_valid_tool_name(&tool.name));
         assert_eq!(tool.input_schema["type"], "object", "{name} input_schema");
         let output_schema = tool.output_schema.as_ref().unwrap_or_else(|| panic!("{name} has no output_schema"));
         assert_eq!(output_schema["type"], "object", "{name} output_schema");
@@ -234,7 +255,7 @@ fn cancelling_a_running_job_only_sets_the_cooperative_flag_until_the_producer_ac
 /// guest blocked in a solve fires once per cancel, late binds fire immediately, terminal jobs never.
 #[test]
 fn a_bound_cancel_hook_obeys_the_language_agnostic_law() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../../🖥️ui/🧪️tests/🧫️fixtures/🛑️job-cancel-hook-law.json")).expect("law fixture is JSON");
     for case in fixture["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("name");
         let registry = JobRegistry::new();
@@ -304,6 +325,7 @@ fn read_ui_resource_for_a_known_job_id_reflects_the_shared_registry() {
 }
 
 //#region 💬️AgentConversation
+
 /// 💬️ The receiving half of the in-shell agent panel: a human turn recorded on a live `/bridge`
 /// connection is readable ONCE through `semio://ui/agent-messages`, then gone — MCP has no push, so
 /// the agent polls this uri and must never be handed the same turn twice.
@@ -353,7 +375,7 @@ async fn agent_conversation_publishes_the_real_tool_call_and_its_result() {
     let handle = Arc::new(BridgeHandle::new());
     assert!(slot.set(handle.clone()).is_ok());
     let (_connection, mut outbox) = handle.register();
-    let conversation = crate::bridge::AgentConversation::new(slot, "claude-code");
+    let conversation = AgentConversation::new(slot, "claude-code");
 
     let invocation = conversation.begin_tool_call("action_invoke", &serde_json::json!({ "capabilityId": "cad.viewport.translateSelection" }));
     conversation.finish_tool_call(&invocation, "action_invoke", true, "moved 1 object");
@@ -385,20 +407,20 @@ fn an_agent_cancel_frame_flips_the_tool_calls_own_job_and_settles_it_cancelled()
     let handle = Arc::new(BridgeHandle::new());
     assert!(slot.set(handle.clone()).is_ok());
     let (connection, _outbox) = handle.register();
-    let conversation = crate::bridge::AgentConversation::new(slot, "claude-code");
+    let conversation = AgentConversation::new(slot, "claude-code");
 
     let invocation = conversation.begin_tool_call("inference_run", &serde_json::json!({ "artifactKind": "cad" }));
-    let opened = crate::ui::job_registry().snapshot(&invocation).expect("a tool call is a real job keyed by its invocation id");
+    let opened = job_registry().snapshot(&invocation).expect("a tool call is a real job keyed by its invocation id");
     assert_eq!(opened.kind, "toolCall");
     assert!(!opened.cancel_requested, "nothing has asked it to stop yet");
-    assert!(!crate::ui::job_registry().is_cancel_requested(&invocation));
+    assert!(!job_registry().is_cancel_requested(&invocation));
 
-    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
-    assert!(crate::ui::job_registry().is_cancel_requested(&invocation), "the frame must reach the same flag `job_cancel` flips");
+    handle.record(connection, ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
+    assert!(job_registry().is_cancel_requested(&invocation), "the frame must reach the same flag `job_cancel` flips");
 
     conversation.finish_tool_call(&invocation, "inference_run", true, "done");
-    let settled = crate::ui::job_registry().snapshot(&invocation).expect("the job outlives the call");
-    assert_eq!(settled.status, crate::ui::JobStatus::Cancelled, "a cancelled call settles cancelled, not succeeded");
+    let settled = job_registry().snapshot(&invocation).expect("the job outlives the call");
+    assert_eq!(settled.status, JobStatus::Cancelled, "a cancelled call settles cancelled, not succeeded");
 }
 
 /// 🛑️ A cancel that arrives after its call already finished is the honest outcome of a late click,
@@ -409,18 +431,18 @@ fn a_late_agent_cancel_frame_is_absorbed_without_disturbing_the_settled_job() {
     let handle = Arc::new(BridgeHandle::new());
     assert!(slot.set(handle.clone()).is_ok());
     let (connection, _outbox) = handle.register();
-    let conversation = crate::bridge::AgentConversation::new(slot, "claude-code");
+    let conversation = AgentConversation::new(slot, "claude-code");
 
     let invocation = conversation.begin_tool_call("action_invoke", &serde_json::Value::Null);
     conversation.finish_tool_call(&invocation, "action_invoke", true, "moved 1 object");
-    assert_eq!(crate::ui::job_registry().snapshot(&invocation).expect("job").status, crate::ui::JobStatus::Succeeded);
+    assert_eq!(job_registry().snapshot(&invocation).expect("job").status, JobStatus::Succeeded);
 
-    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
-    let after = crate::ui::job_registry().snapshot(&invocation).expect("job");
-    assert_eq!(after.status, crate::ui::JobStatus::Succeeded, "a late cancel must not rewrite a settled outcome");
+    handle.record(connection, ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
+    let after = job_registry().snapshot(&invocation).expect("job");
+    assert_eq!(after.status, JobStatus::Succeeded, "a late cancel must not rewrite a settled outcome");
     assert!(!after.cancel_requested);
 
-    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: "inv_never_existed".into() });
+    handle.record(connection, ShellToGateway::AgentCancel { invocation_id: "inv_never_existed".into() });
 }
 
 /// ✂️ An agent calling a tool with an enormous argument blob must not be able to starve the bounded
@@ -428,25 +450,27 @@ fn a_late_agent_cancel_frame_is_absorbed_without_disturbing_the_settled_job() {
 #[test]
 fn conversation_text_is_truncated_on_a_char_boundary() {
     let short = "ä".repeat(4);
-    assert_eq!(crate::bridge::truncate_conversation_text(&short), short, "anything inside the cap is untouched");
-    let long = "ä".repeat(crate::bridge::AGENT_CONVERSATION_MAX_TEXT);
-    let truncated = crate::bridge::truncate_conversation_text(&long);
-    assert!(truncated.len() <= crate::bridge::AGENT_CONVERSATION_MAX_TEXT + '…'.len_utf8());
+    assert_eq!(truncate_conversation_text(&short), short, "anything inside the cap is untouched");
+    let long = "ä".repeat(AGENT_CONVERSATION_MAX_TEXT);
+    let truncated = truncate_conversation_text(&long);
+    assert!(truncated.len() <= AGENT_CONVERSATION_MAX_TEXT + '…'.len_utf8());
     assert!(truncated.ends_with('…'));
     assert!(std::str::from_utf8(truncated.as_bytes()).is_ok(), "a cut inside a multi-byte char would not be utf-8");
 }
+
 //#endregion 💬️AgentConversation
 
 //#region 💬️ConversationReply
+
 /// ⚖️ AC1's local laws for `conversation_reply` — the frame the agent's own words travel on.
 /// `PolicyEngine`/`AgentPrincipal` are built here rather than through a whole `ActionAdapter`,
 /// because the only thing the handler asks the engine is the scope subset check.
-fn reply_policy() -> crate::policy::PolicyEngine {
-    crate::policy::PolicyEngine::new(Arc::new(crate::handles::HandleTable::new()), crate::policy::AutoApprovePolicy::Never)
+fn reply_policy() -> PolicyEngine {
+    PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never)
 }
 
-fn reply_principal(scopes: &[&str]) -> crate::policy::AgentPrincipal {
-    crate::policy::AgentPrincipal::from_scope_names("agent:test", "claude-code", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
+fn reply_principal(scopes: &[&str]) -> AgentPrincipal {
+    AgentPrincipal::from_scope_names("agent:test", "claude-code", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
 }
 
 /// 🔐️ `conversation.write` is the scope that decides it, and nothing else is a substitute: an agent
@@ -536,7 +560,7 @@ async fn conversation_reply_streams_chunks_of_one_turn_over_the_real_bridge() {
         ]
     );
 
-    let huge = "ä".repeat(crate::bridge::AGENT_CONVERSATION_MAX_TEXT);
+    let huge = "ä".repeat(AGENT_CONVERSATION_MAX_TEXT);
     assert!(!conversation_reply_handler(&policy, &principal, Some(&handle), serde_json::json!({ "text": huge })).is_error);
     let cut = tokio::time::timeout(Duration::from_secs(5), outbox.recv()).await.expect("delivered").expect("open");
     let GatewayToShell::AgentReply { text, reply_id, .. } = cut else { panic!("the third frame is a reply") };
@@ -548,12 +572,14 @@ async fn conversation_reply_streams_chunks_of_one_turn_over_the_real_bridge() {
 /// is already the row, and `SELF_PUBLISHING_CONVERSATION_TOOLS` is the declared list that says so.
 #[test]
 fn conversation_reply_is_declared_self_publishing() {
-    assert!(crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"conversation_reply"));
-    assert!(!crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"action_invoke"));
+    assert!(SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"conversation_reply"));
+    assert!(!SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"action_invoke"));
 }
+
 //#endregion 💬️ConversationReply
 
 //#region 💬️AgentMessagePush
+
 /// 🔔️ The reverse direction: a turn the HUMAN types reaches the agent as a push, not only as a
 /// poll. The inbox already existed (read-once through `semio://ui/agent-messages`); AC1 adds the
 /// `notifications/resources/updated` that tells a subscribed client the question was asked, so the
@@ -562,14 +588,14 @@ fn conversation_reply_is_declared_self_publishing() {
 fn a_typed_human_turn_pushes_a_resource_update_for_the_agent_inbox() {
     let handle = Arc::new(BridgeHandle::new());
     let (connection, _outbox) = handle.register();
-    let subscriptions = crate::notify::ResourceSubscriptions::registered();
-    let sink: crate::notify::NotificationSlot = crate::notify::notification_slot();
-    let recorder = Arc::new(crate::notify::RecordingSink::new());
-    assert!(sink.set(recorder.clone() as Arc<dyn crate::notify::NotificationSink>).is_ok());
+    let subscriptions = ResourceSubscriptions::registered();
+    let sink: NotificationSlot = notification_slot();
+    let recorder = Arc::new(RecordingSink::new());
+    assert!(sink.set(recorder.clone() as Arc<dyn NotificationSink>).is_ok());
     subscriptions.bind_sink(sink);
     assert!(subscriptions.subscribe("semio://ui/agent-messages"));
 
-    handle.record(connection, crate::bridge::ShellToGateway::AgentMessage { message_id: "msg_push".into(), text: "widen that wall to 300".into() });
+    handle.record(connection, ShellToGateway::AgentMessage { message_id: "msg_push".into(), text: "widen that wall to 300".into() });
 
     let pushed = recorder.taken();
     assert!(
@@ -578,4 +604,5 @@ fn a_typed_human_turn_pushes_a_resource_update_for_the_agent_inbox() {
     );
     assert_eq!(handle.pending_agent_message_count(connection), 1, "and the turn is still there to be read");
 }
+
 //#endregion 💬️AgentMessagePush

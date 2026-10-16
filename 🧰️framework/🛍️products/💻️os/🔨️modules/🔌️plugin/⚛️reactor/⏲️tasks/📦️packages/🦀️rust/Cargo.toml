@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-reactor-tasks"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Task spawn, records, resumes and extension invocation queue of the plugin reactor"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-tasks"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+
+[dev-dependencies]

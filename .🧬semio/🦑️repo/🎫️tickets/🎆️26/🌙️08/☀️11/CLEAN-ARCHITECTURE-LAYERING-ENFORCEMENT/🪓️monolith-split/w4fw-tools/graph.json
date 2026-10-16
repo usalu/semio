@@ -1,0 +1,457 @@
+{
+ "root": {
+  "kernel": [
+   "ActionContext",
+   "ActionDef",
+   "ActionId",
+   "ActionInvocation",
+   "ActionRequest",
+   "AppEvent",
+   "AppInstanceId",
+   "Appearance",
+   "ArtifactHandle",
+   "ArtifactKind",
+   "AssetHandle",
+   "Capability",
+   "CapabilityGrant",
+   "CapabilityRequirement",
+   "CapabilityToken",
+   "CommandContext",
+   "CommandId",
+   "CommandInvocation",
+   "Effect",
+   "IconRenderExportItem",
+   "InverseMutation",
+   "InvocationId",
+   "InvocationResult",
+   "KernelMutation",
+   "PhysicalSize",
+   "PluginInstanceId",
+   "RequestId",
+   "Rights",
+   "SchemaVersion",
+   "Scope",
+   "UndoGroup",
+   "WindowEvent",
+   "WindowHandle",
+   "WindowInput",
+   "WindowKindDef",
+   "WindowKindId",
+   "WindowOutput"
+  ],
+  "action_bus": [
+   "ActionBus",
+   "ErasedToolJob",
+   "ToolCancellationPolicy",
+   "ToolDispatchError",
+   "ToolExecutionContract",
+   "ToolExecutionShape",
+   "ToolFactoryKey",
+   "ToolFreshnessPolicy",
+   "ToolJobDispatch",
+   "ToolJobFactory",
+   "ToolJobFactoryError",
+   "ToolOperationSpec",
+   "ToolPayload",
+   "ToolRegistrationError",
+   "ToolWireAdmission"
+  ],
+  "manifest": [
+   "ActionInvocation",
+   "CommandInvocation",
+   "Platform",
+   "kernel"
+  ],
+  "platform": [
+   "PanelVisibility",
+   "Platform",
+   "PlatformSpec"
+  ]
+ },
+ "abi": {
+  "kernel": [
+   "Event",
+   "_"
+  ],
+  "m_media": [
+   "bytes"
+  ]
+ },
+ "action_bus": {
+  "m_media": [
+   "bytes"
+  ],
+  "kernel": [
+   "_"
+  ],
+  "root": [
+   "manifest"
+  ],
+  "m_vocab": [
+   "InteractiveJobClassification"
+  ]
+ },
+ "source_projection": {
+  "kernel": [
+   "_"
+  ]
+ },
+ "platform": {
+  "root": [
+   "action_bus"
+  ],
+  "m_surface": [
+   "AppDefinition"
+  ],
+  "action_bus": [
+   "ActionBus"
+  ]
+ },
+ "interaction": {
+  "interaction_schema": [
+   "DomainHover",
+   "DomainSelection",
+   "DomainTopology",
+   "HierarchyProvider",
+   "HoverSpec",
+   "InteractionState",
+   "InteractionTarget",
+   "MergeMode",
+   "PresenceDomain",
+   "PresenceInteraction",
+   "SelectionMethod",
+   "SelectionMode",
+   "SelectionSpec",
+   "TopologyNode"
+  ]
+ },
+ "interaction_gesture": {
+  "kernel": [
+   "Event",
+   "_"
+  ]
+ },
+ "interaction_schema": {
+  "interaction": [
+   "InteractionRef"
+  ]
+ },
+ "kernel": {
+  "k_clipboard": [
+   "CLIPBOARD_FRAGMENT_MAX_WIRE_BYTES",
+   "CLIPBOARD_METADATA_MAX_WIRE_BYTES",
+   "CLIPBOARD_PASTE_MAX_WIRE_BYTES",
+   "CLIPBOARD_TEXT_MAX_BYTES"
+  ],
+  "m_surface": [
+   "FaultNoticeDefinition",
+   "fault_notice_text",
+   "fill_fault_notice"
+  ],
+  "m_media": [
+   "bytes"
+  ],
+  "k_cold": [
+   "COLD_PAIR_MAXIMUM_BYTES",
+   "COLD_PAIR_PAGE_MAXIMUM_BYTES",
+   "ColdDocumentPairHeader",
+   "ColdDocumentPairPage"
+  ],
+  "manifest": [
+   "Platform",
+   "actions"
+  ],
+  "m_view": [
+   "MediaType",
+   "ViewModel"
+  ],
+  "platform": [
+   "Platform"
+  ],
+  "root": [
+   "manifest"
+  ]
+ },
+ "k_clipboard": {},
+ "k_content": {
+  "m_media": [
+   "bytes"
+  ]
+ },
+ "k_message": {
+  "kernel": [
+   "Effect",
+   "MessageEndpoint",
+   "_",
+   "return_content"
+  ],
+  "k_content": [
+   "ReturnContentHeader"
+  ],
+  "m_media": [
+   "bytes"
+  ]
+ },
+ "k_cold": {
+  "kernel": [
+   "_",
+   "cold_pair"
+  ],
+  "m_media": [
+   "bytes"
+  ]
+ },
+ "manifest": {
+  "kernel": [
+   "_"
+  ],
+  "m_argschema": [
+   "ActionArgDef",
+   "default_action_icon_id"
+  ],
+  "m_utilinit": [
+   "InitialWindowUtilityInput",
+   "InitialWindowUtilityResolution",
+   "resolve_initial_window_utility"
+  ],
+  "m_actions": [
+   "ActionSemantics",
+   "ApprovalMode",
+   "CapabilityAudience"
+  ],
+  "interaction": [
+   "InteractionDefinition",
+   "InteractionRef"
+  ],
+  "interaction_schema": [
+   "DomainSelection",
+   "InteractionDefinition"
+  ],
+  "root": [
+   "platform"
+  ],
+  "m_vocab": [
+   "ActionKind"
+  ]
+ },
+ "m_canonical": {
+  "m_surface": [
+   "ProgramContributionEntry"
+  ],
+  "kernel": [
+   "_"
+  ],
+  "m_plugin": [
+   "TopicContribution"
+  ]
+ },
+ "m_media": {},
+ "m_space": {
+  "m_plugin": [
+   "TopicContribution"
+  ]
+ },
+ "m_utilinit": {
+  "manifest": [
+   "UtilityRef"
+  ],
+  "kernel": [
+   "_"
+  ]
+ },
+ "m_argschema": {
+  "m_media": [
+   "bytes"
+  ],
+  "m_vocab": [
+   "ActionKind",
+   "AppRole"
+  ],
+  "kernel": [
+   "ArtifactKind",
+   "_"
+  ]
+ },
+ "m_actions": {
+  "kernel": [
+   "CapabilityId",
+   "UiDirtyScope",
+   "_"
+  ],
+  "m_argschema": [
+   "ActionArgDef",
+   "ActionArgOption",
+   "default_action_icon_id"
+  ],
+  "m_surface": [
+   "AppDefinition",
+   "PanelTabDefinition"
+  ],
+  "m_vocab": [
+   "ActionKind",
+   "InteractiveJobClassification",
+   "history_edit_action_definitions"
+  ],
+  "manifest": [
+   "CommandDefinition",
+   "actions",
+   "kernel"
+  ],
+  "root": [
+   "interaction"
+  ]
+ },
+ "m_vocab": {
+  "manifest": [
+   "ActionRef",
+   "ToolRef",
+   "UtilityRef"
+  ],
+  "m_argschema": [
+   "ActionArgDef",
+   "ActionArgOption",
+   "ArgPresentation",
+   "ArgSchema"
+  ],
+  "m_actions": [
+   "ActionDefinition",
+   "CapabilityAudience",
+   "resolve_audience"
+  ],
+  "m_surface": [
+   "AppDefinition",
+   "DIALOG_CHOICE_ARG",
+   "DialogChoice",
+   "DialogDefinition"
+  ],
+  "kernel": [
+   "_"
+  ],
+  "interaction_schema": [
+   "DomainSelection"
+  ],
+  "interaction": [
+   "gesture"
+  ]
+ },
+ "m_surface": {
+  "m_view": [
+   "AppIo",
+   "ArtifactKindSpec",
+   "CommandGrammar",
+   "ConfigSpec",
+   "MediaPortSpec"
+  ],
+  "manifest": [
+   "ActionRef",
+   "CommandDefinition",
+   "Keybinding",
+   "ToolDefinition",
+   "ToolRef",
+   "UtilityDefinition",
+   "UtilityRef",
+   "actions",
+   "kernel"
+  ],
+  "m_argschema": [
+   "ActionArgDef",
+   "ArgFormat",
+   "ArgSchema"
+  ],
+  "m_actions": [
+   "ActionDefinition",
+   "SET_ACTIVE_TOOL_ACTION_ID",
+   "SET_ACTIVE_UTILITY_ACTION_ID"
+  ],
+  "m_media": [
+   "bytes"
+  ],
+  "m_vocab": [
+   "ActionKind",
+   "AppRole",
+   "IntroductionDefinition",
+   "TutorialDefinition"
+  ],
+  "kernel": [
+   "ArtifactKind",
+   "CapabilityRequirement",
+   "_"
+  ],
+  "interaction": [
+   "InteractionDefinition",
+   "InteractionRef"
+  ],
+  "interaction_schema": [
+   "InteractionDefinition"
+  ],
+  "m_plugin": [
+   "TopicContribution"
+  ]
+ },
+ "m_plugin": {
+  "m_view": [
+   "ArtifactKindSpec",
+   "HostedArtifactKind"
+  ],
+  "m_media": [
+   "bytes"
+  ],
+  "manifest": [
+   "CommandDefinition",
+   "kernel"
+  ],
+  "m_vocab": [
+   "AppRole"
+  ],
+  "m_surface": [
+   "AppDefinition",
+   "AppRef",
+   "ExampleDefinition"
+  ],
+  "kernel": [
+   "CapabilityRequirement",
+   "_"
+  ],
+  "root": [
+   "manifest"
+  ]
+ },
+ "m_view": {
+  "m_argschema": [
+   "ActionArgDef"
+  ],
+  "m_plugin": [
+   "ArtifactContributionDescriptor",
+   "ContributedInferenceMetadata",
+   "ContributedMutationMetadata",
+   "PluginManifest",
+   "TopicContribution"
+  ],
+  "m_vocab": [
+   "MediaClass",
+   "MediaForm",
+   "OsMediaCapability",
+   "PackageRole"
+  ],
+  "manifest": [
+   "CommandDefinition",
+   "kernel"
+  ],
+  "m_surface": [
+   "PanelTabDefinition"
+  ],
+  "kernel": [
+   "ActivationEvent",
+   "CapabilityId",
+   "CapabilityRequest",
+   "QuotaSchema",
+   "_"
+  ],
+  "root": [
+   "manifest"
+  ],
+  "m_media": [
+   "fingerprint"
+  ]
+ }
+}

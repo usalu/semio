@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "name": "source.js",
+      "text": "export const value=7;\n"
+    },
+    {
+      "name": "metadata.json",
+      "text": "{\"inputs\":[],\"physicalInputs\":[],\"loadedRuntime\":0}"
+    }
+  ],
+  "hostile": [
+    "chunk-before-file",
+    "duplicate-file",
+    "bad-hash",
+    "missing-complete",
+    "overlong-partial",
+    "wrong-request",
+    "after-complete",
+    "metadata-too-large"
+  ]
+}

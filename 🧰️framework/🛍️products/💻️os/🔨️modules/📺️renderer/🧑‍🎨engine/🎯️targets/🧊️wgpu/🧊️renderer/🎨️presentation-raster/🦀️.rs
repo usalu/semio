@@ -1,9 +1,11 @@
 //! 🎨️ Presentation and raster: presentation authorities, completion queue, staged reference images, native asset transport and the runtime mailbox state.
 use super::*;
 
+#[path = "🌐️native-asset-stream/🦀️.rs"]
+mod native_asset_stream;
+pub(crate) use native_asset_stream::*;
+
 pub(crate) const RUNTIME_COMPLETION_CAPACITY: usize = 128;
-pub(crate) const WORLD3D_DEADLINE_CAPACITY: usize = 256;
-pub(crate) const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
 pub(crate) const EFFECT_STORM_BUDGET: u32 = 64;
 
 //#region 📮️RuntimeMailbox
@@ -92,7 +94,7 @@ impl RuntimePresentationAuthority {
 struct RuntimeRasterOperationAuthorityInner {
     next_operation: AtomicU64,
     exhausted: AtomicBool,
-    current: Mutex<Option<ui_wgpu::wgpu::RasterTextureWitness>>,
+    current: Mutex<Option<ui_gpu::RasterTextureWitness>>,
 }
 
 #[derive(Clone)]
@@ -103,7 +105,7 @@ impl RuntimeRasterOperationAuthority {
         Self(Arc::new(RuntimeRasterOperationAuthorityInner { next_operation: AtomicU64::new(1), exhausted: AtomicBool::new(false), current: Mutex::new(None) }))
     }
 
-    pub(crate) fn begin(&self, scene_revision: u64, preview_generation: u64) -> Result<ui_wgpu::wgpu::RasterTextureWitness, &'static str> {
+    pub(crate) fn begin(&self, scene_revision: u64, preview_generation: u64) -> Result<ui_gpu::RasterTextureWitness, &'static str> {
         let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
         if current.is_some() {
             return Err("raster operation authority was occupied");
@@ -123,20 +125,20 @@ impl RuntimeRasterOperationAuthority {
                 break operation;
             }
         };
-        let witness = ui_wgpu::wgpu::RasterTextureWitness { scene_revision, preview_generation, operation };
+        let witness = ui_gpu::RasterTextureWitness { scene_revision, preview_generation, operation };
         *current = Some(witness);
         Ok(witness)
     }
 
-    pub(crate) fn current(&self) -> Option<ui_wgpu::wgpu::RasterTextureWitness> {
+    pub(crate) fn current(&self) -> Option<ui_gpu::RasterTextureWitness> {
         self.0.current.lock().ok().and_then(|current| *current)
     }
 
-    pub(crate) fn matches(&self, witness: ui_wgpu::wgpu::RasterTextureWitness) -> bool {
+    pub(crate) fn matches(&self, witness: ui_gpu::RasterTextureWitness) -> bool {
         self.current() == Some(witness)
     }
 
-    pub(crate) fn release(&self, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Result<(), &'static str> {
+    pub(crate) fn release(&self, witness: ui_gpu::RasterTextureWitness) -> Result<(), &'static str> {
         let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
         if *current != Some(witness) {
             return Err("raster operation authority was stale or duplicated");
@@ -145,12 +147,6 @@ impl RuntimeRasterOperationAuthority {
         Ok(())
     }
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) type RuntimeHostWaker = Arc<dyn Fn() + Send + Sync>;
-
-#[cfg(target_arch = "wasm32")]
-pub(crate) type RuntimeHostWaker = std::rc::Rc<dyn Fn()>;
 
 pub(crate) type RuntimeCompletion = runtime_mailbox_core::Completion<RuntimeApply>;
 pub(crate) type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<RuntimeApply, RUNTIME_COMPLETION_CAPACITY>;
@@ -539,8 +535,8 @@ pub(crate) enum NativeAssetTransportCloseStep {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct NativeAssetTransportGuard {
-    pub(crate) mailbox: RuntimeMailbox,
+pub(crate) struct NativeAssetTransportGuard<R> {
+    pub(crate) mailbox: RuntimeMailbox<R>,
     pub(crate) surface_token: Option<AdmittedSurfaceToken>,
     pub(crate) request_token: WorldAssetRequestToken,
     pub(crate) armed: bool,
@@ -554,7 +550,7 @@ pub(crate) struct NativeAssetPageTestBarrier {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Drop for NativeAssetTransportGuard {
+impl<R> Drop for NativeAssetTransportGuard<R> {
     fn drop(&mut self) {
         if !self.armed {
             return;
@@ -593,8 +589,8 @@ impl From<&str> for NativeAssetStreamFailure {
     }
 }
 
-pub(crate) struct RuntimeMailboxInner {
-    pub(crate) runtime: Mutex<AppRuntime>,
+pub(crate) struct RuntimeMailboxInner<R> {
+    pub(crate) runtime: Mutex<R>,
     pub(crate) presentation_authority: RuntimePresentationAuthority,
     pub(crate) raster_operation_authority: RuntimeRasterOperationAuthority,
     pub(crate) world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
@@ -602,7 +598,7 @@ pub(crate) struct RuntimeMailboxInner {
     pub(crate) waker: Mutex<Option<RuntimeHostWaker>>,
     pub(crate) next_revision: AtomicU64,
     pub(crate) applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
-    pub(crate) frame_inputs: Mutex<frame_job::FrameBuildInputs>,
+    pub(crate) frame_inputs: Mutex<FrameBuildInputs>,
     pub(crate) retained_control_deadline_us: AtomicU64,
     pub(crate) shell_clock_deadline_us: AtomicU64,
     pub(crate) frame_fault: Mutex<Option<String>>,
@@ -641,8 +637,8 @@ pub(crate) struct RuntimeMailboxInner {
     pub(crate) native_asset_http_cancel: semio_framework_async::CancelToken,
 }
 
-impl RuntimeMailboxInner {
-    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, AppRuntime>> {
+impl<R> RuntimeMailboxInner<R> {
+    pub(crate) fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, R>> {
         self.runtime.try_lock()
     }
 
@@ -666,12 +662,38 @@ impl RuntimeMailboxInner {
     }
 }
 
-#[derive(Clone)]
-pub(crate) struct RuntimeMailbox(pub(crate) Arc<RuntimeMailboxInner>);
+/// 🔌️ Everything the runtime mailbox needs of the runtime it guards (plan section 5.3, inversion I2): the interaction checkout, the two pending
+/// frame cursors and the resize entry. The mailbox is generic over it so the transport crate never names the application runtime above it.
+pub(crate) trait MailboxRuntime: Send + 'static {
+    fn interaction(&self) -> Option<&AppInteractionState>;
+    fn interaction_mut(&mut self) -> Option<&mut AppInteractionState>;
+    fn interaction_available(&self) -> bool;
+    fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState>;
+    fn return_interaction(&mut self, interaction: AppInteractionState);
+    fn resize(&mut self, logical_width: f32, logical_height: f32, scale_factor: f32);
+    fn pending_frame_deferred(&self) -> &Option<FrameDeferredCursor>;
+    fn pending_frame_deferred_mut(&mut self) -> &mut Option<FrameDeferredCursor>;
+    fn frame_actions_mut(&mut self) -> &mut FrameActionOwners;
+    #[cfg(not(target_arch = "wasm32"))]
+    fn pending_frame_maintenance_refusal(&self) -> &Option<FrameMaintenanceRefusal>;
+    #[cfg(not(target_arch = "wasm32"))]
+    fn pending_frame_maintenance_refusal_mut(&mut self) -> &mut Option<FrameMaintenanceRefusal>;
+}
+
+/// 🪪️ Submits owned work without holding the original runtime or a mutex guard across suspension.
+pub(crate) type RuntimeHandle<R> = std::sync::Weak<RuntimeMailboxInner<R>>;
+
+pub(crate) struct RuntimeMailbox<R>(pub(crate) Arc<RuntimeMailboxInner<R>>);
+
+impl<R> Clone for RuntimeMailbox<R> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameMaintenanceExecutionEnvelope {
-    pub(crate) mailbox: RuntimeMailbox,
+pub(crate) struct FrameMaintenanceExecutionEnvelope<R> {
+    pub(crate) mailbox: RuntimeMailbox<R>,
     pub(crate) registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
     pub(crate) generation: u64,
     pub(crate) revision: u64,
@@ -679,12 +701,12 @@ pub(crate) struct FrameMaintenanceExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FrameMaintenanceExecutionEnvelope {
-    pub(crate) fn new(mailbox: RuntimeMailbox, registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>, generation: u64, revision: u64) -> Self {
+impl<R> FrameMaintenanceExecutionEnvelope<R> {
+    pub(crate) fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>, generation: u64, revision: u64) -> Self {
         Self { mailbox, registry, generation, revision, armed: true }
     }
 
-    pub(crate) fn begin(mut self) -> Option<FrameMaintenanceExecutionGuard> {
+    pub(crate) fn begin(mut self) -> Option<FrameMaintenanceExecutionGuard<R>> {
         let owner_cell = self.registry.try_begin(self.generation)?;
         let owner = owner_cell.try_take()?;
         self.armed = false;
@@ -693,7 +715,7 @@ impl FrameMaintenanceExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Drop for FrameMaintenanceExecutionEnvelope {
+impl<R> Drop for FrameMaintenanceExecutionEnvelope<R> {
     fn drop(&mut self) {
         if self.armed && self.registry.abandon(self.generation) {
             self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
@@ -702,8 +724,8 @@ impl Drop for FrameMaintenanceExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameMaintenanceExecutionGuard {
-    mailbox: RuntimeMailbox,
+struct FrameMaintenanceExecutionGuard<R> {
+    mailbox: RuntimeMailbox<R>,
     registry: Arc<FrameExecutionRegistry<FrameMaintenanceOwner>>,
     owner_cell: Arc<FrameExecutionOwnerCell<FrameMaintenanceOwner>>,
     owner: Option<FrameMaintenanceOwner>,
@@ -713,7 +735,7 @@ struct FrameMaintenanceExecutionGuard {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FrameMaintenanceExecutionGuard {
+impl<R> FrameMaintenanceExecutionGuard<R> {
     fn owner_mut(&mut self) -> Option<&mut FrameMaintenanceOwner> {
         self.owner.as_mut()
     }
@@ -733,7 +755,7 @@ impl FrameMaintenanceExecutionGuard {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Drop for FrameMaintenanceExecutionGuard {
+impl<R> Drop for FrameMaintenanceExecutionGuard<R> {
     fn drop(&mut self) {
         if self.completed {
             return;
@@ -747,19 +769,19 @@ impl Drop for FrameMaintenanceExecutionGuard {
     }
 }
 
-pub(crate) struct RuntimeDispatchReturn{mailbox:RuntimeMailbox,revision:u64,cursor:Option<RuntimeDispatchCursor>,interaction:Option<AppInteractionState>}
-impl RuntimeDispatchReturn{
+pub(crate) struct RuntimeDispatchReturn<R>{mailbox:RuntimeMailbox<R>,revision:u64,cursor:Option<RuntimeDispatchCursor>,interaction:Option<AppInteractionState>}
+impl<R> RuntimeDispatchReturn<R>{
     pub(crate) async fn run(mut self){
         let cursor=self.cursor.as_mut().expect("original dispatch cursor remains owned");let event=cursor.inflight.as_mut().expect("original in-flight event remains owned");let interaction=self.interaction.as_mut().expect("original dispatch interaction remains owned");
-        let _latency=frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(cursor.generation),frame_latency::FrameLatencyStage::DispatchApply,1);winit_app::dispatch_normalized_event(interaction,event).await;self.complete();
+        let _latency=frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(cursor.generation),frame_latency::FrameLatencyStage::DispatchApply,1);dispatch_normalized_event(interaction,event).await;self.complete();
     }
     fn complete(mut self){self.mailbox.0.finish(returned_completion(self.revision,RuntimeApply::ResumeDispatch{interaction:self.interaction.take(),cursor:self.cursor.take()}));}
 }
-impl Drop for RuntimeDispatchReturn{fn drop(&mut self){if self.cursor.is_some(){self.mailbox.0.finish(returned_completion(self.revision,RuntimeApply::ResumeDispatch{interaction:self.interaction.take(),cursor:self.cursor.take()}));}}}
+impl<R> Drop for RuntimeDispatchReturn<R>{fn drop(&mut self){if self.cursor.is_some(){self.mailbox.0.finish(returned_completion(self.revision,RuntimeApply::ResumeDispatch{interaction:self.interaction.take(),cursor:self.cursor.take()}));}}}
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) struct FrameDeferredExecutionEnvelope {
-    pub(crate) mailbox: RuntimeMailbox,
+pub(crate) struct FrameDeferredExecutionEnvelope<R> {
+    pub(crate) mailbox: RuntimeMailbox<R>,
     pub(crate) registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
     pub(crate) generation: u64,
     pub(crate) revision: u64,
@@ -767,12 +789,12 @@ pub(crate) struct FrameDeferredExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FrameDeferredExecutionEnvelope {
-    pub(crate) fn new(mailbox: RuntimeMailbox, registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>, generation: u64, revision: u64) -> Self {
+impl<R> FrameDeferredExecutionEnvelope<R> {
+    pub(crate) fn new(mailbox: RuntimeMailbox<R>, registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>, generation: u64, revision: u64) -> Self {
         Self { mailbox, registry, generation, revision, armed: true }
     }
 
-    pub(crate) fn begin(mut self) -> Option<FrameDeferredExecutionGuard> {
+    pub(crate) fn begin(mut self) -> Option<FrameDeferredExecutionGuard<R>> {
         let owner_cell = self.registry.try_begin(self.generation)?;
         let owner = owner_cell.try_take()?;
         self.armed = false;
@@ -781,7 +803,7 @@ impl FrameDeferredExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Drop for FrameDeferredExecutionEnvelope {
+impl<R> Drop for FrameDeferredExecutionEnvelope<R> {
     fn drop(&mut self) {
         if self.armed && self.registry.abandon(self.generation) {
             self.mailbox.0.finish(returned_completion(self.revision, RuntimeApply::ResumeFrameDeferred { interaction: None, cursor: None }));
@@ -790,8 +812,8 @@ impl Drop for FrameDeferredExecutionEnvelope {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct FrameDeferredExecutionGuard {
-    mailbox: RuntimeMailbox,
+struct FrameDeferredExecutionGuard<R> {
+    mailbox: RuntimeMailbox<R>,
     registry: Arc<FrameExecutionRegistry<FrameDeferredExecutionOwner>>,
     owner_cell: Arc<FrameExecutionOwnerCell<FrameDeferredExecutionOwner>>,
     owner: Option<FrameDeferredExecutionOwner>,
@@ -801,7 +823,7 @@ struct FrameDeferredExecutionGuard {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FrameDeferredExecutionGuard {
+impl<R> FrameDeferredExecutionGuard<R> {
     fn owner_mut(&mut self) -> Option<&mut FrameDeferredExecutionOwner> {
         self.owner.as_mut()
     }
@@ -821,7 +843,7 @@ impl FrameDeferredExecutionGuard {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Drop for FrameDeferredExecutionGuard {
+impl<R> Drop for FrameDeferredExecutionGuard<R> {
     fn drop(&mut self) {
         if self.completed {
             return;
@@ -844,3 +866,5 @@ pub(crate) enum PresenterInteractionStep {
     Abandoned,
 }
 //#endregion 📮️RuntimeMailbox
+
+pub use semio_framework_os_renderer_wgpu_host_base::RuntimeHostWaker;

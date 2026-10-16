@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "location",
+    "primary",
+    "expected"
+  ],
+  "properties": {
+    "location": {
+      "enum": [
+        "probe",
+        "cleanup"
+      ]
+    },
+    "primary": {
+      "enum": [
+        "undefined",
+        "frozen"
+      ]
+    },
+    "expected": {
+      "const": "primary"
+    }
+  }
+}

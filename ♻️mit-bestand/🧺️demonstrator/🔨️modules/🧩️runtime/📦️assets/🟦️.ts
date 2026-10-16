@@ -1,3 +1,5 @@
+import {repositoryCachePartitionRootDataV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import {frameworkOsViteArtifactPathsV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { join } from "node:path";
 import { DEMONSTRATOR_RUNTIME_TARGETS } from "../🟦️.ts";
@@ -15,6 +17,7 @@ export function demonstratorRuntimeComponentIds(): string[] {
 /** 🎪️ Selects only immutable component, browser-support and font outputs for the Demonstrator. */
 export function demonstratorRuntimeAssetSources(workspace: string, profile: "prototype" | "release"): readonly BrowserArtifactSource[] {
   if (!["prototype", "release"].includes(profile)) throw new Error(`Unknown Demonstrator profile: ${profile}`);
+  const staged = frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(workspace, "products"), profile);
   const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], catalog = new Map(components.map(row => [row.pluginId, row]));
   const ids = demonstratorRuntimeComponentIds(), pluginRoute = MODULE_PLUGIN_ROUTE.slice(1);
@@ -25,6 +28,7 @@ export function demonstratorRuntimeAssetSources(workspace: string, profile: "pro
     }),
     { root: join(moduleRoot, PREVIEW2_VENDOR_RELATIVE), destination: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}`, owner: `browser-support:${profile}:preview2` },
     { root: join(moduleRoot, MODULE_SHARD_DIRECTORY), destination: `${pluginRoute}/${MODULE_SHARD_DIRECTORY}`, owner: `browser-support:${profile}:shard` },
-    { root: join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"), destination: `${pluginRoute}/${MODULE_VENDOR_DIRECTORY}`, owner: "infinite:fonts" },
+    { root: staged.fonts, destination: `${pluginRoute}/${MODULE_VENDOR_DIRECTORY}`, owner: "infinite:fonts" },
+    ...staged.canvas.map(({root,destination,owner})=>({root,destination,owner})),
   ];
 }

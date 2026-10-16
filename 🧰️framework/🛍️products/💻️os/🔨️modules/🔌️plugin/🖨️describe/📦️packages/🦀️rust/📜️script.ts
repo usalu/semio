@@ -4,14 +4,13 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
-import { ComponentScript } from "../../🧩️component-stage/🟦️.ts";
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */
 class FreshComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test-fresh-component accepts no arguments");
     const { createFreshComponentTests } = await import("../../🧪️tests/🆕️fresh-component/🟦️.ts");
-    const { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 } = createFreshComponentTests();
+    const { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 } = createFreshComponentTests(this.invocation);
     await testFreshComponentSourceEpochV1(this.repoRoot);
     await testFreshComponentStagingV1(this.repoRoot);
     await testFreshComponentProcessV1(this.repoRoot);
@@ -27,4 +26,4 @@ class CanonicalDescriptorPackCheckScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", ComponentScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));

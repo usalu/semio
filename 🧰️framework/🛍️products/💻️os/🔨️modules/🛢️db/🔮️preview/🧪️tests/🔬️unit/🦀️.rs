@@ -320,12 +320,12 @@ fn list_active_is_ordered_by_publish_arrival_sequence() {
 /// token literals living inside THIS test do not trip the check against themselves.
 #[test]
 fn preview_crate_never_references_wal_shaped_symbols() {
-    let manifest = include_str!("../../../📦️packages/🦀️rust/Cargo.toml");
+    let manifest = include_str!("../../📦️packages/🦀️rust/Cargo.toml");
     // 🎯️ Comment lines are stripped first: the manifest legitimately *explains* the family's
     // sync/async boundary in prose (naming `db_storage` there), and this law is about what the
     // crate DEPENDS on, not about which words appear in it.
     let declarations: String = manifest.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("\n");
-    for forbidden_dependency in ["db_wal", "db_storage", "db_snapshot", "db_artifact", "db_engine"] {
+    for forbidden_dependency in ["db_wal", "db_storage", "db_snapshot", "db_artifact", "db_engine", "db-wal", "db-storage", "db-snapshot", "db-artifact", "db-engine", "db-io", "db-fault"] {
         assert!(!declarations.contains(forbidden_dependency), "db_preview's Cargo.toml must not depend on {forbidden_dependency:?} — previews are never durable");
     }
 

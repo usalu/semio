@@ -1,0 +1,27 @@
+# Controlled Public Watch Event Preparation
+
+Only a ticket helper was authored: `watch-event/📜script.ts`. Real Source `--plan`, real `--event`, public WATCH, Native, SDK and graph/store operations were not run. Root's public workspace producer remains independent and all actual Source content is held.
+
+The fixed future candidate is `🌎️hub/Dockerfile`, a plain existing file below the root declaration named `workspace`. Current watcher Source selects descendants when its admitted project's root is `.`; this candidate contains no generated/.git/.🧬semio/temp ignored component. This is declaration/filter readiness, not a claim that a live admitted WATCH graph has already selected it. Root must confirm that actual selection before authorizing an event. Candidate path is absent all375phase-current tooling role rows and the latest actual backend readiness76397's443paths. These exclusions do not authorize mutation during any producer.
+
+The closed helper modes are `--plan`, `--event`, `--self-test`, `--strict`. A genuine standalone60s Original issues the same resource control for owned systemPython/strict children, preserving shrinking budget, signal and awaited progress/yield. No inherited Original, capabilities/backend or graph pin/reuse variables are accepted. No Source bytes are copied into the ticket.
+
+Future `--plan` nofollow-descriptor reads at most64KiB and records contentSHA, dev/inode/regular-single-link metadata, exact nanosecond atime/mtime, and physical root-to-parent directory identities. It checks current named/FD stamps and parents. Its atime baseline is the observed post-read descriptor time. The plan is created exclusively under Generated. Future `--event` admits only the same fixed candidate and canonical complete parent chain, bounded/stable32KiB plan data, exact file identity/bytes and private FD. It emits an mtime+1s event, verifies unchanged content/path, and finally uses systemPython `os.utime(fd,ns=(atime,mtime))` to restore exact nanoseconds. Final verification is metadata-only after restoration so another content read cannot disturb the restored atime. Result size is bounded8KiB and exclusively created. Primary failure survives restoration/close secondaries.
+
+Timestamp updates necessarily change ctime, which cannot be restored by this protocol. No ctime-preservation claim is made. Update and restoration can produce duplicate or coalesced OS events; public qualification must require at least one correctly scoped neutral callback and bounded no-late-callback after normal cancellation/drain, not exactly one callback. The initial suggested `bun repo tools versions` callback was unsupported and is superseded by the actual public-help check below. The literal `bun repo --help` is the prepared graph-free callback, subject to actual owned prebirth admission; `show projects` would require graph admission. No watch callback has been executed.
+
+Actual disposable Generated fixture self-test completed terminal0 in0.588s: Node captured SHA/NS identity, real systemPython changed/restored the same FD, Node independently confirmed exact atime/mtime/inode and matching SHA. Its complete temporary directory was removed in finally. No real candidate was touched. First strict12041 caught implicit-any Original from a dynamic namespace; an explicit canonical `typeof import` annotation corrected it. Final strict33609 completed terminal0 with strict/noUncheckedIndexedAccess. This proves the current macOS systemPython mechanism only; platforms without exact fd nanosecond timestamp support must refuse rather than emulate precision.
+
+Low independently reviewed the fixed mutation scope and found no blocking issue. Actual `--plan` and `--event` remain held for separate Root release after all producers drain. Prepared commands, not run:
+
+```sh
+bun '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/watch-event/📜️script.ts' --plan
+bun '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/watch-event/📜️script.ts' --event
+```
+
+Run from repository root, absent inherited Original/capability/tool/pin/reuse environment. Outputs are `🗑generated/watch-source-event-plan.json` and `watch-source-event-result.json`; these fixed filenames are exclusive and intentionally refuse overwriting prior evidence. Retained logs: `watch-event-fixture-current.log`, `watch-event-typescript-current.log`; the first strict failure is separately retained as `watch-event-typescript.log`.
+
+
+## Actual Public Callback Grammar Check
+
+Root ran exact public `bun repo tools versions` at01:29:10UTC:terminal1 before graph/SDK work, with `Expected repo tools setup [nx|bazel|all]`. This was a preparation error; no versions feature is being added. The callback plan now uses the existing neutral help interface. Actual standalone `bun repo --help`54402 and `bun repo --tool=bazel --help`18584 both returned terminal0 by01:29:49UTC with normal repository:build loading/running/complete progress and the advertised neutral grammar. All eleven incoming policy/tool/pin/budget overrides were absent. Their launches were not proven nonoverlapping; they are help-interface checks, not backend builds or serial runtime-phase evidence. Logs are `public-tools-versions-default-current.log`, `public-help-default-current.log`, `public-help-bazel-current.log`. All owned calls settled. These results do not qualify WATCH child admission, real Source event delivery, cancellation/drain or either backend task execution.

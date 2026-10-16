@@ -1,6 +1,6 @@
 //! 🌱️ Host-owned artifact genesis and creation receipt boundaries.
 
-use super::{ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, ValidatingCanonicalArtifactAuthority};
+use semio_hub_artifact_authority::{ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_hash::Sha256;
@@ -11,10 +11,6 @@ pub use operation::*;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
-
-#[path = "🧑‍🏭️service-v1/🦀️.rs"]
-mod service;
-pub use service::ArtifactCreationServiceV1;
 
 /// 🪪️ Only a freshly authenticated server session constructs execution authority.
 #[derive(Clone, Debug, PartialEq, Eq, directory::ToValue, directory::FromValue)]
@@ -29,7 +25,7 @@ pub struct ArtifactCreationActorV1 {
 pub trait ArtifactCreationCommitLeaseV1: Send {}
 
 /// ⏳️ Final authority acquisition is bounded by the request owner without exposing mutex types.
-pub type ArtifactCreationCommitFutureV1<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = crate::directory::error::DirectoryResult<Box<dyn ArtifactCreationCommitLeaseV1>>> + Send + 'a>>;
+pub type ArtifactCreationCommitFutureV1<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = semio_hub_directory_contract::error::DirectoryResult<Box<dyn ArtifactCreationCommitLeaseV1>>> + Send + 'a>>;
 
 /// 🛂️ Reacquires live user/session/space/membership gates only after private CAS staging.
 pub trait ArtifactCreationCommitAuthorityV1: Send + Sync {
@@ -48,20 +44,7 @@ pub struct ArtifactGenesisCandidate {
     pub candidate: CheckpointCandidate,
 }
 
-impl ValidatingCanonicalArtifactAuthority<std::sync::Arc<super::trusted_catalog::VerifiedTrustedCatalog>> {
-    /// 🌱️ Builds one private zero-history candidate without publishing or applying a domain edit.
-    pub async fn materialize_genesis(&self, request: ArtifactGenesisRequest, context: &OperationContext<'_>) -> Result<ArtifactGenesisCandidate, AuthorityError> {
-        context.checkpoint()?;
-        let selected = self.catalog.artifact_creation_selection(&request.kind_id).ok_or_else(|| AuthorityError::Catalog("creation kind has no unambiguous verified editor".into()))?;
-        let identity = TrustedArtifactIdentity {
-            plugin_id: selected.package.plugin_id.clone(), package_id: selected.package.package_id.clone(), version: selected.package.version.clone(), package_hash: selected.package.component_sha256.clone(),
-            artifact_kind: selected.artifact.kind.clone(), artifact_schema: selected.artifact.schema.clone(), pack_schema_hash: selected.artifact.pack_schema_hash.clone(),
-        };
-        materialize_selected_genesis(self.catalog.as_ref(), request, identity, selected.parent_dialect.clone(), context).await
-    }
-}
-
-async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, request: ArtifactGenesisRequest, identity: TrustedArtifactIdentity, dialect: ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactGenesisCandidate, AuthorityError> where C::Codec: TrustedArtifactGenesisCodec {
+pub async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, request: ArtifactGenesisRequest, identity: TrustedArtifactIdentity, dialect: ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactGenesisCandidate, AuthorityError> where C::Codec: TrustedArtifactGenesisCodec {
         context.checkpoint()?;
         let target = directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationReadyV1 {
             artifact_id: request.scope.document_id.clone(), kind_id: identity.artifact_kind.clone(), artifact_schema: identity.artifact_schema.clone(),
@@ -72,14 +55,14 @@ async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, re
         }
         if context.now_ms() > directory::os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER { return Err(AuthorityError::ResourceLimit("genesis publication clock")); }
         let limits = context.limits();
-        if limits.max_pair_bytes == 0 || limits.max_pair_bytes > super::AUTHORITY_MAX_PAIR_BYTES || limits.max_operations == 0 || limits.max_operations > super::AUTHORITY_MAX_OPERATIONS || limits.max_operation_bytes == 0 || limits.max_operation_bytes > super::AUTHORITY_MAX_OPERATION_BYTES { return Err(AuthorityError::InvalidLimits); }
+        if limits.max_pair_bytes == 0 || limits.max_pair_bytes > semio_hub_artifact_authority::AUTHORITY_MAX_PAIR_BYTES || limits.max_operations == 0 || limits.max_operations > semio_hub_artifact_authority::AUTHORITY_MAX_OPERATIONS || limits.max_operation_bytes == 0 || limits.max_operation_bytes > semio_hub_artifact_authority::AUTHORITY_MAX_OPERATION_BYTES { return Err(AuthorityError::InvalidLimits); }
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 1, total_units: 4 })?;
         let codec = catalog.resolve(&identity).await?;
         if codec.identity() != &identity || request.kind_id != identity.artifact_kind { return Err(AuthorityError::CodecIdentityMismatch); }
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: 2, total_units: 4 })?;
         let pair: ArtifactPair = codec.initial_pair(&request.scope.document_id, &dialect, context).await?;
         if pair.pack.is_empty() || pair.spr.is_empty() { return Err(AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: "genesis requires a complete nonempty pair".into() }); }
-        super::validate_pair_budget(&pair, limits, ArtifactValidationStage::Output)?;
+        semio_hub_artifact_authority::validate_pair_budget(&pair, limits, ArtifactValidationStage::Output)?;
         codec.validate_pair(&pair, ArtifactValidationStage::Output, context).await?;
         context.report(AuthorityProgress { stage: AuthorityProgressStage::OutputValidated, completed_units: 3, total_units: 4 })?;
         let descriptor = DocumentDescriptor {
@@ -96,9 +79,9 @@ async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, re
         if published_at_ms > directory::os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER { return Err(AuthorityError::ResourceLimit("genesis publication clock")); }
         let mut checkpoint = ArtifactCheckpoint {
             baseline_frontier: ArtifactFrontier { document_id: request.scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash([0; 32]) },
-            scope: request.scope, checkpoint_id: ArtifactHash([0; 32]), parent_checkpoint_id: None, descriptor_digest_v1, pack: super::blob_reference(&pair.pack)?, spr: super::blob_reference(&pair.spr)?, aggregate_sha256: ArtifactHash(aggregate.finalize()), published_at_ms,
+            scope: request.scope, checkpoint_id: ArtifactHash([0; 32]), parent_checkpoint_id: None, descriptor_digest_v1, pack: semio_hub_artifact_authority::blob_reference(&pair.pack)?, spr: semio_hub_artifact_authority::blob_reference(&pair.spr)?, aggregate_sha256: ArtifactHash(aggregate.finalize()), published_at_ms,
         };
-        checkpoint.checkpoint_id = ArtifactHash(Sha256::digest(&super::checkpoint_id_encoding_v1(&checkpoint)?));
+        checkpoint.checkpoint_id = ArtifactHash(Sha256::digest(&semio_hub_artifact_authority::checkpoint_id_encoding_v1(&checkpoint)?));
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Derived, completed_units: 4, total_units: 4 })?;
         Ok(ArtifactGenesisCandidate { descriptor, candidate: CheckpointCandidate { checkpoint, pair } })
 }

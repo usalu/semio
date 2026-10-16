@@ -74,23 +74,23 @@ fn interrupted_host_retirement_is_rediscovered_and_fixed_registry_refuses_max_pl
 }
 
 #[cfg(test)]
-fn runtime_with_component_worlds() -> RuntimeMailbox {
+fn runtime_with_component_worlds() -> AppMailbox {
     runtime_with_component_world_asset_urls("/component-world-a.glb", "/component-world-b.glb")
 }
 
 #[cfg(test)]
-fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str) -> RuntimeMailbox {
+fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str) -> AppMailbox {
     let mut shell = crate::shell::ShellState::new(Vec::new(), "component-asset-close".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for (host_id, surface_id, url) in [("component-world-a", "document-world-a", world_a_url), ("component-world-b", "document-world-b", world_b_url)] {
         let mut state = infinite_world::world::World3dState::new(surface_id.to_string(), format!("{surface_id}.controller"));
-        infinite_world::world::reserve_world3d_asset_request(&mut state, infinite_world::world::WorldAssetRequestKind::Glb, url).expect("the exact World admits its asset request");
-        assert!(shell.world3d_states.try_insert(host_id.to_string(), state).is_ok(), "the component World host is admitted");
+        infinite_world::world::reserve_world3d_asset_request(&mut state.session, &mut state.assets, infinite_world::world::WorldAssetRequestKind::Glb, url).expect("the exact World admits its asset request");
+        assert!(shell.surfaces.world3d_states.try_insert(host_id.to_string(), state).is_ok(), "the component World host is admitted");
     }
     runtime_with_shell(shell)
 }
 
 #[cfg(test)]
-fn runtime_with_shell(shell: crate::shell::ShellState) -> RuntimeMailbox {
+fn runtime_with_shell(shell: crate::shell::ShellState) -> AppMailbox {
     RuntimeMailbox::new(crate::AppRuntime {
         atlas: crate::FontAtlas::builtin(),
         icons: crate::IconAtlas::default(),
@@ -226,7 +226,7 @@ impl Drop for StalledNativeAssetServer {
 }
 
 #[cfg(test)]
-fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
+fn retire_component_world_fixture(runtime: &AppMailbox) {
     for (host_id, surface_id, key) in [("component-world-a", "document-world-a", "world-a"), ("component-world-b", "document-world-b", "world-b")] {
         let mut target = crate::element_contracts::fixture_scene_pointer_target("component-window", surface_id, key);
         target.host_id = host_id.into();
@@ -242,9 +242,9 @@ fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
         assert!(asset_terminal, "{host_id}'s asset authority reaches terminal before whole-World retirement");
         let mut runtime_owner = runtime.try_lock().expect("the fixture runtime returns for exact cleanup");
         let interaction = runtime_owner.interaction.as_mut().expect("the actual interaction owner");
-        let Some(token) = interaction.shell.world3d_states.token(host_id) else { continue };
-        let mut owner = interaction.shell.world3d_states.take_exact_to_retirement(token).expect("the exact World transfers to bounded cleanup");
-        infinite_world::world::begin_world3d_dynamic_retirement(&mut owner.value);
+        let Some(token) = interaction.shell.surfaces.world3d_states.token(host_id) else { continue };
+        let mut owner = interaction.shell.surfaces.world3d_states.take_exact_to_retirement(token).expect("the exact World transfers to bounded cleanup");
+        infinite_world::world::begin_world3d_dynamic_retirement(&mut owner.value.session, &mut owner.value.camera, &mut owner.value.retirement, &mut owner.value.scene, &mut owner.value.assets);
         let mut sequence = 0;
         for _ in 0..262_144 {
             let mut context = semio_framework_job::StepContext::new(
@@ -256,7 +256,7 @@ fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
                 &mut sequence,
             );
             let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-            let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value,terrain_grant,&mut context);
+            let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut owner.value.session, &mut owner.value.terrain,terrain_grant,&mut context);
             assert!(terrain.ownership.fits(terrain_grant));
             assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
             if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && infinite_world::world::step_world3d_dynamic_retirement(&mut owner.value, &mut context) && infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
@@ -265,7 +265,7 @@ fn retire_component_world_fixture(runtime: &RuntimeMailbox) {
         }
         assert!(infinite_world::world::world3d_dynamic_retirement_terminal_is_empty(&owner.value));
         drop(owner);
-        interaction.shell.world3d_states.acknowledge_retired_owner();
+        interaction.shell.surfaces.world3d_states.acknowledge_retired_owner();
     }
 }
 
@@ -302,7 +302,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     let (expected_a, token_b) = {
         let runtime = runtime.try_lock().expect("the fixture runtime is locally available");
         let interaction = runtime.interaction.as_ref().expect("the actual interaction owner");
-        (interaction.shell.world3d_states.token("component-world-a").expect("World A token"), interaction.shell.world3d_states.token("component-world-b").expect("World B token"))
+        (interaction.shell.surfaces.world3d_states.token("component-world-a").expect("World A token"), interaction.shell.surfaces.world3d_states.token("component-world-b").expect("World B token"))
     };
     assert_eq!(token_a, expected_a);
     assert_ne!(token_a, token_b);
@@ -316,7 +316,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     let (a_live_while_checked_out, b_unchanged_while_a_closes) = {
         let runtime = runtime.try_lock().expect("the fixture runtime is locally available");
         let interaction = runtime.interaction.as_ref().expect("the actual interaction owner");
-        (interaction.shell.world3d_states.token("component-world-a") == Some(token_a), interaction.shell.world3d_states.token("component-world-b") == Some(token_b))
+        (interaction.shell.surfaces.world3d_states.token("component-world-a") == Some(token_a), interaction.shell.surfaces.world3d_states.token("component-world-b") == Some(token_b))
     };
     assert!(runtime.return_renderer_asset_owner(fetch_a).is_ok(), "World A's exact checked-out owner returns to its still-live closing authority");
     let mut close_turns = 0usize;
@@ -327,7 +327,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     let (a_retired, b_survived) = {
         let runtime = runtime.try_lock().expect("the fixture runtime is locally available");
         let interaction = runtime.interaction.as_ref().expect("the actual interaction owner");
-        (interaction.shell.world3d_states.token("component-world-a").is_none(), interaction.shell.world3d_states.token("component-world-b") == Some(token_b))
+        (interaction.shell.surfaces.world3d_states.token("component-world-a").is_none(), interaction.shell.surfaces.world3d_states.token("component-world-b") == Some(token_b))
     };
     let mut fetch_b = None;
     for _ in 0..crate::scenes::SCENE_SURFACE_CAPACITY {
@@ -450,9 +450,9 @@ fn unavailable_native_asset_isolated_to_its_exact_world_owner() {
     let (exact_miss, sibling_miss) = {
         let runtime = runtime.try_lock().expect("fixture runtime");
         let interaction = runtime.interaction.as_ref().expect("fixture interaction");
-        let exact = interaction.shell.world3d_states.get_token(surface_token).expect("exact World");
-        let sibling = interaction.shell.world3d_states.get("component-world-b").expect("sibling World");
-        (infinite_world::world::world3d_asset_url_missed(exact, &unavailable_url), infinite_world::world::world3d_asset_url_missed(sibling, &unavailable_url))
+        let exact = interaction.shell.surfaces.world3d_states.get_token(surface_token).expect("exact World");
+        let sibling = interaction.shell.surfaces.world3d_states.get("component-world-b").expect("sibling World");
+        (infinite_world::world::world3d_asset_url_missed(&exact.assets, &unavailable_url), infinite_world::world::world3d_asset_url_missed(&sibling.assets, &unavailable_url))
     };
     let handoff_terminal = runtime.0.native_asset_handoff.lock().expect("native handoff").is_none();
     let frame_faults = usize::from(runtime.0.frame_fault.lock().expect("native frame fault").is_some());
@@ -600,7 +600,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     let runtime = runtime_with_component_world_asset_urls(&url, &url);
     let surface_token = {
         let owner = runtime.try_lock().expect("local page fixture runtime");
-        owner.interaction.as_ref().expect("local page fixture interaction").shell.world3d_states.token("component-world-a").expect("World A surface token")
+        owner.interaction.as_ref().expect("local page fixture interaction").shell.surfaces.world3d_states.token("component-world-a").expect("World A surface token")
     };
     let barrier = std::sync::Arc::new(crate::NativeAssetPageTestBarrier { surface_token, entered: AtomicBool::new(false), release: AtomicBool::new(false) });
     *runtime.0.native_asset_page_barrier.lock().expect("install local page test barrier") = Some(barrier.clone());

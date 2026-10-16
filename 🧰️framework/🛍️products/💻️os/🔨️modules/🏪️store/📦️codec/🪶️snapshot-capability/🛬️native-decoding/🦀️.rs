@@ -3,25 +3,25 @@ use semio_framework_value::NativeDecodeControl;
 use semio_framework_dsl_record::ParseOptions;
 use semio_framework_dsl_record::RecordSpecProducer;
 use semio_framework_dsl_record::RecordValue;
-use crate::sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase};
-use crate::sqlite_snapshot::{ValueError, ValueRefusalKind};
+use semio_framework_io_sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase};
+use semio_framework_io_sqlite_snapshot::{ValueError, ValueRefusalKind};
 use semio_framework_diagnostic::Limits;
 use semio_framework_value::native_decoding::NativeDecodeProgress;
 
 /// 🧮️ Preserves one cumulative ownership budget through borrowed envelope, physical parser and typed binding.
 pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement::RetireOwned>(
-    payload: &crate::io_schema::IoPayload,
+    payload: &semio_framework_io_schema::IoPayload,
     envelope_id: &str,
     spec: RecordSpecProducer,
-    construct: impl FnOnce(&mut RecordValue, &mut Option<T>, &mut NativeDecodeControl<'_>, &mut crate::os_store::NativeSnapshotBodyWallet) -> Result<(), ValueError>,
+    construct: impl FnOnce(&mut RecordValue, &mut Option<T>, &mut NativeDecodeControl<'_>, &mut semio_framework_io_control::NativeSnapshotBodyWallet) -> Result<(), ValueError>,
     control: &mut SqliteSnapshotControl<'_>,
-    native_owner: &mut crate::os_store::NativeSnapshotDecodeOwner<'_, '_>,
+    native_owner: &mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_, '_>,
 ) -> Result<T, ValueError> {
     let limits = control.limits();
     control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
     let length = match payload {
-        crate::io_schema::IoPayload::Binary(bytes) => bytes.len(),
-        crate::io_schema::IoPayload::Text(text) => text.len(),
+        semio_framework_io_schema::IoPayload::Binary(bytes) => bytes.len(),
+        semio_framework_io_schema::IoPayload::Text(text) => text.len(),
     };
     if length > limits.max_file_bytes {
         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot input exceeds file byte limit"));
@@ -36,12 +36,12 @@ pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement:
             intermediate.as_mut().unwrap().0=Some(spec.decode(native)?);
             let (spec,record,output)=intermediate.as_mut().unwrap();let spec=spec.as_ref().unwrap();
             *record=Some(match payload {
-                crate::io_schema::IoPayload::Binary(bytes) => {
-                    let body = super::semio_format::unwrap_binary_controlled(bytes, envelope_id, super::semio_format::Component::Pack, 1, native)?;
-                    pack::record::decode_document_controlled(body, &spec, &pack::record::DecodeOptions::default(), native).map_err(super::PackRefusal::into_value_error)?.0
+                semio_framework_io_schema::IoPayload::Binary(bytes) => {
+                    let body = semio_framework_os_semio::unwrap_binary_controlled(bytes, envelope_id, semio_framework_os_semio::Component::Pack, 1, native)?;
+                    pack::record::decode_document_controlled(body, &spec, &pack::record::DecodeOptions::default(), native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?.0
                 }
-                crate::io_schema::IoPayload::Text(text) => {
-                    let body = super::semio_format::split_text_preamble_controlled(text, envelope_id, super::semio_format::Component::Dsl, 1, native).map_err(super::semio_format::SemioError::into_value_error)?;
+                semio_framework_io_schema::IoPayload::Text(text) => {
+                    let body = semio_framework_os_semio::split_text_preamble_controlled(text, envelope_id, semio_framework_os_semio::Component::Dsl, 1, native).map_err(semio_framework_os_semio::SemioError::into_value_error)?;
                     semio_framework_dsl_record::parse_exact_controlled(body, &spec, &ParseOptions { limits: Limits { max_bytes: limits.max_file_bytes, ..Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document }, native)
                         .map_err(|error| ValueError::new(error.kind, error.message))?
                 }

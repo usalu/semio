@@ -1,6 +1,14 @@
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import {withArtifactDescriptorSlotV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
+import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import {copyFile} from "node:fs/promises";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
@@ -10,13 +18,14 @@ import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSy
 import { dirname, join, relative } from "node:path";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {withRepositoryArtifactDestinationV1, stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
 import type { ComponentSourceOwnerV1 } from "../../../📇️registry/🔎️discovery/🟦️.ts";
-import { pluginModulesRoot, pluginModulesRootIn, builtPluginModulesRootIn } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import {CATALOG_DESCRIPTOR_MAX_BYTES} from "../../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
-import { artifactFiles, fileDigest } from "../../📦️distribution/📋️inventory/🟦️.ts";
+import { artifactFiles, fileDigest,readArtifactBytesV1 } from "../../📦️distribution/📋️inventory/🟦️.ts";
 import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, optimizePluginCoreModuleAsync, PLUGIN_HOST_SHIM_FILE, pluginCoreModuleFilesV1, pluginComponentBridgeSource, pluginWasmOptToolV1, PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImports, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentModulesAsync } from "../🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
@@ -32,21 +41,13 @@ const DESCRIPTOR_PROBE_MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 export class SupportScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length !== 0) throw new Error("Usage: support");
-    const root = pluginModulesRoot();
-    mkdirSync(root, { recursive: true });
-    const temporary = mkdtempSync(join(root, ".support-"));
-    try {
-      const vendor = join(temporary, "vendor"), shard = join(temporary, "shard");
-      ensurePreview2ShimVendorAt(vendor, getWorkspaceRoot());
-      mkdirSync(shard);
-      writeFileSync(join(shard, SHARD_WORKER_FILE), shardWorkerSource());
-      for (const destination of [builtPluginModulesRootIn(this.repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE)), root]) {
-        await stageRepositoryArtifacts(join(destination, PREVIEW2_VENDOR_RELATIVE), "browser-support:preview2", artifactFiles(vendor));
-        await stageRepositoryArtifacts(join(destination, MODULE_SHARD_DIRECTORY), "browser-support:shard", artifactFiles(shard));
-      }
-      if (!ensureGuestSlimTypstFontsAt(root, getWorkspaceRoot())) throw new Error("Missing typst font seed; run semio-framework-os-infinite:fonts through Nx");
-      console.log("Browser support: vendor shims, typst fonts and shard worker staged");
-    } finally { rmSync(temporary, { recursive: true, force: true }); }
+    const mode=readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,phase=scriptCompilerAdmissionControlV1(this.invocation,"browser:support",0);
+    await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,phase,(_store,storePhase)=>withRepositoryCacheStoreV1(this.repoRoot,"products",this.invocation,storePhase,(store,storePhase)=>withArtifactScratchV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode,owner:"browser/support"}},token=>withArtifactDestinationTaskV1(token,this.invocation,async sink=>{
+      const vendor=join(sink.directory,"vendor"),shard=join(sink.directory,"shard"),root=builtPluginModulesRootIn(this.repoRoot,mode);
+      ensurePreview2ShimVendorAt(vendor,this.repoRoot);mkdirSync(shard);writeFileSync(join(shard,SHARD_WORKER_FILE),shardWorkerSource());
+      for(const[directory,owner,source]of[[PREVIEW2_VENDOR_RELATIVE,"browser-support:preview2",vendor],[MODULE_SHARD_DIRECTORY,"browser-support:shard",shard]]as const)await withRepositoryArtifactDestinationV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:join(root,directory)},destination=>stageRepositoryArtifacts(destination,owner,artifactFiles(source)));
+      console.log("Browser support: canonical selected-mode vendor shims and shard worker published");
+    }))));
   }
 }
 
@@ -74,7 +75,7 @@ async function probeModuleDescriptor(module: string, repoRoot: string, control: 
 
 /** 🧺️ The private state one component module is materialized in: its source identity, the deliverable the module is built from, the stage cache and a
  * private work directory. */
-export type ComponentModuleWorkV1 = Readonly<{ repoRoot: string; target: ComponentSourceOwnerV1; deliverable: ComponentDeliverableV1; cache: StageCacheV1; work: string; environment?: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>;
+export type ComponentModuleWorkV1 = Readonly<{ invocation:ScriptInvocation; repoRoot: string; target: ComponentSourceOwnerV1; deliverable: ComponentDeliverableV1; cache: StageCacheV1; work: string; environment?: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>;
 
 /** 🏷️ The jco module name of a component crate. */
 function componentBaseV1(target: ComponentSourceOwnerV1): string {
@@ -95,7 +96,7 @@ export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): 
   checkResourceLeaseControl(work.control);
   const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
   const [component, jco, materialization] = await Promise.all([fileDigest(work.deliverable.wasm, work.control.signal), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", () => fileDigest(fileURLToPath(new URL("../🟦️.ts", import.meta.url))))]);
-  await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile === "wasm-release" ? "release" : "prototype"), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal);
+  await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal);
   checkResourceLeaseControl(work.control);
   return output;
 }
@@ -120,72 +121,44 @@ export async function optimizeComponentCoresV1(work: ComponentModuleWorkV1, tran
 
 /** 🧩️ Assembles the module next to its final directory (so relative imports resolve exactly as published): the transpiled files with the optimized cores
  * swapped in, the host shim, and the preview2 shim imports pointed at the plugin-modules vendor directory. */
-export function assembleComponentModuleV1(work: ComponentModuleWorkV1, transpiled: string, optimized: string | null): string {
-  checkResourceLeaseControl(work.control);
-  if (work.target.directoryName === undefined) throw new Error(`${work.target.pluginId}: materialization requires an authored deployment directory`);
-  const root = builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile === "wasm-release" ? "release" : "prototype"), output = join(root, moduleDirectoryName(work.target.pluginId, [{ pluginId: work.target.pluginId, directoryName: work.target.directoryName }]));
-  mkdirSync(root, { recursive: true });
-  const temporary = mkdtempSync(`${output}.materialize-`);
-  for (const [name, path] of artifactFiles(transpiled)) { mkdirSync(dirname(join(temporary, name)), { recursive: true }); copyFileSync(optimized && existsSync(join(optimized, name)) ? join(optimized, name) : path, join(temporary, name)); }
-  writeFileSync(join(temporary, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-  rewritePreview2ShimImports(join(temporary, `${componentBaseV1(work.target)}.js`), join(root, PREVIEW2_VENDOR_RELATIVE));
-  checkResourceLeaseControl(work.control);
-  return temporary;
+async function assembleComponentModuleV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,temporary:string,vendor:string,maximumFiles:number,maximumBytes:number):Promise<string>{
+ checkResourceLeaseControl(work.control);if(work.target.directoryName===undefined)throw Error("Authored deployment directory required");mkdirSync(temporary,{recursive:true});const shim=hostShimSource();let bytes=Buffer.byteLength(shim);if(bytes>maximumBytes)throw Error("Finite browser shim extent required");for(const[name,path]of artifactFiles(transpiled,maximumFiles-1,maximumBytes-bytes)){const source=optimized&&existsSync(join(optimized,name))?join(optimized,name):path,destination=join(temporary,name),facts=lstatSync(source),extent=facts.size;if(!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||destination.length>publicationSchema.definitions.Protocol.const.maximumPathUnits||extent>maximumBytes-bytes)throw Error("Finite assembled browser extent required");bytes+=extent;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}writeFileSync(join(temporary,PLUGIN_HOST_SHIM_FILE),shim);rewritePreview2ShimImports(join(temporary,`${componentBaseV1(work.target)}.js`),vendor);checkResourceLeaseControl(work.control);return temporary;
 }
 
 /** 🔎️ The probe stage: the assembled module's own `describe()` under JSPI, cached by the digest of every module file and the node version. */
-export async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string): Promise<Uint8Array> {
+async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string,vendor:string): Promise<Uint8Array> {
   checkResourceLeaseControl(work.control);
-  const vendor = join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile === "wasm-release" ? "release" : "prototype"), PREVIEW2_VENDOR_RELATIVE);
-  if (!existsSync(join(vendor, ".semio-artifact.json"))) throw new Error("Missing browser support prerequisite; run @semio-tech/framework-plugin-web:support");
   const inputs: Record<string, string> = {};
   for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
   for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);
   const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), output = join(work.work, "probe");
   await work.cache.run({ stage: "probe", schemaVersion: 1, inputs, tools: { node } }, output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal);
   checkResourceLeaseControl(work.control);
-  return readFileSync(join(output, "semantic.bin"));
+  return readArtifactBytesV1(join(output,"semantic.bin"),CATALOG_DESCRIPTOR_MAX_BYTES,work.control.signal);
 }
 
 /** 📦️ Publishes the assembled module: its semantic descriptor, the bridge and a copy of the receipt that binds the two, staged atomically under the
  * component's one ownership key. The module's `describe()` must hash to the receipt's semantic descriptor. */
-export async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: string, semantic: Uint8Array, receipt: ComponentReceiptV1): Promise<string> {
+async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: string, semantic: Uint8Array, receipt: ComponentReceiptV1,maximumFiles:number,maximumBytes:number): Promise<string> {
   checkResourceLeaseControl(work.control);
-  const output = join(pluginModulesRootIn(work.repoRoot), work.target.directoryName!), base = componentBaseV1(work.target);
-  try {
+  const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,output=join(builtPluginModulesRootIn(work.repoRoot,mode),work.target.directoryName!),base=componentBaseV1(work.target);
+  if(receipt.profile!==mode)throw Error("Component receipt must match its actual Original mode");
     if (createHash("sha256").update(semantic).digest("hex") !== receipt.semanticDescriptorSha256) throw new Error(`${work.target.pluginId}: the module's describe() is not the semantic descriptor its receipt names`);
-    const descriptor = finalizePluginDescriptor(semantic, work.target.pluginId);
-    writeFileSync(join(module, "🛂️.descriptor.semio"), descriptor.pack);
-    writeFileSync(join(module, "🔣️.json"), descriptor.json);
-    writeFileSync(join(module, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, work.target.wasmOut));
-    writeFileSync(join(module, COMPONENT_RECEIPT_FILE), readFileSync(work.deliverable.receipt));
+    const descriptor=finalizePluginDescriptor(semantic,work.target.pluginId),payload=new Map<string,Uint8Array|string>([["🛂️.descriptor.semio",descriptor.pack],["🔣️.json",descriptor.json],[MODULE_BRIDGE_FILE,pluginComponentBridgeSource(base,work.target.wasmOut)],[COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1(receipt)]]),existing=artifactFiles(module,maximumFiles,maximumBytes);let bytes=0,count=existing.size;
+    for(const[name,path]of existing)if(!payload.has(name))bytes+=lstatSync(path).size;for(const[name,value]of payload){if(!existing.has(name))count++;bytes+=typeof value==="string"?Buffer.byteLength(value):value.byteLength;}if(count>maximumFiles||bytes>maximumBytes)throw Error("Final browser module exceeds combined scratch grant");for(const[name,value]of payload)writeFileSync(join(module,name),value);
     work.control.signal?.throwIfAborted();
-    const mode = receipt.profile === "wasm-release" ? "release" : "prototype", canonical = join(builtPluginModulesRootIn(work.repoRoot, mode), work.target.directoryName!);
-    const files = artifactFiles(module), options = { control: work.control, signal: work.control.signal };
-    await stageRepositoryArtifacts(canonical, componentModuleOwnerV1(work.target.cratePath), files, options);
-    checkResourceLeaseControl(work.control);
-    await stageRepositoryArtifacts(output, componentModuleOwnerV1(work.target.cratePath), files, options);
-  } finally {
-    rmSync(module, { recursive: true, force: true });
-  }
-  checkResourceLeaseControl(work.control);
-  return output;
+    const files=artifactFiles(module);
+    await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactDestinationV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,directory:output},destination=>stageRepositoryArtifacts(destination,componentModuleOwnerV1(work.target.cratePath),files)));
+    return output;
 }
 
-/** 🧩️ Materializes one component deliverable into its module directory of the one plugin-modules root through the cached stages: transpile, `wasm-opt -Oz`
- * only for shipped bytes, the module's own `describe()` checked against the receipt's semantic descriptor, then that semantic descriptor,
- * the bridge, the host shim and a copy of the receipt — so every consumer can tell a shipped module from a local `wasm-prototype` one. */
-export async function materializeComponentModuleV1(repoRoot: string, target: ComponentSourceOwnerV1, deliverable: ComponentDeliverableV1, control: CompilerAdmissionControl): Promise<Readonly<{ output: string; receipt: ComponentReceiptV1 }>> {
-  if (target.directoryName === undefined) throw new Error(`${target.pluginId}: materialization requires an authored deployment directory`);
-  const receipt = readComponentReceiptV1(deliverable.receipt);
-  if (receipt.pluginId !== target.pluginId || receipt.packageId !== target.packageId || receipt.profile !== deliverable.profile) throw new Error(`${target.pluginId}: ${relative(repoRoot, deliverable.receipt)} names ${receipt.pluginId} ${receipt.profile}, not this ${deliverable.profile} deliverable`);
-  if (lstatSync(deliverable.wasm).size !== receipt.wasmBytes || await fileDigest(deliverable.wasm, control.signal) !== receipt.wasmSha256) throw new Error(`${target.pluginId}: ${relative(repoRoot, deliverable.wasm)} is not the component its receipt names; rebuild it`);
-  const work: ComponentModuleWorkV1 = { repoRoot, target, deliverable, cache: stageCacheV1(repoCacheDirectory(repoRoot, STAGE_CACHE_POLICY_V1.warmRoot)), work: mkdtempSync(join(dirname(deliverable.directory), ".materialize-")), control };
-  try {
-    const transpiled = await transpileComponentModulesV1(work), module = assembleComponentModuleV1(work, transpiled, await optimizeComponentCoresV1(work, transpiled));
-    const output = await publishComponentModuleV1(work, module, await probeComponentModuleV1(work, module).catch((error: unknown) => { rmSync(module, { recursive: true, force: true }); throw error; }), receipt);
-    return Object.freeze({ output, receipt });
-  } finally {
-    rmSync(work.work, { recursive: true, force: true });
-  }
+/** 🌐️ Retains one genuine vendor reader and funded assembled module through actual probe and final publication. */
+export async function publishComponentBrowserV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,receipt:ComponentReceiptV1):Promise<void>{
+ const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,policy=publicationSchema.definitions.Protocol.const;if(receipt.profile!=="wasm-"+mode)throw Error("Exact actual browser publication mode required");
+ await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:join(builtPluginModulesRootIn(work.repoRoot,mode),PREVIEW2_VENDOR_RELATIVE),owner:"browser-support:preview2",maximumBytes:policy.maximumOutputBytes+policy.maximumManifestBytes,maximumFiles:policy.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,work.invocation,async artifact=>{
+  await withArtifactScratchV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:artifact.control,request:{version:1,mode,owner:"browser/module/"+work.target.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,work.invocation,async sink=>{
+   let total=0;const vendor=join(sink.directory,PREVIEW2_VENDOR_RELATIVE);for(const name of artifact.files){const source=join(artifact.path,name),destination=join(vendor,name),size=lstatSync(source).size;if(destination.length>policy.maximumPathUnits||size>policy.maximumOutputBytes-total)throw Error("Browser vendor scratch extent exceeded");total+=size;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}
+   const module=await assembleComponentModuleV1({...work,control:sink.control},transpiled,optimized,join(sink.directory,"module"),vendor,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);artifactFiles(sink.directory);const semantic=await probeComponentModuleV1({...work,control:sink.control},module,vendor);await artifact.recheck();await publishComponentModuleV1({...work,control:sink.control},module,semantic,receipt,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);
+  }));
+ })));
 }

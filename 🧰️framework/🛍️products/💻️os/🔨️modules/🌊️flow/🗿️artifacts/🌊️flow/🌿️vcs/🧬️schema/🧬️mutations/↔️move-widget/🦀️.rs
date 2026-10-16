@@ -32,9 +32,3 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveWidget {
 }
 
 //#endregion 🎮️Behavior
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::playbook::engine::*;
 
 #[semio_framework_async_macros::async_test]
 async fn playbook_io_declares_the_extra_chapters_in_port() {

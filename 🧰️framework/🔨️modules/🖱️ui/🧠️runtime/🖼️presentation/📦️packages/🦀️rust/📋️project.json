@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-runtime-presentation-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

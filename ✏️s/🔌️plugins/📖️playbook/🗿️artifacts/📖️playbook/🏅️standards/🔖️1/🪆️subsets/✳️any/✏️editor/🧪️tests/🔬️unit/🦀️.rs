@@ -1,5 +1,24 @@
+use crate::{editor::playbook::commands::add_block, editor::playbook::commands::add_step, editor::playbook::commands::move_block, editor::playbook::commands::move_step, editor::playbook::commands::remove_block, editor::playbook::commands::remove_step, editor::playbook::commands::set_active_example, editor::playbook::commands::set_contributions, editor::playbook::commands::update_playbook};
+use crate::editor::playbook::config::PlaybookConfig;
+use crate::{editor::playbook::engine::playbook_io, editor::playbook::engine::PlaybookChapterPayload};
+use crate::editor::playbook::modes::builder;
+use crate::editor::playbook::modes::builder::windows::builder as builder_window;
+use crate::{steps_from_flow_content, PlaybookSnapshot, PlaybookSpec};
+use semio_framework::InteractiveJobClassification;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::Media;
+use semio_framework_plugin::MediaError;
+use semio_framework_plugin::MediaPayload;
+use semio_framework_plugin::SelectionMethod;
+use crate::editor::playbook::{PLAYBOOK_RETAINED_TOOL_IDS, PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS, PlaybookRetainedCommandJobFactory};
 pub(crate) mod context {
-    use super::super::*;
+    use crate::editor::playbook::*;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, project_and_retire_fixture_tree, settle_history_verb, settle_registered_typed_operation};
     use semio_framework_plugin::{App, EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
@@ -85,7 +104,7 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::editor::playbook::*;
 use crate::editor::playbook::unit_tests::context::{dispatch, live_spec, playbook_app};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::{MediaClass, MediaForm, PluginApp};
@@ -134,7 +153,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// names exactly the retained tool roster.
 #[semio_framework_async_macros::async_test]
 async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
-    let source = include_str!("../🧫️fixtures/🧫️interactive-jobs/🔣️.json");
+    let source = runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🧫️interactive-jobs/🔣️.json");
     let owned = source.lines().filter_map(|line| line.trim().strip_prefix("{\"id\":\"").and_then(|tail| tail.split_once('"')).map(|(id, _)| id.to_string())).collect::<Vec<_>>();
     let oracle = serde_json::from_str::<serde_json::Value>(source)
         .expect("language-neutral interactive job fixture")
@@ -155,7 +174,7 @@ async fn interactive_job_catalog_matches_owned_and_json_oracle_projections() {
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-pub(super) fn every_command() -> Vec<PlaybookCommand> {
+pub(crate) fn every_command() -> Vec<PlaybookCommand> {
     vec![
         PlaybookCommand::AddStep(add_step::AddStep {}),
         PlaybookCommand::RemoveStep(remove_step::RemoveStep { step_id: "s".into() }),
@@ -184,7 +203,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[semio_framework_async_macros::async_test]
 async fn playbook_play_app_declares_the_authored_scene_showcase() {
     let definition = create_playbook_play_app();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎭️modes/🏗️builder/🧪️tests/🧫️fixtures/🎬️scene-showcase/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/✏️editor/🎭️modes/🏗️builder/🧪️tests/🧫️fixtures/🎬️scene-showcase/🔣️.json")).unwrap();
     let actual: Vec<_> = definition.window_kinds.iter().map(|window| serde_json::json!({ "windowId": window.id, "bodyKey": window.body_key, "surfaceKind": window.surface_kind })).collect();
     assert_eq!(serde_json::json!(actual), fixture["windows"]);
 }
@@ -443,3 +462,8 @@ fn every_playbook_refusal_code_has_a_localized_notice() {
     }
 }
 //#endregion 🧵️RetainedToolCatalog
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

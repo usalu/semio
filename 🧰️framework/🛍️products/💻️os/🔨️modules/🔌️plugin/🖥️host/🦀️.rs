@@ -18,6 +18,9 @@ pub mod shard;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "🎠️activation/🦀️.rs"]
 pub mod activation;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎁️package-assets/🦀️.rs"]
+pub mod package_assets;
 // 🚚️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): `ProcessTransport`/
 // `StdioTransport` — see that file's own module doc for why they live here and not in `🎭️actor`.
 #[path = "🧵️shard/🚚️process-transport/🦀️.rs"]
@@ -711,7 +714,7 @@ impl SessionLanePack {
     }
 
     /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `ArtifactCodec` when `schema` is set.
-    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>, identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         if ops.is_empty() {
             return;
         }

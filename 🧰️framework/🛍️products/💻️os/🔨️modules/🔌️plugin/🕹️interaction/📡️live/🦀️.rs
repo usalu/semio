@@ -13,10 +13,12 @@ use store::{os_store::one_item::ArtifactStoreOneItemGrant, os_store::snapshot_re
 //#region 🔢️RuntimeGeneration
 /// 🔢️ This allocator belongs to the runtime, never to a reusable app instance slot.
 #[derive(Default)]
-pub(crate) struct LocalInteractionQueryGeneration(std::cell::Cell<u64>);
+#[doc(hidden)]
+pub struct LocalInteractionQueryGeneration(std::cell::Cell<u64>);
 
 impl LocalInteractionQueryGeneration {
-    pub(crate) fn next(&self) -> Option<u64> {
+    #[doc(hidden)]
+    pub fn next(&self) -> Option<u64> {
         let next = self.0.get().checked_add(1)?;
         self.0.set(next);
         Some(next)
@@ -26,12 +28,14 @@ impl LocalInteractionQueryGeneration {
 
 //#region 📡️LiveOwner
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum LocalInteractionLiveStep {
+#[doc(hidden)]
+pub enum LocalInteractionLiveStep {
     Blocked,
     Advanced { emitted_bytes: usize, retired_bytes: usize, ownership: RetainedCloneProgress },
 }
 impl LocalInteractionLiveStep{
-    pub(crate) fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,Self::Blocked=>Default::default()}}
+    #[doc(hidden)]
+    pub fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,Self::Blocked=>Default::default()}}
 }
 
 struct LiveState<D, C, Q: LocalInteractionQueryCapture> {
@@ -42,7 +46,8 @@ struct LiveState<D, C, Q: LocalInteractionQueryCapture> {
 }
 
 /// 🔒️ The app captures these roots under one exclusive owner; transport receives fixed pages only.
-pub(crate) struct LocalInteractionLiveQuery<D, C, Q: LocalInteractionQueryCapture = LocalInteractionCaptureCursor> {
+#[doc(hidden)]
+pub struct LocalInteractionLiveQuery<D, C, Q: LocalInteractionQueryCapture = LocalInteractionCaptureCursor> {
     owned: ManuallyDrop<LiveState<D, C, Q>>,
     request_id: u64,
     started: bool,
@@ -54,7 +59,8 @@ pub(crate) struct LocalInteractionLiveQuery<D, C, Q: LocalInteractionQueryCaptur
 }
 
 impl<D, C> LocalInteractionLiveQuery<D, C> {
-    pub(crate) fn new(request_id: u64, query_generation: u64, identity: LocalInteractionIdentity, document: Option<SnapshotRead<D>>, config: Option<SnapshotRead<C>>, interaction: Option<SnapshotRead<protocol::InteractionState>>) -> Self {
+    #[doc(hidden)]
+    pub fn new(request_id: u64, query_generation: u64, identity: LocalInteractionIdentity, document: Option<SnapshotRead<D>>, config: Option<SnapshotRead<C>>, interaction: Option<SnapshotRead<protocol::InteractionState>>) -> Self {
         let failed = document.is_none() || config.is_none() || interaction.is_none();
         let inputs = LocalInteractionInputReads::from_optional(document, config);
         let query = interaction.map(|read| LocalInteractionQuery::new(LocalInteractionCaptureCursor::new(read, identity), request_id, query_generation));
@@ -67,7 +73,8 @@ impl<D, C> LocalInteractionLiveQuery<D, C> {
 }
 
 impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
-    pub(crate) fn acknowledge(&mut self, token: &LocalInteractionQueryToken) -> bool {
+    #[doc(hidden)]
+    pub fn acknowledge(&mut self, token: &LocalInteractionQueryToken) -> bool {
         if !self.started || !self.page_sent || self.closing {
             return false;
         }
@@ -83,7 +90,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         true
     }
 
-    pub(crate) fn cancel_authorized(&mut self, token: &LocalInteractionQueryToken) -> bool {
+    #[doc(hidden)]
+    pub fn cancel_authorized(&mut self, token: &LocalInteractionQueryToken) -> bool {
         if self.closing || !self.owned.query.as_mut().is_some_and(|query| query.cancel_authorized(token)) {
             return false;
         }
@@ -94,7 +102,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         true
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    #[doc(hidden)]
+    pub fn begin_close(&mut self) {
         self.closing = true;
         self.cancelled = true;
         self.page_sent = false;
@@ -104,7 +113,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         self.owned.inputs.begin_close();
     }
 
-    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionLiveStep, ValueError> {
+    #[doc(hidden)]
+    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionLiveStep, ValueError> {
         if grant.maximum_items == 0 || grant.maximum_depth<2 || self.closing {
             return Ok(LocalInteractionLiveStep::Blocked);
         }
@@ -130,16 +140,19 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         }
     }
 
-    pub(crate) fn retired_bytes(&self)->u64 {
+    #[doc(hidden)]
+    pub fn retired_bytes(&self)->u64 {
         self.owned.query.as_ref().map_or(0,LocalInteractionQuery::retired_bytes)
     }
 
-    pub(crate) fn is_closing(&self) -> bool {
+    #[doc(hidden)]
+    pub fn is_closing(&self) -> bool {
         self.closing
     }
 
     /// 📏️ Exact per-axis quote of the next closing turn: error bytes, then the query, then the input returns.
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction depth overflow"))?;
             Ok(demand)
@@ -153,7 +166,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
     }
 
     /// ♻️ Closes one original owner under the complete caller grant; nested owners receive one item and one less depth.
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.owners_are_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -181,12 +195,14 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         Ok(if self.owners_are_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
-    pub(crate) fn take_reply(&mut self) -> Option<LocalInteractionQueryReply> {
+    #[doc(hidden)]
+    pub fn take_reply(&mut self) -> Option<LocalInteractionQueryReply> {
         self.take_reply_admitted(|_| true)
     }
 
     /// 📬️ State advances only after the exact fixed reply has entered the caller's admitted output slot.
-    pub(crate) fn take_reply_admitted(&mut self, mut admit: impl FnMut(&LocalInteractionQueryReply) -> bool) -> Option<LocalInteractionQueryReply> {
+    #[doc(hidden)]
+    pub fn take_reply_admitted(&mut self, mut admit: impl FnMut(&LocalInteractionQueryReply) -> bool) -> Option<LocalInteractionQueryReply> {
         if self.terminal_sent {
             return None;
         }
@@ -229,11 +245,13 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         Some(reply)
     }
 
-    pub(crate) fn reply_ready(&self) -> bool {
+    #[doc(hidden)]
+    pub fn reply_ready(&self) -> bool {
         !self.terminal_sent && if self.closing { self.owners_are_empty() } else { !self.started || (!self.page_sent && self.owned.query.as_ref().is_some_and(|query| query.page().is_some())) }
     }
 
-    pub(crate) fn has_pending_work(&self) -> bool {
+    #[doc(hidden)]
+    pub fn has_pending_work(&self) -> bool {
         !self.terminal_sent && (self.closing || !self.started || !self.page_sent || self.owned.query.as_ref().is_some_and(LocalInteractionQuery::has_pending_work))
     }
 
@@ -241,7 +259,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         self.closing && self.owned.error.is_none() && self.owned.error_close.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.owners_are_empty() && self.terminal_sent
     }
 }

@@ -1,5 +1,6 @@
+//! 🧱️ Errors_quick of the foundation crate: Gateway vocabulary: errors, handles, audit lane, reports, local session files and delegated credentials.
 
-use super::*;
+use crate::errors::{GatewayError, GatewayErrorCode};
 
 #[test]
 fn code_serializes_screaming_snake() {

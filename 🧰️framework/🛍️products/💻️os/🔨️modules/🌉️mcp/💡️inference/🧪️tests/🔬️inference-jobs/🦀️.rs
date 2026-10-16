@@ -1,6 +1,19 @@
+//! 🧱️ Inference_inference_jobs of the runtime crate: Gateway runtime, entrypoint and facade.
 
-use super::*;
-use semio_framework_async::{CancelToken, TraceId};
+use semio_framework_async::CancelToken;
+use semio_framework_async::OperationContext;
+use semio_framework_async::TraceId;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use std::sync::Arc;
+use crate::root::GATEWAY_TOOL_NAMES;
+use semio_framework_os_mcp_capabilities::capability_declarations::{inference_approve_capability, inference_cancel_capability, inference_events_capability, inference_job_capabilities, inference_submit_capability};
+use semio_framework_os_mcp_catalog::catalog::ToolExposure;
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, SessionHandle};
+use semio_framework_os_mcp_inference_hub::hub_wire::{HubInferenceJobBindingV1, HubInferenceSubjectV1, InferenceExecutionSiteV1, InferenceHubRequestV1, InferenceHubResponseV1, InferenceHubTransport, InferenceHubTransportErrorV1, InferenceJobHandlePayloadV1, InferenceRouteErrorV1, inference_operation_label, read_hub_inference_services, release_inference_operation, retain_inference_operation};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy, PolicyEngine};
+use semio_framework_os_mcp_tools_inference::inference::{check_hub_job_subject, interrupt_inference_operation, resolve_inference_job_handle};
+use semio_framework_os_mcp_wire::protocol::is_valid_tool_name;
 
 fn sample_job_id() -> String {
     "ab".repeat(16)
@@ -70,7 +83,6 @@ fn block_on<F: std::future::Future>(future: F) -> F::Output {
 
 //#region 🧪️Vocabulary
 
-
 #[test]
 fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding() {
     let error = InferenceRouteErrorV1::Unavailable.to_gateway_error("inference_submit");
@@ -98,7 +110,6 @@ fn a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names
     assert_eq!(InferenceRouteErrorV1::Capacity.to_gateway_error("x").code, GatewayErrorCode::PluginUnavailable);
 }
 
-
 //#endregion 🧪️Vocabulary
 
 #[test]
@@ -117,13 +128,14 @@ fn a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothin
 }
 
 //#region 🧪️Policy
+
 fn principal(scopes: &[&str]) -> AgentPrincipal {
     AgentPrincipal::from_scope_names("agent:test", "test agent", &scopes.iter().map(|scope| (*scope).to_string()).collect::<Vec<_>>(), None)
 }
 
 #[test]
 fn every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute() {
-    let engine = PolicyEngine::new(Arc::new(crate::handles::HandleTable::new()), crate::policy::AutoApprovePolicy::Never);
+    let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
     let unscoped = principal(&[]);
     for capability in inference_job_capabilities() {
         let denied = engine.authorize_scopes(&unscoped, &capability).expect_err("an unscoped principal is denied");
@@ -142,9 +154,9 @@ fn every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inferenc
 
 #[test]
 fn a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_subject() {
-    let handles = crate::handles::HandleTable::new();
-    let mine = crate::handles::SessionHandle::new("sess_mine");
-    let theirs = crate::handles::SessionHandle::new("sess_theirs");
+    let handles = HandleTable::new();
+    let mine = SessionHandle::new("sess_mine");
+    let theirs = SessionHandle::new("sess_theirs");
     let subject = HubInferenceSubjectV1 { hub_origin: "https://hub.invalid".into(), space_id: "space:alpha".into(), user_id: "user-a".into(), authority_generation: 7 };
     let payload = InferenceJobHandlePayloadV1 {
         site: InferenceExecutionSiteV1::Hub,
@@ -155,7 +167,7 @@ fn a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_su
         job_id: sample_job_id(),
         hub: Some(HubInferenceJobBindingV1 { route: "inference/document".into(), space_id: subject.space_id.clone(), subject_user_id: subject.user_id.clone(), authority_generation: subject.authority_generation, request_id: sample_job_id(), base: None }),
     };
-    let handle = handles.mint(crate::handles::HandleKind::Job, mine.clone(), crate::handles::Attachment::Artifact { artifact_id: "doc:tokyo".into() }, serde_json::to_value(&payload).expect("payload"), 1_000);
+    let handle = handles.mint(HandleKind::Job, mine.clone(), Attachment::Artifact { artifact_id: "doc:tokyo".into() }, serde_json::to_value(&payload).expect("payload"), 1_000);
     assert_eq!(resolve_inference_job_handle(&handles, &mine, &handle, 1_001).expect("the minting session reads its own job"), payload);
     check_hub_job_subject(&payload, &subject).expect("the minting subject owns it");
     assert_eq!(resolve_inference_job_handle(&handles, &theirs, &handle, 1_001).expect_err("a second connection cannot read it").code, GatewayErrorCode::PermissionDenied);
@@ -190,7 +202,7 @@ fn the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_de
     for (capability, name) in capabilities.iter().zip(expected) {
         let ToolExposure::Direct { tool_name } = &capability.exposure else { panic!("{} is not directly exposed", capability.id) };
         assert_eq!(tool_name, name);
-        assert!(crate::protocol::is_valid_tool_name(tool_name), "{tool_name} is not a valid MCP tool name");
+        assert!(is_valid_tool_name(tool_name), "{tool_name} is not a valid MCP tool name");
         assert_eq!(capability.input_schema["type"], "object", "{}", capability.id);
         assert_eq!(capability.input_schema["$schema"], "https://json-schema.org/draft/2020-12/schema");
         assert_eq!(capability.output_schema["type"], "object", "{}", capability.id);
@@ -199,7 +211,7 @@ fn the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_de
         assert!(english.len() > 40 && german.len() > 40, "{} has an empty half", capability.id);
         assert_ne!(english, german);
     }
-    assert!(crate::GATEWAY_TOOL_NAMES.iter().filter(|name| expected.contains(name)).count() == expected.len(), "the census must list every inference job tool");
+    assert!(GATEWAY_TOOL_NAMES.iter().filter(|name| expected.contains(name)).count() == expected.len(), "the census must list every inference job tool");
 }
-//#endregion 🧪️Policy
 
+//#endregion 🧪️Policy

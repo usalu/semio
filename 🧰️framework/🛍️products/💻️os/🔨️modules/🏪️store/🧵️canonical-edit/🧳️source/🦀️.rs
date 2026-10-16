@@ -1,11 +1,12 @@
 //! 🧳️ Canonical Store preparation drives the genuine original semantic, identity and hash owners.
-use super::ArtifactStoreOneItemLiveAuthority;
-use crate::os_spr::{Edit,command::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor,ArtifactCanonicalEditIdentityCursor}};
+use crate::ArtifactStoreOneItemLiveAuthority;
+use semio_framework_os_spr::Edit;
+use semio_framework_os_spr::command::{ArtifactCanonicalEditAuthority, ArtifactCanonicalEditAuthorityCursor, ArtifactCanonicalEditIdentityCursor};
 use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,shared::SharedControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::size_of,sync::Arc};
-type Text=PagedUtf8<{usize::MAX}>;
+pub type Text=PagedUtf8<{usize::MAX}>;
 type Identities=[Text;3];
 type Live=ArtifactStoreOneItemLiveAuthority;
 type Returned<M>=(Box<Edit<M>>,Identities,[u8;32],RetainedCloneProgress);
@@ -18,14 +19,14 @@ impl RetireOwned for AuthorityLease{
 }
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn copy(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
-fn permits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
+pub fn permits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||refusal("canonical native source depth overflow"))?;Ok(d)}
 fn child(mut g:RetainedCloneGrant)->RetainedCloneGrant{g.maximum_items=1;g.maximum_depth-=1;g}
-fn controlled<T:RetireOwned>(o:&ControlledRetirement<T>)->Result<RetirementDemand,ValueError>{let body=o.next_copy_byte_demand()?;nested(RetirementDemand{copy_bytes:body,capacity_bytes:o.next_capacity_byte_demand(body)?,release_bytes:o.next_release_byte_demand()?,depth:o.next_depth_demand()?})}
+pub fn controlled<T:RetireOwned>(o:&ControlledRetirement<T>)->Result<RetirementDemand,ValueError>{let body=o.next_copy_byte_demand()?;nested(RetirementDemand{copy_bytes:body,capacity_bytes:o.next_capacity_byte_demand(body)?,release_bytes:o.next_release_byte_demand()?,depth:o.next_depth_demand()?})}
 fn source<T:Sync+'static,A:RetireOwned+Sync>(o:&RetainedCloneSource<T,A>)->Result<RetirementDemand,ValueError>{let body=o.next_close_copy_byte_demand()?;nested(RetirementDemand{copy_bytes:body,capacity_bytes:o.next_close_capacity_byte_demand(body)?,release_bytes:o.next_close_release_byte_demand()?,depth:o.next_close_depth_demand()?})}
 
 /// 🪪️ Type-erased transport preserves the native typed original owner and every actual receipt.
-pub(super) trait ArtifactStoreCanonicalOwner<M>:Send{
+pub trait ArtifactStoreCanonicalOwner<M>:Send{
  fn next_demand(&self)->Result<RetirementDemand,ValueError>;
  fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
  fn begin_close(&mut self);
@@ -40,26 +41,26 @@ enum Traversal<M:RetireOwned+Sync+ArtifactCanonicalJsonTree>{
  Hash(ArtifactCanonicalEditSealCursor<M>),
 }
 
-pub(super) struct ArtifactStoreCanonicalSource<M:RetireOwned+Sync+ArtifactCanonicalJsonTree>{
- pending_edit:Option<Box<Edit<M>>>,
+pub struct ArtifactStoreCanonicalSource<M:RetireOwned+Sync+ArtifactCanonicalJsonTree>{
+ pub pending_edit:Option<Box<Edit<M>>>,
  pending_authority:Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
  edit_source:Option<RetainedCloneSource<Box<Edit<M>>>>,
  authority_source:Option<RetainedCloneSource<Live,AuthorityLease>>,
  traversal:Option<Traversal<M>>,
- edit:Option<Box<Edit<M>>>,
- identities:Option<Identities>,
- digest:Option<[u8;32]>,
+ pub edit:Option<Box<Edit<M>>>,
+ pub identities:Option<Identities>,
+ pub digest:Option<[u8;32]>,
  edit_close:Option<ControlledRetirement<Box<Edit<M>>>>,
  identity_close:Option<ControlledRetirement<(Text,Text,Text)>>,
- authority_close:Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
- phase:u8,
- closing:bool,
+ pub authority_close:Option<SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>>,
+ pub phase:u8,
+ pub closing:bool,
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalSource<M>{
  pub(super) fn new(authority:Arc<ArtifactStoreOneItemLiveAuthority>,edit:Box<Edit<M>>)->Self{Self{pending_edit:Some(edit),pending_authority:Some(authority),edit_source:None,authority_source:None,traversal:None,edit:None,identities:None,digest:None,edit_close:None,identity_close:None,authority_close:None,phase:0,closing:false}}
  pub(super) fn source_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Box<Edit<M>>>(),capacity_bytes:size_of::<Self>()+size_of::<Edit<M>>(),depth:1,release_bytes:0}}
- fn projections(&self,g:RetainedCloneGrant)->Result<(RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>,RetainedCloneProgress),ValueError>{let authority=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?;let edit=self.edit_source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?;let(authority,bound_authority)=authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority,g)?;let(edit,bound_edit)=edit.project_owned(0,|value|value.as_ref(),g)?;Ok((authority,edit,bound_authority.checked_add(bound_edit)?))}
- fn advance_original(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
+ pub fn projections(&self,g:RetainedCloneGrant)->Result<(RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>,RetainedCloneProgress),ValueError>{let authority=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?;let edit=self.edit_source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?;let(authority,bound_authority)=authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority,g)?;let(edit,bound_edit)=edit.project_owned(0,|value|value.as_ref(),g)?;Ok((authority,edit,bound_authority.checked_add(bound_edit)?))}
+ pub fn advance_original(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   if let Some(Traversal::Semantic(o))=self.traversal.as_mut(){if o.terminal_is_empty(){if o.decision()!=Some(true){return Err(refusal("canonical original semantic edit disagrees with Store authority"));}self.traversal=None;self.phase=3;}else{p=o.advance(child(g))?.progress();}}
   else if let Some(Traversal::Identity(o))=self.traversal.as_mut(){if o.is_ready(){let(output,receipt)=o.take(child(g))?.ok_or_else(||refusal("canonical preadmitted identity return refused"))?;self.identities=Some(output);p=receipt;}else if o.terminal_is_empty(){self.traversal=None;self.phase=4;}else{p=o.advance(child(g))?.progress();}}
@@ -125,6 +126,4 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> Drop for ArtifactStoreCanonicalSource<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"canonical original source abandoned its native custody");}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

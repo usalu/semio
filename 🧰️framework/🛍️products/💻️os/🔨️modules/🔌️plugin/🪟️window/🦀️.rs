@@ -1,4 +1,7 @@
 //! 🪟️ Surface tree assembly: built node to runtime tree transfer, paged text carriers, scene surfaces and window kind definitions.
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as pack;
 use semio_framework::{ActionDefinition, WindowKindDefinition};
 use semio_framework_ui_contract::BuiltNode;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
@@ -15,7 +18,7 @@ use semio_framework_ui_contract::BuiltNode;
 use semio_framework_ui_contract::*;
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::WindowOptions;
+use semio_framework_ui_layout::layout::WindowOptions;
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
 
 
@@ -153,26 +156,24 @@ pub fn built_text_to_component_tree(label: semio_framework_ui_locale::Label) -> 
     built_text_node(label).map(built_to_component_tree).map_err(|_| ui_assembly_error("built-text-root"))
 }
 
-/// 🧩 Fallible fixed-capacity UI assembly result shared by plugin render boundaries.
-pub type UiAssemblyResult<T> = Result<T, PluginAssemblyError>;
-
-pub(crate) fn ui_assembly_error(stage: &'static str) -> PluginAssemblyError {
-    PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}"))
-}
+pub use semio_framework_plugin_interaction::{ui_assembly_error, UiAssemblyResult};
 
 /// 🩺️ [[ui_assembly_error]] with the refusing cause preserved. `SurfaceEncodeError` already
 /// distinguishes a pack failure from a payload-capacity overflow from a schema overflow, and
 /// discarding it leaves every fixed-capacity refusal reporting the same stage name — indistinguishable
 /// at runtime and unactionable in a browser console.
-pub(crate) fn ui_assembly_error_because(stage: &'static str, cause: impl std::fmt::Display) -> PluginAssemblyError {
+#[doc(hidden)]
+pub fn ui_assembly_error_because(stage: &'static str, cause: impl std::fmt::Display) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}: {cause}"))
 }
 
-pub(crate) fn ui_label<T: TryInto<Label>>(value: T, stage: &'static str) -> UiAssemblyResult<Label> {
+#[doc(hidden)]
+pub fn ui_label<T: TryInto<Label>>(value: T, stage: &'static str) -> UiAssemblyResult<Label> {
     value.try_into().map_err(|_| ui_assembly_error(stage))
 }
 
-pub(crate) fn ui_text<T: TryInto<UiText>>(value: T, stage: &'static str) -> UiAssemblyResult<UiText> {
+#[doc(hidden)]
+pub fn ui_text<T: TryInto<UiText>>(value: T, stage: &'static str) -> UiAssemblyResult<UiText> {
     value.try_into().map_err(|_| ui_assembly_error(stage))
 }
 
@@ -186,16 +187,18 @@ include!("../🧪️tests/🔬️app-tree-convert/🦀️.rs");
 /// deleted with the legacy enum in the deletion wave; it exists because two names for one concept
 /// briefly overlap, not as a compatibility layer.
 // 🚫️async: E1 pure total mapping consumed by sync struct-literal call sites — see R9.
-pub(crate) fn contract_surface_kind(kind: ui_wgpu::wgpu::SurfaceKind) -> SurfaceKind {
+#[doc(hidden)]
+pub fn contract_surface_kind(kind: semio_framework_ui_declaration::ui::SurfaceKind) -> SurfaceKind {
     let name = serde_json::to_string(&kind).unwrap_or_default();
     serde_json::from_str(&name).unwrap_or(SurfaceKind::Canvas2d)
 }
 
 /// 🔀️ The inverse of contract_surface_kind, for descriptor paths still speaking the old enum.
 // 🚫️async: E1 pure total mapping — see R9.
-pub(crate) fn legacy_surface_kind(kind: SurfaceKind) -> ui_wgpu::wgpu::SurfaceKind {
+#[doc(hidden)]
+pub fn legacy_surface_kind(kind: SurfaceKind) -> semio_framework_ui_declaration::ui::SurfaceKind {
     let name = serde_json::to_string(&kind).unwrap_or_default();
-    serde_json::from_str(&name).unwrap_or(ui_wgpu::wgpu::SurfaceKind::Canvas2d)
+    serde_json::from_str(&name).unwrap_or(semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d)
 }
 
 // 🪟️ The seven framework window kits (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
@@ -205,7 +208,8 @@ pub(crate) fn legacy_surface_kind(kind: SurfaceKind) -> ui_wgpu::wgpu::SurfaceKi
 // than each app hand-rolling a text/table/tree/image/mesh/document/media window from scratch.
 
 /// 🏗️ Shared `WindowKindDefinition` scaffold — every kit differs only in id/label/surface/icon/actions.
-pub(crate) fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, mut actions: Vec<ActionDefinition>) -> WindowKindDefinition {
+#[doc(hidden)]
+pub fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, mut actions: Vec<ActionDefinition>) -> WindowKindDefinition {
     for action in &mut actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
     }
@@ -227,3 +231,14 @@ pub(crate) fn window_kind_definition(id: &'static str, en: &'static str, de: &'s
         capabilities: Vec::new(),
     }
 }
+
+#[doc(hidden)]
+pub use semio_framework_os_kernel as __kernel;
+#[doc(hidden)]
+pub use semio_framework_pack_json as __pack_json;
+#[path = "🎛️engagement/🦀️.rs"]
+pub mod engagement;
+#[path = "📬️mutation/🦀️.rs"]
+pub mod window_mutation;
+#[path = "🫧️transient/🦀️.rs"]
+pub mod window_transient;

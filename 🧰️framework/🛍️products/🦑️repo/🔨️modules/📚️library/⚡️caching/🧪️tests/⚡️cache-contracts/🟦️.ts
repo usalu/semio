@@ -338,54 +338,8 @@ if (args[0] === "nextest" && args[1] === "list") console.log("{}");
     restore("PATH", path); restore("SEMIO_TEST_LEVEL", level); restore("SEMIO_COVERAGE", coverage); restore("SEMIO_TEST_ARTIFACT_DIR", artifacts); restore("SEMIO_TEST_BUDGET_MS", testBudget); restore("SEMIO_BUILD_BUDGET_MS", buildBudget); delete process.env.SEMIO_ARTIFACT_TEST_CAPTURE;
     rmSync(runnerRoot, { recursive: true, force: true });
   }
-  const captureRoot = mkdtempSync(join(output, "artifact-capture-"));
-  const capturePath = process.env.PATH;
-  try {
-    const packageRoot = join(captureRoot, "package"), dependencyRoot = join(captureRoot, "dependency"), binRoot = join(captureRoot, "bin");
-    const dependency = join(captureRoot, "target/deps/libfixture_dependency.rlib"), primary = join(captureRoot, "target/libfixture_primary.rlib"), stub = join(binRoot, "📜️script.ts");
-    mkdirSync(packageRoot, { recursive: true }); mkdirSync(dependencyRoot, { recursive: true }); mkdirSync(dirname(dependency), { recursive: true }); mkdirSync(binRoot, { recursive: true });
-    writeFileSync(join(packageRoot, "Cargo.toml"), "[package]\nname='fixture-primary'\nversion='0.0.0'\n");
-    writeFileSync(stub, `#!/usr/bin/env bun
-import { rmSync, writeFileSync } from "node:fs";
-const dependency = process.env.SEMIO_CAPTURE_DEPENDENCY!, primary = process.env.SEMIO_CAPTURE_PRIMARY!;
-rmSync(dependency, { force: true });
-if (process.env.SEMIO_CAPTURE_MISSING !== "1") writeFileSync(dependency, process.env.SEMIO_CAPTURE_DEPENDENCY_BYTES!);
-writeFileSync(primary, process.env.SEMIO_CAPTURE_PRIMARY_BYTES!);
-console.log(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + process.env.SEMIO_CAPTURE_DEPENDENCY_URL + "#fixture-dependency@0.0.0", target: { kind: ["lib"], name: "fixture_dependency" }, filenames: [dependency] }));
-if (process.env.SEMIO_CAPTURE_MISSING === "1") await Bun.sleep(30000);
-console.log(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + process.env.SEMIO_CAPTURE_PRIMARY_URL + "#fixture-primary@0.0.0", target: { kind: ["lib"], name: "fixture_primary" }, filenames: [primary] }));
-await Bun.sleep(Number(process.env.SEMIO_CAPTURE_DELAY_MS));
-rmSync(dependency);
-writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
-`);
-    chmodSync(stub, 0o755);
-    if (process.platform === "win32") writeFileSync(join(binRoot, "cargo.cmd"), `@bun "%~dp0📜️script.ts" %*\r\n`);
-    else symlinkSync("📜️script.ts", join(binRoot, "cargo"));
-    process.env.PATH = binRoot + delimiter + (capturePath ?? "");
-    process.env.SEMIO_CAPTURE_DEPENDENCY = dependency;
-    process.env.SEMIO_CAPTURE_PRIMARY = primary;
-    process.env.SEMIO_CAPTURE_DEPENDENCY_URL = pathToFileURL(dependencyRoot).href;
-    process.env.SEMIO_CAPTURE_PRIMARY_URL = pathToFileURL(packageRoot).href;
-    process.env.SEMIO_CAPTURE_DEPENDENCY_BYTES = cases.artifactCapture.dependency;
-    process.env.SEMIO_CAPTURE_PRIMARY_BYTES = cases.artifactCapture.primary;
-    process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES = cases.artifactCapture.replacement;
-    process.env.SEMIO_CAPTURE_DELAY_MS = String(cases.artifactCapture.delayMs);
-    const control = scriptCompilerAdmissionControlV1(invocation, "native:capture-fixture", 30000), published = join(packageRoot, "dist/build", readBuildMode(process.env.SEMIO_BUILD_MODE));
-    await nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot, { control });
-    assert.equal(readFileSync(join(published, "deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "Cargo dependency must be captured before a successor can replace its shared output");
-    assert.equal(readFileSync(join(published, "libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "Cargo primary output must be captured from the same compiler event epoch");
-    process.env.SEMIO_CAPTURE_MISSING = "1";
-    const failureStarted = Date.now();
-    await assert.rejects(nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml", [], captureRoot, { control }), /ENOENT/);
-    assert.ok(Date.now() - failureStarted < 5000, "A capture failure must cancel and await Cargo without leaving the build alive");
-    assert.equal(readFileSync(join(published, "deps/libfixture_dependency.rlib"), "utf8"), cases.artifactCapture.dependency, "A capture failure must preserve the previous dependency output");
-    assert.equal(readFileSync(join(published, "libfixture_primary.rlib"), "utf8"), cases.artifactCapture.primary, "A capture failure must preserve the previous primary output");
-    assert.equal(readdirSync(join(packageRoot, "dist")).some((name) => name.startsWith("cargo-artifacts-")), false, "A capture failure must remove its private directory");
-  } finally {
-    process.env.PATH = capturePath;
-    for (const name of ["SEMIO_CAPTURE_DEPENDENCY", "SEMIO_CAPTURE_PRIMARY", "SEMIO_CAPTURE_DEPENDENCY_URL", "SEMIO_CAPTURE_PRIMARY_URL", "SEMIO_CAPTURE_DEPENDENCY_BYTES", "SEMIO_CAPTURE_PRIMARY_BYTES", "SEMIO_CAPTURE_REPLACEMENT_BYTES", "SEMIO_CAPTURE_DELAY_MS", "SEMIO_CAPTURE_MISSING"]) delete process.env[name];
-    rmSync(captureRoot, { recursive: true, force: true });
-  }
+  const captureRoot=mkdtempSync(join(output,"artifact-refusal-"));let consumed=false;
+  try{const{repositoryCargoNetworkV1}=await import("../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),control=scriptCompilerAdmissionControlV1(invocation,"native:foreign-workspace-refusal",0);await assert.rejects(nativeBuild.buildRepositoryCargoArtifacts("package/Cargo.toml",[],captureRoot,{producer:"artifact",invocation,control,network:repositoryCargoNetworkV1(invocation,workspace),consume:async()=>{consumed=true;throw Error("Foreign workspace must never admit a compiler consumer");}}),/workspace/u);assert.equal(consumed,false);assert.deepEqual(readdirSync(captureRoot),[]);}finally{rmSync(captureRoot,{recursive:true,force:true});}
   const root = mkdtempSync(join(output, "native-preparation-"));
   try {
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }

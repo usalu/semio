@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "request": {
+    "version": 1,
+    "kind": "consumer-lifetime"
+  },
+  "invalidRequests": [
+    {
+      "version": 1,
+      "kind": "consumer-lifetime",
+      "filesystemBytes": 33554432
+    },
+    {
+      "version": 1,
+      "kind": "consumer-lifetime",
+      "control": {}
+    },
+    {
+      "version": 1,
+      "kind": "maintenance"
+    },
+    {
+      "version": 2,
+      "kind": "consumer-lifetime"
+    }
+  ]
+}

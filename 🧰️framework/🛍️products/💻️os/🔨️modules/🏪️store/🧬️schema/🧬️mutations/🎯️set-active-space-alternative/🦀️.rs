@@ -1,6 +1,6 @@
 //! 🎯️ Direct active space-alternative restoration mutation.
-use super::super::SpaceHistoryMutation;
-use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
+use crate::space_history_mutations::SpaceHistoryMutation;
+use crate::space_history_document::{SpaceHistoryDiff, SpaceHistorySnapshot, SpaceHistoryStep};
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -37,10 +37,10 @@ where
 //#endregion ⚙️Serde
 
 //#region ⚙️Semantics
-impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
-    const SEMANTICS: crate::os_spr::SemanticDescriptor = crate::os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
-    fn diff(&self, _base: &SpaceHistorySnapshot) -> crate::os_spr::MutationOutcome<SpaceHistoryDiff> {
-        crate::os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
+impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SetActiveSpaceAlternative {
+    const SEMANTICS: semio_framework_os_spr::SemanticDescriptor = semio_framework_os_spr::SemanticDescriptor { verb: "set", entity: "active-space-alternative", kind: "set-active-space-alternative", record: "SetActiveSpaceAlternative" };
+    fn diff(&self, _base: &SpaceHistorySnapshot) -> semio_framework_os_spr::MutationOutcome<SpaceHistoryDiff> {
+        semio_framework_os_spr::MutationOutcome::new(SpaceHistoryDiff::step(SpaceHistoryStep::SetActive { alternative_id: self.alternative_id.clone() }))
     }
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Result<Vec<SpaceHistoryMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -48,17 +48,14 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Set active space alternative", "Aktive Space-Alternative setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["activeAlternativeId".into()]
     }
 }
 //#endregion ⚙️Semantics
-
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

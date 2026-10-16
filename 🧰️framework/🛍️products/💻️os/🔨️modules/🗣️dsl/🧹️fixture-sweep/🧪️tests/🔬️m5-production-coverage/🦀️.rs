@@ -3,7 +3,7 @@ use super::m5_soft_skip::soft_skip_missing;
 use super::pilot_resolve;
 use semio_framework_dsl::parse_grammar;
 use semio_framework_dsl::Recognizer;
-use crate::os_store::semio_format::split_text_preamble;
+use semio_framework_os_kernel::os_store::semio_format::split_text_preamble;
 
 async fn dsl_body_from_host_snapshot(text: &str) -> String {
     if text.trim_start().starts_with("semio ") {
@@ -36,7 +36,7 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
         // A grammar that fails to even parse is grammar_conformance's failure to surface —
         // this diagnostic only covers the uncovered-productions signal once a grammar parses.
         let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
-        let recognizer = Recognizer::compile(&grammar, &crate::os_dsl::grammar::family_fragments().expect("OS family grammar"), crate::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
+        let recognizer = Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let body = dsl_body_from_host_snapshot(&fixture_text).await;
         let Ok(uncovered) = recognizer.uncovered_productions(&body) else { continue };
         if !uncovered.is_empty() {

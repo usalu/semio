@@ -1,10 +1,62 @@
 //! 🧩️ The app contract: `ArtifactApp`, media artifacts, `PluginApp` and the action registry.
-use semio_framework::HISTORY_EDIT_ACTION_IDS;
-use crate::window_kits::AppActionRegistry;
-use crate::MountedOwnerPhaseV1;
+#![feature(associated_type_defaults)]
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+#[doc(hidden)]
+#[path = "../👷️job/🦀️.rs"]
+pub mod tool_contract;
+#[doc(hidden)]
+#[path = "🛬️lifted/♻️retirement/🦀️.rs"]
+pub mod completion_retirement;
+#[allow(unused_imports)]
+pub use completion_retirement::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/⚠️fault/🦀️.rs"]
+pub mod completion_fault;
+#[allow(unused_imports)]
+pub use completion_fault::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🚫️refusal/🦀️.rs"]
+pub mod completion_refusal_retirement;
+#[allow(unused_imports)]
+pub use completion_refusal_retirement::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🧬️context/🦀️.rs"]
+pub mod owned_context;
+#[allow(unused_imports)]
+pub use owned_context::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🎞️media-turn/🦀️.rs"]
+pub mod media_operation_refusal;
+#[allow(unused_imports)]
+pub use media_operation_refusal::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/🛫️intrinsic/🦀️.rs"]
+pub mod media_intrinsic;
+#[allow(unused_imports)]
+pub use media_intrinsic::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/⏳️operation-progress/🦀️.rs"]
+pub mod operation_progress;
+#[allow(unused_imports)]
+pub use operation_progress::*;
+#[doc(hidden)]
+#[path = "🛬️lifted/📨️emission/🦀️.rs"]
+pub mod app_emission;
+#[doc(hidden)]
+#[path = "🛬️lifted/⏯️tool-run/🦀️.rs"]
+pub mod tool_run_contract;
+#[doc(hidden)]
+#[path = "🛬️lifted/🎬️media-export/🦀️.rs"]
+pub mod media_contract;
+use semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS;
+use semio_framework_plugin_window_kits::AppActionRegistry;
+use semio_framework_plugin_mounted_owner::MountedOwnerPhaseV1;
 use semio_framework_plugin_ownership::transient_publication::bounded_transient_store_disposer;
-use super::window_config::WindowConfigOwnerRegistry;
-use super::window_transient::WindowTransientOwnerRegistry;
+use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_framework_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
 use semio_framework_value::DslValue;
 use semio_framework::kernel::UiDirtyScope;
 /// 🪪️ Declarative app manifest shared by plugin builders and surface registrations.
@@ -29,10 +81,10 @@ use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore, ConfigStore};
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::ContextMenuItemSpec;
-use ui_wgpu::wgpu::ContextMenuRequest;
-use ui_wgpu::wgpu::WindowEngagement;
-use ui_wgpu::wgpu::WindowMeasure;
+use semio_framework_ui_layout::layout::ContextMenuItemSpec;
+use semio_framework_ui_layout::layout::ContextMenuRequest;
+use semio_framework_ui_layout::layout::WindowEngagement;
+use semio_framework_ui_layout::layout::WindowMeasure;
 /// 🎞️ `MediaWireFormat` backs `MediaArtifactDescriptor::wire` (see `🔖️DocumentContract`
 /// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
 /// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
@@ -54,40 +106,40 @@ use semio_framework::{MediaClass, MediaType};
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework::AppRole;
-use crate::app_emission::Emit;
+use semio_framework_plugin_decl_emission::Emit;
 use crate::app_emission::EphemeralEmit;
-use crate::app_emission::HostEvent;
-use crate::app_views::AppRenderOperationContext;
-use crate::app_views::ArtifactView;
-use crate::app_views::ConfigView;
-use crate::app_views::DraftView;
-use crate::app_views::InteractionView;
-use crate::app_views::PresenceView;
-use crate::window_transient::TransientView;
+use semio_framework_plugin_decl_emission::HostEvent;
+use semio_framework_plugin_decl_views::AppRenderOperationContext;
+use semio_framework_plugin_decl_views::ArtifactView;
+use semio_framework_plugin_decl_views::ConfigView;
+use semio_framework_plugin_decl_views::DraftView;
+use semio_framework_plugin_decl_views::InteractionView;
+use semio_framework_plugin_decl_views::PresenceView;
+use semio_framework_plugin_window_transient::window_transient::TransientView;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use crate::media_contract::ArtifactMediaExportJobRequest;
 use crate::tool_contract::ArtifactReservedToolJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
-use crate::app_emission::ArtifactMutationOutcome;
+use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use crate::tool_contract::ArtifactInstanceOperationOwner;
-use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
 use crate::tool_contract::ArtifactOwnedToolJobRequest;
 use crate::tool_contract::ArtifactReservedToolJobRequest;
 use crate::tool_contract::ArtifactToolCompletionValue;
 use crate::tool_contract::ArtifactToolFactoryRegistry;
-use crate::tool_contract::EmptyArtifactInstanceOperationOwner;
-use crate::tool_run_contract::ToolRunJob;
+use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
 use crate::tool_run_contract::ToolRunJobRequest;
-use crate::tool_run_contract::ToolRunRetargetableJob;
+use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 
-use crate::window_kits::merge_ui_values;
-use crate::window_surface::UiAssemblyResult;
+use semio_framework_plugin_window_kits::merge_ui_values;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 /// 🧩️ Typed, per-app author surface. An app declares its `Snapshot` and `Mutation` (a
 /// `store::Mutation<Snapshot>`), mutates nothing directly, and returns an {@link ActionEmit} whose
@@ -112,9 +164,9 @@ use crate::window_surface::UiAssemblyResult;
 ///   driving the above.
 pub trait ArtifactApp: Default + Send + 'static {
     /// 📬️ Measures the original typed completion's exact app-owned cleanup constructor.
-    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{super::completion_retirement::derived_completion_birth_bytes(value)}
+    fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{crate::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Admits the original completion payload without consuming it on an unfunded or unsupported route.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{super::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{crate::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 🎟️ Declares the exact first-party scaffold birth for an applying parent mutation source.
     fn owned_mutation_batch_birth_bytes()->Option<usize>{None}
     /// 🪵️ Retains the original parent source on every refused or unfunded admission.
@@ -263,7 +315,6 @@ pub trait ArtifactApp: Default + Send + 'static {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media output lacks its concrete source-preserving producer").into())
     }
 
-
     /// 🧬️ Installs the exact domain-owned catalog and nested retirement factories for
     /// retained envelope decode. `None` grants no decoder authority.
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -327,7 +378,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// its own paging overrides it, but none has to declare one to be allowed to READ its own
     /// presence.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     /// 🧹️ Supplies exact bounded retirement for a displaced transient root.
@@ -384,12 +435,12 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
 
     fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
     /// 🧹️ The peer half of the same lane, framework-owned by the same default.
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
+        Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
@@ -635,8 +686,8 @@ pub trait ArtifactApp: Default + Send + 'static {
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
         cx:&mut semio_framework_job::StepContext<'_>,
-    ) -> crate::OriginalRenderResult<ComponentTree> {
-        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=async{
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<semio_framework_ui_runtime::ComponentTree>=async{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state).await
 
@@ -819,18 +870,6 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
 }
 
-/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜️world.wit`): `descriptor` is the
-/// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
-/// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
-/// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
-/// level, not a specific `MediaPortSpec`, so `PluginApp::{consume_media, produce_media}` below default
-/// to a document passthrough rather than requiring any `media_ports()` declaration at all.
-#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
-pub struct MediaArtifact {
-    pub descriptor: MediaArtifactDescriptor,
-    pub data: Vec<u8>,
-}
-
 /// 📄️ One editor-owned natural-file codec, matched exactly to its declared representation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct NaturalFileCodec {
@@ -873,7 +912,7 @@ pub enum NaturalFileDecodeOwner<T> {
 /// 📄️ The ABI port reserved for an editor's mounted natural-file codec.
 pub const NATURAL_FILE_PORT: &str = semio_framework::NATURAL_FILE_PORT_ID;
 
-pub(crate) fn natural_file_input_media(codec: NaturalFileCodec, media_type: MediaType, data: Vec<u8>) -> Media {
+pub fn natural_file_input_media(codec: NaturalFileCodec, media_type: MediaType, data: Vec<u8>) -> Media {
     Media { media_type, payload: MediaPayload::Intrinsic { schema: codec.format_kind.to_string(), value: DslValue::Bytes(data) } }
 }
 
@@ -886,7 +925,7 @@ pub fn document_load_emit<S: ArtifactPack + ::semio_framework_os_kernel::os_stor
     Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }
 }
 
-pub(crate) fn natural_file_input_bytes<'a>(port: &str, codec: NaturalFileCodec, media: &'a Media) -> Result<&'a [u8], MediaError> {
+pub fn natural_file_input_bytes<'a>(port: &str, codec: NaturalFileCodec, media: &'a Media) -> Result<&'a [u8], MediaError> {
     let MediaPayload::Intrinsic { schema, value: DslValue::Bytes(bytes) } = &media.payload else {
         return Err(MediaError::Payload(port.to_string(), "natural file importer requires intrinsic owned bytes".into()));
     };
@@ -902,7 +941,7 @@ fn natural_file_action_arg(id: &str, value: &impl semio_framework_value::ToValue
     argument
 }
 
-pub(crate) fn natural_file_action_definitions(codec: NaturalFileCodec) -> [ActionDefinition; 2] {
+pub fn natural_file_action_definitions(codec: NaturalFileCodec) -> [ActionDefinition; 2] {
     let args = || {
         vec![
             natural_file_action_arg("formatKind", &codec.format_kind),
@@ -920,7 +959,7 @@ pub(crate) fn natural_file_action_definitions(codec: NaturalFileCodec) -> [Actio
     ]
 }
 
-pub(crate) fn mount_natural_file_actions(definition: &mut AppDefinition, codec: NaturalFileCodec) {
+pub fn mount_natural_file_actions(definition: &mut AppDefinition, codec: NaturalFileCodec) {
     if !definition.io.export_formats.iter().any(|format| format == codec.format_kind) {
         definition.io.export_formats.push(codec.format_kind.to_string());
     }
@@ -1056,17 +1095,6 @@ pub fn document_load_fault(code: &'static str, message: impl Into<String>) -> Fa
     Fault::new(FaultOrigin::Framework, FaultCode::new(code), message)
 }
 
-/// 🎞️ A whole document on a media edge (`artifact:out`): the recursive document archive (parent pack + `.spr` + owned members) as
-/// `pk:` base64 text on the `Document{schema}` wire — the `Structured{schema, json}` convention of `export_media`, which every host
-/// carries losslessly as text.
-pub async fn whole_document_media(port: &str, schema: String, archive: &protocol::DocumentArchivePack) -> Result<MediaArtifact, MediaArtifactError> {
-    let bytes = protocol::encode_document_archive_bytes(archive).map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
-    Ok(MediaArtifact {
-        descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port.to_string()), kind_id: None, media_type: None, wire: MediaWireFormat::Document { schema }, blob_hash: None },
-        data: store::pack_rt::pack_value_to_base64(&bytes).into_bytes(),
-    })
-}
-
 /// 🎞️ The archive a [`whole_document_media`] carrier holds.
 pub async fn whole_document_archive(data: &[u8]) -> Result<protocol::DocumentArchivePack, MediaArtifactError> {
     let text = std::str::from_utf8(data).map_err(|_| MediaArtifactError::Payload("a whole-document media carrier is pk: base64 text".into()))?;
@@ -1083,29 +1111,6 @@ pub fn media_artifact_fault(error: MediaArtifactError) -> Fault {
     }
 }
 
-include!("../../🎞️media/🛫️intrinsic/🦀️.rs");
-
-include!("../../🎞️media/💥️fault/🦀️.rs");
-
-impl MediaArtifact {
-    /// 🎞️ Owns exact intrinsic bytes and descriptor text from one borrowed media owner.
-    pub fn encode_intrinsic(port:&str,media_type:MediaType,schema:&str,value:&DslValue,owner:&mut crate::io::control::NativeSnapshotEncodeOwner<'_ ,'_>)->Result<Self,MediaArtifactError>{
-        let (port,schema,data)=encode_intrinsic_parts(port,schema,value,owner)?;
-        Ok(Self{descriptor:MediaArtifactDescriptor{edge_id:None,port_id:Some(port),kind_id:None,media_type:Some(media_type),wire:MediaWireFormat::Intrinsic{schema},blob_hash:None},data})
-    }
-
-    /// 🎞️ Reads one full inline intrinsic payload under the caller's import control.
-    pub fn decode_intrinsic(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Media,MediaArtifactError>{
-        let MediaWireFormat::Intrinsic{schema}=&self.descriptor.wire else{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"media wire is not intrinsic").into())};
-        if self.descriptor.blob_hash.is_some(){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"intrinsic media requires inline bytes").into())}
-        let media_type=self.descriptor.media_type.ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"intrinsic media requires a declared media type"))?;
-        let schema=control.copy_text(schema)?;let value=store::pack_rt::decode_wire_value_controlled(&self.data,&store::PackDecodeOptions::default(),control).map_err(|error|MediaArtifactError::Value(error.into_value_error()))?;
-        Ok(Media{media_type,payload:MediaPayload::Intrinsic{schema,value}})
-    }
-}
-
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-owned-media-error/🦀️.rs");
 
 /// 🔀️ `PluginApp::transaction_prepare`'s result: `foreign` is this member's own recursively
 /// discovered foreign steps (contract §5.4 — empty when its prepared ops touch no other
@@ -1146,11 +1151,11 @@ pub struct EphemeralSnapshot {
 /// moves the head (and the scoped history edits it projects) for every replica, so it is a write, not a read cursor.
 /// `try_build_definition` never declares these on a viewer app, so no host offers or binds them to a
 /// Spectator; this guard is the backstop for a dispatch no manifest offered.
-pub(crate) const VIEWER_REJECTED_ACTION_IDS: [&str; 9] = ["undo", "redo", "commitCheckpoint", "createAlternative", semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
+pub const VIEWER_REJECTED_ACTION_IDS: [&str; 9] = ["undo", "redo", "commitCheckpoint", "createAlternative", semio_framework::SWITCH_ALTERNATIVE_ACTION_ID, "checkoutCheckpoint", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"];
 
 /// 🔒️ Whether a `Viewer`-role instance rejects `action`: the [`VIEWER_REJECTED_ACTION_IDS`] and every history-edit
 /// verb (editing history supersedes inputs, which a viewer never may).
-pub(crate) fn viewer_rejects_action(action: &str) -> bool {
+pub fn viewer_rejects_action(action: &str) -> bool {
     VIEWER_REJECTED_ACTION_IDS.contains(&action) || is_time_travel_action_id(action)
 }
 

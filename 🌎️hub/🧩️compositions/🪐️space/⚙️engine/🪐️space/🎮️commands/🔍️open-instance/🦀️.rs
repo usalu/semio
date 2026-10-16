@@ -1,9 +1,8 @@
 //! 🔍️ 🔍️ S Studio app command — `open-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation, ActiveNodeSetting, FocusedNodeSetting};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Effect, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "open-instance")]
@@ -17,7 +16,7 @@ pub struct OpenInstance {
 pub async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
     let resolved_node_id = match payload.node_id.clone() {
         Some(node_id) => Some(node_id),
-        None => crate::engine::space::primary_selected_node_id(selected, config).await,
+        None => semio_hub_space_operations::primary_selected_node_id(selected, config).await,
     };
     match resolved_node_id {
         Some(node_id) => match doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id) {
@@ -38,15 +37,10 @@ pub async fn open_with_selection(payload: &OpenInstance, doc: &ArtifactView<'_, 
 /// `apply` below instead); `payload.node_id` (when set) is unaffected — only the "fall back to the
 /// live selection" step degrades to empty.
 pub fn handle(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(open_with_selection(payload, doc, cfg.snapshot, &[])))
+    Ok(semio_hub_space_operations::resolve_future(open_with_selection(payload, doc, cfg.snapshot, &[])))
 }
 
 pub async fn apply(payload: &OpenInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     Ok(open_with_selection(payload, doc, cfg.snapshot, &interaction.selection("graph").ids).await)
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

@@ -4,7 +4,7 @@ name = "semio-framework-artifact-workflow-workflow"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Persisted workflow graph artifact"
+description = "Persisted workflow graph artifact facade — re-exports the graph model, snapshot and schema producers"
 
 [package.metadata.semio]
 role = "artifact"
@@ -17,23 +17,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-artifact-reference = { workspace = true }
-semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
-semio-framework-value-derive = { workspace = true }
-semio-framework-schema = { workspace = true }
-
-[dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
-semio-framework-async-macros = { workspace = true }
-serde_json = { workspace = true }
+semio-framework-artifact-workflow-workflow-graph = { path = "../../🕸️graph/📦️packages/🦀️rust" }
+semio-framework-artifact-workflow-workflow-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
+semio-framework-artifact-workflow-workflow-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }

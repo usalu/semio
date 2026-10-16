@@ -29,7 +29,8 @@
         "root": "vite",
         "maximumOutputBytes": 1073741824,
         "maximumOutputFiles": 65536,
-        "writerShards": 16
+        "writerShards": 16,
+        "maximumPendingTransforms": 32
       }
     },
     "Artifact": {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::io::binary::causal::*;
+use crate::binary::*;
 
 //#region 🧸️Fixtures
 // Dummy (P=i64, Op=CausalAddOp) pair: the smallest possible Mutation/MutationDiff impl,
@@ -8,19 +8,19 @@ use crate::io::binary::causal::*;
 struct CausalAddDiff {
     delta: i64,
 }
-impl crate::value::ToValue for CausalAddDiff {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object([("delta".to_string(), crate::value::ToValue::to_value(&self.delta))])
+impl semio_framework_value::ToValue for CausalAddDiff {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([("delta".to_string(), semio_framework_value::ToValue::to_value(&self.delta))])
     }
 }
-impl crate::value::FromValue for CausalAddDiff {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+impl semio_framework_value::FromValue for CausalAddDiff {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.into_object()?;
-        let delta = entries.iter().find(|(k, _)| k == "delta").map_or(Ok(0), |(_, v)| crate::value::FromValue::from_value(v.clone()))?;
+        let delta = entries.iter().find(|(k, _)| k == "delta").map_or(Ok(0), |(_, v)| semio_framework_value::FromValue::from_value(v.clone()))?;
         Ok(Self { delta })
     }
 }
-impl crate::mutation::DiffAlgebra<i64> for CausalAddDiff {
+impl semio_framework_mutation_diff::DiffAlgebra<i64> for CausalAddDiff {
     fn inverse(&self, _base: &i64) -> Self {
         Self { delta: -self.delta }
     }
@@ -28,8 +28,8 @@ impl crate::mutation::DiffAlgebra<i64> for CausalAddDiff {
         self.delta == 0
     }
 }
-impl crate::mutation::MutationDiff<i64> for CausalAddDiff {
-    fn apply(&self, base: &i64, _capability: crate::mutation::ApplyCapability) -> crate::mutation::MutationApplyResult<i64> {
+impl semio_framework_mutation_diff::MutationDiff<i64> for CausalAddDiff {
+    fn apply(&self, base: &i64, _capability: semio_framework_mutation_diff::ApplyCapability) -> semio_framework_mutation_diff::MutationApplyResult<i64> {
         Ok(base + self.delta)
     }
     fn absorb(&mut self, other: Self) {
@@ -41,19 +41,19 @@ impl crate::mutation::MutationDiff<i64> for CausalAddDiff {
 struct CausalAddOp {
     delta: i64,
 }
-impl crate::value::ToValue for CausalAddOp {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object([("delta".to_string(), crate::value::ToValue::to_value(&self.delta))])
+impl semio_framework_value::ToValue for CausalAddOp {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object([("delta".to_string(), semio_framework_value::ToValue::to_value(&self.delta))])
     }
 }
-impl crate::value::FromValue for CausalAddOp {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+impl semio_framework_value::FromValue for CausalAddOp {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.into_object()?;
-        let delta = entries.iter().find(|(k, _)| k == "delta").map_or(Ok(0), |(_, v)| crate::value::FromValue::from_value(v.clone()))?;
+        let delta = entries.iter().find(|(k, _)| k == "delta").map_or(Ok(0), |(_, v)| semio_framework_value::FromValue::from_value(v.clone()))?;
         Ok(Self { delta })
     }
 }
-const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mutation::MutationLeafDescriptor {
+const CAUSAL_ADD_DESCRIPTOR: semio_framework_replication_mutation::MutationLeafDescriptor = semio_framework_replication_mutation::MutationLeafDescriptor {
     schema_version: 1,
     owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add",
     semantic_kind: "causal-add",
@@ -63,20 +63,20 @@ const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mu
     payload_schema: "🦀️.rs#CausalAddOp",
     text_opcode: None,
     binary_tag: None,
-    invertibility: crate::mutation::MutationInvertibility::ExplicitMutation,
-    diff_participation: crate::mutation::MutationDiffParticipation::ApplyOnly,
-    outcome_classes: &[crate::mutation::MutationOutcomeClass::Applied],
-    composition: crate::mutation::MutationComposition::Atomic,
-    required_language_surfaces: &[crate::mutation::MutationLanguageSurface::Rust, crate::mutation::MutationLanguageSurface::Binary],
+    invertibility: semio_framework_replication_mutation::MutationInvertibility::ExplicitMutation,
+    diff_participation: semio_framework_replication_mutation::MutationDiffParticipation::ApplyOnly,
+    outcome_classes: &[semio_framework_replication_mutation::MutationOutcomeClass::Applied],
+    composition: semio_framework_replication_mutation::MutationComposition::Atomic,
+    required_language_surfaces: &[semio_framework_replication_mutation::MutationLanguageSurface::Rust, semio_framework_replication_mutation::MutationLanguageSurface::Binary],
 };
-impl crate::mutation::Mutation<i64> for CausalAddOp {
+impl semio_framework_replication_mutation::Mutation<i64> for CausalAddOp {
     type Diff = CausalAddDiff;
-    const DESCRIPTORS: &'static [crate::mutation::MutationLeafDescriptor] = &[CAUSAL_ADD_DESCRIPTOR];
-    fn descriptor(&self) -> &'static crate::mutation::MutationLeafDescriptor {
+    const DESCRIPTORS: &'static [semio_framework_replication_mutation::MutationLeafDescriptor] = &[CAUSAL_ADD_DESCRIPTOR];
+    fn descriptor(&self) -> &'static semio_framework_replication_mutation::MutationLeafDescriptor {
         &CAUSAL_ADD_DESCRIPTOR
     }
-    fn diff(&self, _base: &i64) -> crate::mutation::MutationOutcome<CausalAddDiff> {
-        crate::mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
+    fn diff(&self, _base: &i64) -> semio_framework_replication_mutation::MutationOutcome<CausalAddDiff> {
+        semio_framework_replication_mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
     }
     fn inverse(&self, _base: &i64) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -87,15 +87,15 @@ impl crate::mutation::Mutation<i64> for CausalAddOp {
 }
 /// 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
 /// u8 (=1) | delta i64 LE`.
-impl crate::io::OpBinary for CausalAddOp {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> {
+impl semio_framework_replication_codec::OpBinary for CausalAddOp {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_replication_error::ProtocolError> {
         let mut out = vec![1u8];
         out.extend_from_slice(&self.delta.to_le_bytes());
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_replication_error::ProtocolError> {
         if bytes.len() != 9 || bytes[0] != 1 {
-            return Err(crate::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
+            return Err(semio_framework_replication_error::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
         }
         let mut delta_bytes = [0u8; 8];
         delta_bytes.copy_from_slice(&bytes[1..9]);
@@ -116,15 +116,15 @@ impl MutationTransform<i64> for CausalAddOp {
 
 fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
     MutationEnvelope {
-        mutation_id: crate::ids::MutationId(id.into()),
-        document_id: crate::ids::ArtifactId("document-1".into()),
-        actor: crate::ids::ActorId("actor-1".into()),
-        dependencies: deps.into_iter().map(|dep| crate::ids::MutationId(dep.into())).collect(),
+        mutation_id: semio_framework_replication_ids::MutationId(id.into()),
+        document_id: semio_framework_replication_ids::ArtifactId("document-1".into()),
+        actor: semio_framework_replication_ids::ActorId("actor-1".into()),
+        dependencies: deps.into_iter().map(|dep| semio_framework_replication_ids::MutationId(dep.into())).collect(),
         observed: None,
         target: Vec::new(),
-        diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
-        inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
-        timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
+        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
+        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: Vec::new() },
+        timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }
 }
@@ -148,11 +148,11 @@ fn retire_dag_shell(dag: &mut MutationDag) {
 
 #[test]
 fn causal_add_fixture_has_exact_required_descriptor() {
-    use crate::mutation::Mutation;
+    use semio_framework_replication_mutation::Mutation;
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor/🔣️.json")).unwrap();
     assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
     assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
-    assert_eq!(serde_json::Value::from(crate::value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor())), expected);
+    assert_eq!(serde_json::Value::from(semio_framework_value::ToValue::to_value(CausalAddOp { delta: -7 }.descriptor())), expected);
 }
 
 //#region 🔖️Envelope
@@ -216,7 +216,7 @@ fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
     let mut dag = MutationDag::new();
     assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
     assert!(dag.ready_identity_at(0).is_none(), "dependency is not yet known to this dag");
-    dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).unwrap();
+    dag.seed_applied(semio_framework_replication_ids::MutationId("operation-1".to_string())).unwrap();
     assert_eq!(dag.ready_identity_at(0), Some("operation-2"));
     retire_dag_shell(&mut dag);
 }
@@ -224,8 +224,8 @@ fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
 #[test]
 fn duplicate_seed_returns_the_exact_unadopted_identity_owner() {
     let mut dag = MutationDag::new();
-    dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).unwrap();
-    let rejected = dag.seed_applied(crate::ids::MutationId("operation-1".to_string())).expect_err("duplicate seed must not consume its exact owner");
+    dag.seed_applied(semio_framework_replication_ids::MutationId("operation-1".to_string())).unwrap();
+    let rejected = dag.seed_applied(semio_framework_replication_ids::MutationId("operation-1".to_string())).expect_err("duplicate seed must not consume its exact owner");
     assert_eq!(rejected.error, MutationDagError::Duplicate);
     assert_eq!(rejected.mutation_id.0, "operation-1");
     retire_dag_shell(&mut dag);
@@ -257,9 +257,9 @@ fn opdagerror_display_is_non_empty() {
 fn fixed_causal_authority_rejects_capacity_plus_one_with_exact_identity_and_closes_one_owner_at_a_time() {
     let mut dag = MutationDag::new();
     for index in 0..MUTATION_DAG_CAPACITY {
-        dag.seed_applied(crate::ids::MutationId(format!("seed-{index:04}"))).expect("exact fixed capacity is admitted");
+        dag.seed_applied(semio_framework_replication_ids::MutationId(format!("seed-{index:04}"))).expect("exact fixed capacity is admitted");
     }
-    let rejected = dag.seed_applied(crate::ids::MutationId("capacity-plus-one".into())).expect_err("capacity plus one must retain its exact identity owner");
+    let rejected = dag.seed_applied(semio_framework_replication_ids::MutationId("capacity-plus-one".into())).expect_err("capacity plus one must retain its exact identity owner");
     assert_eq!(rejected.error, MutationDagError::Capacity);
     assert_eq!(rejected.mutation_id.0, "capacity-plus-one");
     let mut released = 0;
@@ -359,7 +359,7 @@ mod quick {
 
 //#region 🔖️Frontier
 fn frontier(document_id: &str, ordinal: u64, head_id: &str, commit_seq: u64, chain_byte: u8) -> FrontierSummary {
-    FrontierSummary { document_id: crate::ids::ArtifactId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
+    FrontierSummary { document_id: semio_framework_replication_ids::ArtifactId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: head_id.into(), last_commit_seq: commit_seq, chain_hash: [chain_byte; 32] }
 }
 
 #[test]
@@ -395,8 +395,8 @@ fn frontier_delta_same_ordinal_different_head_is_diverged() {
 #[test]
 fn frontier_summary_to_value_round_trips() {
     let summary = frontier("doc-1", 7, "edit-7", 2, 5);
-    let value = crate::value::ToValue::to_value(&summary);
-    let round_tripped: FrontierSummary = crate::value::FromValue::from_value(value).expect("decode");
+    let value = semio_framework_value::ToValue::to_value(&summary);
+    let round_tripped: FrontierSummary = semio_framework_value::FromValue::from_value(value).expect("decode");
     assert_eq!(round_tripped, summary);
 }
 //#endregion 🔖️Frontier
@@ -430,70 +430,70 @@ fn transform_conflict_case_carries_message() {
 //#region 🔖️Bridge
 #[test]
 fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explicit_meta() {
-    let edit = crate::mutation::Edit::<CausalAddOp> {
+    let edit = semio_framework_replication_edit::Edit::<CausalAddOp> {
         id: "edit-1".into(),
         actor: Some("actor-fallback".into()),
         forwards: vec![CausalAddOp { delta: 1 }, CausalAddOp { delta: 2 }],
         inverse: vec![CausalAddOp { delta: -1 }, CausalAddOp { delta: -2 }].into(),
         mutation_meta: vec![
-            crate::mutation::MutationMeta {
-                mutation_id: Some(crate::ids::MutationId("op-a".into())),
-                dependencies: vec![crate::ids::MutationId("op-0".into())],
+            semio_framework_replication_edit::MutationMeta {
+                mutation_id: Some(semio_framework_replication_ids::MutationId("op-a".into())),
+                dependencies: vec![semio_framework_replication_ids::MutationId("op-0".into())],
                 base_version: 0,
-                author_id: Some(crate::ids::ActorId("actor-explicit".into())),
-                timestamp: crate::ids::HybridLogicalTimestamp::new(1, 1000),
-                undo_policy: crate::UndoPolicy::ExactBaseOnly,
+                author_id: Some(semio_framework_replication_ids::ActorId("actor-explicit".into())),
+                timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 1000),
+                undo_policy: semio_framework_replication_wire_core::UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
                 group_id: None,
-                origin: crate::mutation::MutationOrigin::Owner,
+                origin: semio_framework_replication_edit::MutationOrigin::Owner,
                 transaction: None,
             },
-            crate::mutation::MutationMeta {
-                mutation_id: Some(crate::ids::MutationId("op-b".into())),
-                dependencies: vec![crate::ids::MutationId("op-a".into())],
+            semio_framework_replication_edit::MutationMeta {
+                mutation_id: Some(semio_framework_replication_ids::MutationId("op-b".into())),
+                dependencies: vec![semio_framework_replication_ids::MutationId("op-a".into())],
                 base_version: 1,
                 author_id: None,
-                timestamp: crate::ids::HybridLogicalTimestamp::new(1, 2000),
-                undo_policy: crate::UndoPolicy::ExactBaseOnly,
+                timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 2000),
+                undo_policy: semio_framework_replication_wire_core::UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
                 group_id: None,
-                origin: crate::mutation::MutationOrigin::Owner,
-                transaction: Some(crate::mutation::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
+                origin: semio_framework_replication_edit::MutationOrigin::Owner,
+                transaction: Some(semio_framework_replication_edit::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
             },
         ], verb: None, line: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
     };
-    let document_id = crate::ids::ArtifactId("doc-1".into());
-    let schema = crate::ids::SchemaId("causal-add.v1".into());
+    let document_id = semio_framework_replication_ids::ArtifactId("doc-1".into());
+    let schema = semio_framework_replication_ids::SchemaId("causal-add.v1".into());
 
     let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
     assert_eq!(envelopes.len(), 2);
 
-    assert_eq!(envelopes[0].mutation_id, crate::ids::MutationId("op-a".into()));
-    assert_eq!(envelopes[0].actor, crate::ids::ActorId("actor-explicit".into()));
-    assert_eq!(envelopes[0].dependencies, vec![crate::ids::MutationId("op-0".into())]);
+    assert_eq!(envelopes[0].mutation_id, semio_framework_replication_ids::MutationId("op-a".into()));
+    assert_eq!(envelopes[0].actor, semio_framework_replication_ids::ActorId("actor-explicit".into()));
+    assert_eq!(envelopes[0].dependencies, vec![semio_framework_replication_ids::MutationId("op-0".into())]);
     assert_eq!(envelopes[0].document_id, document_id);
-    assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(1, 1000));
+    assert_eq!(envelopes[0].timestamp, semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 1000));
     assert_eq!(envelopes[0].diff.schema, schema);
-    assert_eq!(envelopes[0].diff.payload, crate::io::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
-    assert_eq!(envelopes[0].inverse.payload, crate::io::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
+    assert_eq!(envelopes[0].diff.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
+    assert_eq!(envelopes[0].inverse.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
     // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
-    assert_eq!(envelopes[1].mutation_id, crate::ids::MutationId("op-b".into()));
-    assert_eq!(envelopes[1].actor, crate::ids::ActorId("actor-fallback".into()));
+    assert_eq!(envelopes[1].mutation_id, semio_framework_replication_ids::MutationId("op-b".into()));
+    assert_eq!(envelopes[1].actor, semio_framework_replication_ids::ActorId("actor-fallback".into()));
     assert_eq!(envelopes[0].transaction, None, "an operation authored outside a tool transaction carries none");
     assert_eq!(envelopes[1].transaction, edit.mutation_meta[1].transaction, "the meta's transaction rides the wire envelope");
 }
 
 #[test]
 fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_without_meta() {
-    let edit = crate::mutation::Edit::<CausalAddOp> {
+    let edit = semio_framework_replication_edit::Edit::<CausalAddOp> {
         id: "edit-2".into(),
         actor: None,
         forwards: vec![CausalAddOp { delta: 5 }],
@@ -503,21 +503,21 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
     };
-    let document_id = crate::ids::ArtifactId("doc-2".into());
-    let schema = crate::ids::SchemaId("causal-add.v1".into());
+    let document_id = semio_framework_replication_ids::ArtifactId("doc-2".into());
+    let schema = semio_framework_replication_ids::SchemaId("causal-add.v1".into());
 
     let envelopes = mutation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
     assert_eq!(envelopes.len(), 1);
-    assert_eq!(envelopes[0].mutation_id, crate::ids::MutationId("edit-2#0".into()));
-    assert_eq!(envelopes[0].actor, crate::ids::ActorId("unknown".into()));
+    assert_eq!(envelopes[0].mutation_id, semio_framework_replication_ids::MutationId("edit-2#0".into()));
+    assert_eq!(envelopes[0].actor, semio_framework_replication_ids::ActorId("unknown".into()));
     assert!(envelopes[0].dependencies.is_empty());
-    assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(0, 0));
+    assert_eq!(envelopes[0].timestamp, semio_framework_replication_ids::HybridLogicalTimestamp::new(0, 0));
     assert_eq!(envelopes[0].inverse.payload, Vec::<u8>::new(), "inverse vec shorter than forwards -> empty inverse payload");
 }
 
 #[test]
 fn mutation_envelope_from_edit_propagates_an_encode_failure() {
-    let edit = crate::mutation::Edit::<CausalAddOp> {
+    let edit = semio_framework_replication_edit::Edit::<CausalAddOp> {
         id: "edit-3".into(),
         actor: None,
         forwards: vec![CausalAddOp { delta: 1 }],
@@ -530,8 +530,8 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
     // CausalAddOp::encode_op is infallible by construction, so this test instead documents
     // the law via the Result signature: a real Op whose encode_op can fail (e.g. exceeding a
     // size limit) aborts the whole batch rather than returning a partial Vec.
-    let document_id = crate::ids::ArtifactId("doc-3".into());
-    let schema = crate::ids::SchemaId("causal-add.v1".into());
+    let document_id = semio_framework_replication_ids::ArtifactId("doc-3".into());
+    let schema = semio_framework_replication_ids::SchemaId("causal-add.v1".into());
     assert!(mutation_envelope_from_edit(&edit, &document_id, &schema).is_ok());
 }
 //#endregion 🔖️Bridge
@@ -552,7 +552,7 @@ fn envelope_binary_round_trips() {
 /// bit 0, bit 1 and bit 2) and its value shape; an unknown trailing flag is refused.
 #[test]
 fn envelope_transaction_and_verb_round_trip_through_binary_and_value() {
-    let transaction = Some(crate::mutation::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
+    let transaction = Some(semio_framework_replication_edit::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
     for (transaction, verb, line) in [(transaction.clone(), None, None), (None, Some("typeText".to_string()), None), (transaction, Some("typeText".to_string()), Some("alt-1".to_string()))] {
         let mut envelope = sample_envelope("operation-1", vec!["operation-0"]);
         envelope.transaction = transaction;
@@ -563,7 +563,7 @@ fn envelope_transaction_and_verb_round_trip_through_binary_and_value() {
         let mut pos = 0;
         assert_eq!(decode_envelope(&out, &mut pos).expect("decode"), envelope);
         assert_eq!(pos, out.len());
-        let decoded: MutationEnvelope = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&envelope)).expect("value decode");
+        let decoded: MutationEnvelope = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&envelope)).expect("value decode");
         assert_eq!(decoded, envelope);
     }
     let mut plain = Vec::new();
@@ -585,15 +585,15 @@ fn envelope_binary_encoding_is_deterministic() {
 #[test]
 fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
     let envelope = MutationEnvelope {
-        mutation_id: crate::ids::MutationId("op-empty".into()),
-        document_id: crate::ids::ArtifactId("doc-empty".into()),
-        actor: crate::ids::ActorId("actor-empty".into()),
+        mutation_id: semio_framework_replication_ids::MutationId("op-empty".into()),
+        document_id: semio_framework_replication_ids::ArtifactId("doc-empty".into()),
+        actor: semio_framework_replication_ids::ActorId("actor-empty".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
-        inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
-        timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
+        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Vec::new() },
+        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Vec::new() },
+        timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     };
     let mut out = Vec::new();
@@ -665,11 +665,11 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
                     assert_eq!(actual.timestamp.physical_ms.to_string(), expected["timestamp"]["physicalMs"].as_str().expect("timestamp physicalMs"));
                     assert_eq!(actual.timestamp.logical.to_string(), expected["timestamp"]["logical"].as_str().expect("timestamp logical"));
                     let transaction = &expected["transaction"];
-                    assert_eq!(actual.transaction, (!transaction.is_null()).then(|| crate::mutation::TransactionRef { id: transaction["id"].as_str().expect("transaction id").into(), tool: transaction["tool"].as_str().expect("transaction tool").into() }), "{}", row["id"]);
+                    assert_eq!(actual.transaction, (!transaction.is_null()).then(|| semio_framework_replication_edit::TransactionRef { id: transaction["id"].as_str().expect("transaction id").into(), tool: transaction["tool"].as_str().expect("transaction tool").into() }), "{}", row["id"]);
                     assert_eq!(actual.verb.as_deref(), expected["verb"].as_str(), "{}", row["id"]);
                 }
             }
-            (Err(crate::ProtocolError::LimitExceeded(_)), "limit") => {}
+            (Err(semio_framework_replication_error::ProtocolError::LimitExceeded(_)), "limit") => {}
             (Err(_), "malformed") => {}
             (actual, expected) => panic!("{} produced {actual:?}, expected {expected}", row["id"]),
         }
@@ -705,7 +705,7 @@ fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_all
         let count=case["occupied"].as_u64().unwrap() as usize;
         let(mut dag,birth)=crate::test_allocation::observe(MutationDag::new);
         assert!(birth>0);assert!(!dag.backing_is_empty());
-        for i in 0..count { dag.seed_applied(crate::ids::MutationId(format!("source-{i}"))).unwrap(); }
+        for i in 0..count { dag.seed_applied(semio_framework_replication_ids::MutationId(format!("source-{i}"))).unwrap(); }
         let pointers=dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>();
         let(result,requested,released)=crate::test_allocation::observe_backing(||dag.close_backing_step(1,262144));
         if count>0 { assert_eq!(result,(0,0,false));assert_eq!((requested,released),(0,0));assert_eq!(dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>(),pointers); }

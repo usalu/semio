@@ -2,34 +2,29 @@
 
 use std::sync::Arc;
 
-use super::{
-    schema::{
-        GisMapFrozenArtifactV1, GisMapFrozenBindingV1, GisMapFrozenExecutionProtocolV1, GisMapFrozenGrantV1, GisMapFrozenPackageV1, GisMapFrozenSurfaceV1, InferenceBindingIdentityV1, InferenceCatalogServiceV1, InferenceIdentityV1, InferenceParentDialectV1,
-        InferenceRequestV1, GIS_GRANTED_MODE, GIS_SERVICE_ID, INPUT_MAX_BYTES,
-    },
-    sha256, InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1,
-};
-use crate::artifact_authority::{
-    trusted_catalog::{VerifiedDocumentOpenSelectionV1, VerifiedTrustedCatalog},
-    TrustedArtifactCatalog, TrustedArtifactIdentity,
-};
-use crate::directory::model::AuthSessionRecord;
+use semio_hub_inference::schema::{GisMapFrozenArtifactV1, GisMapFrozenBindingV1, GisMapFrozenExecutionProtocolV1, GisMapFrozenGrantV1, GisMapFrozenPackageV1, GisMapFrozenSurfaceV1, InferenceBindingIdentityV1, InferenceCatalogServiceV1, InferenceIdentityV1, InferenceParentDialectV1, InferenceRequestV1, GIS_GRANTED_MODE, GIS_SERVICE_ID, INPUT_MAX_BYTES};
+use semio_hub_inference::{sha256, InferenceErrorV1, InferenceOperationControlV1, InferencePrivateBytesV1};
+use semio_hub_trusted_catalog_descriptor::VerifiedDocumentOpenSelectionV1;
+use semio_hub_trusted_catalog::VerifiedTrustedCatalog;
+use semio_hub_artifact_authority::{TrustedArtifactCatalog, TrustedArtifactIdentity};
+use semio_hub_directory_contract::model::AuthSessionRecord;
 use directory::os_directory::{ArtifactFrontier, DocumentDescriptor, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentScope};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use semio_framework::ContributedInferenceMetadata;
 use semio_framework_plugin::ArtifactInferenceService;
+use semio_hub_inference_binding::MapInferenceProposalBindingV1;
 
 const GIS_MAP_BINDING_DOMAIN: &[u8] = b"semio.hub.gis-map-frozen-binding/v1\0";
 const GIS_MAP_NATIVE_EXECUTABLE: &str = "semio_hub_gis::gis_map_inference_service";
 
 /// 🧊️ One process-lifetime GIS Map editor selection pinned to its verified catalog and exact native executable.
 pub struct VerifiedGisMapArtifactBindingV1 {
-    catalog: Arc<VerifiedTrustedCatalog>,
-    selection: VerifiedDocumentOpenSelectionV1,
+    pub catalog: Arc<VerifiedTrustedCatalog>,
+    pub selection: VerifiedDocumentOpenSelectionV1,
     projection: GisMapFrozenBindingV1,
     service: ArtifactInferenceService,
-    digest: String,
+    pub digest: String,
 }
 
 impl VerifiedGisMapArtifactBindingV1 {
@@ -78,9 +73,8 @@ fn valid_digest(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingV1, native: ArtifactInferenceService) -> Result<(), InferenceErrorV1> {
+fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingV1, native: ArtifactInferenceService, expected: ArtifactInferenceService) -> Result<(), InferenceErrorV1> {
     let metadata = native.metadata();
-    let expected = semio_s_artifact_gis_gismap::gis_map_inference_service();
     if !valid_digest(&projection.catalog_generation_id)
         || [&projection.package.component_sha256, &projection.package.component_blake3, &projection.package.descriptor_byte_sha256, &projection.artifact.pack_schema_hash].iter().any(|value| !valid_digest(value))
         || projection.package.plugin_id != "gis"
@@ -135,7 +129,7 @@ fn gis_map_binding_digest(projection: &GisMapFrozenBindingV1) -> Result<String, 
 /// answers None there and every inference on such a catalog was denied.
 /// `artifact_creation_selection` is the creation rule scoped to one kind: the owners' ONE most
 /// general writable editor target whose codec identity this generation verified.
-fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, native: ArtifactInferenceService) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
+fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, native: ArtifactInferenceService, expected: ArtifactInferenceService) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
     let Some(selection) = catalog.artifact_creation_selection("s.gis.gismap") else { return Ok(None) };
     if selection.package.plugin_id != "gis" || selection.package.package_id != "semio:gis" {
         return Ok(None);
@@ -201,15 +195,15 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
         },
         native_executable: GIS_MAP_NATIVE_EXECUTABLE.to_owned(),
     };
-    validate_gis_map_binding_projection(&projection, native)?;
+    validate_gis_map_binding_projection(&projection, native, expected)?;
     let digest = gis_map_binding_digest(&projection)?;
     let selection = selection.clone();
     Ok(Some(Arc::new(VerifiedGisMapArtifactBindingV1 { catalog, selection, projection, service: native, digest })))
 }
 
-/// 🧊️ Freezes the verified profile's GIS Map editor choice and literal native inference executable before readiness publication.
-pub fn verified_gis_map_binding(catalog: Arc<VerifiedTrustedCatalog>) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
-    verified_gis_map_binding_with_service(catalog, semio_s_artifact_gis_gismap::gis_map_inference_service())
+/// 🧊️ Freezes the verified profile's GIS Map editor choice and the registered binding's literal native inference executable before readiness publication.
+pub fn verified_gis_map_binding(catalog: Arc<VerifiedTrustedCatalog>, proposals: &dyn MapInferenceProposalBindingV1) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
+    verified_gis_map_binding_with_service(catalog, proposals.inference_service(), proposals.inference_service())
 }
 
 struct PackageProjection<'a> {
@@ -252,7 +246,7 @@ fn exact_projection<'a>(scope: &DocumentScope, descriptor: &DocumentDescriptor, 
     Ok(service)
 }
 
-pub(crate) struct InferenceIdentitySourceV1<'a> {
+pub struct InferenceIdentitySourceV1<'a> {
     pub request: InferenceRequestV1,
     pub scope: &'a DocumentScope,
     pub descriptor: &'a DocumentDescriptor,
@@ -263,7 +257,7 @@ pub(crate) struct InferenceIdentitySourceV1<'a> {
 }
 
 /// 🪪️ Derives the whole immutable job identity from the frozen binding; no client bytes contribute.
-pub(crate) async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifactBindingV1, source: InferenceIdentitySourceV1<'_>, control: &InferenceOperationControlV1) -> Result<InferenceIdentityV1, InferenceErrorV1> {
+pub async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifactBindingV1, source: InferenceIdentitySourceV1<'_>, control: &InferenceOperationControlV1) -> Result<InferenceIdentityV1, InferenceErrorV1> {
     let catalog = binding.catalog().as_ref();
     control.checkpoint(0)?;
     source.request.validate()?;
@@ -320,3 +314,6 @@ pub(crate) async fn identity_from_frozen_binding(binding: &VerifiedGisMapArtifac
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path = "../🛂️authorization/🦀️.rs"]
+pub mod authorization;

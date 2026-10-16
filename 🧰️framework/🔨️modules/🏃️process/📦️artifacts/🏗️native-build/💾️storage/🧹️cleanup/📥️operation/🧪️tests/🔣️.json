@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "open",
+      "accepted": 0,
+      "completed": 0,
+      "topOpen": true,
+      "nestedLive": false,
+      "expected": {
+        "accepts": true,
+        "mustDrain": false
+      }
+    },
+    {
+      "id": "closed",
+      "accepted": 1,
+      "completed": 0,
+      "topOpen": false,
+      "nestedLive": false,
+      "expected": {
+        "accepts": false,
+        "mustDrain": true
+      }
+    },
+    {
+      "id": "accepted-child",
+      "accepted": 1,
+      "completed": 0,
+      "topOpen": false,
+      "nestedLive": true,
+      "expected": {
+        "accepts": true,
+        "mustDrain": true
+      }
+    },
+    {
+      "id": "full",
+      "accepted": 32,
+      "completed": 0,
+      "topOpen": true,
+      "nestedLive": true,
+      "expected": {
+        "accepts": false,
+        "mustDrain": true
+      }
+    },
+    {
+      "id": "settled",
+      "accepted": 2,
+      "completed": 2,
+      "topOpen": false,
+      "nestedLive": false,
+      "expected": {
+        "accepts": false,
+        "mustDrain": false
+      }
+    },
+    {
+      "id": "one-free",
+      "accepted": 32,
+      "completed": 1,
+      "topOpen": true,
+      "nestedLive": false,
+      "expected": {
+        "accepts": true,
+        "mustDrain": true
+      }
+    }
+  ]
+}

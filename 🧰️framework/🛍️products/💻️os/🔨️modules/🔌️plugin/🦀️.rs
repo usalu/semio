@@ -14,6 +14,17 @@ macro_rules! with_authoring_identity {
         $body
     }};
 }
+//#region 📣️FacadeMacroMounts
+#[macro_use]
+#[path = "📣️macros/🌱️wp1-window/🦀️.rs"]
+mod macros_wp1_window;
+#[macro_use]
+#[path = "📣️macros/📜️wp2-declaration/🦀️.rs"]
+mod macros_wp2_declaration;
+#[macro_use]
+#[path = "📣️macros/⚛️wp4-reactor/🦀️.rs"]
+mod macros_wp4_reactor;
+//#endregion 📣️FacadeMacroMounts
 pub use semio_framework_plugin_mounted_owner::{MountedOwnerIdentityV1, MountedOwnerJobReceiptV1, MountedOwnerPhaseV1, MountedOwnerPolicyV1, MountedOwnerTurnV1};
 
 #[cfg(test)] use semio_framework_ui_locale::{Label, LabelText, Locale, LocalizedLabel, Terminology};
@@ -40,223 +51,22 @@ pub use semio_framework_async as __async;
 static PLUGIN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 //#endregion 🧮️HeapWitness
 
-#[cfg(any(test, feature = "artifact-app-testing"))]
-#[path = "🧪️tests/🧰️ui-action-collection/🦀️.rs"]
-pub mod ui_action_laws;
-
-//#region 📄️DeclarationFixtureMutationMount
-#[cfg(test)]
-#[path = "🧪️tests/🛰️declaration-channels/🦀️.rs"]
-pub(crate) mod declaration_fixture_mutations;
-
-#[cfg(test)]
-#[path = "🧪️tests/🤝️cooperative-pump/🦀️.rs"]
-mod cooperative_pump_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🌲️fixture-projection/🦀️.rs"]
-mod fixture_projection_retirement_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🏃️plugin-runtime-runtime-laws/🦀️.rs"]
-mod plugin_runtime_runtime_laws;
-//#endregion 📄️DeclarationFixtureMutationMount
-
 #[doc(hidden)]
 #[path = "🧪️tests/🧬️generated-test-contracts/🦀️.rs"]
 mod generated_test_contracts;
 
-//#region 🔖️ComponentPersistentLocal
-#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
-pub mod component_persistent_local {
-    use std::{cell::UnsafeCell, mem::MaybeUninit, sync::Once};
-
-    /// 🧵️ Component-async calls receive fresh Rust TLS contexts, so actor state that must survive
-    /// from one exported call to the next lives in the component instance's linear-memory global.
-    pub struct ComponentPersistentLocal<T> {
-        once: Once,
-        value: UnsafeCell<MaybeUninit<T>>,
-        initialize: fn() -> T,
-    }
-
-    impl<T> ComponentPersistentLocal<T> {
-        pub const fn new(initialize: fn() -> T) -> Self {
-            Self { once: Once::new(), value: UnsafeCell::new(MaybeUninit::uninit()), initialize }
-        }
-
-        pub fn with<R>(&'static self, use_value: impl FnOnce(&'static T) -> R) -> R {
-            self.once.call_once(|| unsafe {
-                (*self.value.get()).write((self.initialize)());
-            });
-            use_value(unsafe { (&*self.value.get()).assume_init_ref() })
-        }
-    }
-
-    unsafe impl<T> Sync for ComponentPersistentLocal<T> {}
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! component_persistent_local {
-    ($( $(#[$attribute:meta])* static $name:ident: $value_type:ty = $initialize:expr; )+) => {
-        $(
-            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-            $(#[$attribute])*
-            static $name: $crate::component_persistent_local::ComponentPersistentLocal<$value_type> =
-                $crate::component_persistent_local::ComponentPersistentLocal::new(|| $initialize);
-        )+
-
-        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-        std::thread_local! {
-            $(
-                $(#[$attribute])*
-                static $name: $value_type = $initialize;
-            )+
-        }
-    };
-}
-//#endregion 🔖️ComponentPersistentLocal
+pub use semio_framework_plugin_abi::component_persistent_local;
 
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
 pub mod owned_abi {
-    /// 📋️ Fixed stack authority preserves all original scalar fields and refuses malformed extents.
-    pub fn original_job_budget(arguments:[u64;19])->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{semio_framework::kernel::OriginalJobBudget::from_scalar_arguments(arguments).map_err(|error|error.kind)}
+    pub use semio_framework_plugin_abi::owned_abi::*;
 
-    use semio_framework_value_derive::{FromValue, ToValue};
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Deserialize, Serialize)]
-    pub struct PollInput {
-        pub events: Vec<semio_framework::kernel::Event>,
-        pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-        pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
-        pub budget: semio_framework::kernel::Budget,
-    }
-
-    /// 🌉️ Hand-written, not derived — `events`/`command_page`/`budget` are foreign kernel types
-    /// (`semio_framework::kernel::*`, owned by the `semio-framework`/`semio-framework-os-kernel`
-    /// crates), so neither `#[derive(ToValue, FromValue)]` nor a direct `impl … for
-    /// semio_framework::kernel::Event` is legal here (orphan rule: neither the trait nor the type
-    /// is local to this crate). Bridges through the already-derived `Serialize`/`Deserialize` via
-    /// `serde_json` instead, reusing the existing `DslValue <-> serde_json::Value` conversion.
-    impl semio_framework_value::ToValue for PollInput {
-        fn to_value(&self) -> semio_framework_value::DslValue {
-            semio_framework_value::DslValue::from(&serde_json::to_value(self).expect("PollInput always serializes"))
-        }
-    }
-    impl semio_framework_value::FromValue for PollInput {
-        fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-            serde_json::from_value(serde_json::Value::from(value)).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-        }
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct StartJobInput {
-        pub source: Option<semio_framework::kernel::OriginalJobSource>,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct StepJobInput {
-        pub job: u64,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct CancelJobInput {
-        pub job: u64,
-        pub budget: semio_framework::kernel::OriginalJobBudget,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct RestoreInput {
-        pub state: Vec<u8>,
-    }
-
-    /// 🧬️ Input of the owned `codec` core exports. `document_id` is only read by `genesis`, `ops`
-    /// only by `apply-ops` (an `encode_ops_vec` batch) and `replay-envelopes` (an `encode_envelopes`
-    /// stream), and the pair only by `print-mirror`/`apply-ops`/`replay-envelopes` — one shape for
-    /// all five keeps the owned ABI's JSON envelope single-valued per export, exactly as
-    /// `RestoreInput` does.
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct CodecInput {
-        pub artifact_schema: String,
-        #[serde(default)]
-        pub document_id: String,
-        #[serde(default)]
-        pub pack: Vec<u8>,
-        #[serde(default)]
-        pub spr: Vec<u8>,
-        #[serde(default)]
-        pub ops: Vec<u8>,
-    }
-
-    /// 📦️ Output of the owned `codec.genesis`/`codec.apply-ops`/`codec.replay-envelopes` core exports.
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct CodecPair {
-        pub pack: Vec<u8>,
-        pub spr: Vec<u8>,
-    }
-
-    /// 📥️ Output of the owned `codec.print-mirror` core export.
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    pub struct CodecMirror {
-        pub dsl: String,
-        pub ops: String,
-    }
-
-    #[derive(Deserialize, FromValue, Serialize, ToValue)]
-    #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
-    #[value(tag = "kind", rename_all = "camelCase")]
-    pub enum JobStep {
-        Running { progress: Option<Vec<u8>> },
-        Done { output: Vec<u8> },
-        Failed { error: Vec<u8> },
-    }
-
-    pub fn allocate(length: u32) -> u32 {
-        let bytes = vec![0_u8; length as usize].into_boxed_slice();
-        Box::into_raw(bytes) as *mut u8 as usize as u32
-    }
-
+    /// 📬️ Releases one guest allocation after the reactor-context receipt registries had their chance to claim it; the plain release is abi's.
     pub unsafe fn deallocate(pointer: u32, length: u32) {
         if crate::reactor::original_actor_context::exports::fixed_receipt_pointer(pointer,length)||crate::reactor::original_actor_context::exports::release_owned_job_receipt(pointer,length) { return; }
-        let slice = std::ptr::slice_from_raw_parts_mut(pointer as usize as *mut u8, length as usize);
-        drop(unsafe { Box::from_raw(slice) });
-    }
-
-    pub unsafe fn take_json<T: serde::de::DeserializeOwned>(pointer: u32, length: u32) -> Result<T, Vec<u8>> {
-        let slice = std::ptr::slice_from_raw_parts_mut(pointer as usize as *mut u8, length as usize);
-        let bytes = unsafe { Box::from_raw(slice) };
-        serde_json::from_slice(&bytes).map_err(|error| error.to_string().into_bytes())
-    }
-
-    unsafe fn take_actor_json<T: serde::de::DeserializeOwned>(pointer:u32,length:u32)->Result<T,semio_framework_value::ValueRefusalKind>{
-        let slice=std::ptr::slice_from_raw_parts_mut(pointer as usize as *mut u8,length as usize);
-        let bytes=unsafe{Box::from_raw(slice)};
-        serde_json::from_slice(&bytes).map_err(|_|semio_framework_value::ValueRefusalKind::InvalidValue)
-    }
-
-    /// 🌱️ The owned actor admission port never creates dynamic diagnostic prose on malformed input.
-    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<(semio_framework::kernel::RetainedTurnInput,semio_framework_value::RetainedCloneGrant),semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
-
-    /// 📬️ Retains the original declared poll fields without an error-text carrier.
-    pub unsafe fn take_actor_poll_input(pointer:u32,length:u32)->Result<PollInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
-
-    pub fn return_json<T: Serialize>(value: &T) -> u64 {
-        match serde_json::to_vec(value) {
-            Ok(bytes) => return_bytes(bytes),
-            Err(error) => return_bytes(error.to_string().into_bytes()),
-        }
-    }
-
-    pub fn return_bytes(bytes: Vec<u8>) -> u64 {
-        let bytes = bytes.into_boxed_slice();
-        let length = bytes.len() as u32;
-        let pointer = Box::into_raw(bytes) as *mut u8 as usize as u32;
-        u64::from(pointer) | (u64::from(length) << 32)
+        unsafe { semio_framework_plugin_abi::owned_abi::deallocate(pointer, length) }
     }
 }
 
@@ -266,220 +76,49 @@ pub use wasip2::component_export_anchor;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn component_export_anchor() {}
 
-#[cfg(test)]
-#[path = "🧪️tests/📢️publication-fixtures/🦀️.rs"]
-pub(crate) mod publication_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/📢️publication-owners/🦀️.rs"]
-pub(crate) mod window_transient_owners;
-
-#[cfg(test)]
-#[path = "🧪️tests/🖥️test-app-mutations/🦀️.rs"]
-pub(crate) mod test_app_mutation_fixture;
-
-#[cfg(test)]
-#[path = "🧪️tests/📡️contributed-mutation-wire/🦀️.rs"]
-pub(crate) mod contributed_mutation_wire;
-
-#[cfg(test)]
-#[path = "🧪️tests/📤️segmented-download/🦀️.rs"]
-mod segmented_download_contract;
-
-#[cfg(test)]
-#[path = "🌱️initialization/♻️retirement/🧪️tests/🦀️.rs"]
-mod bounded_initializer_laws;
-
 pub use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
 //#region 🏛️OwnershipFacet
 pub use semio_framework_job::StepContext;
-#[path = "🧬️schema/🪶️sqlite/🦀️.rs"]
-pub mod sqlite_wire;
+// 🧭️ Mount hubs: the module mounts that used to follow live in one file per work package of PLAN-PLUGIN-CRATES.md,
+// spliced into this crate root, so every `crate::<module>` path is unchanged.
+include!("🪝️mounts/🌱️wp1-foundation/🦀️.rs");
+include!("🪝️mounts/📜️wp2-declaration/🦀️.rs");
+include!("🪝️mounts/👥️wp3-owners/🦀️.rs");
+include!("🪝️mounts/⚛️wp4-reactor/🦀️.rs");
+include!("🪝️mounts/⏯️wp5-features/🦀️.rs");
+include!("🪝️mounts/🧱️wp6-instance-tier1/🦀️.rs");
+include!("🪝️mounts/🧵️wp7-instance-tier2/🦀️.rs");
+//#region 🏛️OwnershipFacet
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-#[path = "🧬️schema/🦀️.rs"]
-pub mod wasip2;
+pub use semio_framework_plugin_abi::wasip2;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+#[doc(hidden)]
+pub use semio_framework_plugin_abi::__semio_export_component_guest;
 //#endregion 🏛️OwnershipFacet
 //#region 🪟️WindowFacet
-#[path = "🪟️window-kits/📃️document/🦀️.rs"]
-pub(crate) mod document_kit;
-#[path = "🪟️window/🎛️engagement/🦀️.rs"]
-pub mod engagement;
-#[path = "🪟️window-kits/🖼️image/🦀️.rs"]
-pub(crate) mod image_kit;
-#[path = "🕹️interaction/🧭️topology/🦀️.rs"]
-pub(crate) mod interaction_topology;
-#[path = "🕹️interaction/🦀️.rs"]
-pub(crate) mod local_interaction;
-#[path = "🪟️window-kits/🎬️media/🦀️.rs"]
-pub(crate) mod media_kit;
-#[path = "🪟️window-kits/🧊️mesh/🦀️.rs"]
-pub(crate) mod mesh_kit;
-#[path = "🪟️window-kits/📊️table/🦀️.rs"]
-pub(crate) mod table_kit;
-#[path = "🪟️window-kits/📝️text/🦀️.rs"]
-pub(crate) mod text_kit;
-#[path = "🪟️window-kits/🌳️tree/🦀️.rs"]
-pub(crate) mod tree_kit;
-#[path = "🪟️window/🎚️config/🦀️.rs"]
-pub(crate) mod window_config;
-#[path = "🪟️window-kits/🦀️.rs"]
-pub(crate) mod window_kits;
-#[path="🪟️window/📬️mutation/🦀️.rs"]
-pub(crate) mod window_mutation;
-#[path = "🪟️window/🦀️.rs"]
-pub(crate) mod window_surface;
-#[path = "🪟️window/🫧️transient/🦀️.rs"]
-pub(crate) mod window_transient;
-#[path = "🪟️window-kits/🌍️world3d/🦀️.rs"]
-pub mod world3d_host;
+pub(crate) use semio_framework_plugin_window_transient::window_transient;
+#[doc(hidden)]
+pub use semio_framework_plugin_window_transient::window_transient_transfer;
 //#endregion 🪟️WindowFacet
 //#region 📜️DeclarationFacet
-#[path = "🏗️builder/🧩️app/🦀️.rs"]
-pub(crate) mod app_builder;
-#[path = "📜️declaration/🧩️app/🦀️.rs"]
-pub(crate) mod app_contract;
-#[path = "📜️declaration/📨️emission/🦀️.rs"]
-pub(crate) mod app_emission;
-#[path = "📜️declaration/👁️view/🦀️.rs"]
-pub(crate) mod app_views;
-#[path = "📜️declaration/🦀️.rs"]
-pub(crate) mod artifact_declaration;
-#[path = "🪪️identity/🦀️.rs"]
-pub(crate) mod artifact_identity;
-#[path = "💡️inference/🦀️.rs"]
-pub(crate) mod artifact_inference;
-pub use artifact_inference::{ArtifactInferenceGatewayFailure,ArtifactInferenceGatewayRefusal};
-#[path = "🚪️io/🦀️.rs"]
-pub(crate) mod artifact_io;
-#[path = "📜️declaration/📇️registration/🦀️.rs"]
-pub(crate) mod artifact_registration;
-#[path="🧩️composition/📨️emission/📦️preparation/🦀️.rs"]
-pub(crate) mod child_emit_preparation;
-#[path = "📜️declaration/🪆️child/🦀️.rs"]
-pub(crate) mod child_view;
-#[path="📬️completion/⚠️fault/🦀️.rs"]
-pub(crate) mod completion_fault;
-#[path="📬️completion/♻️retirement/🚫️refusal/🦀️.rs"]
-pub(crate) mod completion_refusal_retirement;
-#[path="📬️completion/♻️retirement/🦀️.rs"]
-pub(crate) mod completion_retirement;
-#[path = "📜️declaration/🛠️tool-machine/🦀️.rs"]
-pub(crate) mod gesture_contract;
-#[path = "📜️declaration/🎮️command/🦀️.rs"]
-pub(crate) mod history_view;
-// 🧬️ A2 (design-abi.md §4): `host_port` is deleted — see `important.md`'s "Replace, never wrap"
-// list (`host_port` · `component::host_*` · `set_host_backbone_channel` are all named explicitly).
-// Replaced by `🌐host/🦀️.rs`'s async `Host`/`log`/`now_ms`/`trace_span` — see that
-// module and the report's "peer-coexistence"/deferred-work sections for the backbone channel gap.
-#[path = "🌐host/🦀️.rs"]
-pub mod host;
-#[path = "📜️declaration/🎞️media/🦀️.rs"]
-pub(crate) mod media_contract;
-#[path = "📜️declaration/📥️natural-file/🦀️.rs"]
-pub(crate) mod natural_file_import;
-#[path = "🧵️retained-command/🧬️context/🦀️.rs"]
-pub(crate) mod owned_context;
-#[path = "👥️presence/♻️retirement/🦀️.rs"]
-pub(crate) mod presence_retirement;
-pub use presence_retirement::{
-    bounded_presence_root_retirement_factory, bounded_presence_store_disposer, no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, NoPresenceRetirementFactory, PresenceStoreOwnedDisposer,
-};
-#[path = "📜️declaration/🪟️surface/🦀️.rs"]
-pub(crate) mod surface_contract;
-#[path = "♻️cancellation/🦀️.rs"]
-pub(crate) mod tool_cancellation;
-#[path = "📜️declaration/👷️job/🦀️.rs"]
-pub(crate) mod tool_contract;
-#[path = "📜️declaration/⏯️tool-run/🦀️.rs"]
-pub(crate) mod tool_run_contract;
 //#endregion 📜️DeclarationFacet
-//#region 📬️PublicationFacet
-#[path = "🪆️child/🦀️.rs"]
-pub(crate) mod child_content;
-#[path = "📡️backbone/🔗️binding/🦀️.rs"]
-pub mod document_backbone_binding;
-#[path = "🗃️document/🦀️.rs"]
-pub(crate) mod document_ingress;
-#[path = "🎚️config/🚫️none/♻️retirement/🦀️.rs"]
-pub(crate) mod no_config_retirement;
-pub use no_config_retirement::{no_config_store_disposer, no_config_store_owners};
-#[path = "📝️draft/🚫️none/♻️retirement/🦀️.rs"]
-pub(crate) mod no_draft_retirement;
-pub use no_draft_retirement::{no_draft_store_disposer, no_draft_store_owners};
-#[path = "👥️peer/🦀️.rs"]
-pub(crate) mod peer_roster;
-#[path="🧩️composition/📨️emission/🌱️genesis/📄️input/🦀️.rs"]
-pub(crate) mod private_child_input;
-#[path = "🧩️composition/📬️publication/🦀️.rs"]
-pub(crate) mod store_publication;
-#[path = "🫧️transient/♻️retirement/🦀️.rs"]
-pub(crate) mod transient_retirement;
-pub use transient_retirement::{no_transient_local_root_retirement_factory, no_transient_store_disposer, NoTransientRetirementFactory};
-//#endregion 📬️PublicationFacet
+//#region ⚛️ReactorFacet
+#[path = "⚛️reactor/🏃️runtime/🦀️.rs"]
+pub mod plugin_runtime;
+//#endregion ⚛️ReactorFacet
+
+//#endregion 🏛️OwnershipFacet
 //#region 👷️JobsFacet
-#[path = "🎮️command/📥️admission/🦀️.rs"]
-pub(crate) mod command_admission;
-#[path = "🎮️command/🦀️.rs"]
-pub(crate) mod command_history;
-#[path="📬️completion/♻️effects/🦀️.rs"]
-pub(crate) mod completion_effects;
-pub use completion_effects::CompletionEffect;
-#[path="📬️completion/♻️vacant/🦀️.rs"]
-pub(crate) mod completion_vacant;
-pub use completion_vacant::{VacantVec,VacantDeque};
-#[path="🧩️extension/📨️invoke/⚠️failure/🦀️.rs"]
-pub(crate) mod extension_invocation_failure;
-#[path = "🎞️media/🦀️.rs"]
-pub(crate) mod media_export;
-#[path="🎞️media/⚠️turn/🦀️.rs"]
-pub(crate) mod media_operation_refusal;
 #[cfg(feature="media-turn-testing")]
 pub use media_operation_refusal::tests as media_turn_laws;
 #[cfg(feature="reserved-producer-testing")]
 pub use tool_contract::original_reserved_producer_laws;
-#[path="🚪️io/🛂️authority/🦀️.rs"]
-pub mod operation_authority;
-#[path="👷️job/🧾️bytes/🦀️.rs"]
-pub(crate) mod reserved_job_bytes;
-#[path="👷️job/📤️outcomes/🦀️.rs"]
-pub(crate) mod reserved_job_outcomes;
-#[path = "👷️job/🏛️reserved/🦀️.rs"]
-pub(crate) mod reserved_jobs;
-#[path = "🧵️retained-command/🦀️.rs"]
-pub mod retained_command;
-#[path = "👷️job/🦀️.rs"]
-pub(crate) mod tool_jobs;
-#[path = "🧵️retained-command/🔄️full-operation/🦀️.rs"]
-pub(crate) mod typed_operation;
 //#endregion 👷️JobsFacet
-//#region ⚛️ReactorFacet
-#[path = "🛂️describe/🦀️.rs"]
-pub mod describe;
-#[path="💡️inference/🚪️gateway/🦀️.rs"]
-pub(crate) mod inference_gateway;
-pub use inference_gateway::{cancel_artifact_inference,wire_artifact_infer_cold,ArtifactInferenceGateway,ArtifactInferenceGatewayStep,wire_artifact_infer,original_inference_gateway_demands};
-#[path = "⚛️reactor/🔌️app/🦀️.rs"]
-pub(crate) mod plugin_app;
-#[path = "🏗️builder/🔌️program/🦀️.rs"]
-pub(crate) mod plugin_program;
-#[path = "⚛️reactor/🏃️runtime/🦀️.rs"]
-pub mod plugin_runtime;
-#[path = "⚛️reactor/🦀️.rs"]
-pub mod reactor;
-//#endregion ⚛️ReactorFacet
 //#region 🧵️InstanceFacet
-#[path = "🧵️instance/🦀️.rs"]
-pub(crate) mod artifact_instance;
-#[path = "🏗️builder/🦀️.rs"]
-pub(crate) mod builder;
-#[path = "📜️declaration/🌳️tree/🦀️.rs"]
-pub mod declarations;
+/// 🪝️ The instance extensions every mounted instance consults, in route, refusal and maintenance order (see
+/// [`artifact_instance::InstanceExtension`]).
+pub(crate) type InstanceExtensions = (tool_jobs::tool_run::ToolRunExtension, (tool_jobs::time_travel::TimeTravelExtension, ()));
 //#endregion 🧵️InstanceFacet
-//#region ⚖️AppLaws
-#[cfg(any(test, feature = "artifact-app-testing"))]
-#[path = "🧪️testing/🦀️.rs"]
-pub(crate) mod app_testing;
-//#endregion ⚖️AppLaws
 
 pub mod app {
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
@@ -597,7 +236,7 @@ pub mod plugin_app_close_prelude {
     pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
     pub use serde_json::Value;
     pub use std::collections::HashMap;
-    pub use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
+    pub use semio_framework_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
 }
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -900,13 +539,29 @@ pub use world3d_host::{
     world3d_projection_spec_json, world3d_scene, world3d_selection_json, world3d_selection_json_with_granularity, world3d_sun_measures, SceneLanePayload, SceneLaneRef, SelectionSet, World3dScene, World3dSceneLane, WorldProjectionConfig,
     World3dAngle, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dDimension, World3dHighlight, World3dLeader, World3dLegendTick, World3dMarker, World3dMarkerShape, World3dModellingOptions, World3dPickGranularity, World3dPickTargets, World3dScalarDomain, World3dScalarField, World3dScalarLegend, World3dScalarRange, World3dSection, World3dSectionCap, World3dSubElementStyle, World3dText, World3dTone, WORLD3D_ANNOTATIONS_MAX, WorldSunConfig, WORLD3D_SCENE_LANE_BODY_KEYS, WORLD3D_SCENE_LANE_FIELDS, WORLD3D_SCENE_LANE_KEY_PREFIX, WORLD3D_SCENE_LANE_NAMES, WORLD3D_SCENE_LANE_OPTIONAL,
 };
-// 🧩️ Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so
-// apps keep the flat `semio_framework_plugin::*` import surface with zero Cargo.toml churn.
-pub use ui_wgpu::wgpu::*;
-
-#[cfg(test)]
-#[path = "🧪️tests/📄️natural-file-lifecycle/🦀️.rs"]
-mod natural_file_lifecycle_tests;
+/// 📐️ The renderer-neutral window, engagement, measure, context-menu and panel-tab vocabulary plugins name through this
+/// crate, re-exported from its owner `semio-framework-ui-layout`.
+pub use semio_framework_ui_layout::layout::{
+    create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, ActionDescriptor, ContextMenuHit, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSelectionGroup,
+    ContextMenuSurfaceTarget, ContextMenuTextContext, MeasureSelectItem, NamedLayout, UiMenuRef, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible,
+    WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions,
+    FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+};
+/// 🧰️ The utility-rail category plugins declare utilities under, from `semio-framework-ui-layout`.
+pub use semio_framework_ui_layout::utilities::UtilityCategory;
+/// 📜️ The renderer-neutral surface kinds, table cells, tree actions, inspector helpers and world3d scene JSON helpers plugins
+/// name through this crate, re-exported from their owner `semio-framework-ui-declaration`.
+pub use semio_framework_ui_declaration::ui::{
+    text_identifier_occurrences_json, ui_inspector_all_equal, ui_inspector_mixed_number, ui_inspector_mixed_text, world3d_camera_json, world3d_chunking_json, world3d_fit_json, BlockPaletteEntry, SurfaceKind, TableCell,
+    UiTreeActionPlacement, UiTreeItemAction, UI_INSPECTOR_MIXED_PLACEHOLDER,
+};
+/// 🎬️ The scene records plugins publish through this crate (the world3d family is re-exported by `world3d_host` above),
+/// from their owner `semio-framework-ui-scene`.
+pub use semio_framework_ui_scene::{
+    BlockListBlock, BlockListPaletteEntry, BlockListScene, BlockListSelectionTarget, BlockListStep, Board2dScene, Canvas2dFraming, Canvas2dScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene,
+    NodeGraphEdgeRecord, NodeGraphHover, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, TableScene, TextEditorScene, TextSplice, TextSpliceComposition, TiledMapScene, TEXT_SPLICE_CONTEXT_SCALARS,
+};
 
 #[macro_export]
 macro_rules! register_plugin {
@@ -1146,7 +801,3 @@ macro_rules! subset {
 #[path = "🧪️tests/🔬️subset-macro/🦀️.rs"]
 mod subset_macro_tests;
 
-
-
-#[path="🎮️command/📥️ingress/🦀️.rs"]
-pub mod action_ingress;

@@ -58,7 +58,7 @@ fn authored_glyph_shader_accepts_complete_affine_basis() {
         adapter.request_device(&wgpu::DeviceDescriptor {label:Some("authored_affine_shader"),required_features:wgpu::Features::empty(),required_limits:wgpu::Limits::default(),memory_hints:Default::default(),trace:wgpu::Trace::Off,experimental_features:Default::default()}).await.expect("affine shader device")
     });
     let validation=device.push_error_scope(wgpu::ErrorFilter::Validation);
-    let _shader=device.create_shader_module(wgpu::ShaderModuleDescriptor {label:Some("authored_affine_ui_shader"),source:wgpu::ShaderSource::Wgsl(crate::wgpu::shaders::UI_SHADER.into())});
+    let _shader=device.create_shader_module(wgpu::ShaderModuleDescriptor {label:Some("authored_affine_ui_shader"),source:wgpu::ShaderSource::Wgsl(semio_framework_ui_wgpu_render::testing::ui_shader_source().into())});
     device.poll(wgpu::PollType::Poll).unwrap();
     assert!(semio_framework_async::block_on(validation.pop()).is_none());
     eprintln!("[DEBUG] Actual GPU validated the production affine glyph/image shader");
@@ -74,7 +74,7 @@ fn authored_glyph_image_shader_paints_the_actual_affine_quad() {
         adapter.request_device(&wgpu::DeviceDescriptor {label:Some("authored_affine_framebuffer"),required_features:wgpu::Features::empty(),required_limits:wgpu::Limits::default(),memory_hints:Default::default(),trace:wgpu::Trace::Off,experimental_features:Default::default()}).await.expect("affine framebuffer device")
     });
     let validation=device.push_error_scope(wgpu::ErrorFilter::Validation);
-    let shader=device.create_shader_module(wgpu::ShaderModuleDescriptor {label:Some("authored_affine_framebuffer_shader"),source:wgpu::ShaderSource::Wgsl(crate::wgpu::shaders::UI_SHADER.into())});
+    let shader=device.create_shader_module(wgpu::ShaderModuleDescriptor {label:Some("authored_affine_framebuffer_shader"),source:wgpu::ShaderSource::Wgsl(semio_framework_ui_wgpu_render::testing::ui_shader_source().into())});
     let globals=device.create_buffer_init(&wgpu::util::BufferInitDescriptor {label:Some("affine_globals"),contents:bytemuck::cast_slice(&[32.0_f32,32.0,0.0,0.0]),usage:wgpu::BufferUsages::UNIFORM});
     let texture=device.create_texture(&wgpu::TextureDescriptor {label:Some("affine_source"),size:wgpu::Extent3d {width:1,height:1,depth_or_array_layers:1},mip_level_count:1,sample_count:1,dimension:wgpu::TextureDimension::D2,format:wgpu::TextureFormat::Rgba8Unorm,usage:wgpu::TextureUsages::TEXTURE_BINDING|wgpu::TextureUsages::COPY_DST,view_formats:&[]});
     queue.write_texture(wgpu::TexelCopyTextureInfo {texture:&texture,mip_level:0,origin:wgpu::Origin3d::ZERO,aspect:wgpu::TextureAspect::All},&[255,0,0,255],wgpu::TexelCopyBufferLayout {offset:0,bytes_per_row:Some(4),rows_per_image:Some(1)},wgpu::Extent3d {width:1,height:1,depth_or_array_layers:1});

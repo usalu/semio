@@ -9,6 +9,7 @@ import Parser from "web-tree-sitter";
 import fixture from "./🔣️.json" with { type: "json" };
 import schema from "./🧬️.json" with { type: "json" };
 import receipt from "../../../⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 await Parser.init();
@@ -98,7 +99,7 @@ test("job contract GUI launches match the supported original Nx caller", () => {
 
 /** 🕸️ The independent system engine validates and executes the authored shared job core type. */
 test("authored job selector core types match actual export signatures and independent WebAssembly", () => {
-  const runtime = readFileSync(resolve(owner, "../⚛️reactor/🏃️runtime/🦀️.rs"), "utf8");
+  const runtime = readPluginRuntimeSource();
   for (const row of [...fixture.jobs, ...fixture.helpers]) {
     const signature = new RegExp("fn " + row.core + "\\(([^)]*)\\)\\s*->\\s*u64", "u").exec(runtime);
     expect(signature, row.core).not.toBeNull();

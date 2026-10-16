@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-mesh-component-references"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canonical ordered component references with measured original backing and controlled retirement."
+
+[package.metadata.semio]
+role = "framework"
+id = "mesh-component-references"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:serde"]
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

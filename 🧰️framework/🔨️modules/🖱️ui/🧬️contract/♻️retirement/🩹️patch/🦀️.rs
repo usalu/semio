@@ -1,6 +1,6 @@
 //! 🩹️ Separately admitted one-operation pages with exact typed descendant retirement.
 
-use crate::action::{UiTypedRetire, UiTypedRetirementCursor};
+use semio_framework_ui_contract_values::{UiTypedRetire,UiTypedRetirementCursor};
 use crate::{UiPatchOp, UiValueRetirement, UiValueRetirementStep, UI_DOCUMENT_PATCH_OPS};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::mem::size_of;

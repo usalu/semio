@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "request",
+    "cases",
+    "filesystemBytes",
+    "capacityBytes",
+    "allocationBytes",
+    "invalidRequests",
+    "taskPhase"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "request": {
+      "const": {
+        "version": 1,
+        "kind": "law"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "same",
+              "descendant",
+              "copy",
+              "foreign",
+              "reverse"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "filesystemBytes": {
+      "const": 33554432
+    },
+    "capacityBytes": {
+      "const": 41943040
+    },
+    "allocationBytes": {
+      "const": 8388608
+    },
+    "invalidRequests": {
+      "const": [
+        {
+          "version": 2,
+          "kind": "law"
+        },
+        {
+          "version": 1,
+          "kind": "law",
+          "maximumElapsedMilliseconds": 999999
+        }
+      ]
+    },
+    "taskPhase": {
+      "const": {
+        "maximumElapsedMilliseconds": 5000,
+        "phaseSame": true,
+        "descendant": true,
+        "drained": true
+      }
+    }
+  }
+}

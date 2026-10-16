@@ -2,6 +2,10 @@
   "name": "@semio-tech/framework-pack-record-rs",
   "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/🌱️value",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ],
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*",

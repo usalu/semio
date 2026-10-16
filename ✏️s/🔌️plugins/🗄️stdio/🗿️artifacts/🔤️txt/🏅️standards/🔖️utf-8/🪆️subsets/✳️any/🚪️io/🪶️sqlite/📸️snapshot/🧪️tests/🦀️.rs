@@ -1,7 +1,16 @@
+use crate::{standards::v_utf_8::subsets::any::schema::snapshot::LineEnding, standards::v_utf_8::subsets::any::schema::snapshot::TxtSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotPhase};
+use semio_framework_value::{native_decoding::NativeDecodeControl, NativeEncodeControl};
+use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::Reconstruction, sqlite_snapshot::artifact::ordered_row_refs, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase};
+#[allow(unused_imports)]
+use semio_framework_value::native_decoding::NativeDecodeProgress;
+use crate::standards::v_utf_8::subsets::any::io::sqlite::snapshot::{original_encoding};
 
 /// 🎟️ Supplies the immutable caller policy independently of every observed frontier.
 fn original_caller_grant()->semio_framework_value::RetainedCloneGrant{
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🫴️receiving.json")).unwrap();serde_json::from_value(fixture["originalCallerGrant"].clone()).unwrap()
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🫴️receiving.json")).unwrap();serde_json::from_value(fixture["originalCallerGrant"].clone()).unwrap()
 }
 
 /// 🛬️ Preserves this test's original SQL controller and retained native recipient through decode.
@@ -28,7 +37,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_utf_8::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn registered_full_fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🗂️typed-file.json")).unwrap()}
+fn registered_full_fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🗂️typed-file.json")).unwrap()}
 
 fn txt_full_file_retire<T:semio_framework_value::retirement::RetireOwned>(output:T,backing:usize,policy:store::io::testing::SnapshotFileCaller){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;let(mut owner,heap)=observe(||semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(zero,heap)=observe(||owner.step(Default::default()).unwrap());assert_eq!(zero.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut born,mut released)=(0,0);
@@ -46,7 +55,7 @@ async fn txt_original_receiving_registered_complete_store_and_destination(){
 }
 
 fn native_fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🛂️native.json")).unwrap()
+    serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛂️native.json")).unwrap()
 }
 
 fn native_case(value: &serde_json::Value) -> TxtSnapshot {
@@ -199,7 +208,7 @@ fn sqlite_snapshot_text_value_preflight_can_be_cancelled() {
 
 #[test]
 fn sqlite_snapshot_text_lines_preserve_order_and_line_endings() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = TxtSnapshot { schema: fixture["schema"].as_str().unwrap().into(), lines: fixture["lines"].as_array().unwrap().iter().map(|line| line.as_str().unwrap().into()).collect(), trailing_newline: true, line_ending: LineEnding::CrLf };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.table("text_line").unwrap().rows.len(), 3);
@@ -217,7 +226,7 @@ fn sqlite_snapshot_text_lines_preserve_order_and_line_endings() {
 
 
 /// 🛫️ Reads the closed language-neutral encoder policy independently of observed receipts.
-fn txt_original_encoding_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn txt_original_encoding_fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛫️encoding/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 
 /// 🎟️ Borrows one explicitly authored original grant without deriving authority from demand.
 fn txt_original_encoding_grant(law:&serde_json::Value,name:&str)->semio_framework_value::RetainedCloneGrant{serde_json::from_value(law[name].clone()).unwrap()}
@@ -299,7 +308,7 @@ fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and
  use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  use std::cell::Cell;
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;
+ let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;
  for row in fixture["cases"].as_array().unwrap(){
   let expected=TxtSnapshot::from_body(row["body"].as_str().unwrap());let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();
   for cut in (0..24).chain(std::iter::once(usize::MAX)){
@@ -315,4 +324,9 @@ fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and
  }
  assert!(successes>=fixture["cases"].as_array().unwrap().len());
  eprintln!("[DEBUG] Original Txt receiving fixed plain grant conserves System allocation/release and caller wire through24 cancellation cuts and actual LF/CRLF/empty/Unicode lines");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

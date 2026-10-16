@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-host-media-raster"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "OS host native SVG rasterization, planar geometry extraction and the mesh export and import registrars"
+
+[package.metadata.semio]
+role = "product"
+id = "os-host-media-raster"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+serde_json = "1.0.140"
+base64_codec = { path = "../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-os-host-workflow = { path = "../../../🔀️workflow/📦️packages/🦀️rust" }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
+resvg = "0.45.1"
+tiny-skia = "0.11.4"
+usvg = "0.45.1"
+
+[dev-dependencies]
+png = "0.17.16"
+semio-framework-plugin = { path = "../../../../🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }

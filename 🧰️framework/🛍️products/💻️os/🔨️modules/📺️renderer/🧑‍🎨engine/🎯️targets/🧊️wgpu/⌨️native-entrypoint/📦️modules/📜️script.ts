@@ -1,12 +1,15 @@
 #!/usr/bin/env bun
+import {readNativeCallerAuthorityV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {withPlaygroundSessionV1} from "../../../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {createRequestedIssuedResourceControlV1, receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import {runtimeCatalogBuildInventoryV1} from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { pluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
@@ -20,24 +23,19 @@ const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/
 class PublishScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, selectedProfile] = args, profile = selectedProfile as "prototype" | "release", repo = this.repoRoot, controller = new AbortController(), cancel = () => controller.abort();
-    if (args.length !== 2) throw new Error("publish <variant> <prototype|release>");
-    nativeRuntimeDirectory(".", variant, profile);
+    if (args.length !== 2||!variant) throw new Error("publish <variant> <prototype|release>");
+    nativeRuntimeDirectory(repo,variant!,profile);
+    if(profile!==readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode)throw Error("Native publication must match actual Original mode");
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).entries;
-      const session = (await import(pathToFileURL(join(repo, registryPath, "dist/sessions", variant, "🎮️playground-session/🟦️.ts")).href)).PLAYGROUND_SESSION;
+      await withPlaygroundSessionV1(repo,this.invocation,variant,async(session,projection,control)=>{
+      const catalog=projection.entries,phase=createRequestedIssuedResourceControlV1(control,0,controller.signal);
       if (session.variant !== variant || !Array.isArray(session.plugins)) throw new Error("Native session identity mismatch");
-      await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
-      const modules = session.plugins.map((plugin: { pluginId: string }) => {
-        const entry = catalog.find((row: { pluginId: string }) => row.pluginId === plugin.pluginId);
-        if (!entry) throw new Error(`Missing native catalog component: ${plugin.pluginId}`);
-        const crate = resolve(repo, entry.cratePath), path = relative(repo, crate);
-        if (isAbsolute(path) || path.split(/[\\/]/).includes("..") || !/^[a-z0-9_]+\.wasm$/.test(entry.wasmOut)) throw new Error("Invalid native component input path");
-        const page = join(pluginModulesRootIn(repo), moduleDirectoryName(plugin.pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
-        return { pluginId: plugin.pluginId, wasm: join(crate, COMPONENT_PROFILE_POLICIES[SHIPPED_COMPONENT_PROFILE].directory, entry.wasmOut), descriptor: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), descriptorPack: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), receipt: join(page, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE) };
-      });
-      await publishNativeRuntime(join(repo, ownerPath), variant, profile, modules, controller.signal);
+      await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { facet:"model",invocation:this.invocation,network:repositoryCargoNetworkV1(this.invocation,repo),control:phase });
+      const modules=session.plugins.map(plugin=>{const entry=catalog.find(row=>row.pluginId===plugin.pluginId);if(!entry)throw Error("Missing Native component declaration: "+plugin.pluginId);return{pluginId:entry.pluginId,cratePath:entry.cratePath};});
+      await publishNativeRuntime(repo,this.invocation,variant,modules,phase);
       console.log(`Published native ${variant} ${profile}: ${modules.length} completed components`);
+      });
     } finally { process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel); }
   }
 }

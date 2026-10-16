@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-pack-record"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Record codec: canonical document and record body encode and decode, scalar witness and intrinsic adapters."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-record"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-pack-format = { path = "../../../📐️format/📦️packages/🦀️rust" }
+semio-framework-pack-record-encode = { path = "../../🛫️encode/📦️packages/🦀️rust" }
+semio-framework-pack-record-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

@@ -41,29 +41,27 @@ type MapCamera = { x: number; y: number; zoom: number };
 
 type MapRenderMode = "image" | "vector" | "combined";
 
-type MapVectorStyle = "colored" | "figureGround" | "invertedFigure";
+/** 🎯️ A hovered or hit overlay feature; `kind` is its overlay layer's pickable granularity. */
+type MapHoveredFeature = { readonly kind: string; readonly id: string };
 
-type MapFeatureKind = "position" | "route";
+/** 🗂️ Feature ids per pickable overlay layer id — the hit, marquee and selection wire shape. */
+type MapLayerIds = Readonly<Record<string, readonly string[]>>;
 
-type MapHoveredFeature = { readonly kind: MapFeatureKind; readonly id: string };
+/** 🧩️ One overlay layer the descriptor's `policy` declares; only layers with a `granularity` are pickable. */
+type MapOverlayLayerInfo = { readonly id: string; readonly geometry: string; readonly granularity?: string };
 
-type MapFeatureHit = { readonly positions: readonly string[]; readonly routes: readonly string[] };
+/** 🏷️ The popup facts of one pickable overlay feature. */
+type MapOverlayMeta = { readonly label?: string; readonly icon?: IconName; readonly link?: string };
 
-type MapPositionMeta = {
-  readonly id: string;
-  readonly label?: string;
-  readonly name?: string;
-  readonly icon?: IconName;
-  readonly sourceUrl?: string;
-};
+/** 📇️ The descriptor's declared overlay layers plus the popup facts of every pickable feature, by granularity then id. */
+type MapOverlayIndex = { readonly layers: readonly MapOverlayLayerInfo[]; readonly meta: ReadonlyMap<string, ReadonlyMap<string, MapOverlayMeta>> };
 
 type VisibleTileRow = { z: number; x: number; y: number; key: string };
 
 const DEFAULT_CAMERA_JSON = '{"x":0,"y":0,"zoom":1}';
 /** 🕹️ The framework-owned interaction domain every tiled-map app declares, its map granularity and
  * the hover channel — the wire coordinates `interactionSelect`/`interactionHover` are addressed
- * with, matched on the guest side by `GIS2D_INTERACTION_DOMAIN`/`GIS2D_FEATURE_GRANULARITY`/
- * `Gis2dInteractionSnapshot::POINTER_CHANNEL`. */
+ * with, matched by the guest app's own interaction-domain constants. */
 const MAP_INTERACTION_DOMAIN = "features";
 const MAP_FEATURE_GRANULARITY = "feature";
 const MAP_HOVER_CHANNEL = "pointer";
@@ -116,22 +114,25 @@ function parseCameraJson(raw: string): MapCamera | null {
   }
 }
 
-function parseMapFeatureHit(raw: string): MapFeatureHit {
+function parseMapLayerIds(raw: string): MapLayerIds {
   try {
-    const v = JSON.parse(raw) as { positions?: string[]; routes?: string[] };
-    const positions = Array.isArray(v.positions) ? v.positions.filter((id): id is string => typeof id === "string") : [];
-    const routes = Array.isArray(v.routes) ? v.routes.filter((id): id is string => typeof id === "string") : [];
-    return { positions, routes };
+    const v = JSON.parse(raw) as unknown;
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([layerId, ids]) => [layerId, Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : []]));
   } catch {
-    return { positions: [], routes: [] };
+    return {};
   }
+}
+
+function mapLayerIdsFlat(hits: MapLayerIds): string[] {
+  return Object.values(hits).flat();
 }
 
 function parseMapHoveredFeature(raw: string): MapHoveredFeature | null {
   if (raw === "null") return null;
   try {
     const v = JSON.parse(raw) as { kind?: string; id?: string };
-    if ((v.kind === "position" || v.kind === "route") && typeof v.id === "string") {
+    if (typeof v.kind === "string" && v.kind.length > 0 && typeof v.id === "string") {
       return { kind: v.kind, id: v.id };
     }
   } catch {
@@ -140,7 +141,7 @@ function parseMapHoveredFeature(raw: string): MapHoveredFeature | null {
   return null;
 }
 
-function parseMapPositionScreen(raw: string): { x: number; y: number } | null {
+function parseMapScreenPoint(raw: string): { x: number; y: number } | null {
   if (raw === "null") return null;
   try {
     const v = JSON.parse(raw) as { x?: number; y?: number };
@@ -151,44 +152,35 @@ function parseMapPositionScreen(raw: string): { x: number; y: number } | null {
   }
 }
 
-function parsePositionMeta(mapDescriptorJson: string): Map<string, MapPositionMeta> {
+const EMPTY_MAP_OVERLAY_INDEX: MapOverlayIndex = { layers: [], meta: new Map() };
+
+/** 📇️ Reads the overlay layers the descriptor's `policy.overlays` declares and the `label`/`icon`/`link` of every feature of a pickable one under `overlays`. */
+export function parseMapOverlayIndex(mapDescriptorJson: string): MapOverlayIndex {
   try {
     const descriptor = JSON.parse(mapDescriptorJson) as {
-      positions?: Array<{ id?: string; label?: string; name?: string; icon?: string; source_url?: string; sourceUrl?: string }>;
+      overlays?: Record<string, Array<{ id?: unknown; label?: unknown; icon?: unknown; link?: unknown }>>;
+      policy?: { overlays?: Array<{ id?: unknown; geometry?: unknown; granularity?: unknown }> };
     };
-    const out = new Map<string, MapPositionMeta>();
-    for (const row of descriptor.positions ?? []) {
-      if (typeof row.id !== "string") continue;
-      out.set(row.id, {
-        id: row.id,
-        label: row.label,
-        name: row.name,
-        icon: row.icon as IconName | undefined,
-        sourceUrl: row.source_url ?? row.sourceUrl,
-      });
+    const text = (value: unknown): string | undefined => (typeof value === "string" ? value : undefined);
+    const layers: MapOverlayLayerInfo[] = (descriptor.policy?.overlays ?? []).flatMap((row) => (typeof row.id === "string" ? [{ id: row.id, geometry: text(row.geometry) ?? "point", ...(typeof row.granularity === "string" ? { granularity: row.granularity } : {}) }] : []));
+    const meta = new Map<string, Map<string, MapOverlayMeta>>();
+    for (const layer of layers) {
+      if (!layer.granularity) continue;
+      const rows = meta.get(layer.granularity) ?? new Map<string, MapOverlayMeta>();
+      for (const row of descriptor.overlays?.[layer.id] ?? []) {
+        if (typeof row.id === "string") rows.set(row.id, { label: text(row.label), icon: text(row.icon) as IconName | undefined, link: text(row.link) });
+      }
+      meta.set(layer.granularity, rows);
     }
-    return out;
+    return { layers, meta };
   } catch {
-    return new Map();
-  }
-}
-
-function parseFeatureSelection(raw: string): { positions: string[]; routes: string[] } {
-  try {
-    const v = JSON.parse(raw) as { positions?: string[]; routes?: string[] };
-    return {
-      positions: Array.isArray(v.positions) ? v.positions.filter((id): id is string => typeof id === "string") : [],
-      routes: Array.isArray(v.routes) ? v.routes.filter((id): id is string => typeof id === "string") : [],
-    };
-  } catch {
-    return { positions: [], routes: [] };
+    return EMPTY_MAP_OVERLAY_INDEX;
   }
 }
 
 /** 🕹️ `interactionSelect` args for a map feature pick/marquee against the framework-owned
  * `"features"` domain's `"feature"` granularity — the tiled-map twin of `World3dHost`'s
- * `world3dSelectionActionArgs`, and the exact wire shape the GIS app's own
- * `select_feature_action_args` builds for its context menu. */
+ * `world3dSelectionActionArgs`, and the wire shape a map app's context menu selects with. */
 export function mapFeatureSelectionActionArgs(ids: readonly string[], merge: MergeMode, method: "pick" | SelectionMarqueeMethod) {
   const targets = [...new Set(ids)].map((id) => ({ granularity: MAP_FEATURE_GRANULARITY, id }));
   return { domainId: MAP_INTERACTION_DOMAIN, targets: JSON.stringify(targets), merge, method };
@@ -201,16 +193,19 @@ export function mapFeatureHoverActionArgs(id: string | null | undefined) {
   return { domainId: MAP_INTERACTION_DOMAIN, channel: MAP_HOVER_CHANNEL, targets: JSON.stringify(targets) };
 }
 
-export function resolveMapInteractionSync(selectionJson: string, hoverJson: string): { granularity: "position" | "route"; selectedIdsJson: string; hoveredId?: string } {
-  const selection = parseFeatureSelection(selectionJson);
+/** 🕹️ The one granularity the session highlights: the first declared pickable layer with selected ids, else the hovered feature's granularity, else the first pickable one. */
+export function resolveMapInteractionSync(selectionJson: string, hoverJson: string, layers: readonly MapOverlayLayerInfo[]): { granularity: string; selectedIdsJson: string; hoveredId?: string } {
+  const selection = parseMapLayerIds(selectionJson);
   const hover = parseMapHoveredFeature(hoverJson);
-  const granularity = selection.routes.length > 0 ? "route" : selection.positions.length > 0 ? "position" : hover?.kind ?? "position";
-  const selectedIds = granularity === "route" ? selection.routes : selection.positions;
+  const pickable = layers.filter((layer) => layer.granularity !== undefined);
+  const selected = pickable.find((layer) => (selection[layer.id]?.length ?? 0) > 0);
+  const granularity = selected?.granularity ?? hover?.kind ?? pickable[0]?.granularity ?? MAP_FEATURE_GRANULARITY;
+  const selectedIds = selected ? selection[selected.id] : [];
   return { granularity, selectedIdsJson: JSON.stringify(selectedIds), ...(hover?.kind === granularity ? { hoveredId: hover.id } : {}) };
 }
 
-function syncMapInteraction(session: MapWasmSession, selectionJson: string, hoverJson: string): void {
-  const interaction = resolveMapInteractionSync(selectionJson, hoverJson);
+function syncMapInteraction(session: MapWasmSession, selectionJson: string, hoverJson: string, layers: readonly MapOverlayLayerInfo[]): void {
+  const interaction = resolveMapInteractionSync(selectionJson, hoverJson, layers);
   session.syncInteraction(interaction.granularity, interaction.selectedIdsJson, interaction.hoveredId);
 }
 
@@ -398,6 +393,7 @@ export class MapRenderer {
   private tileUrlTemplate: string;
   private vectorTileUrlTemplate: string;
   private renderMode: MapRenderMode = "vector";
+  private overlayLayers: readonly MapOverlayLayerInfo[] = [];
   private tileRefreshDebounce: LeadingTrailingDebounce;
   private refreshInFlight: Promise<void> | null = null;
   private refreshGeneration = 0;
@@ -436,7 +432,7 @@ export class MapRenderer {
     this.invalidate();
   }
 
-  setVectorStyle(style: MapVectorStyle): void {
+  setVectorStyle(style: string): void {
     this.session.setVectorStyle(style);
     this.invalidate();
   }
@@ -452,7 +448,7 @@ export class MapRenderer {
   }
 
   syncInteraction(selectionJson: string, hoverJson: string): void {
-    syncMapInteraction(this.session, selectionJson, hoverJson);
+    syncMapInteraction(this.session, selectionJson, hoverJson, this.overlayLayers);
     this.invalidate();
   }
 
@@ -502,6 +498,7 @@ export class MapRenderer {
 
   syncDescriptor(json: string): void {
     this.session.syncMapJson(json);
+    this.overlayLayers = parseMapOverlayIndex(json).layers;
     this.invalidate();
   }
 
@@ -751,8 +748,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
 
-  const positionMetaById = useMemo(() => (scene ? parsePositionMeta(scene.mapDescriptorJson) : new Map()), [scene?.mapDescriptorJson]);
+  const overlayIndex = useMemo(() => (scene ? parseMapOverlayIndex(scene.mapDescriptorJson) : EMPTY_MAP_OVERLAY_INDEX), [scene?.mapDescriptorJson]);
   const hoveredFeature = useMemo(() => (scene ? parseMapHoveredFeature(scene.hoverJson) : null), [scene?.hoverJson]);
+  const popupFeature = useMemo(() => (hoveredFeature && overlayIndex.layers.some((layer) => layer.granularity === hoveredFeature.kind && layer.geometry === "point") ? hoveredFeature : null), [hoveredFeature, overlayIndex]);
   const selectionMethod = (scene?.selectionMethod ?? "rectangle") as SelectionMarqueeMethod;
 
   const dispatch = useCallback(
@@ -793,15 +791,15 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   }, []);
 
   const queryFeatureHits = useCallback(
-    (points: readonly SelectionMarqueePoint[], crossing: boolean): MapFeatureHit => {
+    (points: readonly SelectionMarqueePoint[], crossing: boolean): MapLayerIds => {
       const session = rendererRef.current?.session;
-      if (!session) return { positions: [], routes: [] };
+      if (!session) return {};
       if (selectionMethod === "lasso" && points.length >= 3) {
-        return parseMapFeatureHit(session.featuresInPolygonJson(JSON.stringify(points.map((point) => [point.x, point.y])), crossing));
+        return parseMapLayerIds(session.featuresInPolygonJson(JSON.stringify(points.map((point) => [point.x, point.y])), crossing));
       }
       const rect = screenRectFromPoints(points);
-      if (!rect) return { positions: [], routes: [] };
-      return parseMapFeatureHit(session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing));
+      if (!rect) return {};
+      return parseMapLayerIds(session.featuresInRectJson(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, crossing));
     },
     [selectionMethod],
   );
@@ -859,7 +857,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       }
       const renderer = new MapRenderer(scene.tileUrlTemplate, scene.vectorTileUrlTemplate, session);
       renderer.setRenderMode(scene.renderMode as MapRenderMode);
-      renderer.setVectorStyle(scene.vectorStyle as MapVectorStyle);
+      renderer.setVectorStyle(scene.vectorStyle);
       renderer.setLodMode(scene.lodMode);
       renderer.setLayerVisibilityJson(scene.layerVisibilityJson);
       renderer.setLayerStrokeScaleJson(scene.layerStrokeScaleJson);
@@ -967,7 +965,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
 
   useEffect(() => {
     if (!scene) return;
-    rendererRef.current?.setVectorStyle(scene.vectorStyle as MapVectorStyle);
+    rendererRef.current?.setVectorStyle(scene.vectorStyle);
   }, [scene?.vectorStyle]);
 
   useEffect(() => {
@@ -1005,11 +1003,11 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   }, [clampCamera, scene?.cameraJson]);
 
   useEffect(() => {
-    if (!hoveredFeature || hoveredFeature.kind !== "position") return undefined;
+    if (!popupFeature) return undefined;
     let raf = 0;
     const tick = () => {
-      const screen = rendererRef.current?.session.featureScreenJson("position", hoveredFeature.id);
-      const parsed = parseMapPositionScreen(screen ?? "null");
+      const screen = rendererRef.current?.session.featureScreenJson(popupFeature.kind, popupFeature.id);
+      const parsed = parseMapScreenPoint(screen ?? "null");
       const popup = popupRef.current;
       if (parsed && popup) {
         popup.style.left = `${parsed.x}px`;
@@ -1019,7 +1017,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [hoveredFeature]);
+  }, [popupFeature]);
 
   const applyWheelZoom = useCallback(
     (event: WheelEvent): void => {
@@ -1070,12 +1068,12 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
    * empty `targets` as a no-op, not a clear). `crossing` is already baked into `hits` by the caller's
    * coverage-aware hit query, so it carries no separate wire argument. */
   const emitFeatureSelection = useCallback(
-    (hits: MapFeatureHit, mode: MergeMode, method: "pick" | SelectionMarqueeMethod) => {
-      if (hits.positions.length === 0 && hits.routes.length === 0) {
+    (ids: readonly string[], mode: MergeMode, method: "pick" | SelectionMarqueeMethod) => {
+      if (ids.length === 0) {
         dispatch("clearSelection");
         return;
       }
-      dispatch("interactionSelect", mapFeatureSelectionActionArgs([...hits.positions, ...hits.routes], mode, method));
+      dispatch("interactionSelect", mapFeatureSelectionActionArgs(ids, mode, method));
     },
     [dispatch],
   );
@@ -1208,17 +1206,10 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
           endX: point.x,
           path: points,
         });
-        emitFeatureSelection(queryFeatureHits(points, coverage === "partial"), mode, method);
+        emitFeatureSelection(mapLayerIdsFlat(queryFeatureHits(points, coverage === "partial")), mode, method);
       } else if (distance < MAP_MARQUEE_THRESHOLD_PX) {
         const hit = queryHitFeature(point);
-        emitFeatureSelection(
-          {
-            positions: hit?.kind === "position" ? [hit.id] : [],
-            routes: hit?.kind === "route" ? [hit.id] : [],
-          },
-          mode,
-          "pick",
-        );
+        emitFeatureSelection(hit ? [hit.id] : [], mode, "pick");
       }
       resetMarquee();
     };
@@ -1243,11 +1234,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       void (async () => {
         const point = clientToLocal(event.clientX, event.clientY);
         const feature = queryHitFeature(point);
-        const hits = feature ? [{ domain: feature.kind === "route" ? "route" : "position", id: feature.id }] : [];
-        const selection = parseFeatureSelection(scene.selectionJson);
-        const selectionGroups = [];
-        if (selection.positions.length > 0) selectionGroups.push({ domain: "position", ids: selection.positions });
-        if (selection.routes.length > 0) selectionGroups.push({ domain: "route", ids: selection.routes });
+        const hits = feature ? [{ domain: feature.kind, id: feature.id }] : [];
+        const selection = parseMapLayerIds(scene.selectionJson);
+        const selectionGroups = overlayIndex.layers.flatMap((layer) => (layer.granularity && (selection[layer.id]?.length ?? 0) > 0 ? [{ domain: layer.granularity, ids: [...selection[layer.id]] }] : []));
         const menu = await openSurfaceContextMenu(
           requestContextMenu,
           {
@@ -1273,7 +1262,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       window.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
+  }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, overlayIndex, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
 
   if (!scene) return <div className="semio-tiled-map-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
@@ -1283,17 +1272,17 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       <ContextMenuController title={contextMenuTitleLabel} open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
-      {hoveredFeature?.kind === "position" ? (
+      {popupFeature ? (
         <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {
-            const meta = positionMetaById.get(hoveredFeature.id);
-            const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
+            const meta = overlayIndex.meta.get(popupFeature.kind)?.get(popupFeature.id);
+            const title = meta?.label ?? popupFeature.id;
             return (
               <div className="flex items-start gap-1.5">
                 {meta?.icon ? <Icon icon={meta.icon} size="small" className="mt-0.5 shrink-0" /> : null}
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{title}</div>
-                  {meta?.sourceUrl ? <span className="text-xs text-secondary underline-offset-2">{sourceAvailableLabel}</span> : null}
+                  {meta?.link ? <span className="text-xs text-secondary underline-offset-2">{sourceAvailableLabel}</span> : null}
                 </div>
               </div>
             );

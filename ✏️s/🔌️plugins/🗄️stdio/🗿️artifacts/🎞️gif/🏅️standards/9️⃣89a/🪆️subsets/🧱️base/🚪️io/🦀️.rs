@@ -71,7 +71,7 @@ fn color_table_to_bytes(table: &GifColorTable) -> Vec<codec::Rgb> {
     table.colors.iter().map(|c| [c.r, c.g, c.b]).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn color_table_from_bytes(colors: Vec<codec::Rgb>, sorted: bool) -> GifColorTable {
+pub fn color_table_from_bytes(colors: Vec<codec::Rgb>, sorted: bool) -> GifColorTable {
     GifColorTable { sorted, colors: colors.into_iter().map(|[r, g, b]| GifRgb { r, g, b }).collect() }
 }
 //#endregion ColorTableConv
@@ -502,9 +502,7 @@ pub fn register_schema_specs() {}
 //#endregion Register
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
@@ -522,14 +520,17 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_gif_fixture_tests::standards::v89a::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_gif_snapshot::standards::v89a::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_gif_fixture_tests::standards::v89a::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_gif_snapshot::standards::v89a::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::standards::v89a::subsets::any::schema::diff::GifDiff;

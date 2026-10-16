@@ -68,10 +68,10 @@ use semio_framework_plugin::InteractionDefinition;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::InteractionVerb;
 use semio_framework_plugin::InteractionWrite;
-use semio_framework_plugin::IntroductionDefinition;
-use semio_framework_plugin::IntroductionInteraction;
-use semio_framework_plugin::IntroductionPlacement;
-use semio_framework_plugin::IntroductionStepDefinition;
+use semio_framework::onboarding::IntroductionDefinition;
+use semio_framework::onboarding::IntroductionInteraction;
+use semio_framework::onboarding::IntroductionPlacement;
+use semio_framework::onboarding::IntroductionStepDefinition;
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::Media;
@@ -2085,10 +2085,10 @@ async fn a_history_edit_draft_highlights_exactly_the_objects_it_references() {
     let mutation_id = edit_rows(&settled).first().and_then(|row| row.mutations.first()).map(|mutation| mutation.mutation_id.clone()).expect("the drag is one editable mutation");
     let highlighted = |node: &Value| instances_of(node).into_iter().filter(|instance| instance.get("highlighted").and_then(Value::as_bool) == Some(true)).filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string)).collect::<Vec<_>>();
     assert!(highlighted(&render_composite(&mut app).await).is_empty(), "nothing is highlighted before a draft opens");
-    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::HISTORY_EDIT_BEGIN_ACTION_ID, Some(&json!({ "mutationId": mutation_id })), None).await.expect("historyEditBegin admits");
+    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, Some(&json!({ "mutationId": mutation_id })), None).await.expect("historyEditBegin admits");
     settle_reserved(&mut app, admitted).await.expect("historyEditBegin settles");
     assert_eq!(highlighted(&render_composite(&mut app).await), vec![object_id.clone()], "the draft's target is painted highlighted");
-    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::HISTORY_EDIT_EXIT_ACTION_ID, None, None).await.expect("historyEditExit admits");
+    let admitted = dispatch_reserved_unsettled(&mut app, semio_framework::history_edit::HISTORY_EDIT_EXIT_ACTION_ID, None, None).await.expect("historyEditExit admits");
     settle_reserved(&mut app, admitted).await.expect("historyEditExit settles");
     assert!(highlighted(&render_composite(&mut app).await).is_empty(), "closing the edit clears the highlight");
 }

@@ -1,3 +1,4 @@
+use crate::board_set_camera;
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::unit_tests::context::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
@@ -26,7 +27,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     }
 
     fn capture_fill_snapshot(host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshot {
-        let mut capture = host.begin_board_fill_snapshot();
+        let mut capture = begin_board_fill_snapshot(&host.style, &host.brush);
         for _ in 0..FILL_TEST_PUMP_LIMIT {
             match capture.step(host) {
                 BoardFillCaptureStep::Pending => {}
@@ -349,10 +350,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
 
     fn frontier_fill_host() -> BoardHost {
         let mut host = BoardHost::new();
-        host.set_size(800, 600, 1.0);
+        host.scene.set_size(800, 600, 1.0);
         host.set_suggestion_offset(40.0);
         host.set_brush_node_size(40.0);
-        host.set_board_kind_catalogs_from_json(
+        host.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -377,7 +378,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_slot_emits_preview_and_place_on_leave() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
@@ -389,7 +390,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
                 "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }]
             }]
         });
-        h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
         let desc = SceneDescriptor {
             nodes: vec![NodeDescriptor {
                 id: "a".into(),
@@ -434,12 +435,12 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         h.sync_descriptor(&desc).unwrap();
         let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let slot = hp + (hp - Point::new(0.0, 0.0)) * (40.0 / 40.0);
-        let s = h.world_to_screen(slot);
+        let s = h.scene.world_to_screen(slot);
         h.pointer_move_screen(s.x, s.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushPreview"), "expected brushPreview, got: {ev}");
         h.pointer_leave_screen(true);
-        let ev2 = h.drain_events_json();
+        let ev2 = h.outbox.drain_events_json();
         assert!(ev2.contains("brushPlace"), "expected brushPlace on leave with Alt, got: {ev2}");
         assert!(ev2.contains("brush.kind"));
         assert!(ev2.contains("a:h0"));
@@ -454,8 +455,8 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_open_slot_refuses_a_fastened_handle() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 2.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 2.0);
         h.set_active_utility("select");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
@@ -463,7 +464,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             "handleKinds": [{ "id": "port", "name": "Port", "color": "#888" }],
             "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }] }]
         });
-        h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
         let snapshot = json!({
             "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -478,17 +479,17 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             ],
             "edges": [{ "id": "e0", "edgeKind": "link", "source": "a:h0", "target": "b:h0" }]
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)}, "the two-node snapshot must parse");
-        let _ = h.drain_events_json();
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)}, "the two-node snapshot must parse");
+        let _ = h.outbox.drain_events_json();
 
         h.brush_open_slot("a:h0");
-        let fastened = h.drain_events_json();
+        let fastened = h.outbox.drain_events_json();
         assert!(fastened.contains("\"candidates\":[]"), "a fastened handle must resolve an empty candidate page, got: {fastened}");
         h.brush_commit_slot();
-        assert!(!h.drain_events_json().contains("brushPlace"), "an empty page must place nothing");
+        assert!(!h.outbox.drain_events_json().contains("brushPlace"), "an empty page must place nothing");
 
         h.brush_open_slot("a:h1");
-        let free = h.drain_events_json();
+        let free = h.outbox.drain_events_json();
         assert!(free.contains("brush.kind"), "a free handle must still resolve its compatible kinds, got: {free}");
         h.brush_cancel_slot();
     }
@@ -496,8 +497,8 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_open_slot_suggestions_commit_and_cancel() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 2.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 2.0);
         h.set_active_utility("select");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
@@ -509,7 +510,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
                 "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }]
             }]
         });
-        h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
         let desc = SceneDescriptor {
             nodes: vec![NodeDescriptor {
                 id: "a".into(),
@@ -553,7 +554,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         };
         h.sync_descriptor(&desc).unwrap();
         h.brush_open_slot("a:h0");
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         assert!(ev.contains("brushPreview"), "expected brushPreview, got: {ev}");
         assert!(ev.contains("\"id\":\"a:h0\""), "expected hovered source handle, got: {ev}");
@@ -561,23 +562,23 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         let expected_x = hp.x + (hp.x - 0.0) * (40.0 / 40.0);
         assert!(ev.contains(&format!("\"x\":{expected_x}")), "preview should flush along handle normal, got: {ev}");
         h.brush_commit_slot();
-        let ev_commit = h.drain_events_json();
+        let ev_commit = h.outbox.drain_events_json();
         assert!(ev_commit.contains("brushPlace"), "expected brushPlace on commit, got: {ev_commit}");
         h.brush_open_slot("a:h0");
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         h.brush_cancel_slot();
-        let ev_cancel = h.drain_events_json();
+        let ev_cancel = h.outbox.drain_events_json();
         assert!(!ev_cancel.contains("brushPlace"), "cancel should not place, got: {ev_cancel}");
     }
 
     #[test]
     fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -593,25 +594,25 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let inside = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
-        let _ = h.drain_events_json();
-        assert_eq!(h.nodes.len(), 2);
-        let far = h.world_to_screen(Point::new(500.0, 500.0));
+        let _ = h.outbox.drain_events_json();
+        assert_eq!(h.scene.nodes.len(), 2);
+        let far = h.scene.world_to_screen(Point::new(500.0, 500.0));
         h.pointer_move_screen(far.x, far.y, false, false, true);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot with Alt, got: {ev}");
     }
 
     #[test]
     fn board_host_brush_slot_skips_place_on_leave_without_alt() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -627,22 +628,37 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let inside = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         h.pointer_leave_screen(false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("brushPlace"), "expected no brushPlace without Alt, got: {ev}");
+    }
+
+    /// 🔏️ A puzzle board mints its fill placements under the plugin's `puzzle2d.fill.` naming; the same scene on a
+    /// bare board mints the neutral `board.fill.` ids, so the prefix is the plugin's declaration, not the board's.
+    #[test]
+    fn puzzle_board_naming_owns_fill_placement_ids() {
+        use crate::editor::puzzle2d::engine::board_host::PUZZLE_2D_BOARD_NAMING;
+        let operation = || Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(9), semio_framework_job::Generation(1), 42);
+        let mut puzzle = frontier_fill_host();
+        puzzle.style.set_naming(&PUZZLE_2D_BOARD_NAMING);
+        let (puzzle_placements, _, _) = run_fill_job(&puzzle, 1, operation(), 1);
+        let (neutral_placements, _, _) = run_fill_job(&frontier_fill_host(), 1, operation(), 1);
+        assert!(!puzzle_placements.is_empty() && !neutral_placements.is_empty(), "the frontier scene admits a fill placement");
+        assert!(puzzle_placements.iter().all(|placement| placement.target.starts_with("puzzle2d.fill.")), "{puzzle_placements:?}");
+        assert!(neutral_placements.iter().all(|placement| placement.target.starts_with("board.fill.")), "{neutral_placements:?}");
     }
 
     #[test]
     fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -678,10 +694,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_fill_checkpoint_restore_matches_uninterrupted_replay() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -730,10 +746,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn a_checkpoint_with_an_unclaimed_placement_never_resumes() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({ "handleKinds": [{ "id": "child", "name": "Child", "color": "#888888" }], "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "child", "angle": 0.0 }] }] }).to_string()).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({ "handleKinds": [{ "id": "child", "name": "Child", "color": "#888888" }], "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "child", "angle": 0.0 }] }] }).to_string()).unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(9), semio_framework_job::Generation(2), 9);
         let checkpoint = first_fill_checkpoint(BoardFillJob::with_operation(capture_fill_snapshot(&h), 4, operation));
@@ -1000,7 +1016,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             descriptor.nodes.push(node);
         }
         host.sync_descriptor(&descriptor).unwrap();
-        let mut capture = host.begin_board_fill_snapshot();
+        let mut capture = begin_board_fill_snapshot(&host.style, &host.brush);
         let mut fault = None;
         let capture_opportunities = crate::editor::puzzle2d::engine::BOARD_FILL_NODE_CAPACITY.saturating_mul(3).saturating_add(3);
         for _ in 0..capture_opportunities {
@@ -1080,13 +1096,13 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_fixture_drop_preview_json_paints_while_select_utility_active() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_active_utility("select");
-        h.set_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
-        let ev = h.drain_events_json();
+        set_drop_preview_json(&mut h.scene, &mut h.brush, r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("brushPlace"));
         assert!(h.encoded_scene_hint() > 0);
-        h.set_drop_preview_json("").unwrap();
+        set_drop_preview_json(&mut h.scene, &mut h.brush, "").unwrap();
         assert!(h.encoded_scene_hint() > 0);
         close_board_host(h);
     }
@@ -1094,9 +1110,9 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 0.05);
-        h.set_board_kind_catalogs_from_json(
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 0.05);
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "nodeKinds": [{
                     "id": "capsule_J",
@@ -1110,10 +1126,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             .to_string(),
         )
         .unwrap();
-        h.set_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#).unwrap();
+        set_drop_preview_json(&mut h.scene, &mut h.brush, r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#).unwrap();
         let hint_with_preview = h.encoded_scene_hint();
         assert!(hint_with_preview > 0);
-        h.set_drop_preview_json("").unwrap();
+        set_drop_preview_json(&mut h.scene, &mut h.brush, "").unwrap();
         let hint_cleared = h.encoded_scene_hint();
         assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
         close_board_host(h);
@@ -1122,9 +1138,9 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [{"id": "parent", "name": "Parent", "color": "#888888"}],
                 "nodeKinds": [{
@@ -1137,7 +1153,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let session = semio_framework_pack_json::json!({
             "sourceHandleId": "a:h0",
             "candidates": ["brush.kind"],
@@ -1155,7 +1171,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             }
         });
         h.set_brush_session_mirror_json(&session.to_string()).unwrap();
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("brushPlace"));
         assert!(h.encoded_scene_hint() > 0);
     }
@@ -1163,13 +1179,13 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_candidates_sorted_by_handle_proximity() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -1195,10 +1211,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let inside = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates =
@@ -1211,13 +1227,13 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_lists_every_compatible_handle_per_node_kind() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -1236,10 +1252,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let inside = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates = v
             .as_array()
@@ -1262,8 +1278,8 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
 
         let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
-        h.set_handle_link_compat_from_json(&compat_str).unwrap();
-        h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
+        h.style.set_handle_link_compat_from_json(&compat_str).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
         let desc = SceneDescriptor {
             nodes: vec![NodeDescriptor {
                 id: "base".into(),
@@ -1336,15 +1352,15 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         const DOOR_TAMBOUR_LEFT: &str = "door tambour left";
         const CAPITAL_KIND: &str = "Capital";
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
 
         let snapshot: semio_framework_pack_json::Value = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&(<crate::Puzzle2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap())));
         let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
-        h.set_handle_link_compat_from_json(&compat_str).unwrap();
+        h.style.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = snapshot.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
             || "{}".to_string(),
             |kc| {
@@ -1355,7 +1371,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
                 .to_string()
             },
         );
-        h.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
+        h.style.set_board_kind_catalogs_from_json(&catalogs_str).unwrap();
         let desc = SceneDescriptor {
             nodes: vec![NodeDescriptor {
                 id: "tambour".into(),
@@ -1398,12 +1414,12 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let slot = hp + (hp - Point::new(0.0, 0.0)) * (40.0 / 40.0);
-        let slot_screen = h.world_to_screen(slot);
+        let slot_screen = h.scene.world_to_screen(slot);
         h.pointer_move_screen(slot_screen.x, slot_screen.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
         let v: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&ev, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let candidates = v
@@ -1418,12 +1434,12 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -1439,10 +1455,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let inside = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let inside = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_move_screen(inside.x, inside.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushPreview"), "expected brushPreview when hovering node body at overview LOD, got: {ev}");
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
     }
@@ -1450,13 +1466,13 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id": "parent", "name": "Parent", "color": "#888888"},
@@ -1472,13 +1488,13 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let ha0 = h.handles.get("a:h0").unwrap();
-        let ring = h.indirect_handle_world_pos(ha0).unwrap();
-        let s = h.world_to_screen(ring);
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let ha0 = h.scene.handles.get("a:h0").unwrap();
+        let ring = indirect_handle_world_pos(&h.scene, &h.style, ha0).unwrap();
+        let s = h.scene.world_to_screen(ring);
         h.pointer_move_screen(s.x, s.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("brushPreview"), "expected brushPreview on indirect ring anchor, got: {ev}");
     }
 
@@ -1527,18 +1543,18 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     /// — so asserting on the preview event would pass with the bug still present.
     fn brush_candidate_count_for_catalogs(catalogs_json: &str) -> usize {
         let mut host = BoardHost::new();
-        host.set_size(800, 600, 1.0);
-        host.set_camera(0.0, 0.0, 1.0);
+        host.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
         host.set_active_utility("brush");
         host.set_suggestion_offset(40.0);
         host.set_brush_node_size(40.0);
-        host.set_board_kind_catalogs_from_json(catalogs_json).expect("catalog push must be accepted by the engine");
+        host.style.set_board_kind_catalogs_from_json(catalogs_json).expect("catalog push must be accepted by the engine");
         host.sync_descriptor(&brush_single_free_handle_scene()).unwrap();
-        let _ = host.drain_events_json();
+        let _ = host.outbox.drain_events_json();
         let anchor = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-        let probe = host.world_to_screen(anchor + (anchor - Point::new(0.0, 0.0)));
+        let probe = host.scene.world_to_screen(anchor + (anchor - Point::new(0.0, 0.0)));
         host.pointer_move_screen(probe.x, probe.y, false, false, false);
-        let events: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&host.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board events json");
+        let events: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&host.outbox.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("board events json");
         events
             .as_array()
             .and_then(|rows| rows.iter().find(|row| row.get("name").and_then(semio_framework_pack_json::Value::as_str) == Some("brushCandidates")))
@@ -1560,7 +1576,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         let node_kinds = parsed["nodeKinds"].as_array().expect("nodeKinds slice");
         assert!(!node_kinds.is_empty(), "the nakagin manifest must contribute node kinds");
         assert!(node_kinds.iter().any(|row| row.get("handles").and_then(semio_framework_pack_json::Value::as_array).is_some_and(|handles| !handles.is_empty())), "manifest node kinds must carry handle templates, else brush_compatible_candidates skips every kind");
-        BoardHost::new().set_board_kind_catalogs_from_json(&catalogs).expect("manifest catalogs must satisfy the engine contract");
+        BoardHost::new().style.set_board_kind_catalogs_from_json(&catalogs).expect("manifest catalogs must satisfy the engine contract");
     }
 
     /// 🌾️ Proves the fill half of the catalog-translation fix: an empty engine `node_kinds` catalog
@@ -1571,7 +1587,7 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
     #[test]
     fn fill_places_nothing_without_kind_catalogs_and_places_with_them() {
         let mut empty_host = BoardHost::new();
-        empty_host.set_size(800, 600, 1.0);
+        empty_host.scene.set_size(800, 600, 1.0);
         empty_host.set_suggestion_offset(40.0);
         empty_host.set_brush_node_size(40.0);
         empty_host.sync_descriptor(&brush_single_free_handle_scene()).unwrap();
@@ -1606,10 +1622,10 @@ use semio_framework_job_worker::{WorkerJobPoll};use semio_framework_job_worker_a
         });
         let catalogs = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
         let mut catalog_host = BoardHost::new();
-        catalog_host.set_size(800, 600, 1.0);
+        catalog_host.scene.set_size(800, 600, 1.0);
         catalog_host.set_suggestion_offset(40.0);
         catalog_host.set_brush_node_size(40.0);
-        catalog_host.set_board_kind_catalogs_from_json(&catalogs).unwrap();
+        catalog_host.style.set_board_kind_catalogs_from_json(&catalogs).unwrap();
         catalog_host.sync_descriptor(&brush_single_free_handle_scene()).unwrap();
         let catalog_operation = Operation::new(semio_framework_job::OperationId(502), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 502);
         let (catalog_placements, _, catalog_result) = run_fill_job(&catalog_host, 1, catalog_operation, 1);

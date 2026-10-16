@@ -2,11 +2,9 @@
 //!
 //! The retained document frame cursor, the flow setter and the render step that consumes one retained UI document.
 
-use super::ink_and_vfs_focus::close_retiring_focus_clipboard_one;
-use super::retained_ui_engine::{ui_document_close_pending_for, UI_ENGINE};
-use super::scene_interaction::{
-    drive_mounted_layout_text_one, layout_step_is_window_work, FrameworkSceneHost,
-};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::close_retiring_focus_clipboard_one;
+use crate::retained_ui_engine::{ui_document_close_pending_for, UI_ENGINE};
+use crate::scene_interaction::{drive_mounted_layout_text_one, layout_step_is_window_work, FrameworkSceneHost};
 use crate::element_contracts::{FrameworkWidgetContext, ScenePointerTarget};
 use std::sync::atomic::{AtomicBool, Ordering};
 use ui_contract::UiDocumentLease;
@@ -37,7 +35,7 @@ const UI_DOCUMENT_PAINT_STALL_NOTICE: u32 = 65_536;
 
 #[derive(Default)]
 pub struct UiDocumentFrameCursor {
-    pub(super) phase: UiDocumentFramePhase,
+    pub phase: UiDocumentFramePhase,
     /// 🩺️ Consecutive `Pending` paint opportunities, reset whenever the phase changes.
     stalled: u32,
     /// ⏱️ Whether the last step advanced THIS document's own ladder ([`Self::last_step_was_own_work`]).
@@ -100,19 +98,19 @@ impl UiDocumentFrameCursor {
 /// placement, mirrored Select inline edge, mirrored inline arrow keys) could never fire. It is
 /// latent rather than visible today — both shipped locales are LTR, and an `End`-anchored panel is
 /// the only thing that turns it on — but the seam is now real instead of dead.
-pub(crate) fn set_ui_document_flow(window_id: &str, flow: ui_contract::UiFlow) {
+pub fn set_ui_document_flow(window_id: &str, flow: ui_contract::UiFlow) {
     UI_ENGINE.with(|cell| cell.borrow_mut().set_window_flow(window_id, flow));
 }
 
 /// 👥️ Hands every retained window the peers' notes by record key (sorted by key) — the wgpu twin of the host presence
 /// overlay React provides at the shell root. `true` when any window's notes changed.
-pub(crate) fn set_ui_presence_notes(notes: &[(String, String)]) -> bool {
+pub fn set_ui_presence_notes(notes: &[(String, String)]) -> bool {
     UI_ENGINE.with(|cell| cell.borrow_mut().set_presence_notes(notes))
 }
 
 /// 🎯️ Stamps one reconciled Tree candidate's host-owned selected row through the retained presence
 /// channel. Structural document records stay immutable and a stale document generation is refused.
-pub(crate) fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, selected_key: &str) -> bool {
+pub fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, selected_key: &str) -> bool {
     UI_ENGINE.with(|cell| cell.borrow_mut().stamp_tree_selected_item(window_id, generation, selected_key))
 }
 
@@ -122,14 +120,14 @@ pub fn begin_ui_document_opportunity(consumed: bool) {
 
 /// 🩺️ Console line for a retained-document terminal fault. `eprintln!` is a no-op inside a
 /// `wasm32-unknown-unknown` Worker, so a fault recorded there left no trace at all.
-pub(super) fn document_debug_log(line: &str) {
+pub fn document_debug_log(line: &str) {
     #[cfg(target_arch = "wasm32")]
     web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(line));
     #[cfg(not(target_arch = "wasm32"))]
     eprintln!("{line}");
 }
 
-pub(super) fn apply_retained_document_page(engine: &mut ui_wgpu::wgpu::Ui, cursor: &mut UiDocumentFrameCursor, window_id: &str, page: ui_contract::UiDocumentNodePage, step: &mut semio_framework_job::StepContext<'_>) {
+pub fn apply_retained_document_page(engine: &mut ui_wgpu::wgpu::Ui, cursor: &mut UiDocumentFrameCursor, window_id: &str, page: ui_contract::UiDocumentNodePage, step: &mut semio_framework_job::StepContext<'_>) {
     if let Err(rejection) = engine.apply_document_page(window_id, page, step) {
         if rejection.fault == ui_wgpu::wgpu::tree::UiDocumentTreeFault::Generation && (step.is_cancelled() || step.should_yield()) {
             return;
@@ -143,12 +141,12 @@ pub(super) fn apply_retained_document_page(engine: &mut ui_wgpu::wgpu::Ui, curso
 fn forward_retired_component_scene_one(window_id: &str) -> bool {
     let retirement = UI_ENGINE.with(|cell| cell.borrow().retired_component_scene(window_id));
     let Some(retired) = retirement else { return true };
-    if !crate::scenes::scene_surface_retirement_can_admit() {
+    if !semio_framework_os_renderer_wgpu_scene_state::scene_surface_retirement_can_admit() {
         return false;
     }
     let owner = ScenePointerTarget::from(retired.clone());
-    let _retained = crate::scenes::retire_scene_identity(&owner);
-    #[cfg(test)]
+    let _retained = semio_framework_os_renderer_wgpu_scene_state::retire_scene_identity(&owner);
+    #[cfg(any(test, feature = "testkit"))]
     eprintln!("[TRACE] scene retirement forward window={} host={} kind={:?} retained={_retained}", owner.window_id, owner.host_id, owner.kind);
     UI_ENGINE.with(|cell| {
         assert!(cell.borrow_mut().acknowledge_retired_component_scene(window_id, &retired), "the exact retired component scene head changed before acknowledgement");
@@ -187,7 +185,7 @@ fn forward_retired_component_scene_one(window_id: &str) -> bool {
 /// 🔁️ A paint that is waiting on a layout is not a paint step at all: the root
 /// went dirty again (a viewport change, a theme propagation, a fresh reconcile),
 /// and only the Layout phase can re-arm the lane that clears it.
-pub(crate) fn render_ui_document_step(
+pub fn render_ui_document_step(
     cursor: &mut UiDocumentFrameCursor,
     document: &UiDocumentLease,
     bounds: Rect,
@@ -195,7 +193,7 @@ pub(crate) fn render_ui_document_step(
     window_id: &str,
     controller_id: &str,
     driver_drag: ui_wgpu::wgpu::UiDriverDrag,
-    hosts: &mut crate::scenes::SceneEngineHosts<'_>,
+    hosts: &mut semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts<'_>,
     step:&mut semio_framework_job::StepContext<'_>,
 ) -> bool {
     cursor.own_work = false;
@@ -203,7 +201,7 @@ pub(crate) fn render_ui_document_step(
     if close_retiring_focus_clipboard_one() {
         return false;
     }
-    if crate::scenes::close_retired_scene_surface_one() {
+    if semio_framework_os_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
         return false;
     }
     if !forward_retired_component_scene_one(window_id) {

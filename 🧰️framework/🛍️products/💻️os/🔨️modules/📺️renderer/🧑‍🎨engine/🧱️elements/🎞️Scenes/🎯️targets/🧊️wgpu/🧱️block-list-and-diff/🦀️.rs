@@ -223,7 +223,7 @@ fn block_list_source_rect(plan: &BlockListPlan, role: &BlockListRole) -> Option<
     }
 }
 
-pub(crate) fn block_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
+pub fn block_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
     scene.block_list.as_ref()?;
     let plan = block_list_plan(scene, bounds, theme, driver_drag);
     let inside_body = plan.body.contains(x, y);
@@ -280,7 +280,7 @@ fn block_list_closest_target<'a>(plan: &'a BlockListPlan, center_x: f32, center_
         .map(|target| &target.role)
 }
 
-pub(crate) fn block_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, window_id: &str, theme: &Theme, session: &SceneListTransferSession) -> Option<ActionDescriptor> {
+pub fn block_list_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, window_id: &str, theme: &Theme, session: &SceneListTransferSession) -> Option<ActionDescriptor> {
     if session.source_window_id != window_id || session.source_host_id != scene.host_id || !block_list_source_is_current(scene, &session.source) {
         return None;
     }
@@ -393,7 +393,7 @@ fn block_list_accessibility_controls(plan: &BlockListPlan, bounds: Rect, labels:
 /// 🧩️ Renders the strict-list Blockly-like block-list builder (`SurfaceKind::BlockList`): steps
 /// stacked vertically (each with its ordered blocks) plus a palette rail for inserting new blocks,
 /// mirroring `🧩️BlockListHost/🟦️.tsx`'s layout and action verbs.
-pub(crate) fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag, labels: BlockListChromeLabels) {
+pub fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag, labels: BlockListChromeLabels) {
     let theme = ctx.theme;
     if scene.block_list.is_none() {
         stage_block_list_accessibility_controls(&scene.host_id, Vec::new());
@@ -428,7 +428,7 @@ pub(crate) fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx:
 
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::BlockList` against the SAME plan the paint drew
 /// from — scanned back to front so a card's reorder/remove buttons answer before the card itself.
-pub(crate) fn block_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
+pub fn block_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
     scene.block_list.as_ref()?;
     let plan = block_list_plan(scene, bounds, theme, driver_drag);
     let inside_body = plan.body.contains(x, y);
@@ -472,7 +472,7 @@ fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, acti
     }
 }
 
-pub(crate) fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
     if scene.component_kind != SurfaceKind::BlockList {
         return None;
     }
@@ -661,7 +661,7 @@ fn split_diff_rows<'a>(operations: &[DiffLine<'a>]) -> Vec<(Option<DiffLine<'a>>
 
 /// 🩹️ Renders `SurfaceKind::DiffView` with React's inset, Share Tech Mono face, 16 px line
 /// boxes, semantic added/removed ink, fixed number gutters, and preserved-space wrapping.
-pub(crate) fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+pub fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
         return render_placeholder("diff-view", bounds, ctx);

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "profile": "wasm-release",
+  "profile": "release",
   "original": "0061736d01000000",
   "replacement": "0061736d00000000",
   "leaseSuffix": ".cache/framework/leases",

@@ -99,7 +99,5 @@ pub fn render_revisioned(document: &TsvSnapshot, revision: &str, publication_rev
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

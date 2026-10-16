@@ -1,6 +1,6 @@
 use super::*;
 struct ObservedHeap {requested_bytes:usize,released_bytes:usize}
-fn observe<T>(operation:impl FnOnce()->T)->(T,ObservedHeap){let (value,requested_bytes,released_bytes)=crate::registry::tests::observe_ownership(operation);(value,ObservedHeap{requested_bytes,released_bytes})}
+fn observe<T>(operation:impl FnOnce()->T)->(T,ObservedHeap){let (value,requested_bytes,released_bytes)=semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(operation);(value,ObservedHeap{requested_bytes,released_bytes})}
 
 #[test]
 fn original_budgeted_topology_preserves_tree_and_matches_graphlib_order_with_physical_receipts(){

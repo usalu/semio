@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::MdBlock, schema::snapshot::MdInline};
+use crate::MdSnapshot;
+use crate::standards::v_commonmark::subsets::any::schema::inferences::outline::*;
 
 #[semio_framework_async_macros::async_test]
 async fn collects_headings_and_counts_words_and_blocks() {

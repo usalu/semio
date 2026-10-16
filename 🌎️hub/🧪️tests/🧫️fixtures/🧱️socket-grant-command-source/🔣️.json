@@ -230,13 +230,13 @@
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📋️project.json",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/Cargo.toml",
-        "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/📇️directory/🦀️.rs",
         "{workspaceRoot}/Cargo.lock",
-        "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🧪️tests/🔬️bin-unit/**/🦀️.rs",
         "{workspaceRoot}/🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🌎️hub/📇️directory/🪶️sqlite/🧪️tests/🔬️unit/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🧪️tests/🔬️unit/🦀️.rs",
-        "{workspaceRoot}/🌎️hub/🏗️bootstrap/🦀️.rs",
+        "{workspaceRoot}/🌎️hub/🏗️bootstrap/**/🦀️.rs",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ]
     },
@@ -256,14 +256,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership"
     },
     {
@@ -273,14 +274,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::scoped_directory_socket_message_matching_is_body_exact_and_removal_private",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "scoped_directory_socket_message_matching_is_body_exact_and_removal_private"
     },
     {
@@ -290,14 +292,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::scoped_directory_socket_admin_removal_uses_the_same_membership_fence",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "scoped_directory_socket_admin_removal_uses_the_same_membership_fence"
     },
     {
@@ -307,14 +310,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event"
     },
     {
@@ -324,14 +328,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-hostile-input-laws",
+        "--lib",
         "tests::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
       "declaration": "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order"
     },
     {
@@ -341,14 +346,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-hostile-input-laws",
+        "--lib",
         "tests::socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
       "declaration": "socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke"
     },
     {
@@ -358,14 +364,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-directory-route-laws",
+        "--lib",
         "tests::socket_directory_revoke_after_admission_suppresses_replay_without_deadlock",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/📇️directory/🔬️unit/🦀️.rs",
       "declaration": "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock"
     },
     {
@@ -375,14 +382,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-directory-route-laws",
+        "--lib",
         "tests::socket_directory_visibility_requires_membership_even_for_public_spaces",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/📇️directory/🔬️unit/🦀️.rs",
       "declaration": "socket_directory_visibility_requires_membership_even_for_public_spaces"
     },
     {
@@ -392,14 +400,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_directory_route_uses_credential_free_hello_and_revokes_live"
     },
     {
@@ -409,14 +418,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live"
     },
     {
@@ -426,14 +436,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-hostile-input-laws",
+        "--lib",
         "tests::socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe"
     },
     {
@@ -443,14 +454,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization"
     },
     {
@@ -460,14 +472,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::socket_grant_revoke_before_broadcast_authorization_suppresses_frame",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_revoke_before_broadcast_authorization_suppresses_frame"
     },
     {
@@ -477,14 +490,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-hostile-input-laws",
+        "--lib",
         "tests::socket_grant_revoke_before_command_admission_has_no_storage_effect",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🎲️hostile-input/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_revoke_before_command_admission_has_no_storage_effect"
     },
     {
@@ -494,14 +508,15 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
-        "--bin",
-        "os-hub",
+        "-p",
+        "semio-hub-open-plan-laws",
+        "--lib",
         "tests::socket_grant_revoke_before_lag_authorization_reads_no_private_control",
         "--",
         "--exact",
         "--test-threads=1"
       ],
-      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs",
+      "source": "🌎️hub/🧪️tests/🔬️bin-unit/🧭️open-plan/🔬️unit/🦀️.rs",
       "declaration": "socket_grant_revoke_before_lag_authorization_reads_no_private_control"
     },
     {
@@ -511,6 +526,8 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
+        "-p",
+        "semio-hub-directory-laws",
         "--lib",
         "typed_capabilities_match_neutral_sha256_vectors_and_fixed_boundaries",
         "--",
@@ -526,6 +543,8 @@
         "--manifest-path",
         "Cargo.toml",
         "--all-features",
+        "-p",
+        "semio-hub-directory-backend-laws",
         "--lib",
         "socket_binding_reads_are_exact_id_generation_selector_scope_and_status",
         "--",

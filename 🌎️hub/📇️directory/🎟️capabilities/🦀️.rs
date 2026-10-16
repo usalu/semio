@@ -1,6 +1,11 @@
 //! 🎟️ Capabilities, identity assertions, local bootstrap transports, auth preflight and audit validators.
 
-use super::*;
+use crate::model::{AdminOperationEffectReceiptV1, AgentAudience, AgentDelegationRecord, AuthAuditRecord, AuthSessionIssue, AuthSessionRecord, CheckpointPublicationCompletionV1, DirectoryCommandResultKindV1, InviteRecord, IssuedAgentDelegation, IssuedAuthSession, IssuedInvite, IssuedShareToken, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, ShareTokenRecord, SpaceRole};
+use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DocumentScope};
+use crate::error::{DirectoryError, DirectoryResult};
+use semio_framework_hash::Sha256;
+use crate::{actor_user_id, role_to_wire};
+use directory::os_identity::time_ordered_id;
 
 //#region 🔖️Capabilities
 pub const CAPABILITY_SELECTOR_BYTES: usize = 16;
@@ -13,15 +18,15 @@ pub const AUTH_TEXT_MAX_BYTES: usize = 256;
 /// 🔐️ Encodes capability bytes without a runtime dependency.
 /// 📐️ The stamp shape a directory database carries, so a future format is recognised rather than
 /// guessed at. Mirrors `🗄️stores/🦀️.rs`'s `STORE_FORMAT_SCHEMA` for the four filesystem stores.
-pub(crate) const DIRECTORY_FORMAT_SCHEMA: &str = "semio/hub/directory-format/v1";
+pub const DIRECTORY_FORMAT_SCHEMA: &str = "semio/hub/directory-format/v1";
 
 /// 📐️ The directory record format this build writes and reads. Bump it in the same commit that
 /// changes what a `hub_directory_event` row, a projection column or a capability digest means.
-pub(crate) const DIRECTORY_FORMAT_VERSION: i64 = 1;
+pub const DIRECTORY_FORMAT_VERSION: i64 = 1;
 
 /// 📐️ What this build must do about the stamp it found on a directory database.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DirectoryFormatAdmission {
+pub enum DirectoryFormatAdmission {
     Stamp,
     Admitted,
 }
@@ -41,7 +46,7 @@ pub(crate) enum DirectoryFormatAdmission {
 /// - **a newer version, or a schema this build does not know** — refused; this build cannot know
 ///   what a later format means.
 /// - **an older version** — refused; there is no migration framework to run.
-pub(crate) fn admit_directory_format(observed: Option<(String, i64)>, populated: bool, backend: &'static str) -> DirectoryResult<DirectoryFormatAdmission> {
+pub fn admit_directory_format(observed: Option<(String, i64)>, populated: bool, backend: &'static str) -> DirectoryResult<DirectoryFormatAdmission> {
     let Some((schema, version)) = observed else {
         if populated {
             eprintln!("[WARN] adopting an unstamped {backend} hub directory as format v{DIRECTORY_FORMAT_VERSION}");
@@ -83,7 +88,7 @@ fn decode_capability_bytes<const N: usize>(encoded: &str) -> DirectoryResult<[u8
     Ok(decoded)
 }
 
-pub(crate) fn decode_auth_digest_hex(encoded: &str) -> DirectoryResult<[u8; 32]> {
+pub fn decode_auth_digest_hex(encoded: &str) -> DirectoryResult<[u8; 32]> {
     decode_capability_bytes(encoded)
 }
 
@@ -264,7 +269,7 @@ pub fn identity_subject_digest(provider: &str, subject: &str) -> DirectoryResult
 }
 
 #[derive(Clone)]
-pub struct IdentityAssertion(pub(super) Box<[u8]>);
+pub struct IdentityAssertion(pub Box<[u8]>);
 
 impl IdentityAssertion {
     pub fn new(bytes: impl Into<Box<[u8]>>) -> DirectoryResult<Self> {
@@ -433,7 +438,7 @@ pub const AGENT_IDENTITY_PROVIDER: &str = "agent.delegation.v1";
 /// 🤖️ The most delegations one listing returns.
 pub const AGENT_DELEGATION_PAGE_MAX: usize = 200;
 
-pub(crate) fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> DirectoryResult<IssuedAuthSession> {
+pub fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> DirectoryResult<IssuedAuthSession> {
     validate_bounded_auth_text(&issue.user_id, "session user", AUTH_TEXT_MAX_BYTES)?;
     validate_bounded_auth_text(&issue.identity_provider, "identity provider", AUTH_TEXT_MAX_BYTES)?;
     validate_bounded_auth_text(&issue.device_instance_id, "device instance", DEVICE_INSTANCE_MAX_BYTES)?;
@@ -462,14 +467,14 @@ pub(crate) fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> Direct
     Ok(IssuedAuthSession { record, capability })
 }
 
-pub(crate) fn prepare_share_token(scope: &DocumentScope, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedShareToken> {
+pub fn prepare_share_token(scope: &DocumentScope, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedShareToken> {
     let (created_at, expires_at) = capability_window(now, ttl_secs)?;
     let capability = ShareCapability::mint()?;
     let record = ShareTokenRecord { id: time_ordered_id(), selector: capability.selector().to_string(), secret_digest: capability.secret_digest(), scope: scope.clone(), created_at, expires_at, revoked_at: None, revoked_reason: None };
     Ok(IssuedShareToken { record, capability })
 }
 
-pub(crate) fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedInvite> {
+pub fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedInvite> {
     validate_bounded_auth_text(space_id, "invite space", AUTH_TEXT_MAX_BYTES)?;
     let (created_at, expires_at) = capability_window(now, ttl_secs)?;
     let capability = InviteCapability::mint()?;
@@ -550,13 +555,13 @@ pub fn agent_session_preflight(record: Option<&AgentDelegationRecord>, capabilit
     }
 }
 
-pub(crate) fn active_capability(selector: &str, stored_digest: &[u8; 32], expires_at: i64, revoked_at: Option<i64>, capability_selector: &str, candidate_digest: &[u8; 32], now: i64) -> bool {
+pub fn active_capability(selector: &str, stored_digest: &[u8; 32], expires_at: i64, revoked_at: Option<i64>, capability_selector: &str, candidate_digest: &[u8; 32], now: i64) -> bool {
     selector == capability_selector && revoked_at.is_none() && expires_at > now && constant_time_digest_eq(stored_digest, candidate_digest)
 }
 
 /// 🧭️ A verified stored scope selects serialization keys; it grants no redemption authority.
 pub struct InviteRedemptionScopeHintV1 {
-    pub(super) space_id: String,
+    pub space_id: String,
 }
 
 impl InviteRedemptionScopeHintV1 {
@@ -566,7 +571,7 @@ impl InviteRedemptionScopeHintV1 {
 }
 
 /// 🔐️ Reveals a stored scope only for the exact capability secret and authenticated actor.
-pub(crate) fn verify_invite_redemption_scope_hint(record: Option<&InviteRecord>, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
+pub fn verify_invite_redemption_scope_hint(record: Option<&InviteRecord>, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
     let record = record.ok_or(DirectoryError::Unauthorized)?;
     if actor_user_id(actor).ok() != Some(user_id) || record.selector != capability.selector() || !constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
         return Err(DirectoryError::Unauthorized);
@@ -575,14 +580,14 @@ pub(crate) fn verify_invite_redemption_scope_hint(record: Option<&InviteRecord>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum InviteRedemptionSpaceStateV1 {
+pub enum InviteRedemptionSpaceStateV1 {
     Missing,
     Writable,
     Archived,
 }
 
 impl InviteRedemptionSpaceStateV1 {
-    pub(super) fn from_kind(kind: Option<&str>) -> DirectoryResult<Self> {
+    pub fn from_kind(kind: Option<&str>) -> DirectoryResult<Self> {
         match kind {
             None => Ok(Self::Missing),
             Some("studio" | "atelier") => Ok(Self::Writable),
@@ -593,7 +598,7 @@ impl InviteRedemptionSpaceStateV1 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum InviteRedemptionPreflight {
+pub enum InviteRedemptionPreflight {
     Claim,
     AlreadyCommitted,
     Revoked,
@@ -603,7 +608,7 @@ pub(crate) enum InviteRedemptionPreflight {
 }
 
 /// 🎟️ Applies the backend-independent invitation claim decision without accepting client scope or role authority.
-pub(crate) fn invite_redemption_preflight(record: Option<&InviteRecord>, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, user_exists: bool, space_state: InviteRedemptionSpaceStateV1, now_ms: i64) -> InviteRedemptionPreflight {
+pub fn invite_redemption_preflight(record: Option<&InviteRecord>, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, user_exists: bool, space_state: InviteRedemptionSpaceStateV1, now_ms: i64) -> InviteRedemptionPreflight {
     let actor_user_id = (actor.kind == DirectoryActorKind::User).then(|| actor.id.strip_prefix("user:").and_then(|rest| rest.split('#').next())).flatten();
     let Some(record) = record else { return InviteRedemptionPreflight::Denied };
     if actor_user_id != Some(user_id) || record.selector != capability.selector() || !constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) || space_state == InviteRedemptionSpaceStateV1::Missing {
@@ -627,7 +632,7 @@ pub(crate) fn invite_redemption_preflight(record: Option<&InviteRecord>, capabil
 }
 
 /// 🎟️ Verifies the immutable event linked from an already-claimed invite before idempotent return.
-pub(crate) fn verify_invite_redemption_event(record: &InviteRecord, event: Option<DirectoryEvent>, authenticated_user_id: &str) -> DirectoryResult<DirectoryEvent> {
+pub fn verify_invite_redemption_event(record: &InviteRecord, event: Option<DirectoryEvent>, authenticated_user_id: &str) -> DirectoryResult<DirectoryEvent> {
     let accepted_at = record.accepted_at.ok_or_else(|| DirectoryError::Backend("invite acceptance marker is incomplete".into()))?;
     let accepted_event_id = record.accepted_event_id.as_deref().ok_or_else(|| DirectoryError::Backend("invite acceptance event marker is incomplete".into()))?;
     let event = event.ok_or_else(|| DirectoryError::Backend("invite acceptance event is missing".into()))?;
@@ -650,7 +655,7 @@ pub(crate) fn verify_invite_redemption_event(record: &InviteRecord, event: Optio
     Ok(event)
 }
 
-pub(crate) fn auth_audit(
+pub fn auth_audit(
     occurred_at: i64,
     event_kind: &str,
     auth_session_id: Option<&str>,
@@ -685,7 +690,7 @@ pub(crate) fn auth_audit(
 
 /// 🛡️ Admits one durable command idempotency claim: bounded actor, 32-hex nonzero correlation, and
 /// a 64-hex lowercase canonical command digest. Backends call this before touching storage.
-pub(crate) fn validate_directory_command_claim(claim: &NewDirectoryCommandReceipt) -> DirectoryResult<()> {
+pub fn validate_directory_command_claim(claim: &NewDirectoryCommandReceipt) -> DirectoryResult<()> {
     validate_bounded_auth_text(&claim.actor_user_id, "command actor", AUTH_TEXT_MAX_BYTES)?;
     if claim.request_id.len() != 32 || claim.request_id.bytes().all(|byte| byte == b'0') || !claim.request_id.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
         return Err(DirectoryError::Conflict("command request id must be 32 lowercase nonzero hex digits".into()));
@@ -697,7 +702,7 @@ pub(crate) fn validate_directory_command_claim(claim: &NewDirectoryCommandReceip
 }
 
 /// 🛡️ Admits one durable author/correlation/exact-command checkpoint publication identity.
-pub(crate) fn validate_checkpoint_publication_claim(claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<()> {
+pub fn validate_checkpoint_publication_claim(claim: &NewCheckpointPublicationClaimV1) -> DirectoryResult<()> {
     validate_bounded_auth_text(&claim.actor_user_id, "checkpoint publication actor", AUTH_TEXT_MAX_BYTES)?;
     if claim.correlation_id.len() != 32 || claim.correlation_id.bytes().all(|byte| byte == b'0') || !claim.correlation_id.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
         return Err(DirectoryError::Conflict("checkpoint publication correlation must be 32 lowercase nonzero hex digits".into()));
@@ -708,7 +713,7 @@ pub(crate) fn validate_checkpoint_publication_claim(claim: &NewCheckpointPublica
     Ok(())
 }
 
-pub(crate) fn validate_checkpoint_publication_completion(completion: &CheckpointPublicationCompletionV1) -> DirectoryResult<()> {
+pub fn validate_checkpoint_publication_completion(completion: &CheckpointPublicationCompletionV1) -> DirectoryResult<()> {
     validate_checkpoint_publication_claim(&NewCheckpointPublicationClaimV1 {
         actor_user_id: completion.actor_user_id.clone(),
         correlation_id: completion.correlation_id.clone(),
@@ -722,7 +727,7 @@ pub(crate) fn validate_checkpoint_publication_completion(completion: &Checkpoint
 }
 
 /// 🏷️ The exact stored spelling of one durable command result class.
-pub(crate) fn directory_command_result_kind_str(kind: DirectoryCommandResultKindV1) -> &'static str {
+pub fn directory_command_result_kind_str(kind: DirectoryCommandResultKindV1) -> &'static str {
     match kind {
         DirectoryCommandResultKindV1::None => "none",
         DirectoryCommandResultKindV1::Invite => "invite",
@@ -730,7 +735,7 @@ pub(crate) fn directory_command_result_kind_str(kind: DirectoryCommandResultKind
 }
 
 /// 🏷️ Reads back one stored command result class.
-pub(crate) fn directory_command_result_kind_from_str(value: &str) -> DirectoryResult<DirectoryCommandResultKindV1> {
+pub fn directory_command_result_kind_from_str(value: &str) -> DirectoryResult<DirectoryCommandResultKindV1> {
     match value {
         "none" => Ok(DirectoryCommandResultKindV1::None),
         "invite" => Ok(DirectoryCommandResultKindV1::Invite),
@@ -738,7 +743,7 @@ pub(crate) fn directory_command_result_kind_from_str(value: &str) -> DirectoryRe
     }
 }
 
-pub(crate) fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord) -> DirectoryResult<()> {
+pub fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord) -> DirectoryResult<()> {
     for (value, field) in [
         (&fact.request_id, "admin request id"),
         (&fact.intent_digest, "admin intent digest"),
@@ -771,7 +776,7 @@ pub(crate) fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord
     Ok(())
 }
 
-pub(crate) fn validate_admin_operation_effect_receipt(receipt: &AdminOperationEffectReceiptV1) -> DirectoryResult<()> {
+pub fn validate_admin_operation_effect_receipt(receipt: &AdminOperationEffectReceiptV1) -> DirectoryResult<()> {
     validate_bounded_auth_text(&receipt.operation_id, "admin effect operation id", AUTH_TEXT_MAX_BYTES)?;
     validate_bounded_auth_text(&receipt.outcome_code, "admin effect outcome", AUTH_TEXT_MAX_BYTES)?;
     if receipt.intent_digest.len() != 64 || !receipt.intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
@@ -786,7 +791,7 @@ pub(crate) fn validate_admin_operation_effect_receipt(receipt: &AdminOperationEf
     Ok(())
 }
 
-pub(crate) fn admin_operation_effect_receipt_v1(claim: &NewAdminOperationEffectReceiptV1, events: &[DirectoryEvent]) -> DirectoryResult<AdminOperationEffectReceiptV1> {
+pub fn admin_operation_effect_receipt_v1(claim: &NewAdminOperationEffectReceiptV1, events: &[DirectoryEvent]) -> DirectoryResult<AdminOperationEffectReceiptV1> {
     let receipt = AdminOperationEffectReceiptV1 {
         operation_id: claim.operation_id.clone(),
         intent_digest: claim.intent_digest.clone(),
@@ -799,7 +804,7 @@ pub(crate) fn admin_operation_effect_receipt_v1(claim: &NewAdminOperationEffectR
     Ok(receipt)
 }
 
-pub(crate) fn same_admin_operation_request(existing: &NewAdminOperationAuditRecord, candidate: &NewAdminOperationAuditRecord) -> bool {
+pub fn same_admin_operation_request(existing: &NewAdminOperationAuditRecord, candidate: &NewAdminOperationAuditRecord) -> bool {
     existing.request_id == candidate.request_id
         && existing.intent_digest == candidate.intent_digest
         && existing.intent_kind == candidate.intent_kind

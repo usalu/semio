@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-surface-paint-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

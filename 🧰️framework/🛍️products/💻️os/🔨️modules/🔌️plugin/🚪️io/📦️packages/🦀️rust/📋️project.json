@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-abi-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

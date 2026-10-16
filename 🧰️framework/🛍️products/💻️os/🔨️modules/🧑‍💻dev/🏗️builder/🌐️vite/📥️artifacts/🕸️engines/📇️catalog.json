@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "id": "surface",
+      "packageName": "@semio-tech/framework-surface-rs",
+      "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+      "wasmBaseName": "framework_surface"
+    },
+    {
+      "id": "editor",
+      "packageName": "@semio-tech/framework-editor-rs",
+      "sourceOwner": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+      "wasmBaseName": "framework_editor"
+    },
+    {
+      "id": "graph",
+      "packageName": "@semio-tech/framework-os-node-graph-rs",
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+      "wasmBaseName": "framework_os_node_graph"
+    },
+    {
+      "id": "puzzle",
+      "packageName": "@semio-tech/puzzle-wasm",
+      "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+      "wasmBaseName": "semio_puzzle"
+    }
+  ],
+  "sourcePackages": [
+    {
+      "sourceOwner": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/framework-surface-rs"
+    },
+    {
+      "sourceOwner": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/framework-editor-rs"
+    },
+    {
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/framework-os-node-graph-rs"
+    },
+    {
+      "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/puzzle-wasm"
+    },
+    {
+      "sourceOwner": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/framework-actor-rs"
+    },
+    {
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/framework-os-rs"
+    },
+    {
+      "sourceOwner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/flow-core"
+    },
+    {
+      "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/trinity-jack-lsp"
+    },
+    {
+      "sourceOwner": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/s-cad-geometry-browser"
+    },
+    {
+      "sourceOwner": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
+      "packageName": "@semio-tech/s-spatial-kernel-semio-session"
+    }
+  ]
+}

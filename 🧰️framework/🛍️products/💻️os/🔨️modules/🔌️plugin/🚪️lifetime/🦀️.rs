@@ -12,7 +12,7 @@ pub struct PluginInstanceCloseLease<PA: PluginApp> {
 impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
     pub(crate) fn allocation_identity(&self) -> (u32, usize) { (self.instance_id, self.cell.as_ptr().cast::<()>() as usize) }
 
-    pub(super) fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
+    pub(in super::super) fn from_cell(instance_id: u32, cell: &std::sync::Arc<RuntimeAppCell<PA>>) -> Self {
         Self { instance_id, cell: std::sync::Arc::downgrade(cell), admitted: None, terminal: Cell::new(false) }
     }
 

@@ -1,17 +1,17 @@
 //! 🗺️ Web-Mercator / slippy-tile oracle test for `tiled_map::projection` and `tiled_map::tiles`.
 //!
 //! Reads the SAME frozen fixture as the sibling Python oracle adapter
-//! (`../../🗺️tiled-map/🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json`), whose `projection`,
+//! (`../../🗺️tiled-map/🧪️tests/🧫️fixtures/🕸️web-mercator-tile-oracle/🔣️.json`), whose `projection`,
 //! `tileNumbering` and `tileBounds` arrays were computed independently by the `mercantile` third-party
 //! library (pure Python, zero runtime deps) from the published EPSG:3857 / OSM slippy-tile spec. This
 //! file asserts this repository's Rust implementation reproduces the same numbers, discharging
 //! CLAUDE.md's "at least one language-agnostic test per feature, validated against a third-party
 //! library" requirement for Web-Mercator projection and tile selection.
 //!
-//! `lodBands` are repository-owned specification vectors with no third-party reference; they, the three
-//! differential vector sets and the four camera invariants are also run through the platform by the
-//! case's own adapters (`🐍️.py` oracle, `🦀️.rs` subject), which read `map_lod_band` and
-//! `MAX_VISIBLE_TILE_REQUESTS` from the crate's public surface.
+//! `lodBands` are repository-owned specification vectors of the sample band table `lodConstants` with no
+//! third-party reference; they, the three differential vector sets and the four camera invariants are also
+//! run through the platform by the case's own adapters (`🐍️.py` oracle, `🦀️.rs` subject), which resolve the
+//! bands through a `DescribedMapPolicy` and read `MAX_VISIBLE_TILE_REQUESTS` from the crate's public surface.
 //!
 //! @see 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
 
@@ -31,6 +31,7 @@ fn fixture() -> Value {
         "..",
         "..",
         "🗺️tiled-map",
+        "🧪️tests",
         "🧫️fixtures",
         "🕸️web-mercator-tile-oracle",
         "🔣️.json",

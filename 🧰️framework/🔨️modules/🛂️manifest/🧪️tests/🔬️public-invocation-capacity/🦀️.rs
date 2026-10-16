@@ -4,7 +4,7 @@
 //! `🎛️public-invocation/🧬️schema/🔣️.json`, and neither may drift from
 //! `validate_public_json_envelope`, which is the runtime that enforces them.
 
-use super::{public_invocation_char_cost, public_invocation_string_pages, PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR, PUBLIC_INVOCATION_STRING_BYTES};
+use crate::{PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_ESCAPE_PAIR_WIRE_FACTOR, PUBLIC_INVOCATION_STRING_BYTES, public_invocation_char_cost, public_invocation_string_pages};
 
 fn schema() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🎛️public-invocation/🧬️schema/🔣️.json")).unwrap()

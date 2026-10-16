@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumDescriptors",
+    "auxiliaryDescriptors",
+    "maximumFiles",
+    "maximumBytes",
+    "chunkBytes",
+    "maximumManifestBytes",
+    "maximumOwnerCharacters",
+    "maximumPendingOperations",
+    "maximumPendingReads",
+    "maximumEntries",
+    "maximumDepth"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumDescriptors": {
+      "const": 32
+    },
+    "auxiliaryDescriptors": {
+      "const": 2
+    },
+    "maximumFiles": {
+      "const": 16384
+    },
+    "maximumBytes": {
+      "const": 536870912
+    },
+    "chunkBytes": {
+      "const": 65536
+    },
+    "maximumManifestBytes": {
+      "const": 1048576
+    },
+    "maximumOwnerCharacters": {
+      "const": 4096
+    },
+    "maximumPendingOperations": {
+      "const": 32
+    },
+    "maximumPendingReads": {
+      "const": 32
+    },
+    "maximumEntries": {
+      "const": 262144
+    },
+    "maximumDepth": {
+      "const": 64
+    }
+  },
+  "definitions": {
+    "SourceName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!\\.semio-artifact\\.json(?:/|$))(?!/)(?![\\s\\S]*(?:[\\\\:\\u0000-\\u001f\\u007f]|//))(?![\\s\\S]*(?:^|/)\\.{1,2}(?:/|$))[^/]+(?:/[^/]+)*$"
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 16384,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/SourceName"
+          }
+        }
+      }
+    },
+    "InventoryCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "directories",
+        "maximumDepth"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16384
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262143
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      }
+    }
+  }
+}

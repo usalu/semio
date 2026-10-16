@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "accepted",
+    "reads"
+  ],
+  "properties": {
+    "phase": {
+      "enum": [
+        "live",
+        "spread",
+        "sibling",
+        "cancel-before",
+        "cancel-image",
+        "cancel-final"
+      ]
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "reads": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "definitions": {
+    "Stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "outcome"
+      ],
+      "properties": {
+        "stage": {
+          "enum": [
+            "success",
+            "read",
+            "write",
+            "yield",
+            "stat",
+            "undefined-close",
+            "frozen-close",
+            "success-close",
+            "close"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "cancel",
+            "body",
+            "close"
+          ]
+        }
+      }
+    }
+  }
+}

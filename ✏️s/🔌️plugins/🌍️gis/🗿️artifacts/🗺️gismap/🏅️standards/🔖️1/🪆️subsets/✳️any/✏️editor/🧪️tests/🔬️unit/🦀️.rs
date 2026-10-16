@@ -583,6 +583,16 @@ async fn layer_verbs_stage_every_declared_map_layer() {
     }
 }
 
+/// 🎚️ The editor's layer stack is exactly the GIS policy's declared layer toggles, in order, so every
+/// row the chrome shows switches a layer the map host knows.
+#[semio_framework_async_macros::async_test]
+async fn the_layer_stack_is_the_gis_policy_toggle_list() {
+    use semio_framework_surface::tiled_map::MapPolicy;
+    let stack: Vec<&str> = GIS_MAP_LAYER_IDS.iter().map(|(layer_id, _, _)| *layer_id).collect();
+    let toggles: Vec<&str> = crate::tile_coordinates::gis_policy::gis_map_policy().descriptor().layer_toggles.iter().map(|toggle| toggle.key.as_str()).collect();
+    assert_eq!(stack, toggles);
+}
+
 /// 🧬️ The retained tool surface, the publication contracts and the bounded-first-step proof catalog
 /// must agree on the tool set — a command missing from any one of the three is dead at runtime even
 /// though `cargo check` is green (the `TOOL_JOB_IDS` + factory + proofs chain).

@@ -1,0 +1,51 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-inference-contract-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Inference contract laws: the write-ahead proof, schema, approval and canonical command laws"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-contract-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+integration-fixtures = ["semio-hub-inference/integration-fixtures"]
+testkit = ["semio-hub-inference/testkit"]
+
+[dependencies]
+semio-hub-inference = { workspace = true }
+semio-framework-artifact-reference = { path = "../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+futures = "0.3"
+semio-hub-gis = { workspace = true }
+protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+semio-s-artifact-gis-gismap = { workspace = true }
+blake3 = "1"
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+
+[dev-dependencies]
+semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }
+semio-framework-schema = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
+semio-framework-schema-registry = { workspace = true }
+serde = { workspace = true }

@@ -9,10 +9,7 @@
 //! fenced publication live in `🏗️bootstrap/🦀️.rs` (`📌️CheckIn`). Contract:
 //! `schema://os.directory/DocumentCheckInV1` and `DocumentCheckInStatusV1`.
 
-use super::{
-    blob_reference, checkpoint_id_encoding_v1, validate_pair_budget, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext,
-    TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec, ValidatingCanonicalArtifactAuthority, AUTHORITY_MAX_OPERATION_BYTES,
-};
+use semio_hub_artifact_authority::{blob_reference, checkpoint_id_encoding_v1, validate_pair_budget, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityOperationControl, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec, ValidatingCanonicalArtifactAuthority, AUTHORITY_MAX_OPERATION_BYTES};
 use ::directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentDescriptor, DocumentScope, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
 use ::directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
 use ::directory::os_store::codec_registry::canonical_check_in_line;
@@ -159,11 +156,11 @@ struct DocumentCheckInJobState {
 /// It is also the job's [`AuthorityOperationControl`], so authority progress lands in the status the
 /// client polls and the client's cancellation reaches every authority checkpoint.
 pub struct DocumentCheckInJob {
-    request_id: String,
-    command_sha256: String,
-    cancelled: Arc<AtomicBool>,
+    pub request_id: String,
+    pub command_sha256: String,
+    pub cancelled: Arc<AtomicBool>,
     revoked: AtomicBool,
-    state: Mutex<DocumentCheckInJobState>,
+    pub state: Mutex<DocumentCheckInJobState>,
 }
 
 impl DocumentCheckInJob {
@@ -178,7 +175,7 @@ impl DocumentCheckInJob {
         })
     }
 
-    fn state(&self) -> std::sync::MutexGuard<'_, DocumentCheckInJobState> {
+    pub fn state(&self) -> std::sync::MutexGuard<'_, DocumentCheckInJobState> {
         self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 

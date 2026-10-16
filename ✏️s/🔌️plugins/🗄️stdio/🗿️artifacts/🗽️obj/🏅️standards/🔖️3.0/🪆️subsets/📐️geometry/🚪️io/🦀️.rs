@@ -305,6 +305,40 @@ pub fn encode_obj(snap: &ObjSnapshot) -> String {
 //#endregion 🔖️Encode
 //#endregion 🔖️Codec
 
+//#region 🔖️DemoSnapshot
+/// 📄️ Raw demo Wavefront OBJ text — a two-triangle quad split across two named groups/materials,
+/// matching `📚️examples/🎬️demo/🖼️assets/🧊️example.obj` verbatim (this module's own single source
+/// of truth for the demo fixture — exercises every statement kind: `mtllib`, `v`/`vt`/`vn`
+/// (incl. `w`-omitted forms), `f` (`v/vt/vn` triangles), `o`, `g`, `usemtl`, `s` (both numeric and
+/// `off`), a `#` comment, and one genuinely-unrecognized keyword line retained via
+/// `unknown_statements`).
+const DEMO_OBJ_TEXT: &str = "# stdio.obj demo -- a two-triangle quad split across two named groups/materials\n\
+mtllib demo.mtl\n\
+v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n\
+vt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\n\
+vn 0 0 1\n\
+o Quad\ng Front\nusemtl Red\ns 1\n\
+f 1/1/1 2/2/1 3/3/1\n\
+f 1/1/1 3/3/1 4/4/1\n\
+g Back\nusemtl Blue\ns off\n\
+f 3/3/1 2/2/1 1/1/1\n\
+# trailing note retained verbatim\n\
+weird_directive foo bar\n";
+
+/// 📄️ The `demo` example snapshot, parsed once from [`DEMO_OBJ_TEXT`] and stabilized to the
+/// SECOND-generation decode/encode fixed point this module's own doc comment documents
+/// (`unknown_statements[].line_index` renumbers into the trailer on the first re-encode) — so
+/// `print_dsl(demo_obj_snapshot())` is genuinely stable, matching `🗣️.dsl.semio`'s own
+/// `fixture_honesty_law` requirement exactly. Same pattern `stdio.txt`'s own
+/// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demo_obj_snapshot() -> ObjSnapshot {
+    let gen1 = decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| crate::standards::v3_0::subsets::any::schema::empty_obj_snapshot());
+    let gen2_text = encode_obj(&gen1);
+    decode_obj(&gen2_text).unwrap_or(gen1)
+}
+//#endregion 🔖️DemoSnapshot
+
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v3_0::subsets::any::io::ObjAnalyzer;
@@ -377,8 +411,7 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{ObjDiff, ObjMutation, ObjSnapshot};

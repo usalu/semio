@@ -312,16 +312,20 @@ pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
 
 
 
-/// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
-/// emitting each feature's opaque payload.
-pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
+/// 🧩️ The `{ positions, routes, regions }` map descriptor as a JSON value, one opaque payload per feature.
+pub fn gis_map_descriptor_value(document: &GisMapSnapshot) -> Value {
     let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
     serde_json::json!({
         "positions": payloads(&document.positions),
         "routes": payloads(&document.routes),
         "regions": payloads(&document.regions),
     })
-    .to_string()
+}
+
+/// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
+/// emitting each feature's opaque payload.
+pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
+    gis_map_descriptor_value(document).to_string()
 }
 
 

@@ -21,7 +21,7 @@ struct SelectionControl {
     now_ms: u64,
 }
 
-impl super::super::AuthorityOperationControl for SelectionControl {
+impl semio_hub_artifact_authority::AuthorityOperationControl for SelectionControl {
     fn now_ms(&self) -> u64 {
         self.now_ms
     }
@@ -30,7 +30,7 @@ impl super::super::AuthorityOperationControl for SelectionControl {
         self.cancelled
     }
 
-    fn report(&self, _progress: super::super::AuthorityProgress) {}
+    fn report(&self, _progress: semio_hub_artifact_authority::AuthorityProgress) {}
 }
 
 fn hexadecimal(bytes: &[u8; 32]) -> String {
@@ -47,7 +47,7 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
     let mut accepted = 0;
     for case in fixture["cases"].as_array().unwrap() {
         let control = SelectionControl { cancelled: case["cancelled"].as_bool().unwrap(), now_ms: case["nowMs"].as_u64().unwrap() };
-        let context = OperationContext::new(case["deadlineMs"].as_u64().unwrap(), super::super::AuthorityLimits::maximum(), &control);
+        let context = OperationContext::new(case["deadlineMs"].as_u64().unwrap(), semio_hub_artifact_authority::AuthorityLimits::maximum(), &control);
         let result = providers.preview(case["pluginId"].as_str().unwrap(), case["packageId"].as_str().unwrap(), case["version"].as_str().unwrap(), &context);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
         if let Ok(bindings) = result {
@@ -81,7 +81,7 @@ mod quick {
 
     #[tokio::test]
     async fn linked_consumer_descriptors_bind_their_actual_compiled_stdio_dependency_and_catalog() {
-        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
+        let _registry = semio_hub_artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let kind_json: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🗄️artifact-kind-formats.json")).unwrap();
         let kind: semio_framework::ArtifactKindSpec = semio_framework_value::FromValue::from_value(kind_json.clone().into()).unwrap();
@@ -99,7 +99,7 @@ mod quick {
             }
         }
         let control = SelectionControl { cancelled: false, now_ms: 0 };
-        let context = OperationContext::new(u64::MAX, crate::artifact_authority::AuthorityLimits::maximum(), &control);
+        let context = OperationContext::new(u64::MAX, semio_hub_artifact_authority::AuthorityLimits::maximum(), &control);
         let providers = NativeCodecProviderSetV1::linked();
         for (plugin_id, package_id, schema, count) in [("gis", "semio:gis", "gis.map", 2), ("vcs", "semio:vcs", "vcs.vcs", 1)] {
             let emitted = if plugin_id == "gis" {
@@ -238,7 +238,7 @@ mod quick {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
         let providers = NativeCodecProviderSetV1::linked();
         let control = SelectionControl { cancelled: false, now_ms: 0 };
-        let context = OperationContext::new(u64::MAX, crate::artifact_authority::AuthorityLimits::maximum(), &control);
+        let context = OperationContext::new(u64::MAX, semio_hub_artifact_authority::AuthorityLimits::maximum(), &control);
         let counts = [("stdio", "semio:stdio", semio_hub_stdio_catalog::live_native_codec_factory_receipts().unwrap().len()), ("gis", "semio:gis", 2), ("vcs", "semio:vcs", NATIVE_VCS_PROVIDER_RECEIPTS)];
         for profile in fixture["unconsumedProfiles"].as_array().unwrap() {
             let selected = profile["selected"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();

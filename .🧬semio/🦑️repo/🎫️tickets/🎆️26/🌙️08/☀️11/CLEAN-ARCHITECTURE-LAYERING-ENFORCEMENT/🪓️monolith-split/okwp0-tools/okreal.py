@@ -1,0 +1,22 @@
+# 🧱️ The real manifests of the carved crates: first-party edges, external crates (manifest keys of the kernel manifest) and dev-dependencies, derived by reading the sources (RESULT section 5).
+REAL = {
+    'os-list-delta': dict(deps=[], ext=['semio-framework-value', 'semio-framework-mutation-diff', 'semio-framework-value-derive', 'semio-framework-dsl-record-derive'], dev=['semio-framework-dsl-record']),
+    'os-semio': dict(deps=[], ext=['semio-framework-value'], dev=['serde_json', 'semio-framework-trace-memory-testing']),
+    'os-space-sqlite-cells': dict(deps=[], ext=['semio-framework-dsl-record', 'semio-framework-pack-json', 'semio-framework-value', 'semio-framework-io-sqlite-snapshot'], dev=[]),
+    'os-plugin-registry-schema': dict(deps=[], ext=['semio-framework-schema-registry', 'serde', 'serde_json'], dev=[]),
+    'os-extension': dict(deps=['os-semio'], ext=['semio-framework-deflate', 'semio-framework-pack-json', 'semio-framework-hash'], dev=['semio-framework-async-macros', 'serde_json']),
+    'os-pack-tools': dict(deps=[], ext=['semio-framework-async', 'semio-framework-dsl-record', 'semio-framework-os-pack', 'semio-framework-pack-source', 'semio-framework-value'], dev=['semio-framework-async-macros', 'serde_json']),
+    'os-spr': dict(deps=['os-pack-tools'], ext=['semio-framework-replication', 'semio-framework-os-command', 'semio-framework-os-history', 'semio-framework-os-channel', 'semio-framework-os-pack', 'semio-framework-pack-source', 'semio-framework-schema-state', 'semio-framework-diagnostic', 'semio-framework-value', 'semio-framework-value-derive', 'serde', 'dsl_derive'],
+                   dev=['semio-framework-async', 'semio-framework-async-macros', 'semio-framework-pack-json', 'serde_json'],
+                   features=['protocol-laws = ["semio-framework-os-pack/record-codec-laws"]', 'mutation-testing = ["semio-framework-os-command/mutation-testing"]']),
+    'os-spr-cli': dict(deps=['os-pack-tools', 'os-spr'], ext=['semio-framework-os-pack'], dev=['semio-framework-async', 'semio-framework-async-macros']),
+    'os-dsl': dict(deps=['os-semio', 'os-pack-tools'], ext=['semio-framework-dsl', 'semio-framework-dsl-record', 'semio-framework-diagnostic', 'semio-framework-os-pack', 'semio-framework-pack-json', 'semio-framework-value', 'semio-framework-replication', 'dsl_derive'],
+                   dev=['semio-framework-async-macros', 'semio-framework-dsl-record-derive', 'serde_json']),
+    'os-spr-laws-tests': dict(deps=['os-spr', 'os-pack-tools'], dep_features={'os-spr': ['protocol-laws', 'mutation-testing']}, ext=['semio-framework-os-pack', 'semio-framework-mutation-diff', 'semio-framework-ui-locale', 'semio-framework-value', 'semio-framework-value-derive', 'semio-framework-diagnostic', 'semio-framework-pack-json', 'semio-framework-async', 'serde', 'serde_json', 'dsl_derive', 'semio-framework-replication'],
+                              dev=['semio-framework-async-macros', 'semio-framework-os-kernel']),
+    'os-dsl-tests': dict(deps=['os-dsl'], ext=['semio-framework-diagnostic', 'semio-framework-dsl', 'semio-framework-dsl-record', 'semio-framework-dsl-record-derive', 'semio-framework-ui-viewport', 'semio-framework-value', 'serde', 'serde_json', 'semio-framework-pack', 'semio-framework-replication', 'semio-framework-async'],
+                         dev=['semio-framework-async-macros', 'blake3', 'semio-framework-trace-memory-testing', 'semio-framework-os-kernel']),
+    'os-dsl-fixture-sweep-tests': dict(deps=['os-dsl'], ext=['semio-framework-dsl'], dev=['semio-framework-async-macros', 'semio-framework-os-kernel']),
+    'os-dsl-module-tests': dict(deps=['os-dsl'], ext=['semio-framework-diagnostic', 'semio-framework-dsl', 'semio-framework-dsl-record', 'semio-framework-dsl-record-derive', 'semio-framework-value', 'serde_json', 'semio-framework-replication', 'semio-framework-async'],
+                                dev=['semio-framework-async-macros', 'semio-framework-os-kernel']),
+}

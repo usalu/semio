@@ -19,7 +19,7 @@
 //! `.claude/plans/the-final-goal-for-jolly-spindle.md` — this wave builds the mechanism, not the
 //! full 32-standard fan-in.
 
-use crate::os_pack::cli::SchemaResolver;
+use semio_framework_os_pack_tools::SchemaResolver;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -85,7 +85,4 @@ pub async fn full_resolver() -> FullResolver {
 //#endregion 🔖️Registry
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-time-travel-panel-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

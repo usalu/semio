@@ -57,7 +57,7 @@ impl SourceCompare{
    _=>return Err(refusal("original source comparison phase is invalid")),
   }Ok(p)
  }
- pub(super) fn begin_close(&mut self){self.closing=true;}
+ pub fn begin_close(&mut self){self.closing=true;}
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.frames.is_empty()&&self.frames.allocated_bytes()==0}
  pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   self.progress=Default::default();if !self.closing{return Err(refusal("original source comparison close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.demands()?;if !admitted(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}

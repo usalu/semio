@@ -39,7 +39,5 @@ pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResul
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

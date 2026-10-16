@@ -281,10 +281,15 @@ and a kernel job object; Unix a private per-user socket directory and process gr
 The repo command line and the repo MCP server (`⌨️cli`) do not depend on this crate, so a compile
 break in the dashboard or the terminal UI never reaches them.
 
-Modules of the crate, one folder each: `🎮️registry` (commands, declarations, resolution, labels),
-`📚️inventory` (reads the sources, snapshot, background discovery), `🌳️command-tree` (the registry
-projected as launcher rows and wizard steps), `🏛️repo-domain` (the repo actions), `📇️playground-catalog`, `🧭️cli` (the verbs above), `🌀️daemon`, `📎️connection`, `🖥️terminal`,
-`⚙️preferences`, `⌨️usage` and `🚪️entrypoint`.
+The crate is a family of producer crates, one per layer, each rooted at the folder that states what it is; every folder keeps its
+own `📦️packages/🦀️rust` package. From the bottom: `🧱️core` (the invocation, the plugin and playground catalog, the dev environment and the
+content hash), `🧾️launch` (the launch contract), `🏛️repo-domain` (the repo actions), `🎮️registry` (commands, declarations and resolution),
+`📚️inventory` (reads the sources, keeps the snapshot, runs the background discovery; it also mounts `🌳️command-tree`, the registry
+projected as launcher rows and wizard steps, and runs the laws of the registry through a real discovery), `🌀️daemon/🧵️wire` (the frames,
+the transport, readiness, replay, journal, lease and `📎️connection`), `🌀️daemon` (the views, groups, supervisor, control surface and
+lifecycle), `⚙️preferences`, `🖥️terminal/🌐️labels` (every string, the tab texts and the window titles), `🖥️terminal` (the launcher, windows,
+panes, sessions and controls) and `🧭️cli` (the verbs above). The package of `📦️packages/🦀️rust` keeps the dispatch of `semio`,
+`📇️playground-catalog`, `🔌️plugin-registry`, `⌨️usage`, the `🌀️daemon/⌨️command` verb and `🚪️entrypoint`.
 
 ## 🧪️ Tests
 

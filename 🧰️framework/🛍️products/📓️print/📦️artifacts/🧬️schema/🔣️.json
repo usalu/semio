@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Request",
+  "definitions": {
+    "Request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "kind": {
+              "const": "fonts"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "kind": {
+              "const": "tex"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "target",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "target": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)+$",
+              "maxLength": 64
+            },
+            "kind": {
+              "const": "tectonic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "id",
+            "namespace",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 80
+            },
+            "namespace": {
+              "enum": [
+                "print",
+                "report",
+                "probe"
+              ]
+            },
+            "kind": {
+              "const": "document"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "mode",
+            "id",
+            "kind"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "mode": {
+              "enum": [
+                "prototype",
+                "release"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+              "maxLength": 80
+            },
+            "kind": {
+              "const": "measurement"
+            }
+          }
+        }
+      ]
+    },
+    "Protocol": {
+      "const": {
+        "namespace": "print",
+        "maximumDirectoryUnits": 224,
+        "maximumPathUnits": 256,
+        "maximumFiles": 4096,
+        "maximumBytes": 268435456,
+        "maximumWorkers": 4,
+        "maximumWorkerItems": 4096,
+        "scratchNamespace": "print"
+      }
+    },
+    "ScratchName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(?:/[a-z][a-z0-9-]*)*$",
+      "maxLength": 96
+    },
+    "NxProjection": {
+      "const": {
+        "modeToken": "{options.env.SEMIO_BUILD_MODE}"
+      }
+    }
+  }
+}

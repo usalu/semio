@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "scope": {
+    "partition": "products",
+    "paths": [
+      "bazel/actions",
+      "bazel/outputs",
+      "bazel/workspaces"
+    ],
+    "preserved": [
+      "tools",
+      "dependencies",
+      "products/tmp",
+      "immutable graph snapshots",
+      "mandatory compiler artifacts"
+    ]
+  },
+  "cases": [
+    {
+      "name": "valid-quiescent",
+      "wholeImageExclusive": true,
+      "sameDevice": true,
+      "ordinaryNamespace": true,
+      "originalLive": true,
+      "expected": true
+    },
+    {
+      "name": "active-reader-busy",
+      "wholeImageExclusive": false,
+      "sameDevice": true,
+      "ordinaryNamespace": true,
+      "originalLive": true,
+      "expected": false
+    },
+    {
+      "name": "cross-device",
+      "wholeImageExclusive": true,
+      "sameDevice": false,
+      "ordinaryNamespace": true,
+      "originalLive": true,
+      "expected": false
+    },
+    {
+      "name": "foreign-symlink-root",
+      "wholeImageExclusive": true,
+      "sameDevice": true,
+      "ordinaryNamespace": false,
+      "originalLive": true,
+      "expected": false
+    },
+    {
+      "name": "cancelled",
+      "wholeImageExclusive": true,
+      "sameDevice": true,
+      "ordinaryNamespace": true,
+      "originalLive": false,
+      "expected": false
+    }
+  ]
+}

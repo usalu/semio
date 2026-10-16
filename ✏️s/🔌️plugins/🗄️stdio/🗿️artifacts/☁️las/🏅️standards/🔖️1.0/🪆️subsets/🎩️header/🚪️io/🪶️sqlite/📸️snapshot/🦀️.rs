@@ -9,7 +9,7 @@ mod backing;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 #[path="🫴️receiving/🦀️.rs"]
-mod receiving;
+pub mod receiving;
 const HEADER_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(14),FloatColumn::Binary64(15),FloatColumn::Binary64(16),FloatColumn::Binary64(17),FloatColumn::Binary64(18),FloatColumn::Binary64(19),FloatColumn::Binary64(20),FloatColumn::Binary64(21),FloatColumn::Binary64(22),FloatColumn::Binary64(23),FloatColumn::Binary64(24),FloatColumn::Binary64(25)];
 const POINT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
 const GPS_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(1)];
@@ -28,7 +28,7 @@ fn visit_rows(snapshot:&LasSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueErr
         for(ordinal,v)in snapshot.vlrs.iter().enumerate(){let id=p.insert("las_vlr",&[Cell::Integer(1),Cell::Integer(ordinal as i64),Cell::Text(&v.user_id),Cell::Integer(v.record_id.into()),Cell::Text(&v.description)])?;for(ordinal,value)in v.data.iter().enumerate(){p.insert("las_vlr_octet",&[Cell::Integer(id),Cell::Integer(ordinal as i64),Cell::Integer((*value).into())])?;}}
         for(ordinal,v)in snapshot.points.iter().enumerate(){let id=p.insert_float("las_point",&[Cell::Integer(1),Cell::Integer(ordinal as i64),Cell::Real(v.x),Cell::Real(v.y),Cell::Real(v.z),Cell::Integer(v.intensity.into()),Cell::Integer(v.return_number.into()),Cell::Integer(v.number_of_returns.into()),Cell::Integer(v.scan_direction_flag.into()),Cell::Integer(v.edge_of_flight_line.into()),Cell::Integer(v.classification.into()),Cell::Integer(v.scan_angle_rank.into()),Cell::Integer(v.user_data.into()),Cell::Integer(v.point_source_id.into())],POINT_FLOATS)?;if let Some(time)=v.gps_time{p.insert_key_float("las_point_gps",id,&[Cell::Real(time)],GPS_FLOATS)?;}if let Some((red,green,blue))=v.rgb{p.insert_key("las_point_rgb",id,&[Cell::Integer(red.into()),Cell::Integer(green.into()),Cell::Integer(blue.into())])?;}}
 Ok(())}
-impl LasSnapshot{pub(in crate::standards::v1_0::subsets::any::io)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut p)?;p.finish_borrowed()}pub(in crate::standards::v1_0::subsets::any::io)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
+impl LasSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut p)?;p.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshotHost for LasSnapshot{
     fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{receiving::project_receiving(self,control,owner)}
     fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{receiving::reconstruct_receiving(database,control,owner)}
@@ -52,7 +52,4 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{semantic::extent(control.limits())?;backing::reconstruct(database,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 

@@ -2,11 +2,11 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+pub fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 use std::collections::{BTreeMap,BTreeSet};
 use crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::{OwnedNodes,RetireNode};
 #[path="🧮️semantic/🦀️.rs"]
-mod semantic;
+pub mod semantic;
 use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 #[derive(Clone,Copy)]
@@ -74,7 +74,7 @@ impl<'a> Reader<'a>{
 }
 fn children(groups:&Children,id:i64)->&[i64]{groups.get(&id).map(Vec::as_slice).unwrap_or_default()}
 fn boolean(row:&SqliteRow,column:usize)->Result<bool,ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("Markdown flag must be boolean"))}}
-fn start(row:&SqliteRow)->Result<Option<u32>,ValueError>{if matches!(row.values.get(2),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(u32::try_from(row.integer(2)?).map_err(|error|invalid(error.to_string()))?))}}
+pub fn start(row:&SqliteRow)->Result<Option<u32>,ValueError>{if matches!(row.values.get(2),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(u32::try_from(row.integer(2)?).map_err(|error|invalid(error.to_string()))?))}}
 fn text_option(row:&SqliteRow,column:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Option<String>,ValueError>{if matches!(row.values.get(column),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(reconstruct_text(control,row.text(column)?)?))}}
 fn take_tail<T:RetireNode>(values:&mut Vec<T>,start:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<T>,ValueError>{let total=values.len().checked_sub(start).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Markdown reconstruction frame is invalid"))?;let mut result=OwnedNodes(Vec::new());result.0.try_reserve_exact(total).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Markdown child storage allocation failed"))?;while values.len()>start{result.0.push(values.pop().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Markdown child storage is missing"))?);checkpoint(control,result.0.len()-1,total)?;}result.0.reverse();Ok(std::mem::take(&mut result.0))}
 enum ReadTask<'a>{Blocks(&'a [i64],usize),Inlines(&'a [i64],usize),Items(&'a [i64],usize),Block(i64),Inline(i64),FinishBlock(i64,usize),FinishInline(i64,usize),FinishItem(usize)}
@@ -197,7 +197,4 @@ fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotC
 fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control,native_owner)}
 fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 

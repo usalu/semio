@@ -3,7 +3,7 @@
 //! route, for the compiled-guest residency and for the process's DB I/O. Counters, never records: the
 //! records go to the sink the operator configured.
 
-use crate::artifact_authority::trusted_catalog::schema::{TrustedCatalogGuestResidencyStateV1, TrustedCatalogLoadProgressV1};
+use semio_hub_trusted_catalog_contract::schema::{TrustedCatalogGuestResidencyStateV1, TrustedCatalogLoadProgressV1};
 use semio_framework_trace::record::{EventCount, Tracer, SERVER_SPAN_EVENTS};
 use semio_framework_trace::PercentileRing;
 use serde::Serialize;
@@ -106,10 +106,10 @@ pub struct HubDbIoCensusV1 {
 }
 
 impl HubDbIoCensusV1 {
-    /// 🧮️ The census `db::db_storage::db_io_census` reads now: totals and every kind that saw I/O or waited.
+    /// 🧮️ The census `db::storage::db_io_census` reads now: totals and every kind that saw I/O or waited.
     pub fn read() -> Self {
-        let census = db::db_storage::db_io_census();
-        let kinds = db::db_storage::DbIoTaskKind::ALL
+        let census = db::storage::db_io_census();
+        let kinds = db::storage::DbIoTaskKind::ALL
             .iter()
             .map(|kind| HubDbIoKindV1 {
                 kind: format!("{kind:?}"),
@@ -151,7 +151,7 @@ struct RouteCountersV1 {
 /// [`HUB_ROUTE_METRICS_MAX_ROUTES`]; an answer of a route beyond the bound is only counted as overflow.
 #[derive(Default)]
 pub struct HubRouteMetricsV1 {
-    rows: Mutex<BTreeMap<(String, String), RouteCountersV1>>,
+    pub rows: Mutex<BTreeMap<(String, String), RouteCountersV1>>,
     overflowed: std::sync::atomic::AtomicU64,
 }
 
@@ -212,7 +212,7 @@ impl HubRouteMetricsV1 {
 impl HubObservabilityV1 {
     /// 📊️ One reading: the tracer's event table, the route table, the residency and catalog progress (when a
     /// catalog is loaded) and the DB I/O census, `uptime_ms` after boot.
-    pub fn read(tracer: &Tracer, routes: &HubRouteMetricsV1, catalog: Option<&crate::artifact_authority::trusted_catalog::VerifiedTrustedCatalog>, uptime_ms: u64) -> Self {
+    pub fn read(tracer: &Tracer, routes: &HubRouteMetricsV1, catalog: Option<&semio_hub_trusted_catalog::VerifiedTrustedCatalog>, uptime_ms: u64) -> Self {
         Self {
             schema: HUB_OBSERVABILITY_SCHEMA,
             level: tracer.level().as_str(),

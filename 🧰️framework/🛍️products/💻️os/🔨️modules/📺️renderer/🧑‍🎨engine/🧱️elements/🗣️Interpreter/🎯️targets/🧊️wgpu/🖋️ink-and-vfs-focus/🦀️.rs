@@ -3,45 +3,39 @@
 //! Focus state of the virtual file system controls and the ink editor, plus the ink and text editor native
 //! clipboard streams that follow a focus change.
 
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
-use super::retained_ui_engine::{
-    deliver_clipboard_recipient, pump_clipboard_io_one, submit_clipboard_io,
-    validate_clipboard_source,
-};
-use super::retained_ui_engine::{
-    ui_document_close_pending_for, write_owned_os_clipboard, UI_ENGINE,
-};
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
-use super::text_and_table_focus::apply_text_editor_text_at;
-use super::text_and_table_focus::{
-    clear_node_graph_caret, focused_text_editor, focused_text_editor_matches,
-    with_live_text_editor, FocusedTextEditor, FOCUSED_NODE_GRAPH_CARET,
-    FOCUSED_TABLE_EDITABLE_TEXT, FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR,
-};
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
+use crate::scene_intents_and_clipboard::{deliver_clipboard_recipient, pump_clipboard_io_one, submit_clipboard_io, validate_clipboard_source};
+use semio_framework_os_renderer_wgpu_contracts::{ui_document_close_pending_for, UI_ENGINE};
+use crate::scene_intents_and_clipboard::write_owned_os_clipboard;
+#[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
+use crate::scene_intents_and_clipboard::read_os_clipboard;
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
+use crate::text_and_table_focus::apply_text_editor_text_at;
+use crate::text_and_table_focus::{clear_node_graph_caret, focused_text_editor, focused_text_editor_matches, with_live_text_editor, FocusedTextEditor, FOCUSED_NODE_GRAPH_CARET, FOCUSED_TABLE_EDITABLE_TEXT, FOCUSED_TABLE_STEPPER, FOCUSED_TEXT_EDITOR};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::element_contracts::WorkerCell;
 use ui_wgpu::wgpu::{ActionDescriptor, NodeId, Rect, UiComponentSceneNode, UiNode};
 
 //#region 🗂️VirtualFileSystemFocus
 struct FocusedVfsControl {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
-    pub(super) target: crate::scenes::VfsAccessibilityFocusTarget,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+    pub target: semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityFocusTarget,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_VFS_CONTROL: std::cell::RefCell<Option<FocusedVfsControl>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_VFS_CONTROL: std::cell::RefCell<Option<FocusedVfsControl>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn focus_vfs_control(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, target: crate::scenes::VfsAccessibilityFocusTarget) {
+pub fn focus_vfs_control(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, target: semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityFocusTarget) {
     FOCUSED_VFS_CONTROL.with(|cell| {
         *cell.borrow_mut() = Some(FocusedVfsControl { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned(), target });
     });
 }
 
-pub(super) fn focused_vfs_control() -> Option<(String, u64, NodeId, String, crate::scenes::VfsAccessibilityFocusTarget)> {
+pub fn focused_vfs_control() -> Option<(String, u64, NodeId, String, semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityFocusTarget)> {
     FOCUSED_VFS_CONTROL.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone(), focus.target.clone())))
 }
 
@@ -58,14 +52,14 @@ pub fn apply_focused_vfs_control_key(key: &ui_wgpu::wgpu::KeyAction, input: &mut
         }
         let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem || scene.host_id != host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
             return None;
         }
-        crate::scenes::vfs_accessibility_apply_key(scene, &target, key, input)
+        semio_framework_os_renderer_wgpu_scene_text_vfs::vfs_accessibility_apply_key(scene, &target, key, input)
     });
     match outcome {
-        Some(Ok(crate::scenes::VfsAccessibilityKeyOutcome::Consumed)) => true,
-        Some(Ok(crate::scenes::VfsAccessibilityKeyOutcome::Unhandled)) => false,
+        Some(Ok(semio_framework_os_renderer_wgpu_scene_text_vfs::VfsAccessibilityKeyOutcome::Consumed)) => true,
+        Some(Ok(semio_framework_os_renderer_wgpu_scene_text_vfs::VfsAccessibilityKeyOutcome::Unhandled)) => false,
         Some(Err(fault)) => {
             input.record_action_fault(fault);
             true
@@ -80,26 +74,26 @@ pub fn apply_focused_vfs_control_key(key: &ui_wgpu::wgpu::KeyAction, input: &mut
 
 //#region 🖋️InkEditorFocus
 struct FocusedInkEditor {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_INK_EDITOR: std::cell::RefCell<Option<FocusedInkEditor>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_INK_EDITOR: std::cell::RefCell<Option<FocusedInkEditor>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn focus_ink_editor(window_id: &str, window_generation: u64, node: NodeId, host_id: &str) {
+pub fn focus_ink_editor(window_id: &str, window_generation: u64, node: NodeId, host_id: &str) {
     FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = Some(FocusedInkEditor { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned() }));
 }
 
-pub(super) fn focused_ink_editor() -> Option<(String, u64, NodeId, String)> {
+pub fn focused_ink_editor() -> Option<(String, u64, NodeId, String)> {
     FOCUSED_INK_EDITOR.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.host_id.clone())))
 }
 
 fn clear_focused_ink_editor(host_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
-    crate::scenes::cancel_ink_edit(host_id, input);
+    semio_framework_os_renderer_wgpu_scene_ink::cancel_ink_edit(host_id, input);
     FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = None);
 }
 
@@ -115,14 +109,14 @@ pub fn apply_focused_ink_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: &
         }
         let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.host_id != host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
             return None;
         }
-        Some(crate::scenes::ink_edit_key_into(scene, key, modifiers, input))
+        Some(semio_framework_os_renderer_wgpu_scene_ink::ink_edit_key_into(scene, key, modifiers, input))
     });
     match outcome {
         Some(Ok(consumed)) => {
-            if !crate::scenes::ink_edit_active(&host_id) {
+            if !semio_framework_os_renderer_wgpu_scene_ink::ink_edit_active(&host_id) {
                 FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = None);
             }
             consumed
@@ -150,10 +144,10 @@ pub fn blur_focused_ink_editor_at(x: f32, y: f32, input: &mut ui_wgpu::wgpu::Inp
         }
         let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.host_id != host_id || crate::scenes::scene_host_retiring(&host_id) {
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.host_id != host_id || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&host_id) {
             return None;
         }
-        Some(crate::scenes::ink_edit_blur_into(scene, x, y, input))
+        Some(semio_framework_os_renderer_wgpu_scene_ink::ink_edit_blur_into(scene, x, y, input))
     });
     match outcome {
         Some(Ok(committed)) => {
@@ -176,27 +170,27 @@ pub fn blur_focused_ink_editor_at(x: f32, y: f32, input: &mut ui_wgpu::wgpu::Inp
 
 //#region 📋️InkClipboardFocus
 #[derive(Clone)]
-pub(super) struct InkClipboardAddress {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) node: NodeId,
-    pub(super) host_id: String,
-    pub(super) rect: Rect,
+pub struct InkClipboardAddress {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node: NodeId,
+    pub host_id: String,
+    pub rect: Rect,
 }
 
 thread_local! {
-    pub(super) static FOCUSED_INK_SURFACE: std::cell::RefCell<Option<InkClipboardAddress>> = const { std::cell::RefCell::new(None) };
+    pub static FOCUSED_INK_SURFACE: std::cell::RefCell<Option<InkClipboardAddress>> = const { std::cell::RefCell::new(None) };
 }
 
-pub(super) fn focus_ink_surface(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, rect: Rect) {
+pub fn focus_ink_surface(window_id: &str, window_generation: u64, node: NodeId, host_id: &str, rect: Rect) {
     FOCUSED_INK_SURFACE.with(|cell| *cell.borrow_mut() = Some(InkClipboardAddress { window_id: window_id.to_owned(), window_generation, node, host_id: host_id.to_owned(), rect }));
 }
 
-pub(super) fn focused_ink_surface() -> Option<InkClipboardAddress> {
+pub fn focused_ink_surface() -> Option<InkClipboardAddress> {
     FOCUSED_INK_SURFACE.with(|cell| cell.borrow().clone())
 }
 
-pub(super) fn with_live_ink_surface<T>(address: &InkClipboardAddress, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
+pub fn with_live_ink_surface<T>(address: &InkClipboardAddress, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
     UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         if ui_document_close_pending_for(&address.window_id) {
@@ -207,26 +201,26 @@ pub(super) fn with_live_ink_surface<T>(address: &InkClipboardAddress, apply: imp
         }
         let retained = engine.tree(&address.window_id).and_then(|tree| tree.node(address.node))?;
         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-        (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::InkCanvas && scene.host_id == address.host_id && !crate::scenes::scene_host_retiring(&address.host_id)).then(|| apply(scene))
+        (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::InkCanvas && scene.host_id == address.host_id && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&address.host_id)).then(|| apply(scene))
     })
 }
 
 fn focused_ink_editor_owns(address: &InkClipboardAddress) -> bool {
-    focused_ink_editor().is_some_and(|(window_id, generation, node, host_id)| window_id == address.window_id && generation == address.window_generation && node == address.node && host_id == address.host_id && crate::scenes::ink_edit_active(&host_id))
+    focused_ink_editor().is_some_and(|(window_id, generation, node, host_id)| window_id == address.window_id && generation == address.window_generation && node == address.node && host_id == address.host_id && semio_framework_os_renderer_wgpu_scene_ink::ink_edit_active(&host_id))
 }
 
-fn apply_ink_clipboard_content(address: &InkClipboardAddress, kind: crate::scenes::InkClipboardContentKind, content: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+fn apply_ink_clipboard_content(address: &InkClipboardAddress, kind: semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind, content: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     let editor = focused_ink_editor_owns(address);
     let result = with_live_ink_surface(address, |scene| {
         if editor {
-            if kind == crate::scenes::InkClipboardContentKind::Text {
-                crate::scenes::ink_edit_paste_into(scene, content)
+            if kind == semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::Text {
+                semio_framework_os_renderer_wgpu_scene_ink::ink_edit_paste_into(scene, content)
             } else {
                 Ok(false)
             }
         } else {
-            let target = crate::scenes::ink_clipboard_target(scene, address.rect)?;
-            crate::scenes::ink_clipboard_paste_into(scene, target, kind, content, input)
+            let target = semio_framework_os_renderer_wgpu_scene_ink::ink_clipboard_target(scene, address.rect)?;
+            semio_framework_os_renderer_wgpu_scene_ink::ink_clipboard_paste_into(scene, target, kind, content, input)
         }
     });
     match result {
@@ -244,35 +238,35 @@ fn apply_ink_clipboard_content(address: &InkClipboardAddress, kind: crate::scene
 
 pub fn apply_focused_ink_paste(text: &str, image_data_url: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
     let Some(address) = focused_ink_surface() else { return false };
-    let kind = if image_data_url { crate::scenes::InkClipboardContentKind::ImageDataUrl } else { crate::scenes::InkClipboardContentKind::Text };
+    let kind = if image_data_url { semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::ImageDataUrl } else { semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::Text };
     apply_ink_clipboard_content(&address, kind, text, input)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingNativeInkClipboard {
-    pub(super) source:ui_wgpu::wgpu::ClipboardIntentSource,
-    pub(super) address: InkClipboardAddress,
-    pub(super) outcome: Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>>,
+    pub source:ui_wgpu::wgpu::ClipboardIntentSource,
+    pub address: InkClipboardAddress,
+    pub outcome: Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingNativeInkClipboardSlot {
-    pub(super) generation: u64,
-    pub(super) mounted: Option<PendingNativeInkClipboard>,
+    pub generation: u64,
+    pub mounted: Option<PendingNativeInkClipboard>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Copy)]
-pub(super) struct PendingNativeInkClipboardToken {
-    pub(super) slot: u8,
-    pub(super) generation: u64,
+pub struct PendingNativeInkClipboardToken {
+    pub slot: u8,
+    pub generation: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) static PENDING_NATIVE_INK_CLIPBOARD:WorkerCell<[PendingNativeInkClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|PendingNativeInkClipboardSlot{generation:0,mounted:None}));
+pub static PENDING_NATIVE_INK_CLIPBOARD:WorkerCell<[PendingNativeInkClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|PendingNativeInkClipboardSlot{generation:0,mounted:None}));
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn complete_pending_native_ink_clipboard(token: PendingNativeInkClipboardToken, result: Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>) {
+pub fn complete_pending_native_ink_clipboard(token: PendingNativeInkClipboardToken, result: Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>) {
     PENDING_NATIVE_INK_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
         let Some(slot) = slots.get_mut(usize::from(token.slot)).filter(|slot| slot.generation == token.generation) else { return };
@@ -283,7 +277,7 @@ pub(super) fn complete_pending_native_ink_clipboard(token: PendingNativeInkClipb
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn reserve_pending_native_ink_clipboard(address: InkClipboardAddress,source:ui_wgpu::wgpu::ClipboardIntentSource) -> Option<PendingNativeInkClipboardToken> {
+pub fn reserve_pending_native_ink_clipboard(address: InkClipboardAddress,source:ui_wgpu::wgpu::ClipboardIntentSource) -> Option<PendingNativeInkClipboardToken> {
     PENDING_NATIVE_INK_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
         let (index, slot) = slots.iter_mut().enumerate().find(|(_, slot)| slot.mounted.is_none() && slot.generation != u64::MAX)?;
@@ -293,7 +287,7 @@ pub(super) fn reserve_pending_native_ink_clipboard(address: InkClipboardAddress,
     })
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
 fn queue_ink_clipboard_read(address: InkClipboardAddress,input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let source=input.original_clipboard_source.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let Some(token) = reserve_pending_native_ink_clipboard(address,source) else { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits) };
@@ -303,29 +297,29 @@ fn queue_ink_clipboard_read(address: InkClipboardAddress,input:&mut ui_wgpu::wgp
 
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingNativeTextEditorClipboard {
-    pub(super) source:ui_wgpu::wgpu::ClipboardIntentSource,
-    pub(super) focus: FocusedTextEditor,
-    pub(super) outcome: Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>>,
+    pub source:ui_wgpu::wgpu::ClipboardIntentSource,
+    pub focus: FocusedTextEditor,
+    pub outcome: Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingNativeTextEditorClipboardSlot {
-    pub(super) generation: u64,
-    pub(super) mounted: Option<PendingNativeTextEditorClipboard>,
+    pub generation: u64,
+    pub mounted: Option<PendingNativeTextEditorClipboard>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Copy)]
-pub(super) struct PendingNativeTextEditorClipboardToken {
-    pub(super) slot: u8,
-    pub(super) generation: u64,
+pub struct PendingNativeTextEditorClipboardToken {
+    pub slot: u8,
+    pub generation: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) static PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD:WorkerCell<[PendingNativeTextEditorClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|PendingNativeTextEditorClipboardSlot{generation:0,mounted:None}));
+pub static PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD:WorkerCell<[PendingNativeTextEditorClipboardSlot;32]>=WorkerCell::new(||std::array::from_fn(|_|PendingNativeTextEditorClipboardSlot{generation:0,mounted:None}));
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn complete_pending_native_text_editor_clipboard(token: PendingNativeTextEditorClipboardToken, result: Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>) {
+pub fn complete_pending_native_text_editor_clipboard(token: PendingNativeTextEditorClipboardToken, result: Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>) {
     PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
         let Some(slot) = slots.get_mut(usize::from(token.slot)).filter(|slot| slot.generation == token.generation) else { return };
@@ -335,8 +329,8 @@ pub(super) fn complete_pending_native_text_editor_clipboard(token: PendingNative
     });
 }
 
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
-pub(super) fn queue_text_editor_clipboard_read(focus: FocusedTextEditor,input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
+pub fn queue_text_editor_clipboard_read(focus: FocusedTextEditor,input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let source=input.original_clipboard_source.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let token = PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
@@ -351,7 +345,7 @@ pub(super) fn queue_text_editor_clipboard_read(focus: FocusedTextEditor,input:&m
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn rgba_png_data_url(width: u32, height: u32, bytes: Vec<u8>) -> Option<String> {
+pub fn rgba_png_data_url(width: u32, height: u32, bytes: Vec<u8>) -> Option<String> {
     use base64::Engine as _;
     let image = image::RgbaImage::from_raw(width, height, bytes)?;
     let mut png = Vec::new();
@@ -359,12 +353,12 @@ pub(super) fn rgba_png_data_url(width: u32, height: u32, bytes: Vec<u8>) -> Opti
     Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
 }
 
-#[cfg(all(not(target_arch="wasm32"),not(test)))]
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 fn clipboard_content_capacity(outcome:&Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>,ui_wgpu::wgpu::BoundedActionFault>>)->usize{match outcome{Some(Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text))))=>text.capacity(),Some(Ok(Some(ui_wgpu::wgpu::ClipboardContent::ImageRgba8{bytes,..})))=>bytes.capacity(),_=>0}}
-#[cfg(all(not(target_arch="wasm32"),not(test)))]
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 fn clipboard_recipient_can_close(cx:&semio_framework_job::StepContext<'_>,release:usize)->bool{let grant=cx.retained_grant();!cx.should_yield()&&grant.maximum_items>0&&grant.maximum_release_bytes>=release&&grant.maximum_depth>=3}
 
-#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+#[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
 fn drive_clipboard_io_control(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>,cleanup:bool) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
     for index in 0..input.original_clipboard_intents.len(){if let Some(intent)=input.original_clipboard_intents[index].as_ref(){
         validate_clipboard_source(intent.source,cx)?;
@@ -390,9 +384,9 @@ fn drive_clipboard_io_control(input: &mut ui_wgpu::wgpu::InputState<ActionDescri
     let Some(pending) = pending else { return Ok(false) };
     if cleanup||cx.is_cancelled(){drop(pending);return Ok(true)}
     Ok(match pending.outcome.expect("ready clipboard completion") {
-        Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text))) => apply_ink_clipboard_content(&pending.address, crate::scenes::InkClipboardContentKind::Text, &text, input),
+        Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text))) => apply_ink_clipboard_content(&pending.address, semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::Text, &text, input),
         Ok(Some(ui_wgpu::wgpu::ClipboardContent::ImageRgba8 { width, height, bytes })) => match rgba_png_data_url(width, height, bytes) {
-            Some(data) => apply_ink_clipboard_content(&pending.address, crate::scenes::InkClipboardContentKind::ImageDataUrl, &data, input),
+            Some(data) => apply_ink_clipboard_content(&pending.address, semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::ImageDataUrl, &data, input),
             None => {
                 input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::Structure);
                 true
@@ -406,14 +400,14 @@ fn drive_clipboard_io_control(input: &mut ui_wgpu::wgpu::InputState<ActionDescri
     })
 }
 
-#[cfg(all(not(target_arch="wasm32"),not(test)))]
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 pub fn drive_clipboard_io_step(input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{drive_clipboard_io_control(input,cx,false)}
-#[cfg(all(not(target_arch="wasm32"),not(test)))]
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 pub fn close_clipboard_io_step(input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{drive_clipboard_io_control(input,cx,true).map(|pending|!pending)}
-#[cfg(any(target_arch="wasm32",test))]
+#[cfg(any(target_arch="wasm32",any(test, feature = "testkit")))]
 pub fn close_clipboard_io_step(_input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 pub fn drive_clipboard_io_step(_input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
     Ok(false)
 }
@@ -425,7 +419,7 @@ pub fn apply_focused_ink_surface_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
     }
     let ui_wgpu::wgpu::KeyAction::Char(key) = key else { return false };
     if key.eq_ignore_ascii_case("c") {
-        let result = with_live_ink_surface(&address, crate::scenes::ink_clipboard_copy_text);
+        let result = with_live_ink_surface(&address, semio_framework_os_renderer_wgpu_scene_ink::ink_clipboard_copy_text);
         match result {
             Some(Ok(Some(text))) => write_owned_os_clipboard(text, input),
             Some(Err(fault)) => input.record_action_fault(fault),
@@ -437,26 +431,26 @@ pub fn apply_focused_ink_surface_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
     if !key.eq_ignore_ascii_case("v") {
         return false;
     }
-    #[cfg(all(not(target_arch = "wasm32"), test))]
+    #[cfg(all(not(target_arch = "wasm32"), any(test, feature = "testkit")))]
     if let Some(text) = read_os_clipboard() {
-        apply_ink_clipboard_content(&address, crate::scenes::InkClipboardContentKind::Text, &text, input);
+        apply_ink_clipboard_content(&address, semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::Text, &text, input);
     }
-    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    #[cfg(all(not(target_arch = "wasm32"), not(any(test, feature = "testkit"))))]
     if let Err(fault) = queue_ink_clipboard_read(address,input) {
         input.record_action_fault(fault);
     }
     true
 }
 
-pub(super) struct InkClipboardStream {
-    pub(super) id: u64,
-    pub(super) address: InkClipboardAddress,
-    pub(super) image_data_url: bool,
-    pub(super) text: String,
+pub struct InkClipboardStream {
+    pub id: u64,
+    pub address: InkClipboardAddress,
+    pub image_data_url: bool,
+    pub text: String,
 }
 
 thread_local! {
-    pub(super) static INK_CLIPBOARD_STREAMS: std::cell::RefCell<[Option<InkClipboardStream>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
+    pub static INK_CLIPBOARD_STREAMS: std::cell::RefCell<[Option<InkClipboardStream>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
 }
 
 pub fn start_focused_ink_clipboard_stream(stream: u64, image_data_url: bool, declared_bytes: usize) -> Result<bool, &'static str> {
@@ -498,7 +492,7 @@ pub fn commit_focused_ink_clipboard_stream(stream: u64, input: &mut ui_wgpu::wgp
         slots[slot].take()
     });
     mounted.is_some_and(|mounted| {
-        let kind = if mounted.image_data_url { crate::scenes::InkClipboardContentKind::ImageDataUrl } else { crate::scenes::InkClipboardContentKind::Text };
+        let kind = if mounted.image_data_url { semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::ImageDataUrl } else { semio_framework_os_renderer_wgpu_scene_ink::InkClipboardContentKind::Text };
         apply_ink_clipboard_content(&mounted.address, kind, &mounted.text, input)
     })
 }
@@ -513,13 +507,13 @@ pub fn abort_focused_ink_clipboard_stream(stream: u64) -> bool {
 }
 
 struct TextEditorInputStream {
-    pub(super) id: u64,
-    pub(super) focus: FocusedTextEditor,
-    pub(super) text: String,
+    pub id: u64,
+    pub focus: FocusedTextEditor,
+    pub text: String,
 }
 
 thread_local! {
-    pub(super) static TEXT_EDITOR_INPUT_STREAMS: std::cell::RefCell<[Option<TextEditorInputStream>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
+    pub static TEXT_EDITOR_INPUT_STREAMS: std::cell::RefCell<[Option<TextEditorInputStream>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
 }
 
 pub fn start_focused_text_editor_stream(stream: u64, declared_bytes: usize) -> Result<bool, &'static str> {
@@ -563,7 +557,7 @@ pub fn commit_focused_text_editor_stream(stream: u64, input: &mut ui_wgpu::wgpu:
     if !focused_text_editor_matches(&mounted.focus) {
         return false;
     }
-    let outcome = with_live_text_editor(&mounted.focus, |scene| crate::engine_canvas::text_editor_replace_selection_into(scene, &mounted.text, input));
+    let outcome = with_live_text_editor(&mounted.focus, |scene| semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_replace_selection_into(scene, &mounted.text, input));
     match outcome {
         Some(Ok(consumed)) => consumed,
         Some(Err(fault)) => {
@@ -583,7 +577,7 @@ pub fn abort_focused_text_editor_stream(stream: u64) -> bool {
     })
 }
 
-pub(super) fn close_window_focus_clipboard_one(window_id: &str, generation: u64) -> bool {
+pub fn close_window_focus_clipboard_one(window_id: &str, generation: u64) -> bool {
     if let Some(focus) = FOCUSED_NODE_GRAPH_CARET.with(|cell| {
         let mut focus = cell.borrow_mut();
         if focus.as_ref().is_some_and(|focus| focus.target.window_id == window_id && focus.target.window_generation == generation) {
@@ -687,10 +681,10 @@ pub(super) fn close_window_focus_clipboard_one(window_id: &str, generation: u64)
     false
 }
 
-pub(super) fn close_retiring_focus_clipboard_one() -> bool {
+pub fn close_retiring_focus_clipboard_one() -> bool {
     if FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| {
         let mut focus = cell.borrow_mut();
-        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+        if focus.as_ref().is_some_and(|focus| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)) {
             focus.take();
             true
         } else {
@@ -701,7 +695,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if FOCUSED_TABLE_STEPPER.with(|cell| {
         let mut focus = cell.borrow_mut();
-        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+        if focus.as_ref().is_some_and(|focus| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)) {
             focus.take();
             true
         } else {
@@ -712,7 +706,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if FOCUSED_TEXT_EDITOR.with(|cell| {
         let mut focus = cell.borrow_mut();
-        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+        if focus.as_ref().is_some_and(|focus| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)) {
             focus.take();
             true
         } else {
@@ -723,7 +717,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if TEXT_EDITOR_INPUT_STREAMS.with(|cell| {
         let mut slots = cell.borrow_mut();
-        let Some(slot) = slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|stream| crate::scenes::scene_host_retiring(&stream.focus.host_id))) else { return false };
+        let Some(slot) = slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|stream| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&stream.focus.host_id))) else { return false };
         slot.take();
         true
     }) {
@@ -731,7 +725,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if FOCUSED_INK_EDITOR.with(|cell| {
         let mut focus = cell.borrow_mut();
-        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+        if focus.as_ref().is_some_and(|focus| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)) {
             focus.take();
             true
         } else {
@@ -742,7 +736,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if FOCUSED_INK_SURFACE.with(|cell| {
         let mut focus = cell.borrow_mut();
-        if focus.as_ref().is_some_and(|focus| crate::scenes::scene_host_retiring(&focus.host_id)) {
+        if focus.as_ref().is_some_and(|focus| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&focus.host_id)) {
             focus.take();
             true
         } else {
@@ -753,7 +747,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     }
     if INK_CLIPBOARD_STREAMS.with(|cell| {
         let mut slots = cell.borrow_mut();
-        let Some(slot) = slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|stream| crate::scenes::scene_host_retiring(&stream.address.host_id))) else { return false };
+        let Some(slot) = slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|stream| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&stream.address.host_id))) else { return false };
         slot.take();
         true
     }) {
@@ -762,7 +756,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     #[cfg(not(target_arch = "wasm32"))]
     if PENDING_NATIVE_INK_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
-        let Some(slot) = slots.iter_mut().find(|slot| slot.mounted.as_ref().is_some_and(|pending| crate::scenes::scene_host_retiring(&pending.address.host_id))) else { return false };
+        let Some(slot) = slots.iter_mut().find(|slot| slot.mounted.as_ref().is_some_and(|pending| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&pending.address.host_id))) else { return false };
         slot.mounted.take();
         true
     }) {
@@ -771,7 +765,7 @@ pub(super) fn close_retiring_focus_clipboard_one() -> bool {
     #[cfg(not(target_arch = "wasm32"))]
     if PENDING_NATIVE_TEXT_EDITOR_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
-        let Some(slot) = slots.iter_mut().find(|slot| slot.mounted.as_ref().is_some_and(|pending| crate::scenes::scene_host_retiring(&pending.focus.host_id))) else { return false };
+        let Some(slot) = slots.iter_mut().find(|slot| slot.mounted.as_ref().is_some_and(|pending| semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&pending.focus.host_id))) else { return false };
         slot.mounted.take();
         true
     }) {

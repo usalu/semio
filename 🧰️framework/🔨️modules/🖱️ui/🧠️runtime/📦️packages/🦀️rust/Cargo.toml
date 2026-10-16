@@ -4,7 +4,7 @@ name = "semio-framework-ui-runtime"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Headless UI runtime: typed entities with mutation leasing, actual-read dependency tracking, and keyed reconciliation into transactional UiPatch revisions"
+description = "Headless UI runtime facade: re-exports the exchange, presentation, reconcile primitives and reconcile authority crates behind one explicit surface"
 
 [package.metadata.semio]
 role = "framework"
@@ -17,20 +17,20 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-ui_scene = { path = "../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
-ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-contract-validation = { path = "../../../🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+
+semio-framework-ui-runtime-exchange = { path = "../../📡️exchange/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-presentation = { path = "../../🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile-primitives = { path = "../../🧱️primitives/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-runtime-reconcile = { path = "../../♻️reconcile/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 # 🧪️ `TransactionPatch`'s test-only `Serialize` impl and the fixture-oracle tests diff published
 # patches/snapshots against `serde_json` directly — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-
 # FOR-S-PLUGINS-AND-ARTIFACTS. No non-test symbol in this crate names `serde` any more.
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140" }
-
-[[test]]
-name = "native_resource_custody"
-path = "../../🎭️present/📦️resources/🧪️tests/🦀️.rs"

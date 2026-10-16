@@ -133,15 +133,15 @@ fn retained_inline_symbols_native_canonical_utf8_paged_indices_and_exact_granted
     let large = law["large"]["word"].as_str().unwrap().repeat(law["large"]["repetitions"].as_u64().unwrap() as usize);
     assert_eq!(large.len(), law["large"]["bytes"].as_u64().unwrap() as usize);
     let mut wire = Vec::new();
-    crate::write_varint_u64(&mut wire, 1);
-    crate::write_varint_u64(&mut wire, large.len() as u64);
+    semio_framework_replication_codec::write_varint_u64(&mut wire, 1);
+    semio_framework_replication_codec::write_varint_u64(&mut wire, large.len() as u64);
     wire.extend_from_slice(large.as_bytes());
     let prefix = wire.len();
     prepared(wire.clone(), &[large.clone()], prefix, None, 0);
     prepared(wire, &[large], 0, Some(17), 0);
     let mut wire = Vec::new();
     let empty_symbols = law["large"]["emptySymbols"].as_u64().unwrap() as usize;
-    crate::write_varint_u64(&mut wire, empty_symbols as u64);
+    semio_framework_replication_codec::write_varint_u64(&mut wire, empty_symbols as u64);
     wire.resize(wire.len() + empty_symbols, 0);
     let prefix = wire.len();
     prepared(wire.clone(), &vec![String::new(); empty_symbols], prefix, None, 0);

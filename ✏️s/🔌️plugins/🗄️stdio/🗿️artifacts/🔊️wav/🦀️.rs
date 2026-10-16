@@ -11,109 +11,30 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
 pub use standards::riff_pcm::subsets::any::schema::diff::WavDiff;
 pub use standards::riff_pcm::subsets::any::schema::mutations::WavMutation;
 pub use standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 pub use standards::riff_pcm::subsets::any::schema::WavArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_WAV_DOCUMENT_SCHEMA: &str = "stdio.wav";
+pub use semio_s_artifact_stdio_wav_io_registry::{STDIO_WAV_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const WAV_ARTIFACT_SCHEMA_ID: &str = "s.stdio.wav";
+pub use semio_s_artifact_stdio_wav_schema::{WAV_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_wav_io_registry::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_wav_io_registry::{definition};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_wav_io_registry::{formats};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    Vec::new()
-}
+pub use semio_s_artifact_stdio_wav_schema::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "wav", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_wav_io_registry::{contribution};
 
-//#region 🔖️Dialect
-/// 🪪️ Surface coordinate(s) for this artifact — `artifact_kind` matches the schema descriptor
-/// id above verbatim (never guessed); `standard`/`subset` match this file's own on-disk
-/// `🏅️standards/🔖️.../🪆️subsets/✳️...` location. Lives at the artifact root (not under
-/// `editor`/`viewer`) so a viewer file can read it without ever importing through the
-/// sibling `editor` module.
-pub const WAV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") };
-//#endregion 🔖️Dialect
+pub use semio_s_artifact_stdio_wav_io_registry::{WAV_DIALECT};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("wav", definition()?, declaration)
-}
-
-/// 🧾️ The runtime `wav` declares: its schema, format, inference descriptor, composers and document codec.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor()])
-        .composers(standards::riff_pcm::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") })
-        .try_build()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.wav".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Wav", "Wav"),
-        source_format: STDIO_WAV_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_WAV_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_wav_io_registry::{artifact_kind, assembly, declaration};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::riff_pcm::subsets::any::io::io_registry as std_composer;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("WavComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(std_composer::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_wav_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -127,99 +48,56 @@ pub mod standards {
         /// `standards::riff_pcm::engine::register()` imperatively (one of the ticket's 10
         /// protected `dsl::registry` entrypoints — its call site is explicitly not to be
         /// touched).
-        pub mod engine {
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-            pub fn register() {
-                super::subsets::any::io::register();
-            }
-        }
+        pub use semio_s_artifact_stdio_wav_io_registry::standards::riff_pcm::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                pub mod io;
+                pub mod io {
+    pub use semio_s_artifact_stdio_wav_io_registry::standards::riff_pcm::subsets::any::io::*;
+    pub mod binary {
+        pub use semio_s_artifact_stdio_wav_schema::standards::riff_pcm::subsets::any::io::binary::*;
+        pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::binary::diff;
+        pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::binary::inferences;
+        pub use semio_s_artifact_stdio_wav_mutations::standards::riff_pcm::subsets::any::io::binary::mutations;
+        pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::binary::snapshot;
+    }
+    pub mod sqlite {
+        pub use semio_s_artifact_stdio_wav_schema::standards::riff_pcm::subsets::any::io::sqlite::*;
+        pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::io::sqlite::snapshot;
+    }
+}
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod duration {
-                            #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_wav_schema::standards::riff_pcm::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_wav_inferences::standards::riff_pcm::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_wav_mutations::standards::riff_pcm::subsets::any::schema::mutations;
                 }
             }
         }
     }
 }
-#[path = "."]
-pub mod examples {
-    #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-    pub mod demo;
-}
+pub use semio_s_artifact_stdio_wav_inferences::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod wav {
-        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_wav_io_registry::editor::wav::*;
+
+        pub use semio_s_artifact_stdio_wav_inferences::editor::wav::edit_rules;
+        pub use semio_s_artifact_stdio_wav_inferences::editor::wav::presence;
+        pub use semio_s_artifact_stdio_wav_inferences::editor::wav::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_wav_io_registry::editor::wav::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_wav_io_registry::editor::wav::modes::edit::windows;
             }
         }
     }
@@ -229,38 +107,24 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod wav {
-        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_wav_io_registry::viewer::wav::*;
+
+        pub use semio_s_artifact_stdio_wav_inferences::viewer::wav::presence;
+        pub use semio_s_artifact_stdio_wav_inferences::viewer::wav::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_wav_mutations::viewer::wav::modes::view::*;
+
+                pub use semio_s_artifact_stdio_wav_mutations::viewer::wav::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::riff_pcm::subsets::any::io::{WavBuilderConstruction, WavParts, WavAnalyzerAnalysis, WavBuilderFacets, WavBuilder, WavAnalyzer, WavComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

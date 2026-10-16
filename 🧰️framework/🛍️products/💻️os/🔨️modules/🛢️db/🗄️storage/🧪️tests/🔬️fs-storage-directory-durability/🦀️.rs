@@ -2,8 +2,8 @@ mod directory_durability_tests {
     use super::*;
 
     fn lifecycle<T>(storage: &FsStorage, action: impl FnOnce(&mut FsLifecycleState) -> T) -> T {
-        let mut registry = super::super::lock(super::super::db_io_backend_registry());
-        let slot = usize::from(super::super::db_io_backend_parts(storage.control).0);
+        let mut registry = db_storage_memory::lock(db_io_registry::db_io_backend_registry());
+        let slot = usize::from(db_io_core::db_io_backend_parts(storage.control).0);
         let executor = registry.slots[slot].executor.as_mut().unwrap().as_any_mut().downcast_mut::<FsDbIoExecutor>().unwrap();
         let result = action(&mut executor.lifecycle.state.lock().unwrap());
         result
@@ -42,7 +42,7 @@ mod directory_durability_tests {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
         let path = base.join(format!("directory-durability-{name}-{}-{}", std::process::id(), NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed))).join("nested/root");
-        let storage = FsStorage::open(super::super::db_io_test_pool(), &path).await.unwrap();
+        let storage = FsStorage::open(db_io_driver::db_io_test_pool(), &path).await.unwrap();
         let fixture = serde_json::from_str(include_str!("../🧫️fixtures/📁️directory-durability/🔣️.json")).unwrap();
         (storage, path, fixture)
     }
@@ -56,7 +56,7 @@ mod directory_durability_tests {
         let writer = storage.acquire_writer(&document).await.unwrap();
         storage.create_segment(&writer, 0).await.unwrap();
         assert_eq!(serde_json::json!(take_trace(&storage)), fixture["create"]);
-        let bytes = super::super::db_io_copy_pages(b"original bytes").unwrap().await.unwrap();
+        let bytes = db_io_registry::db_io_copy_pages(b"original bytes").unwrap().await.unwrap();
         storage.append(&writer, 0, bytes).await.unwrap();
         storage.sync(&writer, 0, DurabilityClass::Fsync).await.unwrap();
         assert!(matches!(storage.create_segment(&writer, 0).await, Err(DbError::AlreadyExists(_))));
@@ -104,10 +104,10 @@ mod directory_durability_tests {
             *state = FsLifecycleState::default();
             state.fail = Some(FsLifecyclePhase::ReplacementRenamed);
         });
-        let pages = super::super::db_io_copy_pages(b"uncertain snapshot").unwrap().await.unwrap();
+        let pages = db_io_registry::db_io_copy_pages(b"uncertain snapshot").unwrap().await.unwrap();
         assert!(matches!(storage.write_generation(&document, 0, pages).await, Err(DbError::Io(_))));
         assert_eq!(take_trace(&storage), ["replacement-renamed"]);
-        let pages = super::super::db_io_copy_pages(b"confirmed snapshot").unwrap().await.unwrap();
+        let pages = db_io_registry::db_io_copy_pages(b"confirmed snapshot").unwrap().await.unwrap();
         storage.write_generation(&document, 0, pages).await.unwrap();
         assert_eq!(serde_json::json!(take_trace(&storage)), fixture["replace"]);
         let mut pages = storage.read_generation(&document, 0).await.unwrap();
@@ -134,9 +134,9 @@ mod directory_durability_tests {
             if missing {
                 std::fs::remove_file(root.join("wal/recovery-names/segment-00000000000000000000.bin")).unwrap();
             }
-            let reopened = FsStorage::open(super::super::db_io_test_pool(), &root).await.unwrap();
+            let reopened = FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
             take_trace(&reopened);
-            let (mut wal, _) = crate::db_wal::ArtifactWal::open(&reopened, document, crate::db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
+            let (mut wal, _) = db_wal::ArtifactWal::open(&reopened, document, db_wal_log::GroupCommitPolicy::default(), 0).await.unwrap();
             let trace = take_trace(&reopened);
             let recovery: Vec<_> = trace.iter().copied().filter(|step| step.starts_with("wal-")).collect();
             assert_eq!(serde_json::json!(recovery), fixture["recoverySync"]);

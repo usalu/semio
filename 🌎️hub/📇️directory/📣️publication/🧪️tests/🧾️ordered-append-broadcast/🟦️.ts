@@ -13,10 +13,11 @@ export type OrderedAppendBroadcastFixture = {
   }[];
 };
 
-/** 📇️ Reads the hub directory module as one text: the parent first, then its own child modules in declaration order. The sqlite, postgres and neo4j backends are separate subjects of their own laws and stay out. */
+/** 📇️ Reads the hub directory family as one text: the port crate, the contract, the serialized writer with its decider and the dispatch, each root first, then its own child modules in declaration order. The sqlite, postgres and neo4j backends are separate subjects of their own laws and stay out. */
 export function readHubDirectorySource(repoRoot: string): string {
   const backends = ["🪶️sqlite", "🐘️postgres", "🌐️neo4j"];
-  return listModuleTree(join(repoRoot, "🌎️hub/📇️directory/🦀️.rs"))
+  return ["🦀️.rs", "📜️contract/🦀️.rs", "🛠️service/🦀️.rs", "🔀️dispatch/🦀️.rs"]
+    .flatMap((root) => listModuleTree(join(repoRoot, "🌎️hub/📇️directory", root)))
     .filter((path) => !backends.some((backend) => path.includes(`${sep}${backend}${sep}`)))
     .map((path) => {
       const text = readFileSync(path, "utf8");

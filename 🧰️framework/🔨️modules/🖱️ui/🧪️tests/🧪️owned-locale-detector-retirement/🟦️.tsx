@@ -11639,10 +11639,10 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
   
       //#region 🏠️LocalInteractionCompositionTests
       it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
-        const source = await import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
-        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")) as {cases: Array<{name:string;before:State;after:State;changes:Change[]}>};
+        const source = await import("../../../🎓️onboarding/🏠️local-interaction/🟦️.ts");
+        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../🎓️onboarding/🧪️tests/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")) as {cases: Array<{name:string;before:State;after:State;changes:Change[]}>};
         const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
-        type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
+        type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🎓️onboarding/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
         enableMapSet();
         expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
         for (const row of fixture.cases) {

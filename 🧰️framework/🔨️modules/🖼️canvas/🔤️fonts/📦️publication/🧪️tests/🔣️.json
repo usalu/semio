@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "modes": ["prototype", "release"],
+  "namespace": "infinite",
+  "leaf": "fonts",
+  "producer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
+  "requiredCalls": ["withArtifactScratchV1", "withArtifactDestinationTaskV1", "withRepositoryPublishedCargoExecutableV1", "withScriptInvocationSignalV1", "captureOwnedCommandResultV1", "withRepositoryArtifactDestinationV1", "fontAssetPublicationRootV1"],
+  "forbiddenCalls": ["mkdtempSync", "runRepositoryCommand", "process.once"],
+  "invalidModes": ["debug", "production", ""],
+  "invalidRoots": ["relative", "", "/products/../foreign"]
+}

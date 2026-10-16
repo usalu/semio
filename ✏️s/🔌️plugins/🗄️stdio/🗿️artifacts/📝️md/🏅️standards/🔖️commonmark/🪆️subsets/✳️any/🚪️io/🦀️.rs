@@ -66,14 +66,17 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_md_mutations::standards::v_commonmark::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_md_diff::standards::v_commonmark::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_md_mutations::standards::v_commonmark::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_md_diff::standards::v_commonmark::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{MdDiff, MdMutation, MdSnapshot};

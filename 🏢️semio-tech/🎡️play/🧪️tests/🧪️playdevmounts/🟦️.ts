@@ -15,10 +15,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("playDevStaticDirMounts", () => {
     it("claims every route once and serves the font pack, the shim and the extensions through one table", async () => {
       const workspace = mkdtempSync(join(tmpdir(), "play-dev-mounts-"));
-      const mounts = dependencies.playDevStaticDirMounts(workspace, name => join(workspace, "📥️installed", name));
+      const mounts = dependencies.playDevStaticDirMounts(workspace, name => join(workspace, "📥️installed", name), "prototype");
       const put = (route: string, file: string, content: string) => { const mount = mounts.find(row => row.route === route)!; mkdirSync(join(workspace, mount.root), { recursive: true }); writeFileSync(join(workspace, mount.root, file), content); };
       const vendor = `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`;
-      expect(mounts.filter(row => row.route === vendor).map(row => row.root)).toEqual(["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"]);
+      expect(mounts.filter(row => row.route === vendor).map(row => row.root)).toEqual([".cache/b/p/m/infinite/prototype/fonts"]);
       const shim = mounts.find(row => row.route.startsWith(vendor + "/"))!, extension = mounts.find(row => row.root.startsWith("📥️installed/"))!, plugin = mounts.find(row => row.route.startsWith(MODULE_PLUGIN_ROUTE + "/") && !row.route.startsWith(vendor) && row.root.includes("🔌️plugin-modules/"))!;
       put(vendor, FONT_ASSET, "font-pack");
       put(shim.route, "cli.js", "export const cli = 1;");

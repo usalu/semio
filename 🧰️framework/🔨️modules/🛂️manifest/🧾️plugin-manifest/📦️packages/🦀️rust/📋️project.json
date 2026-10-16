@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/manifest-plugin-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -154,8 +154,7 @@
       "required": [
         "version",
         "sourceOwner",
-        "mode",
-        "output"
+        "mode"
       ],
       "properties": {
         "version": {
@@ -171,46 +170,76 @@
             "prototype",
             "release"
           ]
-        },
-        "output": {
+        }
+      }
+    },
+    "CompilerSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "manifest",
+        "configuration",
+        "selectors",
+        "threads",
+        "features",
+        "noDefaultFeatures"
+      ],
+      "properties": {
+        "mode": {
           "enum": [
-            "dist/wasm/prototype",
-            "dist/wasm/release"
+            "prototype",
+            "release"
           ]
-        }
-      },
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "mode",
-            "output"
-          ],
-          "properties": {
-            "mode": {
-              "const": "prototype"
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "configuration": {
+          "anyOf": [
+            {
+              "type": "null"
             },
-            "output": {
-              "const": "dist/wasm/prototype"
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
             }
+          ]
+        },
+        "selectors": {
+          "type": "array",
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^profile\\.(prototype|release)\\."
           }
         },
-        {
-          "type": "object",
-          "required": [
-            "mode",
-            "output"
-          ],
-          "properties": {
-            "mode": {
-              "const": "release"
-            },
-            "output": {
-              "const": "dist/wasm/release"
-            }
+        "threads": {
+          "type": "boolean"
+        },
+        "features": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^(?!\\.|/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_+./-]+$"
           }
+        },
+        "noDefaultFeatures": {
+          "type": "boolean"
         }
-      ]
+      }
     }
   }
 }

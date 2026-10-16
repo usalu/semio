@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-spr"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The spr component of the OS kernel: range extraction, slice verification, content frontier, file lifecycle and materialization"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-spr"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+protocol-laws = ["semio-framework-os-pack/record-codec-laws"]
+mutation-testing = ["semio-framework-os-command/mutation-testing"]
+
+[dependencies]
+dsl_derive = { path = "../../../🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-channel = { path = "../../🧵️channel/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../🎮️command/📦️packages/🦀️rust" }
+semio-framework-os-history = { path = "../../📜️history/📦️packages/🦀️rust", default-features = false }
+semio-framework-os-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-source = { path = "../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-os-pack-tools = { path = "../../../🎒️pack/⌨️cli/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

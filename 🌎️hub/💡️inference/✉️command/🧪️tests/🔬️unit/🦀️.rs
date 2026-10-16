@@ -1,6 +1,7 @@
 //! 🧪️ Literal boundary vectors exercise the production decoder and canonical protocol writer.
 
-use super::*;
+use semio_hub_inference::command::{COMMAND_MAX_BYTES, CanonicalInferenceCommandV1, DEPENDENCY_MAX_COUNT, PAYLOAD_MAX_BYTES, TEXT_MAX_BYTES};
+use semio_hub_inference::schema::SAFE_INTEGER_MAX;
 
 #[test]
 fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_actor_vectors() {
@@ -70,7 +71,7 @@ fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_act
         };
         assert_eq!(outcome, vector["expected"].as_str().unwrap(), "{}", vector["name"]);
         if change == "none" {
-            assert_eq!(crate::inference::sha256(&bytes), source["commandHash"].as_str().unwrap());
+            assert_eq!(semio_hub_inference::sha256(&bytes), source["commandHash"].as_str().unwrap());
         }
     }
 }

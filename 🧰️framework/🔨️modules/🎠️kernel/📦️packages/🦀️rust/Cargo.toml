@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../.."
+name = "semio-framework-kernel"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "kernel"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-kernel-history = { path = "../../📜️history/📦️packages/🦀️rust" }
+semio-framework-kernel-identity = { path = "../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-kernel-media-jobs = { path = "../../🎞️media-jobs/📦️packages/🦀️rust" }
+semio-framework-kernel-ui = { path = "../../🖼️ui/📦️packages/🦀️rust" }
+semio-framework-manifest-media = { path = "../../../🛂️manifest/🎞️media/📦️packages/🦀️rust" }
+semio-framework-manifest-view-model = { path = "../../../🛂️manifest/🖼️view-model/📦️packages/🦀️rust" }
+pack = { workspace = true }
+replication = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { workspace = true }
+ui_wgpu = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+
+[dev-dependencies]
+base64 = "0.22.1"
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

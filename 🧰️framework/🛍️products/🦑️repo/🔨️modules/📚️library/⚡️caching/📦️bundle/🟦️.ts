@@ -1,43 +1,42 @@
-import { scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptInvocationEnvironment, requireIssuedResourceControlInvocationV1, createRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import { mkdir, mkdtemp, readFile, rm, lstat, realpath, copyFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, lstat, realpath, copyFile, writeFile } from "node:fs/promises";
 import type { BunBundleRequest, BunBundleResult } from "./🟦️bun/📜️script.ts";
 import { availableParallelism } from "node:os";
 import { acquireCompilerCapacityLeaseV1, compilerCapacityWorkerCountV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRequire } from "node:module";
 import { join, dirname, relative, resolve, isAbsolute } from "node:path";
-import { createReadStream } from "node:fs";
+import { createReadStream, lstatSync, openSync, writeSync, closeSync, constants } from "node:fs";
 import { createHash } from "node:crypto";
 import workerSchema from "./🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildModeEnvironment, buildModePolicy, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
+import{withArtifactScratchV1,withArtifactDestinationWriterV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1}from"../📦️artifacts/💾️storage/🟦️.ts";
+import{createBunBundleStreamV1}from"./🟦️bun/📤️stream/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{withRepositoryCacheStoreV1}from"../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+
 /** 📦️ Describes a cancellable JavaScript artifact without exposing a compiler SDK. */
-export interface JavaScriptBundle { readonly workspace: string; readonly source: string; readonly output: string; readonly mode: BuildMode; readonly platform: "node" | "browser"; readonly signal: AbortSignal; readonly environment: Readonly<Record<string, string | undefined>>; readonly external?: readonly string[]; readonly runtime?: "javascript" | "bun"; readonly invocation: ScriptInvocation; }
+export interface JavaScriptBundle { readonly workspace: string; readonly source: string; readonly destination: ArtifactDestinationV1; readonly mode: BuildMode; readonly platform: "node" | "browser"; readonly signal: AbortSignal; readonly environment: Readonly<Record<string, string | undefined>>; readonly external?: readonly string[]; readonly runtime?: "javascript" | "bun"; readonly invocation: ScriptInvocation; }
 
 /** 🏗️ Starts esbuild after admission so its Go workers honor the inherited compiler budget. */
-export async function bundleJavaScript(options: JavaScriptBundle): Promise<void> {
-  const failures = validateJsonSchemaSubset(schema, Object.fromEntries(Object.entries(options).filter(([key, value]) => !["signal", "environment", "invocation"].includes(key) && value !== undefined)));
-  if (failures.length) throw Error("Invalid JavaScript bundle: " + failures.join("; "));
-  if (options.runtime === "bun") {
-    if (!options.invocation) throw Error("Bun package compiler requires original invocation");
-    const root = options.environment.SEMIO_TICKET_DIR ? join(options.environment.SEMIO_TICKET_DIR, "🗑️generated") : join(options.workspace, ".🧬semio/🦑️repo/⚡️cache/bun-workers");
-    await withBunBundleFiles({ version: 1, kind: "bun-package", mode: options.mode, entrypoint: options.source }, { workspace: options.workspace, temporaryRoot: root, invocation: options.invocation, signal: options.signal, environment: options.environment }, async files => {
-      const transferSignal = AbortSignal.any([options.signal, options.invocation.control.signal]);
-      if (resolve(options.output).length > 256 || (files.sourceMap && resolve(options.output + ".map").length > 256)) throw Error("Bun package output path exceeds 256 characters"); await mkdir(dirname(options.output), { recursive: true }); await copyFile(files.source, options.output); await verifyBunFile(options.output, files.sourceFile, transferSignal);
-      if (files.sourceMap) { await copyFile(files.sourceMap, options.output + ".map"); await verifyBunFile(options.output + ".map", files.sourceMapFile!, transferSignal); } transferSignal.throwIfAborted();
-    });
-    return;
+export function bundleJavaScript(options: JavaScriptBundle): Promise<void> {
+ return withArtifactDestinationWriterV1(options.destination,options.invocation,async destination=>{
+  const failures=validateJsonSchemaSubset(schema,Object.fromEntries(Object.entries(options).filter(([key,value])=>!["signal","environment","invocation","destination"].includes(key)&&value!==undefined)));
+  if(failures.length)throw Error("Invalid JavaScript bundle: "+failures.join("; "));if(options.workspace!==destination.workspace||options.mode!==destination.mode)throw Error("Original bundle repository or mode disagrees with destination");
+  const source=resolve(options.source),distance=relative(options.workspace,source),output=destination.output;if(source.length>256||output.length>252||isAbsolute(distance)||distance===".."||distance.startsWith("../")||distance.startsWith("..\\")||source===output||!relative(destination.directory,source).startsWith(".."))throw Error("Bundle Source and output custody overlap or escape");
+  for(let path=source;;path=dirname(path)){const status=lstatSync(path);if(status.isSymbolicLink()||path===source&&(!status.isFile()||status.nlink!==1))throw Error("Actual physical bundle Source required");if(dirname(path)===path)break;}
+  const control=createRequestedIssuedResourceControlV1(destination.control,120000,options.signal),environment={...options.environment,...destination.environment};
+  if(options.runtime==="bun"){
+   await withBunBundleFiles({version:1,kind:"bun-package",mode:options.mode,entrypoint:source},{workspace:options.workspace,invocation:options.invocation,control,signal:control.signal,environment},destination,async files=>{
+    if(files.sourceFile.byteLength+(files.sourceMapFile?.byteLength??0)>536870912)throw Error("Bundle output byte capacity exceeded");control.signal.throwIfAborted();await copyFile(files.source,output);await verifyBunFile(output,files.sourceFile,control.signal);if(files.sourceMap){await copyFile(files.sourceMap,output+".map");await verifyBunFile(output+".map",files.sourceMapFile!,control.signal);}
+   });return;
   }
-  const require = createRequire(join(options.workspace, "package.json")), policy = buildModePolicy(options.mode);
-  const args = [require.resolve("esbuild/bin/esbuild"), options.source, "--bundle", `--tree-shaking=${policy.optimize}`, "--format=esm", "--target=es2022", `--platform=${options.platform}`, `--outfile=${options.output}`, ...(policy.optimize ? ["--minify"] : []), ...(policy.sourceMap ? ["--sourcemap=external"] : []), ...["bun", ...(options.external ?? [])].map(value => `--external:${value}`)];
-  const control = scriptCompilerAdmissionControlV1(options.invocation, "javascript:esbuild", 120_000, options.signal), lease = await acquireCompilerCapacityLeaseV1({ directory: join(options.workspace, ".cache/b/l/m/data"), control, environment: options.environment });
-  try {
-    const environment = { ...options.environment, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(lease.parallelism), GOMAXPROCS: String(lease.parallelism) };
-    console.log(`[javascript-build] mode=${options.mode} workers=${lease.parallelism}`);
-    await runOwnedCommand(process.execPath, args, options.workspace, "javascript:esbuild", compilerAdmissionBudgetV1(control), { env: environment, signal: control.signal });
-  } finally { lease.release(); }
+  const require=createRequire(join(options.workspace,"package.json")),policy=buildModePolicy(options.mode),args=[require.resolve("esbuild/bin/esbuild"),source,"--bundle",`--tree-shaking=${policy.optimize}`,"--format=esm","--target=es2022",`--platform=${options.platform}`,`--outfile=${output}`,...(policy.optimize?["--minify"]:[]),...(policy.sourceMap?["--sourcemap=external"]:[]),...["bun",...(options.external??[])].map(value=>`--external:${value}`)],lease=await acquireCompilerCapacityLeaseV1({directory:join(options.workspace,".cache/b/l/m/data"),control,environment});
+  try{await runOwnedCommand(process.execPath,args,options.workspace,"javascript:esbuild",compilerAdmissionBudgetV1(control),{env:{...environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(lease.parallelism),GOMAXPROCS:String(lease.parallelism)},signal:control.signal});const bytes=(await lstat(output)).size+(policy.sourceMap?(await lstat(output+".map")).size:0);if(bytes>536870912)throw Error("Bundle output byte capacity exceeded");}finally{lease.release();}
+ });
 }
 
 /** 🎟️ Admits compilers with an unbounded worker pool only while all host workers are reserved. */
@@ -47,7 +46,7 @@ export async function withWholeHostCompilerCapacity<T>(directory: string, contro
   try { control.signal.throwIfAborted(); return await operation({ ...environment, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(lease.parallelism), GOMAXPROCS: String(lease.parallelism) }); } finally { lease.release(); }
 }
 
-type BunCompileOptions = Readonly<{ workspace: string; temporaryRoot: string; invocation: ScriptInvocation; signal?: AbortSignal; environment?: Readonly<Record<string, string | undefined>>; onLine?: (line: string) => void }>;
+type BunCompileOptions = Readonly<{ workspace: string; invocation: ScriptInvocation; control: CompilerAdmissionControl; signal?: AbortSignal; environment?: Readonly<Record<string, string | undefined>>; onLine?: (line: string) => void }>;
 type BunBundleFiles = Readonly<{ source: string; sourceMap?: string; metadata: Omit<BunBundleResult, "source" | "sourceMap">; sourceFile: BunFile; sourceMapFile?: BunFile }>;
 type BunFile = Readonly<{ path: string; sha256: string; byteLength: number }>;
 
@@ -83,20 +82,12 @@ export async function readBunBundleFiles(request: BunBundleRequest, response: st
   signal.throwIfAborted(); return { source, sourceFile: manifest.source, ...(sourceMap ? { sourceMap, sourceMapFile: manifest.sourceMap } : {}), metadata };
 }
 
-async function withBunBundleFiles<T>(request: BunBundleRequest, options: BunCompileOptions, consume: (files: BunBundleFiles) => Promise<T>): Promise<T> {
-  const control = scriptCompilerAdmissionControlV1(options.invocation, "javascript:bun-worker", 120_000, options.signal);
-  const input = JSON.stringify(request); if (Buffer.byteLength(input) > 16 * 1024 * 1024) throw Error("Bun compiler request bytes refused");
-  await mkdir(options.temporaryRoot, { recursive: true });
-  const temporary = await mkdtemp(join(options.temporaryRoot, "bun-worker-")), output = join(temporary, "result.json");
-  try {
-    return await withWholeHostCompilerCapacity(join(options.workspace, ".cache/b/l/m/data"), control, async compilerEnvironment => {
-      await runOwnedCommand(process.execPath, [join(import.meta.dir, "🟦️bun/📜️script.ts"), "compile", output], options.workspace, "javascript:bun-worker", compilerAdmissionBudgetV1(control), { input, signal: control.signal, env: scriptInvocationEnvironment(options.invocation, buildModeEnvironment(request.mode, compilerEnvironment)), onLine: options.onLine });
-      const files = await readBunBundleFiles(request, output, control.signal); compilerAdmissionBudgetV1(control); const result = await consume(files); control.signal.throwIfAborted(); compilerAdmissionBudgetV1(control); return result;
-    }, options.environment);
-  } finally { await rm(temporary, { recursive: true, force: true }); }
+async function withBunBundleFiles<T>(request:BunBundleRequest,options:BunCompileOptions,destination:ArtifactDestinationContextV1,consume:(files:BunBundleFiles)=>Promise<T>):Promise<T>{
+ const control=createRequestedIssuedResourceControlV1(destination.control,120000,options.signal),input=JSON.stringify(request),requestSha256=createHash("sha256").update(input).digest("hex"),authority=readNativeCallerAuthorityV1(options.invocation.capabilities);if(Buffer.byteLength(input)>16*1024*1024)throw Error("Bun compiler request bytes refused");const temporary=await mkdtemp(join(destination.directory,`bundle-${request.mode}-`)),output=join(destination.directory,"result.json");let file:number|undefined;const stream=createBunBundleStreamV1(requestSha256,event=>{control.signal.throwIfAborted();if(event.type==="file"){const path=join(temporary,event.name);if(path.length>256)throw Error("Bun sink path capacity exceeded");file=openSync(path,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW??0),0o600);}else if(event.type==="chunk"){if(file===undefined)throw Error("Live Bun sink file required");let offset=0;while(offset<event.bytes.byteLength){const written=writeSync(file,event.bytes,offset,event.bytes.byteLength-offset);if(written<=0)throw Error("Bun sink write made no progress");offset+=written;}}else{if(file===undefined)throw Error("Live Bun sink close required");closeSync(file);file=undefined;}});
+ return withWholeHostCompilerCapacity(join(options.workspace,".cache/b/l/m/data"),control,async environment=>{try{await runOwnedCommand(process.execPath,[join(import.meta.dir,"🟦️bun/📜️script.ts"),"compile"],options.workspace,"javascript:bun-worker",compilerAdmissionBudgetV1(control),{input,signal:control.signal,stdout:"ignore",output:{maximumBytes:Math.min(738197504,authority.transport.maximumBytes),maximumLines:authority.transport.maximumLines},outputConsumer:(bytes,source)=>{if(source==="stdout")stream.push(bytes);},env:scriptInvocationEnvironment(options.invocation,buildModeEnvironment(request.mode,{...environment,...destination.environment,SEMIO_NX_PROFILE_INPUTS:"0"})),onLine:(line,source)=>{if(source==="stderr")options.onLine?.(line);}});const records=stream.finish(),record=(name:string)=>{const value=records.find(row=>row.name===name);if(!value)throw Error("Complete Bun sink record required");return{path:relative(destination.directory,join(temporary,name)).split(/[\\/]/).join("/"),sha256:value.sha256,byteLength:value.byteLength};},manifest={version:1,requestSha256,kind:request.kind,mode:request.mode,source:record("source.js"),...(records.some(row=>row.name==="source.js.map")?{sourceMap:record("source.js.map")}:{ }),metadata:record("metadata.json")};if(Buffer.byteLength(JSON.stringify(manifest))>4096)throw Error("Bun sink manifest capacity exceeded");await writeFile(output,JSON.stringify(manifest),{flag:"wx",signal:control.signal});const files=await readBunBundleFiles(request,output,control.signal);compilerAdmissionBudgetV1(control);const result=await consume(files);control.signal.throwIfAborted();compilerAdmissionBudgetV1(control);return result;}finally{if(file!==undefined)closeSync(file);}},{...options.environment,...destination.environment});
 }
 
-/** 🧵️ Decodes admitted bytes only for callers whose owned API consumes generated source in memory. */
-export async function bundleVirtualJavaScript(request: BunBundleRequest, options: BunCompileOptions): Promise<BunBundleResult> {
-  return withBunBundleFiles(request, options, async files => ({ ...files.metadata, source: await readFile(files.source, { encoding: "utf8", signal: options.signal ? AbortSignal.any([options.signal, options.invocation.control.signal]) : options.invocation.control.signal }), ...(files.sourceMap ? { sourceMap: await readFile(files.sourceMap, { encoding: "utf8", signal: options.signal ? AbortSignal.any([options.signal, options.invocation.control.signal]) : options.invocation.control.signal }) } : {}) }));
+/** 🧵️ Returns bounded bytes only after the actual diagnostics-owned worker and file consumer settle. */
+export async function bundleVirtualJavaScript(request:BunBundleRequest,options:BunCompileOptions):Promise<BunBundleResult>{
+ requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities);if(options.workspace!==authority.repositoryRoot||request.mode!==authority.original.buildMode)throw Error("Original bundle workspace or mode disagrees");const phaseControl=createRequestedIssuedResourceControlV1(options.control,120000,options.signal);return withRepositoryCacheStoreV1(options.workspace,"diagnostics",options.invocation,phaseControl,(store,storePhase)=>withArtifactScratchV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:request.mode,owner:"bun-worker/"+createHash("sha256").update("entrypoint" in request?request.entrypoint:request.kind).digest("hex")}},token=>withArtifactDestinationTaskV1(token,options.invocation,destination=>withBunBundleFiles(request,options,destination,async files=>({ ...files.metadata,source:await readFile(files.source,{encoding:"utf8",signal:destination.control.signal}),...(files.sourceMap?{sourceMap:await readFile(files.sourceMap,{encoding:"utf8",signal:destination.control.signal})}:{})})))));
 }

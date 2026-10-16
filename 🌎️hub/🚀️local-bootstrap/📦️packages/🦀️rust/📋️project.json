@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-local-bootstrap-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

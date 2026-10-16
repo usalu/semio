@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-read"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Opaque Store snapshot reads, owner catalogs and per-owner retirement factories"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-read"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-cursor = { path = "../../../🧭️cursor/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-message-ledger = { path = "../../../📒️ledger/📨️messages/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-retirement-owner = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]

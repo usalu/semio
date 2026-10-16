@@ -99,21 +99,21 @@ fn list(value: &DslValue) -> Result<&[DslValue], ValueError> {
         _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history native list is required")),
     }
 }
-fn text_into(value:&DslValue,output:&mut String,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
+fn text_into(value:&DslValue,output:&mut String,c:&mut NativeDecodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet)->Result<(),ValueError>{
     let DslValue::String(text)=value else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native text is required"))};
     body.copy_text_into(c,text,output,7)
 }
-fn string_into(value:&DslValue,key:&str,output:&mut String,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{text_into(field(value,key)?,output,c,body)}
-fn inline(body:&mut crate::os_store::NativeSnapshotBodyWallet,bytes:usize,depth:usize,operation:impl FnOnce())->Result<(),ValueError>{body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:depth})?;operation();body.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
-fn push<T>(output:&mut Vec<T>,body:&mut crate::os_store::NativeSnapshotBodyWallet,depth:usize,value:impl FnOnce()->T)->Result<(),ValueError>{if output.len()==output.capacity()&&size_of::<T>()>0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"space history child slot has no admitted backing"))}inline(body,size_of::<T>(),depth,||output.push(value()))}
-fn optional_into(value:&DslValue,key:&str,output:&mut Option<String>,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
+fn string_into(value:&DslValue,key:&str,output:&mut String,c:&mut NativeDecodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet)->Result<(),ValueError>{text_into(field(value,key)?,output,c,body)}
+fn inline(body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,bytes:usize,depth:usize,operation:impl FnOnce())->Result<(),ValueError>{body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:depth})?;operation();body.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
+fn push<T>(output:&mut Vec<T>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet,depth:usize,value:impl FnOnce()->T)->Result<(),ValueError>{if output.len()==output.capacity()&&size_of::<T>()>0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"space history child slot has no admitted backing"))}inline(body,size_of::<T>(),depth,||output.push(value()))}
+fn optional_into(value:&DslValue,key:&str,output:&mut Option<String>,c:&mut NativeDecodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet)->Result<(),ValueError>{
     let DslValue::Object(fields)=value else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native object is required"))};
     match fields.iter().find(|(name,_)|name==key).map(|(_,value)|value){
         None|Some(DslValue::Null)=>Ok(()),
         Some(value)=>{inline(body,size_of::<Option<String>>(),6,||*output=Some(String::new()))?;text_into(value,output.as_mut().unwrap(),c,body)}
     }
 }
-fn construct(value:&DslValue,output:&mut Option<SpaceHistorySnapshot>,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
+fn construct(value:&DslValue,output:&mut Option<SpaceHistorySnapshot>,c:&mut NativeDecodeControl<'_>,body:&mut semio_framework_io_control::NativeSnapshotBodyWallet)->Result<(),ValueError>{
     c.begin_stage(0)?;
     inline(body,size_of::<SpaceHistorySnapshot>(),2,||*output=Some(SpaceHistorySnapshot::default()))?;
     let output=output.as_mut().unwrap();
@@ -217,7 +217,7 @@ impl semio_framework_pack_json::JsonWriteSource for BorrowedJson<'_> {
         semio_framework_pack_json::JsonWriteSource::object_key_at_path(self.0, path, index)
     }
 }
-fn write_json(value:&DslValue,owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>)->Result<String,ValueError>{
+fn write_json(value:&DslValue,owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>)->Result<String,ValueError>{
  let mut cursor=Some(semio_framework_pack_json::JsonBorrowedWriteCursor::new());
  owner.drive_cursor(&mut cursor,|cursor,control,grant|{
   let result=cursor.step(&BorrowedJson(value),256.min(grant.maximum_items),control,grant);
@@ -225,7 +225,7 @@ fn write_json(value:&DslValue,owner:&mut crate::os_store::NativeSnapshotEncodeOw
  })
 }
 
-pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
+pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner:&mut semio_framework_io_control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_io_schema::IoPayload, ValueError> {
     let limits = control.limits();
     let result=control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
         let mut progress = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
@@ -239,7 +239,7 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
                     if json_size(value.get(), owner.native())? > limits.max_file_bytes {
                         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history native text exceeds file limit"));
                     }
-                    write_json(value.get(), owner).map(crate::io_schema::IoPayload::Text)
+                    write_json(value.get(), owner).map(semio_framework_io_schema::IoPayload::Text)
                 }
                 SnapshotEncoding::Binary => {
                     let c = owner.native();
@@ -249,9 +249,9 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
                     let record = semio_framework_value::DecodedValue::new(record.take(), retire_record);
                     let mut options = pack::record::EncodeOptions::default();
                     options.limits.max_file_len = limits.max_file_bytes as u64;
-                    let bytes = pack::record::encode_document_controlled(&spec, record.get(), &options, c).map_err(crate::os_store::PackRefusal::into_value_error)?;
+                    let bytes = pack::record::encode_document_controlled(&spec, record.get(), &options, c).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?;
                     drop(record);
-                    Ok(crate::io_schema::IoPayload::Binary(bytes))
+                    Ok(semio_framework_io_schema::IoPayload::Binary(bytes))
                 }
             }
         }));
@@ -260,15 +260,15 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
     result?
 }
 
-pub(super) fn decode(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>)->Result<SpaceHistorySnapshot,ValueError>{
+pub(super) fn decode(payload:&semio_framework_io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>)->Result<SpaceHistorySnapshot,ValueError>{
     let limits=control.limits();
     decode_with(payload,control,native_owner,|value,output,native,body|{admission::intrinsic(value,native,limits)?;construct(value,output,native,body)})
 }
 
-pub(crate) fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>,bind:impl FnOnce(&DslValue,&mut Option<T>,&mut NativeDecodeControl<'_>,&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>)->Result<T,ValueError>{
+pub fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&semio_framework_io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_io_control::NativeSnapshotDecodeOwner<'_,'_>,bind:impl FnOnce(&DslValue,&mut Option<T>,&mut NativeDecodeControl<'_>,&mut semio_framework_io_control::NativeSnapshotBodyWallet)->Result<(),ValueError>)->Result<T,ValueError>{
     let limits=control.limits();
     control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
-    let length=match payload{crate::io_schema::IoPayload::Text(text)=>text.len(),crate::io_schema::IoPayload::Binary(bytes)=>bytes.len()};
+    let length=match payload{semio_framework_io_schema::IoPayload::Text(text)=>text.len(),semio_framework_io_schema::IoPayload::Binary(bytes)=>bytes.len()};
     if length>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native input exceeds file limit"))}
     let before=native_owner.native().owned_bytes();
     let maximum=before.checked_add(control.reconstruction_remaining_bytes()?.min(control.allocation_remaining_bytes())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native reconstruction allowance overflow"))?;
@@ -278,13 +278,13 @@ pub(crate) fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payl
         *intermediate=Some((None,None,None,None));
         let (schema,record,value,output)=intermediate.as_mut().unwrap();
         match payload{
-            crate::io_schema::IoPayload::Text(text)=>{
+            semio_framework_io_schema::IoPayload::Text(text)=>{
                 *value=Some(semio_framework_pack_json::from_json_str_controlled::<DslValue>(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native)?);
                 bind(value.as_ref().unwrap(),output,native,body)?;
             }
-            crate::io_schema::IoPayload::Binary(bytes)=>{
+            semio_framework_io_schema::IoPayload::Binary(bytes)=>{
                 *schema=Some(spec(native)?);
-                *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(crate::os_store::PackRefusal::into_value_error)?.0);
+                *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(semio_framework_os_pack::PackRefusal::into_value_error)?.0);
                 let Some(FieldValue::Value(value))=record.as_ref().unwrap().get(1)else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native value field is missing"))};
                 bind(value,output,native,body)?;
             }
@@ -350,7 +350,7 @@ fn sqlite_snapshot_framework_space_history_native_temporary_retirement_requests_
             }
         }
         drop(source);
-        let ((), requests, released) = crate::test_allocation::observe_backing(|| retire_projection(owner));
+        let ((), requests, released) = semio_framework_trace_memory_testing::observe_backing(|| retire_projection(owner));
         assert_eq!(requests, usize::try_from(contract["requestBytes"].as_u64().unwrap()).unwrap(), "{label} mandatory retirement requested unadmitted backing after cancellation");
         assert_eq!(released, expected_release, "{label} complete source-owned backing must be deallocated");
     }
@@ -428,9 +428,9 @@ fn sqlite_snapshot_framework_space_history_native_temporary_retirement_partial_g
                 }
             }
             drop(source);
-            let ((steps, pending, step_requests, step_released), requests, released) = crate::test_allocation::observe_backing(|| {
+            let ((steps, pending, step_requests, step_released), requests, released) = semio_framework_trace_memory_testing::observe_backing(|| {
                 let mut retirement = semio_framework_value::IntrinsicRetirement::new(owner);
-                let (steps, step_requests, step_released) = crate::test_allocation::observe_backing(|| retirement.close_step(grant));
+                let (steps, step_requests, step_released) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(grant));
                 let pending = !retirement.terminal_is_empty();
                 drop(retirement);
                 (steps, pending, step_requests, step_released)

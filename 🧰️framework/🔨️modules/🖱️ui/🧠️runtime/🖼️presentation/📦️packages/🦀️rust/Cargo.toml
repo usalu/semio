@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-runtime-presentation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Headless UI runtime presentation: typed entities with mutation leasing, actual-read dependency tracking, intent routing and the component tree a presenter builds"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-runtime-presentation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-runtime-exchange = { path = "../../../📡️exchange/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { version = "1.0.140" }
+
+[[test]]
+name = "native_resource_custody"
+path = "../../../🎭️present/📦️resources/🧪️tests/🦀️.rs"

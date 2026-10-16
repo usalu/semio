@@ -1,10 +1,9 @@
 //! 🧩️ 🧩️ S Studio app command — `rename-app-instance`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::workflow::RenameNode;
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "rename-app-instance")]
@@ -12,8 +11,8 @@ pub struct RenameAppInstance {
     pub label: Option<String>,
 }
 
-pub(crate) async fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
-    match crate::engine::space::primary_selected_node_id(selected, config).await {
+pub async fn rename_with_selection(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, config: &SpaceConfig, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
+    match semio_hub_space_operations::primary_selected_node_id(selected, config).await {
         Some(node_id) => {
             let next_label = payload.label.clone().or_else(|| doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).map(|node| format!("{} (renamed)", node.label)));
             match next_label {
@@ -31,7 +30,7 @@ pub(crate) async fn rename_with_selection(payload: &RenameAppInstance, doc: &Art
 /// `apply` below instead); the fallback still honors `config.active_node_id` — only the "fall back to
 /// the live selection" step degrades to empty.
 pub fn handle(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    Ok(crate::engine::space::engine::resolve_future(rename_with_selection(payload, doc, cfg.snapshot, &[])))
+    Ok(semio_hub_space_operations::resolve_future(rename_with_selection(payload, doc, cfg.snapshot, &[])))
 }
 
 pub async fn apply(payload: &RenameAppInstance, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, interaction: &InteractionView<'_>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {

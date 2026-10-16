@@ -15,8 +15,9 @@ export function conformsOwnerContractV1(contract,value){
  if(contract.anyOf)return contract.anyOf.some(rule=>conformsOwnerContractV1(rule,value));
  if(contract.type==="null")return value===null;
  if(contract.const!==undefined&&value!==contract.const)return false;
+ if(contract.enum!==undefined)return contract.enum.includes(value);
  if(contract.type==="object"){if(value===null||typeof value!=="object"||Array.isArray(value))return false;const keys=Object.keys(value);if(contract.required?.some(key=>!Object.hasOwn(value,key)))return false;if(contract.additionalProperties===false&&keys.some(key=>!Object.hasOwn(contract.properties??{},key)))return false;return Object.entries(contract.properties??{}).every(([key,rule])=>!Object.hasOwn(value,key)||conformsOwnerContractV1(rule,value[key]));}
- if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>conformsOwnerContractV1(contract.items,item));
+ if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>conformsOwnerContractV1(contract.items,item))&&(contract.uniqueItems!==true||new Set(value.map(item=>JSON.stringify(item))).size===value.length);
  if(contract.type==="integer")return Number.isSafeInteger(value)&&(contract.minimum===undefined||value>=contract.minimum)&&(contract.maximum===undefined||value<=contract.maximum);
  if(contract.type==="boolean")return typeof value==="boolean";
  if(contract.type==="string")return typeof value==="string"&&(contract.minLength===undefined||value.length>=contract.minLength)&&(contract.maxLength===undefined||value.length<=contract.maxLength)&&(!contract.pattern||new RegExp(contract.pattern,"u").test(value));

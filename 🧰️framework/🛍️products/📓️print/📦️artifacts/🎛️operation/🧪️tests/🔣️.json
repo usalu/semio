@@ -1,0 +1,73 @@
+{
+  "cases": [
+    {
+      "version": 1,
+      "kind": "toolchain",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "toolchain",
+      "mode": "release"
+    },
+    {
+      "version": 1,
+      "kind": "bundle",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "bundle",
+      "mode": "release"
+    },
+    {
+      "version": 1,
+      "kind": "fonts",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "fonts",
+      "mode": "release"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "mode": "release"
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "mode": "release"
+    }
+  ],
+  "invalid": [
+    {},
+    {
+      "version": 1,
+      "kind": "document",
+      "mode": "dev"
+    },
+    {
+      "version": 1,
+      "kind": "tools",
+      "mode": "prototype"
+    },
+    {
+      "version": 1,
+      "kind": "probe",
+      "mode": "release",
+      "maximumPending": 64
+    }
+  ]
+}

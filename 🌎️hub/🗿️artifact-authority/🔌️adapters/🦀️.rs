@@ -35,7 +35,7 @@ impl Write for BoundedDiagnostic {
     }
 }
 
-pub(crate) fn bounded_message(error: impl std::fmt::Display) -> String {
+pub fn bounded_message(error: impl std::fmt::Display) -> String {
     let mut diagnostic = BoundedDiagnostic { value: String::with_capacity(AUTHORITY_MAX_DIAGNOSTIC_BYTES) };
     let _ = write!(&mut diagnostic, "{error}");
     diagnostic.value

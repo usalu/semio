@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/replication-mutation-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

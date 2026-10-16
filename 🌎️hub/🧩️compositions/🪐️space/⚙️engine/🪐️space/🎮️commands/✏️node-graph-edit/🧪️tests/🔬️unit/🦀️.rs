@@ -1,9 +1,11 @@
 
-use super::*;
+use semio_hub_space_commands_authoring::node_graph_edit::{NodeGraphEdit, space_node_graph_row};
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_framework_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    use crate::engine::space::SpaceCommand;
+    use semio_hub_space_app::SpaceCommand;
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::NodeGraphEdit(NodeGraphEdit { operations_json: "[]".into() }));
 }
 
@@ -19,8 +21,8 @@ fn rows(rows: serde_json::Value) -> NodeGraphEdit {
 #[semio_framework_async_macros::async_test]
 async fn a_node_drag_record_is_one_relative_move() {
     use crate::demo_space_projection;
-    use crate::engine::space::SpaceCommand;
-    use crate::engine::space::unit_tests::context::{apply_mutations, studio_emit};
+    use semio_hub_space_app::SpaceCommand;
+    use semio_hub_space_app::unit_tests::context::{apply_mutations, studio_emit};
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
     let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
@@ -43,8 +45,8 @@ async fn a_node_drag_record_is_one_relative_move() {
 #[semio_framework_async_macros::async_test]
 async fn a_delete_row_removes_the_named_edges_then_nodes() {
     use crate::demo_space_projection;
-    use crate::engine::space::SpaceCommand;
-    use crate::engine::space::unit_tests::context::studio_emit;
+    use semio_hub_space_app::SpaceCommand;
+    use semio_hub_space_app::unit_tests::context::studio_emit;
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
     let node = projection.graph.nodes.first().expect("node").id.clone();

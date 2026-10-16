@@ -1,4 +1,5 @@
-use super::*;
+use crate::BmpSnapshot;
+use crate::standards::v_v3::subsets::any::schema::mutations::top_level::*;
 use crate::schema::operations::bmp_revision;
 use crate::schema::snapshot::{BmpImage, BmpNativeSample, BmpPixels, BmpRegion};
 use protocol::MutationKind;

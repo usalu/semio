@@ -1,9 +1,10 @@
 
-use super::*;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::commands::spawn_app;
-use crate::engine::space::unit_tests::context::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
+
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_commands_authoring::spawn_app;
+use semio_hub_space_app::unit_tests::context::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
 use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, PluginApp, artifact_app_laws::meta};
+use semio_hub_space_commands_authoring::delete_selection::DeleteSelection;
 
 /// 🕹️ End-to-end proof the `graph` domain's live selection actually drives `deleteSelection` —
 /// spawns a node, selects it via the framework's real `interactionSelect` action (the only way a
@@ -16,7 +17,7 @@ async fn delete_selection_removes_the_live_selected_node() {
     // 🔁️ A retained tool command only returns an admission receipt — the document is not published
     // until the operation settles, so every dispatch here is followed by its settle step.
     let receiver = meta("local").instance_id;
-    dispatch(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 10.0, y: 10.0 })).await;
+    dispatch(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 10.0, y: 10.0 })).await;
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");
     let before = app.snapshot().expect("snapshot");
     let node_id = before.graph.nodes.first().expect("spawned node").id.clone();

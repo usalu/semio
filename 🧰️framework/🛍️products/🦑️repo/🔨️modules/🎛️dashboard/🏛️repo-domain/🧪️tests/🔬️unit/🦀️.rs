@@ -30,14 +30,6 @@ fn repo_action_carries_its_go_argv() {
 }
 
 #[test]
-fn every_action_has_a_distinct_key_the_registry_grammar_accepts() {
-    let actions = [RepoAction::GoalsList, RepoAction::GoalsTree, RepoAction::TreeMonorepo, RepoAction::TreeGoal, RepoAction::TreeStatute, RepoAction::TreeTerritory, RepoAction::StatutesCatalog, RepoAction::Analyze { scope: "rust".into() }, RepoAction::TicketShow { id: "26/09/06/X".into() }, RepoAction::TicketFiles { id: "26/09/06/X".into() }, RepoAction::TicketClose { id: "26/09/06/X".into() }, RepoAction::TicketReopen { id: "26/09/06/X".into() }];
-    let keys: std::collections::BTreeSet<String> = actions.iter().map(action_key).collect();
-    assert_eq!(keys.len(), actions.len());
-    for key in keys { assert!(crate::registry::CommandId::parse(&format!("repo:{key}")).is_ok_and(|id| matches!(id, crate::registry::CommandId::Repo { .. })), "{key}"); }
-}
-
-#[test]
 fn the_go_binary_lives_in_the_marked_cache() {
     let root = Path::new("/workspace");
     assert!(go_binary_path(root).starts_with(root.join(REPO_BIN_CACHE_DIR)));
@@ -45,7 +37,7 @@ fn the_go_binary_lives_in_the_marked_cache() {
 
 #[test]
 fn every_scenario_of_the_repo_domain_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🏛️repo-domain/🥒️.feature"), &[include_str!("🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🏛️repo-domain/🥒️.feature"), &[include_str!("🦀️.rs"), include_str!("../../../🎮️registry/🧪️tests/🔬️unit/🦀️.rs")], &[
         ("Repo actions run in process against the domain crates", &["repo_actions_run_in_process_against_the_domain_crates"]),
         ("A repo action carries the argument list of the Go implementation", &["repo_action_carries_its_go_argv"]),
         ("Every action has a distinct key the registry grammar accepts", &["every_action_has_a_distinct_key_the_registry_grammar_accepts"]),

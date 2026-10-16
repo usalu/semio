@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-instance-extension"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The InstanceExtension hook trait and its hook bundle types of the plugin SDK"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-instance-extension"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }
+
+[dev-dependencies]

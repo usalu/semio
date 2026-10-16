@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "reason": "Original finite body refused",
+        "maximumInputBytes": 4096,
+        "maximumNodeMilliseconds": 15000
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities",
+        "workspace",
+        "witnessAfter",
+        "nodeVersion"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "enum": [
+            "toolkit-refusal",
+            "ledger-refusal"
+          ]
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "workspace": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "witnessAfter": {
+          "const": 0
+        },
+        "nodeVersion": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "directory"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "toolkit-refusal",
+        "ledger-refusal"
+      ]
+    },
+    "directory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

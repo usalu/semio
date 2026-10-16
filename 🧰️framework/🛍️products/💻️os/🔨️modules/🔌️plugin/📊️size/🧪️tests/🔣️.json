@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "valid": {
+    "bytes": [
+      0,
+      97,
+      115,
+      109,
+      1,
+      0,
+      0,
+      0,
+      1,
+      4,
+      1,
+      96,
+      0,
+      0,
+      3,
+      2,
+      1,
+      0,
+      7,
+      5,
+      1,
+      1,
+      102,
+      0,
+      0,
+      10,
+      4,
+      1,
+      2,
+      0,
+      11
+    ],
+    "expected": {
+      "totalBytes": 31,
+      "codeBytes": 4,
+      "dataBytes": 0,
+      "nameBytes": 0,
+      "otherCustomBytes": 0,
+      "functionCount": 1,
+      "memoryInitialPages": null,
+      "memoryMaxPages": null
+    }
+  },
+  "invalid": [
+    [
+      0,
+      97,
+      115,
+      109,
+      1,
+      0,
+      0,
+      0,
+      10,
+      127
+    ],
+    [
+      0,
+      97,
+      115,
+      109,
+      1,
+      0,
+      0,
+      0,
+      10,
+      128,
+      128,
+      128,
+      128,
+      128,
+      0
+    ]
+  ]
+}

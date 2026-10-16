@@ -4,6 +4,8 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 #[path = "📇️native-codecs/🦀️.rs"]
 pub mod native_codecs;
+#[path = "💡️inference/🦀️.rs"]
+pub mod inference;
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};

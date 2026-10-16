@@ -44,7 +44,7 @@ async fn reactor_native_lifecycle_finish(runtime: &crate::plugin_runtime::Plugin
         if let Some(receipt @ Receipt::Retired { .. }) = turn.lifecycle_receipt {
             let lifetimes = runtime.guest_lifetimes.borrow();
             let owner = lifetimes.get(lifetime.instance_id).unwrap().cell.owner().unwrap();
-            assert!(crate::reactor::instance_lifetime::GuestLifetimeOwner::terminal_is_empty(owner).unwrap(), "Retired must prove actual native emptiness");
+            assert!(crate::reactor::instance_lifetime::GuestLifetimeOwner::terminal_is_empty(owner, &crate::reactor::ReactorClosePeers).unwrap(), "Retired must prove actual native emptiness");
             retired = Some(receipt);
             break;
         }

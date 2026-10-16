@@ -1,1 +1,1 @@
-export { default, initSync, DagSession, KernelHost, ToggleMachine, flowAttachSurfaceCanvas, flowSetCompilerFonts, flowDetachSurfaceCanvas, flowResizeSurfaceCanvas, flowSurfaceCanvasPresentsOnGpu, initialize_browser_clock } from "../../🕸️bindings/flow_core.js";
+export { default, initSync, DagSession, KernelHost, ToggleMachine, flowAttachSurfaceCanvas, semioSetRuntimeAssets, flowDetachSurfaceCanvas, flowResizeSurfaceCanvas, flowSurfaceCanvasPresentsOnGpu, initialize_browser_clock } from "../../🕸️bindings/flow_core.js";

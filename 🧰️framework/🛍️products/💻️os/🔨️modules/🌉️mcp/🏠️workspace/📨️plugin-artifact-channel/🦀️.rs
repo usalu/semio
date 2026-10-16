@@ -1,22 +1,32 @@
 //! 📨️ The plugin artifact channel: pending exchanges, budgets and the channel implementation.
 
 #[cfg(not(target_arch = "wasm32"))]
-use super::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, Arc, Fault, GatewayError, GuestRuntimes, HashMap, PathBuf, PreparedOps};
-#[cfg(not(target_arch = "wasm32"))]
-use super::artifact_app_frames::{CommandTurn, app_command_seq_mut, app_frame_is_transaction_terminal, app_frame_reply_seq, app_frame_tag, bind_inference_document, child_head_dependencies, decode_guest_fault, document_backbone_payload, effect_shape, ingress_fault_text, named_shapes, persistent_command_completion_port_ready, shell_app_frame_payload, shell_lane_fault};
-#[cfg(not(target_arch = "wasm32"))]
-use super::compiled_components::{ComponentBytes, scoped_compiled_component, shared_plugin_runtime};
-#[cfg(not(target_arch = "wasm32"))]
-use super::guest_document_codec::DOCUMENT_BACKBONE_BINDING_GENERATION;
-#[cfg(not(target_arch = "wasm32"))]
-use super::plugin_paths_and_descriptor::{PluginRegistryEntry, resolve_plugin_wasm_path};
-/// 🐎️ The compiled runtime this gateway drives its plugin guests through. `GuestRuntime` is a trait
-/// import only — it brings `compile`/`instantiate`/`execute_turn`/`drop_instance` into method-call
-/// scope on [`shared_plugin_runtime`]'s `GuestRuntimes::Wasmtime`.
-#[cfg(not(target_arch = "wasm32"))]
 use semio_framework_plugin_host::GuestRuntime as _;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_plugin_host::GuestRuntimes;
+#[cfg(not(target_arch = "wasm32"))]
+use std::collections::HashMap;
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::Arc;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::artifact_app_frames::{CommandTurn, app_command_seq_mut, app_frame_is_transaction_terminal, app_frame_reply_seq, app_frame_tag, bind_inference_document, child_head_dependencies, decode_guest_fault, document_backbone_payload, effect_shape, ingress_fault_text, named_shapes, persistent_command_completion_port_ready, shell_app_frame_payload, shell_lane_fault};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::compiled_components::{ComponentBytes, scoped_compiled_component, shared_plugin_runtime};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::guest_document_codec::DOCUMENT_BACKBONE_BINDING_GENERATION;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_catalog::plugin_paths_and_descriptor::{PluginRegistryEntry, find_repo_root, resolve_plugin_wasm_path};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_foundation::errors::GatewayError;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, ActivationPhase, ActivationScope, Fault, InferCommand, PreparedOps};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_schema::schema::{ARTIFACT_INFERENCE_WIRE_VERSION, ArtifactInferenceBudgetV1, ArtifactInferenceCacheModeV1, ArtifactInferenceRequestV1, ArtifactInferenceResultV1};
 
 //#region 🔖️ArtifactChannel
+
 /// 🔌️ Real `crate::actions::ArtifactChannel` implementation — the seam `P6-actions-policy`'s
 /// `ActionAdapter` drives (`🔀️dispatch/🦀️.rs`'s own module doc: "is P7's job when it
 /// implements `ArtifactChannel` for real"). `ReadHistory` is driven for REAL over
@@ -35,21 +45,21 @@ use semio_framework_plugin_host::GuestRuntime as _;
 /// never a fabricated result.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    pub(super) host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
     /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
     /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
     /// `wasmtime::Component` belongs to the `Engine` that compiled it, so a second runtime could not
     /// instantiate `compiled` at all.
-    pub(super) runtime: Arc<GuestRuntimes>,
-    pub(super) compiled: semio_framework_plugin_host::CompiledHandle,
+    pub runtime: Arc<GuestRuntimes>,
+    pub compiled: semio_framework_plugin_host::CompiledHandle,
     /// 🔌️ The plugin this channel drives. It is the id alone, never a registry ROW: the row names a
     /// repo path this channel has no use for, and a hub-authorized component has no repo path at all.
-    pub(super) plugin_id: String,
-    pub(super) descriptor: semio_framework::PackageDescriptor,
-    pub(super) app_ref: semio_framework::AppRef,
-    pub(super) actor_label: String,
+    pub plugin_id: String,
+    pub descriptor: semio_framework::PackageDescriptor,
+    pub app_ref: semio_framework::AppRef,
+    pub actor_label: String,
     instances: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
     pending_exchanges: PendingExchangeRegistry<1>,
     pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
@@ -68,7 +78,7 @@ pub struct PluginArtifactChannel {
     /// currently IS — see [`Self::load_session_document`]. Empty for a guest still sitting on the
     /// plugin's own genesis document, which is every folder-lane guest and was, before ticket
     /// 26/09/18 slice M10, every hub-lane one as well.
-    pub(super) session_documents: HashMap<u32, String>,
+    pub(crate) session_documents: HashMap<u32, String>,
     /// 🧵️ Document-backbone messages this guest published and this channel has not handed on yet —
     /// the `Effect::SendMessage { target: Backbone { uri } }` payloads addressed at this channel's
     /// own actor uri. They used to be dropped on the floor: `exchange_one_turn` named every effect
@@ -94,17 +104,17 @@ pub struct PluginArtifactChannel {
 /// (which owns the `Arc<GuestRuntimes>` and the `GuestInstance`), so this struct holds only it.
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) struct PluginInferenceRoute {
-    pub(super) router: semio_framework_plugin_host::ArtifactInferenceRouter,
+    pub router: semio_framework_plugin_host::ArtifactInferenceRouter,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) struct PendingExchange {
-    pub(super) instance: u32,
-    pub(super) seq: u64,
-    pub(super) response: PendingResponsePage,
+pub struct PendingExchange {
+    pub instance: u32,
+    pub seq: u64,
+    pub response: PendingResponsePage,
     /// 🧾️ The guest's own reason for a faulted ingress, kept from the turn that reported it until
     /// the bounded cleanup that follows reaches its terminal and can answer the caller with it.
-    pub(super) ingress_fault: Option<String>,
+    pub ingress_fault: Option<String>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -125,7 +135,7 @@ enum PendingResponseFault {
 /// [`semio_framework::kernel::COMMAND_MAXIMUM_BYTES`] — 8 MiB — and it is still a hard bound, so an
 /// unbounded guest answer is a typed fault rather than an allocation.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) enum PendingResponsePage {
+pub enum PendingResponsePage {
     Empty,
     Frame { bytes: Vec<u8>, duplicate: bool },
     /// 🏁️ The command settled and the guest published no frame naming it — the same reading the
@@ -140,7 +150,7 @@ pub(super) enum PendingResponsePage {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PendingResponsePage {
-    pub(super) fn admit_frame(&mut self, bytes: &[u8]) {
+    pub fn admit_frame(&mut self, bytes: &[u8]) {
         match self {
             Self::Empty => {
                 *self = if bytes.len() > semio_framework::kernel::COMMAND_MAXIMUM_BYTES { Self::Fault(PendingResponseFault::Oversized) } else { Self::Frame { bytes: bytes.to_vec(), duplicate: false } };
@@ -150,7 +160,7 @@ impl PendingResponsePage {
         }
     }
 
-    pub(super) fn stamp_settled(&mut self) {
+    pub fn stamp_settled(&mut self) {
         if matches!(self, Self::Empty) {
             *self = Self::Stamped;
         }
@@ -163,7 +173,7 @@ impl PendingResponsePage {
         matches!(self, Self::Frame { .. })
     }
 
-    pub(super) fn take(&mut self, seq: u64) -> Result<store::AppFrame, Fault> {
+    pub fn take(&mut self, seq: u64) -> Result<store::AppFrame, Fault> {
         match std::mem::replace(self, Self::Empty) {
             Self::Empty => Err(PluginArtifactChannel::not_wired("execute_turn", format!("no AppFrame answering seq {seq} before terminal acknowledgement"))),
             Self::Frame { duplicate: true, .. } => Err(PluginArtifactChannel::not_wired("AppFrame response", format!("the guest published more than one frame answering seq {seq}"))),
@@ -176,7 +186,7 @@ impl PendingResponsePage {
 
     /// 🧹️ A frame larger than one retirement grant is released a grant at a time, so a
     /// faulted command's cleanup stays bounded however big the answer the guest had queued.
-    pub(super) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
         let released = match self {
             Self::Frame { bytes, .. } if bytes.len() <= maximum_bytes => bytes.len(),
             Self::Frame { bytes, .. } => {
@@ -190,7 +200,7 @@ impl PendingResponsePage {
         (true, released)
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         matches!(self, Self::Empty)
     }
 }
@@ -204,14 +214,14 @@ impl PendingResponsePage {
 /// invoke with "no wire representation" (live hub coverage on 7800/p33: procedural's add/rename/removeGeneration publish
 /// `SetSelectedGeneration` beside their document op).
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn headless_agent_ops(capability_id: &str, ops: PreparedOps) -> Result<(PreparedOps, Vec<String>), Fault> {
+pub fn headless_agent_ops(capability_id: &str, ops: PreparedOps) -> Result<(PreparedOps, Vec<String>), Fault> {
     let view_lanes = [("config", !ops.config.is_empty()), ("draft", !ops.draft.is_empty())].into_iter().filter_map(|(lane, held)| held.then_some(lane)).collect::<Vec<_>>();
     if view_lanes.is_empty() {
         return Ok((ops, Vec::new()));
     }
     if ops.document.is_empty() && ops.children.is_empty() {
         return Err(Fault {
-            code: crate::actions::AGENT_LANE_UNCARRIED_FAULT_CODE.to_string(),
+            code: AGENT_LANE_UNCARRIED_FAULT_CODE.to_string(),
             message: format!("action '{capability_id}' changes only {} view state, which a headless agent's transaction cannot carry; it runs only from the shell", view_lanes.join(" and ")),
         });
     }
@@ -225,7 +235,7 @@ pub const VIEW_STATE_OMITTED_WARNING: &str = "view-state-omitted: the action's c
 /// 🧹️ Begins closing the exchange an ABANDONED command left on `instance` — a pending exchange whose seq is not `seq`'s —
 /// so the bounded teardown in `exchange_one_turn` retires it before the next command on the instance is admitted.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn begin_closing_abandoned_exchange(pending_exchanges: &PendingExchangeRegistry<1>, closes: &mut semio_framework::kernel::CommandDriverRegistry<1>, instance: u32, seq: u64) -> Result<(), Fault> {
+pub fn begin_closing_abandoned_exchange(pending_exchanges: &PendingExchangeRegistry<1>, closes: &mut semio_framework::kernel::CommandDriverRegistry<1>, instance: u32, seq: u64) -> Result<(), Fault> {
     let Some(abandoned) = pending_exchanges.get(instance).map(|pending| pending.seq).filter(|pending_seq| *pending_seq != seq) else { return Ok(()) };
     if closes.is_active(u64::from(instance), abandoned) {
         closes.begin_close(u64::from(instance), abandoned).map_err(|fault| Fault { code: "channel.not-wired".to_string(), message: format!("abandoned command owner: {}: {}", fault.code.0, fault.message) })?;
@@ -234,35 +244,35 @@ pub(super) fn begin_closing_abandoned_exchange(pending_exchanges: &PendingExchan
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) struct PendingExchangeRegistry<const CAPACITY: usize> {
-    pub(super) slots: [Option<PendingExchange>; CAPACITY],
+pub struct PendingExchangeRegistry<const CAPACITY: usize> {
+    pub slots: [Option<PendingExchange>; CAPACITY],
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<const CAPACITY: usize> PendingExchangeRegistry<CAPACITY> {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { slots: std::array::from_fn(|_| None) }
     }
 
-    pub(super) fn can_insert(&self, instance: u32) -> bool {
+    pub fn can_insert(&self, instance: u32) -> bool {
         self.slots[instance as usize % CAPACITY].is_none()
     }
 
-    pub(super) fn insert_admitted(&mut self, pending: PendingExchange) {
+    pub fn insert_admitted(&mut self, pending: PendingExchange) {
         let index = pending.instance as usize % CAPACITY;
         assert!(self.slots[index].is_none(), "fixed pending-exchange admission changed before insert");
         self.slots[index] = Some(pending);
     }
 
-    pub(super) fn get_mut(&mut self, instance: u32) -> Option<&mut PendingExchange> {
+    pub fn get_mut(&mut self, instance: u32) -> Option<&mut PendingExchange> {
         self.slots[instance as usize % CAPACITY].as_mut().filter(|pending| pending.instance == instance)
     }
 
-    pub(super) fn get(&self, instance: u32) -> Option<&PendingExchange> {
+    pub fn get(&self, instance: u32) -> Option<&PendingExchange> {
         self.slots[instance as usize % CAPACITY].as_ref().filter(|pending| pending.instance == instance)
     }
 
-    pub(super) fn remove(&mut self, instance: u32) -> Option<PendingExchange> {
+    pub fn remove(&mut self, instance: u32) -> Option<PendingExchange> {
         let index = instance as usize % CAPACITY;
         if self.slots[index].as_ref().is_some_and(|pending| pending.instance == instance) {
             self.slots[index].take()
@@ -271,7 +281,7 @@ impl<const CAPACITY: usize> PendingExchangeRegistry<CAPACITY> {
         }
     }
 
-    pub(super) fn close_response_step(&mut self, instance: u32, maximum_bytes: usize) -> (bool, usize) {
+    pub fn close_response_step(&mut self, instance: u32, maximum_bytes: usize) -> (bool, usize) {
         self.get_mut(instance).map_or((true, 0), |pending| pending.response.close_step(maximum_bytes))
     }
 }
@@ -288,6 +298,7 @@ const INFERENCE_ACTOR_ORDINAL: u16 = u16::MAX;
 /// agent must not be able to widen a guest's memory or dependency-recursion envelope.
 #[cfg(not(target_arch = "wasm32"))]
 const INFERENCE_ALLOCATION_BYTES: u64 = 1 << 20;
+
 #[cfg(not(target_arch = "wasm32"))]
 const INFERENCE_RECURSION_DEPTH: u32 = 4;
 
@@ -318,7 +329,7 @@ fn headless_inference_budget() -> semio_framework::kernel::Budget {
 /// `wasmtime_runtime_instance_open_settles_against_a_real_plugin_component` opens a real component
 /// under exactly this shape.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn headless_open_budget() -> semio_framework::kernel::Budget {
+pub(crate) fn headless_open_budget() -> semio_framework::kernel::Budget {
     semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 4096, max_patch_bytes: 1 << 24, max_frames: 4096 }
 }
 
@@ -355,7 +366,7 @@ const DOCUMENT_LOAD_WALL_BUDGET: std::time::Duration = std::time::Duration::from
 const INSTANCE_OPEN_WALL_BUDGET: std::time::Duration = std::time::Duration::from_secs(150);
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
+pub(crate) fn shared_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, bytes: &[u8]) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
     scoped_compiled_component(runtime, plugin_id, ComponentBytes::Held(bytes), &ActivationScope::detached())
 }
 
@@ -383,7 +394,7 @@ impl PluginArtifactChannel {
     }
 
     /// 🧩️ A channel over a component this process already compiled — see [`scoped_compiled_component`].
-    pub(super) fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
+    pub fn from_compiled(runtime: Arc<GuestRuntimes>, compiled: semio_framework_plugin_host::CompiledHandle, plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
         Self {
             runtime,
             compiled,
@@ -435,7 +446,7 @@ impl PluginArtifactChannel {
     /// 🧵️ A bind turn can already carry egress — the guest flushes whatever its store had
     /// pending onto the freshly bound backbone — so it is captured here exactly as a command
     /// turn's is, rather than left in the turn and lost.
-    pub(super) fn ensure_document_backbone(&mut self, instance: u32) -> Result<(), Fault> {
+    pub fn ensure_document_backbone(&mut self, instance: u32) -> Result<(), Fault> {
         if self.backbone_bindings.contains(&instance) {
             return Ok(());
         }
@@ -520,7 +531,7 @@ impl PluginArtifactChannel {
     /// a fresh instance.
     ///
     /// ⚠️ A guest fault, terminal or refused, is the guest's own typed fault with its own code (`document.loading`, …).
-    pub(super) fn load_document_archive(&mut self, instance: u32, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
+    pub(crate) fn load_document_archive(&mut self, instance: u32, pack: &[u8], spr: &[u8], scope: &ActivationScope) -> Result<(), Fault> {
         let mut load = store::DocumentArchiveLoadHost::new(store::DocumentArchivePack { parent_pack: pack.to_vec(), parent_spr: spr.to_vec(), members: Vec::new() });
         let deadline = std::time::Instant::now() + DOCUMENT_LOAD_WALL_BUDGET;
         let mut stopped: Option<Fault> = None;
@@ -613,7 +624,7 @@ impl PluginArtifactChannel {
     /// the plugin-scoped session pseudo-id `plugin:<id>` — which is what the document IS in that
     /// case, a plugin's genesis session no client can address — never the bare plugin id, which a
     /// client would read as an artifact id and pass straight back into `artifact_snapshot`.
-    pub(super) fn stamped_artifact_id(&self) -> String {
+    pub(crate) fn stamped_artifact_id(&self) -> String {
         self.session_artifact_id.clone().unwrap_or_else(|| format!("plugin:{}", self.plugin_id))
     }
 
@@ -673,7 +684,7 @@ impl PluginArtifactChannel {
     /// identity "s.wfc.bitmap@1/*" has a non-canonical segment` before the guest ran a
     /// single step (measured 2026-09-22, slice CE3). The version is not lost by dropping the
     /// suffix: `artifact_schema_version` is its own field on this same request.
-    pub(super) fn infer_real(&mut self, command: &crate::actions::InferCommand) -> Result<crate::schema::ArtifactInferenceResultV1, Fault> {
+    pub(crate) fn infer_real(&mut self, command: &InferCommand) -> Result<ArtifactInferenceResultV1, Fault> {
         let declared = self
             .descriptor
             .contributions
@@ -686,8 +697,8 @@ impl PluginArtifactChannel {
                 code: "capability.not-found".to_string(),
                 message: format!("plugin `{}` declares no inference `{}` on artifact kind `{}`", self.plugin_id, command.inference_schema, command.artifact_kind),
             })?;
-        let request = crate::schema::ArtifactInferenceRequestV1 {
-            wire_version: crate::schema::ARTIFACT_INFERENCE_WIRE_VERSION,
+        let request = ArtifactInferenceRequestV1 {
+            wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: declared.owner.clone(),
             artifact_kind: declared.artifact_kind.clone(),
             artifact_schema: declared.artifact_schema.clone(),
@@ -700,11 +711,11 @@ impl PluginArtifactChannel {
             generation: command.turn.generation,
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
-            budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units, recursion_depth: INFERENCE_RECURSION_DEPTH },
+            budgets: ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units, recursion_depth: INFERENCE_RECURSION_DEPTH },
             retained: command.retained_policy,
             cancellation_id: command.cancellation_id.clone(),
             previous_state: None,
-            requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
+            requested_cache_mode: ArtifactInferenceCacheModeV1::Cold,
             canonical_payload: bind_inference_document(&declared, command)?,
             dependencies: match command.artifact_document {
                 Some(_) => self.inference_child_dependencies(&command.artifact_id)?,
@@ -732,7 +743,7 @@ impl PluginArtifactChannel {
     /// `sessionWindowInstances` mints for a freshly opened app (`app.windowKinds.map(kind => ({id:
     /// kind.id, …}))`) — an agent therefore addresses the very pane a human's first window is,
     /// rather than a synthetic id no shell would ever produce.
-    pub(super) fn addressed_action_invocation(&self, capability_id: &str, input: &serde_json::Value) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
+    pub(crate) fn addressed_action_invocation(&self, capability_id: &str, input: &serde_json::Value) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
         let plugin_id = self.plugin_id.as_str();
         let mut address: Option<semio_framework::manifest::ActionAddress> = None;
         'apps: for app in self.descriptor.manifest.apps.iter() {
@@ -781,7 +792,7 @@ impl PluginArtifactChannel {
         Ok(semio_framework::manifest::ActionInvocation { address, arguments })
     }
 
-    pub(super) fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {
+    pub(crate) fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {
         Fault { code: "channel.not-wired".to_string(), message: format!("{what}: {detail}") }
     }
 
@@ -822,7 +833,7 @@ impl PluginArtifactChannel {
     /// ♻️ The guest's own retained lifecycle-deadline verdict is runtime-independent too: it is the
     /// guest saying "I kept my progress, ask me again", so the events it did not consume are
     /// re-offered on the next turn rather than lost.
-    pub(super) fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
+    pub(crate) fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
         self.ensure_instance_scoped(instance, &ActivationScope::detached())
     }
 
@@ -835,7 +846,7 @@ impl PluginArtifactChannel {
     /// ⏱️ A compiled turn cut by its own ceiling is not a yield to resume from: the
     /// instance is mid-call and unusable. Report it as the bounded budget fault it is,
     /// rather than as a wiring fault, and throw the half-open instance away.
-    pub(super) fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
+    pub(crate) fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         if self.instances.contains_key(&instance) {
             return Ok(());
         }
@@ -852,12 +863,15 @@ impl PluginArtifactChannel {
             semio_framework_plugin_guest_contract::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
             other => Self::not_wired("instantiate", other),
         })?;
+        let assets = find_repo_root()
+            .map_err(|error| Fault { code: "package-assets.root".to_string(), message: error.to_string() })
+            .and_then(|root| semio_framework_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
             actor: self.actor_label.clone(),
             config: Vec::new(),
-            assets: Vec::new(),
+            assets,
             capabilities: caps,
             quotas: self.descriptor.quotas.clone(),
         }];
@@ -908,7 +922,7 @@ impl PluginArtifactChannel {
     /// answers with an `AppFrame` whose `in_reply_to` is the COMMAND's `seq`. Every call site in
     /// this file used to pass a literal `seq: 0` while the envelope counted from 1, so even a host
     /// reading the right lane would have correlated nothing.
-    pub(super) fn exchange_one_real(&mut self, instance: u32, mut real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
+    pub(crate) fn exchange_one_real(&mut self, instance: u32, mut real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
         let seq = self.take_seq();
         *app_command_seq_mut(&mut real_command) = seq;
         self.exchange_sequenced(instance, &real_command, seq)

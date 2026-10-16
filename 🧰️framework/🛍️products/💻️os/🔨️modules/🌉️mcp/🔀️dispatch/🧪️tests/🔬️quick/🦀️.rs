@@ -1,13 +1,31 @@
+//! 🧱️ Actions_quick of the dispatch crate: The mutation protocol action adapter.
 
-use super::*;
-
-use crate::audit::InMemoryAuditSink;
-use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
-use crate::source_builders;
+use semio_framework::manifest::ApprovalMode;
+use semio_framework::manifest::CapabilityEffects;
+use semio_framework::manifest::CapabilityExecution;
+use semio_framework::manifest::CapabilityPolicy;
+use semio_framework::manifest::ResourceSelector;
 use semio_framework::manifest::kernel;
-use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
+use std::sync::Arc;
+use std::sync::Mutex;
+#[cfg(any(test, feature = "testkit"))]
+use semio_framework_os_mcp_capabilities::source_builders;
+use crate::actions::{ActionAdapter, INSTANCE_BUSY_MAX_ATTEMPTS};
+use semio_framework_os_mcp_catalog::catalog::{CapabilityArgSummary, CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
+use semio_framework_os_mcp_consent::approval_coordinator::ApprovalCoordinator;
+use semio_framework_os_mcp_consent::elicitation::{ElicitationChannel, ElicitationSlot, StdioLines};
+use semio_framework_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_framework_os_mcp_foundation::reports::{InvocationStatus, RevisionStamp};
+use semio_framework_os_mcp_port::channel_port::{AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_framework_os_mcp_wire::protocol::ClientFeatures;
+#[cfg(test)]
+use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
 
 fn synthetic_capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
     CapabilityDefinition {
@@ -86,6 +104,7 @@ fn principal(scopes: &[&str]) -> AgentPrincipal {
 }
 
 //#region 🔖️PreviewVsCommit
+
 /// 🪞️ The exact PureCommand op payload (preview) and the exact TransactionPrepare op payload
 /// (commit) sent over the wire must be byte-identical — asserted on the recorded frame log, not
 /// on internal state. `MockArtifactChannel::handle` derives its `PureCommand` Emit bytes
@@ -118,9 +137,11 @@ fn preview_ops_and_the_ops_actually_committed_are_the_same_bytes() {
     assert_eq!(prepare_ops.len() as u64, preview_ops_count);
     assert_eq!(prepare_ops, vec![expected_op], "the op bytes committed must be byte-identical to what PureCommand emitted during preview");
 }
+
 //#endregion 🔖️PreviewVsCommit
 
 //#region 🔖️NoChange
+
 #[test]
 fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
     let (adapter, channel, _handles, audit) = harness(AutoApprovePolicy::Never);
@@ -142,6 +163,7 @@ fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
     assert!(assert_events(&audit).iter().any(|event| event.outcome == "no_change"), "the audit lane records the no-change outcome");
     assert!(adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 2).is_err(), "the prepared handle is spent");
 }
+
 #[test]
 fn an_action_that_edits_only_owned_children_commits_their_groups_byte_for_byte() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -168,14 +190,17 @@ fn an_action_that_edits_only_owned_children_commits_their_groups_byte_for_byte()
         .expect("a TransactionPrepare was sent");
     assert_eq!(carried, groups, "the child groups reach the guest byte for byte");
 }
+
 //#endregion 🔖️NoChange
 
 //#region 🔖️RevisionConflict
+
+//#region 🔖️RevisionGuardLaws
+
 /// ⚔️ Simulate a concurrent edit landing between prepare and invoke.
 ///
 /// Only a ReadHistory (a pure read) may have been sent after the staleness became detectable —
 /// no TransactionPrepare/TransactionCommit anywhere in the whole log.
-//#region 🔖️RevisionGuardLaws
 fn revision_bound_capability() -> CapabilityDefinition {
     let mut capability = synthetic_capability("table.set-cell", &[], ApprovalMode::Never, false);
     capability.input_schema = serde_json::json!({ "type": "object", "properties": { "row": { "type": "integer" }, "revision": { "type": "string", "x-semio-format": "documentRevision" } }, "required": ["row"] });
@@ -217,6 +242,7 @@ fn an_omitted_revision_behind_a_passed_document_guard_commits_and_a_stale_guard_
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
     assert!(!channel.frame_log()[before_stale..].iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "a stale guard sent a mutation");
 }
+
 //#endregion 🔖️RevisionGuardLaws
 
 #[test]
@@ -239,9 +265,11 @@ fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
     assert!(!log.iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "a mutation command was sent despite a stale expectedRevision: {log:?}");
     assert!(log.len() > before_invoke, "invoke must have issued at least the ReadHistory recheck");
 }
+
 //#endregion 🔖️RevisionConflict
 
 //#region 🔖️Idempotency
+
 /// 🔁️ A replay with a DIFFERENT prepared handle in the request would normally re-resolve, but the
 /// idempotency key alone must short-circuit before any channel command is sent a second time.
 #[test]
@@ -265,9 +293,11 @@ fn idempotent_replay_performs_exactly_one_mutation() {
     let commits_after_second = channel.frame_log().iter().filter(|(_, command)| matches!(command, AppCommand::TransactionCommit { .. })).count();
     assert_eq!(commits_after_second, 1, "a replayed idempotency key must not perform a second mutation");
 }
+
 //#endregion 🔖️Idempotency
 
 //#region 🔖️UndoRoundTrip
+
 #[test]
 fn undo_token_round_trips_through_history_undo_and_redo() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -315,9 +345,11 @@ fn remote_approval_history_retains_opaque_authority_in_its_private_session_port(
     assert_eq!(port.members.lock().expect("history members lock poisoned").len(), 1);
     assert_eq!(adapter.history_undo(&SessionHandle::new("sess_foreign"), &token, 11).expect_err("foreign session cannot resolve token").code, GatewayErrorCode::PermissionDenied);
 }
+
 //#endregion 🔖️UndoRoundTrip
 
 //#region 🔖️ApprovalGateBlocksThenProceeds
+
 #[test]
 fn approval_gate_blocks_a_destructive_capability_without_approval_and_proceeds_with_it() {
     let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -336,9 +368,11 @@ fn approval_gate_blocks_a_destructive_capability_without_approval_and_proceeds_w
     let succeeded = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), approval_handle: Some(approved_handle), ..Default::default() }, 0, 3).unwrap();
     assert_eq!(succeeded.status, InvocationStatus::Succeeded);
 }
+
 //#endregion 🔖️ApprovalGateBlocksThenProceeds
 
 //#region 🔖️ScopeDenialAudited
+
 /// 🚫️ No scopes granted at all
 #[test]
 fn a_capability_whose_scopes_exceed_the_principals_is_permission_denied_and_audited() {
@@ -353,9 +387,11 @@ fn a_capability_whose_scopes_exceed_the_principals_is_permission_denied_and_audi
     let events = assert_events(&audit);
     assert!(events.iter().any(|event| matches!(&event.decision, AuditDecision::Denied { code } if *code == GatewayErrorCode::PermissionDenied) && event.capability == "cad.editor.translateSelection"));
 }
+
 //#endregion 🔖️ScopeDenialAudited
 
 //#region 🔖️Cancel
+
 #[test]
 fn cancel_drops_a_prepared_handle() {
     let (adapter, _channel, handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -371,9 +407,11 @@ fn cancel_drops_a_prepared_handle() {
     let error = adapter.cancel(&session, &prepared.prepared_handle, 2).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::NotFound);
 }
+
 //#endregion 🔖️Cancel
 
 //#region 🔖️InstanceBusy
+
 /// 🚧️ Occupy instance 0 with an externally-pending transaction that never clears.
 #[test]
 fn instance_busy_retries_then_precondition_failed() {
@@ -393,9 +431,11 @@ fn instance_busy_retries_then_precondition_failed() {
     let attempts = channel.frame_log().iter().filter(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. })).count();
     assert_eq!(attempts as u32, INSTANCE_BUSY_MAX_ATTEMPTS + 1, "one external prepare plus every retry attempt");
 }
+
 //#endregion 🔖️InstanceBusy
 
 //#region 🔖️GenerationMismatch
+
 /// 🕰️ Force the LOW-LEVEL commit to see a stale base_generation without going through the upfront
 /// expectedRevision recheck (which used the freshly re-read current revision as `expected`) —
 /// bump AFTER our own ReadHistory recheck would run, by scripting a commit-time fault directly.
@@ -412,6 +452,7 @@ fn a_concurrent_edit_between_prepare_and_commit_is_a_revision_conflict() {
     let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }
+
 //#endregion 🔖️GenerationMismatch
 
 /// 📮️ A hub-bound commit whose relay the hub did not acknowledge — silent past its wait, or refused by a terminal link —
@@ -455,6 +496,7 @@ fn a_hub_edit_that_cannot_reach_the_hub_is_refused_by_name() {
 }
 
 //#region 🔖️BudgetExceeded
+
 #[test]
 fn budget_exceeded_fault_maps_to_budget_exceeded_code() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -468,9 +510,11 @@ fn budget_exceeded_fault_maps_to_budget_exceeded_code() {
     assert_eq!(error.code, GatewayErrorCode::BudgetExceeded);
     assert!(error.retryable);
 }
+
 //#endregion 🔖️BudgetExceeded
 
 //#region 🔖️FaultMapping
+
 #[test]
 fn every_fault_code_maps_to_the_right_gateway_error_code() {
     let cases = [
@@ -529,9 +573,11 @@ fn a_terminal_hub_link_refuses_the_agent_by_name() {
     let expired = map_fault(&Fault { code: store::sync::DocumentLinkStatus::LinkExpired.code().into(), message: "expired".into() });
     assert_eq!(expired.code, GatewayErrorCode::PluginUnavailable);
 }
+
 //#endregion 🔖️FaultMapping
 
 //#region 🔖️SagaCompensation
+
 /// ↩️ Member A (instance 0) will fail its commit; its undo (compensation) must be attempted after
 /// member B (instance 1, committed first since commit runs in REVERSE discovery order) succeeds.
 #[test]
@@ -578,9 +624,11 @@ fn compensation_failure_itself_is_reported_as_compensation_failed() {
     let error = adapter.transaction_commit(&principal, &session, &saga_handle, 2).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::CompensationFailed);
 }
+
 //#endregion 🔖️SagaCompensation
 
 //#region 🔖️Misc
+
 #[test]
 fn unknown_capability_id_is_not_found() {
     let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -641,7 +689,7 @@ fn an_omitted_optional_argument_runs_with_its_declared_default() {
     ];
     let mut capability = synthetic_capability("forms.addBlock", &[], ApprovalMode::Never, false);
     capability.input_schema = serde_json::json!({ "type": "object", "properties": { "kind": { "type": "string", "default": "text" }, "title": { "type": "string" } }, "additionalProperties": false });
-    capability.presentation.args = definitions.into_iter().map(|definition| crate::catalog::CapabilityArgSummary { id: definition.id.clone(), label: definition.id.clone(), required: definition.required, definition: Some(definition) }).collect();
+    capability.presentation.args = definitions.into_iter().map(|definition| CapabilityArgSummary { id: definition.id.clone(), label: definition.id.clone(), required: definition.required, definition: Some(definition) }).collect();
     let catalog = single_capability_catalog(capability);
     let session = SessionHandle::new("sess_1");
     let principal = principal(&[]);
@@ -670,9 +718,11 @@ fn transaction_begin_requires_at_least_one_prepared_handle() {
     let error = adapter.transaction_begin(&session, &[], 0).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
 }
+
 //#endregion 🔖️Misc
 
 //#region 💡️Inference
+
 /// 💡️ The general inference route reaches the channel as a REAL `AppCommand::Infer` carrying every
 /// identity field the router needs, and the guest's own answer comes straight back out — the
 /// contract `🏠️workspace`'s `PluginArtifactChannel` implements against `ArtifactInferenceRouter`.
@@ -692,7 +742,7 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
         canonical_payload: b"{\"seed\":7}".to_vec(),
         artifact_id: String::new(),
         artifact_document: None,
-        cancel: crate::actions::InferenceCancel::default(),
+        cancel: InferenceCancel::default(),
     };
     let outcome = adapter.run_inference(3, command.clone()).expect("the mock channel answers a real Inferred frame");
     assert_eq!(outcome.inference_schema, "s.wfc.wfc3d.solve");
@@ -707,13 +757,15 @@ fn run_inference_sends_one_infer_command_and_returns_the_guest_result() {
 fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     for _ in 0..4{channel.bump_generation(0);}
-    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}, revision:7,cancellation_id:"original stale cancellation".into(),work_units:1,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:crate::actions::InferenceCancel::default() };
+    let command = InferCommand { plugin_id: "neutral".into(), artifact_kind: "test.neutral.record".into(), inference_schema: "test.neutral.record.compute".into(), turn: semio_framework_actor::RetainedTurnInput{operation:71,generation:3,epoch:19,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1671,absolute_deadline_us:1000000,fuel:64},grant:semio_framework_value::RetainedCloneGrant{maximum_items:7,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}},retained_policy:semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:129,maximum_release_bytes:4096,maximum_depth:2}, revision:7,cancellation_id:"original stale cancellation".into(),work_units:1,maximum_elapsed_milliseconds:13,canonical_payload:Vec::new(),artifact_id:String::new(),artifact_document:None,cancel:InferenceCancel::default() };
     let error = adapter.run_inference(0, command).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }
+
 //#endregion 💡️Inference
 
 //#region 🔖️UnboundChannelAndResolvableApproval
+
 // 🎫️ slice M4 (audit §6 P0.2 + P0.3). Two things that were silently wrong in the shipped binary:
 // a gateway with no `--folder`/`--hub` ran the whole mutation protocol against a scripted mock with
 // no signal to the caller, and a parked approval could never be decided by anyone.
@@ -802,20 +854,21 @@ fn auto_approve_all_needs_no_human_at_all() {
     assert_eq!(report.status, InvocationStatus::Succeeded);
 }
 
-fn elicitation_slot_answering(response_line: &str) -> crate::transport::ElicitationSlot {
-    let features = Arc::new(crate::protocol::ClientFeatures::default());
+fn elicitation_slot_answering(response_line: &str) -> ElicitationSlot {
+    let features = Arc::new(ClientFeatures::default());
     features.record(Some(&serde_json::json!({ "elicitation": {} })));
-    let lines = Arc::new(crate::transport::StdioLines::new(Box::new(std::io::Cursor::new(response_line.as_bytes().to_vec())), Box::new(Vec::new())));
-    let slot: crate::transport::ElicitationSlot = Arc::new(std::sync::OnceLock::new());
-    let _ = slot.set(Arc::new(crate::transport::ElicitationChannel::new(lines, features)));
+    let lines = Arc::new(StdioLines::new(Box::new(std::io::Cursor::new(response_line.as_bytes().to_vec())), Box::new(Vec::new())));
+    let slot: ElicitationSlot = Arc::new(std::sync::OnceLock::new());
+    let _ = slot.set(Arc::new(ElicitationChannel::new(lines, features)));
     slot
 }
 
-fn accepting_elicitation_slot() -> crate::transport::ElicitationSlot {
+fn accepting_elicitation_slot() -> ElicitationSlot {
     elicitation_slot_answering("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n")
 }
 
-fn declining_elicitation_slot() -> crate::transport::ElicitationSlot {
+fn declining_elicitation_slot() -> ElicitationSlot {
     elicitation_slot_answering("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"decline\"}}\n")
 }
+
 //#endregion 🔖️UnboundChannelAndResolvableApproval

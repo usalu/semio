@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {withNextStorageV1} from "../../🏗️builder/💾️storage/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {withRepositoryArtifactV1} from "../../../../📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
 import storageSchema from "../../🏗️builder/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { createRequire } from "node:module";
@@ -31,7 +32,7 @@ class BuildScript extends BundleScript{async run(segments:string[]):Promise<void
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     for(let index=0;index<segments.length;index+=2)if(!["--port","-p","--hostname","-H"].includes(segments[index]??"")||!segments[index+1])throw Error("Next development accepts only owned listener settings");
-    await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,()=>withNextStorageV1(this.repoRoot,"prototype",this.invocation,async(store,_layout,temporary)=>{
+    await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),()=>withNextStorageV1(this.repoRoot,"prototype",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async(store,_layout,temporary)=>{
     const typescript = join(temporary, "tsconfig.json"), require = createRequire(join(PACKAGE_DIR, "package.json"));
     await writeFile(typescript, JSON.stringify({ extends: join(PACKAGE_DIR, "tsconfig.json"), compilerOptions: { baseUrl: PACKAGE_DIR, strict: true, incremental: true, tsBuildInfoFile: join(temporary, "state.tsbuildinfo") }, include: [join(PACKAGE_DIR, "app/**/*.ts"), join(PACKAGE_DIR, "app/**/*.tsx"), join(PACKAGE_DIR, "lib/**/*.ts"), join(temporary, "next-env.d.ts"), join(temporary, "types/**/*.ts")], exclude: [join(PACKAGE_DIR, "node_modules"), join(PACKAGE_DIR, "dist"), join(PACKAGE_DIR, "📜️script.ts")] }));
     try { await runOwnedCommand("node", ["--experimental-transform-types", require.resolve("next/dist/bin/next"), "dev", ...segments], PACKAGE_DIR, "repo-coordinator:dev", 0, { env: scriptInvocationEnvironment(this.invocation, { ...devToolingEnv(),...store.environment,SEMIO_BUILD_MODE:"prototype", SEMIO_NEXT_TYPESCRIPT_PROJECT: relative(PACKAGE_DIR, typescript).replaceAll("\\", "/"), SEMIO_NEXT_BUILD_DIRECTORY: relative(PACKAGE_DIR, temporary).replaceAll("\\", "/") }), signal: this.invocation.control.signal }); }
@@ -44,16 +45,16 @@ class DevScript extends BundleScript {
 class StartScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const mode=readBuildMode(process.env.SEMIO_BUILD_MODE);
-    await withNextStorageV1(this.repoRoot,mode,this.invocation,async(store,layout)=>{
-    const standalone=requireNativeStoragePathV1(store.root,join(layout.output,"standalone")),environment:Record<string,string|undefined>={...devToolingEnv(),...store.environment,HOSTNAME:"0.0.0.0"};await withRepositoryArtifactV1(this.repoRoot,{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:storageSchema.definitions.Protocol.const.maximumOutputBytes,maximumFiles:storageSchema.definitions.Protocol.const.maximumOutputFiles},this.invocation,async artifact=>{
+    await withNextStorageV1(this.repoRoot,mode,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async(store,layout)=>{
+    const standalone=requireNativeStoragePathV1(store.root,join(layout.output,"standalone")),environment:Record<string,string|undefined>={...devToolingEnv(),...store.environment,HOSTNAME:"0.0.0.0"};await withRepositoryArtifactV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,request:{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:storageSchema.definitions.Protocol.const.maximumOutputBytes,maximumFiles:storageSchema.definitions.Protocol.const.maximumOutputFiles}},reader=>withRepositoryArtifactTaskV1(reader,this.invocation,async artifact=>{
     for (let index = 0; index < segments.length; index += 2) {
       const key = segments[index], value = segments[index + 1];
       if (!value || !key || !["--port", "-p", "--hostname", "-H"].includes(key)) throw Error("Expected start [--port <port>] [--hostname <hostname>]");
       environment[key === "--port" || key === "-p" ? "PORT" : "HOSTNAME"] = value;
     }
     if(!artifact.files.includes("standalone/server.js"))throw Error("Original Next standalone entry required");
-    await artifact.recheck();await runOwnedCommand("node", [requireNativeStoragePathV1(store.root,join(standalone,"server.js"))], standalone, "repo-coordinator:start", 0, { env: environment, signal: this.invocation.control.signal });
-    });
+    await artifact.recheck();await runOwnedCommand("node", [requireNativeStoragePathV1(store.root,join(standalone,"server.js"))], standalone, "repo-coordinator:start", 0, { env: environment, signal: artifact.control.signal });
+    }));
     });
   }
 }

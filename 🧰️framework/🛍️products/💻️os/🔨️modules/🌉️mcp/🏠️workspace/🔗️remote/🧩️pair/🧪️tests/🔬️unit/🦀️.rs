@@ -1,14 +1,43 @@
+//! 🧱️ Pair_tests of the hub-remote crate: Hub remote binding, component assets and the native binding driver.
 
-use super::*;
-use crate::workspace::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubStreamObservation};
+use semio_framework_async::CancelToken;
+use semio_framework_async::OperationContext;
 use semio_framework_async::TraceId;
-use semio_framework_os_kernel::os_directory::{DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentView, MemberSpaceViewV1, MemberView, RebootstrapRequired};
+use semio_framework_os_kernel::os_directory::ArtifactFrontier;
+use semio_framework_os_kernel::os_directory::ArtifactHash;
+use semio_framework_os_kernel::os_directory::DirectorySpaceKind;
+use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
+use semio_framework_os_kernel::os_directory::DirectorySpaceVisibility;
+use semio_framework_os_kernel::os_directory::DocumentDescriptor;
+use semio_framework_os_kernel::os_directory::DocumentFrontier;
+use semio_framework_os_kernel::os_directory::DocumentOwner;
+use semio_framework_os_kernel::os_directory::DocumentScope;
+use semio_framework_os_kernel::os_directory::DocumentView;
+use semio_framework_os_kernel::os_directory::MemberSpaceViewV1;
+use semio_framework_os_kernel::os_directory::MemberView;
+use semio_framework_os_kernel::os_directory::RebootstrapRequired;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, AtomicUsize};
-use std::sync::{Arc, Mutex};
+use std::collections::VecDeque;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
+use crate::remote::{AuthorizedDescriptorSnapshot, AuthorizedDocumentView, HubRemoteBinding, HubStreamObservation, base64_encode_exact, canonical_checkpoint_resource_text, checked_base64_length, checkpoint_resource_uri, parse_checkpoint_resource_uri};
+use semio_framework_os_mcp_hub_pair::binding_errors::HubBindingError;
+use semio_framework_os_mcp_hub_pair::pair::{CanonicalPairActorState, CanonicalPairBody, CanonicalPairFetchRequest, CanonicalPairHttpResponse, CanonicalPairMountError, CanonicalPairMountIdentity, CanonicalPairTransport, HUB_PAIR_CACHE_MAX_ENTRIES, HUB_PAIR_MAX_VERIFIED_BYTES, HUB_PAIR_MEDIA_TYPE, PairBegin, PairCompletion, canonical_etag, checkpoint, maximum_wire_bytes, wait_for_published_receipt};
+use semio_framework_os_mcp_schema::schema::UNTRUSTED_CONTENT_NOTICE;
+#[cfg(test)]
+use semio_framework_os_mcp_hub_pair::pair::{decode_fixture_for_test, test_wiped_bytes};
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
+    serde_json::from_str(fixture_text("../../../🏠️workspace/🔗️remote/🧩️pair/🧪️tests/🧫️fixtures/🔣️.json")).expect("canonical pair cache fixture")
 }
 
 fn decode_hex(value: &str) -> Vec<u8> {
@@ -330,27 +359,27 @@ async fn canonical_pair_actor_keys_cache_and_mount_to_one_binding_and_evicts_by_
 #[tokio::test]
 async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_never_crosses_scope() {
     let contract = fixture();
-    let resource_contract: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
+    let resource_contract: serde_json::Value = serde_json::from_str(fixture_text("../../../🏠️workspace/🧪️tests/🧫️fixtures/🔐️canonical-checkpoint-resource/🔣️.json")).unwrap();
     let wire = decode_hex(contract["valid"]["wireHex"].as_str().unwrap());
     let etag = contract["valid"]["etag"].as_str().unwrap().to_string();
     let scope = DocumentScope::new(contract["binding"]["spaceId"].as_str().unwrap(), contract["binding"]["documentId"].as_str().unwrap());
-    assert_eq!(super::super::checkpoint_resource_uri(&scope), resource_contract["resource"]["uri"]);
-    assert_eq!(super::super::parse_checkpoint_resource_uri(resource_contract["resource"]["uri"].as_str().unwrap()), Some(scope.clone()));
+    assert_eq!(checkpoint_resource_uri(&scope), resource_contract["resource"]["uri"]);
+    assert_eq!(parse_checkpoint_resource_uri(resource_contract["resource"]["uri"].as_str().unwrap()), Some(scope.clone()));
 
     let binding = ready_binding(i64::MAX);
     let transport = TestTransport::new(vec![response(wire.clone(), etag.clone())]);
     let mount = binding.mount_canonical_pair(&transport, &scope, Some(9), None, &context(10_000), 1, 1).await.unwrap();
-    let text = binding.project_mounted_canonical_pair(&mount, 1, super::super::canonical_checkpoint_resource_text).unwrap();
+    let text = binding.project_mounted_canonical_pair(&mount, 1, canonical_checkpoint_resource_text).unwrap();
     let actual: serde_json::Value = serde_json::from_str(&text).unwrap();
     let mut expected = resource_contract["resource"]["value"].clone();
     expected["authorityGeneration"] = mount.identity.authority_generation.into();
     assert_eq!(actual, expected);
     let pack = decode_hex(contract["valid"]["packHex"].as_str().unwrap());
     let spr = decode_hex(contract["valid"]["sprHex"].as_str().unwrap());
-    assert_eq!(actual["untrusted"]["content"]["packBase64"], super::super::base64_encode_exact(&pack, super::super::checked_base64_length(pack.len()).unwrap()).unwrap());
-    assert_eq!(actual["untrusted"]["content"]["sprBase64"], super::super::base64_encode_exact(&spr, super::super::checked_base64_length(spr.len()).unwrap()).unwrap());
+    assert_eq!(actual["untrusted"]["content"]["packBase64"], base64_encode_exact(&pack, checked_base64_length(pack.len()).unwrap()).unwrap());
+    assert_eq!(actual["untrusted"]["content"]["sprBase64"], base64_encode_exact(&spr, checked_base64_length(spr.len()).unwrap()).unwrap());
     assert_eq!(actual["untrusted"]["provenance"]["revision"]["contentSha256"], framework_hash::sha256_hex(&[pack.as_slice(), spr.as_slice()].concat()));
-    assert_eq!(actual["untrusted"]["notice"], crate::schema::UNTRUSTED_CONTENT_NOTICE);
+    assert_eq!(actual["untrusted"]["notice"], UNTRUSTED_CONTENT_NOTICE);
 
     let other_scope = DocumentScope::new(contract["binding"]["sameDocumentOtherSpace"].as_str().unwrap(), scope.document_id.clone());
     let denied_transport = TestTransport::new(Vec::new());
@@ -365,7 +394,7 @@ async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_
         let release = Arc::new(std::sync::Barrier::new(2));
         binding.pause_next_canonical_pair_mount_return(reached.clone(), release.clone());
         let contender = binding.clone();
-        let projected = std::thread::spawn(move || contender.project_mounted_canonical_pair(&mount, 1, super::super::canonical_checkpoint_resource_text));
+        let projected = std::thread::spawn(move || contender.project_mounted_canonical_pair(&mount, 1, canonical_checkpoint_resource_text));
         reached.wait();
         let wiped_before = test_wiped_bytes();
         if revoke {
@@ -388,7 +417,7 @@ async fn authenticated_hub_checkpoint_resource_projects_exact_verified_pair_and_
         catalog_generation: Some(9),
     };
     let frontier = ArtifactFrontier { document_id: scope.document_id, head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash::new([0; 32]) };
-    assert_eq!(super::super::canonical_checkpoint_resource_text(&identity, &frontier, &vec![0; HUB_PAIR_MAX_VERIFIED_BYTES + 1], &[]).unwrap_err(), CanonicalPairMountError::ResourceLimit);
+    assert_eq!(canonical_checkpoint_resource_text(&identity, &frontier, &vec![0; HUB_PAIR_MAX_VERIFIED_BYTES + 1], &[]).unwrap_err(), CanonicalPairMountError::ResourceLimit);
 }
 
 #[tokio::test]

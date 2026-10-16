@@ -1,9 +1,19 @@
+//! 🧱️ Transport_quick of the http-transport crate: The Streamable HTTP and bridge websocket transport.
 
-use super::*;
-use crate::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, NullBackend};
-use crate::workspace::GatewayBackends;
 use std::io::Cursor;
-
+use std::io::Write;
+use std::net::TcpListener;
+use std::net::TcpStream;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::transport::{BridgeSession, EventLog, FixedByteCredits, FixedOwnerRing, HTTP_CONNECTION_CAPACITY, HTTP_HEADER_BYTES, HTTP_IO_PAGE_BYTES, HTTP_REQUEST_BYTES, HTTP_REQUEST_LINE_BYTES, HTTP_RESPONSE_BYTES, HTTP_SLOWLORIS_MS, HttpAdmission, HttpAfterWrite, HttpConnection, HttpConnectionKey, HttpConnectionPhase, HttpTerminalPolicy, HttpTerminalReason, HttpTransportMode, HttpTransportOptions, HttpTransportState, HttpTurn, OwnedHeader, ParsedHttpHead, WEBSOCKET_FRAME_BYTES, constant_time_eq, decode_client_websocket_frame, dispatch_owned_bridge_handshake, encode_server_websocket_frame, find_crlf_bounded, generation_is_current, is_loopback_or_null, origin_allowed, websocket_accept, websocket_key_nonce};
+use semio_framework_os_mcp_bridge::session::BridgeHandle;
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
+use semio_framework_os_mcp_consent::elicitation::{ELICITATION_TIMEOUT_MS, ElicitationAction, ElicitationChannel, ElicitationClock, ElicitationUnavailable, StdioLines, SystemElicitationClock};
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
+use semio_framework_os_mcp_wire::protocol::{ClientFeatures, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcResponse, NullBackend};
+use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 /// 📝️ An owned, cloneable `Write` sink — `StdioTransport` now takes its output stream by value
 /// (`'static`, because the elicitation channel shares it), so a test keeps its own handle on the
@@ -37,6 +47,7 @@ fn fresh_server() -> McpServer {
 }
 
 //#region 🔖️Stdio
+
 #[test]
 fn one_request_line_produces_exactly_one_response_line_on_stdout() {
     let input = Cursor::new(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}\n".to_vec());
@@ -101,9 +112,11 @@ fn eof_ends_the_loop_cleanly() {
     assert!(transport.serve(fresh_server()).is_ok());
     assert!(output.is_empty());
 }
+
 //#endregion 🔖️Stdio
 
 //#region 🔖️OriginAndBearerUnit
+
 #[test]
 fn loopback_and_null_origins_are_always_allowed() {
     assert!(is_loopback_or_null("null"));
@@ -126,9 +139,11 @@ fn constant_time_eq_matches_regular_equality() {
     assert!(!constant_time_eq(b"secret", b"secre1"));
     assert!(!constant_time_eq(b"secret", b"longer-secret"));
 }
+
 //#endregion 🔖️OriginAndBearerUnit
 
 //#region 🧵️OwnedHttpAuthority
+
 #[test]
 fn connection_cap_plus_one_returns_the_exact_owner_without_mutating_fifo() {
     let mut ring = FixedOwnerRing::<u64, HTTP_CONNECTION_CAPACITY>::new();
@@ -258,7 +273,7 @@ fn malformed_and_unsupported_open_bridge_binary_frames_retain_exact_raw_ingress(
     for (payload, reason) in [
         (vec![99], HttpTerminalReason::Malformed),
         (
-            crate::bridge::ShellToGateway::Hello { bridge_version: crate::bridge::BRIDGE_VERSION, shell_kind: crate::bridge::ShellKind::React, shell_session_id: "s".into(), principal_actor: "p".into(), flags: crate::bridge::BridgeFlags::NONE }
+            ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::React, shell_session_id: "s".into(), principal_actor: "p".into(), flags: BridgeFlags::NONE }
                 .encode(),
             HttpTerminalReason::Unsupported,
         ),
@@ -289,7 +304,7 @@ fn malformed_and_unsupported_open_bridge_binary_frames_retain_exact_raw_ingress(
 fn incremental_bridge_decode_cancellation_and_stale_generation_retain_exact_raw_owner() {
     let (mut state, _peer) = state_with_connection();
     let (id, outbox) = state.bridge.register();
-    let payload = crate::bridge::ShellToGateway::ShellState { revision: 1, state: vec![4; HTTP_IO_PAGE_BYTES + 1] }.encode();
+    let payload = ShellToGateway::ShellState { revision: 1, state: vec![4; HTTP_IO_PAGE_BYTES + 1] }.encode();
     let raw = masked_client_frame(0x2, &payload, true);
     state.request_credits.try_acquire(raw.len(), ()).unwrap();
     let connection = state.connections[0].as_mut().unwrap();
@@ -401,7 +416,7 @@ fn state_with_connection() -> (HttpTransportState, TcpStream) {
     listener.set_nonblocking(true).unwrap();
     let options = HttpTransportOptions::fixture("test-token").bind_addr(address);
     let events = Arc::new(Mutex::new(EventLog::default()));
-    let bridge = crate::bridge::BridgeHandle::new();
+    let bridge = BridgeHandle::new();
     let mut state = HttpTransportState::new(listener, Some(fresh_server()), &options, events, bridge);
     state.io_cursor = 1;
     state.connections[0] = Some(HttpConnection {
@@ -471,7 +486,7 @@ fn owned_bridge_head(keys: &[&str]) -> ParsedHttpHead {
 /// 125 bytes, `126` + `u16` up to 65 535, `127` + `u64` beyond. The bridge's own frames routinely
 /// exceed the inline form (a `ShellState` page alone is 16 KiB), so a 125-byte-only helper could
 /// never build the very ingress these tests drive.
-pub(super) fn masked_client_frame(opcode: u8, payload: &[u8], fin: bool) -> Vec<u8> {
+pub(crate) fn masked_client_frame(opcode: u8, payload: &[u8], fin: bool) -> Vec<u8> {
     let mask = [1u8, 2, 3, 4];
     let mut frame = vec![(if fin { 0x80 } else { 0 }) | opcode];
     match payload.len() {
@@ -489,15 +504,17 @@ pub(super) fn masked_client_frame(opcode: u8, payload: &[u8], fin: bool) -> Vec<
     frame.extend(payload.iter().enumerate().map(|(index, byte)| byte ^ mask[index % 4]));
     frame
 }
+
 //#endregion 🧵️OwnedHttpAuthority
 
 //#region 🔖️Elicitation
+
 // 🎫️ slice M4 (audit §6 P0.2): `elicitation/create` is a server→client REQUEST issued from inside a
 // tool call, while the serve loop is suspended in `dispatch`. These tests drive the real duplex
 // channel: the request really lands on the output stream, and a client line that is NOT the answer
 // is deferred back onto the serve loop rather than dropped.
 fn elicitation_over(client_lines: &str, advertised: bool) -> (ElicitationChannel, SharedWriter, Arc<StdioLines>) {
-    let features = Arc::new(crate::protocol::ClientFeatures::default());
+    let features = Arc::new(ClientFeatures::default());
     features.record(advertised.then(|| serde_json::json!({ "elicitation": {} })).as_ref());
     let output = SharedWriter::default();
     let lines = Arc::new(StdioLines::new(Box::new(Cursor::new(client_lines.as_bytes().to_vec())), Box::new(output.clone())));
@@ -566,15 +583,15 @@ struct SteppingClock {
     reads: std::sync::atomic::AtomicU64,
 }
 
-impl crate::transport::ElicitationClock for SteppingClock {
+impl ElicitationClock for SteppingClock {
     fn now_ms(&self) -> u64 {
         self.reads.fetch_add(1, std::sync::atomic::Ordering::SeqCst) * self.step_ms
     }
 }
 
-fn silent_client_elicitation(timeout_ms: u64, clock: Box<dyn crate::transport::ElicitationClock>) -> (ElicitationChannel, std::sync::mpsc::Sender<u8>) {
+fn silent_client_elicitation(timeout_ms: u64, clock: Box<dyn ElicitationClock>) -> (ElicitationChannel, std::sync::mpsc::Sender<u8>) {
     let (keep_open, gate) = std::sync::mpsc::channel();
-    let features = Arc::new(crate::protocol::ClientFeatures::default());
+    let features = Arc::new(ClientFeatures::default());
     features.record(Some(&serde_json::json!({ "elicitation": {} })));
     let lines = Arc::new(StdioLines::new(Box::new(std::io::BufReader::new(SilentClient { gate })), Box::new(SharedWriter::default())));
     (ElicitationChannel::new(lines, features).with_deadline(timeout_ms, clock), keep_open)
@@ -583,14 +600,14 @@ fn silent_client_elicitation(timeout_ms: u64, clock: Box<dyn crate::transport::E
 #[test]
 fn a_silent_client_times_out_instead_of_wedging_the_agent_forever() {
     let clock = Box::new(SteppingClock { step_ms: 1_000, reads: std::sync::atomic::AtomicU64::new(0) });
-    let (channel, keep_open) = silent_client_elicitation(crate::transport::ELICITATION_TIMEOUT_MS, clock);
+    let (channel, keep_open) = silent_client_elicitation(ELICITATION_TIMEOUT_MS, clock);
     assert_eq!(channel.request_boolean("delete everything?", "Delete Selection"), Err(ElicitationUnavailable::TimedOut), "the wait must end on the injected clock passing the deadline, not on an answer");
     drop(keep_open);
 }
 
 #[test]
 fn the_elicitation_deadline_is_real_wall_clock_not_only_an_injected_one() {
-    let (channel, keep_open) = silent_client_elicitation(120, Box::new(crate::transport::SystemElicitationClock::default()));
+    let (channel, keep_open) = silent_client_elicitation(120, Box::new(SystemElicitationClock::default()));
     let started = std::time::Instant::now();
     assert_eq!(channel.request_boolean("proceed?", "Proceed"), Err(ElicitationUnavailable::TimedOut));
     assert!(started.elapsed() >= std::time::Duration::from_millis(120), "the wait must actually spend its budget, not return early");
@@ -599,7 +616,7 @@ fn the_elicitation_deadline_is_real_wall_clock_not_only_an_injected_one() {
 
 #[test]
 fn the_client_feature_mirror_records_exactly_what_was_advertised() {
-    let features = crate::protocol::ClientFeatures::default();
+    let features = ClientFeatures::default();
     features.record(Some(&serde_json::json!({ "elicitation": {}, "roots": { "listChanged": true } })));
     assert!(features.elicitation.load(std::sync::atomic::Ordering::SeqCst));
     assert!(features.roots.load(std::sync::atomic::Ordering::SeqCst));
@@ -607,4 +624,5 @@ fn the_client_feature_mirror_records_exactly_what_was_advertised() {
     features.record(None);
     assert!(!features.elicitation.load(std::sync::atomic::Ordering::SeqCst), "a re-handshake with no capabilities clears the mirror");
 }
+
 //#endregion 🔖️Elicitation

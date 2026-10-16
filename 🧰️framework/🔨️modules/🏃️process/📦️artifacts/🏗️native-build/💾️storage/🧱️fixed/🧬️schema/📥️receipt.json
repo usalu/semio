@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt",
+    "before",
+    "after",
+    "expected"
+  ],
+  "properties": {
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "dev",
+        "ino",
+        "size",
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32"
+          ]
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1099511627776
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "dev",
+        "ino",
+        "size",
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32"
+          ]
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1099511627776
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        }
+      }
+    },
+    "before": {
+      "type": "string",
+      "maxLength": 4096
+    },
+    "after": {
+      "type": "string",
+      "maxLength": 4096
+    }
+  }
+}

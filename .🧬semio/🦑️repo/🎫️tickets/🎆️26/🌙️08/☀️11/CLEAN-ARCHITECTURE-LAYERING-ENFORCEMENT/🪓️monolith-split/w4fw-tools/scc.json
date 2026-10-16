@@ -1,0 +1,11 @@
+[
+[
+"m_argschema::arg_schema_json_schema",
+"m_argschema::ActionArgDef",
+"m_argschema::ArgSchema"
+],
+[
+"kernel::UiTurnPatchesIntoIter",
+"kernel::UiTurnPatches"
+]
+]

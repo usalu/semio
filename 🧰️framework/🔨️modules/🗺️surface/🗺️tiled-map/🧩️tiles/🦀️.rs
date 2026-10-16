@@ -3,10 +3,10 @@
 //! Mounted as `pub mod tiles` of the tiled-map root.
 
 // #region 🔖️Tiles
-use super::canvas::camera::{Camera, Viewport};
+use canvas::camera::{Camera, Viewport};
 use super::map_viewport;
 use super::projection::WORLD_HALF;
-use super::{pick_tile_z_target, Point, MAX_VISIBLE_TILE_REQUESTS};
+use super::{map_view_facts, MapPolicy, Point, MAX_VISIBLE_TILE_REQUESTS};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct VisibleTile {
@@ -63,8 +63,9 @@ impl VisibleTileCursor {
     }
 }
 
-pub fn pick_zoom(camera: &Camera, viewport: &Viewport, forced_lod_id: Option<&str>) -> u32 {
-    let mut z = pick_tile_z_target(camera, viewport, forced_lod_id);
+/// 🧷️ Raster tile z for the viewport: the policy's target for the pinned band (if any), lowered until the visible set fits [`MAX_VISIBLE_TILE_REQUESTS`].
+pub fn pick_zoom(camera: &Camera, viewport: &Viewport, policy: &dyn MapPolicy, pinned_band: Option<&str>) -> u32 {
+    let mut z = policy.tile_z_target(map_view_facts(camera, viewport, policy), pinned_band);
     while z > 0 && visible_tile_cursor(camera, viewport, z).remaining() > MAX_VISIBLE_TILE_REQUESTS {
         z -= 1;
     }

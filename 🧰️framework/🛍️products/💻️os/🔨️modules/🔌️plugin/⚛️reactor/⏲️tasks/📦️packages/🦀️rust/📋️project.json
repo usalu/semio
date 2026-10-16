@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-reactor-tasks-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

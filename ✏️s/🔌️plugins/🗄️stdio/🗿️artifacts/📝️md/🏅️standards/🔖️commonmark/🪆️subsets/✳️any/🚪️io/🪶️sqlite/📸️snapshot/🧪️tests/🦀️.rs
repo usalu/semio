@@ -1,13 +1,21 @@
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_os_kernel::{sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotPhase};
+#[allow(unused_imports)]
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::*;
+#[allow(unused_imports)]
+use semio_framework_value::ValueError;
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::BTreeSet};
+#[allow(unused_imports)]
+use crate::{standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::OwnedNodes, standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::RetireNode};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::artifact::NativeEncodingBound, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::reconstruct_text, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow};
+use crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::{invalid, start, semantic};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_commonmark::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},os_store::serialization::ArtifactSqliteSnapshotHost};
 
-std::thread_local!{static MD_RECONSTRUCT_ACTIVE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};}
-pub(crate) struct MdReconstructTestScope(bool);
-impl MdReconstructTestScope{pub(crate) fn enter()->Self{Self(MD_RECONSTRUCT_ACTIVE.with(|active|active.replace(true)))}}
-impl Drop for MdReconstructTestScope{fn drop(&mut self){MD_RECONSTRUCT_ACTIVE.with(|active|active.set(self.0));}}
-
-fn fixture()->MdSnapshot{semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn fixture()->MdSnapshot{semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn roundtrip(snapshot:&MdSnapshot)->MdSnapshot{let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let bytes=export_sqlite_database(&database,limits,&mut |_|true).unwrap();let database=import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap()}
 
 #[test]
@@ -23,7 +31,7 @@ fn sqlite_snapshot_md_owned_guard_refuses_different_permitted_literal_tree(){
 }
 
 #[test]
-fn sqlite_snapshot_md_all_semantic_variants_and_optional_states(){let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(actual,serde_json::from_str::<serde_json::Value>(include_str!("🧫️fixtures/🔣️.json")).unwrap());assert_eq!(roundtrip(&MdSnapshot{schema:"".into(),blocks:Vec::new()}),MdSnapshot{schema:"".into(),blocks:Vec::new()});}
+fn sqlite_snapshot_md_all_semantic_variants_and_optional_states(){let snapshot=fixture();assert_eq!(roundtrip(&snapshot),snapshot);let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();assert_eq!(actual,serde_json::from_str::<serde_json::Value>(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap());assert_eq!(roundtrip(&MdSnapshot{schema:"".into(),blocks:Vec::new()}),MdSnapshot{schema:"".into(),blocks:Vec::new()});}
 
 #[test]
 fn sqlite_snapshot_md_independent_sqlite_queries_and_edits_tree_entities(){
@@ -52,13 +60,13 @@ fn sqlite_snapshot_commonmark_logical_erased_records_preserve_1024_tree_levels()
 
 
 #[test]
-fn sqlite_snapshot_commonmark_neutral_exact_coordinate_guard_and_identity(){#[derive(value_derive::FromValue)]#[value(rename_all="camelCase")]struct Coordinates{sqlite_dialect:semio_framework_artifact_reference::ArtifactDialect,invalid_sqlite_dialects:Vec<semio_framework_artifact_reference::ArtifactDialect>}let coordinates:Coordinates=semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🧭️dialects/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();for dialect in coordinates.invalid_sqlite_dialects{assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}let mut changed=database.clone();changed.table_mut("md_document").unwrap().rows[0].values[1]=SqliteValue::Text("different owned schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&changed,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());}
+fn sqlite_snapshot_commonmark_neutral_exact_coordinate_guard_and_identity(){#[derive(value_derive::FromValue)]#[value(rename_all="camelCase")]struct Coordinates{sqlite_dialect:semio_framework_artifact_reference::ArtifactDialect,invalid_sqlite_dialects:Vec<semio_framework_artifact_reference::ArtifactDialect>}let coordinates:Coordinates=semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧭️dialects/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();for dialect in coordinates.invalid_sqlite_dialects{assert!(snapshot.validate_sqlite_snapshot_subset(&dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}let mut changed=database.clone();changed.table_mut("md_document").unwrap().rows[0].values[1]=SqliteValue::Text("different owned schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&changed,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&coordinates.sqlite_dialect,&database,&mut SqliteSnapshotControl::new(&mut |_|false,limits)).is_err());}
 
 #[derive(value_derive::FromValue)]
 struct DepthCase{depth:usize,leaf:String}
-fn depth_case()->DepthCase{semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/📏️depth/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+fn depth_case()->DepthCase{semio_framework_pack_json::from_json_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️depth/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 
-fn cohort()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/📏️cohort/🔣️.json")).unwrap()}
+fn cohort()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/📏️cohort/🔣️.json")).unwrap()}
 
 #[test]
 fn sqlite_snapshot_md_authored_domain_census_matches_every_independent_table(){
@@ -97,7 +105,11 @@ fn sqlite_snapshot_md_native_output_cancels_inside_wide_empty_list_census(){
 #[test]
 fn sqlite_snapshot_md_native_decode_cancels_inside_owned_wide_empty_item_frontier(){
  use store::sqlite_snapshot::SqliteSnapshotPhase;let cases=cohort();let count=cases["wideEmptyItems"].as_u64().unwrap()as usize;let snapshot=MdSnapshot{schema:"literal wide list decode".into(),blocks:vec![MdBlock::List{ordered:false,start:Some(u32::MAX),tight:true,items:(0..count).map(|_|Vec::new()).collect()}]};let payloads=[store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)),store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot))];
- for payload in payloads{let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if MD_RECONSTRUCT_ACTIVE.with(std::cell::Cell::get)&&event.phase==SqliteSnapshotPhase::DecodeNative&&event.total==count&&event.completed>=cases["cancelAfter"].as_u64().unwrap()as usize&&event.completed<event.total{interior=true;false}else{true}},SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior,"owned reconstruction, independently of parsing and binding, must advance its known empty-item frontier");}snapshot.retire_sqlite_snapshot();
+ let after=cases["cancelAfter"].as_u64().unwrap()as usize;
+ for payload in payloads{
+  let mut events=Vec::new();let _=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative{events.push((event.completed,event.total))}true},SqliteDatabaseLimits::default()), native_owner));
+  let end=events.iter().rposition(|event|*event==(count,count)).expect("owned reconstruction must complete its known empty-item frontier");let start=events[..end].iter().rposition(|event|*event==(0,count)).expect("owned reconstruction must begin its known empty-item frontier");
+  let mut seen=0usize;let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase!=SqliteSnapshotPhase::DecodeNative{return true}let index=seen;seen+=1;if index>start&&index<end&&event.total==count&&event.completed>=after&&event.completed<event.total{interior=true;false}else{true}},SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior,"owned reconstruction, independently of parsing and binding, must advance its known empty-item frontier");}snapshot.retire_sqlite_snapshot();
 }
 
 #[test]
@@ -116,7 +128,7 @@ fn sqlite_snapshot_commonmark_authored_grammar_recognizes_all_typed_logical_kind
 #[test]
 fn sqlite_snapshot_md_whole_native_control_keeps_deep_fields_and_interior_cancellation(){
  use store::sqlite_snapshot::SqliteSnapshotPhase;
- let cases:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛬️controlled.json")).unwrap();let depth=cases["depth"].as_u64().unwrap()as usize;let mut inline=MdInline::Text{text:"exact literal 世界".into()};for _ in 0..depth{inline=MdInline::Emphasis{inlines:vec![inline]};}let mut block=MdBlock::List{ordered:false,start:Some(cases["orderedStart"].as_u64().unwrap()as u32),tight:false,items:vec![vec![],vec![MdBlock::Paragraph{inlines:vec![inline]}]]};for _ in 0..depth{block=MdBlock::BlockQuote{blocks:vec![block]};}
+ let cases:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🛬️controlled.json")).unwrap();let depth=cases["depth"].as_u64().unwrap()as usize;let mut inline=MdInline::Text{text:"exact literal 世界".into()};for _ in 0..depth{inline=MdInline::Emphasis{inlines:vec![inline]};}let mut block=MdBlock::List{ordered:false,start:Some(cases["orderedStart"].as_u64().unwrap()as u32),tight:false,items:vec![vec![],vec![MdBlock::Paragraph{inlines:vec![inline]}]]};for _ in 0..depth{block=MdBlock::BlockQuote{blocks:vec![block]};}
  let snapshot=MdSnapshot{schema:"owned logical schema 世界".repeat(cases["schemaRepeat"].as_u64().unwrap()as usize),blocks:vec![block]};let limits=SqliteDatabaseLimits::default();
  for payload in[store::io_schema::IoPayload::Binary(pack::snapshot::ArtifactPack::encode_pack(&snapshot)),store::io_schema::IoPayload::Text(pack::snapshot::ArtifactDsl::print_dsl(&snapshot))]{
   let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(restored.schema,snapshot.schema);let mut block=&restored.blocks[0];let mut count=0;while let MdBlock::BlockQuote{blocks}=block{count+=1;block=&blocks[0];}assert_eq!(count,depth);let MdBlock::List{ordered,start,tight,items}=block else{panic!()};assert!(!ordered&&!tight);assert_eq!(*start,Some(u32::MAX));assert!(items[0].is_empty());restored.retire_sqlite_snapshot();
@@ -176,7 +188,7 @@ fn norm_independent_complete_extent(source:&MdSnapshot)->serde_json::Value{
 }
 #[test]
 fn sqlite_snapshot_md_complete_independent_native_semantic_limits(){
- use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️semantic.json")).unwrap();
+ use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🎛️semantic.json")).unwrap();
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let extent=norm_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);let limits=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:27,max_columns:4,..SqliteDatabaseLimits::default()};let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),source);
   for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
    for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:26,..limits},SqliteDatabaseLimits{max_columns:3,..limits}]{assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"relational copied limits {short:?}");assert!(MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
@@ -186,4 +198,9 @@ fn sqlite_snapshot_md_complete_independent_native_semantic_limits(){
 #[test]
 fn sqlite_snapshot_md_complete_independent_copied_columns_admission(){
  use store::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::*};let source=fixture();let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let limits=SqliteDatabaseLimits{max_columns:3,..SqliteDatabaseLimits::default()};assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(MdSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"preflight copied columns {encoding:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"encoder copied columns {encoding:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| MdSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"decoder copied columns {encoding:?}");}
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

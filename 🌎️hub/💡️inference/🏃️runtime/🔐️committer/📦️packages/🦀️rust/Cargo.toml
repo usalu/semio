@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-inference-committer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Retained approval committer for composed-map proposals"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-inference-committer"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-inference = { workspace = true }
+semio-hub-inference-ledger = { workspace = true }
+semio-hub-inference-runtime-contract = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-async = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-hub-inference-binding = { workspace = true }
+protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+
+[dev-dependencies]

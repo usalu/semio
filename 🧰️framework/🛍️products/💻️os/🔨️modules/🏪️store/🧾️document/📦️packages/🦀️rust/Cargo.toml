@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-document"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Document hydration, history and the mounted pack of the Store"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-document"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-codec-registry = { path = "../../../📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-runtime = { path = "../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-member-open = { path = "../../../🧩️composition/🚪️open/📦️packages/🦀️rust" }
+semio-framework-os-store-owned-schema-decode = { path = "../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]

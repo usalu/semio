@@ -31,9 +31,11 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// SDK default holds), and it asks the broker for document write access because `LayoutPlayApp`
 /// persists edits back to the open document. No quota declared: layout's ~20 `Effect` call sites
 /// (`DispatchAction`/`DownloadMediaExport`) are per-turn UI/export effects with no evidence of
-/// long-running computation, large held buffers, or high-frequency timers.
+/// long-running computation, large held buffers, or high-frequency timers. `.asset(…)` declares the fifteen built-in text
+/// fonts as package assets the host preloads into `Event::InstanceOpen.assets` (see `LayoutPlayApp::default`, which installs
+/// them into the layout engine when an instance opens).
 pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
-    PluginBuilder::<_, LayoutApps>::new("layout")
+    let mut builder = PluginBuilder::<_, LayoutApps>::new("layout")
         .label("Layout")
         .version("0.1.0")
         .package_id("semio:layout")
@@ -44,8 +46,11 @@ pub fn plugin() -> Result<Plugin<LayoutApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<crate::viewer::layout::LayoutViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::layout::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
-        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist layout edits to the open document".into(), optional: false })
-        .try_build()
+        .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist layout edits to the open document".into(), optional: false });
+    for declaration in crate::editor::text_font_asset_declarations() {
+        builder = builder.asset(declaration);
+    }
+    builder.try_build()
 }
 
 //#region 🧪️SurfaceTests

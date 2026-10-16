@@ -1,20 +1,28 @@
-//#region 🎯️ToolJobBus
-//! 🎯️ Typed routing from renderer actions to resumable interactive jobs.
-//!
-//! Every UI-reachable tool enters through one [`ToolOperationSpec`], is resolved by a
-//! [`ToolJobFactory`], and leaves as a worker-drivable [`ToolJobDispatch`]. Factories are accepted
-//! only when their manifest classification is [`InteractiveJobClassification::Migrated`], so a
-//! callback, batch-only command, forbidden command, or unclassified command cannot become reachable
-//! merely by being inserted into the bus.
+//! 🎯️ Action bus and tool job registry, plus the root platform shell that owns one bus.
 
-use crate::manifest::InteractiveJobClassification;
-use semio_framework_job::{InteractiveJob, Operation, StepContext};
-use std::any::{Any, TypeId};
-use std::collections::{HashMap, HashSet};
+use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobCloseStep;
+use semio_framework_job::Operation;
+use semio_framework_job::StepContext;
+use semio_framework_value::ValueError;
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use std::any::Any;
+use std::any::TypeId;
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::error::Error;
-use std::fmt::{Display, Formatter};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::fmt;
+use std::fmt::Display;
+use std::fmt::Formatter;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::OnceLock;
+use semio_framework_manifest_actions::InteractiveJobClassification;
+use semio_framework_manifest_app_surface::AppDefinition;
 
+//#region 🎯️ToolJobBus
 //#region 🧬️Contract
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ToolFactoryKey {
@@ -441,9 +449,10 @@ impl Display for ToolJobFactoryError {
 }
 
 impl Error for ToolJobFactoryError {}
-//#endregion 🧬️Contract
 
+//#endregion 🧬️Contract
 //#region 🚫️Rejection
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ToolRegistrationError {
     EmptyFactory,
@@ -485,9 +494,10 @@ impl Display for ToolDispatchError {
 }
 
 impl Error for ToolDispatchError {}
-//#endregion 🚫️Rejection
 
+//#endregion 🚫️Rejection
 //#region 🚌️Bus
+
 trait ErasedToolJobFactory: Send {
     fn create_job(&mut self, spec: &mut ToolOperationSpec) -> Result<ErasedToolJob, ToolJobFactoryError>;
     fn create_job_from_wire(&mut self, operation: Operation, payload: &[u8], checkpoint: Option<Vec<u8>>) -> Result<ErasedToolJob, ToolJobFactoryError>;
@@ -804,8 +814,18 @@ impl ActionBus {
         Ok(ToolJobDispatch { spec, job })
     }
 }
-//#endregion 🚌️Bus
 
+//#endregion 🚌️Bus
+//#endregion 🎯️ToolJobBus
+
+#[path = "../🖥️platform/🦀️.rs"]
+pub mod platform;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+//#region 🎯️ToolJobBus
 #[cfg(test)]
 #[path = "🧹️wire-retirement/🧪️tests/🔬️standalone/🦀️.rs"]
 mod wire_retirement_tests;

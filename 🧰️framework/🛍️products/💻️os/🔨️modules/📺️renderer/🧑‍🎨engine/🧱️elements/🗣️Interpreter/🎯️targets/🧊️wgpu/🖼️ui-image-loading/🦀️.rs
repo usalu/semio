@@ -3,7 +3,7 @@
 //! The UI image caches, byte and data url admission, SVG rasterization and the retained image render step.
 
 use crate::element_contracts::{FrameworkWidgetContext, RasterUploadRefusal, WorkerCell};
-use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with};
+use crate::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use ui_wgpu::wgpu::{ActionDescriptor, Rect, Theme, WidgetContext, WidgetInteractionMaps};
 
@@ -11,14 +11,14 @@ use ui_wgpu::wgpu::{ActionDescriptor, Rect, Theme, WidgetContext, WidgetInteract
 static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
 static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
 static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
-pub(super) static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new(Default::default);
+pub static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new(Default::default);
 /// 🚫️ Per image id, the inline source the raster authority refused as the image's own ([`RasterUploadRefusal::Invalid`]) — kept, not
 /// re-offered each paint; the image paints its fallback until its source changes.
 static UI_IMAGE_REFUSED: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new(Default::default);
 static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new(Default::default);
 #[cfg(test)]
 thread_local! {
-    pub(super) static INLINE_SVG_PARSE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    pub static INLINE_SVG_PARSE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 pub fn take_ui_image_asset_fault() -> Option<WorldAssetFault> {
@@ -70,7 +70,7 @@ fn queue_ui_image_url_fetch(id: &str, url: &str) {
         return;
     }
     let kind = WorldAssetMetadataId::try_from_str(id).map(|id| WorldAssetRequestKind::UiImage { id });
-    let result = kind.and_then(|kind| crate::reserve_renderer_asset_request(kind, url).map(|_| ()));
+    let result = kind.and_then(|kind| semio_framework_os_renderer_wgpu_asset_authority::reserve_renderer_asset_request(kind, url).map(|_| ()));
     if let Err(fault) = result {
         UI_IMAGE_ASSET_FAULT.with(|cell| *cell.borrow_mut() = Some(fault));
     }
@@ -233,7 +233,7 @@ fn resolve_ui_image_data_url(id: &str, src: &str) {
 }
 
 /// 🖼️ Returns pixels only for the requested image source while preserving the fallback during loading.
-pub(crate) fn current_ui_image_key(id: &str, src: &str) -> Option<String> {
+pub fn current_ui_image_key(id: &str, src: &str) -> Option<String> {
     if id.len() > 256 || src.is_empty() || src.len() > RETAINED_UI_IMAGE_SOURCE_BYTES {
         return None;
     }
@@ -283,7 +283,7 @@ pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(
  * `natural_w/natural_h` aspect ratio, centered. The React reference renders a plain `<img src>`,
  * whose intrinsic aspect ratio is handled by the browser natively; this renderer has no CSS engine,
  * so this reproduces the same visual result from the decoded/rasterized pixel dimensions. */
-pub(super) fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
+pub fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
     if natural_w <= 0.0 || natural_h <= 0.0 || bounds.w <= 0.0 || bounds.h <= 0.0 {
         return bounds;
     }
@@ -296,7 +296,7 @@ pub(super) fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) 
 
 const RETAINED_UI_IMAGE_SOURCE_BYTES: usize = 4 * 1024 * 1024;
 
-pub(super) fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
+pub fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
     match cursor.phase() {
         0 => {
             if image.id.len() > 256 {
@@ -362,22 +362,4 @@ pub(super) fn render_ui_image_step(image: &ui_wgpu::wgpu::UiImageNode, bounds: R
     }
 }
 
-/// 🪀️ One immediate-mode widget pass's context. `viewport_height` is the measured surface height in
-/// logical pixels — React hands `window.innerHeight` to `resolveSelectPlacement`
-/// (`🧱️elements/🔽️Select/🟦️.tsx:514`) and the kit needs the same number to flip and clamp a popup;
-/// `0.0` means unmeasured and degrades to a below-the-trigger placement at natural height.
-pub fn framework_widget_context<'a>(
-    draw: &'a mut ui_wgpu::wgpu::DrawList,
-    overlay: Option<&'a mut ui_wgpu::wgpu::DrawList>,
-    atlas: &'a mut ui_wgpu::wgpu::FontAtlas,
-    icons: Option<&'a ui_wgpu::wgpu::IconAtlas>,
-    input: &'a mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-    theme: &'a Theme,
-    scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
-    collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
-    open_selects: &'a mut std::collections::HashMap<String, bool>,
-    interaction_maps: Option<&'a mut WidgetInteractionMaps<ActionDescriptor>>,
-    viewport_height: f32,
-) -> FrameworkWidgetContext<'a> {
-    WidgetContext { draw, overlay, atlas, icons, input, theme, scroll_offsets, collapsed_sections, open_selects, interaction_maps, pick_clip: None, viewport_height }
-}
+pub use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;

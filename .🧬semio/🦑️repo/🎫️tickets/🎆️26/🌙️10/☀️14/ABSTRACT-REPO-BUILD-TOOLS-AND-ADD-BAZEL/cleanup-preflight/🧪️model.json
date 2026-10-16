@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "fields": [
+    "exactFixture",
+    "originalLive",
+    "exclusive",
+    "expectedIdentityBoundUnderExclusive",
+    "identityMatches",
+    "journalEmpty",
+    "normalDetach"
+  ],
+  "cases": [
+    {
+      "name": "all required proofs",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": true
+    },
+    {
+      "name": "missing exactFixture",
+      "facts": {
+        "exactFixture": false,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing originalLive",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": false,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing exclusive",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": false,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing expectedIdentityBoundUnderExclusive",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": false,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing identityMatches",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": false,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing journalEmpty",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": false,
+        "normalDetach": true
+      },
+      "expected": false
+    },
+    {
+      "name": "missing normalDetach",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": true,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": false
+      },
+      "expected": false
+    },
+    {
+      "name": "replacement after external precheck",
+      "facts": {
+        "exactFixture": true,
+        "originalLive": true,
+        "exclusive": true,
+        "expectedIdentityBoundUnderExclusive": false,
+        "identityMatches": true,
+        "journalEmpty": true,
+        "normalDetach": true
+      },
+      "expected": false
+    }
+  ]
+}

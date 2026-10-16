@@ -21,7 +21,7 @@ function noFollowAncestors(repoRoot: string, target: string, label: string, reje
   let current = root;
   const end = segments.length - (rejectLeafSymlink ? 0 : 1);
   for (let index = 0; index < end; index++) {
-    current = join(current, segments[index]);
+    const segment=segments[index];if(segment===undefined)throw new Error("Required input ancestry segment is missing");current = join(current, segment);
     const stat = observe(current);
     const leaf = rejectLeafSymlink && index === segments.length - 1;
     if (stat?.isSymbolicLink() || (!leaf && stat && !stat.isDirectory())) throw new Error(`${label} has a non-directory or symlink ancestor: ${segments.slice(0, index + 1).join("/")}`);
@@ -73,7 +73,7 @@ export class UnsafeDirectoryAncestorError extends Error {}
 export function noFollowDirectoryChain(repoRoot: string): readonly { readonly path: string; readonly stat: Stats }[] {
   const root = parse(repoRoot).root;
   const paths = [root];
-  for (const segment of repoRoot.slice(root.length).split(sep).filter(Boolean)) paths.push(join(paths[paths.length - 1], segment));
+  let current=root;for (const segment of repoRoot.slice(root.length).split(sep).filter(Boolean)){current=join(current,segment);paths.push(current);}
   return paths.map((path) => {
     const stat = lstatSync(path);
     if (stat.isSymbolicLink() || !stat.isDirectory()) throw new UnsafeDirectoryAncestorError(`Input root has unsafe ancestry: ${path}`);

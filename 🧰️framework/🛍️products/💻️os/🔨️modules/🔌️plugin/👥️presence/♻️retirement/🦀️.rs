@@ -2,7 +2,8 @@
 
 use crate::store::{Mutation, PresenceStore, PresenceStoreRetirement};
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use crate::{ArtifactOwnedDisposer, Fault};
+use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+use semio_framework::Fault;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::Arc;
 
@@ -118,7 +119,7 @@ impl<P> BoundedPresenceRootRetirement<P> {
         RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.root.is_none() && self.retained_bytes == 0
     }
 }

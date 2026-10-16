@@ -16,12 +16,6 @@ path = "../../../🎰️jobserver/🔮️oracles/🦀️.rs"
 [dev-dependencies]
 jobserver = "=0.1.35"
 
-[profile.release]
-opt-level = 3
-codegen-units = 1
-lto = "thin"
-debug = false
-
 [workspace]
 members = ["."]
 

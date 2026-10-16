@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "targets"],
+  "properties": {
+    "version": {"const": 1},
+    "targets": {
+      "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["target", "command", "source", "rows"],
+        "properties": {
+          "target": {"enum": ["test-graph-publication", "test-toolkit-use", "test-selected-graph"]},
+          "command": {"type": "string", "pattern": "^bun \\./📜️script\\.ts test [a-z-]+$"},
+          "source": {"type": "string", "minLength": 1, "maxLength": 256},
+          "rows": {
+            "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+            "items": {
+              "type": "object", "additionalProperties": false, "required": ["language", "name", "order"],
+              "properties": {"language": {"enum": ["EN", "DE"]}, "name": {"type": "string", "minLength": 1}, "order": {"type": "number", "minimum": 20.93, "maximum": 20.94}}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,6 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-obj-inferences = { path = "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-obj-diff = { path = "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-obj-schema = { path = "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-obj-mutations = { path = "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-obj-io-registry = { path = "../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

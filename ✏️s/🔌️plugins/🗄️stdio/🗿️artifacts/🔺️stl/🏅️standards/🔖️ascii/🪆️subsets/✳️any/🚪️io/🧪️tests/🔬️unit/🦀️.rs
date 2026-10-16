@@ -1,4 +1,6 @@
-use super::*;
+use crate::schema::snapshot::StlTriangle;
+use crate::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
+use crate::standards::v_ascii::subsets::any::io::*;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {

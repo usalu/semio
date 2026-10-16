@@ -1,4 +1,9 @@
-use super::*;
+
+#[cfg(feature="integration-fixtures")]
+use semio_hub_inference::schema::GisInferenceCheckpointControlFrameV1;
+use semio_hub_gis::inference::{GisMapApprovalUndoHandleV1, GisMapApprovalUndoRequestV1};
+use semio_hub_inference::schema::{InferenceApprovalRequestV1, InferenceIdentityV1, SCHEMA_ID, decode_inference_job_reconcile_request_v1};
+use serde::Serialize;
 
 const EXPORTS: [&str; 50] = [
     "InferenceServerIdV1",
@@ -199,6 +204,6 @@ fn hub_inference_approval_hostiles_declare_their_rejection_stage() {
         assert!(hostile["code"].as_str().is_some_and(|code| !code.is_empty()), "{}", hostile["field"]);
         let mut candidate = approval["request"].clone();
         candidate[hostile["field"].as_str().expect("field")] = hostile["value"].clone();
-        assert_eq!(InferenceApprovalRequestV1::decode(&serde_json::to_vec(&candidate).expect("bytes")), Err(super::super::InferenceErrorV1::Invalid), "{}", hostile["code"]);
+        assert_eq!(InferenceApprovalRequestV1::decode(&serde_json::to_vec(&candidate).expect("bytes")), Err(semio_hub_inference::InferenceErrorV1::Invalid), "{}", hostile["code"]);
     }
 }

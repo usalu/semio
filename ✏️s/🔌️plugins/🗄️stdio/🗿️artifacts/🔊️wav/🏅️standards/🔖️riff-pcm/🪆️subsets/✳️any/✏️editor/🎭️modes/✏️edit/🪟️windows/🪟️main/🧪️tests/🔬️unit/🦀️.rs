@@ -1,4 +1,11 @@
-use super::*;
+use crate::editor::wav::edit_audio;
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
+use semio_framework_plugin::app::row_action;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_ui_locale::Locale;
+use crate::editor::wav::modes::edit::windows::main::{SAMPLE_TABLE_ID, CHANNEL_TABLE_ID, action};
+use crate::editor::wav::modes::edit::windows::main::*;
 use semio_framework_plugin::{ActionBinding, Component, TreeWindowRequest, UiValue, ViewModel};
 
 fn node_by_key<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {

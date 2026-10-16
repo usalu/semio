@@ -245,10 +245,10 @@ fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
 /// 3 751 batches for the remaining nine gestures (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
 fn a_stale_world3d_draw_rebuild_is_closed_and_never_quarantines_the_surface() {
-    let start = RENDERER_SOURCE.find("match step_world3d_draw_rebuild(state, context) {").expect("the host steps the retained draw rebuild");
+    let start = RENDERER_SOURCE.find("match step_world3d_draw_rebuild(&mut state.session, &mut state.authority, &mut state.scene, context) {").expect("the host steps the retained draw rebuild");
     let arm = &RENDERER_SOURCE[start..start + RENDERER_SOURCE[start..].find("\n                }").expect("the match ends")];
     assert!(arm.contains("WorldDrawRebuildStep::Stale => {"), "`Stale` has its own arm");
-    assert!(arm.contains("close_world3d_draw_rebuild_step(state, context)"), "a stale rebuild is CLOSED down the module's own ladder");
+    assert!(arm.contains("close_world3d_draw_rebuild_step(&mut state.scene, context)"), "a stale rebuild is CLOSED down the module's own ladder");
     assert!(!arm.contains("WorldDrawRebuildStep::Stale | WorldDrawRebuildStep::Fault"), "`Stale` is never lumped in with `Fault` — `record_frame_fault` quarantines the surface for good");
     let fault_arm = &arm[arm.find("WorldDrawRebuildStep::Fault").expect("`Fault` still faults")..];
     assert!(fault_arm.contains("record_frame_fault(\"world3d retained draw rebuild faulted\")"), "a real `Fault` still records the frame fault");

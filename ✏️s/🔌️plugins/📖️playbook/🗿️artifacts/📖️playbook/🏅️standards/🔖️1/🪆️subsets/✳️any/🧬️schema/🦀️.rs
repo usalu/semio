@@ -152,9 +152,7 @@ pub fn default_block(id: String, kind: &str) -> crate::PlaybookBlock {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🧱️block-defaults/🦀️.rs"]
-mod block_defaults_tests;
+
 //#endregion 🔖️BlockDefaults
 
 //#region 🧬️DerivedArtifactFacets

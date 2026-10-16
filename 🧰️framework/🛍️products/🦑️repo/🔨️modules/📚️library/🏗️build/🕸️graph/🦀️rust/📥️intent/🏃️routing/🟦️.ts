@@ -1,3 +1,4 @@
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import {readFileSync,lstatSync} from "node:fs";
 import {resolve,join} from "node:path";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -24,8 +25,8 @@ export async function runDeclaredRustBuildV1(workspace:string,project:string,pac
  if(fallback){
   const {buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),{scriptCompilerAdmissionControlV1}=await import("../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts");
   console.log("[DEBUG] Selected Rust bounded Cargo fallback "+JSON.stringify({project,target,adapters:fallback.adapters,cache:false}));
-  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{network:repositoryCargoNetworkV1(invocation,workspace),control:scriptCompilerAdmissionControlV1(invocation,"cargo:bounded-fallback",0),environment:process.env});return;
+  await buildRepositoryCargoArtifacts(resolve(workspace,intent.manifest),[...rustBuildIntentArgumentsV1(intent),...args],workspace,{producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(invocation,workspace),control:scriptCompilerAdmissionControlV1(invocation,"cargo:bounded-fallback",0),environment:process.env});return;
  }
- const request=declaredRustBuildArgumentsV1(project,args,process.env,target),{runOwnedBuildChildInvocationV1}=await import("../../../../📜️script.ts");
+ const request=declaredRustBuildArgumentsV1(project,args,process.env,target),{runOwnedBuildChildInvocationV1}=await import("../../../../📥️caller/📤️child/🟦️.ts");
  await runOwnedBuildChildInvocationV1(workspace,request,invocation);
 }

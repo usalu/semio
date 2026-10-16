@@ -793,14 +793,17 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_gif_fixture_tests::standards::v87a::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_gif_inferences::standards::v87a::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_gif_fixture_tests::standards::v87a::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_gif_inferences::standards::v87a::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};

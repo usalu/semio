@@ -1,0 +1,38 @@
+[package]
+workspace = "../../.."
+name = "semio-hub-local-bootstrap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Local bootstrap service and its inherited transport"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-local-bootstrap"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-directory = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-dispatch = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]
+semio-hub-directory-sqlite = { workspace = true }
+semio-hub-directory = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }

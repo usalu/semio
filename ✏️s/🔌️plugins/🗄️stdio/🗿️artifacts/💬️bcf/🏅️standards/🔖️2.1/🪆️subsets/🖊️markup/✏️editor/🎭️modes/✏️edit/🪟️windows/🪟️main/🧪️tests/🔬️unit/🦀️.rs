@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use semio_framework_plugin::app::TableWindowKit;
+use semio_framework_plugin::BuiltNode;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_ui_locale::Locale;
+use crate::editor::bcf::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_editable_table_window_kit() {

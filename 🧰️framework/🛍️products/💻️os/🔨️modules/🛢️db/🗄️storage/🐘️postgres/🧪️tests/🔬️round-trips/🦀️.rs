@@ -9,9 +9,11 @@
 //! one async-native operation slot queues concurrent writers instead of refusing them, and that concurrent openers of a
 //! fresh database all find its schema.
 use super::PostgresStorage;
-use crate::db_ids::ArtifactId;
-use crate::db_storage::claimed_backend;
-use crate::db_storage::{db_io_copy_pages, db_io_test_pool, IndexStorage, WalStorage};
+use db_ids::ArtifactId;
+use db_io_core::claimed_backend;
+use db_io_core::{IndexStorage, WalStorage};
+use db_io_driver::db_io_test_pool;
+use db_io_registry::db_io_copy_pages;
 
 const RUNS: u64 = 40;
 const SEGMENTS: u64 = 12;
@@ -23,12 +25,12 @@ const STATISTICS_STILL: std::time::Duration = std::time::Duration::from_secs(12)
 fn settled_scans(table: &str) -> u64 {
     let query = format!("SELECT coalesce(sum(seq_scan + coalesce(idx_scan, 0)), 0) FROM pg_stat_user_tables WHERE relname = '{table}'");
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(90);
-    let mut last = claimed_backend::client(&query).parse::<u64>().expect("scan count");
+    let mut last = db_io_core::claimed_backend::client(&query).parse::<u64>().expect("scan count");
     let mut still_since = std::time::Instant::now();
     while still_since.elapsed() < STATISTICS_STILL {
         assert!(std::time::Instant::now() < deadline, "{table} statistics never settled");
         std::thread::sleep(std::time::Duration::from_millis(500));
-        let now = claimed_backend::client(&query).parse::<u64>().expect("scan count");
+        let now = db_io_core::claimed_backend::client(&query).parse::<u64>().expect("scan count");
         if now != last {
             last = now;
             still_since = std::time::Instant::now();
@@ -40,7 +42,7 @@ fn settled_scans(table: &str) -> u64 {
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … --include-ignored db_storage_postgres::round_trips`"]
 async fn a_postgres_list_is_one_statement_however_many_rows_it_returns() {
-    let storage = PostgresStorage::connect(db_io_test_pool(), &claimed_backend::env("OS_HUB_DATABASE_URL")).await.unwrap();
+    let storage = PostgresStorage::connect(db_io_test_pool(), &db_io_core::claimed_backend::env("OS_HUB_DATABASE_URL")).await.unwrap();
     let document: ArtifactId = "round-trips".into();
 
     for run in 0..RUNS {
@@ -72,14 +74,14 @@ async fn a_postgres_list_is_one_statement_however_many_rows_it_returns() {
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … --include-ignored db_storage_postgres::round_trips`"]
 async fn concurrent_postgres_writers_wait_for_the_backends_one_operation_slot() {
     const WRITERS: usize = 24;
-    let database = claimed_backend::FreshPostgresDatabase::create("writers");
+    let database = db_io_core::claimed_backend::FreshPostgresDatabase::create("writers");
     let storage = PostgresStorage::connect(db_io_test_pool(), &database.url).await.unwrap();
-    let outcomes: Vec<Result<(), crate::db_ids::DbError>> = std::thread::scope(|scope| {
+    let outcomes: Vec<Result<(), db_ids::DbError>> = std::thread::scope(|scope| {
         let writers: Vec<_> = (0..WRITERS)
             .map(|writer| {
                 let storage = &storage;
                 scope.spawn(move || {
-                    crate::db_actor::block_on(async move {
+                    db_actor::block_on(async move {
                         let document: ArtifactId = format!("concurrent-{writer}").as_str().into();
                         for run in 0..4u64 {
                             storage.write_run(&document, run, db_io_copy_pages(format!("writer-{writer}-run-{run}").as_bytes()).unwrap().await.unwrap()).await?;
@@ -109,13 +111,13 @@ async fn concurrent_postgres_writers_wait_for_the_backends_one_operation_slot() 
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- … --include-ignored db_storage_postgres::round_trips`"]
 async fn concurrent_openers_of_a_fresh_database_all_find_its_schema() {
     const OPENERS: usize = 16;
-    let database = claimed_backend::FreshPostgresDatabase::create("bootstrap");
+    let database = db_io_core::claimed_backend::FreshPostgresDatabase::create("bootstrap");
     let outcomes: Vec<Result<(), String>> = std::thread::scope(|scope| {
         let openers: Vec<_> = (0..OPENERS)
             .map(|_| {
                 let url = &database.url;
                 scope.spawn(move || {
-                    crate::db_actor::block_on(async move {
+                    db_actor::block_on(async move {
                         let storage = PostgresStorage::connect(db_io_test_pool(), url).await.map_err(|refused| format!("{refused:?}"))?;
                         storage.close().await.map_err(|error| error.to_string())
                     })

@@ -1,7 +1,7 @@
 //! 🖍️ Original CPU draw records, accumulation and bounded retained ownership.
 // #region draw_types
 
-use semio_framework_ui_scene::math::ScenePass3d;
+use semio_framework_ui_scene_pass::ScenePass3d;
 use semio_framework_ui_theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 
@@ -366,39 +366,39 @@ fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
         bytes = bytes.checked_add(next_bytes)?;
         Some(())
     };
-    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
-    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
-    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
+    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
+    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
+    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneDraw3d>())?)?;
     for draw in pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()) {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_mesh::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneMaterialDraw3d>())?)?;
+    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::SceneMaterialDraw3d>())?)?;
     for draw in &pass.material_draws {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
         let texture_key = match &draw.material {
-            semio_framework_ui_scene::math::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
-            semio_framework_ui_scene::math::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
-            semio_framework_ui_scene::math::SceneMaterialKind3d::Standard | semio_framework_ui_scene::math::SceneMaterialKind3d::Celebration {..} => None,
+            semio_framework_ui_scene_pass::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
+            semio_framework_ui_scene_pass::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
+            semio_framework_ui_scene_pass::SceneMaterialKind3d::Standard | semio_framework_ui_scene_pass::SceneMaterialKind3d::Celebration {..} => None,
         };
         if let Some(texture_key) = texture_key {
             include(texture_key.len(), texture_key.capacity())?;
         }
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_mesh::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::LineDraw3d>())?)?;
+    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::LineDraw3d>())?)?;
     for draw in &pass.line_draws {
-        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::LineVertex3d>())?)?;
+        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::LineVertex3d>())?)?;
     }
-    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::TexturedDraw3d>())?)?;
+    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::TexturedDraw3d>())?)?;
     for draw in &pass.textured_draws {
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::TexturedInstance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene_pass::TexturedInstance3d>())?)?;
         for instance in &draw.instances {
             include(instance.texture_key.len(), instance.texture_key.capacity())?;
         }
@@ -583,7 +583,7 @@ impl DrawList {
             if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}
             if let Some(draw)=pass.material_draws.last(){
                 if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}
-                use semio_framework_ui_scene::math::SceneMaterialKind3d;
+                use semio_framework_ui_scene_pass::SceneMaterialKind3d;
                 let key=match &draw.material{SceneMaterialKind3d::Painted{texture_key}=>Some(texture_key),SceneMaterialKind3d::Authored(material)=>[&material.base_color_texture,&material.metallic_roughness_texture,&material.normal_texture,&material.occlusion_texture,&material.emissive_texture].into_iter().flatten().find(|key|!key.is_empty()||key.capacity()!=0),_=>None};
                 if let Some(key)=key{if !key.is_empty()||key.capacity()!=0{return Ok(text(key))}}
                 return Ok(text(&draw.mesh_key))
@@ -1470,7 +1470,8 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 /// (`paint_orbit_view_gizmo`, which needs the GPU-adjacent `WidgetContext`) stays in
 /// `widgets.rs`'s own `gizmo` module, still `wgpu-engine`-gated.
 pub mod gizmo {
-    use semio_framework_ui_scene::math::{Camera3d, Vec3, Vec3Math};
+    use semio_framework_ui_scene_camera::Camera3d;
+    use semio_framework_ui_scene_algebra::{Vec3, Vec3Math};
     use semio_framework_ui_theme::{Rgba, geometry::Rect};
 
     /// 🧭️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
@@ -1602,3 +1603,96 @@ pub mod gizmo {
 }
 //#endregion gizmo
 // #endregion draw_types
+
+pub fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
+    if points.len() < 3 {
+        return Vec::new();
+    }
+    let mut indices: Vec<usize> = (0..points.len()).collect();
+    let mut triangles = Vec::new();
+    let mut guard = 0usize;
+    while indices.len() > 3 && guard < points.len() * points.len() {
+        guard += 1;
+        let mut ear_found = false;
+        for i in 0..indices.len() {
+            let prev = indices[(i + indices.len() - 1) % indices.len()];
+            let curr = indices[i];
+            let next = indices[(i + 1) % indices.len()];
+            let a = points[prev];
+            let b = points[curr];
+            let c = points[next];
+            let cross = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+            if cross <= 0.0 {
+                continue;
+            }
+            let mut contains = false;
+            for &idx in &indices {
+                if idx == prev || idx == curr || idx == next {
+                    continue;
+                }
+                let p = points[idx];
+                if point_in_triangle(p, a, b, c) {
+                    contains = true;
+                    break;
+                }
+            }
+            if contains {
+                continue;
+            }
+            triangles.push(a);
+            triangles.push(b);
+            triangles.push(c);
+            indices.remove(i);
+            ear_found = true;
+            break;
+        }
+        if !ear_found {
+            break;
+        }
+    }
+    if indices.len() == 3 {
+        triangles.push(points[indices[0]]);
+        triangles.push(points[indices[1]]);
+        triangles.push(points[indices[2]]);
+    }
+    triangles
+}
+
+fn point_in_triangle(p: [f32; 2], a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> bool {
+    let d1 = sign(p, a, b);
+    let d2 = sign(p, b, c);
+    let d3 = sign(p, c, a);
+    let has_neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
+    let has_pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
+    !(has_neg && has_pos)
+}
+
+pub const ICON_ATLAS_TEXTURE_SIZE: u32 = 2048;
+
+pub struct IconAtlas {
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u8>,
+    entries: std::collections::HashMap<String, [f32; 4]>,
+}
+
+impl Default for IconAtlas {
+    fn default() -> Self {
+        Self { width: 1, height: 1, pixels: vec![0, 0, 0, 0], entries: std::collections::HashMap::new() }
+    }
+}
+
+impl IconAtlas {
+    pub fn from_packed(width: u32, height: u32, pixels: Vec<u8>, entries: Vec<(String, [f32; 4])>) -> Self {
+        Self { width, height, pixels, entries: entries.into_iter().collect() }
+    }
+
+    pub fn icon_uv(&self, icon_id: &str) -> Option<[f32; 4]> {
+        self.entries.get(icon_id).copied()
+    }
+}
+
+
+fn sign(p1: [f32; 2], p2: [f32; 2], p3: [f32; 2]) -> f32 {
+    (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+}

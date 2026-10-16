@@ -45,7 +45,7 @@ impl<M:Send+'static,C:Send+'static,D:Send+'static> semio_framework_value::retire
 const COLD_TASK_RETIREMENT_STEPS:usize=1<<16;
 const COLD_TASK_RETIREMENT_BODY_BYTES:usize=1<<16;
 /// 🧊️ Retires a task run that never reached a hot grant — refused at admission or cancelled before its first poll — to exact terminal emptiness under its own quoted grant, the cold-path precedent of `ExtensionBundle::dispose_cold`.
-pub(crate) fn dispose_cold_task_run<M,C,D>(mut run:Box<dyn AsyncTaskRun<M,C,D>>){
+pub fn dispose_cold_task_run<M,C,D>(mut run:Box<dyn AsyncTaskRun<M,C,D>>){
  for _ in 0..COLD_TASK_RETIREMENT_STEPS{
   if run.terminal_is_empty(){return}
   let Ok(demand)=run.demands(COLD_TASK_RETIREMENT_BODY_BYTES)else{return};
@@ -54,9 +54,9 @@ pub(crate) fn dispose_cold_task_run<M,C,D>(mut run:Box<dyn AsyncTaskRun<M,C,D>>)
  }
 }
 /// 🧊️ The executor-owned custody of a spawned task's run: dropped before its first poll, the run retires cold instead of abandoning its controlled source.
-pub(crate) struct ColdTaskRun<M,C,D>(Option<Box<dyn AsyncTaskRun<M,C,D>>>);
+pub struct ColdTaskRun<M,C,D>(Option<Box<dyn AsyncTaskRun<M,C,D>>>);
 impl<M,C,D> ColdTaskRun<M,C,D>{
- pub(crate) fn new(run:Box<dyn AsyncTaskRun<M,C,D>>)->Self{Self(Some(run))}
- pub(crate) fn take(&mut self)->Box<dyn AsyncTaskRun<M,C,D>>{self.0.take().expect("cold task run is taken once, at its first poll")}
+ pub fn new(run:Box<dyn AsyncTaskRun<M,C,D>>)->Self{Self(Some(run))}
+ pub fn take(&mut self)->Box<dyn AsyncTaskRun<M,C,D>>{self.0.take().expect("cold task run is taken once, at its first poll")}
 }
 impl<M,C,D> Drop for ColdTaskRun<M,C,D>{fn drop(&mut self){if let Some(run)=self.0.take(){dispose_cold_task_run(run)}}}

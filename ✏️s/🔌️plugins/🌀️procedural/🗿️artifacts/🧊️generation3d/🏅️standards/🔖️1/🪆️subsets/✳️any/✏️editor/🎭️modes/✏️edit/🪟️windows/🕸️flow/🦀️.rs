@@ -305,8 +305,8 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
     let (nodes, edges, operators) = with_host(host_snapshot, |host| {
-        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
-        let operators = document_operator_records(&host.dag.host_snapshot, &nodes);
+        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
+        let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
         (nodes, edges, operators)
     });
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };

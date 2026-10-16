@@ -43,8 +43,8 @@ impl RetireOwned for RenderSnapshot{
     fn controlled_retirement_supported()->bool{true}
 }
 /// 🫴️ A paid output alias keeps the original snapshot body stationary while canonical pages are written.
-pub(crate) struct RenderSnapshotOutputLoan{original:ManuallyDrop<Option<Arc<RenderSnapshot>>>}
-impl RenderSnapshotOutputLoan{pub(crate) fn snapshot(&self)->&RenderSnapshot{self.original.as_ref().expect("original snapshot output remains owned")}}
+pub struct RenderSnapshotOutputLoan{original:ManuallyDrop<Option<Arc<RenderSnapshot>>>}
+impl RenderSnapshotOutputLoan{pub fn snapshot(&self)->&RenderSnapshot{self.original.as_ref().expect("original snapshot output remains owned")}}
 impl RetireOwned for RenderSnapshotOutputLoan{
     fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.original.take().unwrap()))}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<SharedControlledRetirement<RenderSnapshot>>())}
@@ -113,15 +113,15 @@ impl RenderSnapshotSink {
     }
 
     /// 🎟️ Alias admission consumes original metadata before the actual atomic reference increments.
-    pub(crate) fn acquire_output_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<Option<RenderSnapshotOutputLoan>,OriginalTurnFailure>{
+    pub fn acquire_output_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<Option<RenderSnapshotOutputLoan>,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let Ok(current)=self.current.try_lock()else{return Ok(None)};cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
         Ok(Some(RenderSnapshotOutputLoan{original:ManuallyDrop::new(Some(Arc::clone(current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot output source is closed"))?)))}))
     }
     /// 🏞️ Published stationary snapshots remain resident while their event's incoming and displaced bodies close.
-    pub(crate) fn original_event_terminal_is_empty(&self)->bool{self.original_incoming.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_displaced.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_refused.try_lock().is_ok_and(|owner|owner.is_none())}
+    pub fn original_event_terminal_is_empty(&self)->bool{self.original_incoming.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_displaced.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_refused.try_lock().is_ok_and(|owner|owner.is_none())}
     /// 🪙️ The genuine snapshot Arc birth and displaced original close are separately paid events.
-    pub(crate) fn publish_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn publish_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         let Ok(mut displaced)=self.original_displaced.try_lock()else{return Ok(false)};
         if let Some(owner)=displaced.as_mut(){if !owner.terminal_is_empty(){close_shared(owner,cx)?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*displaced=None;return Ok(false)}
@@ -130,10 +130,10 @@ impl RenderSnapshotSink {
         let Ok(mut current)=self.current.try_lock()else{return Ok(false)};let original=Arc::new(incoming.take().unwrap());let previous=current.replace(original);if let Some(previous)=previous{*displaced=Some(SharedControlledRetirement::lease(previous))}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;Ok(false)
     }
     /// 📥️ A completed presentation donates its same media vector into the preborn publication slot.
-    pub(crate) fn retain_original_publication(&self,source:&mut Option<RenderSnapshot>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn retain_original_publication(&self,source:&mut Option<RenderSnapshot>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if source.is_none(){return Ok(true)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let Ok(mut incoming)=self.original_incoming.try_lock()else{return Ok(false)};if incoming.is_some(){return Ok(false)}**incoming=source.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
-    pub(crate) fn close_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn close_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         let Ok(mut incoming)=self.original_incoming.try_lock()else{return Ok(false)};let Ok(mut displaced)=self.original_displaced.try_lock()else{return Ok(false)};let Ok(mut refused)=self.original_refused.try_lock()else{return Ok(false)};
         if let Some(owner)=refused.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*refused=None;return Ok(false)}

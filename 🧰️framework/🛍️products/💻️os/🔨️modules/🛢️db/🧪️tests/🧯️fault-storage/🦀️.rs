@@ -26,14 +26,22 @@
 //! through the facade's actor-mailbox boundary. This is a deliberate, documented scope choice, not
 //! a workaround: it exercises exactly the same cross-crate machinery the facade will call into once
 //! `db_engine` wires the remaining mailbox variants.
+#![allow(async_fn_in_trait)]
+#![cfg(not(target_arch = "wasm32"))]
+extern crate semio_framework_os_kernel as pack;
 
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-
-use crate::db_durability::Frontier;
-use crate::db_ids::DbError;
-use crate::*;
-use db_storage::{db_io_copy_pages, CatalogStorage, DbBackend, DbIoPages, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
+use db_durability::{DurabilityClass, EpochFence, Frontier};
+use db_engine::{ArtifactSpec, Database, DatabaseShutdownControl};
+use db_ids::{ActorId, ArtifactId, DbError};
+use db_io_core::CatalogStorage;
+use db_io_registry::db_io_copy_pages;
+use db_policy::Profile;
+use db_storage::{DbBackend, FaultScript, FaultStorage};
+use std::sync::Arc;
+#[cfg(test)]
+use db_io_core::DbIoPages;
+#[cfg(test)]
+use std::{cell::RefCell, rc::Rc};
 
 //#region 🔖️Prng
 /// 🎲️ splitmix64 — see <https://prng.di.unimi.it/splitmix64.c>. Small, dependency-free,
@@ -68,7 +76,6 @@ impl SplitMix64 {
     }
 }
 //#endregion 🔖️Prng
-
 //#region 🔖️Generators
 /// 🎲️ Deterministic seeded fabricator for the primitive pieces of a `protocol::
 /// MutationEnvelope` (paths, actors, JSON values, operation ids) — the unit `WorkloadGen` builds
@@ -143,8 +150,8 @@ impl WorkloadGen {
                 dependencies: Vec::new(),
                 observed: None,
                 target: Vec::new(),
-                diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
-                inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
+                diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
+                inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
                 timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 transaction: None, verb: None, line: None,
             });
@@ -153,7 +160,6 @@ impl WorkloadGen {
     }
 }
 //#endregion 🔖️Generators
-
 //#region 🔖️SimRuntime
 /// ⏱️ A manually-advanced virtual clock — never reads the wall clock, so a `SimRuntime` run
 /// is reproducible byte-for-byte from its seed alone.
@@ -253,272 +259,6 @@ pub fn explore_interleavings<T>(base_seed: u64, permutations: u32, mut run_one: 
         .collect()
 }
 //#endregion 🔖️SimRuntime
-
-//#region 🔖️FaultStorage
-/// 💥️ One knob of `FaultStorage`'s injectable fault script — every field independently
-/// optional/off by default, so a freshly `FaultScript::default()`ed `FaultStorage` behaves exactly
-/// like its inner backend.
-#[derive(Clone, Copy, Default, Debug)]
-pub struct FaultScript {
-    /// 🚫️ The Nth call to `WalStorage::append` (1-indexed, counting EVERY append this
-    /// storage sees, including a document's own genesis header write) fails outright with
-    /// `DbError::Io` before reaching the inner backend — models a crash where the physical write
-    /// never lands at all.
-    pub fail_nth_write: Option<u64>,
-    /// ✂️ `(nth, keep_bytes)`: the Nth `append` call forwards only its first `keep_bytes`
-    /// bytes to the inner backend (still succeeding, reporting the inner backend's real new
-    /// length) — models a crash mid-`write(2)`, the "torn write" fault `db_wal`'s own recovery
-    /// (`WalRecoveryReport.torn_tail_bytes`) exists to detect and truncate.
-    pub torn_write_at: Option<(u64, u64)>,
-    /// 🚫️ The Nth call to `WalStorage::sync` (1-indexed) fails before reaching the
-    /// inner backend, after any preceding append has already completed.
-    pub fail_nth_sync: Option<u64>,
-    /// 🤥️ `WalStorage::sync` returns `Ok(())` without ever forwarding to the inner backend —
-    /// models a storage device that acknowledges `fsync` without actually forcing data to physical
-    /// storage (a caller relying on `DurabilityClass::Fsync` alone, without independently verifying
-    /// durability, cannot tell the difference from the return value).
-    pub fsync_lies: bool,
-    /// ⚔️ The Nth call to `CatalogStorage::cas_root` (1-indexed) fails with a synthetic
-    /// `DbError::Fenced` (as if a competing writer had already advanced the epoch) without ever
-    /// touching the inner backend — models exercising a caller's CAS-retry path without needing a
-    /// second real writer.
-    pub cas_conflict_nth: Option<u64>,
-}
-
-/// 💥️ Wraps a real `db_storage::DbStorage` backend with a scriptable `FaultScript`, injected
-/// only at the WAL append/sync and catalog-CAS boundaries (see `FaultScript`'s fields) — every
-/// other operation (segment lifecycle, snapshot/payload/index/lease storage) passes straight
-/// through to `inner` untouched, since those are outside this testkit's stated crash-simulation
-/// scope (fail-nth-write/sync / torn write / fsync-lie / CAS-conflict injection).
-pub struct FaultStorage {
-    inner: Arc<DbBackend>,
-    script: Mutex<FaultScript>,
-    append_calls: AtomicU64,
-    sync_calls: AtomicU64,
-    sync_delegated_calls: AtomicU64,
-    cas_calls: AtomicU64,
-}
-
-impl FaultStorage {
-    pub async fn new(inner: Arc<DbBackend>) -> FaultStorage {
-        FaultStorage { inner, script: Mutex::new(FaultScript::default()), append_calls: AtomicU64::new(0), sync_calls: AtomicU64::new(0), sync_delegated_calls: AtomicU64::new(0), cas_calls: AtomicU64::new(0) }
-    }
-
-    pub async fn set_script(&self, script: FaultScript) {
-        *self.script.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = script;
-    }
-
-    async fn script(&self) -> FaultScript {
-        *self.script.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
-    }
-
-    /// 🔢️ Every `WalStorage::append` call this storage has seen so far, faulted or not —
-    /// `CrashHarness` uses this to discover exactly how many write boundaries a workload has.
-    pub async fn append_calls(&self) -> u64 {
-        self.append_calls.load(Ordering::SeqCst)
-    }
-
-    /// 🔢️ Every `WalStorage::sync` call this storage has seen, faulted or not.
-    pub async fn sync_calls(&self) -> u64 {
-        self.sync_calls.load(Ordering::SeqCst)
-    }
-
-    /// 🔢️ How many `WalStorage::sync` calls actually reached the inner backend (as opposed
-    /// to being lied about under `FaultScript::fsync_lies`).
-    pub async fn sync_delegated_calls(&self) -> u64 {
-        self.sync_delegated_calls.load(Ordering::SeqCst)
-    }
-
-    pub async fn cas_calls(&self) -> u64 {
-        self.cas_calls.load(Ordering::SeqCst)
-    }
-
-    /// 🎚️ Passes the inner backend's own capabilities straight through — fault injection
-    /// never changes what the backend claims to support, only what it actually does on a call.
-    pub async fn capabilities(&self) -> StorageCapabilities {
-        self.inner.capabilities().await
-    }
-
-    /// 🔚️ Faults never script a close; it closes the wrapped backend.
-    pub async fn close(&self) -> Result<(), DbError> {
-        self.inner.close().await
-    }
-}
-
-impl WalStorage for FaultStorage {
-    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_storage::WalWriterPermit, DbError> {
-        self.inner.wal().await.acquire_writer(document).await
-    }
-    async fn create_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
-        self.inner.wal().await.create_segment(writer, index).await
-    }
-
-    async fn append(&self, writer: &db_storage::WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
-        let call = self.append_calls.fetch_add(1, Ordering::SeqCst) + 1;
-        let script = self.script().await;
-        {
-            if script.fail_nth_write == Some(call) {
-                return Err(DbError::Io(format!("fault_storage: injected failure on wal append #{call}")));
-            }
-            if let Some((torn_call, keep_bytes)) = script.torn_write_at {
-                if torn_call == call {
-                    let keep = (keep_bytes as usize).min(bytes.len());
-                    let pages = match bytes.try_prefix(keep) {
-                        Ok(pages) => pages,
-                        Err(_) => return Err(DbError::Internal("fault_storage torn prefix exceeded the retained DB page owner".to_string())),
-                    };
-                    return self.inner.wal().await.append(writer, index, pages).await;
-                }
-            }
-            self.inner.wal().await.append(writer, index, bytes).await
-        }
-    }
-
-    async fn sync(&self, writer: &db_storage::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
-        let call = self.sync_calls.fetch_add(1, Ordering::SeqCst) + 1;
-        let script = self.script().await;
-        if script.fail_nth_sync == Some(call) {
-            return Err(DbError::Io(format!("fault_storage: injected failure on wal sync #{call}")));
-        }
-        if script.fsync_lies {
-            return Ok(());
-        }
-        self.sync_delegated_calls.fetch_add(1, Ordering::SeqCst);
-        self.inner.wal().await.sync(writer, index, class).await
-    }
-
-    async fn seal(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
-        self.inner.wal().await.seal(writer, index).await
-    }
-
-    async fn read(&self, document: &ArtifactId, index: u64, range: pack::ByteRange) -> Result<DbIoPages, DbError> {
-        self.inner.wal().await.read(document, index, range).await
-    }
-
-    async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
-        self.inner.wal().await.segment_len(document, index).await
-    }
-
-    async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
-        self.inner.wal().await.segment_state(document, index).await
-    }
-
-    async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        self.inner.wal().await.list_segments(document).await
-    }
-
-    async fn truncate_tail(&self, writer: &db_storage::WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
-        self.inner.wal().await.truncate_tail(writer, index, new_len).await
-    }
-
-    async fn delete_segment(&self, writer: &db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
-        self.inner.wal().await.delete_segment(writer, index).await
-    }
-}
-
-impl SnapshotStorage for FaultStorage {
-    fn publication_scope(&self) -> usize {
-        self.inner.publication_scope()
-    }
-
-    async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
-        self.inner.snapshot().await.write_generation(document, generation, bytes).await
-    }
-
-    async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
-        self.inner.snapshot().await.read_generation(document, generation).await
-    }
-
-    async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
-        self.inner.snapshot().await.latest_generation(document).await
-    }
-
-    async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        self.inner.snapshot().await.list_generations(document).await
-    }
-
-    async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
-        self.inner.snapshot().await.delete_generation(document, generation).await
-    }
-}
-
-impl PayloadStorage for FaultStorage {
-    async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
-        self.inner.payload().await.put(bytes).await
-    }
-
-    async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
-        self.inner.payload().await.get(hash).await
-    }
-
-    async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-        self.inner.payload().await.contains(hash).await
-    }
-
-    async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-        self.inner.payload().await.delete(hash).await
-    }
-
-    async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-        self.inner.payload().await.len(hash).await
-    }
-}
-
-impl CatalogStorage for FaultStorage {
-    async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
-        self.inner.catalog().await.read_root().await
-    }
-
-    async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
-        let call = self.cas_calls.fetch_add(1, Ordering::SeqCst) + 1;
-        let conflict = self.script().await.cas_conflict_nth == Some(call);
-        {
-            if conflict {
-                let current = self.inner.catalog().await.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
-                return Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch });
-            }
-            self.inner.catalog().await.cas_root(expected, new_bytes).await
-        }
-    }
-}
-
-impl IndexStorage for FaultStorage {
-    async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
-        self.inner.index().await.write_run(document, run_id, bytes).await
-    }
-
-    async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
-        self.inner.index().await.read_run(document, run_id).await
-    }
-
-    async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
-        self.inner.index().await.list_runs(document).await
-    }
-
-    async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
-        self.inner.index().await.delete_run(document, run_id).await
-    }
-}
-
-impl LeaseStorage for FaultStorage {
-    async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-        self.inner.lease().await.acquire(resource, holder, ttl_ms, now_ms).await
-    }
-
-    async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-        self.inner.lease().await.renew(resource, holder, fence, ttl_ms, now_ms).await
-    }
-
-    async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-        self.inner.lease().await.release(resource, holder, fence).await
-    }
-
-    async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-        self.inner.lease().await.current(resource, now_ms).await
-    }
-}
-//#endregion 🔖️FaultStorage
-
 //#region 🔖️CrashHarness
 /// 📋️ What `CrashHarness::run_crash_after_every_write` found across every injected write
 /// boundary.
@@ -582,7 +322,7 @@ impl CrashHarness {
             as_fault(&faulted).await.set_script(FaultScript { fail_nth_write: Some(crash_at), ..FaultScript::default() }).await;
             run_workload_until_fault(&document, &ops, faulted.clone()).await;
 
-            match db_artifact::ArtifactEngine::open(document.clone(), &faulted, db_artifact::ArtifactEngineConfig::default(), 0) {
+            match db_artifact_engine::ArtifactEngine::open(document.clone(), &faulted, db_artifact_engine::ArtifactEngineConfig::default(), 0) {
                 Ok((recovered, _report)) => {
                     if !recovered_state_matches_prefix(&recovered, &ops, expected_committed).await {
                         report.state_mismatches.push(crash_at);
@@ -607,7 +347,7 @@ impl CrashHarness {
 /// [`DbBackend::Fault`] variant — `MemoryStorage` does no genuinely-blocking I/O, so
 /// `CrashHarness`'s workloads never enter the shared typed I/O lane.
 async fn new_fault_backend() -> Arc<DbBackend> {
-    Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))).await)))
+    Arc::new(DbBackend::Fault(Box::new(FaultStorage::new(Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()))).await)))
 }
 
 /// 🔍️ Recovers the `&FaultStorage` a [`new_fault_backend`] produced, so `CrashHarness` can
@@ -624,10 +364,10 @@ async fn as_fault(storage: &DbBackend) -> &FaultStorage {
 
 #[cfg(not(target_arch = "wasm32"))]
 async fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend>) {
-    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
+    let mut engine = db_artifact_engine::ArtifactEngine::create(document.clone(), storage, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
-        let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).await.expect("testkit: single-envelope batch");
-        engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("testkit: baseline submit must not fault");
+        let batch = db_artifact_contract::CommandBatch::new(vec![envelope.clone()]).await.expect("testkit: single-envelope batch");
+        engine.submit(batch, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("testkit: baseline submit must not fault");
     }
 }
 
@@ -635,21 +375,21 @@ async fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::
 /// panicking — the fault IS the point, simulating a crash mid-workload.
 #[cfg(not(target_arch = "wasm32"))]
 async fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend>) {
-    let created = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0);
+    let created = db_artifact_engine::ArtifactEngine::create(document.clone(), storage, db_artifact_engine::ArtifactEngineConfig::default(), 0);
     let mut engine = match created {
         Ok(engine) => engine,
         Err(_) => return, // the fault fired during genesis itself — nothing further to submit.
     };
     for (i, envelope) in ops.iter().enumerate() {
-        let batch = db_artifact::CommandBatch::new(vec![envelope.clone()]).await.expect("testkit: single-envelope batch");
-        if engine.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.is_err() {
+        let batch = db_artifact_contract::CommandBatch::new(vec![envelope.clone()]).await.expect("testkit: single-envelope batch");
+        if engine.submit(batch, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.is_err() {
             return;
         }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn recovered_state_matches_prefix(recovered: &db_artifact::ArtifactEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
+async fn recovered_state_matches_prefix(recovered: &db_artifact_engine::ArtifactEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
     if recovered.frontier().await.head_seq != expected_committed as u64 {
         return false;
     }
@@ -692,7 +432,6 @@ async fn query_result_is_present(result: Result<Option<db_query::QueryBytes>, Db
     true
 }
 //#endregion 🔖️CrashHarness
-
 //#region 🔖️Laws
 #[cfg(not(target_arch = "wasm32"))]
 async fn temp_dir(name: &str) -> std::path::PathBuf {
@@ -703,8 +442,8 @@ async fn temp_dir(name: &str) -> std::path::PathBuf {
     dir
 }
 
-async fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artifact::CommandBatch {
-    db_artifact::CommandBatch::new(vec![envelope]).await.expect("testkit: single-envelope batch")
+async fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artifact_contract::CommandBatch {
+    db_artifact_contract::CommandBatch::new(vec![envelope]).await.expect("testkit: single-envelope batch")
 }
 
 /// 🔁️ The replay-determinism law: (1) a document's WAL replay after a clean shutdown+reopen
@@ -722,7 +461,7 @@ pub async fn assert_replay_deterministic(pool: Arc<semio_framework_async::Worker
         let mut database = Database::open_at(pool.clone(), &root, Profile::Test).await.expect("testkit: open_at for replay law");
         let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.expect("testkit: create_document for replay law");
         for envelope in &ops {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
         let frontier = handle.frontier().await.expect("frontier");
         drop(handle);
@@ -745,7 +484,7 @@ pub async fn assert_replay_deterministic(pool: Arc<semio_framework_async::Worker
         let database = Database::open_at(pool, &root_independent, Profile::Test).await.expect("testkit: open independent replica");
         let handle = database.create_document(ArtifactSpec::new(document).await).await.expect("testkit: create independent replica document");
         for envelope in &ops_regenerated {
-            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
+            db_actor::block_on(handle.submit(single_envelope_batch(envelope.clone()).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).expect("submit future resolved").expect("submit succeeded");
         }
         handle.frontier().await.expect("frontier")
     };
@@ -762,27 +501,27 @@ pub async fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapsho
     let document = protocol::ArtifactId(format!("testkit-snap-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, before_snapshot + after_snapshot.max(1)).await;
 
-    let storage_snapshotting: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+    let storage_snapshotting: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
     {
-        let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine a");
+        let mut engine = db_artifact_engine::ArtifactEngine::create(document.clone(), storage_snapshotting.clone(), db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create engine a");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("submit a");
+            engine.submit(single_envelope_batch(envelope.clone()).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("submit a");
             if i + 1 == before_snapshot {
                 engine.snapshot_now((i + 1) as u64).await.expect("snapshot_now");
             }
         }
     }
-    let (materialized_from_snapshot, report_a) = db_artifact::ArtifactEngine::open(document.clone(), &storage_snapshotting, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine a");
+    let (materialized_from_snapshot, report_a) = db_artifact_engine::ArtifactEngine::open(document.clone(), &storage_snapshotting, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("open engine a");
     assert!(before_snapshot == 0 || report_a.from_snapshot, "replica a must have materialized from a real snapshot when one was published");
 
-    let storage_full_replay: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+    let storage_full_replay: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
     {
-        let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine b");
+        let mut engine = db_artifact_engine::ArtifactEngine::create(document.clone(), storage_full_replay.clone(), db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create engine b");
         for (i, envelope) in ops.iter().enumerate() {
-            engine.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("submit b");
+            engine.submit(single_envelope_batch(envelope.clone()).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("submit b");
         }
     }
-    let (materialized_full_replay, report_b) = db_artifact::ArtifactEngine::open(document, &storage_full_replay, db_artifact::ArtifactEngineConfig::default(), 0).expect("open engine b");
+    let (materialized_full_replay, report_b) = db_artifact_engine::ArtifactEngine::open(document, &storage_full_replay, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("open engine b");
     assert!(!report_b.from_snapshot, "replica b must never have snapshotted");
     assert_eq!(report_b.commands_replayed as usize, ops.len(), "a never-snapshotted replica must replay every command from genesis");
 
@@ -831,7 +570,7 @@ pub async fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: u
     let document = protocol::ArtifactId(document_core.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1)).await;
 
-    let storage = db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let build_projections = || vec![db_projection::erase(CountingProjection)];
 
     let incremental_engine = db_projection::ProjectionEngine::new(&storage, document_core.clone(), build_projections()).await.expect("projection engine (incremental)");
@@ -865,8 +604,8 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     }
@@ -879,17 +618,17 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-undo-{seed:x}"));
-    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(db_storage::db_io_test_pool())).unwrap()));
-    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
+    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool())).unwrap()));
+    let mut engine = db_artifact_engine::ArtifactEngine::create(document.clone(), storage, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
     let forward_value = serde_json::json!(seed % 1000);
     let envelope = schema_erased_envelope(&document, "op-forward", "actor-1", &path, forward_value.clone(), serde_json::Value::Null).await;
     let target = envelope.mutation_id.clone();
-    engine.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions::default(), 1).await.expect("submit forward");
+    engine.submit(single_envelope_batch(envelope).await, db_artifact_contract::SubmitOptions::default(), 1).await.expect("submit forward");
 
     let after_forward_bytes = engine.get(&path).await.expect("forward value query").expect("forward value present");
-    let after_forward: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(after_forward_bytes).await).await.expect("json");
+    let after_forward: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(after_forward_bytes).await).await.expect("json");
     assert_eq!(after_forward, forward_value);
 
     engine.undo(&target, protocol::MutationId("op-undo".to_string()), protocol::ActorId("actor-1".to_string()), 2).await.expect("undo");
@@ -897,7 +636,7 @@ pub async fn assert_inverse_undo_roundtrip(seed: u64) {
 
     engine.undo(&protocol::MutationId("op-undo".to_string()), protocol::MutationId("op-redo".to_string()), protocol::ActorId("actor-1".to_string()), 3).await.expect("redo (undo of undo)");
     let after_redo_bytes = engine.get(&path).await.expect("redo value query").expect("redo value present");
-    let after_redo: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(after_redo_bytes).await).await.expect("json");
+    let after_redo: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(after_redo_bytes).await).await.expect("json");
     assert_eq!(after_redo, forward_value, "undoing the undo (redo) must restore the exact original value — inverse-of-inverse roundtrip");
 }
 
@@ -911,32 +650,32 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
     let document_core = ArtifactId(document.0.clone());
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(2)).await;
 
-    let server_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
-    let mut server = db_artifact::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create server");
+    let server_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let mut server = db_artifact_engine::ArtifactEngine::create(document.clone(), server_storage.clone(), db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create server");
     for (i, envelope) in ops.iter().enumerate() {
-        server.submit(single_envelope_batch(envelope.clone()).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("server submit");
+        server.submit(single_envelope_batch(envelope.clone()).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("server submit");
     }
     let server_frontier = server.frontier().await;
     let sync_state = db_actor::block_on(async { db_sync::replay_sync_state(&server_storage.wal().await, document_core.clone()).await }).expect("replay_sync_state");
 
-    let replica1_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
-    let mut replica1 = db_artifact::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica1");
+    let replica1_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let mut replica1 = db_artifact_engine::ArtifactEngine::create(document.clone(), replica1_storage, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create replica1");
     let missing1 = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core.clone())).await.expect("missing_commands one-shot");
     for (i, envelope) in missing1.into_iter().enumerate() {
-        replica1.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("replica1 submit");
+        replica1.submit(single_envelope_batch(envelope).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("replica1 submit");
     }
 
-    let replica2_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
-    let mut replica2 = db_artifact::ArtifactEngine::create(document, replica2_storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("create replica2");
+    let replica2_storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let mut replica2 = db_artifact_engine::ArtifactEngine::create(document, replica2_storage, db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create replica2");
     let half = ops.len() / 2;
     let missing2_first = db_sync::missing_commands(&sync_state, &Frontier::genesis(document_core)).await.expect("missing_commands first half");
     for (i, envelope) in missing2_first.into_iter().take(half).enumerate() {
-        replica2.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("replica2 submit (first half)");
+        replica2.submit(single_envelope_batch(envelope).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i as u64).await.expect("replica2 submit (first half)");
     }
     let replica2_resume_frontier = replica2.frontier().await;
     let missing2_rest = db_sync::missing_commands(&sync_state, &replica2_resume_frontier).await.expect("missing_commands resumed");
     for (i, envelope) in missing2_rest.into_iter().enumerate() {
-        replica2.submit(single_envelope_batch(envelope).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, (half + i) as u64).await.expect("replica2 submit (rest)");
+        replica2.submit(single_envelope_batch(envelope).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, (half + i) as u64).await.expect("replica2 submit (rest)");
     }
 
     assert_eq!(server_frontier, replica1.frontier().await, "a one-shot replica must converge to the server's exact frontier");
@@ -970,14 +709,14 @@ pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage)
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_preview_never_durable(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-preview-{seed:x}"));
-    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new(db_storage::db_io_test_pool())).unwrap()));
+    let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool())).unwrap()));
     let core_document = ArtifactId(document.0.clone());
-    let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact::ArtifactEngineConfig::default(), 0).expect("create engine");
+    let mut engine = db_artifact_engine::ArtifactEngine::create(document.clone(), storage.clone(), db_artifact_engine::ArtifactEngineConfig::default(), 0).expect("create engine");
 
     let path = CommandGen::new(seed).random_path();
     let committed_value = serde_json::json!("committed");
     let envelope = schema_erased_envelope(&document, "op-committed", "actor-1", &path, committed_value.clone(), serde_json::Value::Null);
-    engine.submit(single_envelope_batch(envelope.await).await, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.expect("submit committed");
+    engine.submit(single_envelope_batch(envelope.await).await, db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.expect("submit committed");
 
     let wal_facet = db_actor::block_on(storage.wal());
     let segments_before = db_actor::block_on(wal_facet.list_segments(&core_document)).expect("list_segments");
@@ -994,11 +733,11 @@ pub async fn assert_preview_never_durable(seed: u64) {
     assert_eq!(engine.frontier().await, frontier_before, "a preview must never advance the document's committed frontier");
 
     let previewed_bytes = engine.preview_get(&preview_id, &path).await.expect("preview_get").expect("preview value present");
-    let previewed: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(previewed_bytes).await).await.expect("json");
+    let previewed: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(previewed_bytes).await).await.expect("json");
     assert_eq!(previewed, preview_value, "the preview overlay must shadow the committed value for its own reader");
 
     let committed_bytes = engine.get(&path).await.expect("committed value query").expect("committed value still present");
-    let committed_still: serde_json::Value = db_artifact::decode_pathmap_json(&query_bytes_into_vec(committed_bytes).await).await.expect("json");
+    let committed_still: serde_json::Value = db_artifact_contract::decode_pathmap_json(&query_bytes_into_vec(committed_bytes).await).await.expect("json");
     assert_eq!(committed_still, committed_value, "a preview must never mutate the canonical committed state");
 }
 
@@ -1035,7 +774,7 @@ pub async fn assert_overlay_structural_sharing(writes: usize) {
 //#endregion 🔖️Laws
 
 //#region 🧪️Tests
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../🧯️fault-storage-laws/🦀️.rs"]
+#[cfg(test)]
+#[path = "🧪️tests/🧯️fault-storage-laws/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

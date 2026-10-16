@@ -18,7 +18,4 @@ pub fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapshot>, _
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

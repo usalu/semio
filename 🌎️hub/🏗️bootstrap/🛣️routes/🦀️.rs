@@ -8,23 +8,26 @@ use axum::Router;
 use directory::os_directory::schema::space_artifact_creation::SPACE_ARTIFACT_CREATION_MAX_BYTES;
 use directory::os_directory;
 use directory::os_directory::{DOCUMENT_CHECK_IN_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES};
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::directory::ADMIN_INTENT_REQUEST_MAX_BYTES;
-use crate::state::HubState;
-use crate::readiness::{HUB_PROCESS_START, get_healthz, get_readyz};
-use crate::transport::{ForwardedTlsTrustV1, refusal_middleware, transport_security_middleware, rate_limit_middleware, CrossOriginPolicyV1, cors_middleware, route_metrics_middleware};
-use crate::access_grants::{issue_document_open_plan, issue_document_execution_target_manifest, issue_document_execution_target_component, issue_document_execution_target_descriptor, issue_document_execution_target_browser_actor, issue_document_plan_socket_grant, issue_directory_socket_grant, issue_scoped_directory_socket_grant};
-use crate::pair_blobs::{get_active_checkpoint_pair, get_document_status, put_blob, get_blob, head_blob};
-use crate::check_in::{post_document_check_in, get_document_check_in, post_document_check_in_cancel};
-use crate::document_socket::document_ws_v1;
-use crate::directory_commands::{post_directory_commands, get_directory_spaces, get_directory_space, post_redeem_invite};
-use crate::directory_events::{get_directory_event_page_v1, get_directory_preference_page_v1, get_directory_events, directory_ws_v1, directory_scoped_ws_v1};
-use crate::artifact_creation::{get_space_artifact_creation_catalog, post_space_artifact_creation, get_space_artifact_creation_status, post_space_artifact_creation_cancel};
-use crate::session_agent::{get_session_me, post_session_sign_out, post_auth_session, post_auth_credential, post_agent_delegation, get_agent_delegations, post_agent_delegation_revoke, post_agent_session};
-use crate::admin::{admin_operation, cancel_admin_operation, admin_operation_audit, admin_intents, admin_overview, admin_observability, admin_spaces, admin_space, admin_users, admin_connections, admin_documents, admin_events};
-use crate::assets::{list_extensions, get_extension_asset, get_trusted_plugin_module_index, get_trusted_plugin_module_manifest, get_trusted_plugin_module_file, get_admin_root, get_admin_asset};
-use crate::inference::{post_inference_gis_map_job, post_inference_gis_map_job_reconcile, get_inference_gis_map_job_events, post_inference_gis_map_job_cancel, post_inference_gis_map_job_approval, post_inference_gis_map_approval_undo, INFERENCE_REQUEST_MAX_BYTES};
-use db::db_storage::PayloadStorage as _;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_directory_contract::ADMIN_INTENT_REQUEST_MAX_BYTES;
+use semio_hub_state::HubState;
+use semio_hub_runtime::readiness::HUB_PROCESS_START;
+use semio_hub_session_routes::readiness::{get_healthz, get_readyz};
+use semio_hub_runtime::transport::{ForwardedTlsTrustV1, refusal_middleware, transport_security_middleware, CrossOriginPolicyV1, cors_middleware, route_metrics_middleware};
+use semio_hub_session_routes::transport::rate_limit_middleware;
+use semio_hub_session_routes::access_grants::{issue_document_open_plan, issue_document_execution_target_manifest, issue_document_execution_target_component, issue_document_execution_target_descriptor, issue_document_execution_target_browser_actor, issue_document_plan_socket_grant, issue_directory_socket_grant, issue_scoped_directory_socket_grant};
+use semio_hub_document_routes::pair_blobs::{get_active_checkpoint_pair, get_document_status, put_blob, get_blob, head_blob};
+use semio_hub_document_routes::check_in::{post_document_check_in, get_document_check_in, post_document_check_in_cancel};
+use semio_hub_document_routes::document_socket::document_ws_v1;
+use semio_hub_session_routes::directory_commands::{post_directory_commands, get_directory_spaces, get_directory_space, post_redeem_invite};
+use semio_hub_document_routes::directory_events::{get_directory_event_page_v1, get_directory_preference_page_v1, get_directory_events, directory_ws_v1, directory_scoped_ws_v1};
+use semio_hub_document_routes::artifact_creation::{get_space_artifact_creation_catalog, post_space_artifact_creation, get_space_artifact_creation_status, post_space_artifact_creation_cancel};
+use semio_hub_session_routes::session_agent::{get_session_me, post_session_sign_out, post_auth_session, post_auth_credential, post_agent_delegation, get_agent_delegations, post_agent_delegation_revoke, post_agent_session};
+use semio_hub_document_routes::admin::{admin_operation, cancel_admin_operation, admin_operation_audit, admin_intents, admin_overview, admin_observability, admin_spaces, admin_space, admin_users, admin_connections, admin_documents, admin_events};
+use semio_hub_document_routes::assets::{list_extensions, get_extension_asset, get_trusted_plugin_module_index, get_trusted_plugin_module_manifest, get_trusted_plugin_module_file, get_admin_root, get_admin_asset};
+use semio_hub_document_routes::inference::{post_inference_gis_map_job, post_inference_gis_map_job_reconcile, get_inference_gis_map_job_events, post_inference_gis_map_job_cancel, post_inference_gis_map_job_approval, post_inference_gis_map_approval_undo};
+use semio_hub_route_models::inference::INFERENCE_REQUEST_MAX_BYTES;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 💡️Inference
@@ -56,18 +59,18 @@ fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
 /// limiting or any handler sees it — a compromised transport is not a per-route question.
 ///
 /// 🚧️ Outermost of all: every answer, the transport refusal included, leaves typed and signed.
-pub(crate) fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Router {
+pub fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Router {
     std::sync::LazyLock::force(&HUB_PROCESS_START);
     artifact_creation_routes(inference_routes(Router::new()))
         .route("/healthz", get(get_healthz))
         .route("/readyz", get(get_readyz))
-        .route(semio_hub::auth::SESSION_MINT_ROUTE, post(post_auth_session).layer(DefaultBodyLimit::max(semio_hub::auth::SIGN_IN_REQUEST_MAX_BYTES)))
-        .route(semio_hub::auth::CREDENTIAL_ROUTE, post(post_auth_credential).layer(DefaultBodyLimit::max(semio_hub::auth::CREDENTIAL_CHANGE_REQUEST_MAX_BYTES)))
+        .route(semio_hub_auth::SESSION_MINT_ROUTE, post(post_auth_session).layer(DefaultBodyLimit::max(semio_hub_auth::SIGN_IN_REQUEST_MAX_BYTES)))
+        .route(semio_hub_auth::CREDENTIAL_ROUTE, post(post_auth_credential).layer(DefaultBodyLimit::max(semio_hub_auth::CREDENTIAL_CHANGE_REQUEST_MAX_BYTES)))
         .route("/auth/sessions/me", get(get_session_me))
         .route("/auth/sessions/me/sign-out", post(post_session_sign_out).layer(DefaultBodyLimit::max(0)))
-        .route(semio_hub::auth::agent::AGENT_DELEGATION_ROUTE, post(post_agent_delegation).get(get_agent_delegations).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_DELEGATION_REQUEST_MAX_BYTES)))
-        .route(semio_hub::auth::agent::AGENT_DELEGATION_REVOKE_ROUTE, post(post_agent_delegation_revoke).layer(DefaultBodyLimit::max(0)))
-        .route(semio_hub::auth::agent::AGENT_SESSION_ROUTE, post(post_agent_session).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_SESSION_REQUEST_MAX_BYTES)))
+        .route(semio_hub_auth::agent::AGENT_DELEGATION_ROUTE, post(post_agent_delegation).get(get_agent_delegations).layer(DefaultBodyLimit::max(semio_hub_auth::agent::AGENT_DELEGATION_REQUEST_MAX_BYTES)))
+        .route(semio_hub_auth::agent::AGENT_DELEGATION_REVOKE_ROUTE, post(post_agent_delegation_revoke).layer(DefaultBodyLimit::max(0)))
+        .route(semio_hub_auth::agent::AGENT_SESSION_ROUTE, post(post_agent_session).layer(DefaultBodyLimit::max(semio_hub_auth::agent::AGENT_SESSION_REQUEST_MAX_BYTES)))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
         .route("/directory/spaces", get(get_directory_spaces))
         .route("/directory/spaces/{id}", get(get_directory_space))

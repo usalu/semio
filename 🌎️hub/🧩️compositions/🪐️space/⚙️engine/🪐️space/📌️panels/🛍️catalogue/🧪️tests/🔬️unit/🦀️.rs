@@ -22,7 +22,7 @@ async fn seed_app(plugin_id: &str, app_id: &str, label: &str, document: &[&str],
 /// keys, outermost first (the `Apps` section, then every ancestor branch), joined by
 /// `TREE_WINDOW_PATH_SEPARATOR` — see `TreeWindows::path_of`.
 fn branch_path(segments: &[&str]) -> String {
-    let mut parts = vec![crate::engine::space::S_PLAY_CATALOGUE_TAB_ID.to_string()];
+    let mut parts = vec![semio_hub_space_foundation::S_PLAY_CATALOGUE_TAB_ID.to_string()];
     let mut id = String::from("s-play-catalogue.document");
     for segment in segments {
         id = format!("{id}.{segment}");

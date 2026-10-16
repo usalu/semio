@@ -1,15 +1,15 @@
 //! 🧪️ Live slots use real Store leases, full authority tokens, and bounded three-root retirement.
 
 use super::*;
-use crate::{app::InteractionConfigMutation, local_interaction::query::tests::install_original_interaction_owners};
+use crate::{mutations::InteractionConfigMutation, query::tests::install_original_interaction_owners};
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
 
 type TestStore = ArtifactStore<protocol::InteractionState, InteractionConfigMutation>;
 type Query = LocalInteractionLiveQuery<protocol::InteractionState, protocol::InteractionState>;
-use crate::local_interaction::query::tests::original_receiving_recipient;
+use crate::query::tests::original_receiving_recipient;
 
 async fn stores() -> ([TestStore; 3],crate::io::control::NativeSnapshotBodyWallet) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).expect("fixture read at run time")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({});
@@ -202,7 +202,7 @@ async fn local_interaction_live_terminates_without_any_store_reclamation() {
 fn local_interaction_live_empty_capture_reaches_its_terminal_closed_reply() {
     let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, None);let mut recipient=original_receiving_recipient();
     let mut query = LocalInteractionLiveQuery {
-        owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(crate::local_interaction::query::tests::empty_capture_for_live_law(), 3, 8)), inputs, error: None, error_close:None }),
+        owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(crate::query::tests::empty_capture_for_live_law(), 3, 8)), inputs, error: None, error_close:None }),
         request_id: 3,
         started: false,
         page_sent: false,
@@ -250,7 +250,7 @@ fn local_interaction_runtime_query_generation_exhausts_before_slot_admission() {
 fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retirement_counts() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
-        let source = crate::local_interaction::query::tests::hostile_capture_for_live_law();
+        let source = crate::query::tests::hostile_capture_for_live_law();
         let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, None);let mut recipient=original_receiving_recipient();
         let mut query = LocalInteractionLiveQuery {
             owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(source, 13, 41)), inputs, error: None, error_close:None }),

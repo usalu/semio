@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "fresh",
+      "initial": "none",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": true,
+      "created": 2
+    },
+    {
+      "name": "existing",
+      "initial": "both",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": true,
+      "created": 0
+    },
+    {
+      "name": "one-parent",
+      "initial": "cache",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": true,
+      "created": 1
+    },
+    {
+      "name": "file-parent",
+      "initial": "cache-file",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "symlink-parent",
+      "initial": "cache-link",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "file-base",
+      "initial": "base-file",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "symlink-base",
+      "initial": "base-link",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "workspace-symlink",
+      "initial": "workspace-link",
+      "restriction": "live",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "cancelled",
+      "initial": "none",
+      "restriction": "cancelled",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "forged",
+      "initial": "none",
+      "restriction": "forged",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "noncanonical",
+      "initial": "none",
+      "restriction": "noncanonical",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "long",
+      "initial": "none",
+      "restriction": "long",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "concurrent-directory",
+      "initial": "none",
+      "restriction": "live",
+      "mkdir": "race-directory",
+      "accepted": true,
+      "created": 2
+    },
+    {
+      "name": "creation-primary",
+      "initial": "none",
+      "restriction": "live",
+      "mkdir": "throw-undefined",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "creation-cancel",
+      "initial": "none",
+      "restriction": "live",
+      "mkdir": "cancel-after-cache",
+      "accepted": false,
+      "created": 1
+    },
+    {
+      "name": "concurrent-link",
+      "initial": "none",
+      "restriction": "live",
+      "mkdir": "race-link",
+      "accepted": false,
+      "created": 0
+    },
+    {
+      "name": "ancestor-link",
+      "initial": "none",
+      "restriction": "ancestor-link",
+      "mkdir": "normal",
+      "accepted": false,
+      "created": 0
+    }
+  ]
+}

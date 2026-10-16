@@ -30,8 +30,7 @@
 )]
 
 #[cfg(test)]
-#[path = "../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 
 #[cfg(test)]
 #[global_allocator]
@@ -54,139 +53,8 @@ extern crate semio_framework_async as wasm_bindgen_futures;
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /
 // `use protocol::` style paths resolve through these aliases to this crate root.
 
-#[path = "."]
-pub mod os_dsl {
-    #[path = "../../🔨️modules/🗣️dsl/🦀️.rs"]
-    mod component;
-    pub use component::*;
+include!("📥️mounts/🌱️wp1-leaves/🦀️.rs");
 
-    #[path = "."]
-    pub mod family {
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️.rs"]
-        pub mod catalog;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/📎️embed/🦀️.rs"]
-        pub mod embed;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🌍️geo/🦀️.rs"]
-        pub mod geo;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️.rs"]
-        pub mod graph;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🧑‍🍳recipe/🦀️.rs"]
-        pub mod recipe;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/🎬️scene/🦀️.rs"]
-        pub mod scene;
-
-        #[path = "../../🔨️modules/🗣️dsl/👪️family/📊️sheet/🦀️.rs"]
-        pub mod sheet;
-    }
-
-    #[cfg(test)]
-    #[path = "../../🔨️modules/🗣️dsl/🧹️fixture-sweep/🧪️tests/🧹️fixture-sweep/🦀️.rs"]
-    pub mod fixture_sweep;
-
-    #[path = "../../🔨️modules/🗣️dsl/📖️grammar/🦀️.rs"]
-    pub mod grammar;
-
-    #[path = "../../🔨️modules/🗣️dsl/🧠️lsp/🦀️.rs"]
-    pub mod lsp;
-
-
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[path = "../../🔨️modules/🗣️dsl/📇️registry/🦀️.rs"]
-    pub mod registry;
-
-
-}
-
-#[path = "."]
-pub mod os_pack {
-    #[cfg(not(target_arch = "wasm32"))]
-    #[path = "../../🔨️modules/🎒️pack/🚦️control/🦀️.rs"]
-    pub mod control;
-    pub use semio_framework_os_pack::*;
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️.rs"]
-    pub mod cli;
-
-    // 🎒️ The `.spk` container (header/footer/segments/manifest/recovery/sources) is owned by
-    // `🧰️framework/🔨️modules/🎒️pack`, and its codec floor by the replication crate. What stays os-side
-    // below is only the schema-driven half: the record value codec and its test-only laws.
-    pub use pack::async_;
-    pub use pack::codec;
-    pub use pack::codec::ids;
-    pub use pack::format;
-    pub use pack::http;
-    #[cfg(not(target_arch = "wasm32"))]
-    pub use pack::io;
-    pub use pack::source;
-
-    // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
-    // re-exporting it a second time here would make every primitive an ambiguous glob.
-
-
-
-
-}
-
-/// 🪡️ Generic positional list deltas — `{removed, inserted, moved, patched}` rows with base/after coordinates, never an id order list.
-#[path = "../../🔨️modules/🪡️list-delta/🦀️.rs"]
-pub mod list_delta;
-
-#[path = "."]
-pub mod os_spr {
-    #[path = "../../🔨️modules/📡️spr/🦀️.rs"]
-    mod component;
-    pub use component::*;
-
-    // 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary,
-    // `.spr` format) lives in `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no
-    // longer owns it. This facade keeps every historical `protocol::`/`os_spr::` path working.
-    pub use protocol::causal;
-    pub use protocol::conflict;
-    pub use protocol::crypto;
-    pub use protocol::dictionary;
-    pub use protocol::format;
-    pub use protocol::ids;
-    pub use protocol::scalar;
-    pub use protocol::wire;
-
-    pub use semio_framework_os_channel as channel;
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[path = "../../🔨️modules/📡️spr/⌨️cli/🦀️.rs"]
-    pub mod cli;
-
-    // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor
-    // registry, composite planner). It re-exports `protocol::mutation`'s contract from its own file,
-    // so `os_spr::command::Mutation` and friends still resolve here.
-    pub use semio_framework_os_command as command;
-
-    // 🧮️ Composite-plan folding and the fold-footprint law, kept apart from the command layer's leaf-facing kit.
-    pub use semio_framework_os_command::fold;
-
-    pub use self::crypto::*;
-    pub use self::dictionary::*;
-    pub use self::ids::*;
-    pub use self::wire::*;
-
-    pub use semio_framework_os_history as history;
-
-    #[path = "../../🔨️modules/📡️spr/🔌️io/🦀️.rs"]
-    pub mod io;
-
-    #[path = "../../🔨️modules/📡️spr/💎️materialize/🦀️.rs"]
-    pub mod materialize;
-
-    #[cfg(any(test, feature = "protocol-laws"))]
-    #[path = "../../🔨️modules/📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs"]
-    pub mod protocol_laws;
-}
 
 use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
@@ -194,11 +62,6 @@ pub use semio_framework_os_vcs as os_vcs;
 
 pub use semio_framework_os_identity as os_identity;
 
-// 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1: directory event log
-// schema + pure read model (`DirectoryEvent`/`DirectoryReadModel`/`fold`) — plain serde data, no
-// cross-crate dependency, so it mounts cleanly unlike `🔁️workflow` below.
-#[path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🦀️.rs"]
-pub mod os_plugin_module_schema;
 
 pub use semio_framework_plugin_component_receipt as os_component_receipt;
 
@@ -219,8 +82,11 @@ pub mod os_directory {
 // file's own `os_workflow` mount for the real fix, and the run crate's glue.rs for the matching
 // `extern crate semio_framework as workflow;` alias change.
 
-#[path = "../../🔨️modules/🚪️io/🦀️.rs"]
-pub mod io;
+pub mod io {
+    pub use semio_framework_os_io::*;
+    pub use semio_framework_os_store_codec_registry::lifted_io::*;
+}
+pub use semio_framework_os_io::{compose_thunk, io_run_thunk, io_sniff_thunk};
 
 pub use semio_framework_io_schema as io_schema;
 
@@ -261,19 +127,7 @@ pub use crate::os_pack::*;
 pub use crate::os_spr::*;
 pub use crate::os_store::test_support;
 pub use crate::os_store::*;
-#[path = "../../🔨️modules/🧬️semio/🦀️.rs"]
-pub mod os_semio;
 
-// 🧩️ `.sxt` extension package pack/unpack/verify is host-only: installing a runtime extension is
-// native-host tooling (only caller repo-wide: `semio-framework-os`'s host crate), never something a
-// guest component does to itself. `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, so this
-// mount is narrowed to exclude the WASI component target with the full
-// `not(all(target_arch = "wasm32", target_env = "p2"))` form — a bare arch gate would also exclude
-// the browser wasm32 target, which does not need to lose this capability. See
-// `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`'s matching `zip` target-gate.
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-#[path = "../../🔨️modules/🧩️extension/🦀️.rs"]
-pub mod os_extension;
 
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub use crate::os_extension as extension;
@@ -306,25 +160,9 @@ pub use semio_framework_dsl_record_derive as __dsl_record_derive;
 /// 🌿️ Publishes the canonical retained ownership derives beside their owned value traits.
 
 
-//#region 🧪️Tests
-#[cfg(test)]
-include!("../../🧪️tests/🔬️standalone/🦀️.rs");
-//#endregion 🧪️Tests
+include!("📥️mounts/🧪️wp8-tests/🦀️.rs");
 
-#[cfg(test)]
-#[path="../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/♻️retirement/🦀️.rs"]
-mod canonical_intrinsic_retirement_tests;
 
-#[path="../../🔨️modules/🔌️plugin/📇️registry/📥️runtime/🦀️.rs"]
-pub mod native_catalog;
-
-#[cfg(test)]
-#[path = "../../🔨️modules/📡️spr/🧵️channel/🧪️tests/📤️return-content/🦀️.rs"]
-mod channel_return_content_tests;
-
-#[cfg(test)]
-#[path = "../../🔨️modules/🌿️vcs/🧪️tests/🧪️branch-provenance/🦀️.rs"]
-mod vcs_branch_provenance_tests;
 
 pub use semio_framework_mutation_diff::{sparse_record_diff,sparse_whole_diff};
 

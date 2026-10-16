@@ -147,7 +147,7 @@ test("native law planning is source-bound, ordered, cancellable, and phase-exact
   const plan = socketGrantNativeLawPlan();
   expect(plan).toEqual(fixture.nativeStages);
   expect(plan).toHaveLength(19);
-  expect(plan.filter((stage) => stage.source === "🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs")).toHaveLength(15);
+  expect(plan.filter((stage) => stage.source?.startsWith("🌎️hub/🧪️tests/🔬️bin-unit/"))).toHaveLength(15);
   expect(plan.some((stage) => stage.declaration?.includes("forced_lag_is_scope"))).toBe(false);
   expect(() => assertSocketGrantNativeLawSources(repoRoot)).not.toThrow();
   const packageRoot = join(hubRoot, "📦️packages/🦀️rust");
@@ -169,7 +169,7 @@ test("native law planning is source-bound, ordered, cancellable, and phase-exact
 
 test("Rust oracle independently parses exact test declarations and hostile lookalikes", () => {
   const oracle = readFileSync(join(hubRoot, "📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs"), "utf8");
-  const library = readFileSync(join(hubRoot, "📦️packages/🦀️rust/🦀️.rs"), "utf8");
+  const library = readFileSync(join(hubRoot, "📇️directory/🦀️.rs"), "utf8");
   expect(oracle).toContain("syn::parse_file");
   expect(oracle).toContain("test_declarations(hostile)");
   expect(oracle).toContain("!exact_declaration(&duplicates");

@@ -26,5 +26,5 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::os_store::serialization::ArtifactCodec)> {
         Some((SQLITE_SNAPSHOT_DIALECT, store::bare_artifact_codec::<Self, SpaceMutation>(S_SPACE_SCHEMA)))
     }
-fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec()) }
+fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()) }
 }

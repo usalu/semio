@@ -9,7 +9,8 @@ use std::collections::BTreeMap;
 use semio_framework_artifact_reference::ArtifactKindId;
 
 /// 🪪️ Admits one canonical artifact root owned by this exact plugin identity.
-pub(crate) fn preflight_artifact_identity(plugin_id: &str, kind: &str) -> Result<(), PluginAssemblyError> {
+#[doc(hidden)]
+pub fn preflight_artifact_identity(plugin_id: &str, kind: &str) -> Result<(), PluginAssemblyError> {
     let canonical = ArtifactKindId::parse(kind).map_err(|_| PluginAssemblyError::new("plugin-assembly.artifact-kind", "artifact identity must use canonical <domain>.<plugin>.<artifact> grammar"))?;
     if canonical.plugin() != plugin_id {
         return Err(PluginAssemblyError::new("plugin-assembly.artifact-owner", "artifact identity is not owned by the declaring plugin"));
@@ -20,7 +21,8 @@ pub(crate) fn preflight_artifact_identity(plugin_id: &str, kind: &str) -> Result
 /// 🪪️ Canonical, dot-delimited identity with explicit hierarchy.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArtifactIdentity {
-    pub(crate) value: String,
+    #[doc(hidden)]
+    pub value: String,
     segments: Vec<String>,
 }
 
@@ -239,7 +241,8 @@ impl ArtifactIdentityNamespace {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArtifactIdentityClaim {
     namespace: ArtifactIdentityNamespace,
-    pub(crate) value: String,
+    #[doc(hidden)]
+    pub value: String,
 }
 
 impl ArtifactIdentityClaim {
@@ -334,7 +337,8 @@ pub type ArtifactCapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, 
 /// 🧩️ One extension-owned capability and its conflict-checked external identities.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactCapability {
-    pub(crate) identity: ArtifactIdentity,
+    #[doc(hidden)]
+    pub identity: ArtifactIdentity,
     kind: ArtifactCapabilityKind,
     descriptor: Vec<u8>,
     executable_identity: Option<ArtifactExecutableIdentity>,
@@ -438,7 +442,8 @@ impl ArtifactCapability {
 /// 🗿️ Schema-owned, plural declarative contract for one artifact family or standard profile.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactDefinition {
-    pub(crate) identity: ArtifactIdentity,
+    #[doc(hidden)]
+    pub identity: ArtifactIdentity,
     capabilities: BTreeMap<ArtifactIdentity, ArtifactCapability>,
 }
 
@@ -681,7 +686,8 @@ impl ArtifactDefinitionRegistry {
 }
 
 /// 🔐️ Locates the one immutable typed capability whose complete claim set authorizes a runtime facet.
-pub(crate) fn require_declared_capability_or_record(definition: &ArtifactDefinition, definition_error: &mut Option<ArtifactDefinitionError>, kind: &ArtifactCapabilityKind, claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>) {
+#[doc(hidden)]
+pub fn require_declared_capability_or_record(definition: &ArtifactDefinition, definition_error: &mut Option<ArtifactDefinitionError>, kind: &ArtifactCapabilityKind, claims: Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError>) {
     if definition_error.is_some() {
         return;
     }

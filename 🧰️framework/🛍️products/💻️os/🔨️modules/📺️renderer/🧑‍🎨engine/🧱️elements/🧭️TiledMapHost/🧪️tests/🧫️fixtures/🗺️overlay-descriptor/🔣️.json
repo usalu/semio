@@ -1,0 +1,230 @@
+{
+  "$comment": "🗺️ A neutral map descriptor with a small test policy: the neutral bands plus one pickable line layer (paths, granularity path) and one pickable point layer (pins, granularity pin). The TiledMapHost story paints it and the wgpu EngineCanvas surface tests sync it, so both hosts read the same overlay and selection shapes.",
+  "mapDescriptor": {
+    "overlays": {
+      "paths": [
+        {
+          "id": "zurich-muenchen",
+          "coordinates": [
+            [
+              8.54,
+              47.37
+            ],
+            [
+              11.58,
+              48.14
+            ]
+          ]
+        }
+      ],
+      "pins": [
+        {
+          "id": "zurich",
+          "coordinates": [
+            [
+              8.54,
+              47.37
+            ]
+          ],
+          "label": "Zürich",
+          "icon": "crosshair",
+          "link": "https://example.org/zurich"
+        },
+        {
+          "id": "muenchen",
+          "coordinates": [
+            [
+              11.58,
+              48.14
+            ]
+          ],
+          "label": "München",
+          "style": "accent"
+        }
+      ]
+    },
+    "policy": {
+      "id": "overlay-test",
+      "bands": [
+        {
+          "id": "all",
+          "name": "All",
+          "description": "One band for every zoom.",
+          "maxZoom": null,
+          "maxSpanDeg": 0.0,
+          "rasterTileZ": 0,
+          "representativeSpanDeg": 360.0,
+          "labelPx": 10.5,
+          "gates": {
+            "water": true,
+            "landBackdrop": false,
+            "landCover": true,
+            "roads": true,
+            "buildings": true,
+            "boundaries": true,
+            "coastline": true,
+            "maxAdminLevel": 18446744073709551615
+          },
+          "buildingsMaxSpanDeg": null,
+          "buildingsMinTileZ": 0,
+          "roadSpans": null,
+          "roadStrokeScale": 1.0,
+          "waterAreaClasses": null,
+          "waterways": true,
+          "adminAreaHoles": true,
+          "landWash": false,
+          "landCoverOverAdminAreas": true
+        }
+      ],
+      "coarseBandCount": 0,
+      "rasterTileZMax": 22,
+      "vectorTileZMax": 22,
+      "vectorZoomSteps": [],
+      "boundaryAdminMin": 0,
+      "layers": [],
+      "defaultDrawRank": 0,
+      "featureKeys": {
+        "class": "",
+        "adminLevel": "",
+        "maritime": "",
+        "label": []
+      },
+      "roadSpans": {
+        "rows": [],
+        "fallbackBelowSpanDeg": null
+      },
+      "roadWidths": {
+        "rows": [],
+        "fallback": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "boundaryWidths": {
+        "rows": [],
+        "fallback": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "coastlineWidth": {
+        "width": 1.0,
+        "min": 0.0,
+        "max": 1.7976931348623157e+308
+      },
+      "lineScale": {
+        "coefficient": 1.0,
+        "minSpanDeg": 0.0,
+        "coefficientMinSpanDeg": 1.0,
+        "min": 1.0,
+        "max": 1.0,
+        "segments": [],
+        "beyond": 1.0
+      },
+      "labels": {
+        "spanFloorDeg": 360.0,
+        "minSpanDeg": 0.0,
+        "roadLabelSpans": {
+          "rows": [],
+          "fallbackBelowSpanDeg": null
+        },
+        "roadLabelRanks": {
+          "rows": [],
+          "fallback": 0
+        },
+        "placeLabelSpans": [],
+        "placeLabelRanks": {
+          "rows": [],
+          "fallback": 0
+        },
+        "pointLabelMaxSpanDeg": 1.7976931348623157e+308
+      },
+      "layerToggles": [
+        {
+          "key": "paths",
+          "targets": [
+            {
+              "overlay": "paths"
+            }
+          ]
+        },
+        {
+          "key": "pins",
+          "targets": [
+            {
+              "overlay": "pins"
+            }
+          ]
+        },
+        {
+          "key": "pinLabels",
+          "targets": [
+            {
+              "overlayLabels": "pins"
+            }
+          ]
+        }
+      ],
+      "overlays": [
+        {
+          "id": "paths",
+          "geometry": "line",
+          "granularity": "path",
+          "hitRadiusPx": 10.0,
+          "lineWidth": 2.0,
+          "pointRadius": 0.0,
+          "pointStroke": 0.0,
+          "labelOffsetPx": 0.0,
+          "fill": "routeStroke",
+          "stroke": "routeStroke",
+          "styleFills": []
+        },
+        {
+          "id": "pins",
+          "geometry": "point",
+          "granularity": "pin",
+          "hitRadiusPx": 14.0,
+          "lineWidth": 0.0,
+          "pointRadius": 8.0,
+          "pointStroke": 2.0,
+          "labelOffsetPx": 6.0,
+          "fill": "positionFill",
+          "stroke": "positionStroke",
+          "styleFills": [
+            {
+              "style": "accent",
+              "fill": "selectionStroke"
+            }
+          ]
+        }
+      ],
+      "stylePresets": [
+        {
+          "id": "default",
+          "technique": "colored",
+          "ink": "labelFill",
+          "paper": "surfaceClear",
+          "labelFill": "labelFill",
+          "labelHalo": "labelHalo"
+        }
+      ]
+    }
+  },
+  "selection": {
+    "pins": [
+      "zurich"
+    ],
+    "paths": []
+  },
+  "hover": {
+    "kind": "pin",
+    "id": "muenchen"
+  },
+  "expect": {
+    "pins": 2,
+    "paths": 1,
+    "selectedGranularity": "pin",
+    "selectedIds": [
+      "zurich"
+    ],
+    "hoveredId": "muenchen"
+  }
+}

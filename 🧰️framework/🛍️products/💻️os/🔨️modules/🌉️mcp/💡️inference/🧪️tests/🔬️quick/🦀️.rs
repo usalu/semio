@@ -1,10 +1,29 @@
+//! 🧱️ Inference_quick of the tools-inference crate: Inference discovery, jobs and resources.
 
-use super::*;
-use crate::catalog::{CapabilityAudience, Catalog, CatalogSource, compile};
-use crate::protocol::ToolRegistry;
-use crate::protocol::is_valid_tool_name;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
+use std::sync::Arc;
+use crate::inference::{DeclaredInference, InferenceLookup, declared_inferences_for_artifact, declared_inferences_for_workspace, execution_not_wired_error, inference_job_payload, inference_original_retained, inference_original_turn, inference_resources, lookup_inference, read_inference_resource, register_inference_job_tools, register_inference_tools, validate_inference_request};
+use semio_framework_os_mcp_capabilities::capability_declarations::inference_capabilities;
+use semio_framework_os_mcp_catalog::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, CatalogSource, ToolExposure, compile};
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};
+use semio_framework_os_mcp_foundation::errors::GatewayErrorCode;
+use semio_framework_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
+use semio_framework_os_mcp_port::channel_port::AppCommand;
+use semio_framework_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
+use semio_framework_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
+use semio_framework_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryToolRegistry, ToolRegistry, is_valid_tool_name};
+use semio_framework_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+#[cfg(test)]
+use semio_framework_os_mcp_port::channel_port::MockArtifactChannel;
+
+/// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.
+fn fixture_text(relative: &str) -> &'static str {
+    Box::leak(std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).expect(relative).into_boxed_str())
+}
+
 
 fn empty_catalog() -> Arc<Catalog> {
     Arc::new(compile(&CatalogSource::default(), Locale::En, Terminology::Native).expect("empty catalog compiles"))
@@ -41,11 +60,12 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
 fn open_workspace(catalog: Arc<Catalog>) -> Arc<HeadlessWorkspace> {
     let dir = store::test_support::tempdir().expect("tempdir");
     let mut workspace=HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), catalog).expect("opens");
-    workspace.test_discovery=Some(serde_json::from_str(include_str!("../🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
+    workspace.test_discovery=Some(serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/🧩️neutral-descriptors/🔣️.json")).unwrap());
     Arc::new(workspace)
 }
 
 //#region 🧪️Capabilities
+
 #[test]
 fn capability_schemas_are_2020_12_object_typed_at_the_top_level() {
     for capability in inference_capabilities() {
@@ -63,9 +83,11 @@ fn tool_names_are_valid_mcp_names() {
         assert!(is_valid_tool_name(tool_name), "{tool_name}");
     }
 }
+
 //#endregion 🧪️Capabilities
 
 //#region 🧪️ToolsBareTier
+
 #[test]
 fn bare_registry_still_registers_both_inference_tools() {
     let mut registry = InMemoryToolRegistry::new();
@@ -87,9 +109,11 @@ fn bare_tier_every_inference_tool_is_a_retryable_plugin_unavailable() {
         assert_eq!(payload["retryable"], true, "{name}");
     }
 }
+
 //#endregion 🧪️ToolsBareTier
 
 //#region 🧪️Discovery
+
 #[test]
 fn declared_inferences_for_workspace_finds_the_real_neutral_roster() {
     let workspace = open_workspace(neutral_only_catalog());
@@ -160,6 +184,7 @@ fn declared_inferences_for_artifact_is_retryable_plugin_unavailable_for_an_unkno
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
     assert!(error.retryable);
 }
+
 #[tokio::test]
 async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
     let workspace = open_workspace(neutral_only_catalog());
@@ -171,9 +196,11 @@ async fn inference_get_on_an_open_probe_names_the_missing_service_not_found() {
     let payload = result.structured_content.expect("structured error payload");
     assert_eq!(payload["code"], "NOT_FOUND");
 }
+
 //#endregion 🧪️Discovery
 
 //#region 🧪️ExecutionSeam
+
 #[test]
 fn lookup_inference_distinguishes_no_such_service_from_execute() {
     let declared = vec![DeclaredInference {
@@ -215,9 +242,11 @@ fn execute_lookup_reports_a_retryable_channel_not_wired_gap() {
     assert_eq!(payload.artifact_kind, "test.neutral.wfc3d");
     assert_eq!(payload.inference_schema, "test.neutral.wfc3d.solve");
 }
+
 //#endregion 🧪️ExecutionSeam
 
 //#region 🧪️Resources
+
 #[test]
 fn a_non_inference_uri_falls_through_as_none() {
     for uri in ["semio://workspace", "semio://artifact/a", "semio://artifact/a/schema", "semio://artifact/a/history"] {
@@ -265,28 +294,30 @@ async fn bound_tier_inference_resources_list_names_every_known_artifact() {
     let resources = inference_resources(Some(&workspace));
     assert!(resources.iter().any(|resource| resource.uri == "semio://artifact/probe-list/inference"));
 }
+
 //#endregion 🧪️Resources
 
 //#region 🧪️Execution
+
 /// 🏗️ A tool registry with `inference_run` wired exactly the way the live binary wires it, plus the
 /// shared `MockArtifactChannel` so the test can assert on the REAL `AppCommand::Infer` that left the
 /// dispatch path. The workspace is a real `--folder` one over `catalog`, so the declared roster is
 /// read from the plugins' own COMMITTED `🔣️.json` descriptors — no fixture roster is invented here.
-fn inference_run_harness(catalog: Arc<Catalog>) -> (InMemoryToolRegistry, crate::actions::MockArtifactChannel, Arc<HeadlessWorkspace>) {
+fn inference_run_harness(catalog: Arc<Catalog>) -> (InMemoryToolRegistry, MockArtifactChannel, Arc<HeadlessWorkspace>) {
     let workspace = open_workspace(catalog.clone());
-    let channel = crate::actions::MockArtifactChannel::new();
+    let channel = MockArtifactChannel::new();
     for _ in 0..3{channel.bump_generation(0);}
-    let actions = Arc::new(crate::actions::ActionAdapter::new(
-        Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
-        Arc::new(crate::handles::HandleTable::new()),
-        Arc::new(crate::handles::IdempotencyStore::new()),
-        Arc::new(crate::audit::AuditSinks::InMemory(crate::audit::InMemoryAuditSink::new())),
-        crate::policy::AutoApprovePolicy::Never,
-        crate::audit::ClientInfo { name: "test".into(), version: "0".into() },
+    let actions = Arc::new(ActionAdapter::new(
+        Box::new(ArtifactChannels::Mock(channel.clone())),
+        Arc::new(HandleTable::new()),
+        Arc::new(IdempotencyStore::new()),
+        Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())),
+        AutoApprovePolicy::Never,
+        ClientInfo { name: "test".into(), version: "0".into() },
     ));
     let principal = AgentPrincipal::from_scope_names("agent:test", "claude-code", &["artifacts.read".to_string(), "jobs.spawn".to_string()], None);
     let mut registry = InMemoryToolRegistry::new();
-    register_inference_job_tools(&mut registry, catalog, Some(workspace.clone()), actions, principal, crate::handles::SessionHandle::new("sess_inference"));
+    register_inference_job_tools(&mut registry, catalog, Some(workspace.clone()), actions, principal, SessionHandle::new("sess_inference"));
     (registry, channel, workspace)
 }
 
@@ -312,7 +343,7 @@ async fn inference_run_dispatches_a_neutral_declared_service_through_the_infer_c
 
     let log = channel.frame_log();
     assert_eq!(log.len(), 1, "exactly one command left the dispatch path: {log:?}");
-    let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
+    let AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
     assert_eq!(command.plugin_id, "neutral-remote");
     assert_eq!(command.artifact_kind, "test.neutral-remote.document");
     assert_eq!(command.inference_schema, "test.neutral-remote.document.inference");
@@ -332,7 +363,7 @@ async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
     assert_eq!(structured["payload"], serde_json::json!({ "seed": 7 }));
 
     let log = channel.frame_log();
-    let crate::actions::AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
+    let AppCommand::Infer(command) = &log[0].1 else { panic!("expected an Infer command, got {:?}", log[0].1) };
     assert_eq!(command.plugin_id, "neutral");
     assert_eq!(command.inference_schema, "test.neutral.wfc3d.solve");
     assert_eq!(command.cancellation_id,"original wfc cancellation");
@@ -354,24 +385,26 @@ async fn inference_run_refuses_an_undeclared_service() {
 async fn inference_run_is_scope_gated() {
     let catalog = neutral_only_catalog();
     let workspace = open_workspace(catalog.clone());
-    let channel = crate::actions::MockArtifactChannel::new();
-    let actions = Arc::new(crate::actions::ActionAdapter::new(
-        Box::new(crate::workspace::ArtifactChannels::Mock(channel.clone())),
-        Arc::new(crate::handles::HandleTable::new()),
-        Arc::new(crate::handles::IdempotencyStore::new()),
-        Arc::new(crate::audit::AuditSinks::InMemory(crate::audit::InMemoryAuditSink::new())),
-        crate::policy::AutoApprovePolicy::Never,
-        crate::audit::ClientInfo { name: "test".into(), version: "0".into() },
+    let channel = MockArtifactChannel::new();
+    let actions = Arc::new(ActionAdapter::new(
+        Box::new(ArtifactChannels::Mock(channel.clone())),
+        Arc::new(HandleTable::new()),
+        Arc::new(IdempotencyStore::new()),
+        Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())),
+        AutoApprovePolicy::Never,
+        ClientInfo { name: "test".into(), version: "0".into() },
     ));
     let mut registry = InMemoryToolRegistry::new();
-    register_inference_job_tools(&mut registry, catalog, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
+    register_inference_job_tools(&mut registry, catalog, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), SessionHandle::new("sess_unscoped"));
     let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"work":{"clockBinding":1671,"absoluteDeadlineUs":1000000,"fuel":64},"grant":{"maximumItems":64,"maximumCopyBytes":4096,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty());
 }
+
 //#endregion 🧪️Execution
 
 //#region 🧪️PayloadContract
+
 /// 📜️ One declared row carrying the contract a re-described neutral owner publishes.
 fn contract_row(required: bool, input_schema: &str) -> DeclaredInference {
     DeclaredInference {
@@ -458,6 +491,7 @@ fn a_committed_contract_reaches_the_published_roster_row() {
     assert_eq!(published["payload"]["artifactBinding"]["field"], "document");
     assert_eq!(published["payload"]["progressUnit"], "cells");
 }
+
 //#endregion 🧪️PayloadContract
 
 /// 📜️ A READ of an artifact-bound inference is still a gap, but it is now an INSTRUCTION: the
@@ -483,6 +517,7 @@ fn a_read_of_an_unbound_inference_keeps_its_plain_refusal() {
     assert!(error.message.contains("carries no canonical request payload"), "{}", error.message);
     assert!(error.details["payload"].is_null());
 }
+
 /// 🎟️ Every external caller supplies its exact five retained currencies before guest preparation.
 #[test]
 fn original_mcp_inference_preserves_required_caller_authority(){
@@ -494,7 +529,7 @@ fn original_mcp_inference_preserves_required_caller_authority(){
 /// 🎟️ The actual original command metadata borrows cancellation and preserves every supplied authority.
 #[test]
 fn original_mcp_source_requires_exact_turn_revision_cancellation_and_work() {
- let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/original-caller.json")).unwrap();
+ let source: serde_json::Value = serde_json::from_str(fixture_text("../../../💡️inference/🧪️tests/🧫️fixtures/original-caller.json")).unwrap();
  let pointer = source["cancellationId"].as_str().unwrap().as_ptr();
  let (authority, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| inference_original_turn(&source));
  let authority = authority.unwrap();

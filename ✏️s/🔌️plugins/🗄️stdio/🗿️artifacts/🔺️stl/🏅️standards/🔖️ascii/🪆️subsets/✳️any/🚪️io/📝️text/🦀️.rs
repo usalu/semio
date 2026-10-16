@@ -1,7 +1,6 @@
 //! 🚪️ Artifact representation module ownership.
 
-#[path = "📸️snapshot/🦀️.rs"]
-pub mod snapshot;
+pub use semio_s_artifact_stdio_stl_inferences::standards::v_ascii::subsets::any::io::text::snapshot;
 
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
@@ -9,5 +8,4 @@ pub mod mutations;
 #[path = "🔺️diff/🦀️.rs"]
 pub mod diff;
 
-#[path = "💡️inferences/🦀️.rs"]
-pub mod inferences;
+

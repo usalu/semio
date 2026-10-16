@@ -1,12 +1,13 @@
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1,buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "./🚪️admission/🟦️.ts";
 import { readdir, readFile, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
 import {readFileSync} from "node:fs";
 import { join, dirname, relative, isAbsolute } from "node:path";
 import {createRequire} from "node:module";
-import { randomUUID, createHash } from "node:crypto";
+import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import { checkScriptInvocation, advanceScriptInvocation, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, advanceScriptInvocation, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {acquireQueuedResourceLease} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
@@ -98,26 +99,27 @@ export function planBuildGraphInvalidationV1(inventory:BuildGraphInvalidationInv
 }
 
 /** 🔒️ Serializes graph publication and invalidation inside the original enforcing store. */
-async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,body:(store:RepositoryCacheStoreV1)=>Promise<T>,scope?:string):Promise<T> {
-  checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
-  const run=async(store:RepositoryCacheStoreV1)=>{
-    const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"build-graph-state:"+store.root+(scope?":selected:"+buildGraphWriterResourceV1(root,"selection",scope).split(":").at(-1):""),mode:"exclusive",owner:randomUUID(),control:store.control,signal:store.control.signal});
-    try{requireCurrentGraphModuleV1();return await body(store);}finally{writer.release();}
+async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>,scope?:string):Promise<T> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
+  const run=async(store:RepositoryCacheStoreV1,actualControl:ResourceLeaseControl)=>{
+    const writer=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"build-graph-state:"+store.root+(scope?":selected:"+buildGraphWriterResourceV1(root,"selection",scope).split(":").at(-1):""),mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:actualControl,signal:actualControl.signal});
+    try{requireCurrentGraphModuleV1();checkResourceLeaseControl(actualControl);return await body(store,actualControl);}finally{writer.release();}
   };
-  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,run);
+  return scope?withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,scope,run):withRepositoryBuildGraphFactStoreV1(root,invocation,phaseControl,run);
 }
 
 /** ♻️ Invalidates current graph authority while retaining charged storage, immutable pins and source facts. */
-export async function invalidateBuildGraphV1(root:string,invocation:ScriptInvocation):Promise<void> {
-  checkScriptInvocation(invocation);await advanceScriptInvocation(invocation,"build:reset","running");
-  await withBuildGraphStateV1(root,invocation,async store=>{
+export async function invalidateBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,beforeInvalidation?:(actualControl:ResourceLeaseControl)=>Promise<void>):Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);await advanceScriptInvocation(invocation,"build:reset","running");
+  await withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{
     await store.recheck();if(store.root!==dirname(buildGraphPathV1(root)))throw Error("Original graph publication store required");
     const device=(await lstat(store.root)).dev,entries:BuildGraphInvalidationInventoryV1["entries"]=[];
     for(const name of await readdir(store.root)){
       checkScriptInvocation(invocation);const status=await lstat(join(store.root,name));entries.push({name,kind:status.isSymbolicLink()?"symlink":status.isFile()?"file":status.isDirectory()?"directory":"other",links:status.nlink,bytes:status.size,device:status.dev});
       if(entries.length%64===0)await advanceScriptInvocation(invocation,"build:reset-inventory","running");
     }
-    for(const name of planBuildGraphInvalidationV1({device,entries})){
+    const selected=planBuildGraphInvalidationV1({device,entries});checkScriptInvocation(invocation);checkResourceLeaseControl(actualControl);if(beforeInvalidation)await beforeInvalidation(actualControl);checkResourceLeaseControl(actualControl);checkScriptInvocation(invocation);
+    for(const name of selected){
       checkScriptInvocation(invocation);await store.recheck();const path=requireNativeStoragePathV1(store.root,join(store.root,name)),status=await lstat(path);planBuildGraphInvalidationV1({device,entries:[{name,kind:status.isSymbolicLink()?"symlink":status.isFile()?"file":status.isDirectory()?"directory":"other",links:status.nlink,bytes:status.size,device:status.dev}]});await rm(path);await advanceScriptInvocation(invocation,"build:reset-publication","running");
     }
   });
@@ -203,16 +205,16 @@ export function requireBuildOwnerRegistryAuthorityV1(original:unknown,current:un
 }
 
 /** 📚️ Assembles all owned inference contributions without installing or invoking Nx. */
-export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation?:ScriptInvocation,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1):Promise<BuildGraphV1> {
-  selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
+export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1):Promise<BuildGraphV1> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8")));
   if(selection.kind==="tasks"&&!admission)throw Error("Closed selected owner admission required");
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
   const require=createRequire(import.meta.url),owner=require("./📥️inference/🟨️.mjs"),tests=require("../../../🧪️test/🟨️.mjs"),policies=require("./📥️inference/🛡️policy/🟨️.mjs");
   const policy=graphDeclarationV1("../🔣️policy.json"),options={analyzeLockfile:true,catalogProviders:selection.kind==="all"?registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})):admission!.catalogProviders,...(selection.kind==="tasks"?{ownerAdmission:admission}:{})};
-  const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||file==="bun.lock"||file.endsWith(".patch")),options,{workspaceRoot:root,invocation,registry});
+  const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||file==="bun.lock"||file.endsWith(".patch")),options,{workspaceRoot:root,invocation,phaseControl,registry});
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
-  const contributions=[...primary,...await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{}, {workspaceRoot:root,invocation})];
+  const contributions=[...primary,...await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{}, {workspaceRoot:root,invocation,phaseControl})];
   const policyOwners=Object.assign({},...contributions.map(([,contribution])=>contribution.projects??{}));
   contributions.push(...await policies.default.createNodesV2[1](files.filter(file=>file.endsWith("📜️script.ts")),{}, {workspaceRoot:root,projects:policyOwners}));
   const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>();
@@ -227,7 +229,7 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   const ordered=Object.entries(projects).sort(([,a],[,b])=>b.root.length-a.root.length),projectFileMap:Record<string,{file:string}[]>=Object.fromEntries(Object.keys(projects).map(name=>[name,[]]));
   const withheld=[...unavailable.keys()];
   for(const file of files){const match=ordered.find(([,project])=>project.root==="."||file.startsWith(project.root+"/"));if(match&&!withheld.some(root=>file.startsWith(root+"/")&&root.length>match[1].root.length)){const entries=projectFileMap[match[0]];if(!entries)throw Error("Discovered project file owner is missing");entries.push({file});}}
-  const context={workspaceRoot:root,projects,fileMap:{projectFileMap},invocation,selection,registry,completeSourceImports:selection.kind==="tasks"};
+  const context={workspaceRoot:root,projects,fileMap:{projectFileMap},invocation,phaseControl,selection,registry,completeSourceImports:selection.kind==="tasks"};
   const edges=[...await owner.discoverBuildDependenciesV1(options,context),...await tests.discoverTestBuildDependenciesV1({},context)];
   const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{name,type:"lib",data}]))},options,context);
   for(const[name,value]of Object.entries(metadata) as [string,any][])projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...value.metadata?.semio}};
@@ -257,8 +259,8 @@ export async function buildGraphMembershipV1(root:string,files:string[],invocati
 export async function buildGraphSourceFactsHoldV1(observations:unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void):Promise<boolean>{return createRequire(import.meta.url)("../👁️observation/🟨️.mjs").observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale);}
 
 /** 📥️ Resolves one candidate while keeping every candidate's memory within its own finite attempt. */
-async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation|undefined,options:{selection:BuildGraphSelectionV1;reuse?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|undefined> {
-  requireCurrentGraphModuleV1();
+async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean},registry?:BuildOwnerRegistryV1,scope?:string):Promise<BuildGraphV1|undefined> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
   const profile=process.env.SEMIO_NX_PROFILE_INPUTS==="1",timing=(phase:string,started:number,details:Record<string,unknown>={})=>{if(profile)console.log("[DEBUG] Build graph Source phase "+JSON.stringify({phase,milliseconds:performance.now()-started,...details}));};
   const image=async(source:string)=>{let started=performance.now();const decoded=JSON.parse(source);timing("graph-json-parse",started,{bytes:Buffer.byteLength(source)});started=performance.now();const expanded=await portableInputs(root,decoded,invocation);timing("graph-input-expand",started);started=performance.now();const graph=readBuildGraphV1(expanded);timing("graph-schema-validation",started,{projects:Object.keys(graph.projects).length,dependencies:graph.dependencies.length});return graph;};
   if(options.reuse){
@@ -270,7 +272,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation|u
   if(!registry)throw Error("Original canonical graph owner registry required");
   const selected=options.selection.kind==="tasks",path=scope?join(dirname(buildGraphPathV1(root)),"selected",scope+".json"):buildGraphPathV1(root),authorityPath=scope?join(dirname(path),scope+".authority.json"):join(dirname(path),graphDeclarationV1("../🧬️schema/📣️publication.json").properties.authority.const);
   const observation=createRequire(import.meta.url)("../👁️observation/🟨️.mjs"),producer=createRequire(import.meta.url)("./📥️inference/🟨️.mjs");createRequire(import.meta.url)("../../../🧪️test/🟨️.mjs");createRequire(import.meta.url)("./📥️inference/🛡️policy/🟨️.mjs");
-  const inventory=async()=>{let started=performance.now();const captured=selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(buildGraphScopeKeyV1(options.selection,current)!==scope)throw Error("Original selected owner registry changed");const nativeCache=new Map(),nativeClosures=new Map();return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{if(invocation)checkScriptInvocation(invocation);return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,selection:options.selection,nativeCache,nativeClosures},inputs);});},{signal:invocation?.control.signal})):undefined,admission=captured?.value as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation));timing("workspace-catalog-lookup",started,{files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0});started=performance.now();const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);return {files,digest,admission,observations:captured?.observations??[]};};
+  const inventory=async()=>{let started=performance.now();const captured=selected?await observation.captureObservedSourceInputsV1(()=>observation.settleObservedComputationV1(async()=>{const current=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(buildGraphScopeKeyV1(options.selection,current)!==scope)throw Error("Original selected owner registry changed");const nativeCache=new Map(),nativeClosures=new Map();return closeBuildOwnerAdmissionV1(options.selection,registry!,async(owner,targets,inputs)=>{if(invocation)checkScriptInvocation(invocation);return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures},inputs);});},{signal:invocation?.control.signal})):undefined,admission=captured?.value as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation));timing("workspace-catalog-lookup",started,{files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0});started=performance.now();const digest=await buildGraphMembershipV1(root,files,invocation);timing("workspace-membership-hash",started);return {files,digest,admission,observations:captured?.observations??[]};};
   let initial:Awaited<ReturnType<typeof inventory>>;try{initial=await inventory();}catch(error){if((error as {code?:string}).code==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw error;}
   const {files,digest:before}=initial;
   let phaseStarted=performance.now();
@@ -289,7 +291,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation|u
     for(const source of [new URL(import.meta.url),new URL("../🧬️schema/📣️publication.json",import.meta.url),new URL("../🧬️schema/🔣️.json",import.meta.url),new URL("../🧬️schema/📥️authority.json",import.meta.url),new URL("../🔣️policy.json",import.meta.url),new URL("../../⚡️caching/🔣️policy.json",import.meta.url),new URL("../../🗂️workspaces/🔣️policy.json",import.meta.url),new URL("../📤️arguments/🧬️schema/🔣️.json",import.meta.url),new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),new URL("../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",import.meta.url)])observation.observedFs.readFileSync(source);
     const admittedRegistry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));if(JSON.stringify(admittedRegistry)!==JSON.stringify(registry))throw Error("Original canonical owner registry changed");
     for(const source of [new URL("../🧬️schema/🚪️selection.json",import.meta.url),new URL("../🧬️schema/📋️owners.json",import.meta.url),new URL("../🧬️schema/🚪️admission.json",import.meta.url),new URL("./🚪️admission/🟦️.ts",import.meta.url)])observation.observedFs.readFileSync(source);
-    return discoverBuildGraphV1(root,options.selection,registry!,invocation,files,initial.admission);
+    return discoverBuildGraphV1(root,options.selection,registry!,invocation,phaseControl,files,initial.admission);
   },(rows:unknown[],authority:unknown[])=>{failedFacts=rows;failedAuthority=authority;});}
   catch(error){if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] original graph inference failure "+String(error));if(invocation)checkScriptInvocation(invocation);if((error as {code?:string}).code==="BUILD_AUTHORITY_CHANGED")throw error;let current;try{current=await inventory();}catch(recheck){if((recheck as {code?:string}).code==="BUILD_MEMBERSHIP_CHANGED")return undefined;throw recheck;}const stale:{kind:string;path:string;fact:unknown}[]=[],holds=await buildGraphSourceFactsHoldV1(failedFacts,invocation,row=>{if(stale.length<8)stale.push(row);});if(current.digest===before&&holds)throw error;if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] invalidated graph inference "+JSON.stringify({error:String(error),membershipChanged:current.digest!==before,stale:stale.map(row=>({kind:row.kind,path:row.path,observed:failedFacts.filter((original:any)=>original.kind===row.kind&&original.path===row.path).slice(0,4).map((original:any)=>({fact:original.fact,moduleLoad:failedAuthority.some((loaded:any)=>loaded.kind===original.kind&&loaded.path===original.path&&JSON.stringify(loaded.fact)===JSON.stringify(original.fact))}))}))}));return undefined;}
   timing("graph-original-inference",phaseStarted,{observations:captured.observations.length});
@@ -304,20 +306,20 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation|u
   return graph;
 }
 /** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */
-export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation|undefined,options:{selection:BuildGraphSelectionV1;reuse?:boolean}):Promise<BuildGraphV1> {
-  if(invocation)checkScriptInvocation(invocation);
+export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{selection:BuildGraphSelectionV1;reuse?:boolean}):Promise<BuildGraphV1> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   options={...options,selection:readBuildGraphSelectionV1(options.selection)};
-  if(options.reuse)return await loadBuildGraphAttemptV1(root,invocation,options)??Promise.reject(Error("Reusable build graph unavailable"));
+  if(options.reuse)return await loadBuildGraphAttemptV1(root,invocation,phaseControl,options)??Promise.reject(Error("Reusable build graph unavailable"));
   if(!invocation)throw Error("Original build graph producer invocation required");
   const registry=readBuildOwnerRegistryV1(JSON.parse(createRequire(import.meta.url)("./📥️inference/🟨️.mjs").readBuildOwnerRegistrySourceV1(root))),scope=options.selection.kind==="tasks"?buildGraphScopeKeyV1(options.selection,registry):undefined;
-  return withBuildGraphStateV1(root,invocation,async store=>{
+  return withBuildGraphStateV1(root,invocation,phaseControl,async(store,actualControl)=>{
   const staging=scope?join(store.root,"selected"):store.root;await store.recheck();requireNativeStoragePathV1(store.root,staging);await mkdir(staging,{recursive:true});const selectedStage=scope?new RegExp("^"+scope+"(?:\\.authority)?\\.json\\.[a-f0-9-]{36}$","u"):undefined;
   for(const name of await readdir(staging)){if(!(selectedStage?.test(name)??/^(?:canonical|authority)\.json\.[a-f0-9-]{36}$/u.test(name)))continue;await store.recheck();const path=join(staging,name),status=await lstat(path);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>536870912)throw Error("Owned bounded graph staging file required");await rm(path);}
   for(let attempt=0;attempt<=8;attempt++){
     if(invocation)checkScriptInvocation(invocation);
     await store.recheck();
     const currentRegistry=options.selection.kind==="all"?readBuildOwnerRegistryV1(JSON.parse(await readFile(join(root,"📋️build-owners.json"),"utf8"))):registry;
-    const graph=await loadBuildGraphAttemptV1(root,invocation,options,currentRegistry,scope);if(graph)return graph;
+    const graph=await loadBuildGraphAttemptV1(root,invocation,actualControl,options,currentRegistry,scope);if(graph)return graph;
     if(invocation)await advanceScriptInvocation(invocation,"build:refresh","running");
   }
   throw Error("Build source authority keeps changing during inference");

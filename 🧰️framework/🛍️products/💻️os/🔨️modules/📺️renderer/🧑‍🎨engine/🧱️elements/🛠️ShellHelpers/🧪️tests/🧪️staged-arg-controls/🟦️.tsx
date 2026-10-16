@@ -18,7 +18,7 @@ import numberControls from "../../../../../../../../../🔨️modules/🖱️ui/
 import numberFacets from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🧫️number-facets/🔣️.json";
 import type { ActionArgNumberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
-import { formatUiNumber } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
+import { formatUiNumber } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 

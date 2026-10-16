@@ -1,6 +1,8 @@
 //! 🧭️ The repo command line and the production repository behind the repo MCP server: `repo_cli`
 //! is the `semio-repo` binary's verb tree, `mcp_verb` the repository the `repo` stdio server and
-//! the `mcp` verb both serve. Neither links a terminal user interface.
+//! the `mcp` verb both serve. Neither links a terminal user interface. The event stream, the command
+//! framework, the tree source, the verbs and the MCP repository are producer crates; this crate keeps the
+//! declared command tree and the process entry.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🐹️.go
 
@@ -16,20 +18,12 @@ pub mod repo_cli;
 
 //#endregion 🧭️RepoCli
 
-//#region 📡️EventStream
-
-#[path = "📡️event-stream/🦀️.rs"]
-mod event_stream;
-
-//#endregion 📡️EventStream
-
 //#region 🔌️McpVerb
 
 /// 🔌️ The production repository the repo MCP server serves: every tool reaches the domain owner the
 /// matching verb reaches, every resource reads through the repository's GraphQL surface.
 ///
 /// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/🦀️.rs
-#[path = "🔌️mcp-verb/🦀️.rs"]
-pub mod mcp_verb;
+pub use semio_framework_repo_cli_mcp_verb as mcp_verb;
 
 //#endregion 🔌️McpVerb

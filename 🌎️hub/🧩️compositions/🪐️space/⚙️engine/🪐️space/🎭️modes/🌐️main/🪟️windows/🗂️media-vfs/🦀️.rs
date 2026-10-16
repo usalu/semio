@@ -1,7 +1,7 @@
 //! 🗂️ S Studio app — Media VFS window: definition + render (constitutional: ui/WindowKind + Render).
 //! Navigates the workflow's media/collection tree; currently root-only (see `engine::flatten_media_vfs_rows`'s doc).
 
-use crate::engine::space::terminology::SStudioLabels;
+use semio_hub_space_foundation::terminology::SStudioLabels;
 use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
 use semio_framework_ui_locale::{LocalizedLabel};
 use semio_framework_plugin::{resolve_labels, SurfaceKind, ViewModel, WindowKindDefinition};
@@ -54,7 +54,7 @@ pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> se
     // 🚧️ `flatten_media_vfs_rows` is a no-op stub (os-core dissolve deleted the `🔖️WorkflowVfs` region
     // it depended on) — the media VFS window shows only its root node until a full collection-browser
     // UI replaces it in a later wave.
-    crate::engine::space::engine::flatten_media_vfs_rows(OS_WORKFLOW_VFS_ROOT_ID, &projection.graph, &projection.parameter_bindings, &projection.parameters, &mut rows).await;
+    semio_hub_space_operations::flatten_media_vfs_rows(OS_WORKFLOW_VFS_ROOT_ID, &projection.graph, &projection.parameter_bindings, &projection.parameters, &mut rows).await;
     let schema = semio_framework_pack_json::object([
         ("descriptorKinds".to_string(), semio_framework_pack_json::object([])),
         ("fileNodeKinds".to_string(), semio_framework_pack_json::object([("root".to_string(), semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from("root")), ("name".to_string(), semio_framework_pack_json::Value::from("Workflow")), ("descriptors".to_string(), semio_framework_pack_json::array([]))]))])),

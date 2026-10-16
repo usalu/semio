@@ -196,9 +196,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#endregion 🔖️IoDeclaration
 
 //#region 🧪️CarrierLaw
-#[cfg(test)]
-#[path = "🧪️tests/🔬️carrier-law/🦀️.rs"]
-mod carrier_law;
+
 //#endregion 🧪️CarrierLaw
 
 #[path = "💾️binary/🦀️.rs"]
@@ -207,8 +205,7 @@ pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{TxtDiff, TxtMutation, TxtSnapshot};

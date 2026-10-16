@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-repo-dashboard-repo-domain"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "repo dashboard repo domain: tickets, goals, analysis, trees and statutes answered in process by the Rust domain crates"
+
+[package.metadata.semio]
+role = "tool"
+id = "repo-dashboard-repo-domain"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-repo-codebase = { path = "../../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-goals = { path = "../../../../🎯️goals/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-providers = { path = "../../../../🧩️providers/📦️packages/🦀️rust" }
+semio-framework-repo-statutes = { path = "../../../../📜️statutes/📦️packages/🦀️rust" }
+semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packages/🦀️rust" }
+semio-framework-repo-tree = { path = "../../../../🌳️tree/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }

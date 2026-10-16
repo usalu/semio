@@ -7,25 +7,25 @@ use directory::os_directory::{DocumentDescriptor, DocumentOpenArtifactV1, Docume
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use futures::{SinkExt, StreamExt};
 use semio_framework_hash::Sha256;
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::directory::model::DocumentScope;
-use semio_hub::directory::AUTH_TEXT_MAX_BYTES;
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::AUTH_TEXT_MAX_BYTES;
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 use crate::socket_grants::{SOCKET_GRANT_TTL_MS, SESSION_PROTOCOL_V1, SocketBindingKeyV1, SocketAudienceV1, SocketSubjectV1, socket_record_bindings, SocketGrantLedgerV1, SocketGrantLedgerErrorV1};
 use crate::access_grants::{DOCUMENT_SOCKET_GRANT_SCHEMA_V1, DocumentSocketGrantReceiptV1};
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 🔖️State
-pub(crate) const DOCUMENT_OPEN_PLAN_LEDGER_CAPACITY: usize = 1_024;
+pub const DOCUMENT_OPEN_PLAN_LEDGER_CAPACITY: usize = 1_024;
 
-pub(crate) const DOCUMENT_OPEN_PLAN_BINDING_CAPACITY: usize = 64;
+pub const DOCUMENT_OPEN_PLAN_BINDING_CAPACITY: usize = 64;
 
 const DOCUMENT_OPEN_PLAN_RECEIPT_DOMAIN: &[u8] = b"semio/hub/document-open-plan-receipt/v1\0";
 
-pub(crate) struct DocumentOpenPlanCapabilityV1(pub(crate) Box<[u8; 32]>);
+pub struct DocumentOpenPlanCapabilityV1(pub Box<[u8; 32]>);
 
 impl Drop for DocumentOpenPlanCapabilityV1 {
     fn drop(&mut self) {
@@ -72,27 +72,27 @@ fn document_open_plan_base64url_encode(bytes: &[u8; 32]) -> String {
 
 struct DocumentOpenPlanDecodedSecretV1([u8; 32]);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct DocumentOpenPlanDecodeWipeObservationV1 {
-    pub(crate) nonzero_before: usize,
-    pub(crate) after: [u8; 32],
+pub struct DocumentOpenPlanDecodeWipeObservationV1 {
+    pub nonzero_before: usize,
+    pub after: [u8; 32],
 }
 
-#[cfg(test)]
-pub(crate) static DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVATIONS: Mutex<Vec<DocumentOpenPlanDecodeWipeObservationV1>> = Mutex::new(Vec::new());
+#[cfg(any(test, feature = "testkit"))]
+pub static DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVATIONS: Mutex<Vec<DocumentOpenPlanDecodeWipeObservationV1>> = Mutex::new(Vec::new());
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 std::thread_local! {
-    pub(crate) static DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    pub static DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 impl Drop for DocumentOpenPlanDecodedSecretV1 {
     fn drop(&mut self) {
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         let nonzero_before = self.0.iter().filter(|byte| **byte != 0).count();
         self.0.fill(0);
-        #[cfg(test)]
+        #[cfg(any(test, feature = "testkit"))]
         DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVING.with(|observing| {
             if observing.get() {
                 if let Ok(mut observations) = DOCUMENT_OPEN_PLAN_DECODE_WIPE_OBSERVATIONS.lock() {
@@ -140,51 +140,51 @@ fn document_open_plan_base64url_decode(encoded: &str) -> Result<Box<[u8; 32]>, D
 }
 
 impl DocumentOpenPlanCapabilityV1 {
-    pub(crate) fn mint() -> Result<Self, DocumentOpenPlanErrorCodeV1> {
+    pub fn mint() -> Result<Self, DocumentOpenPlanErrorCodeV1> {
         let mut secret = Box::new([0u8; 32]);
         directory::os_identity::fill_entropy(secret.as_mut()).map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?;
         Ok(Self(secret))
     }
 
-    pub(crate) fn parse(receipt: &str) -> Result<Self, DocumentOpenPlanErrorCodeV1> {
+    pub fn parse(receipt: &str) -> Result<Self, DocumentOpenPlanErrorCodeV1> {
         let encoded = receipt.strip_prefix("open.v1.").ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
         document_open_plan_base64url_decode(encoded).map(Self)
     }
 
-    #[cfg(test)]
-    pub(crate) fn from_secret(secret: [u8; 32]) -> Self {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn from_secret(secret: [u8; 32]) -> Self {
         Self(Box::new(secret))
     }
 
-    pub(crate) fn digest(&self) -> [u8; 32] {
+    pub fn digest(&self) -> [u8; 32] {
         let mut hash = Sha256::new();
         hash.update(DOCUMENT_OPEN_PLAN_RECEIPT_DOMAIN);
         hash.update(self.0.as_ref());
         hash.finalize()
     }
 
-    pub(crate) fn expose_once(&self) -> String {
+    pub fn expose_once(&self) -> String {
         format!("open.v1.{}", document_open_plan_base64url_encode(self.0.as_ref()))
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct DocumentOpenPlanAuthorityV1 {
-    pub(crate) scope: DocumentScope,
-    pub(crate) descriptor: DocumentDescriptor,
-    pub(crate) descriptor_digest_v1: String,
-    pub(crate) catalog: DocumentOpenCatalogV1,
-    pub(crate) package: DocumentOpenPackageV1,
-    pub(crate) artifact: DocumentOpenArtifactV1,
-    pub(crate) parent_dialect: semio_framework::ArtifactDialect,
-    pub(crate) surface: DocumentOpenSurfaceV1,
-    pub(crate) browser_actor: os_directory::DocumentOpenBrowserActorV1,
-    pub(crate) grant: DocumentOpenGrantV1,
-    pub(crate) checkpoint: DocumentOpenCheckpointV1,
-    pub(crate) revalidation: DocumentOpenRevalidationV1,
-    pub(crate) subject: SocketSubjectV1,
-    pub(crate) server_actor_id: String,
-    pub(crate) client_instance_id_digest: [u8; 32],
+pub struct DocumentOpenPlanAuthorityV1 {
+    pub scope: DocumentScope,
+    pub descriptor: DocumentDescriptor,
+    pub descriptor_digest_v1: String,
+    pub catalog: DocumentOpenCatalogV1,
+    pub package: DocumentOpenPackageV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub parent_dialect: semio_framework::ArtifactDialect,
+    pub surface: DocumentOpenSurfaceV1,
+    pub browser_actor: os_directory::DocumentOpenBrowserActorV1,
+    pub grant: DocumentOpenGrantV1,
+    pub checkpoint: DocumentOpenCheckpointV1,
+    pub revalidation: DocumentOpenRevalidationV1,
+    pub subject: SocketSubjectV1,
+    pub server_actor_id: String,
+    pub client_instance_id_digest: [u8; 32],
 }
 
 impl DocumentOpenPlanAuthorityV1 {
@@ -192,7 +192,7 @@ impl DocumentOpenPlanAuthorityV1 {
     /// `parent_dialect` is the owning app's `Dialect` (`s.note.note`, `s.stdio.json`): two distinct
     /// id spaces, so each is bounded on its own and the descriptor binds only the kind. `gis` alone
     /// spells both alike, and an equality here refused every other plugin's plan.
-    pub(crate) fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+    pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
         self.browser_actor
             .validate(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
             .map_err(|_| DocumentOpenPlanErrorCodeV1::Stale)?;
@@ -255,7 +255,7 @@ impl DocumentOpenPlanAuthorityV1 {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DocumentOpenPlanStateV1 {
+pub enum DocumentOpenPlanStateV1 {
     Issued,
     Consumed,
     Invalidated,
@@ -279,8 +279,8 @@ pub(crate) struct DocumentOpenPlanLedgerInnerV1 {
 }
 
 #[derive(Default)]
-pub(crate) struct DocumentOpenPlanLedgerV1 {
-    pub(crate) inner: Mutex<DocumentOpenPlanLedgerInnerV1>,
+pub struct DocumentOpenPlanLedgerV1 {
+    pub inner: Mutex<DocumentOpenPlanLedgerInnerV1>,
 }
 
 impl DocumentOpenPlanLedgerV1 {
@@ -307,11 +307,11 @@ impl DocumentOpenPlanLedgerV1 {
         }
     }
 
-    pub(crate) fn issue(&self, authority: DocumentOpenPlanAuthorityV1, now_ms: u64, expires_at_ms: u64) -> Result<DocumentOpenPlanV1, DocumentOpenPlanErrorCodeV1> {
+    pub fn issue(&self, authority: DocumentOpenPlanAuthorityV1, now_ms: u64, expires_at_ms: u64) -> Result<DocumentOpenPlanV1, DocumentOpenPlanErrorCodeV1> {
         self.issue_with_capability(authority, now_ms, expires_at_ms, DocumentOpenPlanCapabilityV1::mint()?)
     }
 
-    pub(crate) fn issue_with_capability(&self, authority: DocumentOpenPlanAuthorityV1, now_ms: u64, expires_at_ms: u64, capability: DocumentOpenPlanCapabilityV1) -> Result<DocumentOpenPlanV1, DocumentOpenPlanErrorCodeV1> {
+    pub fn issue_with_capability(&self, authority: DocumentOpenPlanAuthorityV1, now_ms: u64, expires_at_ms: u64, capability: DocumentOpenPlanCapabilityV1) -> Result<DocumentOpenPlanV1, DocumentOpenPlanErrorCodeV1> {
         authority.validate()?;
         let ttl = expires_at_ms.checked_sub(now_ms).ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
         let binding_expiry_ms = match &authority.subject {
@@ -410,12 +410,12 @@ impl DocumentOpenPlanLedgerV1 {
         Ok(output)
     }
 
-    #[cfg(test)]
-    pub(crate) fn exchange(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grant_selector: &str) -> Result<DocumentOpenPlanAuthorityV1, DocumentOpenPlanErrorCodeV1> {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn exchange(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grant_selector: &str) -> Result<DocumentOpenPlanAuthorityV1, DocumentOpenPlanErrorCodeV1> {
         self.exchange_record(receipt, current, now_ms, |authority, _| Ok((socket_grant_selector.to_string(), authority.clone())))
     }
 
-    pub(crate) fn exchange_to_socket_grant(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grants: &SocketGrantLedgerV1) -> Result<DocumentSocketGrantReceiptV1, DocumentOpenPlanErrorCodeV1> {
+    pub fn exchange_to_socket_grant(&self, receipt: &str, current: &DocumentOpenPlanAuthorityV1, now_ms: u64, socket_grants: &SocketGrantLedgerV1) -> Result<DocumentSocketGrantReceiptV1, DocumentOpenPlanErrorCodeV1> {
         self.exchange_record(receipt, current, now_ms, |authority, plan_expires_at_ms| {
             let issued_at_ms = i64::try_from(now_ms).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
             let plan_expires_at_ms = i64::try_from(plan_expires_at_ms).map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?;
@@ -435,7 +435,7 @@ impl DocumentOpenPlanLedgerV1 {
         })
     }
 
-    pub(crate) fn invalidate_binding(&self, binding: &SocketBindingKeyV1) -> usize {
+    pub fn invalidate_binding(&self, binding: &SocketBindingKeyV1) -> usize {
         let Ok(mut inner) = self.inner.lock() else { return 0 };
         let digests = inner
             .records
@@ -456,7 +456,7 @@ impl DocumentOpenPlanLedgerV1 {
         digests.len()
     }
 
-    pub(crate) fn invalidate_receipt(&self, receipt: &str) -> Result<(), DocumentOpenPlanErrorCodeV1> {
+    pub fn invalidate_receipt(&self, receipt: &str) -> Result<(), DocumentOpenPlanErrorCodeV1> {
         let capability = DocumentOpenPlanCapabilityV1::parse(receipt)?;
         let digest = capability.digest();
         let mut inner = self.inner.lock().map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?;

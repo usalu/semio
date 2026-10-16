@@ -1,19 +1,23 @@
 //! 🏪️ OS snapshot receiving capabilities, document wire framing and erased application codecs.
 //! Neutral snapshot representation contracts are owned by framework IO and packaged by Pack.
+#[path = "💾️binary/🪪️operation-identity/🦀️.rs"]
+pub mod operation_identity;
+#[path = "📝️text/🦀️.rs"]
+pub mod text_format;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::ValueError;
-use crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
-use crate::os_vcs::VcsError;
+use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+use semio_framework_os_vcs::VcsError;
 use semio_framework_diagnostic::TextError;
-use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError};
-use crate::os_pack::pack_rt;
+use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError};
+use semio_framework_os_pack::pack_rt;
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
-use crate::io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 #[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
+use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
-use super::ArtifactTextFiles;
+use semio_framework_os_store_backbone::local_storage_backbone_key;
+use crate::text_format::ArtifactTextFiles;
 
 /// 🏪️ Explicit OS application capabilities authored independently of snapshot encoding.
 pub trait ArtifactStoreSnapshot: pack::snapshot::ArtifactPack {
@@ -46,7 +50,7 @@ pub struct ArtifactPackFiles {
 /// stand in for a whole document (media document wire, WIT `list<u8>` document hops).
 pub async fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
-    crate::os_pack::write_varint_u64(&mut out, pack.len() as u64);
+    semio_framework_os_pack::write_varint_u64(&mut out, pack.len() as u64);
     out.extend_from_slice(pack);
     out.extend_from_slice(spr);
     out
@@ -55,7 +59,7 @@ pub async fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
 /// 🔌️ Inverse of `encode_document_pack_bytes`.
 pub async fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
     let mut pos = 0usize;
-    let pack_len = crate::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
+    let pack_len = semio_framework_os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
     let pack_end = pos.checked_add(pack_len).ok_or_else(|| VcsError::Deserialize("document pack bytes overflow".to_string()))?;
     if pack_end > bytes.len() {
         return Err(VcsError::Deserialize("document pack bytes truncated".to_string()));
@@ -79,79 +83,21 @@ pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Futur
 #[cfg(target_arch = "wasm32")]
 pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>;
 
-/// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite.
-pub trait ArtifactSqliteSnapshotHost: pack::snapshot::ArtifactSqliteSnapshot {
-    /// 🫴️ Receives original SQL row ownership before any projection effect can refuse; the default runs the authored projection under the original owner, whose control carries the operation workspace recipient the codec installed.
-    fn to_sqlite_database_receiving(&self,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<crate::sqlite_snapshot::SqliteDatabase,ValueError>{super::sqlite_snapshot_workspace::project(self,control,owner)}
-    /// 🪆️ Receives original semantic tree ownership before any reconstruction effect can refuse; the default runs the authored reconstruction under the original owner, whose control carries the operation workspace recipient the codec installed.
-    fn from_sqlite_database_receiving(database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError> {super::sqlite_snapshot_workspace::reconstruct(database,control,owner)}
 
-    /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
-    fn retire_sqlite_snapshot(self) {
-        drop(self);
-    }
-
-    /// 🛬️ Materializes native snapshot fields under the caller's limits and cancellation control.
-    fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
-        native_owner.native().checkpoint()?;
-        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation"))
-    }
-
-    /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.
-    fn encode_sqlite_snapshot_native(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
-        native_owner.native().checkpoint()?;
-        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation"))
-    }
-
-    /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
-    fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no bounded native encoding preflight"))
-    }
-
-    /// 🛡️ Validates the exact owned subset without lowering fields into a native wire format.
-    fn validate_sqlite_snapshot_subset(&self, dialect: &semio_framework_artifact_reference::ArtifactDialect, _database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
-
-        control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(crate::io_schema::IoError::from_value_error)?;
-        if dialect.subset == "*" {
-            return Ok(crate::io_schema::IoOutcome::clean(()));
-        }
-        Err(crate::io_schema::IoError::from_value_error(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()))))
-    }
-
-    /// 🛂️ Validates the authoritative subset with original decode receiving authority; the default applies the authored subset policy.
-    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{super::sqlite_snapshot_workspace::validate_decoding(self,dialect,database,control,native)}
-    /// 🛃️ Validates the authoritative subset with original encode receiving authority; the default applies the authored subset policy.
-    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{super::sqlite_snapshot_workspace::validate_encoding(self,dialect,database,control,native)}
-
-    /// 🪶️ Builds the relational codec only when the snapshot actually implements it.
-    fn sqlite_codec() -> ArtifactSqliteSnapshotCodec
-    where
-        Self: ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    {
-        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned>(schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&crate::io_schema::IoPayload,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase>{super::sqlite_snapshot_retirement::export::<P>(schema,dialect,payload,control,native)}
-        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned>(schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,input:&mut Option<crate::sqlite_snapshot::SqliteDatabase>,encoding:crate::sqlite_snapshot::SnapshotEncoding,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<crate::io_schema::IoPayload>{super::sqlite_snapshot_retirement::import::<P>(schema,dialect,input,encoding,control,native)}
-
-        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self>,export_file:Some(crate::io::io_mechanism::export_snapshot_file_read::<Self>),import_file:Some(crate::io::io_mechanism::import_snapshot_file_into::<Self>) }
-    }
-}
 
 /// 📚️ Registers distinct raw-payload and complete captured-snapshot SQLite capabilities.
-pub type ArtifactSqliteSnapshotExportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&super::snapshot_read::ErasedSnapshotRead,crate::sqlite_snapshot::SnapshotEncoding,&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<Vec<u8>>;
+pub type ArtifactSqliteSnapshotExportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&semio_framework_os_store_read::ErasedSnapshotRead,semio_framework_io_sqlite_snapshot::SnapshotEncoding,&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<Vec<u8>>;
 /// 🪆️ Receives a complete snapshot into an exact empty caller slot without creating erased backing.
-pub type ArtifactSqliteSnapshotImportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&[u8],&mut(dyn std::any::Any+Send),&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>;
+pub type ArtifactSqliteSnapshotImportFile=fn(&semio_framework_artifact_reference::ArtifactDialect,&[u8],&mut(dyn std::any::Any+Send),&mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,&mut NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_io_schema::IoResult<()>;
 
 /// 🔌️ An artifact's explicit complete snapshot files and native payload relational bridge.
 #[derive(Clone)]
 pub struct ArtifactSqliteSnapshotCodec {
     pub schema: std::borrow::Cow<'static, str>,
     pub snapshot_type: Option<std::any::TypeId>,
-    pub export: fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &crate::io_schema::IoPayload, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotDecodeOwner<'_, '_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase>,
+    pub export: fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &semio_framework_io_schema::IoPayload, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_io_schema::IoResult<semio_framework_io_sqlite_snapshot::SqliteDatabase>,
     pub import:
-        fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &mut Option<crate::sqlite_snapshot::SqliteDatabase>, crate::sqlite_snapshot::SnapshotEncoding, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotEncodeOwner<'_, '_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload>,
+        fn(&str, &semio_framework_artifact_reference::ArtifactDialect, &mut Option<semio_framework_io_sqlite_snapshot::SqliteDatabase>, semio_framework_io_sqlite_snapshot::SnapshotEncoding, &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>, &mut NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework_io_schema::IoResult<semio_framework_io_schema::IoPayload>,
     pub export_file:Option<ArtifactSqliteSnapshotExportFile>,
     pub import_file:Option<ArtifactSqliteSnapshotImportFile>,
 }
@@ -217,7 +163,7 @@ pub struct ArtifactCodec {
     /// envelope's opaque `OpBinary` payload back into a concrete `Mutation` just long enough to
     /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
     /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
-    pub edit_text_from_envelope: for<'a> fn(&'a crate::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
+    pub edit_text_from_envelope: for<'a> fn(&'a semio_framework_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>,
     /// Host-authoritative Emit apply: (pack, spr, encode_ops_vec) -> (pack, spr, ops text).
     /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub apply_ops_binary: for<'a, 'b> fn(&'a [u8], &'a [u8], &'a [u8], &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>,
@@ -229,8 +175,8 @@ pub struct ArtifactCodec {
 
 #[path="💾️binary/📸️snapshot/🦀️.rs"]
 mod binary_snapshot;
-#[path="💾️binary/🧬️mutations/🦀️.rs"]
-mod binary_mutations;
+use semio_framework_os_store_space_schema::binary_mutations;
+pub use semio_framework_os_store_space_history::lifted_serialization::{ArtifactSqliteSnapshotHost};
 #[path="📝️text/📸️snapshot/🦀️.rs"]
 mod text_snapshot;
 #[path="📝️text/🧬️mutations/🦀️.rs"]

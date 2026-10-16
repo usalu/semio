@@ -1,7 +1,7 @@
 //! ♻️ Retains original domain edit fields until their independently admitted typed closure.
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,controlled::ControlledRetirement}};
 use std::mem::{ManuallyDrop,size_of};
-pub struct RetainedEditCustody<T:RetireOwned>{original:ManuallyDrop<Option<T>>,close:Option<ControlledRetirement<T>>,closing:bool}
+pub struct RetainedEditCustody<T:RetireOwned>{pub original:ManuallyDrop<Option<T>>,pub close:Option<ControlledRetirement<T>>,pub closing:bool}
 impl<T:RetireOwned> RetainedEditCustody<T>{
  pub fn new(original:T)->Self{Self{original:ManuallyDrop::new(Some(original)),close:None,closing:false}}
  pub fn original(&self)->&T{self.original.as_ref().expect("original domain fields retained")}

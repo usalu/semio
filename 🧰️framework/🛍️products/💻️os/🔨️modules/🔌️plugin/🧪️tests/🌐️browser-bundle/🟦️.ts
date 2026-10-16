@@ -1,3 +1,4 @@
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
@@ -148,15 +149,15 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const reset = () => { for (const [name, source] of Object.entries(fixture.files)) writeFileSync(join(directory, name), source as string, { mode: 0o600 }); };
     reset();
     const roots = [{ name: "fixture", path: directory }];
-    const baseline = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation);
+    const baseline = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
     assert.deepEqual(baseline.inputs.map(row => row.logicalPath), fixture.inputs);
     for (const row of baseline.inputs) assert.equal(row.sha256, Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(fixture.files[row.logicalPath.slice(8)]))).toString("hex"));
     let replaced = 0;
-    const changed = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, path => {
+    const changed = await captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), path => {
       renameSync(path, path + ".retained");
       writeFileSync(path, "throw new Error('changed compiler source executed');", { mode: 0o600 });
       replaced++;
-    }, invocation);
+    });
     assert.equal(replaced, fixture.inputs.length);
     assert.deepEqual(changed, baseline);
     const oracle = await captureOwnedProcess("node", ["--input-type=module", "-e", `
@@ -176,11 +177,11 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     reset();
     writeFileSync(join(evidence, "foreign.js"), "export const value = 900;", { mode: 0o600 });
     writeFileSync(join(directory, "entry.js"), "export { value } from '../foreign.js';", { mode: 0o600 });
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation), /compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0)), /compiler source/);
     writeFileSync(join(directory, "value.json"), "{}", { mode: 0o600 });
     writeFileSync(join(directory, "entry.js"), "export { default } from './value.json';", { mode: 0o600 });
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, undefined, invocation), /compiler source/);
-    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => { throw new Error("cancelled compiler source"); }, undefined, invocation), /cancelled compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => {}, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0)), /compiler source/);
+    await assert.rejects(captureBrowserCodegenSources(join(directory, "entry.js"), roots, () => { throw new Error("cancelled compiler source"); }, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0)), /cancelled compiler source/);
     console.log(`browser-compiler-sources: AJV=1 Node-oracle=1 WebCrypto=1 laws=${fixture.laws.length} inputs=${baseline.inputs.length} evidence=${evidence}`);
   }
   
@@ -224,7 +225,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.equal(executable.byteLength, lstatSync(executable.path).size);
     assert.match(executable.sha256, /^[a-f0-9]{64}$/);
     const evidence = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "browser-codegen-policy-"));
-    const compiler = await buildBrowserCodegenModule(evidence, () => {}, invocation);
+    const compiler = await buildBrowserCodegenModule(evidence, () => {}, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
     const capturedInputs = structuredClone(compiler.inputs);
     writeFileSync(join(evidence, "compiler-sources.json"), "[]", { mode: 0o600 });
     assert.deepEqual(compiler.inputs, capturedInputs);
@@ -283,16 +284,16 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const componentBytes = Buffer.from(input.component, "hex");
     for (const key of ["repoRoot", "evidenceRoot"]) {
       const unread = new Proxy(componentBytes, { get() { throw new Error("unreserved input inspected"); } });
-      await assert.rejects(buildClosedBrowserActorArtifactV1(unread, invocation, { [key]: evidence } as unknown as BrowserActorBuildControl), { message: "browser actor artifact: invalid build control" });
+      await assert.rejects(buildClosedBrowserActorArtifactV1(unread, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { [key]: evidence } as unknown as BrowserActorBuildControl), { message: "browser actor artifact: invalid build control" });
     }
     const scratchNames = () => readdirSync(artifactBase).filter(name => name.startsWith("browser-actor-codegen-")).sort();
     const scratchBefore = scratchNames();
     let scratchDuring: string[] = [];
-    const artifact = await buildClosedBrowserActorArtifactV1(componentBytes, invocation, { progress(phase) { if (phase === "codegen") scratchDuring = scratchNames().filter(name => !scratchBefore.includes(name)); } });
+    const artifact = await buildClosedBrowserActorArtifactV1(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { progress(phase) { if (phase === "codegen") scratchDuring = scratchNames().filter(name => !scratchBefore.includes(name)); } });
     assert.equal(scratchDuring.length, 1);
     assert.deepEqual(scratchNames(), scratchBefore);
     let scratchCancelled = false;
-    await assert.rejects(buildClosedBrowserActorArtifactV1(componentBytes, invocation, { cancelled: () => scratchCancelled, progress(phase) { if (phase === "codegen") { assert.equal(scratchNames().filter(name => !scratchBefore.includes(name)).length, 1); scratchCancelled = true; } } }), { message: "browser actor artifact: cancelled" });
+    await assert.rejects(buildClosedBrowserActorArtifactV1(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { cancelled: () => scratchCancelled, progress(phase) { if (phase === "codegen") { assert.equal(scratchNames().filter(name => !scratchBefore.includes(name)).length, 1); scratchCancelled = true; } } }), { message: "browser actor artifact: cancelled" });
     assert.equal(scratchCancelled, true);
     assert.deepEqual(scratchNames(), scratchBefore);
     const validatePolicy = await browserBundleValidator("CodegenPolicyV1");
@@ -316,7 +317,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.deepEqual(browserActorImportAdmissionV1(componentBytes), { admitted: input.closed.importInterfaces, refused: [] });
     assert.deepEqual(browserActorImportAdmissionV1(Buffer.from(input.unsupported, "hex")), { admitted: [], refused: ["untrusted:remote/pure@1.0.0"] });
     assert.throws(() => browserActorImportAdmissionV1(componentBytes.subarray(0, componentBytes.byteLength - 1)), /malformed component/);
-    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), invocation, { importInterfaces: input.closed.importInterfaces });
+    const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), invocation, { importInterfaces: input.closed.importInterfaces });
     assert.deepEqual(artifact.bytes, new TextEncoder().encode(nodeClosure));
     const runtimeRoot = join(evidence, "captured-runtime");
     for (const name of ["🌐️host/🟦️.ts", "🌐️wasi/🟦️.ts"]) {
@@ -330,17 +331,17 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       renameSync(path, path + ".retained");
       writeFileSync(path, "throw new Error('runtime replacement executed');", { mode: 0o600 });
     }
-    const capturedClosure = await closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, runtimeSnapshot, invocation);
+    const capturedClosure = await closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, runtimeSnapshot, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
     assert.equal(capturedClosure, nodeClosure);
     for (const name of ["🌐️host/🟦️.ts", "🌐️wasi/🟦️.ts"]) writeFileSync(join(runtimeRoot, name), "import './escape.ts';\n" + readFileSync(join(source.directory, name), "utf8"), { mode: 0o600 });
-    await assert.rejects(closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, captureBrowserActorRuntime(runtimeRoot, () => {}), invocation), /Bundle failed|runtime import denied/);
+    await assert.rejects(closedBrowserActorBundleFromRuntime(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces }, captureBrowserActorRuntime(runtimeRoot, () => {}), invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0)), /Bundle failed|runtime import denied/);
     const ambient = Object.fromEntries(["NODE_OPTIONS", "NODE_PATH", "BUN_OPTIONS", "BUN_PRELOAD", "PATH"].map(name => [name, process.env[name]]));
     try {
       process.env.NODE_OPTIONS = "--require=/semio-denied-ambient-preload";
       process.env.NODE_PATH = process.env.PATH = "/semio-denied-ambient-path";
       process.env.BUN_OPTIONS = "--preload=/semio-denied-ambient-preload";
       process.env.BUN_PRELOAD = "/semio-denied-ambient-preload";
-      assert.deepEqual(await buildClosedBrowserActorArtifactOwned(componentBytes, invocation, {}, evidence), artifact);
+      assert.deepEqual(await buildClosedBrowserActorArtifactOwned(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), {}, evidence), artifact);
     } finally {
       for (const [name, value] of Object.entries(ambient)) if (value === undefined) delete process.env[name]; else process.env[name] = value;
     }
@@ -353,25 +354,25 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert(artifact.byteLength <= fixture.artifact.maximumBytes);
     assert.deepEqual(artifact.importInterfaces, fixture.importInterfaces);
     const mutable = Buffer.from(componentBytes), phases: string[] = [];
-    const repeat = buildClosedBrowserActorArtifactOwned(mutable, invocation, { progress(phase) { phases.push(phase); if (phase === "snapshot") mutable.fill(0); } }, evidence);
+    const repeat = buildClosedBrowserActorArtifactOwned(mutable, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { progress(phase) { phases.push(phase); if (phase === "snapshot") mutable.fill(0); } }, evidence);
     let rejectedProgress = 0;
     const unread = new Proxy(componentBytes, { get() { throw new Error("unreserved build touched input"); } });
     try {
-      await assert.rejects(buildClosedBrowserActorArtifactV1(unread, invocation, { progress() { rejectedProgress++; } }), /build capacity/);
+      await assert.rejects(buildClosedBrowserActorArtifactV1(unread, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { progress() { rejectedProgress++; } }), /build capacity/);
       assert.equal(rejectedProgress, 0);
     } finally { await repeat; }
     const repeated = await repeat;
     assert(mutable.every(value => value === 0));
     assert.deepEqual(repeated, artifact);
     assert.deepEqual([...new Set(phases)], ["snapshot", "policy", "codegen", "closure", "hash"]);
-    await assert.rejects(buildClosedBrowserActorArtifactOwned(Buffer.from(input.unsupported, "hex"), invocation, {}, evidence), /unsupported import interface/);
+    await assert.rejects(buildClosedBrowserActorArtifactOwned(Buffer.from(input.unsupported, "hex"), invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), {}, evidence), /unsupported import interface/);
     let cancelled = false;
-    await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, { cancelled: () => cancelled, progress(phase, completed) { if (phase === "codegen" && completed) cancelled = true; } }, evidence), /cancelled/);
-    await assert.rejects(buildClosedBrowserActorArtifactV1(componentBytes, invocation, { cancelled: () => true }), /cancelled/);
-    await assert.rejects(buildClosedBrowserActorArtifactV1(new Uint8Array(8), invocation), /component header/);
+    await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { cancelled: () => cancelled, progress(phase, completed) { if (phase === "codegen" && completed) cancelled = true; } }, evidence), /cancelled/);
+    await assert.rejects(buildClosedBrowserActorArtifactV1(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), { cancelled: () => true }), /cancelled/);
+    await assert.rejects(buildClosedBrowserActorArtifactV1(new Uint8Array(8), invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0)), /component header/);
     const replacementRoot = join(evidence, "opened-file-replacement");
     let codegenComplete = false, readChecks = 0, replaced = false;
-    await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, {
+    await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), {
       progress(phase, completed) { if (phase === "codegen" && completed) codegenComplete = true; },
       cancelled() {
         if (codegenComplete && ++readChecks === 2) {
@@ -390,7 +391,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       const replacementRoot = join(evidence, name + "-replacement");
       mkdirSync(replacementRoot, { recursive: true });
       let replaced = false;
-      await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, {
+      await assert.rejects(buildClosedBrowserActorArtifactOwned(componentBytes, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0), {
         cancelled() {
           const rows = readdirSync(replacementRoot);
           if (!replaced && rows.length === 1) {

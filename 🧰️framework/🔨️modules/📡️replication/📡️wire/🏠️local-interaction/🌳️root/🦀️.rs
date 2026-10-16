@@ -1,7 +1,9 @@
 //! 🌳️ Exact persistent local interaction roots compose defining typed physical retirement.
 
 use super::{DomainSelection,LocalInteractionState,SelectionMode};
-use crate::value::{ordered::OrderedMap,retirement::controlled::ControlledRetirement,ValueError};
+use semio_framework_value::ordered::OrderedMap;
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::ValueError;
 
 #[path="🩹️update/🦀️.rs"]
 mod update;
@@ -14,17 +16,17 @@ pub struct LocalInteractionRoot {
     active_granularity:OrderedMap<String>,
 }
 
-impl crate::value::ToValue for LocalInteractionRoot {
-    fn to_value(&self)->crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("selection".to_string(),crate::value::ToValue::to_value(&self.selection)),
-            ("activeMode".to_string(),crate::value::ToValue::to_value(&self.active_mode)),
-            ("activeGranularity".to_string(),crate::value::ToValue::to_value(&self.active_granularity)),
+impl semio_framework_value::ToValue for LocalInteractionRoot {
+    fn to_value(&self)->semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("selection".to_string(),semio_framework_value::ToValue::to_value(&self.selection)),
+            ("activeMode".to_string(),semio_framework_value::ToValue::to_value(&self.active_mode)),
+            ("activeGranularity".to_string(),semio_framework_value::ToValue::to_value(&self.active_granularity)),
         ])
     }
 }
 
-crate::value::artifact_retire_struct!(LocalInteractionRoot {selection,active_mode,active_granularity});
+semio_framework_value::artifact_retire_struct!(LocalInteractionRoot {selection,active_mode,active_granularity});
 
 impl LocalInteractionRoot {
     /// 🧊️ Explicit cold transport construction provides no retained-work credit.

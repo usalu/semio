@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {flowBrowserPackageRequestV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModeEnvironment, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -8,7 +11,8 @@ import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST, playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
-import { bindPlayRuntimeAssetsV1, playModuleCatalogFindingsV1, publishPlayPages } from "./📄pages/🟦️.ts";
+import {playModuleCatalogFindingsV1} from "./📄pages/🟦️.ts";
+import {publishPlayPageCohortV1,withPublishedPlayPagesV1} from "./📄pages/📦️publication/🟦️.ts";
 
 /** 🛑️ Runs one cancellable step: SIGINT and SIGTERM abort its signal and set the conventional exit code. */
 async function cancellable(run: (signal: AbortSignal) => Promise<void>): Promise<void> {
@@ -32,7 +36,7 @@ class BuildScript extends BundleScript {
       import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),
     ]);
     await cancellable(async () => {
-      await buildReleasePipelineV1(this.repoRoot, pipeline, { components: new Set(playRuntimeComponentIds()), network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
+      await buildReleasePipelineV1(this.repoRoot, pipeline, { facet:"browser",invocation:this.invocation,components: new Set(playRuntimeComponentIds()), network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
     });
   }
 }
@@ -51,7 +55,7 @@ class BundleSiteScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("bundle accepts no arguments");
     const root = resolve(this.root, "../..");
-    await cancellable((signal) => buildViteArtifact({ invocation: this.invocation, root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), output: join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), owner: "play:site", signal: this.invocation.control.signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" }, ...(process.env.SEMIO_TICKET_DIR ? { temporaryRoot: join(process.env.SEMIO_TICKET_DIR, "🗑️generated") } : {}) }));
+    await cancellable(async(signal) => {await buildViteArtifact({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: readBuildMode(process.env.SEMIO_BUILD_MODE), artifactInputs: [...frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootV1(this.repoRoot,"products"),{version:1,mode:readBuildMode(process.env.SEMIO_BUILD_MODE),facet:"play"}).map(row=>row.request),flowBrowserPackageRequestV1(repositoryCachePartitionRootDataV1(this.repoRoot,"products"),{version:1,mode:readBuildMode(process.env.SEMIO_BUILD_MODE)})], root, workspace: this.repoRoot, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), owner: "play:site", signal: this.invocation.control.signal, environment: { SEMIO_BUILD_MODE: readBuildMode(process.env.SEMIO_BUILD_MODE), SEMIO_RENDERER: "react", GIS_MAP_TILE_SERVE_MODE: "bundle" } });});
   }
 }
 
@@ -59,12 +63,7 @@ class BundleSiteScript extends BundleScript {
 class PagesScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("pages accepts no arguments");
-    const root = resolve(this.root, "../..");
-    await cancellable(async (signal) => {
-      const catalog = await bindPlayRuntimeAssetsV1(join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), this.repoRoot, signal);
-      console.log(`Play module catalog: ${catalog.modules.length} module(s) bound to their receipts`);
-      publishPlayPages(join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "site"), join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "pages"), PLAY_HOST);
-    });
+    await publishPlayPageCohortV1(this.repoRoot,this.invocation,PLAY_HOST);
   }
 }
 
@@ -73,12 +72,14 @@ class PagesScript extends BundleScript {
 class VerifyScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("verify accepts no arguments");
-    const root = resolve(this.root, "../.."), registry = join(this.repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
-    const { renderCatalogFiles } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
-    const findings = [...Object.entries(renderCatalogFiles(this.repoRoot, undefined, "refuse").files).filter(([name, content]) => !existsSync(join(registry, name)) || readFileSync(join(registry, name), "utf8") !== content).map(([name]) => `Generated catalog ${name} differs from the committed descriptors; run bun repo run @semio-tech/plugin-registry:generate`), ...playModuleCatalogFindingsV1(join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "pages"))];
-    for (const finding of findings) console.error(finding);
-    if (findings.length) throw new Error(`Play release verification failed: ${findings.length} finding(s)`);
-    console.log("Play release verified: generated catalog and module catalog bind the published pages");
+    const registry = join(this.repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
+    await withPublishedPlayPagesV1(this.repoRoot,this.invocation,async pages=>{
+      const {renderCatalogFiles}=await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
+      const findings=[...Object.entries(renderCatalogFiles(this.repoRoot,undefined,"refuse").files).filter(([name,content])=>!existsSync(join(registry,name))||readFileSync(join(registry,name),"utf8")!==content).map(([name])=>`Generated catalog ${name} differs from committed descriptors`),...playModuleCatalogFindingsV1(pages.root)];
+      for(const finding of findings)console.error(finding);
+      if(findings.length)throw Error(`Play release verification failed: ${findings.length} finding(s)`);
+      console.log("Play release verified: exact cohort and module catalog bind published pages");
+    });
   }
 }
 

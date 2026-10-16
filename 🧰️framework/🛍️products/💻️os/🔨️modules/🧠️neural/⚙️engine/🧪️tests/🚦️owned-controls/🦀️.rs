@@ -12,14 +12,14 @@ fn close_input(owner:&mut crate::retirement::RetainedDictionaryInput,copy:usize)
     for _ in 0..100000 {
         if owner.terminal_is_empty(){return;}
         let grant=input_grant(owner,copy,true);
-        let (step,born,freed)=crate::registry::tests::observe_ownership(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
+        let (step,born,freed)=semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
     }
     panic!("original input cancellation retained an allocation");
 }
 #[test]
 fn retained_dictionary_binding_moves_typed_input_under_existing_owner_grants() {
     use crate::retirement::RetainedDictionaryInput;
-    use crate::registry::tests::observe_ownership;
+    use semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership;
     let fixture=fixture();let law=&fixture["retainedBinding"];let key=law["keyUnit"].as_str().unwrap().repeat(law["keyRepeats"].as_u64().unwrap()as usize);let label=law["textUnit"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let expected=serde_json::json!({"nested":{"first":label.clone(),"second":-3.25},key.clone():label.clone(),format!("{key}2"):label});let text=expected.to_string();let oracle=ColdOwner::new(serde_json::from_str::<Dictionary>(&text).unwrap());
     let input=||semio_framework_pack_json::from_json_str::<DslValue>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let original=input();let (mut owner,born,freed)=observe_ownership(||RetainedDictionaryInput::new(original));assert_eq!((born,freed),(law["physical"]["sourceBirthBytes"].as_u64().unwrap()as usize,law["physical"]["sourceReleaseBytes"].as_u64().unwrap()as usize));let mut phases=std::collections::BTreeSet::new();let mut turns=0;

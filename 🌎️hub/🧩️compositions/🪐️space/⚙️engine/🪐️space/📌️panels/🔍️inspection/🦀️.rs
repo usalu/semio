@@ -9,9 +9,10 @@
 //! per-file `s_play_action` (returning the legacy `ActionDescriptor`) is gone — `crate::engine::space::
 //! s_play_action` already returns the contract's own `(ActionId, Option<UiValue>)` pair.
 
-use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id};
-use crate::engine::space::terminology::SStudioLabels;
-use crate::engine::space::{ui_value_list, ui_value_map, ui_value_text, S_PLAY_INSPECTOR_TAB_ID};
+use semio_hub_space_operations::{os_parameter_types_compatible_shim, parameter_entity_id};
+use semio_hub_space_foundation::terminology::SStudioLabels;
+use crate::{ui_value_list, ui_value_map, ui_value_text};
+use semio_hub_space_foundation::S_PLAY_INSPECTOR_TAB_ID;
 use semio_framework_os::{os_app_registration, WorkflowNode, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{
     tree_item, tree_item_desc, ui_inspector_all_equal, ActionId, Buildable, HasBase, HasChildren, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiAssemblyResult, UiText, UiValue,
@@ -25,7 +26,7 @@ pub async fn definition() -> PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()),
         label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
         group: PanelGroup::Details,
-        body_key: Some(crate::engine::space::S_PLAY_INSPECTOR_BODY_KEY.into()),
+        body_key: Some(semio_hub_space_foundation::S_PLAY_INSPECTOR_BODY_KEY.into()),
         children: Vec::new(),
     }
 }
@@ -65,7 +66,7 @@ fn node_ids_arg(ids: &[String]) -> UiAssemblyResult<UiValue> {
 /// builder's own sync-only ruling, `📌️important.md`), bridged the same way `🎮️commands/🔍️open-instance/
 /// 🦀️.rs`'s `handle` bridges its own callee.
 fn entity_id(parameter: &WorkflowParameter) -> String {
-    crate::engine::space::engine::resolve_future(parameter_entity_id(parameter)).to_string()
+    semio_hub_space_operations::resolve_future(parameter_entity_id(parameter)).to_string()
 }
 
 fn control_row(id: &str, label: &str, code: &'static str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
@@ -133,7 +134,7 @@ fn inspector_parameter_row(projection: &WorkflowSnapshot, node: &WorkflowNode, t
         .try_item(fixed_text("__direct__", "ui.inspector.bind-select-item-value")?, fixed_label(term_labels.direct_value.as_str(), "ui.inspector.bind-select-item-label")?)
         .map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select-item", "parameter-binding select item admission failed"))?;
     for parameter in &projection.parameters {
-        if !crate::engine::space::engine::resolve_future(os_parameter_types_compatible_shim(parameter, &field_spec.parameter_type)) {
+        if !semio_hub_space_operations::resolve_future(os_parameter_types_compatible_shim(parameter, &field_spec.parameter_type)) {
             continue;
         }
         let value_id = entity_id(parameter);
@@ -144,7 +145,7 @@ fn inspector_parameter_row(projection: &WorkflowSnapshot, node: &WorkflowNode, t
             .try_item(fixed_text(&value_id, "ui.inspector.bind-select-item-value")?, fixed_label(&name, "ui.inspector.bind-select-item-label")?)
             .map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select-item", "parameter-binding select item admission failed"))?;
     }
-    let bind_action_pair = crate::engine::space::s_play_action("bindParameterField", Some(ui_value_map([("nodeId", ui_value_text(node.id.as_str())?), ("fieldPath", ui_value_text(field_spec.field_path.as_str())?)])?))?;
+    let bind_action_pair = crate::s_play_action("bindParameterField", Some(ui_value_map([("nodeId", ui_value_text(node.id.as_str())?), ("fieldPath", ui_value_text(field_spec.field_path.as_str())?)])?))?;
     let select_node = bind_action(select_builder, Trigger::Change, bind_action_pair)?.try_build().map_err(|_| PluginAssemblyError::new("ui.inspector.bind-select", "parameter-binding select admission failed"))?;
     control_row(&format!("{ROOT}.app-parameter.{}", field_spec.field_path), &field_spec.label, "ui.inspector.bind-field", select_node)
 }
@@ -180,7 +181,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
 
         let mut node_fields = semio_framework_plugin::UiFixedList::<BuiltNode>::default();
         if selected_node_ids.len() == 1 {
-            let noop = crate::engine::space::s_play_action("noOperation", None)?;
+            let noop = crate::s_play_action("noOperation", None)?;
             let control = input(InputKind::Text)
                 .value(fixed_text(&selected_node_ids[0], "ui.inspector.id-text")?)
                 .try_id(format!("{ROOT}.media-node.id.input"))
@@ -191,7 +192,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
                 .map_err(|_| PluginAssemblyError::new("ui.inspector.node-fields", "media-node field admission failed"))?;
         }
 
-        let x_action = crate::engine::space::s_play_action("patchMediaNodes", Some(ui_value_map([("nodeIds", node_ids_arg(selected_node_ids)?), ("field", ui_value_text("position")?), ("axis", ui_value_text("x")?)])?))?;
+        let x_action = crate::s_play_action("patchMediaNodes", Some(ui_value_map([("nodeIds", node_ids_arg(selected_node_ids)?), ("field", ui_value_text("position")?), ("axis", ui_value_text("x")?)])?))?;
         let x_value = if x_uniform { xs.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() };
         let mut x_control = input(InputKind::Number).value(fixed_text(&x_value, "ui.inspector.x-text")?);
         if !x_uniform {
@@ -201,7 +202,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
         let x_control = bind_action(x_control, Trigger::Change, x_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.inspector.x-input", "x input admission failed"))?;
         node_fields.try_push(control_row(&format!("{ROOT}.media-node.x"), "X", "ui.inspector.x-field", x_control)?).map_err(|_| PluginAssemblyError::new("ui.inspector.node-fields", "media-node field admission failed"))?;
 
-        let y_action = crate::engine::space::s_play_action("patchMediaNodes", Some(ui_value_map([("nodeIds", node_ids_arg(selected_node_ids)?), ("field", ui_value_text("position")?), ("axis", ui_value_text("y")?)])?))?;
+        let y_action = crate::s_play_action("patchMediaNodes", Some(ui_value_map([("nodeIds", node_ids_arg(selected_node_ids)?), ("field", ui_value_text("position")?), ("axis", ui_value_text("y")?)])?))?;
         let y_value = if y_uniform { ys.first().map(|v| v.to_string()).unwrap_or_default() } else { String::new() };
         let mut y_control = input(InputKind::Number).value(fixed_text(&y_value, "ui.inspector.y-text")?);
         if !y_uniform {
@@ -245,7 +246,7 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
         }
 
         let node_ids_for_label = node_ids_arg(selected_node_ids)?;
-        let label_action = crate::engine::space::s_play_action("patchAppInstances", Some(ui_value_map([("nodeIds", node_ids_for_label), ("field", ui_value_text("label")?)])?))?;
+        let label_action = crate::s_play_action("patchAppInstances", Some(ui_value_map([("nodeIds", node_ids_for_label), ("field", ui_value_text("label")?)])?))?;
         let label_value = if label_uniform { node_labels.first().cloned().unwrap_or_default() } else { String::new() };
         let mut label_control = input(InputKind::Text).value(fixed_text(&label_value, "ui.inspector.label-text")?).commit(fixed_text("blur", "ui.inspector.label-commit")?);
         if !label_uniform {

@@ -1,5 +1,6 @@
 //! ✂️ One final severity selection consumes original native message pages under physical grants.
-use super::{MutationMessage, MutationMessageRetirement, ReplayMessageAccumulator, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES};
+use semio_framework_replication_mutation::{MutationMessage, MUTATION_MESSAGE_ENTRY_BYTES, MUTATION_MESSAGE_OWNER_BYTES, MUTATION_MESSAGE_TARGET_BYTES};
+use super::{MutationMessageRetirement, ReplayMessageAccumulator};
 use semio_framework_diagnostic::Severity;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError, ValueRefusalKind};
 use std::mem::{ManuallyDrop, size_of};

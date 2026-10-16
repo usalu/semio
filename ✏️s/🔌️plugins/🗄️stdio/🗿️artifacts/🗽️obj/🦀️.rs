@@ -4,7 +4,6 @@ use semio_framework_plugin::PluginBuilder;
 //! 🎪 `stdio.obj` artifact — stdio reference format.
 #[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
-
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -13,195 +12,32 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 pub use schema::diff::ObjDiff;
 pub use schema::mutations::ObjMutation;
 pub use schema::snapshot::ObjSnapshot;
 pub use schema::ObjArtifact;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_OBJ_DOCUMENT_SCHEMA: &str = "stdio.obj";
+pub use semio_s_artifact_stdio_obj_inferences::{STDIO_OBJ_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const OBJ_ARTIFACT_SCHEMA_ID: &str = "s.stdio.obj";
+pub use semio_s_artifact_stdio_obj_inferences::{OBJ_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_obj_inferences::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
-    let factories = native_codecs();
-    let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
-    semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
-}
+pub use semio_s_artifact_stdio_obj_mutations::{definition};
 
-pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_obj_inferences::{formats};
 
-fn native_codec() -> store::os_store::serialization::ArtifactCodec {
-    let mut codec = store::artifact_codec::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA);
-    codec.extension = "obj";
-    codec
-}
+pub use semio_s_artifact_stdio_obj_mutations::{native_codec};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.obj.v1", artifact: "obj", kind: artifact_kind, codec: native_codec }]
-}
+pub use semio_s_artifact_stdio_obj_mutations::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "obj", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_obj_io_registry::{contribution};
 
-//#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
-/// replaces the old side-effecting `crate::engine::register()`, which the plugin
-/// root used to call unconditionally before `PluginBuilder::new(...)` was even constructed. Mirrors
-/// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
-/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<ObjSnapshot, ObjMutation>(...))`.
-/// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
-/// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
-/// super::standards::v3_0::engine::*; }`) — deliberately NOT this file's own `io_registry` module
-/// below, whose `entries()` returns `&'static [&'static ComposerEntry]` (references) and would
-/// silently rebind under a bare call (this ticket's "SILENT REBIND" hazard).
-///
-/// **NOT covered by any `ArtifactDeclaration` field**: the engine's `register_schema_specs()`
-/// (`dsl::registry::register_schema_spec`, a registry distinct from `.languages()`'s
-/// `dsl::register_language` — same gap `🗜️deflate`'s own exemplar documents). No field here closes
-/// it, so it is not invented and the call is not dropped — it must survive on the plugin root's
-/// `.setup(crate::engine::register_schema_specs)` alongside this declaration's
-/// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case) for
-/// a genuine, narrowly scoped registration gap.
-/// 🧩️ Binds this executable root to its sole schema-owned definition.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("obj", definition()?, declaration)
-}
+pub use semio_s_artifact_stdio_obj_io_registry::{assembly, declaration, pilot_languages};
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::obj_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([schema::inferences::obj_artifact_inference_descriptor()])
-        .composers(engine::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.obj", standard: semio_framework_artifact_reference::StandardId("3.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .try_build()
-}
-
-/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built
-/// once and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, copied
-/// verbatim (five `LanguageSpec` rows, one per role) from `crate::standards::v3_0::
-/// engine::register_pilot_languages`'s own `dsl::register_language(...)` call bodies.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
-    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
-    LANGUAGES
-        .get_or_init(|| {
-            vec![
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.obj",
-                    extension: Some("obj"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v3_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v3_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v3_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v3_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.obj.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v3_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v3_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v3_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v3_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.obj.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v3_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v3_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.obj.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v3_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v3_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "stdio.obj.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(standards::v3_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v3_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("stdio.obj.spr"),
-                },
-            ]
-        })
-        .as_slice()
-}
-//#endregion 🔖️Declaration
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.obj".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Obj", "Obj"),
-        source_format: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
-        schema: STDIO_OBJ_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_obj_inferences::{artifact_kind};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v3_0::engine::io_registry as v3_0;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v3_0::entries().iter().collect()).as_slice()
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("ObjComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v3_0::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-}
+pub use semio_s_artifact_stdio_obj_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -211,97 +47,38 @@ pub mod standards {
         // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
         // so every existing `standards::v3_0::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-            pub use super::subsets::any::schema::*;
-        }
+        pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod bounds {
-                            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_obj_schema::standards::v3_0::subsets::any::schema::*;
+
+                    pub use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_obj_diff::standards::v3_0::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_obj_mutations::standards::v3_0::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::io::binary::inferences;
+}
+pub mod sqlite {
+    pub use semio_s_artifact_stdio_obj_diff::standards::v3_0::subsets::any::io::sqlite::*;
+    pub use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::io::sqlite::snapshot;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_obj_inferences::standards::v3_0::subsets::any::io::text::inferences;
+}
+
+                    pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::subsets::any::io::import;
+                    pub use semio_s_artifact_stdio_obj_io_registry::standards::v3_0::subsets::any::io::export;
                 }
             }
         }
@@ -316,52 +93,24 @@ pub mod engine {
     pub use super::standards::v3_0::engine::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_obj_diff::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod obj {
-        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_obj_mutations::editor::obj::*;
+
+        pub use semio_s_artifact_stdio_obj_diff::editor::obj::edit_rules;
+        pub use semio_s_artifact_stdio_obj_diff::editor::obj::presence;
+        pub use semio_s_artifact_stdio_obj_diff::editor::obj::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_obj_inferences::editor::obj::modes::edit::*;
+
+                pub use semio_s_artifact_stdio_obj_inferences::editor::obj::modes::edit::windows;
             }
         }
     }
@@ -371,38 +120,27 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod obj {
-        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_obj_io_registry::viewer::obj::*;
+
+        pub use semio_s_artifact_stdio_obj_diff::viewer::obj::presence;
+        pub use semio_s_artifact_stdio_obj_diff::viewer::obj::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_obj_inferences::viewer::obj::modes::view::*;
+
+                pub use semio_s_artifact_stdio_obj_inferences::viewer::obj::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v3_0::subsets::any::io::{ObjBuilderConstruction, ObjParts, ObjAnalyzerAnalysis, ObjBuilderFacets, ObjBuilder, ObjAnalyzer, ObjComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
+mod hoisted_receiving_0;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_1;

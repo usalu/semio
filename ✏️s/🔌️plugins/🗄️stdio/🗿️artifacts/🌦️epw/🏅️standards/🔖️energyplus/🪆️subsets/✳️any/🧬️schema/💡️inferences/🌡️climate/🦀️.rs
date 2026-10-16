@@ -56,8 +56,5 @@ pub fn compute_epw_climate_summary(snapshot: &EpwSnapshot) -> EpwClimateSummary 
 }
 //#endregion 🔖️ClimateSummary
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

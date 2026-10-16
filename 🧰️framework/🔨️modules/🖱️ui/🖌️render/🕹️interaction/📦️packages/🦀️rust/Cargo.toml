@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-render-interaction"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Frame input and timing for the GPU UI core: element identity, the dispatch tree with hit-testing, focus, drag, overlays and edit routing, and the invalidation scheduler"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-render-interaction"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

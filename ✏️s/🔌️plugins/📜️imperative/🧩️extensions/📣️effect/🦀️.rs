@@ -136,7 +136,7 @@ pub fn module_registry() -> Registry {
 // #endregion 🔖️Helpers
 
 //#region 🔖️Bundle
-const EXTENSION_ID: &str = "imperative-extension-effect";
+pub const EXTENSION_ID: &str = "imperative-extension-effect";
 const MODULE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 🧩️ Host contribution entry for the core imperative module.

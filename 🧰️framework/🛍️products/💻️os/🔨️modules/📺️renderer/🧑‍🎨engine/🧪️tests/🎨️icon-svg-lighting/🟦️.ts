@@ -48,7 +48,7 @@ describe("🎨️ Icon SVG face lighting", () => {
   });
 
   it("renders the actual production SVG profile through Chromium WebGPU", async () => {
-    const shaderPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+    const shaderPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
     const shader = readFileSync(shaderPath, "utf8").match(/pub const WORLD3D_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
     const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
     try {

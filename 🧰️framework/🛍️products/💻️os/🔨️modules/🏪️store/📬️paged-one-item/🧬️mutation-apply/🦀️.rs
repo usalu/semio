@@ -2,9 +2,11 @@
 //!
 //! The snapshot is cloned page by page under the grants by the preparation. `Mutation::apply_diff` is whole-snapshot, so the apply turn is one snapshot-sized turn quoted from the exact retained capacity of that clone; the displaced clone is then retired through controlled custody in separately granted release turns.
 use super::{PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
-use crate::os_spr::{apply_diff, MutationDiff, OpBinary};
-use crate::snapshot_clone_preparation::RetainedEditCustody;
-use crate::{ArtifactCanonicalJsonTree, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory, Mutation};
+use semio_framework_os_spr::{apply_diff, MutationDiff, OpBinary};
+use semio_framework_os_store_snapshot_clone::custody::RetainedEditCustody;
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_framework_os_spr::Mutation;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -20,10 +22,10 @@ enum Stage {
 
 /// 🧬️ Bounded turns: inverse rows, snapshot-sized apply, granted retirement of the displaced clone, hand-over of the rows.
 pub struct MutationApplyEdit<S: RetainedClone, M: RetireOwned + Send + 'static> {
-    stage: Stage,
+    pub stage: Stage,
     clone_bytes: usize,
-    displaced: Option<ControlledRetirement<S>>,
-    custody: RetainedEditCustody<(Option<Vec<M>>, ())>,
+    pub displaced: Option<ControlledRetirement<S>>,
+    pub custody: RetainedEditCustody<(Option<Vec<M>>, ())>,
 }
 
 impl<S: RetainedClone, M: RetireOwned + Send + 'static> Default for MutationApplyEdit<S, M> {

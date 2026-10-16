@@ -1,3 +1,4 @@
+use crate::board_set_camera;
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::unit_tests::context::*;
 
@@ -10,18 +11,18 @@ mod tests {
     #[test]
     fn board_host_node_drag_proximity_connect_overlapping_compatible_handles() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        let center_b = h.world_to_screen(Point::new(280.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let center_b = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_down_screen(center_b.x, center_b.y, 0, false, false);
-        let overlap = h.world_to_screen(Point::new(60.0, 0.0));
+        let overlap = h.scene.world_to_screen(Point::new(60.0, 0.0));
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: Some(_), .. }), "expected proximity preview wire while overlapping compatible nodes");
+        assert!(matches!(h.focus.interaction, Interaction::DragNodes { proximity_pair: Some(_), .. }), "expected proximity preview wire while overlapping compatible nodes");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
+        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.outbox.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
         assert!(!rows.iter().any(|row| row["name"] == "edgeCreate"), "the drop's link rides the gesture record, never a separate edge row: {rows:?}");
         let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
         assert_eq!(record["payload"]["proximity"], json!([{ "source": "a:h0", "target": "b:h0" }]), "the record carries the previewed proximity pair: {record}");
@@ -30,18 +31,18 @@ mod tests {
     #[test]
     fn board_host_node_drag_skips_proximity_when_moving_node_has_incident_edge() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
-        let _ = h.drain_events_json();
-        let center_b = h.world_to_screen(Point::new(280.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let center_b = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_down_screen(center_b.x, center_b.y, 0, false, false);
-        let overlap = h.world_to_screen(Point::new(60.0, 0.0));
+        let overlap = h.scene.world_to_screen(Point::new(60.0, 0.0));
         h.pointer_move_screen(overlap.x, overlap.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::DragNodes { proximity_pair: None, .. }), "connected moving node must not preview node-drag proximity");
+        assert!(matches!(h.focus.interaction, Interaction::DragNodes { proximity_pair: None, .. }), "connected moving node must not preview node-drag proximity");
         h.pointer_up_screen(overlap.x, overlap.y, false, false, false);
-        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
+        let rows: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::from_json_str(&h.outbox.drain_events_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("release rows");
         let record = rows.iter().find(|row| row["name"] == "gesture").expect("the release is one gesture record");
         assert_eq!(record["payload"]["proximity"], json!([]), "a connected node records no proximity pair: {record}");
     }
@@ -49,34 +50,34 @@ mod tests {
     #[test]
     fn board_host_link_drag_snap_emits_edge_create() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("proximityConnect"));
         assert!(ev.contains("a:h0"));
         assert!(ev.contains("b:h0"));
-        let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
+        let created: Vec<_> = h.scene.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
         assert_eq!(created.len(), 1);
     }
 
     #[test]
     fn board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_micro_lod(&mut h);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id":"core.rect.bottom","name":"B","color":"#112233","defaultWireKind":"link.w"},
@@ -87,7 +88,7 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        h.set_handle_link_compat_from_json(r#"[{"source":"core.rect.bottom","target":"core.rect.top","specificity":"handle"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"core.rect.bottom","target":"core.rect.top","specificity":"handle"}]"#).unwrap();
         let desc = SceneDescriptor {
             nodes: vec![
                 NodeDescriptor {
@@ -169,19 +170,19 @@ mod tests {
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let pa = handle_position_on_rectangle(Point::new(0.0, 100.0), 100.0, 56.0, std::f64::consts::PI);
         let pb = handle_position_on_rectangle(Point::new(0.0, 20.0), 100.0, 56.0, 0.0);
-        let s0 = h.world_to_screen(pa);
+        let s0 = h.scene.world_to_screen(pa);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
         let mid = Point::new(0.0, 60.0);
-        let s_mid = h.world_to_screen(mid);
+        let s_mid = h.scene.world_to_screen(mid);
         h.pointer_move_screen(s_mid.x, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(pb);
+        let s1 = h.scene.world_to_screen(pb);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::LinkDragSnap { ref target_id, .. } if target_id.as_deref() == Some("b:h0")), "expected drag snap onto b:h0 at micro zoom");
+        assert!(matches!(h.focus.interaction, Interaction::LinkDragSnap { ref target_id, .. } if target_id.as_deref() == Some("b:h0")), "expected drag snap onto b:h0 at micro zoom");
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"), "expected edgeCreate, got: {ev}");
         assert!(ev.contains("proximityConnect"), "expected proximityConnect, got: {ev}");
     }
@@ -189,24 +190,24 @@ mod tests {
     #[test]
     fn board_host_link_drag_snap_proximity_connect_in_overview_lod() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
         h.sync_descriptor(&link_test_scene_no_edge_non_draggable_nodes()).unwrap();
-        let _ = h.drain_events_json();
-        let center_a = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let center_a = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(center_a.x, center_a.y, 0, false, false);
         h.pointer_up_screen(center_a.x, center_a.y, false, false, false);
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"), "expected edgeCreate at overview LOD, got: {ev}");
         assert!(ev.contains("proximityConnect") || ev.contains("indirectConnect"), "expected proximityConnect or indirectConnect, got: {ev}");
     }
@@ -225,13 +226,13 @@ mod tests {
                 { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
             ]
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
-        assert_eq!(h.port_mode, GraphPortMode::Normal);
-        assert!(h.handles.is_empty());
-        assert_eq!(h.edges.len(), 1);
-        assert_eq!(h.edges.get("e1").unwrap().source, "a");
-        assert_eq!(h.edges.get("e1").unwrap().target, "b");
-        h.set_size(800, 600, 1.0);
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        assert_eq!(h.style.port_mode, GraphPortMode::Normal);
+        assert!(h.scene.handles.is_empty());
+        assert_eq!(h.scene.edges.len(), 1);
+        assert_eq!(h.scene.edges.get("e1").unwrap().source, "a");
+        assert_eq!(h.scene.edges.get("e1").unwrap().target, "b");
+        h.scene.set_size(800, 600, 1.0);
         let scene = h.build_vector_scene();
         assert!(scene.path_count() > 0);
     }
@@ -239,7 +240,7 @@ mod tests {
     #[test]
     fn board_host_ingests_edge_and_node_kind_catalog_visual_fields() {
         let mut h = BoardHost::new_normal();
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "edgeKinds": [
                     {"id":"wires.owns","name":"Owns","color":"#ff0000","stroke":"3","pattern":"dashed","targetTip":"filled-diamond","directed":false},
@@ -252,20 +253,20 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        let owns = h.edge_kinds.get("wires.owns").expect("owns edge kind");
+        let owns = h.style.edge_kinds.get("wires.owns").expect("owns edge kind");
         assert_eq!(owns.stroke_width, 3.0);
         assert_eq!(owns.pattern, EdgeStrokePattern::Dashed);
         assert_eq!(owns.target_tip.as_deref(), Some("filled-diamond"));
         assert!(!owns.directed);
         assert!(owns.color.is_some());
-        let is = h.edge_kinds.get("wires.is").expect("is edge kind");
+        let is = h.style.edge_kinds.get("wires.is").expect("is edge kind");
         assert_eq!(is.pattern, EdgeStrokePattern::Dotted);
         assert_eq!(is.target_tip.as_deref(), Some("filled-arrow"));
         assert!(!is.directed);
-        let diamond = h.edge_tips.get("filled-diamond").expect("filled-diamond tip");
+        let diamond = h.style.edge_tips.get("filled-diamond").expect("filled-diamond tip");
         assert_eq!(diamond.geometry, EdgeTipGeometry::Diamond);
         assert!(diamond.filled);
-        let capsule = h.node_kinds.get("capsule").expect("capsule node kind");
+        let capsule = h.style.node_kinds.get("capsule").expect("capsule node kind");
         assert_eq!(capsule.shape, NodeShape::Circle);
         assert!(capsule.color_fill.is_some());
     }
@@ -323,10 +324,10 @@ mod tests {
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
-        assert!(h.handles.is_empty());
-        assert_eq!(h.edges.get("e1").unwrap().source, "a");
-        assert_eq!(h.edges.get("e1").unwrap().target, "b");
-        h.set_size(800, 600, 1.0);
+        assert!(h.scene.handles.is_empty());
+        assert_eq!(h.scene.edges.get("e1").unwrap().source, "a");
+        assert_eq!(h.scene.edges.get("e1").unwrap().target, "b");
+        h.scene.set_size(800, 600, 1.0);
         let scene = h.build_vector_scene();
         assert!(scene.path_count() > 0);
     }
@@ -334,7 +335,7 @@ mod tests {
     #[test]
     fn board_host_hidden_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         let snapshot = json!({
             "schema": "board.ports.directed.v1",
@@ -357,28 +358,28 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
-        let _ = h.drain_events_json();
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"), "hidden handle should block connect, got: {ev}");
-        assert!(h.edges.is_empty());
+        assert!(h.scene.edges.is_empty());
     }
 
     #[test]
     fn board_host_hidden_node_blocks_indirect_connect() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         let snapshot = json!({
             "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -401,37 +402,37 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let inside_a = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(inside_a.x, inside_a.y, 0, false, false);
-        let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
+        let inside_b = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(inside_b.x, inside_b.y, false, false, false);
         h.pointer_up_screen(inside_b.x, inside_b.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"), "hidden node should block indirect connect, got: {ev}");
-        assert!(matches!(h.interaction, Interaction::None));
-        assert!(h.edges.is_empty());
+        assert!(matches!(h.focus.interaction, Interaction::None));
+        assert!(h.scene.edges.is_empty());
     }
 
     #[test]
     fn board_host_locked_node_blocks_hit_select() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         let mut desc = sample_scene();
         desc.nodes[0].locked = Some(true);
         h.sync_descriptor(&desc).unwrap();
-        assert!(h.resolve_hit_world(Point::new(0.0, 0.0)).is_none());
+        assert!(resolve_hit_world(&h.scene, &h.focus, &h.style, Point::new(0.0, 0.0)).is_none());
         h.update_hover_from_world(Point::new(0.0, 0.0));
-        assert_ne!(h.hovered_id.as_deref(), Some("a"));
+        assert_ne!(h.focus.hovered_id.as_deref(), Some("a"));
     }
 
     #[test]
     fn board_host_locked_handle_blocks_proximity_connect() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         let snapshot = json!({
             "schema": "board.ports.directed.v1",
@@ -454,74 +455,74 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h,&snapshot.to_string(),&mut control)});
-        let _ = h.drain_events_json();
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"), "locked handle should block connect, got: {ev}");
-        assert!(h.edges.is_empty());
+        assert!(h.scene.edges.is_empty());
     }
 
     #[test]
     fn board_host_overview_lod_omits_direct_handle_resolve_hit() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
         let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let probe = Point::new(hp.x + 3.0, hp.y);
-        assert_ne!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
+        assert_ne!(resolve_hit_world(&h.scene, &h.focus, &h.style, probe).as_deref(), Some("a:h0"));
     }
 
     #[test]
     fn board_host_link_rejects_incompatible_handle_kind_pairs() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_handle_link_compat_from_json(r#"[{"source":"child","target":"parent"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"child","target":"parent"}]"#).unwrap();
         let desc = link_test_scene_no_edge();
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
     }
 
     #[test]
     fn board_host_link_accepts_matching_handle_kind_pair() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         let desc = link_test_scene_no_edge();
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("proximityConnect"));
     }
@@ -529,50 +530,50 @@ mod tests {
     #[test]
     fn board_host_normal_lod_prefers_node_at_center_and_handle_off_rim() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a"));
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, Point::new(0.0, 0.0)).as_deref(), Some("a"));
         let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let probe = Point::new(hp.x + 2.0, hp.y);
-        assert_eq!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, probe).as_deref(), Some("a:h0"));
     }
 
     #[test]
     fn board_host_indirect_ring_resolve_skips_connected_handles() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_node_a_two_handles_one_busy()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let ha0 = h.handles.get("a:h0").unwrap();
-        let ring_busy = h.indirect_handle_world_pos(ha0).unwrap();
-        assert_ne!(h.resolve_hit_world(ring_busy).as_deref(), Some("a:h0"));
-        assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a:h1"));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let ha0 = h.scene.handles.get("a:h0").unwrap();
+        let ring_busy = indirect_handle_world_pos(&h.scene, &h.style, ha0).unwrap();
+        assert_ne!(resolve_hit_world(&h.scene, &h.focus, &h.style, ring_busy).as_deref(), Some("a:h0"));
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, Point::new(0.0, 0.0)).as_deref(), Some("a:h1"));
     }
 
     #[test]
     fn board_host_indirect_sole_compatible_drop_creates_edge_immediately() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let inside_a = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(inside_a.x, inside_a.y, 0, false, false);
         assert!(matches!(
-            h.interaction,
+            h.focus.interaction,
             Interaction::LinkAtSourceHandle { ref source_id, .. } if source_id == "a:h0"
         ));
-        let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
+        let inside_b = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(inside_b.x, inside_b.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::LinkDragSnap { .. }));
+        assert!(matches!(h.focus.interaction, Interaction::LinkDragSnap { .. }));
         h.pointer_up_screen(inside_b.x, inside_b.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::None));
-        let ev = h.drain_events_json();
+        assert!(matches!(h.focus.interaction, Interaction::None));
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("indirectConnect"));
         assert!(ev.contains("a:h0"));
@@ -582,26 +583,26 @@ mod tests {
     #[test]
     fn board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let sa = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let sa = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(sa.x, sa.y, 0, false, false);
-        let sb = h.world_to_screen(Point::new(280.0, 0.0));
+        let sb = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(sb.x, sb.y, false, false, false);
         h.pointer_up_screen(sb.x, sb.y, false, false, false);
         assert!(matches!(
-            h.interaction,
+            h.focus.interaction,
             Interaction::LinkTargetNode { ref target_node_id, .. } if target_node_id == "b"
         ));
-        let b0 = h.handles.get("b:h0").unwrap();
-        let ring0 = h.indirect_handle_world_pos(b0).unwrap();
-        let s1 = h.world_to_screen(ring0);
+        let b0 = h.scene.handles.get("b:h0").unwrap();
+        let ring0 = indirect_handle_world_pos(&h.scene, &h.style, b0).unwrap();
+        let s1 = h.scene.world_to_screen(ring0);
         h.pointer_down_screen(s1.x, s1.y, 0, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("indirectConnect"));
         assert!(ev.contains("a:h0"));
@@ -611,77 +612,77 @@ mod tests {
     #[test]
     fn board_host_indirect_target_click_elsewhere_stops_wire() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
-        h.set_selection_ids(&["a".into()]);
-        let sa = h.world_to_screen(Point::new(0.0, 0.0));
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let sa = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(sa.x, sa.y, 0, false, false);
-        let target_center = h.world_to_screen(Point::new(280.0, 0.0));
+        let target_center = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(target_center.x, target_center.y, false, false, false);
         h.pointer_up_screen(target_center.x, target_center.y, false, false, false);
-        assert!(matches!(h.interaction, Interaction::LinkTargetNode { .. }));
+        assert!(matches!(h.focus.interaction, Interaction::LinkTargetNode { .. }));
         h.pointer_down_screen(20.0, 20.0, 0, false, false);
-        assert!(matches!(h.interaction, Interaction::None));
-        assert!(h.edges.is_empty());
+        assert!(matches!(h.focus.interaction, Interaction::None));
+        assert!(h.scene.edges.is_empty());
     }
 
     #[test]
     fn board_host_indirect_ring_shown_when_node_has_two_free_handles() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let ha0 = h.handles.get("a:h0").unwrap();
-        let ring = h.indirect_handle_world_pos(ha0).unwrap();
-        assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let ha0 = h.scene.handles.get("a:h0").unwrap();
+        let ring = indirect_handle_world_pos(&h.scene, &h.style, ha0).unwrap();
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, ring).as_deref(), Some("a:h0"));
     }
 
     #[test]
     fn board_host_indirect_ring_paints_without_rebuilding_world_cache() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
-        let gen = h.test_content_scene_generation();
+        let gen = h.scene.test_content_scene_generation();
         let neutral_hint = h.encoded_scene_hint();
-        h.set_selection_ids_silent(&["a".into()]);
-        assert_eq!(h.test_content_scene_generation(), gen);
-        let ha0 = h.handles.get("a:h0").unwrap();
-        let ring = h.indirect_handle_world_pos(ha0).unwrap();
-        assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
+        set_selection_ids_silent(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        assert_eq!(h.scene.test_content_scene_generation(), gen);
+        let ha0 = h.scene.handles.get("a:h0").unwrap();
+        let ring = indirect_handle_world_pos(&h.scene, &h.style, ha0).unwrap();
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, ring).as_deref(), Some("a:h0"));
         assert!(h.encoded_scene_hint() > neutral_hint, "indirect ring must paint in the live overlay, not only in stale cached geometry");
-        h.set_selection_ids_silent(&[]);
+        set_selection_ids_silent(&mut h.scene, &mut h.focus, &mut h.outbox, &[]);
         assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
     #[test]
     fn board_host_link_drag_emits_compatible_nodes_and_target_ring_events() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let sa = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let sa = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(sa.x, sa.y, 0, false, false);
-        let sb = h.world_to_screen(Point::new(280.0, 0.0));
+        let sb = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(sb.x, sb.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("linkCompatibleNodes"), "got: {ev}");
         assert!(ev.contains(r#""nodeIds":["b"]"#) || ev.contains(r#""nodeIds": ["b"]"#), "got: {ev}");
         assert!(ev.contains("linkTargetRing"), "got: {ev}");
         assert!(ev.contains("b:h0") && ev.contains("b:h1"), "got: {ev}");
-        let ring = h.indirect_handle_world_pos(h.handles.get("b:h1").unwrap()).unwrap();
-        assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("b:h1"));
+        let ring = indirect_handle_world_pos(&h.scene, &h.style, h.scene.handles.get("b:h1").unwrap()).unwrap();
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, ring).as_deref(), Some("b:h1"));
         h.pointer_up_screen(20.0, 20.0, false, false, false);
-        let ev_end = h.drain_events_json();
+        let ev_end = h.outbox.drain_events_json();
         assert!(ev_end.contains("linkCompatibleNodes"));
         assert!(ev_end.contains(r#""nodeIds":[]"#) || ev_end.contains(r#""nodeIds": []"#));
         assert!(ev_end.contains("linkTargetRing"));
@@ -690,20 +691,20 @@ mod tests {
     #[test]
     fn board_host_indirect_ring_gap_scales_with_node_across_zoom() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let ha = h.handles.get("a:h0").unwrap().clone();
+        let ha = h.scene.handles.get("a:h0").unwrap().clone();
         let node_r = 40.0_f64;
         let body = || handle_position_on_circle(Point::new(0.0, 0.0), node_r, 0.0);
         let gap_ratio = |host: &BoardHost| {
-            let ring = host.indirect_handle_world_pos(&ha).unwrap();
-            let gap_px = distance_between(host.world_to_screen(ring), host.world_to_screen(body()));
-            gap_px / (node_r * host.camera.zoom)
+            let ring = indirect_handle_world_pos(&host.scene, &host.style, &ha).unwrap();
+            let gap_px = distance_between(host.scene.world_to_screen(ring), host.scene.world_to_screen(body()));
+            gap_px / (node_r * host.scene.camera.zoom)
         };
-        h.set_camera(0.0, 0.0, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
         let ratio_z1 = gap_ratio(&h);
         let gap_px_z1 = node_r * ratio_z1;
-        h.set_camera(0.0, 0.0, 4.25);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 4.25);
         let ratio_z2 = gap_ratio(&h);
         let gap_px_z2 = node_r * 4.25 * ratio_z2;
         assert!((ratio_z1 - ratio_z2).abs() < 1e-6, "rim-to-ring ratios differ: {ratio_z1} vs {ratio_z2}");
@@ -714,17 +715,17 @@ mod tests {
     #[test]
     fn board_host_indirect_handle_marker_radius_scales_with_node_extent() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let ha = h.handles.get("a:h0").unwrap();
-        assert!((h.indirect_handle_marker_radius_world(ha) - 32.0).abs() < 1e-6);
+        let ha = h.scene.handles.get("a:h0").unwrap();
+        assert!((indirect_handle_marker_radius_world(&h.scene, &h.style, ha) - 32.0).abs() < 1e-6);
     }
 
     #[test]
     fn board_host_handle_scale_combines_node_and_kind_scales() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_board_kind_catalogs_from_json(
+        h.scene.set_size(800, 600, 1.0);
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"slot-a","name":"Slot A","color":"#112233","scale":2.0}],
                 "nodeKinds": [{"id":"kind-a","name":"Kind A","scale":1.5}],
@@ -738,17 +739,17 @@ mod tests {
         desc.handles[0].handle_kind = Some("slot-a".into());
         desc.handles[0].scale = Some(0.5);
         h.sync_descriptor(&desc).unwrap();
-        let ha = h.handles.get("a:h0").unwrap();
-        assert_eq!(h.resolve_hit_world(Point::new(120.0, 0.0)).as_deref(), Some("a:h0"));
-        assert!((h.indirect_handle_marker_radius_world(ha) - 96.0).abs() < 1e-6);
+        let ha = h.scene.handles.get("a:h0").unwrap();
+        assert_eq!(resolve_hit_world(&h.scene, &h.focus, &h.style, Point::new(120.0, 0.0)).as_deref(), Some("a:h0"));
+        assert!((indirect_handle_marker_radius_world(&h.scene, &h.style, ha) - 96.0).abs() < 1e-6);
     }
 
     #[test]
     fn board_host_link_wire_specificity_allows_when_handle_row_absent() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
                 "wireKinds": [{"id":"flow.wire","name":"W","defaultEdgeKind":"flow.edge"}],
@@ -756,20 +757,20 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        h.set_handle_link_compat_from_json(r#"[{"source":"flow.wire","target":"child","specificity":"wire"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"flow.wire","target":"child","specificity":"wire"}]"#).unwrap();
         let desc = link_test_scene_no_edge();
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("proximityConnect"));
     }
@@ -777,7 +778,7 @@ mod tests {
     #[test]
     fn board_host_kind_catalog_accepts_modern_hsl_handle_colors() {
         let mut h = BoardHost::new();
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [
                     {"id":"space","name":"S","color":"hsl(206 52% 48%)"},
@@ -788,9 +789,9 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        let c_space = h.handle_kinds.get("space").expect("space").color;
-        let c_comma = h.handle_kinds.get("comma").expect("comma").color;
-        let c_slash = h.handle_kinds.get("slash").expect("slash").color;
+        let c_space = h.style.handle_kinds.get("space").expect("space").color;
+        let c_comma = h.style.handle_kinds.get("comma").expect("comma").color;
+        let c_slash = h.style.handle_kinds.get("slash").expect("slash").color;
         assert_eq!(c_space, c_comma);
         assert_ne!(c_space, c_slash);
     }
@@ -798,16 +799,16 @@ mod tests {
     #[test]
     fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
         let mut h = BoardHost::new();
-        let err = h.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
+        let err = h.style.set_board_kind_catalogs_from_json(&semio_framework_pack_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
         assert!(err.to_string().contains("legacy label"));
     }
 
     #[test]
     fn board_host_link_important_pair_overrides_lower_specificity_filter() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_board_kind_catalogs_from_json(
+        h.style.set_board_kind_catalogs_from_json(
             &semio_framework_pack_json::json!({
                 "handleKinds": [{"id":"parent","name":"P","color":"#112233","defaultWireKind":"flow.wire"}],
                 "wireKinds": [{"id":"flow.wire","name":"W"}],
@@ -815,7 +816,7 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        h.set_handle_link_compat_from_json(
+        h.style.set_handle_link_compat_from_json(
             r#"[
     				{"source":"flow.wire","target":"nope","specificity":"wire"},
     				{"source":"parent","target":"child","specificity":"general","important":true}
@@ -824,17 +825,17 @@ mod tests {
         .unwrap();
         let desc = link_test_scene_no_edge();
         h.sync_descriptor(&desc).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(ev.contains("edgeCreate"));
         assert!(ev.contains("proximityConnect"));
     }
@@ -842,83 +843,83 @@ mod tests {
     #[test]
     fn board_host_link_drag_does_not_snap_when_target_handle_busy() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_target_b_handle_busy()).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+        let s_mid = h.scene.world_to_screen(Point::new(140.0, 0.0));
         h.pointer_move_screen(s_mid.x + 20.0, s_mid.y, false, false, false);
-        let s1 = h.world_to_screen(hp_b);
+        let s1 = h.scene.world_to_screen(hp_b);
         h.pointer_move_screen(s1.x, s1.y, false, false, false);
         h.pointer_up_screen(s1.x, s1.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
-        assert_eq!(h.edges.len(), 1);
-        assert!(h.edges.contains_key("e-bc"));
+        assert_eq!(h.scene.edges.len(), 1);
+        assert!(h.scene.edges.contains_key("e-bc"));
     }
 
     #[test]
     fn board_host_link_does_not_start_from_busy_source_handle() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
-        assert!(matches!(h.interaction, Interaction::None));
-        assert!(!h.drain_events_json().contains("edgeCreate"));
+        assert!(matches!(h.focus.interaction, Interaction::None));
+        assert!(!h.outbox.drain_events_json().contains("edgeCreate"));
     }
 
     #[test]
     fn board_host_indirect_does_not_commit_on_busy_target_handle() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
-        h.set_camera(0.0, 0.0, 1.0);
-        h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+        h.scene.set_size(800, 600, 1.0);
+        board_set_camera(&mut h.scene, &mut h.outbox, 0.0, 0.0, 1.0);
+        h.style.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         h.sync_descriptor(&link_test_scene_target_b_handle_busy()).unwrap();
-        let _ = h.drain_events_json();
-        h.set_selection_ids(&["a".into()]);
-        let sa = h.world_to_screen(Point::new(0.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
+        let sa = h.scene.world_to_screen(Point::new(0.0, 0.0));
         h.pointer_down_screen(sa.x, sa.y, 0, false, false);
-        let target_center = h.world_to_screen(Point::new(280.0, 0.0));
+        let target_center = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_move_screen(target_center.x, target_center.y, false, false, false);
         h.pointer_up_screen(target_center.x, target_center.y, false, false, false);
         assert!(matches!(
-            h.interaction,
+            h.focus.interaction,
             Interaction::LinkTargetNode {
                 ref source_id,
                 ref target_node_id
             } if source_id == "a:h0" && target_node_id == "b"
         ));
-        let _ = h.drain_events_json();
-        let sb = h.world_to_screen(Point::new(280.0, 0.0));
+        let _ = h.outbox.drain_events_json();
+        let sb = h.scene.world_to_screen(Point::new(280.0, 0.0));
         h.pointer_down_screen(sb.x, sb.y, 0, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
-        assert_eq!(h.edges.len(), 1);
-        assert!(matches!(h.interaction, Interaction::None));
+        assert_eq!(h.scene.edges.len(), 1);
+        assert!(matches!(h.focus.interaction, Interaction::None));
     }
 
     #[test]
     fn board_host_link_short_drag_does_not_emit_edge_create() {
         let mut h = BoardHost::new();
-        h.set_size(800, 600, 1.0);
+        h.scene.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let _ = h.drain_events_json();
+        let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
-        let s0 = h.world_to_screen(hp_a);
+        let s0 = h.scene.world_to_screen(hp_a);
         h.pointer_down_screen(s0.x, s0.y, 0, false, false);
         h.pointer_move_screen(s0.x + 2.0, s0.y, false, false, false);
         h.pointer_up_screen(s0.x + 2.0, s0.y, false, false, false);
-        let ev = h.drain_events_json();
+        let ev = h.outbox.drain_events_json();
         assert!(!ev.contains("edgeCreate"));
     }
 }

@@ -76,6 +76,39 @@
     "InputPath": {
       "type": "string",
       "pattern": "^(?:package[.]json|bun[.]lock|[.]semio-authorizer-source[.]json|[.]semio-authorizer-compiler[.]json|[.]semio-sdk-material[.]json|patches/[a-f0-9]{64}[.]patch)$"
+    },
+    "Planning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "minimumAvailableBytes",
+        "material",
+        "publicationRequired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "minimumAvailableBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483648
+        },
+        "material": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/DerivativeMaterial"
+            }
+          ]
+        },
+        "publicationRequired": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import type { BuildGraphV1 } from "../🕸️graph/🟦️.ts";
-import { checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createIssuedResourceControlV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand, captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import cachePolicy from "../../⚡️caching/🔣️policy.json";
@@ -76,26 +76,39 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
 
 /** 👁️ Watches source events with bounded reruns and original cancellation. */
 export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,options:{initial?:boolean}={}):Promise<void> {
+  const controller=new AbortController(),control=createIssuedResourceControlV1(invocation,"build:watch",0,controller.signal);
   const boundary=args.indexOf("--"),command=boundary<0?[]:args.slice(boundary+1);
   if(!command.length)throw Error("Expected repo watch --projects=<projects> -- <command>");
+  checkScriptInvocation(invocation);
+  const {watchBuildChildArgumentsV1,buildWatchChangesEnvironmentV1,watchBuildChangeLimitsV1}=await import("./👁️watch/🟦️.ts"),child=watchBuildChildArgumentsV1(root,command);
+  checkScriptInvocation(invocation);
+  if(child){const {readOwnedBuildInvocationV1}=await import("../📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,invocation,child);}
   const names=selectBuildProjectsV1(graph,(buildOptionV1(args,"projects","p")??"").split(",").filter(Boolean),(buildOptionV1(args,"exclude")??"").split(",").filter(Boolean)),changed=new Set<string>();
-  let pending:ReturnType<typeof setTimeout>|undefined,running=Promise.resolve();
-  const flush=()=>{const files=[...changed];changed.clear();if(!files.length)return;running=running.then(async()=>{checkScriptInvocation(invocation);await runOwnedCommand(command[0]!,command.slice(1),root,"build:watch",scriptInvocationBudget(invocation,0),{signal:invocation.control.signal,env:{...process.env,SEMIO_BUILD_CHANGED_FILES:JSON.stringify(files),SEMIO_BUILD_CHANGED_PROJECTS:JSON.stringify(names)}});}).catch(error=>{if(!invocation.control.signal.aborted)console.error(error instanceof Error?error.message:String(error));});};
+  let pending:ReturnType<typeof setTimeout>|undefined,running=Promise.resolve(),busy=false,stopped=false,failure:{error:unknown}|undefined,finish:(()=>void)|undefined;
+  const flush=()=>{if(stopped||busy||!changed.size)return;const files=[...changed];changed.clear();busy=true;running=Promise.resolve().then(async()=>{if(stopped)return;checkScriptInvocation(invocation);const changes={files,projects:names};
+   if(child){const {runOwnedBuildChildInvocationV1}=await import("../📥️caller/📤️child/🟦️.ts");checkScriptInvocation(invocation);await runOwnedBuildChildInvocationV1(root,child,invocation,changes,control);}
+   else{await advanceScriptInvocation(invocation,"build:watch","running");await runOwnedCommand(command[0]!,command.slice(1),root,"build:watch",scriptInvocationBudget(invocation,0),{signal:control.signal,env:scriptInvocationEnvironment(invocation,{...process.env,...buildWatchChangesEnvironmentV1(changes)}),onProgress:()=>advanceScriptInvocation(invocation,"build:watch","running")});}
+   checkScriptInvocation(invocation);
+  }).catch(error=>{if(!invocation.control.signal.aborted)failure??={error};controller.abort(failure?.error??invocation.control.signal.reason);stopped=true;finish?.();}).finally(()=>{busy=false;if(!stopped&&changed.size){pending=setTimeout(flush,200);}});};
   const watcher=watch(root,{recursive:true},(_event,filename)=>{
-    if(!filename)return;const path=filename.toString().replaceAll("\\","/");
+    if(stopped||!filename)return;const path=filename.toString().replaceAll("\\","/");
     if(path.split("/").some(part=>[...cachePolicy.generatedDirectories,".git",".🧬semio","temp"].includes(part)))return;
     if(path.split("/").some((part,index,parts)=>ownership.collections.names.includes(part)&&parts[index-1]!==ownership.collections.moduleMember))return;
     const selected=names.some(name=>graph.projects[name]!.root==="."||path.startsWith(graph.projects[name]!.root+"/")),global=args.some(argument=>argument==="--include-global-files"||argument==="--include-global-files=true")&&!Object.values(graph.projects).some(project=>project.root!=="."&&path.startsWith(project.root+"/"));
     if(!selected&&!global)return;
+    if(path.length>watchBuildChangeLimitsV1.path||!changed.has(path)&&changed.size>=watchBuildChangeLimitsV1.files){failure??={error:Error("Bounded watch source event set required")};controller.abort(failure.error);stop();return;}
     changed.add(path);if(pending)clearTimeout(pending);pending=setTimeout(flush,200);
   });
-  if(options.initial){changed.add(".");flush();}
-  try{await new Promise<void>((done,reject)=>{const stop=()=>done();invocation.control.signal.addEventListener("abort",stop,{once:true});watcher.once("error",reject);if(invocation.control.signal.aborted)done();});}
-  finally{watcher.close();if(pending)clearTimeout(pending);await running;}
+  const stop=()=>{stopped=true;finish?.();},error=(error:Error)=>{failure??={error};controller.abort(error);stop();};
+  try{
+   await new Promise<void>(done=>{finish=done;invocation.control.signal.addEventListener("abort",stop,{once:true});watcher.once("error",error);if(invocation.control.signal.aborted)stop();else if(options.initial){changed.add(".");flush();}});
+  }finally{stopped=true;invocation.control.signal.removeEventListener("abort",stop);watcher.removeListener("error",error);try{watcher.close();}catch(error){failure??={error};}if(pending)clearTimeout(pending);await running;}
+  if(failure)throw failure.error;if(!invocation.control.signal.aborted)checkScriptInvocation(invocation);
 }
 
 /** 🚦️ Refuses unsupported backend flags before publishing or executing any task. */
 export function validateBuildTaskArgumentsV1(args:readonly string[]):void {
+  if(args[0]==="watch"){const boundary=args.indexOf("--");if(boundary<0||!args[boundary+1]?.length)throw Error("Expected repo watch --projects=<projects> -- <command>");}
   const values=new Set(["projects","p","targets","target","t","exclude","parallel","configuration","c","output","output-style","base","head","files"]),booleans=new Set(["all","skip-cache","skip-remote-cache","exclude-dependencies","exclude-task-dependencies","dry-run","help","verbose","bail","uncommitted","untracked","include-global-files"]),optional=new Set(["graph"]);
   for(let index=args[0]==="run"?2:1;index<args.length&&args[index]!=="--";index++){
     const argument=args[index]!;

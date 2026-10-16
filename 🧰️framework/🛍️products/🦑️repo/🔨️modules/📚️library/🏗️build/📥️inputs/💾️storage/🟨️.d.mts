@@ -1,11 +1,12 @@
+import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 /** 🗂️ Names closed graph fact namespaces in the authored fixed partition. */
 export function repositoryBuildGraphDataDirectoryV1(workspace:string,namespace:"build-input-closures"|"build-lock-closures"|"inference"|"admission"):string;
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 /** 🎟️ Runs producers within original fixed-volume custody. */
-export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,body:(store:BuildGraphFactStoreV1)=>Promise<T>):Promise<T>;
+export function withRepositoryBuildGraphFactStoreV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(store:BuildGraphFactStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🎯️ Holds one selected inference namespace within the original graph writer. */
-export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,identity:string,body:(store:BuildGraphFactStoreV1)=>Promise<T>):Promise<T>;
+export function withRepositoryBuildGraphSelectionV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,identity:string,body:(store:BuildGraphFactStoreV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
 /** 🔒️ Checks live writer custody before synchronous publication. */
 export function requireRepositoryBuildGraphWriterV1(workspace:string):void;
 /** 📁️ Admits one closed directory on the original writer device. */
@@ -16,7 +17,7 @@ export interface BuildInferenceDatasetV1{readonly version:1;readonly identity:st
 /** 🧬️ Refuses undeclared dataset transport fields and ambient paths. */
 export function readBuildInferenceDatasetV1(value:unknown):BuildInferenceDatasetV1;
 /** 🧷️ Runs one logical dataset in original real repository graph custody. */
-export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invocation:ScriptInvocation,value:unknown,body:(scope:Readonly<{root:string;retire:()=>Promise<void>}>)=>T|Promise<T>):Promise<T>;
+export function withRepositoryBuildInferenceDatasetV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,value:unknown,body:(scope:Readonly<{root:string;retire:()=>Promise<void>}>,actualControl:ResourceLeaseControl)=>T|Promise<T>):Promise<T>;
 
 /** 🧮️ Models exact optional cache peaks independently of physical custody. */
 export interface BuildGraphOptionalQuotaStateV1{readonly maximumBytes:number;readonly usedBytes:number;readonly availableBytes:number;readonly minimumAvailableBytes:number}

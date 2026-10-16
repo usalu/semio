@@ -223,11 +223,11 @@ pub struct AviChunkDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
+pub fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
     AviChunk { fourcc: base.fourcc.clone(), data: d.data.clone().unwrap_or_else(|| base.data.clone()), keyframe: d.keyframe.unwrap_or(base.keyframe) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
+pub fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
     *item = apply_chunk_diff(item, d);
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -239,7 +239,7 @@ fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool {
     d.data.is_none() && d.keyframe.is_none()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_chunk_rows(a: &mut AviChunkDiff, b: AviChunkDiff) {
+pub fn absorb_chunk_rows(a: &mut AviChunkDiff, b: AviChunkDiff) {
     if b.data.is_some() {
         a.data = b.data;
     }

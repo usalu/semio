@@ -10,6 +10,7 @@ import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioC
 import Ajv from "ajv";
 import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
+import {verifyStdioCargoPhaseV1} from "./🎟️phase/🟦️.ts";
 
 type CommandOwnership = Readonly<{
   cargoMetadata:Readonly<{owner:string;function:string;invocation:string;custody:readonly string[];capture:string;program:string;control:string;maximumBytes:number;maximumLines:number}>;
@@ -79,12 +80,13 @@ export async function testStdioArtifactPackageGraph(repoRoot:string,invocation:S
 /** 📌️ Checks exact-pin admission and changed-byte refusal against independent schema and SHA oracles. */
 export function verifyStdioBuildGraphPinFixtures(repoRoot:string):void{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;assert(artifacts,"Original Stdio pin fixture artifacts required");const root=mkdtempSync(join(artifacts,"sp-")),path=join(root,"graph.json"),fixture=readStdioJson(join(repoRoot,"✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph/📌️pin.json")),validate=new Ajv({strict:true}).compile(pinSchema);
- try{for(const row of fixture.cases){const source=row.change==="malformed-json"?"{":JSON.stringify(row.change==="invalid-graph"?{version:0}:fixture.graph);writeFileSync(path,source);const digest=new Bun.CryptoHasher("sha256").update(source).digest("hex"),publication:{path?:string;digest?:string}={path,digest};if(row.change==="missing-path")delete publication.path;if(row.change==="missing-digest")delete publication.digest;if(row.change==="relative-path")publication.path="graph.json";if(row.change==="invalid-digest")publication.digest="invalid";if(row.change==="changed-bytes")writeFileSync(path,source+" ");assert.equal(validate(publication),row.schemaAccepted,row.name);const environment={SEMIO_BUILD_GRAPH_PATH:publication.path,SEMIO_BUILD_GRAPH_DIGEST:publication.digest};if(row.accepted)assert.deepEqual(readStdioArtifactBuildGraphPin(environment),fixture.graph);else assert.throws(()=>readStdioArtifactBuildGraphPin(environment),undefined,row.name);}
+ try{for(const row of fixture.cases){const source=row.change==="malformed-json"?"{":JSON.stringify(row.change==="invalid-graph"?{version:0}:fixture.graph);writeFileSync(path,source);const digest=new Bun.CryptoHasher("sha256").update(source).digest("hex"),publication:{path?:string;digest?:string}={path,digest};if(row.change==="missing-path")delete publication.path;if(row.change==="missing-digest")delete publication.digest;if(row.change==="relative-path")publication.path="graph.json";if(row.change==="invalid-digest")publication.digest="invalid";if(row.change==="changed-bytes")writeFileSync(path,source+" ");assert.equal(validate(publication),row.schemaAccepted,row.name);const environment={SEMIO_BUILD_GRAPH_PATH:publication.path,SEMIO_BUILD_GRAPH_DIGEST:publication.digest};if(row.accepted)assert.deepEqual(readStdioArtifactBuildGraphPin(environment),fixture.graph);else assert.throws(()=>readStdioArtifactBuildGraphPin(environment),row.name);}
  }finally{rmSync(root,{recursive:true,force:true});}console.log(`[stdio-package-contract] immutable pin fixtures=${fixture.cases.length} independentSchemaAndSha=true`);
 }
 
 /** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, build inputs and package scripts to the command-ownership contract. */
 export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
+  await verifyStdioCargoPhaseV1(repoRoot);
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");
   const fixture = readStdioJson(join(compositionRoot, "🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;

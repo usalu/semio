@@ -1,0 +1,51 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-open-plan-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Open-plan laws: document-open plans, execution targets, supersession, socket grants and scoped directory sockets"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-open-plan-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-document-routes/testkit", "semio-hub-ledgers/testkit", "semio-hub-route-models/testkit", "semio-hub-runtime/testkit", "semio-hub-session-routes/testkit", "semio-hub-state/testkit"]
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-artifact-creation = { workspace = true }
+semio-hub-auth = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-document-routes = { workspace = true, features = ["testkit"] }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-route-models = { workspace = true, features = ["testkit"] }
+semio-hub-route-testkit = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-state = { workspace = true, features = ["testkit"] }
+semio-hub-testing = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+tokio = { version = "1", features = ["full", "test-util"] }
+tokio-tungstenite = "0.26"
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+serde_json = { workspace = true }
+semio-framework-artifact-reference = { path = "../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+axum = { version = "0.8", features = ["ws"] }
+futures = "0.3"

@@ -28,19 +28,20 @@
 //! dependency list grants it `db_projection` but not `protocol` (only `db_artifact`, which already
 //! owns envelope interpretation, has both) — so the layer that calls `state_at`/`preview_augmented`
 //! hands this crate only the resulting bytes, never the engine or the envelope.
+#![allow(async_fn_in_trait)]
 
-use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, DbError};
-use crate::*;
+use db_durability::Frontier;
+use db_ids::{DbError, check_len};
+use db_ids::{ArtifactId, DbLimits};
 use db_index::{CommitIndex, FrontierIndex, FullTextIndex};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
 pub struct QueryCursorControl {
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    deadline: std::time::Instant,
-    fuel: usize,
+    pub cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub deadline: std::time::Instant,
+    pub fuel: usize,
 }
 
 impl QueryCursorControl {
@@ -73,19 +74,19 @@ impl QueryCursorControl {
 }
 
 pub struct QueryBytes {
-    pages: db_storage::DbIoPages,
+    pub pages: db_io_core::DbIoPages,
 }
 
 impl QueryBytes {
-    pub fn from_pages(pages: db_storage::DbIoPages) -> Result<Self, (DbError, db_storage::DbIoPages)> {
+    pub fn from_pages(pages: db_io_core::DbIoPages) -> Result<Self, (DbError, db_io_core::DbIoPages)> {
         if pages.operation() == 0 {
             return Err((DbError::InvalidArgument("query bytes require a nonzero operation".to_string()), pages));
         }
         Ok(Self { pages })
     }
 
-    pub async fn copy_from_pages(source: &db_storage::DbIoPages, control: &mut QueryCursorControl) -> Result<Self, DbError> {
-        let mut writer = db_storage::DbIoPageWriter::try_reserve(source.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    pub async fn copy_from_pages(source: &db_io_core::DbIoPages, control: &mut QueryCursorControl) -> Result<Self, DbError> {
+        let mut writer = db_io_core::DbIoPageWriter::try_reserve(source.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
         for fragment in source.fragments() {
             control.grant()?;
             if writer.write_fragment(fragment)? != fragment.len() {
@@ -93,14 +94,14 @@ impl QueryBytes {
             }
             semio_framework_async::yield_once().await;
         }
-        Ok(Self { pages: writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)? })
+        Ok(Self { pages: writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)? })
     }
 
     pub fn len(&self) -> usize {
         self.pages.len()
     }
 
-    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+    pub fn fragments(&self) -> db_io_core::DbIoPageReader<'_> {
         self.pages.fragments()
     }
 
@@ -431,12 +432,12 @@ pub async fn resolve_consistency(consistency: &Consistency, resolver: &impl Cons
 /// ("for `Consistency::Historical(commit_id)` query resolution"). Construction needs a live
 /// `db_storage::IndexStorage` on the caller's side — this crate stays storage-agnostic by only ever
 /// holding the already-constructed typed index handles, never constructing them itself.
-pub struct IndexConsistencyResolver<'a, S: db_storage::IndexStorage> {
+pub struct IndexConsistencyResolver<'a, S: db_io_core::IndexStorage> {
     pub commits: CommitIndex<'a, S>,
     pub frontiers: FrontierIndex<'a, S>,
 }
 
-impl<'resolver, S: db_storage::IndexStorage> ConsistencyResolver for IndexConsistencyResolver<'resolver, S> {
+impl<'resolver, S: db_io_core::IndexStorage> ConsistencyResolver for IndexConsistencyResolver<'resolver, S> {
     async fn current_frontier(&self) -> Result<Frontier, DbError> {
         self.frontiers.latest().await?.ok_or_else(|| DbError::NotFound("no frontier has been recorded for this document yet".to_string()))
     }
@@ -680,8 +681,8 @@ pub struct RowId(pub u64);
 
 #[derive(Debug)]
 pub struct QueryRow {
-    id: RowId,
-    value: Value,
+    pub id: RowId,
+    pub value: Value,
 }
 
 impl QueryRow {
@@ -707,9 +708,9 @@ const QUERY_RETIRED_ROW_SETS: usize = 64;
 
 #[derive(Debug)]
 pub struct QueryRows {
-    slots: [Option<QueryRow>; QUERY_ROW_SLOTS],
-    len: u8,
-    retirement: Option<QueryRowsRetirementReservation>,
+    pub slots: [Option<QueryRow>; QUERY_ROW_SLOTS],
+    pub len: u8,
+    pub retirement: Option<QueryRowsRetirementReservation>,
 }
 
 impl QueryRows {
@@ -773,7 +774,7 @@ impl QueryRows {
         }
     }
 
-    fn take(&mut self, index: usize) -> Option<QueryRow> {
+    pub fn take(&mut self, index: usize) -> Option<QueryRow> {
         if index >= self.len() {
             return None;
         }
@@ -1017,7 +1018,7 @@ pub trait QuerySource {
 /// 🔌️ What a full-text pushdown needs: term → candidate row ids. `db_index::FullTextIndex`
 /// implements this directly below (its `doc_ref` postings are exactly this trait's `RowId`s).
 pub trait FullTextLookup {
-    async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError>;
+    async fn search(&self, term: &str) -> Result<db_io_core::DbIoU64List, DbError>;
 }
 
 /// 🚫️ The phantom `FullTextLookup` type for `execute`/`refresh`'s `fulltext: None` call
@@ -1028,13 +1029,13 @@ pub trait FullTextLookup {
 pub enum NoFullTextLookup {}
 
 impl FullTextLookup for NoFullTextLookup {
-    async fn search(&self, _term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+    async fn search(&self, _term: &str) -> Result<db_io_core::DbIoU64List, DbError> {
         match *self {}
     }
 }
 
-impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'index, S> {
-    async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+impl<'index, S: db_io_core::IndexStorage> FullTextLookup for FullTextIndex<'index, S> {
+    async fn search(&self, term: &str) -> Result<db_io_core::DbIoU64List, DbError> {
         FullTextIndex::search(self, term).await
     }
 }
@@ -1312,13 +1313,13 @@ pub struct LiveQuerySpec {
 /// present, rows no longer present, and rows present in both but with a changed `Value`.
 pub struct QueryDiff {
     pub added: QueryRows,
-    pub removed: db_storage::DbIoU64List,
+    pub removed: db_io_core::DbIoU64List,
     pub updated: QueryRows,
 }
 
 impl Default for QueryDiff {
     fn default() -> Self {
-        Self { added: QueryRows::new(), removed: db_storage::DbIoU64List::new(), updated: QueryRows::new() }
+        Self { added: QueryRows::new(), removed: db_io_core::DbIoU64List::new(), updated: QueryRows::new() }
     }
 }
 
@@ -1388,8 +1389,8 @@ fn query_value_hash(value: &Value) -> [u8; 32] {
 /// while still being a real `updated` event each time) — so the two mechanisms are complementary,
 /// not duplicate.
 pub struct LiveQuery {
-    spec: LiveQuerySpec,
-    snapshot: [Option<(RowId, [u8; 32])>; QUERY_ROW_SLOTS],
+    pub spec: LiveQuerySpec,
+    pub snapshot: [Option<(RowId, [u8; 32])>; QUERY_ROW_SLOTS],
     snapshot_len: u8,
 }
 

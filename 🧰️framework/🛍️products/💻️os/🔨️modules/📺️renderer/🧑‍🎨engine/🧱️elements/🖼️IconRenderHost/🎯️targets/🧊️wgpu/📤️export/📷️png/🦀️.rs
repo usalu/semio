@@ -3,7 +3,7 @@ use semio_framework_pixels::{editing::validate_image, png_encoding::PngEncodeJob
 
 const PIXELS_PER_STEP: usize = 1024;
 
-enum Phase {
+pub enum Phase {
     Normalize { image: RasterImage, pixel: usize },
     Encode { encoder: PngEncodeJob, completed: usize, total: usize },
     Complete(Option<Vec<u8>>),

@@ -980,5 +980,5 @@ impl ActiveEdit {
 //#endregion ⏳️PersistentEdit
 
 #[cfg(test)]
-#[path = "../🧪️tests/🔬️text-edit-unit/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

@@ -1,11 +1,12 @@
 use super::*;
-use db_storage::{MemoryStorage, PayloadStorage as _, WalStorage as _};
-use db_wal::{WalPayloadRef, WalRecord};
-use {DurabilityClass, Frontier};
+use db_io_core::{PayloadStorage as _, WalStorage as _};
+use db_storage_memory::MemoryStorage;
+use db_wal_log::{WalPayloadRef, WalRecord};
+use db_durability::{DurabilityClass, Frontier};
 
-fn pages(bytes: &[u8]) -> db_storage::DbIoPages {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).expect("test compaction writer admitted");
-    for fragment in bytes.chunks(db_storage::DB_IO_PAGE_BYTES) {
+fn pages(bytes: &[u8]) -> db_io_core::DbIoPages {
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).expect("test compaction writer admitted");
+    for fragment in bytes.chunks(db_io_core::DB_IO_PAGE_BYTES) {
         assert_eq!(writer.write_fragment(fragment).unwrap(), fragment.len());
     }
     writer.finish().unwrap()
@@ -23,13 +24,13 @@ async fn sample_body(head_seq: u64) -> db_snapshot::SnapshotBody {
     db_snapshot::SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1_000 }
 }
 
-async fn wal_bytes(source: &[u8]) -> db_wal::WalBytes {
-    let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
-    db_wal::WalBytes::try_admit(source.to_vec(), 1024 * 1024, &mut control).await.unwrap()
+async fn wal_bytes(source: &[u8]) -> db_wal_log::WalBytes {
+    let mut control = db_wal_log::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
+    db_wal_log::WalBytes::try_admit(source.to_vec(), 1024 * 1024, &mut control).await.unwrap()
 }
 
 async fn submit_record(storage: &MemoryStorage, wal: &mut db_wal::ArtifactWal, record: WalRecord, now_ms: u64) {
-    let mut records = db_wal::WalRecordBatch::new();
+    let mut records = db_wal_log::WalRecordBatch::new();
     assert!(records.push(record).is_ok());
     wal.submit(storage, &[], &records, DurabilityClass::Fsync, now_ms).await.unwrap();
     while records.close_step().unwrap() {}
@@ -143,7 +144,7 @@ fn held_compaction_worker_pool() -> (Arc<WorkerPool>, Arc<std::sync::atomic::Ato
 }
 
 async fn retained_compaction_storage() -> Arc<db_storage::DbBackend> {
-    Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()))
+    Arc::new(db_storage::DbBackend::Memory(MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -153,7 +154,7 @@ async fn retained_compaction_handoff_to_first_poll_cancel_uses_real_io_lane_and_
     let storage_identity = Arc::as_ptr(&storage) as usize;
     let document = ArtifactId(String::from("p1y-handoff-cancel"));
     let document_identity = document.0.as_ptr();
-    let holder = db_storage::DbIoText::try_from_str("p1y-holder").unwrap();
+    let holder = db_io_core::DbIoText::try_from_str("p1y-holder").unwrap();
     let started = std::time::Instant::now();
     let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, document, holder, false, CompactionBudget::default(), 0).unwrap();
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
@@ -179,7 +180,7 @@ async fn retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_r
     let (pool, held) = held_compaction_worker_pool();
     let storage = retained_compaction_storage().await;
     let storage_identity = Arc::as_ptr(&storage) as usize;
-    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-deadline")), db_storage::DbIoText::try_from_str("deadline-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-deadline")), db_io_core::DbIoText::try_from_str("deadline-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     state.deadline_ms.store(0, std::sync::atomic::Ordering::Release);
     state.deadline_callback();
@@ -198,7 +199,7 @@ async fn retained_compaction_actual_deadline_callback_lost_wake_and_drop_close_r
 
 #[semio_framework_async_macros::async_test]
 async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority() {
-    if !crate::db_storage::process_isolated_law("db_compact::tests::retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority") {
+    if !db_io_driver::process_isolated_law("tests::retained_compaction_max_plus_one_capacity_refusal_preserves_storage_document_holder_and_hash_authority") {
         return;
     }
     let (pool, held) = held_compaction_worker_pool();
@@ -206,14 +207,14 @@ async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_doc
     let mut admitted = Vec::with_capacity(DATABASE_COMPACTION_SLOTS);
     for index in 0..DATABASE_COMPACTION_SLOTS {
         admitted.push(
-            DatabaseCompactionFuture::try_submit(pool.clone(), admitted_storage.clone(), ArtifactId(format!("p1y-max-{index}")), db_storage::DbIoText::try_from_str("max-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap(),
+            DatabaseCompactionFuture::try_submit(pool.clone(), admitted_storage.clone(), ArtifactId(format!("p1y-max-{index}")), db_io_core::DbIoText::try_from_str("max-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap(),
         );
     }
     let slot_storage = retained_compaction_storage().await;
     let slot_storage_identity = Arc::as_ptr(&slot_storage) as usize;
     let slot_document = ArtifactId(String::from("p1y-slot-max-plus-one"));
     let slot_document_identity = slot_document.0.as_ptr();
-    let slot_rejected = DatabaseCompactionFuture::try_submit(pool.clone(), slot_storage, slot_document, db_storage::DbIoText::try_from_str("slot-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
+    let slot_rejected = DatabaseCompactionFuture::try_submit(pool.clone(), slot_storage, slot_document, db_io_core::DbIoText::try_from_str("slot-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
     let (slot_error, slot_storage, slot_document, mut slot_holder) = slot_rejected.into_parts().unwrap();
     assert_eq!(slot_error, DbError::LimitExceeded("database compaction admission slots"));
     assert_eq!(Arc::as_ptr(&slot_storage) as usize, slot_storage_identity);
@@ -221,10 +222,10 @@ async fn retained_compaction_max_plus_one_capacity_refusal_preserves_storage_doc
     assert!(slot_holder.close_step());
     let storage = retained_compaction_storage().await;
     let storage_identity = Arc::as_ptr(&storage) as usize;
-    let mut external = String::with_capacity(db_storage::DbIoText::maximum_capacity() + 1);
+    let mut external = String::with_capacity(db_io_core::DbIoText::maximum_capacity() + 1);
     external.push_str("p1y-max-plus-one");
     let document_identity = external.as_ptr();
-    let rejected = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(external), db_storage::DbIoText::try_from_str("exact-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
+    let rejected = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(external), db_io_core::DbIoText::try_from_str("exact-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap_err();
     let (error, storage, document, mut holder) = rejected.into_parts().unwrap();
     assert_eq!(error, DbError::LimitExceeded("database compaction document backing"));
     assert_eq!(Arc::as_ptr(&storage) as usize, storage_identity);
@@ -270,7 +271,7 @@ async fn database_compaction_future_acquires_pool_use_before_admission() {
     let storage_identity = Arc::as_ptr(&storage) as usize;
     let document = ArtifactId(String::from("pool-use-precedes-compaction-admission"));
     let document_identity = document.0.as_ptr();
-    let holder = db_storage::DbIoText::try_from_str("pool-use-holder").unwrap();
+    let holder = db_io_core::DbIoText::try_from_str("pool-use-holder").unwrap();
     let rejected = DatabaseCompactionFuture::try_submit(pool, storage, document, holder, false, CompactionBudget::default(), 0).unwrap_err();
     let (error, storage, document, mut holder) = rejected.into_parts().unwrap();
     assert!(matches!(error, DbError::Unavailable(detail) if detail.contains("WorkerPool use rejected")));
@@ -289,7 +290,7 @@ async fn database_compaction_future_acquires_pool_use_before_admission() {
 async fn retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_generation_owner_per_opportunity() {
     let (pool, held) = held_compaction_worker_pool();
     let future =
-        DatabaseCompactionFuture::try_submit(pool.clone(), retained_compaction_storage().await, ArtifactId(String::from("p1y-stale")), db_storage::DbIoText::try_from_str("stale-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        DatabaseCompactionFuture::try_submit(pool.clone(), retained_compaction_storage().await, ArtifactId(String::from("p1y-stale")), db_io_core::DbIoText::try_from_str("stale-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     let replacement = state.generation.checked_add(1).unwrap();
     DATABASE_COMPACTION_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = replacement;
@@ -307,7 +308,7 @@ async fn retained_compaction_stale_aba_drop_and_partial_terminal_close_keep_one_
     let mut owners = DatabaseCompactionTerminalOwners {
         storage: Some(retained_compaction_storage().await),
         document: Some(ArtifactId(String::from("p1y-close"))),
-        holder: Some(db_storage::DbIoText::try_from_str("close-holder").unwrap()),
+        holder: Some(db_io_core::DbIoText::try_from_str("close-holder").unwrap()),
         result: Some(Ok(CompactionReport { index_reports: reports, ..CompactionReport::default() })),
     };
     let before = owners.result.as_ref().and_then(|result| result.as_ref().ok()).map(|report| report.index_reports.len()).unwrap();
@@ -358,7 +359,7 @@ async fn retained_compaction_panic_after_lease_acquire_releases_once_before_publ
     let (pool, held) = held_compaction_worker_pool();
     let storage = retained_compaction_storage().await;
     let lease_storage = storage.clone();
-    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-panic-release")), db_storage::DbIoText::try_from_str("panic-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-panic-release")), db_io_core::DbIoText::try_from_str("panic-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
     state.lease_recovery.install(fence);
@@ -380,7 +381,7 @@ async fn retained_compaction_release_error_retries_through_real_worker_loop_unti
     let (pool, held) = held_compaction_worker_pool();
     let storage = retained_compaction_storage().await;
     let lease_storage = storage.clone();
-    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-release-error-success")), db_storage::DbIoText::try_from_str("release-error-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+    let future = DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-release-error-success")), db_io_core::DbIoText::try_from_str("release-error-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
     state.lease_recovery.install(fence);
@@ -408,7 +409,7 @@ async fn retained_compaction_perpetual_release_error_keeps_fence_fault_admission
     let storage = retained_compaction_storage().await;
     let lease_storage = storage.clone();
     let future =
-        DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-perpetual-release-error")), db_storage::DbIoText::try_from_str("perpetual-release-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
+        DatabaseCompactionFuture::try_submit(pool.clone(), storage, ArtifactId(String::from("p1y-perpetual-release-error")), db_io_core::DbIoText::try_from_str("perpetual-release-holder").unwrap(), false, CompactionBudget::default(), 0).unwrap();
     let state = future.state.as_ref().unwrap().clone();
     let fence = lease_storage.lease().await.acquire(state.lease_recovery.resource.as_str(), state.lease_recovery.holder.as_str(), DEFAULT_LEASE_TTL_MS, 0).await.unwrap();
     state.lease_recovery.install(fence);
@@ -464,7 +465,7 @@ async fn retained_compaction_cumulative_observed_backing_rejects_individually_va
 
 #[semio_framework_async_macros::async_test]
 async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit() {
-    if !crate::db_storage::process_isolated_law("db_compact::tests::compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit") {
+    if !db_io_driver::process_isolated_law("tests::compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrupted_close_and_max_plus_one_return_exact_credit") {
         return;
     }
     while compaction_page_maintenance_step().unwrap() {}
@@ -549,7 +550,7 @@ async fn compaction_fixed_pages_success_refusal_cancel_stale_fault_drop_interrup
 //#region 🔖️Lease
 #[semio_framework_async_macros::async_test]
 async fn compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot_lease() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
 
     let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 1_000, 0)).unwrap();
@@ -569,7 +570,7 @@ async fn compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot
 #[semio_framework_async_macros::async_test]
 async fn segment_horizons_tracks_the_max_head_seq_seen_within_each_segment_span() {
     let document = doc("doc-1").await;
-    let mut records = db_wal::WalRecordBatch::new();
+    let mut records = db_wal_log::WalRecordBatch::new();
     for record in [
         WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
         WalRecord::Command(wal_bytes(b"a").await),
@@ -617,7 +618,7 @@ async fn plan_wal_retention_respects_the_budget_cap() {
 #[semio_framework_async_macros::async_test]
 async fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects() {
     let fixture = committed_compaction_fixture();
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("committed-compaction-effects").await;
     let aborted = storage.put(pages(b"aborted-payload")).await.unwrap();
     let committed = storage.put(pages(b"committed-payload")).await.unwrap();
@@ -643,7 +644,7 @@ async fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects
 
 #[semio_framework_async_macros::async_test]
 async fn document_compaction_retains_shared_and_private_cas_without_global_reference_authority() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document_a = doc("payload-owner-a").await;
     let document_b = doc("payload-owner-b").await;
     let shared = storage.put(pages(b"shared-across-documents")).await.unwrap();
@@ -687,7 +688,7 @@ async fn document_compaction_retains_shared_and_private_cas_without_global_refer
 
 #[semio_framework_async_macros::async_test]
 async fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let writer = storage.acquire_writer(&document).await.unwrap();
     db_actor::block_on(storage.create_segment(&writer, 0)).unwrap();
@@ -707,12 +708,12 @@ async fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
 //#region 🔖️PayloadGc
 #[semio_framework_async_macros::async_test]
 async fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let orphan_hash = db_actor::block_on(storage.put(pages(b"orphan-payload"))).unwrap();
     let shared_hash = db_actor::block_on(storage.put(pages(b"shared-payload"))).unwrap();
     let document = doc("doc-1").await;
 
-    let mut records = db_wal::WalRecordBatch::new();
+    let mut records = db_wal_log::WalRecordBatch::new();
     for record in [
         WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
         WalRecord::Payload(WalPayloadRef::CasRef(orphan_hash)),
@@ -733,11 +734,11 @@ async fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_refer
 
 #[semio_framework_async_macros::async_test]
 async fn sweep_payloads_respects_the_budget_cap() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let hash_a = db_actor::block_on(storage.put(pages(b"a"))).unwrap();
     let hash_b = db_actor::block_on(storage.put(pages(b"b"))).unwrap();
     let document = doc("doc-1").await;
-    let mut records = db_wal::WalRecordBatch::new();
+    let mut records = db_wal_log::WalRecordBatch::new();
     assert!(records.push(WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }).is_ok());
     assert!(records.push(WalRecord::Payload(WalPayloadRef::CasRef(hash_a))).is_ok());
     assert!(records.push(WalRecord::Payload(WalPayloadRef::CasRef(hash_b))).is_ok());
@@ -751,7 +752,7 @@ async fn sweep_payloads_respects_the_budget_cap() {
 //#region 🔖️IndexCompaction
 #[semio_framework_async_macros::async_test]
 async fn compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_one() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command).await;
     index_put(&handle, b"a", b"1").await;
@@ -771,7 +772,7 @@ async fn compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_on
 //#region 🔖️SnapshotConsolidation
 #[semio_framework_async_macros::async_test]
 async fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole_chain() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
 
@@ -788,7 +789,7 @@ async fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole
     assert_eq!(new_generation, 2);
 
     let mut bytes = db_actor::block_on(storage.read_generation(&document, new_generation)).unwrap();
-    let mut prepared = db_storage::db_io_prepare_platform(&bytes).unwrap().await.unwrap();
+    let mut prepared = db_io_registry::db_io_prepare_platform(&bytes).unwrap().await.unwrap();
     let handle = db_snapshot::open_latest(prepared.as_slice()).await.unwrap();
     assert!(handle.parent_footer_offset().await.is_none(), "a consolidated generation must be a self-sufficient full baseline");
     assert_eq!(handle.descriptor.roots, body1.roots);
@@ -807,7 +808,7 @@ async fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole
 
 #[semio_framework_async_macros::async_test]
 async fn retain_from_after_consolidate_prunes_every_generation_below_the_new_baseline() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
     db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
@@ -822,7 +823,7 @@ async fn retain_from_after_consolidate_prunes_every_generation_below_the_new_bas
 
 #[semio_framework_async_macros::async_test]
 async fn consolidate_respects_the_snapshot_chain_depth_budget() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
     db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
@@ -838,7 +839,7 @@ async fn consolidate_respects_the_snapshot_chain_depth_budget() {
 //#region 🔖️ColdArchive
 #[semio_framework_async_macros::async_test]
 async fn build_cold_archive_matches_materialize_chain_and_reopens_independently() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
     let pages = vec![state_page(b"page-a").await];
@@ -850,7 +851,7 @@ async fn build_cold_archive_matches_materialize_chain_and_reopens_independently(
     let mut expected = db_actor::block_on(cursor.materialize_pages()).unwrap();
     assert_eq!(archive, expected);
 
-    let mut prepared = db_storage::db_io_prepare_platform(&archive).unwrap().await.unwrap();
+    let mut prepared = db_io_registry::db_io_prepare_platform(&archive).unwrap().await.unwrap();
     let handle = db_snapshot::open_latest(prepared.as_slice()).await.unwrap();
     assert_eq!(handle.generation().await, 0);
     while prepared.close_step().unwrap() {}
@@ -863,9 +864,9 @@ async fn build_cold_archive_matches_materialize_chain_and_reopens_independently(
 //#region 🔖️Compactor
 #[semio_framework_async_macros::async_test]
 async fn run_never_deletes_the_sole_or_active_wal_segment() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
-    let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
+    let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal_log::GroupCommitPolicy::default(), 0)).unwrap();
     submit_record(&storage, &mut wal, WalRecord::Frontier(frontier(&document, 100).await), 0).await;
     wal.close().await.unwrap();
     let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
@@ -878,7 +879,7 @@ async fn run_never_deletes_the_sole_or_active_wal_segment() {
 
 #[semio_framework_async_macros::async_test]
 async fn run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_releases_the_lease() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
     let gen0_pages = vec![state_page(b"p0").await];
@@ -907,7 +908,7 @@ async fn run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_release
 
 #[semio_framework_async_macros::async_test]
 async fn run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0)).unwrap();
     let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
@@ -921,7 +922,7 @@ async fn run_fails_with_conflict_when_another_holder_already_holds_the_compactio
 
 #[semio_framework_async_macros::async_test]
 async fn run_releases_the_compaction_lease_even_when_a_step_fails() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let writer = storage.acquire_writer(&document).await.unwrap();
     db_actor::block_on(storage.create_segment(&writer, 0)).unwrap();
@@ -940,12 +941,12 @@ async fn run_releases_the_compaction_lease_even_when_a_step_fails() {
 
 #[semio_framework_async_macros::async_test]
 async fn run_from_latest_snapshot_derives_the_floor_from_the_current_snapshot_head_seq() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let manager = db_snapshot::SnapshotManager::new(&storage).await;
     db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42).await)).unwrap();
 
-    let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
+    let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal_log::GroupCommitPolicy::default(), 0)).unwrap();
     submit_record(&storage, &mut wal, WalRecord::Frontier(frontier(&document, 42).await), 0).await;
     wal.close().await.unwrap();
     let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);

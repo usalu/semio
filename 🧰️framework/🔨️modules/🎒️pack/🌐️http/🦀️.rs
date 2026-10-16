@@ -4,13 +4,17 @@
 //! etag-based revalidation. An optional `ureq`
 //! feature (off by default) provides a native `UreqRangeTransport`.
 
+// 🔓️ R7: `async fn` in a public trait is our deliberate crate-wide shape (R3 answers the lint's underlying `Send` concern structurally).
+// Never take rustc's suggested `-> impl Future<...> + Send` fix; it re-imposes `Send` R3 forbids.
+#![allow(async_fn_in_trait)]
+
 //#region 🔖️Transport
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use crate::async_::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
-use crate::ByteRange;
+use semio_framework_pack_async::{AsyncPackSource, CancellationToken, LoadPriority, ReadRequest as SchedulerRead, ReadScheduler};
+use semio_framework_replication_codec::ByteRange;
 use semio_framework_pack_error::{PackError,PackRetryDisposition};
 use semio_framework_async::WorkerPool;
 

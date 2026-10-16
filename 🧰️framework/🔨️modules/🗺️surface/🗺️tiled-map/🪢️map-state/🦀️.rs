@@ -1,20 +1,35 @@
-//! 🪢️ Map descriptors and layer state: extension trait, position/route/region data, tile mode, layer weights and visibility, tile ledger.
+//! 🪢️ Map descriptors and layer state: extension trait, overlay features, tile mode, policy-keyed layer switches, tile ledger.
 //!
-//! Linked to [`super::MapHost`], which owns one [`MapTileLedger`] and one set of layer tables.
+//! Linked to `MapHost`, which owns one [`MapExtension`], one [`MapTileLedger`], one [`MapOverlayTables`] and one [`MapLayerSwitches`].
 
 use super::*;
 
 // #region 🔖️MapExtension
+/// 🆔️ Extension id of [`DefaultMapExtension`].
+pub const MAP_EXTENSION_DEFAULT_ID: &str = "surface.tiled-map/default";
+
+/// 🧩️ Domain extension of a tiled map: its coordinate reference system and the [`MapPolicy`] a `MapHost` renders by.
 pub trait MapExtension: CanvasExtension {
     fn map_crs(&self) -> &str;
+    fn policy(&self) -> &dyn MapPolicy;
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct DefaultMapExtension;
+/// 🫙️ Web Mercator extension carrying one [`DescribedMapPolicy`] — the neutral policy by default, a shipped descriptor once `MapHost::sync_map_json` receives one.
+#[derive(Clone, Debug, Default)]
+pub struct DefaultMapExtension {
+    policy: DescribedMapPolicy,
+}
+
+impl DefaultMapExtension {
+    /// 🪄️ The default extension carrying `policy`.
+    pub fn with_policy(policy: DescribedMapPolicy) -> Self {
+        Self { policy }
+    }
+}
 
 impl CanvasExtension for DefaultMapExtension {
     fn extension_id(&self) -> &str {
-        "gis.map/default"
+        MAP_EXTENSION_DEFAULT_ID
     }
 }
 
@@ -22,65 +37,40 @@ impl MapExtension for DefaultMapExtension {
     fn map_crs(&self) -> &str {
         "EPSG:3857"
     }
+
+    fn policy(&self) -> &dyn MapPolicy {
+        &self.policy
+    }
 }
 // #endregion 🔖️MapExtension
 
 // #region 🔖️MapContent
-// 🌱️ `source_url`'s `#[serde(alias = "sourceUrl")]` has NO `#[value(...)]` equivalent (derive has no
-// alias support) — read-compat gap, not replicated in `FromValue` on purpose rather than faked.
-// Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
-pub struct PositionData {
+/// 📍️ One overlay feature of the map descriptor: its id, its lon/lat coordinates (one for a point, a polyline for a line, a ring for an area) and an optional caption, style key, line width, icon and link.
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MapOverlayFeature {
     pub id: String,
-    pub lon: f64,
-    pub lat: f64,
-    #[serde(default)]
-    #[value(default)]
+    pub coordinates: Vec<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default)]
-    #[value(default)]
-    pub name: Option<String>,
-    #[serde(default)]
-    #[value(default)]
-    pub kind: Option<String>,
-    #[serde(default)]
-    #[value(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub style: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
-    #[serde(default, alias = "sourceUrl")]
-    #[value(default)]
-    pub source_url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub link: Option<String>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
-pub struct RouteData {
-    pub id: String,
-    pub points: Vec<[f64; 2]>,
-    #[serde(default = "default_route_stroke")]
-    #[value(default = "default_route_stroke")]
-    pub stroke_width: f64,
-}
-
-fn default_route_stroke() -> f64 {
-    ui_styling::strokes::MAP_ROUTE_DEFAULT
-}
-
-#[derive(Clone, Debug, serde::Deserialize, semio_framework_value::FromValue)]
-pub struct RegionData {
-    pub id: String,
-    pub ring: Vec<[f64; 2]>,
-}
-
-#[derive(Clone, Debug, Default, serde::Deserialize, semio_framework_value::FromValue)]
-pub struct MapDescriptorJson {
+/// 📨️ What `MapHost::sync_map_json` reads: the overlay features per overlay layer id, plus an optional [`MapPolicyDescriptor`] that replaces the host's policy when it differs.
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MapSyncJson {
     #[serde(default)]
-    #[value(default)]
-    pub positions: Vec<PositionData>,
+    pub overlays: std::collections::BTreeMap<String, Vec<MapOverlayFeature>>,
     #[serde(default)]
-    #[value(default)]
-    pub routes: Vec<RouteData>,
-    #[serde(default)]
-    #[value(default)]
-    pub regions: Vec<RegionData>,
+    pub policy: Option<MapPolicyDescriptor>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -101,45 +91,11 @@ impl MapTileMode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum MapVectorStyle {
-    #[default]
-    Colored,
-    FigureGround,
-    InvertedFigure,
-}
-
-impl MapVectorStyle {
-    pub fn parse(style: &str) -> Self {
-        match style {
-            "figureGround" => Self::FigureGround,
-            "invertedFigure" => Self::InvertedFigure,
-            _ => Self::Colored,
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Colored => "colored",
-            Self::FigureGround => "figureGround",
-            Self::InvertedFigure => "invertedFigure",
-        }
-    }
-}
-
-fn map_layer_default_true() -> bool {
-    true
-}
-
 /// 🎚️ Minimum layer line/label weight multiplier from window sliders.
 pub const MAP_LAYER_WEIGHT_MIN: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MIN;
 
 /// 🎚️ Maximum layer line/label weight multiplier from window sliders.
 pub const MAP_LAYER_WEIGHT_MAX: f64 = ui_styling::metrics::map::LAYER_WEIGHT_MAX;
-
-fn map_layer_default_weight() -> f64 {
-    1.0
-}
 
 /// 🎚️ Clamps a layer weight slider value to the supported multiplier range.
 pub fn clamp_map_layer_weight(value: f64) -> f64 {
@@ -150,141 +106,65 @@ pub fn clamp_map_layer_weight(value: f64) -> f64 {
     }
 }
 
-/// 🎚️ Per-layer line/label weight multipliers (1.0 = default cartography).
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[serde(rename_all = "camelCase", default)]
-#[value(rename_all = "camelCase", default)]
-pub struct MapLayerStrokeScale {
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub raster: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub water: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub land: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub roads: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub buildings: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub borders: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub labels: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub positions: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub position_labels: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub routes: f64,
-    #[serde(default = "map_layer_default_weight")]
-    #[value(default = "map_layer_default_weight")]
-    pub regions: f64,
+/// 👁️ Per-toggle visibility and weight, keyed by the policy's [`MapLayerToggle`] keys: an absent key is visible at weight 1.0, a target no toggle lists is always visible at weight 1.0.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct MapLayerSwitches {
+    pub visibility: std::collections::BTreeMap<String, bool>,
+    pub weights: std::collections::BTreeMap<String, f64>,
 }
 
-impl Default for MapLayerStrokeScale {
-    fn default() -> Self {
-        Self { raster: 1.0, water: 1.0, land: 1.0, roads: 1.0, buildings: 1.0, borders: 1.0, labels: 1.0, positions: 1.0, position_labels: 1.0, routes: 1.0, regions: 1.0 }
+impl MapLayerSwitches {
+    /// 👀️ Whether `target` paints under `policy`'s toggles.
+    pub fn visible(&self, policy: &dyn MapPolicy, target: &MapLayerTarget) -> bool {
+        policy.toggle_key(target).and_then(|key| self.visibility.get(key)).copied().unwrap_or(true)
+    }
+
+    /// ⚖️ The weight multiplier `target` paints with under `policy`'s toggles.
+    pub fn weight(&self, policy: &dyn MapPolicy, target: &MapLayerTarget) -> f64 {
+        policy.toggle_key(target).and_then(|key| self.weights.get(key)).copied().unwrap_or(1.0)
+    }
+
+    /// 🧽️ `weights` with every value clamped to the slider range.
+    pub fn sanitized_weights(weights: std::collections::BTreeMap<String, f64>) -> std::collections::BTreeMap<String, f64> {
+        weights.into_iter().map(|(key, weight)| (key, clamp_map_layer_weight(weight))).collect()
     }
 }
 
-impl MapLayerStrokeScale {
-    pub fn sanitized(self) -> Self {
-        Self {
-            raster: clamp_map_layer_weight(self.raster),
-            water: clamp_map_layer_weight(self.water),
-            land: clamp_map_layer_weight(self.land),
-            roads: clamp_map_layer_weight(self.roads),
-            buildings: clamp_map_layer_weight(self.buildings),
-            borders: clamp_map_layer_weight(self.borders),
-            labels: clamp_map_layer_weight(self.labels),
-            positions: clamp_map_layer_weight(self.positions),
-            position_labels: clamp_map_layer_weight(self.position_labels),
-            routes: clamp_map_layer_weight(self.routes),
-            regions: clamp_map_layer_weight(self.regions),
-        }
-    }
-}
-
-/// 👁️ Per-layer show/hide gates for base map vector paint and user overlays.
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[serde(rename_all = "camelCase", default)]
-#[value(rename_all = "camelCase", default)]
-pub struct MapLayerVisibility {
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub raster: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub water: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub land: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub roads: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub buildings: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub borders: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub labels: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub positions: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub position_labels: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub routes: bool,
-    #[serde(default = "map_layer_default_true")]
-    #[value(default = "map_layer_default_true")]
-    pub regions: bool,
-}
-
-impl Default for MapLayerVisibility {
-    fn default() -> Self {
-        Self { raster: true, water: true, land: true, roads: true, buildings: true, borders: true, labels: true, positions: true, position_labels: true, routes: true, regions: true }
-    }
-}
-
-/// 🗺️ GIS feature tables mirrored from projection JSON — not authoritative document state (OS `ArtifactStore` owns packs).
+/// 🗺️ Overlay features mirrored from projection JSON, per overlay layer id and feature id — not authoritative document state (OS `ArtifactStore` owns packs).
 #[derive(Default)]
-pub struct MapFeatureTables {
-    pub positions: std::collections::BTreeMap<String, PositionData>,
-    pub routes: std::collections::BTreeMap<String, RouteData>,
-    pub regions: std::collections::BTreeMap<String, RegionData>,
+pub struct MapOverlayTables {
+    pub layers: std::collections::BTreeMap<String, std::collections::BTreeMap<String, MapOverlayFeature>>,
+}
+
+impl MapOverlayTables {
+    /// 📚️ The features of overlay layer `layer`, by id.
+    pub fn features(&self, layer: &str) -> impl Iterator<Item = &MapOverlayFeature> {
+        self.layers.get(layer).into_iter().flat_map(|features| features.values())
+    }
+
+    /// 🔎️ One feature of overlay layer `layer`.
+    pub fn feature(&self, layer: &str, id: &str) -> Option<&MapOverlayFeature> {
+        self.layers.get(layer)?.get(id)
+    }
 }
 
 #[derive(Default)]
-pub(super) struct MapTileLedger {
-    pub(super) tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
-    pub(super) vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
+pub struct MapTileLedger {
+    pub tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+    pub vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
     /// 🕰️ Last-touched tick per raster tile key ("touched" = uploaded or drawn) — drives LRU eviction.
-    pub(super) raster_touch: RefCell<std::collections::BTreeMap<String, u64>>,
+    pub raster_touch: RefCell<std::collections::BTreeMap<String, u64>>,
     /// 🕰️ Same as `raster_touch`, for the vector tile cache.
-    pub(super) vector_touch: RefCell<std::collections::BTreeMap<String, u64>>,
-    pub(super) touch_clock: std::cell::Cell<u64>,
+    pub vector_touch: RefCell<std::collections::BTreeMap<String, u64>>,
+    pub touch_clock: std::cell::Cell<u64>,
 }
 
 impl MapTileLedger {
-    pub(super) fn touch_raster(&self, key: &str) {
+    pub fn touch_raster(&self, key: &str) {
         Self::touch_in(&self.touch_clock, &self.raster_touch, key);
     }
 
-    pub(super) fn touch_vector(&self, key: &str) {
+    pub fn touch_vector(&self, key: &str) {
         Self::touch_in(&self.touch_clock, &self.vector_touch, key);
     }
 

@@ -42,6 +42,7 @@ tui-bindgen = ["tui", "dep:wasm-bindgen"]
 wgpu = ["dep:semio-framework-ui-draw-contract", "dep:semio-framework-ui-prepared", "dep:semio-framework-ui-raster-owner", "dep:semio-framework-ui-action", "dep:semio-framework-ui-theme", "dep:semio-framework-ui-declaration", "dep:serde", "dep:serde_json", "dep:semio-framework-ui-locale", "dep:semio-framework-value-derive", "dep:bytemuck", "dep:semio-framework-job"]
 # 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
 wgpu-engine = [
+    "dep:semio-framework-ui-wgpu-render",
     "semio-framework-ui-prepared/browser-presenter",
     "dep:semio-framework-ui-surface-identity",
     "dep:semio-framework-ui-retained-tree",
@@ -68,6 +69,7 @@ wgpu-engine = [
 typegen = ["wgpu"]
 
 [dependencies]
+semio-framework-ui-wgpu-render = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", optional = true }
 semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", optional = true }
 semio-framework-job-worker-authority = { path = "../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", optional = true }
 
@@ -167,6 +169,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-ui-wgpu-render = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
 semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,0 +1,10 @@
+{
+  "type": "object", "additionalProperties": false, "required": ["version", "cases", "refused", "watchGrammar"],
+  "properties": {
+    "version": {"const": 1},
+    "cases": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["name", "parent", "child"], "properties": {"name": {"enum": ["direct", "convenience"]}, "parent": {"$ref": "#/definitions/Arguments"}, "child": {"$ref": "#/definitions/Arguments"}}}},
+    "refused": {"type": "array", "minItems": 2, "items": {"$ref": "#/definitions/Arguments"}},
+    "watchGrammar": {"type":"array","minItems":6,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["name","args","valid"],"properties":{"name":{"enum":["missing-boundary","missing-program","empty-program","neutral-help","literal-option","empty-argument"]},"args":{"$ref":"#/definitions/Arguments"},"valid":{"type":"boolean"}}}}
+  },
+  "definitions": {"Arguments": {"type": "array", "minItems": 1, "maxItems": 65536, "items": {"type": "string"}}}
+}

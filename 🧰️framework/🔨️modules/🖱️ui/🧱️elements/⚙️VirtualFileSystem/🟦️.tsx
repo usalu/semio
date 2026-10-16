@@ -19,7 +19,7 @@ import { Table, type TableColumn, type TableProps, type HierarchicalRowData, typ
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🌳️Tree/🟦️.tsx";
 import { useLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
 import { Icon } from "../🔣️Icons/🟦️.tsx";
-import { formatHostTemporalValueV1 } from "../../🧬️contract/🕰️host-temporal-format/🟦️.ts";
+import { formatHostTemporalValueV1 } from "../../🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📁️VirtualFileSystem

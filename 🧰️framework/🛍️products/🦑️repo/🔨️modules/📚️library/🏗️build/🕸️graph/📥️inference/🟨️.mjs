@@ -1,3 +1,10 @@
+import{printArtifactNxOutputV1}from"../../../../../../📓️print/📦️artifacts/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {frameworkOsEngineSourceOwnersV1} from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {repositoryWasmPackageNxOutputV1} from "../../../⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import {withHostPlatformOutputsV1} from "../../🎯️host-platform/🟦️.ts";
+import {componentModelDirectoryKeyV1} from "../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts";
 import {conformsOwnerContractV1} from "../../📤️arguments/🟨️.mjs";
 import {repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphFactStoreV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {loadCatalogBuildProvidersV1,catalogBuildContributionForManifestV1} from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
@@ -9,7 +16,7 @@ import { fileURLToPath,pathToFileURL } from "node:url";
 import * as loadedCommandInputs from "../../../⚡️caching/📥️inference/🟨️.mjs";
 import * as loadedProjectInputs from "../../../🏗️build/📥️inputs/🟨️.mjs";
 import * as loadedBuildMode from "../../../🏗️build/🎚️mode/🟨️.mjs";
-import {receiveScriptProcessInvocation,checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {receiveScriptProcessInvocation,checkScriptInvocation,createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {advanceScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
 import { buildModesV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {declaredNativeOwnerCommandV1,literalCommandTokensV1,bindBuildCommandV1} from "../../../🏗️build/📤️arguments/🟨️.mjs";
@@ -145,8 +152,8 @@ const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? 
 
 const POLICY = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "⚡️caching/🔣️policy.json")).toString("utf8"));
 /** 🗂️ The one plugin-modules root every build driver materializes component modules into. */
-const PLUGIN_MODULES_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules";
-const CANONICAL_PLUGIN_MODULES_ROOT = PLUGIN_MODULES_ROOT.replace("/dist/", "/dist/{options.env.SEMIO_BUILD_MODE}/");
+const componentModelOutputV1=(cratePath,mode="{options.env.SEMIO_BUILD_MODE}")=>`{workspaceRoot}/.cache/b/p/m/browser/${mode}/components/${componentModelDirectoryKeyV1(cratePath)}`;
+const PLUGIN_MODULES_ROOT = ".cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules";
 const WORKSPACE_OWNERSHIP = JSON.parse(readPhysicalSource(join(LIBRARY_ROOT, "🗂️workspaces/🔣️policy.json")).toString("utf8"));
 const EXAMPLE_COLLECTIONS = WORKSPACE_OWNERSHIP.collections.names;
 const TAXONOMY = readTaxonomyProjectionV1(join(LIBRARY_ROOT, "🔣️taxonomy.json"));
@@ -511,6 +518,7 @@ function cargoSourceInputs(root, workspaceRoot, facts, includeTests = true) {
 
 /** 🗂️ Shares source reads and command closures only within one graph construction. */
 export function createScriptInputCache(context={}) {
+  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);}
   return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),context };
 }
 
@@ -1076,7 +1084,8 @@ async function projectWithDefaults(json, root, projectDir, workspaceRoot, contra
     return [group.name];
   };
   for (const [name, target] of Object.entries(admitted)) {
-    const inherited=targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target,...(target.cache===false&&target.inputs===undefined?{inputs:["default"]}:{}) }, root, ownsScript);
+    const inheritedBase=targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target,...(target.cache===false&&target.inputs===undefined?{inputs:["default"]}:{}) }, root, ownsScript);
+    const inherited=inheritedBase.metadata?.semio?.hostPlatformOutputsV1?withHostPlatformOutputsV1(inheritedBase,process.platform):inheritedBase;
     if(typeof inherited.options?.cwd==="string")inherited.options={...inherited.options,cwd:inherited.options.cwd.replaceAll("{projectRoot}",root).replaceAll("{workspaceRoot}",workspaceRoot)};
     const policy = targetPolicy(name,inherited);
     const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
@@ -1120,7 +1129,8 @@ async function projectWithDefaults(json, root, projectDir, workspaceRoot, contra
     if (artifactTarget) policy.inputs = [...new Set([...(name === "build" ? [] : ["default", "^default"]), "artifactSources", "artifactCommandSources", ...(target.inputs ?? [])])];
     if (!nativeTarget && !artifactTarget && policy.cache) policy.inputs = [...(policy.inputs ?? ["default", "^default"]), ...internCommandSources(await genericTargetCommandInputs(policy, workspaceRoot, genericFallback, scripts, root))];
     if (artifactTarget && ["build", "test"].includes(name)) { policy.cache = false; policy.outputs = ["{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}", "{projectRoot}/dist"]; }
-    if (nativeProject && json.name !== "@semio-tech/framework-renderer-wgpu" && /^wasm(?:-release)?$/.test(name)) { policy.cache = false; policy.outputs = ["{projectRoot}/dist/wasm/{options.env.SEMIO_BUILD_MODE}"]; }
+    if(policy.metadata?.semio?.wasmPackageSourceV1){policy.cache=false;policy.outputs=[...new Set([repositoryWasmPackageNxOutputV1(workspaceRoot,repositoryCachePartitionRootDataV1(workspaceRoot,"products"),policy.metadata.semio.wasmPackageSourceV1),...(target.outputs??[])])];}
+    else if (nativeProject && json.name !== "@semio-tech/framework-renderer-wgpu" && /^wasm(?:-release)?$/.test(name)) { policy.cache = false; policy.outputs = ["{projectRoot}/dist/wasm/{options.env.SEMIO_BUILD_MODE}"]; }
     if (POLICY.serialTargets?.includes(name)) policy.parallelism = false;
     normalized[name] = targetBuildModes(name, policy);
   }
@@ -1145,14 +1155,14 @@ async function projectWithDefaults(json, root, projectDir, workspaceRoot, contra
 }
 
 /** 🔎️ Queries source-project normalization through the same production stages without publishing graph facts. */
-export async function inferReadOnlyBuildProjectSourcesV1(json, root, workspaceRoot, invocation) {
-  checkScriptInvocation(invocation);
-  await libraryBootstrap;
+export async function inferReadOnlyBuildProjectSourcesV1(json, root, workspaceRoot, invocation,phaseControl) {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+  await libraryBootstrap;checkResourceLeaseControl(phaseControl);
   if(existsSync(join(workspaceRoot,json.metadata?.nativeRoot??root,"Cargo.toml")))throw Error("Read-only source project normalization requires a non-Cargo owner");
   await advanceScriptInvocation(invocation,"build:project-sources","running");
   const taxonomy=join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),contracts=existsSync(taxonomy)?readTaxonomyProjectionV1(taxonomy).generatorContracts:{};
-  const result=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),undefined,createScriptInputCache({workspaceRoot,invocation}),undefined,"source");
-  checkScriptInvocation(invocation);
+  const result=await projectWithDefaults(json,root,join(workspaceRoot,root),workspaceRoot,contracts,new Map(),undefined,createScriptInputCache({workspaceRoot,invocation,phaseControl}),undefined,"source");
+  checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
   return result;
 }
 
@@ -1184,7 +1194,7 @@ async function printDocumentTargets(project, root, workspaceRoot, scripts) {
       const source = `${product}/${path}`;
       return `{workspaceRoot}/${source}${statSync(join(workspaceRoot, source)).isDirectory() ? "/**/*" : ""}`;
     });
-    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [`{projectRoot}/dist/documents/${document.id}`], inputs: [...inputs, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `bun ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
+    targets[`build-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: true, outputs: [printArtifactNxOutputV1(workspaceRoot,{version:1,kind:"document",mode:"prototype",namespace:"print",id:document.id})], inputs: [...inputs, ...paths], dependsOn: ["fonts", "deps-tectonic", "deps-tex", "generate"], options: { cwd: root, command: `bun ${buildPath(relative(root, script))} build ${document.id}`, forwardAllArgs: false } });
     targets[`watch-${document.id}`] = executionTargetV1("source", { executor: DEFAULT_EXECUTOR, cache: false, continuous: true, outputs: [], dependsOn: [`build-${document.id}`], options: { cwd: root, command: `bun ${buildPath(relative(root, script))} watch`, forwardAllArgs: false } });
   }
   for (const [name, collection] of [["build", "templates"], ["build-viz", "visualizations"]]) targets[name] = executionTargetV1("source", { ...project.targets[name], cache: false, outputs: [], dependsOn: catalog.documents.filter(document => document.collection === collection).map(document => `build-${document.id}`) });
@@ -1223,7 +1233,7 @@ function componentBuildTargets(root, workspaceRoot) {
     cache: false,
     metadata: { semio: { orchestrator: true } },
     dependsOn: ["@semio-tech/os-plugin-describe-rs:build", "@semio-tech/framework-plugin-web:support", "workspace:deps-wasm-opt"],
-    outputs: ["{projectRoot}/dist/components/{options.env.SEMIO_BUILD_MODE}", ...(moduleDirectory === undefined ? [] : [`{workspaceRoot}/${CANONICAL_PLUGIN_MODULES_ROOT}/${moduleDirectory}`, `{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${moduleDirectory}`])],
+    outputs: [componentModelOutputV1(buildPath(root)), ...(moduleDirectory === undefined ? [] : [`{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${moduleDirectory}`])],
     options: { cwd: ".", command: `bun ${JSON.stringify(script)} component --manifest ${JSON.stringify(buildPath(relative(workspaceRoot, path)))}`, forwardAllArgs: false },
   }) };
 }
@@ -1330,7 +1340,7 @@ function playgroundSessionTargets(configFiles, workspaceRoot,catalogContribution
     cache:true,
     inputs:["default",{dependentTasksOutputFiles:"**/*",transitive:true},...[...runtimeComponentClosure([...components.values()],[{id:row.pluginId,appScoped:row.app!==undefined}])].sort().flatMap(id=>["🛂️.descriptor.semio","🔣️.json"].map(name=>`{workspaceRoot}/${components.get(id).ownerRoot}/${name}`))],
     dependsOn:[row.buildCatalog.project+":"+row.buildCatalog.generateTarget],
-    outputs:["{projectRoot}/dist/sessions/"+variant],
+    outputs:["{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/sessions/"+variant],
     options:{command:"bun ./📜️script.ts session "+variant,env:{SEMIO_PLUGIN_CATALOG:join(workspaceRoot,row.buildCatalog.publication.outputRoot)}},
   })]));
 }
@@ -1352,8 +1362,8 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
   const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   const projectOwners = new Map(), nativeHostOwners = new Map(), nativePlans = new Map();
   const componentPrerequisites=async id=>{if(!nativePlans.has(id)){await advance("build:playground-native");nativePlans.set(id,nativePreparation(components.get(id).cratePath,workspaceRoot,contracts,false,nativeFiles,nativeClosures).map(contract=>contract.target));}return nativePlans.get(id);};
-  const closurePrerequisites=async ids=>{const prerequisites=["@semio-tech/os-plugin-describe-rs:build","workspace:deps-wasm-opt"];for(const id of ids)prerequisites.push(...await componentPrerequisites(id));return [...new Set(prerequisites)].sort();};
-  const closureOutputs = (ids) => [...ids].sort().flatMap((id) => { const directory = componentDeploymentDirectoryV1(components.get(id)); return directory === undefined ? [] : [`{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${directory}`]; });
+  const closurePrerequisites=async(ids,facet)=>{const prerequisites=["@semio-tech/os-plugin-describe-rs:build",...(facet==="browser"?["workspace:deps-wasm-opt"]:[])];for(const id of ids)prerequisites.push(...await componentPrerequisites(id));return [...new Set(prerequisites)].sort();};
+  const closureOutputs=(ids,facet="browser",mode="{options.env.SEMIO_BUILD_MODE}")=>[...ids].sort().flatMap(id=>{const row=components.get(id),directory=componentDeploymentDirectoryV1(row);return[componentModelOutputV1(row.cratePath,mode),...(facet==="browser"&&directory!==undefined?[`{workspaceRoot}/${PLUGIN_MODULES_ROOT}/${directory}`]:[])];});
   const orchestrator = { semio: { orchestrator: true } };
   const projectAt = (root) => {
     const path = join(workspaceRoot, root, PROJECT_BASENAME);
@@ -1376,6 +1386,8 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
   if (!wgpuProject?.name || !["prototype","release"].every(mode=>wgpuProject.targets?.wasm?.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode)) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const flowRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", flowProject=projectAt(flowRoot);
   if(!flowProject?.name || !flowProject.targets?.wasm)throw new Error(`Flow must name its authored browser producer: ${flowRoot}`);
+  const enginePrerequisites = owners => owners.map(root=>{const project=projectAt(root);if(!project?.name||!project.targets?.wasm)throw Error(`Engine must name its authored producer: ${root}`);return `${project.name}:wasm`;});
+  const rendererEngines=enginePrerequisites(frameworkOsEngineSourceOwnersV1("renderer")),distributionEngines=enginePrerequisites(frameworkOsEngineSourceOwnersV1("distribution"));
   const nativeHostView={kind:(path)=>{try{const stat=lstatSync(join(workspaceRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if(error.code==="ENOENT")return null;throw error;}},readText:(path)=>readFileSync(join(workspaceRoot,path),"utf8"),admitScript:(path)=>observedSourceAnalysisV1(prepareSourceAnalysesV1().nativeScript,join(workspaceRoot,path))};
   const nativeHostOwner = root => { if (!nativeHostOwners.has(root)) nativeHostOwners.set(root, nativeHostSourceFactsV1(root, nativeHostView)); return nativeHostOwners.get(root); };
   const result = {};
@@ -1404,7 +1416,7 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
     // keeps the host's own depends-on/consumes without the host-fanout that otherwise selects every crate.
     const bootSelected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: true }]);
     const selected = runtimeComponentClosure(componentRows, [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
-    const bootPrerequisites=await closurePrerequisites(bootSelected),selectedPrerequisites=await closurePrerequisites(selected);
+    const bootPrerequisites=await closurePrerequisites(bootSelected,"browser"),selectedPrerequisites=await closurePrerequisites(selected,"browser"),nativePrerequisites=await closurePrerequisites(selected,"model");
     const engines = new Set([...new Set([...(playground.engines ?? []), ...declaredBrowserSessionEnginesV1(workspaceRoot, playground.devContribution)])].map((path) => {
       const root = buildPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
@@ -1415,8 +1427,8 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
       result[`prepare-${playground.variant}-native-${profile}`] = {
         cache: false,
         metadata: orchestrator,
-        outputs: [`{projectRoot}/dist/runtime/native/${profile}/${playground.variant}`, ...closureOutputs(selected)],
-        dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...selectedPrerequisites],
+        outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/native/${playground.variant}`, ...closureOutputs(selected,"model",profile)],
+        dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, ...nativePrerequisites],
         options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📜️script.ts publish ${playground.variant} ${profile}`, forwardAllArgs: false },
       };
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = {
@@ -1432,7 +1444,7 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
       result[`activate-${playground.variant}-react-${profile}`] = {
       cache: true,
       parallelism: false,
-      outputs: [`{projectRoot}/dist/runtime/react/${profile}/${playground.variant}`],
+      outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/react/${playground.variant}`],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`prepare-${playground.variant}-react-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} react ${profile}` },
@@ -1441,13 +1453,13 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
       cache: false,
       metadata: orchestrator,
       outputs: closureOutputs(bootSelected),
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, ...engines, ...bootPrerequisites],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", ...rendererEngines, ...engines, ...bootPrerequisites],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       };
       for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = { cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } };
       result[`activate-${playground.variant}-wgpu-${profile}`] = {
       cache: false,
-      outputs: [`{projectRoot}/dist/runtime/wgpu/${profile}/${playground.variant}`],
+      outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/wgpu/${playground.variant}`],
       inputs: [{ dependentTasksOutputFiles: "**/*", transitive: true }],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
       options: { command: `bun ./📜️script.ts activate ${playground.variant} wgpu ${profile}` },
@@ -1456,7 +1468,7 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
       cache: false,
       metadata: orchestrator,
       outputs: closureOutputs(bootSelected),
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootPrerequisites],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${wgpuProject.name}:wasm`, `${wgpuProject.name}:generate-browser-boot`, `${wgpuProject.name}:generate-frame-worker`, `${wgpuProject.name}:generate-renderer-boot`, ...bootPrerequisites],
       options: { command: `bun ./📜️script.ts prepare ${playground.variant} wgpu ${profile}` },
       };
     }
@@ -1473,7 +1485,7 @@ async function playgroundPreparationTargets(configFiles, workspaceRoot, projectR
       // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
       // cache key ignores them and a cached bundle silently answers for the wrong hub.
       inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(buildPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
-      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", `${flowProject.name}:wasm`, ...engines, ...selectedPrerequisites, "@semio-tech/assets:build"],
+      dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-framework-os-infinite:fonts", "semio-framework-canvas:stage-runtime-assets", `${flowProject.name}:wasm`, ...distributionEngines, ...engines, ...selectedPrerequisites, "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     };
     result[`build-${playground.variant}-react`] = {
@@ -1598,7 +1610,7 @@ function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRoot,comp
 }
 
 /** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control. */
-async function yieldInferenceV1(context,phase,index,force=false){if(context.invocation){checkScriptInvocation(context.invocation);if(force||index%16===0)await advanceScriptInvocation(context.invocation,phase,"running");}}
+async function yieldInferenceV1(context,phase,index,force=false){if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);if(force||index%16===0){await advanceScriptInvocation(context.invocation,phase,"running");checkResourceLeaseControl(context.phaseControl);}}}
 
 /** 🪪️ Expands actual native owners through the same read-only phase and original caller controls. */
 export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context){
@@ -1615,8 +1627,8 @@ export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,cont
 /** 🚪️ Observes one canonical owner and only its selected executable source closures. */
 export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,context,inputNames=[]){
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
- if(context.invocation)checkScriptInvocation(context.invocation);
- const stage=async phase=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] selected-owner-stage "+JSON.stringify({owner:owner.name,phase}));if(context.invocation)await advanceScriptInvocation(context.invocation,"build:selected-"+phase,"running");};
+ if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
+ const stage=async phase=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] selected-owner-stage "+JSON.stringify({owner:owner.name,phase}));await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
  await stage("declaration");
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
@@ -1660,9 +1672,9 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   }if(value.startsWith("^")){caretInputs.add(value.slice(1));continue;}if(Object.hasOwn(named,value)){if(active.has(value))throw Error("Selected named input cycle: "+value);active.add(value);expand(named[value]);active.delete(value);}else if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))patterns.push(value.replaceAll("{workspaceRoot}/","").replaceAll("{projectRoot}",owner.root));else throw Error("Unknown selected named source input: "+value);}};
   for(const name of targets){json.targets[name]=normalized.targets[name];expand(normalized.targets[name].inputs??["default"]);}
   expand(inputNames);
-  const exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1)),matched=new Set(),walked=new Map();let visited=0;
+  const exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1)),matched=new Set(),walked=new Map(),matchers=new Map(),matches=(path,pattern)=>{let matcher=matchers.get(pattern);if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}return matcher(path);};let visited=0;
   const walk=async root=>{if(walked.has(root))return walked.get(root);const pending=[root],found=[];while(pending.length){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const directory=pending.pop();if(!existsSync(join(workspaceRoot,directory)))continue;for(const entry of readdirSync(join(workspaceRoot,directory),{withFileTypes:true})){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const path=buildPath(join(directory,entry.name));if(entry.isSymbolicLink())continue;if(entry.isDirectory()){if(![...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target","🗑️generated"].includes(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);}else if(entry.isFile())found.push(path);}}walked.set(root,found);return found;};
-  for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(loadedProjectInputs.buildInputPathMatchesV1(path,pattern)&&!exclusions.some(pattern=>loadedProjectInputs.buildInputPathMatchesV1(path,pattern)))matched.add(path);}}
+  for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(matches(path,pattern)&&!exclusions.some(pattern=>matches(path,pattern)))matched.add(path);}}
   for(const path of matched)addFile(path);
   await stage("source-closure");
   const modules=[...matched].filter(path=>/\.[cm]?[jt]sx?$/u.test(path)).map(path=>join(workspaceRoot,path)).filter(path=>!scripts.resources.has(path)||scripts.modules.has(path));
@@ -1706,7 +1718,7 @@ function projectConcurrencyV1(options) {
 
 /** 🪨️ Reports and cancels inference settlement rounds through the original invocation. */
 function settlementOptionsV1(context) {
-  return { signal: context.invocation?.control.signal, onRound: async ({ round, conflict, failure }) => { if (process.env.SEMIO_BUILD_TRACE_AUTHORITY === "true") console.error("[DEBUG] build inference settlement round " + JSON.stringify({ round, conflict, failure: failure === undefined ? undefined : String(failure) })); if (context.invocation) await advanceScriptInvocation(context.invocation, "build:settle", "running"); } };
+  return { signal: context.phaseControl?.signal, onRound: async ({ round, conflict, failure }) => { if (process.env.SEMIO_BUILD_TRACE_AUTHORITY === "true") console.error("[DEBUG] build inference settlement round " + JSON.stringify({ round, conflict, failure: failure === undefined ? undefined : String(failure) })); await yieldInferenceV1(context,"build:settle",0,true); } };
 }
 
 async function emojiProjectJsonNodes(configFiles, options, context) {
@@ -2006,8 +2018,8 @@ let reloadedImplementation;
 
 function invokeCurrentImplementation(kind, args) {
   if(kind!=="nodes"&&kind!=="dependencies")return invokeCurrentImplementationV1(kind,args);
-  const context=kind==="nodes"?args[2]:args[1],run=invocation=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,()=>invokeCurrentImplementationV1(kind,args));
-  return context.invocation?run(context.invocation):receiveScriptProcessInvocation(process.env,run);
+  const index=kind==="nodes"?2:1,context=args[index],run=(invocation,phaseControl)=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,phaseControl,(_store,actualControl)=>{const current=[...args];current[index]={...context,invocation,phaseControl:actualControl};return invokeCurrentImplementationV1(kind,current);});
+  return context.invocation?run(context.invocation,context.phaseControl):receiveScriptProcessInvocation(process.env,invocation=>run(invocation,createIssuedResourceControlV1(invocation,"graph:inference-entry",0)));
 }
 
 function invokeCurrentImplementationV1(kind, args) {

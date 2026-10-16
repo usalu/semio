@@ -1,106 +1,54 @@
 #!/usr/bin/env bun
-import { bundleJavaScript } from "../../📦️bundle/🟦️.ts";
-import { acquireCompilerCapacityLeaseV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
-import { collectArtifactFiles } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
-import { stageRepositoryArtifacts } from "../🟦️.ts";
-import { repoCacheDirectory } from "../../🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import assert from "node:assert/strict";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
-import { BundleScript, ScriptRouter, type ScriptCommand, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
-import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import{typeScriptLibraryArgumentsV1}from"../../../🏗️build/🟦️typescript/📚️libraries/🟦️.ts";
+import{bundleJavaScript}from"../../📦️bundle/🟦️.ts";
+import{acquireCompilerCapacityLeaseV1,compilerAdmissionBudgetV1,type CompilerAdmissionControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import{readBuildMode,type BuildMode}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import{withArtifactScratchV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1,typeScriptArtifactLayoutV1}from"../💾️storage/🟦️.ts";
+import{withRepositoryCacheStoreV1,type RepositoryCacheStoreV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../🟦️.ts";
+import{bindTypeScriptPackageArtifactV1}from"./🔗️binding/🟦️.ts";
+import{readTypeScriptDeclarationResponseV1}from"./🧬️declarations/🟦️.ts";
+import{withResourceLeases}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{collectArtifactFiles}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
+import{receiveScriptProcessInvocation,scriptInvocationEnvironment,withScriptInvocationSignalV1,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,BundleScript,ScriptRouter,type ScriptCommand,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{captureOwnedCommandResultV1,runOwnedCommand,writeOwnedCommandOutputV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../📋️native-orchestration/📥️invocation/🟦️.ts";
+import{getWorkspaceRoot}from"../../../🗂️workspaces/🟦️.ts";
+import{readFileSync,existsSync,mkdirSync,writeFileSync,lstatSync}from"node:fs";
+import{mkdir,writeFile}from"node:fs/promises";
+import{join,resolve,dirname,relative,isAbsolute,sep}from"node:path";
+import{createRequire}from"node:module";
+import assert from"node:assert/strict";
 
-/** 🧪️ Declares artifact-owned suites and commands; suite paths resolve beneath the artifact root. */
-export interface ArtifactTypeScriptPackageOptions {
-  readonly suites?: readonly string[];
-  readonly bundleRuntime?: "javascript" | "bun";
-  readonly afterTest?: (invocation: ScriptInvocation) => Promise<void>;
-  readonly commands?: Readonly<Record<string, ScriptCommand>>;
+/** 🧪️ Declares artifact-owned suites and commands under the actual package Source owner. */
+export interface ArtifactTypeScriptPackageOptions{readonly suites?:readonly string[];readonly bundleRuntime?:"javascript"|"bun";readonly afterTest?:(invocation:ScriptInvocation)=>Promise<void>;readonly commands?:Readonly<Record<string,ScriptCommand>>}
+type Context={readonly workspace:string;readonly source:string;readonly output:string;readonly mode:BuildMode;readonly destination:ArtifactDestinationV1;readonly sink:ArtifactDestinationContextV1;readonly products:RepositoryCacheStoreV1;readonly environment:Readonly<Record<string,string|undefined>>;typeScript:(entry:string,args:string[],skipLibraries?:boolean)=>Promise<void>;build:()=>Promise<void>};
+async function withCompilation<T>(packageRoot:string,packageName:string,original:ScriptInvocation,options:ArtifactTypeScriptPackageOptions,run:(context:Context)=>Promise<T>):Promise<T>{
+ const workspace=getWorkspaceRoot(),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),authority=readNativeCallerAuthorityV1(original.capabilities);if(mode!==authority.original.buildMode||resolve(packageRoot)!==packageRoot||JSON.parse(readFileSync(join(packageRoot,"package.json"),"utf8")).name!==packageName)throw Error("Actual authored TypeScript package and mode required");const phaseControl=createIssuedResourceControlV1(original,"artifact:typescript-operation",120000),source=resolve(packageRoot,"../../🟦️.ts"),owner=relative(workspace,packageRoot).replaceAll("\\","/");
+ return withRepositoryCacheStoreV1(workspace,"dependencies",original,phaseControl,dependencies=>withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),control:dependencies.control,signal:dependencies.control.signal,resources:[{resource:"javascript-dependency-bindings:"+workspace,mode:"shared"}]},()=>withRepositoryCacheStoreV1(workspace,"products",original,dependencies.control,products=>withRepositoryCacheStoreV1(workspace,"diagnostics",original,products.control,diagnostics=>withArtifactScratchV1({workspace,invocation:original,storage:diagnostics.storage,control:diagnostics.control,phaseControl,request:{version:1,mode,owner}},destination=>withArtifactDestinationTaskV1(destination,original,async sink=>{const environment={...process.env,...products.environment,...diagnostics.environment,...sink.environment,SEMIO_NX_PROFILE_INPUTS:"0"},output=sink.directory,compiler=createRequire(join(workspace,"package.json")).resolve("typescript/bin/tsc"),limits={maximumBytes:Math.min(134217728,authority.transport.maximumBytes),maximumLines:authority.transport.maximumLines};
+  const compile=async(run:(control:CompilerAdmissionControl,environment:Readonly<Record<string,string|undefined>>)=>Promise<void>)=>{const control=createRequestedIssuedResourceControlV1(sink.control,120000),lease=await acquireCompilerCapacityLeaseV1({directory:join(workspace,".cache/b/l/m/data"),control,environment,requestedParallelism:1});try{await run(control,{...environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(lease.parallelism),GOMAXPROCS:String(lease.parallelism)});}finally{lease.release();}};
+  const typeScript=async(entry:string,args:string[],skipLibraries=true)=>compile((control,env)=>runOwnedCommand(process.execPath,[compiler,entry,...args,"--incremental","false","--allowImportingTsExtensions","--module","ESNext","--moduleResolution","Bundler","--resolveJsonModule","--allowSyntheticDefaultImports","--strict",...(skipLibraries?["--skipLibCheck"]:[]),"--target","ES2022",...typeScriptLibraryArgumentsV1()],workspace,"artifact:typescript-check",compilerAdmissionBudgetV1(control),{signal:control.signal,env:scriptInvocationEnvironment(original,env),output:limits}));
+  const build=async()=>{const names=["🟦️.js"];await bundleJavaScript({workspace,source,destination,platform:"node",mode,signal:sink.control.signal,environment,runtime:options.bundleRuntime,invocation:original});await compile(async(control,env)=>{const result=await captureOwnedCommandResultV1(process.execPath,[import.meta.path,"emit-declarations",source,workspace],workspace,{control,env:scriptInvocationEnvironment(original,env),output:{maximumBytes:Math.min(16777216,authority.transport.maximumBytes),maximumLines:Math.min(65536,authority.transport.maximumLines)}});if(result.status!==0||result.signal!==null)throw Error("Declaration compiler failed: "+result.stderr.slice(-65536));const declarations=readTypeScriptDeclarationResponseV1(result.stdout);for(const[name,contents]of declarations){names.push(name);const path=join(output,name);if(path.length>256)throw Error("Declaration sink path capacity exceeded");await mkdir(dirname(path),{recursive:true});await writeFile(path,contents,{flag:"wx",signal:sink.control.signal});}});if(existsSync(join(output,"🟦️.js.map")))names.push("🟦️.js.map");const files=new Map(names.map(name=>[name,join(output,name)])),layout=typeScriptArtifactLayoutV1(products.root,{version:1,mode,owner});await withRepositoryArtifactDestinationV1({workspace,invocation:original,storage:products.storage,control:products.control,phaseControl:sink.control,directory:layout.output},target=>stageRepositoryArtifacts(target,`typescript:${packageName}:${mode}`,files));await bindTypeScriptPackageArtifactV1({workspace,packageRoot,packageName,mode,invocation:original,storage:products.storage,control:products.control,phaseControl:sink.control});console.log(`[DEBUG] Built bounded TypeScript artifact ${packageName} mode=${mode} files=${files.size}`);};
+  return run({workspace,source,output,mode,destination,sink,products,environment,typeScript,build});
+ }))))));
 }
 
-/** 🟦️ Builds and resolves a declaration-only TypeScript artifact package from its taxonomy source. */
-export async function runArtifactTypeScriptPackageMain(packageRoot: string, packageName: string, options: ArtifactTypeScriptPackageOptions = {}): Promise<void> {
-  await receiveScriptProcessInvocation(process.env, async original => {
-  const segments = process.argv.slice(2), compilerCommand = ["build", "check", "test"].includes(segments[0] ?? "test");
-  const source = resolve(packageRoot, "../../🟦️.ts"), mode = compilerCommand ? readBuildMode(process.env.SEMIO_BUILD_MODE) : "prototype", activeOutput = resolve(packageRoot, "dist");
-  let output = join(packageRoot, "📤️dist", mode), signal = original.control.signal, environment: Readonly<Record<string, string | undefined>> = process.env;
-  const compile = async (run: (control: CompilerAdmissionControl) => Promise<void>, requestedParallelism?: 1): Promise<void> => {
-    const control = scriptCompilerAdmissionControlV1(original, "artifact:typescript", 120_000), lease = await acquireCompilerCapacityLeaseV1({ directory: join(getWorkspaceRoot(), ".cache/b/l/m/data"), control, environment, requestedParallelism }), previous = environment;
-    environment = { ...environment, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(lease.parallelism), GOMAXPROCS: String(lease.parallelism) };
-    try { await run(control); } finally { environment = previous; lease.release(); }
-  };
-  const typeScript = async (entry: string, args: string[], skipLibraries = true): Promise<void> => {
-    await compile(async control => runRepositoryCommand(original,process.execPath, ["x", "tsc", entry, ...args, "--allowImportingTsExtensions", "--module", "ESNext", "--moduleResolution", "Bundler", "--resolveJsonModule", "--allowSyntheticDefaultImports", "--strict", ...(skipLibraries ? ["--skipLibCheck"] : []), "--target", "ES2022"], getWorkspaceRoot(), `artifact-typescript:${packageName}:tsc`, {version:1,maximumElapsedMilliseconds:compilerAdmissionBudgetV1(control),output:{maximumBytes:134217728,maximumLines:65536}}, { env: environment }), 1);
-  };
-  const suites = (options.suites ?? []).map((suite) => {
-    const path = resolve(packageRoot, "../..", suite);
-    if (!existsSync(path)) throw new Error(`${packageName} registers the missing suite ${suite}`);
-    return path;
-  });
-  const checkSuites = async (): Promise<void> => {
-    for (const suite of suites) await typeScript(suite, ["--noEmit", "--allowImportingTsExtensions"]);
-  };
-  const build = async (retain = false): Promise<string> => {
-    signal.throwIfAborted();
-    const temporaryRoot = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : repoCacheDirectory(getWorkspaceRoot(), "typescript-staging");
-    await mkdir(temporaryRoot, { recursive: true });
-    const temporary = await mkdtemp(join(temporaryRoot, "typescript-")), destination = join(packageRoot, "📤️dist", mode);
-    output = temporary;
-    try {
-      await bundleJavaScript({ workspace: getWorkspaceRoot(), source, output: join(output, "🟦️.js"), platform: "node", mode, signal, environment, runtime: options.bundleRuntime, invocation: original });
-      signal.throwIfAborted();
-      await compile(control => runRepositoryCommand(original, process.execPath, [import.meta.path, "emit-declarations", source, join(output, "🧬️types"), getWorkspaceRoot()], getWorkspaceRoot(), `artifact-typescript:${packageName}:declarations`, { version: 1, maximumElapsedMilliseconds: compilerAdmissionBudgetV1(control), output: { maximumBytes: 134217728, maximumLines: 65536 } }, { env: environment }), 1);
-      const files = await collectArtifactFiles(output, signal);
-      await stageRepositoryArtifacts(destination, `typescript:${packageName}:${mode}`, files, { signal });
-      await stageRepositoryArtifacts(activeOutput, `typescript:${packageName}:active`, files, { signal });
-      console.log(`[artifact-typescript] built ${packageName} mode=${mode} outputs=${files.size}`);
-      return temporary;
-    } finally { output = retain ? temporary : destination; if (!retain) await rm(temporary, { recursive: true, force: true }); }
-  };
-  class BuildScript extends BundleScript { async run(): Promise<void> { await build(); } }
-  class CheckScript extends BundleScript {
-    async run(): Promise<void> {
-      const checkRoot = await mkdtemp(join(repoCacheDirectory(getWorkspaceRoot()), "typescript-check-"));
-      try { await bundleJavaScript({ workspace: getWorkspaceRoot(), source, output: join(checkRoot, "check.js"), platform: "node", mode, signal, environment, runtime: options.bundleRuntime, invocation: original }); } finally { await rm(checkRoot, { recursive: true, force: true }); }
-      await typeScript(source, ["--noEmit"]);
-      await checkSuites();
-      console.log(`[artifact-typescript] checked ${packageName} suites=${suites.length}`);
-    }
-  }
-  class TestScript extends BundleScript {
-    async run(): Promise<void> {
-      const temporary = await build(true);
-      try {
-      const artifact = await import(join(output, "🟦️.js"));
-      const probe = join(output, "🧪️consumer.ts"), typeRoots = join(output, "🧪️types");
-      mkdirSync(typeRoots);
-      const assertion = Object.hasOwn(artifact, "definition") ? "const definitionId: typeof artifact.definition.id = artifact.definition.id;\nvoid definitionId;" : `const artifactModule: typeof import("./🟦️.js") = artifact;\nvoid artifactModule;`;
-      writeFileSync(probe, `import * as artifact from "./🟦️.js";\n${assertion}\n`);
-      try { await typeScript(probe, ["--noEmit", "--typeRoots", typeRoots], false); } finally { rmSync(probe, { force: true }); rmSync(typeRoots, { recursive: true, force: true }); }
-      assert.equal(typeof artifact, "object", `${packageName} did not resolve as an ES module`);
-      await checkSuites();
-      for (const suite of suites) await runRepositoryCommand(this.invocation,process.execPath,["test", `./${relative(getWorkspaceRoot(), suite)}`],getWorkspaceRoot(),`artifact-typescript:${packageName}:suite`,{version:1,maximumElapsedMilliseconds:300_000,output:{maximumBytes:134217728,maximumLines:65536}}, { env: environment });
-      await options.afterTest?.(this.invocation);
-      console.log(`[artifact-typescript] tested ${packageName} exports=${Object.keys(artifact).length} suites=${suites.length}`);
-      } finally { await rm(temporary, { recursive: true, force: true }); }
-    }
-  }
-  const router = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
-  for (const [name, Command] of Object.entries(options.commands ?? {})) router.register(name, Command);
-  if (!compilerCommand) { await router.run(segments, original); return; }
-  await router.run(segments.length ? segments : ["test"], original);
-  });
+/** 📦️ Builds and consumes an actual package while its compiler, output and binding scopes remain retained. */
+export function buildArtifactTypeScriptPackageV1(packageRoot:string,packageName:string,invocation:ScriptInvocation,options:ArtifactTypeScriptPackageOptions={},consume?:(destination:ArtifactDestinationV1)=>Promise<void>):Promise<void>{return withCompilation(packageRoot,packageName,invocation,options,async context=>{await context.build();await consume?.(context.destination);});}
+
+/** 🔎️ Runs a fixed no-output TypeScript check under retained dependencies and an actual diagnostic sink. */
+export function checkArtifactTypeScriptSourceV1(source:string,invocation:ScriptInvocation,carried?:CompilerAdmissionControl):Promise<void>{
+ const workspace=getWorkspaceRoot(),distance=relative(workspace,source);if(resolve(source)!==source||!distance||isAbsolute(distance)||distance===".."||distance.startsWith(".."+sep))throw Error("Actual repository TypeScript Source required");for(let path=source;;path=dirname(path)){const row=lstatSync(path);if(row.isSymbolicLink()||path===source&&(!row.isFile()||row.nlink!==1))throw Error("Physical TypeScript check Source required");if(dirname(path)===path)break;}const phaseControl=carried??createIssuedResourceControlV1(invocation,"artifact:typescript-check",120000),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),owner="typescript/check/"+new Bun.CryptoHasher("sha256").update(distance).digest("hex");
+ return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phaseControl,dependencies=>withResourceLeases({directory:join(workspace,".cache/b/l/m/data"),control:dependencies.control,signal:dependencies.control.signal,resources:[{resource:"javascript-dependency-bindings:"+workspace,mode:"shared"}]},()=>withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,dependencies.control,diagnostics=>withArtifactScratchV1({workspace,invocation,storage:diagnostics.storage,control:diagnostics.control,phaseControl,request:{version:1,mode,owner}},token=>withArtifactDestinationTaskV1(token,invocation,async context=>{const environment={...process.env,...dependencies.environment,...diagnostics.environment,...context.environment},compiler=createRequire(join(workspace,"package.json")).resolve("typescript/bin/tsc"),lease=await acquireCompilerCapacityLeaseV1({directory:join(workspace,".cache/b/l/m/data"),control:context.control,environment,requestedParallelism:1});try{await runOwnedCommand(process.execPath,[compiler,source,"--noEmit","--incremental","false","--allowImportingTsExtensions","--module","ESNext","--moduleResolution","Bundler","--resolveJsonModule","--allowSyntheticDefaultImports","--strict","--skipLibCheck","--target","ES2022",...typeScriptLibraryArgumentsV1()],workspace,"artifact:typescript-check",compilerAdmissionBudgetV1(context.control),{signal:context.control.signal,env:scriptInvocationEnvironment(invocation,{...environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(lease.parallelism),GOMAXPROCS:String(lease.parallelism)}),output:readNativeCallerAuthorityV1(invocation.capabilities).transport});}finally{lease.release();}})))));
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, async invocation => {
-  readBuildMode(process.env.SEMIO_BUILD_MODE);
-  const [command, entry, output, workspace] = process.argv.slice(2);
-  if (command !== "emit-declarations" || process.argv.length !== 6) throw Error("Expected emit-declarations <entry> <output> <workspace>");
-  const { emitTypeScriptDeclarations } = await import("./🧬️declarations/🟦️.ts");
-  const lease = await acquireCompilerCapacityLeaseV1({ directory: join(resolve(workspace), ".cache/b/l/m/data"), control: scriptCompilerAdmissionControlV1(invocation, "artifact:declarations", 120_000), environment: process.env, requestedParallelism: 1 });
-  try { invocation.control.signal.throwIfAborted(); console.log(`[artifact-typescript] declarations=${emitTypeScriptDeclarations(resolve(entry), resolve(output), resolve(workspace))}`); } finally { lease.release(); }
-});
+/** 🟦️ Runs all default package compiler commands inside actual fixed products and diagnostic lifetimes. */
+export async function runArtifactTypeScriptPackageMain(packageRoot:string,packageName:string,options:ArtifactTypeScriptPackageOptions={}):Promise<void>{
+ await receiveScriptProcessInvocation(process.env,async original=>{const segments=process.argv.slice(2),compilerCommand=["build","check","test"].includes(segments[0]??"test"),suites=(options.suites??[]).map(suite=>{const path=resolve(packageRoot,"../..",suite);if(!existsSync(path))throw Error(`${packageName} registers the missing suite ${suite}`);return path;});let context:Context;
+ class BuildScript extends BundleScript{async run(){await context.build();}}
+ class CheckScript extends BundleScript{async run(){await bundleJavaScript({workspace:context.workspace,source:context.source,destination:context.destination,platform:"node",mode:context.mode,signal:context.sink.control.signal,environment:context.environment,runtime:options.bundleRuntime,invocation:original});await context.typeScript(context.source,["--noEmit"]);for(const suite of suites)await context.typeScript(suite,["--noEmit"]);}}
+ class TestScript extends BundleScript{async run(){await context.build();const artifact=await import(join(context.output,"🟦️.js")),probe=join(context.output,"🧪️consumer.ts"),types=join(context.output,"🧪️types");mkdirSync(types);const assertion=Object.hasOwn(artifact,"definition")?"const definitionId: typeof artifact.definition.id = artifact.definition.id;\nvoid definitionId;":"const artifactModule: typeof import(\"./🟦️.js\") = artifact;\nvoid artifactModule;";writeFileSync(probe,`import * as artifact from "./🟦️.js";\n${assertion}\n`);await context.typeScript(probe,["--noEmit","--typeRoots",types],false);assert.equal(typeof artifact,"object");for(const suite of suites){await context.typeScript(suite,["--noEmit"]);await runOwnedCommand(process.execPath,["test",suite],context.workspace,"artifact:package-suite",compilerAdmissionBudgetV1(context.sink.control),{signal:context.sink.control.signal,env:scriptInvocationEnvironment(original,context.environment),output:readNativeCallerAuthorityV1(original.capabilities).transport});}if(options.afterTest)await withScriptInvocationSignalV1(original,context.sink.control.signal,alias=>options.afterTest!(alias));console.log(`[DEBUG] Tested bounded TypeScript ${packageName} exports=${Object.keys(artifact).length} suites=${suites.length}`);}}
+ const router=new ScriptRouter(packageRoot).register("build",BuildScript).register("check",CheckScript).register("test",TestScript);for(const[name,Command]of Object.entries(options.commands??{}))router.register(name,Command);if(!compilerCommand){await router.run(segments,original);return;}await withCompilation(packageRoot,packageName,original,options,async value=>{context=value;await router.run(segments.length?segments:["test"],original);});});
+}
+
+if(import.meta.main)await receiveScriptProcessInvocation(process.env,async invocation=>{const[command,entry,workspace]=process.argv.slice(2);if(command!=="emit-declarations"||process.argv.length!==5||!entry||!workspace||resolve(workspace)!==readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot)throw Error("Expected emit-declarations <entry> <actual-workspace>");const{emitTypeScriptDeclarations}=await import("./🧬️declarations/🟦️.ts"),control=createRequestedIssuedResourceControlV1((await import("../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts")).scriptCompilerAdmissionControlV1(invocation,"artifact:declarations",120000),0),lease=await acquireCompilerCapacityLeaseV1({directory:join(workspace,".cache/b/l/m/data"),control,environment:process.env,requestedParallelism:1});try{const files=emitTypeScriptDeclarations(resolve(entry),workspace),response=JSON.stringify({version:1,files:[...files].map(([name,contents])=>({name,contents}))}),limit=Math.min(16777216,readNativeCallerAuthorityV1(invocation.capabilities).transport.maximumBytes);if(Buffer.byteLength(response)>limit)throw Error("Original declaration transport capacity exceeded");await writeOwnedCommandOutputV1(process.stdout,response,control);}finally{lease.release();}});

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-store-sync-native-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

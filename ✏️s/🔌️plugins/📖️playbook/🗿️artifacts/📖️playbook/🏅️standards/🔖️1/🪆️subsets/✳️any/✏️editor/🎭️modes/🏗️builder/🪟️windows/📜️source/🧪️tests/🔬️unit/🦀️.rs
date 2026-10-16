@@ -1,4 +1,6 @@
-use super::*;
+use crate::PlaybookSpec;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::playbook::modes::builder::windows::source::*;
 
 #[test]
 fn source_window_is_a_registered_text_editor_surface() {

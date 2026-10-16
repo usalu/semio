@@ -23,10 +23,7 @@ macro_rules! test_identity {
 pub mod persistence;
 
 //#region 🔖️Space
-use semio_framework_artifact_workflow_workflow as workflow_kernel;
-
-#[path = "../../../🔨️modules/🪐️space/🦀️.rs"]
-pub mod space;
+pub use semio_framework_os_host_space as space;
 
 // 🌉️ Mirrors the target guard on the module this re-exports: `store::sync` is itself mounted
 // `#[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]` because the

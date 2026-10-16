@@ -1,4 +1,8 @@
-use super::*;
+use crate::editor::playbook::config::PlaybookConfig;
+use crate::PLAYBOOK_BUILTIN_KINDS;
+use semio_framework_plugin::SurfaceKind;
+use crate::editor::playbook::modes::builder::windows::builder::{build_palette};
+use crate::editor::playbook::modes::builder::windows::builder::*;
 use crate::editor::playbook::unit_tests::context::{live_spec, playbook_app};
 use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 use semio_framework_plugin::PluginApp;

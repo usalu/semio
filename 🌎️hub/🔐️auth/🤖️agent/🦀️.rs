@@ -15,8 +15,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::directory::AgentSessionPreflight;
-use crate::directory::model::{AgentAudience, AgentDelegationRow};
+use semio_hub_directory_contract::AgentSessionPreflight;
+use semio_hub_directory_contract::model::{AgentAudience, AgentDelegationRow};
 
 /// 🛣️ The three delegation routes and the exchange route.
 pub const AGENT_DELEGATION_ROUTE: &str = "/auth/agent-delegations";
@@ -93,7 +93,7 @@ impl CreateAgentDelegationRequestV1 {
             return Err(AgentErrorCodeV1::MalformedRequest);
         }
         let agent_label = self.agent_label.trim().to_string();
-        if !(1..=crate::directory::AGENT_LABEL_MAX_BYTES).contains(&agent_label.len()) || agent_label.chars().any(char::is_control) {
+        if !(1..=semio_hub_directory_contract::AGENT_LABEL_MAX_BYTES).contains(&agent_label.len()) || agent_label.chars().any(char::is_control) {
             return Err(AgentErrorCodeV1::MalformedRequest);
         }
         if !(MIN_DELEGATION_TTL_SECS..=MAX_DELEGATION_TTL_SECS).contains(&self.ttl_secs) {

@@ -1,5 +1,5 @@
 use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
-use super::*;
+use crate::standards::v5::subsets::any::schema::snapshot::*;
 
 const FIXTURE: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌐️.html");
 

@@ -1,7 +1,13 @@
+import {frameworkOsEngineDeliveriesV1,frameworkOsEnginePackageNameV1,frameworkOsEngineFacetV1} from "📥️artifacts/🕸️engines/🟦️.ts";
+import {managedWasmPackagesVitePluginV1} from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
+import {flowBrowserDeliveryV1} from "../../../🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+import {runtimeAssetDeliveries} from "../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import {frameworkOsViteArtifactPathsV1} from "./📥️artifacts/🟦️.ts";
 import { canonicalWasmBuildVitePlugin } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { viteCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import type { AssetDeliveryProviderV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
@@ -12,7 +18,6 @@ import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../�
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import type { ShellBrand } from "@semio-tech/framework";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
@@ -20,18 +25,19 @@ import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODUL
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
-import { COMPILER_FONTS_DIRECTORY, COMPILER_FONTS_ROUTE } from "../../../../../../🔨️modules/📚️compiler/🌍️world/🟦️.ts";
+import { packageAssetDeliveries } from "../../../../../../🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 
 import { developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
-import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
+import { DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 /** 🏗️ Builds a neutral shell using entry points and brands supplied by its owner. */
-export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string }) {
+export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string;readonly browserSessionFactories:readonly Readonly<{module:string;engine:string}>[] }) {
+const sourceEngineFacet=frameworkOsEngineFacetV1(options.browserSessionFactories);
 return defineOwnedBuildConfigFactory(async ({ command, mode }): Promise<OwnedBuildConfig> => {
 const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = options.inventory;
 
@@ -46,14 +52,16 @@ void _semioProcessGraphAnchor;
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
 const buildMode = readBuildMode(mode), profile = buildMode;
-const rendererModulesDir = path.resolve(playDir, `../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-${buildMode}`);
-const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
+const stagedInputs = frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(repoRoot, "products"), buildMode);
+const rendererModulesDir = stagedInputs.renderer.directory;
+const distributionLayout=distributionLayoutForModeV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),buildMode);
+const runtimeRoot = developmentRuntimeRoot(repoRoot, plugin, profile, "react");
 const testBrowserHost = command === "serve" ? options.inventory.browserHost?.() : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
 const pluginModulesDir = testBrowserHost?.moduleRoot ?? builtPluginModulesRootIn(repoRoot, buildMode);
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? testBrowserHost.extensionsRoot : path.join(runtimeRoot, "extensions");
-const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
+const fontsDir = stagedInputs.fonts;
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
 const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);
 const sessionPath = sessionAlias.replacement;
@@ -63,28 +71,16 @@ const brand = resolveShellBrandById(options.brands, brandId);
 const playgroundDistDir = playgroundTarget?.distDir;
 const distributionSource = (source: string) => source === "\0vite/preload-helper.js" ? "virtual/vite/preload-helper.js" : path.relative(repoRoot, path.resolve(playDir, source)).replaceAll("\\", "/");
 const distributionRollupOutput = {
-  entryFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(DISTRIBUTION_LAYOUT, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
-  chunkFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(DISTRIBUTION_LAYOUT, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
-  assetFileNames: (asset: { originalFileNames: string[]; names: string[] }) => distributionAssetName(DISTRIBUTION_LAYOUT, { originalFileNames: asset.originalFileNames.map(distributionSource), names: asset.names }),
+  entryFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(distributionLayout, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
+  chunkFileNames: (chunk: { facadeModuleId: string | null; moduleIds: string[] }) => distributionChunkName(distributionLayout, { facadeModuleId: chunk.facadeModuleId === null ? null : distributionSource(chunk.facadeModuleId), moduleIds: chunk.moduleIds.map(distributionSource) }),
+  assetFileNames: (asset: { originalFileNames: string[]; names: string[] }) => distributionAssetName(distributionLayout, { originalFileNames: asset.originalFileNames.map(distributionSource), names: asset.names }),
 };
 
 //#region 🔖️RegistryDrivenAssetsAndEngines
 /** 🔌️ Keeps lazy engine imports out of eager optimization; selected playground metadata owns compilation prerequisites. */
-const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-surface-board-2d-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
+const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-rs", "@semio-tech/framework-os-node-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/puzzle-wasm", "@semio-tech/flow-core"];
 
-/** 📦️ Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
- * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
- * crate keeps optimizing correctly across restructures/moves without touching this file. */
-function engineNpmPackage(cratePath: string): string {
-  const direct = path.join(repoRoot, cratePath, "package.json");
-  const nested = path.join(repoRoot, cratePath, "pkg", "package.json");
-  const manifestPath = existsSync(direct) ? direct : nested;
-  const name = JSON.parse(readFileSync(manifestPath, "utf8")).name as string | undefined;
-  if (!name) throw new Error(`missing "name" in ${manifestPath}`);
-  return name;
-}
-
-const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(engineNpmPackage);
+const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target) => target.variant === plugin).flatMap((target) => target.engines))].map(owner=>frameworkOsEnginePackageNameV1(path.relative(repoRoot,path.resolve(repoRoot,owner)).replaceAll("\\","/")));
 
 /** 🗄️ Isolates dependency-optimizer state for concurrent playground variants, renderers and
  * profiles under the ONE shared cache root, so disk is bounded by build history rather than by
@@ -224,7 +220,8 @@ return {
       entry: options.browserEntry,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
-    playgroundFlowWasmDevStubPlugin(repoRoot),
+    managedWasmPackagesVitePluginV1((renderer==="wgpu"?[]:frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:buildMode,facet:command==="build"?"distribution":sourceEngineFacet})).map(({packageName,root,entry,files})=>({packageName,root,entry,files}))),
+    playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:buildMode,command})),
     semioServiceWorkerScopeVitePlugin(),
     semioDescriptorRouteGuardVitePlugin([
       { route: MODULE_PLUGIN_ROUTE, root: pluginModulesDir, directoryNames: new Set(plugins.filter((target) => target.role === "plugin").map((target) => moduleDirectoryName(target.pluginId, [target]))) },
@@ -241,7 +238,8 @@ return {
       ...pluginModuleDirNames.map((name) => ({ kind: "static-dir" as const, route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
       { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) },
       { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) },
-      ...(renderer === "wgpu" ? [{ kind: "static-dir" as const, route: COMPILER_FONTS_ROUTE, root: COMPILER_FONTS_DIRECTORY }] : []),
+      ...runtimeAssetDeliveries(),
+      ...packageAssetDeliveries(),
     ])),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.
@@ -270,4 +268,4 @@ return {
 
 }
 
-export default createFrameworkOsDevConfig({ inventory: { plugins: [], extensions: [], playgrounds: [], moduleDirectories: [], assetProviders: [] }, brands: [], browserEntry: "/🚀️entry/🟦️.ts" });
+export default createFrameworkOsDevConfig({ inventory: { plugins: [], extensions: [], playgrounds: [], moduleDirectories: [], assetProviders: [] }, brands: [], browserSessionFactories: [], browserEntry: "/🚀️entry/🟦️.ts" });

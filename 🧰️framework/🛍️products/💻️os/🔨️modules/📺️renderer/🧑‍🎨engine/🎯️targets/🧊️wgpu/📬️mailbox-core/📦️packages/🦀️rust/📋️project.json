@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-renderer-wgpu-mailbox-core-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

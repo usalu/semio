@@ -149,9 +149,9 @@ pub struct AlternativeView {
 }
 
 /// ⏪️ One undone shell row waiting on the redo stack — chrome-order counterpart to VCS redo.
-pub(crate) struct ShellHistoryReplay {
-    pub(crate) seq: u64,
-    pub(crate) redo: InverseAction,
+pub struct ShellHistoryReplay {
+    pub seq: u64,
+    pub redo: InverseAction,
 }
 
 /// 🧾️ One appended session-command record — runtime-only, never persisted (the VCS envelope

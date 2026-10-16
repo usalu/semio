@@ -1,7 +1,7 @@
 //! 🏠️ Exact local interaction transport values; live retained owners are separate from cold value composition.
 
 use std::collections::BTreeMap;
-use crate::{DomainSelection, SelectionMode};
+use semio_framework_replication_interaction::{DomainSelection, SelectionMode};
 
 #[path = "📡️transport/🦀️.rs"]
 pub mod transport;
@@ -24,35 +24,35 @@ pub struct LocalInteractionState {
 /// `🎮️mutation/🦀️.rs` documents (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 /// 26/09/01). Mirrors `#[serde(rename_all = "camelCase", deny_unknown_fields)]` byte-for-byte: all
 /// three fields required, any other key is a decode error.
-impl crate::value::ToValue for LocalInteractionState {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
-            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
-            ("activeGranularity".to_string(), crate::value::ToValue::to_value(&self.active_granularity)),
+impl semio_framework_value::ToValue for LocalInteractionState {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("selection".to_string(), semio_framework_value::ToValue::to_value(&self.selection)),
+            ("activeMode".to_string(), semio_framework_value::ToValue::to_value(&self.active_mode)),
+            ("activeGranularity".to_string(), semio_framework_value::ToValue::to_value(&self.active_granularity)),
         ])
     }
 }
-impl crate::value::FromValue for LocalInteractionState {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionState, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionState {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionState, found {value:?}")));
         };
         let mut selection = None;
         let mut active_mode = None;
         let mut active_granularity = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "selection" => selection = Some(<BTreeMap<String, DomainSelection> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
-                "activeMode" => active_mode = Some(<BTreeMap<String, SelectionMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
-                "activeGranularity" => active_granularity = Some(<BTreeMap<String, String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionState"))),
+                "selection" => selection = Some(<BTreeMap<String, DomainSelection> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
+                "activeMode" => active_mode = Some(<BTreeMap<String, SelectionMode> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
+                "activeGranularity" => active_granularity = Some(<BTreeMap<String, String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionState"))),
             }
         }
         Ok(LocalInteractionState {
-            selection: selection.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing selection"))?,
-            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeMode"))?,
-            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeGranularity"))?,
+            selection: selection.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing selection"))?,
+            active_mode: active_mode.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeMode"))?,
+            active_granularity: active_granularity.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionState missing activeGranularity"))?,
         })
     }
 }
@@ -71,10 +71,10 @@ pub struct LocalInteractionIdentity {
 /// mirrors `#[serde(with = "decimal_u64")]` (a canonical decimal string, lossless past JS's 2^53
 /// float-precision boundary); `revision`/`document_revision`/`topology_revision` mirror
 /// `#[serde(with = "revision_hex")]` (64 lowercase hex chars). `deny_unknown_fields` enforced.
-impl crate::value::ToValue for LocalInteractionIdentity {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("appInstanceId".to_string(), crate::value::ToValue::to_value(&self.app_instance_id)),
+impl semio_framework_value::ToValue for LocalInteractionIdentity {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("appInstanceId".to_string(), semio_framework_value::ToValue::to_value(&self.app_instance_id)),
             ("generation".to_string(), encode_decimal_u64(self.generation)),
             ("revision".to_string(), encode_revision_hex(&self.revision)),
             ("documentRevision".to_string(), encode_revision_hex(&self.document_revision)),
@@ -82,10 +82,10 @@ impl crate::value::ToValue for LocalInteractionIdentity {
         ])
     }
 }
-impl crate::value::FromValue for LocalInteractionIdentity {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionIdentity, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionIdentity {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionIdentity, found {value:?}")));
         };
         let mut app_instance_id = None;
         let mut generation = None;
@@ -94,20 +94,20 @@ impl crate::value::FromValue for LocalInteractionIdentity {
         let mut topology_revision = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "appInstanceId" => app_instance_id = Some(<u32 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("appInstanceId"))?),
+                "appInstanceId" => app_instance_id = Some(<u32 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("appInstanceId"))?),
                 "generation" => generation = Some(decode_decimal_u64(entry).map_err(|e| e.under("generation"))?),
                 "revision" => revision = Some(decode_revision_hex(entry).map_err(|e| e.under("revision"))?),
                 "documentRevision" => document_revision = Some(decode_revision_hex(entry).map_err(|e| e.under("documentRevision"))?),
                 "topologyRevision" => topology_revision = Some(decode_revision_hex(entry).map_err(|e| e.under("topologyRevision"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionIdentity"))),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionIdentity"))),
             }
         }
         Ok(LocalInteractionIdentity {
-            app_instance_id: app_instance_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing appInstanceId"))?,
-            generation: generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing generation"))?,
-            revision: revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing revision"))?,
-            document_revision: document_revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing documentRevision"))?,
-            topology_revision: topology_revision.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing topologyRevision"))?,
+            app_instance_id: app_instance_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing appInstanceId"))?,
+            generation: generation.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing generation"))?,
+            revision: revision.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing revision"))?,
+            document_revision: document_revision.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing documentRevision"))?,
+            topology_revision: topology_revision.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionIdentity missing topologyRevision"))?,
         })
     }
 }
@@ -125,35 +125,35 @@ pub struct LocalInteractionDomainPatch {
 /// error) even though its VALUE may be `null` (⇒ `None`) — distinct from an ordinary `Option<T>`
 /// field, where a missing key and a `null` value both decode to `None`. Tracked with a nested
 /// `Option<Option<T>>` accumulator so "absent" and "present-but-null" stay distinguishable.
-impl crate::value::ToValue for LocalInteractionDomainPatch {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
-            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
-            ("activeGranularity".to_string(), crate::value::ToValue::to_value(&self.active_granularity)),
+impl semio_framework_value::ToValue for LocalInteractionDomainPatch {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("selection".to_string(), semio_framework_value::ToValue::to_value(&self.selection)),
+            ("activeMode".to_string(), semio_framework_value::ToValue::to_value(&self.active_mode)),
+            ("activeGranularity".to_string(), semio_framework_value::ToValue::to_value(&self.active_granularity)),
         ])
     }
 }
-impl crate::value::FromValue for LocalInteractionDomainPatch {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionDomainPatch, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionDomainPatch {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionDomainPatch, found {value:?}")));
         };
         let mut selection: Option<Option<DomainSelection>> = None;
         let mut active_mode: Option<Option<SelectionMode>> = None;
         let mut active_granularity: Option<Option<String>> = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "selection" => selection = Some(<Option<DomainSelection> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
-                "activeMode" => active_mode = Some(<Option<SelectionMode> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
-                "activeGranularity" => active_granularity = Some(<Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionDomainPatch"))),
+                "selection" => selection = Some(<Option<DomainSelection> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("selection"))?),
+                "activeMode" => active_mode = Some(<Option<SelectionMode> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("activeMode"))?),
+                "activeGranularity" => active_granularity = Some(<Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("activeGranularity"))?),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionDomainPatch"))),
             }
         }
         Ok(LocalInteractionDomainPatch {
-            selection: selection.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing selection"))?,
-            active_mode: active_mode.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeMode"))?,
-            active_granularity: active_granularity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeGranularity"))?,
+            selection: selection.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing selection"))?,
+            active_mode: active_mode.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeMode"))?,
+            active_granularity: active_granularity.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionDomainPatch missing activeGranularity"))?,
         })
     }
 }
@@ -166,28 +166,28 @@ pub struct LocalInteractionCapture {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above.
-impl crate::value::ToValue for LocalInteractionCapture {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![("identity".to_string(), crate::value::ToValue::to_value(&self.identity)), ("state".to_string(), crate::value::ToValue::to_value(&self.state))])
+impl semio_framework_value::ToValue for LocalInteractionCapture {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![("identity".to_string(), semio_framework_value::ToValue::to_value(&self.identity)), ("state".to_string(), semio_framework_value::ToValue::to_value(&self.state))])
     }
 }
-impl crate::value::FromValue for LocalInteractionCapture {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionCapture, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionCapture {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionCapture, found {value:?}")));
         };
         let mut identity = None;
         let mut state = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "identity" => identity = Some(<LocalInteractionIdentity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
-                "state" => state = Some(<LocalInteractionState as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("state"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionCapture"))),
+                "identity" => identity = Some(<LocalInteractionIdentity as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
+                "state" => state = Some(<LocalInteractionState as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("state"))?),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionCapture"))),
             }
         }
         Ok(LocalInteractionCapture {
-            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing identity"))?,
-            state: state.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing state"))?,
+            identity: identity.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing identity"))?,
+            state: state.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionCapture missing state"))?,
         })
     }
 }
@@ -201,46 +201,46 @@ pub enum LocalInteractionRestore {
 
 /// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. Internally tagged
 /// on `"kind"`, mirroring `#[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]`.
-impl crate::value::ToValue for LocalInteractionRestore {
-    fn to_value(&self) -> crate::value::DslValue {
+impl semio_framework_value::ToValue for LocalInteractionRestore {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         match self {
-            LocalInteractionRestore::Full { base, state } => crate::value::DslValue::object(vec![
-                ("kind".to_string(), crate::value::DslValue::String("full".to_string())),
-                ("base".to_string(), crate::value::ToValue::to_value(base)),
-                ("state".to_string(), crate::value::ToValue::to_value(state)),
+            LocalInteractionRestore::Full { base, state } => semio_framework_value::DslValue::object(vec![
+                ("kind".to_string(), semio_framework_value::DslValue::String("full".to_string())),
+                ("base".to_string(), semio_framework_value::ToValue::to_value(base)),
+                ("state".to_string(), semio_framework_value::ToValue::to_value(state)),
             ]),
-            LocalInteractionRestore::Domains { base, domains } => crate::value::DslValue::object(vec![
-                ("kind".to_string(), crate::value::DslValue::String("domains".to_string())),
-                ("base".to_string(), crate::value::ToValue::to_value(base)),
-                ("domains".to_string(), crate::value::ToValue::to_value(domains)),
+            LocalInteractionRestore::Domains { base, domains } => semio_framework_value::DslValue::object(vec![
+                ("kind".to_string(), semio_framework_value::DslValue::String("domains".to_string())),
+                ("base".to_string(), semio_framework_value::ToValue::to_value(base)),
+                ("domains".to_string(), semio_framework_value::ToValue::to_value(domains)),
             ]),
         }
     }
 }
-impl crate::value::FromValue for LocalInteractionRestore {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionRestore, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionRestore {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionRestore, found {value:?}")));
         };
         let get = |key: &str| fields.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let kind = match get("kind") {
-            Some(crate::value::DslValue::String(s)) => s,
-            _ => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore missing kind")),
+            Some(semio_framework_value::DslValue::String(s)) => s,
+            _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore missing kind")),
         };
         let known: &[&str] = match kind.as_str() { "full" => &["kind", "base", "state"], "domains" => &["kind", "base", "domains"], _ => &["kind"] };
         if let Some((unknown, _)) = fields.iter().find(|(k, _)| !known.contains(&k.as_str())) {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{unknown}` for LocalInteractionRestore")));
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{unknown}` for LocalInteractionRestore")));
         }
         match kind.as_str() {
             "full" => Ok(LocalInteractionRestore::Full {
-                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing base"))?).map_err(|e| e.under("base"))?,
-                state: <LocalInteractionState as crate::value::FromValue>::from_value(get("state").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing state"))?).map_err(|e| e.under("state"))?,
+                base: <LocalInteractionIdentity as semio_framework_value::FromValue>::from_value(get("base").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing base"))?).map_err(|e| e.under("base"))?,
+                state: <LocalInteractionState as semio_framework_value::FromValue>::from_value(get("state").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.full missing state"))?).map_err(|e| e.under("state"))?,
             }),
             "domains" => Ok(LocalInteractionRestore::Domains {
-                base: <LocalInteractionIdentity as crate::value::FromValue>::from_value(get("base").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing base"))?).map_err(|e| e.under("base"))?,
-                domains: <BTreeMap<String, LocalInteractionDomainPatch> as crate::value::FromValue>::from_value(get("domains").ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing domains"))?).map_err(|e| e.under("domains"))?,
+                base: <LocalInteractionIdentity as semio_framework_value::FromValue>::from_value(get("base").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing base"))?).map_err(|e| e.under("base"))?,
+                domains: <BTreeMap<String, LocalInteractionDomainPatch> as semio_framework_value::FromValue>::from_value(get("domains").ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionRestore.domains missing domains"))?).map_err(|e| e.under("domains"))?,
             }),
-            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown LocalInteractionRestore kind `{other}`"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown LocalInteractionRestore kind `{other}`"))),
         }
     }
 }
@@ -256,20 +256,20 @@ pub struct LocalInteractionQueryToken {
 
 /// 🌱️ Hand-written, not derived — same reason as `LocalInteractionState` above. `request_id`/
 /// `query_generation`/`ordinal` mirror `#[serde(with = "decimal_u64")]`.
-impl crate::value::ToValue for LocalInteractionQueryToken {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
+impl semio_framework_value::ToValue for LocalInteractionQueryToken {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
             ("requestId".to_string(), encode_decimal_u64(self.request_id)),
             ("queryGeneration".to_string(), encode_decimal_u64(self.query_generation)),
-            ("identity".to_string(), crate::value::ToValue::to_value(&self.identity)),
+            ("identity".to_string(), semio_framework_value::ToValue::to_value(&self.identity)),
             ("ordinal".to_string(), encode_decimal_u64(self.ordinal)),
         ])
     }
 }
-impl crate::value::FromValue for LocalInteractionQueryToken {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionQueryToken, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionQueryToken {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionQueryToken, found {value:?}")));
         };
         let mut request_id = None;
         let mut query_generation = None;
@@ -279,16 +279,16 @@ impl crate::value::FromValue for LocalInteractionQueryToken {
             match key.as_str() {
                 "requestId" => request_id = Some(decode_decimal_u64(entry).map_err(|e| e.under("requestId"))?),
                 "queryGeneration" => query_generation = Some(decode_decimal_u64(entry).map_err(|e| e.under("queryGeneration"))?),
-                "identity" => identity = Some(<LocalInteractionIdentity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
+                "identity" => identity = Some(<LocalInteractionIdentity as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
                 "ordinal" => ordinal = Some(decode_decimal_u64(entry).map_err(|e| e.under("ordinal"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionQueryToken"))),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionQueryToken"))),
             }
         }
         Ok(LocalInteractionQueryToken {
-            request_id: request_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing requestId"))?,
-            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing queryGeneration"))?,
-            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing identity"))?,
-            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing ordinal"))?,
+            request_id: request_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing requestId"))?,
+            query_generation: query_generation.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing queryGeneration"))?,
+            identity: identity.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing identity"))?,
+            ordinal: ordinal.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionQueryToken missing ordinal"))?,
         })
     }
 }
@@ -305,22 +305,22 @@ pub struct LocalInteractionPage {
 }
 
 /// 🌱️ Hand-written, not derived — same reason as `LocalInteractionQueryToken` above.
-impl crate::value::ToValue for LocalInteractionPage {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
+impl semio_framework_value::ToValue for LocalInteractionPage {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
             ("requestId".to_string(), encode_decimal_u64(self.request_id)),
             ("queryGeneration".to_string(), encode_decimal_u64(self.query_generation)),
-            ("identity".to_string(), crate::value::ToValue::to_value(&self.identity)),
+            ("identity".to_string(), semio_framework_value::ToValue::to_value(&self.identity)),
             ("ordinal".to_string(), encode_decimal_u64(self.ordinal)),
-            ("terminal".to_string(), crate::value::ToValue::to_value(&self.terminal)),
-            ("bytes".to_string(), crate::value::ToValue::to_value(&self.bytes)),
+            ("terminal".to_string(), semio_framework_value::ToValue::to_value(&self.terminal)),
+            ("bytes".to_string(), semio_framework_value::ToValue::to_value(&self.bytes)),
         ])
     }
 }
-impl crate::value::FromValue for LocalInteractionPage {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionPage, found {value:?}")));
+impl semio_framework_value::FromValue for LocalInteractionPage {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for LocalInteractionPage, found {value:?}")));
         };
         let mut request_id = None;
         let mut query_generation = None;
@@ -332,20 +332,20 @@ impl crate::value::FromValue for LocalInteractionPage {
             match key.as_str() {
                 "requestId" => request_id = Some(decode_decimal_u64(entry).map_err(|e| e.under("requestId"))?),
                 "queryGeneration" => query_generation = Some(decode_decimal_u64(entry).map_err(|e| e.under("queryGeneration"))?),
-                "identity" => identity = Some(<LocalInteractionIdentity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
+                "identity" => identity = Some(<LocalInteractionIdentity as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("identity"))?),
                 "ordinal" => ordinal = Some(decode_decimal_u64(entry).map_err(|e| e.under("ordinal"))?),
-                "terminal" => terminal = Some(<bool as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("terminal"))?),
-                "bytes" => bytes = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("bytes"))?),
-                other => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionPage"))),
+                "terminal" => terminal = Some(<bool as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("terminal"))?),
+                "bytes" => bytes = Some(<Vec<u8> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("bytes"))?),
+                other => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown field `{other}` for LocalInteractionPage"))),
             }
         }
         Ok(LocalInteractionPage {
-            request_id: request_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing requestId"))?,
-            query_generation: query_generation.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing queryGeneration"))?,
-            identity: identity.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing identity"))?,
-            ordinal: ordinal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing ordinal"))?,
-            terminal: terminal.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing terminal"))?,
-            bytes: bytes.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing bytes"))?,
+            request_id: request_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing requestId"))?,
+            query_generation: query_generation.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing queryGeneration"))?,
+            identity: identity.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing identity"))?,
+            ordinal: ordinal.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing ordinal"))?,
+            terminal: terminal.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing terminal"))?,
+            bytes: bytes.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LocalInteractionPage missing bytes"))?,
         })
     }
 }
@@ -385,33 +385,33 @@ fn apply_field<T: Clone>(map: &mut BTreeMap<String, T>, domain: &str, value: &Op
 //#region 📦️ColdValueCodec
 /// 🌱️ Canonical decimal-string encoding for a `u64` that must survive JS's 2^53 float-precision
 /// boundary losslessly — the first-party twin of the former `#[serde(with = "decimal_u64")]`.
-fn encode_decimal_u64(value: u64) -> crate::value::DslValue {
-    crate::value::DslValue::String(value.to_string())
+fn encode_decimal_u64(value: u64) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::String(value.to_string())
 }
-fn decode_decimal_u64(value: crate::value::DslValue) -> Result<u64, crate::value::ValueError> {
-    let crate::value::DslValue::String(text) = value else {
-        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a decimal string, found {value:?}")));
+fn decode_decimal_u64(value: semio_framework_value::DslValue) -> Result<u64, semio_framework_value::ValueError> {
+    let semio_framework_value::DslValue::String(text) = value else {
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a decimal string, found {value:?}")));
     };
     if text.is_empty() || text.len() > 20 || (text.len() > 1 && text.starts_with('0')) || !text.bytes().all(|byte| byte.is_ascii_digit()) {
-        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid decimal u64"));
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid decimal u64"));
     }
-    text.parse().map_err(|_| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid decimal u64"))
+    text.parse().map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid decimal u64"))
 }
 
 /// 🌱️ Canonical 64-lowercase-hex-char encoding for a `[u8; 32]` revision — the first-party twin
 /// of the former `#[serde(with = "revision_hex")]`.
-fn encode_revision_hex(value: &[u8; 32]) -> crate::value::DslValue {
+fn encode_revision_hex(value: &[u8; 32]) -> semio_framework_value::DslValue {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut text = String::with_capacity(64);
     for byte in value { text.push(HEX[(byte >> 4) as usize] as char); text.push(HEX[(byte & 15) as usize] as char); }
-    crate::value::DslValue::String(text)
+    semio_framework_value::DslValue::String(text)
 }
-fn decode_revision_hex(value: crate::value::DslValue) -> Result<[u8; 32], crate::value::ValueError> {
-    let crate::value::DslValue::String(text) = value else {
-        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a hex string, found {value:?}")));
+fn decode_revision_hex(value: semio_framework_value::DslValue) -> Result<[u8; 32], semio_framework_value::ValueError> {
+    let semio_framework_value::DslValue::String(text) = value else {
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a hex string, found {value:?}")));
     };
     if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
-        return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "invalid full revision"));
+        return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid full revision"));
     }
     let mut bytes = [0; 32];
     for (index, pair) in text.as_bytes().as_chunks::<2>().0.iter().enumerate() { bytes[index] = nibble(pair[0]) * 16 + nibble(pair[1]); }
@@ -426,18 +426,18 @@ fn nibble(byte: u8) -> u8 { if byte <= b'9' { byte - b'0' } else { byte - b'a' +
 /// produce/consume — lets fixture-driven tests keep comparing against literal JSON without any
 /// shipped type needing `serde::Serialize`/`Deserialize`. `serde_json` stays a dev-dependency only.
 #[cfg(test)]
-fn json_to_dsl(value: serde_json::Value) -> crate::value::DslValue {
-    crate::value::DslValue::from(&value)
+fn json_to_dsl(value: serde_json::Value) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::from(&value)
 }
 #[cfg(test)]
-fn dsl_to_json(value: &crate::value::DslValue) -> serde_json::Value {
+fn dsl_to_json(value: &semio_framework_value::DslValue) -> serde_json::Value {
     serde_json::Value::from(value)
 }
 /// 🌱️ Test-only convenience: decode a `DslValue` (typically freshly built by `json_to_dsl`) via
 /// `FromValue`, panicking with the decode error on failure (mirrors `serde_json::from_value(...)
 /// .unwrap()`'s former ergonomics).
 #[cfg(test)]
-fn from_json<T: crate::value::FromValue>(value: serde_json::Value) -> T {
+fn from_json<T: semio_framework_value::FromValue>(value: serde_json::Value) -> T {
     T::from_value(json_to_dsl(value)).unwrap()
 }
 //#endregion 🧪️TestBridge
@@ -453,3 +453,9 @@ mod retained_root_tests;
 #[cfg(test)]
 #[path = "🌳️root/🩹️update/🧪️tests/🩹️update/🦀️.rs"]
 mod retained_update_tests;
+
+#[cfg(test)]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;

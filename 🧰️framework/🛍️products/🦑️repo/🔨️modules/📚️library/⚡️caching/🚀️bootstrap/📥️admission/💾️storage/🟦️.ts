@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {lstat,mkdir} from "node:fs/promises";
 import {posix,win32,resolve} from "node:path";
 import {randomUUID} from "node:crypto";
@@ -18,7 +19,7 @@ export function nxCollectionAdmissionPlanV1(value:unknown):{directory:string;res
 }
 /** 🔒️ Retains real graph funding and independent Original collection writer custody. */
 export async function withNxCollectionAdmissionStoreV1<T>(workspace:string,invocation:ScriptInvocation,body:(directory:string)=>Promise<T>):Promise<T>{
- checkScriptInvocation(invocation);workspace=resolve(workspace);if((invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot!==workspace)throw Error("Original collection admission repository required");return withRepositoryCacheStoreV1(workspace,"graph",invocation,async store=>{
+ checkScriptInvocation(invocation);workspace=resolve(workspace);if((invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot!==workspace)throw Error("Original collection admission repository required");return withRepositoryCacheStoreV1(workspace,"graph",invocation,createIssuedResourceControlV1(invocation,"cache:store-entry",0),async store=>{
   const plan=nxCollectionAdmissionPlanV1({version:1,platform:process.platform==="win32"?"windows":"posix",workspace,storage:store.root}),held=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:plan.resource,mode:"exclusive",owner:randomUUID(),control:store.control,signal:store.control.signal});
   try{await store.recheck();const directory=requireNativeStoragePathV1(store.root,plan.directory);await mkdir(directory,{recursive:true});const actual=await lstat(directory),root=await lstat(store.root);if(!actual.isDirectory()||actual.isSymbolicLink()||actual.dev!==root.dev)throw Error("Original collection admission mounted directory required");checkScriptInvocation(invocation);const value=await body(directory);await store.recheck();checkScriptInvocation(invocation);return value;}finally{held.release();}
  });

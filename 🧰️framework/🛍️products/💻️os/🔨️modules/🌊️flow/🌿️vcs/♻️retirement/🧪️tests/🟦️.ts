@@ -27,7 +27,7 @@ export function testOriginalVcsClosure():void{
  assert.equal(stableStringify(applyPatch(original,[],true,false).newDocument),stableStringify(original));
  assert.equal(Buffer.byteLength(original.InsertWidget),fixture.utf8Bytes);
  assertions+=2;
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");const domain=readFileSync(new URL("../../../🕸️wasm/🦀️.rs",import.meta.url),"utf8");
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");const domain=["🌉️domain-impl","🧩️domain-adapter","🌿️vcs-feature"].map((folder)=>readFileSync(new URL(`../../../🕸️wasm/${folder}/🦀️.rs`,import.meta.url),"utf8")).join("\n");
  assert.equal(/admit_retained_clone_close\(grant,1,/.test(source),false,"preflight cannot call the canonical actual-step validator as an obsolete boolean admission");assertions++;
  assert.ok(source.includes("admit_retained_clone_close(child,step,owner.terminal_is_empty()"));assertions++;
  assert.equal(/admit_retained_clone_close\(budget.retained,1,/.test(domain),false);assertions++;

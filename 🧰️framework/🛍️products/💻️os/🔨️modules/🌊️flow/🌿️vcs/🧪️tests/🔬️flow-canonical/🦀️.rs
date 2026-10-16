@@ -1,6 +1,6 @@
 //! 🧪️ The borrowed Flow canonical JSON matches an independent serde_json oracle for every leaf shape.
 use super::*;
-use crate::os_store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText, ArtifactCanonicalJsonValue as V, ArtifactPreparedOperationSource};
+use semio_framework_os_kernel::os_store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as N, ArtifactCanonicalJsonText, ArtifactCanonicalJsonValue as V, ArtifactPreparedOperationSource};
 use neural::{Atom, Dictionary, Value as NeuralValue};
 use serde_json::{json, Value};
 

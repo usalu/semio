@@ -34,13 +34,13 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 /// fleet-wide `ArtifactApp::Members` associated-type rollout — see
 /// `📓️terra-dedyn-fw-os-spacemember-report.md` §ChildContentView for the rejected alternatives.
 /// `Default` (`EMPTY`) so a leaf app's view costs nothing and needs no ceremony.
-pub(crate) const CHILD_CONTENT_SLOTS: usize = 1_024;
+pub const CHILD_CONTENT_SLOTS: usize = 1_024;
 
 const CHILD_CONTENT_PAGE_SLOTS: usize = 32;
 
 const CHILD_CONTENT_PAGES: usize = CHILD_CONTENT_SLOTS / CHILD_CONTENT_PAGE_SLOTS;
 
-pub(crate) const CHILD_CONTENT_ID_BYTES: usize = 256;
+pub const CHILD_CONTENT_ID_BYTES: usize = 256;
 
 /// 🪜️ The owner edge that identifies one composed member inside a document (design §21.9): the artifact id of the
 /// MEMBER that owns it — empty when the document itself does — and its `(slot, child_id)` step under that owner. It is
@@ -86,40 +86,40 @@ impl<'a> MemberKeyRef<'a> {
     }
 }
 
-pub(crate) struct ChildContentEntry {
-    pub(crate) owner: String,
-    pub(crate) slot: String,
-    pub(crate) child_id: String,
-    pub(crate) artifact_id: String,
-    pub(crate) dialect: ArtifactDialect,
-    pub(crate) revision: [u8; 32],
-    pub(crate) snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
+pub struct ChildContentEntry {
+    pub owner: String,
+    pub slot: String,
+    pub child_id: String,
+    pub artifact_id: String,
+    pub dialect: ArtifactDialect,
+    pub revision: [u8; 32],
+    pub snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
 impl ChildContentEntry {
-    pub(crate) fn key(&self) -> MemberKeyRef<'_> {
+    pub fn key(&self) -> MemberKeyRef<'_> {
         MemberKeyRef { owner: &self.owner, slot: &self.slot, child_id: &self.child_id }
     }
 }
 
-pub(crate) struct PreparedChildContentIdentity {
-    pub(crate) key: MemberKey,
-    pub(crate) reference: ArtifactRef,
+pub struct PreparedChildContentIdentity {
+    pub key: MemberKey,
+    pub reference: ArtifactRef,
 }
 
-pub(crate) struct PreparedChildContentEntry {
+pub struct PreparedChildContentEntry {
     entry: ManuallyDrop<Option<ChildContentEntry>>,
-    pub(crate) metadata: ManuallyDrop<Option<[String; 7]>>,
+    pub metadata: ManuallyDrop<Option<[String; 7]>>,
     metadata_cursor: usize,
     visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
-    pub(crate) generation: u64,
+    pub generation: u64,
 }
 
-pub(crate) struct PreparedChildContentSlot {
-    pub(crate) index: usize,
+pub struct PreparedChildContentSlot {
+    pub index: usize,
     identity: usize,
     visibility: std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>,
-    pub(crate) generation: u64,
+    pub generation: u64,
     taken: bool,
 }
 
@@ -128,7 +128,7 @@ impl PreparedChildContentEntry {
     fn preparation_demands() -> RetirementDemand { let mut demand = store::os_store::snapshot_read::ErasedSnapshotRead::prepared_read_demands(); demand.depth += 1; demand }
 
     /// 🧳️ Moves admitted identity owners into an exact private candidate read.
-    pub(crate) fn prepare<M: SpaceMember>(identity: &mut Option<PreparedChildContentIdentity>, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
+    pub fn prepare<M: SpaceMember>(identity: &mut Option<PreparedChildContentIdentity>, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
         if !Self::admits(grant, Self::preparation_demands()) { return Ok(None); }
         let retained = identity.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "prepared child identity has already transferred"))?;
         ChildContentView::identity_hash(retained.key.borrowed())?;
@@ -138,11 +138,11 @@ impl PreparedChildContentEntry {
         Ok(Some((Self { entry: ManuallyDrop::new(Some(ChildContentEntry { owner: key.owner, slot: key.slot, child_id: key.child_id, artifact_id: reference.artifact_id, dialect: reference.dialect, revision, snapshot })), metadata: ManuallyDrop::new(None), metadata_cursor: 0, visibility: ManuallyDrop::new(Some(visibility.clone())), generation }, progress)))
     }
 
-    pub(crate) fn next_close_byte_demand(&self) -> usize {
+    pub fn next_close_byte_demand(&self) -> usize {
         self.retirement_demands().release_bytes
     }
 
-    pub(crate) fn retirement_demands(&self) -> RetirementDemand {
+    pub fn retirement_demands(&self) -> RetirementDemand {
         if self.entry.is_some() {
             let mut demand = store::os_store::snapshot_read::ErasedSnapshotRead::prepared_return_demands();
             demand.copy_bytes += Self::read_return_parent_copy_bytes(); demand.depth += 1; return demand;
@@ -161,7 +161,7 @@ impl PreparedChildContentEntry {
     fn admits(grant: store::os_store::one_item::ArtifactStoreOneItemGrant, demand: RetirementDemand) -> bool { grant.permits_one() && !(grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth) }
 
     /// 🪃️ Returns the lease to its private member before separately freeing each identity allocation.
-    pub(crate) fn close_step<M: SpaceMember>(&mut self, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_step<M: SpaceMember>(&mut self, member: &M, publication: &mut dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.visibility.as_ref().is_none_or(|visibility| !std::sync::Arc::ptr_eq(visibility, visibility_retainer)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands();
@@ -187,7 +187,7 @@ impl PreparedChildContentEntry {
         self.close_metadata_step(visibility_retainer, grant)
     }
 
-    pub(crate) fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_metadata_step(&mut self, visibility_retainer: &std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.visibility.as_ref().is_none_or(|visibility| !std::sync::Arc::ptr_eq(visibility, visibility_retainer)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands();
@@ -204,17 +204,17 @@ impl PreparedChildContentEntry {
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.entry.is_none() && self.metadata.is_none() && self.visibility.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.entry.is_none() && self.metadata.is_none() && self.visibility.is_none() }
 }
 
 impl Drop for PreparedChildContentEntry {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "prepared child entry requires exact installation or bounded private return"); }
 }
 
-pub(crate) fn child_content_arc_bytes<T>() -> usize { size_of::<(std::sync::atomic::AtomicUsize, std::sync::atomic::AtomicUsize, T)>() }
+pub fn child_content_arc_bytes<T>() -> usize { size_of::<(std::sync::atomic::AtomicUsize, std::sync::atomic::AtomicUsize, T)>() }
 
 #[derive(Clone)]
-pub(crate) struct ChildContentPage {
+pub struct ChildContentPage {
     entries: [Option<std::sync::Arc<ChildContentEntry>>; CHILD_CONTENT_PAGE_SLOTS],
 }
 
@@ -225,9 +225,9 @@ impl Default for ChildContentPage {
 }
 
 #[derive(Clone)]
-pub(crate) struct ChildContentRoot {
-    pub(crate) pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES],
-    pub(crate) len: usize,
+pub struct ChildContentRoot {
+    pub pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES],
+    pub len: usize,
 }
 
 impl Default for ChildContentRoot {
@@ -238,17 +238,17 @@ impl Default for ChildContentRoot {
 
 #[derive(Clone, Default)]
 pub struct ChildContentView {
-    pub(crate) root: Option<std::sync::Arc<ChildContentRoot>>,
+    pub root: Option<std::sync::Arc<ChildContentRoot>>,
 }
 
 impl ChildContentView {
     /// 🈳️ The view a document with no children gets.
     pub const EMPTY: Self = Self { root: None };
 
-    pub(crate) fn prepared_entry_birth_bytes() -> usize { child_content_arc_bytes::<ChildContentRoot>() + child_content_arc_bytes::<ChildContentPage>() + child_content_arc_bytes::<ChildContentEntry>() }
+    pub fn prepared_entry_birth_bytes() -> usize { child_content_arc_bytes::<ChildContentRoot>() + child_content_arc_bytes::<ChildContentPage>() + child_content_arc_bytes::<ChildContentEntry>() }
 
     /// 🏗️ Builds the future immutable root before the common visibility decision.
-    pub(crate) fn insert_prepared_entry(&self, prepared: &mut PreparedChildContentEntry, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, PreparedChildContentSlot, RetainedCloneProgress)>, ValueError> {
+    pub fn insert_prepared_entry(&self, prepared: &mut PreparedChildContentEntry, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Self, PreparedChildContentSlot, RetainedCloneProgress)>, ValueError> {
         let demand = RetirementDemand { capacity_bytes: Self::prepared_entry_birth_bytes(), depth: 3, ..Default::default() };
         if !PreparedChildContentEntry::admits(grant, demand) { return Ok(None); }
         let reject = |reason| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason);
@@ -261,10 +261,10 @@ impl ChildContentView {
         Ok(Some((next, PreparedChildContentSlot { index, identity, visibility: prepared.visibility.take().expect("original prepared visibility transfers into its exact slot"), generation: prepared.generation, taken: false }, RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() })))
     }
 
-    pub(crate) fn prepared_entry_release_bytes() -> usize { child_content_arc_bytes::<ChildContentEntry>() }
+    pub fn prepared_entry_release_bytes() -> usize { child_content_arc_bytes::<ChildContentEntry>() }
 
     /// 🪝️ Extracts an unpublished entry under its whole Arc allocation grant, retaining its exact lease owner.
-    pub(crate) fn take_prepared_entry(&mut self, slot: &mut PreparedChildContentSlot, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(PreparedChildContentEntry, RetainedCloneStep)>, Fault> {
+    pub fn take_prepared_entry(&mut self, slot: &mut PreparedChildContentSlot, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(PreparedChildContentEntry, RetainedCloneStep)>, Fault> {
         if slot.taken { return Ok(None); }
         if slot.visibility.committed() { return Err(plugin_sdk_fault("prepared child extraction cannot change a committed view")); }
         if !grant.permits_one() || grant.maximum_depth < 3 || grant.maximum_release_bytes < Self::prepared_entry_release_bytes() { return Ok(None); }
@@ -279,7 +279,7 @@ impl ChildContentView {
         Ok(Some((PreparedChildContentEntry { entry: ManuallyDrop::new(Some(entry)), metadata: ManuallyDrop::new(None), metadata_cursor: 0, visibility: ManuallyDrop::new(Some(slot.visibility.clone())), generation: slot.generation }, RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: Self::prepared_entry_release_bytes(), ..Default::default() }))))
     }
 
-    pub(crate) fn prepared_structure_close_byte_demand(&self) -> usize {
+    pub fn prepared_structure_close_byte_demand(&self) -> usize {
         let Some(root) = self.root.as_ref() else { return 0; };
         if std::sync::Arc::strong_count(root) != 1 { return 0; }
         match root.pages.iter().flatten().next() {
@@ -289,7 +289,7 @@ impl ChildContentView {
         }
     }
 
-    pub(crate) fn prepared_structure_close_depth_demand(&self) -> usize {
+    pub fn prepared_structure_close_depth_demand(&self) -> usize {
         let Some(root) = self.root.as_ref() else { return 0; };
         if std::sync::Arc::strong_count(root) != 1 { return 1; }
         match root.pages.iter().flatten().next() {
@@ -300,7 +300,7 @@ impl ChildContentView {
     }
 
     /// 🧭️ Borrows the known view retaining the exact current root, page, or entry frontier.
-    pub(crate) fn prepared_structure_retainer<'a>(&self, first: &'a Self, second: &'a Self) -> Option<&'a Self> {
+    pub fn prepared_structure_retainer<'a>(&self, first: &'a Self, second: &'a Self) -> Option<&'a Self> {
         let Some(root) = self.root.as_ref() else { return Some(first); };
         if std::sync::Arc::strong_count(root) != 1 {
             return [first, second].into_iter().find(|view| view.root.as_ref().is_some_and(|retained| std::sync::Arc::ptr_eq(root, retained)));
@@ -315,7 +315,7 @@ impl ChildContentView {
     }
 
     /// 🪵️ Frees one private view alias or empty scaffold while another exact view retains all remaining entries.
-    pub(crate) fn close_prepared_structure_step(&mut self, retained: &Self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
+    pub fn close_prepared_structure_step(&mut self, retained: &Self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, Fault> {
         let yielded = RetainedCloneStep::Progress(RetainedCloneProgress::default());
         let handoff = RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() });
         if self.root.is_none() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -348,7 +348,7 @@ impl ChildContentView {
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: child_content_arc_bytes::<ChildContentRoot>(), ..Default::default() }))
     }
 
-    pub(crate) fn hash(key: MemberKeyRef<'_>) -> Result<usize, Fault> {
+    pub fn hash(key: MemberKeyRef<'_>) -> Result<usize, Fault> {
         Self::identity_hash(key).map_err(|error| plugin_sdk_fault(error.into_message()))
     }
 
@@ -382,7 +382,7 @@ impl ChildContentView {
         Err(plugin_sdk_fault("fixed immutable child-content root is saturated"))
     }
 
-    pub(crate) fn admit_member(&self, key: MemberKeyRef<'_>) -> Result<usize, Fault> {
+    pub fn admit_member(&self, key: MemberKeyRef<'_>) -> Result<usize, Fault> {
         match self.root.as_deref() {
             Some(root) => Self::locate(root, key).map(|location| match location {
                 Ok(index) | Err(index) => index,
@@ -391,7 +391,7 @@ impl ChildContentView {
         }
     }
 
-    pub(crate) fn insert_entry_admitted(&self, index: usize, entry: ChildContentEntry) -> Self {
+    pub fn insert_entry_admitted(&self, index: usize, entry: ChildContentEntry) -> Self {
         let root = self.root.as_deref().cloned().unwrap_or_default();
         let page_index = index / CHILD_CONTENT_PAGE_SLOTS;
         let entry_index = index % CHILD_CONTENT_PAGE_SLOTS;
@@ -421,7 +421,7 @@ impl ChildContentView {
 
     /// 🍂️ The same immutable root without one exact child: a copy-on-write removal that re-seats every later
     /// entry of that child's probe run (backward shift), so every other child stays addressable.
-    pub(crate) fn without_member(&self, key: MemberKeyRef<'_>) -> Result<Self, Fault> {
+    pub fn without_member(&self, key: MemberKeyRef<'_>) -> Result<Self, Fault> {
         let Some(current) = self.root.as_deref() else { return Ok(self.clone()) };
         let Ok(mut hole) = Self::locate(current, key)? else { return Ok(self.clone()) };
         let mut next = current.clone();
@@ -467,15 +467,15 @@ impl ChildContentView {
         digest
     }
 
-    pub(crate) fn same_owner(&self,other:&Self)->bool{
+    pub fn same_owner(&self,other:&Self)->bool{
         match(self.root.as_ref(),other.root.as_ref()){(Some(left),Some(right))=>std::sync::Arc::ptr_eq(left,right),(None,None)=>true,_=>false}
     }
 
-    pub(crate) fn contains_entry_owner(&self, entry: &std::sync::Arc<ChildContentEntry>) -> bool {
+    pub fn contains_entry_owner(&self, entry: &std::sync::Arc<ChildContentEntry>) -> bool {
         self.find(entry.key()).ok().flatten().is_some_and(|candidate| std::ptr::eq(candidate, entry.as_ref()))
     }
 
-    pub(crate) fn next_take_copy_bytes(&self)->usize{
+    pub fn next_take_copy_bytes(&self)->usize{
         let Some(root)=self.root.as_ref()else{return 0};
         if std::sync::Arc::strong_count(root)!=1{return size_of::<Option<std::sync::Arc<ChildContentRoot>>>()}
         let Some(page)=root.pages.iter().flatten().next()else{return size_of::<Option<std::sync::Arc<ChildContentRoot>>>()};
@@ -484,7 +484,7 @@ impl ChildContentView {
     }
 
     /// 📏️ Quotes the exact Arc allocation the next in-place disposal step frees.
-    pub(crate) fn next_take_release_bytes(&self) -> usize {
+    pub fn next_take_release_bytes(&self) -> usize {
         let Some(root) = self.root.as_ref() else { return 0 };
         if std::sync::Arc::strong_count(root) != 1 { return 0; }
         let Some(page) = root.pages.iter().flatten().next() else { return child_content_arc_bytes::<ChildContentRoot>() };
@@ -496,7 +496,7 @@ impl ChildContentView {
         }
     }
 
-    pub(crate) fn take_one(&mut self, current: &ChildContentView, owners: &dyn ChildContentRetainers) -> ChildContentTake {
+    pub fn take_one(&mut self, current: &ChildContentView, owners: &dyn ChildContentRetainers) -> ChildContentTake {
         if self.root.is_none() { return ChildContentTake::Complete(0); }
         if self.same_owner(current)||owners.retains_root(self){drop(self.root.take());return ChildContentTake::Complete(0)}
         let Some(root) = self.root.as_mut().and_then(std::sync::Arc::get_mut) else { return ChildContentTake::Blocked };
@@ -537,18 +537,18 @@ impl ChildContentView {
 
     /// 🪞️ The same immutable root with one member's `snapshot` read in its place — a history edit's preview of a composed
     /// member (design §12), never the published root.
-    pub(crate) fn with_member_read(&self, key: MemberKeyRef<'_>, dialect: &ArtifactDialect, revision: [u8; 32], snapshot: store::os_store::snapshot_read::ErasedSnapshotRead) -> Result<Self, Fault> {
+    pub fn with_member_read(&self, key: MemberKeyRef<'_>, dialect: &ArtifactDialect, revision: [u8; 32], snapshot: store::os_store::snapshot_read::ErasedSnapshotRead) -> Result<Self, Fault> {
         let artifact_id = self.find(key)?.map(|entry| entry.artifact_id.clone()).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {} child {}", key.slot, key.child_id)))?;
         let index = self.admit_member(key)?;
         Ok(self.insert_entry_admitted(index, ChildContentEntry { owner: key.owner.to_string(), slot: key.slot.to_string(), child_id: key.child_id.to_string(), artifact_id, dialect: dialect.clone(), revision, snapshot }))
     }
 
-    pub(crate) async fn with_member<M: SpaceMember>(&self, key: MemberKeyRef<'_>, reference: &ArtifactRef, member: &M) -> Result<Self, Fault> {
+    pub async fn with_member<M: SpaceMember>(&self, key: MemberKeyRef<'_>, reference: &ArtifactRef, member: &M) -> Result<Self, Fault> {
         let index = self.admit_member(key)?;
         self.capture_member_admitted(index, key, reference, member).await
     }
 
-    pub(crate) async fn capture_member_admitted<M: SpaceMember>(&self, index: usize, key: MemberKeyRef<'_>, reference: &ArtifactRef, member: &M) -> Result<Self, Fault> {
+    pub async fn capture_member_admitted<M: SpaceMember>(&self, index: usize, key: MemberKeyRef<'_>, reference: &ArtifactRef, member: &M) -> Result<Self, Fault> {
         let revision = member.content_revision().await;
         let snapshot = member.snapshot_read_erased().await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
         Ok(self.insert_entry_admitted(index, ChildContentEntry { owner: key.owner.to_string(), slot: key.slot.to_string(), child_id: key.child_id.to_string(), artifact_id: reference.artifact_id.clone(), dialect: reference.dialect.clone(), revision, snapshot }))
@@ -616,7 +616,7 @@ impl ChildContentView {
     }
 }
 
-pub(crate) enum ChildContentTake {
+pub enum ChildContentTake {
     Blocked,
     Released(usize),
     Snapshot(ChildContentEntry, usize),
@@ -629,15 +629,15 @@ pub(crate) enum ChildContentTake {
 /// an alias held by a mere borrower (an operation view a job still holds) blocks, because a borrower
 /// drops without a bounded disposer. Copy-on-write publication makes two consecutive retirements
 /// share every untouched page, so without this set both wait on each other forever.
-pub(crate) trait ChildContentRetainers {
+pub trait ChildContentRetainers {
     fn retains_root(&self, view: &ChildContentView) -> bool;
     fn retains_page(&self, page_index: usize, page: &std::sync::Arc<ChildContentPage>) -> bool;
     fn retains_entry(&self, entry: &std::sync::Arc<ChildContentEntry>) -> bool;
 }
 
-pub(crate) struct ChildContentOwners {
+pub struct ChildContentOwners {
     views: [ChildContentView; ARTIFACT_LIVE_OUTPUT_SLOTS],
-    pub(crate) len: usize,
+    pub len: usize,
 }
 
 impl ChildContentRetainers for ChildContentOwners {
@@ -648,7 +648,7 @@ impl ChildContentRetainers for ChildContentOwners {
 
 impl ChildContentOwners {
     /// 🈳️ The owner set of a retirement with no live sibling.
-    pub(crate) fn none() -> Self {
+    pub fn none() -> Self {
         Self { views: std::array::from_fn(|_| ChildContentView::EMPTY), len: 0 }
     }
 
@@ -658,7 +658,7 @@ impl ChildContentOwners {
         self.len += 1;
     }
 
-    pub(crate) fn view_retains_page(view: &ChildContentView, page_index: usize, page: &std::sync::Arc<ChildContentPage>) -> bool {
+    pub fn view_retains_page(view: &ChildContentView, page_index: usize, page: &std::sync::Arc<ChildContentPage>) -> bool {
         view.root.as_deref().and_then(|root| root.pages[page_index].as_ref()).is_some_and(|candidate| std::sync::Arc::ptr_eq(candidate, page))
     }
 
@@ -671,4 +671,7 @@ impl ChildContentOwners {
     }
 }
 
-include!("../../🧩️composition/♻️root/👁️read/🦀️.rs");
+use std::mem::ManuallyDrop;
+#[path = "🛬️lifted/👁️read/🦀️.rs"]
+mod lifted_read;
+pub use lifted_read::*;

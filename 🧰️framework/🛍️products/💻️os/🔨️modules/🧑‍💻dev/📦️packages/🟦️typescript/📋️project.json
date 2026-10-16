@@ -182,6 +182,16 @@
         "forwardAllArgs": true
       }
     },
+    "plugin-size": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": ["{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/reports/size"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts plugin size",
+        "forwardAllArgs": false
+      }
+    },
     "parity": {
       "executor": "repo:script",
       "options": {

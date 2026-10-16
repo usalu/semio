@@ -460,7 +460,7 @@ test("semio has only the dashboard verbs: nothing is forwarded to the root scrip
 
 // #region 🔖️Hash
 test("Bun's own XXH3 gives the vectors the registry pins for the Nx graph-reuse decision", () => {
-  const rust = readFileSync(join(dashboard, "🎮️registry/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const rust = readFileSync(join(dashboard, "🧱️core/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   for (const input of ["", "a", "abc"]) {
     const hash = (Bun.hash as any).xxHash3(input) as bigint;
     const literal = `0x${hash.toString(16).padStart(16, "0").match(/.{4}/gu)!.join("_")}`;

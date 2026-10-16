@@ -10,25 +10,26 @@ use axum::response::{IntoResponse, Response};
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
 use futures::StreamExt;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord, Tracer};
-use semio_hub::artifact_authority::chunk_cas::ArtifactChunkCasStorage;
-use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1, ArtifactCreationServiceV1};
+use semio_hub_artifact_authority::chunk_cas::ArtifactChunkCasStorage;
+use semio_hub_artifact_creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1};
+use semio_hub_artifact_creation_service::ArtifactCreationServiceV1;
 #[cfg(test)]
-use semio_hub::artifact_authority::ImmutableArtifactBlobStore;
-use semio_hub::artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext, VerifiedCheckpointPublisher};
+use semio_hub_artifact_authority::ImmutableArtifactBlobStore;
+use semio_hub_artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
-use semio_hub::directory::error::DirectoryError;
-use semio_hub::directory::model::SocketSessionBindingStatus;
-use semio_hub::directory::{HubDirectories, HubDirectory, LocalBootstrapTransport};
-use semio_hub::inference::runtime::GisMapApprovalIngressAuthorityV1;
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_contract::model::SocketSessionBindingStatus;
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::HubDirectory;
+use semio_hub_directory_contract::LocalBootstrapTransport;
+use semio_hub_inference_runtime_contract::GisMapApprovalIngressAuthorityV1;
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::support::{DirectoryJson, now_ms, bearer};
-use crate::state::HubState;
-use crate::socket_grants::{SocketBindingKeyV1, SocketBindingGuardV1, SocketBindingGatesV1};
-use crate::guard::session_access_roles;
-use crate::directory_commands::resolve_bearer_user;
-use db::db_storage::PayloadStorage as _;
+use semio_hub_runtime::support::{DirectoryJson, now_ms};
+use semio_hub_ledgers::socket_grants::{SocketBindingKeyV1, SocketBindingGuardV1, SocketBindingGatesV1};
+use semio_hub_ledgers::guard::session_access_roles;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
 
 //#region 🔖️Directory
@@ -38,9 +39,9 @@ struct HubArtifactCreationCommitLeaseV1 {
 
 impl ArtifactCreationCommitLeaseV1 for HubArtifactCreationCommitLeaseV1 {}
 
-pub(crate) struct HubArtifactCreationCommitAuthorityV1 {
-    pub(crate) directory: Arc<HubDirectories>,
-    pub(crate) gates: Arc<SocketBindingGatesV1>,
+pub struct HubArtifactCreationCommitAuthorityV1 {
+    pub directory: Arc<HubDirectories>,
+    pub gates: Arc<SocketBindingGatesV1>,
 }
 
 impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 {
@@ -69,47 +70,19 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
     }
 }
 
-fn artifact_creation_space_id_v1(space_id: &str) -> bool {
+pub fn artifact_creation_space_id_v1(space_id: &str) -> bool {
     !space_id.is_empty() && space_id.len() <= 256 && space_id.as_bytes()[0].is_ascii_alphanumeric() && space_id.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(&byte))
-}
-
-async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<SocketBindingGuardV1>), StatusCode> {
-    if !artifact_creation_space_id_v1(space_id) {
-        return Err(StatusCode::BAD_REQUEST);
-    }
-    let caller = resolve_bearer_user(state, token).await.ok_or(StatusCode::UNAUTHORIZED)?;
-    let guards = tokio::time::timeout(
-        std::time::Duration::from_secs(2),
-        state.socket_binding_gates.share_bindings(vec![
-            SocketBindingKeyV1::User(caller.user_id.clone()),
-            SocketBindingKeyV1::Session(caller.session_id.clone()),
-            SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_string() },
-            SocketBindingKeyV1::Membership { user_id: caller.user_id.clone(), space_id: space_id.to_string() },
-        ]),
-    )
-    .await
-    .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-    let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms())).await;
-    let space_kind = state.directory.get_space(space_id).await.ok().flatten().map(|space| space.kind);
-    match binding {
-        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| directory_access_permits(&session_access_roles(session_kind, Some(role)), DirectoryAccessActionV1::ArtifactCreate, Some(kind))) => {
-            Ok((ArtifactCreationActorV1 { user_id: caller.user_id, session_id: caller.session_id, authorization_generation: caller.authorization_generation }, guards))
-        }
-        Ok(Ok(SocketSessionBindingStatus::Active { .. } | SocketSessionBindingStatus::MembershipLost)) => Err(StatusCode::FORBIDDEN),
-        Ok(Ok(SocketSessionBindingStatus::Revoked | SocketSessionBindingStatus::Expired)) => Err(StatusCode::UNAUTHORIZED),
-        Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(StatusCode::SERVICE_UNAVAILABLE),
-    }
 }
 
 const ARTIFACT_CREATION_HTTP_CAPACITY: usize = 8;
 
 const ARTIFACT_CREATION_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(32);
 
-pub(crate) struct ArtifactCreationHttpControlV1 {
-    pub(crate) cancelled: std::sync::atomic::AtomicBool,
+pub struct ArtifactCreationHttpControlV1 {
+    pub cancelled: std::sync::atomic::AtomicBool,
     shutdown_cancelled: Option<Arc<std::sync::atomic::AtomicBool>>,
     fault: Mutex<Option<String>>,
-    pub(crate) progress: Mutex<Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1>>,
+    pub progress: Mutex<Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1>>,
 }
 
 impl ArtifactCreationHttpControlV1 {
@@ -119,7 +92,7 @@ impl ArtifactCreationHttpControlV1 {
     /// `Cancelled`, the one terminal phase that says the AUTHOR stopped the work. The bound lives
     /// in the context alone now (`ARTIFACT_CREATION_STALL_BOUND_MS`), which is the single place
     /// ticket 26/09/18 slice HT16 put operation bounds.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None, fault: Mutex::new(None), progress: Mutex::new(None) }
     }
 
@@ -127,17 +100,17 @@ impl ArtifactCreationHttpControlV1 {
         Self { shutdown_cancelled: Some(shutdown_cancelled), ..Self::new() }
     }
 
-    pub(crate) fn cancel(&self) {
+    pub fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }
 
     /// 🧯️ Takes the sentence the operation left behind, so the host reports it exactly once.
-    fn take_fault(&self) -> Option<String> {
+    pub fn take_fault(&self) -> Option<String> {
         self.fault.lock().ok().and_then(|mut held| held.take())
     }
 
     /// 📈️ Where this running creation is: `queued` until its operation reports anything.
-    pub(crate) fn progress(&self) -> directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1 {
+    pub fn progress(&self) -> directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1 {
         use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreationProgressV1, SpaceArtifactCreationStageV1};
         self.progress.lock().ok().and_then(|held| *held).unwrap_or(SpaceArtifactCreationProgressV1 { stage: SpaceArtifactCreationStageV1::Queued, completed_units: 0, total_units: 1 })
     }
@@ -145,8 +118,8 @@ impl ArtifactCreationHttpControlV1 {
 
 /// 🧭️ The creation stage an authority progress stage belongs to; a stage that says nothing about
 /// where the creation is keeps the stage already reported.
-fn artifact_creation_stage(stage: semio_hub::artifact_authority::AuthorityProgressStage) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1> {
-    use semio_hub::artifact_authority::AuthorityProgressStage;
+fn artifact_creation_stage(stage: semio_hub_artifact_authority::AuthorityProgressStage) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1> {
+    use semio_hub_artifact_authority::AuthorityProgressStage;
     use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1;
     match stage {
         AuthorityProgressStage::GuestCompiling => Some(SpaceArtifactCreationStageV1::CompilingGuest),
@@ -215,8 +188,8 @@ pub(crate) struct ArtifactCreationHttpTaskOwnerStateV1 {
     recovery: Option<tokio::task::JoinHandle<()>>,
 }
 
-pub(crate) struct ArtifactCreationHttpTaskOwnerV1 {
-    pub(crate) state: Mutex<ArtifactCreationHttpTaskOwnerStateV1>,
+pub struct ArtifactCreationHttpTaskOwnerV1 {
+    pub state: Mutex<ArtifactCreationHttpTaskOwnerStateV1>,
     pub(crate) changed: Arc<tokio::sync::Notify>,
     recovery_cancelled: Arc<std::sync::atomic::AtomicBool>,
 }
@@ -228,14 +201,14 @@ pub(crate) struct ArtifactCreationHttpReservationV1 {
     activated: bool,
 }
 
-pub(crate) enum ArtifactCreationHttpAdmissionV1 {
+pub enum ArtifactCreationHttpAdmissionV1 {
     Owner(ArtifactCreationHttpReservationV1),
     Join(Arc<ArtifactCreationHttpPendingV1>),
     Unavailable,
 }
 
 impl ArtifactCreationHttpTaskOwnerV1 {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             state: Mutex::new(ArtifactCreationHttpTaskOwnerStateV1 { closing: false, reservations: BTreeMap::new(), tasks: BTreeMap::new(), recovery: None }),
             changed: Arc::new(tokio::sync::Notify::new()),
@@ -243,7 +216,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         }
     }
 
-    pub(crate) fn reserve(self: &Arc<Self>, key: String, control: Arc<ArtifactCreationHttpControlV1>) -> ArtifactCreationHttpAdmissionV1 {
+    pub fn reserve(self: &Arc<Self>, key: String, control: Arc<ArtifactCreationHttpControlV1>) -> ArtifactCreationHttpAdmissionV1 {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.tasks.retain(|_, task| !task.task.is_finished());
         if state.closing {
@@ -265,7 +238,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
     /// uncommitted key: the sweep runs every second and reads only durable facts, so a creation
     /// that is legitimately still working looks exactly like one whose executor died, and closing
     /// it takes the key out from under an execution that is about to append `Prepared`.
-    pub(crate) fn owns_live_execution(&self, key: &str) -> bool {
+    pub fn owns_live_execution(&self, key: &str) -> bool {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.tasks.retain(|_, task| !task.task.is_finished());
         state.reservations.contains_key(key) || state.tasks.contains_key(key)
@@ -278,7 +251,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         state.tasks.get(key).map(|task| task.control.progress()).or_else(|| state.reservations.get(key).map(|pending| pending.control.progress()))
     }
 
-    pub(crate) fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>, tracer: Tracer) {
+    pub fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>, tracer: Tracer) {
         let cancelled = self.recovery_cancelled.clone();
         let wake = self.changed.clone();
         let owner = Arc::downgrade(self);
@@ -311,7 +284,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     }
                     drop(owner);
                     let control = ArtifactCreationHttpControlV1::recovery(cancelled.clone());
-                    let Ok(context) = OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), &control) else { break };
+                    let Ok(context) = OperationContext::stall_bounded(semio_hub_artifact_creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), &control) else { break };
                     if let Err(error) = service.recover(intent, authority.as_ref(), &context).await {
                         let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
                         record.detail = Some(format!("creation-recovery-attempt-unavailable:{error}"));
@@ -333,7 +306,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         }
     }
 
-    pub(crate) fn cancel(&self, key: &str) {
+    pub fn cancel(&self, key: &str) {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(pending) = state.reservations.get(key) {
             pending.control.cancel();
@@ -343,11 +316,11 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         }
     }
 
-    pub(crate) async fn shutdown(&self) {
+    pub async fn shutdown(&self) {
         self.shutdown_with_deadline(ARTIFACT_CREATION_SHUTDOWN_DEADLINE).await;
     }
 
-    pub(crate) async fn shutdown_with_deadline(&self, shutdown_deadline: std::time::Duration) {
+    pub async fn shutdown_with_deadline(&self, shutdown_deadline: std::time::Duration) {
         self.recovery_cancelled.store(true, std::sync::atomic::Ordering::Release);
         self.changed.notify_waiters();
         let deadline = tokio::time::Instant::now() + shutdown_deadline;
@@ -395,7 +368,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
     }
 
     #[cfg(test)]
-    pub(crate) fn task_count(&self) -> usize {
+    pub fn task_count(&self) -> usize {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.reservations.len().saturating_add(state.tasks.values().filter(|task| !task.task.is_finished()).count())
     }
@@ -451,7 +424,7 @@ impl Drop for ArtifactCreationHttpReservationV1 {
     }
 }
 
-async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHttpPendingV1) -> Option<u8> {
+pub async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHttpPendingV1) -> Option<u8> {
     let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
     if disposition != 0 {
         return Some(disposition);
@@ -470,15 +443,15 @@ async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHtt
     .ok()
 }
 
-fn artifact_creation_task_key_v1(user_id: &str, space_id: &str, request_id: &str) -> String {
+pub fn artifact_creation_task_key_v1(user_id: &str, space_id: &str, request_id: &str) -> String {
     format!("{user_id}\0{space_id}\0{request_id}")
 }
 
-pub(crate) fn artifact_creation_request_id_v1(request_id: &str) -> bool {
+pub fn artifact_creation_request_id_v1(request_id: &str) -> bool {
     request_id.len() == 32 && request_id.bytes().any(|byte| byte != b'0') && request_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
-fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
+pub fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
     match error {
         DirectoryError::NotFound(_) => StatusCode::NOT_FOUND,
         DirectoryError::Conflict(_) => StatusCode::CONFLICT,
@@ -487,7 +460,7 @@ fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
     }
 }
 
-fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> Response {
+pub fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> Response {
     let code = match status.phase {
         SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing => StatusCode::ACCEPTED,
         SpaceArtifactCreationPhaseV1::Ready | SpaceArtifactCreationPhaseV1::Indeterminate | SpaceArtifactCreationPhaseV1::Failed | SpaceArtifactCreationPhaseV1::Cancelled => StatusCode::OK,
@@ -497,139 +470,4 @@ fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> R
     response
 }
 
-pub(crate) async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
-    if uri.query().is_some() {
-        return StatusCode::BAD_REQUEST.into_response();
-    }
-    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
-    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
-        Ok(actor) => actor,
-        Err(status) => return status.into_response(),
-    };
-    match service.creation_catalog(&actor, &space_id, u64::try_from(now_ms()).unwrap_or_default()).await {
-        Ok(catalog) => {
-            let mut response = DirectoryJson(catalog).into_response();
-            response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
-            response
-        }
-        Err(error) => artifact_creation_error_status(error).into_response(),
-    }
-}
-
-/// 🧗️ No socket is waiting on what follows: the route has already answered 202 and the
-/// client polls the durable status. Its bound is therefore the stall bound, fed by the
-/// guest codec's own fuel progress, never the calendar.
-pub(crate) async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
-    if uri.query().is_some()
-        || body.is_empty()
-        || body.len() > SPACE_ARTIFACT_CREATION_MAX_BYTES
-        || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1
-        || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json")
-    {
-        return StatusCode::BAD_REQUEST.into_response();
-    }
-    let request = match std::str::from_utf8(&body).ok().and_then(SpaceArtifactCreateV1::parse_canonical_json) {
-        Some(request) => request,
-        None => return StatusCode::BAD_REQUEST.into_response(),
-    };
-    let Some(service) = state.artifact_creation.as_ref().cloned() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
-    let (actor, guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
-        Ok(actor) => actor,
-        Err(status) => return status.into_response(),
-    };
-    let key = artifact_creation_task_key_v1(&actor.user_id, &space_id, &request.request_id);
-    let control = Arc::new(ArtifactCreationHttpControlV1::new());
-    let mut predecessor_failures = 0u8;
-    let reservation = loop {
-        match state.artifact_creation_tasks.reserve(key.clone(), control.clone()) {
-            ArtifactCreationHttpAdmissionV1::Owner(reservation) => break Some(reservation),
-            ArtifactCreationHttpAdmissionV1::Join(pending) => match await_artifact_creation_http_admission_v1(pending.as_ref()).await {
-                Some(1) => break None,
-                Some(2) if predecessor_failures < 2 => {
-                    predecessor_failures += 1;
-                    continue;
-                }
-                _ => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
-            },
-            ArtifactCreationHttpAdmissionV1::Unavailable => return ([(axum::http::header::RETRY_AFTER, "1")], StatusCode::SERVICE_UNAVAILABLE).into_response(),
-        }
-    };
-    let Ok(context) = OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) else {
-        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-    };
-    let acceptance = match service.accept(&actor, &space_id, request, &context).await {
-        Ok(acceptance) => acceptance,
-        Err(error) => return artifact_creation_error_status(error).into_response(),
-    };
-    drop(guards);
-    if let Some(execution) = acceptance.execution {
-        let Some(reservation) = reservation else {
-            return StatusCode::SERVICE_UNAVAILABLE.into_response();
-        };
-        let authority = state.artifact_creation_commit_authority.clone();
-        let execution_tracer = state.tracer.clone();
-        reservation.activate(async move {
-            let context = match OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) {
-                Ok(context) => context,
-                Err(error) => {
-                    let mut record = TraceRecord::new("server.artifact.creation", TraceOutcome::Failed);
-                    record.detail = Some(format!("creation-retained-execution-unbounded:{error}"));
-                    execution_tracer.emit(record);
-                    return;
-                }
-            };
-            if let Err(error) = service.execute(execution, authority.as_ref(), &context).await {
-                let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
-                record.detail = Some(format!("creation-retained-execution-unavailable:{error}"));
-                execution_tracer.emit(record);
-            }
-            if let Some(detail) = control.take_fault() {
-                let mut record = TraceRecord::new("server.artifact.creation", TraceOutcome::Failed);
-                record.detail = Some(detail);
-                execution_tracer.emit(record);
-            }
-        });
-    } else if let Some(reservation) = reservation {
-        reservation.finish();
-    }
-    artifact_creation_status_response(acceptance.status)
-}
-
-pub(crate) async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
-    if uri.query().is_some() || !artifact_creation_request_id_v1(&request_id) {
-        return StatusCode::BAD_REQUEST.into_response();
-    }
-    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
-    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
-        Ok(actor) => actor,
-        Err(status) => return status.into_response(),
-    };
-    match service.status(&actor, &space_id, &request_id, u64::try_from(now_ms()).unwrap_or_default()).await {
-        Ok(mut status) => {
-            if matches!(status.phase, SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing) {
-                status.progress = state.artifact_creation_tasks.live_progress(&artifact_creation_task_key_v1(&actor.user_id, &space_id, &request_id));
-            }
-            artifact_creation_status_response(status)
-        }
-        Err(error) => artifact_creation_error_status(error).into_response(),
-    }
-}
-
-pub(crate) async fn post_space_artifact_creation_cancel(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
-    if uri.query().is_some() || !body.is_empty() || !artifact_creation_request_id_v1(&request_id) {
-        return StatusCode::BAD_REQUEST.into_response();
-    }
-    let Some(service) = state.artifact_creation.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
-    let (actor, _guards) = match acquire_artifact_creation_actor(&state, &space_id, bearer(&headers).as_deref()).await {
-        Ok(actor) => actor,
-        Err(status) => return status.into_response(),
-    };
-    match service.cancel(&actor, &space_id, &request_id, u64::try_from(now_ms()).unwrap_or_default()).await {
-        Ok(status) => {
-            state.artifact_creation_tasks.cancel(&artifact_creation_task_key_v1(&actor.user_id, &space_id, &request_id));
-            artifact_creation_status_response(status)
-        }
-        Err(error) => artifact_creation_error_status(error).into_response(),
-    }
-}
 //#endregion 🔖️Directory

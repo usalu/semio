@@ -89,7 +89,9 @@
     },
     "Policy": {
       "const": {
-        "maximumChildren": 64
+        "maximumChildren": 64,
+        "maximumGraphBytes": 268435456,
+        "readChunkBytes": 1048576
       }
     },
     "Context": {

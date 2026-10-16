@@ -3,7 +3,8 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, w
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { runCmd } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { prepareTectonic } from "../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts";
+import{publishPrintArtifact}from"../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
+import type{PrintExecutionV1}from"../../🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts";
 
 /** 📌️ Pinned [elan](https://github.com/leanprover/elan/releases/tag/v4.2.4) archives. */
 const elan = {
@@ -59,25 +60,15 @@ async function prepareLean(repoRoot: string): Promise<string> {
 }
 
 /** 📥️ Provisions elan, the Mathlib build cache and the pinned Tectonic. */
-export async function prepareDependencies(root: string, repoRoot: string): Promise<void> {
+export async function prepareLeanDependencies(root: string, repoRoot: string): Promise<void> {
   const lake = await prepareLean(repoRoot);
   runCmd(lake, ["exe", "cache", "get"], { cwd: join(root, "🧘️lean"), env: leanEnvironment(repoRoot), budgetMs: 0 });
-  await prepareTectonic(repoRoot);
 }
 
 /** 🏗️ Checks the Lean proof (`lean`) or typesets one document (`📯️notes`, `🏆️proof`) under an ASCII job name, because TeX cannot carry an emoji `\jobname`. */
-export async function build(root: string, repoRoot: string, target = "lean"): Promise<void> {
-  if (target === "lean") {
-    runCmd(await prepareLean(repoRoot), ["build"], { cwd: join(root, "🧘️lean"), env: leanEnvironment(repoRoot), budgetMs: 0 });
-    return;
-  }
-  if (!documents.includes(target)) throw new Error(`Unknown build target: ${target}`);
-  const output = join(root, "dist", target);
-  const job = target.replace(/^[^a-z]+/u, "") + ".tex";
-  mkdirSync(output, { recursive: true });
-  copyFileSync(join(root, target, "📐️.tex"), join(output, job));
-  runCmd(await prepareTectonic(repoRoot), [job], { cwd: output });
-}
+export async function buildLean(root:string,repoRoot:string):Promise<void>{runCmd(await prepareLean(repoRoot),["build"],{cwd:join(root,"🧘️lean"),env:leanEnvironment(repoRoot),budgetMs:0});}
+/** 📄️ Publishes a declared TeX document through the same managed Print compiler and readers. */
+export async function buildPrintDocument(execution:PrintExecutionV1,target:string):Promise<void>{if(!documents.includes(target))throw Error("Declared Leutwiler document required");await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"report",id:"leutwiler-"+(target==="📯️notes"?"notes":"proof"),sourceRoot:"👴️leutwiler/💤️realparts-of-powers-z-n/"+target,texPath:"📐️.tex",sources:["📐️.tex"],dark:false});}
 
 /** ⚖️ Fails when a main theorem depends on anything but the three standard axioms. */
 export async function verifyAxioms(root: string, repoRoot: string): Promise<void> {

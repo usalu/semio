@@ -1,10 +1,12 @@
+use crate::{standards::isobmff::subsets::any::schema::snapshot::Mp4Movie, standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata, standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA};
+use crate::standards::isobmff::subsets::any::io::{normalized_chunk_sample_counts};
 use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::io::Mp4AnalyzerAnalysis;
-use super::*;
+use crate::standards::isobmff::subsets::any::io::*;
 
 #[test]
 fn incremental_mux_matches_the_real_fixture_under_small_grants() {
-    let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4");
+    let source = &std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable")[..];
     let snapshot = decode_mp4(source).expect("real MP4 fixture decodes");
     let mut cursor = Mp4EncodeCursor::new(&snapshot);
     let mut output = Vec::new();
@@ -117,7 +119,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
-    let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🎬️.mp4").to_vec();
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🎬️.mp4")).expect("the committed fixture is readable");
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
     assert_eq!(encode_mp4(&snapshot), bytes);
 

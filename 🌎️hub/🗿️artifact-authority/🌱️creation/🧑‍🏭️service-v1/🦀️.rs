@@ -1,21 +1,25 @@
 //! 🧑‍🏭️ Creation coordinates durable facts, one factory execution and the sole genesis publication.
 
-use crate::artifact_authority::creation::io::{artifact_creation_command_digest_v1};
-use super::*;
-use crate::artifact_authority::chunk_cas::{ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkBlobStore, ArtifactChunkCasStores};
-use crate::artifact_authority::trusted_catalog::VerifiedTrustedCatalog;
-use crate::artifact_authority::{CheckpointPublicationOrchestrator, VerifiedCheckpointPublisher};
-use crate::directory::error::{DirectoryError, DirectoryResult};
-use crate::directory::model::{SocketSessionBindingStatus, SpaceRole};
-use crate::directory::{DirectoryService, HubDirectory, HubVerifiedCheckpointPublisher};
+use semio_hub_artifact_creation::io::artifact_creation_command_digest_v1;
+
+use semio_hub_artifact_authority::chunk_cas::{ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkBlobStore, ArtifactChunkCasStores};
+use semio_hub_trusted_catalog::VerifiedTrustedCatalog;
+use semio_hub_artifact_authority::{CheckpointPublicationOrchestrator, VerifiedCheckpointPublisher};
+use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
+use semio_hub_directory_contract::model::{SocketSessionBindingStatus, SpaceRole};
+use semio_hub_directory_service::{DirectoryService, HubVerifiedCheckpointPublisher};
+use semio_hub_directory::HubDirectory;
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationCatalogV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1};
 use std::sync::Arc;
+use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ARTIFACT_CREATION_PAIR_MAX_BYTES, ARTIFACT_CREATION_STALL_BOUND_MS, ArtifactCreationAcceptanceV1, ArtifactCreationActorV1, ArtifactCreationClaimV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationExecutionV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationOperationV1, ArtifactCreationPreparedV1, ArtifactGenesisCandidate, ArtifactGenesisRequest, materialize_selected_genesis};
+use directory::os_directory::{ArtifactCheckpoint, DocumentOwner, DocumentScope};
+use semio_hub_artifact_authority::{ArtifactPair, AuthorityError, CheckpointCandidate, OperationContext, TrustedArtifactIdentity};
 
 /// 🏭️ An immutable admitted catalog and durable directory own all creation state.
 pub struct ArtifactCreationServiceV1 {
-    directory: Arc<DirectoryService>,
-    catalog: Arc<VerifiedTrustedCatalog>,
-    storage: Arc<ArtifactChunkCasStores>,
+    pub directory: Arc<DirectoryService>,
+    pub catalog: Arc<VerifiedTrustedCatalog>,
+    pub storage: Arc<ArtifactChunkCasStores>,
 }
 
 impl ArtifactCreationServiceV1 {
@@ -40,12 +44,12 @@ impl ArtifactCreationServiceV1 {
         self.catalog.artifact_creation_catalog(space_id).ok_or_else(|| DirectoryError::Conflict("selected catalog has no verified creatable artifact kind".into()))
     }
 
-    async fn read(&self, user_id: &str, space_id: &str, request_id: &str) -> DirectoryResult<ArtifactCreationOperationV1> {
+    pub async fn read(&self, user_id: &str, space_id: &str, request_id: &str) -> DirectoryResult<ArtifactCreationOperationV1> {
         let facts = self.directory.backend().read_artifact_creation(user_id, request_id).await?;
         if facts.is_empty() {
             return Err(DirectoryError::NotFound("artifact creation request".into()));
         }
-        let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&facts)?;
+        let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&facts)?;
         if operation.intent.scope.space_id != space_id || operation.intent.actor.user_id != user_id {
             return Err(DirectoryError::NotFound("artifact creation request".into()));
         }
@@ -73,7 +77,7 @@ impl ArtifactCreationServiceV1 {
         let command_sha256 = artifact_creation_command_digest_v1(space_id, &request)?;
         let existing = self.directory.backend().read_artifact_creation(&actor.user_id, &request.request_id).await?;
         if !existing.is_empty() {
-            let operation = crate::artifact_authority::creation::io::fold_artifact_creation_facts_v1(&existing)?;
+            let operation = semio_hub_artifact_creation::io::fold_artifact_creation_facts_v1(&existing)?;
             if operation.intent.command_sha256 != command_sha256 || operation.intent.scope.space_id != space_id {
                 return Err(DirectoryError::Conflict("artifact creation request already names another intent".into()));
             }
@@ -102,7 +106,7 @@ impl ArtifactCreationServiceV1 {
             accepted_at_ms,
             deadline_ms: accepted_at_ms.checked_add(ARTIFACT_CREATION_DEADLINE_MS).ok_or_else(|| DirectoryError::Conflict("artifact creation deadline overflows".into()))?,
         };
-        crate::artifact_authority::creation::io::validate_artifact_creation_intent_v1(&intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_intent_v1(&intent)?;
         match self.directory.backend().claim_artifact_creation(&intent).await? {
             ArtifactCreationClaimV1::Accepted(operation) => Ok(ArtifactCreationAcceptanceV1 { status: operation.status(), execution: Some(ArtifactCreationExecutionV1 { intent: operation.intent }) }),
             ArtifactCreationClaimV1::Existing(operation) => Ok(ArtifactCreationAcceptanceV1 { status: operation.status(), execution: None }),
@@ -210,12 +214,12 @@ impl ArtifactCreationServiceV1 {
         let mut limits = context.limits();
         limits.max_pair_bytes = limits.max_pair_bytes.min(ARTIFACT_CREATION_PAIR_MAX_BYTES as u64);
         let bounded = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, limits, context.control).map_err(authority_error)?;
-        let candidate = match ValidatingCanonicalArtifactAuthority::new(self.catalog.clone()).materialize_genesis(ArtifactGenesisRequest { scope: intent.scope.clone(), kind_id: intent.request.kind_id.clone() }, &bounded).await {
+        let candidate = match materialize_genesis(self.catalog.as_ref(), ArtifactGenesisRequest { scope: intent.scope.clone(), kind_id: intent.request.kind_id.clone() }, &bounded).await {
             Ok(candidate) => candidate,
             Err(error) => return self.terminal(&intent, matches!(error, AuthorityError::Cancelled), &format!("genesis materialization failed: {error}"), context).await,
         };
         let prepared = ArtifactCreationPreparedV1 { descriptor: candidate.descriptor, checkpoint: candidate.candidate.checkpoint, pack: candidate.candidate.pair.pack, spr: candidate.candidate.pair.spr };
-        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, &intent)?;
         let append = ArtifactCreationFactAppendV1 {
             actor: intent.actor.clone(),
             space_id: intent.scope.space_id.clone(),
@@ -254,7 +258,7 @@ impl ArtifactCreationServiceV1 {
             return self.terminal(intent, false, "the selected catalog no longer matches the prepared intent", context).await;
         }
         let prepared = operation.prepared.as_ref().ok_or_else(|| DirectoryError::Conflict("creation has no prepared bytes".into()))?;
-        crate::artifact_authority::creation::io::validate_artifact_creation_prepared_v1(&prepared, intent)?;
+        semio_hub_artifact_creation::io::validate_artifact_creation_prepared_v1(&prepared, intent)?;
         let publisher = GenesisPublisher { owner: self, intent, prepared, authority };
         let candidate = CheckpointCandidate { checkpoint: prepared.checkpoint.clone(), pair: ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() } };
         match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.storage.clone()), publisher).publish_candidate(candidate, context).await {
@@ -309,4 +313,15 @@ impl<A: ArtifactCreationCommitAuthorityV1> VerifiedCheckpointPublisher for Genes
         drop(lease);
         result
     }
+}
+
+/// 🌱️ Builds one private zero-history candidate from the catalog's unambiguous creation selection without publishing or applying a domain edit.
+pub async fn materialize_genesis(catalog: &VerifiedTrustedCatalog, request: ArtifactGenesisRequest, context: &OperationContext<'_>) -> Result<ArtifactGenesisCandidate, AuthorityError> {
+    context.checkpoint()?;
+    let selected = catalog.artifact_creation_selection(&request.kind_id).ok_or_else(|| AuthorityError::Catalog("creation kind has no unambiguous verified editor".into()))?;
+    let identity = TrustedArtifactIdentity {
+        plugin_id: selected.package.plugin_id.clone(), package_id: selected.package.package_id.clone(), version: selected.package.version.clone(), package_hash: selected.package.component_sha256.clone(),
+        artifact_kind: selected.artifact.kind.clone(), artifact_schema: selected.artifact.schema.clone(), pack_schema_hash: selected.artifact.pack_schema_hash.clone(),
+    };
+    materialize_selected_genesis(catalog, request, identity, selected.parent_dialect.clone(), context).await
 }

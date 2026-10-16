@@ -1,0 +1,32 @@
+# ALL20 Settlement Reuse Inspection
+
+This is read-only Source and existing-log analysis while Root's genuine Original20-minute producer96134 remains active. No inference invocation, cache census, physical reader, write, diagnostic run or Source change was performed. Counts below describe one finite log snapshot and can advance afterward.
+
+## Observed Retry
+
+The first candidate logged2120 starts and2120 completions. Its settlement round0 reported contradictory observations for the actual OS/flow/geometry/Rust Cargo.toml path. The following candidate declares2127 projects. At the inspected snapshot it had165 start rows and157 completions;8 jobs were consequently outstanding in that snapshot. All157 completed names were also in the first candidate;46 had reported elapsed≤20ms and77 exceeded1000ms. Examples: cad-cad-rs13,358→33,353ms, wfc-grid2d-rs14,581→20,442ms, wfc-grid3d-rs14,741→19,802ms. These are concurrent per-job elapsed values, not CPU or additive wall-time measurements.
+
+The first section contains476,867 build:command-source-imports progress records; the current retry section contains60,451. These are actual existing records. They do not prove every import was parsed again: the same progress checkpoint is also invoked while validating memoized computations, including a forced checkpoint on a validated hit. No cache-hit/recompute counter is emitted in these logs.
+
+## Exact Reuse Boundaries
+
+observation/🟨️.mjs settleObservedComputationV1 reruns its compute callback after the conflict, with a NEW nested observations map, captured-source map and inference-validation scope. It does not clear the process-level projectImages map. emojiProjectJsonNodes therefore reconstructs current catalog/native owners, candidate manifests and project jobs for the whole round, and again schedules every current project through its bounded workers. Its start/completion rows surround this entire operation, including a possible valid cached image; they are not cache-miss events.
+
+observeProjectInferenceV1 first compares the retained in-process image identity, then validates every retained input fact against the new round. When both hold it inherits those current facts, restores the original publication reference and returns the retained JSON without running project assembly. Otherwise it checks the persisted inference record with digest/result-hash/current observations and only then invokes assembly if necessary. Thus a fresh round may reuse unchanged first-pass project results, but cannot bypass current validation or omit newly discovered projects.
+
+The identity includes the sealed implementation authority, contracts, registry digest, native command-input revision, the project's actual native/component assembly authority, root, authored project JSON and selected targets. The changed geometry Cargo fact and seven additional current projects are established by the log; these logs do not expose which individual image failed its key/fact validation, so no assertion is made that one particular key invalidated all native projects.
+
+Each emojiProjectJsonNodes invocation also creates NEW script-input maps (files, closures, commandDependencies) and NEW native discovery maps. nativeCommandInputs runs before project assembly and computes the Cargo script import closure with this round's new script cache. Per-project cached images can survive across rounds, while those per-construction memo maps are intentionally recreated. The lower observed analysis/record stores may reuse exact Source-derived images, subject to their currentness checks.
+
+## Scope of Conclusion
+
+The current retry revisits the full candidate/job inventory and fresh round validation; it is not an unconditional cold recompile of every project. It can reuse valid first-pass images, but the current log already establishes substantial command-source checkpoint work and long elapsed jobs alongside very fast jobs. The evidence does not predict whether this candidate will finish within its unchanged Original deadline or justify skipping validations, caching authority across rounds, changing the deadline or editing Source during the active producer.
+
+
+## Trace-Only Environment Consumption
+
+A repository Source search (excluding generated output, managed caches, node_modules, Git and compiler outputs) found the production flag only in graph/🟦️.ts and graph/inference/🟨️.mjs. Every current condition tests SEMIO_BUILD_TRACE_AUTHORITY==="true" around console.error diagnostics: original inference error details, invalidated inference/completed membership/stale facts, selected-owner stage detail, settlement-round detail, and project start/completion timing. Setting it false or omitting it removes those diagnostics; the actual inference calls, source-fact validations, membership checks, failure propagation, Source hashes, retry decisions and Original checks remain outside these conditions.
+
+The current qualifier records the value in launch metadata and forwards the real environment. Its active ALL child uses the exact received original; the older phase-wrapper branch is not active. Its parent watches only stderr lines prefixed [script], parses actual command/stage progress, and enforces its completed-invalidation guard on build:refresh. That guard does not depend on [DEBUG] trace lines. Production settlement still awaits build:settle progress outside the trace conditional. The normal yieldInferenceV1/advanceScriptInvocation path still publishes and yields with original checks, including build:command-source-imports. Owned-command onProgress is its independent10-second native progress source, also unrelated to this flag.
+
+Consequently trace=false preserves the inspected current authority/currentness/guard semantics while reducing only optional diagnostic output. It does NOT remove the large Source-import progress stream. At the measured finite log snapshot, total file bytes59,841,255; [DEBUG] rows4,971/987,357 bytes including LF; [script] rows607,038/58,853,898 bytes, including600,523 command-source-import records. Some DEBUG records are unconditional qualifier messages, so even the entire987,357-byte DEBUG total is an upper bound on this flag's savings. No elapsed-performance prediction follows from these byte counts. A future fresh Original may omit verbose trace, but this cannot relabel the existing attempt or bypass its original deadline/validation. No Source edits or execution were performed.

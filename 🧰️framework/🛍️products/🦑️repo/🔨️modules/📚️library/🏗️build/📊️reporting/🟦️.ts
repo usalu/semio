@@ -1,3 +1,4 @@
+import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {randomBytes,createHash} from "node:crypto";
 import {join} from "node:path";
 import {mkdir,open,rename,rm,lstat,readdir,readFile} from "node:fs/promises";
@@ -17,7 +18,7 @@ export interface RepositoryBuildReportV1{readonly path:string;readonly digest:st
 /** 📝️ Publishes finite JSON under exclusive custody, then retains its original reader callback. */
 export async function withRepositoryBuildReportV1<T>(workspace:string,name:string,value:unknown,invocation:ScriptInvocation,body:(artifact:RepositoryBuildReportV1)=>Promise<T>):Promise<T>{
  name=repositoryBuildReportNameV1(name);const encoded=JSON.stringify(value,null,2);if(encoded===undefined)throw Error("JSON build report value required");const bytes=encoded+"\n";if(validateJsonSchemaSubset(schema.definitions.Policy,policy).length||Buffer.byteLength(bytes)>policy.maximumReportBytes)throw Error("Build report exceeds16MiB limit");
- return withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,async store=>{
+ return withRepositoryCacheStoreV1(workspace,"diagnostics",invocation,createIssuedResourceControlV1(invocation,"cache:store-entry",0),async store=>{
   const directory=requireNativeStoragePathV1(store.root,join(store.root,"reports")),path=requireNativeStoragePathV1(store.root,join(directory,name)),leases=join(workspace,".cache/b/l/m/data"),resource="repository-build-reports",writer=await acquireResourceLease({directory:leases,resource,mode:"exclusive",signal:store.control.signal,control:store.control}),temporary=requireNativeStoragePathV1(store.root,path+"~"+randomBytes(4).toString("hex"));
   try{
    await store.recheck();await mkdir(directory,{recursive:true});const rows:{path:string;bytes:number;stamp:number}[]=[];

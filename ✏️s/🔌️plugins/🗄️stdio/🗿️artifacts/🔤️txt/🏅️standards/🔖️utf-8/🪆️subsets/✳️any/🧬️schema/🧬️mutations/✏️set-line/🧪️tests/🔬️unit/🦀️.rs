@@ -1,6 +1,7 @@
+use crate::TxtSnapshot;
 use crate::apply_mutation;
-use super::super::{TxtMutation};
-use super::*;
+use crate::standards::v_utf_8::subsets::any::schema::mutations::{TxtMutation};
+use crate::standards::v_utf_8::subsets::any::schema::mutations::set_line::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 

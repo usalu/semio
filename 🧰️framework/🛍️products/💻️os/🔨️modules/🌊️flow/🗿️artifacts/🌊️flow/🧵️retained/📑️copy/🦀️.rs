@@ -1,10 +1,12 @@
 //! 🗿️ Retained typed scene copying under an immutable rooted borrow witness.
 
+use semio_framework_artifact_flow_flow_document::*;
+
 /// 📑️ Selects the next child-copy task for a rooted record.
 type RecordCopyTaskFactory<T> = fn(&Rooted<T>, usize) -> Option<Box<dyn Task>>;
 type RecordCopyTaskQuote<T> = fn(&Rooted<T>, usize) -> Option<TaskAdmission>;
 
-use super::{FlowOwner as Owner, FlowRetirement as Retirement};
+use crate::retained::{FlowOwner as Owner, FlowRetirement as Retirement};
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use std::mem::{ManuallyDrop,size_of,size_of_val};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
@@ -604,4 +606,8 @@ impl<R:RetireOwned+Sync> semio_framework_job::OriginalSnapshotIntake<FlowHostSna
 #[cfg(test)]
 #[path = "🧪️tests/📑️copy/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🦀️.rs"]
+mod retained_laws;
 //#endregion 🧪️CopyLaws

@@ -1,3 +1,16 @@
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {buildModePolicy} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {buildComponentClosureV1} from "../../🏗️build/🧩️driver-stages/🟦️.ts";
+import {withComponentModelV1,type ComponentModelV1} from "../../📦️model/👓️reading/🟦️.ts";
+import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import {componentStageTargetV1} from "../🧩️component-stage/🟦️.ts";
+import {buildDescriptorEmitterV1,withDescriptorEmitterV1,withDescriptorEmitterTaskV1} from "../🛠️emitter/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -313,72 +326,23 @@ export async function stageFreshComponentInputs<T>(
   }
 }
 
-/** 🧬️ Builds and stages verified inputs, requiring derivation before its private raw owner retires. */
-export async function produceFreshComponentV1<T>(
-  repoRoot: string,
-  request: FreshComponentRequestV1,
-  freshTargetRoot: string,
-  packageStageRoot: string,
-  control: FreshProcessControlV1,
-  derive: (lease: FreshComponentLeaseV1) => Promise<T>,
-): Promise<FreshComponentProducedV1<T>> {
-  parseFreshProcessPolicyV1(control.process);
-  if (typeof derive !== "function") throw new Error("fresh component derivation callback is required");
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.pluginId) || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.componentPackageId) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(request.cargoPackage) || !/^[a-z0-9_]+\.wasm$/u.test(request.outputName))
-    throw new Error("fresh component request identity is not canonical");
-  const targetRoot = freshRoot(freshTargetRoot, "fresh component target root");
-  const stageRoot = freshRoot(packageStageRoot, "fresh component stage root");
-  if (freshPathIsWithin(targetRoot, stageRoot) || freshPathIsWithin(stageRoot, targetRoot)) throw new Error("fresh component target and stage roots must be disjoint");
-  if (control.diagnosticsRoot && (freshPathIsWithin(targetRoot, resolve(control.diagnosticsRoot)) || freshPathIsWithin(stageRoot, resolve(control.diagnosticsRoot)))) throw new Error("fresh process evidence must outlive target and stage cleanup");
-  const workRoot = join(targetRoot, ".semio-fresh-component-work");
-  mkdirSync(workRoot, { mode: 0o700 });
-  const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0" });
-  const total = 8;
-  let componentBytes: Uint8Array | undefined, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>> | undefined;
-  try {
-    const cargo = ["build", "-p", request.cargoPackage, "--lib", "--target", "wasm32-wasip2", "--profile", request.componentProfile];
-    const componentInvocation = await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
-    const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
-    if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
-    freshWasmArtifactSize(cargoComponent, SHIPPED_COMPONENT_MAX_BYTES, "fresh WASIp2 component");
-    componentBytes = readStableBuildFile(cargoComponent, SHIPPED_COMPONENT_MAX_BYTES, { remaining: SHIPPED_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot", 1, total));
-    if (!componentBytes.byteLength) throw new Error("fresh component is empty");
-    const component = join(workRoot, "component.wasm");
-    freshStage(componentBytes, component, control, "snapshot", 1, total);
-    const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
-    if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
-    const witPath = join(workRoot, "component.wit");
-    await freshRun("node", [jco, "wit", component, "--output", witPath], repoRoot, env, control, "inspect-wit", 1, total);
-    const wit = readFileSync(witPath, "utf8");
-    if (Buffer.byteLength(wit) > SHIPPED_COMPONENT_MAX_BYTES) throw new Error("fresh component WIT exceeds its fixed boundary");
-    const witExports = [...wit.matchAll(/\bexport\s+([^;]+);/gu)]
-      .map((match) => {
-        const token = match[1]!.trim();
-        const iface = token.match(/\/([a-z][a-z0-9-]*)@/u)?.[1];
-        return iface ?? token;
-      })
-      .sort();
-    // 🧬️ `codec` joined `world actor`'s exports with the creation-path codec surface (ticket
-    // 26/09/18): a component without it cannot answer `pack-schema-hash`/`genesis`/`print-mirror`/
-    // `apply-ops`, so a hub that links no Rust codec for its package can neither create nor edit its
-    // documents. Requiring it here is the earliest point the absence is visible — at the built
-    // artifact, before a descriptor or a catalog generation is derived from it.
-    if (!["checkpoint", "codec", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
-    const descriptorInvocation = await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
-    const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
-    const descriptorRoot = join(workRoot, "descriptor");
-    mkdirSync(descriptorRoot, { mode: 0o700 });
-    await freshRun(emitter, ["describe", component, "--out", descriptorRoot], repoRoot, env, control, "emit-descriptor", 4, total);
-    const descriptorPack = join(descriptorRoot, DESCRIPTOR_PACK_FILENAME);
-    const descriptorJson = join(descriptorRoot, DESCRIPTOR_JSON_FILENAME);
-    snapshot = await captureFreshComponentInputs(repoRoot, request, componentBytes, { descriptorPack, descriptorJson }, control);
-    if (!componentInvocation || !descriptorInvocation) throw new Error("fresh component compiler observations are missing");
-    const componentReceipt = freshComponentReceiptV1(repoRoot, request, snapshot, componentInvocation, cargoDirectories(repoRoot, env).build, resolve(env.CARGO_HOME ?? join(homedir(), ".cargo")));
-    const produced = await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, componentReceipt, control, derive);
-    return { ...produced, compilerInvocations: [componentInvocation, descriptorInvocation] };
-  } finally {
-    componentBytes?.fill(0);
-    snapshot?.descriptorBytes.fill(0);
-    rmSync(workRoot, { recursive: true, force: true });
-  }
+export interface FreshCompilerObservationV1{readonly kind:"component"|"emitter";readonly pass:string;readonly bytes:Uint8Array;readonly sha256:string}
+export interface FreshComponentEvidenceV1{readonly control:CompilerAdmissionControl;readonly observations:readonly FreshCompilerObservationV1[];withEmitter<T>(body:(tool:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<T>):Promise<T>}
+export type FreshComponentProductionControlV1=FreshBuildControlV1&Readonly<{invocation:ScriptInvocation;compiler:CompilerAdmissionControl}>;
+/** 🧬️ Consumes a genuinely fresh canonical model and real compiler observations before the driver cleans its generation. */
+export async function produceFreshComponentV1<T>(repoRoot:string,request:FreshComponentRequestV1,packageStageRoot:string,control:FreshComponentProductionControlV1,derive:(lease:FreshComponentLeaseV1,evidence:FreshComponentEvidenceV1)=>Promise<T>):Promise<FreshComponentProducedV1<T>>{
+ requireIssuedResourceControlInvocationV1(control.compiler,control.invocation);const authority=readNativeCallerAuthorityV1(control.invocation.capabilities),mode=authority.original.buildMode,target=componentStageTargetV1(repoRoot,join(repoRoot,componentSourceManifestV1(repoRoot,request.cargoPackage)));
+ if(repoRoot!==authority.repositoryRoot||request.componentProfile!==buildModePolicy(mode).cargoProfile||target.pluginId!==request.pluginId||target.packageId!==request.componentPackageId||target.packageName!==request.cargoPackage||request.outputName!==request.cargoPackage.replaceAll("-","_")+".wasm"||typeof derive!=="function")throw Error("Exact actual Original fresh component selection required");const stage=freshRoot(packageStageRoot,"fresh component stage root");await buildDescriptorEmitterV1(repoRoot,control.invocation,control.compiler);let completed=false,produced:FreshComponentProducedV1<T>|undefined;
+ await withDescriptorEmitterV1(repoRoot,control.invocation,control.compiler,emitter=>withDescriptorEmitterTaskV1(emitter,control.invocation,tool=>buildComponentClosureV1(repoRoot,new Set([request.pluginId]),{invocation:control.invocation,facet:"model",network:repositoryCargoNetworkV1(control.invocation,repoRoot),control:tool.control,generation:"fresh",maximumObservationBytes:authority.transport.maximumBytes,consume:async(outcome,phase)=>{
+  const observations:FreshCompilerObservationV1[]=[],maximum=authority.transport.maximumBytes;let retained=0;
+  try{for(const row of outcome.observations){const bytes=await readArtifactBytesV1(row.path,maximum-retained,phase.signal);retained+=bytes.length;const record=decodeCargoProvenanceV1(new TextDecoder("utf-8",{fatal:true}).decode(bytes));if(record.status!==0||record.cancelled)throw Error("Actual successful fresh compiler observation required");observations.push(Object.freeze({kind:"component",pass:row.pass,bytes,sha256:createHash("sha256").update(bytes).digest("hex")}));}const emitterBytes=new TextEncoder().encode(tool.observation);if(emitterBytes.length>maximum-retained||!observations.length)throw Error("Finite actual component and emitter observations required");observations.push(Object.freeze({kind:"emitter",pass:"descriptor-emitter",bytes:emitterBytes,sha256:createHash("sha256").update(emitterBytes).digest("hex")}));
+   await withComponentModelV1(repoRoot,control.invocation,{version:1,mode,pluginId:request.pluginId,cratePath:target.cratePath},phase,async model=>{const componentBytes=await readArtifactBytesV1(model.component,SHIPPED_COMPONENT_MAX_BYTES,model.control.signal);let snapshot:Awaited<ReturnType<typeof captureFreshComponentInputs>>|undefined;try{snapshot=await captureFreshComponentInputs(repoRoot,request,componentBytes,{descriptorPack:model.descriptorPack,descriptorJson:model.descriptor},control);await model.recheck();const evidence:FreshComponentEvidenceV1=Object.freeze({control:model.control,observations:Object.freeze(observations),withEmitter:<R>(body:(actual:Readonly<{path:string;sha256:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<R>)=>withDescriptorEmitterTaskV1(emitter,control.invocation,body)});produced=await stageFreshComponentInputs(request,snapshot,stage,await freshComponentWitExportsV1(repoRoot,control.invocation,model,control),model.receipt,control,lease=>derive(lease,evidence));completed=true;await model.recheck();}finally{componentBytes.fill(0);snapshot?.descriptorBytes.fill(0);}});await tool.recheck();
+  }finally{for(const row of observations)row.bytes.fill(0);}
+ }})));
+ if(!completed||!produced)throw Error("Actual fresh model consumer did not complete");return produced;
 }
+
+function componentSourceManifestV1(repoRoot:string,packageName:string):string{const rows=findPluginCargoFiles(repoRoot).map(path=>parseComponentSourceOwnerV1(path,repoRoot)).filter(row=>row.packageName===packageName);if(rows.length!==1)throw Error("One declared component source owner required");return join(rows[0]!.cratePath,"Cargo.toml");}
+
+async function freshComponentWitExportsV1(repoRoot:string,invocation:ScriptInvocation,model:ComponentModelV1,control:FreshBuildControlV1):Promise<readonly string[]>{
+ const jco=resolveWorkspaceBin("@bytecodealliance/jco",repoRoot);if(!jco)throw Error("Declared component inspector required");return withRepositoryCacheStoreV1(repoRoot,"products",invocation,model.control,(store,storePhase)=>withArtifactScratchV1({workspace:repoRoot,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:model.intent.mode,owner:"browser/fresh-wit/"+model.intent.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{const path=join(sink.directory,"component.wit");await captureOwnedCommandV1(process.execPath,[jco,"wit",model.component,"--output",path],repoRoot,{control:sink.control,env:scriptInvocationEnvironment(invocation,process.env)});const bytes=await readArtifactBytesV1(path,SHIPPED_COMPONENT_MAX_BYTES,sink.control.signal),wit=new TextDecoder("utf-8",{fatal:true}).decode(bytes),exports=[...wit.matchAll(/\bexport\s+([^;]+);/gu)].map(match=>match[1]!.trim().match(/\/([a-z][a-z0-9-]*)@/u)?.[1]??match[1]!.trim()).sort();if(!["checkpoint","codec","describe","jobs","reactor"].every(name=>exports.includes(name)))throw Error("Fresh component omits a required actual actor export");freshCheckpoint(control,"inspect-wit",6,8);return Object.freeze(exports);})));}

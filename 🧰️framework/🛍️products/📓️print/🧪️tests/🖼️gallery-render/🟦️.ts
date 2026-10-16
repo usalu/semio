@@ -1,3 +1,4 @@
+import{withPrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import type { GalleryRenderEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧬️schema/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -42,9 +43,7 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({ projection: evidence(ctx).variants }),
       /** 🎯️ The library half: the matrix rebuilt now, measured the same way. */
       subject: async (ctx: AdapterContext) => {
-        const measured: Record<string, unknown> = {};
-        for (const variant of printGalleryMatrix()) measured[variant.id] = await measurePrintGalleryVariant(variant);
-        return { projection: measured };
+        return withPrintExecutionV1({workspace:ctx.repoRoot,invocation:ctx.invocation,phaseControl:ctx.phaseControl,kind:"probe"},async execution=>{const measured:Record<string,unknown>={};for(const variant of printGalleryMatrix())measured[variant.id]=await measurePrintGalleryVariant(execution,variant);return{projection:measured};});
       },
     },
     "family-option-distinctness": {

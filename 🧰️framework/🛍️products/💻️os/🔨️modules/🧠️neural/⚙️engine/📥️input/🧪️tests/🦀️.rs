@@ -1,5 +1,5 @@
 use super::*;
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::registry::tests::observe_ownership(operation)}
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_os_kernel_neural_engine_model::testkit::observe_ownership(operation)}
 
 #[test]
 fn original_budgeted_input_merge_preserves_shared_payloads_and_physical_receipts(){

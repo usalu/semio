@@ -384,10 +384,9 @@ mod tests {
 
     #[test]
     fn public_interactive_route_has_no_batch_or_whole_input_capability() {
-        let source = include_str!("../../🦀️.rs");
-        let start = source.find("pub mod codec_abi {").unwrap();
-        let tests = source[start..].find("//#region 🧪️Tests").unwrap() + start;
-        let production = &source[start..tests];
+        let source = include_str!("../../📡️codec-abi/🦀️.rs");
+        let tests = source.find("//#region 🧪️Tests").unwrap();
+        let production = &source[..tests];
         for forbidden in ["UiForbidden", "ArtifactPack", "ArtifactDsl", "decode_pack(", "parse_dsl(", "decode_workflow_fixture_pack", "parse_workflow_fixture_dsl"] {
             assert!(!production.contains(forbidden), "public route contains forbidden batch edge {forbidden}");
         }

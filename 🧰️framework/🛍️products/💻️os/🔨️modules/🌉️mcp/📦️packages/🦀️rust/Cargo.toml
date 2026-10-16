@@ -10,6 +10,11 @@ description = "Semio OS MCP gateway — dual-era JSON-RPC/MCP protocol core over
 role = "product"
 id = "os-mcp"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
 [lints]
 workspace = true
 
@@ -36,85 +41,47 @@ name = "compile_cancellation_law"
 path = "../../🏠️workspace/🧪️tests/⏱️compile-cancellation-law/🦀️.rs"
 
 [dependencies]
-semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-artifact-reference = { workspace = true }
-semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-# 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — closes
-# `GatewayBackend`'s implementor set (`NullBackend`, `HeadlessWorkspace`, `Arc<HeadlessWorkspace>`)
-# into a real enum instead of `Box<dyn GatewayBackend>`. Same dependency shape `🔌️plugin`'s and
-# `🛢️db`'s own Cargo.toml files already use.
-semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-# 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P2-catalog: the ONLY facet in
-# this crate that depends on `semio-framework` is `🗂️catalog` (it compiles `CapabilityDefinition`s
-# FROM `semio_framework::manifest::{PackageDescriptor, PluginManifest, AppDefinition, …}` — real types
-# P3-manifest-schema landed). Every other facet (protocol/transport/🐙️handles/audit/bridge/errors/schema)
-# stays framework-free, per D8/`📓️terra-P1a-report.md` §5 — this dependency does not change that.
-semio-framework = { workspace = true }
-semio-framework-async = { workspace = true }
-semio-framework-schema = { path = "../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-# 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
-# root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `../../📦️packages/🦀️rust/🦀️.rs` lines 15-16, 91-92);
-# they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️.rs` itself imports them from
-# (its own `use ui_wgpu::wgpu::{…, LocalizedLabel, …, SurfaceKind, …};`). `🧫️fixtures` constructs real
-# `AppDefinition`/`WindowKindDefinition` values and needs both directly, so this crate depends on the
-# SAME workspace-aliased crate manifest does, under its real Rust name (`semio_framework_ui`) — not a
-# new external dependency, an existing internal one already one hop away.
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
-schemars = "0.8.22"
-serde = { workspace = true }
-serde_json = { workspace = true }
-# 🌐️ Streamable HTTP transport (P1b) — same version/feature style as 🌎️hub's own Cargo.toml, the
-# repo's other axum+tokio product crate.
-axum = { version = "0.8", features = ["ws"] }
-tokio = { workspace = true, features = ["full"] }
-# 🌊️ P1c: `SinkExt`/`StreamExt` (`WebSocket::split`) for the REAL `/bridge` connection loop
-# (`🧵️bridge/🦀️.rs`'s `mod server::handle_socket`) — promoted from dev-only (P1b's websocket
-# TEST used it) to a real dependency now that production code uses it too. Same version hub already
-# depends on for its own websocket endpoints.
-futures = "0.3"
-# 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace: the
-# `🏠️workspace` facet's real `store::sync::ArtifactHost`/`PersistenceBinding` binding layer — the
-# `sync` feature is exactly what mounts `🏪️store/🔄️sync/🦀️.rs` into this crate
-# (`💻️os/📦️packages/🦀️rust/🦀️.rs`'s own `#[cfg(feature = "sync")] pub mod sync;`), same crate
-# `🏃️run`'s own Cargo.toml depends on. Relative path identical to `🏃️run`'s (same directory depth:
-# both are `🔨️modules/<X>/📦️packages/🦀️rust`).
+semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
-semio-framework-os-services = { workspace = true }
-# 🎫️ P7-headless-workspace: `semio_framework_actor::ActorId` (aliased `RuntimeActorId` everywhere
-# else in this tree) — needed directly because `semio-framework-plugin-host` only `use`s it
-# internally, never `pub use`s it (verified: only `PackageId`/`PackageHash`/`PackageRef` are
-# re-exported from that crate).
-semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
-# 🎫️ P7-headless-workspace: real plugin actor activation (`WasmtimeRuntime`/`GuestRuntime`,
-# `OpeningResolver`, `AppRouter`) — native-only, mirrors `🏃️run`'s own
-# `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` gate exactly (this crate never targets
-# wasm32 itself — it is a stdio/HTTP server binary — but the gate is kept for consistency with the
-# crate `semio-framework-plugin-host` itself requires it from).
-framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-wire = { path = "../../📡️wire/📦️packages/🦀️rust" }
+semio-framework-os-mcp-schema = { path = "../../📐️schema-contract/📦️packages/🦀️rust" }
+semio-framework-os-mcp-catalog = { path = "../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust" }
+semio-framework-os-mcp-port = { path = "../../🔌️channel-port/📦️packages/🦀️rust" }
+semio-framework-os-mcp-bridge = { path = "../../🪢️bridge-session/📦️packages/🦀️rust" }
+semio-framework-os-mcp-consent = { path = "../../🙋️consent/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packages/🦀️rust" }
+semio-framework-os-mcp-inference-hub = { path = "../../🌐️inference-hub/📦️packages/🦀️rust" }
+semio-framework-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀️rust" }
+semio-framework-os-mcp-shell-channel = { path = "../../🎛️shell-channel/📦️packages/🦀️rust" }
+semio-framework-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust" }
+semio-framework-os-mcp-dispatch = { path = "../../🪝️action-dispatch/📦️packages/🦀️rust" }
+semio-framework-os-mcp-workspace = { path = "../../🪟️workspace-host/📦️packages/🦀️rust" }
+semio-framework-os-mcp-tools-inference = { path = "../../🔭️inference-tools/📦️packages/🦀️rust" }
+semio-framework-os-mcp-tools-gateway = { path = "../../🧳️gateway-tools/📦️packages/🦀️rust" }
+semio-framework-os-mcp-server = { path = "../../🎯️server/📦️packages/🦀️rust" }
+semio-framework-os-mcp-http-transport = { path = "../../📮️http-transport/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-plugin-guest-contract = { workspace = true }
-# 🎫️ ticket 26/09/18 slice M10: `document_backbone_binding` — the host↔guest CONTROL-PLANE codec for
-# binding a guest instance's document backbone (`DocumentBackboneBindingCommandV1::encode` +
-# `require_document_backbone_binding_receipt_v1`). A guest publishes `MessageEndpoint::Backbone`
-# effects only once a host has bound one, so a gateway that wants its agent's committed envelopes to
-# leave the process has to send that command. The wgpu renderer — the other real host — links this
-# crate for exactly the same pair of functions (`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`
-# `bind_document_backbone`); writing a second copy of the wire shape here instead would be the
-# duplicate codec this repo forbids.
 semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
-semio-framework-trace.workspace = true
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
-# 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
-# version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).
-tokio-tungstenite = "0.26"
+framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework = { workspace = true }
+semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-async = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-os-mcp-foundation = { path = "../../🧱️foundation/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-port = { path = "../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-bridge-codec = { path = "../../🧶️bridge-codec/📦️packages/🦀️rust" }
+semio-framework-os-mcp-probe-document = { path = "../../🔬️probe-document/📦️packages/🦀️rust" }
+semio-framework-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }

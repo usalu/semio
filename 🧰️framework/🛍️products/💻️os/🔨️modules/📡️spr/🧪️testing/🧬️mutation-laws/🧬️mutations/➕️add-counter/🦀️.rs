@@ -1,7 +1,7 @@
 //! ➕️ Lawful signed counter addition used by the testkit's own law tests.
 
 use super::super::{CounterDiff, CounterMutation};
-use crate::os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
+use semio_framework_os_spr::{MutationKind, MutationOutcome, OpText, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -25,8 +25,8 @@ impl MutationKind<i64, CounterMutation> for AddCounter {
     
     })())
 }
-    fn label(&self) -> crate::LocalizedLabel {
-        crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }
 }
 //#endregion ⚙️Behavior

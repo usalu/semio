@@ -9,10 +9,6 @@
 //! This crate's `FrontierSummary`/`frontier_delta` are the runtime/wire twin of
 //! `protocol_history`'s durable-log-derived pair — deliberately kept separate, see `🔖️Frontier`.
 
-#[path = "🔀️transition/🦀️.rs"]
-pub mod transition;
-pub use transition::*;
-
 //#region 🔖️Envelope
 // Moved from framework/core L6246 (MutationEnvelope), L6121 (ArtifactDiff), L6137
 // (InverseMutation). The frozen contract's field shapes are simpler than the framework-core
@@ -50,16 +46,16 @@ pub use transition::*;
 /// exactly as the author does.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MutationEnvelope {
-    pub mutation_id: crate::ids::MutationId,
-    pub document_id: crate::ids::ArtifactId,
-    pub actor: crate::ids::ActorId,
-    pub dependencies: Vec<crate::ids::MutationId>,
-    pub observed: Option<crate::ids::MutationId>,
+    pub mutation_id: semio_framework_replication_ids::MutationId,
+    pub document_id: semio_framework_replication_ids::ArtifactId,
+    pub actor: semio_framework_replication_ids::ActorId,
+    pub dependencies: Vec<semio_framework_replication_ids::MutationId>,
+    pub observed: Option<semio_framework_replication_ids::MutationId>,
     pub target: Vec<String>,
     pub diff: ArtifactDiff,
     pub inverse: InverseMutation,
-    pub timestamp: crate::ids::HybridLogicalTimestamp,
-    pub transaction: Option<crate::mutation::TransactionRef>,
+    pub timestamp: semio_framework_replication_ids::HybridLogicalTimestamp,
+    pub transaction: Option<semio_framework_replication_edit::TransactionRef>,
     pub verb: Option<String>,
     /// 🌿️ The alternative the operation was authored on. `None` is the trunk.
     pub line: Option<String>,
@@ -71,7 +67,7 @@ pub struct MutationEnvelope {
 /// 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactDiff {
-    pub schema: crate::ids::SchemaId,
+    pub schema: semio_framework_replication_ids::SchemaId,
     pub payload: Vec<u8>,
 }
 
@@ -81,7 +77,7 @@ pub struct ArtifactDiff {
 /// ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq)]
 pub struct InverseMutation {
-    pub schema: crate::ids::SchemaId,
+    pub schema: semio_framework_replication_ids::SchemaId,
     pub payload: Vec<u8>,
 }
 
@@ -398,7 +394,7 @@ impl std::fmt::Display for MutationDagInsertRejected {
 #[derive(Debug, PartialEq)]
 pub struct MutationDagSeedRejected {
     pub error: MutationDagError,
-    pub mutation_id: crate::ids::MutationId,
+    pub mutation_id: semio_framework_replication_ids::MutationId,
 }
 
 impl std::fmt::Display for MutationDagSeedRejected {
@@ -521,7 +517,7 @@ impl MutationDag {
     /// stays `Pending` forever, since `insert` only recognizes a dependency as satisfied through
     /// this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer adopted by some
     /// other route.
-    pub fn seed_applied(&mut self, mutation_id: crate::ids::MutationId) -> Result<(), MutationDagSeedRejected> {
+    pub fn seed_applied(&mut self, mutation_id: semio_framework_replication_ids::MutationId) -> Result<(), MutationDagSeedRejected> {
         if mutation_id.0.len() > MUTATION_DAG_IDENTIFIER_BYTES {
             return Err(MutationDagSeedRejected { error: MutationDagError::IdentifierTooLong, mutation_id });
         }
@@ -582,7 +578,7 @@ impl MutationDag {
 /// No `#[serde(rename_all = …)]`, matching the `ToValue` twin's snake_case field names byte-for-byte.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FrontierSummary {
-    pub document_id: crate::ids::ArtifactId,
+    pub document_id: semio_framework_replication_ids::ArtifactId,
     pub head_edit_ordinal: u64,
     pub head_edit_id: String,
     pub last_commit_seq: u64,
@@ -644,7 +640,7 @@ pub enum TransformOutcome<Op> {
 
 /// 🧮️ Operational-transform hook: rewrites `self` so it applies cleanly after `against`
 /// (both assumed concurrent, same base). New trait — no prior `vcs`/`framework-core` equivalent.
-pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
+pub trait MutationTransform<P>: semio_framework_replication_mutation::Mutation<P> {
     fn transform(&self, against: &Self) -> TransformOutcome<Self>
     where
         Self: Sized;
@@ -683,30 +679,30 @@ pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
 /// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`inverse` work, and so
 /// there is exactly one place this chain is spelled out.
-pub fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>) -> Vec<crate::ids::MutationId> {
+pub fn mutation_ids_for_edit<P, Op: semio_framework_replication_mutation::Mutation<P>>(edit: &semio_framework_replication_edit::Edit<Op>) -> Vec<semio_framework_replication_ids::MutationId> {
     edit.forwards.iter().enumerate().map(|(index, op)| edit_operation_mutation_id(edit, index, op)).collect()
 }
 
 /// 🪪️ One operation's wire identity without materializing its edit's other identities.
-pub fn mutation_id_for_edit_operation<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>, index: usize) -> Option<crate::ids::MutationId> {
+pub fn mutation_id_for_edit_operation<P, Op: semio_framework_replication_mutation::Mutation<P>>(edit: &semio_framework_replication_edit::Edit<Op>, index: usize) -> Option<semio_framework_replication_ids::MutationId> {
     edit.forwards.get(index).map(|op| edit_operation_mutation_id(edit, index, op))
 }
 
-fn edit_operation_mutation_id<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>, index: usize, op: &Op) -> crate::ids::MutationId {
+fn edit_operation_mutation_id<P, Op: semio_framework_replication_mutation::Mutation<P>>(edit: &semio_framework_replication_edit::Edit<Op>, index: usize, op: &Op) -> semio_framework_replication_ids::MutationId {
     match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
         Some(id) => id,
         None => match op.mutation_id() {
             Some(id) => id,
-            None => crate::ids::MutationId(format!("{}#{index}", edit.id)),
+            None => semio_framework_replication_ids::MutationId(format!("{}#{index}", edit.id)),
         },
     }
 }
 
-pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::io::OpBinary>(
-    edit: &crate::mutation::Edit<Op>,
-    document_id: &crate::ids::ArtifactId,
-    schema: &crate::ids::SchemaId,
-) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+pub fn mutation_envelope_from_edit<P, Op: semio_framework_replication_mutation::Mutation<P> + semio_framework_replication_codec::OpBinary>(
+    edit: &semio_framework_replication_edit::Edit<Op>,
+    document_id: &semio_framework_replication_ids::ArtifactId,
+    schema: &semio_framework_replication_ids::SchemaId,
+) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     mutation_envelopes_from_edit_since(edit, 0, document_id, schema)
 }
 
@@ -714,12 +710,12 @@ pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::
 /// [`mutation_envelope_from_edit`]'s answer, encoding only that tail. An edit that absorbs later
 /// operations (a coalesced typing run) is announced one appended range at a time, so re-encoding its
 /// whole history per keystroke would make a long run quadratic (ticket 26/09/23 LD item 1).
-pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + crate::io::OpBinary>(
-    edit: &crate::mutation::Edit<Op>,
+pub fn mutation_envelopes_from_edit_since<P, Op: semio_framework_replication_mutation::Mutation<P> + semio_framework_replication_codec::OpBinary>(
+    edit: &semio_framework_replication_edit::Edit<Op>,
     from: usize,
-    document_id: &crate::ids::ArtifactId,
-    schema: &crate::ids::SchemaId,
-) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+    document_id: &semio_framework_replication_ids::ArtifactId,
+    schema: &semio_framework_replication_ids::SchemaId,
+) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     let mut out = Vec::with_capacity(edit.forwards.len().saturating_sub(from));
     for (index, op) in edit.forwards.iter().enumerate().skip(from) {
         let meta = edit.mutation_meta.get(index);
@@ -732,19 +728,19 @@ pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + 
             Some(actor) => actor,
             None => match op.author_id() {
                 Some(actor) => actor,
-                None => crate::ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".into())),
+                None => semio_framework_replication_ids::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".into())),
             },
         };
         let timestamp = match meta.map(|m| m.timestamp) {
             Some(ts) => ts,
             None => match op.timestamp() {
                 Some(ts) => ts,
-                None => crate::ids::HybridLogicalTimestamp::new(0, 0),
+                None => semio_framework_replication_ids::HybridLogicalTimestamp::new(0, 0),
             },
         };
         let payload = op.encode_op()?;
         let inverse_payload = match edit.inverse.get(index) {
-            Some(inv) => crate::io::OpBinary::encode_op(inv)?,
+            Some(inv) => semio_framework_replication_codec::OpBinary::encode_op(inv)?,
             None => Vec::new(),
         };
         out.push(MutationEnvelope {
@@ -773,3 +769,10 @@ pub const DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES: usize = 64;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+mod owned_retirement {
+    use super::*;
+    semio_framework_value::artifact_retire_struct!(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff, inverse, timestamp, transaction, verb, line });
+    semio_framework_value::artifact_retire_struct!(ArtifactDiff { schema, payload });
+    semio_framework_value::artifact_retire_struct!(InverseMutation { schema, payload });
+}

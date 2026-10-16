@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::v89a::subsets::any::schema::snapshot::GifColorTable, standards::v89a::subsets::any::schema::snapshot::GifDisposal, standards::v89a::subsets::any::schema::snapshot::GifFrame};
+use crate::standards::v89a::subsets::any::schema::diff::*;
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifRgb, STDIO_GIF89A_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

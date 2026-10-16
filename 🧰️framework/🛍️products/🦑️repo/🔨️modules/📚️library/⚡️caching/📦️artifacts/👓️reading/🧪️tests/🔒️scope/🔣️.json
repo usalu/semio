@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "parameters": ["options", "body"],
+  "requiredCalls": ["requireNativeStorageReservationV1", "requireIssuedResourceControlInvocationV1", "withArtifactStorageOperationV1", "withRequestedIssuedResourceControlV1", "Promise.allSettled"],
+  "exports": ["withRepositoryArtifactV1", "withRepositoryArtifactTaskV1"],
+  "maximumPending": 32,
+  "maximumEntries": 262144,
+  "maximumDepth": 64,
+  "maximumManifestBytes": 16777216,
+  "chunkBytes": 65536
+}

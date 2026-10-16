@@ -1,0 +1,171 @@
+{
+  "policy": {
+    "version": 1,
+    "maximumDescriptors": 32,
+    "auxiliaryDescriptors": 2,
+    "maximumFiles": 16384,
+    "maximumBytes": 536870912,
+    "chunkBytes": 65536,
+    "maximumManifestBytes": 1048576,
+    "maximumOwnerCharacters": 4096,
+    "maximumPendingOperations": 32,
+    "maximumPendingReads": 32,
+    "maximumEntries": 262144,
+    "maximumDepth": 64
+  },
+  "cases": [
+    {
+      "name": "value.js",
+      "accepted": true
+    },
+    {
+      "name": "nested/value.js",
+      "accepted": true
+    },
+    {
+      "name": ".semio-artifact.json",
+      "accepted": false
+    },
+    {
+      "name": ".semio-artifact.json/child",
+      "accepted": false
+    },
+    {
+      "name": "../escape",
+      "accepted": false
+    },
+    {
+      "name": "a//b",
+      "accepted": false
+    },
+    {
+      "name": "a\\b",
+      "accepted": false
+    },
+    {
+      "name": "",
+      "accepted": false
+    },
+    {
+      "name": "literal..name",
+      "accepted": true
+    },
+    {
+      "name": "a/./b",
+      "accepted": false
+    },
+    {
+      "name": "a/../b",
+      "accepted": false
+    },
+    {
+      "name": "a/",
+      "accepted": false
+    },
+    {
+      "name": "a\u2028/../b",
+      "accepted": false
+    },
+    {
+      "name": "a\u2028:b",
+      "accepted": false
+    }
+  ],
+  "manifests": [
+    {
+      "value": {
+        "version": 1,
+        "owner": "fixture",
+        "files": [
+          "a"
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "version": 1,
+        "owner": "",
+        "files": [
+          "a"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "owner": "fixture",
+        "files": [
+          ".semio-artifact.json"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "owner": "fixture",
+        "files": [
+          "a",
+          "a"
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "version": 1,
+        "owner": "fixture",
+        "files": [
+          "a"
+        ],
+        "extra": 0
+      },
+      "accepted": false
+    }
+  ],
+  "inventories": [
+    {
+      "names": [
+        "a/x",
+        "a/y"
+      ],
+      "entries": 5,
+      "directories": 2,
+      "maximumDepth": 2
+    },
+    {
+      "depth": 64,
+      "entries": 66,
+      "directories": 64,
+      "maximumDepth": 64
+    }
+  ],
+  "countCases": [
+    {
+      "value": {
+        "files": 16384,
+        "directories": 245759,
+        "maximumDepth": 64
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "files": 16384,
+        "directories": 245760,
+        "maximumDepth": 64
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "files": 1,
+        "directories": 65,
+        "maximumDepth": 65
+      },
+      "accepted": false
+    }
+  ]
+}

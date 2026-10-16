@@ -1,3 +1,7 @@
+import {buildModePolicy} from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {registryModuleDirectories} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { type CompilerAdmissionControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -52,7 +56,8 @@ const repoRoot = getWorkspaceRoot();
 
 import { ensureWasmTarget } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
-import { buildPluginCargo } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts";
+import {buildComponentClosureV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import {componentDeliverableV1,componentProfileV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 
 import { pluginFileDigest } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts";
 
@@ -62,6 +67,7 @@ import { ensureAppleDeveloperDir } from "../../../../../🧰️framework/🛍️
 
 export type TestBrowserHostStageInputV1 = Readonly<{
   artifactRoot: string;
+  invocation:ScriptInvocation;
   control: CompilerAdmissionControl;
   selectedGis: Readonly<{
     generationId: string;
@@ -145,9 +151,10 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
   const space = entries.find((entry) => entry.pluginId === "space" && entry.role === "plugin");
   const gis = entries.find((entry) => entry.pluginId === "gis" && entry.role === "plugin");
   if (!space || !gis || entries.filter((entry) => ["space", "gis"].includes(entry.pluginId)).length !== 2) throw new Error("Test browser host registry selection is not exact");
-  ensureAppleDeveloperDir();
-  ensureWasmTarget();
-  const builtSpace = await buildPluginCargo(space, input.control);
+  const mode=readNativeCallerAuthorityV1(input.invocation.capabilities).original.buildMode;
+  await buildComponentClosureV1(repoRoot,new Set([space.pluginId]),{facet:"browser",invocation:input.invocation,control:input.control,network:repositoryCargoNetworkV1(input.invocation,repoRoot)});
+  const deliverable=componentDeliverableV1(join(repoRoot,space.cratePath),space.packageName,componentProfileV1(buildModePolicy(mode).cargoProfile));
+  const builtSpace={artifact:deliverable.wasm};
   // 🔒️ `buildPluginCargo` stages the iterate component under the crate's own `dist/components-iterate`; this
   // ticket-owned copy is what makes the artifact eligible for `ownedTestBrowserHostInput`'s
   // bounded-regular-file-inside-`artifactRoot` check below.

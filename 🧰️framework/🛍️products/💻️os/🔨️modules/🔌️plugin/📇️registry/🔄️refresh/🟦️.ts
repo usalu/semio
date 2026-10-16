@@ -16,7 +16,7 @@ const repoRoot = getWorkspaceRoot();
 
 import { createConcurrencyLimiter, cargoConcurrencyLimit, materializeConcurrencyLimit } from "../../🏗️build/🏃️execution/🟦️.ts";
 
-import { buildPluginCargo, materializePlugin, publishShardWorker } from "../../🏗️build/📦️materialization/🟦️.ts";
+
 
 import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 
@@ -30,11 +30,11 @@ import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️compon
 async function buildPluginCatalog(
   orderedTargets: readonly PluginBuildTargetV1[],
   control: CompilerAdmissionControl,
-  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly deliverable: ComponentDeliverableV1 }> = target => buildPluginCargo(target, control),
-  materializeFn: (target: PluginBuildTargetV1, built: { readonly deliverable: ComponentDeliverableV1 }) => Promise<void> = materializePlugin,
-  concurrencyLimit: number = materializeConcurrencyLimit(),
-  publishShardWorkerFn: () => void = publishShardWorker,
-  cargoLimit: number = cargoConcurrencyLimit(),
+  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly deliverable: ComponentDeliverableV1 }>,
+  materializeFn: (target: PluginBuildTargetV1, built: { readonly deliverable: ComponentDeliverableV1 }) => Promise<void>,
+  concurrencyLimit: number,
+  publishShardWorkerFn: () => void,
+  cargoLimit: number,
 ): Promise<{ readonly failedPluginIds: readonly string[] }> {
   checkResourceLeaseControl(control);
   const cargoLimiter = createConcurrencyLimiter(cargoLimit);

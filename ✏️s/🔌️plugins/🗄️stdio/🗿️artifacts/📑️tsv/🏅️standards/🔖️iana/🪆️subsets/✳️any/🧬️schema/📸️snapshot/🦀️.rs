@@ -100,7 +100,5 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

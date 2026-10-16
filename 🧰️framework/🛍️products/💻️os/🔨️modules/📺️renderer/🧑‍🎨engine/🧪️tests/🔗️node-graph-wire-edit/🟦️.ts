@@ -117,7 +117,7 @@ describe("node graph wire edit", () => {
     const guestField = /closed\(&\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
     expect(guestField).toBe("synapseId");
     const wgpu = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
-    const dag = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"));
+    const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     expect(dag).toContain(`sink.text("${guestField}", synapse_id)?`);
     expect(wgpu).toContain("flow::dag::write_dag_graph_edit_rows(edits, &mut BoundedGraphEditRows(builder))?");
     expect(law.rules.disconnectNamesTheSynapse).toContain(guestField!);

@@ -10,10 +10,11 @@
 //! German). Every prompt takes an optional `locale` argument; an unknown or absent locale resolves to
 //! English rather than failing, because a prompt is guidance, not policy.
 
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::protocol::{ContentBlock, InMemoryPromptRegistry, Prompt, PromptArgument, PromptGetResult, PromptMessage};
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_wire::protocol::{ContentBlock, InMemoryPromptRegistry, Prompt, PromptArgument, PromptGetResult, PromptMessage};
 
 //#region 🔖️Locale
+
 /// 🌍️ The two languages this gateway speaks, in the repo's declared order. Never a default field on
 /// a struct — the caller always states one, and an unrecognised tag resolves to `En` explicitly here
 /// rather than silently somewhere downstream.
@@ -37,19 +38,21 @@ impl PromptLocale {
         Self::resolve(arguments.and_then(|value| value.get("locale")).and_then(serde_json::Value::as_str))
     }
 }
+
 //#endregion 🔖️Locale
 
 //#region 🔖️Definitions
+
 /// 💬️ One prompt's full bilingual definition — the single source of truth for both its `prompts/list`
 /// row and its `prompts/get` body, so the two can never drift apart.
 struct PromptDefinition {
-    name: &'static str,
+    pub name: &'static str,
     title_en: &'static str,
     title_de: &'static str,
     description_en: &'static str,
     description_de: &'static str,
-    body_en: &'static str,
-    body_de: &'static str,
+    pub(crate) body_en: &'static str,
+    pub(crate) body_de: &'static str,
 }
 
 impl PromptDefinition {
@@ -62,7 +65,7 @@ impl PromptDefinition {
         }
     }
 
-    fn result(&self, locale: PromptLocale) -> PromptGetResult {
+    pub fn result(&self, locale: PromptLocale) -> PromptGetResult {
         let (description, body) = match locale {
             PromptLocale::En => (self.description_en, self.body_en),
             PromptLocale::De => (self.description_de, self.body_de),
@@ -122,13 +125,15 @@ const UNDO_LAST_CHANGE: PromptDefinition = PromptDefinition {
 };
 
 /// 💬️ Every prompt this gateway serves, in `prompts/list` order.
-const DEFINITIONS: [PromptDefinition; 5] = [EXPLORE_WORKSPACE, SAFE_MUTATION, INSPECT_ARTIFACT, DRIVE_THE_UI, UNDO_LAST_CHANGE];
+pub(crate) const DEFINITIONS: [PromptDefinition; 5] = [EXPLORE_WORKSPACE, SAFE_MUTATION, INSPECT_ARTIFACT, DRIVE_THE_UI, UNDO_LAST_CHANGE];
 
 /// 💬️ The prompt names, as a census the tests assert the registry against.
 pub const GATEWAY_PROMPT_NAMES: [&str; 5] = ["explore_workspace", "safe_mutation", "inspect_artifact", "drive_the_ui", "undo_last_change"];
+
 //#endregion 🔖️Definitions
 
 //#region 🔖️Registry
+
 /// 🏗️ Builds the real `PromptRegistry` the gateway serves — five protocol-teaching prompts, each
 /// bilingual, none of them naming a plugin, an app or an artifact kind.
 pub fn build_prompt_registry() -> InMemoryPromptRegistry {
@@ -144,10 +149,8 @@ pub fn build_prompt_registry() -> InMemoryPromptRegistry {
 pub fn prompt_body(name: &str, locale: PromptLocale) -> Result<PromptGetResult, GatewayError> {
     DEFINITIONS.iter().find(|definition| definition.name == name).map(|definition| definition.result(locale)).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("unknown prompt: {name}")))
 }
+
 //#endregion 🔖️Registry
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

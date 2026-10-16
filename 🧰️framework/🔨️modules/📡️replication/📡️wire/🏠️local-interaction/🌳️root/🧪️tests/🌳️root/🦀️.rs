@@ -5,12 +5,13 @@ fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../ðŸ
 
 #[test]
 fn local_interaction_root_composes_real_typed_payload_and_physical_retirement() {
-    use crate::value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
     let fixture=fixture();let cases=cases();
     for name in ["sourceCase","largeSourceCase"]{let case=cases["cases"].as_array().unwrap().iter().find(|case|case["id"]==fixture[name]).unwrap();let source=&case[if name=="sourceCase"{"before"}else{"expected"}];
         for maximum_copy_bytes in [1,64,4096]{
             let(root,birth,free)=crate::test_allocation::observe_backing(||LocalInteractionRoot::from_cold(from_json(source.clone())));let original=birth-free;
-            assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&root)),*source);
+            assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&root)),*source);
             let(mut owner,birth,free)=crate::test_allocation::observe_backing(||ControlledRetirement::new(root).unwrap_or_else(|_|panic!("local interaction root requires defining typed retirement")));assert_eq!((birth,free),(0,0));let mut total=RetainedCloneProgress::default();let mut turns=0;
             while !owner.terminal_is_empty(){turns+=1;assert!(turns<500000);let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(maximum_copy_bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
                 let(step,birth,free)=crate::test_allocation::observe_backing(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));
@@ -22,8 +23,8 @@ fn local_interaction_root_composes_real_typed_payload_and_physical_retirement() 
     }
 }
 
-pub(super) fn drain(owner:Result<crate::value::retirement::controlled::ControlledRetirement<LocalInteractionRoot>,(crate::value::ValueError,LocalInteractionRoot)>,bytes:usize)->usize {
-    use crate::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+pub(super) fn drain(owner:Result<semio_framework_value::retirement::controlled::ControlledRetirement<LocalInteractionRoot>,(semio_framework_value::ValueError,LocalInteractionRoot)>,bytes:usize)->usize {
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
     let mut owner=owner.unwrap_or_else(|_|panic!("defining Root retirement must be supported"));
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
     assert_eq!(owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
@@ -48,9 +49,9 @@ fn local_interaction_retained_root_preserves_exact_wire_and_shared_payloads() {
         let root = LocalInteractionRoot::from_cold(from_json(source.clone()));
         let shared = root.clone();
         assert!(std::ptr::eq(root.selection().first_key_value().unwrap().1, shared.selection().first_key_value().unwrap().1));
-        assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&root)), *source);
+        assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&root)), *source);
         assert_eq!(drain(root.retire(), bytes), fixture["sharedOwnerRetiredBytes"].as_u64().unwrap() as usize);
-        assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&shared)), *source);
+        assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&shared)), *source);
         assert_eq!(drain(shared.retire(), bytes), fixture["finalOwnerRetiredBytes"].as_u64().unwrap() as usize);
     }
 }
@@ -62,7 +63,7 @@ fn local_interaction_retained_root_large_semantic_content_closes_under_actual_gr
     let source = &cases["cases"].as_array().unwrap().iter().find(|case| case["id"] == fixture["largeSourceCase"]).unwrap()["expected"];
     for bytes in [1, 64, 4096] {
         let root = LocalInteractionRoot::from_cold(from_json(source.clone()));
-        assert_eq!(dsl_to_json(&crate::value::ToValue::to_value(&root)), *source);
+        assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&root)), *source);
         assert_eq!(drain(root.retire(), bytes), fixture["largeFinalOwnerRetiredBytes"].as_u64().unwrap() as usize);
     }
 }

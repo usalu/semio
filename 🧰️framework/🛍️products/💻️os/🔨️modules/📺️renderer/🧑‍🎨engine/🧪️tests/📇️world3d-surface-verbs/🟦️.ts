@@ -1,5 +1,5 @@
 /**
- * 📇️ The TypeScript twin of `♾️infinite/🌍️world/🧪️tests/📇️surface-verbs/🦀️.rs`. Both read the SAME
+ * 📇️ The TypeScript twin of `♾️infinite/🌍️world/🎛️host/🧪️tests/📇️surface-verbs/🦀️.rs`. Both read the SAME
  * neutral oracle (`🌐️World3dHost/🧫️fixtures/📇️surface-verbs.json`): the Rust law drives the
  * production predicate and the production admission gate, this one re-derives the rule from the
  * fixture's own `handleVerbs` mapping.

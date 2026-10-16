@@ -7,8 +7,6 @@ import {
   type CanvasPickTarget,
   type CanvasHoverFocus,
   type NamedLayout,
-  type WindowLayout,
-  type WindowLayoutWindowNode,
   type UiPresence,
   type UiStatus,
   type Component,
@@ -18,6 +16,7 @@ import {
   type BuiltNode,
   UI_INSPECTOR_MIXED_PLACEHOLDER,
 } from "../🛂️manifest/🟦️.ts";
+import type { WindowLayout, WindowLayoutWindowNode } from "../🛂️manifest/🗺️window-layout/🟦️.ts";
 
 //#region 🆔️ElementId
 /** 🆔️ Element id of the app shell's navbar/footer — singular, shell-owned chrome. */

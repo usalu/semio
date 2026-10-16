@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-scene-world3d-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

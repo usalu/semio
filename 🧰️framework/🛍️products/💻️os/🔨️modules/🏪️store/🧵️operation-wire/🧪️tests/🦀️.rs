@@ -1,10 +1,11 @@
 //! 🧪️ Exact serde operation wire and same-thread allocator witnesses across admitted copy and cancellation turns.
 use super::*;
-use super::super::{ArtifactCanonicalJsonNode, ArtifactCanonicalJson};
+use semio_framework_pack_json::ArtifactCanonicalJsonNode;
+use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
 
 struct OracleSource(serde_json::Value);
 impl OracleSource {
-    fn value(&self, path: &[usize]) -> Result<&serde_json::Value, String> {
+    pub fn value(&self, path: &[usize]) -> Result<&serde_json::Value, String> {
         let mut value = &self.0;
         for index in path {
             value = match value {
@@ -19,7 +20,7 @@ impl OracleSource {
 
 struct TextOracle(serde_json::Value);
 impl TextOracle {
-    fn node(&self, path: &[usize]) -> &serde_json::Value {
+    pub fn node(&self, path: &[usize]) -> &serde_json::Value {
         let mut node = &self.0;
         for index in path { node = &node["children"][*index]; }
         node
@@ -106,7 +107,7 @@ impl ArtifactCanonicalJson for OracleSource {
             serde_json::Value::Object(values) => N::Object(values.len()),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<crate::os_store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
         self.value(path).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"operation-wire.invalid-fixture-path"))?.as_object().and_then(|values| values.keys().nth(index)).map(|key| key.as_str().into()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "operation-wire.invalid-fixture-key"))
     }
 }

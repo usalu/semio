@@ -44,8 +44,8 @@ mod reserved_verb_answer_tests {
         }
     }
 
-    fn outcome(frames: Vec<AppFrame>) -> crate::kernel_runtime::ExchangeOutcome {
-        crate::kernel_runtime::ExchangeOutcome { frames, surfaces: Default::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }
+    fn outcome(frames: Vec<AppFrame>) -> semio_framework_os_renderer_wgpu_kernel_protocol::ExchangeOutcome {
+        semio_framework_os_renderer_wgpu_kernel_protocol::ExchangeOutcome { frames, surfaces: Default::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }
     }
 
     fn selected_ids(result: &InvocationResult) -> Vec<String> {

@@ -359,10 +359,9 @@ pub struct PngSnapshot {
 impl Default for PngSnapshot { fn default() -> Self { Self { schema: STDIO_PNG_DOCUMENT_SCHEMA.into(), image: PngImage::default() } } }
 impl PngSnapshot { pub fn validate(&self) -> Result<(), String> { if self.schema != STDIO_PNG_DOCUMENT_SCHEMA { return Err("png: undeclared semantic schema".into()); } self.image.validate() } }
 
-#[cfg(test)]
-#[path="🧪️tests/🪆️owner/🦀️.rs"]
-mod logical_owner_tests;
 
-#[cfg(test)]
-#[path="🧪️tests/🧬️owned-native-contract/🦀️.rs"]
-mod owned_native_contract_tests;
+
+
+
+#[path="🔏️canonical/🦀️.rs"]
+pub mod canonical;

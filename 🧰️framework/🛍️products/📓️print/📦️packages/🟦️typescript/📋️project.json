@@ -63,7 +63,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/fonts"
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/fonts"
       ],
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/**/*",

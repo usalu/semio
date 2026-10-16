@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:compiler-cargo-selector-arguments:v1",
+  "definitions": {
+    "Arguments": {
+      "type": "array",
+      "maxItems": 512,
+      "items": {
+        "type": "string",
+        "maxLength": 4096
+      }
+    },
+    "Selectors": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "pattern": "^profile\\.(prototype|release)\\."
+      }
+    },
+    "Protocol": {
+      "const": {
+        "maximumArgumentBytes": 4096,
+        "maximumSerializedBytes": 1048576
+      }
+    }
+  }
+}

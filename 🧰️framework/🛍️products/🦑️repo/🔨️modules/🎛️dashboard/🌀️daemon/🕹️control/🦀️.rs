@@ -17,12 +17,6 @@ use std::time::{Duration, Instant};
 const POLL: Duration = Duration::from_millis(50);
 const QUIET: Duration = Duration::from_millis(250);
 
-/// 🔗 A connection to the workspace daemon, which is started first when none runs.
-pub fn connect_or_start(root: &Path, executable: &Path) -> std::io::Result<Connection> {
-    if let Ok(connection) = Connection::connect(root) { return Ok(connection); }
-    super::supervisor::spawn_daemon(root, executable)?;
-    Connection::connect(root)
-}
 
 /// 📋 The sessions of the workspace as the daemon lists them.
 pub fn tasks(connection: &mut Connection, within: Duration) -> std::io::Result<Vec<SessionInfo>> {

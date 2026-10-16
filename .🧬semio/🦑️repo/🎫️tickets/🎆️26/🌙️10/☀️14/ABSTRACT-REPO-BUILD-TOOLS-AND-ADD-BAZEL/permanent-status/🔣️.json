@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "progress",
+      "text": "[script] {\"command\":\"selected-source-inputs\",\"stage\":\"running\"}\n",
+      "expected": {
+        "rows": {
+          "pass": 0,
+          "fail": 0,
+          "skip": 0
+        },
+        "lastPhase": "selected-source-inputs",
+        "firstError": null
+      }
+    },
+    {
+      "name": "completed-bun",
+      "text": "bun test v1.3.14\n(pass) one\n(skip) two\n\n 1 pass\n 1 skip\n 0 fail\nRan 2 tests across 1 file. [20ms]\n",
+      "expected": {
+        "rows": {
+          "pass": 1,
+          "fail": 0,
+          "skip": 1
+        },
+        "lastPhase": null,
+        "firstError": null
+      }
+    },
+    {
+      "name": "refusal",
+      "text": "[script] {\"command\":\"cache:tools-store\",\"stage\":\"running\"}\nerror: Original graph mandatory-work headroom required\n",
+      "expected": {
+        "rows": {
+          "pass": 0,
+          "fail": 0,
+          "skip": 0
+        },
+        "lastPhase": "cache:tools-store",
+        "firstError": "error: Original graph mandatory-work headroom required"
+      }
+    },
+    {
+      "name": "failed-test",
+      "text": "(pass) previous\n(fail) failed assertion\n 1 pass\n 1 fail\n",
+      "expected": {
+        "rows": {
+          "pass": 1,
+          "fail": 1,
+          "skip": 0
+        },
+        "lastPhase": null,
+        "firstError": "(fail) failed assertion"
+      }
+    }
+  ]
+}

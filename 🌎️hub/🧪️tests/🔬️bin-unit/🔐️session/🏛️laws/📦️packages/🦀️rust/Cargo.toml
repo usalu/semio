@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-session-route-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Session route laws: credential sign-in, agent delegation, origin and proxy posture, observability and shutdown"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-session-route-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-hub-ledgers/testkit", "semio-hub-route-models/testkit", "semio-hub-runtime/testkit", "semio-hub-session-routes/testkit", "semio-hub-state/testkit"]
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-auth = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-ledgers = { workspace = true, features = ["testkit"] }
+semio-hub-observability = { workspace = true }
+semio-hub-route-models = { workspace = true, features = ["testkit"] }
+semio-hub-route-testkit = { workspace = true }
+semio-hub-routes = { workspace = true }
+semio-hub-runtime = { workspace = true, features = ["testkit"] }
+semio-hub-session-routes = { workspace = true, features = ["testkit"] }
+semio-hub-state = { workspace = true, features = ["testkit"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+tokio-tungstenite = "0.26"
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
+axum = { version = "0.8", features = ["ws"] }
+protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }

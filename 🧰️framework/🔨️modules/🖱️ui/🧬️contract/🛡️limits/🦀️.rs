@@ -12,6 +12,7 @@
 
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_ui_contract::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
@@ -177,30 +178,6 @@ fn component_is_finite(component: &crate::Component) -> bool {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn limit_values(limits: Option<&crate::UiNumberLimits>) -> impl Iterator<Item = f64> + '_ {
     limits.into_iter().flat_map(|limits| [limits.min.as_ref(), limits.max.as_ref()]).flatten().map(|bound| bound.value)
-}
-
-/// 🎚️ The number-range law every renderer shares (TS twin `numberRangeIsValid`): a display factor is positive; a
-/// `log` scale has a strictly positive travel; declared limits keep their lower bound below their upper one
-/// (equal only when both include it) and admit the key range `min..=max` and every detent — so a slider's travel
-/// is a soft range inside its hard one. The admission gate behind [`UiContractViolation::InvalidNumberRange`].
-pub fn number_range_is_valid(min: Option<f64>, max: Option<f64>, scale: crate::UiNumberScale, display_factor: Option<f64>, limits: Option<&crate::UiNumberLimits>, snaps: impl IntoIterator<Item = f64>) -> bool {
-    let factor = display_factor.is_none_or(|factor| factor > 0.0);
-    let axis = scale == crate::UiNumberScale::Linear || min.zip(max).is_some_and(|(min, max)| min > 0.0 && max > 0.0);
-    let Some(limits) = limits else { return factor && axis };
-    let ordered = limits.min.as_ref().zip(limits.max.as_ref()).is_none_or(|(low, high)| low.value < high.value || (low.value == high.value && !low.exclusive && !high.exclusive));
-    let admitted = |value: f64| limits.crossed(value).is_none();
-    factor && axis && ordered && min.is_none_or(admitted) && max.is_none_or(admitted) && snaps.into_iter().all(admitted)
-}
-
-/// 🧲️ The detent law every renderer shares: finite, strictly ascending, inside `min..=max` — the admission
-/// gate behind [`UiContractViolation::InvalidSnaps`] (TS twin `snapsAreValid`, `🛡️limits/🟦️.ts`).
-pub fn snaps_are_valid(snaps: impl IntoIterator<Item = f64>, min: f64, max: f64) -> bool {
-    let mut previous = f64::NEG_INFINITY;
-    snaps.into_iter().all(|snap| {
-        let valid = snap.is_finite() && snap > previous && snap >= min && snap <= max;
-        previous = snap;
-        valid
-    })
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -1495,6 +1472,22 @@ fn remove_subtree(draft: &mut crate::UiSnapshotState, id: crate::UiNodeId) -> Re
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[path = "../🧪️tests/🔬️limits-unit/🦀️.rs"]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+
+#[cfg(test)]
+#[path="🧪️tests/🧩️components/🦀️.rs"]
+mod component_integration;
+
+#[cfg(test)]
+#[path="🧪️tests/🗺️surface/🦀️.rs"]
+mod surface_integration;
+
+#[cfg(test)]
+#[path="🧪️tests/🧬️conformance/🦀️.rs"]
+mod conformance;
+#[cfg(test)]
+#[path="🧪️examples/🦀️.rs"]
+mod conformance_examples;

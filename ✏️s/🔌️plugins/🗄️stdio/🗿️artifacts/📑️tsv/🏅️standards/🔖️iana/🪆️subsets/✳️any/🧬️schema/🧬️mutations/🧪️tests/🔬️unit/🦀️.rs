@@ -1,5 +1,6 @@
+use crate::{standards::iana::subsets::any::schema::snapshot::LineEnding, standards::iana::subsets::any::schema::snapshot::TsvSnapshot};
 use crate::apply_mutation;
-use super::*;
+use crate::standards::iana::subsets::any::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 
 //#region 🔖️Fixtures

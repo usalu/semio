@@ -1,25 +1,35 @@
+//! 🧱️ Bridge_server of the http-transport crate: The Streamable HTTP and bridge websocket transport.
 
-use super::{BRIDGE_VERSION, BridgeHandle, GatewayToShell, ShellToGateway};
 use axum::Router;
 use axum::extract::State;
-use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::http::{HeaderMap, StatusCode, Uri};
-use axum::response::{IntoResponse, Response};
+use axum::extract::ws::Message;
+use axum::extract::ws::WebSocket;
+use axum::extract::ws::WebSocketUpgrade;
+use axum::http::HeaderMap;
+use axum::http::StatusCode;
+use axum::http::Uri;
+use axum::response::IntoResponse;
+use axum::response::Response;
 use axum::routing::get;
-use futures::{SinkExt, StreamExt};
-use semio_framework_value::{FromValue, ToValue};
+use futures::SinkExt;
+use futures::StreamExt;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
 use std::sync::Arc;
+use crate::transport::{HttpAdmission, origin_allowed};
+use semio_framework_os_mcp_bridge::session::BridgeHandle;
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, GatewayToShell, ShellToGateway};
 
 #[derive(Clone)]
 struct BridgeServerState {
-    admission: crate::transport::HttpAdmission,
+    admission: HttpAdmission,
     allowed_origins: Arc<Vec<String>>,
     handle: BridgeHandle,
 }
 
 /// 🏗️ Builds the `/bridge` route + its [`BridgeHandle`] — never bound to a socket by itself; a
 /// caller `.merge()`s the returned [`Router`] into the app it actually serves.
-pub(crate) fn bridge_router(admission: crate::transport::HttpAdmission, allowed_origins: Vec<String>) -> (Router, BridgeHandle) {
+pub(crate) fn bridge_router(admission: HttpAdmission, allowed_origins: Vec<String>) -> (Router, BridgeHandle) {
     let handle = BridgeHandle::new();
     let state = BridgeServerState { admission, allowed_origins: Arc::new(allowed_origins), handle: handle.clone() };
     let router = Router::new().route("/bridge", get(upgrade)).with_state(state);
@@ -31,7 +41,7 @@ async fn upgrade(ws: WebSocketUpgrade, uri: Uri, headers: HeaderMap, State(state
         return (StatusCode::UNAUTHORIZED, "invalid bridge admission").into_response();
     }
     let origin = headers.get(axum::http::header::ORIGIN).and_then(|value| value.to_str().ok());
-    if !crate::transport::origin_allowed(origin, &state.allowed_origins) {
+    if !origin_allowed(origin, &state.allowed_origins) {
         return (StatusCode::FORBIDDEN, "origin not allowed").into_response();
     }
     let protocols = headers.get(axum::http::header::SEC_WEBSOCKET_PROTOCOL).and_then(|value| value.to_str().ok()).map(|value| value.split(',').map(str::trim).collect::<Vec<_>>()).unwrap_or_default();

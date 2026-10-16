@@ -39,6 +39,7 @@ pub fn plugin() -> Result<Plugin<DagApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::dag::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist dag edits to the open document".into(), optional: false })
+        .canvas_runtime_assets()
         .try_build()
 }
 

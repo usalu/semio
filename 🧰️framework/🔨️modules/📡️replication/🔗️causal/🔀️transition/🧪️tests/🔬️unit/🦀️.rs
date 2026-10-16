@@ -97,7 +97,7 @@ fn on_line(mut edit: FoldEdit, line: &str) -> FoldEdit {
     edit
 }
 
-fn at(transition: HistoryTransition, actor: &str, physical_ms: u64) -> super::super::MutationEnvelope {
+fn at(transition: HistoryTransition, actor: &str, physical_ms: u64) -> semio_framework_replication_causal::MutationEnvelope {
     history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId(actor.into()), Vec::new(), HybridLogicalTimestamp { actor: 0, physical_ms, logical: 0 })
 }
 
@@ -370,7 +370,7 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
             line: row["line"].as_str().map(str::to_string),
         })
         .collect();
-    let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
+    let mut transitions: Vec<semio_framework_replication_causal::MutationEnvelope> = Vec::new();
     let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
     let none = none();
     for step in fixture["steps"].as_array().expect("steps") {
@@ -426,10 +426,10 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
                 let transition_id = case["expect"]["transitionId"].as_str().expect("transitionId");
                 assert_eq!(history_transition_id(&clock, &bytes).0, transition_id, "{id}: first-party id");
                 let mut material = Vec::new();
-                crate::wire::write_varint_u64(&mut material, clock.actor);
-                crate::wire::write_varint_u64(&mut material, clock.physical_ms);
-                crate::wire::write_varint_u64(&mut material, clock.logical);
-                crate::write_bytes(&mut material, &bytes);
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.actor);
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.physical_ms);
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.logical);
+                semio_framework_replication_wire_core::write_bytes(&mut material, &bytes);
                 assert_eq!(format!("transition-{}", &blake3::hash(&material).to_hex()[..16]), transition_id, "{id}: third-party blake3 id");
             }
             "malformed" => {
@@ -445,8 +445,8 @@ fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
         let expected = trunk["alternativeId"].as_str().expect("alternativeId");
         assert_eq!(trunk_alternative_id(&ArtifactId(document.into())), expected, "{document}: first-party trunk id");
         let mut material = Vec::new();
-        crate::write_str(&mut material, "semio.history.trunk");
-        crate::write_str(&mut material, document);
+        semio_framework_replication_wire_core::write_str(&mut material, "semio.history.trunk");
+        semio_framework_replication_wire_core::write_str(&mut material, document);
         assert_eq!(format!("trunk-{}", &blake3::hash(&material).to_hex()[..16]), expected, "{document}: third-party blake3 trunk id");
     }
     for row in fixture["shapes"].as_array().expect("shape rows") {
@@ -490,7 +490,7 @@ fn supersede_fold_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json")).expect("supersede fold fixture parses")
 }
 
-fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> crate::causal::MutationEnvelope {
+fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> semio_framework_replication_causal::MutationEnvelope {
     let transition = fixture_transition(&step["transition"]);
     let dependencies = match &transition {
         HistoryTransition::Supersede(supersede) => supersede.targets(),
@@ -502,107 +502,12 @@ fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> cra
     envelope
 }
 
-fn expected_supersessions(expect: &serde_json::Value) -> HistoryFoldIndex<MutationId, EffectiveSupersession> {
-    expect["supersessions"]
-        .as_array()
-        .expect("supersessions")
-        .iter()
-        .map(|row| {
-            (
-                MutationId(row["target"].as_str().expect("target").into()),
-                EffectiveSupersession {
-                    transition_id: row["transitionId"].as_str().expect("transitionId").into(),
-                    actor: row["actor"].as_str().expect("actor").into(),
-                    timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
-                    scope: row["scope"].as_str().map(str::to_string),
-                    replacement: fixture_replacement(&row["replacement"]),
-                },
-            )
-        })
-        .collect()
-}
-
-/// ✏️ Language-agnostic supersede fold law (shared with the TypeScript fold twin): last-wins by `(hlc, id)` whatever
-/// the arrival order, no ownership rule, scope against the final alternative, composition with revert/commit/branch/
-/// checkout, a pure re-fold on reload, and an unknown target refused as a fold error.
-#[test]
-fn the_supersede_fold_fixture_matches_the_fold_law() {
-    let fixture = supersede_fold_fixture();
-    assert_eq!(fixture["schema"].as_str(), Some("semio.history.supersede-fold"));
-    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
-    assert_eq!(fixture["trunkAlternativeId"].as_str(), Some(trunk_alternative_id(&document).as_str()));
-    let edits: Vec<FoldEdit> = fixture["edits"]
-        .as_array()
-        .expect("edits")
-        .iter()
-        .map(|row| FoldEdit {
-            id: row["id"].as_str().expect("edit id").into(),
-            actor: Some(row["actor"].as_str().expect("actor").into()),
-            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
-            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
-            line: row["line"].as_str().map(str::to_string),
-        })
-        .collect();
-    let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
-    for step in fixture["steps"].as_array().expect("steps") {
-        let label = step["label"].as_str().unwrap_or("transition");
-        match step["kind"].as_str().expect("step kind") {
-            "transition" => transitions.push(fixture_step_envelope(&document, step)),
-            "expect" => {
-                let viewer = match step["expect"].get("head").filter(|head| !head.is_null()) {
-                    Some(viewer) => head(viewer["lineId"].as_str().expect("head lineId"), viewer["checkpointId"].as_str()),
-                    None => ViewerHead::canonical_trunk(&document),
-                };
-                let fold = fold_history_for(&document, &edits, &transitions, &none(), &viewer).unwrap_or_else(|error| panic!("{label}: {error:?}"));
-                assert_eq!(fold.alternative, step["expect"]["alternative"].as_str().map(str::to_string), "{label}: alternative");
-                assert_eq!(fold.supersessions, expected_supersessions(&step["expect"]), "{label}: supersessions");
-            }
-            "reload" => assert_eq!(fold_history(&document, &edits, &transitions, &none()).expect(label), fold_history(&document, &edits, &transitions, &none()).expect(label), "{label}"),
-            "refuse" => {
-                let mut refused = transitions.clone();
-                refused.push(fixture_step_envelope(&document, &step["transition"]));
-                let error = fold_history(&document, &edits, &refused, &none()).expect_err(label);
-                assert!(format!("{error:?}").contains(step["detail"].as_str().expect("detail")), "{label}: {error:?}");
-            }
-            other => panic!("unknown step kind {other}"),
-        }
-    }
-}
-
-/// 🔀️ Supersessions are a function of the event SET: every rotation of the fixture's transitions folds to the same projection.
-#[test]
-fn supersessions_are_a_function_of_the_event_set() {
-    let fixture = supersede_fold_fixture();
-    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
-    let edits: Vec<FoldEdit> = fixture["edits"]
-        .as_array()
-        .expect("edits")
-        .iter()
-        .map(|row| FoldEdit {
-            id: row["id"].as_str().expect("edit id").into(),
-            actor: Some(row["actor"].as_str().expect("actor").into()),
-            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
-            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
-            line: row["line"].as_str().map(str::to_string),
-        })
-        .collect();
-    let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().expect("steps").iter().filter(|step| step["kind"] == "transition").map(|step| fixture_step_envelope(&document, step)).collect();
-    let expected = fold_history(&document, &edits, &transitions, &none()).expect("fold");
-    assert!(!expected.supersessions.is_empty());
-    for rotation in 1..transitions.len() {
-        let mut shuffled = transitions.clone();
-        shuffled.rotate_left(rotation);
-        shuffled.reverse();
-        assert_eq!(fold_history(&document, &edits, &shuffled, &none()).expect("fold"), expected, "rotation {rotation}");
-    }
-}
-
 /// 🌉️ The value shapes of a replacement and an effective supersession round-trip.
 #[test]
 fn supersession_values_round_trip() {
     for replacement in [InputReplacement::Input { schema: "demo/v1".into(), payload: vec![1, 2] }, InputReplacement::Withdrawn] {
         let supersession = EffectiveSupersession { transition_id: "transition-1".into(), actor: "alice".into(), timestamp: HybridLogicalTimestamp::new(3, 4), scope: Some("alt".into()), replacement };
-        let decoded: EffectiveSupersession = crate::value::FromValue::from_value(crate::value::ToValue::to_value(&supersession)).expect("decode");
+        let decoded: EffectiveSupersession = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&supersession)).expect("decode");
         assert_eq!(decoded, supersession);
     }
 }
@@ -615,7 +520,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
     let fixture = supersede_fold_fixture();
     let document = ArtifactId(fixture["documentId"].as_str().unwrap().into());
     let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(Into::into), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
-    let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().unwrap().iter().filter(|row| row["kind"] == "transition").map(|row| fixture_step_envelope(&document, row)).collect();
+    let transitions: Vec<semio_framework_replication_causal::MutationEnvelope> = fixture["steps"].as_array().unwrap().iter().filter(|row| row["kind"] == "transition").map(|row| fixture_step_envelope(&document, row)).collect();
     let expected = fold_history(&document, &edits, &transitions, &none()).unwrap();
     let input = std::sync::Arc::new((document, edits, transitions));
     for bytes in law["byteGrants"].as_array().unwrap() {
@@ -655,7 +560,7 @@ fn bounded_history_fold_obeys_the_neutral_law() {
 fn bounded_history_transition_decoding_obeys_the_neutral_law() {
     use semio_framework_value::ErasedSnapshotRetirement;
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let mut cases: Vec<(Vec<u8>, Result<HistoryTransition, crate::ProtocolError>)> = every_transition().into_iter().map(|transition| (encode_history_transition(&transition), Ok(transition))).collect();
+    let mut cases: Vec<(Vec<u8>, Result<HistoryTransition, semio_framework_replication_error::ProtocolError>)> = every_transition().into_iter().map(|transition| (encode_history_transition(&transition), Ok(transition))).collect();
     for row in law["decodeCases"].as_array().unwrap() {
         let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
         let expected = decode_history_transition(&bytes);
@@ -693,7 +598,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
     for row in law["envelopeCases"].as_array().unwrap() {
         let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
         let mut position = 0;
-        let expected = crate::decode_envelope(&bytes, &mut position);
+        let expected = semio_framework_replication_causal::binary::decode_envelope(&bytes, &mut position);
         let valid = expected.is_ok() && position == bytes.len();
         assert_eq!(valid, row["valid"].as_bool().unwrap());
         if valid {
@@ -738,8 +643,8 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 65536, maximum_depth: 8 };
     for refused in [false, true] {
         let ((job, pointer), born, freed) = crate::test_allocation::observe_backing(|| {
-            let fault = refused.then(|| crate::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
-            let pointer = fault.as_ref().map(|error| match error { crate::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
+            let fault = refused.then(|| semio_framework_replication_error::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
+            let pointer = fault.as_ref().map(|error| match error { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
             (HistoryFoldJob::new(move |_| async move { match fault { Some(error) => Err(error), None => Ok(()) } }), pointer)
         });
         let held = born - freed;
@@ -766,13 +671,13 @@ fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
         assert!(outcome.released_bytes > 0);
         if refused {
             assert!(!job.terminal_is_empty());
-            let original = match job.rejection().unwrap() { crate::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
+            let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
             assert_eq!(Some(original), pointer);
             let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(denied).unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
-            assert_eq!(match job.rejection().unwrap() { crate::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
+            assert_eq!(match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
             for _ in 0..4 {
                 if job.terminal_is_empty() { break; }
                 let (step, allocated, released) = crate::test_allocation::observe_backing(|| job.close_step(grant).unwrap());

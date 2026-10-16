@@ -1,9 +1,9 @@
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
-use super::*;
-use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
-use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundlePluginModuleV1, TrustedBundleProfileOpenTargetV1};
-use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
+
+use semio_hub_artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
+use semio_hub_native_openable::NativeCodecProviderSetV1;
+use semio_hub_trusted_catalog_contract::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundlePluginModuleV1, TrustedBundleProfileOpenTargetV1};
+use semio_hub_artifact_authority::{AuthorityLimits, AuthorityOperationControl};
 use directory::os_store::{serialization::ArtifactPackFiles, text_format::ArtifactTextFiles, VcsError, codec_registry::document_codec};
 use std::io::Write;
 use std::path::PathBuf;
@@ -18,13 +18,13 @@ static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 /// admin route reports carries exactly the fields `TrustedCatalogGuestResidencyStateV1` requires.
 #[test]
 fn guest_residency_bounds_are_the_declared_schema_values() {
-    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let module: serde_json::Value = serde_json::from_str(semio_hub_trusted_catalog_contract::schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
     let residency = &module["$defs"]["TrustedCatalogGuestResidencyV1"];
     let declared = &residency["properties"];
     let bytes = &declared["residentComponentBytes"];
     assert_eq!(bytes["default"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes));
-    assert_eq!(bytes["minimum"].as_u64(), Some(*schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.start()));
-    assert_eq!(bytes["maximum"].as_u64(), Some(*schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.end()));
+    assert_eq!(bytes["minimum"].as_u64(), Some(*semio_hub_trusted_catalog_contract::schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.start()));
+    assert_eq!(bytes["maximum"].as_u64(), Some(*semio_hub_trusted_catalog_contract::schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.end()));
     assert_eq!(declared["concurrentVerifications"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications as u64));
     assert_eq!(declared["accessCountCeiling"]["const"].as_u64(), Some(u64::from(TRUSTED_CATALOG_GUEST_RESIDENCY.access_count_ceiling)));
     assert_eq!(declared["accessCountAgingPerGuest"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.access_count_aging_per_guest));
@@ -60,7 +60,7 @@ async fn a_guest_codec_verification_is_recalled_only_for_its_exact_key() {
     assert_eq!(GuestCodecVerificationCacheV1::at(root.clone(), "owned-engine-v1:ab:fuel-1").recall(&component, "note.document").await, None, "a changed engine verifies afresh");
     assert_eq!(GuestCodecVerificationCacheV1::disabled().recall(&component, "note.document").await, None);
     let file = std::fs::read_dir(&root).unwrap().next().unwrap().unwrap().path();
-    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let module: serde_json::Value = serde_json::from_str(semio_hub_trusted_catalog_contract::schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
     let stored: serde_json::Value = serde_json::from_slice(&std::fs::read(&file).unwrap()).unwrap();
     let required: Vec<&str> = module["$defs"]["GuestCodecVerificationV1"]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect();
     assert_eq!(stored.as_object().unwrap().keys().map(String::as_str).collect::<BTreeSet<_>>(), required.iter().copied().collect(), "the record is exactly the schema's fields");
@@ -299,13 +299,6 @@ async fn concurrent_operations_share_one_compile() {
     assert!(cold.is_resident() && !hot.is_resident(), "the guest eight operations used displaced the one two used");
 }
 
-impl GuestResidentFootprintV1 for Vec<u8> {
-    /// 📏️ A byte-charged test value holds only the bytes it was registered with.
-    fn footprint_bytes(&self) -> u64 {
-        0
-    }
-}
-
 /// 📐️ A test guest whose state grows in a call, as a compiled guest's does when its first codec call assembles its origin.
 struct GrowingGuest(std::sync::atomic::AtomicU64);
 
@@ -471,7 +464,7 @@ fn an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_w
 
 #[test]
 fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let encoded = row["rawHex"].as_str().unwrap();
         let bytes: Vec<_> = (0..encoded.len()).step_by(2).map(|index| u8::from_str_radix(&encoded[index..index + 2], 16).unwrap()).collect();
@@ -513,7 +506,206 @@ fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
     assert!(matches!(&result, Err(AuthorityError::Catalog(message)) if message.contains("max_total_alloc")), "actual Hub materialization fence: {result:?}");
 }
 
-include!("../📤️publication/🦀️.rs");
+use directory::os_directory::io::binary::artifact_hash::hex_lower;
+use std::sync::Arc;
+use directory::io::ArtifactCatalogCapability;
+use directory::os_store::serialization::ArtifactCodec;
+use semio_hub_artifact_authority::{AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactIdentity};
+use std::collections::BTreeSet;
+use directory::os_component_receipt::ComponentReceiptV1;
+use directory::os_directory::{DocumentDescriptor, DocumentOpenGrantV1, DocumentOpenSurfaceRoleV1};
+use directory::os_directory::schema::DocumentOpenBrowserActorV1;
+use semio_framework::{DslValue, PackageDescriptor};
+use semio_hub_trusted_catalog::{GUEST_CALL_CANCELLATION_POLL, GUEST_CODEC_BUDGET, GuestCodecVerificationCacheV1, GuestResidencyLedgerV1, GuestResidencyV1, GuestResidentFootprintV1, TrustedCatalogLoadProgressCellV1, TrustedCatalogLoader, TrustedCatalogPublicationOutcome, TrustedCatalogPublisher, VerifiedTrustedCatalog, guest_codec_engine_identity, guest_verification_concurrency, interpret_off_worker};
+use semio_framework_hash::{Hasher, Sha256};
+use semio_hub_trusted_catalog_descriptor::{MostGeneralDialect, NativeCodecBinding, NativeCodecProviderPackageV1, NativeCodecProviderRequirementV1, NativeCodecProviderSourceV1, TrustedCatalogAsset, TrustedRetainedFile, VerifiedTrustedPackage, append_trusted_profile_dependencies, decode_package_descriptor, descriptor_open_targets, descriptor_open_targets_answer, most_general_dialect, open_target_codec_package, owner_preferred_creation, selected_closure_digest, trusted_profile_generation, validate_bundle, validate_descriptor, validate_descriptor_open_target, validate_native_bindings};
+use std::path::Path;
+use semio_hub_trusted_catalog_contract::schema::{TRUSTED_BUNDLE_SCHEMA_VERSION, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogPackagePhaseV1, publication_revision};
+use semio_hub_artifact_authority::adapters::TRUSTED_CATALOG_MAX_CODECS;
+use semio_hub_trusted_catalog_contract::{TRUSTED_COMPONENT_MAX_BYTES, TRUSTED_DESCRIPTOR_MAX_BYTES, TRUSTED_IDENTITY_MAX_BYTES, TRUSTED_READ_CHUNK_BYTES, TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1, catalog, catalog_error, dual_hash, ensure_count, valid_identity, valid_package_id, validate_file};
+use directory::os_store;
+#[cfg(all(any(test, feature = "testkit"),unix))]
+use semio_hub_trusted_catalog_contract::create_fifo_fixture;
+#[cfg(any(test,feature="integration-fixtures"))]
+use semio_hub_trusted_catalog::{fixture_component_receipt, headless_stdio_fixture_package, write_fixture_plugin_module};
+/// 🧳️ Stages exact existing fixture bytes under a real private publication data root.
+fn stage_publication_fixture(fixture: &FixtureDirectory, data: &Path) -> serde_json::Value {
+    let generation = fixture.bundle["profiles"][0]["generationId"].as_str().unwrap();
+    let root = data.join("trusted-catalog/generations").join(generation);
+    std::fs::create_dir_all(&root).unwrap();
+    for record in fixture.bundle["packages"].as_array().unwrap() {
+        let mut paths = vec![record["component"]["path"].as_str().unwrap().to_owned(), record["descriptor"]["path"].as_str().unwrap().to_owned(), record["pluginModule"]["path"].as_str().unwrap().to_owned()];
+        if let Some(path) = record["browserActor"]["path"].as_str() {
+            paths.push(path.to_owned());
+        }
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(fixture.root.join(record["pluginModule"]["path"].as_str().unwrap())).unwrap()).unwrap();
+        paths.extend(manifest["files"].as_array().unwrap().iter().map(|file| semio_hub_trusted_catalog_contract::plugin_module::plugin_module_blob_path(file["sha256"].as_str().unwrap())));
+        for path in &paths {
+            let destination = root.join(path);
+            std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
+            std::fs::copy(fixture.root.join(path), destination).unwrap();
+        }
+    }
+    let bundle = serde_json::to_vec(&fixture.bundle).unwrap();
+    std::fs::write(root.join("trusted-catalog.json"), &bundle).unwrap();
+    serde_json::json!({"schema":"semio.hub.trusted-catalog-publication/v1","requestId":"11".repeat(16),"profileId":"fixture","generationId":generation,"bundleSha256":hex_lower(&Sha256::digest(&bundle)),"expectedCurrentSha256":null})
+}
+
+/// 🧾️ Keeps indeterminate Windows visibility explicit in platform-neutral native tests.
+fn publication_fixture_receipt(outcome: TrustedCatalogPublicationOutcome) -> serde_json::Value {
+    let (bytes, expected) = match outcome {
+        TrustedCatalogPublicationOutcome::Durable(bytes) => (bytes, "durable"),
+        TrustedCatalogPublicationOutcome::Unconfirmed(bytes) => (bytes, "replaced-unconfirmed"),
+    };
+    let receipt: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(receipt["outcome"], expected);
+    receipt
+}
+
+#[test]
+fn trusted_publication_revision_matches_neutral_closed_u64_cases() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📤️publication/🔄️cas.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let current = row["currentRevision"].as_str().map(publication_revision).transpose();
+        let result = current.and_then(|current| {
+            if let Some(expected) = row["expectedRevision"].as_str() {
+                if Some(publication_revision(expected)?) != current {
+                    return Err(catalog("stale fixture token"));
+                }
+            }
+            current.unwrap_or(0).checked_add(1).ok_or_else(|| catalog("revision exhausted"))
+        });
+        assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{}", row["id"]);
+        if let Some(next) = row["nextRevision"].as_str() {
+            assert_eq!(result.unwrap().to_string(), next);
+        }
+    }
+}
+
+#[tokio::test]
+async fn trusted_publication_cas_races_and_aba_use_real_catalog_loader() {
+    let a = prepared_fixture();
+    let b = prepared_fixture();
+    let data = a.root.join("publication-data");
+    let mut command_a = stage_publication_fixture(&a, &data);
+    let mut command_b = stage_publication_fixture(&b, &data);
+    let provider_a = FixtureProviderSource::new(vec![a.binding()]);
+    let provider_b = FixtureProviderSource::new(vec![b.binding()]);
+    let control = TestControl::new();
+    let context = control.context();
+    let initial = publication_fixture_receipt(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_a).unwrap(), &provider_a, &context).await.unwrap());
+    assert_eq!(initial["publicationRevision"], "1");
+    assert!(document_codec(&a.schema).await.unwrap().is_none(), "publication installed a codec");
+    command_b["expectedCurrentSha256"] = initial["currentSha256"].clone();
+    command_b["requestId"] = "22".repeat(16).into();
+    let middle = publication_fixture_receipt(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_b).unwrap(), &provider_b, &context).await.unwrap());
+    command_a["expectedCurrentSha256"] = middle["currentSha256"].clone();
+    command_a["requestId"] = "33".repeat(16).into();
+    let restored = publication_fixture_receipt(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_a).unwrap(), &provider_a, &context).await.unwrap());
+    assert_eq!(restored["publicationRevision"], "3");
+    assert_eq!(restored["generationId"], initial["generationId"]);
+    assert_ne!(restored["currentSha256"], initial["currentSha256"]);
+    let pointer_path = data.join("trusted-catalog/current.json");
+    let before = std::fs::read(&pointer_path).unwrap();
+    command_a["expectedCurrentSha256"] = initial["currentSha256"].clone();
+    assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_a).unwrap(), &provider_a, &context).await.is_err());
+    assert_eq!(std::fs::read(&pointer_path).unwrap(), before);
+    let loaded = TrustedCatalogLoader::load_current(&data, &provider_a, &context).await.unwrap().unwrap();
+    assert_eq!(loaded.generation_id(), initial["generationId"].as_str().unwrap());
+    command_a["expectedCurrentSha256"] = restored["currentSha256"].clone();
+    command_b["expectedCurrentSha256"] = restored["currentSha256"].clone();
+    command_a["requestId"] = "44".repeat(16).into();
+    command_b["requestId"] = "55".repeat(16).into();
+    let bytes_a = serde_json::to_vec(&command_a).unwrap();
+    let bytes_b = serde_json::to_vec(&command_b).unwrap();
+    let (left, right) = tokio::join!(TrustedCatalogPublisher::publish_current(&data, &bytes_a, &provider_a, &context), TrustedCatalogPublisher::publish_current(&data, &bytes_b, &provider_b, &context));
+    assert_ne!(left.is_ok(), right.is_ok(), "competing current token admitted two or zero publishers");
+    let winner = publication_fixture_receipt(left.or(right).unwrap());
+    assert_eq!(winner["publicationRevision"], "4");
+    let provider = if winner["generationId"] == command_a["generationId"] { &provider_a } else { &provider_b };
+    assert_eq!(TrustedCatalogLoader::load_current(&data, provider, &context).await.unwrap().unwrap().generation_id(), winner["generationId"].as_str().unwrap());
+    let mut maximum = TrustedCatalogCurrentPointerV1::decode(&std::fs::read(&pointer_path).unwrap()).unwrap();
+    maximum.publication_revision = u64::MAX.to_string();
+    let maximum_bytes = maximum.encode().unwrap();
+    std::fs::write(&pointer_path, &maximum_bytes).unwrap();
+    let mut exhausted = if winner["generationId"] == command_a["generationId"] { command_a } else { command_b };
+    exhausted["expectedCurrentSha256"] = hex_lower(&Sha256::digest(&maximum_bytes)).into();
+    assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&exhausted).unwrap(), provider, &context).await.is_err());
+    assert_eq!(std::fs::read(&pointer_path).unwrap(), maximum_bytes);
+}
+
+struct PublicationLeafSwap {
+    path: PathBuf,
+    swapped: AtomicBool,
+}
+
+impl AuthorityOperationControl for PublicationLeafSwap {
+    fn now_ms(&self) -> u64 {
+        0
+    }
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+    fn report(&self, progress: AuthorityProgress) {
+        if progress.stage == AuthorityProgressStage::CatalogResolved && !self.swapped.swap(true, Ordering::SeqCst) {
+            std::fs::write(&self.path, b"substituted-after-verified-candidate").unwrap();
+        }
+    }
+}
+
+#[tokio::test]
+async fn trusted_publication_post_verification_leaf_substitution_preserves_current() {
+    for field in ["component", "descriptor", "browserActor", "pluginModule", "bundle"] {
+        let a = prepared_fixture();
+        let b = prepared_fixture();
+        let data = a.root.join("publication-data");
+        let command_a = stage_publication_fixture(&a, &data);
+        let mut command_b = stage_publication_fixture(&b, &data);
+        let provider_a = FixtureProviderSource::new(vec![a.binding()]);
+        let provider_b = FixtureProviderSource::new(vec![b.binding()]);
+        let control = TestControl::new();
+        let context = control.context();
+        let current = publication_fixture_receipt(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_a).unwrap(), &provider_a, &context).await.unwrap());
+        command_b["expectedCurrentSha256"] = current["currentSha256"].clone();
+        let relative = if field == "bundle" { "trusted-catalog.json" } else { b.bundle["packages"][0][field]["path"].as_str().unwrap() };
+        let path = data.join("trusted-catalog/generations").join(command_b["generationId"].as_str().unwrap()).join(relative);
+        let swap = PublicationLeafSwap { path, swapped: AtomicBool::new(false) };
+        let swap_context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &swap);
+        let pointer = data.join("trusted-catalog/current.json");
+        let before = std::fs::read(&pointer).unwrap();
+        assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command_b).unwrap(), &provider_b, &swap_context).await.is_err(), "{field}");
+        assert!(swap.swapped.load(Ordering::SeqCst));
+        assert_eq!(std::fs::read(&pointer).unwrap(), before);
+        assert!(document_codec(&b.schema).await.unwrap().is_none(), "failed candidate installed a codec");
+        assert_eq!(TrustedCatalogLoader::load_current(&data, &provider_a, &context).await.unwrap().unwrap().generation_id(), current["generationId"].as_str().unwrap());
+    }
+}
+
+#[tokio::test]
+async fn trusted_publication_command_refuses_invalid_authority_before_initial_pointer() {
+    let fixture = prepared_fixture();
+    let data = fixture.root.join("publication-data");
+    let command = stage_publication_fixture(&fixture, &data);
+    let provider = FixtureProviderSource::new(vec![fixture.binding()]);
+    let control = TestControl::new();
+    for field in ["bundlePath", "publicationRevision", "requestId", "expectedCurrentSha256"] {
+        let mut rejected = command.clone();
+        match field {
+            "bundlePath" => rejected[field] = "/untrusted".into(),
+            "publicationRevision" => rejected[field] = "1".into(),
+            "requestId" => rejected[field] = "".into(),
+            _ => {
+                rejected.as_object_mut().unwrap().remove(field);
+            }
+        }
+        assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&rejected).unwrap(), &provider, &control.context()).await.is_err(), "{field}");
+        assert!(!data.join("trusted-catalog/current.json").exists());
+        assert!(provider.calls.lock().unwrap().is_empty());
+    }
+    control.cancelled.store(true, Ordering::SeqCst);
+    assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command).unwrap(), &provider, &control.context()).await.is_err());
+    assert!(!data.join("trusted-catalog/current.json").exists());
+}
 
 struct TestControl {
     cancelled: AtomicBool,
@@ -681,11 +873,11 @@ fn fixture_component_bytes(fixture: &serde_json::Value) -> Vec<u8> {
 }
 
 fn snapshot_json() -> serde_json::Value {
-    serde_json::from_str(include_str!("../🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
+    serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
 }
 
 fn synthetic_browser_actor(component: &str, descriptor: &str, path: &str) -> serde_json::Value {
-    let mut fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let mut fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     let mut actor = fixture["closed"].take();
     actor["sourceComponentSha256"] = component.into();
     actor["sourceDescriptorByteSha256"] = descriptor.into();
@@ -906,7 +1098,7 @@ fn descriptor_json(plugin_id: &str, package_id: &str, version: &str, schema: Opt
 fn prepared_fixture() -> FixtureDirectory {
     let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
     let schema = format!("fixture.document.catalog.{}.{}@1", std::process::id(), sequence);
-    let root = crate::test_artifact_root::test_artifact_root().join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
+    let root = semio_hub_testing::test_artifact_root().join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
     std::fs::create_dir_all(root.join("components")).expect("component directory");
     std::fs::create_dir_all(root.join("descriptors")).expect("descriptor directory");
     std::fs::create_dir_all(root.join("browser")).expect("actor directory");
@@ -1015,7 +1207,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
         target["grant"]["write"] = false.into();
     }
     let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
-    let root = crate::test_artifact_root::test_artifact_root().join(format!("gis-binding-catalog-{}-{sequence}", std::process::id()));
+    let root = semio_hub_testing::test_artifact_root().join(format!("gis-binding-catalog-{}-{sequence}", std::process::id()));
     std::fs::create_dir(&root).expect("exclusive GIS binding fixture directory");
     std::fs::write(root.join("component.wasm"), component).expect("write synthetic GIS component");
     std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
@@ -1128,7 +1320,7 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
         }
         fn report(&self, _progress: AuthorityProgress) {}
     }
-    let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
+    let _registry = semio_hub_artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📇️native-openable-provider/🧪️tests/🧫️fixtures/🌍️gis-v1/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json")).unwrap();
     assert_eq!(fixture["packageVersion"], expected["packageVersion"]);
@@ -1208,7 +1400,7 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
 
 #[tokio::test]
 async fn selected_native_provider_descriptor_and_cancellation_fences_precede_publication() {
-    let cases: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for case in cases["descriptorPreviewCases"].as_array().unwrap() {
         let mut invalid = prepared_fixture();
         let source = FixtureProviderSource::new(invalid.make_two_codec_bindings());
@@ -1456,7 +1648,7 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
             self.control.report(progress);
         }
     }
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🌐️browser-actor/🔣️.json")).unwrap();
     for law in corpus["loadCases"].as_array().unwrap() {
         let mut fixture = prepared_fixture();
         let path = fixture.root.join(fixture.bundle["packages"][0]["browserActor"]["path"].as_str().unwrap());
@@ -1948,15 +2140,11 @@ async fn a_catalog_load_reports_every_package_phase_bytes_and_rows_into_the_host
         }
 
         fn report(&self, _progress: AuthorityProgress) {}
-
-        fn catalog_progress(&self) -> Option<Arc<TrustedCatalogLoadProgressCellV1>> {
-            Some(Arc::clone(&self.0))
-        }
     }
     let fixture = prepared_fixture();
     let control = ObservedControl(Arc::default());
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
-    let catalog = load_fixture(&fixture, &[fixture.binding()], &context).await.expect("fixture catalog");
+    let catalog = TrustedCatalogLoader::load_fixture_observed(&fixture.bundle_path, "fixture", &FixtureProviderSource::new(vec![fixture.binding()]), &control.0, &context).await.expect("fixture catalog");
     let observed = control.0.snapshot();
     assert_eq!(observed, catalog.load_progress(), "the catalog keeps reporting into the host's cell");
     assert!(observed.packages_total >= 1 && observed.packages.len() as u64 == observed.packages_total);
@@ -1966,7 +2154,7 @@ async fn a_catalog_load_reports_every_package_phase_bytes_and_rows_into_the_host
     assert_eq!(observed.rows_pinned, observed.rows_total);
     assert_eq!(observed.rows_total, observed.packages.iter().map(|package| package.rows).sum::<u64>());
     catalog.verify_pending_guests(&context).await.expect("nothing is pending");
-    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let module: serde_json::Value = serde_json::from_str(semio_hub_trusted_catalog_contract::schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
     let fields = |def: &str| module["$defs"][def]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap().to_string()).collect::<BTreeSet<_>>();
     let body = serde_json::to_value(&observed).unwrap();
     assert_eq!(body.as_object().unwrap().keys().cloned().collect::<BTreeSet<_>>(), fields("TrustedCatalogLoadProgressV1"));
@@ -2074,7 +2262,7 @@ fn bundle_rejects_incomplete_duplicate_conflicting_and_escaping_declarations() {
 
 #[test]
 fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
-    let dependency_fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+    let dependency_fixture: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
     for row in dependency_fixture["encodingCases"].as_array().unwrap() {
         let identities: Vec<TrustedBundleIdentityV1> = serde_json::from_value(row["identities"].clone()).unwrap();
         let mut encoded = Vec::new();
@@ -2209,17 +2397,22 @@ fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rul
 
 mod long {
     use super::*;
+use std::sync::Arc;
+use semio_framework::DslValue;
+use semio_framework_hash::Sha256;
+use semio_hub_trusted_catalog::TrustedCatalogLoader;
+use semio_hub_trusted_catalog_descriptor::{VerifiedTrustedPackage, decode_package_descriptor};
 
     #[tokio::test]
     async fn gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes() {
-        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
+        let _registry = semio_hub_artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
         for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
             let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
             let control = TestControl::new();
             let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
-            let result = crate::inference::verified_gis_map_binding(catalog.clone());
+            let result = semio_hub_inference_catalog::verified_gis_map_binding(catalog.clone(), &semio_hub_gis::inference::GisMapInferenceBindingV1);
             if foreign_service {
-                assert!(matches!(result, Err(crate::inference::InferenceErrorV1::Denied)));
+                assert!(matches!(result, Err(semio_hub_inference::InferenceErrorV1::Denied)));
             } else if viewer {
                 assert!(result.expect("viewer profile is admissible").is_none());
             } else {
@@ -2241,8 +2434,8 @@ mod long {
 
     #[tokio::test]
     async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
-        let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let _registry = semio_hub_artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
+        let corpus: serde_json::Value = serde_json::from_str(semio_hub_testing::hub_source("🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
         let mut fixture = prepared_gis_binding_fixture(false, false).await;
         for receipt in semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap() {
             let native = receipt.into_codec().unwrap();
@@ -2341,7 +2534,7 @@ async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_a
     let control = TestControl::new();
     let catalog = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "fixture", &provider, &control.context()).await.expect("fixture catalog");
     let index = catalog.plugin_module_index();
-    plugin_module::validate_plugin_module_index(&index).expect("canonical index");
+    semio_hub_trusted_catalog_contract::plugin_module::validate_plugin_module_index(&index).expect("canonical index");
     assert_eq!(index.generation_id, catalog.generation_id());
     assert_eq!(index.modules.iter().map(|entry| entry.plugin_id.as_str()).collect::<Vec<_>>(), vec!["fixture-base", "fixture-editor"]);
     assert_eq!(index.modules[1].dependencies, vec!["fixture-base".to_owned()]);
@@ -2362,7 +2555,7 @@ async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_a
     let editor = catalog.plugin_module(&index.modules[1].bundle_sha256).expect("editor module");
     let bridge = editor.bundle().files.iter().find(|file| file.path.ends_with("🌉️bridge.js")).expect("editor entry");
     assert!(editor.file("fixture-editor/unlisted.js").is_none());
-    std::fs::write(fixture.root.join(plugin_module::plugin_module_blob_path(&bridge.sha256)), b"tampered").expect("tamper entry");
+    std::fs::write(fixture.root.join(semio_hub_trusted_catalog_contract::plugin_module::plugin_module_blob_path(&bridge.sha256)), b"tampered").expect("tamper entry");
     assert!(editor.file(&bridge.path).expect("editor entry").read(&control.context()).await.is_err(), "a module file tampered after verification is never served");
     assert!(drain_stream(editor.file(&bridge.path).expect("editor entry")).await.1.is_some(), "a module file tampered after verification never completes its stream");
 }

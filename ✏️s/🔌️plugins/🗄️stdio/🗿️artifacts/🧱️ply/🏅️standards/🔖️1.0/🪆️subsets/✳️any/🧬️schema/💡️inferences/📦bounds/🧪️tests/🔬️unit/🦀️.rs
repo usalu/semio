@@ -1,4 +1,6 @@
-use super::*;
+use crate::{schema::snapshot::PlyProperty, schema::snapshot::PlyValue};
+use crate::PlySnapshot;
+use crate::standards::v1_0::subsets::any::schema::inferences::bounds::*;
 use crate::schema::snapshot::{PlyElement, PlyFormat, PlyRow};
 use crate::STDIO_PLY_DOCUMENT_SCHEMA;
 

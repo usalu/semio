@@ -11,14 +11,8 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
-use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-
-use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-
 use semio_framework_dispatch_macros::dyn_enum_close;
-use semio_framework_plugin::__semio_dispatch_PluginApp;
+
 use semio_framework_plugin::plugin_app_close_prelude::*;
 
 dyn_enum_close! {
@@ -35,117 +29,23 @@ pub use schema::BinaryArtifact;
 /// 🧬️ The wire contract a native test host decodes `🥒️.feature` witnesses through and inverts them with
 /// (`Mutation::from_payload_value`/`Mutation::inverse`), re-exported because such a host links this crate alone.
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_BINARY_DOCUMENT_SCHEMA: &str = "stdio.binary";
+pub use semio_s_artifact_stdio_binary_snapshot::{STDIO_BINARY_DOCUMENT_SCHEMA};
 
-/// 🧬️ Artifact schema descriptor id.
-pub const BINARY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.binary";
+pub use semio_s_artifact_stdio_binary_snapshot::{BINARY_ARTIFACT_SCHEMA_ID};
 
-/// 📜 Schema-owned package definition.
-pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
+pub use semio_s_artifact_stdio_binary_snapshot::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<ArtifactDefinition, PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::definition_from_schema(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_binary_snapshot::{definition};
 
-pub fn formats() -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
-    semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
-}
+pub use semio_s_artifact_stdio_binary_snapshot::{formats};
 
-pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
-    Vec::new()
-}
+pub use semio_s_artifact_stdio_binary_snapshot::{native_codecs};
 
-pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
-    semio_s_artifact_stdio_contract::ArtifactContribution { definition_constraint: None, identity: "binary", schema: ARTIFACT_DEFINITION_SCHEMA, definition, assembly, formats, native_codecs }
-}
+pub use semio_s_artifact_stdio_binary_io_registry::{contribution};
 
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, PluginAssemblyError> {
-    semio_s_artifact_stdio_contract::runtime_assembly("binary", definition()?, declaration)
-}
-
-/// 🧾️ The runtime `binary` declares: its schema, format, inference descriptor, composers and document codec.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
-    let formats = formats()?;
-    ArtifactDeclaration::builder(definition)
-        .schema(standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor()])
-        .composers(standards::v_raw::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") })
-        .try_build()
-}
-
-//#region 🔖️ArtifactDeclaration
-/// 🌳️ New tree (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P pilot): the whole
-/// `s.stdio.binary` artifact through the declaration tree — one standard, `raw`, one subset,
-/// `any`. `localization: &[]` — the real en/de localized descriptors already live in
-/// `📜️artifact-definition.json` (the OLD `ArtifactDefinition` channel this artifact stays
-/// on for `📇️registry`'s catalog, kept per `assembly()` below); wiring them into this NEW field
-/// too is a follow-up, not required for the carrier law or for this tree to register cleanly
-/// (see `📓️w2-p-report.md` `## openQuestions`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![standards::v_raw::standard()] }
-}
-//#endregion 🔖️ArtifactDeclaration
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "s.stdio.binary".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Binary", "Binärdatei"),
-        source_format: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        component_kind: "stdio".into(),
-        dimension: "data".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
-//#endregion 🔖️ArtifactKind
+pub use semio_s_artifact_stdio_binary_io_registry::{artifact, artifact_kind, assembly, declaration};
 //#region 🚪️DerivedIoRegistry
-pub mod io_registry {
-    use crate::standards::v_raw::subsets::any::io::io_registry as v_raw;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
-
-    /// 🎹️ Every composer entry this artifact can serve, across all its standards.
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_raw::entries().iter().collect()).as_slice()
-    }
-
-    /// 🎯️ Compose into exactly one target dialect from a set of (possibly foreign-dialect) sources.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn compose(target: Dialect, sources: &[ErasedComposeSource]) -> Result<ComposedArtifact, ComposeError> {
-        let entry = entries().iter().find(|e| e.writes == target).ok_or_else(|| ComposeError { message: format!("BinaryComposer: no entry writes {:?}", target), diagnostics: Vec::new() })?;
-        ::semio_framework_async::poll::resolve_ready((entry.compose)(sources))
-    }
-
-    /// 📌️ Registers every entry into the OS-wide typed io registry. Called once from `🔌️plugin/🔧️setup`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_composer_entries(v_raw::entries()).expect("static Stdio registration must be available and conflict-free");
-    }
-
-    //#region 🧪️Tests
-    #[cfg(test)]
-    include!("🧪️tests/🔬️io-registry-unit/🦀️.rs");
-    //#endregion 🧪️Tests
-}
+pub use semio_s_artifact_stdio_binary_io_registry::io_registry;
 //#endregion 🚪️DerivedIoRegistry
 
 #[path = "."]
@@ -154,9 +54,8 @@ pub mod standards {
     pub mod v_raw {
         // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
         // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
-        #[path = "🏅️standards/🔖️raw/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::*;
+        
 
         // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // codecs already lived beside `BinarySnapshot`'s `ArtifactDsl`/`ArtifactPack` impls in
@@ -169,9 +68,7 @@ pub mod standards {
         // via this artifact's own top-level `pub mod engine` shim below) — left callable at
         // this exact path via a pure re-export of `subsets::any::io::register` (itself
         // unchanged).
-        pub mod engine {
-            pub use super::subsets::any::io::register;
-        }
+        pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::engine;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -181,93 +78,32 @@ pub mod standards {
                 // viewer/editor/examples children mounted below (and `crate::editor::binary`/
                 // `crate::viewer::binary`, mounted at the plugin's top-level `editor`/`viewer`
                 // modules, not here — see that file's own doc comment).
-                #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::subsets::any::*;
+                
 
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod extent {
-                            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏extent/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_stdio_binary_schema::standards::v_raw::subsets::any::schema::*;
+                    
+                    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::schema::snapshot;
+                    pub use semio_s_artifact_stdio_binary_schema::standards::v_raw::subsets::any::schema::inferences;
+                    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::schema::diff;
+                    pub use semio_s_artifact_stdio_binary_mutations::standards::v_raw::subsets::any::schema::mutations;
                 }
                 #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod binary {
-                                    #[path = "."]
-                                    pub mod v_raw {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::subsets::any::io::*;
+pub mod binary {
+    pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::binary::inferences;
+}
+pub mod text {
+    pub use semio_s_artifact_stdio_binary_io_registry::standards::v_raw::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::text::inferences;
+}
+                    
+                    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::import;
+                    pub use semio_s_artifact_stdio_binary_snapshot::standards::v_raw::subsets::any::io::export;
                 }
             }
         }
@@ -282,52 +118,24 @@ pub mod engine {
     pub use super::standards::v_raw::engine::*;
 }
 
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
+pub use semio_s_artifact_stdio_binary_snapshot::examples;
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod binary {
-        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_binary_mutations::editor::binary::*;
+        
+        pub use semio_s_artifact_stdio_binary_snapshot::editor::binary::edit_rules;
+        pub use semio_s_artifact_stdio_binary_snapshot::editor::binary::presence;
+        pub use semio_s_artifact_stdio_binary_snapshot::editor::binary::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_binary_mutations::editor::binary::modes::edit::*;
+                
+                pub use semio_s_artifact_stdio_binary_mutations::editor::binary::modes::edit::windows;
             }
         }
     }
@@ -337,38 +145,24 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod binary {
-        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
+        pub use semio_s_artifact_stdio_binary_io_registry::viewer::binary::*;
+        
+        pub use semio_s_artifact_stdio_binary_snapshot::viewer::binary::presence;
+        pub use semio_s_artifact_stdio_binary_snapshot::viewer::binary::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
-                #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
+                pub use semio_s_artifact_stdio_binary_mutations::viewer::binary::modes::view::*;
+                
+                pub use semio_s_artifact_stdio_binary_mutations::viewer::binary::modes::view::windows;
             }
         }
     }
 }
 
 pub use crate::standards::v_raw::subsets::any::io::{BinaryBuilderConstruction, BinaryParts, BinaryAnalyzerAnalysis, BinaryBuilderFacets, BinaryBuilder, BinaryAnalyzer, BinaryComposer};
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod hoisted_snapshot_0;

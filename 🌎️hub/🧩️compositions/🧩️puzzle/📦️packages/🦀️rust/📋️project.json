@@ -26,10 +26,16 @@
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
-      "cache": true
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",
@@ -54,6 +60,14 @@
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-architecture"
+      },
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+          }
+        }
       }
     }
   }

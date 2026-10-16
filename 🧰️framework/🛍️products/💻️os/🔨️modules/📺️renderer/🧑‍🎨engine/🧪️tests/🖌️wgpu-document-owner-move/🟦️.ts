@@ -106,7 +106,9 @@ describe("wgpu retained document owner move", () => {
     for (const walk of laws.terminalCursorWalks) {
       const start = shell.indexOf(`fn ${walk}(`);
       expect(start, `the ${walk} chrome walk exists`).toBeGreaterThan(0);
-      const end = shell.indexOf("\n    fn ", start + 1);
+      const boundary = /\n(?:    (?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn |\})/gu;
+      boundary.lastIndex = start + 1;
+      const end = boundary.exec(shell)?.index ?? -1;
       const body = shell.slice(start, end < 0 ? undefined : end);
       expect(body.includes(release) || body.includes(helper), `the ${walk} chrome walk releases a terminal cursor directly or through the bounded opportunity helper`).toBe(true);
       walkReleases += body.split(release).length - 1;

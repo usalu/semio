@@ -26,8 +26,9 @@
 //!
 //! 🌉️ The bridge handed back to `Lane::Io` is a `semio_framework_async::oneshot` receiver — a repo
 //! primitive whose `poll` reads a value and registers a waker, which is safe on any thread.
+#![cfg(not(target_arch = "wasm32"))]
 
-use crate::db_storage::{DbIoAsyncDriverFuture, DbIoAsyncDriverOutput, DbIoAsyncDriverRuntime};
+use db_io_core::{DbIoAsyncDriverFuture, DbIoAsyncDriverOutput, DbIoAsyncDriverRuntime};
 use semio_framework_async::oneshot;
 use std::future::Future;
 use std::pin::Pin;
@@ -139,7 +140,7 @@ pub fn within<T>(build: impl FnOnce() -> T) -> T {
 /// 💓 A periodic driver turn owned by its handle — a remote lease renews itself on the
 /// driver runtime while its owner holds the handle, and dropping the handle stops it at once.
 pub struct DbIoDriverPeriodic {
-    task: tokio::task::JoinHandle<()>,
+    pub task: tokio::task::JoinHandle<()>,
 }
 
 impl Drop for DbIoDriverPeriodic {

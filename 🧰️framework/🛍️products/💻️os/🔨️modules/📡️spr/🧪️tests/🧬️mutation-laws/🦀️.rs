@@ -1,6 +1,6 @@
 //! 🧪️ Counter domain and direct operations used by the law helper's own tests.
 
-use crate::os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_framework_os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔺️StructuralDiff
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -31,7 +31,7 @@ impl CounterDiff {
 }
 
 impl MutationDiff<i64> for CounterDiff {
-    fn apply(&self, base: &i64, _capability: crate::os_spr::ApplyCapability) -> MutationApplyResult<i64> {
+    fn apply(&self, base: &i64, _capability: semio_framework_os_spr::ApplyCapability) -> MutationApplyResult<i64> {
         self.deltas.iter().try_fold(*base, |value, delta| value.checked_add(*delta).ok_or_else(|| MutationApplyError::new("mutation.apply.invariant", "counter addition overflowed")))
     }
 
@@ -61,7 +61,7 @@ pub use mutations::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::os_spr::{Mutation, MutationLeaf, OpText};
+    use semio_framework_os_spr::{Mutation, MutationLeaf, OpText};
 
     fn fixture() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("law fixture")
@@ -102,7 +102,7 @@ mod tests {
             other => panic!("unexpected fixture outcome {other:?}"),
         };
         assert_eq!(level, row["outcome"].as_str().unwrap());
-        assert_eq!(crate::os_spr::apply_diff(outcome.diff(), &base).unwrap(), row["next"].as_i64().unwrap());
+        assert_eq!(semio_framework_os_spr::apply_diff(outcome.diff(), &base).unwrap(), row["next"].as_i64().unwrap());
         assert_eq!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").len(), usize::try_from(row["inverseCount"].as_u64().unwrap()).unwrap());
     }
 
@@ -114,11 +114,11 @@ mod tests {
             let diff = CounterDiff { deltas: row["deltas"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().parse().unwrap()).collect() };
             match row["expected"].as_str() {
                 Some(expected) => {
-                    let after = crate::os_spr::apply_diff(&diff, &base).unwrap();
+                    let after = semio_framework_os_spr::apply_diff(&diff, &base).unwrap();
                     assert_eq!(after, expected.parse::<i64>().unwrap());
-                    assert_eq!(crate::os_spr::apply_diff(&diff.inverse(&base), &after).unwrap(), base);
+                    assert_eq!(semio_framework_os_spr::apply_diff(&diff.inverse(&base), &after).unwrap(), base);
                 }
-                None => assert!(crate::os_spr::apply_diff(&diff, &base).is_err()),
+                None => assert!(semio_framework_os_spr::apply_diff(&diff, &base).is_err()),
             }
         }
         let first = CounterDiff::delta(2);
@@ -132,17 +132,17 @@ mod tests {
         let mut right = first;
         right.absorb(tail);
         assert_eq!(left, right);
-        assert_eq!(crate::os_spr::apply_diff(&left, &10), Ok(19));
+        assert_eq!(semio_framework_os_spr::apply_diff(&left, &10), Ok(19));
     }
 
     #[test]
     fn minimum_add_inverse_obeys_store_reverse_order() {
         let mutation = CounterMutation::AddCounter(AddCounter { delta: i64::MIN });
         let before = i64::MAX;
-        let after = crate::os_spr::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+        let after = semio_framework_os_spr::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
         let inverse = mutation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse, vec![AddCounter { delta: 1 }.into(), AddCounter { delta: i64::MAX }.into()]);
-        let restored = inverse.into_iter().rev().fold(after, |state, operation| crate::os_spr::apply_diff(operation.diff(&state).diff(), &state).unwrap());
+        let restored = inverse.into_iter().rev().fold(after, |state, operation| semio_framework_os_spr::apply_diff(operation.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
     }
 }

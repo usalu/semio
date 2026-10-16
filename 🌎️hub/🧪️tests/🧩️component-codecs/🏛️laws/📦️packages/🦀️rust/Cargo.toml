@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-component-codec-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component codec laws over caller-selected runtimes"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-component-codec-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+integration-fixtures = []
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+semio-framework-job = { workspace = true }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-plugin-host = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
+directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]

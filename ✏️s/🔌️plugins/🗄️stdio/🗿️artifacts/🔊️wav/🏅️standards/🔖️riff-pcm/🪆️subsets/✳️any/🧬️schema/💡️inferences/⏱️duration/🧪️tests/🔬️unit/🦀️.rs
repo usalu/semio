@@ -1,4 +1,5 @@
-use super::*;
+use crate::{standards::riff_pcm::subsets::any::schema::snapshot::WavData, standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot};
+use crate::standards::riff_pcm::subsets::any::schema::inferences::duration::*;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::WavFmt;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

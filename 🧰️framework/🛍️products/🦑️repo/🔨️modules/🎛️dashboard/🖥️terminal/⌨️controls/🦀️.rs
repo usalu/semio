@@ -6,8 +6,8 @@
 
 use super::launcher::{Input, LauncherState, Outcome};
 use super::windows::{Body, ContextMenu, Dashboard, Effect, Kind, LinkState, Place};
-use crate::preferences::keymap::{KeyName, KeySpec, Scope};
-use crate::preferences::Change;
+use dashboard_preferences::Change;
+use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
 use ui_tui::tui::engine::Tui;
 use ui_tui::tui::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
 use ui_tui::tui::layout::{reorder_stack_tab, resize_split, resize_window, zoom_window};
@@ -529,7 +529,7 @@ impl Dashboard {
             (None, Some(registry)) => text.state_commands.fill(&[("count", &registry.entries().len().to_string())]).into_string(),
             (None, None) => String::new(),
         };
-        let phase = self.phase.map(|phase| match phase { crate::inventory::Phase::Known => text.phase_known, crate::inventory::Phase::Sources => text.phase_sources, crate::inventory::Phase::Walk => text.phase_walk, crate::inventory::Phase::Complete => text.phase_complete }.as_str().to_string()).filter(|_| self.inventory.is_some());
+        let phase = self.phase.map(|phase| match phase { dashboard_inventory::Phase::Known => text.phase_known, dashboard_inventory::Phase::Sources => text.phase_sources, dashboard_inventory::Phase::Walk => text.phase_walk, dashboard_inventory::Phase::Complete => text.phase_complete }.as_str().to_string()).filter(|_| self.inventory.is_some());
         [self.notice.clone(), self.focus_title(tui), Some(text.state_running.fill(&[("count", &self.running().to_string())]).into_string()), Some(link), Some(discovery).filter(|value| !value.is_empty()), phase].into_iter().flatten().collect::<Vec<_>>().join(" · ")
     }
 }

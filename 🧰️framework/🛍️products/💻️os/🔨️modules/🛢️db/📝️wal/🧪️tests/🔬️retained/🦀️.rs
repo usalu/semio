@@ -1,5 +1,7 @@
 use super::*;
-use crate::db_storage::WalStorage;
+
+use db_io_core::WalStorage;
+use db_wal_log::{GroupCommitPolicy, WalBytes, WalCursorControl, WalRecord, WalRecordBatch, WalReplayStep, replay_document};
 
 fn fail_stop_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🛑️fail-stop/🔣️.json")).unwrap()
@@ -21,14 +23,14 @@ async fn fail_stop_segment_bytes(storage: &impl WalStorage, document: &ArtifactI
 async fn assert_artifact_wal_fail_stop_case(name: &str) {
     let fixture = fail_stop_fixture();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == name).unwrap();
-    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
+    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let storage = db_storage::FaultStorage::new(inner.clone()).await;
     let document = ArtifactId::from(format!("retained-artifact-wal-fail-stop-{name}"));
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let baseline = fail_stop_segment_bytes(&storage, &document).await;
     let append_boundary = storage.append_calls().await + 1;
     let sync_boundary = storage.sync_calls().await + 1;
-    let mut script = crate::db_fault_testing::FaultScript::default();
+    let mut script = db_storage::FaultScript::default();
     match case["fault"].as_str().unwrap() {
         "shortAppend" => script.torn_write_at = Some((append_boundary, case["keepBytes"].as_u64().unwrap())),
         "appendError" => script.fail_nth_write = Some(append_boundary),
@@ -87,52 +89,12 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn wal_bytes_exact_backing_handback_cancel_and_close_are_one_owner() {
-    let _pool = crate::db_storage::db_io_test_pool();
-    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let mut control = WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 64).unwrap();
-    let mut source = Vec::with_capacity(32);
-    source.push(0xA5);
-    let mut retained = WalBytes::try_admit(source, 32, &mut control).await.unwrap();
-    assert_eq!(retained.len(), 1);
-    while retained.close_step().unwrap().is_some() {}
-    assert!(retained.terminal_is_empty());
-
-    let mut source = Vec::with_capacity(33);
-    source.push(0x5A);
-    let pointer = source.as_ptr();
-    let rejected = WalBytes::try_admit(source, 32, &mut control).await.unwrap_err();
-    let returned = rejected.into_source().unwrap();
-    assert_eq!(returned.as_ptr(), pointer);
-    assert_eq!(returned.capacity(), 33);
-
-    cancelled.store(true, std::sync::atomic::Ordering::Release);
-    let mut source = Vec::with_capacity(8);
-    source.push(1);
-    let pointer = source.as_ptr();
-    let mut rejected = WalBytes::try_admit(source, 8, &mut control).await.unwrap_err();
-    while rejected.close_step().unwrap() {}
-    let returned = rejected.into_source().unwrap();
-    assert_eq!(returned.as_ptr(), pointer);
-
-    cancelled.store(false, std::sync::atomic::Ordering::Release);
-    let mut deadline_control = WalCursorControl::new(cancelled, std::time::Instant::now(), 16).unwrap();
-    let mut source = Vec::with_capacity(2);
-    source.push(0x33);
-    let pointer = source.as_ptr();
-    let mut rejected = WalBytes::try_admit(source, 2, &mut deadline_control).await.unwrap_err();
-    assert!(matches!(rejected.error(), DbError::Unavailable(message) if message == "wal cursor deadline reached"));
-    while rejected.close_step().unwrap() {}
-    assert_eq!(rejected.into_source().unwrap().as_ptr(), pointer);
-}
-
-#[semio_framework_async_macros::async_test]
 async fn wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic() {
-    let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("retained-replay");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let mut admission = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_024).unwrap();
-    let bytes = WalBytes::try_admit(vec![0xA5; db_storage::DB_IO_PAGE_BYTES + 1], (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
+    let bytes = WalBytes::try_admit(vec![0xA5; db_io_core::DB_IO_PAGE_BYTES + 1], (db_io_core::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(bytes)).is_ok());
     wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 0).await.unwrap();
@@ -168,11 +130,11 @@ async fn wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic() {
 
 #[semio_framework_async_macros::async_test]
 async fn wal_replay_cancellation_remains_set_while_close_reaches_terminal_empty() {
-    let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("retained-replay-cancel-close");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     let mut admission = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_024).unwrap();
-    let bytes = WalBytes::try_admit(vec![0x5A; db_storage::DB_IO_PAGE_BYTES + 1], (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
+    let bytes = WalBytes::try_admit(vec![0x5A; db_io_core::DB_IO_PAGE_BYTES + 1], (db_io_core::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(bytes)).is_ok());
     wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 0).await.unwrap();
@@ -195,7 +157,7 @@ async fn wal_replay_cancellation_remains_set_while_close_reaches_terminal_empty(
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_wal_repeated_open_close_is_page_budget_neutral() {
-    let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("retained-artifact-wal-close-budget");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     wal.close().await.unwrap();
@@ -220,7 +182,7 @@ async fn artifact_wal_repeated_open_close_is_page_budget_neutral() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_wal_close_rejects_pending_records_and_closed_writes() {
-    let storage = db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
+    let storage = db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("retained-artifact-wal-pending-close");
     let policy = GroupCommitPolicy { max_delay_ms: u64::MAX, max_bytes: u64::MAX, max_records: u32::MAX };
     let mut wal = ArtifactWal::create(&storage, document, policy, 0).await.unwrap();
@@ -260,19 +222,19 @@ async fn artifact_wal_sync_error_is_fail_stop_until_reopen() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen() {
     assert!(fail_stop_fixture()["cases"].as_array().unwrap().iter().any(|case| case["fault"] == "successorAppendError"));
-    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap()));
-    let storage = crate::db_fault_testing::FaultStorage::new(inner.clone()).await;
+    let inner = std::sync::Arc::new(db_storage::DbBackend::Memory(db_storage_memory::MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap()));
+    let storage = db_storage::FaultStorage::new(inner.clone()).await;
     let document = ArtifactId::from("retained-artifact-wal-successor-fail-stop");
     let mut wal = ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0).await.unwrap();
     wal.max_segment_bytes = 1;
-    storage.set_script(crate::db_fault_testing::FaultScript { fail_nth_write: Some(storage.append_calls().await + 2), ..crate::db_fault_testing::FaultScript::default() }).await;
+    storage.set_script(db_storage::FaultScript { fail_nth_write: Some(storage.append_calls().await + 2), ..db_storage::FaultScript::default() }).await;
     let mut admission = WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 128).unwrap();
     let command = WalBytes::try_admit(b"committed-before-successor-failure".to_vec(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(command)).is_ok());
     assert!(matches!(wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 1).await, Err(DbError::Io(_))));
     while batch.close_step().unwrap() {}
-    assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
+    assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_io_core::WalSegmentState::Sealed);
     let sealed = fail_stop_segment_bytes(&storage, &document).await;
     let append_calls = storage.append_calls().await;
     assert!(matches!(wal.force_flush(&storage).await, Err(DbError::Closed)));

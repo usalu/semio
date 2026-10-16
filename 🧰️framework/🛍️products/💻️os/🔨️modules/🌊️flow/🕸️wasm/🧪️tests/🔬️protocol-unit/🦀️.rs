@@ -106,12 +106,12 @@ fn open(bridge: &mut FlowBridge<MockDomain>, request_id: u64, generation: u32) -
 
 #[test]
 fn schema_and_fixtures_publish_every_operation_and_fixed_law() {
-    assert!(FLOW_ABI_SCHEMA.contains("\"open\": 2500"));
-    assert!(FLOW_ABI_SCHEMA.contains("\"renderDrawingScene\": 2600"));
-    assert!(FLOW_ABI_SCHEMA.contains("\"snapshotJson\": 2609"));
-    assert!(FLOW_ABI_SCHEMA.contains("\"synchronizeSnapshotJson\": 2610"));
+    assert!(read_source("../../🧬️schema/📡️abi/🔣️.json").contains("\"open\": 2500"));
+    assert!(read_source("../../🧬️schema/📡️abi/🔣️.json").contains("\"renderDrawingScene\": 2600"));
+    assert!(read_source("../../🧬️schema/📡️abi/🔣️.json").contains("\"snapshotJson\": 2609"));
+    assert!(read_source("../../🧬️schema/📡️abi/🔣️.json").contains("\"synchronizeSnapshotJson\": 2610"));
     for operation in (FLOW_OPERATION_FIRST..=FLOW_OPERATION_LAST).filter(|operation| !matches!(operation, 2_603 | 2_604)) {
-        assert!(FLOW_ABI_SCHEMA.contains(&format!(": {operation}")));
+        assert!(read_source("../../🧬️schema/📡️abi/🔣️.json").contains(&format!(": {operation}")));
     }
     assert!(FLOW_ABI_LIMITS.contains("request_bytes\t1048576\t1048577"));
     assert!(FLOW_ABI_TRACE.contains("rejected_controls"));
@@ -189,7 +189,7 @@ fn original_flow_failure_retains_and_closes_complete_value_cause() {
                     let original_extent = owned.capacity();
                     let error = if borrowed { ValueError::literal(kind, "original borrowed refusal") } else { ValueError::new(kind, owned) }.with_retained_progress(progress);
                     let original_pointer = error.message.as_ptr();
-                    let (failure, heap) = observe(|| if through_vcs { super::super::flow_vcs_close_failure(crate::vcs::FlowVcsCloseFailure::from(error)) } else { super::super::flow_close_value_failure(error) });
+                    let (failure, heap) = observe(|| if through_vcs { super::flow_vcs_close_failure(semio_framework_os_flow_vcs::FlowVcsCloseFailure::from(error)) } else { super::flow_close_value_failure(error) });
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                     let FlowFailureCause::Value(original) = &failure.cause else { panic!("complete original value cause") };
                     assert_eq!(original.kind, kind);

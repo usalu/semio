@@ -1,5 +1,6 @@
 //! 🧳️ Neutral prepared operation owners retain publication, inverse, diagnostics and independent refusals.
-use super::{MutationMessage,MutationApplyError};
+use semio_framework_replication_mutation::MutationMessage;
+use semio_framework_mutation_diff::MutationApplyError;
 use semio_framework_value::ValueError;
 use std::sync::Arc;
 /// 🧳️ Semantic owners produced against the immutable base; inverse and apply refusals are independent.

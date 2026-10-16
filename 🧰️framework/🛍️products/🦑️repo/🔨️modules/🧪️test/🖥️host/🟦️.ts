@@ -17,6 +17,9 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { receiveScriptProcessInvocation,withIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ResourceLeaseControl } from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ResultArtifact, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -89,7 +92,8 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
 }
 
 /** 🏃️ Executes every planned scenario against one loaded adapter, in plan order. */
-export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: TestAdapter): Promise<TestResult[]> {
+export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: TestAdapter, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<TestResult[]> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const results: TestResult[] = [];
   const registrationProblems = validateRegistration(plan, adapter, plan.role);
   for (const scenario of plan.scenarios) {
@@ -100,10 +104,14 @@ export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: 
       continue;
     }
     try {
-      const outcome = await handler(makeAdapterContext(repoRoot, plan, scenario, plan.role));
-      results.push(resultFor(plan, scenario.id, scenario.level, plan.role, "passed", Date.now() - started, outcome, outcome.diagnostics ?? [], scenario.seed));
+      const result = await withRequestedIssuedResourceControlV1(phaseControl,testLevelBudgetMs(scenario.level),async scenarioControl=>{
+        const outcome=await withRequestedIssuedResourceControlV1(scenarioControl,0,control=>withIssuedResourceOperationV1(control,()=>Promise.resolve(handler(makeAdapterContext(repoRoot,plan,scenario,plan.role,invocation,control)))));
+        requireIssuedResourceControlInvocationV1(scenarioControl,invocation);
+        return resultFor(plan,scenario.id,scenario.level,plan.role,"passed",Date.now()-started,outcome,outcome.diagnostics??[],scenario.seed);
+      });
+      results.push(result);
     } catch (error) {
-      const failure = error as Error;
+      const failure = error instanceof Error ? error : Error(String(error));
       const status = failure.name === "AssertionError" ? "failed" : "errored";
       results.push(resultFor(plan, scenario.id, scenario.level, plan.role, status, Date.now() - started, null, [{ severity: "error", message: failure.message, detail: failure.stack ?? "" }], scenario.seed));
     }
@@ -114,7 +122,8 @@ export async function runAdapter(repoRoot: string, plan: TestCasePlan, adapter: 
 
 //#region 🚪️Entry
 /** 🚪️ Host entry: load plan, load adapter, execute, emit JSONL. Any failure is a result, never a skip. */
-export async function main(argv: readonly string[]): Promise<number> {
+export async function main(argv: readonly string[], invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<number> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const args = parseHostArgs(argv);
   const repoRoot = repoRootFromHere();
   const plan = JSON.parse(readFileSync(args.planPath, "utf8")) as TestCasePlan;
@@ -124,13 +133,13 @@ export async function main(argv: readonly string[]): Promise<number> {
   const module = (await import(adapterAbs)) as { default?: TestAdapter };
   const adapter = module.default;
   if (adapter === undefined || adapter.implementation !== "typescript") throw new Error(`${adapterRel} must default-export defineTestAdapter({ implementation: "typescript", … })`);
-  const results = await runAdapter(repoRoot, plan, adapter);
+  const results = await runAdapter(repoRoot, plan, adapter, invocation, phaseControl);
   mkdirSync(dirname(args.outPath), { recursive: true });
   writeFileSync(args.outPath, results.map((result) => JSON.stringify(result)).join("\n") + (results.length > 0 ? "\n" : ""));
   return results.every((result) => result.status === "passed") ? 0 : 1;
 }
 
 if (import.meta.main) {
-  process.exit(await main(process.argv.slice(2)));
+  process.exitCode=await receiveScriptProcessInvocation(process.env,invocation=>withIssuedResourceControlV1(invocation,"test:host-entry",0,control=>main(process.argv.slice(2),invocation,control)));
 }
 //#endregion 🚪️Entry

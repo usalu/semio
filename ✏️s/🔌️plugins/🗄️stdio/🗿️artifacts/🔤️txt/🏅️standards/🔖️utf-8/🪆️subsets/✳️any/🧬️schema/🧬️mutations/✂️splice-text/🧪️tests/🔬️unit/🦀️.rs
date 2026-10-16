@@ -1,6 +1,8 @@
+use crate::schema::diff::TxtDiff;
+use crate::TxtSnapshot;
 use crate::apply_mutation;
-use super::super::{TxtMutation};
-use super::*;
+use crate::standards::v_utf_8::subsets::any::schema::mutations::{TxtMutation};
+use crate::standards::v_utf_8::subsets::any::schema::mutations::splice_text::*;
 use crate::schema::snapshot::LineEnding;
 use protocol::{Mutation, MutationKind, MutationLeaf, OpBinary, OpText};
 
@@ -72,7 +74,7 @@ fn refuses_ranges_that_leave_the_text_overlap_or_leave_the_native_shape() {
 /// contract's own scalar splice application, and its inverse restores the base.
 #[test]
 fn the_corpus_rows_mean_the_corpus_text() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/✂️splice-text/🔣️.json")).expect("splice corpus");
+    let corpus: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../../../../🧪️tests/🧫️fixtures/✂️splice-text/🔣️.json")).expect("splice corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let id = row["id"].as_str().unwrap();
         let before = row["before"].as_str().unwrap();
@@ -113,4 +115,9 @@ async fn splice_text_inverse_sum_law_holds_for_every_shape() {
     ] {
         protocol::protocol_laws::assert_mutation_inverse_sum_law(&TxtMutation::SpliceText(SpliceTextMutation { splices }), &base).await;
     }
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

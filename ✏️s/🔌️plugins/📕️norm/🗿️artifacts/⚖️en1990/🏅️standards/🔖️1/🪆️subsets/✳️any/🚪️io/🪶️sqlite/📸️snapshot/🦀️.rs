@@ -195,7 +195,7 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 }
 
 /// 🪶️ Binds the EN1990 owner to its explicit relational capability.
-pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1990Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec() }
+pub fn sqlite_codec() -> store::os_store::serialization::ArtifactSqliteSnapshotCodec { <En1990Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec() }
 
 #[path="🛂️admission/🦀️.rs"]
 pub(crate)mod admission;

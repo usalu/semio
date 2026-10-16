@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-trusted-catalog-fixtures"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Feature-gated real GIS Map profile builder for the hub binary laws"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-trusted-catalog-fixtures"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-inference-catalog = { workspace = true }
+semio-hub-native-openable = { workspace = true }
+semio-hub-testing = { workspace = true }
+semio-hub-trusted-catalog = { workspace = true }
+semio-hub-trusted-catalog-contract = { workspace = true }
+semio-hub-trusted-catalog-descriptor = { workspace = true }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-hub-stdio-catalog = { workspace = true }
+semio-hub-gis = { workspace = true }
+semio-framework-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]

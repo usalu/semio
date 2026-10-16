@@ -21,6 +21,3 @@ pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️
 semio-s-artifact-puzzle-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d = { path = "../🗿️artifacts/🖐️5d/📦️packages/🦀️rust" }
-
-[profile.prototype]
-inherits = "dev"

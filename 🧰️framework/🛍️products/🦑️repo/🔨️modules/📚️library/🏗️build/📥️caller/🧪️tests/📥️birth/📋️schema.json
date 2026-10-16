@@ -1,0 +1,89 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "cases",
+    "childArguments",
+    "ceilings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "args",
+          "mode",
+          "main",
+          "javascript"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "main": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "javascript": {
+            "type": "boolean"
+          },
+          "watch": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "childArguments": {
+      "const": [
+        "run",
+        "app:test"
+      ]
+    },
+    "ceilings": {
+      "const": {
+        "transport": {
+          "maximumBytes": 12345,
+          "maximumLines": 123
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 1234
+        },
+        "network": {
+          "offline": true
+        }
+      }
+    }
+  }
+}

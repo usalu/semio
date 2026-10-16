@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-route-testkit-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

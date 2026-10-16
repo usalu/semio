@@ -22,5 +22,38 @@
       "minLength": 1,
       "maxLength": 4096
     }
+  },
+  "definitions": {
+    "TestRegistration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "target",
+        "command",
+        "source",
+        "languages"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "target": {
+          "const": "test-toolkit-outputs"
+        },
+        "command": {
+          "const": "bun ./📜️script.ts test toolkit-outputs"
+        },
+        "source": {
+          "const": "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts"
+        },
+        "languages": {
+          "const": [
+            "EN",
+            "DE"
+          ]
+        }
+      }
+    }
   }
 }

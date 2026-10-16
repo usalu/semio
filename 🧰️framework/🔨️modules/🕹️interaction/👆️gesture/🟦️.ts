@@ -295,7 +295,7 @@ export const pinchWheelDelta = (scale: number, pixelsPerDoubling: number = PINCH
  * (anchor = cursor). `viewport` is the surface's size in the same pixel space as `anchor`.
  *
  * Uses the canonical board transform `screenX = (worldX - camera.x) * zoom + width / 2`
- * (`🖥️Board2dHost/🟦️.tsx`'s `puzzle2dWorldToScreen`), so a host can hand this its own camera record. */
+ * (`🖥️Board2dHost/🟦️.tsx`'s `boardWorldToScreen`), so a host can hand this its own camera record. */
 export const zoomAboutPoint = (
   camera: { readonly x: number; readonly y: number; readonly zoom: number },
   anchor: { readonly x: number; readonly y: number },

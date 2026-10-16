@@ -4,7 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import { discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
-import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
+import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
@@ -144,7 +144,7 @@ export const DECOMPOSER_FACET_DIR = "🪓️decomposer";
 
 export const LEGACY_WASM_DIR = "🕸️wasm";
 
-export const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems["🟦️typescript"].componentFileKindId);
+export const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(requiredRegistryEntryV1(TAXONOMY.ecosystems, "🟦️typescript").componentFileKindId);
 
 /** 🪟️ A window dir may only contain these children, each itself a `🦀️.rs` leaf. */
 export const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
@@ -154,7 +154,7 @@ export const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
  * exactly as a subset or a surface does; they are ownership dirs, never window facets. */
 export const TAXONOMY_TEST_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(TAXONOMY.testOwnerKinds.includes(TAXONOMY.windowsDirName) ? [TAXONOMY.testsDirName, TAXONOMY.testFixturesDirName] : []);
 
-export const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems[RUST_LANG].componentFileKindId);
+export const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(requiredRegistryEntryV1(TAXONOMY.ecosystems, RUST_LANG).componentFileKindId);
 
 /** 🥒️ Gherkin feature leaf that marks a directory as a repository test-platform case. */
 export const TEST_FEATURE_FILENAME = primaryFilenameForKind(TAXONOMY.testFeatureFileKindId);
@@ -182,11 +182,11 @@ function semanticFacetPrimaryProjection(contractId: string): SemanticFacetPrimar
 export const PLUGIN_EMPTY_LANE_FILENAME = semanticFacetPrimaryProjection("artifact-empty-facet-primary-markdown-v1").sourceFilename;
 
 /** 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
-export const RUST_LIBRARY_ENTRY_CONTRACT_ID = TAXONOMY.ecosystems[RUST_LANG].entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
+export const RUST_LIBRARY_ENTRY_CONTRACT_ID = requiredRegistryEntryV1(TAXONOMY.ecosystems, RUST_LANG).entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
 
 if (!RUST_LIBRARY_ENTRY_CONTRACT_ID) throw new Error("📇️registry: Rust ecosystem must declare a library entry contract");
 
-export const RUST_ENTRY_FILENAME = TAXONOMY.configurableEntryContracts[RUST_LIBRARY_ENTRY_CONTRACT_ID].filename;
+export const RUST_ENTRY_FILENAME = requiredRegistryEntryV1(TAXONOMY.configurableEntryContracts, RUST_LIBRARY_ENTRY_CONTRACT_ID).filename;
 
 export const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
 
@@ -227,7 +227,7 @@ export function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: 
       const subsetsAbs = join(standardsAbs, std, TAXONOMY.subsetsDirName);
       for (const sub of listDirs(subsetsAbs)) {
         for (const role of TAXONOMY.surfaceRoles) {
-          const dirName = TAXONOMY.surfaceDirNames[role];
+          const dirName = requiredRegistryEntryV1(TAXONOMY.surfaceDirNames, role);
           const abs = join(subsetsAbs, sub, dirName);
           if (existsSync(abs)) out.push({ abs, label: `${sub}/${dirName}` });
         }

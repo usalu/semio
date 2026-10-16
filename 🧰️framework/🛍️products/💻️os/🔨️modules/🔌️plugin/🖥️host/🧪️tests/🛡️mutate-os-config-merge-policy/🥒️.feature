@@ -10,11 +10,9 @@ Feature: Apply every typed merge-policy mutation to its committed specification 
   `os-config-merge-policy-mutation-semantics` no-oracle decision in
   `../../../../../🎚️config/🔮️oracles/🔣️.json`).
 
-  ⚠️ Like its opening-preferences sibling, this case lives under `🔌️plugin/🖥️host` rather than beside
-  the vocabulary it exercises, because `🎚️config` has no crate of its own: `📦️glue.rs` in
-  `🖥️host/📦️packages/🦀️rust` is the ONE place `MergePolicyConfigMutation` is mounted, and a case
-  placed at `🎚️config` would resolve its subject crate to the OS kernel, which does not expose the
-  facet at all.
+  ⚠️ Like its opening-preferences sibling, this case lives under `🔌️plugin/🖥️host`; its Rust subject
+  links the owning crate `semio-framework-os-config` directly, declared as a subject host package in
+  `../../🔮️oracles/🔣️.json`.
 
   The vocabulary closes at ONE kind, and that is a statement about the record rather than an
   omission. `MergePolicySetting` holds exactly one field, so there is nothing to insert, remove or

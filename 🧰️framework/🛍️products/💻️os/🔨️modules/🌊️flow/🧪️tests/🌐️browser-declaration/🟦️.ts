@@ -29,7 +29,7 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
     if (typeof entry === "string") continue;
     const binding = entry as { types: string; import: string };
     const name = fixture.package.name + (subpath === "." ? "" : subpath.slice(1));
-    const resolved = ts.resolveModuleName(name, join(testDirectory, "consumer.ts"), { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext }, ts.sys).resolvedModule;
+    const resolved = ts.resolveModuleName(name, join(testDirectory, "consumer.ts"), { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext, baseUrl: packageRoot, paths: { [name]: [binding.types] } }, ts.sys).resolvedModule;
     assert.ok(resolved, name);
     assert.equal(realpathSync(resolved.resolvedFileName), realpathSync(join(packageRoot, binding.types)));
   }

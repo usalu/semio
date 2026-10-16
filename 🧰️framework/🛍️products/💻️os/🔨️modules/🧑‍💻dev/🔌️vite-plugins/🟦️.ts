@@ -17,7 +17,7 @@ import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, ag
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceFreshness } from "../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, activationSourceFreshnessDirectory, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, activationSourceFreshnessDirectory, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { requestLocalBrokerSession } from "../../📇️directory/🎫️local-session/🗄️broker/🟦️.ts";
@@ -788,7 +788,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
               const {repositoryCargoNetworkV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
               const parent=scriptCompilerAdmissionControlV1(original,"vite:lazy-activate:"+pluginId,0,controller.signal);
               const control={...parent,publish:async(progress:Parameters<typeof parent.publish>[0])=>{await parent.publish(progress);for(const listener of listeners)listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`);}};
-              await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{control,network:repositoryCargoNetworkV1(original,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
+              await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{facet:"browser",invocation:original,control,network:repositoryCargoNetworkV1(original,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
               checkResourceLeaseControl(control);
               await publishOne(pluginId);
               checkResourceLeaseControl(control);
@@ -1160,7 +1160,7 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
  * module graph entry can back (virtual ids, client runtime, the index document). `/@fs/` carries the
  * absolute path the module graph is keyed by; everything else is relative to Vite's `root`. */
 export function requestedTransformFile(url: string, root: string): string | null {
-  const [pathname] = url.split("?");
+  const pathname = url.split("?",1)[0]??"";
   if (pathname === "" || pathname === "/" || pathname.endsWith("/")) return null;
   let decoded: string;
   try {
@@ -1198,7 +1198,7 @@ export function semioTransformFreshnessVitePlugin(options: { readonly freshness:
     apply: "serve" as const,
     enforce: "pre" as const,
     transform(_code: string, id: string) {
-      const [file] = id.split("?");
+      const file = id.split("?",1)[0]??"";
       if (isAbsolute(file)) options.freshness.record(file);
       return null;
     },

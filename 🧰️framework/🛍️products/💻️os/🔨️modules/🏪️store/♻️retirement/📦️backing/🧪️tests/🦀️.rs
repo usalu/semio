@@ -1,4 +1,15 @@
-use super::*;
+use std::sync::{Arc, Mutex};
+use semio_framework_os_store_cursor::{ArtifactCursor, ArtifactCursorOwners};
+use semio_framework_os_store_read::{ArtifactStoreCursorRetirement, ArtifactStoreMutationDagRetirement, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement, SNAPSHOT_READ_LEASE_CAPACITY, SnapshotReadLeaseRegistry, SnapshotReadLeaseRegistryOwner, SnapshotReadLeaseSlot, artifact_retirement_box_close_step, artifact_retirement_box_demands};
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_framework_value::ErasedSnapshotRetirement;
+use semio_framework_os_spr::MutationId;
+use semio_framework_os_store_retirement::resident_backing::{PagedSourceIterator, SourceIterator, close_deque, close_history, close_vec, denied, deque_demand, released, vec_demand};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_os_store_ephemeral::SNAPSHOT_READ_RELEASE_PAGE_BYTES;
+use std::collections::VecDeque;
+use super::document_materialize::create_document_envelope;
+use super::{fixture_mutations, snapshot_read, resident_backing_tests as tests};
 
 #[test]
 fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup(){
@@ -33,7 +44,7 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
             assert_eq!(if is_deque { deque_demand(&deque) } else { vec_demand(&vector) }, 0);
         }
     }
-    let mut history = crate::os_vcs::HistoryPageStack::<String>::new();
+    let mut history = semio_framework_os_vcs::HistoryPageStack::<String>::new();
     while history.capacity() != 0 {
         let demand = history.next_empty_page_release_byte_demand().unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: demand, maximum_depth: 1 };
@@ -50,7 +61,7 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
     loop {
         let demand = registry.owned_backing_demands().unwrap();
         if demand.release_bytes == 0 { break; }
-        assert!(demand.release_bytes <= crate::os_store::snapshot_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
+        assert!(demand.release_bytes <= semio_framework_os_store_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
         let shared = registry.empty_backing_demands().unwrap().release_bytes != 0;
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         let denied_grant = RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
@@ -63,7 +74,7 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand.release_bytes));
         physical += demand.release_bytes;
     }
-    assert_eq!(physical, SNAPSHOT_READ_LEASE_CAPACITY * (size_of::<crate::os_store::snapshot_read::SnapshotReadLeaseSlot>() + size_of::<u64>()));
+    assert_eq!(physical, SNAPSHOT_READ_LEASE_CAPACITY * (size_of::<semio_framework_os_store_read::SnapshotReadLeaseSlot>() + size_of::<u64>()));
     eprintln!("[DEBUG] Store resident original backing paged release independent of copy/capacity: reader slots={} physical={physical}", SNAPSHOT_READ_LEASE_CAPACITY);
 }
 
@@ -74,8 +85,8 @@ fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_termi
     let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let law = &fixture["dagRetirement"];
     for seed in [false, true] {
-        let mut dag = crate::os_spr::MutationDag::default();
-        if seed { dag.seed_applied(crate::os_spr::MutationId(law["appliedIdentity"].as_str().unwrap().to_owned())).unwrap(); }
+        let mut dag = semio_framework_os_spr::MutationDag::default();
+        if seed { dag.seed_applied(semio_framework_os_spr::MutationId(law["appliedIdentity"].as_str().unwrap().to_owned())).unwrap(); }
         let (mut retirement, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| ArtifactStoreMutationDagRetirement::new(dag));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, law["constructorBytes"].as_u64().unwrap() as usize));
         let mut turns = 0;
@@ -182,7 +193,7 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     loop {
         let page = owner.custody_byte_demand().unwrap();
         if page == 0 { break; }
-        assert!(page <= crate::os_store::snapshot_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
+        assert!(page <= semio_framework_os_store_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: page, ..grant }));
         assert_eq!(step.unwrap().progress().released_bytes, page);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, page));
@@ -209,7 +220,7 @@ fn undergrants(demand: semio_framework_value::RetirementDemand) -> Vec<RetainedC
 fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_factory_owners() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let maximum = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
-    let mut owners = super::super::tests::demo_closable_store_owners();
+    let mut owners = super::tests::demo_closable_store_owners();
     while !owners.store_disposer.uninstalled_terminal_is_empty() {
         let demand = owners.store_disposer.uninstalled_demands(0).unwrap();
         assert!(matches!(owners.store_disposer.close_uninstalled_step(demand_grant(demand)).unwrap(), RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));
@@ -244,8 +255,8 @@ fn artifact_store_resident_uninstalled_catalog_terminal_drop_has_no_unreported_f
 #[test]
 fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_release() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let owners = super::super::tests::demo_closable_store_owners();
-    let envelope = create_document_envelope::<super::super::tests::DemoSnapshot, super::super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::super::tests::DemoSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let owners = super::tests::demo_closable_store_owners();
+    let envelope = create_document_envelope::<super::tests::DemoSnapshot, super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::tests::DemoSnapshot::default(), None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owners.uninstalled_envelope_retirement_demands(&envelope).copy_bytes, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
     let (born, progress) = owners.retire_envelope_uninstalled(envelope, grant).unwrap_or_else(|_| panic!("catalog envelope birth is funded"));
     assert!(progress.fits(grant));
@@ -309,9 +320,9 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let extent = fixture["emptyVectorExtents"][0].as_u64().unwrap() as usize;
     let body = || String::from_utf8(vec![b'a'; extent]).unwrap();
-    let mut revision = CursorRevisionAccumulator { identity_digest: [0; 32], applied: crate::os_vcs::HistoryPageStack::empty(), redo: crate::os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
+    let mut revision = CursorRevisionAccumulator { identity_digest: [0; 32], applied: semio_framework_os_vcs::HistoryPageStack::empty(), redo: semio_framework_os_vcs::HistoryPageStack::empty(), applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() };
     revision.mutation_positions.insert(MutationId(body()), (0, 0, [0; 32]));
-    let visibility = crate::os_vcs::ArtifactGroupVisibilityOwner::new();
+    let visibility = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
     let view = visibility.view();
     let mut cursor = ArtifactCursor::new(vec![body()], Vec::new(), None);
     cursor.stage_group_owned(ArtifactCursorOwners { applied_edit_ids: vec![body()].into(), redo_edit_ids: Default::default(), checkpoint_id: Some(body()) }, &view).unwrap();
@@ -362,7 +373,7 @@ fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
     let law = &fixture["stringHistory"];
     let count = law["itemCount"].as_u64().unwrap() as usize;
     let bytes = law["bodyBytes"].as_u64().unwrap() as usize;
-    let mut values = crate::os_vcs::HistoryPageStack::empty();
+    let mut values = semio_framework_os_vcs::HistoryPageStack::empty();
     for _ in 0..count { values.push(String::from_utf8(vec![b'a'; bytes]).unwrap()); }
     let original = values.last().unwrap().as_ptr();
     let mut owner = ArtifactStoreStringVectorRetirement::new(values);

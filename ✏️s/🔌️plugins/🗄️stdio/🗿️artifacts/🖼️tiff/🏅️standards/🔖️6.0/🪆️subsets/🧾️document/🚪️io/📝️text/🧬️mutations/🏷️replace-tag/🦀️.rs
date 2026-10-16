@@ -1,7 +1,7 @@
 //! 📝️ Direct replace-tag text codec.
 use crate::standards::v6_0::subsets::document::schema::mutations::*;
 use crate::standards::v6_0::subsets::document::io::text::diff::*;
-use crate::standards::v6_0::subsets::document::io::text::mutations::Entry;
+use crate::standards::v6_0::subsets::document::io::text::mutations::entry::Entry;
 pub const TEXT_OPCODE: &str = "replace-tag";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };
 

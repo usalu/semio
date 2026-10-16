@@ -1,0 +1,36 @@
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {buildModePolicy} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {buildRepositoryCargoArtifacts} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import {withCapturedCargoArtifactsTaskV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {decodeCargoProvenanceV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactReaderV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {readArtifactBytesV1,fileDigest} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import {descriptorEmitterCargoArgumentsV1,descriptorEmitterBinaryNameV1,descriptorEmitterRequestV1,readDescriptorEmitterIntentV1,DESCRIPTOR_EMITTER_MANIFEST_V1,type DescriptorEmitterIntentV1} from "./📋️contract/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import {join,basename} from "node:path";
+import {writeFile} from "node:fs/promises";
+declare const emitterBrand:unique symbol;
+export type DescriptorEmitterV1=Readonly<{readonly[emitterBrand]:true}>;
+type Scope={live:boolean;reader:RepositoryArtifactReaderV1;workspace:string;invocation:ScriptInvocation;intent:DescriptorEmitterIntentV1};
+const emitters=new WeakMap<DescriptorEmitterV1,Scope>();
+/** 🔧️ Publishes the actual captured executable and actual completed compiler observation before producer cleanup. */
+export function buildDescriptorEmitterV1(workspace:string,invocation:ScriptInvocation,control:CompilerAdmissionControl):Promise<void>{
+ requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),intent=readDescriptorEmitterIntentV1({version:1,mode:authority.original.buildMode,platform:process.platform}),name=descriptorEmitterBinaryNameV1(intent);if(workspace!==authority.repositoryRoot)throw Error("Actual emitter workspace required");
+ return buildRepositoryCargoArtifacts(join(workspace,DESCRIPTOR_EMITTER_MANIFEST_V1),[...descriptorEmitterCargoArgumentsV1(intent.mode)],workspace,{producer:"descriptor-emitter",invocation,network:repositoryCargoNetworkV1(invocation,workspace),control,consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async native=>{
+  const binary=native.files.get(name);if(!binary||native.files.size!==1)throw Error("One self-contained captured descriptor executable required");await withRepositoryCacheStoreV1(workspace,"products",invocation,native.control,(store,storePhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:intent.mode,owner:"browser/tools/descriptor-emitter"}},scratch=>withArtifactDestinationTaskV1(scratch,invocation,async sink=>{const file=schema.definitions.Protocol.const.observation,path=join(sink.directory,file);await writeFile(path,native.observation,{flag:"wx",signal:sink.control.signal});await native.recheck();const request=descriptorEmitterRequestV1(store.root,intent);await withRepositoryArtifactDestinationV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,new Map([[name,binary],[file,path]])));})));
+ })});
+}
+/** 🪪️ Issues only a private live token around the genuine selected-mode tool artifact owner. */
+export function withDescriptorEmitterV1<T>(workspace:string,invocation:ScriptInvocation,control:CompilerAdmissionControl,body:(emitter:DescriptorEmitterV1)=>Promise<T>):Promise<T>{
+ requireIssuedResourceControlInvocationV1(control,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),intent=readDescriptorEmitterIntentV1({version:1,mode:authority.original.buildMode,platform:process.platform});if(workspace!==authority.repositoryRoot||typeof body!=="function")throw Error("Actual descriptor emitter owner required");return withRepositoryCacheStoreV1(workspace,"products",invocation,control,(store,storePhase)=>withRepositoryArtifactV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:descriptorEmitterRequestV1(store.root,intent)},async reader=>{const token=Object.freeze({})as DescriptorEmitterV1,scope:Scope={live:true,reader,workspace,invocation,intent};emitters.set(token,scope);try{return await body(token);}finally{scope.live=false;}}));
+}
+/** ▶️ Retains actual reader custody through executable use and verifies its real compiler witness. */
+export function withDescriptorEmitterTaskV1<T>(token:DescriptorEmitterV1,invocation:ScriptInvocation,body:(tool:Readonly<{path:string;sha256:string;observation:string;control:CompilerAdmissionControl;recheck():Promise<void>}>)=>Promise<T>):Promise<T>{
+ const scope=emitters.get(token);if(!scope?.live||scope.invocation!==invocation||typeof body!=="function")throw Error("Live actual descriptor emitter task required");return withRepositoryArtifactTaskV1(scope.reader,invocation,async artifact=>{const name=descriptorEmitterBinaryNameV1(scope.intent),observationFile=schema.definitions.Protocol.const.observation;if(JSON.stringify([...artifact.files].sort())!==JSON.stringify([name,observationFile].sort()))throw Error("Exact complete descriptor tool inventory required");const path=join(artifact.path,name),sha256=await fileDigest(path,artifact.control.signal),maximum=readNativeCallerAuthorityV1(invocation.capabilities).transport.maximumBytes,observation=new TextDecoder("utf-8",{fatal:true}).decode(await readArtifactBytesV1(join(artifact.path,observationFile),maximum,artifact.control.signal)),record=decodeCargoProvenanceV1(observation),matches=record.units.flatMap(unit=>unit.artifacts.filter(output=>basename(output.path)===name&&output.sha256===sha256));if(record.status!==0||record.cancelled||record.manifest!==join(scope.workspace,DESCRIPTOR_EMITTER_MANIFEST_V1)||matches.length!==1)throw Error("Actual descriptor executable compiler observation required");await artifact.recheck();return body(Object.freeze({path,sha256,observation,control:artifact.control,recheck:artifact.recheck}));});
+}

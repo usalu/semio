@@ -11,186 +11,52 @@
 //! contract). "Space" is a namespacing convention this crate applies on top of `db`'s flat document
 //! catalog (`{space_id}:{document_id}`), not hub-internal state.
 
-#[cfg(test)]
-extern crate directory as semio_framework_os_kernel;
-
 use futures::{SinkExt, StreamExt};
 use semio_framework_async::ShardedMap;
 use semio_framework_trace::record::{TraceOutcome, TraceRecord, Tracer};
-use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage};
-use semio_hub::artifact_authority::creation::ArtifactCreationServiceV1;
-use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
-use semio_hub::artifact_authority::trusted_catalog::NativeCodecProviderSourceV1;
-use semio_hub::artifact_authority::trusted_catalog::schema::{TrustedCatalogGuestResidencyV1, GUEST_RESIDENCY_BYTES_ENV};
-use semio_hub::artifact_authority::check_in::DocumentCheckInJobs;
-use semio_hub::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, CheckpointPublicationOrchestrator, OperationContext};
-use semio_hub::auth::rate_limit::HubRateLimiterV1;
-use semio_hub::auth::password::PasswordCredentialV1;
-use semio_hub::auth::CredentialSignInPolicyV1;
-use semio_hub::directory::{DirectoryService, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, IdentityAssertionVerifier, IdentityVerificationControl, LocalBootstrapTransport, SessionCapability};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage};
+use semio_hub_artifact_creation_service::ArtifactCreationServiceV1;
+use semio_hub_native_openable::NativeCodecProviderSetV1;
+use semio_hub_trusted_catalog_descriptor::NativeCodecProviderSourceV1;
+use semio_hub_trusted_catalog_contract::schema::{TrustedCatalogGuestResidencyV1, GUEST_RESIDENCY_BYTES_ENV};
+use semio_hub_artifact_checkin::DocumentCheckInJobs;
+use semio_hub_artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, CheckpointPublicationOrchestrator, OperationContext};
+use semio_hub_auth::rate_limit::HubRateLimiterV1;
+use semio_hub_auth::CredentialSignInPolicyV1;
+use semio_hub_directory_service::{DirectoryService, HubVerifiedCheckpointPublisher};
+use semio_hub_directory::{HubDirectory, ProjectionRebuildControl};
+use semio_hub_directory_contract::{IdentityAssertionVerifier, IdentityVerificationControl, LocalBootstrapTransport, SessionCapability};
 #[cfg(feature="integration-fixtures")]
-use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
-use semio_hub::inference::runtime::{GisMapApprovalCheckpointPublisherV1, HubInferenceRuntimeV1, RetainedGisMapApprovalCommitterV1};
-use semio_hub::inference::sqlite::InferenceJobLedgerV1;
-use semio_hub::inference::verified_gis_map_binding;
-use semio_hub::lag_rebootstrap::{RebootstrapTransferControl, VerifiedRebootstrapSource};
-use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
+use semio_hub_inference_runtime::InferenceCheckpointTestGateV1;
+use semio_hub_inference_runtime_contract::GisMapApprovalCheckpointPublisherV1;
+use semio_hub_inference_runtime::HubInferenceRuntimeV1;
+use semio_hub_inference_committer::RetainedGisMapApprovalCommitterV1;
+use semio_hub_inference_ledger::InferenceJobLedgerV1;
+use semio_hub_inference_catalog::verified_gis_map_binding;
+use semio_hub_inference_binding::MapInferenceProposalBindingV1;
+use semio_hub_gis::inference::GisMapInferenceBindingV1;
+use semio_hub_lag_rebootstrap::{RebootstrapTransferControl, VerifiedRebootstrapSource};
+use semio_hub_local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use db::db_storage::PayloadStorage as _;
+use db::storage::PayloadStorage as _;
 use server::storage::SessionStore as _;
-#[cfg(test)]
-use directory::os_directory::io::text::access_policy::directory_access_permits;
-#[cfg(test)]
-use directory::os_directory::io::text::{directory_command_sha256, validate_directory_event_page_event};
-#[cfg(test)]
-use axum::body::Bytes;
-#[cfg(test)]
-use axum::extract::ws::Message;
-#[cfg(test)]
-use axum::extract::{OriginalUri, Path, Query, State};
-#[cfg(test)]
-use axum::http::{HeaderMap, StatusCode};
-#[cfg(test)]
-use axum::response::IntoResponse;
-#[cfg(test)]
-use axum::routing::{get, post};
-#[cfg(test)]
-use axum::{Json, Router};
-#[cfg(test)]
-use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1};
-#[cfg(test)]
-use directory::{os_directory, DslValue, FromValue};
-#[cfg(test)]
-use directory::os_directory::{AdminIntentReceiptV1, AdminIntentStateV1, AdminIntentV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, ConnectionView, DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, EditedArtifactFrontierV1, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, MemberView, PublishedArtifactCheckpoint, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_OPEN_PLAN_MAX_TTL_MS};
-#[cfg(test)]
-use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
-#[cfg(test)]
-use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
-#[cfg(test)]
-use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
-#[cfg(test)]
-use semio_framework_hash::Sha256;
-#[cfg(test)]
-use semio_framework_trace::record::{TraceLevel, SERVER_SPAN_EVENTS};
-#[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
-#[cfg(test)]
-use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1};
-#[cfg(test)]
-use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1};
-#[cfg(test)]
-use semio_hub::observability::HubRouteMetricsV1;
-#[cfg(test)]
-use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore, AuthorityProgress, ValidatingCanonicalArtifactAuthority, VerifiedCheckpointPublisher};
-#[cfg(test)]
-use semio_hub::artifact_authority::check_in::DocumentCheckInKey;
-#[cfg(test)]
-use semio_hub::auth::rate_limit::{HubStreamLimiterV1, RateLimitClassV1, RateLimitRefusalV1, RateLimitSubjectV1, StreamLimitClassV1};
-#[cfg(test)]
-use directory::os_directory::access_policy::DirectoryAccessActionV1;
-#[cfg(test)]
-use semio_hub::directory::error::DirectoryError;
-#[cfg(test)]
-use semio_hub::directory::model::{AdminEffectCommitV1, AuthSessionIssue, AuthSessionKind, DocumentScope, NewAdminOperationEffectReceiptV1, NewDirectoryCommandReceipt, SocketSessionBindingStatus, SpaceRole};
-#[cfg(test)]
-use semio_hub::directory::sqlite::SqliteDirectory;
-#[cfg(test)]
-use semio_hub::directory::{directory_command_result_kind, HubDirectories, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, identity_subject_digest, HubCapability, InviteCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
-#[cfg(all(test,feature="integration-fixtures"))]
-use semio_hub::inference::runtime::UnavailableGisMapApprovalCommitterV1;
-#[cfg(test)]
-use semio_hub::inference::runtime::{GisMapApprovalIngressAuthorityV1, InferenceRouteErrorV1};
-#[cfg(test)]
-use semio_hub::lag_rebootstrap::{decode_canonical_checkpoint_pair, RebootstrapProgressStage, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE};
-#[cfg(test)]
-use semio_hub::stores::HubInstance;
-#[cfg(test)]
-use server::contract::{Principal, SessionId};
-#[cfg(test)]
-use server::gateway::ServerState;
-#[cfg(test)]
-use server::storage::SessionRecord;
-#[cfg(test)]
-use std::collections::BTreeMap;
-#[cfg(test)]
-use std::sync::Mutex;
-#[cfg(test)]
-use tokio::sync::broadcast;
-
-#[path = "🚀️startup/🦀️.rs"]
-mod startup;
-#[path = "🧰️http-support/🦀️.rs"]
-mod support;
-#[path = "👥️presence/🦀️.rs"]
-mod presence;
-#[path = "🧠️state/🦀️.rs"]
-mod state;
-#[path = "🎟️socket-grants/🦀️.rs"]
-mod socket_grants;
-#[path = "🧭️open-plan/🦀️.rs"]
-mod open_plan;
-#[path = "🛡️guard/🦀️.rs"]
-mod guard;
-#[path = "🩺️readiness/🦀️.rs"]
-mod readiness;
-#[path = "🚦️transport/🦀️.rs"]
-mod transport;
-#[path = "🔑️access-grants/🦀️.rs"]
-mod access_grants;
-#[path = "🪞️pair-blobs/🦀️.rs"]
-mod pair_blobs;
-#[path = "📌️check-in/🦀️.rs"]
-mod check_in;
-#[path = "🔌️document-socket/🦀️.rs"]
-mod document_socket;
-#[path = "📇️directory-commands/🦀️.rs"]
-mod directory_commands;
-#[path = "📣️directory-events/🦀️.rs"]
-mod directory_events;
-#[path = "🌱️artifact-creation/🦀️.rs"]
-mod artifact_creation;
-#[path = "🪪️session-agent/🦀️.rs"]
-mod session_agent;
-#[path = "🛠️admin/🦀️.rs"]
-mod admin;
-#[path = "🧩️assets/🦀️.rs"]
-mod assets;
-#[path = "💡️inference/🦀️.rs"]
-mod inference;
-#[path = "🛣️routes/🦀️.rs"]
-mod routes;
-#[path = "🛑️lifecycle/🦀️.rs"]
-mod lifecycle;
-
-use startup::*;
-use support::*;
-use presence::*;
-use state::*;
-use socket_grants::*;
-use open_plan::*;
-use guard::*;
-use readiness::*;
-use transport::*;
-#[cfg(test)]
-use access_grants::*;
-#[cfg(test)]
-use pair_blobs::*;
-use check_in::*;
-#[cfg(test)]
-use document_socket::*;
-#[cfg(test)]
-use directory_commands::*;
-#[cfg(test)]
-use directory_events::*;
-use artifact_creation::*;
-#[cfg(test)]
-use session_agent::*;
-use admin::*;
-#[cfg(test)]
-use inference::*;
-use routes::*;
-use lifecycle::*;
+use semio_hub_route_models::admin::{ADMIN_OPERATION_SHUTDOWN_DEADLINE, AdminOperationTaskOwner};
+use semio_hub_runtime::readiness::{AGENT_DELEGATION_READINESS_PROBE_SCOPE, BootReadinessServerV1, CHECKPOINT_POLICY_BYTES_ENV, CHECKPOINT_POLICY_EDITS_ENV, HubCheckpointPolicyV1, HubMode, declare_public_session_issuance, hub_readiness, hub_starting_readiness, readiness_trace_detail, startup_readiness_line, with_checkpoint_policy};
+use semio_hub_runtime::startup::{ArtifactCasMaintenanceSupervisor, DocumentOpenCatalogAuthorityV1, HubBootstrapControl, HubError, SAGA_DRAIN_INTERVAL, SagaDrainSupervisor, StartupArtifactAuthority, StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, artifact_authority_closed_reason, artifact_cas_sweep_execute_from_env, compose_hub_server, configured_artifact_authority, merge_policy_from_env, verify_pending_catalog_guests};
+use semio_hub_route_models::artifact_creation::{ArtifactCreationHttpTaskOwnerV1, HubArtifactCreationCommitAuthorityV1};
+use semio_hub_runtime::transport::{CrossOriginPolicyV1, ForwardedTlsTrustV1};
+use semio_hub_runtime::lifecycle::{DATABASE_SHUTDOWN_DEADLINE, HUB_RUNTIME_THREAD_STACK_BYTES, HubSocketDrainV1, SOCKET_DRAIN_DEADLINE, close_hub_database, connect_artifact_cas, connect_db, connect_directory};
+use semio_hub_ledgers::open_plan::DocumentOpenPlanLedgerV1;
+use semio_hub_route_models::check_in::GisMapApprovalCheckpointPublisherV1Impl;
+use semio_hub_state::HubState;
+use semio_hub_runtime::presence::PresenceDirectoryProjections;
+use semio_hub_ledgers::socket_grants::{SocketBindingGatesV1, SocketGrantLedgerV1};
+use semio_hub_ledgers::guard::{configured_admin_subjects, validate_auth_startup};
+use semio_hub_runtime::support::now_ms;
+use semio_hub_routes::router;
+#[cfg(unix)]
+use semio_hub_runtime::lifecycle::termination_signal;
 
 //#region 🔖️Main
 fn main() -> Result<(), HubError> {
@@ -256,7 +122,7 @@ async fn serve() -> Result<(), HubError> {
     let bootstrap_control = Arc::new(HubBootstrapControl::new());
     let local_bootstrap: Option<Arc<dyn LocalBootstrapTransport>> = if mode == HubMode::Development {
         let deadline_ms = now_ms().checked_add(LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS).ok_or_else(|| HubError::UnsafeAuthConfiguration("local bootstrap deadline overflow".into()))?;
-        let context = semio_hub::directory::IdentityVerificationContext { deadline_ms, control: bootstrap_control.as_ref() };
+        let context = semio_hub_directory_contract::IdentityVerificationContext { deadline_ms, control: bootstrap_control.as_ref() };
         Some(InheritedLocalBootstrapTransport::open_inherited(&context, bootstrap_control.clone()).await?)
     } else {
         None
@@ -332,8 +198,9 @@ async fn serve() -> Result<(), HubError> {
         let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
         let agent_delegation_ready = directory.list_agent_delegations(AGENT_DELEGATION_READINESS_PROBE_SCOPE, AGENT_DELEGATION_READINESS_PROBE_SCOPE, 1).await.is_ok();
         let verified_catalog = artifact_authority.as_ref().map(|configured| configured.catalog.clone());
+        let gis_map_inference_binding: Arc<dyn MapInferenceProposalBindingV1> = Arc::new(GisMapInferenceBindingV1);
         let gis_map_binding = match verified_catalog.as_ref() {
-            Some(catalog) => verified_gis_map_binding(catalog.clone()).map_err(|error| AuthorityError::Catalog(format!("verified GIS Map inference binding rejected: {error:?}")))?,
+            Some(catalog) => verified_gis_map_binding(catalog.clone(), gis_map_inference_binding.as_ref()).map_err(|error| AuthorityError::Catalog(format!("verified GIS Map inference binding rejected: {error:?}")))?,
             None => None,
         };
         let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
@@ -360,8 +227,8 @@ async fn serve() -> Result<(), HubError> {
                     fanout: fanout.clone(),
                     fanout_capacity,
                 });
-                let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(db.clone(), db.storage().await, ledger.clone(), publisher));
-                let runtime = Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer));
+                let committer: Arc<RetainedGisMapApprovalCommitterV1<GisMapInferenceBindingV1>> = Arc::new(RetainedGisMapApprovalCommitterV1::new(db.clone(), db.storage().await, ledger.clone(), publisher));
+                let runtime = Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer, gis_map_inference_binding.clone()));
                 #[cfg(feature = "integration-fixtures")]
                 if let Some(descriptor) = std::env::var_os("OS_HUB_TEST_INFERENCE_CHECKPOINT_FD") {
                     if mode != HubMode::Development || descriptor.to_str() != Some("4") {
@@ -396,7 +263,7 @@ async fn serve() -> Result<(), HubError> {
             record
         });
         let check_ins = Arc::new(DocumentCheckInJobs::default());
-        let state = HubState {
+        let state: HubState = semio_hub_state::HubStateParts {
             tracer: tracer.clone(),
             route_metrics: Arc::default(),
             instance,
@@ -430,22 +297,8 @@ async fn serve() -> Result<(), HubError> {
             admin_dir,
             fanout,
             fanout_capacity,
-            #[cfg(test)]
-            live_gate: None,
-            #[cfg(test)]
-            canonical_pair_authorization_gate: None,
-            #[cfg(test)]
-            canonical_pair_request_gate: None,
-            #[cfg(test)]
-            canonical_pair_deadline_ms: None,
-            #[cfg(test)]
-            document_open_plan_issue_gate: None,
-            #[cfg(test)]
-            document_open_plan_deadline_ms: None,
             presence: Arc::new(ShardedMap::new()),
             presence_publication_gate: Arc::new(tokio::sync::Mutex::new(PresenceDirectoryProjections::default())),
-            #[cfg(test)]
-            presence_clock: None,
             session_colors: Arc::new(ShardedMap::new()),
             session_kicks: Arc::new(ShardedMap::new()),
             socket_drain: socket_drain.clone(),
@@ -454,7 +307,8 @@ async fn serve() -> Result<(), HubError> {
             socket_binding_gates,
             extensions_root,
             merge_policy,
-        };
+        }
+        .into();
         let listener = tokio::net::TcpListener::from_std(bound)?;
         boot_server.hand_over().await;
         let saga_drain = SagaDrainSupervisor::start(state.instance.clone(), state.tracer.clone(), SAGA_DRAIN_INTERVAL);
@@ -564,22 +418,3 @@ mod trusted_catalog_command;
 
 #[path = "../🔐️auth/📤️command/🦀️.rs"]
 mod credential_command;
-
-//#region 🔖️Tests
-// 🪶️ Gated on the `sqlite` feature (not just `test`): every test below constructs a `HubState`
-// through `SqliteDirectory` — the zero-external-dependency backend — so the full bin test suite
-// naturally lives behind the same feature a plain `cargo test` already enables by default (see
-// `Cargo.toml`'s `default = ["sqlite"]`). `postgres`/`neo4j` each carry their own backend-only
-// tests in `📇️directory/{🐘️postgres,🌐️neo4j}/🦀️.rs` instead of duplicating this suite.
-#[cfg(test)]
-#[path = "../🧪️tests/🗂️artifact-root/🦀️.rs"]
-mod test_artifact_root;
-
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "../🧪️tests/🤝️two-client-document/🦀️.rs"]
-mod two_client_document;
-//#endregion 🔖️Tests

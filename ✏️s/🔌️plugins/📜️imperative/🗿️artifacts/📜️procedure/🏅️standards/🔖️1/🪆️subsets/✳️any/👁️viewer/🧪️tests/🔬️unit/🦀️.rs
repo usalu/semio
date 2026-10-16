@@ -1,4 +1,6 @@
-use super::*;
+use crate::PROCEDURE_DIALECT;
+use semio_framework_plugin::{app::ArtifactViewer, app::Viewer};
+use crate::viewer::procedure::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_imperative_viewer_builds_a_definition_for_the_viewer_role() {

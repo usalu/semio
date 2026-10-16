@@ -187,13 +187,14 @@
           "release": {
             "prerequisites": [
               "workspace:deps-wasm-opt",
-              "@semio-tech/plugin-registry:generate"
+              "@semio-tech/plugin-registry:generate",
+              "@semio-tech/assets:build"
             ],
             "stageAfter": {
               "describe": [
                 "job:describe-tool"
               ],
-              "probe": [
+              "browser": [
                 "job:support"
               ]
             },
@@ -270,6 +271,22 @@
                 ]
               },
               {
+                "id": "canvas-runtime-assets",
+                "root": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "stage-runtime-assets"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
                 "id": "flow-wasm",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
                 "command": [
@@ -278,8 +295,8 @@
                   "wasm"
                 ],
                 "after": [],
-                "lane": "wasm-release",
-                "profile": "wasm-release",
+                "lane": "release",
+                "profile": "release",
                 "target": "wasm32-unknown-unknown",
                 "workerProtocol": "exclusive",
                 "policies": [
@@ -297,8 +314,46 @@
                   "wasm"
                 ],
                 "after": [],
-                "lane": "wasm-release",
-                "profile": "wasm-release",
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "editor-wasm",
+                "root": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
+                "target": "wasm32-unknown-unknown",
+                "workerProtocol": "exclusive",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "graph-wasm",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "release",
+                "profile": "release",
                 "target": "wasm32-unknown-unknown",
                 "workerProtocol": "exclusive",
                 "policies": [
@@ -316,8 +371,8 @@
                   "wasm"
                 ],
                 "after": [],
-                "lane": "wasm-release",
-                "profile": "wasm-release",
+                "lane": "release",
+                "profile": "release",
                 "target": "wasm32-unknown-unknown",
                 "workerProtocol": "exclusive",
                 "policies": [
@@ -353,6 +408,8 @@
                 "after": [
                   "job:flow-wasm",
                   "job:surface-wasm",
+                  "job:editor-wasm",
+                  "job:graph-wasm",
                   "job:puzzle-wasm",
                   "job:map-tiles"
                 ],
@@ -374,7 +431,8 @@
                 "after": [
                   "job:bundle",
                   "job:support",
-                  "components:publish"
+                  "job:canvas-runtime-assets",
+                  "components:complete"
                 ],
                 "profile": "release",
                 "target": "host",
@@ -395,7 +453,7 @@
       },
       "cache": false,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/pages"
+        "{workspaceRoot}/.cache/b/p/m/play/{options.env.SEMIO_BUILD_MODE}/pages"
       ]
     },
     "test": {

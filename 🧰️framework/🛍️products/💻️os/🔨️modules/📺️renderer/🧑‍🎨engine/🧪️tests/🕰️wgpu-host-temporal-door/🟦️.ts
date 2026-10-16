@@ -1,7 +1,7 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it } from "vitest";
-import schema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧬️schema/🔣️.json";
-import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json";
+import schema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧬️schema/🔣️.json";
+import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🧪️tests/🧫️fixtures/🔣️.json";
 import {
   HOST_TEMPORAL_DATE_OPTIONS,
   HOST_TEMPORAL_DATE_TIME_OPTIONS,
@@ -11,7 +11,7 @@ import {
   isHostTemporalIsoV1,
   type HostTemporalFormatReplyV1,
   type HostTemporalValueV1,
-} from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
+} from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
 import { createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
 
 function relativeOracle(date: Date, nowMs: number, locale: string): string {

@@ -1,13 +1,12 @@
 #!/usr/bin/env bun
 import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** ⚙️ Runs the `semio-framework-ui-scene` test suite and the guest-target compile gates.
+/** ⚙️ Runs the test suites of `semio-framework-ui-scene` and the producer crates carved from it, and the guest-target compile gates.
  *
  * This crate carries the pack-encoded `SurfaceDoc` payload every wasm32-wasip2 plugin component and
  * wasm32-unknown-unknown browser renderer moves across the `Component::Surface` boundary, so a
@@ -21,11 +20,14 @@ import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦�
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
+/** 🎬️ The scene crates, bottom up: the math producers, the pack codec, the doc contract, the product scenes, the surface bridge, then the facade. */
+const SCENE_PACKAGES = ["semio-framework-ui-scene-algebra", "semio-framework-ui-scene-camera", "semio-framework-ui-scene-mesh", "semio-framework-ui-scene-pass", "semio-framework-ui-scene-picking", "semio-framework-ui-scene-pack", "semio-framework-ui-scene-doc", "semio-framework-ui-scene-modelling", "semio-framework-ui-scene-world3d", "semio-framework-ui-scene-node-graph", "semio-framework-ui-scene-plane", "semio-framework-ui-scene-views", "semio-framework-ui-scene-surface", "semio-framework-ui-scene"];
+
 //#region 🔖️test
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
+    await runRepositoryCargoTests(SCENE_PACKAGES, this.repoRoot, this.invocation, ["--all-features", ...rest]);
   }
 }
 //#endregion 🔖️test

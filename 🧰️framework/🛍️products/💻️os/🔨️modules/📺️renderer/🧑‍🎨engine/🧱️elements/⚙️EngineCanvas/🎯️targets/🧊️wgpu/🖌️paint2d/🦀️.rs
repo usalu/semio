@@ -3,8 +3,8 @@
 //! Paint2d layer pick, the context menu targets, the marquee and the pointer button, move and wheel handlers.
 
 use super::board2d::with_board_host;
-use super::engine_surface_attach::engine_camera_from_json;
-use super::engine_surface_registry::{NodeGraphEngine, ENGINE_SURFACES};
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_camera_from_json;
+use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{NodeGraphEngine, ENGINE_SURFACES};
 use crate::element_contracts::WorkerCell;
 use semio_framework_canvas as canvas;
 use semio_framework_surface::paint::RasterHost;
@@ -37,7 +37,7 @@ pub fn with_raster_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut RasterHost)
 /// 🖱️ The topmost pixel layer under a surface-local point — the wgpu twin of
 /// `resolveTargetsAtClient`'s `pickTargetsAtScreenJson(...)` read, narrowed to the `layer`
 /// granularity that raster's interaction domain actually declares.
-pub(super) fn paint2d_pick_layer(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
+pub fn paint2d_pick_layer(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let host = map.get(surface_id)?.raster_host.as_ref()?;

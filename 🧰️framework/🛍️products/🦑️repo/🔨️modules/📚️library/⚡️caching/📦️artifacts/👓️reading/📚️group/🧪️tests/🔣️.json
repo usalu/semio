@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "invalidNames": [
+    [
+      "a",
+      "a"
+    ],
+    [
+      "a",
+      "a/b"
+    ],
+    [
+      "a/b",
+      "a"
+    ],
+    [
+      "a",
+      "a-z",
+      "a/b"
+    ]
+  ],
+  "counts": [
+    79,
+    128
+  ],
+  "usage": [
+    {
+      "kind": "manifest",
+      "maximum": 16777216
+    },
+    {
+      "kind": "files",
+      "maximum": 131072
+    },
+    {
+      "kind": "entries",
+      "maximum": 262144
+    },
+    {
+      "kind": "bytes",
+      "maximum": 8589934592
+    }
+  ]
+}

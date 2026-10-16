@@ -1,18 +1,5 @@
 use super::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::canvas;
-use std::sync::OnceLock;
-
-fn install_compiler_fonts() {
-    static SET: OnceLock<canvas::icon_codec::FontSet<'static>> = OnceLock::new();
-    let set = *SET.get_or_init(|| {
-        let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts");
-        canvas::icon_codec::FontSet::from_directory(&directory).expect("compiler font assets must be readable from the repository")
-    });
-    match canvas::icon_codec::install_compiler_fonts(set) {
-        Ok(()) | Err(canvas::icon_codec::CompilerFontsInstallError::AlreadyInstalled) => {}
-        Err(failure) => panic!("{failure}"),
-    }
-}
 
 #[test]
 fn svg_icon_append_smoke() {
@@ -38,7 +25,7 @@ fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
 
 #[test]
 fn board_icon_codec_resolves_typst_math_to_svg_plain() {
-    install_compiler_fonts();
+    canvas::testkit::install_repository_assets();
     let r = canvas::icon_codec::resolve_icon_kind("typst:$x^2$", puzzle_themed_icon_lookup);
     match r {
         canvas::icon_codec::ResolvedIcon::SvgPlain(s) => {
@@ -50,7 +37,7 @@ fn board_icon_codec_resolves_typst_math_to_svg_plain() {
 
 #[test]
 fn board_icon_codec_resolves_emoji_prefix_without_tofu() {
-    install_compiler_fonts();
+    canvas::testkit::install_repository_assets();
     let r = canvas::icon_codec::resolve_icon_kind("emoji:☺️", puzzle_themed_icon_lookup);
     match r {
         canvas::icon_codec::ResolvedIcon::SvgPlain(s) => {

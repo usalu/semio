@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::procedure::modes::edit::windows::script::*;
 use crate::editor::procedure::unit_tests::context::{imperative_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

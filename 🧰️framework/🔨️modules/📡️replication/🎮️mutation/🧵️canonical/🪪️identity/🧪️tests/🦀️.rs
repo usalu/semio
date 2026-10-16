@@ -1,6 +1,6 @@
 //! 🧪️ Actual three paged identities preserve Unicode semantics and original custody across paid assembly and cancellation.
 use super::*;
-use crate::HybridLogicalTimestamp;
+use semio_framework_replication_ids::HybridLogicalTimestamp;
 use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[derive(semio_framework_value::RetireOwned)]
@@ -16,7 +16,7 @@ fn canonical_native_identity_assembly_preserves_original_unicode_fields_and_exac
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for repeats in [1,fixture["repeat"].as_u64().unwrap()as usize]{for pause in [Some(0),Some(1),Some(3),Some(17),Some(129),None]{
   let actor=fixture["actor"].as_str().unwrap().repeat(repeats);let id=fixture["id"].as_str().unwrap();let native=Authority{actor:actor.as_str().into()};let actor_pointer=native.actor.chunks().next().unwrap().as_ptr();let mut authority=source(native);
-  let mut edit=Box::new(Edit::<bool>{id:id.to_owned(),actor:None,line:None,sequence_number:1,forwards:vec![true],mutation_meta:Vec::new(),inverse:crate::value::list::PagedList::new(),verb:None,started_at:String::new(),finished_at:None});edit.id.reserve(8192);let edit_pointer=edit.as_ref()as*const Edit<bool>;let id_pointer=edit.id.as_ptr();let mut edit=source(edit);
+  let mut edit=Box::new(Edit::<bool>{id:id.to_owned(),actor:None,line:None,sequence_number:1,forwards:vec![true],mutation_meta:Vec::new(),inverse:semio_framework_value::list::PagedList::new(),verb:None,started_at:String::new(),finished_at:None});edit.id.reserve(8192);let edit_pointer=edit.as_ref()as*const Edit<bool>;let id_pointer=edit.id.as_ptr();let mut edit=source(edit);
   let(((original_authority,_),(original_edit,_)),heap)=observe(||(authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority,alias_grant()).unwrap(),edit.project_owned(0,|value|value.as_ref(),alias_grant()).unwrap()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let admitted=grant(ArtifactCanonicalEditIdentityCursor::<bool>::constructor_demand());let((mut cursor,receipt),heap)=observe(||ArtifactCanonicalEditIdentityCursor::admit(original_authority,original_edit,admitted).unwrap_or_else(|_|panic!("identity original admission")));assert!(receipt.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut turns=0;
   while !cursor.terminal_is_empty()&&!cursor.is_ready(){assert!(turns<100000);if pause==Some(turns){cursor.begin_close();}let(demand,heap)=observe(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let admitted=grant(demand);

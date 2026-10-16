@@ -1,14 +1,13 @@
 //! 📝️ Framing and direct codec registry for TiffMutation.
 use crate::schema::mutations::TiffMutation;
 
+#[path = "🧾️entry/🦀️.rs"]
+pub mod entry;
+pub use entry::*;
+
 //#region Registry
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-pub struct Entry {
-    pub opcode: &'static str,
-    pub print: fn(&TiffMutation) -> Option<String>,
-    pub parse: fn(&str) -> Result<TiffMutation, semio_framework_diagnostic::TextError>,
-}
 pub const REGISTRY: &[Entry] = &[
     insert_ifd::CODEC,
     remove_ifd::CODEC,

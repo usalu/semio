@@ -504,7 +504,7 @@ fn backbone_uris_are_stable() {
 
 //#region 🧪️DraftLaws
 fn memory_draft_port() -> Arc<store::os_store::backbone::BackbonePorts> {
-    Arc::new(store::os_store::backbone::BackbonePorts::Memory(crate::host::resolve_kernel_future(store::os_store::backbone::MemoryBackbonePort::new())))
+    Arc::new(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(store::os_store::backbone::MemoryBackbonePort::new())))
 }
 
 #[test]
@@ -730,7 +730,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
     let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
     atelier.users.push(demo_user("u2", SpaceRole::Author));
     atelier.users.push(demo_user("u1", SpaceRole::Author));
-    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let space_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let space_history = space_store.envelope().vcs.clone();
     let loaded = space_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_space_atelier_invariant(loaded.clone());
@@ -740,7 +740,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
 
     let mut collection = empty_collection_snapshot("Demo");
     collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
-    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let collection_store = resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let collection_history = collection_store.envelope().vcs.clone();
     let loaded = collection_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_collection_integrity(loaded.clone());
@@ -763,17 +763,17 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // 🌉️ `ArtifactStore::new`/`dispatch`/`snapshot_pack`/`TestBlobStore::put`/`get` all turned
     // `async fn` under the runtime-dependency sweep; this test stays a plain sync `#[test]` (this
     // crate has no `#[async_test]` harness dependency) and bridges via
-    // `crate::host::resolve_kernel_future`, same as this file's other async fallout fixes — every
+    // `resolve_kernel_future`, same as this file's other async fallout fixes — every
     // op here is an in-memory fixture operation, never real I/O.
     test_identity!(identity);
     let mut nested_space_store =
-        crate::host::resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
-    let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
+        resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
+    resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
+    let original_pack_files = resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
 
     let blob_store = TestBlobStore::default();
-    let blob_ref = crate::host::resolve_kernel_future(blob_store.put(b"hello blob bytes", "text/plain")).expect("put blob");
+    let blob_ref = resolve_kernel_future(blob_store.put(b"hello blob bytes", "text/plain")).expect("put blob");
 
     let mut collection = empty_collection_snapshot("RealDemo");
     collection.entries.push(CollectionEntry {
@@ -800,14 +800,14 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     assert_eq!(imported_pack, &original_pack_files.pack, "artifact pack bytes are byte-identical after the round trip");
     assert_eq!(imported_spr, &original_pack_files.spr, "artifact spr bytes are byte-identical after the round trip");
 
-    let restored_store = crate::host::resolve_kernel_future(import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("reconstruct store");
+    let restored_store = resolve_kernel_future(import_document_artifact::<SpaceSnapshot, SpaceMutation>(imported_pack, imported_spr, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("reconstruct store");
     assert_eq!(restored_store.snapshot().expect("projection"), nested_space_store.snapshot().expect("projection"), "reconstructed document projection matches the original exactly");
 
     let (imported_blob, imported_blob_bytes) = imported.blobs.iter().find(|(blob, _)| blob.hash == blob_ref.hash).expect("blob present");
     assert_eq!(imported_blob_bytes, b"hello blob bytes");
     let fresh_blob_store = TestBlobStore::default();
     import_blob(&fresh_blob_store, imported_blob, &imported_blob_bytes).expect("import blob");
-    assert_eq!(crate::host::resolve_kernel_future(fresh_blob_store.get(&blob_ref.hash)).expect("get"), Some(b"hello blob bytes".to_vec()));
+    assert_eq!(resolve_kernel_future(fresh_blob_store.get(&blob_ref.hash)).expect("get"), Some(b"hello blob bytes".to_vec()));
 
     // export -> import -> export must stay byte-stable with REAL data too (not just injected
     // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes

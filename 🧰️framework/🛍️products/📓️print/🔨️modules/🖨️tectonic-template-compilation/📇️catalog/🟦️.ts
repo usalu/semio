@@ -1,6 +1,4 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 export type PrintDocument = { readonly id: string; readonly texPath: string; readonly collection: "templates" | "visualizations"; readonly sources: readonly string[] };
 const catalog: { version: number; sourceDateEpoch: number; librarySources: string[]; documents: PrintDocument[] } = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
@@ -25,11 +23,6 @@ export function printDocument(id: string): PrintDocument {
   const document = catalog.documents.find(document => document.id === id);
   if (!document) throw new Error(`Unknown Print document: ${id}`);
   return document;
-}
-
-/** 📦️ Gives each document exclusive ownership of its final PDF directory. */
-export function printDocumentOutputDirectory(id: string, workspace = getWorkspaceRoot()): string {
-  return join(workspace, product, "📦️packages/🟦️typescript/dist/documents", printDocument(id).id);
 }
 
 /** 🕰️ Fixes TeX timestamps and date-dependent content to the authored reproducibility epoch. */

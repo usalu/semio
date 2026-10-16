@@ -46,7 +46,7 @@ async function testContinuousServiceScenario(workspace: string, generated: strin
     if (await (await fetch(url)).text() !== (shared ? "first" : id)) throw new Error("Server disappeared before its consumer");
     event("done");
   }
-  `);
+`);
   if (scenario.vite) {
     const implementation = join(dirname(fileURLToPath(import.meta.url)), "../../🌐️vite");
     put("app/index.html", "<!doctype html><title>Nx Vite fixture</title>");
@@ -57,7 +57,11 @@ async function testContinuousServiceScenario(workspace: string, generated: strin
     put("📜️script.ts", String.raw`import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { serveVite } from ${JSON.stringify(join(implementation, "🟦️.ts"))};
+import {receiveScriptProcessInvocation} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"))};
+import {scriptCompilerAdmissionControlV1} from ${JSON.stringify(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts"))};
 import { openServiceSession, readServiceSession, publishServiceReady, waitForServiceReady, closeServiceSession } from ${JSON.stringify(join(implementation, "🧾️session/🟦️.ts"))};
+await receiveScriptProcessInvocation(process.env,async invocation=>{
+const phase=scriptCompilerAdmissionControlV1(invocation,"fixture:vite-service",0);
 const id = process.env.FIXTURE_RUN_ID, pid = Number(process.env.NX_INVOCATION_ROOT_PID), owner = "fixture:e2e", sessions = resolve("state/sessions");
 const event = phase => appendFileSync("state/events.jsonl", JSON.stringify({ phase, id, pid: process.pid }) + "\n");
 if (process.argv[2] === "prepare") await openServiceSession(sessions, owner, pid);
@@ -67,7 +71,7 @@ else {
   const timer = setTimeout(cancel, ${contract.timeouts.service});
   try {
     if (process.argv[2] === "serve") {
-      await serveVite({ root: resolve("app"), config: resolve("app/⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => {
+      await serveVite({invocation,control:phase, root: resolve("app"), config: resolve("app/⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => {
         await publishServiceReady(sessions, session, url, controller.signal); writeFileSync("state/ready-" + id, new URL(url).port); writeFileSync("state/session-" + id, JSON.stringify(session)); event("serve");
       } });
     } else {
@@ -81,6 +85,7 @@ else {
     if (process.argv[2] === "serve") { await closeServiceSession(sessions, session); event("closed"); }
   }
 }
+});
 `);
   }
   const env: NodeJS.ProcessEnv = { ...process.env, SEMIO_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_WORKSPACE_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_DAEMON: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_NO_CLOUD: "true", NODE_OPTIONS: "" };

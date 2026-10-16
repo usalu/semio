@@ -1,4 +1,4 @@
-import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, policyReadRustPolicySource, interactivityMountedFrameTransactionFailures } from "../../../../../../../../📜️script.ts";
+import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_FIND_ITEMS_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILES, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, policyReadRustPolicySource, interactivityMountedFrameTransactionFailures } from "../../../../../../../../📜️script.ts";
 
 /** 🧪️ Executes interactivity mounted frame transaction policy assertions. */
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
@@ -13,9 +13,9 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs"),
     read("🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs"),
-    read(INTERACTIVITY_AUDIT_SHELL_FILE),
+    read(INTERACTIVITY_AUDIT_SHELL_FILE) + "\n" + read(INTERACTIVITY_AUDIT_FIND_ITEMS_FILE),
     read(INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
-    read(INTERACTIVITY_AUDIT_WORLD3D_FILE),
+    INTERACTIVITY_AUDIT_WORLD3D_FILES.map(read).join("\n"),
     read(INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE),
     read(INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE),
     read(INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE),
@@ -104,7 +104,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["ui-bypasses-host-storage-read", 5, "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::read(&path)", "P5a native preference maintenance does not delegate document and field pages to the host-storage service"],
     ["ui-bypasses-host-storage-write", 5, "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::write(&path, value.as_bytes())", "P5a native preference maintenance does not delegate document and field pages to the host-storage service"],
     ["missing-fixed-page-law", 16, "fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page", "fixed_file_page_smoke"],
-    ["missing-paint-output-credit", 13, "draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>())", "Ok::<(), ()>(())", "P5a paint child authority is not retained by byte, glyph, line, output credit, and close state"],
+    ["missing-paint-output-credit", 13, "draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw_types::UiInstance>())", "Ok::<(), ()>(())", "P5a paint child authority is not retained by byte, glyph, line, output credit, and close state"],
     ["missing-paint-byte-cursor", 13, "byte: usize", "bytes: Vec<u8>"],
     ["missing-multimegabyte-text-law", 13, "retained_text_multi_megabyte_max_plus_one_preserves_tree_owner_identity", "retained_text_large_smoke"],
     ["missing-nontext-large-law", 13, "retained_multi_megabyte_input_advances_one_scalar_per_grant", "retained_large_input_smoke"],

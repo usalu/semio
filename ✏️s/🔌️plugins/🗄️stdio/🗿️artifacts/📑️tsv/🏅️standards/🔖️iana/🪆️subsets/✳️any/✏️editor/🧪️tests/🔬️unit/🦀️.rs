@@ -1,5 +1,14 @@
+use crate::editor::tsv::modes::edit::windows::main;
+use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::editor::tsv::{TSV_KIT_ACTION_ID, tsv_example_snapshot, tsv_command_from_action, tsv_emit};
 use crate::apply_mutation;
-use super::*;
+use crate::editor::tsv::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_tsv_editor_builds_a_definition_for_the_editor_role() {

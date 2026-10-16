@@ -1,44 +1,55 @@
 //! 🪪️ The headless workspace state, plugin artifact binding, drop and provenance helpers.
 
-use super::{ActionAdapter, Arc, Catalog, GatewayError, GatewayErrorCode, HashMap, HubRemoteBinding, Mutex, OnceLock, PathBuf, ResourceContent, UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::OnceLock;
+use semio_framework_os_mcp_catalog::catalog::Catalog;
+use semio_framework_os_mcp_dispatch::actions::ActionAdapter;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_hub_remote::remote::HubRemoteBinding;
+use semio_framework_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+use semio_framework_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeStore, close_probe_store_to_terminal};
+use semio_framework_os_mcp_routing::routing_and_shell_routed::{PluginArtifactBinding, WorkspaceCatalog};
+use semio_framework_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};
+use semio_framework_os_mcp_shell_channel::shell_channel::SessionChannelBinding;
+use semio_framework_os_mcp_wire::protocol::ResourceContent;
 #[cfg(not(target_arch = "wasm32"))]
-use super::NativeHubBindingDriver;
-use super::hub_relay::{HubRelay, SessionDocumentPair};
-use super::plugin_binding_and_activation::WorkspaceOrigin;
-use super::probe_document::{PROBE_SCHEMA, ProbeStore, close_probe_store_to_terminal};
-use super::routing_and_shell_routed::WorkspaceCatalog;
+use semio_framework_os_mcp_hub_remote::remote::NativeHubBindingDriver;
 #[cfg(not(target_arch = "wasm32"))]
-use super::routing_and_shell_routed::PluginComponentSource;
+use semio_framework_os_mcp_routing::routing_and_shell_routed::PluginComponentSource;
 
 //#region 🔖️HeadlessWorkspace
+
 /// 🏠️ The real `GatewayBackend` — see this file's module doc for the shape and the honest gaps.
 pub struct HeadlessWorkspace {
-    pub(super) host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     #[cfg(test)]
-    pub(crate) test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
-    pub(super) artifact_host: store::sync::ArtifactHost,
-    pub(super) origin: WorkspaceOrigin,
-    pub(super) principal: String,
-    pub(super) session_id: String,
-    pub(super) scopes: Vec<String>,
-    pub(super) repo_root: Option<PathBuf>,
+    pub test_discovery:Option<Vec<semio_framework::PackageDescriptor>>,
+    pub(crate) artifact_host: store::sync::ArtifactHost,
+    pub origin: WorkspaceOrigin,
+    pub principal: String,
+    pub session_id: String,
+    pub scopes: Vec<String>,
+    pub repo_root: Option<PathBuf>,
     /// 🗂️ See [`WorkspaceCatalog`]: fixed for a folder, following the hub's descriptor authority for a hub.
-    pub(super) catalog: Arc<WorkspaceCatalog>,
+    pub catalog: Arc<WorkspaceCatalog>,
     /// 🧵️ Every document this workspace has opened a live `ProbeStore`/backbone attachment for —
     /// `artifact_open`/`ensure_probe_artifact` populate this; `resolve_context`/`read_resource` read
     /// through it first before falling back to a cold `FolderEventLogStorage` read.
-    pub(super) open_probes: Mutex<HashMap<String, ProbeStore>>,
+    pub(crate) open_probes: Mutex<HashMap<String, ProbeStore>>,
     /// 🎬️ Lazily-built, cached real `ActionAdapter` — `🔀️dispatch`'s own already-real Observe→
     /// Prepare→Preview→Commit→Undo/Redo two-phase protocol, wrapping this workspace's own real
     /// `RoutingArtifactChannel` (`open_routing_channel`). `prepare_action`/`invoke_action` delegate to
     /// it rather than duplicating that protocol — see those methods' own doc for why.
-    pub(super) action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
+    pub(crate) action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
     /// 🗿️ The ROOT-owned adapter `action_prepare`/`action_invoke` actually drive
     /// (`🦀️.rs`'s `build_server_with_workspace`), bound once before the server serves. It is the
     /// only holder of the guest instances a committed mutation lives in, so it is the only place
     /// `artifact_snapshot` can read a document as the agent just left it.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) root_actions: OnceLock<Arc<ActionAdapter>>,
+    pub(crate) root_actions: OnceLock<Arc<ActionAdapter>>,
     /// 🗂️ `artifact_id` → the plugin-typed binding [`HeadlessWorkspace::create_plugin_artifact`]
     /// minted for it. The probe lane (`open_probes`) covers this crate's own generic document; this
     /// covers every artifact created for a REAL plugin artifact kind, and is what finally gives
@@ -48,68 +59,19 @@ pub struct HeadlessWorkspace {
     /// 🗿️ Shared with this workspace's [`RoutingArtifactChannel`] (`Arc`, one map, never a copy):
     /// the channel needs the INVERSE lookup — which artifact a plugin's live session document is —
     /// so `AppFrame::HistorySnapshot` can stamp the artifact rather than the plugin id.
-    pub(super) plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
+    pub(crate) plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
     /// 🐚️ The session's channel decision, published once by `server_for_workspace_options`. The
     /// artifact-level verbs that open a channel of their OWN (`create_plugin_artifact`,
     /// `export_artifact_media` — they never pass through `ActionAdapter`) consult it, so a session
     /// that resolved `shell` has ONE document owner for every verb rather than a split brain
     /// (`📓️lb1-live-bridge-action-routing.md` §7.3). Unset is the ordinary headless tier.
-    pub(super) shell_route: OnceLock<(Arc<crate::shell_channel::SessionChannelBinding>, Arc<Catalog>)>,
-    pub(super) hub_binding: Option<Arc<HubRemoteBinding>>,
+    pub(crate) shell_route: OnceLock<(Arc<SessionChannelBinding>, Arc<Catalog>)>,
+    pub hub_binding: Option<Arc<HubRemoteBinding>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) hub_driver: Option<Arc<NativeHubBindingDriver>>,
+    pub(crate) hub_driver: Option<Arc<NativeHubBindingDriver>>,
     /// 🧩️ Where this workspace's plugin components come from — see [`PluginComponentSource`].
     #[cfg(not(target_arch = "wasm32"))]
-    pub(super) plugin_components: Option<PluginComponentSource>,
-}
-
-#[derive(Clone)]
-pub struct PluginArtifactBinding {
-    pub schema: String,
-    pub plugin_id: String,
-    pub app_id: String,
-    pub surface_id: Option<String>,
-    pub document: Option<Arc<SessionDocumentPair>>,
-    /// 🧵️ The hub document actor's own mailbox, when this binding opened one. Every
-    /// `MessageEndpoint::Backbone` message the plugin's guest publishes for this document is handed
-    /// to it as `ArtifactActorMsg::DocumentBackbone`, which is the actor path that persists the
-    /// envelopes and relays them to the hub as `ClientFrame::Commands` — the SAME route the wgpu
-    /// shell's `route_document_backbone_effects` drives for a human's edit.
-    #[cfg(not(target_arch = "wasm32"))]
-    pub backbone: Option<store::sync::ArtifactMailboxSender>,
-    /// 🚧️ Why this binding opened no document actor, when it did not. A hub document whose artifact
-    /// schema has no registered `store::os_store::serialization::ArtifactCodec` in this process cannot open a document socket
-    /// at all: `connect_hub` reads `document_codec(schema).pack_schema_hash` to build its
-    /// `SocketHelloV1` and silently reschedules a reconnect forever when there is none. Recording
-    /// the reason here is what turns that silence into something a reader can see.
-    pub backbone_blocked_by: Option<String>,
-    /// 🧾️ How many document-backbone messages this binding has handed to its document actor. The
-    /// ONE fact that separates "the guest published nothing" from "the actor has it and the socket
-    /// has not flushed yet", and the agent is owed it: `action_invoke` answers `SUCCEEDED` for a
-    /// transaction the guest committed, which is true and is not the same as "anyone else can see
-    /// it". Published by `artifact_open`'s `sessionDocument.relayedBatches`.
-    pub relayed: Arc<std::sync::atomic::AtomicU64>,
-    /// 🚦️ The document actor's own sync reports, for a binding that opened one.
-    pub relay: Arc<HubRelay>,
-    /// 🕰️ When the agent last opened or edited this hub document ([`hub_link_tick`]; 0 for a folder artifact): its app's
-    /// session document is the one with the latest, and the least recent live link closes first past the bound.
-    pub used: u64,
-}
-
-impl std::fmt::Debug for PluginArtifactBinding {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter
-            .debug_struct("PluginArtifactBinding")
-            .field("schema", &self.schema)
-            .field("plugin_id", &self.plugin_id)
-            .field("app_id", &self.app_id)
-            .field("surface_id", &self.surface_id)
-            .field("document_bytes", &self.document.as_ref().map(|pair| pair.pack.len() + pair.spr.len()))
-            .field("backbone_blocked_by", &self.backbone_blocked_by)
-            .field("relayed", &self.relayed.load(std::sync::atomic::Ordering::Relaxed))
-            .field("used", &self.used)
-            .finish()
-    }
+    pub(crate) plugin_components: Option<PluginComponentSource>,
 }
 
 /// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens
@@ -219,7 +181,7 @@ impl HeadlessWorkspace {
     /// has no validate query command either (same gap as `schema` above) — a live plugin
     /// instance's own `validate()` is not reachable from here yet, so this is now a typed,
     /// retryable gap naming exactly that, never a hardcoded pass.
-    pub(super) fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
+    pub(crate) fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;
             if !snapshot.documents.keys().any(|scope| scope.document_id == artifact_id) {
@@ -281,12 +243,12 @@ impl HeadlessWorkspace {
     }
 }
 
-pub(super) fn directory_json_value<T: semio_framework_value::ToValue>(value: &T) -> Result<serde_json::Value, GatewayError> {
+pub(crate) fn directory_json_value<T: semio_framework_value::ToValue>(value: &T) -> Result<serde_json::Value, GatewayError> {
     let text = semio_framework_pack_json::to_json_string(value);
     serde_json::from_str(&text).map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "directory value could not be projected to MCP JSON"))
 }
 
-pub(super) fn base64_encode(bytes: &[u8]) -> String {
+pub fn base64_encode(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for chunk in bytes.chunks(3) {
@@ -300,4 +262,5 @@ pub(super) fn base64_encode(bytes: &[u8]) -> String {
     }
     out
 }
+
 //#endregion 🔖️HeadlessWorkspace

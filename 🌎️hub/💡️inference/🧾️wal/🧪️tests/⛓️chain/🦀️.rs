@@ -1,6 +1,9 @@
 //! ⛓️ Real replay and independent third-party BLAKE3 over hostile CRC-valid committed frames.
 
 use super::*;
+use std::sync::Arc;
+use semio_hub_inference::wal::{InferenceDocumentFenceV1, InferenceWalVerifierV1};
+use semio_hub_inference::InferenceOperationControlV1;
 
 #[derive(Clone, Copy)]
 struct Frame {
@@ -228,7 +231,7 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
         }
         let expected = case["accepted"].as_bool().unwrap();
         assert_eq!(independent_chain(&segments, fixture["documentKey"].as_str().unwrap()), expected, "independent blake3 {}", case["name"]);
-        let verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
+        let verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(retained_storage(&fixture, &segments, 0).await);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
         let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
         assert_eq!(matches!(result, Ok(Some(_))), expected, "actual retained WAL {}", case["name"]);
@@ -239,6 +242,12 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
 
 mod quick {
     use super::*;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
+use semio_hub_inference::wal::{InferenceDocumentFenceV1, InferenceWalVerifierV1};
+use semio_hub_inference::{InferenceErrorV1, InferenceOperationControlV1};
+use db::wal::{WalCursorControl, WalReplayCursor, WalReplayStep};
 
     #[tokio::test]
     async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof() {
@@ -247,7 +256,7 @@ mod quick {
         let durable = durable_fixture_record(&fixture);
         let segments = chain_segments(&fixture, &chain["cases"][0], &durable).await;
         for owner in chain["hashingOwnership"].as_array().unwrap() {
-            let mut verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
+            let mut verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(retained_storage(&fixture, &segments, 0).await);
             let gate = Arc::new(tokio::sync::Semaphore::new(0));
             Arc::get_mut(&mut verifier.state).unwrap().hashing_gate = Some(gate.clone());
             let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
@@ -314,7 +323,7 @@ mod quick {
             assert_eq!(records == 4, boundary["replayAccepted"].as_bool().unwrap());
             drop(replay);
             drop(storage);
-            let verifier = InferenceWalVerifierV1::new(backend);
+            let verifier = InferenceWalVerifierV1::new::<semio_hub_gis::inference::GisMapInferenceBindingV1>(backend);
             let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
             let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
             assert_eq!(matches!(result, Ok(Some(_))), boundary["genesisProofAccepted"].as_bool().unwrap());

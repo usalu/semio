@@ -192,6 +192,138 @@
       "consumer": "🔨️modules/🏪️store/🦀️.rs",
       "canonical": "pub use semio_framework_mutation_diff::{KeyedRow,KeyedRows,keyed_rows_apply,keyed_rows_inverse,keyed_rows_changing,keyed_rows_absorb};",
       "definition": "pub mod diff;"
+    },
+    {
+      "producer": "semio-framework-os-list-delta",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_list_delta as list_delta;",
+      "definition": "pub trait Keyed {"
+    },
+    {
+      "producer": "semio-framework-os-semio",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_semio as os_semio;",
+      "definition": "pub enum SemioError {"
+    },
+    {
+      "producer": "semio-framework-os-extension",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_extension as os_extension;",
+      "definition": "pub enum ExtensionPackageError"
+    },
+    {
+      "producer": "semio-framework-os-dsl",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_dsl as os_dsl;",
+      "definition": "pub mod protocol_record {"
+    },
+    {
+      "producer": "semio-framework-os-spr",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_spr::*;",
+      "definition": "pub async fn compile_ops("
+    },
+    {
+      "producer": "semio-framework-os-plugin-registry-schema",
+      "consumer": "📦️packages/🦀️rust/📥️mounts/🌱️wp1-leaves/🦀️.rs",
+      "canonical": "pub use semio_framework_os_plugin_registry_schema as os_plugin_module_schema;",
+      "definition": "pub struct TrustedPluginModuleIndexV1"
+    },
+    {
+      "producer": "semio-framework-os-store-child",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_child as artifact_child;",
+      "definition": "pub struct ArtifactChildLocalText"
+    },
+    {
+      "producer": "semio-framework-os-store-ledger",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_ledger as ledger;",
+      "definition": "pub struct CursorRevisionRecord"
+    },
+    {
+      "producer": "semio-framework-os-store-replay",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_replay::*;",
+      "definition": "pub struct PairMerge"
+    },
+    {
+      "producer": "semio-framework-os-store-read",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_read::*;",
+      "definition": "pub struct ArtifactDerivedSnapshot"
+    },
+    {
+      "producer": "semio-framework-os-store-backbone",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_backbone as backbone;",
+      "definition": "pub enum BackboneMessage"
+    },
+    {
+      "producer": "semio-framework-os-store-canonical-json",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_canonical_json::*;",
+      "definition": "pub const ARTIFACT_CANONICAL_JSON_DEPTH"
+    },
+    {
+      "producer": "semio-framework-os-store-one-item-publication",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_one_item_publication::*;",
+      "definition": "pub struct ArtifactStoreOneItemLiveAuthority"
+    },
+    {
+      "producer": "semio-framework-os-store-operation-wire",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_operation_wire::*;",
+      "definition": "pub struct ArtifactPreparedOperationProgress"
+    },
+    {
+      "producer": "semio-framework-os-store-snapshot-clone",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_snapshot_clone as snapshot_clone_preparation;",
+      "definition": "pub enum RetainedCloneEditStep"
+    },
+    {
+      "producer": "semio-framework-os-store-one-item-batch",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "use semio_framework_os_store_one_item_batch as one_item_owners;",
+      "definition": "pub struct OneItemOwners"
+    },
+    {
+      "producer": "semio-framework-os-store-space-schema",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_space_schema::*;",
+      "definition": "pub mod lifted_mutations"
+    },
+    {
+      "producer": "semio-framework-os-store-retirement",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_retirement::*;",
+      "definition": "pub mod resident_backing"
+    },
+    {
+      "producer": "semio-framework-os-store-owned-schema-decode",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_owned_schema_decode::*;",
+      "definition": "pub struct ArtifactEnvelopeDecodeOwnerBundle"
+    },
+    {
+      "producer": "semio-framework-os-store-space-history",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_space_history as space_history;",
+      "definition": "pub mod sqlite_snapshot_workspace"
+    },
+    {
+      "producer": "semio-framework-os-store-text-io",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_text_io::*;",
+      "definition": "pub trait ArtifactStoreSnapshot"
+    },
+    {
+      "producer": "semio-framework-os-store-codec-registry",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_codec_registry as codec_registry;",
+      "definition": "pub fn validate_owned_sqlite_snapshot_subset"
     }
   ],
   "mutationOwners": [

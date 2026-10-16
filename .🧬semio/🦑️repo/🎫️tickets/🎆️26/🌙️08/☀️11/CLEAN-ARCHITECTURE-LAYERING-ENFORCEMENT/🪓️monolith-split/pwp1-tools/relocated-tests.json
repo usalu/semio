@@ -1,0 +1,28 @@
+[
+ {
+  "test": "🧪️tests/🔬️app-window-kits/🦀️.rs",
+  "host": "app_window_kits_tests",
+  "alias": "crate::window_kits",
+  "imports": "prepended",
+  "items": [],
+  "unresolved": []
+ },
+ {
+  "test": "🧪️tests/🔬️app-panel-kit/🦀️.rs",
+  "host": "app_panel_kit_tests",
+  "alias": "crate::tree_kit",
+  "imports": "prepended",
+  "items": [
+   "TreeWindows",
+   "tree_window_section_or_placeholder",
+   "TREE_WINDOW_DEFAULT_ROWS",
+   "tree_item_with_action_draggable",
+   "selection_ids",
+   "tree_item",
+   "PanelTreeBuilder",
+   "tree_window_section",
+   "tree_window_item"
+  ],
+  "unresolved": []
+ }
+]

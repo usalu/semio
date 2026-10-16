@@ -7,7 +7,7 @@
  * 🎨️ Independent TypeScript implementation of `os.config.ui-preferences`' nine-kind mutation
  * vocabulary, driven as a second SUBJECT. `applyUiPreferencesConfigMutation`/`inverseUiPreferencesConfigMutation`
  * (`../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts`) are the authoritative direct TypeScript leaves,
- * written independently of the Rust dispatch the host package re-exports. This file applies THAT
+ * written independently of the Rust dispatch `semio-framework-os-config` owns. This file applies THAT
  * TypeScript dispatch to the identical committed `(before, mutation, after, outcome)` vectors the Rust
  * adapter reads literally — never recomputed — so both implementations answer to the same fixed evidence.
  * The TypeScript leaves raise no diagnostics, so a `no-op` vector is held to its observable half: the

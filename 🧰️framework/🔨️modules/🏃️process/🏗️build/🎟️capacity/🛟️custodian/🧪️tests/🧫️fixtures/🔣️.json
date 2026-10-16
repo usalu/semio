@@ -1,0 +1,29 @@
+{
+  "parallelism": 1,
+  "output": {
+    "maximumBytes": 65536,
+    "maximumLines": 128
+  },
+  "expected": {
+    "stdout": "paid-child",
+    "status": 0,
+    "signal": null
+  },
+  "invalid": {
+    "extra": true,
+    "parallelism": 0,
+    "jobParallelism": 2
+  },
+  "forgedResult": {
+    "version": 1,
+    "kind": "result",
+    "index": 0,
+    "result": {
+      "version": 1,
+      "stdout": "forged-paid",
+      "stderr": "",
+      "status": 0,
+      "signal": null
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# Public Phase-Control Setup Proof
+
+Root confirmed actual public setup19545 terminal0 by 2026-10-15 23:40:06 UTC, after launch23:38:18 UTC under ordinary CLI policy0 with11 incoming overrides absent. Independent bounded read of generated/public-setup-phase-current.log confirms stage line1273, published line1732 and installed line2464 actual Node preflights:38 functions each and identical bundle SHA52b16365a9224b8cbdded27f850e4aae7ca91866ec2cd6a79fd407ee227ae39e. Published and installed generation is79ae4eb4147837a513ad8f6f2c1fc42d97791efe1615af3462d3b2f08dda1ebe. EOF2924–2926 reports Local v23.2.0, Global Not found and repository:build repo complete.
+
+Logged source capture11701 entries/168402658 bytes/10182ms and shared pristine projection10189 files/18982856 owned bytes/34772ms. Captured authorizer release inputs167/418173 bytes. These are logged phase measurements only; the terminal observation interval is not precise process duration or performance causality.
+
+This accepts the actual ordinary public setup process for this held phase-control batch. It does not qualify workspace, ALL, public selected targets or direct Bazel aggregate. Independent role Source proof preceding setup validated115/190/70 entries at its observation time. Authenticated installation-to-current-Source metadata comparison remains Core’s separately authorized diagnostic. This auditor did not open SDK material, stores or images.

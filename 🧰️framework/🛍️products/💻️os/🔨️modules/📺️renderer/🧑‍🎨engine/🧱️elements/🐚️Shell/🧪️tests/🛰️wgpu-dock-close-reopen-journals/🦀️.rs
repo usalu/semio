@@ -46,9 +46,9 @@ fn journey_shell(keybindings: Vec<Keybinding>) -> ShellState {
     kind.actions = vec![ActionDefinition::new("engagementAbort", LocalizedLabel::data("Abort"), ActionKind::Interaction, "eye")];
     let mut app = AppDefinition { window_kinds: WindowKinds::try_from(vec![kind]).expect("one window kind"), ..app };
     app.keybindings = keybindings;
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-    shell.dock = journey_dock();
-    shell.active_window_id = Some(TOP.to_string());
+    shell.docs.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
+    shell.dock.dock = journey_dock();
+    shell.windows.active_window_id = Some(TOP.to_string());
     shell
 }
 
@@ -68,7 +68,7 @@ fn published_dock_tab_rows(shell: &ShellState) -> Vec<String> {
     let labels = HashMap::from([(TOP.to_string(), "Top".to_string()), (PERSPECTIVE.to_string(), "Perspective".to_string())]);
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
-    shell.dock.paint_chrome(&mut ctx, CANVAS, false);
+    shell.dock.dock.paint_chrome(&mut ctx, CANVAS, false);
     input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).filter(|id| id.starts_with("dock.tab.")).collect()
 }
 
@@ -81,15 +81,15 @@ fn accepted_dock_input(shell: &mut ShellState) -> InputState<ActionDescriptor> {
     let labels = HashMap::from([(TOP.to_string(), "Top".to_string()), (PERSPECTIVE.to_string(), "Perspective".to_string())]);
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
-    shell.dock.paint_chrome(&mut ctx, CANVAS, false);
-    shell.publish_retained_hit_registry(&mut input);
+    shell.dock.dock.paint_chrome(&mut ctx, CANVAS, false);
+    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     input
 }
 
 fn plan(shell: &mut ShellState) {
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
-    shell.plan_dock_windows(CANVAS, &theme, &mut atlas);
+    ChromeViewCtx::of(&mut shell).plan_dock_windows(CANVAS, &theme, &mut atlas);
 }
 
 //#region 🪟️CloseAndReopen
@@ -105,11 +105,11 @@ fn plan(shell: &mut ShellState) {
 #[test]
 fn the_close_cap_closes_exactly_the_clicked_window_and_refocuses_the_survivor() {
     let mut shell = journey_shell(Vec::new());
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
-    assert_eq!(shell.dock.collect_window_ids(), vec![PERSPECTIVE.to_string()], "🪟️ one window closed, the other stayed");
-    assert_eq!(shell.active_window_id.as_deref(), Some(PERSPECTIVE), "🪟️ focus moved to the survivor, as React's `remaining[0]` does");
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
+    assert_eq!(shell.dock.dock.collect_window_ids(), vec![PERSPECTIVE.to_string()], "🪟️ one window closed, the other stayed");
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some(PERSPECTIVE), "🪟️ focus moved to the survivor, as React's `remaining[0]` does");
     assert!(outcome.is_ok(), "🕒️ the close returns its interaction owner without awaiting the guest journal");
-    let note = shell.deferred_actions.last().expect("🕒️ the close arms the note React's onWindowClose uses");
+    let note = shell.settle.deferred_actions.last().expect("🕒️ the close arms the note React's onWindowClose uses");
     assert_eq!(note.action, "noteShellCommand");
     let args = note.args.as_ref().expect("the close note carries its command and window");
     assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowClose"));
@@ -126,25 +126,25 @@ fn a_window_options_popup_dismissal_preserves_the_immediate_close_cap_gesture() 
     let law = &fixture["rapidPopupClose"];
     let mut shell = journey_shell(Vec::new());
     let mut input = accepted_dock_input(&mut shell);
-    shell.open_selects.insert(law["popupOwner"].as_str().expect("popup owner").to_string(), true);
+    shell.input.open_selects.insert(law["popupOwner"].as_str().expect("popup owner").to_string(), true);
 
     let dismiss = law["dismissPoint"].as_array().expect("dismiss point");
     let (dismiss_x, dismiss_y) = (dismiss[0].as_f64().expect("dismiss x") as f32, dismiss[1].as_f64().expect("dismiss y") as f32);
-    semio_framework_async::block_on(shell.handle_pointer_button(dismiss_x, dismiss_y, true, 0, &mut input, &Theme::default())).expect("the outside press dismisses the Window Options popup");
-    semio_framework_async::block_on(shell.handle_pointer_button(dismiss_x, dismiss_y, false, 0, &mut input, &Theme::default())).expect("the popup dismissal completes");
-    assert!(shell.open_selects.values().all(|open| !open), "🔽️ the popup is retired before the cap gesture starts");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(dismiss_x, dismiss_y, true, 0, &mut input, &Theme::default())).expect("the outside press dismisses the Window Options popup");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(dismiss_x, dismiss_y, false, 0, &mut input, &Theme::default())).expect("the popup dismissal completes");
+    assert!(shell.input.open_selects.values().all(|open| !open), "🔽️ the popup is retired before the cap gesture starts");
 
     let close_id = law["closeControl"].as_str().expect("close control");
     let close = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(close_id)).expect("the accepted frame publishes Top's close cap").rect;
     let (x, y) = (close.x + close.w * 0.5, close.y + close.h * 0.5);
-    semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &Theme::default())).expect("the immediate close press routes");
-    semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &Theme::default())).expect("the immediate close release routes");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &Theme::default())).expect("the immediate close press routes");
+    semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut input, &Theme::default())).expect("the immediate close release routes");
 
     let expected_windows = law["remainingWindows"].as_array().expect("remaining windows").iter().map(|window| window.as_str().expect("window id").to_string()).collect::<Vec<_>>();
-    assert_eq!(shell.dock.collect_window_ids(), expected_windows, "🪟️ one immediate cap gesture removes Top");
-    assert_eq!(shell.active_window_id.as_deref(), law["focusedWindow"].as_str(), "🪟️ the survivor receives focus");
-    assert!(shell.presented_input_candidate.is_none(), "🎯️ no stale input candidate remains after the accepted gestures");
-    let close_notes = shell.deferred_actions.iter().filter(|action| action.action == "noteShellCommand" && action.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str) == law["closeCommand"].as_str()).count();
+    assert_eq!(shell.dock.dock.collect_window_ids(), expected_windows, "🪟️ one immediate cap gesture removes Top");
+    assert_eq!(shell.windows.active_window_id.as_deref(), law["focusedWindow"].as_str(), "🪟️ the survivor receives focus");
+    assert!(shell.input.presented_input_candidate.is_none(), "🎯️ no stale input candidate remains after the accepted gestures");
+    let close_notes = shell.settle.deferred_actions.iter().filter(|action| action.action == "noteShellCommand" && action.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str) == law["closeCommand"].as_str()).count();
     assert_eq!(close_notes, law["closeCommandCount"].as_u64().expect("close command count") as usize, "🕒️ the one cap gesture journals one close command");
 }
 
@@ -162,20 +162,20 @@ fn a_window_options_popup_dismissal_preserves_the_immediate_close_cap_gesture() 
 #[test]
 fn the_reopen_scan_after_a_close_lands_on_a_tab_select_that_closes_nothing() {
     let mut shell = journey_shell(Vec::new());
-    let _ = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
+    let _ = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close")), &InputState::<ActionDescriptor>::default()));
     let rows = published_dock_tab_rows(&shell);
     let scanned = rows.first().cloned().expect("🛰️ the survivor still publishes its tab");
     assert_eq!(scanned, format!("dock.tab..{PERSPECTIVE}"), "🛰️ the reopen scan resolves a SELECT target: {rows:?}");
-    assert!(ShellState::shell_command_for_control(&scanned, false).is_none(), "🕒️ a tab select is no shell command — React's reopen step journals nothing");
+    assert!(shell_command_for_control(&scanned, false).is_none(), "🕒️ a tab select is no shell command — React's reopen step journals nothing");
 
-    let before = shell.dock.collect_window_ids();
-    shell.deferred_actions.clear();
+    let before = shell.dock.dock.collect_window_ids();
+    shell.settle.deferred_actions.clear();
     let outcome = semio_framework_async::block_on(
-        shell.handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }, &InputState::<ActionDescriptor>::default()),
+        PointerCtx::of(&mut shell).handle_shell_hit(&HitTarget::<ActionDescriptor> { rect: CANVAS, event: None, control_id: Some(scanned), kind: HitKind::Window, drag_axis: None, drag_data: None }, &InputState::<ActionDescriptor>::default()),
     );
     assert!(outcome.is_ok(), "🛰️ the reopen step crosses no dispatch funnel");
-    assert_eq!(shell.dock.collect_window_ids(), before, "🛰️ …and closes nothing: the dock survives the whole cap sequence");
-    assert!(shell.deferred_actions.is_empty(), "🕒️ the survivor was already active, so not even an activation is owed");
+    assert_eq!(shell.dock.dock.collect_window_ids(), before, "🛰️ …and closes nothing: the dock survives the whole cap sequence");
+    assert!(shell.settle.deferred_actions.is_empty(), "🕒️ the survivor was already active, so not even an activation is owed");
 }
 
 /// ⚖️ LAW: a tab publishes its select target before its chips, and its chips left to right — React's
@@ -205,12 +205,12 @@ fn every_dock_tab_publishes_its_select_target_before_its_chips() {
 #[test]
 fn an_emptied_dock_never_enters_the_window_plan() {
     let mut shell = journey_shell(Vec::new());
-    assert!(shell.dock.close_window(TOP) && shell.dock.close_window(PERSPECTIVE), "🪟️ both panes close");
+    assert!(shell.dock.dock.close_window(TOP) && shell.dock.dock.close_window(PERSPECTIVE), "🪟️ both panes close");
     plan(&mut shell);
-    assert!(shell.dock_window_plan.is_empty(), "🈳️ an empty dock plans no window: {:?}", shell.dock_window_plan);
-    assert!(!shell.window_content_rects.contains_key(""), "🈳️ and no content rect is keyed by an empty window id");
-    assert!(shell.window_silhouettes.is_empty(), "🈳️ an empty stack owns no silhouette");
-    assert!(!shell.dock_drop_bodies.is_empty(), "📥️ …while the emptied stack stays a drop body, so a dragged window can come back");
+    assert!(shell.dock.dock_window_plan.is_empty(), "🈳️ an empty dock plans no window: {:?}", shell.dock.dock_window_plan);
+    assert!(!shell.dock.window_content_rects.contains_key(""), "🈳️ and no content rect is keyed by an empty window id");
+    assert!(shell.dock.window_silhouettes.is_empty(), "🈳️ an empty stack owns no silhouette");
+    assert!(!shell.dock.dock_drop_bodies.is_empty(), "📥️ …while the emptied stack stays a drop body, so a dragged window can come back");
 }
 
 //#endregion 🪟️CloseAndReopen
@@ -226,23 +226,23 @@ fn an_emptied_dock_never_enters_the_window_plan() {
 /// (`🗑️generated/w12c-parity-run-19/steps.json` step 16).
 #[test]
 fn the_focus_cap_journals_no_shell_command_and_only_its_activation() {
-    assert!(ShellState::shell_command_for_control(&format!("dock.tab.0.{TOP}.focus"), false).is_none(), "🕒️ no `shell.windowMaximize` exists to note");
+    assert!(shell_command_for_control(&format!("dock.tab.0.{TOP}.focus"), false).is_none(), "🕒️ no `shell.windowMaximize` exists to note");
     let mut shell = journey_shell(Vec::new());
-    shell.active_window_id = Some(PERSPECTIVE.to_string());
-    shell.arm_window_activation_note();
-    shell.deferred_actions.clear();
+    shell.windows.active_window_id = Some(PERSPECTIVE.to_string());
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    shell.settle.deferred_actions.clear();
 
-    let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.focus")), &InputState::<ActionDescriptor>::default()));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.focus")), &InputState::<ActionDescriptor>::default()));
     assert!(outcome.is_ok(), "🕒️ the Focus chip crosses no dispatch funnel of its own");
-    assert!(shell.deferred_actions.is_empty(), "🕒️ …and arms nothing by itself");
-    assert_eq!(shell.active_window_id.as_deref(), Some(TOP), "🪟️ it DID activate the tab's window, exactly as React's `activateWindow` does");
+    assert!(shell.settle.deferred_actions.is_empty(), "🕒️ …and arms nothing by itself");
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some(TOP), "🪟️ it DID activate the tab's window, exactly as React's `activateWindow` does");
 
-    shell.arm_window_activation_note();
-    let armed = shell.deferred_actions.first().expect("🪟️ the activation is the one thing the chip journals");
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    let armed = shell.settle.deferred_actions.first().expect("🪟️ the activation is the one thing the chip journals");
     assert_eq!(armed.action, "noteShellCommand");
     let args = armed.args.as_ref().expect("the note carries its command");
     assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowActivate"));
-    assert_eq!(shell.deferred_actions.len(), 1, "🕒️ one activation, one note — never a second `shell.windowMaximize`");
+    assert_eq!(shell.settle.deferred_actions.len(), 1, "🕒️ one activation, one note — never a second `shell.windowMaximize`");
 }
 
 /// ⚖️ LAW: a press inside a docked pane activates that pane's window, which is what arms the
@@ -260,25 +260,25 @@ fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
     let mut shell = journey_shell(Vec::new());
     plan(&mut shell);
     let mut input = InputState::<ActionDescriptor>::default();
-    shell.publish_retained_input_for_test(&mut input, &Theme::default());
-    shell.arm_window_activation_note();
-    shell.deferred_actions.clear();
-    let (_, body) = shell.dock_window_plan.iter().find(|(window_id, _)| window_id == PERSPECTIVE).cloned().expect("🪟️ the perspective pane is planned");
+    PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &Theme::default());
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    shell.settle.deferred_actions.clear();
+    let (_, body) = shell.dock.dock_window_plan.iter().find(|(window_id, _)| window_id == PERSPECTIVE).cloned().expect("🪟️ the perspective pane is planned");
 
-    assert!(shell.activate_window_under_pointer(body.x + body.w * 0.7, body.y + body.h * 0.45, &Theme::light()), "🖱️ the probe's own aim point activates the pane it lands in");
-    assert_eq!(shell.active_window_id.as_deref(), Some(PERSPECTIVE));
-    shell.arm_window_activation_note();
-    let armed = shell.deferred_actions.first().expect("🪟️ a real activation arms exactly one note");
+    assert!(shell.input.activate_window_under_pointer(body.x + body.w * 0.7, body.y + body.h * 0.45, &Theme::light(), &mut shell.windows, &mut shell.dock), "🖱️ the probe's own aim point activates the pane it lands in");
+    assert_eq!(shell.windows.active_window_id.as_deref(), Some(PERSPECTIVE));
+    WindowActionsCtx::of(&mut shell).arm_window_activation_note();
+    let armed = shell.settle.deferred_actions.first().expect("🪟️ a real activation arms exactly one note");
     let args = armed.args.as_ref().expect("the note carries its command");
     assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowActivate"));
     assert_eq!(args.get("detail").and_then(|detail| detail.get("windowId")).and_then(DslValue::as_str), Some(PERSPECTIVE));
 
     let mut empty = journey_shell(Vec::new());
-    assert!(empty.dock.close_window(TOP) && empty.dock.close_window(PERSPECTIVE));
+    assert!(empty.dock.dock.close_window(TOP) && empty.dock.dock.close_window(PERSPECTIVE));
     plan(&mut empty);
-    empty.publish_retained_input_for_test(&mut input, &Theme::default());
-    empty.deferred_actions.clear();
-    assert!(!empty.activate_window_under_pointer(CANVAS.w * 0.7, CANVAS.h * 0.45, &Theme::light()), "🈳️ an empty dock has no pane to activate — the run-19 state in which `mod+z` carried no `shell.windowActivate`");
+    PanelsViewCtx::of(&mut empty).publish_retained_input_for_test(&mut input, &Theme::default());
+    empty.settle.deferred_actions.clear();
+    assert!(!empty.input.activate_window_under_pointer(CANVAS.w * 0.7, CANVAS.h * 0.45, &Theme::light(), &mut empty.windows, &mut empty.dock), "🈳️ an empty dock has no pane to activate — the run-19 state in which `mod+z` carried no `shell.windowActivate`");
 }
 
 //#endregion 🕒️CapJournals
@@ -296,11 +296,11 @@ fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
 #[test]
 fn escape_with_a_docked_owner_dispatches_the_apps_engagement_abort() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
-    shell.overlay_state = OverlayState::Dropdown("example".into());
+    shell.input.overlay_state = OverlayState::Dropdown("example".into());
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
-    assert_eq!(shell.overlay_state, OverlayState::None, "⎋️ the same keydown dismisses the picker");
-    assert!(shell.transient_notice().is_none(), "⎋️ a docked owner answers the verb — no unowned-chord banner");
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the same keydown dismisses the picker");
+    assert!(shell.chrome.transient_notice().is_none(), "⎋️ a docked owner answers the verb — no unowned-chord banner");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⎋️ …and `engagementAbort` crossed the dispatch funnel");
 }
 
@@ -311,11 +311,11 @@ fn escape_with_a_docked_owner_dispatches_the_apps_engagement_abort() {
 #[test]
 fn escape_with_an_empty_dock_is_the_hinted_no_op_run_19_measured() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
-    assert!(shell.dock.close_window(TOP) && shell.dock.close_window(PERSPECTIVE));
+    assert!(shell.dock.dock.close_window(TOP) && shell.dock.dock.close_window(PERSPECTIVE));
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
     assert!(outcome.is_ok(), "⎋️ nothing is dispatched at all");
-    assert_eq!(shell.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ the verb resolved and found no window to address");
+    assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ the verb resolved and found no window to address");
 }
 
 //#endregion ⎋️EngagementAbort
@@ -337,7 +337,7 @@ fn the_cap_rows_of_the_journal_fixture_match_the_shell_command_table() {
     for step in steps {
         let Some(control) = step["control"].as_str() else { continue };
         let expected: Vec<&str> = step["commands"].as_array().expect("📜️ a control row declares its commands").iter().map(|value| value.as_str().expect("a command id")).collect();
-        let actual: Vec<&str> = ShellState::shell_command_for_control(control, false).map(|(command_id, _)| command_id).into_iter().collect();
+        let actual: Vec<&str> = shell_command_for_control(control, false).map(|(command_id, _)| command_id).into_iter().collect();
         assert_eq!(actual, expected, "📜️ {}: `{control}` journals {expected:?}", step["id"].as_str().unwrap_or("?"));
         checked += 1;
     }

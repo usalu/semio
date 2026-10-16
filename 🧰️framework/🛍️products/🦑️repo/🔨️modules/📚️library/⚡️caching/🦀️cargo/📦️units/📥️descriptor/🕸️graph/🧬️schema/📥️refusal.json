@@ -28,7 +28,10 @@
           "build-script",
           "build-script-run",
           "compiler-operation",
-          "library-output"
+          "library-output",
+          "effective-profile",
+          "compiler-arguments",
+          "extern-flags"
         ]
       }
     }

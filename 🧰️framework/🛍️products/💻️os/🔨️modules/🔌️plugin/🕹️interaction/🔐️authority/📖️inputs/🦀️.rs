@@ -25,15 +25,18 @@ impl<D, C> LocalInteractionInputReads<D, C> {
         Self { owned: ManuallyDrop::new(InputReadState { document, config, closing: false }) }
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    #[doc(hidden)]
+    pub fn begin_close(&mut self) {
         self.owned.closing = true;
     }
 
-    pub(crate) fn retirement_demands(&self) -> RetirementDemand {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self) -> RetirementDemand {
         RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -59,7 +62,8 @@ impl<D, C> LocalInteractionInputReads<D, C> {
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.owned.closing && self.owned.document.is_none() && self.owned.config.is_none()
     }
 }

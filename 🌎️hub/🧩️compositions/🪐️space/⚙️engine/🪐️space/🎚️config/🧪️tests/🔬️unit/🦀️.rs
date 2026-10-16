@@ -1,7 +1,7 @@
 
 use super::*;
-use crate::engine::space::S_PLAY_PARAMETERS_TAB_ID;
-use crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW;
+use crate::S_PLAY_PARAMETERS_TAB_ID;
+use crate::S_PLAY_WINDOW_WORKFLOW;
 use protocol::Mutation;
 
 async fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> SpaceConfig {

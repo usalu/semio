@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-mcp-schema"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The os.mcp schema registry: tool schemas, scope exports and the committed mirror."
+
+[package.metadata.semio]
+role = "product"
+id = "os-mcp-schema"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+doctest = false
+
+[dependencies]
+framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+schemars = "0.8.22"
+semio-framework-schema = { path = "../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+semio-framework-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" }

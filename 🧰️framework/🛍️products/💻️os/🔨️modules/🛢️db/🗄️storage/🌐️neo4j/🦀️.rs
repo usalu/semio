@@ -38,15 +38,14 @@
 //! `holder + token + unexpired` before touching a segment, so a writer whose lease lapsed (paused,
 //! partitioned or crashed) is fenced by the storage itself, never by its own belief. A crashed
 //! holder's lease frees itself after `leaseTtlMs`. Contract: `🔐️writer/🧫️fixtures/🌐️remote-guard`.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_durability::{DurabilityClass, EpochFence};
-use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::db_storage::{
-    close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend,
-    register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation,
-    DbIoAsyncDriverRuntime, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo,
-    LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
-};
+use db_durability::{DurabilityClass, EpochFence};
+use db_ids::{ArtifactId, DbError, check_len};
+use db_io_core::{CatalogStorage, DB_IO_PAGE_BYTES, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoAsyncDriverRuntime, DbIoBackendControl, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage};
+use db_io_driver::{DbStorageOpenRejected, close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted};
+use db_io_registry::{DbIoBackendKind, DbIoBackendRollbackReservation, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend};
 
 macro_rules! with_admitted_artifact {
     ($operation:expr, $document:expr, $artifact:ident, $call:expr) => {{
@@ -59,16 +58,16 @@ macro_rules! with_admitted_artifact {
         terminal
     }};
 }
-use crate::db_storage::writer::{release, WalWriterGuard, WalWriterTable};
-use crate::db_storage::DbIoWriterReleaseStep;
-use crate::db_storage_driver_runtime::DbIoDriverPeriodic;
+use db_io_driver::{WalWriterGuard, WalWriterTable};
+use db_io_core::DbIoWriterReleaseStep;
+use db_storage_driver_runtime::DbIoDriverPeriodic;
 use neo4rs::{query, BoltBytes, Graph, Query, Txn};
 use pack::{ByteRange, ContentHash};
 use semio_framework_async::WorkerPool;
 use std::sync::Arc;
 
 //#region 🔖️Codec
-use crate::db_storage::DB_IO_MAX_READ_BYTES;
+use db_io_core::DB_IO_MAX_READ_BYTES;
 
 async fn write_driver_bytes(reservation: DbIoDriverReservation, bytes: BoltBytes, offset: usize, length: usize, output: &mut DbIoPageWriter) -> Result<DbIoPages, DbError> {
     db_io_write_observed_bytes_range(reservation, bytes.value.to_vec(), offset, length, output)?.await
@@ -435,7 +434,7 @@ impl Neo4jWalWriterLease {
 
     fn renew_periodically(&self, graph: Graph, document: String) -> DbIoDriverPeriodic {
         let lease = self.clone();
-        crate::db_storage_driver_runtime::detach_periodic(std::time::Duration::from_millis(WAL_WRITER_RENEW_EVERY_MS), move || {
+        db_storage_driver_runtime::detach_periodic(std::time::Duration::from_millis(WAL_WRITER_RENEW_EVERY_MS), move || {
             let graph = graph.clone();
             let renew = lease.query(CYPHER_WAL_WRITER_RENEW, &document);
             Box::pin(async move {
@@ -471,13 +470,13 @@ impl WalWriterGuard for Neo4jWalWriterGuard {
                 drop(renewal);
                 let unlock = Arc::new(Neo4jWalWriterUnlock { done: std::sync::atomic::AtomicBool::new(false), waker: std::sync::Mutex::new(None) });
                 let signal = unlock.clone();
-                drop(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move {
+                drop(db_storage_driver_runtime::detach_unit(Box::pin(async move {
                     let _ = graph.run(lease.query(CYPHER_WAL_WRITER_RELEASE, &document)).await;
                     signal.done.store(true, std::sync::atomic::Ordering::Release);
                     if let Some(waker) = signal.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
                         waker.wake();
                     }
-                    release::request_controller(backend);
+                    db_io_core::request_controller(backend);
                 })));
                 *self = Self::Unlocking(unlock);
                 Ok(true)
@@ -1186,7 +1185,7 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
         DbIoExecutorMode::AsyncNative
     }
     fn driver_runtime(&self) -> Option<&'static dyn DbIoAsyncDriverRuntime> {
-        Some(crate::db_storage_driver_runtime::shared())
+        Some(db_storage_driver_runtime::shared())
     }
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
@@ -1236,7 +1235,7 @@ impl DbIoTaskExecutor for Neo4jDbIoExecutor {
 
 /// 🕸️ Typed Neo4j facade; only the registered executor owns the external graph driver.
 pub struct Neo4jStorage {
-    control: DbIoBackendControl,
+    pub control: DbIoBackendControl,
     worker_pool: Arc<WorkerPool>,
     closed: std::sync::atomic::AtomicBool,
 }
@@ -1255,7 +1254,7 @@ impl Neo4jStorage {
     }
 
     async fn connect_owned(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbStorageOpenRejected> {
-        crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_owned_once(worker_pool.clone(), uri.clone(), config.clone())).await
+        db_io_driver::open_db_io_backend_admitted(&worker_pool, || Self::connect_owned_once(worker_pool.clone(), uri.clone(), config.clone())).await
     }
 
     /// 🎯️ One Neo4j backend open attempt, refused at once when the backend capacity is taken.
@@ -1326,9 +1325,9 @@ fn neo4j_list(result: DbIoResult) -> Result<DbIoU64List, DbError> {
 }
 
 impl WalStorage for Neo4jStorage {
-    async fn acquire_writer(&self, document: &ArtifactId) -> Result<crate::db_storage::WalWriterPermit, DbError> {
+    async fn acquire_writer(&self, document: &ArtifactId) -> Result<db_io_core::WalWriterPermit, DbError> {
         let document = neo4j_document(document)?;
-        crate::db_storage::writer::admitted_acquire(self.control, std::time::Duration::from_millis(crate::db_storage::writer::WAL_WRITER_ADMISSION_WAIT_MS), || async {
+        db_io_driver::admitted_acquire(self.control, std::time::Duration::from_millis(db_io_driver::WAL_WRITER_ADMISSION_WAIT_MS), || async {
             match self.execute(DbIoTask::WalWriterAcquire { backend: self.control, document: document.clone() }).await? {
                 DbIoResult::WalWriter(writer) => Ok(writer),
                 _ => Err(DbError::Internal("remote WAL writer result taxonomy".to_string())),
@@ -1336,19 +1335,19 @@ impl WalStorage for Neo4jStorage {
         })
         .await
     }
-    async fn create_segment(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn create_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::WalCreate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
-    async fn append(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
+    async fn append(&self, writer: &db_io_core::WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         match self.execute(DbIoTask::WalAppend { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, input: bytes }).await? {
             DbIoResult::Length(length) => Ok(length),
             _ => Err(DbError::Internal("Neo4j executor returned a non-length result".to_string())),
         }
     }
-    async fn sync(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
+    async fn sync(&self, writer: &db_io_core::WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::WalSync { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, class }).await?)
     }
-    async fn seal(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn seal(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::WalSeal { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
@@ -1369,10 +1368,10 @@ impl WalStorage for Neo4jStorage {
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         neo4j_list(self.execute(DbIoTask::WalList { backend: self.control, document: neo4j_document(document)?, output: DbIoU64List::new() }).await?)
     }
-    async fn truncate_tail(&self, writer: &crate::db_storage::WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
+    async fn truncate_tail(&self, writer: &db_io_core::WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::WalTruncate { backend: self.control, document: writer.document().clone(), writer: writer.key(), index, new_len }).await?)
     }
-    async fn delete_segment(&self, writer: &crate::db_storage::WalWriterPermit, index: u64) -> Result<(), DbError> {
+    async fn delete_segment(&self, writer: &db_io_core::WalWriterPermit, index: u64) -> Result<(), DbError> {
         neo4j_unit(self.execute(DbIoTask::WalDelete { backend: self.control, document: writer.document().clone(), writer: writer.key(), index }).await?)
     }
 }

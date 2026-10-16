@@ -548,6 +548,21 @@
           }
         ]
       }
+    ],
+    "rejectedTasks": [
+      {
+        "project": "missing",
+        "target": "build"
+      },
+      {
+        "project": "parent",
+        "target": "missing"
+      },
+      {
+        "project": "parent",
+        "target": "build",
+        "configuration": "invented"
+      }
     ]
   }
 }

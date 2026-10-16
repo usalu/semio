@@ -1,4 +1,7 @@
 //! 🎬️ Workflow, VFS snapshot types, and media export registry.
+extern crate semio_framework_value_derive as value_derive;
+#[cfg(test)]
+extern crate semio_framework_os_kernel as store;
 // #region workflow
 
 // 🧬️ Kernel re-exports — the persisted graph model itself (`Workflow`/`WorkflowNode`/`WorkflowEdge`/
@@ -15,7 +18,7 @@
 // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
 // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
 // single source of truth for the workflow document vocabulary.
-pub use crate::workflow_kernel::{
+pub use semio_framework_artifact_workflow_workflow::{
     apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
     validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
     workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode,
@@ -24,8 +27,8 @@ pub use crate::workflow_kernel::{
     S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 
-use crate::instance::create_os_id;
-use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
+use semio_framework_os_host_instance::create_os_id;
+use semio_framework_os_host_registry::{os_app_registration, os_artifact_descriptor, os_artifact_dialect, resolve_kernel_future, OsArtifactDescriptor};
 use {semio_framework::media_types_compatible,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaCompat,semio_framework::MediaWireFormat};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -46,7 +49,7 @@ pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
 pub fn negotiate_media_contract(source_port: &WorkflowMediaPort, target_port: &WorkflowMediaPort) -> Result<MediaContract, String> {
     let source_descriptor = os_artifact_descriptor(source_port.spec.kind_id.as_deref().unwrap_or_default());
     let target_descriptor = os_artifact_descriptor(target_port.spec.kind_id.as_deref().unwrap_or_default());
-    let conversion = match crate::host::resolve_kernel_future(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type)) {
+    let conversion = match resolve_kernel_future(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type)) {
         MediaCompat::Direct => None,
         MediaCompat::Convert { from, to } => Some((from, to)),
         MediaCompat::Reject => {
@@ -91,12 +94,12 @@ fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescr
 /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
 fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
     use semio_framework_os_kernel::io::IoDirection;
-    let target_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+    let target_reads: HashSet<&str> = resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
     if target_reads.contains(source_kind) {
         let descriptor = semio_framework_os_kernel::io::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
         return Ok(Some(descriptor.kind_id));
     }
-    let source_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+    let source_reads: HashSet<&str> = resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
     if let Some(candidate) = target_reads.intersection(&source_reads).next() {
         let descriptor = semio_framework_os_kernel::io::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
         return Ok(Some(descriptor.kind_id));
@@ -108,7 +111,7 @@ fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result
 /// re-exported as `kernel_validate_workflow`), and edge-contract consistency (this layer's own
 /// pass, since it needs the artifact registry the kernel crate doesn't have).
 pub fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
-    let mut validation = crate::host::resolve_kernel_future(kernel_validate_workflow(graph));
+    let mut validation = resolve_kernel_future(kernel_validate_workflow(graph));
 
     //#region ContractConsistency
     // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
@@ -461,7 +464,7 @@ pub fn build_os_workflow_operator_infos(graph: &Workflow, parameters: &[Workflow
 /// is a bare `&str` with no standard/subset fields of its own -- the NEW io-mechanism path below
 /// builds a full `ArtifactDialect` directly from `os_artifact_dialect`, not from this function.
 fn native_dialect_kind(workflow_kind: &str) -> String {
-    crate::registry::os_artifact_dialect(workflow_kind).artifact_kind
+    os_artifact_dialect(workflow_kind).artifact_kind
 }
 /// 📜️ The JSON standard (RFC 8259) that marks the JSON interchange dialect among a composer's declared reads and an artifact's export dialects — a standard id, never a plugin id.
 const JSON_INTERCHANGE_STANDARD: &str = "rfc8259";
@@ -471,7 +474,7 @@ fn dialect_names_format(dialect: &semio_framework_artifact_reference::Dialect, f
 }
 //#endregion 🔖️IoDialectBridge
 //#region 🔖️MediaCapability
-pub use crate::registry::os_resource_media_capability;
+pub use semio_framework_os_host_registry::os_resource_media_capability;
 /// 🗂️ Defined in `semio_framework` alongside `ArtifactKindSpec`; re-exported here
 /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
 /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
@@ -498,15 +501,16 @@ impl OsMediaExportResult {
     }
 }
 
-type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
+pub type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
 
-fn export_handlers() -> &'static Mutex<HashMap<String, OsMediaExportHandler>> {
+/// 🗃️ The process-wide export handler registry, shared with the registrars of the media raster producer.
+pub fn export_handlers() -> &'static Mutex<HashMap<String, OsMediaExportHandler>> {
     static HANDLERS: OnceLock<Mutex<HashMap<String, OsMediaExportHandler>>> = OnceLock::new();
     HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 /// 🗂️ Registry key `(artifact_kind, format_artifact_kind)` — stdio kind ids.
-fn os_media_handler_key(artifact_kind: &str, format_artifact_kind: &str) -> String {
+pub fn os_media_handler_key(artifact_kind: &str, format_artifact_kind: &str) -> String {
     format!("{artifact_kind}:{format_artifact_kind}")
 }
 
@@ -570,7 +574,7 @@ fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_frame
     let mut snapshot_callback = |_| !cancel.is_cancelled_now();
     let mut snapshot = semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut snapshot_callback, Default::default());
     let mut input = Some(payload);
-    match crate::host::resolve_kernel_future(io_run_with_snapshot_control(route, &mut input, &mut control, &mut snapshot)) {
+    match resolve_kernel_future(io_run_with_snapshot_control(route, &mut input, &mut control, &mut snapshot)) {
         Ok(outcome) => HostIoRun::Done(outcome.value),
         Err(_) if cancel.is_cancelled_now() => HostIoRun::Cancelled,
         Err(_) => HostIoRun::Failed,
@@ -602,7 +606,7 @@ fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
 
     let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
     let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
-    let route = crate::host::resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
+    let route = resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
     // 🌉️ `source_document` is this artifact's own JSON-shaped snapshot as the OS document store
     // already carries it -- a legitimate `IoPayload::Text` reading of `artifact_dialect`'s own
     // native encoding whenever that dialect's `NativeCodecs.snapshot.text` is a plain-serde-json
@@ -643,7 +647,7 @@ fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
 fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
     use {semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload};
     let native_kind = native_dialect_kind(artifact_kind);
-    let target = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
+    let target = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect_names_format(dialect, format_kind))?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -656,11 +660,11 @@ fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_standard: target.standard.0.to_string(),
         format_subset: target.subset.0.to_string(),
     };
-    let composer = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::resolve(&key)).ok()?;
+    let composer = resolve_kernel_future(semio_framework_os_kernel::io::resolve(&key)).ok()?;
     let json_bridge = *composer.reads.iter().find(|dialect| dialect.standard.0 == JSON_INTERCHANGE_STANDARD)?;
     let json_text = serde_json::to_string(source_document).ok()?;
     let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
-    let composed = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&key, &sources)).ok()?;
+    let composed = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&key, &sources)).ok()?;
     let bytes = match composed.payload {
         IoPayload::Binary(b) => b,
         IoPayload::Text(t) => t.into_bytes(),
@@ -673,7 +677,7 @@ fn registry_export_media_via_composer_registry(artifact_kind: &str, format_kind:
 /// exists yet, falls through again to the stringly handler map at the call site. One path wins per
 /// call -- never merged (design.md's rejected-approaches list; `📌️important.md`).
 fn registry_export_media(artifact_kind: &str, format_kind: &str, source_document: &Value, cancel: &semio_framework_async::CancelToken) -> Option<Result<OsMediaExportResult, String>> {
-    let dialect = crate::registry::os_artifact_dialect(artifact_kind);
+    let dialect = os_artifact_dialect(artifact_kind);
     if let Some(result) = registry_export_media_via_io_mechanism(&dialect, format_kind, source_document, artifact_kind, cancel) {
         return Some(result);
     }
@@ -684,9 +688,10 @@ pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> 
     Ok(semio_framework_os_kernel::io::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
 }
 
-type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
+pub type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
 
-fn import_handlers() -> &'static Mutex<HashMap<String, OsMediaImportHandler>> {
+/// 🗃️ The process-wide import handler registry, shared with the registrars of the media raster producer.
+pub fn import_handlers() -> &'static Mutex<HashMap<String, OsMediaImportHandler>> {
     static HANDLERS: OnceLock<Mutex<HashMap<String, OsMediaImportHandler>>> = OnceLock::new();
     HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
 }
@@ -729,7 +734,7 @@ fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
     let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
     let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
     let carrier_payload = if is_binary { NewIoPayload::Binary(data.to_vec()) } else { NewIoPayload::Text(String::from_utf8(data.to_vec()).ok()?) };
-    let route = crate::host::resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
+    let route = resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
     let outcome = match host_io_run(&route, carrier_payload, cancel) {
         HostIoRun::Done(outcome) => outcome,
         HostIoRun::Failed => return None,
@@ -759,7 +764,7 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
     use semio_framework_os_kernel::io::IoPayload;
     let native_kind = native_dialect_kind(artifact_kind);
 
-    let source_dialect = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Import)) {
+    let source_dialect = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Import)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect_names_format(dialect, format_kind))?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -773,9 +778,9 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_subset: source_dialect.subset.0.to_string(),
     };
     let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
-    let native = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&import_key, &sources)).ok()?;
+    let native = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&import_key, &sources)).ok()?;
 
-    let export_dialect = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
+    let export_dialect = match resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
         Ok(dialects) => dialects.into_iter().find(|dialect| dialect.standard.0 == JSON_INTERCHANGE_STANDARD)?,
         Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
     };
@@ -789,7 +794,7 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
         format_subset: export_dialect.subset.0.to_string(),
     };
     let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
-    let json_out = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&export_key, &native_sources)).ok()?;
+    let json_out = resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&export_key, &native_sources)).ok()?;
     let bytes = match json_out.payload {
         IoPayload::Binary(b) => b,
         IoPayload::Text(t) => t.into_bytes(),
@@ -801,7 +806,7 @@ fn registry_import_media_via_composer_registry(artifact_kind: &str, format_kind:
 /// first, falls through to the OLD `io_dispatch` path (debt D2) when no route exists yet, falls
 /// through again to the stringly handler map at the call site. One path wins per call.
 fn registry_import_media(artifact_kind: &str, format_kind: &str, data: &[u8], cancel: &semio_framework_async::CancelToken) -> Option<Result<Value, String>> {
-    let dialect = crate::registry::os_artifact_dialect(artifact_kind);
+    let dialect = os_artifact_dialect(artifact_kind);
     if let Some(result) = registry_import_media_via_io_mechanism(&dialect, format_kind, data, cancel) {
         return Some(result);
     }

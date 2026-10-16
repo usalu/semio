@@ -16,19 +16,13 @@
         "browserBundleSources"
       ],
       "outputs": [
-        "{projectRoot}/dist/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
-        "{projectRoot}/dist/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
-        "{projectRoot}/dist/🔌️plugin-modules/🧵️shard",
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🧵️shard"
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/modules/🧵️shard"
       ],
       "options": {
         "command": "bun ./📜️script.ts support"
       },
-      "dependsOn": [
-        "semio-framework-os-infinite:fonts"
-      ]
+      "dependsOn": []
     },
     "test-catalog-composition": {
       "executor": "repo:script",

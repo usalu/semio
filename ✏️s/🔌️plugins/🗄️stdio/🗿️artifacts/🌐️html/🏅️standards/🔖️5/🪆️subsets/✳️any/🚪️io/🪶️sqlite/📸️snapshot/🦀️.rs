@@ -17,12 +17,12 @@ impl std::ops::Deref for OwnedChildren{type Target=Vec<HtmlNode>;fn deref(&self)
 impl std::ops::DerefMut for OwnedChildren{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
 impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){native::retire_node(node)}}}
 fn integer(value: usize) -> Result<i64, ValueError> { i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"HTML ordinal exceeds SQLite integer range")) }
-fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"HTML ordinal must be nonnegative")) }
+pub fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"HTML ordinal must be nonnegative")) }
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML relational size overflow"))?; Ok(()) }
-fn text(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue,ValueError> { semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control,value).map(SqliteValue::Text) }
-fn kind(node: &HtmlNode) -> &'static str { match node { HtmlNode::Element { .. } => "element", HtmlNode::Text { .. } => "text", HtmlNode::Comment { .. } => "comment", HtmlNode::RawText { .. } => "raw_text" } }
+pub fn text(value: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteValue,ValueError> { semio_framework_os_kernel::sqlite_snapshot::artifact::project_text(control,value).map(SqliteValue::Text) }
+pub fn kind(node: &HtmlNode) -> &'static str { match node { HtmlNode::Element { .. } => "element", HtmlNode::Text { .. } => "text", HtmlNode::Comment { .. } => "comment", HtmlNode::RawText { .. } => "raw_text" } }
 fn push(database: &mut SqliteDatabase, table: &str, values: Vec<SqliteValue>) -> Result<i64, ValueError> { let rows = &mut database.table_mut(table)?.rows; let id = integer(rows.len() + 1)?; let mut fields = vec![SqliteValue::Integer(id)]; fields.extend(values); rows.push(SqliteRow { rowid: id, values: fields }); Ok(id) }
-fn component(database: &mut SqliteDatabase, table: &str, id: i64, values: Vec<SqliteValue>) -> Result<(), ValueError> { let mut fields = vec![SqliteValue::Integer(id)]; fields.extend(values); database.table_mut(table)?.rows.push(SqliteRow { rowid: id, values: fields }); Ok(()) }
+pub fn component(database: &mut SqliteDatabase, table: &str, id: i64, values: Vec<SqliteValue>) -> Result<(), ValueError> { let mut fields = vec![SqliteValue::Integer(id)]; fields.extend(values); database.table_mut(table)?.rows.push(SqliteRow { rowid: id, values: fields }); Ok(()) }
 fn identity(row: &SqliteRow, columns: usize) -> Result<(), ValueError> { if row.values.len() != columns || row.integer(0)? != row.rowid { Err(ValueError::new(ValueRefusalKind::InvalidValue,"HTML row identity or column count is invalid")) } else { Ok(()) } }
 fn tick(control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase, checked: &mut usize, total: usize) -> Result<(), ValueError> { add(checked, 1)?; if *checked % 256 == 0 { control.checkpoint(phase, (*checked).min(total), total)?; } Ok(()) }
 
@@ -150,9 +150,6 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🚦️native/🦀️.rs"]

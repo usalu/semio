@@ -1,0 +1,616 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "facts",
+    "digest",
+    "metadata"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packageIdentity",
+        "manifest",
+        "target",
+        "operation",
+        "mode",
+        "profileData",
+        "compiler",
+        "arguments",
+        "environment",
+        "features",
+        "cfg",
+        "cfgSnapshot",
+        "package",
+        "adapter",
+        "dependencies",
+        "execution"
+      ],
+      "properties": {
+        "packageIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "version",
+            "provenance"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "provenance": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "identity"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "workspace",
+                    "registry",
+                    "git",
+                    "external-path"
+                  ]
+                },
+                "identity": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "allOf": [
+                    {
+                      "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                    }
+                  ]
+                }
+              },
+              "propertyNames": {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            }
+          },
+          "propertyNames": {
+            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+          }
+        },
+        "manifest": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+          "maxLength": 200,
+          "allOf": [
+            {
+              "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+            }
+          ]
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "kind",
+            "role",
+            "triple",
+            "entry",
+            "edition"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "kind": {
+              "enum": [
+                "library",
+                "binary",
+                "proc-macro",
+                "build-script",
+                "test",
+                "link"
+              ]
+            },
+            "role": {
+              "enum": [
+                "host",
+                "target"
+              ]
+            },
+            "triple": {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "entry": {
+              "type": "string",
+              "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+              "maxLength": 200,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "edition": {
+              "enum": [
+                "2015",
+                "2018",
+                "2021",
+                "2024"
+              ]
+            }
+          },
+          "propertyNames": {
+            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+          }
+        },
+        "operation": {
+          "enum": [
+            "build",
+            "check",
+            "test",
+            "doc",
+            "doctest",
+            "run-custom-build"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "profileData": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "opt_level",
+            "lto",
+            "codegen_backend",
+            "codegen_units",
+            "debuginfo",
+            "split_debuginfo",
+            "debug_assertions",
+            "overflow_checks",
+            "rpath",
+            "incremental",
+            "panic",
+            "strip"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "opt_level": {
+              "enum": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "s",
+                "z"
+              ]
+            },
+            "lto": {
+              "enum": [
+                "false",
+                "off",
+                "thin",
+                "fat",
+                "true"
+              ]
+            },
+            "codegen_backend": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 128,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "codegen_units": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 256
+            },
+            "debuginfo": {
+              "enum": [
+                null,
+                0,
+                1,
+                2,
+                "none",
+                "limited",
+                "full",
+                "line-tables-only",
+                "line-directives-only"
+              ]
+            },
+            "split_debuginfo": {
+              "enum": [
+                null,
+                "off",
+                "packed",
+                "unpacked"
+              ]
+            },
+            "debug_assertions": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "overflow_checks": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rpath": {
+              "type": "boolean"
+            },
+            "incremental": {
+              "type": "boolean"
+            },
+            "panic": {
+              "enum": [
+                "abort",
+                "unwind"
+              ]
+            },
+            "strip": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "resolved"
+                  ],
+                  "properties": {
+                    "resolved": {
+                      "oneOf": [
+                        {
+                          "const": "None"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "Named"
+                          ],
+                          "properties": {
+                            "Named": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "allOf": [
+                                {
+                                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                                }
+                              ]
+                            }
+                          },
+                          "propertyNames": {
+                            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "propertyNames": {
+                    "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "deferred"
+                  ],
+                  "properties": {
+                    "deferred": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "allOf": [
+                        {
+                          "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                        }
+                      ]
+                    }
+                  },
+                  "propertyNames": {
+                    "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                  }
+                }
+              ]
+            },
+            "trim_paths": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 3,
+              "items": {
+                "enum": [
+                  "diagnostics",
+                  "macro",
+                  "object"
+                ]
+              }
+            }
+          },
+          "definitions": {
+            "SchedulerSuffix": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "const": "-Zthreads=1"
+              }
+            }
+          },
+          "propertyNames": {
+            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+          }
+        },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "program",
+            "digest",
+            "sysrootDigest",
+            "linkerDigest"
+          ],
+          "properties": {
+            "program": {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "digest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "sysrootDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            },
+            "linkerDigest": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "allOf": [
+                {
+                  "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                }
+              ]
+            }
+          },
+          "propertyNames": {
+            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+          }
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "allOf": [
+              {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            ]
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "allOf": [
+              {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            ]
+          },
+          "propertyNames": {
+            "not": {
+              "const": "SEMIO_SCRIPT_PROCESS_INVOCATION"
+            },
+            "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "allOf": [
+              {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            ]
+          },
+          "uniqueItems": true
+        },
+        "cfg": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "allOf": [
+              {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            ]
+          },
+          "uniqueItems": true
+        },
+        "cfgSnapshot": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "allOf": [
+              {
+                "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+              }
+            ]
+          },
+          "uniqueItems": true
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+            }
+          ]
+        },
+        "adapter": {
+          "const": "direct-rlib-v2"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "externName",
+              "public",
+              "noprelude",
+              "context"
+            ],
+            "properties": {
+              "externName": {
+                "type": "string",
+                "minLength": 1,
+                "allOf": [
+                  {
+                    "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                  }
+                ]
+              },
+              "public": {
+                "type": "boolean"
+              },
+              "noprelude": {
+                "type": "boolean"
+              },
+              "context": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "allOf": [
+                  {
+                    "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+                  }
+                ]
+              }
+            },
+            "propertyNames": {
+              "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cwd",
+            "policy"
+          ],
+          "properties": {
+            "cwd": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "policy": {
+              "enum": [
+                "compiler-state-v1",
+                "temporary-v1"
+              ]
+            }
+          }
+        }
+      },
+      "propertyNames": {
+        "pattern": "^(?:[^\\uD800-\\uDFFF]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF])*$"
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "metadata": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "description": "First-party direct rlib context v2. Required execution cwd/policy is consumed under a genuine producer loan. Canonical compact JSON uses UTF-8 byte ordering for object keys and set-valued features/cfg. All strings are Unicode scalars. Arrays of compiler arguments retain their exact order. Digest and metadata are full SHA256 lowercase hex."
+}

@@ -76,8 +76,8 @@ pub fn layered_targets(scene: &DagScene, config: &DagConfig) -> Result<HashMap<S
     let document = semio_framework_artifact_infinite_dag::DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: scene.nodes.clone(), edges: scene.edges.clone() };
     let fixture = DagHostSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), ..dag_host_snapshot_from_document(&document, dag_config_camera(config)) };
     let mut host = DagHost::load_host_snapshot_json(&semio_framework_pack_json::to_json_string(&fixture)).map_err(|error| layout_fault("dag.layout-run.layered-load", error.to_string()))?;
-    let mut progress=|_|true;let mut control=infinite_canvas::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);host.reorganize(&DagLayoutOptions::default(),&mut control).map_err(|error| layout_fault("dag.layout-run.layered-layout", error.to_string()))?;
-    let layered: DagHostSnapshot = host.host_snapshot_json().ok().and_then(|json| semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).ok_or_else(|| layout_fault("dag.layout-run.layered-result", "the layered host returned no decodable fixture".into()))?;
+    let mut progress=|_|true;let mut control=infinite_canvas::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);host.graph.reorganize(&DagLayoutOptions::default(),&mut control).map_err(|error| layout_fault("dag.layout-run.layered-layout", error.to_string()))?;
+    let layered: DagHostSnapshot = host.graph.host_snapshot_json().ok().and_then(|json| semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).ok_or_else(|| layout_fault("dag.layout-run.layered-result", "the layered host returned no decodable fixture".into()))?;
     Ok(layered.nodes.into_iter().map(|node| (node.id, LayoutRunPoint::new(node.x, node.y))).collect())
 }
 

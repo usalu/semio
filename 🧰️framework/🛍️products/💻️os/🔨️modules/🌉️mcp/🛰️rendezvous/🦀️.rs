@@ -21,11 +21,14 @@
 //! gateway has no fd-3 credential to delegate, and inventing a path that would copy one into a file
 //! is exactly what the credential seal exists to prevent.
 
+use serde::Deserialize;
+use serde::Serialize;
+use std::path::Path;
+use std::path::PathBuf;
 use crate::errors::{GatewayError, GatewayErrorCode};
-use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 
 //#region 🔖️Paths
+
 /// 🏷️ The carrier that points one gateway and one os session at a rendezvous of their own instead of
 /// the per-user default. It is a **directory path, never a credential** (the admission proof stays in
 /// the owner-only offer file), and it is spelled with the `S_` prefix the process-entry seal admits.
@@ -75,9 +78,11 @@ fn home_dir() -> Option<PathBuf> {
     }
     None
 }
+
 //#endregion 🔖️Paths
 
 //#region 🔖️Records
+
 /// 🖥️ One live os session, as the session itself published it. `pid` is the authority: this crate
 /// never believes a record whose process is gone.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -118,9 +123,11 @@ pub struct BridgeOffer {
 /// 🏷️ The rendezvous record version both halves write and read (`🔗️AgentBridge/🛰️offer` `AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION`);
 /// version 2 gave every offer its [`BridgeOfferScope`].
 pub const RENDEZVOUS_SCHEMA_VERSION: u32 = 2;
+
 //#endregion 🔖️Records
 
 //#region 🔖️Liveness
+
 /// 🫀️ Whether `pid` still names a live process. `kill(pid, 0)` on unix; on Windows a process whose
 /// pid is gone cannot be opened, and the conservative answer there is "alive" only when the record is
 /// young — an unreachable process's stale offer is harmless (a dialer simply fails to connect),
@@ -173,12 +180,14 @@ fn offer_is_live(offer: &BridgeOffer) -> bool {
     now_ms().saturating_sub(offer.published_at_ms) <= SESSION_RECORD_MAX_AGE_MS
 }
 
-fn now_ms() -> u64 {
+pub(crate) fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64
 }
+
 //#endregion 🔖️Liveness
 
 //#region 🔖️Discovery
+
 /// 🔎️ Every live os session, newest first, sweeping stale records as it goes. An empty result is the
 /// honest "no `dev s` session is running on this machine for this user" — it is never an error, and
 /// callers turn it into a typed, retryable diagnostic rather than a silent no-op.
@@ -208,14 +217,16 @@ pub fn live_os_sessions_in(root: &Path) -> Vec<OsSessionRecord> {
     records.sort_by(|left, right| right.started_at_ms.cmp(&left.started_at_ms));
     records
 }
+
 //#endregion 🔖️Discovery
 
 //#region 🔖️Offer
+
 /// 🧹️ A published offer that removes its own file on drop — the gateway's exit, clean or not, must
 /// not leave a dead `ws://` address behind for a shell to retry forever.
 pub struct PublishedBridgeOffer {
-    path: PathBuf,
-    offer: BridgeOffer,
+    pub path: PathBuf,
+    pub offer: BridgeOffer,
 }
 
 impl PublishedBridgeOffer {
@@ -273,9 +284,11 @@ fn sweep_dead_offers_in(directory: &Path) {
 fn write_owner_only(path: &Path, bytes: &[u8]) -> Result<(), GatewayError> {
     crate::owner_only::write_owner_only(path, bytes).map_err(|reason| GatewayError::new(GatewayErrorCode::Internal, reason))
 }
+
 //#endregion 🔖️Offer
 
 //#region 🔖️AdmissionProof
+
 /// 🔑️ A fresh per-process admission proof — the value a dialer must present as the SECOND websocket
 /// subprotocol (`semio.mcp.bridge.v1`, `<proof>`). Entropy comes from `std`'s own OS-seeded
 /// `RandomState` (the same source `HashMap`'s DoS resistance stands on), mixed with the process id
@@ -293,10 +306,8 @@ pub fn mint_admission_proof() -> String {
     material.extend_from_slice(&std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos().to_le_bytes());
     framework_hash::hash_bytes(&material)[..32].to_owned()
 }
+
 //#endregion 🔖️AdmissionProof
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
 //#endregion 🧪️Tests

@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "name": "ordinary-converted-command",
+      "kind": "command",
+      "children": "none",
+      "configuration": "converted",
+      "expected": "none",
+      "calls": 0
+    },
+    {
+      "name": "ordinary-converted-noop",
+      "kind": "noop",
+      "children": "none",
+      "configuration": "converted",
+      "expected": "none",
+      "calls": 0
+    },
+    {
+      "name": "ordinary-prototype",
+      "kind": "command",
+      "children": "none",
+      "configuration": "prototype",
+      "expected": "none",
+      "calls": 0
+    },
+    {
+      "name": "native-without-children",
+      "kind": "orchestration",
+      "children": "none",
+      "configuration": "converted",
+      "expected": "none",
+      "calls": 0
+    },
+    {
+      "name": "delegated-prototype",
+      "kind": "orchestration",
+      "children": "valid",
+      "configuration": "prototype",
+      "expected": "context",
+      "calls": 1
+    },
+    {
+      "name": "delegated-release",
+      "kind": "orchestration",
+      "children": "valid",
+      "configuration": "release",
+      "expected": "context",
+      "calls": 1
+    },
+    {
+      "name": "delegated-unconfigured",
+      "kind": "orchestration",
+      "children": "valid",
+      "configuration": null,
+      "expected": "context",
+      "calls": 1
+    },
+    {
+      "name": "delegated-custom-mode-refused",
+      "kind": "orchestration",
+      "children": "valid",
+      "configuration": "converted",
+      "expected": "refusal",
+      "calls": 1
+    },
+    {
+      "name": "malformed-delegation-refused",
+      "kind": "orchestration",
+      "children": "malformed",
+      "configuration": "prototype",
+      "expected": "refusal",
+      "calls": 1
+    }
+  ]
+}

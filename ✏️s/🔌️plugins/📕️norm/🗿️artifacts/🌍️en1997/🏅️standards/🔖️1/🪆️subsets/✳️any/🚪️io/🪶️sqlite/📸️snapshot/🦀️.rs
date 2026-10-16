@@ -27,7 +27,7 @@ fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut Sqlit
 fn groups<'a>(rows:Entities<'a>,parents:&Entities<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>, ValueError>{let mut out=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(n,r)in rows.into_values().enumerate(){checkpoint(c,n,0)?;let p=r.integer(1)?;if !parents.contains_key(&p){return Err(invalid("EN1997 owning foreign key is dangling"));}out.entry(p).or_default().push(r);}Ok(out)}
 fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
 /// 🪪️ Optional native capability supplied by the actual geotechnical pack owner.
-pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1997Snapshot as ArtifactSqliteSnapshotHost>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1997Snapshot as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec()}
 impl En1997Snapshot{
  fn write_sqlite_rows(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
   p.insert_key_float("en1997_document",1,&[Cell::Text(&self.structure_id),Cell::Integer(i64::from(self.geotechnical_category)),Cell::Text(&self.design_situation),Cell::Text(&self.design_approach),Cell::Text(annex(self.annex)),Cell::Real(self.groundwater_level),Cell::Real(self.investigation_depth)],DOCUMENT)?;

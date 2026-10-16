@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-abi"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Guest wire ABI of the plugin SDK: io wire, authority returns, snapshots, sqlite wire, wasip2 bindings and the persistent-local macro"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-abi"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+wit-bindgen = { version = "0.57.1", default-features = false, features = ["macros", "realloc", "async", "std", "macro-string"] }
+
+[dev-dependencies]

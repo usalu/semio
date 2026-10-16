@@ -21,7 +21,4 @@ pub fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnap
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

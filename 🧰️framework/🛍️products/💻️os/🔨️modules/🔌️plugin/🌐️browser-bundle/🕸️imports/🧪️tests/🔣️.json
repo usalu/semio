@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "source": "import { io } from '../../../../p/m/browser/prototype/modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';",
+      "expected": "import { io } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';"
+    },
+    {
+      "source": "import { io } from '@bytecodealliance/preview2-shim/io';",
+      "expected": "import { io } from '../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js';"
+    },
+    {
+      "source": "import { io } from './unrelated/io.js';",
+      "expected": "import { io } from './unrelated/io.js';"
+    }
+  ]
+}

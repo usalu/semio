@@ -47,15 +47,15 @@ fn a_bare_parameter_id_switches_a_flag_on_and_is_refused_for_choices_and_text() 
 #[test]
 fn a_launch_becomes_the_group_message_the_daemon_starts() {
     let root = std::env::temp_dir().join("semio-cli-group");
-    let process = |id: &str, ready: Option<crate::registry::Ready>| crate::registry::LaunchProcess { command_id: id.into(), cmd: "bun".into(), args: vec!["nx".into()], cwd: root.clone(), env: vec![], label: Default::default(), ready, long_running: true };
-    let hub = crate::registry::Launch { command_id: "hub:dev".into(), label: Default::default(), processes: vec![process("hub:dev", Some(crate::registry::Ready { port: 8787, path: "/admin".into(), printed: false }))], requires: vec![], group: None, stop: crate::registry::Stop::Independent };
-    let compound = crate::registry::Launch { command_id: "compound:w/c".into(), label: Default::default(), processes: vec![process("a:dev", None), process("b:dev", None)], requires: vec![hub], group: Some("compound:w/c".into()), stop: crate::registry::Stop::Together };
+    let process = |id: &str, ready: Option<dashboard_launch::Ready>| dashboard_launch::LaunchProcess { command_id: id.into(), cmd: "bun".into(), args: vec!["nx".into()], cwd: root.clone(), env: vec![], label: Default::default(), ready, long_running: true };
+    let hub = dashboard_launch::Launch { command_id: "hub:dev".into(), label: Default::default(), processes: vec![process("hub:dev", Some(dashboard_launch::Ready { port: 8787, path: "/admin".into(), printed: false }))], requires: vec![], group: None, stop: dashboard_launch::Stop::Independent };
+    let compound = dashboard_launch::Launch { command_id: "compound:w/c".into(), label: Default::default(), processes: vec![process("a:dev", None), process("b:dev", None)], requires: vec![hub], group: Some("compound:w/c".into()), stop: dashboard_launch::Stop::Together };
     let group = sized(SpawnGroup::from_launch(&compound, &[]));
     assert_eq!(group.requires.iter().map(|member| member.command.command_id.as_str()).collect::<Vec<_>>(), ["hub:dev"]);
     assert_eq!(group.members.iter().map(|member| member.command.command_id.as_str()).collect::<Vec<_>>(), ["a:dev", "b:dev"]);
     assert_eq!(group.stop, ipc::GroupStop::Together);
     assert!(group.members.iter().all(|member| member.command.group.as_deref() == Some(group.group_id.as_str()) && member.command.cols > 0));
-    assert_eq!(group.requires[0].command.ready, Some(ipc::Ready { port: 8787, path: "/admin".into(), printed: false }));
+    assert_eq!(group.requires[0].command.ready, Some(dashboard_launch::Ready { port: 8787, path: "/admin".into(), printed: false }));
 }
 
 #[test]
@@ -69,7 +69,7 @@ fn control_sequences_are_dropped_across_chunk_borders_and_text_is_kept() {
 
 #[test]
 fn a_running_task_is_the_launch_asked_for_when_command_words_and_chosen_parameters_agree() {
-    let command = |args: &[&str], parameters: &[(&str, &str)]| SessionCommand { cmd: "bun".into(), args: args.iter().map(ToString::to_string).collect(), command_id: "hub:dev".into(), label: ipc::TaskLabel { parameters: parameters.iter().map(|(key, value)| (key.to_string(), value.to_string())).collect(), ..Default::default() }, cwd: "C:/canonical".into(), ..Default::default() };
+    let command = |args: &[&str], parameters: &[(&str, &str)]| SessionCommand { cmd: "bun".into(), args: args.iter().map(ToString::to_string).collect(), command_id: "hub:dev".into(), label: dashboard_launch::TaskLabel { parameters: parameters.iter().map(|(key, value)| (key.to_string(), value.to_string())).collect(), ..Default::default() }, cwd: "C:/canonical".into(), ..Default::default() };
     assert!(same_launch(&command(&["nx"], &[("backend", "pg")]), &SessionCommand { cwd: "other".into(), env: vec![("TERM".into(), "x".into())], ..command(&["nx"], &[("backend", "pg")]) }));
     assert!(!same_launch(&command(&["nx"], &[("backend", "pg")]), &command(&["nx"], &[])));
     assert!(!same_launch(&command(&["nx"], &[]), &command(&["nx", "--"], &[])));
@@ -77,7 +77,7 @@ fn a_running_task_is_the_launch_asked_for_when_command_words_and_chosen_paramete
 
 #[test]
 fn every_scenario_of_the_cli_feature_is_proved_by_a_test() {
-    crate::tests::assert_proved(include_str!("../../../🧪️tests/🧭️cli/🥒️.feature"), &[include_str!("🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(include_str!("../../../🧪️tests/🧭️cli/🥒️.feature"), &[include_str!("🦀️.rs")], &[
         ("Flags, bare words and the tail after the double dash are told apart", &["flags_valued_and_bare_words_and_the_tail_after_the_double_dash_are_told_apart", "a_switch_may_stand_before_the_words_without_swallowing_them", "malformed_flags_are_refused_with_the_flag_named"]),
         ("A request carries parameters, extra environment and arguments", &["the_request_carries_parameters_extra_environment_and_arguments", "a_bare_parameter_id_switches_a_flag_on_and_is_refused_for_choices_and_text"]),
         ("A launch becomes the group message the daemon starts", &["a_launch_becomes_the_group_message_the_daemon_starts"]),

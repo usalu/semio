@@ -1,4 +1,10 @@
-use super::*;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
+use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::EditorApp;
+use semio_s_artifact_stdio_contract::editing;
+use crate::editor::mp3::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_editor_builds_a_definition_for_the_editor_role() {
@@ -73,7 +79,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     assert!(app.close_terminal_is_empty());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::Mp3Editor, || semio_framework_plugin::App { definition: super::create_mp3_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::mp3::Mp3Editor, || semio_framework_plugin::App { definition: crate::editor::mp3::create_mp3_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history() {

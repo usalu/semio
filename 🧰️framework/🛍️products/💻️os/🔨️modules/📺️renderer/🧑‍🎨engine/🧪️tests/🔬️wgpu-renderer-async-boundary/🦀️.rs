@@ -5,11 +5,11 @@ const BINARY_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/⌨�
 const MANIFEST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml");
 const WINT_APP_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
 const OS_HOST_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
-const GPU_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs");
-const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
+const GPU_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs");
+const DRAW_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs");
 const PREPARED_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs");
-const ENGINE_CANVAS_SOURCE: &str = crate::engine_canvas::ENGINE_CANVAS_SOURCE;
-const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-draw-unit/🦀️.rs");
+const ENGINE_CANVAS_SOURCE: &str = concat!(include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs"),include_str!("../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs"));
+const DRAW_LAWS_SOURCE: &str = include_str!("../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🧪️tests/🔬️targets-wgpu-draw-unit/🦀️.rs");
 
 /// 🩺️ LAW: a frame build that ends because its PREPARATION refused must name the refusal. Nothing
 /// else in the chain can: `AppFramePreparation` answers an empty `JobFault`, `ActiveFrameBuild`
@@ -87,7 +87,7 @@ fn product_library_has_no_executor_bridge() {
     assert!(!GPU_SOURCE.contains("fn apply_prepared_uploads"));
     assert!(!DRAW_SOURCE.contains("for index in 0..schema.vertices"));
     assert!(!DRAW_SOURCE.contains("for index in 0..schema.indices"));
-    assert!(DRAW_SOURCE.contains("pub fn ensure_mesh_step"));
+    assert!(DRAW_SOURCE.contains("pub(crate) fn ensure_mesh_step"));
     assert!(DRAW_SOURCE.contains("pub fn close_upload_step"));
     assert!(GPU_SOURCE.contains("pub fn close_mesh_upload_step"));
     let upload_close = OS_HOST_SOURCE.find("presenter.close_world_owners_step()").expect("active upload and packet close phase");
@@ -123,9 +123,9 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let present_step = gpu.find("pub fn prepared_present_step").unwrap_or(0);
     let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
     let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
-    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)";
+    let engine_reservation = "self.reserve_engine_texture(key,width,height,1,identity,candidate,expected)";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
-    let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
+    let first_engine_allocation = ["device.create_texture", ".create_view", "CanvasRasterSession::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
     let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
     let gpu_stage = &draw[draw.find("pub fn stage_gpu_bind_group").unwrap_or(draw.len())..draw.find("pub fn begin_presenting").unwrap_or(draw.len())];
     let cancellation = &draw[draw.find("pub fn cancel_engine_texture_admission").unwrap_or(draw.len())..draw.find("fn claim_stage_before_gpu_allocation").unwrap_or(draw.len())];
@@ -206,7 +206,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && !draw.contains("HashMap<String, RasterTexture>")
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels)")
         && gpu.contains("self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels)")
-        && gpu.contains("pub fn stage_engine_texture")
+        && gpu.contains("pub(crate) fn stage_engine_texture")
         && gpu.contains("view: wgpu::TextureView")
         && gpu.contains(".stage_gpu_bind_group")
         && gpu.contains("Result<(), RasterTextureStageFault>")
@@ -214,19 +214,25 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && begin < present_step
         && engine.matches(engine_reservation).count() == 1
         && engine_reservation_index < first_engine_allocation
-        && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(admission, expected)", "create_target_texture", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_target_view_allocation(admission, expected)", ".create_view", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_renderer_allocation(admission, expected)", "Renderer::new", 1)
+        && guarded_allocations(engine, "self.validate_engine_target_texture_allocation(admission,expected)", "device.create_texture", 1)
+        && guarded_allocations(engine, "self.validate_engine_target_view_allocation(admission,expected)", ".create_view", 1)
+        && guarded_allocations(&engine[engine.find("EngineRasterBuildPhase::Renderer=>").unwrap_or(engine.len())..engine.find("EngineRasterBuildPhase::Render=>").unwrap_or(engine.len())], "self.validate_engine_renderer_allocation(admission,expected)", "CanvasRasterSession::new", 1)
         && engine.contains("gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)")
-        && engine.matches("create_target_texture(gpu.device(), build.width, build.height)").count() == 1
-        && engine.contains("Err(RasterTextureStageFault::Returned { fault, admission, texture, view }) => {")
-        && engine.contains("build.admission = Some(admission);")
-        && engine.contains("build.texture = Some(texture);")
-        && engine.contains("build.view = Some(view);")
-        && engine.contains("Err(RasterTextureStageFault::Retained(fault)) => {")
-        && engine.contains("gpu.cancel_engine_texture_admission(admission)?;")
-        && engine.contains("EngineGpuBuildPhase::RetireRenderer")
-        && engine.contains("if build.renderer.take().is_some()")
+        && engine.matches("self.roots.device.create_texture(&wgpu::TextureDescriptor").count() == 1
+        && engine.contains("Err(RasterTextureStageFault::Returned{fault,admission,texture,view})=>{")
+        && engine.contains("build.admission=Some(admission);")
+        && engine.contains("build.texture=Some(texture);")
+        && engine.contains("build.view=Some(view);")
+        && engine.contains("Err(RasterTextureStageFault::Retained(fault))=>")
+        && engine.contains("Err(RasterTextureCancelFault::Returned{fault,admission})=>{build.admission=Some(admission);return Err(fault.into())}")
+        && engine.contains("Err(RasterTextureCancelFault::Retained(fault))=>return Err(fault.into())")
+        && engine.contains("EngineRasterBuildPhase::RetireRenderer")
+        && engine.contains("if build.renderer.take().is_none()")
+        && engine.contains("Arc::ptr_eq(roots,&self.roots)")
+        && engine.contains("roots:Option<Arc<GpuSessionRoots>>")
+        && engine.contains("build.gpu=Some(owner);build.begin_close();return Err(fault);")
+        && !engine.contains("gpu.device()")
+        && !engine.contains("gpu.queue()")
         && !engine.contains("EngineGpuSurface")
         && !engine.contains("replacement_texture")
         && !engine.contains("replacement_view")
@@ -264,7 +270,7 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
             (DRAW_SOURCE.replace("current.operation >= candidate.operation", "current.operation > candidate.operation"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.replace("view: Option<wgpu::TextureView>", "view_erased: bool"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.replace("view: wgpu::TextureView", "view: &wgpu::TextureView"), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("gpu.reserve_engine_texture", "gpu.realize_without_reservation")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("self.reserve_engine_texture", "self.realize_without_reservation")),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE.to_string()),
             (
                 DRAW_SOURCE.to_string(),
@@ -332,19 +338,19 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_texture_allocation(admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_target_texture_allocation(admission,expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_view_allocation(admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_target_view_allocation(admission,expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.to_string(),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_renderer_allocation(admission, expected)", "Ok(())"),
+                ENGINE_CANVAS_SOURCE.replace("self.validate_engine_renderer_allocation(admission,expected)", "Ok(())"),
             ),
             (
                 DRAW_SOURCE.replace(
@@ -379,8 +385,8 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
                 LIBRARY_SOURCE.to_string(),
                 ENGINE_CANVAS_SOURCE.to_string(),
             ),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.texture = Some(texture);", "drop(texture);")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.view = Some(view);", "drop(view);")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.texture=Some(texture);", "drop(texture);")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.view=Some(view);", "drop(view);")),
             (DRAW_SOURCE.replace("Self::Scene(lease) => lease.transfer_bytes()", "Self::Scene(_) => usize::MAX"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.replace("let transfer_bytes = pixels.transfer_bytes();", "let transfer_bytes = usize::MAX;"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.replace("row_bytes > transfer_bytes", "false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
@@ -390,8 +396,8 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
     for (draw, gpu, glue, engine) in mutations {
         assert!(!retained_raster_contract(&draw, &gpu, &glue, &engine));
     }
-    let reservation = "build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)?);";
-    let first_allocation = "build.texture = Some(create_target_texture(gpu.device(), build.width, build.height));";
+    let reservation = "let admission=self.reserve_engine_texture(key,width,height,1,identity,candidate,expected)?;";
+    let first_allocation = "build.texture=Some(self.roots.device.create_texture";
     let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
     assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
 }
@@ -1258,7 +1264,7 @@ fn reference_decode_staging_reports_exact_pool_reuse_before_browser_decode() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn native_reference_runtime() -> RuntimeMailbox {
+fn native_reference_runtime() -> AppMailbox {
     RuntimeMailbox::new(AppRuntime {
         atlas: FontAtlas::builtin(),
         icons: IconAtlas::default(),
@@ -1851,7 +1857,7 @@ fn an_incomplete_text_stream_waits_for_external_ingress_without_a_worker_self_wa
 fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
     let registry = FrameExecutionRegistry::new();
     let owner = frame_maintenance_test_owner(91, 1);
-    let identity = owner.interaction.as_ref().map(|interaction| interaction.shell.plugin_filter.as_ptr());
+    let identity = owner.interaction.as_ref().map(|interaction| interaction.shell.plugins.plugin_filter.as_ptr());
     let cell = Arc::new(FrameExecutionOwnerCell::new(owner));
     assert!(registry.try_publish(91, cell.clone()).is_ok());
     assert!(!registry.abandon(92));
@@ -1860,7 +1866,7 @@ fn accepted_frame_maintenance_queue_drop_publishes_exact_generation_owner() {
     assert_eq!(generation, 91);
     assert!(Arc::ptr_eq(&cell, &recovered_cell));
     let Some(recovered) = recovered_cell.try_take() else { panic!("exact abandoned owner") };
-    assert_eq!(recovered.interaction.as_ref().map(|interaction| interaction.shell.plugin_filter.as_ptr()), identity);
+    assert_eq!(recovered.interaction.as_ref().map(|interaction| interaction.shell.plugins.plugin_filter.as_ptr()), identity);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1985,7 +1991,7 @@ fn runtime_raster_operation_authority_rejects_stale_duplicate_and_device_close_a
     assert_eq!(first.preview_generation, 5);
     assert!(authority.matches(first));
     assert!(authority.begin(3, 5).is_err());
-    let stale = ui_wgpu::wgpu::RasterTextureWitness { operation: first.operation.wrapping_add(1), ..first };
+    let stale = ui_gpu::RasterTextureWitness { operation: first.operation.wrapping_add(1), ..first };
     assert!(!authority.matches(stale));
     assert!(authority.release(stale).is_err());
     assert!(authority.matches(first));
@@ -2224,17 +2230,17 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
 
     let url = "/mesh/🧊️probe.glb";
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-    reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, url).expect("the surface admits its own GLB request");
-    let mut owner = take_next_world3d_asset(&mut state).expect("the host drains exactly the admitted request");
+    reserve_world3d_asset_request(&mut state.session, &mut state.assets, WorldAssetRequestKind::Glb, url).expect("the surface admits its own GLB request");
+    let mut owner = take_next_world3d_asset(&mut state.assets).expect("the host drains exactly the admitted request");
     assert_eq!(owner.url(), url);
-    reserve_world3d_asset_response(&mut state, &mut owner, glb.len()).expect("response credits");
+    reserve_world3d_asset_response(&mut state.assets, &mut owner, glb.len()).expect("response credits");
     for chunk in glb.chunks(64) {
         owner.push_page(WorldAssetResponsePage::try_from_owned(chunk.to_vec()).expect("bounded response page")).expect("page admission");
     }
-    seal_world3d_asset_response(&mut state, &mut owner).expect("sealed response");
-    return_world3d_asset(&mut state, owner).expect("handback");
+    seal_world3d_asset_response(&mut state.assets, &mut owner).expect("sealed response");
+    return_world3d_asset(&mut state.assets, owner).expect("handback");
 
-    let owner = take_next_completed_world3d_asset_step(&mut state).expect("completed decode owner");
+    let owner = take_next_completed_world3d_asset_step(&mut state.assets).expect("completed decode owner");
     let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
     let mut ready = false;
     for _ in 0..16_384 {
@@ -2250,7 +2256,7 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     }
     assert!(ready, "the GLB decode must reach Ready");
     let asset = probe.take_ready_mesh_asset().expect("the decoded mesh and appearance asset");
-    publish_world3d_asset_mesh(&mut state, url, asset).expect("the decoded GLB publishes under the url's own mesh id");
+    publish_world3d_asset_mesh(&mut state.session, &mut state.interaction, &mut state.scene, &mut state.assets, url, asset).expect("the decoded GLB publishes under the url's own mesh id");
 
     let resident = state.mesh_lease("mesh:🧊️probe").expect("the mesh is resident under `mesh_id_from_url`, the id the wire names it by");
     let schema = resident.schema().expect("resident mesh schema");
@@ -2266,8 +2272,8 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     probe.begin_close();
     while !probe.close_step() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("terminal owner") else { panic!("shared probe") };
-    finish_world3d_asset(&mut state, owner).expect("terminal handback");
-    assert!(begin_world3d_dynamic_retirement(&mut state));
+    finish_world3d_asset(&mut state.assets, owner).expect("terminal handback");
+    assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
     for _ in 0..4_096 {
         let mut sequence = 0;
         let mut context = semio_framework_job::StepContext::new(
@@ -2279,7 +2285,7 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
             &mut sequence,
         );
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
         if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
@@ -2309,15 +2315,15 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     let glb: &[u8] = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let url = "/mesh/🧊️capsule_J.glb";
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-    reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, url).unwrap();
-    let mut owner = take_next_world3d_asset(&mut state).unwrap();
-    reserve_world3d_asset_response(&mut state, &mut owner, glb.len()).unwrap();
+    reserve_world3d_asset_request(&mut state.session, &mut state.assets, WorldAssetRequestKind::Glb, url).unwrap();
+    let mut owner = take_next_world3d_asset(&mut state.assets).unwrap();
+    reserve_world3d_asset_response(&mut state.assets, &mut owner, glb.len()).unwrap();
     for chunk in glb.chunks(16 * 1024) {
         owner.push_page(WorldAssetResponsePage::try_from_owned(chunk.to_vec()).unwrap()).unwrap();
     }
-    seal_world3d_asset_response(&mut state, &mut owner).unwrap();
-    return_world3d_asset(&mut state, owner).unwrap();
-    let owner = take_next_completed_world3d_asset_step(&mut state).unwrap();
+    seal_world3d_asset_response(&mut state.assets, &mut owner).unwrap();
+    return_world3d_asset(&mut state.assets, owner).unwrap();
+    let owner = take_next_completed_world3d_asset_step(&mut state.assets).unwrap();
     let mut probe = RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner));
     let mut steps = 0u64;
     loop {
@@ -2331,7 +2337,7 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
         assert!(steps < 1_000_000, "no Ready within the step ceiling");
     }
     let asset = probe.take_ready_mesh_asset().unwrap();
-    publish_world3d_asset_mesh(&mut state, url, asset).unwrap();
+    publish_world3d_asset_mesh(&mut state.session, &mut state.interaction, &mut state.scene, &mut state.assets, url, asset).unwrap();
     let resident = state.mesh_lease("mesh:🧊️capsule_J").unwrap();
     let schema = resident.schema().unwrap();
     assert_eq!((schema.vertices, schema.indices, schema.uvs), (1_472, 5_250, 1_472), "the whole export lands, every primitive welded into one mesh");
@@ -2339,8 +2345,8 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
     probe.begin_close();
     while !probe.close_step() {}
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!() };
-    finish_world3d_asset(&mut state, owner).unwrap();
-    assert!(begin_world3d_dynamic_retirement(&mut state));
+    finish_world3d_asset(&mut state.assets, owner).unwrap();
+    assert!(begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
     for _ in 0..8_192 {
         let mut sequence = 0;
         let mut context = semio_framework_job::StepContext::new(
@@ -2352,7 +2358,7 @@ fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_me
             &mut sequence,
         );
         let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state,terrain_grant,&mut context);
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
         assert!(terrain.ownership.fits(terrain_grant));
         assert!(!matches!(terrain.step,infinite_world::world::WorldTerrainMeshPublicationStep::Fault(_)));
         if terrain.step==infinite_world::world::WorldTerrainMeshPublicationStep::Idle && step_world3d_dynamic_retirement(&mut state, &mut context) {
@@ -2510,7 +2516,7 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     assert!(DRAW_SOURCE.contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
     assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
     assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
-    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
+    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_gpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
     let stall = LIBRARY_SOURCE.split("fn note_present_stall(").nth(1).expect("the presenter's stall watch");
     let stall = &stall[..stall.find("\n    }\n").expect("the stall watch closes")];
     let signature = &stall[stall.find("(cursor.phase").expect("the stall signature tuple") + 1..];

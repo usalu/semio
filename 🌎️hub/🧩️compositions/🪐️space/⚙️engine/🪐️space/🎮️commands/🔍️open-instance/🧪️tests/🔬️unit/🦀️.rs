@@ -1,13 +1,16 @@
 
-use super::*;
+
 use crate::demo_space_projection;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::unit_tests::context::{apply_config, seed_draw_plugin, studio_emit};
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_app::unit_tests::context::{apply_config, seed_draw_plugin, studio_emit};
+use semio_framework_plugin::Effect;
+use semio_hub_space_foundation::config::{FocusedNodeSetting, SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_commands_authoring::open_instance::OpenInstance;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenInstance(OpenInstance { node_id: Some("n1".into()) }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(crate::engine::space::commands::close_focused_instance::CloseFocusedInstance {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {}));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -40,6 +43,6 @@ async fn open_and_close_focused_instance() {
     assert!(open_emit.config_mutations.contains(&SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: Some(node_id.clone()) })));
     let config_after_open = apply_config(&config, &open_emit.config_mutations).await;
     assert_eq!(config_after_open.focused_node_id.as_deref(), Some(node_id.as_str()));
-    let close_emit = studio_emit(&projection, &config_after_open, &SpaceCommand::CloseFocusedInstance(crate::engine::space::commands::close_focused_instance::CloseFocusedInstance {})).await.expect("handle");
+    let close_emit = studio_emit(&projection, &config_after_open, &SpaceCommand::CloseFocusedInstance(semio_hub_space_commands_authoring::close_focused_instance::CloseFocusedInstance {})).await.expect("handle");
     assert_eq!(close_emit.config_mutations, vec![SpaceConfigMutation::SetFocusedNode(FocusedNodeSetting { node_id: None })]);
 }

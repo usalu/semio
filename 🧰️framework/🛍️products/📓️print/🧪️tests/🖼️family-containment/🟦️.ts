@@ -1,14 +1,17 @@
+import{PRINT_PDF_OPS_V1 as OPS,printPdfPageV1,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,type PrintPdfPageV1}from"../../📦️artifacts/📖️pdf/🟦️.ts";
+import{basename}from"node:path";
+import printProbeLimits from"../../🔨️modules/🖨️tectonic-template-compilation/📋️intent/🧬️schema/🔣️.json";
+import{withPrintScratchV1,type PrintExecutionV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 /** 🖼️ Compiles neutral family containment cases and consumes their text with independent PDF.js. */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
-import { getDocument, OPS, Util, type PDFPageProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { rgb as d3Rgb } from "d3-color";
 import { scaleLinear, scaleThreshold, scaleOrdinal, scaleBand, scaleSqrt } from "d3-scale";
 import { linkHorizontal, symbol, symbolCircle, symbolSquare, pointRadial } from "d3-shape";
 import { geoStereographic } from "d3-geo";
 const SunCalc = createRequire(import.meta.url)("suncalc") as { getPosition(date: Date, latitude: number, longitude: number): { altitude: number; azimuth: number } };
-import { compileVizProbeDocument } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
+import { compileVizProbeDocument,inspectVizProbeDocumentRefusalV1,withCompiledVizProbeDocumentV1 } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "./🔣️.json";
 import optionFixture from "../🧫️fixtures/🧬️chart-mutations/🔣️.json";
 import schemaDocument from "../../🧬️schema/🔣️.json";
@@ -27,42 +30,42 @@ import { compileNativePhysicsContainment } from "./⚛️physics/🟦️.ts";
 import { compileNativeSetContainment } from "./🫧️sets/🟦️.ts";
 
 /** 🔬️ Verifies actual native family bounds and glyphs in both configured themes. */
-export async function compileNativeFamilyContainment(workDir: string): Promise<void> {
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options-admission") return compileNativeCanonicalAdmission(join(workDir, "canonical-admission"));
+export async function compileNativeFamilyContainment(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/family-containment",async({directory:workDir,execution})=>{
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options-admission") return compileNativeCanonicalAdmission(execution);
   if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options-metadata") return verifyCanonicalOptionSyntaxContract();
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options") return compileNativeCanonicalOptions(join(workDir, "canonical-options"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "sets") return compileNativeSetContainment(join(workDir, "sets"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "queueing") return compileNativeQueueingLabels(join(workDir, "queueing"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "math-records") return compileNativeMathRecords(join(workDir, "math-records"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "physics") return compileNativePhysicsContainment(join(workDir, "physics"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "tree") return compileNativeTreeContainment(join(workDir, "tree"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "chemistry") return compileNativeOrbitalContainment(join(workDir, "chemistry"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "bifurcation") return compileNativeBifurcations(join(workDir, "bifurcation"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "complex") return compileNativeComplexSurfaces(join(workDir, "complex"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "grid") return compileNativeGrammarGrids(join(workDir, "grid"));
-  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "encoding") return compileNativeGrammarEncodings(join(workDir, "encoding"));
-  if(process.env.PRINT_NATIVE_FAMILY_PHASE==="sunpath"){await compileNativeSunpaths(join(workDir,"sunpath"));return;}
-  await compileNativeEvaluationBoundaries(join(workDir, "evaluation"));
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "canonical-options") return compileNativeCanonicalOptions(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "sets") return compileNativeSetContainment(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "queueing") return compileNativeQueueingLabels(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "math-records") return compileNativeMathRecords(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "physics") return compileNativePhysicsContainment(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "tree") return compileNativeTreeContainment(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "chemistry") return compileNativeOrbitalContainment(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "bifurcation") return compileNativeBifurcations(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "complex") return compileNativeComplexSurfaces(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "grid") return compileNativeGrammarGrids(execution);
+  if (process.env.PRINT_NATIVE_FAMILY_PHASE === "encoding") return compileNativeGrammarEncodings(execution);
+  if(process.env.PRINT_NATIVE_FAMILY_PHASE==="sunpath"){await compileNativeSunpaths(execution);return;}
+  await compileNativeEvaluationBoundaries(execution);
   if (process.env.PRINT_NATIVE_FAMILY_PHASE === "evaluation") return;
-  await compileNativeComplexSurfaces(join(workDir, "complex"));
-  await compileNativeBifurcations(join(workDir, "bifurcation"));
-  await compileNativeGrammarEncodings(join(workDir, "encoding"));
-  await compileNativeGrammarGrids(join(workDir, "grid"));
-  await compileNativeSunpaths(join(workDir,"sunpath"));
-  await compileNativeOrbitalContainment(join(workDir, "chemistry"));
-  await compileNativeTreeContainment(join(workDir, "tree"));
-  await compileNativePhysicsContainment(join(workDir, "physics"));
-  await compileNativeQueueingLabels(join(workDir, "queueing"));
-  await compileNativeMathRecords(join(workDir, "math-records"));
-  await compileNativeSetContainment(join(workDir, "sets"));
-  await compileNativeCanonicalOptions(join(workDir, "canonical-options"));
-  await compileNativeCanonicalAdmission(join(workDir, "canonical-admission"));
+  await compileNativeComplexSurfaces(execution);
+  await compileNativeBifurcations(execution);
+  await compileNativeGrammarEncodings(execution);
+  await compileNativeGrammarGrids(execution);
+  await compileNativeSunpaths(execution);
+  await compileNativeOrbitalContainment(execution);
+  await compileNativeTreeContainment(execution);
+  await compileNativePhysicsContainment(execution);
+  await compileNativeQueueingLabels(execution);
+  await compileNativeMathRecords(execution);
+  await compileNativeSetContainment(execution);
+  await compileNativeCanonicalOptions(execution);
+  await compileNativeCanonicalAdmission(execution);
   const failures: string[] = [];
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme);
     const body = fixture.cases.flatMap(entry => [{ raw: ("columns" in entry && entry.columns !== undefined && "rows" in entry && entry.rows !== undefined ? `\\SemioVizTable{family-flow}{${entry.columns.join(",")}}` + entry.rows.map(row => `\\SemioVizRow{family-flow}{${row.join(",")}}`).join("") : "") + `\\clearpage\\SemioVizProbeBegin{family-containment}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=${fixture.frame[0]},height=${fixture.frame[1]}]\\begin{scope}[local bounding box=family-result]\\FamilyMeasure\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{scope}\\ExplSyntaxOn\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{family-result}{south~west}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{family-result}{south~west}}\\semio_viz_probe_values:nx{family/min}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/\\dim_to_fp:n{1mm}},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/\\dim_to_fp:n{1mm}}}\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{family-result}{north~east}}\\pgfextracty\\l_tmpb_dim{\\pgfpointanchor{family-result}{north~east}}\\semio_viz_probe_values:nx{family/max}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/\\dim_to_fp:n{1mm}},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/\\dim_to_fp:n{1mm}}}\\ExplSyntaxOff\\end{VizFigure}` }]);
     for (const [index, flow] of fixture.flowControls.entries()) body.push({ raw: `\\ExplSyntaxOn\\fp_set:Nn\\l_semio_viz_snk_ox_fp{${flow.offset}}\\fp_set:Nn\\l_semio_viz_snk_k_fp{${flow.scale}}\\fp_set:Nn\\l_semio_viz_snk_curv_fp{${flow.curvature}}\\tl_set:Nn\\l_semio_viz_snk_x_tl{${flow.source}}\\tl_set:Nn\\l_semio_viz_snk_xb_tl{${flow.target}}\\semio_viz_probe_values:nx{flow/control/${index}}{\\fp_eval:n{\\semio_viz_snk_cx:},\\fp_eval:n{\\semio_viz_snk_dx:}}\\ExplSyntaxOff` });
-    const records = await compileVizProbeDocument({ case: "family-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\FamilyMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Family Containment}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    await withCompiledVizProbeDocumentV1({ case: "family-containment", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\makeatletter\\newcommand\\FamilyMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\title{Family Containment}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     for (const [index, flow] of fixture.flowControls.entries()) {
       const mapped = scaleLinear([0, 1], [flow.offset, flow.offset + flow.scale]);
       const source = mapped(flow.source), target = mapped(flow.target), mid = Number(linkHorizontal()({ source: [source, 0], target: [target, 0] })!.match(/C([^,]+)/)![1]);
@@ -70,17 +73,17 @@ export async function compileNativeFamilyContainment(workDir: string): Promise<v
       const actual = records.find(record => record.key === `flow/control/${index}`)!.values.map(Number);
       if (actual.some((value, position) => Math.abs(value - expected[position]!) > 1e-4)) failures.push(`${theme}/flow/control/${index}: ${actual} differs from D3 ${expected}`);
     }
-    const out = join(root, "🧪️probe-out"), file = readdirSync(out).find(name => name.endsWith(".pdf"));
+    const out = join(root, "🧪️probe-out"), file = basename(probe.pdfPath);
     if (!file) throw new Error("family containment probe published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, file))), useSystemFonts: true }).promise;
-    const pages = pdf.numPages, texts: string[] = [], widths: ReadonlyMap<string, number>[] = [], rectangles: ReadonlyMap<string, readonly number[]>[] = [];
+    const pdf = await probe.inspect();
+    const pages = pdf.pages.length, texts: string[] = [], widths: ReadonlyMap<string, number>[] = [], rectangles: ReadonlyMap<string, readonly number[]>[] = [];
     for (let page = 1; page <= pages; page++) {
-      const items = (await (await pdf.getPage(page)).getTextContent()).items.flatMap(item => "str" in item ? [item] : []);
+      const items = (await (printPdfPageV1(pdf,page))).items.flatMap(item => "str" in item ? [item] : []);
       texts.push(items.map(item => item.str).join(" "));
       widths.push(new Map(items.map(item => [item.str, item.width * 25.4 / 72])));
       rectangles.push(new Map(items.map(item => [item.str, [item.transform[4], item.transform[5], item.width, item.height]])));
     }
-    await pdf.destroy();
+    
     if (pages < fixture.cases.length) failures.push(`${theme}: expected at least ${fixture.cases.length} case pages, consumed ${pages}`);
     for (const entry of fixture.cases) {
       const min = records.find(record => record.scenario === entry.id && record.key === "family/min")!.values.map(Number), max = records.find(record => record.scenario === entry.id && record.key === "family/max")!.values.map(Number);
@@ -114,14 +117,12 @@ export async function compileNativeFamilyContainment(workDir: string): Promise<v
       if (Math.abs(x! - scaleX(file!)) > 1e-4 || Math.abs(y! - scaleY(rank!)) > 1e-4) failures.push(`${theme}/board-six: placement differs from D3`);
     }
     console.log(`[native-families] ${theme}: ${fixture.cases.length} compiled family cases, ${pages} PDF.js pages consumed`);
-  }
+  });}
   for (const entry of fixture.rejections) {
     const root = join(workDir, entry.id), table = `\\SemioVizTable{family-input}{${entry.columns.join(",")}}` + entry.rows.map(row => `\\SemioVizRow{family-input}{${row.join(",")}}`).join("");
     let rejected = false;
-    try {
-      await compileVizProbeDocument({ case: "family-containment", scenario: entry.id, documentClass: "semio", documentClassOptions: "type=paper,language=en", packages: ["semio-viz"], preamble: ["\\title{Family Admission}", "\\author{Semio}", "\\date{}"], body: [{ raw: `${table}\\begin{VizFigure}[width=80,height=40]\\SemioVizChart{${entry.kind}}[data=family-input,${entry.options}]\\end{VizFigure}` }] }, { workDir: root, keepWorkDir: true });
-    } catch {
-      const log = readFileSync(join(root, "🧪️probe-out", entry.id + ".log"), "utf8");
+    {const refusal=await inspectVizProbeDocumentRefusalV1({ case: "family-containment", scenario: entry.id, documentClass: "semio", documentClassOptions: "type=paper,language=en", packages: ["semio-viz"], preamble: ["\\title{Family Admission}", "\\author{Semio}", "\\date{}"], body: [{ raw: `${table}\\begin{VizFigure}[width=80,height=40]\\SemioVizChart{${entry.kind}}[data=family-input,${entry.options}]\\end{VizFigure}` }] },{execution,});
+      const log = refusal.log;
       rejected = log.includes(entry.diagnostic);
     }
     if (!rejected) failures.push(`${entry.id}: invalid authored board position was not rejected with its diagnostic`);
@@ -129,20 +130,20 @@ export async function compileNativeFamilyContainment(workDir: string): Promise<v
   }
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[native-families] scientific containment, reaction glyphs, board cells and process labels PASS");
-}
+});}
 
 /** 🪪️ Checks stock and authored queueing captions and preserved station spacing with PDF.js and D3. */
-async function compileNativeQueueingLabels(workDir: string): Promise<void> {
+async function compileNativeQueueingLabels(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/queueing-labels",async({directory:workDir,execution})=>{
   const failures: string[] = [];
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme), body = fixture.queueingCases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{queueing-labels}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{queueing-network-diagram}[${entry.options}]\\end{VizFigure}` }));
-    await compileVizProbeDocument({ case: "queueing-labels", scenario: "captions", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Queueing Captions}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
-    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise;
+    await withCompiledVizProbeDocumentV1({ case: "queueing-labels", scenario: "captions", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Queueing Captions}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
+    const out = join(root, "🧪️probe-out"), pdf = await probe.inspect();
     let pages = 0, captions = 0, projections = 0;
     const seen = new Set<string>();
-    try {
-      for (let index = 1; index <= pdf.numPages; index++) {
-        const page = await pdf.getPage(index), items = (await page.getTextContent()).items.flatMap(item => "str" in item ? [item] : []), text = items.map(item => item.str).join(" "), entry = fixture.queueingCases.find(entry => text.includes(entry.id));
+    {
+      for (let index = 1; index <= pdf.pages.length; index++) {
+        const page = printPdfPageV1(pdf,index), items = (await page).items.flatMap(item => "str" in item ? [item] : []), text = items.map(item => item.str).join(" "), entry = fixture.queueingCases.find(entry => text.includes(entry.id));
         if (entry) {
           if (seen.has(entry.id)) failures.push(`${theme}/${entry.id}: duplicate actual case page`);
           seen.add(entry.id);
@@ -161,26 +162,25 @@ async function compileNativeQueueingLabels(workDir: string): Promise<void> {
           }
         }
         if (/[\uFFFD\uFFFF]/u.test(text)) failures.push(`${theme}/page${index}: invalid queueing glyph`);
-        page.cleanup(); pages++;
+         pages++;
       }
-    } finally { await pdf.destroy(); }
+    }
     for (const entry of fixture.queueingCases) if (!seen.has(entry.id)) failures.push(`${theme}/${entry.id}: missing actual case page`);
     console.log(`[native-queueing] ${theme}: ${fixture.queueingCases.length} cases, ${captions} actual captions, ${projections} D3 station projections, ${pages} PDF.js pages consumed`);
-  }
+  });}
   if (failures.length) throw Error(`${failures.length} queueing caption/projection failures:\n${failures.join("\n")}`);
   console.log("[native-queueing] stock and authored mathematical captions PASS");
-}
+});}
 
 /** 🧮️ Consumes protected mathematical captions and every shared record-reader family with PDF.js and D3. */
-async function compileNativeMathRecords(workDir: string): Promise<void> {
+async function compileNativeMathRecords(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/math-records",async({directory:workDir,execution})=>{
   const failures: string[] = [], cases = fixture.mathRecordCases.filter(entry => process.env.PRINT_NATIVE_MATH_PHASE === "piecewise" ? entry.reference.mode === "piecewise" : process.env.PRINT_NATIVE_MATH_PHASE !== "baseline" || !entry.options.includes("\\("));
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme), body = cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{math-records}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{VizFigure}` }));
-    const records = await compileVizProbeDocument({ case: "math-records", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Mathematical Records}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
-    const out = join(root, "🧪️probe-out"), pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, readdirSync(out).find(name => name.endsWith(".pdf"))!))) }).promise;
+    await withCompiledVizProbeDocumentV1({ case: "math-records", scenario: "cases", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Mathematical Records}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
+    const out = join(root, "🧪️probe-out"), pdf = await probe.inspect();
     const texts: string[] = [];
-    try { for (let index = 1; index <= pdf.numPages; index++) texts.push((await (await pdf.getPage(index)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" ")); }
-    finally { await pdf.destroy(); }
+    { for (let index = 1; index <= pdf.pages.length; index++) texts.push((await (printPdfPageV1(pdf,index))).items.flatMap(item => "str" in item ? [item.str] : []).join(" ")); }
     let glyphs = 0, references = 0;
     for (const entry of cases) {
       const pages = texts.filter(text => text.includes(entry.id));
@@ -201,17 +201,17 @@ async function compileNativeMathRecords(workDir: string): Promise<void> {
     }
     if (texts.some(text => /[\uFFFD\uFFFF]/u.test(text))) failures.push(`${theme}: invalid mathematical caption glyph`);
     console.log(`[native-math-records] ${theme}: ${cases.length} cases, ${glyphs} actual glyphs, ${references} D3 values, ${texts.length} PDF.js pages consumed`);
-  }
+  });}
   if (failures.length) throw Error(`${failures.length} mathematical record failures:\n${failures.join("\n")}`);
   console.log("[native-math-records] protected captions and shared record consumers PASS");
-}
+});}
 
 /** 🎛️ Compiles categorical grammar bindings and compares actual paints with independent D3 ordinal scales. */
-export async function compileNativeGrammarEncodings(workDir: string): Promise<void> {
+export async function compileNativeGrammarEncodings(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/grammar-encodings",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme);
     const body = fixture.encodingCases.map(entry => ({ raw: "\\SemioVizTable{encoding-input}{" + entry.columns.join(",") + "}" + entry.rows.map(row => "\\SemioVizRow{encoding-input}{" + row.join(",") + "}").join("") + "\\clearpage\\SemioVizProbeBegin{grammar-encoding}{" + entry.id + "}\\begin{VizFigure}[title={" + entry.id + "},width=80,height=40]\\SemioVizThemeSet[colors={" + entry.colors.join(",") + "}]\\SemioVizChart{" + entry.kind + "}[" + entry.options + "]\\end{VizFigure}" }));
-    const records = await compileVizProbeDocument({ case: "grammar-encoding", scenario: "paints", documentClass: "semio", documentClassOptions: "type=paper,language=en,theme=" + theme, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Grammar Encodings}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    await withCompiledVizProbeDocumentV1({ case: "grammar-encoding", scenario: "paints", documentClass: "semio", documentClassOptions: "type=paper,language=en,theme=" + theme, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Grammar Encodings}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     for (const entry of fixture.encodingCases) {
       const column = entry.columns.indexOf(entry.category), categories = entry.rows.map(row => String(row[column])), scale = scaleOrdinal<string, string>([...new Set(categories)], entry.colors);
       const actual = records.filter(record => record.scenario === entry.id && record.key === "grammar/style").map(record => record.values[0]), expected = categories.map(category => scale(category));
@@ -226,19 +226,19 @@ export async function compileNativeGrammarEncodings(workDir: string): Promise<vo
         }
       }
     }
-    const out = join(root, "🧪️probe-out"), name = readdirSync(out).find(name => name.endsWith(".pdf"));
+    const out = join(root, "🧪️probe-out"), name = basename(probe.pdfPath);
     if (!name) throw Error("grammar encodings published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, name))), useSystemFonts: true }).promise;
+    const pdf = await probe.inspect();
     let text = "";
     const caseText = new Map<string, readonly string[]>();
-    for (let page = 1; page <= pdf.numPages; page++) {
-      const entries = (await (await pdf.getPage(page)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []);
+    for (let page = 1; page <= pdf.pages.length; page++) {
+      const entries = (await (printPdfPageV1(pdf,page))).items.flatMap(item => "str" in item ? [item.str] : []);
       const content = entries.join(" ");
       text += content;
       for (const entry of fixture.encodingCases) if (content.includes(entry.id)) caseText.set(entry.id, entries);
     }
-    const pages = pdf.numPages;
-    await pdf.destroy();
+    const pages = pdf.pages.length;
+    
     for (const entry of fixture.encodingCases) if (!text.includes(entry.id)) throw Error("grammar encoding PDF has no case title " + entry.id);
     for (const entry of fixture.encodingCases) {
       const captions = caseText.get(entry.id)?.filter(content => /^(?:Namespace|Figurefacility|Grammarelement)/.test(content.replace(/\s+/g, "")));
@@ -249,16 +249,16 @@ export async function compileNativeGrammarEncodings(workDir: string): Promise<vo
       for (const category of domain) if (!caseText.get(entry.id)?.includes(category)) throw Error(theme + "/" + entry.id + ": actual PDF legend omitted group " + category);
     }
     console.log("[native-families] " + theme + ": 18 native categorical paints match D3 and legend group domains, " + pages + " actual PDF.js pages consumed PASS");
-  }
-}
+  });}
+});}
 
 /** ☀️ Compares actual solar angles and native chart points to independent SunCalc and D3. */
-export async function compileNativeSunpaths(workDir:string):Promise<void>{
+export async function compileNativeSunpaths(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/sunpaths",async({directory:workDir,execution})=>{
   const cases=sunpaths.cases;
   for(const theme of ["light","dark"]){
     const root=join(workDir,theme),body=cases.map(entry=>({raw:("rows" in entry&&entry.rows!==undefined?"\\SemioVizTable{sunpath-input}{month,hour,azimuth,altitude}"+entry.rows.map(row=>`\\SemioVizRow{sunpath-input}{${row.join(",")}}`).join(""):"")+`\\clearpage\\SemioVizProbeBegin{sunpath}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{VizFigure}`}));
     const preamble=["\\title{Solar Chart Admission}","\\author{Semio}","\\date{}"];
-    const records=await compileVizProbeDocument({case:"sunpath",scenario:"solar",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble,body},{workDir:root,scenario:undefined,keepWorkDir:true});
+    await withCompiledVizProbeDocumentV1({case:"sunpath",scenario:"solar",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble,body},{execution,scenario:undefined},async({records:records,probe})=>{
     let points=0;
     for(const entry of cases){
       const expected="rows" in entry&&entry.rows!==undefined?entry.rows.map(row=>[row[3]!,row[2]!] as const):("months" in entry&&entry.months!==undefined?entry.months:[Number(entry.date!.split("-")[1])]).flatMap(month=>entry.hours!.map(hour=>{const [year,,day]=entry.date!.split("-").map(Number),position=SunCalc.getPosition(new Date(Date.UTC(year!,month-1,day!,hour)),entry.latitude!,entry.longitude!);return [position.altitude*180/Math.PI,position.azimuth*180/Math.PI] as const;})),angles=records.filter(record=>record.scenario===entry.id&&record.key==="geometry/diagram-sun");
@@ -273,20 +273,20 @@ export async function compileNativeSunpaths(workDir:string):Promise<void>{
         points++;
       }
     }
-    const out=join(root,"🧪️probe-out"),name=readdirSync(out).find(name=>name.endsWith(".pdf"));if(!name)throw Error("sunpath native probe published no PDF");
-    const pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,name))),useSystemFonts:true}).promise;let text="";for(let page=1;page<=pdf.numPages;page++)text+=(await(await pdf.getPage(page)).getTextContent()).items.flatMap(item=>"str" in item?[item.str]:[]).join(" ");const pages=pdf.numPages;await pdf.destroy();
+    const out=join(root,"🧪️probe-out"),name=basename(probe.pdfPath);if(!name)throw Error("sunpath native probe published no PDF");
+    const pdf=await probe.inspect();let text="";for(let page=1;page<=pdf.pages.length;page++)text+=(await(printPdfPageV1(pdf,page))).items.flatMap(item=>"str" in item?[item.str]:[]).join(" ");const pages=pdf.pages.length;
     for(const entry of cases)if(!text.includes(entry.id))throw Error(`${theme}/${entry.id}: PDF.js found no case title`);
     console.log(`[native-sunpath] ${theme}: ${sunpaths.cases.length} cases, ${points} actual D3/SunCalc points, ${pages} PDF.js pages PASS`);
-  }
-}
+  });}
+});}
 
 
 /** 🎯️ Consumes compiled decision regions and compares every cell to independent D3 scales. */
-export async function compileNativeEvaluationBoundaries(workDir: string): Promise<void> {
+export async function compileNativeEvaluationBoundaries(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/evaluation-boundaries",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme);
     const body = fixture.evaluationCases.map(entry => ({ raw: `\\SemioVizProbeBegin{evaluation-boundary}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{${entry.kind}}[width=${entry.width},height=${entry.height},pad=${entry.padding}]\\end{VizFigure}` }));
-    const records = await compileVizProbeDocument({ case: "evaluation-boundary", scenario: "regions", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Evaluation Regions}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    await withCompiledVizProbeDocumentV1({ case: "evaluation-boundary", scenario: "regions", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Evaluation Regions}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     for (const entry of fixture.evaluationCases) {
       const cells = records.filter(record => record.scenario === entry.id && record.key === "geometry/rect"), regions = records.filter(record => record.scenario === entry.id && record.key === "geometry/evaluation-region");
       if (cells.length !== entry.cells ** 2 || regions.length !== entry.cells ** 2) throw Error(`${theme}/${entry.id}: actual grid did not emit ${entry.cells ** 2} cells and region selections`);
@@ -296,23 +296,23 @@ export async function compileNativeEvaluationBoundaries(workDir: string): Promis
         if (actual.some((value, position) => Math.abs(value - expected[position]!) > 1e-4) || choice[2] !== region(column + row + 2)) throw Error(`${theme}/${entry.id}/${index}: native region differs from D3`);
       }
     }
-    const out = join(root, "🧪️probe-out"), name = readdirSync(out).find(name => name.endsWith(".pdf"));
+    const out = join(root, "🧪️probe-out"), name = basename(probe.pdfPath);
     if (!name) throw Error("evaluation regions published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, name))), useSystemFonts: true }).promise;
+    const pdf = await probe.inspect();
     let text = "";
-    for (let page = 1; page <= pdf.numPages; page++) text += (await (await pdf.getPage(page)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" ");
-    const pages = pdf.numPages;
-    await pdf.destroy();
+    for (let page = 1; page <= pdf.pages.length; page++) text += (await (printPdfPageV1(pdf,page))).items.flatMap(item => "str" in item ? [item.str] : []).join(" ");
+    const pages = pdf.pages.length;
+    
     for (const entry of fixture.evaluationCases) if (!text.includes(entry.id)) throw Error(`${theme}/${entry.id}: actual PDF.js document has no case title`);
     console.log(`[native-families] ${theme}: 128 evaluation cells match D3, ${pages} actual PDF.js pages consumed PASS`);
-  }
-}
+  });}
+});}
 
 /** 🌀️ Compares actual Riemann sheets and sampling controls with independent D3 canvas scales. */
-export async function compileNativeComplexSurfaces(workDir: string): Promise<void> {
+export async function compileNativeComplexSurfaces(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/complex-surfaces",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme), body = complex.cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{complex-surface}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{${entry.kind}}[${entry.options}]\\end{VizFigure}` }));
-    const records = await compileVizProbeDocument({ case: "complex-surface", scenario: "sheets", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Complex Surfaces}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    await withCompiledVizProbeDocumentV1({ case: "complex-surface", scenario: "sheets", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Complex Surfaces}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     let points = 0;
     for (const entry of complex.cases) {
       const paths = records.filter(record => record.scenario === entry.id && record.key === "geometry/path"), x = scaleLinear(entry.domain, [0, entry.width]), y = scaleLinear(entry.range, [0, entry.height]), parameter = scaleLinear([0, entry.samples], entry.domain);
@@ -326,24 +326,24 @@ export async function compileNativeComplexSurfaces(workDir: string): Promise<voi
         }
       }
     }
-    const out = join(root, "🧪️probe-out"), name = readdirSync(out).find(name => name.endsWith(".pdf"));
+    const out = join(root, "🧪️probe-out"), name = basename(probe.pdfPath);
     if (!name) throw Error("Riemann surfaces published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, name))), useSystemFonts: true }).promise;
+    const pdf = await probe.inspect();
     let text = "";
-    for (let page = 1; page <= pdf.numPages; page++) text += (await (await pdf.getPage(page)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" ");
-    const pages = pdf.numPages;
-    await pdf.destroy();
+    for (let page = 1; page <= pdf.pages.length; page++) text += (await (printPdfPageV1(pdf,page))).items.flatMap(item => "str" in item ? [item.str] : []).join(" ");
+    const pages = pdf.pages.length;
+    
     for (const entry of complex.cases) if (!text.includes(entry.id)) throw Error(`${theme}/${entry.id}: actual PDF has no case title`);
     console.log(`[native-complex] ${theme}: ${points} sampled points match D3, ${pages} actual PDF.js pages consumed PASS`);
-  }
-}
+  });}
+});}
 
 
 /** \u{1fa9f} Compiles stock and authored grammar grids against independent D3 scales and square symbols. */
-export async function compileNativeGrammarGrids(workDir: string): Promise<void> {
+export async function compileNativeGrammarGrids(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/grammar-grids",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root=join(workDir,theme),body=fixture.gridCases.map(entry=>({raw:"\\SemioVizTable{grid-input}{"+entry.columns.join(",")+"}"+entry.rows.map(row=>"\\SemioVizRow{grid-input}{"+row.join(",")+"}").join("")+"\\clearpage\\SemioVizProbeBegin{grammar-grid}{"+entry.id+"}\\begin{VizFigure}[title={"+entry.id+"},width=80,height=40]\\SemioVizChart{"+entry.kind+"}["+entry.options+"]\\end{VizFigure}"}));
-    const records=await compileVizProbeDocument({case:"grammar-grid",scenario:"grids",documentClass:"semio",documentClassOptions:"type=paper,language=en,theme="+theme,packages:["semio-viz"],geometry:true,preamble:["\\title{Grammar Grids}","\\author{Semio}","\\date{}"],body},{workDir:root,scenario:undefined,keepWorkDir:true});
+    await withCompiledVizProbeDocumentV1({case:"grammar-grid",scenario:"grids",documentClass:"semio",documentClassOptions:"type=paper,language=en,theme="+theme,packages:["semio-viz"],geometry:true,preamble:["\\title{Grammar Grids}","\\author{Semio}","\\date{}"],body},{execution,scenario:undefined},async({records:records,probe})=>{
     let points=0,lines=0;
     for(const entry of fixture.gridCases){
       const xs=entry.rows.map(row=>row[entry.columns.indexOf(entry.x)]!),ys=entry.rows.map(row=>Number(row[entry.columns.indexOf(entry.y)])),numeric=xs.every(value=>typeof value==="number"),domain=[...new Set(xs.map(String))],band=scaleBand(domain,[8,78]),linear=scaleLinear([Math.min(...xs.map(Number)),Math.max(...xs.map(Number))],[8,78]),vertical=scaleLinear([Math.min(0,...ys),Math.max(...ys)],[8,38]),mapX=(value:unknown)=>numeric?linear(Number(value)):band(String(value))!+band.bandwidth()/2;
@@ -357,18 +357,18 @@ export async function compileNativeGrammarGrids(workDir: string): Promise<void> 
       if(grid.length!==expectedLines.length||grid.some((record,index)=>record.values.some((value,dimension)=>Math.abs(Number(value)-expectedLines[index]![dimension]!)>1e-4)))throw Error(theme+"/"+entry.id+": authored plot grid differs from D3 scale ticks");
       points+=actual.length;lines+=grid.length;
     }
-    const out=join(root,"\u{1f9ea}\uFE0Fprobe-out"),name=readdirSync(out).find(name=>name.endsWith(".pdf"));if(!name)throw Error("grammar grids published no PDF");
-    const pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,name))),useSystemFonts:true}).promise;let text="";for(let page=1;page<=pdf.numPages;page++)text+=(await(await pdf.getPage(page)).getTextContent()).items.flatMap(item=>"str" in item?[item.str]:[]).join(" ");const pages=pdf.numPages;await pdf.destroy();
+    const out=join(root,"\u{1f9ea}\uFE0Fprobe-out"),name=basename(probe.pdfPath);if(!name)throw Error("grammar grids published no PDF");
+    const pdf=await probe.inspect();let text="";for(let page=1;page<=pdf.pages.length;page++)text+=(await(printPdfPageV1(pdf,page))).items.flatMap(item=>"str" in item?[item.str]:[]).join(" ");const pages=pdf.pages.length;
     for(const entry of fixture.gridCases)if(!text.includes(entry.id))throw Error("grammar grid PDF omitted case "+entry.id);
     console.log("[native-grids] "+theme+": "+points+" actual D3 square positions and "+lines+" D3 scale grid lines, "+pages+" PDF.js pages PASS");
-  }
-}
+  });}
+});}
 
 /** 🌿️ Verifies retained logistic-map tails, full stock capacity and actual independent PDF fill operators. */
-export async function compileNativeBifurcations(workDir: string): Promise<void> {
+export async function compileNativeBifurcations(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/bifurcations",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme), body = bifurcation.cases.map(entry => ({ raw: `\\clearpage\\SemioVizProbeBegin{bifurcation}{${entry.id}}\\begin{VizFigure}[title={${entry.id}},width=80,height=40]\\SemioVizChart{bifurcation-diagram}[${entry.options}]\\end{VizFigure}` }));
-    const records = await compileVizProbeDocument({ case: "bifurcation", scenario: "orbits", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Bifurcation Capacity}", "\\author{Semio}", "\\date{}"], body }, { workDir: root, scenario: undefined, keepWorkDir: true });
+    await withCompiledVizProbeDocumentV1({ case: "bifurcation", scenario: "orbits", documentClass: "semio", documentClassOptions: `type=paper,language=en,theme=${theme}`, packages: ["semio-viz"], geometry: true, preamble: ["\\title{Bifurcation Capacity}", "\\author{Semio}", "\\date{}"], body },{execution,scenario: undefined},async({records:records,probe})=>{
     let points = 0;
     for (const entry of bifurcation.cases) {
       const actual = records.filter(record => record.scenario === entry.id && record.key === "geometry/bifurcation-point"), parameter = scaleLinear([0, entry.columns], [entry.from, entry.to]), x = scaleLinear([entry.from, entry.to], [0, entry.width]), y = scaleLinear([0, 1], [0, entry.height]);
@@ -384,31 +384,31 @@ export async function compileNativeBifurcations(workDir: string): Promise<void> 
         }
       }
     }
-    const out = join(root, "🧪️probe-out"), name = readdirSync(out).find(name => name.endsWith(".pdf"));
+    const out = join(root, "🧪️probe-out"), name = basename(probe.pdfPath);
     if (!name) throw Error("bifurcation probe published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, name))), useSystemFonts: true }).promise;
+    const pdf = await probe.inspect();
     let text = "", fills = 0;
-    for (let page = 1; page <= pdf.numPages; page++) { const current = await pdf.getPage(page); text += (await current.getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" "); const operators = await current.getOperatorList(); fills += operators.fnArray.filter((operation, index) => operation === OPS.fill || operation === OPS.eoFill || operation === OPS.constructPath && [OPS.fill, OPS.eoFill].includes(operators.argsArray[index]?.[0])).length; }
-    const pages = pdf.numPages;
-    await pdf.destroy();
+    for (let page = 1; page <= pdf.pages.length; page++) { const current = printPdfPageV1(pdf,page); text += (current).items.flatMap(item => "str" in item ? [item.str] : []).join(" "); const operators = current.operators; fills += operators.fnArray.filter((operation, index) => operation === OPS.fill || operation === OPS.eoFill || operation === OPS.constructPath && [OPS.fill, OPS.eoFill].includes(printPdfNameV1(operators.argsArray[index]?.[0]))).length; }
+    const pages = pdf.pages.length;
+    
     for (const entry of bifurcation.cases) if (!text.includes(entry.id)) throw Error(`${theme}/${entry.id}: PDF has no case title`);
     if (fills < points) throw Error(`${theme}: PDF.js observed only ${fills} fills for ${points} separate circle marks`);
     console.log(`[native-bifurcation] ${theme}: ${points} retained points, ${fills} actual PDF.js fills, ${pages} pages PASS`);
-  }
-}
+  });}
+});}
 /** ⚛️ Compares compiled orbital columns to D3 and verifies mathematical labels with PDF.js. */
-export async function compileNativeOrbitalContainment(workDir: string): Promise<void> {
+export async function compileNativeOrbitalContainment(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/orbital-containment",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root = join(workDir, theme), failures: string[] = [];
     const body = chemistry.cases.map(entry => ({ raw: "\\clearpage\\SemioVizProbeBegin{orbital-containment}{" + entry.id + "}\\begin{VizFigure}[title={" + entry.id + "},width=" + entry.width + ",height=" + entry.height + "]\\begin{scope}[local bounding box=orbital-result]\\OrbitalMeasure\\SemioVizChart{" + entry.kind + "}[" + entry.options + "]\\end{scope}\\ExplSyntaxOn\\pgfextractx\\l_tmpa_dim{\\pgfpointanchor{orbital-result}{south~west}}\\pgfextractx\\l_tmpb_dim{\\pgfpointanchor{orbital-result}{north~east}}\\semio_viz_probe_values:nx{orbital/bounds}{\\fp_eval:n{\\dim_to_fp:n{\\l_tmpa_dim}/\\dim_to_fp:n{1mm}},\\fp_eval:n{\\dim_to_fp:n{\\l_tmpb_dim}/\\dim_to_fp:n{1mm}}}\\ExplSyntaxOff\\end{VizFigure}" }));
     const preamble = ["\\title{Orbital Containment}", "\\author{Semio}", "\\date{}", "\\makeatletter\\newcommand\\OrbitalMeasure{\\pgf@relevantforpicturesizetrue}\\makeatother", "\\ExplSyntaxOn\\cs_new_eq:NN\\semio_orbital_original_electrons:\\semio_viz_chem_electrons:\\cs_set_protected:Npn\\semio_viz_chem_electrons:{\\semio_viz_probe_values:nx{orbital/center}{\\fp_to_decimal:N\\l_semio_viz_sci_a_fp,\\semio_viz_sci_my:n{\\semio_viz_chem_field:n{2}}}\\semio_orbital_original_electrons:}\\ExplSyntaxOff"];
-    const records = await compileVizProbeDocument({ case: "orbital-containment", scenario: "columns", documentClass: "semio", documentClassOptions: "type=paper,language=en,theme=" + theme, packages: ["semio-viz"], geometry: true, preamble, body }, { workDir: root, scenario: undefined, keepWorkDir: true });
-    const out = join(root, "🧪️probe-out"), name = readdirSync(out).find(name => name.endsWith(".pdf"));
+    await withCompiledVizProbeDocumentV1({ case: "orbital-containment", scenario: "columns", documentClass: "semio", documentClassOptions: "type=paper,language=en,theme=" + theme, packages: ["semio-viz"], geometry: true, preamble, body },{execution,scenario: undefined},async({records:records,probe})=>{
+    const out = join(root, "🧪️probe-out"), name = basename(probe.pdfPath);
     if (!name) throw Error("orbital containment published no PDF");
-    const pdf = await getDocument({ data: new Uint8Array(readFileSync(join(out, name))), useSystemFonts: true }).promise, texts: string[] = [];
-    for (let page = 1; page <= pdf.numPages; page++) texts.push((await (await pdf.getPage(page)).getTextContent()).items.flatMap(item => "str" in item ? [item.str] : []).join(" "));
-    const pages = pdf.numPages;
-    await pdf.destroy();
+    const pdf = await probe.inspect(), texts: string[] = [];
+    for (let page = 1; page <= pdf.pages.length; page++) texts.push((await (printPdfPageV1(pdf,page))).items.flatMap(item => "str" in item ? [item.str] : []).join(" "));
+    const pages = pdf.pages.length;
+    
     for (const entry of chemistry.cases) {
       const centers = records.filter(record => record.scenario === entry.id && record.key === "orbital/center"), x = scaleLinear(entry.domain, [chemistry.rungHalfWidth, entry.width - chemistry.rungHalfWidth]), y = scaleLinear(entry.range, [0, entry.height]);
       if (centers.length !== entry.levels.length) failures.push(entry.id + ": orbital center inventory differs");
@@ -424,8 +424,8 @@ export async function compileNativeOrbitalContainment(workDir: string): Promise<
     }
     if (failures.length) throw Error(theme + ":\n" + failures.join("\n"));
     console.log("[native-orbital] " + theme + ": " + chemistry.cases.length + " cases, 7 actual D3 column centers, mathematical glyphs and horizontal bounds, " + pages + " PDF.js pages PASS");
-  }
-}
+  });}
+});}
 
 /** 🧷️ Checks every closed syntax descriptor against owned validation and independent AJV. */
 function verifyCanonicalOptionSyntaxContract():void{
@@ -440,7 +440,7 @@ function verifyCanonicalOptionSyntaxContract():void{
 }
 
 /** 🪄️ Compiles actual canonical mutation output and compares its numerical paths with independent D3. */
-async function compileNativeCanonicalOptions(workDir:string):Promise<void>{
+async function compileNativeCanonicalOptions(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/canonical-options",async({directory:workDir,execution})=>{
  verifyCanonicalOptionSyntaxContract();
  for(const entry of optionFixture.optionSyntax.rejections){let snapshot=structuredClone(entry.snapshot) as unknown as VizChartSnapshot;for(const mutation of entry.mutations){const outcome=changeVizChartValue(snapshot,mutation);if(outcome.messages.length)throw Error(JSON.stringify(outcome.messages));const result=applyVizChartDiff(snapshot,outcome.diff);if(result.messages.length)throw Error(JSON.stringify(result.messages));snapshot=result.snapshot;}const inferred=await inferVizChart(snapshot);if(inferred.complete||!inferred.diagnostics.length)throw Error(`Invalid source syntax accepted ${entry.id}`);}
  const implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript",sources:string[]=[];
@@ -454,7 +454,7 @@ async function compileNativeCanonicalOptions(workDir:string):Promise<void>{
  let projections=0,pages=0;const failures:string[]=[];
  for(const theme of ["light","dark"]){
   const root=join(workDir,implementation,theme),body=optionFixture.optionSyntax.cases.filter(entry=>!entry.reference.pdfStroke).map(entry=>{const index=optionFixture.optionSyntax.cases.indexOf(entry),reference=entry.reference,probes=reference.inputs?.map((_,row)=>`\\CanonicalTypedCellProbe{${reference.table}}{${row+1}}{${reference.column}}{${row}}${reference.scales!.map(scale=>`\\CanonicalTypedScaleProbe{${scale.name}}{${row}}`).join("")}`).join("\n")??"";return{raw:`\\clearpage\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]!.replace("\\end{VizFigure}",probes+"\n\\end{VizFigure}")}`};});
-  const records=await compileVizProbeDocument({case:"canonical-options",scenario:"mutations",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Options}","\\author{Semio}","\\date{}","\\ExplSyntaxOn\\NewDocumentCommand\\CanonicalTypedCellProbe{mmmm}{\\semio_viz_table_cell:nnnN{#1}{#2}{#3}\\l_tmpa_tl\\exp_args:NnV\\semio_viz_probe_string:nn{typed/#4}\\l_tmpa_tl}\\NewDocumentCommand\\CanonicalTypedScaleProbe{mm}{\\semio_viz_scale_value:nVN{#1}\\l_tmpa_tl\\l_tmpb_tl\\semio_viz_probe_values:nV{typed/#1/#2}\\l_tmpb_tl}\\ExplSyntaxOff"],body},{workDir:root,scenario:undefined,keepWorkDir:true});
+  await withCompiledVizProbeDocumentV1({case:"canonical-options",scenario:"mutations",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Options}","\\author{Semio}","\\date{}","\\ExplSyntaxOn\\NewDocumentCommand\\CanonicalTypedCellProbe{mmmm}{\\semio_viz_table_cell:nnnN{#1}{#2}{#3}\\l_tmpa_tl\\exp_args:NnV\\semio_viz_probe_string:nn{typed/#4}\\l_tmpa_tl}\\NewDocumentCommand\\CanonicalTypedScaleProbe{mm}{\\semio_viz_scale_value:nVN{#1}\\l_tmpa_tl\\l_tmpb_tl\\semio_viz_probe_values:nV{typed/#1/#2}\\l_tmpb_tl}\\ExplSyntaxOff"],body},{execution,scenario:undefined},async({records:records,probe})=>{const probeExecution11=Object.freeze({operation:execution.operation,phaseControl:probe.control});
   for(const entry of optionFixture.optionSyntax.cases){
    const reference=entry.reference;if(reference.pdfStroke)continue;const actual=records.filter(record=>record.scenario===entry.id&&record.key===reference.key),x=scaleLinear(reference.domain,[0,reference.canvas[0]!]),y=scaleLinear(reference.range,[0,reference.canvas[1]!]);
    if(!reference.pdfStroke&&!reference.columns&&!reference.centres&&actual.length!==reference.segments.length)failures.push(`${implementation}/${theme}/${entry.id}: path count ${actual.length}`);
@@ -463,16 +463,16 @@ async function compileNativeCanonicalOptions(workDir:string):Promise<void>{
    if(reference.centres){const sx=reference.area?scaleLinear(reference.domain,[reference.pad!,reference.canvas[0]!-reference.pad!]):scaleLinear([0,1],[0,reference.unit!]),sy=reference.area?scaleLinear(reference.range,[reference.pad!,reference.canvas[1]!-reference.pad!]):scaleLinear([0,1],[0,reference.unit!]),expected=reference.centres.map(point=>[sx(point[0]!),sy(point[1]!)]);if(actual.length!==expected.length||expected.some((point,index)=>point.some((value,axis)=>Math.abs(Number(actual[index]?.values[axis])-value)>1e-5)))failures.push(`${implementation}/${theme}/${entry.id}: independent D3 centres differ`);projections+=expected.length*2;}
    for(const[index,segment]of reference.segments.entries()){const sample=scaleLinear([0,reference.samples],segment),expected=Array.from({length:reference.samples+1},(_,position)=>{const value=sample(position),expression=reference.expressions[index];return[x(value),y(expression==="zero"?0:expression==="negative"?-value:expression==="square-third"?value*value/3:value*value)];}).flat(),values=actual[index]?.values;if(values?.length!==expected.length||expected.some((value,index)=>!Number.isFinite(Number(values?.[index]))||Math.abs(Number(values?.[index])-value)>1e-5))failures.push(`${implementation}/${theme}/${entry.id}/${index}: independent D3 path differs`);projections+=expected.length;}
   }
-  const out=join(root,"🧪️probe-out"),pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,readdirSync(out).find(name=>name.endsWith(".pdf"))!)))}).promise;
-  const texts:string[]=[],paints=new Set<string>(),widths:number[]=[];try{for(let index=1;index<=pdf.numPages;index++){const text=(await(await pdf.getPage(index)).getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");const operators=await(await pdf.getPage(index)).getOperatorList();for(const[position,operation]of operators.fnArray.entries()){if(operation===OPS.setFillRGBColor)paints.add(String(operators.argsArray[position]?.[0]).toLowerCase());if(operation===OPS.setLineWidth)widths.push(Number(operators.argsArray[position]?.[0]));}texts.push(text);if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/page${index}: invalid glyph`);pages++;}}finally{await pdf.destroy();}
+  const out=join(root,"🧪️probe-out"),pdf=await probe.inspect();
+  const texts:string[]=[],paints=new Set<string>(),widths:number[]=[];{for(let index=1;index<=pdf.pages.length;index++){const text=(await(printPdfPageV1(pdf,index))).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");const operators=await(printPdfPageV1(pdf,index)).operators;for(const[position,operation]of operators.fnArray.entries()){if(operation===OPS.setFillRGBColor)paints.add(String(operators.argsArray[position]?.[0]).toLowerCase());if(operation===OPS.setLineWidth)widths.push(Number(operators.argsArray[position]?.[0]));}texts.push(text);if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/page${index}: invalid glyph`);pages++;}}
   for(const entry of optionFixture.optionSyntax.cases)for(const expected of entry.reference.text??[])if(!texts.join(" ").includes(expected))failures.push(`${implementation}/${theme}/${entry.id}: literal PDF text ${expected} missing`);
   for(const entry of optionFixture.optionSyntax.cases){const reference=entry.reference;if(reference.paint&&!paints.has(d3Rgb(reference.paint).formatHex()))failures.push(`${implementation}/${theme}/${entry.id}: actual PDF paint missing`);if(reference.strokeWidth&&!widths.some(value=>Math.abs(value-reference.strokeWidth!*72/25.4)<1e-3))failures.push(`${implementation}/${theme}/${entry.id}: actual PDF stroke width missing`);}
   for(const[index,entry]of optionFixture.optionSyntax.cases.entries()){
    const reference=entry.reference.pdfStroke;if(!reference)continue;
    const isolated=join(root,entry.id);
-   await compileVizProbeDocument({case:"canonical-options",scenario:entry.id,documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Paint Bindings}","\\author{Semio}","\\date{}"],body:[{raw:`\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]}\\SemioVizProbeValues{canonical/paint-owner}{1}`} ]},{workDir:isolated,keepWorkDir:true});
-   const directory=join(isolated,"🧪️probe-out"),document=await getDocument({data:new Uint8Array(readFileSync(join(directory,readdirSync(directory).find(name=>name.endsWith(".pdf"))!)))}).promise;
-   const painted:CanonicalPaintShape[]=[];try{for(let page=1;page<=document.numPages;page++){const ownerPage=await document.getPage(page),text=(await ownerPage.getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/${entry.id}/page${page}: invalid glyph`);painted.push(...canonicalPaintShapes(await ownerPage.getOperatorList()));pages++;}}finally{await document.destroy();}
+   await withCompiledVizProbeDocumentV1({case:"canonical-options",scenario:entry.id,documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Paint Bindings}","\\author{Semio}","\\date{}"],body:[{raw:`\\SemioVizProbeBegin{canonical-options}{${entry.id}}${sources[index]}\\SemioVizProbeValues{canonical/paint-owner}{1}`} ]},{execution:probeExecution11,},async({records:records,probe})=>{
+   const directory=join(isolated,"🧪️probe-out"),document=await probe.inspect();
+   const painted:CanonicalPaintShape[]=[];{for(let page=1;page<=document.pages.length;page++){const ownerPage=printPdfPageV1(document,page),text=(await ownerPage).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${implementation}/${theme}/${entry.id}/page${page}: invalid glyph`);painted.push(...canonicalPaintShapes(await ownerPage.operators));pages++;}}
    if(reference.shape==="circles"){
     const radius=Number(symbol().type(symbolCircle).size(reference.area!).digits(12)()!.match(/^M([^,]+),/)?.[1]),sx=scaleLinear(reference.domain,[reference.pad!,entry.reference.canvas[0]!-reference.pad!]),sy=scaleLinear(reference.range,[reference.pad!,entry.reference.canvas[1]!-reference.pad!]),anchors:{actual:number[],expected:number[]}[]=[];
     for(const group of reference.groups!){const matches=painted.filter(shape=>shape.kind==="circle"&&shape.paint===d3Rgb(group.paint).formatHex()&&shape.fill===d3Rgb(group.fill).formatHex()).sort((left,right)=>left.centre[0]!-right.centre[0]!);if(matches.length!==group.points.length||matches.some(shape=>shape.delta.some(value=>Math.abs(value-2*radius)>=.002)))failures.push(`${implementation}/${theme}/${entry.id}: exact owned circle paints/count/D3 area differ (${JSON.stringify(matches)})`);for(const[index,point]of group.points.entries())if(matches[index])anchors.push({actual:matches[index]!.centre,expected:[sx(point[0]!),sy(point[1]!)]});projections+=group.points.length*2;}
@@ -481,25 +481,25 @@ async function compileNativeCanonicalOptions(workDir:string):Promise<void>{
     const sx=scaleLinear(reference.domain,[0,entry.reference.canvas[0]!]),sy=scaleLinear(reference.range,[0,entry.reference.canvas[1]!]),expected=[Math.abs(sx(reference.domain[1]!)-sx(reference.domain[0]!)),Math.abs(sy(reference.range[1]!)-sy(reference.range[0]!))],matches=painted.filter(shape=>shape.kind==="line"&&shape.paint===d3Rgb(reference.paint).formatHex());
     if(matches.length!==1||matches[0]!.delta.some((value,axis)=>Math.abs(value-expected[axis]!)>=.002))failures.push(`${implementation}/${theme}/${entry.id}: exact owned painted PDF segment differs from independent D3 (${JSON.stringify(matches)})`);projections+=2;
    }
-  }
+  });}
   console.log(`[DEBUG] Canonical options ${implementation}/${theme}: ${optionFixture.optionSyntax.cases.length} actual emitted cases consumed`);
- }
+ });}
  if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Canonical ${implementation} mutations/inference/native compiler: ${projections} independent D3 values and ${pages} PDF.js pages PASS`);
-}
+});}
 type CanonicalPaintShape={paint:string,fill:string,kind:"line"|"circle",delta:number[],centre:number[]};
 /** 🔭️ Resolves actual painted PDF spans through the independent graphics-state interpreter. */
-function canonicalPaintShapes(operators:Awaited<ReturnType<PDFPageProxy["getOperatorList"]>>):CanonicalPaintShape[]{
+function canonicalPaintShapes(operators:PrintPdfPageV1["operators"]):CanonicalPaintShape[]{
  const results:CanonicalPaintShape[]=[],stack:{matrix:number[],paint:string,fill:string}[]=[];let matrix=[1,0,0,1,0,0],paint="",fill="";
  for(const[index,operation]of operators.fnArray.entries()){
-  const args=operators.argsArray[index];
-  if(operation===OPS.save||operation===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],paint,fill});if(operation===OPS.paintFormXObjectBegin&&args[0])matrix=Util.transform(matrix,args[0]);}
+  const args=printPdfArrayV1(operators.argsArray[index]);
+  if(operation===OPS.save||operation===OPS.paintFormXObjectBegin){stack.push({matrix:[...matrix],paint,fill});if(operation===OPS.paintFormXObjectBegin&&args[0])matrix=printPdfTransformV1(matrix,printPdfVectorV1(args[0],6));}
   else if(operation===OPS.restore||operation===OPS.paintFormXObjectEnd){const previous=stack.pop();if(!previous)throw Error("Canonical PDF graphics state underflow");matrix=previous.matrix;paint=previous.paint;fill=previous.fill;}
-  else if(operation===OPS.transform)matrix=Util.transform(matrix,args);
+  else if(operation===OPS.transform)matrix=printPdfTransformV1(matrix,printPdfVectorV1(args,6));
   else if(operation===OPS.setStrokeRGBColor)paint=String(args[0]).toLowerCase();
   else if(operation===OPS.setFillRGBColor)fill=String(args[0]).toLowerCase();
-  else if(operation===OPS.constructPath&&[OPS.stroke,OPS.fillStroke,OPS.eoFillStroke].includes(args[0])){
-   const values=Array.from(args[1]?.[0]??[],Number),points:number[][]=[];let cursor=0,lines=0,curves=0;
-   while(cursor<values.length){const command=values[cursor++]!;if(command===4)continue;if(command===2){cursor+=4;curves++;}else if(command===1)lines++;else if(command!==0){points.length=0;break;}const point=[values[cursor++]!,values[cursor++]!];Util.applyTransform(point,matrix);points.push(point);}
+  else if(operation===OPS.constructPath&&[OPS.stroke,OPS.fillStroke,OPS.eoFillStroke].includes(printPdfNameV1(args[0]))){
+   const values=printPdfVectorV1(printPdfArrayV1(args[1])[0]),points:number[][]=[];let cursor=0,lines=0,curves=0;
+   while(cursor<values.length){const command=values[cursor++]!;if(command===4)continue;if(command===2){cursor+=4;curves++;}else if(command===1)lines++;else if(command!==0){points.length=0;break;}const point=[values[cursor++]!,values[cursor++]!];printPdfApplyV1(point,matrix);points.push(point);}
    const kind=points.length===2&&curves===0&&lines===1?"line":curves===4&&lines===0?"circle":undefined;
    if(kind){const bounds=[0,1].map(axis=>[Math.min(...points.map(point=>point[axis]!))*25.4/72,Math.max(...points.map(point=>point[axis]!))*25.4/72]);results.push({paint,fill,kind,delta:bounds.map(bound=>bound[1]!-bound[0]!),centre:bounds.map(bound=>(bound[1]!+bound[0]!)/2)});}
   }
@@ -507,7 +507,7 @@ function canonicalPaintShapes(operators:Awaited<ReturnType<PDFPageProxy["getOper
  if(stack.length)throw Error("Canonical PDF graphics state imbalance");return results;
 }
 /** 🛂️ Adjudicates declared option values through canonical replay, independent AJV and actual native grammar. */
-async function compileNativeCanonicalAdmission(workDir:string):Promise<void>{
+async function compileNativeCanonicalAdmission(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/canonical-admission",async({directory:workDir,execution})=>{
  const metadata=schemaDocument as unknown as {"x-semio-family-options":Record<string,{options:Record<string,Record<string,unknown>>}>,"x-semio-option-syntax":Record<string,Record<string,Record<string,unknown>>>},ajv=new Ajv2020({strict:false,allErrors:true}),failures:string[]=[],sources=new Map<string,string>(),implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript";
  for(const entry of optionFixture.optionSyntax.admission){
   const descriptor=entry.family?metadata["x-semio-family-options"][entry.owner]?.options[entry.key]:metadata["x-semio-option-syntax"][entry.owner]?.[entry.key];if(!descriptor)throw Error(`Missing admission owner ${entry.owner}/${entry.key}`);
@@ -523,9 +523,9 @@ async function compileNativeCanonicalAdmission(workDir:string):Promise<void>{
  console.log(`[DEBUG] Typed canonical admission: ${optionFixture.optionSyntax.admission.length} neutral en/de mutation/replay/inference cases compared with independent AJV PASS`);
  let pages=0,projections=0;
  for(const theme of ["light","dark"]){const root=join(workDir,implementation,theme),body=[...sources].map(([id,source])=>({raw:`\\clearpage\\SemioVizProbeBegin{canonical-admission}{${id}}${source}\\SemioVizProbeValues{admission/compiled}{1}`}));
- const records=await compileVizProbeDocument({case:"canonical-admission",scenario:"values",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Option Admission}","\\author{Semio}","\\date{}"],body},{workDir:root,scenario:undefined,keepWorkDir:true});
+ await withCompiledVizProbeDocumentV1({case:"canonical-admission",scenario:"values",documentClass:"semio",documentClassOptions:`type=paper,language=en,theme=${theme}`,packages:["semio-viz"],geometry:true,preamble:["\\title{Canonical Option Admission}","\\author{Semio}","\\date{}"],body},{execution,scenario:undefined},async({records:records,probe})=>{
  for(const entry of optionFixture.optionSyntax.admission.filter(entry=>entry.valid)){if(!records.some(record=>record.scenario===entry.id&&record.key==="admission/compiled"&&Number(record.values[0])===1))failures.push(`${theme}/${entry.id}: compiler owner marker absent`);if(entry.owner==="sci-function"&&entry.key==="samples"){const actual=records.find(record=>record.scenario===entry.id&&record.key==="geometry/path")?.values,x=scaleLinear([-2,2],[0,60]),y=scaleLinear([0,4],[0,40]),domain=scaleLinear([0,4],[-2,2]),expected=Array.from({length:5},(_,index)=>[x(domain(index)),y(0)]).flat();if(actual?.length!==expected.length||expected.some((value,index)=>Math.abs(Number(actual?.[index])-value)>1e-5))failures.push(`${theme}/${entry.id}: declared samples and D3 path differ`);projections+=expected.length;}}
- const out=join(root,"🧪️probe-out"),pdf=await getDocument({data:new Uint8Array(readFileSync(join(out,readdirSync(out).find(name=>name.endsWith(".pdf"))!)))}).promise;try{for(let page=1;page<=pdf.numPages;page++){const text=(await(await pdf.getPage(page)).getTextContent()).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${theme}/page${page}: invalid glyph`);pages++;}}finally{await pdf.destroy();}
- }
+ const out=join(root,"🧪️probe-out"),pdf=await probe.inspect();{for(let page=1;page<=pdf.pages.length;page++){const text=(await(printPdfPageV1(pdf,page))).items.flatMap(item=>"str"in item?[item.str]:[]).join(" ");if(/[\uFFFD\uFFFF]/u.test(text))failures.push(`${theme}/page${page}: invalid glyph`);pages++;}}
+ });}
  if(failures.length)throw Error(failures.join("\n"));console.log(`[DEBUG] Typed canonical ${implementation}: ${sources.size} actual valid emitted controls, ${projections} independent D3 path values, ${pages} PDF.js pages PASS`);
-}
+});}

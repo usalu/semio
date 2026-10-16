@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase",
+    "parent"
+  ],
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "cache",
+        "nested",
+        "uncached",
+        "birth",
+        "services",
+        "refusals",
+        "cancellation",
+        "configuration",
+        "offline"
+      ]
+    },
+    "parent": {
+      "enum": [
+        "bazel",
+        "defaultnx"
+      ]
+    }
+  }
+}

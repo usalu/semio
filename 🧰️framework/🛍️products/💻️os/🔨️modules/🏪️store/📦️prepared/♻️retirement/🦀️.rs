@@ -1,10 +1,16 @@
 //! 📦️ Original unpublished candidates retire their real edit, root, seal and metadata through captured issuers.
-use super::one_item_publication::ArtifactStoreOneItemPreparedParts;
-use super::*;
+use crate::ArtifactStoreOneItemPreparedParts;
+use std::sync::Arc;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
+use semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement;
+use crate::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared};
+use semio_framework_os_spr::{Edit, HybridLogicalTimestamp};
+use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
+use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use semio_framework_value::{FactoryAuthority,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneBirthDemand}};
 use std::mem::ManuallyDrop;
 /// 🧳️ An owning cancellation cursor retains every original prepared allocation and declared issuer.
-pub struct ArtifactStorePreparedRetirement<P,M>{pub(super) fold_digest:[u8;32],pub(super) fold_clock:HybridLogicalTimestamp,pub(super) foreign_step_presence:Option<bool>,pub(super) edit:ManuallyDrop<Option<Box<Edit<M>>>>,unboxed:ManuallyDrop<Option<Edit<M>>>,pub(super) post:ManuallyDrop<Option<Arc<P>>>,authority:ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,pub(super) strings:ManuallyDrop<[Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>;3]>,mutation_factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,snapshot_factory:ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,factories:ManuallyDrop<[Option<FactoryAuthority>;2]>}
+pub struct ArtifactStorePreparedRetirement<P,M>{pub fold_digest:[u8;32],pub fold_clock:HybridLogicalTimestamp,pub foreign_step_presence:Option<bool>,pub edit:ManuallyDrop<Option<Box<Edit<M>>>>,unboxed:ManuallyDrop<Option<Edit<M>>>,pub post:ManuallyDrop<Option<Arc<P>>>,pub authority:ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,pub strings:ManuallyDrop<[Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>;3]>,pub mutation_factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,pub snapshot_factory:ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,pub active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub factories:ManuallyDrop<[Option<FactoryAuthority>;2]>}
 impl<P,M> ArtifactStoreOneItemPrepared<P,M>{
  /// 📏️ The exact cursor frame is priced before any original owner moves.
  pub fn retirement_birth_demand()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:size_of::<ArtifactStorePreparedRetirement<P,M>>(),depth:1}}
@@ -12,12 +18,12 @@ impl<P,M> ArtifactStoreOneItemPrepared<P,M>{
 impl<P:Send+Sync+'static,M:Send+'static> ArtifactStoreOneItemPrepared<P,M>{
  /// 🎟️ Refusal returns the actual candidate and both already captured issuers unchanged.
  pub fn admit_retirement(self,mutation_factory:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,snapshot_factory:Arc<dyn SnapshotRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<P>>)>{self.admit_fold_retirement(mutation_factory,snapshot_factory,grant).map(|(owner,receipt)|(owner as Box<dyn ErasedSnapshotRetirement>,receipt))}
-  pub(super) fn admit_fold_retirement(self,mutation_factory:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,snapshot_factory:Arc<dyn SnapshotRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<(Box<ArtifactStorePreparedRetirement<P,M>>,RetainedCloneProgress),(ValueError,Self,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<P>>)>{
+  pub fn admit_fold_retirement(self,mutation_factory:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,snapshot_factory:Arc<dyn SnapshotRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<(Box<ArtifactStorePreparedRetirement<P,M>>,RetainedCloneProgress),(ValueError,Self,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<P>>)>{
   let receipt=match Self::retirement_birth_demand().admit(grant){Ok(receipt)=>receipt,Err(error)=>return Err((error,self,mutation_factory,snapshot_factory))};let ArtifactStoreOneItemPreparedParts{edit,post_snapshot,local_actor,applied_edit_id,tail_edit_id,authority,edit_digest,next_clock,foreign_step_presence}=self.into_parts();let owner=ArtifactStorePreparedRetirement{fold_digest:edit_digest,fold_clock:next_clock,foreign_step_presence,edit:ManuallyDrop::new(Some(edit)),unboxed:ManuallyDrop::new(None),post:ManuallyDrop::new(Some(post_snapshot)),authority:ManuallyDrop::new(Some(authority)),strings:ManuallyDrop::new([local_actor,Some(applied_edit_id),Some(tail_edit_id)]),mutation_factory:ManuallyDrop::new(Some(mutation_factory)),snapshot_factory:ManuallyDrop::new(Some(snapshot_factory)),active:ManuallyDrop::new(None),factories:ManuallyDrop::new(Default::default())};Ok((Box::new(owner),receipt))
  }
 }
 impl<P,M> ArtifactStorePreparedRetirement<P,M>{
- fn empty(&self)->bool{self.edit.is_none()&&self.unboxed.is_none()&&self.post.is_none()&&self.authority.is_none()&&self.strings.iter().all(Option::is_none)&&self.mutation_factory.is_none()&&self.snapshot_factory.is_none()&&self.active.is_none()&&self.factories.iter().all(Option::is_none)}
+ pub fn empty(&self)->bool{self.edit.is_none()&&self.unboxed.is_none()&&self.post.is_none()&&self.authority.is_none()&&self.strings.iter().all(Option::is_none)&&self.mutation_factory.is_none()&&self.snapshot_factory.is_none()&&self.active.is_none()&&self.factories.iter().all(Option::is_none)}
 }
 impl<P:Send+Sync+'static,M:Send+'static> ArtifactStorePreparedRetirement<P,M>{
  /// 📐️ Every physical child extent is admitted independently from logical copy work.
@@ -53,6 +59,4 @@ impl<P:Send+Sync+'static,M:Send+'static> ErasedSnapshotRetirement for ArtifactSt
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
 impl<P,M> Drop for ArtifactStorePreparedRetirement<P,M>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"prepared retirement retains original owners until funded terminal closure");if self.empty(){unsafe{ManuallyDrop::drop(&mut self.edit);ManuallyDrop::drop(&mut self.unboxed);ManuallyDrop::drop(&mut self.post);ManuallyDrop::drop(&mut self.authority);ManuallyDrop::drop(&mut self.strings);ManuallyDrop::drop(&mut self.mutation_factory);ManuallyDrop::drop(&mut self.snapshot_factory);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.factories);}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

@@ -1,6 +1,12 @@
-use super::*;
-use super::super::tests::DemoSnapshot;
-use super::super::fixture_mutations::demo::{DemoMutation, SetN};
+use std::sync::Arc;
+use semio_framework_os_spr::command::ArtifactReplayPrepared;
+use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
+use semio_framework_value::{ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_os_spr::MutationId;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_os_vcs::VcsError;
+use super::tests::DemoSnapshot;
+use super::fixture_mutations::demo::{DemoMutation, SetN};
 
 type Raw = EditReplay<DemoSnapshot, DemoMutation>;
 
@@ -17,7 +23,7 @@ fn original() -> Raw {
     owner.original.drafts.insert(MutationId("original-draft".into()), protocol::InputReplacement::Input { schema: String::with_capacity(65536), payload: Vec::with_capacity(65536) });
     let mut target = Vec::with_capacity(8192);
     target.push(String::with_capacity(65536));
-    owner.original.edit_messages.rows_mut().try_push(crate::os_spr::MutationMessage { level: semio_framework_diagnostic::Severity::Warning, code: "original-row".into(), message: String::with_capacity(65536), target, op_index: Some(0) }).unwrap();
+    owner.original.edit_messages.rows_mut().try_push(semio_framework_os_spr::MutationMessage { level: semio_framework_diagnostic::Severity::Warning, code: "original-row".into(), message: String::with_capacity(65536), target, op_index: Some(0) }).unwrap();
     owner.with_retirement_factories(Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<DemoMutation>::default()))
 }
 
@@ -121,8 +127,8 @@ fn raw_replay_custody_cancelled_ready_replay_refuses_finish_without_original_tra
 fn raw_replay_custody_prepared_owners_keep_independent_refusals_and_unused_capacities(){
  for refusal in [false,true]{
   let mut owner=original();let inverse=if refusal{Err(ValueError::new(ValueRefusalKind::InvalidValue,String::with_capacity(65536)))}else{let mut inverse=semio_framework_value::list::PagedList::default();inverse.try_push(DemoMutation::SetN(SetN{n:9})).unwrap();Ok(inverse)};
-  let mut messages=Vec::with_capacity(8192);let mut target=Vec::with_capacity(8192);target.push(String::with_capacity(65536));messages.push(crate::os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:String::with_capacity(65536).into(),message:String::with_capacity(65536),target,op_index:Some(0)});
-  let mut target=Vec::with_capacity(8192);target.push(String::with_capacity(65536));let apply_refusal=Some(crate::os_spr::MutationApplyError{code:String::with_capacity(65536),message:String::with_capacity(65536),target});
+  let mut messages=Vec::with_capacity(8192);let mut target=Vec::with_capacity(8192);target.push(String::with_capacity(65536));messages.push(semio_framework_os_spr::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:String::with_capacity(65536).into(),message:String::with_capacity(65536),target,op_index:Some(0)});
+  let mut target=Vec::with_capacity(8192);target.push(String::with_capacity(65536));let apply_refusal=Some(semio_framework_os_spr::MutationApplyError{code:String::with_capacity(65536),message:String::with_capacity(65536),target});
   owner.original.prepared_operation=Some(ArtifactReplayPrepared{next:Some(Arc::new(DemoSnapshot{n:Some(9)})),inverse,messages,apply_refusal,input_refusal:Some(String::with_capacity(65536)),foreign_steps:true});let prepared=owner.original.prepared_operation.as_ref().unwrap();let pointer=Arc::as_ptr(prepared.next.as_ref().unwrap());let rows=prepared.messages.as_ptr();let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.cancel());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(owner.original.prepared_operation.as_ref().unwrap().next.as_ref().unwrap()),pointer);assert_eq!(owner.original.prepared_operation.as_ref().unwrap().messages.as_ptr(),rows);
   let turns=close(&mut owner);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Raw prepared original snapshot/inverse/refusal/messages/apply/input backing retained inverseRefused={refusal}; exact {turns} granted turns and terminalDrop=0");
  }

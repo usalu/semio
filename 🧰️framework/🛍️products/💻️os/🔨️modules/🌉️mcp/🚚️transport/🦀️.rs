@@ -12,392 +12,57 @@
 //! owner through `HttpTransport::start` into `HttpTransportRun`; the process entry may synchronously
 //! wait on that opaque completion, but no transport or pool turn constructs/drives a second runtime.
 
-use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::protocol::{extract_meta_protocol_version, ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpServer, PARSE_ERROR, SUPPORTED_PROTOCOL_VERSIONS, UNSUPPORTED_PROTOCOL_VERSION};
+#[cfg(test)]
+use axum::Router;
 #[cfg(test)]
 use axum::body::Body;
 #[cfg(test)]
 use axum::extract::State;
 #[cfg(test)]
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::HeaderMap;
 #[cfg(test)]
-use axum::response::{IntoResponse, Response};
+use axum::http::StatusCode;
+#[cfg(test)]
+use axum::response::IntoResponse;
+#[cfg(test)]
+use axum::response::Response;
 #[cfg(test)]
 use axum::routing::post;
-#[cfg(test)]
-use axum::Router;
-use std::collections::VecDeque;
-use std::io::{BufRead, Read, Write};
-use std::net::{IpAddr, Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Condvar, Mutex, OnceLock, Weak};
-
-use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
+use semio_framework_async::Job;
+use semio_framework_async::Lane;
+use semio_framework_async::ProcessKind;
+use semio_framework_async::WorkerPool;
+use semio_framework_async::WorkerPoolConfig;
+use semio_framework_async::WorkerSubmitErrorKind;
 use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
-
-//#region 🔖️McpTransport
-/// 🔌️ Drives one [`McpServer`] to completion over the synchronous stdio channel. The retained HTTP
-/// owner has an explicit start/wait/control lifecycle because its pool turns must never block.
-pub trait McpTransport {
-    fn serve(&mut self, server: McpServer) -> Result<(), GatewayError>;
-}
-//#endregion 🔖️McpTransport
-
-//#region 🔖️StdioTransport
-fn io_error(error: std::io::Error) -> GatewayError {
-    GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))
-}
-
-/// 📻️ The one duplex line channel a stdio connection owns. Both the serve loop AND a server-initiated
-/// request made from INSIDE a tool call (`elicitation/create`) read and write through this single
-/// owner, so exactly one component ever touches the real descriptors. A line the elicitation wait
-/// reads that is not its own response is pushed onto `deferred`, and the serve loop drains that queue
-/// before touching the stream again — the client's own ordering is preserved and nothing is dropped.
-///
-/// ⏱️ The client stream is drained by ONE owned reader thread into a channel rather than read
-/// in place. That is what makes a wait on it deadline-bounded: `BufRead::read_line` blocks with no
-/// timeout of any kind, so an elicitation waiting directly on the descriptor could never give up on
-/// a client that goes silent (`📓️m4-mcp-bridge-approval-binding.md` §5.3). Every read still yields
-/// lines in exact arrival order, and the thread ends on EOF, on an io error, or when the last
-/// `StdioLines` is dropped. The one exception is `notifications/cancelled`, which this thread applies
-/// immediately ([`crate::protocol::intercept_cancellation`]) so it interrupts the call still running.
-pub struct StdioLines {
-    output: Mutex<Box<dyn Write + Send>>,
-    inbound: Mutex<std::sync::mpsc::Receiver<Result<String, String>>>,
-    deferred: Mutex<VecDeque<String>>,
-}
-
-/// 📥️ What one bounded read of the client stream produced.
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum StdioRead {
-    Line(String),
-    Eof,
-    TimedOut,
-}
-
-impl StdioLines {
-    pub(crate) fn new(input: Box<dyn BufRead + Send>, output: Box<dyn Write + Send>) -> Self {
-        let (sender, receiver) = std::sync::mpsc::channel();
-        let _ = std::thread::Builder::new().name("semio-mcp-stdio-reader".to_string()).spawn(move || {
-            let mut input = input;
-            loop {
-                let mut line = String::new();
-                match input.read_line(&mut line) {
-                    Ok(0) => return,
-                    Ok(_) => {
-                        if crate::protocol::intercept_cancellation(&line) {
-                            continue;
-                        }
-                        if sender.send(Ok(line)).is_err() {
-                            return;
-                        }
-                    }
-                    Err(error) => {
-                        let _ = sender.send(Err(error.to_string()));
-                        return;
-                    }
-                }
-            }
-        });
-        Self { output: Mutex::new(output), inbound: Mutex::new(receiver), deferred: Mutex::new(VecDeque::new()) }
-    }
-
-    pub(crate) fn write_line(&self, line: &str) -> Result<(), GatewayError> {
-        let mut output = self.output.lock().expect("stdio line channel poisoned");
-        writeln!(output, "{line}").map_err(io_error)?;
-        output.flush().map_err(io_error)
-    }
-
-    /// 📥️ The next client line — a deferred one first, then a fresh one off the reader. `None` is EOF.
-    pub(crate) fn read_line(&self) -> Result<Option<String>, GatewayError> {
-        if let Some(line) = self.deferred.lock().expect("stdio deferred queue poisoned").pop_front() {
-            return Ok(Some(line));
-        }
-        match self.inbound.lock().expect("stdio inbound channel poisoned").recv() {
-            Ok(Ok(line)) => Ok(Some(line)),
-            Ok(Err(error)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))),
-            Err(_) => Ok(None),
-        }
-    }
-
-    /// 📥️ The next line straight off the client stream within `budget`, IGNORING the deferred queue —
-    /// what an in-flight `elicitation/create` waits on. It must never re-read a line it just deferred
-    /// (the answer it is waiting for has not been written by the client yet, so anything already
-    /// queued is by construction not it), and the serve loop drains that queue afterwards in arrival
-    /// order. A `budget` that elapses answers [`StdioRead::TimedOut`] and consumes nothing.
-    pub(crate) fn read_line_direct_within(&self, budget: std::time::Duration) -> Result<StdioRead, GatewayError> {
-        match self.inbound.lock().expect("stdio inbound channel poisoned").recv_timeout(budget) {
-            Ok(Ok(line)) => Ok(StdioRead::Line(line)),
-            Ok(Err(error)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))),
-            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Ok(StdioRead::TimedOut),
-            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => Ok(StdioRead::Eof),
-        }
-    }
-
-    pub(crate) fn defer(&self, line: String) {
-        self.deferred.lock().expect("stdio deferred queue poisoned").push_back(line);
-    }
-}
-
-/// 📻️ Newline-delimited JSON-RPC over `input`/`output`, with a THIRD writer (`log`) for every
-/// diagnostic line — generic over the log writer so tests exercise the exact same code path a real
-/// `stdin`/`stdout`/`stderr` wiring uses, in-memory, without touching the process's real file
-/// descriptors. `input`/`output` are owned by the shared [`StdioLines`] channel instead, because a
-/// server-initiated `elicitation/create` issued from inside a tool call must reach the very same
-/// descriptors while the serve loop is suspended in `dispatch`.
-pub struct StdioTransport<L: Write> {
-    lines: Arc<StdioLines>,
-    log: L,
-    elicitation: Option<ElicitationSlot>,
-}
-
-/// 📤️ The stdio connection's server→client notification lane — the SAME [`StdioLines`] owner the
-/// serve loop and an in-flight `elicitation/create` write through, so a `notifications/progress`
-/// emitted from inside a tool call reaches the client's stdin mid-call rather than after it
-/// (`📓️m4-mcp-bridge-approval-binding.md` §5.3 built that single-owner channel; this rides it).
-struct StdioNotificationSink {
-    lines: Arc<StdioLines>,
-}
-
-impl crate::notify::NotificationSink for StdioNotificationSink {
-    fn publish(&self, notification: JsonRpcNotification) {
-        if let Ok(line) = serde_json::to_string(&notification) {
-            let _ = self.lines.write_line(&line);
-        }
-    }
-}
-
-impl<L: Write> StdioTransport<L> {
-    pub fn new(input: impl BufRead + Send + 'static, output: impl Write + Send + 'static, log: L) -> Self {
-        Self { lines: Arc::new(StdioLines::new(Box::new(input), Box::new(output))), log, elicitation: None }
-    }
-
-    /// 📤️ Fills `slot` with this connection's notification sink, so an [`McpServer`] built with
-    /// `publishing_notifications_into(slot)` pushes `resources/updated`, `resources/list_changed`
-    /// and `progress` down the very descriptors this transport owns.
-    #[must_use]
-    pub fn publishing_notifications_into(self, slot: crate::notify::NotificationSlot) -> Self {
-        let _ = slot.set(Arc::new(StdioNotificationSink { lines: self.lines.clone() }));
-        self
-    }
-
-    /// 🙋 Publishes this connection's server→client request channel into `slot`, so the approval
-    /// coordinator the tool registry already captured can ask the CLIENT's own human for a decision.
-    /// `features` is the live client-capability mirror `McpServer` fills at `initialize`: elicitation
-    /// is attempted only when the connected client advertised it.
-    #[must_use]
-    pub fn publishing_elicitation_into(mut self, slot: ElicitationSlot, features: Arc<ClientFeatures>) -> Self {
-        let _ = slot.set(Arc::new(ElicitationChannel::new(self.lines.clone(), features)));
-        self.elicitation = Some(slot);
-        self
-    }
-
-    fn write_response(&mut self, response: &JsonRpcResponse) -> Result<(), GatewayError> {
-        let line = serde_json::to_string(response).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-        self.lines.write_line(&line)
-    }
-
-    fn log_line(&mut self, line: &str) {
-        let _ = writeln!(self.log, "{line}");
-    }
-}
-
-impl<L: Write> McpTransport for StdioTransport<L> {
-    /// 🔁️ One line in → zero-or-one line out, until EOF (client closed stdin) or a hard io error. A
-    /// blank line is skipped silently (not an error — some clients send a trailing newline). A batch
-    /// that dispatches to zero responses (all-notification batch) writes nothing, per JSON-RPC. A line
-    /// that is a RESPONSE to a request this server itself issued (elicitation) never reaches here: the
-    /// waiting elicitation consumed it, and every other line it saw was deferred back onto this loop.
-    fn serve(&mut self, mut server: McpServer) -> Result<(), GatewayError> {
-        loop {
-            let Some(line) = self.lines.read_line()? else { return Ok(()) };
-            let trimmed = line.trim();
-            if trimmed.is_empty() {
-                continue;
-            }
-            match serde_json::from_str::<JsonRpcIncoming>(trimmed) {
-                Ok(JsonRpcIncoming::Single(request)) => {
-                    if let Some(response) = server.dispatch(&request) {
-                        self.write_response(&response)?;
-                    }
-                }
-                Ok(JsonRpcIncoming::Batch(requests)) => {
-                    let responses = server.dispatch_batch(&requests);
-                    if !responses.is_empty() {
-                        let line = serde_json::to_string(&responses).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-                        self.lines.write_line(&line)?;
-                    }
-                }
-                Err(error) => {
-                    self.log_line(&format!("stdio transport: malformed JSON-RPC line rejected: {error}"));
-                    let response = JsonRpcResponse::error(JsonRpcId::Null, PARSE_ERROR, format!("parse error: {error}"), None);
-                    self.write_response(&response)?;
-                }
-            }
-        }
-    }
-}
-//#endregion 🔖️StdioTransport
-
-//#region 🔖️Elicitation
-/// 🙋 The MCP `elicitation/create` server→client request channel — the spec's own human-in-the-loop
-/// primitive, and the FIRST place a destructive capability's approval is offered when the connected
-/// client advertises `capabilities.elicitation` (`🛡️policy`'s `ApprovalCoordinator` owns the chain).
-/// Late-bound through [`ElicitationSlot`] for the same reason `🖥️ui::BridgeSlot` is: the tool
-/// registry is built before any transport exists.
-pub type ElicitationSlot = Arc<OnceLock<Arc<ElicitationChannel>>>;
-
-/// 🙅 Why an elicitation could not produce a decision — never confused with an explicit `Decline`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ElicitationUnavailable {
-    NoChannel,
-    ClientDoesNotSupportIt,
-    ClientClosed,
-    TimedOut,
-    Malformed(String),
-}
-
-/// ⏱️ How long an `elicitation/create` waits for the connected client's human before the lane is
-/// declared closed. Deliberately the same budget as `🛡️policy`'s `SHELL_APPROVAL_TIMEOUT_MS`: a
-/// human deciding in an MCP client and a human deciding in the OS shell get the same amount of time,
-/// and a silent one closes its lane the same way rather than wedging the agent forever.
-pub const ELICITATION_TIMEOUT_MS: u64 = 120_000;
-
-/// 🕰️ The wall clock an elicitation deadline is measured against, injected so a test can drive the
-/// deadline arithmetic without spending the deadline. `now_ms` is monotonic, in milliseconds, from
-/// an arbitrary origin — only differences are ever read.
-pub trait ElicitationClock: Send + Sync {
-    fn now_ms(&self) -> u64;
-}
-
-/// 🕰️ The real clock: `Instant` elapsed since the channel was built.
-pub struct SystemElicitationClock {
-    origin: std::time::Instant,
-}
-
-impl Default for SystemElicitationClock {
-    fn default() -> Self {
-        Self { origin: std::time::Instant::now() }
-    }
-}
-
-impl ElicitationClock for SystemElicitationClock {
-    fn now_ms(&self) -> u64 {
-        u64::try_from(self.origin.elapsed().as_millis()).unwrap_or(u64::MAX)
-    }
-}
-
-/// ⏲️ One tick of an [`ElicitationClock`]. A floored millisecond reading can sit up to one tick
-/// behind the instant it was taken, so the difference of two readings can overstate the real wait by
-/// up to one tick. The deadline is set one tick past the budget so the wait never ends before it.
-const ELICITATION_CLOCK_TICK_MS: u64 = 1;
-
-/// ⏳️ The longest a single bounded read blocks before the deadline is re-checked, so a fake clock
-/// that jumps forward is noticed promptly instead of at the end of one enormous `recv_timeout`.
-const ELICITATION_READ_SLICE_MS: u64 = 25;
-
-/// 🗳️ The three `elicitation/create` result actions, verbatim from the MCP schema.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ElicitationAction {
-    Accept,
-    Decline,
-    Cancel,
-}
-
-pub struct ElicitationChannel {
-    lines: Arc<StdioLines>,
-    features: Arc<ClientFeatures>,
-    next_id: AtomicU64,
-    timeout_ms: u64,
-    clock: Box<dyn ElicitationClock>,
-}
-
-impl ElicitationChannel {
-    pub(crate) fn new(lines: Arc<StdioLines>, features: Arc<ClientFeatures>) -> Self {
-        Self { lines, features, next_id: AtomicU64::new(1), timeout_ms: ELICITATION_TIMEOUT_MS, clock: Box::new(SystemElicitationClock::default()) }
-    }
-
-    /// ⏱️ Rebinds the wait's budget and the clock it is measured against — the seam the deadline tests
-    /// drive, and the one a future launch flag would set.
-    #[must_use]
-    pub fn with_deadline(mut self, timeout_ms: u64, clock: Box<dyn ElicitationClock>) -> Self {
-        self.timeout_ms = timeout_ms;
-        self.clock = clock;
-        self
-    }
-
-    pub fn client_supports_elicitation(&self) -> bool {
-        self.features.elicitation.load(Ordering::SeqCst)
-    }
-
-    /// 🙋 Issues one `elicitation/create` and waits on THIS connection for the client's answer.
-    /// Every other line that arrives meanwhile is deferred back onto the serve loop in arrival order,
-    /// so a client that keeps sending requests while a human decides loses nothing. The wait ends on
-    /// the matching response, on EOF, or on {@link ELICITATION_TIMEOUT_MS} of wall clock — a client
-    /// whose human walks away closes this lane exactly as a silent OS shell closes the bridge lane,
-    /// and the approval chain moves on instead of wedging the agent forever.
-    pub fn request_boolean(&self, message: &str, title: &str) -> Result<ElicitationAction, ElicitationUnavailable> {
-        if !self.client_supports_elicitation() {
-            return Err(ElicitationUnavailable::ClientDoesNotSupportIt);
-        }
-        let id = format!("semio-elicit-{}", self.next_id.fetch_add(1, Ordering::Relaxed));
-        let request = serde_json::json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "method": "elicitation/create",
-            "params": {
-                "message": message,
-                "requestedSchema": {
-                    "type": "object",
-                    "title": title,
-                    "properties": { "approve": { "type": "boolean", "title": "Approve", "description": "Approve this destructive action once." } },
-                    "required": ["approve"],
-                },
-            },
-        });
-        let line = serde_json::to_string(&request).map_err(|error| ElicitationUnavailable::Malformed(error.to_string()))?;
-        self.lines.write_line(&line).map_err(|error| ElicitationUnavailable::Malformed(error.message))?;
-        let deadline_ms = self.clock.now_ms().saturating_add(self.timeout_ms).saturating_add(ELICITATION_CLOCK_TICK_MS);
-        loop {
-            let now_ms = self.clock.now_ms();
-            if now_ms >= deadline_ms {
-                return Err(ElicitationUnavailable::TimedOut);
-            }
-            let budget = std::time::Duration::from_millis((deadline_ms - now_ms).min(ELICITATION_READ_SLICE_MS));
-            let inbound = match self.lines.read_line_direct_within(budget).map_err(|error| ElicitationUnavailable::Malformed(error.message))? {
-                StdioRead::Line(line) => line,
-                StdioRead::Eof => return Err(ElicitationUnavailable::ClientClosed),
-                StdioRead::TimedOut => continue,
-            };
-            let trimmed = inbound.trim();
-            if trimmed.is_empty() {
-                continue;
-            }
-            match serde_json::from_str::<serde_json::Value>(trimmed) {
-                Ok(value) if value.get("id").and_then(serde_json::Value::as_str) == Some(id.as_str()) => return Ok(elicitation_action(&value)),
-                _ => self.lines.defer(inbound),
-            }
-        }
-    }
-}
-
-/// 🗳️ Reads the action out of one `elicitation/create` response: an `error` member (the client
-/// cancelled or refused to ask) is `Cancel`, `action: "accept"` with `content.approve == true` is
-/// `Accept`, and anything else is `Decline` — never an approval by default.
-fn elicitation_action(response: &serde_json::Value) -> ElicitationAction {
-    if response.get("error").is_some() {
-        return ElicitationAction::Cancel;
-    }
-    let Some(result) = response.get("result") else { return ElicitationAction::Cancel };
-    match result.get("action").and_then(serde_json::Value::as_str) {
-        Some("accept") if result.pointer("/content/approve").and_then(serde_json::Value::as_bool) == Some(true) => ElicitationAction::Accept,
-        Some("cancel") => ElicitationAction::Cancel,
-        _ => ElicitationAction::Decline,
-    }
-}
-//#endregion 🔖️Elicitation
+use std::collections::VecDeque;
+use std::io::Write;
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
+use std::net::Shutdown;
+use std::net::SocketAddr;
+use std::net::TcpListener;
+use std::net::TcpStream;
+use std::sync::Arc;
+use std::sync::Condvar;
+use std::sync::Mutex;
+use std::sync::Weak;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
+use semio_framework_os_mcp_bridge::session::{BridgeEncodedLease, BridgeHandle, BridgeOutboxReceiver, ShellConnectionId};
+use semio_framework_os_mcp_bridge::shell_command_dispatch::BridgeSlot;
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeRefusal, GatewayToShell, ShellDecodeFault, ShellDecodeStep, ShellFrameKind, ShellMaterializeStep, ShellToGateway, ShellToGatewayDecodeCursor, ShellToGatewayMaterializeCursor};
+use semio_framework_os_mcp_consent::elicitation::ElicitationClock;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_wire::notify::{NotificationSink, NotificationSlot};
+use semio_framework_os_mcp_wire::protocol::{JsonRpcId, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, PARSE_ERROR, SUPPORTED_PROTOCOL_VERSIONS, UNSUPPORTED_PROTOCOL_VERSION, extract_meta_protocol_version};
+#[cfg(test)]
+use crate::bridge_server::bridge_router;
 
 //#region 🔖️HttpTransport
+
 /// 🔢️ `HeaderMismatch` (Streamable HTTP, `MCP-Protocol-Version` header vs body `_meta` mismatch) —
 /// transport-local because it is an HTTP-framing concern the stdio-only `🦀️🟪️protocol.rs` never needs.
 pub const HEADER_MISMATCH: i64 = -32020;
@@ -440,7 +105,7 @@ impl HttpAdmission {
 pub struct HttpTransportOptions {
     pub bind_addr: SocketAddr,
     pub allowed_origins: Vec<String>,
-    admission: HttpAdmission,
+    pub(crate) admission: HttpAdmission,
 }
 
 /// 🌉️ Options for a listener that serves ONLY `/bridge` — the shape `run_stdio` binds so a live os
@@ -460,7 +125,7 @@ impl HttpTransportOptions {
     }
 
     #[cfg(test)]
-    fn fixture(capability: &str) -> Self {
+    pub fn fixture(capability: &str) -> Self {
         Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6300), allowed_origins: Vec::new(), admission: HttpAdmission::Fixture(Arc::from(capability.as_bytes())) }
     }
 
@@ -479,15 +144,15 @@ impl HttpTransportOptions {
 /// resumption source for the legacy `GET` stream's `Last-Event-ID` support. Capacity-bounded so a
 /// long-running gateway with no GET client attached never grows this without limit.
 #[derive(Default)]
-struct EventLog {
+pub(crate) struct EventLog {
     next_id: u64,
-    entries: VecDeque<(u64, JsonRpcNotification)>,
+    pub entries: VecDeque<(u64, JsonRpcNotification)>,
 }
 
 impl EventLog {
     const CAPACITY: usize = 256;
 
-    fn push(&mut self, notification: JsonRpcNotification) -> u64 {
+    pub fn push(&mut self, notification: JsonRpcNotification) -> u64 {
         self.next_id += 1;
         let id = self.next_id;
         self.entries.push_back((id, notification));
@@ -497,7 +162,7 @@ impl EventLog {
         id
     }
 
-    fn since(&self, last_id: Option<u64>) -> Vec<(u64, JsonRpcNotification)> {
+    pub fn since(&self, last_id: Option<u64>) -> Vec<(u64, JsonRpcNotification)> {
         let floor = last_id.unwrap_or(0);
         self.entries.iter().filter(|(id, _)| *id > floor).cloned().collect()
     }
@@ -507,7 +172,7 @@ impl EventLog {
 /// server-initiated notification into the same [`EventLog`] the legacy GET handler reads from.
 #[derive(Clone)]
 pub struct HttpEventPublisher {
-    events: Arc<Mutex<EventLog>>,
+    pub(crate) events: Arc<Mutex<EventLog>>,
 }
 
 impl HttpEventPublisher {
@@ -519,19 +184,19 @@ impl HttpEventPublisher {
 /// 📤️ The HTTP connection's server→client notification lane: the very [`EventLog`] the resumable
 /// `GET` stream replays from, so `resources/updated`/`progress` reach an HTTP client through the one
 /// mechanism this transport already had for server-initiated frames.
-impl crate::notify::NotificationSink for HttpEventPublisher {
+impl NotificationSink for HttpEventPublisher {
     fn publish(&self, notification: JsonRpcNotification) {
         self.push(notification);
     }
 }
 
 #[derive(Clone)]
-struct HttpState {
+pub(crate) struct HttpState {
     /// 🕳️ `None` on a bridge-only listener: that socket serves `/bridge` and answers 404 for `/mcp`.
-    server: Option<Arc<Mutex<McpServer>>>,
-    admission: HttpAdmission,
-    allowed_origins: Arc<Vec<String>>,
-    events: Arc<Mutex<EventLog>>,
+    pub server: Option<Arc<Mutex<McpServer>>>,
+    pub(crate) admission: HttpAdmission,
+    pub allowed_origins: Arc<Vec<String>>,
+    pub(crate) events: Arc<Mutex<EventLog>>,
 }
 
 /// 🌐️ Streamable HTTP transport (`📌️sol-P1b-packet.md` §2.1) — a single `/mcp` endpoint: `POST` for
@@ -543,9 +208,9 @@ struct HttpState {
 /// (reject non-loopback/non-`null`/non-allowlisted with `403`) and the bearer token (`401`) before
 /// anything else runs.
 pub struct HttpTransport {
-    options: HttpTransportOptions,
-    bridge_slot: Option<crate::ui::BridgeSlot>,
-    notification_slot: Option<crate::notify::NotificationSlot>,
+    pub options: HttpTransportOptions,
+    pub bridge_slot: Option<BridgeSlot>,
+    pub notification_slot: Option<NotificationSlot>,
 }
 
 impl HttpTransport {
@@ -558,7 +223,7 @@ impl HttpTransport {
     /// the same resumable stream the `GET` handler replays. Filled on `start`, because the log the
     /// running transport uses does not exist until then.
     #[must_use]
-    pub fn publishing_notifications_into(mut self, slot: crate::notify::NotificationSlot) -> Self {
+    pub fn publishing_notifications_into(mut self, slot: NotificationSlot) -> Self {
         self.notification_slot = Some(slot);
         self
     }
@@ -568,7 +233,7 @@ impl HttpTransport {
     /// from that same slot. The handle is minted from THIS transport's worker pool, which is why the
     /// caller cannot construct it up front and hand it in: doing so would spin a second pool.
     #[must_use]
-    pub fn publishing_bridge_into(mut self, slot: crate::ui::BridgeSlot) -> Self {
+    pub fn publishing_bridge_into(mut self, slot: BridgeSlot) -> Self {
         self.bridge_slot = Some(slot);
         self
     }
@@ -580,11 +245,11 @@ impl HttpTransport {
     /// tests exercising `/bridge` bind a real ephemeral (`:0`) socket instead (`mod long` in this file
     /// and in `🧵️bridge/🦀️.rs`), same as P1a/P1b's own websocket tests already did.
     #[cfg(test)]
-    pub(crate) fn router(&self, server: McpServer) -> (Router, HttpEventPublisher, crate::bridge::BridgeHandle) {
+    pub(crate) fn router(&self, server: McpServer) -> (Router, HttpEventPublisher, BridgeHandle) {
         let events = Arc::new(Mutex::new(EventLog::default()));
         let state = HttpState { server: Some(Arc::new(Mutex::new(server))), admission: self.options.admission.clone(), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
         let mcp_router = Router::new().route("/mcp", post(handle_post).get(handle_get)).with_state(state);
-        let (bridge_router, bridge_handle) = crate::bridge::server::bridge_router(self.options.admission.clone(), self.options.allowed_origins.clone());
+        let (bridge_router, bridge_handle) = bridge_router(self.options.admission.clone(), self.options.allowed_origins.clone());
         let router = mcp_router.merge(bridge_router);
         (router, HttpEventPublisher { events }, bridge_handle)
     }
@@ -623,7 +288,7 @@ impl HttpTransport {
         if let Some(slot) = self.notification_slot.as_ref() {
             let _ = slot.set(Arc::new(HttpEventPublisher { events: events.clone() }));
         }
-        let bridge = crate::bridge::BridgeHandle::with_pool(pool.clone());
+        let bridge = BridgeHandle::with_pool(pool.clone());
         if let Some(slot) = self.bridge_slot.as_ref() {
             let _ = slot.set(Arc::new(bridge.clone()));
         }
@@ -649,8 +314,8 @@ impl HttpTransport {
 /// 🧭️ Stable generation key for one accepted connection slot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct HttpConnectionKey {
-    slot: u16,
-    generation: u64,
+    pub slot: u16,
+    pub generation: u64,
 }
 
 /// 🧯️ Why an exact connection owner left the live transport authority.
@@ -668,13 +333,13 @@ pub enum HttpTerminalReason {
 /// 📦️ Exact terminal socket plus every admitted ingress/egress byte still owned by it. Socket
 /// internals remain private; a caller may inspect identity/bytes and close the owner explicitly.
 pub struct HttpTerminalConnection {
-    key: HttpConnectionKey,
-    peer: SocketAddr,
-    stream: Option<TcpStream>,
-    ingress: Vec<u8>,
-    egress: Vec<u8>,
-    bridge_egress: Option<BridgeWriteCursor>,
-    reason: HttpTerminalReason,
+    pub key: HttpConnectionKey,
+    pub(crate) peer: SocketAddr,
+    pub(crate) stream: Option<TcpStream>,
+    pub(crate) ingress: Vec<u8>,
+    pub(crate) egress: Vec<u8>,
+    pub(crate) bridge_egress: Option<BridgeWriteCursor>,
+    pub(crate) reason: HttpTerminalReason,
 }
 
 impl HttpTerminalConnection {
@@ -728,12 +393,12 @@ impl HttpTransportCompletion {
 /// entry boundary; every socket operation itself remains a finite `Lane::Io` pool turn.
 pub struct HttpTransportRun {
     inner: Arc<HttpTransportAuthority>,
-    bridge: crate::bridge::BridgeHandle,
-    local_addr: SocketAddr,
+    pub bridge: BridgeHandle,
+    pub local_addr: SocketAddr,
 }
 
 impl HttpTransportRun {
-    pub fn bridge(&self) -> crate::bridge::BridgeHandle {
+    pub fn bridge(&self) -> BridgeHandle {
         self.bridge.clone()
     }
 
@@ -791,40 +456,55 @@ impl HttpTransportRun {
     }
 }
 
-const HTTP_CONNECTION_CAPACITY: usize = 64;
+pub(crate) const HTTP_CONNECTION_CAPACITY: usize = 64;
+
 const HTTP_HEADER_CAPACITY: usize = 64;
-const HTTP_HEADER_BYTES: usize = 65_536;
-const HTTP_REQUEST_LINE_BYTES: usize = 4_096;
+
+pub(crate) const HTTP_HEADER_BYTES: usize = 65_536;
+
+pub(crate) const HTTP_REQUEST_LINE_BYTES: usize = 4_096;
+
 const HTTP_HEADER_NAME_BYTES: usize = 64;
+
 const HTTP_HEADER_VALUE_BYTES: usize = 8_192;
+
 const HTTP_PATH_BYTES: usize = 2_048;
-const HTTP_REQUEST_BYTES: usize = 1_048_576;
-const HTTP_RESPONSE_BYTES: usize = 1_048_576;
-const HTTP_IO_PAGE_BYTES: usize = 16_384;
-const HTTP_SLOWLORIS_MS: u64 = 15_000;
+
+pub(crate) const HTTP_REQUEST_BYTES: usize = 1_048_576;
+
+pub(crate) const HTTP_RESPONSE_BYTES: usize = 1_048_576;
+
+pub(crate) const HTTP_IO_PAGE_BYTES: usize = 16_384;
+
+pub(crate) const HTTP_SLOWLORIS_MS: u64 = 15_000;
+
 /// ⏳️ How long an upgraded `/bridge` socket may stay open without its `Hello` before the gateway
 /// closes it: every accepted connection ends in a bounded time, answered or not.
 pub const BRIDGE_OPENING_DEADLINE_MS: u64 = 10_000;
+
 /// 🚫️ What a connection accepted while every slot is taken is answered with before it is closed: a
 /// typed refusal, never a silent wait in the kernel's accept queue.
 const HTTP_CAPACITY_REFUSAL: &[u8] = b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json\r\nContent-Length: 60\r\nConnection: close\r\n\r\n{\"schema\":\"semio.mcp.transport-refusal/v1\",\"reason\":\"capacity\"}";
-const HTTP_READINESS_POLL_MS: u64 = 4;
-const HTTP_RETRY_MS: u64 = 1;
-const WEBSOCKET_FRAME_BYTES: usize = 1_048_576;
 
-struct FixedOwnerRing<T, const N: usize> {
-    slots: Box<[Option<T>]>,
-    head: usize,
-    len: usize,
+const HTTP_READINESS_POLL_MS: u64 = 4;
+
+const HTTP_RETRY_MS: u64 = 1;
+
+pub(crate) const WEBSOCKET_FRAME_BYTES: usize = 1_048_576;
+
+pub(crate) struct FixedOwnerRing<T, const N: usize> {
+    pub slots: Box<[Option<T>]>,
+    pub(crate) head: usize,
+    pub len: usize,
 }
 
-struct FixedByteCredits {
-    used: usize,
+pub(crate) struct FixedByteCredits {
+    pub used: usize,
     cap: usize,
 }
 
 impl FixedByteCredits {
-    fn new(cap: usize) -> Self {
+    pub(crate) fn new(cap: usize) -> Self {
         Self { used: 0, cap }
     }
 
@@ -832,7 +512,7 @@ impl FixedByteCredits {
         self.cap.saturating_sub(self.used)
     }
 
-    fn try_acquire<T>(&mut self, bytes: usize, owner: T) -> Result<T, T> {
+    pub(crate) fn try_acquire<T>(&mut self, bytes: usize, owner: T) -> Result<T, T> {
         if bytes > self.remaining() {
             return Err(owner);
         }
@@ -840,21 +520,21 @@ impl FixedByteCredits {
         Ok(owner)
     }
 
-    fn release(&mut self, bytes: usize) {
+    pub(crate) fn release(&mut self, bytes: usize) {
         self.used = self.used.saturating_sub(bytes);
     }
 }
 
 impl<T, const N: usize> FixedOwnerRing<T, N> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: semio_framework_async::boxed_slots(N, || None), head: 0, len: 0 }
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 
-    fn try_push(&mut self, owner: T) -> Result<(), T> {
+    pub fn try_push(&mut self, owner: T) -> Result<(), T> {
         if self.len == N {
             return Err(owner);
         }
@@ -864,7 +544,7 @@ impl<T, const N: usize> FixedOwnerRing<T, N> {
         Ok(())
     }
 
-    fn pop_front(&mut self) -> Option<T> {
+    pub(crate) fn pop_front(&mut self) -> Option<T> {
         if self.len == 0 {
             return None;
         }
@@ -876,28 +556,28 @@ impl<T, const N: usize> FixedOwnerRing<T, N> {
 }
 
 #[derive(Clone)]
-struct OwnedHeader {
-    name: String,
-    value: String,
+pub(crate) struct OwnedHeader {
+    pub name: String,
+    pub value: String,
 }
 
-struct ParsedHttpHead {
-    method: Option<String>,
-    path: Option<String>,
-    version: Option<String>,
-    headers: [Option<OwnedHeader>; HTTP_HEADER_CAPACITY],
-    header_count: usize,
-    cursor: usize,
-    header_end: Option<usize>,
-    content_length: usize,
+pub(crate) struct ParsedHttpHead {
+    pub method: Option<String>,
+    pub path: Option<String>,
+    pub version: Option<String>,
+    pub(crate) headers: [Option<OwnedHeader>; HTTP_HEADER_CAPACITY],
+    pub(crate) header_count: usize,
+    pub cursor: usize,
+    pub(crate) header_end: Option<usize>,
+    pub(crate) content_length: usize,
 }
 
 impl ParsedHttpHead {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { method: None, path: None, version: None, headers: std::array::from_fn(|_| None), header_count: 0, cursor: 0, header_end: None, content_length: 0 }
     }
 
-    fn header(&self, name: &str) -> Option<&str> {
+    pub(crate) fn header(&self, name: &str) -> Option<&str> {
         self.headers[..self.header_count].iter().flatten().find(|header| header.name.eq_ignore_ascii_case(name)).map(|header| header.value.as_str())
     }
 
@@ -911,7 +591,7 @@ impl ParsedHttpHead {
 }
 
 #[derive(Clone, Copy)]
-enum HttpAfterWrite {
+pub(crate) enum HttpAfterWrite {
     Close,
     Upgrade,
     WebSocket,
@@ -919,7 +599,7 @@ enum HttpAfterWrite {
 }
 
 #[derive(Clone, Copy)]
-enum HttpConnectionPhase {
+pub(crate) enum HttpConnectionPhase {
     ReadHttp,
     ParseHttp,
     DispatchHttp,
@@ -929,30 +609,30 @@ enum HttpConnectionPhase {
     DrainBridgeOutbox,
 }
 
-struct BridgeSession {
-    id: Option<crate::bridge::ShellConnectionId>,
-    outbox: Option<crate::bridge::BridgeOutboxReceiver>,
-    opening: bool,
-    inbound: Option<BridgeInboundCursor>,
+pub(crate) struct BridgeSession {
+    pub id: Option<ShellConnectionId>,
+    pub(crate) outbox: Option<BridgeOutboxReceiver>,
+    pub(crate) opening: bool,
+    pub(crate) inbound: Option<BridgeInboundCursor>,
 }
 
 enum BridgeInboundPhase {
-    Decode(crate::bridge::ShellToGatewayDecodeCursor),
-    Materialize(crate::bridge::ShellToGatewayMaterializeCursor),
-    Ready(Option<crate::bridge::ShellToGateway>),
+    Decode(ShellToGatewayDecodeCursor),
+    Materialize(ShellToGatewayMaterializeCursor),
+    Ready(Option<ShellToGateway>),
 }
 
 struct BridgeInboundCursor {
-    generation: u64,
-    frame: ClientWebSocketFrame,
-    phase: BridgeInboundPhase,
+    pub generation: u64,
+    pub(crate) frame: ClientWebSocketFrame,
+    pub phase: BridgeInboundPhase,
 }
 
 struct BridgeWriteCursor {
-    header: [u8; 10],
+    pub(crate) header: [u8; 10],
     header_len: usize,
-    frame: crate::bridge::BridgeEncodedLease,
-    written: usize,
+    pub(crate) frame: BridgeEncodedLease,
+    pub(crate) written: usize,
     credited: bool,
 }
 
@@ -988,59 +668,59 @@ impl BridgeWriteCursor {
     }
 }
 
-struct HttpConnection {
-    key: HttpConnectionKey,
-    peer: SocketAddr,
-    stream: TcpStream,
-    ingress: Vec<u8>,
-    egress: Vec<u8>,
-    bridge_egress: Option<BridgeWriteCursor>,
-    written: usize,
-    parser: ParsedHttpHead,
-    phase: HttpConnectionPhase,
-    bridge: BridgeSession,
-    last_progress_ms: u64,
-    header_deadline_ms: u64,
+pub(crate) struct HttpConnection {
+    pub key: HttpConnectionKey,
+    pub(crate) peer: SocketAddr,
+    pub(crate) stream: TcpStream,
+    pub(crate) ingress: Vec<u8>,
+    pub(crate) egress: Vec<u8>,
+    pub(crate) bridge_egress: Option<BridgeWriteCursor>,
+    pub(crate) written: usize,
+    pub(crate) parser: ParsedHttpHead,
+    pub phase: HttpConnectionPhase,
+    pub bridge: BridgeSession,
+    pub(crate) last_progress_ms: u64,
+    pub(crate) header_deadline_ms: u64,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum HttpTransportMode {
+pub(crate) enum HttpTransportMode {
     Running,
     Closing,
     Closed,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum HttpTerminalPolicy {
+pub(crate) enum HttpTerminalPolicy {
     Handback,
     Close,
 }
 
-enum HttpTurn {
+pub(crate) enum HttpTurn {
     MoreWork,
     PollReadiness,
     Parked,
     Complete(Result<(), GatewayError>),
 }
 
-struct HttpTransportState {
-    listener: Option<TcpListener>,
-    connections: Box<[Option<HttpConnection>]>,
-    terminal: FixedOwnerRing<HttpTerminalConnection, HTTP_CONNECTION_CAPACITY>,
-    terminal_policy: HttpTerminalPolicy,
-    mode: HttpTransportMode,
+pub(crate) struct HttpTransportState {
+    pub listener: Option<TcpListener>,
+    pub(crate) connections: Box<[Option<HttpConnection>]>,
+    pub terminal: FixedOwnerRing<HttpTerminalConnection, HTTP_CONNECTION_CAPACITY>,
+    pub(crate) terminal_policy: HttpTerminalPolicy,
+    pub mode: HttpTransportMode,
     terminal_result: Option<GatewayError>,
-    run_generation: u64,
+    pub(crate) run_generation: u64,
     next_connection_generation: u64,
-    io_cursor: usize,
-    request_credits: FixedByteCredits,
-    response_credits: FixedByteCredits,
+    pub(crate) io_cursor: usize,
+    pub(crate) request_credits: FixedByteCredits,
+    pub(crate) response_credits: FixedByteCredits,
     http: HttpState,
-    bridge: crate::bridge::BridgeHandle,
+    pub bridge: BridgeHandle,
 }
 
 impl HttpTransportState {
-    fn new(listener: TcpListener, server: Option<McpServer>, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: crate::bridge::BridgeHandle) -> Self {
+    pub(crate) fn new(listener: TcpListener, server: Option<McpServer>, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: BridgeHandle) -> Self {
         Self {
             listener: Some(listener),
             connections: semio_framework_async::boxed_slots(HTTP_CONNECTION_CAPACITY, || None),
@@ -1062,7 +742,7 @@ impl HttpTransportState {
         self.connections.iter().filter(|slot| slot.is_some()).count()
     }
 
-    fn drive_one(&mut self, now_ms: u64) -> HttpTurn {
+    pub(crate) fn drive_one(&mut self, now_ms: u64) -> HttpTurn {
         if self.terminal_policy == HttpTerminalPolicy::Close {
             if let Some(owner) = self.terminal.pop_front() {
                 owner.close();
@@ -1222,7 +902,7 @@ impl HttpTransportState {
         let _ = connection.stream.shutdown(Shutdown::Both);
     }
 
-    fn terminalize(&mut self, mut connection: HttpConnection, reason: HttpTerminalReason) {
+    pub(crate) fn terminalize(&mut self, mut connection: HttpConnection, reason: HttpTerminalReason) {
         self.request_credits.release(connection.ingress.len());
         self.response_credits.release(connection.egress.len() + connection.bridge_egress.as_ref().map_or(0, BridgeWriteCursor::credited_bytes));
         if let Some(id) = connection.bridge.id.take() {
@@ -1471,7 +1151,7 @@ impl HttpTransportState {
             if frame.opcode != 0x2 {
                 return ConnectionTurn::Terminal(HttpTerminalReason::Unsupported);
             }
-            connection.bridge.inbound = Some(BridgeInboundCursor { generation: connection.key.generation, phase: BridgeInboundPhase::Decode(crate::bridge::ShellToGatewayDecodeCursor::new(frame.payload_len)), frame });
+            connection.bridge.inbound = Some(BridgeInboundCursor { generation: connection.key.generation, phase: BridgeInboundPhase::Decode(ShellToGatewayDecodeCursor::new(frame.payload_len)), frame });
             return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket);
         }
         let opening = connection.bridge.opening;
@@ -1483,27 +1163,27 @@ impl HttpTransportState {
             BridgeInboundPhase::Decode(decoder) => {
                 let frame = inbound.frame;
                 match decoder.step(|index| frame.payload_byte(&connection.ingress, index)) {
-                    crate::bridge::ShellDecodeStep::Pending => return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket),
-                    crate::bridge::ShellDecodeStep::Fault(crate::bridge::ShellDecodeFault::Capacity) => return ConnectionTurn::Terminal(HttpTerminalReason::Capacity),
-                    crate::bridge::ShellDecodeStep::Fault(crate::bridge::ShellDecodeFault::Malformed) => return ConnectionTurn::Terminal(HttpTerminalReason::Malformed),
-                    crate::bridge::ShellDecodeStep::Complete(frame) => {
+                    ShellDecodeStep::Pending => return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket),
+                    ShellDecodeStep::Fault(ShellDecodeFault::Capacity) => return ConnectionTurn::Terminal(HttpTerminalReason::Capacity),
+                    ShellDecodeStep::Fault(ShellDecodeFault::Malformed) => return ConnectionTurn::Terminal(HttpTerminalReason::Malformed),
+                    ShellDecodeStep::Complete(frame) => {
                         let kind = frame.kind();
-                        if opening && kind != crate::bridge::ShellFrameKind::Hello {
+                        if opening && kind != ShellFrameKind::Hello {
                             return ConnectionTurn::Terminal(HttpTerminalReason::Malformed);
                         }
-                        if !opening && kind == crate::bridge::ShellFrameKind::Hello {
+                        if !opening && kind == ShellFrameKind::Hello {
                             return ConnectionTurn::Terminal(HttpTerminalReason::Unsupported);
                         }
-                        inbound.phase = BridgeInboundPhase::Materialize(crate::bridge::ShellToGatewayMaterializeCursor::new(frame));
+                        inbound.phase = BridgeInboundPhase::Materialize(ShellToGatewayMaterializeCursor::new(frame));
                         return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket);
                     }
                 }
             }
             BridgeInboundPhase::Materialize(materializer) => match materializer.step() {
-                crate::bridge::ShellMaterializeStep::Pending => return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket),
-                crate::bridge::ShellMaterializeStep::Fault(crate::bridge::ShellDecodeFault::Capacity) => return ConnectionTurn::Terminal(HttpTerminalReason::Capacity),
-                crate::bridge::ShellMaterializeStep::Fault(crate::bridge::ShellDecodeFault::Malformed) => return ConnectionTurn::Terminal(HttpTerminalReason::Malformed),
-                crate::bridge::ShellMaterializeStep::Complete(message) => {
+                ShellMaterializeStep::Pending => return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket),
+                ShellMaterializeStep::Fault(ShellDecodeFault::Capacity) => return ConnectionTurn::Terminal(HttpTerminalReason::Capacity),
+                ShellMaterializeStep::Fault(ShellDecodeFault::Malformed) => return ConnectionTurn::Terminal(HttpTerminalReason::Malformed),
+                ShellMaterializeStep::Complete(message) => {
                     inbound.phase = BridgeInboundPhase::Ready(Some(message));
                     return ConnectionTurn::Keep(HttpConnectionPhase::ParseWebSocket);
                 }
@@ -1512,43 +1192,43 @@ impl HttpTransportState {
         };
         let consumed = connection.bridge.inbound.as_ref().expect("bridge inbound cursor disappeared").frame.consumed;
         match message {
-            crate::bridge::ShellToGateway::Hello { bridge_version, .. } if connection.bridge.opening && bridge_version != crate::bridge::BRIDGE_VERSION => {
+            ShellToGateway::Hello { bridge_version, .. } if connection.bridge.opening && bridge_version != BRIDGE_VERSION => {
                 self.consume_websocket_ingress(connection, consumed);
-                let refused = crate::bridge::GatewayToShell::Refused { reason: crate::bridge::BridgeRefusal::Version, gateway_version: crate::bridge::BRIDGE_VERSION };
+                let refused = GatewayToShell::Refused { reason: BridgeRefusal::Version, gateway_version: BRIDGE_VERSION };
                 self.queue_websocket_payload(connection, 0x2, &refused.encode(), HttpAfterWrite::WebSocketClose)
             }
-            crate::bridge::ShellToGateway::Hello { flags, .. } if connection.bridge.opening => {
+            ShellToGateway::Hello { flags, .. } if connection.bridge.opening => {
                 self.consume_websocket_ingress(connection, consumed);
                 let (id, outbox) = self.bridge.register();
                 self.bridge.record_hello(id, flags);
                 connection.bridge.id = Some(id);
                 connection.bridge.outbox = Some(outbox);
                 connection.bridge.opening = false;
-                let welcome = crate::bridge::GatewayToShell::Welcome { bridge_version: crate::bridge::BRIDGE_VERSION, connection: id.to_string(), principal: "agent:local".to_string() };
+                let welcome = GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: id.to_string(), principal: "agent:local".to_string() };
                 self.queue_websocket_payload(connection, 0x2, &welcome.encode(), HttpAfterWrite::WebSocket)
             }
-            crate::bridge::ShellToGateway::Ping => {
+            ShellToGateway::Ping => {
                 self.consume_websocket_ingress(connection, consumed);
-                self.queue_websocket_payload(connection, 0x2, &crate::bridge::GatewayToShell::Pong.encode(), HttpAfterWrite::WebSocket)
+                self.queue_websocket_payload(connection, 0x2, &GatewayToShell::Pong.encode(), HttpAfterWrite::WebSocket)
             }
-            crate::bridge::ShellToGateway::Bye => {
+            ShellToGateway::Bye => {
                 self.consume_websocket_ingress(connection, consumed);
                 self.queue_websocket_payload(connection, 0x8, &[], HttpAfterWrite::WebSocketClose)
             }
-            message @ (crate::bridge::ShellToGateway::ShellState { .. }
-            | crate::bridge::ShellToGateway::ShellStatePatch { .. }
-            | crate::bridge::ShellToGateway::Instances { .. }
-            | crate::bridge::ShellToGateway::ShellCommandResult { .. }
-            | crate::bridge::ShellToGateway::Approval { .. }
-            | crate::bridge::ShellToGateway::AgentMessage { .. }
-            | crate::bridge::ShellToGateway::AgentCancel { .. }
-            | crate::bridge::ShellToGateway::AppFrames { .. }) => {
+            message @ (ShellToGateway::ShellState { .. }
+            | ShellToGateway::ShellStatePatch { .. }
+            | ShellToGateway::Instances { .. }
+            | ShellToGateway::ShellCommandResult { .. }
+            | ShellToGateway::Approval { .. }
+            | ShellToGateway::AgentMessage { .. }
+            | ShellToGateway::AgentCancel { .. }
+            | ShellToGateway::AppFrames { .. }) => {
                 let Some(id) = connection.bridge.id else { return ConnectionTurn::Terminal(HttpTerminalReason::Malformed) };
                 self.consume_websocket_ingress(connection, consumed);
                 self.bridge.record(id, message);
                 ConnectionTurn::Keep(HttpConnectionPhase::DrainBridgeOutbox)
             }
-            crate::bridge::ShellToGateway::Hello { .. } => ConnectionTurn::Terminal(HttpTerminalReason::Unsupported),
+            ShellToGateway::Hello { .. } => ConnectionTurn::Terminal(HttpTerminalReason::Unsupported),
         }
     }
 
@@ -1566,7 +1246,7 @@ impl HttpTransportState {
         }
     }
 
-    fn queue_encoded_websocket_payload(&mut self, connection: &mut HttpConnection, opcode: u8, frame: crate::bridge::BridgeEncodedLease, after: HttpAfterWrite) -> ConnectionTurn {
+    fn queue_encoded_websocket_payload(&mut self, connection: &mut HttpConnection, opcode: u8, frame: BridgeEncodedLease, after: HttpAfterWrite) -> ConnectionTurn {
         let Some((header, header_len)) = websocket_server_header(opcode, frame.len()) else {
             connection.bridge_egress = Some(BridgeWriteCursor { header: [0; 10], header_len: 0, frame, written: 0, credited: false });
             return ConnectionTurn::Terminal(HttpTerminalReason::Capacity);
@@ -1603,7 +1283,7 @@ enum ConnectionTurn {
 
 struct HttpTransportAuthority {
     pool: WorkerPool,
-    state: Mutex<HttpTransportState>,
+    pub(crate) state: Mutex<HttpTransportState>,
     scheduled: AtomicBool,
     wake_requested: AtomicBool,
     retry_armed: AtomicBool,
@@ -1612,7 +1292,7 @@ struct HttpTransportAuthority {
     readiness_generation: AtomicU64,
     retry_job: Mutex<Option<Job>>,
     terminal_job: Mutex<Option<Job>>,
-    completion: (Mutex<Option<Result<(), GatewayError>>>, Condvar),
+    pub completion: (Mutex<Option<Result<(), GatewayError>>>, Condvar),
 }
 
 impl HttpTransportAuthority {
@@ -1709,7 +1389,7 @@ impl HttpTransportAuthority {
         }
     }
 
-    fn finish(&self, result: Result<(), GatewayError>) {
+    pub fn finish(&self, result: Result<(), GatewayError>) {
         let (lock, wake) = &self.completion;
         let mut completion = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if completion.is_none() {
@@ -1731,17 +1411,17 @@ fn retry_retained_job(weak: Weak<HttpTransportAuthority>, generation: u64) {
     }
 }
 
-fn generation_is_current(current: u64, retained: u64) -> bool {
+pub(crate) fn generation_is_current(current: u64, retained: u64) -> bool {
     current == retained
 }
 
-struct OwnedHttpResponse {
-    bytes: Vec<u8>,
+pub(crate) struct OwnedHttpResponse {
+    pub bytes: Vec<u8>,
     upgrade: bool,
 }
 
 struct CappedBytes {
-    bytes: Vec<u8>,
+    pub bytes: Vec<u8>,
     cap: usize,
     exceeded: bool,
 }
@@ -1769,7 +1449,7 @@ impl Write for CappedBytes {
     }
 }
 
-fn find_crlf_bounded(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
+pub(crate) fn find_crlf_bounded(bytes: &[u8], start: usize, end: usize) -> Option<usize> {
     if start >= end || end > bytes.len() {
         return None;
     }
@@ -1820,7 +1500,7 @@ fn owned_json_rpc_error(status: u16, reason: &str, id: JsonRpcId, code: i64, mes
     build_http_response(status, reason, Some("application/json"), body, &[], false)
 }
 
-fn dispatch_owned_http(state: &HttpState, head: &ParsedHttpHead, request: &[u8]) -> Result<OwnedHttpResponse, HttpTerminalReason> {
+pub(crate) fn dispatch_owned_http(state: &HttpState, head: &ParsedHttpHead, request: &[u8]) -> Result<OwnedHttpResponse, HttpTerminalReason> {
     let method = head.method.as_deref().ok_or(HttpTerminalReason::Malformed)?;
     let path = head.path.as_deref().ok_or(HttpTerminalReason::Malformed)?;
     let origin = head.header("origin");
@@ -1891,7 +1571,7 @@ fn dispatch_owned_get(state: &HttpState, head: &ParsedHttpHead) -> Result<OwnedH
     build_http_response(200, "OK", Some("text/event-stream"), body.bytes, &[("Cache-Control", "no-cache")], false)
 }
 
-fn dispatch_owned_bridge_handshake(admission: &HttpAdmission, head: &ParsedHttpHead) -> Result<OwnedHttpResponse, HttpTerminalReason> {
+pub(crate) fn dispatch_owned_bridge_handshake(admission: &HttpAdmission, head: &ParsedHttpHead) -> Result<OwnedHttpResponse, HttpTerminalReason> {
     if head.method.as_deref() != Some("GET") {
         return build_http_response(405, "Method Not Allowed", Some("text/plain"), b"method not allowed".to_vec(), &[], false);
     }
@@ -1914,14 +1594,14 @@ fn dispatch_owned_bridge_handshake(admission: &HttpAdmission, head: &ParsedHttpH
     build_http_response(101, "Switching Protocols", None, Vec::new(), &[("Upgrade", "websocket"), ("Sec-WebSocket-Accept", &accept), ("Sec-WebSocket-Protocol", "semio.mcp.bridge.v1")], true)
 }
 
-fn websocket_accept(key: &str) -> String {
+pub(crate) fn websocket_accept(key: &str) -> String {
     let mut input = Vec::with_capacity(key.len() + 36);
     input.extend_from_slice(key.as_bytes());
     input.extend_from_slice(b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
     base64(&sha1(&input))
 }
 
-fn websocket_key_nonce(key: &str) -> Option<[u8; 16]> {
+pub(crate) fn websocket_key_nonce(key: &str) -> Option<[u8; 16]> {
     let bytes = key.as_bytes();
     if bytes.len() != 24 || bytes[22..] != *b"==" {
         return None;
@@ -2017,15 +1697,15 @@ fn base64(bytes: &[u8]) -> String {
 
 #[derive(Clone, Copy)]
 struct ClientWebSocketFrame {
-    opcode: u8,
+    pub(crate) opcode: u8,
     payload_start: usize,
-    payload_len: usize,
+    pub(crate) payload_len: usize,
     mask: [u8; 4],
-    consumed: usize,
+    pub(crate) consumed: usize,
 }
 
 impl ClientWebSocketFrame {
-    fn payload_byte(self, bytes: &[u8], index: usize) -> Option<u8> {
+    pub(crate) fn payload_byte(self, bytes: &[u8], index: usize) -> Option<u8> {
         if index >= self.payload_len {
             return None;
         }
@@ -2043,7 +1723,7 @@ impl ClientWebSocketFrame {
     }
 }
 
-fn decode_client_websocket_frame(bytes: &[u8]) -> Result<Option<ClientWebSocketFrame>, HttpTerminalReason> {
+pub(crate) fn decode_client_websocket_frame(bytes: &[u8]) -> Result<Option<ClientWebSocketFrame>, HttpTerminalReason> {
     if bytes.len() < 2 {
         return Ok(None);
     }
@@ -2090,7 +1770,7 @@ fn decode_client_websocket_frame(bytes: &[u8]) -> Result<Option<ClientWebSocketF
     Ok(Some(ClientWebSocketFrame { opcode, payload_start: cursor, payload_len, mask, consumed }))
 }
 
-fn encode_server_websocket_frame(opcode: u8, payload: &[u8]) -> Option<Vec<u8>> {
+pub(crate) fn encode_server_websocket_frame(opcode: u8, payload: &[u8]) -> Option<Vec<u8>> {
     let (header, header_bytes) = websocket_server_header(opcode, payload.len())?;
     let total = header_bytes.checked_add(payload.len())?;
     if total > HTTP_RESPONSE_BYTES {
@@ -2125,7 +1805,8 @@ fn websocket_server_header(opcode: u8, payload_len: usize) -> Option<([u8; 10], 
 }
 
 //#region 🔖️OriginAndBearer
-fn is_loopback_or_null(origin: &str) -> bool {
+
+pub(crate) fn is_loopback_or_null(origin: &str) -> bool {
     if origin.eq_ignore_ascii_case("null") {
         return true;
     }
@@ -2181,6 +1862,7 @@ fn reject_by_bearer(headers: &HeaderMap, state: &HttpState) -> Option<Response> 
         Some((StatusCode::UNAUTHORIZED, "missing or invalid bearer token").into_response())
     }
 }
+
 //#endregion 🔖️OriginAndBearer
 
 #[cfg(test)]
@@ -2197,7 +1879,7 @@ fn json_rpc_error_response(status: StatusCode, id: JsonRpcId, code: i64, message
 /// does. A JSON-RPC notification (absent `id`) is `202 Accepted` with no body; a request gets `200 OK`
 /// `application/json`.
 #[cfg(test)]
-async fn handle_post(State(state): State<HttpState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
+pub(crate) async fn handle_post(State(state): State<HttpState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
     if let Some(response) = reject_by_origin(&headers, &state) {
         return response;
     }
@@ -2245,7 +1927,7 @@ async fn handle_post(State(state): State<HttpState>, headers: HeaderMap, body: a
 /// client reconnects (carrying the last id it saw) to keep watching — this endpoint's job is correct
 /// resumption on each such (re)connect, not holding one socket open forever.
 #[cfg(test)]
-async fn handle_get(State(state): State<HttpState>, headers: HeaderMap) -> Response {
+pub(crate) async fn handle_get(State(state): State<HttpState>, headers: HeaderMap) -> Response {
     if let Some(response) = reject_by_origin(&headers, &state) {
         return response;
     }
@@ -2266,16 +1948,8 @@ async fn handle_get(State(state): State<HttpState>, headers: HeaderMap) -> Respo
         .body(Body::from(body))
         .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
 }
+
 //#endregion 🔖️HttpTransport
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️quick/🦀️.rs"]
-mod quick;
-
-/// 🌐️ HTTP handler integration tests use the owned in-process request driver; websocket upgrade
-/// coverage below continues to bind the real `axum::Router` on an ephemeral socket.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️long/🦀️.rs"]
-mod long;
 //#endregion 🧪️Tests

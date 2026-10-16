@@ -3,6 +3,7 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
+import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
 
 /** 📨️ The original invoke caller owns pending raw bytes and lends one unchanged scheduler wallet. */
 export function extensionInvokeCallerOracle(repoRoot:string):number{
@@ -20,7 +21,7 @@ export function extensionInvokeCallerOracle(repoRoot:string):number{
  assert.deepEqual(fixture.executionGrant,{maximumItems:16,maximumCopyBytes:64,maximumCapacityBytes:262144,maximumReleaseBytes:262144,maximumDepth:128});assertions++;
  for(const entry of fixture.admissionCases){const demand=applyPatch({maximumItems:2,maximumCopyBytes:0,maximumCapacityBytes:entry.frameBytes,maximumReleaseBytes:0,maximumDepth:1},[{op:"replace" as const,path:"/maximumItems",value:2+Number(entry.checkpoint)}],true,false).newDocument;assert.deepEqual(entry.demand,demand);assertions++;}
  for(const row of fixture.lookupCases){const actual=row.candidates.findIndex((candidate:string)=>Buffer.from(candidate).equals(Buffer.from(row.input)));assert.equal(actual<0?null:actual,row.matched);assertions++;}
- const owner=read("🧩️extension/🚪️retirement/🦀️.rs"),runtime=read("⚛️reactor/🏃️runtime/🦀️.rs"),reactor=read("⚛️reactor/🔄️turn/🦀️.rs");
+ const owner=read("🧩️extension/🚪️retirement/🦀️.rs"),runtime=readPluginRuntimeSource(),reactor=read("⚛️reactor/🔄️turn/🦀️.rs");
  assert(/pub struct ExtensionInvokeStep\s*\{[^}]*pub payload:Option<Vec<u8>>[^}]*pub retained_progress:RetainedCloneProgress/s.test(owner),"original extension result retains optional payload and all actual effects");assertions++;
  assert(/fn invoke\([^;{]*cx:\s*&mut semio_framework_job::StepContext<'_>[^;{]*Result<ExtensionInvokeStep,\s*Fault>/s.test(owner),"original extension receiver borrows the actual caller context");assertions++;
  assert(owner.includes("invoke(capability, request, cx)"));assertions++;

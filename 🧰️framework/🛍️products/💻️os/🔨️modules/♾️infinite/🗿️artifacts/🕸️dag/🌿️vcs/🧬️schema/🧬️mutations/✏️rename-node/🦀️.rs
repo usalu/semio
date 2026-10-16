@@ -45,7 +45,3 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for RenameNode {
         vec!["nodes".into(), self.id.clone()]
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

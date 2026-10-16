@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-canvas-icons"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Canvas icon identity and codec: the structured icon union and its wire string, the metabolism icon names and the resolver that turns an encoded icon into paintable SVG or raster content"
+
+[package.metadata.semio]
+role = "framework"
+id = "canvas-icons"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust" }
+semio-framework-icon-contract = { path = "../../../../🖼️assets/🔣️icons/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+base64_codec = { path = "../../../../🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+compiler = { path = "../../../../📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
+serde = { workspace = true }
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+semio-framework-intrinsic-size = { path = "../../../../📏️intrinsic-size/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true }

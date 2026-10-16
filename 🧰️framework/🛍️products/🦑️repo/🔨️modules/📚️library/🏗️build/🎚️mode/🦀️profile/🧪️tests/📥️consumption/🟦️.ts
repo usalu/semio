@@ -1,0 +1,112 @@
+import{runtimeActorCargoArgumentsV1}from"../../../../../🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
+import"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/📐️arguments/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../🧪️tests/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync}from"node:fs";
+import{join,dirname,resolve}from"node:path";
+import{test,expect}from"bun:test";
+import{createHash}from"node:crypto";
+import{Database}from"bun:sqlite";
+import Ajv from"ajv";
+import ts from"typescript";
+import TOML from"@iarna/toml";
+import schema from"../../📋️constraints/🧬️schema/🔣️.json"with{type:"json"};
+import data from"../../📋️constraints/🔣️.json"with{type:"json"};
+import corpus from"./🔣️.json"with{type:"json"};
+
+/** 📋️ Historical package constraints remain exact closed DATA after their Cargo selector tables retire. */
+test("neutral consumed Cargo profile policy preserves every actual workspace constraint inventory",async()=>{
+ const policy=await import("../../🟦️.ts"),read=policy.cargoProfileConstraintsForOwnerV1;expect(typeof read).toBe("function");if(typeof read!=="function")throw Error("Actual canonical profile constraint owner required");const database=new Database(":memory:");database.exec("create table owners(path text primary key,native integer,wasm integer);create table rows(origin text,name text,level text,primary key(origin,name))");
+ try{for(const owner of corpus.owners){const actual=read(owner.manifest)as readonly Readonly<{package:string;optLevel:string;origin:string}>[],rows=actual.map(value=>({origin:value.origin,name:value.package,level:value.optLevel})).sort((a,b)=>a.origin.localeCompare(b.origin)||a.name.localeCompare(b.name));expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"),owner.manifest).toBe(owner.digest);database.exec("delete from rows");for(const row of rows)database.query("insert into rows values(?,?,?)").run(row.origin,row.name,row.level);const counts=database.query("select sum(origin='native') native,sum(origin='wasm') wasm from rows").get()as{native:number|null;wasm:number|null};expect({native:counts.native??0,wasm:counts.wasm??0}).toEqual({native:owner.native,wasm:owner.wasm});database.query("insert into owners values(?,?,?)").run(owner.manifest,owner.native,owner.wasm);expect(Object.isFrozen(actual)&&actual.every(Object.isFrozen)).toBe(true);}expect(database.query("select count(*) count from owners").get()).toEqual({count:239});expect(database.query("select native,wasm,count(*) count from owners group by native,wasm order by native,wasm").all()).toEqual([{native:0,wasm:0,count:95},{native:28,wasm:50,count:1},{native:29,wasm:4,count:6},{native:29,wasm:38,count:136},{native:29,wasm:51,count:1}]);expect(()=>read("../Cargo.toml")).toThrow();expect(()=>read("unregistered/Cargo.toml")).toThrow();}finally{database.close();}
+});
+
+/** 🧊️ Imported schema and policy values are public DATA, never mutable private policy. */
+test("neutral consumed Cargo profile constraints resist public DATA mutation",async()=>{
+ const{cargoProfileConstraintsForOwnerV1}=await import("../../🟦️.ts");expect(new Ajv({strict:true}).validate(schema,data)).toBe(true);const before=cargoProfileConstraintsForOwnerV1("Cargo.toml"),group=data.owners["Cargo.toml"],limit=schema.definitions.Protocol.const.maximumPackageRows;
+ try{data.owners["Cargo.toml"]="isolated";schema.definitions.Protocol.const.maximumPackageRows=0;expect(cargoProfileConstraintsForOwnerV1("Cargo.toml")).toBe(before);expect(before.length).toBe(80);}finally{data.owners["Cargo.toml"]=group;schema.definitions.Protocol.const.maximumPackageRows=limit;}
+});
+
+/** 🎚️ Two-intent selector bytes describe supported TOML values and preserve distinct host override semantics. */
+test("neutral consumed Cargo profile renders exact inline TOML before compiler planning",async()=>{
+ const api=await import("../../🟦️.ts"),render=Reflect.get(api,"renderCargoProfileConfigurationV1");expect(typeof render).toBe("function");if(typeof render!=="function")throw Error("Actual consumed profile renderer required");
+ for(const row of corpus.rendering){const actual=render(row.request,"Cargo.toml","repository")as{selectors:readonly string[]},text=actual.selectors.join("\n"),parsed=TOML.parse(text)as{profile:Record<string,Record<string,unknown>>};expect(Bun.TOML.parse(text)).toEqual(parsed);const selected=parsed.profile[row.request.mode];if(!selected)throw Error("Exact selected profile required");const{package:packages,"build-override":host,...settings}=selected;expect(Object.keys(parsed.profile)).toEqual([row.request.mode]);expect(settings).toEqual(row.target);expect(host).toEqual(row.host);expect(host).not.toHaveProperty("lto");expect(actual.selectors.length*2).toBeLessThanOrEqual(512);expect(actual.selectors.every(value=>Buffer.byteLength(value)<=4096)).toBe(true);expect(Object.isFrozen(actual.selectors)).toBe(true);}
+});
+
+/** 🎟️ Serialized receipts and copied fields cannot issue a live compiler configuration selector. */
+test("neutral consumed Cargo selectors refuse every unissued view before effects",async()=>{
+ const api=await import("../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"),apply=Reflect.get(api,"repositoryCargoConfigurationArgumentsV1");expect(typeof apply).toBe("function");if(typeof apply!=="function")throw Error("Actual private issued configuration argument owner required");
+ for(const value of[Object.freeze({}),Object.freeze({version:1,digest:"0".repeat(64),directory:"/paid-looking/configuration",environment:Object.freeze({SEMIO_COMPILER_CAPACITY_HELD:"true"})}),JSON.parse(JSON.stringify({version:1,selectors:["profile.release.opt-level=0"],profile:{mode:"release"}}))])await expect(Promise.resolve().then(()=>apply(value,["build","--profile","release"]))).rejects.toThrow("issued");
+});
+
+/** 🧭️ Real controlled Source reads retain actual nearest/explicit workspace selection through callback settlement. */
+registerBuildTestLawV1("neutral consumed Cargo workspace selection uses bounded actual Original Source custody","sdk-fence",async original=>{
+ const api=await import("../../../../../🗂️workspaces/🦀️cargo/🟦️.ts"),hold=Reflect.get(api,"withCargoWorkspaceSelectionV1");expect(typeof hold).toBe("function");if(typeof hold!=="function")throw Error("Actual bounded workspace selection owner required");const sink=resolve(process.cwd(),".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated");
+ for(const row of corpus.workspaceSelection){const root=mkdtempSync(join(sink,"cps-")),database=new Database(":memory:");try{database.exec("create table owners(path text primary key)");for(const file of row.files){mkdirSync(dirname(join(root,file.path)),{recursive:true});writeFileSync(join(root,file.path),file.text);const parsed=TOML.parse(file.text)as{workspace?:unknown};expect(Bun.TOML.parse(file.text)).toEqual(parsed);if(parsed.workspace)database.query("insert into owners values(?)").run(file.path);}const leaf=TOML.parse(row.files.find(file=>file.path===row.manifest)!.text)as{package:{workspace?:string}},start=leaf.package.workspace===undefined?dirname(row.manifest):join(dirname(row.manifest),leaf.package.workspace),selected=database.query("select path from owners where path='Cargo.toml' or ?1=substr(path,1,length(path)-11) or ?1 like substr(path,1,length(path)-11)||'/%' order by length(path) desc limit 1").get(start)as{path:string};expect(selected.path).toBe(row.expected);await hold(root,row.manifest,createIssuedResourceControlV1(original,"profile:workspace-selection",0),async(view:{scope:{manifest:string};recheck():Promise<void>})=>{expect(view.scope.manifest).toBe(row.expected);await view.recheck();});}finally{database.close();rmSync(root,{recursive:true,force:true});}}
+});
+
+/** 🔍️ Effective profile observations match every exact selector and refuse hidden package or host changes. */
+test("neutral consumed Cargo profile verifies the complete effective selector table",async()=>{
+ const api=await import("../../🟦️.ts"),verify=Reflect.get(api,"verifyCargoProfileConfigurationV1");expect(typeof verify).toBe("function");if(typeof verify!=="function")throw Error("Actual effective consumed profile verifier required");
+ for(const row of corpus.rendering){const rendered=api.renderCargoProfileConfigurationV1(row.request,"Cargo.toml","repository"),configuration=TOML.parse(rendered.selectors.join("\n"));expect(Bun.TOML.parse(rendered.selectors.join("\n"))).toEqual(configuration);expect(()=>verify(rendered,configuration)).not.toThrow();const changed=structuredClone(configuration)as{profile:Record<string,Record<string,unknown>>};changed.profile[row.request.mode]!["unowned-field"]=true;expect(()=>verify(rendered,changed)).toThrow();const foreign=structuredClone(configuration)as{profile:Record<string,Record<string,unknown>>};foreign.profile[row.request.mode]!["package"]={unobserved:{"opt-level":3}};expect(()=>verify(rendered,foreign)).toThrow();const missing=structuredClone(configuration)as{profile:Record<string,Record<string,unknown>>};delete missing.profile[row.request.mode]!["codegen-units"];expect(()=>verify(rendered,missing)).toThrow();}
+});
+
+/** 🧭️ Only actual controlled workspace Source selects repository membership; caller DATA supplies finite producer intent. */
+test("neutral consumed Cargo intent cannot assert workspace membership or Original mode",async()=>{
+ const api=await import("../../🟦️.ts"),schema=(await import("../../🧬️schema/🔣️.json")).default,validate=new Ajv({strict:true}).compile({...schema,$ref:"#/definitions/Consumption"}),database=new Database(":memory:");try{for(const row of corpus.consumption){expect(validate(row.request)).toBe(row.accept);if(row.accept)expect(JSON.stringify(api.readCargoProfileConsumptionV1(row.request))).toBe(JSON.stringify(row.request));else expect(()=>api.readCargoProfileConsumptionV1(row.request)).toThrow();const oracle=database.query("select case json_extract(?1,'$.kind') when 'resolution' then (select count(*)=1 from json_each(?1)) when 'compiler' then json_extract(?1,'$.producer') in ('artifact','descriptor-emitter','wasm-component','browser-canvas','browser-module') and json_extract(?1,'$.operation') in ('build','check','test','doc','run','bench','clippy','rustc','rustdoc') and (select count(*)=3 and sum(key in ('kind','producer','operation'))=3 from json_each(?1)) else 0 end admitted").get(JSON.stringify(row.request))as{admitted:number};expect(Boolean(oracle.admitted)).toBe(row.accept);}}finally{database.close();}
+});
+
+/** 📥️ Inline profile selectors stay in the Cargo receiver before opaque program arguments. */
+test("neutral consumed Cargo selectors reach generated compiler steps before the program delimiter",async()=>{
+ const api=await import("../../🟦️.ts"),append=Reflect.get(api,"appendCargoProfileSelectorsV1");expect(typeof append).toBe("function");if(typeof append!=="function")throw Error("Actual bounded selector insertion required");const rendered=api.renderCargoProfileConfigurationV1(corpus.rendering[0]!.request,"Cargo.toml","repository");for(const row of corpus.argumentInsertion){const actual=append(row.input,rendered)as readonly string[],pairs=rendered.selectors.flatMap(value=>["--config",value]);expect(actual).toEqual([...row.head,...pairs,...row.tail]);expect(Object.isFrozen(actual)).toBe(true);expect(actual.length).toBeLessThanOrEqual(512);}
+});
+
+/** 🕸️ The pinned custom-profile parser keeps optimizer metadata selection identical across the mode rename. */
+test("neutral consumed Cargo wasm-pack forwards exact two-intent custom profiles",async()=>{
+ const api=await import("../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts"),invoke=Reflect.get(api,"wasmBuildArguments"),database=new Database(":memory:");if(typeof invoke!=="function")throw Error("Actual WASM profile argument owner required");try{for(const row of corpus.wasmInvocation){const actual=Reflect.apply(invoke,undefined,[row.mode]);expect(actual).toEqual({pack:row.pack,cargo:row.cargo});expect(database.query("select json_extract(?1,'$.pack[0]')='--profile' and json_extract(?1,'$.cargo[0]')='--profile' and json_extract(?1,'$.pack[1]')=?2 and json_extract(?1,'$.cargo[1]')=?2 admitted").get(JSON.stringify(actual),row.mode)).toEqual({admitted:1});}for(const mode of["dev","host-tool","wasm-prototype","wasm-release","unknown"])expect(()=>Reflect.apply(invoke,undefined,[mode])).toThrow();}finally{database.close();}
+});
+
+/** 🎯️ Actual selected target determines generic artifact role without another public compiler mode. */
+test("neutral consumed Cargo artifact roles close actual host and WASM targets",async()=>{
+ const api=await import("../../🟦️.ts"),database=new Database(":memory:");try{for(const row of corpus.targetRoles){const request={version:1,mode:"prototype",producer:row.producer,target:row.target,operation:"build"},oracle=database.query("select case when ?1='artifact' then case ?2 when 'aarch64-apple-darwin' then 'native' when 'wasm32-wasip2' then 'component' when 'wasm32-unknown-unknown' then 'browser' end when ?1='descriptor-emitter' and ?2 not like 'wasm%' then 'descriptor' when ?1='browser-canvas' and ?2='wasm32-unknown-unknown' then 'browser' end role").get(row.producer,row.target);expect(JSON.stringify(oracle)).toBe(JSON.stringify({role:row.role}));if(row.role===null)expect(()=>api.planCargoProfilePolicyV1(request,{owner:"Cargo.toml",kind:"repository"})).toThrow();else{const plan=api.planCargoProfilePolicyV1(request,{owner:"Cargo.toml",kind:"repository"});expect(String(plan.role)).toBe(row.role);expect(plan.packageOverrides.some(value=>value.origin==="wasm")).toBe(row.role!=="native");}}}finally{database.close();}
+});
+
+
+/** 🎚️ Neutral capture admits only the exact selected profile, independent of compiler target. */
+test("neutral consumed Cargo artifact capture rejects every retired profile alias",async()=>{
+ const api=await import("../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"),modes=await import("../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"),database=new Database(":memory:");try{for(const row of corpus.artifactProfileAdmission){const oracle=database.query("select ?1=?2 admitted").get(row.mode,row.profile);expect(oracle).toEqual({admitted:Number(row.accept)});const invoke=()=>api.cargoArtifactArgumentsV1(["build","--profile",row.profile],{mode:modes.readBuildMode(row.mode),compilerConfiguration:undefined,buildDirectory:"/paid/build"});if(row.accept)expect(invoke().slice(0,3)).toEqual(["build","--profile",row.mode]);else expect(invoke).toThrow();expect(modes.buildModePolicy(modes.readBuildMode(row.mode))).not.toHaveProperty("wasmProfile");}}finally{database.close();}
+});
+
+/** 📋️ Every selected repository workspace retains its constraints solely in the canonical consumed owner. */
+test("neutral consumed Cargo policy closes every actual authored workspace profile table",()=>{
+ const database=new Database(":memory:");try{database.exec("create table owners(path text primary key,profiles integer)");for(const row of corpus.owners){const text=readFileSync(join(process.cwd(),row.manifest),"utf8"),actual=Bun.TOML.parse(text);expect(actual).toEqual(TOML.parse(text));const profiles=Reflect.get(actual,"profile");database.query("insert into owners values(?,?)").run(row.manifest,profiles===undefined?0:Object.keys(profiles).length);}expect(database.query("select count(*) owners,sum(profiles) profiles from owners").get()).toEqual({owners:239,profiles:0});}finally{database.close();}
+});
+
+/** 📥️ Actual native planning and capture must execute inside the final issued compiler-input continuation. */
+test("neutral consumed Cargo actual native producers retain the final compiler input port",()=>{
+ const database=new Database(":memory:");try{for(const row of corpus.compilerPortOwners){const source=ts.createSourceFile(row.path,readFileSync(join(process.cwd(),row.path),"utf8"),ts.ScriptTarget.Latest,true),owner=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===row.function);if(!owner)throw Error("Actual compiler owner function required");let found=0;const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text===row.call)found++;ts.forEachChild(node,walk);};walk(owner);expect(database.query("select ?1>0 retained").get(found),row.path).toEqual({retained:1});}}finally{database.close();}
+});
+
+/** 🚪️ Actual issued callers cannot turn an unknown producer DATA field into store or compiler admission. */
+registerBuildTestLawV1("neutral consumed Cargo producer intent refuses before physical store entry","sdk-fence",async original=>{
+ const{buildRepositoryCargoArtifacts}=await import("../../../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"),{repositoryCargoNetworkV1}=await import("../../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),root=process.cwd(),control=createIssuedResourceControlV1(original,"profile:producer-refusal",0);let entered=false;for(const producer of[undefined,"host-tool","foreign"]){const options={invocation:original,producer,network:repositoryCargoNetworkV1(original,root),control,consume:async()=>{entered=true;throw Error("Refused producer cannot admit a consumer");}};await expect(Reflect.apply(buildRepositoryCargoArtifacts,undefined,[join(root,"Cargo.toml"),[],root,options])).rejects.toThrow();}expect(entered).toBe(false);
+});
+
+/** 📍️ One exact configuration and writer tuple stays stable across repeated neutral compiler planning. */
+test("neutral consumed Cargo writer selectors are exact unique coordinates",async()=>{
+ const{cargoConfigurationArgumentsV1}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"),database=new Database(":memory:");try{for(const row of corpus.writerSelectors){const invoke=()=>cargoConfigurationArgumentsV1(row.args,"/repo/.cargo/config.toml","/paid/build");if(!row.accept){expect(invoke).toThrow();continue;}const actual=invoke();expect(actual).toEqual(["build","--config","/repo/.cargo/config.toml","--config",'build.build-dir="/paid/build"']);expect(database.query("select count(*) count from json_each(?1) where value=?2").get(JSON.stringify(actual),'build.build-dir="/paid/build"')).toEqual({count:1});expect(cargoConfigurationArgumentsV1(actual,"/repo/.cargo/config.toml","/paid/build")).toEqual(actual);}}finally{database.close();}
+});
+
+/** 🎭️ Production actor expectations recompute full consumed arguments, preserving distinct pass and emitter owners. */
+test("neutral consumed Cargo actor witnesses require the full actual compiler tuple",async()=>{
+ const path=join(process.cwd(),"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts"),api={runtimeActorCargoArgumentsV1},requestSchema=JSON.parse(readFileSync(join(dirname(path),"🧬️schema/🔣️.json"),"utf8")),database=new Database(":memory:");expect(typeof api.runtimeActorCargoArgumentsV1).toBe("function");try{for(const row of corpus.actorArguments){expect(new Ajv({strict:true}).validate(requestSchema,row)).toBe(true);const request={...row,root:resolve(row.root),packageManifest:resolve(row.packageManifest),buildDirectory:resolve(row.buildDirectory)},actual=api.runtimeActorCargoArgumentsV1(request) as readonly string[],configuration=actual.flatMap((value,index)=>value==="--config"?[actual[index+1]!]:[]),profiles=configuration.filter(value=>value.startsWith("profile.")),table=TOML.parse(profiles.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(Bun.TOML.parse(profiles.join("\n"))).toEqual(table);expect(table.profile.release?.lto).toBe(row.kind==="component"?"thin":false);expect(database.query("select sum(value='--config') configurations,sum(value='--profile') profiles from json_each(?1)").get(JSON.stringify(actual))).toEqual({configurations:profiles.length+2,profiles:1});expect(actual).not.toContain("wasm-release");expect(actual).not.toContain("host-tool");expect(actual[0]).toBe("build");expect(actual).toContain("--locked");expect(actual).toContain("--message-format=json-render-diagnostics");expect(Object.isFrozen(actual)).toBe(true);expect(()=>api.runtimeActorCargoArgumentsV1({...row,mode:"prototype"})).toThrow();expect(()=>api.runtimeActorCargoArgumentsV1({...row,buildDirectory:"relative"})).toThrow();}}finally{database.close();}
+});
+
+/** 🌉️ Isolated bridges do not keep a redundant local selector outside canonical consumption. */
+test("neutral consumed Cargo isolated bridges retire redundant profile declarations",()=>{
+ const database=new Database(":memory:");try{database.exec("create table sources(path text primary key,profiles integer)");for(const path of corpus.isolatedProfileSources){const text=readFileSync(join(process.cwd(),path),"utf8"),actual=Bun.TOML.parse(text);expect(actual).toEqual(TOML.parse(text));database.query("insert into sources values(?,?)").run(path,Object.keys(Reflect.get(actual,"profile")??{}).length);}expect(database.query("select sum(profiles) profiles from sources").get()).toEqual({profiles:0});}finally{database.close();}
+});
+
+/** 🦀️ Native Cargo release syntax narrows to the actual Original intent, without a retired profile alias. */
+test("neutral consumed Cargo native release flags normalize only matching intent",async()=>{
+ const api=await import("../../🟦️.ts"),invoke=Reflect.get(api,"cargoProfileInvocationArgumentsV1"),database=new Database(":memory:");expect(typeof invoke).toBe("function");if(typeof invoke!=="function")throw Error("Actual native Cargo mode normalization required");try{for(const row of corpus.standardModeFlags){const rendered=api.renderCargoProfileConfigurationV1({version:1,mode:row.mode,target:"wasm32-wasip2",producer:"artifact",operation:"build"},"Cargo.toml","repository"),execute=()=>invoke(row.args,rendered)as readonly string[];if(!row.accept){expect(execute).toThrow();continue;}const actual=execute();expect(actual.slice(0,row.head.length)).toEqual(row.head);expect(actual).not.toContain("--release");expect(database.query("select count(*) profiles from json_each(?1) where value='--profile'").get(JSON.stringify(actual))).toEqual({profiles:1});}}finally{database.close();}
+});

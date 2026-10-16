@@ -1,0 +1,11 @@
+from cfgboard import *
+tree, mods = load_mods()
+nodes = build(mods)
+g, amb = edges(nodes, 'none')
+ids = set(n.id for n in nodes if n.mod.startswith('🎲️board'))
+assert set(nodes[i].mod for i in ids) <= set(ORDER), set(nodes[i].mod for i in ids) - set(ORDER)
+res = run_lane(nodes, g, ids, seed, ORDER, SPLIT)
+print('units', len(res['units']), 'moved units', len(res['moved']), sum(res['unodes'][x].lines for x in res['moved']))
+print('merged cycles', [(l, n[:5]) for l, n in res['merged'] if l > 30])
+print('ext', len(res['ext']), sum(n.lines for n in res['ext']), collections.Counter(n.parent for n in res['ext']).most_common(10))
+for r in sorted(res['sizes']): print(r, ORDER[r].replace(D,'D/'), res['sizes'][r])

@@ -3,7 +3,7 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 /** 🧩️ Semantic plugin build plan owner. */
 
 import { newestComponentSourceMtime, stagedModuleMtime } from "../🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -21,8 +21,7 @@ const repoRoot = getWorkspaceRoot();
 
 
 
-/** 🔌️ The one plugin-modules root this dev loop stages iterated modules into, beside the shipped ones. */
-const pluginOutRoot = pluginModulesRoot();
+
 
 /** 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
  * constant so the ship, dev and bench call sites can never drift onto different (or extinct) paths. */
@@ -95,4 +94,4 @@ function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSel
   return filterPlugin && !projectedHostPluginFilter(catalog, filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
-export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, pluginOutRoot, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };
+export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

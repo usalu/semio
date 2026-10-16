@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-kernel-media-jobs"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "kernel-media-jobs"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-kernel-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

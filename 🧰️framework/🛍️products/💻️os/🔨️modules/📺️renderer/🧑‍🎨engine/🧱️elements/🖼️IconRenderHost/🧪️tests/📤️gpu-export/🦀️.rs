@@ -3,11 +3,11 @@ use semio_framework_job::{drive_step, root_cancel_token, Generation, Interactive
 use ui_wgpu::wgpu::{DrawList, PreparedRenderInput, PreparedRenderJob};
 use ui_wgpu::wgpu::{draw_types::UiInstance, theme::Rgba};
 
-fn contract() -> serde_json::Value {
+pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️gpu-export/🔣️.json")).unwrap()
 }
 
-fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {
+pub fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {
     let mut draw = DrawList::default();
     for row in fixture["rectangles"].as_array().unwrap() {
         let bounds = std::array::from_fn(|i| row["bounds"][i].as_f64().unwrap() as f32);
@@ -40,7 +40,7 @@ fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {
     result.expect("prepared fixture packet")
 }
 
-fn begin(source: &GpuContext, fixture: &serde_json::Value) -> IconGpuPngExport {
+pub fn begin(source: &GpuContext, fixture: &serde_json::Value) -> IconGpuPngExport {
     match IconGpuPngExport::new(source, fixture["width"].as_u64().unwrap() as u32, fixture["height"].as_u64().unwrap() as u32, packet(fixture)) {
         Ok(job) => job,
         Err(mut rejected) => {
@@ -50,7 +50,7 @@ fn begin(source: &GpuContext, fixture: &serde_json::Value) -> IconGpuPngExport {
     }
 }
 
-fn finish(job: &mut IconGpuPngExport) {
+pub fn finish(job: &mut IconGpuPngExport) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while !job.advance().unwrap() {
         assert!(job.take_png().is_none());

@@ -5,21 +5,21 @@ use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
 use semio_framework_value::NativeDecodeControl;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
-fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"CommonMark literal role, variant or exclusive forest differs")}
-fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark semantic extent overflow"))}
-pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{
+pub fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"CommonMark literal role, variant or exclusive forest differs")}
+pub fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark semantic extent overflow"))}
+pub fn extent(limits:SqliteDatabaseLimits)->Result<()>{
  let bytes=MdSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).try_fold(0usize,|total,sql|sum(total,sql.len()))?;
  let bytes=TABLES.iter().try_fold(bytes,|total,(name,_)|sum(total,name.len()))?;
  if bytes.max(MdSnapshot::SQLITE_SCHEMA.len())>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"CommonMark authored schema exceeds caller bytes"))}
  if TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<1{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"CommonMark authored relational extent exceeds caller limits"))}Ok(())
 }
-fn exact(value:&R,count:usize)->Result<()>{if value.fields.len()!=count||value.fields.keys().any(|id|usize::from(*id)>=count){return Err(invalid())}Ok(())}
+pub fn exact(value:&R,count:usize)->Result<()>{if value.fields.len()!=count||value.fields.keys().any(|id|usize::from(*id)>=count){return Err(invalid())}Ok(())}
 fn field(value:&R,id:u16)->Result<&F>{value.get(id).ok_or_else(invalid)}
 fn record(value:&F,count:usize)->Result<&R>{let F::Record(value)=value else{return Err(invalid())};exact(value,count)?;Ok(value)}
 fn list(value:&F)->Result<&[F]>{let F::List(value)=value else{return Err(invalid())};Ok(value)}
 fn uint(value:&F,maximum:u64)->Result<u64>{match value{F::UInt(value)if *value<=maximum=>Ok(*value),_=>Err(invalid())}}
-fn kind(value:&F,names:&[&'static str])->Result<(usize,&'static str)>{let F::Enum(value)=value else{return Err(invalid())};let index=*value as usize;Ok((index,*names.get(index).ok_or_else(invalid)?))}
-fn text(value:&F,native:&mut NativeDecodeControl<'_>)->Result<usize>{let F::Text(value)=value else{return Err(invalid())};native.scoped_stage(|native|{native.begin_stage(value.len())?;for part in value.as_bytes().chunks(256){native.advance(part.len())?;}Ok::<_,ValueError>(())})?;Ok(value.len())}
+pub fn kind(value:&F,names:&[&'static str])->Result<(usize,&'static str)>{let F::Enum(value)=value else{return Err(invalid())};let index=*value as usize;Ok((index,*names.get(index).ok_or_else(invalid)?))}
+pub fn text(value:&F,native:&mut NativeDecodeControl<'_>)->Result<usize>{let F::Text(value)=value else{return Err(invalid())};native.scoped_stage(|native|{native.begin_stage(value.len())?;for part in value.as_bytes().chunks(256){native.advance(part.len())?;}Ok::<_,ValueError>(())})?;Ok(value.len())}
 fn optional_text(value:&F,native:&mut NativeDecodeControl<'_>)->Result<Option<usize>>{match value{F::Absent=>Ok(None),value=>text(value,native).map(Some)}}
 fn optional_uint(value:&F,maximum:u64)->Result<Option<u64>>{match value{F::Absent=>Ok(None),value=>uint(value,maximum).map(Some)}}
 fn optional_bool(value:&F)->Result<Option<bool>>{match value{F::Absent=>Ok(None),F::Bool(value)=>Ok(Some(*value)),_=>Err(invalid())}}

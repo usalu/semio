@@ -451,7 +451,7 @@ pub fn action_key(action: &RepoAction) -> String {
 
 // #region 🔖️Command
 /// 🛡️ Executes an owned repo action in a managed process so expensive queries remain cancellable.
-pub fn run_action(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
+pub fn run_action(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     match parsed.flag("action").and_then(|value| serde_json::from_str::<RepoAction>(value).ok()) {
         Some(action) => { println!("{}", action.execute(root)); 0 },
         None => { eprintln!("[dashboard] invalid repo action"); 2 }

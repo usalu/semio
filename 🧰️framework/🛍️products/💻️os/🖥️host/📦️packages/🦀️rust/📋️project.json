@@ -165,10 +165,16 @@
         "command": "bun 📜️script.ts wasm",
         "cwd": "{projectRoot}"
       },
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
-      "cache": true
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test": {
       "executor": "repo:script",

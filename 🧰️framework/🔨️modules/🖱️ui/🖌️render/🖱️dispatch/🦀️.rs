@@ -16,7 +16,7 @@
 //!
 //! **Absolute bounds simplify the port.** `events.rs`'s `layout.x`/`layout.y` were parent-relative,
 //! which is why that file needed `node_abs_origin`'s parent-chain walk and `hit_test_subtree`'s
-//! re-basing math. [`crate::element::Hitbox::bounds`] is already window-absolute (the `bounds` param
+//! re-basing math. [`crate::identity::Hitbox::bounds`] is already window-absolute (the `bounds` param
 //! `Element::prepaint` receives), so neither is needed here — `hit_test_subtree` degenerates to
 //! `hit_test` with a different root.
 //!
@@ -40,7 +40,7 @@
 
 use std::collections::HashMap;
 
-use crate::element::{Bounds, ElementId, Hitbox};
+use crate::identity::{Bounds, ElementId, Hitbox};
 use crate::schedule::InvalidationReason;
 use ui_contract::{ActionBinding, ActionId, FlowInline, SurfaceId, Trigger, UiIntent, UiNodeId, UiRevision, UiText, UiValue};
 
@@ -237,7 +237,7 @@ pub struct DispatchNode {
 }
 
 /// 🌳️ The frame-local interpreted dispatch tree — built node-by-node during prepaint (see
-/// `element.rs`'s [`crate::PrepaintCx::register`]/[`crate::PrepaintCx::with_children`]) and held
+/// `element.rs`'s `PrepaintCx::register`/`PrepaintCx::with_children`) and held
 /// read-only inside the presented `Rc<FrameSnapshot>` for the lifetime of that generation. `index` is
 /// the reverse [`ElementId`] →
 /// [`FrameNodeId`] lookup [`Dispatcher`] uses to resolve its own persistent, `ElementId`-keyed state
@@ -1578,7 +1578,7 @@ impl Dispatcher {
 
 /// 🧪️ Ports `events.rs`'s seven test regions onto [`DispatchTree`]/[`Dispatcher`] — they are this
 /// port's specification (see the ticket). Built directly against hand-assembled [`DispatchTree`]s via
-/// [`DispatchTree::insert`] — the same primitive [`crate::PrepaintCx::register`] itself calls — exactly
+/// [`DispatchTree::insert`] — the same primitive `PrepaintCx::register` itself calls — exactly
 /// as `events.rs`'s own tests built a `UiTree` by hand via a `leaf()` helper. `frame.rs`'s own test
 /// module covers the *other* half: that a real `build_frame` call, going through prepaint registration
 /// rather than a hand-built tree, produces the same kind of structure these tests assume.

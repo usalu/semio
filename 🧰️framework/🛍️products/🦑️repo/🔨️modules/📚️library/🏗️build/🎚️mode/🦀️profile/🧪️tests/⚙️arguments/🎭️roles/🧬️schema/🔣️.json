@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "contexts", "cases", "maximumSourceBytes", "maximumArtifactBytes", "hostBaseline"],
+  "properties": {
+    "version": {"const": 1},
+    "contexts": {"const": ["host", "dual"]},
+    "cases": {"const": ["prototype-off", "prototype-incremental", "release-thin", "release-fat"]},
+    "maximumSourceBytes": {"const": 16384},
+    "maximumArtifactBytes": {"const": 2097152},
+    "hostBaseline": {"const": {"optLevel": "0", "codegenUnits": 256, "debug": 0}}
+  }
+}

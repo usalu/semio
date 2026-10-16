@@ -1,4 +1,4 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 use crate::schema::default_snapshot;
 
 /// 🔁️ A whole-artifact replacement absorbs every earlier field delta.

@@ -39,9 +39,10 @@ export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(mesh.materials).toEqual(fixture.mesh.materials);
       expect(mesh.textures).toEqual(fixture.mesh.textures);
       expect(Array.from(mesh.uvs)).toEqual(fixture.mesh.uvs);
-      expect(mesh.attributes!.normal.values.length).toBe(1);
-      expect(mesh.attributes!.labels.values.length).toBe(1);
-      expect(mesh.attributes!.normal.indices!.length).toBe(mesh.positions.length / 3);
+      const attributes=mesh.attributes;if(!attributes?.normal||!attributes.labels)throw Error("Golden mesh normal and label attributes required");
+      expect(attributes.normal.values.length).toBe(1);
+      expect(attributes.labels.values.length).toBe(1);
+      expect(attributes.normal.indices!.length).toBe(mesh.positions.length/3);
     });
     it("decodes the shared golden vector into typed arrays that match the fixture's mesh", () => {
       expect(bytes.length).toBe(fixture.packBodyBytes);

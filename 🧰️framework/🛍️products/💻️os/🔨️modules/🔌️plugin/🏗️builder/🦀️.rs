@@ -618,6 +618,23 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         self
     }
+
+    /// 🖼️ Declares the canvas assets a `wasm32-wasip2` guest needs to size and paint icons (the emoji face, the label face and the
+    /// icon pack) as package assets and registers this guest's [`crate::reactor::package_asset`] as the canvas port's reader, so the
+    /// port installs them once the host delivered them with the instance open. Plugins whose guests link Canvas call it once.
+    #[cfg(feature = "canvas-runtime-assets")]
+    pub fn canvas_runtime_assets(mut self) -> Self {
+        semio_framework_canvas_assets::register_guest_asset_reader(crate::reactor::package_asset);
+        for declaration in semio_framework_canvas_assets::guest_asset_declarations() {
+            self = self.asset(AssetDeclaration {
+                name: declaration.name,
+                media_type: semio_framework::MediaType { class: semio_framework::MediaClass::Text, form: semio_framework::MediaForm::Document },
+                size_bytes: declaration.size_bytes,
+                sha256: declaration.sha256,
+            });
+        }
+        self
+    }
     //#endregion 🔖️Descriptor
 
     /// 📚️ Assembles a library-only plugin through the typed boundary.

@@ -1,6 +1,6 @@
 //! 💾️ 💾️ S Studio app command — `set-active-example`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
@@ -19,8 +19,3 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, WorkflowSnapsh
     }
 }
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

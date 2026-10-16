@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 #[test]
 fn sqlite_snapshot_csv_receiving_original_subset_validation_uses_both_original_controls(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🛂️validation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&fixture());let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
+ let law:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🛂️validation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=snapshot(&fixture());let database=input(&source);let pointers=(source.schema.as_ptr(),database.tables.as_ptr());let incoming=grant(&law["grant"]);
  macro_rules! direction{
   ($native:ident,$owner:ident,$method:ident)=>{
    for case in law["cases"].as_array().unwrap(){
@@ -26,8 +26,8 @@ use std::sync::atomic::{AtomicUsize,Ordering as AtomicOrdering};
 mod heap;
 #[global_allocator]
 static CSV_RECEIVING_HEAP:heap::RequestedAllocator=heap::RequestedAllocator;
-fn policy()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn policy()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn snapshot(value:&serde_json::Value)->CsvSnapshot{CsvSnapshot{schema:value["schema"].as_str().unwrap().to_string(),has_header:value["hasHeader"].as_bool().unwrap(),records:value["records"].as_array().unwrap().iter().map(|record|CsvRecord{fields:record["fields"].as_array().unwrap().iter().map(|field|CsvField{value:field["value"].as_str().unwrap().to_string(),quoted:field["quoted"].as_bool().unwrap()}).collect()}).collect()}}
 fn long_snapshot(law:&serde_json::Value)->CsvSnapshot{CsvSnapshot{schema:"owned-λ🙂".to_string(),has_header:true,records:vec![CsvRecord{fields:Vec::new()},CsvRecord{fields:vec![CsvField{value:law["stringUnit"].as_str().unwrap().repeat(law["stringRepetitions"].as_u64().unwrap()as usize),quoted:true},CsvField{value:"tail".to_string(),quoted:false}]},CsvRecord{fields:Vec::new()}]}}
@@ -69,7 +69,7 @@ fn sqlite_snapshot_csv_receiving_original_native_cancellation_keeps_staged_outpu
 fn sqlite_snapshot_csv_receiving_original_subset_validation_typed_destination_keeps_original_children(){
  use semio_framework_dsl_record::{FieldValue,RecordValue};
  use semio_framework_value::{native_decoding::NativeDecodeProgress,retirement::controlled::ControlledRetirement};
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=&law["source"];let text=source["unit"].as_str().unwrap().repeat(source["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),source["bytes"].as_u64().unwrap()as usize);
+ let law:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let source=&law["source"];let text=source["unit"].as_str().unwrap().repeat(source["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),source["bytes"].as_u64().unwrap()as usize);
  let normal=grant(&law["bodyGrant"]);let closing=grant(&law["closeGrant"]);
  let make_record=|schema:&str,value:&str|{let row=|fields|FieldValue::Record(RecordValue{fields:[(0,FieldValue::List(fields))].into_iter().collect()});let field=|value:&str,quoted|FieldValue::Record(RecordValue{fields:[(0,FieldValue::Text(value.into())),(1,FieldValue::Bool(quoted))].into_iter().collect()});RecordValue{fields:[(0,FieldValue::Text(schema.into())),(1,FieldValue::Bool(source["hasHeader"].as_bool().unwrap())),(2,FieldValue::List(vec![row(vec![]),row(vec![field(value,source["quoted"].as_bool().unwrap()),field("",source["emptyQuoted"].as_bool().unwrap())]),row(vec![])]))].into_iter().collect()}};
  let record=make_record(source["schema"].as_str().unwrap(),&text);let demanded=super::super::admission::binding_demands(&record).unwrap();
@@ -82,4 +82,9 @@ fn sqlite_snapshot_csv_receiving_original_subset_validation_typed_destination_ke
   let at=at.as_u64().map(|value|value as usize);let record=if target=="schema"{make_record(&text,"")}else{make_record(source["schema"].as_str().unwrap(),&text)};let mut callback=|event:NativeDecodeProgress|event.total!=text.len()||at.is_none_or(|at|event.completed<at);let mut native=NativeDecodeControl::new(law["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.begin_stage(17).unwrap();native.advance(3).unwrap();let mut wallet=store::NativeSnapshotBodyWallet::new(normal);let mut output=None;let(result,mut born,mut released)=heap::observe_backing(||super::super::admission::bind(&record,&mut output,&mut native,&mut wallet));let receipt=wallet.progress();assert!(receipt.fits(normal));assert_eq!((born,released),(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(released,0);let retained=output.as_ref().unwrap();assert!(retained.has_header);let prefix=if target=="schema"{&retained.schema}else{assert_eq!(retained.schema,source["schema"].as_str().unwrap());assert_eq!(retained.records[1].fields[0].quoted,source["quoted"].as_bool().unwrap());&retained.records[1].fields[0].value};let prefix_bytes=prefix.len();assert!(text.starts_with(prefix));assert!(text.is_char_boundary(prefix_bytes));assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(prefix).unwrap()).unwrap(),text[..prefix_bytes]);if at.is_some(){assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);}else{result.unwrap();assert_eq!(retained.records.len(),3);assert!(retained.records[0].fields.is_empty());assert!(retained.records[2].fields.is_empty());assert_eq!(retained.records[1].fields.len(),2);assert!(retained.records[1].fields[1].quoted);assert!(retained.records[1].fields[1].value.is_empty());}native.advance(14).unwrap();drop(native);
   let mut owner=ControlledRetirement::new(output.take().unwrap()).map_err(|(error,_)|error).unwrap();for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(result,allocated,freed)=heap::observe_backing(||owner.step(closing));let step=result.unwrap();assert!(step.progress().fits(closing));assert_eq!((allocated,freed),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=allocated;released+=freed;}assert!(owner.terminal_is_empty());assert_eq!(born,released);let(_,allocated,freed)=heap::observe_backing(||drop(owner));assert_eq!((allocated,freed),(0,law["terminalDropBytes"].as_u64().unwrap()as usize));eprintln!("[DEBUG] Original CSV typed receiving target={target} cancelAt={at:?} UTF8prefix={prefix_bytes} originalStage17 preserved bodyReceiptExact born={born} released={released} fundedTerminalEmpty");
  }}
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

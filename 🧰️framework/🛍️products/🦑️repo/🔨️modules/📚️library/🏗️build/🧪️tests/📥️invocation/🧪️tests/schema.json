@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "lawMilliseconds",
+    "fallbackMilliseconds",
+    "drainMilliseconds",
+    "cases",
+    "order",
+    "suiteCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "lawMilliseconds": {
+      "const": 2000
+    },
+    "fallbackMilliseconds": {
+      "const": 3500
+    },
+    "drainMilliseconds": {
+      "const": 120
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "timeout",
+              "error",
+              "undefined",
+              "detached",
+              "normal",
+              "funded",
+              "registered-error",
+              "registered-undefined"
+            ]
+          },
+          "status": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "order": {
+      "const": [
+        "lease-held",
+        "lease-released",
+        "cleanup",
+        "late-birth-refused"
+      ]
+    },
+    "suiteCases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "normal",
+              "error",
+              "undefined",
+              "detached",
+              "early"
+            ]
+          },
+          "status": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

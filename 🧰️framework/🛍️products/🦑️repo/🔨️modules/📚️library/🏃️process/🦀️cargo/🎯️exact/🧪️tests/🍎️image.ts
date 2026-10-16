@@ -14,7 +14,7 @@ test("actual repository exact Cargo prepares and acquires every selected bounded
  const mode=process.env.SEMIO_BUILD_MODE;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");
  await receiveScriptProcessInvocation(process.env,async invocation=>{
   const workspace=process.cwd(),control=scriptCompilerAdmissionControlV1(invocation,"repository-exact:physical",120000);
-  await withRepositoryCompilerStoreV1(workspace,mode,control,process.env,async store=>{
+  await withRepositoryCompilerStoreV1(workspace,mode,control,process.env,async (store,control)=>{
    const root=mkdtempSync(join(store.buildDirectory,"ex-")),suffix=randomUUID().slice(0,8),packages=[0,1].map(index=>"exact_"+suffix+"_"+index),manifests=Object.fromEntries(packages.map((name,index)=>[name,join(root,String(index),"Cargo.toml")])),events:string[]=[];
    try{
     const receipts=await runRepositoryExactCargoLaws({invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:120000,listMilliseconds:60000,lawMilliseconds:60000},preparation:configuredRepositoryCargoPreparationPolicyV1(),cwd:root,manifestPaths:manifests,groups:packages.map(name=>({package:name,target:{kind:"test" as const,name:"laws"},laws:fixture.laws}))},{

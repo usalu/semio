@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "platform",
+    "layers"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "platform": {
+      "enum": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^=\\u0000]+$"
+        },
+        "additionalProperties": {
+          "type": "string",
+          "maxLength": 65536,
+          "pattern": "^[^\\u0000]*$"
+        },
+        "maxProperties": 4096
+      }
+    }
+  },
+  "definitions": {
+    "Runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "mode",
+        "platform",
+        "environment",
+        "directory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "environment": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^=\\u0000]+$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "maxProperties": 4096
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "maximumEnvironmentBytes": 1048576,
+        "maximumPathUnits": 256,
+        "temporaryName": "tmp",
+        "derivedVariables": [
+          "TMPDIR",
+          "TMP",
+          "TEMP",
+          "SEMIO_VITE_CACHE_DIRECTORY"
+        ],
+        "fixedVariables": {
+          "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+          "NODE_DISABLE_COMPILE_CACHE": "1"
+        },
+        "removedVariables": [
+          "SEMIO_SCRIPT_PROCESS_INVOCATION"
+        ],
+        "paidVariables": [
+          "SEMIO_COMPILER_CAPACITY_HELD",
+          "SEMIO_COMPILER_PARALLELISM",
+          "GOMAXPROCS"
+        ],
+        "maximumLayers": 3,
+        "windowsLayerComparison": "uppercase"
+      }
+    }
+  }
+}

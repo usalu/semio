@@ -135,3 +135,54 @@ Rules are in `📓️CARVING-RULES.md`. At 10:xx the `bun repo cargo` launcher i
 - Carving: compiler fits the gate (fonts go through `FontSet`/`CompilerFonts`, hosts install them; the first real `bun repo cargo check` succeeded); print fits (schema documents load at runtime); server is 5 crates plus a facade; quiz and repo-graphql each lost a `-schema` crate; pets is 7 producers plus a facade.
 - Hardening with the patched oracle found and fixed 12 plugin-instance and 8 hub regressions and 51 infinite structs; wave-2 splits are clean.
 - The region audit (`AUDIT-REGIONS-NAMES-SIZES.md`) found region markers dropped across many splits; a restore is running.
+
+## Goal phase: end to end (started 14:30)
+
+The user set the goal to keep untangling until everything runs end to end.
+
+State at the start:
+- 25 oversized crates (census rerun).
+- The launcher fails with "Finite original maintenance authority required": the lease control has no deadline, and the error is thrown from `⚡️caching/🧹️pruning/🏪️budget/⚙️execution`.
+- The Nx producer route fails on a missing `📚️layers/🟦️.ts` (peer mid-edit).
+
+Wave 4 (14 agents) per `📓️WAVE4-BRIEF.md`: REPO-CLI, CANVAS, UI-RENDER, UI-SCENE, UI-RUNTIME, SURFACE (plus moving GIS policy into the GIS plugin and giving terrain a single owner), REPO-DASHBOARD, PACK, FRAMEWORK-FACADE (plus relocating product vocabulary), OS-INFINITE (plus relocating the puzzle2d knowledge), OS-MCP, OS-FLOW (plus the flow and workflow artifact crates), OS-HOST-NEURAL-DAG. Haiku audit: why the renderer-wgpu and db crates are refused, and the plugin and hub gate census.
+
+## 16:05 coordination
+
+- Compile attempts are refused with "Original selected owner registry changed", because the fleet's carves keep changing `📋️build-owners.json`, manifests and launch routes.
+- Decision: launch no new carving waves until a quiet compile window has run. Once the wave-4 agents finish, freeze registry and manifest edits from this fleet, refresh locks, then run check and test bottom-up (census tier order) and fix errors.
+- Load average is about 50.
+
+## 16:30 compile blocker: image headroom
+
+- Canonical compile: `SEMIO_SCRIPT_POLICY='{"version":1,"owner":"repository:cargo:caller","maximumElapsedMilliseconds":3600000}' bun repo cargo --store=shared --configuration=prototype -- check -p <crate> --message-format=short` (RESULT-INFRA-UNBLOCK.md §7).
+- It is refused with "Insufficient physical compiler initial headroom": the Rust image `⚡️cache/rust/fixed/m` has 4,293,222,400 bytes free and needs 4,294,967,296. The image holds 6.0 GB of cargo state and 5.3 GB of Nx SDK material.
+- The sanctioned historical retirement fails with "Original funded graph publication namespace required" until the peer republishes the Nx SDK. This is not ours to bypass.
+- Infra defects fixed by this fleet: the owner-contract validator now accepts `enum`/`uniqueItems`; `lsof` paths are decoded; the Repo Cargo launch entries carry a finite policy.
+- A background watcher fires when the image has at least 4.4 GB free. Until then, carving continues, because registry churn no longer costs a compile window.
+
+## 20:30 status
+
+- Carved (static verification): canvas, ui-render (plus font and asset delivery), ui-scene, ui-runtime, surface, repo-dashboard, pack, the framework facade (21 crates), os host/neural/dag, os-mcp (22), os-flow (18), flow-flow, os-infinite world (7) and board (11), stdio-contract (11), trace testkit, quiz/graphql/pets/server/print/compiler/repo-cli.
+- Infra: the launcher works for gate-compliant closures (renderer WP0 had 5 green `check -p`). The owner registry now covers every package (235 rows added). The counter's cfg bug is fixed.
+- Plans: renderer (87 crates; WP0 done, WP1–WP5 running), os-kernel (48 crates; WP0 plus non-store packages running, store waits for peer batches), plugin (58 crates; WP0 running), replication (16 crates; executing).
+- Plugin crates: wave-0 generators and the space-space pilot are done; S2b automation and the rollout to the 11 clean packages are running.
+- Running: the compile pass 1 agent (real check and test on all compliant crates), db, hub.
+- Regression fixed by the coordinator: the root script import of `INTERACTIVITY_AUDIT_WORLD3D_FILE`.
+- Correction: the `icon-embeds` file mounts 250 files, which breaks the file budget, so WP2 moves IconRenderHost onto the runtime asset port.
+
+## 21:20 usage-limit interruption
+
+All 12 fleet agents and the relocation session stopped at the session usage limit, some mid-edit. After the reset they are resumed in batches to avoid another limit hit.
+- Batch 1, which had mid-edit state: hub, db, kernel WP0, plugin WP0, renderer WP2, plugin generators. Each first verifies and repairs its own half-applied edits.
+- Batch 2 part 1: replication, compile pass 1.
+- Pending: renderer WP1, WP3, WP4, WP5 and the relocation session.
+
+## 22:xx first real compile results
+
+- Compile pass 1 (`--manifest-path 🧰️framework/Cargo.toml`, native lib): 129 of 137 gate-compliant framework crates pass `check` with warnings only, among them our ui-scene, ui-render and most surface carves. Two crates had one error each, fixed but not re-run: canvas-assets (a wasip2-only `estimate_only` was called on every target) and ui-wgpu-device (wgpu 29 `BufferView` has no lifetime). Six crates were not reached.
+- Blocker: image headroom is 3,457,024 bytes short of the 4 GiB gate. The sanctioned recovery (`cargo-retirement-preview/retire` in the peer headroom script) fails with "Original funded graph publication namespace required" until the peer republishes its Nx SDK. Nothing is deleted or bypassed.
+- Gate census: 204 of 557 crates pass. The biggest blockers are replication (332, now carved and pending a re-census) and ui-contract (203, which the peer is actively subdividing; see their `ui-contract-owner-subdivision-implementation-current.md`).
+- db is carved into 41 crates and replication into 16 crates plus a facade.
+
+- 2026-10-16: taxonomy sweep done (RESULT-TAXONOMY-SWEEP.md); slug-pattern follow-up dispatched to replace the 778+261 hand lists.

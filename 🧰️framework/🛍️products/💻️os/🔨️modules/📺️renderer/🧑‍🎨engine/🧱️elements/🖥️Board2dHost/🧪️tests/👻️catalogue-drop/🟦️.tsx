@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it } from "vitest";
-import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, puzzle2dDropPreviewJson, registerBoardCatalogueDropHost } from "../../🟦️.tsx";
+import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, boardDropPreviewJson, registerBoardCatalogueDropHost } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 👻️CatalogueDropLaws
@@ -37,8 +37,8 @@ describe("👻️ board catalogue drop geometry", () => {
     unregisterB();
   });
 
-  it("puzzle2dDropPreviewJson encodes world-space ghost payload", () => {
-    expect(JSON.parse(puzzle2dDropPreviewJson(DROP_PAYLOAD, 100, 200))).toMatchObject({
+  it("boardDropPreviewJson encodes world-space ghost payload", () => {
+    expect(JSON.parse(boardDropPreviewJson(DROP_PAYLOAD, 100, 200))).toMatchObject({
       nodeKind: "seed",
       x: 100,
       y: 200,

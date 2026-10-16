@@ -1,9 +1,13 @@
 //! 🔁️ Commit turns: driving one request or one abandoned turn to its terminal state.
 
-use super::*;
+use std::sync::Arc;
+use semio_hub_inference_binding::ComposedMapCommitBindingV1;
+use crate::{GisMapAbandonedTurnV1, GisMapCommitTurnV1, RetainedGisMapApprovalCommitterV1, RetainedGisMapDocumentStateV1};
+use semio_hub_inference_runtime_contract::{GisMapApprovalCommitErrorV1, GisMapApprovalRequestTokenV1, GisMapCommitConflictArmV1, GisMapCommitIdentityV1, GisMapCommitOperationV1, GisMapDocumentWriteLeaseV1, GisMapParentSnapshotV1, gis_map_commit_conflict, gis_map_storage_refusal, record_abandoned_assembly_turn, record_prepare_conflict, recorded_abandoned_assembly_turn};
+use semio_hub_inference_ledger::InferenceReaderV1;
 
-impl RetainedGisMapApprovalCommitterV1 {
-    pub(super) async fn drive_turn(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1) -> GisMapCommitTurnV1 {
+impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
+    pub(super) async fn drive_turn(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1<B>) -> GisMapCommitTurnV1 {
         use directory::os_store::durable_group::{DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1};
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Unavailable) };
@@ -157,7 +161,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         Arc::ptr_eq(&document_write.request, request)
     }
 
-    pub(super) fn state_has_active_request(state: &RetainedGisMapDocumentStateV1) -> bool {
+    pub(super) fn state_has_active_request(state: &RetainedGisMapDocumentStateV1<B>) -> bool {
         let document_write = match state {
             RetainedGisMapDocumentStateV1::Recovery { document_write, .. }
             | RetainedGisMapDocumentStateV1::Recovered { document_write, .. }
@@ -386,10 +390,10 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
                 GisMapAbandonedTurnV1::Recover => self.finish_document_recovery(key).await.is_err(),
                 GisMapAbandonedTurnV1::Recovered => match self.resume_recovered_checkpoint(key).await {
-                    Ok((identity, generation, receipt)) => self.verify(key, &identity, generation, receipt, super::super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
+                    Ok((identity, generation, receipt)) => self.verify(key, &identity, generation, receipt, semio_hub_inference::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
                     Err(_) => true,
                 },
-                GisMapAbandonedTurnV1::Verify { identity, generation, receipt } => self.verify(key, &identity, generation, receipt, super::super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
+                GisMapAbandonedTurnV1::Verify { identity, generation, receipt } => self.verify(key, &identity, generation, receipt, semio_hub_inference::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
                 GisMapAbandonedTurnV1::Retry => true,
             };
             if retry {

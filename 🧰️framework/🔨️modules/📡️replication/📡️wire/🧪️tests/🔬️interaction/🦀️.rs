@@ -192,11 +192,11 @@ async fn validate_state_clamps_single_mode_selection_to_first_id() {
 #[semio_framework_async_macros::async_test]
 async fn hierarchy_provider_to_value_is_internally_tagged() {
     let path_delimited = HierarchyProvider::PathDelimited { delimiter: "/".into() };
-    let value = crate::value::ToValue::to_value(&path_delimited);
-    assert_eq!(value, crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("pathDelimited".to_string())), ("delimiter".to_string(), crate::value::DslValue::String("/".to_string())),]));
-    assert_eq!(<HierarchyProvider as crate::value::FromValue>::from_value(value).unwrap(), path_delimited);
+    let value = semio_framework_value::ToValue::to_value(&path_delimited);
+    assert_eq!(value, semio_framework_value::DslValue::object(vec![("kind".to_string(), semio_framework_value::DslValue::String("pathDelimited".to_string())), ("delimiter".to_string(), semio_framework_value::DslValue::String("/".to_string())),]));
+    assert_eq!(<HierarchyProvider as semio_framework_value::FromValue>::from_value(value).unwrap(), path_delimited);
 
-    let flat_value = crate::value::ToValue::to_value(&HierarchyProvider::Flat);
-    assert_eq!(flat_value, crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("flat".to_string()))]));
+    let flat_value = semio_framework_value::ToValue::to_value(&HierarchyProvider::Flat);
+    assert_eq!(flat_value, semio_framework_value::DslValue::object(vec![("kind".to_string(), semio_framework_value::DslValue::String("flat".to_string()))]));
 }
 //#endregion 🔖️Serde

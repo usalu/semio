@@ -8,7 +8,7 @@
 
 import { type ChildProcessByStdio, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { accessSync, chmodSync, constants as fsConstants, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import { accessSync, chmodSync, constants as fsConstants, copyFileSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
@@ -928,6 +928,77 @@ export async function runMcpClientEndToEnd(repoRoot: string, folder: string, pin
   return [...os, ...repo];
 }
 //#endregion 🔖️ClientEndToEnd
+
+//#region 🔖️GatewaySourceTree
+/** 🌳️ The library roots of the producer crates the gateway splits into (`semio-framework-os-mcp-*` plus the `semio-framework-os-mcp` facade); each one mounts the module files it owns, so the gateway's whole Rust text is the union of their module trees. */
+export const MCP_GATEWAY_CRATE_ROOTS: readonly string[] = [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧱️foundation/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️wire/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📐️schema-contract/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📚️catalog-compiler/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧰️capabilities/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔌️channel-port/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧶️bridge-codec/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🪢️bridge-session/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🙋️consent/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔬️probe-document/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/⚙️plugin-runtime/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌐️inference-hub/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔗️hub-pair/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🌍️hub-remote/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎛️shell-channel/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧲️channel-routing/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🪝️action-dispatch/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🪟️workspace-host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔭️inference-tools/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧳️gateway-tools/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎯️server/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📮️http-transport/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/🦀️.rs",
+];
+
+/** 📦️ Every cargo package the gateway splits into: the `semio-framework-os-mcp` facade (library, binary and integration laws) and its producer crates. Native test routes run all of them. */
+export const MCP_GATEWAY_PACKAGES: readonly string[] = [
+  "semio-framework-os-mcp",
+  "semio-framework-os-mcp-foundation",
+  "semio-framework-os-mcp-wire",
+  "semio-framework-os-mcp-schema",
+  "semio-framework-os-mcp-catalog",
+  "semio-framework-os-mcp-capabilities",
+  "semio-framework-os-mcp-port",
+  "semio-framework-os-mcp-bridge-codec",
+  "semio-framework-os-mcp-bridge",
+  "semio-framework-os-mcp-consent",
+  "semio-framework-os-mcp-probe-document",
+  "semio-framework-os-mcp-plugin-runtime",
+  "semio-framework-os-mcp-inference-hub",
+  "semio-framework-os-mcp-hub-pair",
+  "semio-framework-os-mcp-hub-remote",
+  "semio-framework-os-mcp-shell-channel",
+  "semio-framework-os-mcp-routing",
+  "semio-framework-os-mcp-dispatch",
+  "semio-framework-os-mcp-workspace",
+  "semio-framework-os-mcp-tools-inference",
+  "semio-framework-os-mcp-tools-gateway",
+  "semio-framework-os-mcp-server",
+  "semio-framework-os-mcp-http-transport",
+];
+
+/** 📖️ Reads the gateway's whole production Rust text as the one text the unsplit crate held: every module file below `🌉️mcp` outside the test, generated and package directories, in path order. A crate root mounts its sibling module files from outside its own directory, so the tree reader cannot follow them; the directory walk is the single enumeration instead. */
+export function readMcpGatewaySource(repoRoot: string, readFile: (path: string) => string = (path) => readFileSync(path, "utf8")): string {
+  const skipped = new Set(["🧪️tests", "🤖️generated", "📦️packages", "dist", "node_modules"]);
+  const files: string[] = [];
+  const walk = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0))) {
+      if (entry.isDirectory()) {
+        if (!skipped.has(entry.name)) walk(join(directory, entry.name));
+      } else if (entry.name.endsWith(".rs")) files.push(join(directory, entry.name));
+    }
+  };
+  walk(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp"));
+  return files.map((file) => readFile(file)).join("\n");
+}
+//#endregion 🔖️GatewaySourceTree
 
 //#region 🧪️Tests
 if (import.meta.vitest) {

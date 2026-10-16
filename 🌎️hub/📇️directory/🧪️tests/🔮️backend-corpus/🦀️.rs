@@ -5,9 +5,12 @@
 //! module the fixture corpus was read by the sqlite lane alone and the other two backends shared no
 //! fixture with it at all.
 
-use crate::directory::model::*;
-use crate::directory::{DirectoryError, HubClock, HubDirectory, NewDirectoryEvent};
+use semio_hub_directory_contract::error::DirectoryError;
+use semio_hub_directory_contract::{HubClock, NewDirectoryEvent};
+use crate::port::HubDirectory;
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentOwner};
+use directory::os_directory::DocumentScope;
+use semio_hub_directory_contract::model::SpaceRole;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -56,10 +59,10 @@ fn share_descriptor(scope: &DocumentScope) -> DocumentDescriptor {
 /// 🔑️ Runs the whole corpus against one seeded directory: the owned hex encoding matches the
 /// fixture's vectors, a grant authorizes its own scope, the fixture's cross-space scope is refused,
 /// revocation is durable and idempotent-by-refusal, and a zero-lifetime grant is rejected.
-pub(crate) async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(directory: &D) {
+pub async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(directory: &D) {
     let corpus = corpus();
     for vector in &corpus.encoding {
-        assert_eq!(crate::directory::encode_capability_bytes(&vector.bytes), vector.hex, "owned hex encoding must match the language-neutral vector");
+        assert_eq!(semio_hub_directory_contract::encode_capability_bytes(&vector.bytes), vector.hex, "owned hex encoding must match the language-neutral vector");
     }
 
     let grant_scope = DocumentScope::new(corpus.scope.grant.space_id.clone(), corpus.scope.grant.document_id.clone());
@@ -90,7 +93,6 @@ pub(crate) async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(direc
     assert!(matches!(directory.issue_share_token(&grant_scope, 0, "backend-corpus-invalid").await, Err(DirectoryError::Conflict(_))), "a zero-lifetime grant is refused on every backend");
 }
 
-
 /// 🏛️ Runs the exact directory read surface the hub's `/directory/spaces/{id}` administration page
 /// performs, against one seeded directory.
 ///
@@ -100,7 +102,7 @@ pub(crate) async fn assert_share_scope_corpus_v1<D: HubDirectory + ?Sized>(direc
 /// grouping expressions`), so the route answered a bare `500` on every Neo4j hub ever booted, while
 /// every write law and the whole `directory::` suite stayed green (ticket 26/09/18, slice DB3).
 /// The route reads these five and nothing else, so running them here is running the page.
-pub(crate) async fn assert_space_administration_read_surface_v1<D: HubDirectory + ?Sized>(directory: &D) {
+pub async fn assert_space_administration_read_surface_v1<D: HubDirectory + ?Sized>(directory: &D) {
     let author = directory.create_user("surface-author@example.com", "Surface Author", None, None, None).await.expect("create the space author");
     let space_id = format!("surface-{}", &author.id);
     let scope = DocumentScope::new(space_id.clone(), "surface-document".to_string());
@@ -152,18 +154,18 @@ pub(crate) async fn assert_space_administration_read_surface_v1<D: HubDirectory 
 
     assert_eq!(directory.get_role(&space_id, &author.id).await.expect("read the caller role"), Some(SpaceRole::Author), "the page resolves the caller's role before it renders");
 
-    let members = directory.list_space_administration_members_page(&space_id, None, crate::directory::SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.expect("the member page must answer on every backend");
+    let members = directory.list_space_administration_members_page(&space_id, None, semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.expect("the member page must answer on every backend");
     assert_eq!(members.len(), 1, "exactly the one upserted member");
     assert_eq!(members[0].user_id, author.id);
     assert_eq!(members[0].email, "surface-author@example.com", "the member row carries the identity the page prints");
     assert_eq!(members[0].role, SpaceRole::Author);
 
-    let invites = directory.list_space_administration_invites_page(&space_id, None, crate::directory::SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.expect("the invite page must answer on every backend");
+    let invites = directory.list_space_administration_invites_page(&space_id, None, semio_hub_directory_contract::SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.expect("the invite page must answer on every backend");
     assert_eq!(invites.len(), 1, "exactly the one issued invite");
     assert_eq!(invites[0].invite_id, issued.record.id);
     assert!(!invites[0].revoked && !invites[0].accepted, "a freshly issued invite is neither revoked nor accepted on any backend");
 
-    let descriptors = directory.list_document_descriptors_page(Some(&space_id), 0, crate::directory::ADMIN_PAGE_FETCH_MAX).await.expect("the document page must answer on every backend");
+    let descriptors = directory.list_document_descriptors_page(Some(&space_id), 0, semio_hub_directory_contract::ADMIN_PAGE_FETCH_MAX).await.expect("the document page must answer on every backend");
     assert_eq!(descriptors.len(), 1, "exactly the one announced document");
     assert_eq!(descriptors[0].document_id, scope.document_id);
 }

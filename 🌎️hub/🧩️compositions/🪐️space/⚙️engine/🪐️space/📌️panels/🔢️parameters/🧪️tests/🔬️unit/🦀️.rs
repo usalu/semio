@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::engine::space::S_PLAY_PARAMETERS_BODY_KEY;
+use semio_hub_space_foundation::S_PLAY_PARAMETERS_BODY_KEY;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn labels() -> &'static SStudioLabels {

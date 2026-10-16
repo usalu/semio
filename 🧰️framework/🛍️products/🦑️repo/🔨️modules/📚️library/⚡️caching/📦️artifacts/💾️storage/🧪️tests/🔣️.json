@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "modules/example/package"
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "release",
+        "owner": "modules/example/package"
+      },
+      "accepted": true
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "dev",
+        "owner": "modules/example/package"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "../outside"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "/outside"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "modules//package"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "modules/package/"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "C:/outside"
+      },
+      "accepted": false
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "owner": "modules/package",
+        "output": "/outside"
+      },
+      "accepted": false
+    }
+  ],
+  "layout": {
+    "root": "/fixture/products",
+    "prefix": "a/ts",
+    "directoryKeyBytes": 16
+  },
+  "held": [
+    "accepted-success",
+    "accepted-failure",
+    "undefined-failure",
+    "cancel",
+    "foreign",
+    "copied",
+    "wrong-control",
+    "same-source-output",
+    "released"
+  ],
+  "compilerOracles": [
+    "bun",
+    "esbuild"
+  ]
+}

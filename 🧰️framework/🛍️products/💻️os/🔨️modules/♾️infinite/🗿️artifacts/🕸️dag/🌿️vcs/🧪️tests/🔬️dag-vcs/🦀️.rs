@@ -1,5 +1,9 @@
-
+//! 🧪️ DAG document VCS: node operations, diffs, inverses, codecs and store replay through the artifact facade.
 use super::*;
+use crate::os_spr::{ArtifactId, Edit, Mutation, SchemaId};
+use crate::os_store::store_schema::ArtifactCommand;
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
+use semio_framework_pack_json::Value;
 
 fn sample_node(id: &str) -> DagNodeSpec {
     DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() }

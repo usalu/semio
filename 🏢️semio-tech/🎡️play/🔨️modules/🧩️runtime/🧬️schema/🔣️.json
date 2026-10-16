@@ -186,7 +186,7 @@
           ],
           "properties": {
             "profile": {
-              "enum": ["wasm-prototype", "wasm-release"]
+              "enum": ["prototype", "release"]
             },
             "wasmSha256": {
               "type": "string",

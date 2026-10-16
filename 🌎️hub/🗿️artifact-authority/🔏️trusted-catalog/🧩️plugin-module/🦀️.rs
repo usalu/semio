@@ -6,7 +6,8 @@
 
 use super::schema::{TrustedBundlePluginModuleV1};
 use directory::os_plugin_module_schema::{TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TRUSTED_PLUGIN_MODULE_SCHEMA};
-use super::{catalog, catalog_error, decode_digest, valid_identity, valid_package_id, AuthorityError, TRUSTED_COMPONENT_MAX_BYTES};
+use super::{catalog, catalog_error, decode_digest, valid_identity, valid_package_id, TRUSTED_COMPONENT_MAX_BYTES};
+use semio_hub_artifact_authority::AuthorityError;
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use semio_framework_hash::{Hasher, Sha256};
 use std::path::Path;
@@ -184,7 +185,7 @@ pub fn validate_plugin_module_index(index: &TrustedPluginModuleIndexV1) -> Resul
     Ok(())
 }
 
-fn digests(bytes: &[u8]) -> ([u8; 32], [u8; 32]) {
+pub fn digests(bytes: &[u8]) -> ([u8; 32], [u8; 32]) {
     let mut blake3 = Hasher::new();
     blake3.update(bytes);
     (Sha256::digest(bytes), *blake3.finalize().as_bytes())
@@ -236,6 +237,3 @@ pub fn write_plugin_module_bundle(root: &Path, manifest_path: &str, source: Trus
     Ok(TrustedBundlePluginModuleV1 { path: manifest_path.into(), byte_length: u64::try_from(manifest.len()).map_err(catalog_error)?, sha256: hex_lower(&sha256), blake3: hex_lower(&blake3) })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

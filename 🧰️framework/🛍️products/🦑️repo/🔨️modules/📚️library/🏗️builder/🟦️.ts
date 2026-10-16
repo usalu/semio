@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, openSync, readSync, writeFileSync, type BigIntStats, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
-import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId, taxonomyRelativePathIsExcluded, type Taxonomy } from "../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId, semanticDirectoryMemberAdmitsName, taxonomyRelativePathIsExcluded, type Taxonomy } from "../🔍️discovery/🟦️.ts";
 
 export type ArtifactScaffoldOwner = Readonly<{ kind: "subset"; subsetPath: string } | { kind: "surface"; subsetPath: string; role: string }>;
 export type ArtifactScaffoldLeaf = Readonly<{ path: string; content: string }>;
@@ -37,7 +37,7 @@ function scaffoldKind(name: string, parentKindId: string, taxonomy: Taxonomy): s
   const kind = semanticDirectoryKindId(name, taxonomy, { parentKindId });
   if (!kind) throw new Error(`Unregistered authoring directory: ${JSON.stringify(name)}`);
   const spec = taxonomy.semanticDirectoryKinds[kind], members = taxonomy.semanticDirectoryMemberKinds[kind];
-  if (spec && !name.startsWith(spec.emoji) || !spec && !members?.memberNames.includes(name)) throw new Error(`Unregistered authoring directory: ${JSON.stringify(name)}`);
+  if (spec && !name.startsWith(spec.emoji) || !spec && !(members && semanticDirectoryMemberAdmitsName(members, name))) throw new Error(`Unregistered authoring directory: ${JSON.stringify(name)}`);
   return kind;
 }
 

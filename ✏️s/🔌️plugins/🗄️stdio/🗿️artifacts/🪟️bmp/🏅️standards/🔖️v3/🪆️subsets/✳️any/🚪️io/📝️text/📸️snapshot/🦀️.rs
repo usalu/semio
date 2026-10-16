@@ -22,6 +22,4 @@ impl pack::snapshot::ArtifactDsl for BmpSnapshot{
 }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔤️native-fixture-admission/🦀️.rs"]
-mod native_fixture_admission_tests;
+

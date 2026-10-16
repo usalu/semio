@@ -25,10 +25,14 @@
 //! `CompactionLease` scoped per document (a distinct resource namespace from the snapshot lease,
 //! since a snapshot builder and a compactor may legitimately run concurrently for two different
 //! documents, but never for the SAME document at the same time).
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_ids::{check_len, ArtifactId, DbError};
-use crate::*;
-use db_storage::{LeaseStorage as _, SnapshotStorage as _};
+use db_ids::{ArtifactId, DbError, check_len};
+use db_durability::{DurabilityClass, EpochFence, Frontier};
+use db_ids::GenerationId;
+use pack::ContentHash;
+use db_io_core::{LeaseStorage as _, SnapshotStorage as _};
 use semio_framework_async::{Lane, WorkerPool, WorkerPoolUse};
 use std::future::Future;
 use std::sync::Arc;
@@ -80,23 +84,23 @@ impl CompactionLease {
     }
 
     /// 🤝️ Acquires (or idempotently re-acquires) the compaction lease for `document`.
-    pub async fn acquire(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+    pub async fn acquire(storage: &impl db_io_core::LeaseStorage, document: &ArtifactId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms).await
     }
 
     /// ♻️ Extends `holder`'s existing compaction lease for `document`.
-    pub async fn renew(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+    pub async fn renew(storage: &impl db_io_core::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms).await
     }
 
     /// 🕊️ Releases `holder`'s compaction lease for `document` — `Compactor::run` always
     /// calls this once, even if the pass itself failed (see that method's doc).
-    pub async fn release(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+    pub async fn release(storage: &impl db_io_core::LeaseStorage, document: &ArtifactId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         storage.release(&Self::resource(document), holder, fence).await
     }
 
     /// 👀️ The compaction lease's current holder/fence for `document`, or `None` if unheld.
-    pub async fn current(storage: &impl db_storage::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_storage::LeaseInfo>, DbError> {
+    pub async fn current(storage: &impl db_io_core::LeaseStorage, document: &ArtifactId, now_ms: u64) -> Result<Option<db_io_core::LeaseInfo>, DbError> {
         storage.current(&Self::resource(document), now_ms).await
     }
 }
@@ -125,17 +129,17 @@ pub struct SegmentHorizon {
 /// 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
 #[cfg(test)]
-pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'record db_wal::WalRecord>) -> Vec<SegmentHorizon> {
+pub async fn segment_horizons<'record>(records: impl IntoIterator<Item = &'record db_wal_log::WalRecord>) -> Vec<SegmentHorizon> {
     let mut horizons = Vec::new();
     let mut current: Option<SegmentHorizon> = None;
     for record in records {
         match record {
-            db_wal::WalRecord::SegmentHeader { segment_index, .. } => {
+            db_wal_log::WalRecord::SegmentHeader { segment_index, .. } => {
                 if let Some(horizon) = current.replace(SegmentHorizon { segment_index: *segment_index, max_head_seq: None }) {
                     horizons.push(horizon);
                 }
             }
-            db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } => {
+            db_wal_log::WalRecord::Frontier(frontier) | db_wal_log::WalRecord::SnapshotPub { frontier, .. } => {
                 if let Some(horizon) = current.as_mut() {
                     horizon.max_head_seq = Some(horizon.max_head_seq.map_or(frontier.head_seq, |head| head.max(frontier.head_seq)));
                 }
@@ -169,7 +173,7 @@ pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budg
 /// Idempotent (`WalStorage::delete_segment` already is). Returns how many were selected (and thus
 /// attempted).
 #[cfg(test)]
-async fn release_compaction_test_writer(writer: db_storage::WalWriterPermit) -> Result<(), DbError> {
+async fn release_compaction_test_writer(writer: db_io_core::WalWriterPermit) -> Result<(), DbError> {
     let mut release = writer.release();
     let mut first_error = None;
     loop {
@@ -185,7 +189,7 @@ async fn release_compaction_test_writer(writer: db_storage::WalWriterPermit) -> 
 }
 
 #[cfg(test)]
-pub async fn apply_wal_retention(storage: &impl db_storage::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
+pub async fn apply_wal_retention(storage: &impl db_io_core::WalStorage, document: &ArtifactId, segments: &[u64]) -> Result<u64, DbError> {
     let writer = storage.acquire_writer(document).await?;
     let result = async {
         for &index in segments {
@@ -221,15 +225,15 @@ pub struct PayloadGcReport {
 /// over every payload ever stored; it can only trace liveness for a caller-supplied candidate set,
 /// which is exactly what `Compactor::run` derives from its own WAL retention pass.
 #[cfg(test)]
-pub async fn sweep_payloads<'record>(payload_storage: &impl db_storage::PayloadStorage, records: impl IntoIterator<Item = &'record db_wal::WalRecord>, deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
+pub async fn sweep_payloads<'record>(payload_storage: &impl db_io_core::PayloadStorage, records: impl IntoIterator<Item = &'record db_wal_log::WalRecord>, deleted_segments: &[u64], budget: &CompactionBudget) -> Result<PayloadGcReport, DbError> {
     let deleted_set: std::collections::HashSet<u64> = deleted_segments.iter().copied().collect();
     let mut candidates = std::collections::HashSet::new();
     let mut live = std::collections::HashSet::new();
     let mut segment_index = 0;
     for record in records {
-        if let db_wal::WalRecord::SegmentHeader { segment_index: next, .. } = record {
+        if let db_wal_log::WalRecord::SegmentHeader { segment_index: next, .. } = record {
             segment_index = *next;
-        } else if let db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) = record {
+        } else if let db_wal_log::WalRecord::Payload(db_wal_log::WalPayloadRef::CasRef(hash)) = record {
             let target = if deleted_set.contains(&segment_index) { &mut candidates } else { &mut live };
             target.insert(*hash);
         }
@@ -314,7 +318,7 @@ impl Default for CompactionIndexReports {
 /// withdrawn preview key or a resolved conflict marker is the only thing a tombstone shadows,
 /// compacting reclaims it for good.
 #[cfg(test)]
-pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, document: &ArtifactId) -> Result<CompactionIndexReports, DbError> {
+pub async fn compact_all_indexes(storage: &impl db_io_core::IndexStorage, document: &ArtifactId) -> Result<CompactionIndexReports, DbError> {
     let mut reports = CompactionIndexReports::default();
     for kind in db_index::IndexKind::ALL {
         let handle = db_index::IndexHandle::new(storage, document.clone(), kind).await;
@@ -590,7 +594,7 @@ impl Future for MountedCompactionPageClose<'_> {
 /// returning the latest generation's own descriptor plus every page introduced anywhere in the
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
 #[cfg(test)]
-async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
+async fn collect_chain_pages<S: db_io_core::SnapshotStorage>(
     manager: &db_snapshot::SnapshotManager<'_, S>,
     document: &ArtifactId,
     through_generation: u64,
@@ -627,12 +631,12 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(
 /// full baseline — the responsibility `db_snapshot`'s own module doc explicitly defers to this
 /// crate (see that crate's "Scope boundary" note).
 #[cfg(test)]
-pub struct SnapshotConsolidator<'storage, S: db_storage::SnapshotStorage> {
+pub struct SnapshotConsolidator<'storage, S: db_io_core::SnapshotStorage> {
     manager: db_snapshot::SnapshotManager<'storage, S>,
 }
 
 #[cfg(test)]
-impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S> {
+impl<'storage, S: db_io_core::SnapshotStorage> SnapshotConsolidator<'storage, S> {
     pub async fn new(storage: &'storage S) -> SnapshotConsolidator<'storage, S> {
         SnapshotConsolidator { manager: db_snapshot::SnapshotManager::new(storage).await }
     }
@@ -689,7 +693,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
 /// archive bytes rather than inventing a storage seam unilaterally in a crate that isn't
 /// `db_storage`'s own.
 #[cfg(test)]
-pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<db_storage::DbIoPages, DbError> {
+pub async fn build_cold_archive(storage: &impl db_io_core::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<db_io_core::DbIoPages, DbError> {
     let manager = db_snapshot::SnapshotManager::new(storage).await;
     let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let control = db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
@@ -754,7 +758,7 @@ impl<'storage> Compactor<'storage> {
 
     async fn run_owned(&self, document: &ArtifactId, holder: &str, floor: Option<u64>, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let wal_storage = self.storage.wal().await;
-        let (mut wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await {
+        let (mut wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal_log::GroupCommitPolicy::default(), now_ms).await {
             Ok(opened) => opened,
             Err(rejected) => return Err(close_compaction_wal_open_rejected(rejected).await),
         };
@@ -980,7 +984,7 @@ struct DatabaseCompactionAdmissionState {
 
 impl DatabaseCompactionAdmissionState {
     fn try_claim(&mut self, document: &ArtifactId) -> Result<(usize, u64), DbError> {
-        if document.0.len() > db_storage::DbIoText::maximum_capacity() || document.0.capacity() > db_storage::DbIoText::maximum_capacity() {
+        if document.0.len() > db_io_core::DbIoText::maximum_capacity() || document.0.capacity() > db_io_core::DbIoText::maximum_capacity() {
             return Err(DbError::LimitExceeded("database compaction document backing"));
         }
         let slot = self.slots.iter().position(|entry| !entry.occupied).ok_or(DbError::LimitExceeded("database compaction admission slots"))?;
@@ -1108,14 +1112,14 @@ async fn compaction_opportunity(cancelled: &std::sync::atomic::AtomicBool) -> Re
     Ok(())
 }
 
-fn compaction_resource(document: &ArtifactId) -> Result<db_storage::DbIoText, DbError> {
+fn compaction_resource(document: &ArtifactId) -> Result<db_io_core::DbIoText, DbError> {
     use std::fmt::Write as _;
-    let mut resource = db_storage::DbIoText::try_from_str("compact:")?;
+    let mut resource = db_io_core::DbIoText::try_from_str("compact:")?;
     write!(&mut resource, "{}", document.0).map_err(|_| DbError::LimitExceeded("database compaction lease resource"))?;
     Ok(resource)
 }
 
-async fn close_compaction_replay<S: db_storage::WalStorage>(replay: &mut db_wal::WalCommittedCursor<'_, S>) -> Result<(), DbError> {
+async fn close_compaction_replay<S: db_io_core::WalStorage>(replay: &mut db_wal_log::WalCommittedCursor<'_, S>) -> Result<(), DbError> {
     close_compaction_owner(|| replay.close_owner_step()).await
 }
 
@@ -1135,9 +1139,9 @@ async fn close_compaction_page(mut page: db_state::Page) -> Result<(), DbError> 
     close_compaction_owner(|| Ok(page.close_step()?.is_some())).await
 }
 
-async fn committed_compaction_horizons<S: db_storage::WalStorage>(storage: &S, document: &ArtifactId, cancelled: &std::sync::atomic::AtomicBool) -> Result<DatabaseCompactionSegmentOwners, DbError> {
-    let control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut replay = db_wal::replay_committed_document(storage, document, control).await?;
+async fn committed_compaction_horizons<S: db_io_core::WalStorage>(storage: &S, document: &ArtifactId, cancelled: &std::sync::atomic::AtomicBool) -> Result<DatabaseCompactionSegmentOwners, DbError> {
+    let control = db_wal_log::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut replay = db_wal_log::replay_committed_document(storage, document, control).await?;
     let scan = async {
         let mut horizons = DatabaseCompactionSegmentOwners::new();
         for segment_index in replay.segment_indices() {
@@ -1147,24 +1151,24 @@ async fn committed_compaction_horizons<S: db_storage::WalStorage>(storage: &S, d
             compaction_opportunity(cancelled).await?;
             replay.renew_step()?;
             match replay.next_transaction_step().await? {
-                db_wal::WalCommittedStep::Transaction(mut transaction) => {
+                db_wal_log::WalCommittedStep::Transaction(mut transaction) => {
                     let segment_index = transaction.segment_index();
                     loop {
                         match transaction.next_record_step()? {
-                            db_wal::WalCommittedRecordStep::Record(record) => {
-                                let observed = if let db_wal::WalRecord::Frontier(frontier) | db_wal::WalRecord::SnapshotPub { frontier, .. } = record { horizons.observe_head(segment_index, frontier.head_seq) } else { Ok(()) };
+                            db_wal_log::WalCommittedRecordStep::Record(record) => {
+                                let observed = if let db_wal_log::WalRecord::Frontier(frontier) | db_wal_log::WalRecord::SnapshotPub { frontier, .. } = record { horizons.observe_head(segment_index, frontier.head_seq) } else { Ok(()) };
                                 let closed = close_compaction_owner(|| transaction.close_record_step()).await;
                                 observed?;
                                 closed?;
                             }
-                            db_wal::WalCommittedRecordStep::Yield => compaction_opportunity(cancelled).await?,
-                            db_wal::WalCommittedRecordStep::Done => break,
+                            db_wal_log::WalCommittedRecordStep::Yield => compaction_opportunity(cancelled).await?,
+                            db_wal_log::WalCommittedRecordStep::Done => break,
                         }
                     }
                     transaction.finish()?;
                 }
-                db_wal::WalCommittedStep::Yield => {}
-                db_wal::WalCommittedStep::Done => break,
+                db_wal_log::WalCommittedStep::Yield => {}
+                db_wal_log::WalCommittedStep::Done => break,
             }
         }
         Ok(horizons)
@@ -1183,7 +1187,7 @@ async fn committed_compaction_horizons<S: db_storage::WalStorage>(storage: &S, d
 pub async fn retained_compaction_with_wal(
     storage: Arc<db_storage::DbBackend>,
     artifact_wal: &mut db_wal::ArtifactWal,
-    holder: db_storage::DbIoText,
+    holder: db_io_core::DbIoText,
     consolidate_snapshots: bool,
     budget: CompactionBudget,
     now_ms: u64,
@@ -1325,7 +1329,7 @@ async fn retained_compaction_snapshot(
                     let source = cursor.read_page(hash).await?;
                     let page = db_state::Page::try_from_pages(source).await?;
                     let items = usize::from(page.pages().page_count());
-                    let bytes = items.checked_mul(db_storage::DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("database compaction snapshot page backing"))?;
+                    let bytes = items.checked_mul(db_io_core::DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("database compaction snapshot page backing"))?;
                     let next_items = match page_items.checked_add(items) {
                         Some(next_items) => next_items,
                         None => {
@@ -1460,7 +1464,7 @@ async fn retained_compaction_snapshot(
 struct DatabaseCompactionExecution {
     storage: Arc<db_storage::DbBackend>,
     document: ArtifactId,
-    holder: db_storage::DbIoText,
+    holder: db_io_core::DbIoText,
     result: Result<CompactionReport, DbError>,
 }
 
@@ -1468,8 +1472,8 @@ type DatabaseCompactionLeaseReleaseFuture = std::pin::Pin<Box<dyn Future<Output 
 
 struct DatabaseCompactionLeaseRecovery {
     storage: Arc<db_storage::DbBackend>,
-    resource: db_storage::DbIoText,
-    holder: db_storage::DbIoText,
+    resource: db_io_core::DbIoText,
+    holder: db_io_core::DbIoText,
     fence: std::sync::Mutex<Option<EpochFence>>,
     releasing: std::sync::atomic::AtomicBool,
     released: std::sync::atomic::AtomicBool,
@@ -1480,7 +1484,7 @@ struct DatabaseCompactionLeaseRecovery {
 }
 
 impl DatabaseCompactionLeaseRecovery {
-    fn new(storage: Arc<db_storage::DbBackend>, resource: db_storage::DbIoText, holder: db_storage::DbIoText) -> Arc<Self> {
+    fn new(storage: Arc<db_storage::DbBackend>, resource: db_io_core::DbIoText, holder: db_io_core::DbIoText) -> Arc<Self> {
         Arc::new(Self {
             storage,
             resource,
@@ -1541,7 +1545,7 @@ impl DatabaseCompactionLeaseRecovery {
 async fn retained_compaction_execute(
     storage: Arc<db_storage::DbBackend>,
     document: ArtifactId,
-    holder: db_storage::DbIoText,
+    holder: db_io_core::DbIoText,
     consolidate_snapshots: bool,
     budget: CompactionBudget,
     now_ms: u64,
@@ -1553,7 +1557,7 @@ async fn retained_compaction_execute(
     let mut result = async {
         compaction_opportunity(cancelled.as_ref()).await?;
         let wal_storage = storage.wal().await;
-        let (mut artifact_wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await {
+        let (mut artifact_wal, _) = match db_wal::ArtifactWal::open(&wal_storage, document.clone(), db_wal_log::GroupCommitPolicy::default(), now_ms).await {
             Ok(opened) => opened,
             Err(rejected) => return Err(close_compaction_wal_open_rejected(rejected).await),
         };
@@ -1631,7 +1635,7 @@ enum DatabaseCompactionDriverAuthority {
 struct DatabaseCompactionTerminalOwners {
     storage: Option<Arc<db_storage::DbBackend>>,
     document: Option<ArtifactId>,
-    holder: Option<db_storage::DbIoText>,
+    holder: Option<db_io_core::DbIoText>,
     result: Option<Result<CompactionReport, DbError>>,
 }
 
@@ -1649,7 +1653,7 @@ impl DatabaseCompactionTerminalOwners {
         if self.result.take().is_some() {
             return true;
         }
-        if self.holder.as_mut().is_some_and(db_storage::DbIoText::close_step) {
+        if self.holder.as_mut().is_some_and(db_io_core::DbIoText::close_step) {
             return true;
         }
         if self.holder.take().is_some() {
@@ -2071,7 +2075,7 @@ impl std::fmt::Debug for DatabaseCompactionResult {
 }
 
 impl DatabaseCompactionResult {
-    pub fn into_parts(mut self) -> Result<(Arc<db_storage::DbBackend>, ArtifactId, db_storage::DbIoText, Result<CompactionReport, DbError>), Self> {
+    pub fn into_parts(mut self) -> Result<(Arc<db_storage::DbBackend>, ArtifactId, db_io_core::DbIoText, Result<CompactionReport, DbError>), Self> {
         let execution = self.execution.take();
         match execution {
             Some(execution) => {
@@ -2122,7 +2126,7 @@ impl std::fmt::Debug for DatabaseCompactionFuture {
 }
 
 impl DatabaseCompactionFuture {
-    pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_storage::DbIoText, consolidate_snapshots: bool, budget: CompactionBudget, now_ms: u64) -> Result<Self, DatabaseCompactionRejected> {
+    pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_io_core::DbIoText, consolidate_snapshots: bool, budget: CompactionBudget, now_ms: u64) -> Result<Self, DatabaseCompactionRejected> {
         let pool_use = match pool.acquire_use() {
             Ok(pool_use) => pool_use,
             Err(error) => return Err(DatabaseCompactionRejected::new(pool, DbError::Unavailable(format!("database compaction WorkerPool use rejected: {error:?}")), storage, document, holder)),
@@ -2316,7 +2320,7 @@ impl std::fmt::Debug for DatabaseCompactionRejected {
 }
 
 impl DatabaseCompactionRejected {
-    fn new(pool: Arc<WorkerPool>, error: DbError, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_storage::DbIoText) -> Self {
+    fn new(pool: Arc<WorkerPool>, error: DbError, storage: Arc<db_storage::DbBackend>, document: ArtifactId, holder: db_io_core::DbIoText) -> Self {
         Self {
             error: Some(error),
             close: Arc::new(DatabaseCompactionRejectedClose {
@@ -2328,7 +2332,7 @@ impl DatabaseCompactionRejected {
         }
     }
 
-    pub fn into_parts(mut self) -> Result<(DbError, Arc<db_storage::DbBackend>, ArtifactId, db_storage::DbIoText), Self> {
+    pub fn into_parts(mut self) -> Result<(DbError, Arc<db_storage::DbBackend>, ArtifactId, db_io_core::DbIoText), Self> {
         let error = self.error.take();
         let mut owners = self.close.owners.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let storage = owners.as_mut().and_then(|owners| owners.storage.take());

@@ -25,9 +25,13 @@
 //! frame — as the authoritative source of "where is the replica" on the receive path. The
 //! `resume_token` this crate ISSUES (`issue_resume_token`, on the send path, `Welcome.resume_token`)
 //! is fully real: `ResumeToken::encode` is public and exercised end to end.
-use crate::db_durability::Frontier;
-use crate::*;
-use db_storage::SnapshotStorage;
+#![allow(async_fn_in_trait)]
+
+use db_durability::Frontier;
+use db_durability::{DurabilityClass, FrontierDelta, ResumeToken};
+use db_ids::{ActorId, ArtifactId, DbError, DbLimits, GenerationId, check_len};
+use db_policy::AdmissionWaiters;
+use db_io_core::SnapshotStorage;
 /// ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
 /// `protocol_io::binary::causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
 /// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
@@ -57,7 +61,7 @@ async fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvel
 
 /// 🧷️ Hands `read` one WAL command record as a contiguous slice: a record held in one page is read
 /// in place, a longer one is gathered once (a record spans at most one operation's pages).
-fn with_wal_command<T>(bytes: &db_wal::WalBytes, read: impl FnOnce(&[u8]) -> T) -> T {
+fn with_wal_command<T>(bytes: &db_wal_log::WalBytes, read: impl FnOnce(&[u8]) -> T) -> T {
     let mut fragments = bytes.fragments();
     match (fragments.next(), fragments.next()) {
         (Some(only), None) => read(only),
@@ -76,7 +80,7 @@ fn with_wal_command<T>(bytes: &db_wal::WalBytes, read: impl FnOnce(&[u8]) -> T) 
 /// record is already in memory, so a decode never yields — replay and hello walks batch whole records
 /// into their cooperative turns (`db_wal::WalTurn`). The layout is `protocol::decode_envelope`'s
 /// alone; this is the one decoder of WAL commands (document open, the ledger tail, every sync hello).
-pub fn decode_wal_command(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
+pub fn decode_wal_command(bytes: &db_wal_log::WalBytes, control: &mut db_wal_log::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
     control.grant()?;
     with_wal_command(bytes, |record| {
         let mut pos = 0usize;
@@ -89,7 +93,7 @@ pub fn decode_wal_command(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCur
 }
 
 /// 🆔️ The mutation id of a WAL command record (the layout's first field) without decoding the rest.
-pub fn wal_command_id(bytes: &db_wal::WalBytes, control: &mut db_wal::WalCursorControl) -> Result<String, DbError> {
+pub fn wal_command_id(bytes: &db_wal_log::WalBytes, control: &mut db_wal_log::WalCursorControl) -> Result<String, DbError> {
     control.grant()?;
     with_wal_command(bytes, |record| protocol::read_str(record, &mut 0).map_err(|error| DbError::Corrupt(format!("wal command id: {error}"))))
 }
@@ -121,41 +125,41 @@ pub struct ArtifactSyncState {
 
 /// 🔁️ Replays committed transactions via `db_wal::replay_committed_document` and
 /// derives its `ArtifactSyncState` — see the struct's doc for exactly how each field is derived.
-pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
+pub async fn replay_sync_state(storage: &impl db_io_core::WalStorage, document: ArtifactId) -> Result<ArtifactSyncState, DbError> {
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-    let mut records = db_wal::replay_committed_document(storage, &document, control).await?;
-    let mut decode_control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let control = db_wal_log::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+    let mut records = db_wal_log::replay_committed_document(storage, &document, control).await?;
+    let mut decode_control = db_wal_log::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut commands = Vec::new();
     let mut chain = semio_framework_hash::Hasher::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
-    let mut turn = db_wal::WalTurn::start();
+    let mut turn = db_wal_log::WalTurn::start();
     let replay = async {
         loop {
             records.renew_step()?;
-            decode_control.replenish(std::time::Instant::now() + db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+            decode_control.replenish(std::time::Instant::now() + db_wal_log::WAL_REPLAY_STEP_STALL_BOUND, db_wal_log::WAL_REPLAY_STEP_FUEL)?;
             let mut transaction = match records.next_transaction_step().await? {
-                db_wal::WalCommittedStep::Transaction(transaction) => transaction,
-                db_wal::WalCommittedStep::Yield => {
+                db_wal_log::WalCommittedStep::Transaction(transaction) => transaction,
+                db_wal_log::WalCommittedStep::Yield => {
                     turn.step().await;
                     continue;
                 }
-                db_wal::WalCommittedStep::Done => break,
+                db_wal_log::WalCommittedStep::Done => break,
             };
             loop {
                 match transaction.next_record_step()? {
-                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes)) => {
+                    db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Command(bytes)) => {
                         commands.push(decode_wal_command(bytes, &mut decode_control)?);
                         chain.update(&bytes.hash());
                     }
-                    db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. }) => floor_head_seq = frontier.head_seq,
-                    db_wal::WalCommittedRecordStep::Record(_) => {}
-                    db_wal::WalCommittedRecordStep::Yield => {
+                    db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::SnapshotPub { frontier, .. }) => floor_head_seq = frontier.head_seq,
+                    db_wal_log::WalCommittedRecordStep::Record(_) => {}
+                    db_wal_log::WalCommittedRecordStep::Yield => {
                         turn.step().await;
                         continue;
                     }
-                    db_wal::WalCommittedRecordStep::Done => break,
+                    db_wal_log::WalCommittedRecordStep::Done => break,
                 }
                 while transaction.close_record_step()? {
                     turn.step().await;
@@ -267,7 +271,7 @@ pub enum BootstrapPlan {
     Tail { envelopes: Vec<protocol::MutationEnvelope> },
     /// 📸️ The replica is behind the retained WAL floor (or brand new against a compacted
     /// document): ship it a whole snapshot generation first.
-    Snapshot { generation: u64, pages: db_storage::DbIoPages, pack_hash: [u8; 32] },
+    Snapshot { generation: u64, pages: db_io_core::DbIoPages, pack_hash: [u8; 32] },
 }
 
 /// 🧭️ Decides `BootstrapPlan` for `replica` (`None` meaning a totally fresh replica with no
@@ -287,7 +291,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl Snapsh
         .await?
         .ok_or_else(|| DbError::Unavailable(format!("replica head_seq {replica_head_seq} is behind the retained WAL floor {} and no snapshot generation is available", state.floor_head_seq)))?;
     let pages = snapshots.read_generation(&state.frontier.document, generation).await?;
-    let pack_hash = db_storage::db_io_hash_pages(&pages).await.0;
+    let pack_hash = db_io_registry::db_io_hash_pages(&pages).await.0;
     Ok(BootstrapPlan::Snapshot { generation, pages, pack_hash })
 }
 //#endregion 🔖️Bootstrap
@@ -321,8 +325,8 @@ const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024;
 /// carries — so no hello holds more than one frame of it, however long the document's history (ticket 26/09/23 session
 /// 14c: a 13 201-edit document could no longer be opened, its whole tail was decoded into one frame first).
 const DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES: usize = 256;
-const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_storage::DB_IO_OPERATION_PAGES;
-const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_storage::DB_IO_PAGE_BYTES;
+const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_io_core::DB_IO_OPERATION_PAGES;
+const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_io_core::DB_IO_PAGE_BYTES;
 const DATABASE_SYNC_HELLO_ADMISSION_WAITERS: usize = 256;
 const DATABASE_SYNC_HELLO_ADMISSION_SATURATED: &str = "database sync hello admission saturated";
 
@@ -443,9 +447,9 @@ impl Drop for DatabaseSyncHelloAdmission {
 /// restart are all welcomed (ticket 26/09/23 H9 session 12, growth e2e g15). The slot is not
 /// reserved; the caller claims it with its next submission and waits again if another hello took it.
 pub struct DatabaseSyncHelloAdmissionReady {
-    pool: std::sync::Arc<semio_framework_async::WorkerPool>,
-    deadline_ms: u64,
-    waiter: Option<u64>,
+    pub pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+    pub deadline_ms: u64,
+    pub waiter: Option<u64>,
     deadline_armed: bool,
 }
 
@@ -541,7 +545,7 @@ impl DatabaseSyncHelloBackingLedger {
 
     fn close_one_credit(&mut self) -> bool {
         if self.bytes != 0 {
-            self.bytes -= self.bytes.min(db_storage::DB_IO_PAGE_BYTES);
+            self.bytes -= self.bytes.min(db_io_core::DB_IO_PAGE_BYTES);
             return true;
         }
         if self.items != 0 {
@@ -610,9 +614,9 @@ fn database_sync_hello_reserve_snapshot_pages(ledger: &mut DatabaseSyncHelloBack
 }
 
 impl DatabaseSyncHelloSnapshotPageReservation {
-    fn observed(self, pages: &db_storage::DbIoPages) -> Result<(usize, usize), DbError> {
+    fn observed(self, pages: &db_io_core::DbIoPages) -> Result<(usize, usize), DbError> {
         let items = usize::from(pages.page_count());
-        let bytes = items.checked_mul(db_storage::DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("database sync hello snapshot observed page backing"))?;
+        let bytes = items.checked_mul(db_io_core::DB_IO_PAGE_BYTES).ok_or(DbError::LimitExceeded("database sync hello snapshot observed page backing"))?;
         if items > self.items || bytes > self.bytes || pages.len() > bytes {
             return Err(DbError::LimitExceeded("database sync hello snapshot observed page backing"));
         }
@@ -838,7 +842,7 @@ fn database_sync_hello_envelope_credit(envelope: &protocol::MutationEnvelope) ->
     Ok((items, bytes))
 }
 
-async fn database_sync_hello_close_pages(pages: &mut db_storage::DbIoPages, cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
+async fn database_sync_hello_close_pages(pages: &mut db_io_core::DbIoPages, cancelled: &std::sync::atomic::AtomicBool, expired: &std::sync::atomic::AtomicBool) -> Result<(), DbError> {
     let mut control_error = None;
     while pages.close_step()?.is_some() {
         semio_framework_async::yield_once().await;
@@ -868,29 +872,29 @@ async fn replay_sync_state_retained(
 ) -> Result<DatabaseSyncHelloReplay, DbError> {
     progress.store(DatabaseSyncHelloProgress::Replay as u8, std::sync::atomic::Ordering::Release);
     let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS);
-    let control = db_wal::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
+    let control = db_wal_log::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
     database_sync_hello_control(&cancelled, &expired)?;
     let wal = storage.wal().await;
     database_sync_hello_control(&cancelled, &expired)?;
-    let mut records = db_wal::replay_committed_document(&wal, &document, control).await?;
-    let mut decode_control = db_wal::WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+    let mut records = db_wal_log::replay_committed_document(&wal, &document, control).await?;
+    let mut decode_control = db_wal_log::WalCursorControl::stall_bounded(cancelled.clone(), db_wal_log::WAL_REPLAY_STEP_STALL_BOUND, db_wal_log::WAL_REPLAY_STEP_FUEL)?;
     let mut chain = semio_framework_hash::Hasher::new();
     let mut head_seq = 0u64;
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
     let mut head_edit_id = String::new();
-    let mut turn = db_wal::WalTurn::start();
+    let mut turn = db_wal_log::WalTurn::start();
     let replay = async {
         loop {
             records.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
             database_sync_hello_control(&cancelled, &expired)?;
             let mut transaction = match records.next_transaction_step().await {
-                Ok(db_wal::WalCommittedStep::Transaction(transaction)) => transaction,
-                Ok(db_wal::WalCommittedStep::Yield) => {
+                Ok(db_wal_log::WalCommittedStep::Transaction(transaction)) => transaction,
+                Ok(db_wal_log::WalCommittedStep::Yield) => {
                     turn.step().await;
                     continue;
                 }
-                Ok(db_wal::WalCommittedStep::Done) => break,
+                Ok(db_wal_log::WalCommittedStep::Done) => break,
                 Err(error) if database_sync_hello_turn_exhausted(&error) => {
                     database_sync_hello_opportunity(&cancelled, &expired).await?;
                     continue;
@@ -902,19 +906,19 @@ async fn replay_sync_state_retained(
                 decode_control.renew_step()?;
                 database_sync_hello_control(&cancelled, &expired)?;
                 match transaction.next_record_step() {
-                    Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes))) => {
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Command(bytes))) => {
                         progress.store(DatabaseSyncHelloProgress::Decode as u8, std::sync::atomic::Ordering::Release);
                         chain.update(&bytes.hash());
                         head_edit_id = wal_command_id(bytes, &mut decode_control)?;
                         head_seq = head_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello head sequence"))?;
                     }
-                    Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::SnapshotPub { frontier, .. })) => floor_head_seq = frontier.head_seq,
-                    Ok(db_wal::WalCommittedRecordStep::Record(_)) => {}
-                    Ok(db_wal::WalCommittedRecordStep::Yield) => {
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::SnapshotPub { frontier, .. })) => floor_head_seq = frontier.head_seq,
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(_)) => {}
+                    Ok(db_wal_log::WalCommittedRecordStep::Yield) => {
                         turn.step().await;
                         continue;
                     }
-                    Ok(db_wal::WalCommittedRecordStep::Done) => break,
+                    Ok(db_wal_log::WalCommittedRecordStep::Done) => break,
                     Err(error) if database_sync_hello_turn_exhausted(&error) => {
                         database_sync_hello_opportunity(&cancelled, &expired).await?;
                         continue;
@@ -1064,29 +1068,29 @@ async fn database_sync_hello_tail_reader(
     expired: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<(), DbError> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS);
-    let control = db_wal::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
+    let control = db_wal_log::WalCursorControl::new(cancelled.clone(), deadline, DATABASE_SYNC_HELLO_MAX_ITEMS)?;
     database_sync_hello_control(&cancelled, &expired)?;
     let wal = storage.wal().await;
     database_sync_hello_control(&cancelled, &expired)?;
-    let mut records = db_wal::replay_committed_document(&wal, &document, control).await?;
-    let mut decode_control = db_wal::WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+    let mut records = db_wal_log::replay_committed_document(&wal, &document, control).await?;
+    let mut decode_control = db_wal_log::WalCursorControl::stall_bounded(cancelled.clone(), db_wal_log::WAL_REPLAY_STEP_STALL_BOUND, db_wal_log::WAL_REPLAY_STEP_FUEL)?;
     let mut chain = semio_framework_hash::Hasher::new();
     let mut envelopes: Vec<protocol::MutationEnvelope> = Vec::new();
     let mut head_seq = 0u64;
     let mut commit_seq = 0u64;
     let mut head_edit_id = String::new();
-    let mut turn = db_wal::WalTurn::start();
+    let mut turn = db_wal_log::WalTurn::start();
     let read = async {
         while head_seq < end_head_seq {
             records.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
             database_sync_hello_control(&cancelled, &expired)?;
             let mut transaction = match records.next_transaction_step().await {
-                Ok(db_wal::WalCommittedStep::Transaction(transaction)) => transaction,
-                Ok(db_wal::WalCommittedStep::Yield) => {
+                Ok(db_wal_log::WalCommittedStep::Transaction(transaction)) => transaction,
+                Ok(db_wal_log::WalCommittedStep::Yield) => {
                     turn.step().await;
                     continue;
                 }
-                Ok(db_wal::WalCommittedStep::Done) => break,
+                Ok(db_wal_log::WalCommittedStep::Done) => break,
                 Err(error) if database_sync_hello_turn_exhausted(&error) => {
                     database_sync_hello_opportunity(&cancelled, &expired).await?;
                     continue;
@@ -1098,7 +1102,7 @@ async fn database_sync_hello_tail_reader(
                 decode_control.renew_step()?;
                 database_sync_hello_control(&cancelled, &expired)?;
                 match transaction.next_record_step() {
-                    Ok(db_wal::WalCommittedRecordStep::Record(db_wal::WalRecord::Command(bytes))) => {
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Command(bytes))) => {
                         head_seq = head_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello tail head sequence"))?;
                         chain.update(&bytes.hash());
                         if head_seq > replica_head {
@@ -1107,12 +1111,12 @@ async fn database_sync_hello_tail_reader(
                             envelopes.push(envelope);
                         }
                     }
-                    Ok(db_wal::WalCommittedRecordStep::Record(_)) => {}
-                    Ok(db_wal::WalCommittedRecordStep::Yield) => {
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(_)) => {}
+                    Ok(db_wal_log::WalCommittedRecordStep::Yield) => {
                         turn.step().await;
                         continue;
                     }
-                    Ok(db_wal::WalCommittedRecordStep::Done) => break,
+                    Ok(db_wal_log::WalCommittedRecordStep::Done) => break,
                     Err(error) if database_sync_hello_turn_exhausted(&error) => {
                         database_sync_hello_opportunity(&cancelled, &expired).await?;
                         continue;
@@ -1152,7 +1156,7 @@ async fn database_sync_hello_tail_reader(
 enum DatabaseSyncHelloFollowUp {
     None,
     Tail(Box<DatabaseSyncHelloTail>),
-    Snapshot { pages: db_storage::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool },
+    Snapshot { pages: db_io_core::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool },
 }
 
 struct DatabaseSyncHelloGrant {
@@ -1543,7 +1547,7 @@ pub fn database_sync_hello_live_slots() -> usize {
     database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count()
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl DatabaseSyncHelloState {
     fn debug_witness(&self) -> String {
         use std::sync::atomic::Ordering::Acquire;
@@ -1573,16 +1577,16 @@ impl DatabaseSyncHelloState {
 
 /// 🔬️ Per-owner retirement witness of one hello session: the state it owns, observed without
 /// keeping it alive, so concurrent sessions of other owners never enter the observation.
-#[cfg(test)]
-pub(crate) struct DatabaseSyncHelloRetirementWitness(std::sync::Weak<DatabaseSyncHelloState>);
+#[cfg(any(test, feature = "testkit"))]
+pub struct DatabaseSyncHelloRetirementWitness(std::sync::Weak<DatabaseSyncHelloState>);
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl DatabaseSyncHelloRetirementWitness {
-    pub(crate) fn retired(&self) -> bool {
+    pub fn retired(&self) -> bool {
         self.0.strong_count() == 0
     }
 
-    pub(crate) fn describe(&self) -> String {
+    pub fn describe(&self) -> String {
         self.0.upgrade().map_or_else(|| String::from("retired"), |state| state.debug_witness())
     }
 }
@@ -1970,7 +1974,7 @@ impl DatabaseSyncHelloState {
 
 /// 👋️ Retained generation-qualified sync-hello future driven only by the shared I/O lane.
 pub struct DatabaseSyncHelloFuture {
-    state: Option<std::sync::Arc<DatabaseSyncHelloState>>,
+    pub state: Option<std::sync::Arc<DatabaseSyncHelloState>>,
     completed: bool,
 }
 
@@ -2000,7 +2004,7 @@ impl DatabaseSyncHelloFuture {
         Self::try_submit_with_use(pool, pool_use, storage, document, hello_frontier, session_id, origin, snapshot_chunk_bytes)
     }
 
-    pub(crate) fn try_submit_with_use(
+    pub fn try_submit_with_use(
         pool: std::sync::Arc<semio_framework_async::WorkerPool>,
         pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>,
         storage: std::sync::Arc<db_storage::DbBackend>,
@@ -2273,13 +2277,13 @@ impl Drop for DatabaseSyncHelloReturnedFrame {
 
 /// 📡️ Backpressured hello output with one bounded I/O-lane opportunity per frame request.
 pub struct DatabaseSyncHelloSession {
-    state: Option<std::sync::Arc<DatabaseSyncHelloState>>,
+    pub state: Option<std::sync::Arc<DatabaseSyncHelloState>>,
     welcome_taken: bool,
 }
 
 impl DatabaseSyncHelloSession {
-    #[cfg(test)]
-    pub(crate) fn retirement_witness(&self) -> DatabaseSyncHelloRetirementWitness {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn retirement_witness(&self) -> DatabaseSyncHelloRetirementWitness {
         DatabaseSyncHelloRetirementWitness(self.state.as_ref().map_or_else(std::sync::Weak::new, std::sync::Arc::downgrade))
     }
 
@@ -2596,8 +2600,8 @@ impl DatabaseSyncHelloRejectedClose {
 
 /// ⛔️ Lossless pre-admission refusal retaining every exact hello input owner.
 pub struct DatabaseSyncHelloRejected {
-    error: Option<DbError>,
-    close: std::sync::Arc<DatabaseSyncHelloRejectedClose>,
+    pub error: Option<DbError>,
+    pub close: std::sync::Arc<DatabaseSyncHelloRejectedClose>,
 }
 
 impl DatabaseSyncHelloRejected {
@@ -2607,7 +2611,7 @@ impl DatabaseSyncHelloRejected {
         matches!(&self.error, Some(DbError::Unavailable(message)) if message == DATABASE_SYNC_HELLO_ADMISSION_SATURATED)
     }
 
-    fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>, error: DbError, owners: DatabaseSyncHelloOwners) -> Self {
+    pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>, error: DbError, owners: DatabaseSyncHelloOwners) -> Self {
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_SYNC_HELLO_DEADLINE_MS);
         let close = std::sync::Arc::new(DatabaseSyncHelloRejectedClose {
             pool,
@@ -2676,7 +2680,7 @@ pub struct WelcomeResponse {
 
 #[cfg(test)]
 struct BootstrapPageRangeCopy<'a> {
-    pages: &'a db_storage::DbIoPages,
+    pages: &'a db_io_core::DbIoPages,
     skip: usize,
     remaining: usize,
     page: u8,
@@ -2713,7 +2717,7 @@ impl std::future::Future for BootstrapPageRangeCopy<'_> {
 }
 
 #[cfg(test)]
-fn bootstrap_page_range_copy(pages: &db_storage::DbIoPages, start: usize, len: usize) -> Result<BootstrapPageRangeCopy<'_>, DbError> {
+fn bootstrap_page_range_copy(pages: &db_io_core::DbIoPages, start: usize, len: usize) -> Result<BootstrapPageRangeCopy<'_>, DbError> {
     let end = start.checked_add(len).ok_or(DbError::LimitExceeded("bootstrap page range"))?;
     if end > pages.len() {
         return Err(DbError::InvalidArgument("bootstrap page range exceeds its retained owner".to_string()));
@@ -2739,7 +2743,7 @@ async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, o
                 Ok((protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: Some(bytes) }, Vec::new()))
             } else {
                 let chunks = pages.len().div_ceil(snapshot_chunk_bytes);
-                if chunks > db_storage::DB_IO_OPERATION_ITEMS {
+                if chunks > db_io_core::DB_IO_OPERATION_ITEMS {
                     return Err(DbError::LimitExceeded("bootstrap protocol chunk items"));
                 }
                 let mut follow_up = Vec::new();
@@ -2803,7 +2807,7 @@ pub async fn handle_hello(
 /// 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
 /// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
-pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
+pub async fn handle_frontier_advertise(storage: &impl db_io_core::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
     let state = replay_sync_state(storage, document).await?;
     let replica = from_frontier_summary(advertised);
     let missing = missing_commands(&state, &replica).await?;

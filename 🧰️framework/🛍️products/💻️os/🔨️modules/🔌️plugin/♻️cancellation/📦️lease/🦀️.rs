@@ -8,14 +8,17 @@ impl CancellationLeaseParts {
   let aliases=handle.map(|ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}|{tokens[3]=Some(app_scope);claims[4]=Some(publication_scope);CancellationHandleAliases{state,generation:app_generation,active}});
   Self{aliases,tokens,claims,token_retirements:std::array::from_fn(|_|None),document_id,claim_retirements:std::array::from_fn(|_|None)}
  }
- pub(crate) fn terminal_is_empty(&self)->bool{self.aliases.is_none()&&self.tokens.iter().all(Option::is_none)&&self.claims.iter().all(Option::is_none)&&self.token_retirements.iter().all(Option::is_none)&&self.claim_retirements.iter().all(Option::is_none)}
- pub(crate) fn retirement_demands(&self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,body:usize)->Result<RetirementDemand,ValueError>{
+ #[doc(hidden)]
+ pub fn terminal_is_empty(&self)->bool{self.aliases.is_none()&&self.tokens.iter().all(Option::is_none)&&self.claims.iter().all(Option::is_none)&&self.token_retirements.iter().all(Option::is_none)&&self.claim_retirements.iter().all(Option::is_none)}
+ #[doc(hidden)]
+ pub fn retirement_demands(&self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,body:usize)->Result<RetirementDemand,ValueError>{
   let item=RetirementDemand{depth:1,..Default::default()};
   for index in 0..4{if self.tokens[index].is_some()||self.token_retirements[index].is_some(){return self.token_demands(index,canonical,Some(original_parent))}}
   for index in 0..5{if self.claims[index].is_some()||self.claim_retirements[index].is_some(){return plugin_typed_owner_demand(&self.claims[index],&self.claim_retirements[index],body)}}
   if let Some(aliases)=self.aliases.as_ref(){if !std::sync::Arc::ptr_eq(&aliases.state,&canonical.state)||!std::sync::Arc::ptr_eq(&aliases.generation,&canonical.app_generation)||!std::sync::Arc::ptr_eq(&aliases.active,&canonical.active){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original cancellation handle aliases lost their issuing canonical owner"))}return Ok(RetirementDemand{copy_bytes:size_of::<CancellationHandleAliases>(),..item})}Ok(item)
  }
- pub(crate) fn close_step(&mut self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ #[doc(hidden)]
+ pub fn close_step(&mut self,canonical:&ToolCancellationHandle,original_parent:&semio_framework_job::CancelToken,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.retirement_demands(canonical,original_parent,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
   for index in 0..4{if self.tokens[index].is_some()||self.token_retirements[index].is_some(){return self.token_step(index,canonical,Some(original_parent),grant)}}
   for index in 0..5{if self.claims[index].is_some()||self.claim_retirements[index].is_some(){return plugin_typed_owner_step(&mut self.claims[index],&mut self.claim_retirements[index],grant)}}
@@ -42,11 +45,15 @@ impl CancellationLeaseParts {
   }
  }
 }
-pub(crate) struct ToolCancellationLeaseRetirement { original:Option<ManuallyDrop<ToolCancellationLease>>, operation:Option<ManuallyDrop<ToolDocumentCancellationScope>>, document:Option<ManuallyDrop<ToolKeyedDocumentCancellationScope>>, parts:ManuallyDrop<Option<CancellationLeaseParts>>, detached:bool }
+#[doc(hidden)]
+pub struct ToolCancellationLeaseRetirement { original:Option<ManuallyDrop<ToolCancellationLease>>, operation:Option<ManuallyDrop<ToolDocumentCancellationScope>>, document:Option<ManuallyDrop<ToolKeyedDocumentCancellationScope>>, parts:ManuallyDrop<Option<CancellationLeaseParts>>, detached:bool }
 impl ToolCancellationLeaseRetirement {
- pub(crate) fn new(original:ToolCancellationLease)->Self{Self{original:Some(ManuallyDrop::new(original)),operation:None,document:None,parts:ManuallyDrop::new(None),detached:false}}
- pub(crate) fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.operation.is_none()&&self.document.is_none()&&self.parts.is_none()}
- pub(crate) fn retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{
+ #[doc(hidden)]
+ pub fn new(original:ToolCancellationLease)->Self{Self{original:Some(ManuallyDrop::new(original)),operation:None,document:None,parts:ManuallyDrop::new(None),detached:false}}
+ #[doc(hidden)]
+ pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.operation.is_none()&&self.document.is_none()&&self.parts.is_none()}
+ #[doc(hidden)]
+ pub fn retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{
   let item=RetirementDemand{depth:1,..Default::default()};
   if !self.detached{return Ok(RetirementDemand{copy_bytes:size_of::<ToolDocumentCancellationScope>()+size_of::<ToolKeyedDocumentCancellationScope>(),..item});}
   if self.original.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>()+size_of::<ToolDocumentCancellationScope>()+size_of::<ToolKeyedDocumentCancellationScope>(),..item});}
@@ -56,7 +63,8 @@ impl ToolCancellationLeaseRetirement {
   if let Some(aliases)=parts.aliases.as_ref(){if !std::sync::Arc::ptr_eq(&aliases.state,&canonical.state)||!std::sync::Arc::ptr_eq(&aliases.generation,&canonical.app_generation)||!std::sync::Arc::ptr_eq(&aliases.active,&canonical.active){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original cancellation handle aliases lost their issuing canonical owner"));}return Ok(RetirementDemand{copy_bytes:size_of::<CancellationHandleAliases>(),..item});}
   Ok(item)
  }
- pub(crate) fn close_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ #[doc(hidden)]
+ pub fn close_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.retirement_demands(canonical,grant.maximum_copy_bytes)?;
   if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if !self.detached{
@@ -75,7 +83,7 @@ impl ToolCancellationLeaseRetirement {
    drop(state);original.finished=true;self.detached=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}));
   }
   if let Some(original)=self.original.take(){
-   let crate::tool_cancellation::ToolCancellationLeaseOriginal{handle,token,publication_claim:claim,document_claim,keyed,document,..}=ManuallyDrop::into_inner(original).into_retirement_source();
+   let crate::ToolCancellationLeaseOriginal{handle,token,publication_claim:claim,document_claim,keyed,document,..}=ManuallyDrop::into_inner(original).into_retirement_source();
    let ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}=handle;
    let mut parts=CancellationLeaseParts{aliases:Some(CancellationHandleAliases{state,generation:app_generation,active}),tokens:[Some(token),None,None,Some(app_scope)],claims:[Some(claim),document_claim,None,None,Some(publication_scope)],token_retirements:std::array::from_fn(|_|None),document_id:keyed.then(||u64::from(document.0)),claim_retirements:std::array::from_fn(|_|None)};
    if let Some(operation)=self.operation.take(){let ToolDocumentCancellationScope{token,publication_claim,..}=ManuallyDrop::into_inner(operation);parts.tokens[1]=Some(token);parts.claims[2]=Some(publication_claim);}
@@ -90,11 +98,13 @@ impl ToolCancellationLeaseRetirement {
  }
 }
 impl Drop for ToolCancellationLeaseRetirement{fn drop(&mut self){assert!(self.terminal_is_empty(),"original cancellation lease retirement retains all refused owners");}}
-pub(crate) fn original_lease_cursor_admit(original:&mut Option<ToolCancellationLease>,grant:RetainedCloneGrant)->Result<(Option<Box<ToolCancellationLeaseRetirement>>,RetainedCloneProgress),ValueError>{
+#[doc(hidden)]
+pub fn original_lease_cursor_admit(original:&mut Option<ToolCancellationLease>,grant:RetainedCloneGrant)->Result<(Option<Box<ToolCancellationLeaseRetirement>>,RetainedCloneProgress),ValueError>{
  let empty=RetainedCloneProgress::default();if original.is_none(){return Ok((None,empty));}let layout=std::alloc::Layout::new::<ToolCancellationLeaseRetirement>();let demand=RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:layout.size(),depth:1,..Default::default()};if grant.maximum_items==0||!plugin_grant_funds(demand,grant){return Ok((None,empty));}
  let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ToolCancellationLeaseRetirement>())else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original cancellation lease cursor allocation was refused"));};let value=original.take().unwrap();let owner=unsafe{pointer.as_ptr().write(ToolCancellationLeaseRetirement::new(value));Box::from_raw(pointer.as_ptr())};Ok((Some(owner),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:layout.size(),..empty}))
 }
-pub(crate) fn original_lease_cursor_release(original:&mut Option<Box<ToolCancellationLeaseRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+#[doc(hidden)]
+pub fn original_lease_cursor_release(original:&mut Option<Box<ToolCancellationLeaseRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
  let Some(owner)=original.as_ref()else{return Ok(Default::default());};if !owner.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original cancellation cursor frame still retains its children"));}let bytes=size_of::<ToolCancellationLeaseRetirement>();if grant.maximum_items==0||grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(Default::default());}original.take();Ok(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})
 }
 #[cfg(test)]

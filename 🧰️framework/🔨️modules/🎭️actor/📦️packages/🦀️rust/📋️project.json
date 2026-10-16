@@ -76,10 +76,16 @@
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
-      "cache": true
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "wasmPackageSourceV1": {
+            "version": 1,
+            "sourceOwner": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust"
+          }
+        }
+      }
     },
     "test-original-owned-async-source": {
       "executor": "repo:script",

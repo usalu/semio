@@ -1,6 +1,15 @@
 //! 🚦️ One handler per verb, each a thin front for the domain crate that owns the aggregate.
 
-use super::*;
+use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_cli_event_stream::{format_markdown_result, go_json, go_sprint, graphql_events, Event, Format, EXIT_ERROR, EXIT_OK, KIND_ERROR, KIND_RESULT, KIND_START};
+use semio_framework_repo_cli_mcp_verb::RepoRepository;
+use semio_framework_repo_cli_tree_source_and_search::{export_entities, flatten_tree, searched_tree, status_filter, text_tree_lines, tree_filter, write_tree_forest, write_tree_node, FsTreeSource, StreamOptions};
+use semio_framework_repo_codebase::{Codebase, Scope as CodebaseScope};
+use semio_framework_repo_graphql::RepoContext;
+use semio_framework_repo_identity::{emoji_text, entity as identity_entity, flat};
+use semio_framework_repo_model::{entity, DraftCreateInput, TicketStatus, TreeNode, TreeNodeKind};
+use serde_json::{json, Map, Value as Json};
+use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🧭️RepoCli
 //#region 🚦️Verbs
@@ -119,7 +128,7 @@ pub fn mcp(invocation: &mut Invocation<'_>) -> Result<(), CliError> {
     }
     let raw = if invocation.args().is_empty() { std::env::var(semio_framework_repo_mcp::PROFILE_ENVIRONMENT).unwrap_or_default() } else { invocation.arg(0) };
     let profile = semio_framework_repo_mcp::Profile::parse(&raw).map_err(|error| CliError::Message(error.to_string()))?;
-    semio_framework_repo_mcp::serve_stdio(crate::mcp_verb::RepoRepository::open(&invocation.root(), profile), profile).map_err(|error| CliError::Message(error.to_string()))
+    semio_framework_repo_mcp::serve_stdio(RepoRepository::open(&invocation.root(), profile), profile).map_err(|error| CliError::Message(error.to_string()))
 }
 
 pub fn graphql(invocation: &mut Invocation<'_>) -> Result<(), CliError> {

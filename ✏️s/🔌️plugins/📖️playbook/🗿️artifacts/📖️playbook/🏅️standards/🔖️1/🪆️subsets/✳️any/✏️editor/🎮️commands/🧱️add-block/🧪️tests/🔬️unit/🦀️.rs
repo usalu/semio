@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::playbook::commands::add_block::*;
 use crate::editor::playbook::commands::move_block::MoveBlock;
 use crate::editor::playbook::commands::remove_block::RemoveBlock;
 use crate::editor::playbook::unit_tests::context::{dispatch, live_spec, playbook_app};

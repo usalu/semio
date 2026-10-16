@@ -14,11 +14,12 @@
 //! many runs it's spread across (checksums via `pack::crc32c` catch on-disk corruption either
 //! way). `db_storage::IndexStorage` stores opaque per-`(document, run_id)` byte blobs; this crate
 //! owns everything about what's inside a run and how `run_id`s are namespaced per `IndexKind`.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as pack;
 
-use crate::db_durability::Frontier;
-use crate::db_ids::{check_len, ActorId, ArtifactId, DbError};
-use crate::*;
-use db_storage::IndexStorage;
+use db_durability::Frontier;
+use db_ids::{ActorId, ArtifactId, DbError, check_len};
+use db_io_core::IndexStorage;
 #[cfg(test)]
 use pack::crc32c;
 use pack::ByteWriter;
@@ -54,7 +55,7 @@ const LEVEL_RUN_ENTRIES_MAX: u64 = MAX_RUN_ENTRIES << (2 * RUN_LEVEL_MAX);
 /// 🛡️ Ceiling on the bytes a fold reads (its input runs together): one read operation's credit, so the folded run —
 /// never larger than its inputs — is always read in one operation; a fold that would exceed it is skipped and its runs
 /// stay as they are.
-const LEVEL_FOLD_BYTES_MAX: usize = db_storage::DB_IO_MAX_READ_BYTES as usize;
+const LEVEL_FOLD_BYTES_MAX: usize = db_io_core::DB_IO_MAX_READ_BYTES as usize;
 //#endregion 🔖️Limits
 
 //#region 🔖️IndexKind
@@ -176,9 +177,9 @@ fn entries_of_run_id(run_id: u64) -> u64 {
 /// 📇️ One entry's value in a sorted run: either a live payload or a tombstone recording that
 /// a key was deleted (and must keep shadowing that key in any older, not-yet-merged run beneath).
 pub struct IndexCursorControl {
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    deadline: std::time::Instant,
-    fuel: usize,
+    pub cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub deadline: std::time::Instant,
+    pub fuel: usize,
     cooperative: Option<(std::time::Duration, usize)>,
 }
 
@@ -190,7 +191,7 @@ impl IndexCursorControl {
         Ok(Self { cancelled, deadline, fuel, cooperative: None })
     }
 
-    fn retained(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
+    pub fn retained(cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>, deadline: std::time::Instant, fuel: usize) -> Result<Self, DbError> {
         let duration = deadline.saturating_duration_since(std::time::Instant::now());
         if fuel == 0 || duration.is_zero() {
             return Err(DbError::LimitExceeded("index cursor retained budget"));
@@ -227,7 +228,7 @@ impl IndexCursorControl {
 
 #[derive(Debug)]
 pub struct IndexBytes {
-    pages: db_storage::DbIoPages,
+    pub pages: db_io_core::DbIoPages,
 }
 
 impl PartialEq for IndexBytes {
@@ -241,7 +242,7 @@ impl Eq for IndexBytes {}
 #[derive(Debug)]
 pub struct IndexBytesRejected {
     source: Option<Vec<u8>>,
-    writer: Option<db_storage::DbIoPageWriter>,
+    writer: Option<db_io_core::DbIoPageWriter>,
     error: DbError,
 }
 
@@ -250,16 +251,16 @@ impl IndexBytes {
         if source.capacity() as u64 > maximum {
             return Err(IndexBytesRejected { source: Some(source), writer: None, error: DbError::LimitExceeded("index source backing capacity") });
         }
-        let pages = source.capacity().div_ceil(db_storage::DB_IO_PAGE_BYTES);
-        let mut writer = match db_storage::DbIoPageWriter::try_reserve(pages) {
+        let pages = source.capacity().div_ceil(db_io_core::DB_IO_PAGE_BYTES);
+        let mut writer = match db_io_core::DbIoPageWriter::try_reserve(pages) {
             Ok(writer) => writer,
             Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: error.into_writer(), error: DbError::Unavailable("index page admission rejected".to_string()) }),
         };
-        let mut reservation = match db_storage::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
+        let mut reservation = match db_io_core::DbIoDriverReservation::try_reserve(writer.operation(), source.capacity()) {
             Ok(reservation) => reservation,
             Err(error) => return Err(IndexBytesRejected { source: Some(source), writer: Some(writer), error }),
         };
-        let mut source = db_storage::DbIoExternalBytes::new(source);
+        let mut source = db_io_core::DbIoExternalBytes::new(source);
         if let Err(error) = source.capacity().and_then(|capacity| reservation.observe_capacity(capacity)) {
             return Err(IndexBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
@@ -302,13 +303,13 @@ impl IndexBytes {
         self.pages.is_empty()
     }
 
-    pub fn fragments(&self) -> db_storage::DbIoPageReader<'_> {
+    pub fn fragments(&self) -> db_io_core::DbIoPageReader<'_> {
         self.pages.fragments()
     }
 
     #[cfg(test)]
-    async fn prepare_platform(&self) -> Result<db_storage::DbIoPlatformBuffer, DbError> {
-        db_storage::db_io_prepare_platform(&self.pages)?.await
+    async fn prepare_platform(&self) -> Result<db_io_registry::DbIoPlatformBuffer, DbError> {
+        db_io_registry::db_io_prepare_platform(&self.pages)?.await
     }
 
     pub async fn copy_for_operation(operation: u64, bytes: &[u8], control: &mut IndexCursorControl) -> Result<Self, DbError> {
@@ -319,8 +320,8 @@ impl IndexBytes {
         if offset >= self.len() || output.is_empty() {
             return 0;
         }
-        let page = (offset / db_storage::DB_IO_PAGE_BYTES) as u8;
-        let page_offset = offset % db_storage::DB_IO_PAGE_BYTES;
+        let page = (offset / db_io_core::DB_IO_PAGE_BYTES) as u8;
+        let page_offset = offset % db_io_core::DB_IO_PAGE_BYTES;
         let Some(fragment) = self.pages.page(page) else { return 0 };
         let read = output.len().min(fragment.len().saturating_sub(page_offset));
         output[..read].copy_from_slice(&fragment[page_offset..page_offset + read]);
@@ -367,7 +368,7 @@ impl IndexBytesRejected {
 impl Drop for IndexBytesRejected {
     fn drop(&mut self) {
         if let Some(source) = self.source.take() {
-            drop(db_storage::DbIoExternalBytes::new(source));
+            drop(db_io_core::DbIoExternalBytes::new(source));
         }
     }
 }
@@ -385,7 +386,7 @@ async fn admit_generated_index_bytes(source: Vec<u8>, maximum: u64, control: &mu
                 semio_framework_async::yield_once().await;
             }
             if let Some(source) = rejected.source.take() {
-                let mut source = db_storage::DbIoExternalBytes::new(source);
+                let mut source = db_io_core::DbIoExternalBytes::new(source);
                 while !source.terminal_is_empty() {
                     control.grant()?;
                     let _ = source.close_step();
@@ -446,7 +447,7 @@ fn index_bytes_compare_prefix(value: &IndexBytes, prefix: &IndexBytes) -> bool {
     let mut compared = 0;
     for fragment in value.fragments() {
         for byte in fragment {
-            let Some(prefix_byte) = prefix.pages.page((compared / db_storage::DB_IO_PAGE_BYTES) as u8).and_then(|page| page.get(compared % db_storage::DB_IO_PAGE_BYTES)) else { return true };
+            let Some(prefix_byte) = prefix.pages.page((compared / db_io_core::DB_IO_PAGE_BYTES) as u8).and_then(|page| page.get(compared % db_io_core::DB_IO_PAGE_BYTES)) else { return true };
             if byte != prefix_byte {
                 return false;
             }
@@ -475,8 +476,8 @@ pub struct RunEntry {
 }
 
 pub struct RunEntries {
-    entries: Box<[Option<RunEntry>]>,
-    len: u8,
+    pub entries: Box<[Option<RunEntry>]>,
+    pub len: u8,
 }
 
 impl RunEntries {
@@ -566,13 +567,13 @@ struct RunHeader {
 }
 
 struct RunPageReader<'pages> {
-    pages: &'pages db_storage::DbIoPages,
+    pages: &'pages db_io_core::DbIoPages,
     position: usize,
     limit: usize,
 }
 
 impl<'pages> RunPageReader<'pages> {
-    fn new(pages: &'pages db_storage::DbIoPages, limit: usize) -> Self {
+    fn new(pages: &'pages db_io_core::DbIoPages, limit: usize) -> Self {
         Self { pages, position: 0, limit }
     }
 
@@ -681,7 +682,7 @@ fn encode_varint(mut value: u64, buffer: &mut [u8; 10]) -> &[u8] {
     }
 }
 
-async fn run_write(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &[u8]) -> Result<(), DbError> {
+async fn run_write(writer: &mut db_io_core::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &[u8]) -> Result<(), DbError> {
     let mut cursor = 0;
     while cursor < bytes.len() {
         let written = writer.write_fragment(&bytes[cursor..])?;
@@ -692,7 +693,7 @@ async fn run_write(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack:
     Ok(())
 }
 
-async fn run_write_trailer(writer: &mut db_storage::DbIoPageWriter, bytes: &[u8]) -> Result<(), DbError> {
+async fn run_write_trailer(writer: &mut db_io_core::DbIoPageWriter, bytes: &[u8]) -> Result<(), DbError> {
     let mut cursor = 0;
     while cursor < bytes.len() {
         cursor += writer.write_fragment(&bytes[cursor..])?;
@@ -701,7 +702,7 @@ async fn run_write_trailer(writer: &mut db_storage::DbIoPageWriter, bytes: &[u8]
     Ok(())
 }
 
-async fn run_write_pages(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
+async fn run_write_pages(writer: &mut db_io_core::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, bytes: &IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
     for fragment in bytes.fragments() {
         control.grant()?;
         run_write(writer, checksum, fragment).await?;
@@ -709,7 +710,7 @@ async fn run_write_pages(writer: &mut db_storage::DbIoPageWriter, checksum: &mut
     Ok(())
 }
 
-async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut IndexCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
     let mut encoded_len = RUN_MAGIC.len() + 2 + varint_len(entries.len() as u64) + 4;
     let mut previous_key: Option<&IndexBytes> = None;
@@ -733,7 +734,7 @@ async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut I
         }
         semio_framework_async::yield_once().await;
     }
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let mut checksum = pack::codec::Crc32cCursor::new();
     run_write(&mut writer, &mut checksum, &RUN_MAGIC).await?;
     run_write(&mut writer, &mut checksum, &[RUN_VERSION, kind.tag()]).await?;
@@ -754,12 +755,12 @@ async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut I
         }
     }
     run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
-    writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 
 /// 📥️ Encodes strictly ascending, unique `(key, value)` puts into one run's bytes (the same
 /// layout as `encode_run_pages`) straight from caller-owned slices, under one page writer.
-async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], control: &mut IndexCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
     let mut encoded_len = RUN_MAGIC.len() + 2 + varint_len(entries.len() as u64) + 4;
     for (index, (key, value)) in entries.iter().enumerate() {
@@ -773,7 +774,7 @@ async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], co
             .checked_add(varint_len(key.len() as u64) + key.len() + 1 + varint_len(value.len() as u64) + value.len())
             .ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
     }
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let mut checksum = pack::codec::Crc32cCursor::new();
     let mut varint = [0u8; 10];
     let written = async {
@@ -796,11 +797,11 @@ async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], co
         return Err(error);
     }
     run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
-    writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 
 async fn index_bytes_from_reader(operation: u64, reader: &mut RunPageReader<'_>, len: usize, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve_for_operation(operation, len.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let end = reader.position.checked_add(len).ok_or(DbError::LimitExceeded("index run field cursor"))?;
     if end > reader.limit {
         return Err(DbError::Corrupt("index run field exceeds retained body".to_string()));
@@ -812,21 +813,21 @@ async fn index_bytes_from_reader(operation: u64, reader: &mut RunPageReader<'_>,
         let written = writer.write_fragment(&fragment[..count])?;
         reader.position += written;
     }
-    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 
 async fn index_bytes_from_slice_for_operation(operation: u64, bytes: &[u8], control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
-    let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, bytes.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve_for_operation(operation, bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let mut offset = 0usize;
     while offset < bytes.len() {
         control.grant()?;
         offset += writer.write_fragment(&bytes[offset..])?;
     }
-    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 
 #[cfg(test)]
-async fn decode_run_pages_inner(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+async fn decode_run_pages_inner(pages: &db_io_core::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
     control.grant()?;
     let operation = pages.operation();
     if pages.len() < 4 {
@@ -878,7 +879,7 @@ async fn decode_run_pages_inner(pages: &db_storage::DbIoPages, expected_kind: In
 }
 
 #[cfg(test)]
-async fn decode_run_pages(mut pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
+async fn decode_run_pages(mut pages: db_io_core::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
     let result = decode_run_pages_inner(&pages, expected_kind, control).await;
     let _ = pages.close_step()?;
     drop(pages);
@@ -906,13 +907,13 @@ struct RunViewEntry {
 /// pages — never a page per entry — so a run of `MAX_RUN_ENTRIES` small entries stays inside one
 /// operation's I/O credit, and an index never outgrows that credit as its document grows.
 struct RunView {
-    pages: db_storage::DbIoPages,
+    pages: db_io_core::DbIoPages,
     entries: Box<[RunViewEntry]>,
 }
 
 /// 🧹️ Returns every page of a run read to its arena before the owner is dropped, so a read
 /// never parks its pages as a lost owner for maintenance to reclaim later.
-fn close_run_pages(mut pages: db_storage::DbIoPages) -> Result<(), DbError> {
+fn close_run_pages(mut pages: db_io_core::DbIoPages) -> Result<(), DbError> {
     while pages.close_step()?.is_some() {}
     drop(pages);
     Ok(())
@@ -973,7 +974,7 @@ impl RunView {
     /// 📤️ Copies one of this run's ranges out as caller-owned bytes, charged to the run's own
     /// read operation.
     async fn materialize(&self, range: RunRange, control: &mut IndexCursorControl) -> Result<IndexBytes, DbError> {
-        let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(self.pages.operation(), range.len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+        let mut writer = db_io_core::DbIoPageWriter::try_reserve_for_operation(self.pages.operation(), range.len.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
         let mut reader = RunPageReader { pages: &self.pages, position: range.start, limit: range.start + range.len };
         while reader.position < reader.limit {
             control.grant()?;
@@ -981,12 +982,12 @@ impl RunView {
             let written = writer.write_fragment(fragment)?;
             reader.position += written;
         }
-        writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
+        writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_io_core::DbIoPageWriterRejected::into_error)
     }
 }
 
 /// ⚖️ Lexicographic order of two ranges, each over its own pages.
-fn run_range_cmp(left: &db_storage::DbIoPages, left_range: RunRange, right: &db_storage::DbIoPages, right_range: RunRange) -> Result<std::cmp::Ordering, DbError> {
+fn run_range_cmp(left: &db_io_core::DbIoPages, left_range: RunRange, right: &db_io_core::DbIoPages, right_range: RunRange) -> Result<std::cmp::Ordering, DbError> {
     let mut left_reader = RunPageReader { pages: left, position: left_range.start, limit: left_range.start + left_range.len };
     let mut right_reader = RunPageReader { pages: right, position: right_range.start, limit: right_range.start + right_range.len };
     loop {
@@ -1010,7 +1011,7 @@ fn run_range_cmp(left: &db_storage::DbIoPages, left_range: RunRange, right: &db_
 }
 
 /// 👁️ Verifies one run's checksum and structure and reads its entries in place.
-async fn view_run_pages(pages: db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
+async fn view_run_pages(pages: db_io_core::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
     match view_run_entries(&pages, expected_kind, control).await {
         Ok(entries) => Ok(RunView { pages, entries }),
         Err(error) => {
@@ -1020,7 +1021,7 @@ async fn view_run_pages(pages: db_storage::DbIoPages, expected_kind: IndexKind, 
     }
 }
 
-async fn view_run_entries(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<Box<[RunViewEntry]>, DbError> {
+async fn view_run_entries(pages: &db_io_core::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<Box<[RunViewEntry]>, DbError> {
     control.grant()?;
     if pages.len() < 4 {
         return Err(DbError::Corrupt("index run is shorter than its checksum trailer".to_string()));
@@ -1114,7 +1115,7 @@ fn merge_run_views(views: &[&RunView], drop_tombstones: bool, control: &mut Inde
     Ok(picks)
 }
 
-async fn run_write_range(writer: &mut db_storage::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, pages: &db_storage::DbIoPages, range: RunRange, control: &mut IndexCursorControl) -> Result<(), DbError> {
+async fn run_write_range(writer: &mut db_io_core::DbIoPageWriter, checksum: &mut pack::codec::Crc32cCursor, pages: &db_io_core::DbIoPages, range: RunRange, control: &mut IndexCursorControl) -> Result<(), DbError> {
     let mut reader = RunPageReader { pages, position: range.start, limit: range.start + range.len };
     while reader.position < reader.limit {
         control.grant()?;
@@ -1127,7 +1128,7 @@ async fn run_write_range(writer: &mut db_storage::DbIoPageWriter, checksum: &mut
 
 /// ✍️ Encodes picked entries of in-place runs as one run, copying key and value bytes straight
 /// from their source pages — the same wire as `encode_run_pages`.
-async fn encode_run_from_views(kind: IndexKind, views: &[&RunView], picks: &[RunPick], control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+async fn encode_run_from_views(kind: IndexKind, views: &[&RunView], picks: &[RunPick], control: &mut IndexCursorControl) -> Result<db_io_core::DbIoPages, DbError> {
     check_len(picks.len() as u64, LEVEL_RUN_ENTRIES_MAX, "db_index::entries")?;
     let mut encoded_len = RUN_MAGIC.len() + 2 + varint_len(picks.len() as u64) + 4;
     for pick in picks {
@@ -1138,7 +1139,7 @@ async fn encode_run_from_views(kind: IndexKind, views: &[&RunView], picks: &[Run
             encoded_len = encoded_len.checked_add(varint_len(value.len as u64) + value.len).ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
         }
     }
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let mut checksum = pack::codec::Crc32cCursor::new();
     run_write(&mut writer, &mut checksum, &RUN_MAGIC).await?;
     run_write(&mut writer, &mut checksum, &[RUN_VERSION, kind.tag()]).await?;
@@ -1159,7 +1160,7 @@ async fn encode_run_from_views(kind: IndexKind, views: &[&RunView], picks: &[Run
         }
     }
     run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
-    writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 //#endregion 🔖️RunView
 
@@ -1264,11 +1265,11 @@ enum RangeStep {
 /// (`CommandIndex`, `FrontierIndex`, ...) is a thin codec layered on top of one of these. Never
 /// interprets key/value bytes itself; that's the typed layer's job.
 pub struct IndexHandle<'a, S: IndexStorage> {
-    storage: &'a S,
-    document: ArtifactId,
-    kind: IndexKind,
-    policy: MergePolicy,
-    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub storage: &'a S,
+    pub document: ArtifactId,
+    pub kind: IndexKind,
+    pub policy: MergePolicy,
+    pub cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl<'a, S: IndexStorage> IndexHandle<'a, S> {
@@ -1481,7 +1482,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// ➕️ Writes `pages` (holding `count` entries) as the kind's newest run from ONE listing
     /// of its runs, then lets `MergePolicy` fold at most one adjacent pair — sizes come from the run
     /// ids, so an append never reads a run it does not merge.
-    async fn append_run(&self, pages: db_storage::DbIoPages, count: usize, control: &mut IndexCursorControl) -> Result<(), DbError> {
+    async fn append_run(&self, pages: db_io_core::DbIoPages, count: usize, control: &mut IndexCursorControl) -> Result<(), DbError> {
         let mut ids = match self.kind_run_ids(control).await {
             Ok(ids) => ids,
             Err(error) => {
@@ -1811,7 +1812,7 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
 /// would exceed one read operation's credit (entries of that size never fold higher).
 #[derive(Debug)]
 pub struct OwnedRuns {
-    ids: Vec<u64>,
+    pub ids: Vec<u64>,
     next_sequence: u64,
     fold_ceiling: u32,
 }
@@ -2042,7 +2043,7 @@ impl<'a, S: IndexStorage> InverseIndex<'a, S> {
 /// contain a NUL byte (validated) so the `0x00` separator stays unambiguous and prefix scans by
 /// actor (`latest_for_actor`) can't spill into a neighboring actor's entries.
 pub struct ActorSeqIndex<'a, S: IndexStorage> {
-    handle: IndexHandle<'a, S>,
+    pub handle: IndexHandle<'a, S>,
 }
 
 async fn validate_actor_key_safe(actor: &ActorId) -> Result<(), DbError> {
@@ -2157,7 +2158,7 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
 /// `Consistency::Historical`/replica resume resolve "what did the frontier look like at commit N"
 /// without replaying.
 pub struct FrontierIndex<'a, S: IndexStorage> {
-    handle: IndexHandle<'a, S>,
+    pub handle: IndexHandle<'a, S>,
 }
 
 async fn encode_frontier(frontier: &Frontier) -> Vec<u8> {
@@ -2262,7 +2263,7 @@ pub struct TouchedRegionIndex<'a, S: IndexStorage> {
     handle: IndexHandle<'a, S>,
 }
 
-async fn encode_postings(postings: &db_storage::DbIoU64List) -> Vec<u8> {
+async fn encode_postings(postings: &db_io_core::DbIoU64List) -> Vec<u8> {
     let mut writer = ByteWriter::new();
     writer.write_varint_u64(postings.len() as u64);
     for posting in postings.as_slice() {
@@ -2271,10 +2272,10 @@ async fn encode_postings(postings: &db_storage::DbIoU64List) -> Vec<u8> {
     writer.into_bytes()
 }
 
-fn decode_postings(reader: &mut RunPageReader<'_>) -> Result<db_storage::DbIoU64List, DbError> {
+fn decode_postings(reader: &mut RunPageReader<'_>) -> Result<db_io_core::DbIoU64List, DbError> {
     let count = reader.varint()?;
     check_len(count, MAX_RUN_ENTRIES, "db_index::postings")?;
-    let mut postings = db_storage::DbIoU64List::new();
+    let mut postings = db_io_core::DbIoU64List::new();
     for _ in 0..count {
         postings.push(reader.varint()?)?;
     }
@@ -2291,7 +2292,7 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
     pub async fn record_touch(&self, region: &[u8], command_seq: u64) -> Result<(), DbError> {
         let mut control = self.handle.operation_control(16_384)?;
         let mut postings = self.touching_with_control(region, &mut control).await?;
-        let mut updated = db_storage::DbIoU64List::new();
+        let mut updated = db_io_core::DbIoU64List::new();
         let mut inserted = false;
         for posting in postings.as_slice() {
             if !inserted && command_seq < *posting {
@@ -2317,17 +2318,17 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
         self.handle.put(key, value, &mut control).await
     }
 
-    async fn touching_with_control(&self, region: &[u8], control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+    async fn touching_with_control(&self, region: &[u8], control: &mut IndexCursorControl) -> Result<db_io_core::DbIoU64List, DbError> {
         let key = admit_generated_index_bytes(region.to_vec(), MAX_KEY_LEN, control).await?;
         let result = self.handle.get(&key, control).await?;
         close_index_bytes(key, control).await?;
         match result {
             Some(bytes) => decode_index_bytes(bytes, control, decode_postings).await,
-            None => Ok(db_storage::DbIoU64List::new()),
+            None => Ok(db_io_core::DbIoU64List::new()),
         }
     }
 
-    pub async fn touching(&self, region: &[u8]) -> Result<db_storage::DbIoU64List, DbError> {
+    pub async fn touching(&self, region: &[u8]) -> Result<db_io_core::DbIoU64List, DbError> {
         let mut control = self.handle.operation_control(16_384)?;
         self.touching_with_control(region, &mut control).await
     }
@@ -2339,7 +2340,7 @@ impl<'a, S: IndexStorage> TouchedRegionIndex<'a, S> {
 /// per the contract's content-addressed `ck-<hex16>` scheme) to the command sequence it was cut at,
 /// for `Consistency::Historical(commit_id)` query resolution.
 pub struct CommitIndex<'a, S: IndexStorage> {
-    handle: IndexHandle<'a, S>,
+    pub handle: IndexHandle<'a, S>,
 }
 
 impl<'a, S: IndexStorage> CommitIndex<'a, S> {
@@ -2382,13 +2383,13 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
         Self { handle: IndexHandle::new(storage, document, IndexKind::FullText).await }
     }
 
-    async fn postings(&self, term_key: &[u8], control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+    pub async fn postings(&self, term_key: &[u8], control: &mut IndexCursorControl) -> Result<db_io_core::DbIoU64List, DbError> {
         let key = admit_generated_index_bytes(term_key.to_vec(), MAX_KEY_LEN, control).await?;
         let result = self.handle.get(&key, control).await?;
         close_index_bytes(key, control).await?;
         match result {
             Some(bytes) => decode_index_bytes(bytes, control, decode_postings).await,
-            None => Ok(db_storage::DbIoU64List::new()),
+            None => Ok(db_io_core::DbIoU64List::new()),
         }
     }
 
@@ -2400,7 +2401,7 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
             let term = term.to_lowercase();
             let mut postings = self.postings(term.as_bytes(), &mut control).await?;
             if postings.as_slice().binary_search(&doc_ref).is_err() {
-                let mut updated = db_storage::DbIoU64List::new();
+                let mut updated = db_io_core::DbIoU64List::new();
                 let mut inserted = false;
                 for posting in postings.as_slice() {
                     if !inserted && doc_ref < *posting {
@@ -2429,7 +2430,7 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
 
     /// 🔎️ The posting list for `term` (case-folded to match `index_document`'s tokenizer),
     /// or an empty list if the term has never been indexed.
-    pub async fn search(&self, term: &str) -> Result<db_storage::DbIoU64List, DbError> {
+    pub async fn search(&self, term: &str) -> Result<db_io_core::DbIoU64List, DbError> {
         let mut control = self.handle.operation_control(16_384)?;
         self.postings(term.to_lowercase().as_bytes(), &mut control).await
     }
@@ -2487,7 +2488,7 @@ async fn encode_blob_list(blobs: &IndexBlobList, control: &mut IndexCursorContro
         let blob = blobs.get(index).unwrap();
         total = total.checked_add(varint_len(blob.len() as u64) + blob.len()).ok_or(DbError::LimitExceeded("index blob list bytes"))?;
     }
-    let mut writer = db_storage::DbIoPageWriter::try_reserve(total.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut writer = db_io_core::DbIoPageWriter::try_reserve(total.div_ceil(db_io_core::DB_IO_PAGE_BYTES)).map_err(db_io_core::DbIoPageWriterRejected::into_error)?;
     let mut varint = [0u8; 10];
     index_write_unchecked(encode_varint(blobs.len() as u64, &mut varint), &mut writer, control).await?;
     for index in 0..blobs.len() {
@@ -2497,10 +2498,10 @@ async fn encode_blob_list(blobs: &IndexBlobList, control: &mut IndexCursorContro
             index_write_unchecked(fragment, &mut writer, control).await?;
         }
     }
-    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
+    writer.seal_retained().await.map(|pages| IndexBytes { pages }).map_err(db_io_core::DbIoPageWriterRejected::into_error)
 }
 
-async fn index_write_unchecked(bytes: &[u8], writer: &mut db_storage::DbIoPageWriter, control: &mut IndexCursorControl) -> Result<(), DbError> {
+async fn index_write_unchecked(bytes: &[u8], writer: &mut db_io_core::DbIoPageWriter, control: &mut IndexCursorControl) -> Result<(), DbError> {
     let mut offset = 0;
     while offset < bytes.len() {
         control.grant()?;

@@ -126,7 +126,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(BinaryEditorCo
 /// `BinarySnapshot::parse_dsl` already uses. `None` on odd length or an invalid hex digit — the
 /// caller rejects the complete command, never a partial apply.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
+pub fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
     let hex: String = text.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("").chars().filter(|c| !c.is_whitespace()).collect();
     if !hex.len().is_multiple_of(2) {
         return None;
@@ -160,7 +160,7 @@ fn binary_command_id(command: &semio_s_artifact_stdio_contract::editing::Snapsho
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, snapshot: &BinarySnapshot) -> Result<Emit<BinaryMutation>, Fault> {
+pub fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<BinaryEditorCommand>, snapshot: &BinarySnapshot) -> Result<Emit<BinaryMutation>, Fault> {
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(BinaryEditorCommand::SpliceText { splices }) = command else {
         return Err(Fault::from("stdio-binary-snapshot-edit-routed-to-native-reducer"));
     };

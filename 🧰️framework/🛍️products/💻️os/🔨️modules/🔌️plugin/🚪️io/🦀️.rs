@@ -1,4 +1,11 @@
 //! 🚪️ Artifact io capabilities: serializers, deserializers, composers, builders, decomposers, analyzers and derived artifacts.
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as pack;
+use semio_framework_os_kernel::io;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+use semio_framework::Fault;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
 use store::{Mutation, MutationDiff};
@@ -517,3 +524,21 @@ impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spe
         <Spec::Composition as ArtifactComposition>::compose(sources)
     }
 }
+
+#[path = "🛂️authority/🦀️.rs"]
+pub mod operation_authority;
+#[path = "../🧬️schema/🪶️sqlite/🦀️.rs"]
+pub mod sqlite_wire;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+#[path = "../🧬️schema/🦀️.rs"]
+pub mod wasip2;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+#[doc(hidden)]
+pub mod component {
+    pub use super::wasip2;
+}
+#[path = "../🧬️schema/🔁️persistent-local/🦀️.rs"]
+mod persistent_local;
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+#[doc(hidden)]
+pub use persistent_local::{component_persistent_local, owned_abi};

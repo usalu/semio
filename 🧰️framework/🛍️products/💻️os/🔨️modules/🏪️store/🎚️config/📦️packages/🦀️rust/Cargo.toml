@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-config"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The config store: config envelope, hydration and apply"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-config"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-store-document = { path = "../../../🧾️document/📦️packages/🦀️rust" }
+semio-framework-os-store-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-initialization-runtime = { path = "../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-os-store-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-os-store-snapshot-clone = { path = "../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
+semio-framework-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-replication = { workspace = true }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+
+[dev-dependencies]

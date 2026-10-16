@@ -1,4 +1,6 @@
-use super::*;
+use crate::{standards::v87a::subsets::any::schema::snapshot::GifImage, standards::v87a::subsets::any::schema::snapshot::GifSnapshot};
+use crate::STDIO_GIF_DOCUMENT_SCHEMA;
+use crate::standards::v87a::subsets::any::io::*;
 use crate::standards::v87a::subsets::any::schema::demo_gif_snapshot;
 
 /// 🧪️ Builds a real, lossless `GifImage` (LCT + indices) from a checkerboard RGBA pattern via

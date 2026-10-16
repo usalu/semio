@@ -1,6 +1,8 @@
 //! 🧪️ Every details-pane pointer of the GIF89a editor resolves to the concrete kinds of its gesture, and replaying them reaches the edited document.
 
-use super::*;
+use semio_framework_value::DslValue;
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+use crate::standards::v89a::subsets::any::schema::mutations::edit_rules::*;
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifDisposal, GifRgb};
 
 fn frame(delay_cs: u16) -> GifFrame {

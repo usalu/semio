@@ -46,11 +46,12 @@
 //! persisted incremental path and the pure rebuild path, which is what keeps the rebuild ==
 //! incremental-apply law holding by construction rather than by two independently-written rules
 //! happening to agree.
+#![allow(async_fn_in_trait)]
 
-use crate::*;
+use db_ids::{ActorId, ArtifactId, DbError};
 use db_index::ProjectionIndex;
 use db_state::{PGraph, PMap, TouchedRegion, TouchedSet};
-use db_storage::IndexStorage;
+use db_io_core::IndexStorage;
 use protocol::MutationEnvelope;
 
 //#region 🔖️State
@@ -411,9 +412,9 @@ async fn should_run<E: ErasedProjection>(projection: &E, touched: &TouchedSet, c
 /// doc for how a caller picks `E` (a single concrete `ErasedWrapper<P>`, or its own closed enum over
 /// several).
 pub struct ProjectionEngine<'a, S: IndexStorage, E: ErasedProjection> {
-    storage: &'a S,
-    document: ArtifactId,
-    projections: Vec<E>,
+    pub storage: &'a S,
+    pub document: ArtifactId,
+    pub projections: Vec<E>,
     graph: ProjectionGraph,
 }
 
@@ -493,7 +494,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
         offset = VERSION_PREFIX_LEN;
         while offset < versioned_bytes.len() {
             control.grant()?;
-            let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
+            let mut fragment = [0u8; db_io_core::DB_IO_PAGE_BYTES];
             let read = versioned_bytes.read_fragment(offset, &mut fragment);
             if read == 0 {
                 return Err(DbError::Corrupt("projection checkpoint state ended early".to_string()));

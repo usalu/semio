@@ -12,8 +12,8 @@ fn prepared_retirement_original_publication_and_independent_refusal_custody(){
   let((mut prepared,factory),heap)=observe_heap_allocations_on_this_thread(||{
    let factory=crate::registered_replay_retirement_factory(Arc::new(OwnedValueRetirementFactory::<String>::default()),Arc::new(OwnedValueRetirementFactory::<String>::default()));
    let inverse=if row["inverse"]=="owned"{Ok([text("inverse\0\"😀")].into_iter().collect())}else{Err(ValueError::new(ValueRefusalKind::InvalidValue,text("inverse refusal\0\"😀")))};
-   let mut messages=Vec::with_capacity(8192);let mut targets=Vec::with_capacity(8192);targets.push(text(""));messages.push(crate::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:text("mutation.invariant").into(),message:text("diagnostic\0\"😀"),target:targets,op_index:None});
-   let mut target=Vec::with_capacity(8192);target.push(text(""));let apply_refusal=Some(crate::MutationApplyError{code:text("apply.refusal"),message:text("apply\0\"😀"),target});
+   let mut messages=Vec::with_capacity(8192);let mut targets=Vec::with_capacity(8192);targets.push(text(""));messages.push(semio_framework_replication_mutation::MutationMessage{level:semio_framework_diagnostic::Severity::Fatal,code:text("mutation.invariant").into(),message:text("diagnostic\0\"😀"),target:targets,op_index:None});
+   let mut target=Vec::with_capacity(8192);target.push(text(""));let apply_refusal=Some(semio_framework_mutation_diff::MutationApplyError{code:text("apply.refusal"),message:text("apply\0\"😀"),target});
    (ArtifactReplayPrepared{next:Some(Arc::new(text("snapshot\0\"😀"))),inverse,messages,apply_refusal,input_refusal:Some(text("input\0\"😀")),foreign_steps:false},factory)
   });
   assert_eq!(heap.released_bytes,0);let original=heap.requested_bytes;let mut births=0;let mut releases=0;let mut turns=0;let mut slot=None;

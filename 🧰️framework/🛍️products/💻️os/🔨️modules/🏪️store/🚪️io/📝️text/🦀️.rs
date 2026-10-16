@@ -3,41 +3,37 @@
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
+use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use crate::os_spr::command::ArtifactMessageSource;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, UndoPolicy};
-use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
+use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, UndoPolicy};
+use semio_framework_os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
-use crate::os_vcs::{Author, VcsError};
-use crate::os_vcs::{
-    Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable,
-};
-use super::store_schema::{ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane};
-use super::artifact_child_owner_schema::OwnerRef;
-use super::serialization::{ ArtifactPackFiles, ArtifactSqliteSnapshotHost, encode_document_pack_bytes};
-#[cfg(target_arch = "wasm32")]
-use super::serialization::{ArtifactCodecApplyFuture};
+use semio_framework_os_vcs::{Author, VcsError};
+use semio_framework_os_vcs::{Alternative, ArtifactHistoryLedger, ArtifactVcs, Change, Checkpoint, Identified, Patchable};
+use semio_framework_os_store_space_schema::{ArtifactCursor, ArtifactEnvelope, ArtifactEnvelopeOwners, HistoryLane};
+use semio_framework_os_store_envelope::owner::OwnerRef;
+use crate::{ArtifactPackFiles, encode_document_pack_bytes};
+use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use crate::os_pack::pack_rt;
-use super::command_format::{OpsAuthor, OpsHeaderLine, OpsPin, OpsSupersededInput, ops_line_provenance};
-use super::ledger::{ArtifactEditMessageLedger, fold_envelope_history};
-use super::ledger::{retire_replayed_projection, retire_scratch_operations, stamp_edit_semantics, validate_composition_pins};
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
-use super::replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, admit_replacement};
-use super::replay::{FoldProjection, retire_shared_projection};
+use semio_framework_os_pack::pack_rt;
+use semio_framework_os_store_command::{OpsAuthor, OpsHeaderLine, OpsPin, OpsSupersededInput, ops_line_provenance};
+use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history};
+use semio_framework_os_store_ledger::{retire_replayed_projection, retire_scratch_operations, stamp_edit_semantics, validate_composition_pins};
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_framework_os_store_replay::{EditReplay, EditReplayResult, EffectiveSupersessions, ReplayEdits, ReplayMode, admit_replacement};
+use semio_framework_os_store_replay::{FoldProjection, retire_shared_projection};
 #[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
+use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
+use semio_framework_os_store_backbone::local_storage_backbone_key;
 
 /// 📄️ The two files a textual VCS document is made of: the DSL text (initial snapshot) and
 /// the append-only op log (every edit ever created, forwards-only — see {@link parse_document_text}).
@@ -135,11 +131,11 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
 /// their own initial-snapshot encoding. Every replay-critical value is explicit: forward and
 /// inverse operations, operation metadata, message ledger, conflicts, and cursor.
 /// ⏰️ `physical.logical.actor` — the textual HLC every transition line carries.
-pub(crate) fn print_clock(timestamp: &HybridLogicalTimestamp) -> String {
+pub fn print_clock(timestamp: &HybridLogicalTimestamp) -> String {
     format!("{}.{}.{}", timestamp.physical_ms, timestamp.logical, timestamp.actor)
 }
 
-pub(crate) fn parse_clock(text: &str) -> Result<HybridLogicalTimestamp, String> {
+pub fn parse_clock(text: &str) -> Result<HybridLogicalTimestamp, String> {
     let mut parts = text.split('.').map(str::parse::<u64>);
     match (parts.next(), parts.next(), parts.next(), parts.next()) {
         (Some(Ok(physical_ms)), Some(Ok(logical)), Some(Ok(actor)), None) => Ok(HybridLogicalTimestamp { actor, physical_ms, logical }),
@@ -147,25 +143,25 @@ pub(crate) fn parse_clock(text: &str) -> Result<HybridLogicalTimestamp, String> 
     }
 }
 
-pub(crate) fn operation_ids(ids: &[MutationId]) -> Vec<String> {
+pub fn operation_ids(ids: &[MutationId]) -> Vec<String> {
     ids.iter().map(|id| id.0.clone()).collect()
 }
 
-pub(crate) fn mutation_ids(ids: Vec<String>) -> Vec<MutationId> {
+pub fn mutation_ids(ids: Vec<String>) -> Vec<MutationId> {
     ids.into_iter().map(MutationId).collect()
 }
 
 /// 🖨️ One transition envelope as its semantic `.ops` line.
-pub(crate) fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelope) -> Result<OpsHeaderLine, VcsError> {
-    let transition = crate::os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Serialize(error.to_string()))?.ok_or_else(|| VcsError::Serialize(format!("{} is not a history transition", envelope.mutation_id.0)))?;
+pub fn ops_line_from_transition(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<OpsHeaderLine, VcsError> {
+    let transition = semio_framework_os_spr::history_transition_from_envelope(envelope).map_err(|error| VcsError::Serialize(error.to_string()))?.ok_or_else(|| VcsError::Serialize(format!("{} is not a history transition", envelope.mutation_id.0)))?;
     let id = envelope.mutation_id.0.clone();
     let actor = envelope.actor.0.clone();
     let clock = print_clock(&envelope.timestamp);
     let after = operation_ids(&envelope.dependencies);
     Ok(match transition {
-        crate::os_spr::HistoryTransition::Revert { mutation_ids } => OpsHeaderLine::Revert { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
-        crate::os_spr::HistoryTransition::Reinstate { mutation_ids } => OpsHeaderLine::Reinstate { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
-        crate::os_spr::HistoryTransition::Commit(checkpoint) => OpsHeaderLine::Commit {
+        semio_framework_os_spr::HistoryTransition::Revert { mutation_ids } => OpsHeaderLine::Revert { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
+        semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids } => OpsHeaderLine::Reinstate { id, actor, clock, after, operations: operation_ids(&mutation_ids) },
+        semio_framework_os_spr::HistoryTransition::Commit(checkpoint) => OpsHeaderLine::Commit {
             id,
             actor,
             clock,
@@ -181,12 +177,12 @@ pub(crate) fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelop
             at: checkpoint.timestamp,
             line: checkpoint.line_id.into_iter().collect(),
         },
-        crate::os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id } => OpsHeaderLine::Branch { id, actor, clock, after, alternative: alternative_id, name, checkpoint: checkpoint_id },
-        crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id } => OpsHeaderLine::Checkout { id, actor, clock, after, checkpoint: checkpoint_id, alternative: alternative_id },
-        crate::os_spr::HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
+        semio_framework_os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id } => OpsHeaderLine::Branch { id, actor, clock, after, alternative: alternative_id, name, checkpoint: checkpoint_id },
+        semio_framework_os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id } => OpsHeaderLine::Checkout { id, actor, clock, after, checkpoint: checkpoint_id, alternative: alternative_id },
+        semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
             OpsHeaderLine::Repin { id, actor, clock, after, checkpoint: checkpoint_id, pinned: pinned_checkpoint_id, pins: pins.into_iter().map(|pin| OpsPin { child: pin.child_uri, checkpoint: pin.checkpoint_id }).collect() }
         }
-        crate::os_spr::HistoryTransition::Supersede(supersede) => {
+        semio_framework_os_spr::HistoryTransition::Supersede(supersede) => {
             OpsHeaderLine::Supersede { id, actor, clock, after, scope: supersede.scope, inputs: supersede.inputs.into_iter().map(OpsSupersededInput::from).collect(), observed: envelope.observed.as_ref().map(|observed| observed.0.clone()) }
         }
     })
@@ -194,8 +190,8 @@ pub(crate) fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelop
 
 /// 🧾️ Rebuilds the transition envelope a `.ops` transition line describes, refusing a line
 /// whose printed id is not the content-addressed id of what it states.
-pub(crate) fn transition_from_ops_line(document_id: &str, id: String, actor: semio_framework_value::SharedUtf8, clock: &str, after: Vec<String>, transition: crate::os_spr::HistoryTransition) -> Result<crate::os_spr::MutationEnvelope, String> {
-    let envelope = crate::os_spr::history_transition_envelope(&transition, &ArtifactId(document_id.to_string()), &ActorId(actor), mutation_ids(after), parse_clock(clock)?);
+pub fn transition_from_ops_line(document_id: &str, id: String, actor: semio_framework_value::SharedUtf8, clock: &str, after: Vec<String>, transition: semio_framework_os_spr::HistoryTransition) -> Result<semio_framework_os_spr::MutationEnvelope, String> {
+    let envelope = semio_framework_os_spr::history_transition_envelope(&transition, &ArtifactId(document_id.to_string()), &ActorId(actor), mutation_ids(after), parse_clock(clock)?);
     if envelope.mutation_id.0 != id {
         return Err(format!("transition line {id} does not match its content-addressed id {}", envelope.mutation_id.0));
     }
@@ -205,7 +201,7 @@ pub(crate) fn transition_from_ops_line(document_id: &str, id: String, actor: sem
 /// 📚️ Materializes everything an envelope's event log projects to — change/checkpoint/
 /// alternative ledgers, the active alternative and the cursor — from [`fold_envelope_history`].
 /// The loaders call it right after reading the persisted events, which are all a document stores.
-pub(crate) fn project_envelope_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<EffectiveSupersessions, VcsError>
+pub fn project_envelope_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<EffectiveSupersessions, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -217,7 +213,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     for checkpoint in fold.checkpoints {
         let mut composition_pins = Vec::with_capacity(checkpoint.pins.len());
         for pin in checkpoint.pins {
-            composition_pins.push(crate::os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin.checkpoint_id });
+            composition_pins.push(semio_framework_os_vcs::CompositionPin { child_ref: semio_framework_artifact_reference::ArtifactRef::parse_uri(&pin.child_uri).map_err(VcsError::Deserialize)?, checkpoint_id: pin.checkpoint_id });
         }
         let authors = checkpoint.authors.into_iter().map(|author| Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
         checkpoints.push(Checkpoint { id: checkpoint.id, change_ids: checkpoint.change_ids, parent_id: checkpoint.parent_id, authors, message: checkpoint.message, timestamp: checkpoint.timestamp, composition_pins });
@@ -236,7 +232,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// them with one Report replay from the genesis — an operation that no longer applies is recorded as a `Fatal` no-op
 /// whether or not supersessions exist — and every supersession envelope regains the conflict target its record does not
 /// persist. Answers the replayed head projection.
-pub(crate) fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
+pub fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone + 'static,
     Mutation: self::Mutation<P> + OpBinary + 'static,
@@ -250,7 +246,7 @@ where
 
 /// ⏪️ The Report replay every load settles its applied history with ([`replay_loaded_history`]): from the genesis, under
 /// the fold's effective supersessions. A retained loader steps it under its own deadline.
-pub(crate) fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
+pub fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
@@ -263,7 +259,7 @@ where
 
 /// ✍️ Writes a finished load replay into `envelope` — every applied edit's rebased inverse and messages, every supersession
 /// envelope's conflict target — and answers the replayed head projection.
-pub(crate) fn adopt_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, mut result: EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
+pub fn adopt_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, mut result: EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone + 'static,
     Mutation: self::Mutation<P> + OpBinary + 'static,
@@ -279,7 +275,7 @@ where
 }
 
 /// 🎴️ Writes a finished load replay into `envelope` and takes its reached projection; every untaken owner stays attached to `result`.
-pub(crate) fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
+pub fn take_loaded_replay<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, result: &mut EditReplayResult<P, Mutation>) -> Result<Arc<P>, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
@@ -307,20 +303,20 @@ where
 
 /// 🎯️ Re-derives the conflict target of every supersession envelope that carries none — the persisted transition record
 /// does not — from the superseded and replacing operations ([`supersession_address`]).
-pub(crate) fn fill_supersession_targets<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError>
+pub fn fill_supersession_targets<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError>
 where
     Mutation: self::Mutation<P> + OpBinary,
 {
     let mut originals: HashMap<MutationId, &Mutation> = HashMap::new();
     for edit in envelope.vcs.edits.iter() {
-        originals.extend(crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()));
+        originals.extend(semio_framework_os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().zip(edit.forwards.iter()));
     }
     let mut targets = Vec::new();
     for (index, transition) in envelope.transitions.iter().enumerate() {
         if !transition.target.is_empty() {
             continue;
         }
-        if let Some(crate::os_spr::HistoryTransition::Supersede(supersede)) = crate::os_spr::history_transition_from_envelope(transition).map_err(|error| VcsError::Deserialize(error.to_string()))? {
+        if let Some(semio_framework_os_spr::HistoryTransition::Supersede(supersede)) = semio_framework_os_spr::history_transition_from_envelope(transition).map_err(|error| VcsError::Deserialize(error.to_string()))? {
             targets.push((index, supersession_address::<P, Mutation>(&supersede, &envelope.schema, |target| originals.get(target).copied())));
         }
     }
@@ -334,7 +330,7 @@ where
 /// 🎯️ The address a supersession writes: the longest prefix every superseded operation's and every admitted
 /// replacement's conflict target share — the same law authoring stamps and loading re-derives. A replacement breaking
 /// the supersede law ([`admit_replacement`]) writes nothing beyond its target.
-pub(crate) fn supersession_address<'a, P, Mutation>(supersede: &protocol::TransitionSupersede, schema: &str, original: impl Fn(&MutationId) -> Option<&'a Mutation>) -> Vec<String>
+pub fn supersession_address<'a, P, Mutation>(supersede: &protocol::TransitionSupersede, schema: &str, original: impl Fn(&MutationId) -> Option<&'a Mutation>) -> Vec<String>
 where
     Mutation: self::Mutation<P> + OpBinary + 'a,
 {
@@ -355,11 +351,11 @@ where
 }
 
 /// 🎯️ The longest address prefix `left` and `right` share.
-pub(crate) fn common_address(left: &[String], right: &[String]) -> Vec<String> {
+pub fn common_address(left: &[String], right: &[String]) -> Vec<String> {
     left.iter().zip(right.iter()).take_while(|(left, right)| left == right).map(|(segment, _)| segment.clone()).collect()
 }
 
-pub(crate) async fn print_ops_log<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<String, VcsError>
+pub async fn print_ops_log<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<String, VcsError>
 where
     Mutation: OpText,
 {
@@ -411,7 +407,7 @@ where
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
 // 🚫️async: E1 pure ordinal mapping, consumed by `history_op_meta_from_operation_meta` which is
 // itself consumed only through `Iterator::map` fn-item arguments — see R9.
-pub(crate) fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
+pub fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     match policy {
         UndoPolicy::ExactBaseOnly => 0,
         UndoPolicy::TransformAgainstConcurrent => 1,
@@ -421,7 +417,7 @@ pub(crate) fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
 }
 
 // 🚫️async: E1 pure ordinal mapping, consumed by `mutation_meta_from_history_op_meta` — see R9.
-pub(crate) fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
+pub fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
     match ordinal {
         1 => UndoPolicy::TransformAgainstConcurrent,
         2 => UndoPolicy::SemanticUndo,
@@ -431,19 +427,19 @@ pub(crate) fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub(crate) fn history_message_from_mutation_message(message: &crate::os_spr::MutationMessage) -> crate::os_spr::history::HistoryMessage {
-    crate::os_spr::history::HistoryMessage { level: message.level.as_u8(), code: message.code.0.clone(), message: message.message.clone(), target: message.target.clone(), op_index: message.op_index }
+pub fn history_message_from_mutation_message(message: &semio_framework_os_spr::MutationMessage) -> semio_framework_os_spr::history::HistoryMessage {
+    semio_framework_os_spr::history::HistoryMessage { level: message.level.as_u8(), code: message.code.0.clone(), message: message.message.clone(), target: message.target.clone(), op_index: message.op_index }
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub(crate) fn mutation_message_from_history_message(message: crate::os_spr::history::HistoryMessage) -> Result<crate::os_spr::MutationMessage, String> {
+pub fn mutation_message_from_history_message(message: semio_framework_os_spr::history::HistoryMessage) -> Result<semio_framework_os_spr::MutationMessage, String> {
     let level = semio_framework_diagnostic::Severity::from_u8(message.level).ok_or_else(|| format!("unknown mutation message severity {}", message.level))?;
-    Ok(crate::os_spr::MutationMessage { level, code: semio_framework_diagnostic::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
+    Ok(semio_framework_os_spr::MutationMessage { level, code: semio_framework_diagnostic::FaultCode(message.code), message: message.message, target: message.target, op_index: message.op_index })
 }
 
 // 🚫️async: E1 pure field-copy, consumed only through `Iterator::map` fn-item arguments — see R9.
-pub(crate) fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl IntoIterator<Item = crate::os_spr::history::HistoryMessage>) -> crate::os_spr::HistoryOpMeta {
-    crate::os_spr::HistoryOpMeta {
+pub fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages: impl IntoIterator<Item = semio_framework_os_spr::history::HistoryMessage>) -> semio_framework_os_spr::HistoryOpMeta {
+    semio_framework_os_spr::HistoryOpMeta {
         op_id: meta.mutation_id.as_ref().map(|id| id.0.clone()),
         dependencies: meta.dependencies.iter().map(|id| id.0.clone()).collect(),
         base_version: meta.base_version,
@@ -460,7 +456,7 @@ pub(crate) fn history_op_meta_from_operation_meta(meta: &MutationMeta, messages:
 
 // 🚫️async: E1 pure field-copy, consumed by `mutation_meta_from_history_op_meta`'s own caller
 // (§) without `.await` — see R9.
-pub(crate) fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpMeta) -> Result<(MutationMeta, Vec<crate::os_spr::MutationMessage>), String> {
+pub fn mutation_meta_from_history_op_meta(meta: semio_framework_os_spr::HistoryOpMeta) -> Result<(MutationMeta, Vec<semio_framework_os_spr::MutationMessage>), String> {
     let (actor, physical_ms, logical) = meta.hlt.ok_or_else(|| "history operation metadata has no hybrid-clock timestamp".to_string())?;
     let physical_ms = u64::try_from(physical_ms).map_err(|_| "history operation metadata has a negative hybrid-clock physical time".to_string())?;
     if meta.op_id.as_ref().is_none_or(|id| id.trim().is_empty()) {
@@ -475,7 +471,7 @@ pub(crate) fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpM
             author_id: meta.author_id.map(ActorId),
             timestamp: HybridLogicalTimestamp { actor, physical_ms, logical },
             undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
-            payload_hash: meta.payload_hash.map(crate::os_spr::PayloadHash),
+            payload_hash: meta.payload_hash.map(semio_framework_os_spr::PayloadHash),
             semantic_kind: None,
             label: None,
             group_id: meta.group_id,
@@ -488,11 +484,11 @@ pub(crate) fn mutation_meta_from_history_op_meta(meta: crate::os_spr::HistoryOpM
 
 /// ⚖️ Persistence admits exactly the frozen outcome vocabulary ([`protocol::OUTCOME_CODES`] plus the
 /// `mutation.apply.<detail>` family), each code at the one level it fixes.
-pub(crate) async fn expected_mutation_message_level(code: &str) -> Option<semio_framework_diagnostic::Severity> {
+pub async fn expected_mutation_message_level(code: &str) -> Option<semio_framework_diagnostic::Severity> {
     protocol::outcome_code_level(code)
 }
 
-pub(crate) async fn validate_persisted_message(message: &crate::os_spr::MutationMessage, operation_count: Option<usize>) -> Result<(), VcsError> {
+pub async fn validate_persisted_message(message: &semio_framework_os_spr::MutationMessage, operation_count: Option<usize>) -> Result<(), VcsError> {
     let Some(expected_level) = expected_mutation_message_level(&message.code.0).await else {
         return Err(VcsError::ValidationFailed(format!("history carries unknown mutation message code {}", message.code.0)));
     };
@@ -507,15 +503,15 @@ pub(crate) async fn validate_persisted_message(message: &crate::os_spr::Mutation
     Ok(())
 }
 
-pub(crate) async fn stable_mutation_ids_for_edit<Mutation>(edit: &Edit<Mutation>) -> Result<Vec<MutationId>, VcsError> {
+pub async fn stable_mutation_ids_for_edit<Mutation>(edit: &Edit<Mutation>) -> Result<Vec<MutationId>, VcsError> {
     if edit.mutation_meta.len() != edit.forwards.len() {
         return Err(VcsError::ValidationFailed(format!("edit {} does not carry one operation identity per forward mutation", edit.id)));
     }
     edit.mutation_meta.iter().map(|meta| meta.mutation_id.clone().filter(|id| !id.0.trim().is_empty()).ok_or_else(|| VcsError::ValidationFailed(format!("edit {} has an operation without a stable identity", edit.id)))).collect()
 }
 
-pub(crate) async fn conflict_messages_for_edits<Mutation>(edits: &[Edit<Mutation>], replayed: &[crate::os_spr::EditMessages]) -> Result<Vec<crate::os_spr::MutationMessage>, VcsError> {
-    let replayed_by_edit: HashMap<&str, &crate::os_spr::EditMessages> = replayed.iter().map(|entry| (entry.edit_id.as_str(), entry)).collect();
+pub async fn conflict_messages_for_edits<Mutation>(edits: &[Edit<Mutation>], replayed: &[semio_framework_os_spr::EditMessages]) -> Result<Vec<semio_framework_os_spr::MutationMessage>, VcsError> {
+    let replayed_by_edit: HashMap<&str, &semio_framework_os_spr::EditMessages> = replayed.iter().map(|entry| (entry.edit_id.as_str(), entry)).collect();
     if replayed_by_edit.len() != replayed.len() {
         return Err(VcsError::ValidationFailed("conflict messages repeat an edit owner".to_string()));
     }
@@ -538,7 +534,7 @@ pub(crate) async fn conflict_messages_for_edits<Mutation>(edits: &[Edit<Mutation
     Ok(messages)
 }
 
-pub(crate) async fn canonical_conflict_actors(actors: impl IntoIterator<Item = ActorId>) -> Vec<ActorId> {
+pub async fn canonical_conflict_actors(actors: impl IntoIterator<Item = ActorId>) -> Vec<ActorId> {
     let mut actors: Vec<ActorId> = actors.into_iter().collect();
     actors.sort_by(|left, right| left.0.cmp(&right.0));
     actors.dedup_by(|left, right| left.0 == right.0);
@@ -549,7 +545,7 @@ pub(crate) async fn canonical_conflict_actors(actors: impl IntoIterator<Item = A
 /// envelopes in `Quarantined` order, or every forward operation of `Degraded` edits in
 /// `edit_ids` order. This makes `op_index` globally unambiguous for a conflict rather
 /// than accidentally treating every message as if it belonged to its first edit.
-pub(crate) async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<(), VcsError> {
+pub async fn validate_persisted_conflicts<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<(), VcsError> {
     let mut conflict_ids = HashSet::new();
     let known_edits: HashMap<&str, &Edit<Mutation>> = envelope.vcs.edits.iter().map(|edit| (edit.id.as_str(), edit)).collect();
     for conflict in &envelope.conflicts {
@@ -560,7 +556,7 @@ pub(crate) async fn validate_persisted_conflicts<P, Mutation>(envelope: &Artifac
             return Err(VcsError::ValidationFailed(format!("conflict {} has malformed actor identities", conflict.id.0)));
         }
         let (mutation_ids, operation_count) = match &conflict.kind {
-            crate::os_spr::ConflictKind::Quarantined { envelopes } => {
+            semio_framework_os_spr::ConflictKind::Quarantined { envelopes } => {
                 if envelopes.is_empty() {
                     return Err(VcsError::ValidationFailed(format!("quarantined conflict {} has no mutation envelopes", conflict.id.0)));
                 }
@@ -591,7 +587,7 @@ pub(crate) async fn validate_persisted_conflicts<P, Mutation>(envelope: &Artifac
                 }
                 (mutation_ids, envelopes.len())
             }
-            crate::os_spr::ConflictKind::Degraded { edit_ids } => {
+            semio_framework_os_spr::ConflictKind::Degraded { edit_ids } => {
                 if edit_ids.is_empty() {
                     return Err(VcsError::ValidationFailed(format!("degraded conflict {} has no edit references", conflict.id.0)));
                 }
@@ -620,7 +616,7 @@ pub(crate) async fn validate_persisted_conflicts<P, Mutation>(envelope: &Artifac
         for message in &conflict.messages {
             validate_persisted_message(message, Some(operation_count)).await?;
         }
-        if conflict.id != crate::os_spr::ConflictId::new(&conflict.kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &conflict.timestamp).await {
+        if conflict.id != semio_framework_os_spr::ConflictId::new(&conflict.kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &conflict.timestamp).await {
             return Err(VcsError::ValidationFailed(format!("conflict {} does not match its content-addressed identity", conflict.id.0)));
         }
     }
@@ -630,7 +626,7 @@ pub(crate) async fn validate_persisted_conflicts<P, Mutation>(envelope: &Artifac
 /// 🧱️ Validates the complete durable history graph at every persistence boundary.
 /// Deliberately free of store construction bounds: codecs must reject malformed history before a
 /// caller needs to construct an `ArtifactStore`.
-pub(crate) async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
+pub async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>) -> Result<(), VcsError> {
     let mut edit_ids = HashSet::new();
     let mut edit_sequences = HashSet::new();
     for edit in &envelope.vcs.edits {
@@ -722,7 +718,7 @@ pub(crate) async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnv
     Ok(())
 }
 
-pub(crate) async fn validate_history_lanes<P, Mutation, I, J, S, R>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, redo_edit_ids: J) -> Result<(), VcsError>
+pub async fn validate_history_lanes<P, Mutation, I, J, S, R>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, redo_edit_ids: J) -> Result<(), VcsError>
 where
     I: IntoIterator<Item = S>,
     J: IntoIterator<Item = R>,
@@ -761,11 +757,11 @@ where
 /// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
 /// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
 /// inverse/meta byte-for-byte instead of recomputing them via replay.
-pub(crate) async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: impl IntoIterator<Item = &'a Mutation>) -> Result<Vec<crate::os_spr::OpPayload>, VcsError> {
+pub async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: impl IntoIterator<Item = &'a Mutation>) -> Result<Vec<semio_framework_os_spr::OpPayload>, VcsError> {
     let mut payloads = Vec::new();
     for op in mutations {
         let binary = op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
-        payloads.push(crate::os_spr::OpPayload { text: None, binary: Some(binary) });
+        payloads.push(semio_framework_os_spr::OpPayload { text: None, binary: Some(binary) });
     }
     Ok(payloads)
 }
@@ -775,11 +771,11 @@ pub(crate) async fn history_op_payloads<'a, Mutation: OpBinary + 'a>(mutations: 
 /// forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
 /// `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
 /// would spuriously fail that check for a non-empty `ops`.
-pub(crate) async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[crate::os_spr::MutationMessage], lane: Option<HistoryLane>) -> Result<crate::os_spr::HistoryEdit, VcsError> {
+pub async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messages: &[semio_framework_os_spr::MutationMessage], lane: Option<HistoryLane>) -> Result<semio_framework_os_spr::HistoryEdit, VcsError> {
     if messages.iter().any(|message| message.op_index.is_none_or(|index| index as usize >= edit.forwards.len())) {
         return Err(VcsError::ValidationFailed(format!("edit {} carries a message without a valid operation index", edit.id)));
     }
-    Ok(crate::os_spr::HistoryEdit {
+    Ok(semio_framework_os_spr::HistoryEdit {
         id: edit.id.clone(),
         actor: edit.actor.clone(),
         started_at: edit.started_at.clone(),
@@ -806,26 +802,26 @@ pub(crate) async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutat
 
 /// 🌀️ `encode_envelope` is async (📡️replication, out of this packet's scope); `map`'s
 /// closure is sync (R10 shape 1), so it's hoisted into an explicit loop.
-pub(crate) async fn history_conflict_from_conflict(conflict: &crate::os_spr::Conflict) -> crate::os_spr::history::HistoryConflict {
+pub async fn history_conflict_from_conflict(conflict: &semio_framework_os_spr::Conflict) -> semio_framework_os_spr::history::HistoryConflict {
     let (kind, edit_ids, envelopes) = match &conflict.kind {
-        crate::os_spr::ConflictKind::Quarantined { envelopes, .. } => {
+        semio_framework_os_spr::ConflictKind::Quarantined { envelopes, .. } => {
             let mut encoded = Vec::with_capacity(envelopes.len());
             for envelope in envelopes {
                 let mut bytes = Vec::new();
-                crate::os_spr::encode_envelope(envelope, &mut bytes);
+                semio_framework_os_spr::encode_envelope(envelope, &mut bytes);
                 encoded.push(bytes);
             }
             (0, Vec::new(), encoded)
         }
-        crate::os_spr::ConflictKind::Degraded { edit_ids } => (1, edit_ids.clone(), Vec::new()),
+        semio_framework_os_spr::ConflictKind::Degraded { edit_ids } => (1, edit_ids.clone(), Vec::new()),
     };
-    crate::os_spr::history::HistoryConflict {
+    semio_framework_os_spr::history::HistoryConflict {
         id: conflict.id.0.clone(),
         kind,
         status: match conflict.status {
-            crate::os_spr::ConflictStatus::Open => 0,
-            crate::os_spr::ConflictStatus::Accepted => 1,
-            crate::os_spr::ConflictStatus::Discarded => 2,
+            semio_framework_os_spr::ConflictStatus::Open => 0,
+            semio_framework_os_spr::ConflictStatus::Accepted => 1,
+            semio_framework_os_spr::ConflictStatus::Discarded => 2,
         },
         actors: conflict.actors.iter().map(|actor| actor.0.clone()).collect(),
         hlt: (conflict.timestamp.actor, conflict.timestamp.physical_ms, conflict.timestamp.logical),
@@ -835,31 +831,31 @@ pub(crate) async fn history_conflict_from_conflict(conflict: &crate::os_spr::Con
     }
 }
 
-pub(crate) fn conflict_from_history_conflict(conflict: crate::os_spr::history::HistoryConflict) -> Result<crate::os_spr::Conflict, String> {
+pub fn conflict_from_history_conflict(conflict: semio_framework_os_spr::history::HistoryConflict) -> Result<semio_framework_os_spr::Conflict, String> {
     let kind = match conflict.kind {
         0 => {
             let mut envelopes = Vec::with_capacity(conflict.envelopes.len());
             for bytes in conflict.envelopes {
                 let mut position = 0;
-                let envelope = crate::os_spr::decode_envelope(&bytes, &mut position).map_err(|error| error.to_string())?;
+                let envelope = semio_framework_os_spr::decode_envelope(&bytes, &mut position).map_err(|error| error.to_string())?;
                 if position != bytes.len() {
                     return Err("quarantined conflict envelope has trailing bytes".into());
                 }
                 envelopes.push(envelope);
             }
-            crate::os_spr::ConflictKind::Quarantined { envelopes }
+            semio_framework_os_spr::ConflictKind::Quarantined { envelopes }
         }
-        1 => crate::os_spr::ConflictKind::Degraded { edit_ids: conflict.edit_ids },
+        1 => semio_framework_os_spr::ConflictKind::Degraded { edit_ids: conflict.edit_ids },
         value => return Err(format!("unknown conflict kind {value}")),
     };
     let status = match conflict.status {
-        0 => crate::os_spr::ConflictStatus::Open,
-        1 => crate::os_spr::ConflictStatus::Accepted,
-        2 => crate::os_spr::ConflictStatus::Discarded,
+        0 => semio_framework_os_spr::ConflictStatus::Open,
+        1 => semio_framework_os_spr::ConflictStatus::Accepted,
+        2 => semio_framework_os_spr::ConflictStatus::Discarded,
         value => return Err(format!("unknown conflict status {value}")),
     };
-    Ok(crate::os_spr::Conflict {
-        id: crate::os_spr::ConflictId(conflict.id),
+    Ok(semio_framework_os_spr::Conflict {
+        id: semio_framework_os_spr::ConflictId(conflict.id),
         kind,
         status,
         messages: conflict.messages.into_iter().map(mutation_message_from_history_message).collect::<Result<Vec<_>, _>>()?,
@@ -875,8 +871,8 @@ pub(crate) fn conflict_from_history_conflict(conflict: crate::os_spr::history::H
 /// `parse_document_spr(pack, &empty_document_spr(id, schema))` recovers exactly `P::decode_pack(pack)`
 /// as both the initial and live snapshot, with zero edits.
 pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
-    let log = crate::os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..crate::os_spr::HistoryLog::default() };
-    crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
+    let log = semio_framework_os_spr::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..semio_framework_os_spr::HistoryLog::default() };
+    semio_framework_os_spr::encode_history(&log, &semio_framework_os_spr::EncodeOptions::default()).await.expect("encoding an edit-free HistoryLog is infallible")
 }
 
 /// 🪪️ Re-stamps an app-built document `.spr` with the identity of the live document it is
@@ -886,13 +882,13 @@ pub async fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
 pub async fn stamp_document_spr_identity(spr: &[u8], doc_id: &str, schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, owner: Option<&OwnerRef>) -> Result<Vec<u8>, VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     log.doc_id = doc_id.to_string();
     log.schema = schema.to_string();
     log.composition =
-        Some(crate::os_spr::HistoryComposition { owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())), dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())) });
-    let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
-    crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+        Some(semio_framework_os_spr::HistoryComposition { owner: owner.map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone())), dialect: Some((dialect.artifact_kind.clone(), dialect.standard.clone(), dialect.subset.clone())) });
+    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
+    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🌱️ A brand-new owned member's full envelope pack — `initial_pack` plus an edit-free `.spr`
@@ -916,12 +912,12 @@ pub async fn genesis_member_envelope_pack(schema: &str, expected: &semio_framewo
 /// (`SprWriter::resume` + a seeded `DictBuilder`/`edit_ordinals`) is a follow-up optimization, not
 /// required for correctness (this function's asymptotics match the JSON-envelope full rewrite it
 /// replaces).
-pub async fn append_history_events_to_spr(spr: &[u8], edits: &[crate::os_spr::HistoryEdit], transitions: &[crate::os_spr::HistoryTransitionRecord]) -> Result<Vec<u8>, VcsError> {
-    let mut log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
+pub async fn append_history_events_to_spr(spr: &[u8], edits: &[semio_framework_os_spr::HistoryEdit], transitions: &[semio_framework_os_spr::HistoryTransitionRecord]) -> Result<Vec<u8>, VcsError> {
+    let mut log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     log.edits.extend(edits.iter().cloned());
     log.transitions.extend(transitions.iter().cloned());
-    let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
-    crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
+    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🧩️ Projects an envelope's composition facts (`owner`, `dialect`) into the durable
@@ -930,7 +926,7 @@ pub async fn append_history_events_to_spr(spr: &[u8], edits: &[crate::os_spr::Hi
 /// single byte from this record existing. `ArtifactRef`s cross the boundary as their `to_uri()`
 /// wire string, the same "own the codec at this edge" convention `CompositionPin`/`ArtifactChild`
 /// already use rather than coupling `ArtifactRef` into the protocol crate.
-pub(crate) async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Option<crate::os_spr::HistoryComposition> {
+pub async fn history_composition_from_envelope<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Option<semio_framework_os_spr::HistoryComposition> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let owner = envelope.owner.as_ref().map(|owner| (owner.parent.to_uri(), owner.slot.clone(), owner.child_id.clone()));
@@ -938,13 +934,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     if owner.is_none() && dialect.is_none() {
         return None;
     }
-    Some(crate::os_spr::HistoryComposition { owner, dialect })
+    Some(semio_framework_os_spr::HistoryComposition { owner, dialect })
 }
 
 /// 🧩️ Inverse of `history_composition_from_envelope`: malformed ownership rejects the
 /// authoritative history rather than being silently discarded. Checkpoint pins are not part of the
 /// overlay — they are facts of `Repin` transitions, folded like every other history fact.
-pub(crate) async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &crate::os_spr::HistoryComposition) -> Result<(), VcsError> {
+pub async fn apply_history_composition<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, composition: &semio_framework_os_spr::HistoryComposition) -> Result<(), VcsError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     envelope.owner = match &composition.owner {
@@ -978,7 +974,7 @@ where
             validate_persisted_message(message, Some(operation_count)).await?;
         }
     }
-    let mut edits = crate::os_spr::history::HistoryEdits::empty();
+    let mut edits = semio_framework_os_spr::history::HistoryEdits::empty();
     for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]), envelope.lanes.get(&edit.id).copied()).await?);
     }
@@ -986,18 +982,18 @@ where
     for conflict in &envelope.conflicts {
         conflicts.push(history_conflict_from_conflict(conflict).await);
     }
-    let log = crate::os_spr::HistoryLog {
+    let log = semio_framework_os_spr::HistoryLog {
         doc_id: envelope.id.clone(),
         schema: envelope.schema.clone(),
         edits,
-        transitions: envelope.transitions.iter().map(crate::os_spr::HistoryTransitionRecord::from_envelope).collect(),
+        transitions: envelope.transitions.iter().map(semio_framework_os_spr::HistoryTransitionRecord::from_envelope).collect(),
         composition: history_composition_from_envelope(envelope).await,
         conflicts,
-        viewer_line: envelope.active_alternative_id.clone().filter(|line| line != &crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()))),
+        viewer_line: envelope.active_alternative_id.clone().filter(|line| line != &semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()))),
         viewer_checkpoint: envelope.viewer_checkpoint_id.clone(),
     };
-    let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
-    crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
+    let options = semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() };
+    semio_framework_os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
 }
 
 /// 🎯️ Inverse of [`print_document_spr`]: rebuilds an envelope's event log — `edits` (with
@@ -1009,7 +1005,7 @@ where
     P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
-    let log = crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
+    let log = semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
     parse_decoded_document_spr(pack, log, producer).await
 }
 
@@ -1020,14 +1016,14 @@ where
 /// with a layout entry died in `OrderedMap<WidgetLayout>::drop`
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
 /// `?` above as well, which the explicit call below never covered.
-pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: crate::os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn parse_decoded_document_spr<P, Mutation>(pack: &[u8], mut log: semio_framework_os_spr::HistoryLog, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
 {
     let initial_snapshot = producer.decode_genesis_pack(pack).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
 
-    async fn decode_op<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payload: &crate::os_spr::OpPayload) -> Result<Mutation, TextError> {
+    async fn decode_op<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payload: &semio_framework_os_spr::OpPayload) -> Result<Mutation, TextError> {
         match (&payload.binary, &payload.text) {
             (Some(bytes), _) => Mutation::decode_op(bytes).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1))),
             (None, Some(text)) => Mutation::parse_op(text),
@@ -1035,7 +1031,7 @@ where
         }
     }
 
-    async fn decode_ops<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payloads: &[crate::os_spr::OpPayload]) -> Result<Vec<Mutation>, TextError> {
+    async fn decode_ops<P, Mutation: OpText + OpBinary + self::Mutation<P>>(payloads: &[semio_framework_os_spr::OpPayload]) -> Result<Vec<Mutation>, TextError> {
         let mut out = Vec::with_capacity(payloads.len());
         for payload in payloads {
             out.push(decode_op::<P, Mutation>(payload).await?);
@@ -1073,7 +1069,7 @@ where
             .collect::<Result<Vec<_>, String>>()
             .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?;
         if !durable_messages.is_empty() {
-            edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
+            edit_messages.push(semio_framework_os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
         }
         let mut edit = Edit {
             id: history_edit.id,
@@ -1096,7 +1092,7 @@ where
         conflicts.push(conflict_from_history_conflict(conflict).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(1, 1)))?);
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
-    let mut transitions: Vec<crate::os_spr::MutationEnvelope> = log.transitions.iter().map(|record| record.to_envelope(&log.doc_id)).collect();
+    let mut transitions: Vec<semio_framework_os_spr::MutationEnvelope> = log.transitions.iter().map(|record| record.to_envelope(&log.doc_id)).collect();
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
     let mut envelope = ArtifactEnvelope::from_owners(ArtifactEnvelopeOwners {
         schema: log.schema,
@@ -1112,11 +1108,11 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions,
-        history_shape: crate::os_spr::HistoryShape::Document,
+        history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,
     });
-    let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+    let trunk = semio_framework_os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
     envelope.active_alternative_id = log.viewer_line.clone().filter(|line| line != &trunk);
     envelope.viewer_checkpoint_id = log.viewer_checkpoint.clone();
     let composed = match &log.composition {
@@ -1149,7 +1145,7 @@ where
 /// 📥️ Parses the explicit `.ops` records against an already-obtained initial snapshot.
 /// Text persistence is intentionally strict: it requires inverse operations, one authoritative
 /// metadata record per forward operation, durable messages/conflicts, and exactly one cursor.
-pub(crate) async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn replay_ops<P, Mutation>(initial_snapshot: P, ops: &str, producer:&(impl ArtifactGenesisProducer<P> + Sync)) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
     Mutation: OpText + OpBinary + self::Mutation<P> + 'static,
@@ -1157,10 +1153,10 @@ where
     let mut schema = String::new();
     let mut id = String::new();
     let mut edits: Vec<Edit<Mutation>> = Vec::new();
-    let mut transitions: Vec<crate::os_spr::MutationEnvelope> = Vec::new();
+    let mut transitions: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
     let mut inverse_by_edit: HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>> = HashMap::new();
     let mut metadata_by_edit: HashMap<String, HashMap<u32, MutationMeta>> = HashMap::new();
-    let mut messages_by_edit: HashMap<String, Vec<crate::os_spr::MutationMessage>> = HashMap::new();
+    let mut messages_by_edit: HashMap<String, Vec<semio_framework_os_spr::MutationMessage>> = HashMap::new();
     let mut message_order = Vec::new();
     let mut conflicts = Vec::new();
     let mut saw_doc = false;
@@ -1228,19 +1224,19 @@ where
             }
             OpsHeaderLine::Revert { id: transition_id, actor, clock, after, operations } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Revert { mutation_ids: mutation_ids(operations) })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Reinstate { id: transition_id, actor, clock, after, operations } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at, line } => {
-                let authors = by.into_iter().map(|author| crate::os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
-                let checkpoint = crate::os_spr::TransitionCheckpoint {
+                let authors = by.into_iter().map(|author| semio_framework_os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
+                let checkpoint = semio_framework_os_spr::TransitionCheckpoint {
                     checkpoint_id: checkpoint,
                     parent_id: parent,
                     change_id: change,
@@ -1253,34 +1249,34 @@ where
                     line_id: ops_line_provenance(line)?,
                 };
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Commit(checkpoint))
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Commit(checkpoint))
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Branch { id: transition_id, actor, clock, after, alternative, name, checkpoint } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Branch { alternative_id: alternative, name, checkpoint_id: checkpoint })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Checkout { id: transition_id, actor, clock, after, checkpoint, alternative } => {
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Checkout { checkpoint_id: checkpoint, alternative_id: alternative })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Repin { id: transition_id, actor, clock, after, checkpoint, pinned, pins } => {
-                let pins = pins.into_iter().map(|pin| crate::os_spr::TransitionPin { child_uri: pin.child, checkpoint_id: pin.checkpoint }).collect();
+                let pins = pins.into_iter().map(|pin| semio_framework_os_spr::TransitionPin { child_uri: pin.child, checkpoint_id: pin.checkpoint }).collect();
                 transitions.push(
-                    transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins })
+                    transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id: checkpoint, pinned_checkpoint_id: pinned, pins })
                         .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?,
                 );
             }
             OpsHeaderLine::Supersede { id: transition_id, actor, clock, after, scope, inputs, observed } => {
-                let inputs = inputs.into_iter().map(crate::os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
-                let supersede = crate::os_spr::TransitionSupersede { scope, inputs };
+                let inputs = inputs.into_iter().map(semio_framework_os_spr::SupersededInput::try_from).collect::<Result<Vec<_>, _>>().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
+                let supersede = semio_framework_os_spr::TransitionSupersede { scope, inputs };
                 supersede.validate().map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(line_no, 1)))?;
-                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Supersede(supersede))
+                let mut envelope = transition_from_ops_line(&id, transition_id, actor, &clock, after, semio_framework_os_spr::HistoryTransition::Supersede(supersede))
                     .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, TextSpan::at(line_no, 1)))?;
                 envelope.observed = observed.map(MutationId);
                 transitions.push(envelope);
@@ -1344,7 +1340,7 @@ where
         for message in &messages {
             validate_persisted_message(message, Some(edit.forwards.len())).await.map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
         }
-        edit_messages.push(crate::os_spr::EditMessages { edit_id, messages });
+        edit_messages.push(semio_framework_os_spr::EditMessages { edit_id, messages });
     }
     let edits = ArtifactHistoryLedger::try_from_preflighted(edits).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "ops edit capacity exceeded".to_string(), TextSpan::at(1, 1)))?;
     transitions.sort_by(|left, right| (left.timestamp.cmp_key(), left.mutation_id.0.as_str()).cmp(&(right.timestamp.cmp_key(), right.mutation_id.0.as_str())));
@@ -1362,7 +1358,7 @@ where
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
         transitions,
-        history_shape: crate::os_spr::HistoryShape::Document,
+        history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,
     });
@@ -1372,7 +1368,7 @@ where
 /// 🧮️ Finishes a load: folds the parsed event log into every derived position and fact,
 /// validates the result and materializes the live snapshot by replaying the applied edits over the
 /// genesis. A refused document is discarded through [`discard_parsed_envelope`], never dropped.
-pub(crate) async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
+pub async fn settle_parsed_envelope<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>) -> Result<ParsedDocumentText<P, Mutation>, TextError>
 where
     P: Clone + 'static,
     Mutation: self::Mutation<P> + OpBinary + 'static,
@@ -1399,7 +1395,7 @@ where
 
 /// 🧹️ Discards a refused, never-published parsed envelope: its shell is detached and its
 /// genesis retired through the technology's own diff vocabulary; the plain history data drops.
-pub(crate) fn discard_parsed_envelope<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>)
+pub fn discard_parsed_envelope<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>)
 where
     Mutation: self::Mutation<P>,
 {

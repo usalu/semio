@@ -15,8 +15,7 @@ mod cursor;
 pub use cursor::{Base64DecodeCursor, Base64DecodeOutcome, Base64DecodeParts, Base64DecodeState, Base64Input, Base64InputRange};
 
 #[cfg(test)]
-#[path = "../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-mod test_allocation;
+use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;

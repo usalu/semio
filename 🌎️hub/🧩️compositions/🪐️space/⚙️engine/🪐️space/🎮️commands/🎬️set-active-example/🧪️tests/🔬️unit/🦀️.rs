@@ -1,17 +1,21 @@
 
-use super::*;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::unit_tests::context::studio_emit;
+
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_app::unit_tests::context::studio_emit;
 use semio_framework_os::empty_workflow_snapshot;
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit};
+use semio_hub_space_commands_media::set_active_example::SetActiveExample;
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
+use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::SetActiveExample(SetActiveExample { example_id: "demo".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(crate::engine::space::commands::export_studio_pack::ExportStudioPack {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(crate::engine::space::commands::export_studio_dsl::ExportStudioDsl {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(crate::engine::space::commands::import_space_pack::ImportSpacePack {}));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(crate::engine::space::commands::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioPack(semio_hub_space_commands_media::export_studio_pack::ExportStudioPack {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportStudioDsl(semio_hub_space_commands_media::export_studio_dsl::ExportStudioDsl {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePack(semio_hub_space_commands_media::import_space_pack::ImportSpacePack {}));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportSpacePackPayload(semio_hub_space_commands_media::import_space_pack_payload::ImportSpacePackPayload { payload: "data:...".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -25,7 +29,7 @@ async fn open_studio_loads_created_empty_catalog_studio() {
     crate::register_studio_port_for_test(&entry.id, port).await;
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: entry.id.clone() })).await.expect("handle");
     assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetSpaceId(SpaceIdSetting { space_id: Some(entry.id) })));
     assert!(emit.config_mutations.contains(&SpaceConfigMutation::SetActiveNode(ActiveNodeSetting { node_id: None })));
     assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })));
@@ -36,7 +40,7 @@ async fn open_studio_loads_created_empty_catalog_studio() {
 async fn open_studio_unknown_id_returns_not_found() {
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).await.err().expect("not found");
+    let err = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "unknown-studio-id".into() })).await.err().expect("not found");
     assert_eq!(err.code.0, "s.space.not-found");
 }
 
@@ -58,7 +62,7 @@ async fn load_document_snapshot(emit: &Emit<WorkflowMutation, SpaceConfigMutatio
 async fn open_studio_demo_explicit_loads_demo_fixture() {
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: "demo".into() })).await.expect("handle");
     let (projection, id) = load_document_snapshot(&emit).await;
     assert!(id.contains("demo-studio"));
     assert!(!projection.graph.nodes.is_empty());
@@ -90,7 +94,7 @@ async fn open_studio_loads_ephemeral_created_studio() {
         .expect("navigate");
     let empty = empty_workflow_snapshot().await;
     let config = SpaceConfig::default();
-    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
+    let emit = studio_emit(&empty, &config, &SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.clone() })).await.expect("handle");
     let (projection, id) = load_document_snapshot(&emit).await;
     assert_eq!(id, space_id);
     assert!(projection.graph.nodes.is_empty());
@@ -138,7 +142,7 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     // — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) rather than through
     // `SpaceApp::handle`, which now needs a real `InteractionView` only a full `VcsArtifactApp`
     // dispatch can provide.
-    let open = SpaceCommand::OpenSpace(crate::engine::space::commands::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
+    let open = SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
     assert!(open.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "openSpace must load the created studio");
     assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));
     assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })));

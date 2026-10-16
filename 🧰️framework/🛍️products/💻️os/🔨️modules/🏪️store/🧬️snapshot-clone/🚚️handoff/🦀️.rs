@@ -7,8 +7,8 @@ use semio_framework_value::{
 use std::mem::ManuallyDrop;
 
 pub(super) struct RetainedCloneCursorHandoff<T: RetainedClone> {
-    cursor: ManuallyDrop<Option<T::Cursor>>,
-    terminal: bool,
+    pub cursor: ManuallyDrop<Option<T::Cursor>>,
+    pub terminal: bool,
 }
 
 impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
@@ -20,11 +20,11 @@ impl<T: RetainedClone> RetainedCloneCursorHandoff<T> {
     fn cursor_mut(&mut self) -> Result<&mut T::Cursor, ValueError> {
         self.cursor.as_mut().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff lost its close owner"))
     }
-    fn cursor(&self) -> Result<&T::Cursor, ValueError> {
+    pub fn cursor(&self) -> Result<&T::Cursor, ValueError> {
         self.cursor.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff lost its close owner"))
     }
 
-    fn finish(&mut self) -> Result<(), ValueError> {
+    pub fn finish(&mut self) -> Result<(), ValueError> {
         let cursor = self.cursor.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff completed twice"))?;
         if !cursor.terminal_is_empty() {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone cursor handoff completed with a live owner"));

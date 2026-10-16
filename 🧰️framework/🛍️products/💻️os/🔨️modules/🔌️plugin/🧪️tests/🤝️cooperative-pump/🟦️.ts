@@ -24,7 +24,7 @@ test("original cooperative host law has one higher owner and all twelve neutral 
   expect(new Bun.CryptoHasher("sha256").update(bytes).digest("hex")).toBe(createHash("sha256").update(native).digest("hex"));
   expect(native.match(/fn exact_live_pump_binding\(/gu)).toHaveLength(1);
   expect(native.match(/fn cooperative_maintenance_live_host_revisits_queued_owner\(/gu)).toHaveLength(1);
-  expect(native).toContain('include_str!("../../🦀️.rs")');
+  expect(native).toContain('read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../⚛️reactor/🏃️runtime/🦀️.rs"))');
   for (const row of fixture.cases.filter(row => !row.accepted)) {
     expect(host).toContain(row.before!);
     expect(native).toContain("source.replace(" + JSON.stringify(row.before) + ", " + JSON.stringify(row.after) + ")");

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase"
+  ],
+  "properties": {
+    "phase": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/Phase"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Phase": {
+      "type": "string",
+      "enum": [
+        "cache",
+        "nested",
+        "uncached",
+        "birth",
+        "services",
+        "refusals",
+        "cancellation",
+        "configuration",
+        "offline"
+      ]
+    },
+    "Policy": {
+      "const": {
+        "maximumChildMilliseconds": 120000,
+        "sourcePattern": "^(?!Bazel actual owned runtime ).*",
+        "runtimePrefix": "^Bazel actual owned runtime ",
+        "runtimeSuffix": "$"
+      }
+    }
+  }
+}

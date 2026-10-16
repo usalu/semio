@@ -7,7 +7,7 @@ export function interactivityDbIoDirectWriterSelfTests(): void {
   const index = "async fn encode_run_pages DbIoPageWriter::try_reserve Crc32cCursor run_write writer.seal_retained().await";
   const wal = "struct SharedBuf(std::sync::Arc<std::sync::Mutex<db_storage::DbIoPageWriter>>) fn try_new() -> Result<Self, DbError> async fn copy_range async fn read_exact write_fragment(&bytes[cursor..]) record.write_retained(&mut self.writer).await?";
   const spr = "async fn write_frame_retained Crc32cCursor::new() pending_chain_hasher: blake3::Hasher write_frame_retained(&mut self.sink";
-  const pack = "pub struct PackIdentitySegment pub async fn begin_identity_segment let chunks = std::mem::take(&mut self.chunks) segment.write_fragment(retained_varint self.begin_identity_segment(crate::KIND_CHUNK";
+  const pack = "pub struct PackIdentitySegment pub async fn begin_identity_segment let chunks = std::mem::take(&mut self.chunks) segment.write_fragment(retained_varint self.begin_identity_segment(semio_framework_replication_codec::KIND_CHUNK";
   if (interactivityDbIoDirectWriterFailures(engine, snapshot, index, wal, spr, pack).length !== 0) throw new Error("[verify interactivity] DB direct-writer self-test rejected retained writers.");
   const mutations = [
     ["catalog-encode-then-copy", `${engine} serde_json::to_vec`, snapshot, index, wal, spr, pack],

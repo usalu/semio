@@ -1,0 +1,111 @@
+// 🧵️ HUB WP3: mount hub of WP3 UI engine, frame core and host: ui-engine-*, host-plumbing, frame-actions, runtime-mailbox, app-runtime, frame-presentation, frame-transaction, frame-job, native-probe, host-winit, browser-worker.
+// This file is spliced into the crate root by `include!` from the renderer root, so every item below stays a crate-root item;
+// its `#[path]` and `include!` literals resolve against this folder (`📥️mounts/<hub>/`), hence the `../../` prefix of the renderer folder.
+// Carving a crate removes its unit here and puts `extern crate <crate> as <old module name>;` in its place (PLAN-RENDERER-WGPU-CRATES.md, section 10.3).
+
+#[cfg(test)]
+#[path="../../../../../🧪️tests/🎟️original-turn/🦀️.rs"]
+mod fixture_original_turn;
+
+#[cfg(test)]
+include!("../../../../../🧪️tests/🧊️wgpu-renderer-standalone/🦀️.rs");
+
+#[cfg(test)]
+include!("../../../../../🧪️tests/🐕️wgpu-present-stall-watch/🦀️.rs");
+
+#[path = "../../../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod interpreter;
+
+#[path = "../../🛎️frame-actions/🦀️.rs"]
+mod frame_actions;
+pub(crate) use frame_actions::*;
+
+#[path = "../../🎨️presentation-raster/🦀️.rs"]
+mod presentation_raster;
+pub(crate) use presentation_raster::*;
+
+#[path = "../../📮️mailbox-impl/🦀️.rs"]
+mod mailbox_impl;
+pub(crate) use mailbox_impl::*;
+
+#[path = "../../🧾️frame-build/🦀️.rs"]
+mod frame_build;
+pub(crate) use frame_build::*;
+
+#[path = "../../🖥️frame-presentation/🦀️.rs"]
+mod frame_presentation;
+pub(crate) use frame_presentation::*;
+
+#[path = "../../🧠️app-runtime/🦀️.rs"]
+mod app_runtime;
+pub(crate) use app_runtime::*;
+
+#[path = "../../🔬️native-socket-probe/🦀️.rs"]
+mod native_socket_probe;
+pub use native_socket_probe::*;
+
+//#region 🔖️AsyncBoundaryTests
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs"]
+mod async_boundary_tests;
+//#endregion 🔖️AsyncBoundaryTests
+
+//#region 🔖️FrameActionLedgerTests
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🧾️frame-action-ledger/🦀️.rs"]
+mod frame_action_ledger_tests;
+//#endregion 🔖️FrameActionLedgerTests
+
+//#region 🔖️WheelApplicationPointTests
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🖱️wheel-application-point/🦀️.rs"]
+mod wheel_application_point_tests;
+//#endregion 🔖️WheelApplicationPointTests
+
+//#region 🔖️OsHostDecomposition
+// 🏠️ ticket 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (packet os-host): the seam that ends
+// this crate owning the actor kernel and ends its continuous redraw. `deadlines` is a leaf (no
+// dependency on `os_host`/`winit_app`); `os_host` composes `AppRuntime` with it; `winit_app` is the
+// new `ApplicationHandler` — see that file's own module docstring for why it hand-rolls the event
+// loop instead of using `ui_host::window::NativeHost<D>` directly. Mounted here, away from the peer
+// program's `parallel_runtime` mount just below, per this ticket's own OWNS list.
+//
+// 🪢️ There used to be a second, `#[cfg(test)]`-only `kernel_seam` module here: a bounded
+// intent/outcome mailbox whose own docstring admitted "Test fixture … Production rendering dispatches
+// through RuntimeMailbox; this fixture has no production router." It had no production consumer at
+// all (its `KernelSeam`/`AppKernelSeam`/`HostWaker` were named only by its own test) and it shadowed
+// the name of the REAL production exchange, `KernelOutcome` in `🔖️KernelClient` below. Ticket
+// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W2k retired it: `📮️RuntimeMailbox` is the one production
+// router, and it is already the exact counterpart of React's own dispatch seam — `onActionStable`
+// taking a descriptor built by `uiIntentToActionDescriptor` (`🛠️ShellHelpers/🟦️.tsx:2051`). Nothing
+// about wgpu's runtime semantics needed the fixture; what DID differ was the controller identity that
+// descriptor carried, and that is fixed at the source in `ui_wgpu`'s `UiIntentCommand::descriptor`.
+use semio_framework_os_renderer_wgpu_host_plumbing::{browser_original_output, deadlines, input_wire, render_snapshot, surface_lane};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_renderer_wgpu_host_plumbing::native_caller;
+#[path = "../../../🏠️os-host/🦀️.rs"]
+mod os_host;
+// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the `InteractiveJob` seam for the
+// slice of `AppRuntime::frame()` that genuinely is `Send`-safe today — see that file's own module
+// docstring for exactly what moves and, more importantly, what still cannot.
+#[path = "../../../🧵️frame-job/🦀️.rs"]
+mod frame_job;
+#[path = "../../../../../🪙️authority/🖼️frame/🦀️.rs"]
+mod frame_authority;
+#[cfg(target_arch = "wasm32")]
+#[path = "../../../🌐️browser-worker/🦀️.rs"]
+mod browser_worker;
+#[path = "../../../🪟️winit-app/🦀️.rs"]
+mod winit_app;
+//#endregion 🔖️OsHostDecomposition
+
+//#region 🧷️InterpreterTestHosts
+// 🧪️ Test hosts of the interpreter laws that name the monolith (scenes, engine canvas, the frame fixtures): the `ui-engine` crates are built with their `testkit` feature in this test unit, and the law files keep the namespace they were written against.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️test-hosts/🧷️interpreter-command-wiring/🦀️.rs"]
+mod interpreter_command_wiring_host;
+
+#[cfg(test)]
+#[path = "🧪️test-hosts/🔎️interpreter-introspection/🦀️.rs"]
+mod interpreter_introspection_host;
+//#endregion 🧷️InterpreterTestHosts

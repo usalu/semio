@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import {withJavascriptDependencyStorageV1} from "./💾️storage/🟦️.ts";
-import {prepareJavascriptDependencies,runTool} from "./🟦️.ts";
-import {mkdirSync} from "node:fs";
+import {prepareJavascriptDependencies} from "./🟦️.ts";
 import {dirname,join} from "node:path";
-import {Script,ScriptRouter,checkScriptInvocation,receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {Script,ScriptRouter,checkScriptInvocation,receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {discoverCurrentBunWorkspaceScopesV1} from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import{withRepositoryTestArtifactsV1,repositoryTestArtifactEnvironmentV1}from"../../../../🧪️test/💾️storage/🟦️.ts";
+import{runRepositoryCommand}from"../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 
 /** 📦️ Synchronizes the locked JavaScript environment without loading application modules. */
@@ -26,12 +26,13 @@ export class SyncScript extends Script {
         checkScriptInvocation(this.invocation);
       },
     };
+    const phaseControl=createIssuedResourceControlV1(this.invocation,"bun:dependency-storage",0);
     const scopes = await discoverCurrentBunWorkspaceScopesV1(this.root, selection, control);
     if (!scopes.length) throw new Error("Unknown present Bun installation scope");
     for (const scope of scopes) {
       checkScriptInvocation(this.invocation);
       console.log("[bun-workspace] " + scope.manifest + " " + this.mode);
-      await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,store=>prepareJavascriptDependencies(this.mode,join(this.root,dirname(scope.manifest)),store));
+      await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,phaseControl,(store,control)=>prepareJavascriptDependencies(this.mode,join(this.root,dirname(scope.manifest)),store,control));
       checkScriptInvocation(this.invocation);
     }
     if(selection.kind==="all"){const current=await discoverCurrentBunWorkspaceScopesV1(this.root,selection,control);if(JSON.stringify(current.map(scope=>scope.manifest))!==JSON.stringify(scopes.map(scope=>scope.manifest)))throw Error("Original Bun installation owner membership changed");}
@@ -48,9 +49,7 @@ export class ContractCheckScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Dependency contract check accepts no arguments");
     checkScriptInvocation(this.invocation);
-    const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, ".🧬semio/🦑️repo/⚡️cache/tests/bootstrap-dependencies");
-    mkdirSync(artifacts, { recursive: true });
-    await runTool(process.execPath,["test", join(import.meta.dir, "🧪️tests/🟦️.ts")],this.root,this.invocation.control.signal,false,{ ...process.env, SEMIO_TEST_ARTIFACT_DIR: artifacts },repositoryCargoPreparationStorageV1(process.cwd()));
+    await withRepositoryTestArtifactsV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"dependencies:tests",0),()=>runRepositoryCommand(this.invocation,process.execPath,["test",join(import.meta.dir,"🧪️tests/🟦️.ts")],this.repoRoot,"dependencies:contract-check",{version:1,maximumElapsedMilliseconds:120000,output:{maximumBytes:134217728,maximumLines:65536}},{env:repositoryTestArtifactEnvironmentV1(this.repoRoot)}));
     checkScriptInvocation(this.invocation);
   }
 }

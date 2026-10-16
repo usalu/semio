@@ -1223,8 +1223,7 @@ impl<S: Clone, Mutation: self::Mutation<S>> InteractionStore<S, Mutation> {
 
 
 #[cfg(test)]
-#[path="../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-mod test_allocation;
+use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;

@@ -78,7 +78,5 @@ pub fn render(scene: &ProcedureScene, run_output_json: &str, labels: &Imperative
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

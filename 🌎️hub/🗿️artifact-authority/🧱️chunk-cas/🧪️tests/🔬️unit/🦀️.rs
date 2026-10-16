@@ -1,7 +1,7 @@
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 
 use super::*;
-use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress};
+use crate::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 struct TestControl {
@@ -273,9 +273,9 @@ mod long {
         }
         assert_vector(&fixture["largePair"]["pack"]);
         let ledger = &fixture["retentionLedger"];
-        assert_eq!(ledger["reservationMaximumTtlMs"].as_u64(), Some(crate::directory::ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
+        assert_eq!(ledger["reservationMaximumTtlMs"].as_u64(), Some(semio_hub_directory_contract::ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
         assert_eq!(ledger["reservationGraceMs"].as_u64(), Some(ARTIFACT_CAS_RESERVATION_GRACE_MS));
-        assert_eq!(ledger["sweepPageMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_PAGE_MAX as u64));
-        assert_eq!(ledger["sweepObjectMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX as u64));
+        assert_eq!(ledger["sweepPageMaximum"].as_u64(), Some(semio_hub_directory_contract::ARTIFACT_CAS_SWEEP_PAGE_MAX as u64));
+        assert_eq!(ledger["sweepObjectMaximum"].as_u64(), Some(semio_hub_directory_contract::ARTIFACT_CAS_SWEEP_OBJECT_MAX as u64));
     }
 }

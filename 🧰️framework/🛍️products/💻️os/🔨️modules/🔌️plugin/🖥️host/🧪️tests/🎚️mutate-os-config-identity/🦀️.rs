@@ -8,10 +8,9 @@
 //! `apply_identity_config_mutation_reporting` over the full two-kind `IdentityConfigMutation`
 //! vocabulary.
 //!
-//! **Why the case sits here rather than beside the vocabulary.** `🎚️config` has no crate of its
-//! own; `../../🧪️tests/🎚️mutate-os-config-identity/🦀️.rs` in `🖥️host/📦️packages/🦀️rust` is the ONE place `IdentityConfigMutation` is
-//! mounted, and the generated test host resolves its subject crate by walking UP from the case
-//! owner. The feature says the same thing in prose so a reader is not left guessing.
+//! **Why the case sits here.** The generated test host resolves its subject crate by walking UP from the
+//! case owner to `🖥️host/📦️packages/🦀️rust`; the subject links the owning crate `semio-framework-os-config`
+//! directly, declared as a subject host package in `../../🔮️oracles/🔣️.json`.
 //!
 //! **Where the assertion lives.** A recorded no-oracle case runs NO oracle role, so every law this
 //! case claims is asserted INSIDE the subject handler. A handler that merely returned `Ok` would
@@ -89,10 +88,10 @@ fn round_trip_oracle(_ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_framework_plugin_host::config_io::text::mutations::{decode_identity_config_mutation_json};
-    use semio_framework_plugin_host::config_io::text::snapshot::{decode_identity_setting_json, encode_identity_setting_json};
+    use semio_framework_os_config::io::text::mutations::{decode_identity_config_mutation_json};
+    use semio_framework_os_config::io::text::snapshot::{decode_identity_setting_json, encode_identity_setting_json};
 
-    use semio_framework_plugin_host::opening_config::mutations::{
+    use semio_framework_os_config::opening_config::mutations::{
         apply_identity_config_mutation_reporting, inverse_identity_config_mutation_steps, IdentityConfigMutation, IdentitySetting,
     };
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};

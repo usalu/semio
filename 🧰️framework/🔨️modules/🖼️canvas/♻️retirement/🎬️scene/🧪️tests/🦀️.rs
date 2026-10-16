@@ -1,6 +1,6 @@
 #[global_allocator]
 static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-use semio_framework_canvas::{Scene,CanvasSceneRetirement,BezPath,Stroke,FillRule,Affine,Color,RasterImage};
+use semio_framework_canvas_scene::{Scene,CanvasSceneRetirement,BezPath,Stroke,FillRule,Affine,Color,RasterImage};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;
 fn law()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}

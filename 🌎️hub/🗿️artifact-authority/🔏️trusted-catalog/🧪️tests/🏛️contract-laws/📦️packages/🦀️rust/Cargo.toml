@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-trusted-catalog-contract-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Trusted-catalog contract laws: plugin-module index, opened-root publication and browser actor"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-trusted-catalog-contract-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }
+semio-hub-testing = { workspace = true }
+semio-hub-trusted-catalog-contract = { workspace = true, features = ["testkit", "integration-fixtures"] }
+tokio = { version = "1", features = ["full", "test-util"] }
+directory = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+serde_json = { workspace = true }

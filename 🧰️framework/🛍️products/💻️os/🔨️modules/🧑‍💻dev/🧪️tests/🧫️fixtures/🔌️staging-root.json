@@ -1,7 +1,7 @@
 {
   "root": {
-    "packageRelativePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist",
-    "modulesDirectoryName": "🔌️plugin-modules",
+    "packageRelativePath": ".cache/b/p/m/browser",
+    "modulesDirectoryName": "modules",
     "profiles": [
       "prototype",
       "release"
@@ -29,16 +29,6 @@
         "id": "wgpu-vite-mount",
         "renderer": "wgpu",
         "profile": "prototype"
-      },
-      {
-        "id": "wgpu-native-descriptor-source",
-        "renderer": "wgpu",
-        "profile": "prototype"
-      },
-      {
-        "id": "wgpu-native-descriptor-source",
-        "renderer": "wgpu",
-        "profile": "release"
       },
       {
         "id": "prepare-and-activate",

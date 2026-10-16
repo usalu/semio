@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "policy": {
+    "version": 1,
+    "maximumCompressedBytes": 8192,
+    "maximumInflatedBytes": 65536,
+    "maximumEntries": 16,
+    "maximumFileBytes": 32768,
+    "maximumPathBytes": 128,
+    "maximumMetadataBytes": 1024,
+    "progressEntries": 2
+  },
+  "files": [
+    {
+      "path": "tectonic",
+      "text": "binary\u0000payload"
+    },
+    {
+      "path": "licenses/unicode.txt",
+      "text": "licensed Grüße 世界\n"
+    },
+    {
+      "path": "empty",
+      "text": ""
+    }
+  ],
+  "invalidPaths": [
+    "../escape",
+    "/escape",
+    "C:/escape",
+    "back\\slash",
+    "CON.txt",
+    "trail. ",
+    "a/../b",
+    "a//b"
+  ],
+  "tarFailures": [
+    "checksum",
+    "padding",
+    "missing-footer",
+    "unaligned",
+    "link",
+    "hardlink",
+    "sparse",
+    "duplicate",
+    "case-collision",
+    "normalized-collision",
+    "file-ancestor",
+    "truncated"
+  ],
+  "zipFailures": [
+    "checksum",
+    "local-name",
+    "local-method",
+    "encrypted",
+    "zip64",
+    "symlink",
+    "disk",
+    "central-count",
+    "central-offset",
+    "truncated",
+    "duplicate",
+    "case-collision",
+    "normalized-collision",
+    "file-ancestor",
+    "directory-mode",
+    "needed-version",
+    "metadata",
+    "trailing-deflate",
+    "local-overlap",
+    "local-gap",
+    "extra-name"
+  ],
+  "descriptorSignaturePayload": [
+    172,
+    10,
+    122,
+    213
+  ],
+  "tarFooterBytes": 2097152
+}

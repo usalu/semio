@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "record": {
+    "version": 1,
+    "files": [
+      "compiler/one.ts",
+      "library/two.ts"
+    ]
+  },
+  "selection": {
+    "project": "app",
+    "target": "build",
+    "configuration": "prototype",
+    "excludeTaskDependencies": false
+  },
+  "expected": {
+    "version": 1,
+    "tasks": [
+      "app:build:prototype"
+    ],
+    "roots": [
+      "app"
+    ],
+    "files": [
+      "compiler/one.ts",
+      "library/two.ts"
+    ]
+  },
+  "cases": [
+    {
+      "id": "managed",
+      "managed": true,
+      "old": false,
+      "accepts": true
+    },
+    {
+      "id": "old-only",
+      "managed": false,
+      "old": true,
+      "accepts": false
+    },
+    {
+      "id": "old-poison",
+      "managed": true,
+      "old": true,
+      "poisonOld": true,
+      "accepts": true
+    },
+    {
+      "id": "managed-poison",
+      "managed": true,
+      "old": true,
+      "poisonManaged": true,
+      "accepts": false
+    }
+  ],
+  "readLimits": {
+    "maximumRecordBytes": 16777216
+  },
+  "hostileRecords": [
+    {
+      "id": "padding",
+      "paddingBytes": 16777217,
+      "pathCharacters": 0,
+      "extraLinks": 0,
+      "accepts": false
+    },
+    {
+      "id": "hardlink",
+      "paddingBytes": 0,
+      "pathCharacters": 0,
+      "extraLinks": 1,
+      "accepts": false
+    },
+    {
+      "id": "wide-path",
+      "paddingBytes": 0,
+      "pathCharacters": 257,
+      "extraLinks": 0,
+      "accepts": false
+    }
+  ],
+  "cancellation": {
+    "expectedPlannerCalls": 0
+  },
+  "sdkAdmission": [
+    {
+      "kind": "copied-control",
+      "error": "Live Original resource control issuance required"
+    },
+    {
+      "kind": "missing-namespace",
+      "error": "Original live native graph namespace required"
+    }
+  ],
+  "readerLifetime": {
+    "maximumPending": 32,
+    "failures": [
+      "error",
+      "undefined"
+    ],
+    "releaseOrder": [
+      "accepted",
+      "drained",
+      "released"
+    ],
+    "canonicalOrder": [
+      "accepted",
+      "descendant",
+      "released"
+    ]
+  },
+  "journalProjection": {
+    "input": {
+      "version": 1,
+      "tasks": [
+        "app:build:prototype"
+      ],
+      "roots": [
+        "app"
+      ],
+      "files": [
+        "Cargo.toml"
+      ]
+    },
+    "output": {
+      "roots": [
+        "app"
+      ],
+      "files": [
+        "Cargo.toml"
+      ]
+    },
+    "invalid": [
+      {
+        "roots": [
+          "../escape"
+        ],
+        "files": []
+      },
+      {
+        "roots": [
+          "app",
+          "app"
+        ],
+        "files": []
+      }
+    ]
+  }
+}

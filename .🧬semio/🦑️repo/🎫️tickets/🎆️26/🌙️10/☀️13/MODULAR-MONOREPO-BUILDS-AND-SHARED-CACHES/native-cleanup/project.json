@@ -1,0 +1,257 @@
+{
+  "name": "repo-private-native-cleanup",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts test prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts test prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts test release"
+        }
+      }
+    },
+    "types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types release"
+        }
+      }
+    },
+    "cancel": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts cancel prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts cancel prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts cancel release"
+        }
+      }
+    },
+    "operation": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation release"
+        }
+      }
+    },
+    "operation-error": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-error prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-error prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-error release"
+        }
+      }
+    },
+    "operation-undefined": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-undefined prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-undefined prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-undefined release"
+        }
+      }
+    },
+    "operation-reader": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-reader prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-reader prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-reader release"
+        }
+      }
+    },
+    "operation-borrower": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower release"
+        }
+      }
+    },
+    "operation-core": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-core prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-core prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-core release"
+        }
+      }
+    },
+    "operation-borrower-error": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-error prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-error prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-error release"
+        }
+      }
+    },
+    "operation-borrower-undefined": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-undefined prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-undefined prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts operation-borrower-undefined release"
+        }
+      }
+    },
+    "receiver": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts receiver prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts receiver prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts receiver release"
+        }
+      }
+    },
+    "compiler-phase": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase release"
+        }
+      }
+    },
+    "compiler-phase-error": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-error prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-error prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-error release"
+        }
+      }
+    },
+    "compiler-phase-undefined": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-undefined prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-undefined prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-undefined release"
+        }
+      }
+    },
+    "compiler-phase-cancel": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-cancel prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-cancel prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts compiler-phase-cancel release"
+        }
+      }
+    },
+    "types-core": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-core prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-core prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-core release"
+        }
+      }
+    },
+    "types-inferred": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-inferred prototype"
+      },
+      "configurations": {
+        "prototype": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-inferred prototype"
+        },
+        "release": {
+          "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/native-cleanup/📜️script.ts types-inferred release"
+        }
+      }
+    }
+  }
+}

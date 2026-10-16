@@ -19,7 +19,7 @@ pub use retained_fold::*;
 mod input_drafts;
 pub use input_drafts::HistoryInputDrafts;
 
-use crate::ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
+use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
 
 //#region 🔖️Vocabulary
 /// 🏷️ `diff.schema` of every transition envelope. Operation envelopes carry their
@@ -96,7 +96,7 @@ impl TransitionSupersede {
 
     /// 🛂️ The codec law every encoded supersession satisfies: at least one input, unique targets,
     /// `scope` at most [`SUPERSEDE_SCOPE_MAX_BYTES`], every payload at most [`SUPERSEDE_PAYLOAD_MAX_BYTES`].
-    pub fn validate(&self) -> Result<(), crate::ProtocolError> {
+    pub fn validate(&self) -> Result<(), semio_framework_replication_error::ProtocolError> {
         if self.scope.as_ref().is_some_and(|scope| scope.len() > SUPERSEDE_SCOPE_MAX_BYTES) {
             return Err(malformed(0, format!("supersede scope exceeds {SUPERSEDE_SCOPE_MAX_BYTES} bytes")));
         }
@@ -149,61 +149,61 @@ pub struct EffectiveSupersession {
 }
 
 /// 🌉️ Internally tagged on `"kind"` (`input` carries `schema` and `payload` bytes, `withdrawn` nothing).
-impl crate::value::ToValue for InputReplacement {
-    fn to_value(&self) -> crate::value::DslValue {
+impl semio_framework_value::ToValue for InputReplacement {
+    fn to_value(&self) -> semio_framework_value::DslValue {
         match self {
-            InputReplacement::Input { schema, payload } => crate::value::DslValue::object(vec![
-                ("kind".to_string(), crate::value::DslValue::String("input".to_string())),
-                ("schema".to_string(), crate::value::ToValue::to_value(schema)),
-                ("payload".to_string(), crate::value::ToValue::to_value(payload)),
+            InputReplacement::Input { schema, payload } => semio_framework_value::DslValue::object(vec![
+                ("kind".to_string(), semio_framework_value::DslValue::String("input".to_string())),
+                ("schema".to_string(), semio_framework_value::ToValue::to_value(schema)),
+                ("payload".to_string(), semio_framework_value::ToValue::to_value(payload)),
             ]),
-            InputReplacement::Withdrawn => crate::value::DslValue::object(vec![("kind".to_string(), crate::value::DslValue::String("withdrawn".to_string()))]),
+            InputReplacement::Withdrawn => semio_framework_value::DslValue::object(vec![("kind".to_string(), semio_framework_value::DslValue::String("withdrawn".to_string()))]),
         }
     }
 }
-impl crate::value::FromValue for InputReplacement {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for InputReplacement, found {value:?}")));
+impl semio_framework_value::FromValue for InputReplacement {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for InputReplacement, found {value:?}")));
         };
         let mut kind = None;
         let mut schema = None;
         let mut payload = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "kind" => kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
-                "schema" => schema = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                "payload" => payload = Some(<Vec<u8> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                "kind" => kind = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("kind"))?),
+                "schema" => schema = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
+                "payload" => payload = Some(<Vec<u8> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
                 _ => {}
             }
         }
         match kind.as_deref() {
             Some("input") => Ok(InputReplacement::Input {
-                schema: schema.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing schema"))?,
-                payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing payload"))?,
+                schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing schema"))?,
+                payload: payload.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "InputReplacement::Input missing payload"))?,
             }),
             Some("withdrawn") => Ok(InputReplacement::Withdrawn),
-            Some(other) => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown InputReplacement kind `{other}`"))),
-            None => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "InputReplacement missing kind")),
+            Some(other) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown InputReplacement kind `{other}`"))),
+            None => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "InputReplacement missing kind")),
         }
     }
 }
 
-impl crate::value::ToValue for EffectiveSupersession {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object(vec![
-            ("transitionId".to_string(), crate::value::ToValue::to_value(&self.transition_id)),
-            ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
-            ("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)),
-            ("scope".to_string(), crate::value::ToValue::to_value(&self.scope)),
-            ("replacement".to_string(), crate::value::ToValue::to_value(&self.replacement)),
+impl semio_framework_value::ToValue for EffectiveSupersession {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::object(vec![
+            ("transitionId".to_string(), semio_framework_value::ToValue::to_value(&self.transition_id)),
+            ("actor".to_string(), semio_framework_value::ToValue::to_value(&self.actor)),
+            ("timestamp".to_string(), semio_framework_value::ToValue::to_value(&self.timestamp)),
+            ("scope".to_string(), semio_framework_value::ToValue::to_value(&self.scope)),
+            ("replacement".to_string(), semio_framework_value::ToValue::to_value(&self.replacement)),
         ])
     }
 }
-impl crate::value::FromValue for EffectiveSupersession {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for EffectiveSupersession, found {value:?}")));
+impl semio_framework_value::FromValue for EffectiveSupersession {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for EffectiveSupersession, found {value:?}")));
         };
         let mut transition_id = None;
         let mut actor = None;
@@ -212,20 +212,20 @@ impl crate::value::FromValue for EffectiveSupersession {
         let mut replacement = None;
         for (key, entry) in fields {
             match key.as_str() {
-                "transitionId" => transition_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("transitionId"))?),
-                "actor" => actor = Some(<semio_framework_value::SharedUtf8 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
-                "timestamp" => timestamp = Some(<HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
-                "scope" => scope = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("scope"))?,
-                "replacement" => replacement = Some(<InputReplacement as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("replacement"))?),
+                "transitionId" => transition_id = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("transitionId"))?),
+                "actor" => actor = Some(<semio_framework_value::SharedUtf8 as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "timestamp" => timestamp = Some(<HybridLogicalTimestamp as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
+                "scope" => scope = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("scope"))?,
+                "replacement" => replacement = Some(<InputReplacement as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("replacement"))?),
                 _ => {}
             }
         }
         Ok(EffectiveSupersession {
-            transition_id: transition_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing transitionId"))?,
-            actor: actor.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing actor"))?,
-            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing timestamp"))?,
+            transition_id: transition_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing transitionId"))?,
+            actor: actor.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing actor"))?,
+            timestamp: timestamp.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing timestamp"))?,
             scope,
-            replacement: replacement.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing replacement"))?,
+            replacement: replacement.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "EffectiveSupersession missing replacement"))?,
         })
     }
 }
@@ -310,26 +310,26 @@ fn write_optional_str(out: &mut Vec<u8>, value: &Option<String>) {
     match value {
         Some(value) => {
             out.push(1);
-            crate::write_str(out, value);
+            semio_framework_replication_wire_core::write_str(out, value);
         }
         None => out.push(0),
     }
 }
 
-fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, crate::ProtocolError> {
+fn read_u8(bytes: &[u8], pos: &mut usize) -> Result<u8, semio_framework_replication_error::ProtocolError> {
     let value = *bytes.get(*pos).ok_or_else(|| malformed(*pos, "truncated"))?;
     *pos += 1;
     Ok(value)
 }
 
-fn malformed(offset: usize, detail: impl Into<String>) -> crate::ProtocolError {
-    crate::ProtocolError::Malformed { what: "history transition", offset: offset as u64, detail: detail.into() }
+fn malformed(offset: usize, detail: impl Into<String>) -> semio_framework_replication_error::ProtocolError {
+    semio_framework_replication_error::ProtocolError::Malformed { what: "history transition", offset: offset as u64, detail: detail.into() }
 }
 
 fn write_ids(out: &mut Vec<u8>, ids: &[MutationId]) {
-    crate::wire::write_varint_u64(out, ids.len() as u64);
+    semio_framework_replication_wire_core::write_varint_u64(out, ids.len() as u64);
     for id in ids {
-        crate::write_str(out, &id.0);
+        semio_framework_replication_wire_core::write_str(out, &id.0);
     }
 }
 
@@ -341,63 +341,63 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     let mut out = Vec::new();
     match transition {
         HistoryTransition::Revert { mutation_ids } => {
-            crate::wire::write_varint_u64(&mut out, 0);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 0);
             write_ids(&mut out, mutation_ids);
         }
         HistoryTransition::Reinstate { mutation_ids } => {
-            crate::wire::write_varint_u64(&mut out, 1);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 1);
             write_ids(&mut out, mutation_ids);
         }
         HistoryTransition::Commit(checkpoint) => {
-            crate::wire::write_varint_u64(&mut out, 2);
-            crate::write_str(&mut out, &checkpoint.checkpoint_id);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 2);
+            semio_framework_replication_wire_core::write_str(&mut out, &checkpoint.checkpoint_id);
             write_optional_str(&mut out, &checkpoint.parent_id);
-            crate::write_str(&mut out, &checkpoint.change_id);
+            semio_framework_replication_wire_core::write_str(&mut out, &checkpoint.change_id);
             write_ids(&mut out, &checkpoint.mutation_ids);
             write_optional_str(&mut out, &checkpoint.description);
-            crate::write_str(&mut out, &checkpoint.saved_at);
-            crate::wire::write_varint_u64(&mut out, checkpoint.authors.len() as u64);
+            semio_framework_replication_wire_core::write_str(&mut out, &checkpoint.saved_at);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, checkpoint.authors.len() as u64);
             for author in &checkpoint.authors {
-                crate::write_str(&mut out, &author.id);
-                crate::write_str(&mut out, &author.name);
+                semio_framework_replication_wire_core::write_str(&mut out, &author.id);
+                semio_framework_replication_wire_core::write_str(&mut out, &author.name);
                 write_optional_str(&mut out, &author.avatar);
             }
             write_optional_str(&mut out, &checkpoint.message);
-            crate::write_str(&mut out, &checkpoint.timestamp);
+            semio_framework_replication_wire_core::write_str(&mut out, &checkpoint.timestamp);
             write_optional_str(&mut out, &checkpoint.line_id);
         }
         HistoryTransition::Branch { alternative_id, name, checkpoint_id } => {
-            crate::wire::write_varint_u64(&mut out, 3);
-            crate::write_str(&mut out, alternative_id);
-            crate::write_str(&mut out, name);
-            crate::write_str(&mut out, checkpoint_id);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 3);
+            semio_framework_replication_wire_core::write_str(&mut out, alternative_id);
+            semio_framework_replication_wire_core::write_str(&mut out, name);
+            semio_framework_replication_wire_core::write_str(&mut out, checkpoint_id);
         }
         HistoryTransition::Checkout { checkpoint_id, alternative_id } => {
-            crate::wire::write_varint_u64(&mut out, 4);
-            crate::write_str(&mut out, checkpoint_id);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 4);
+            semio_framework_replication_wire_core::write_str(&mut out, checkpoint_id);
             write_optional_str(&mut out, alternative_id);
         }
         HistoryTransition::Repin { checkpoint_id, pinned_checkpoint_id, pins } => {
-            crate::wire::write_varint_u64(&mut out, 5);
-            crate::write_str(&mut out, checkpoint_id);
-            crate::write_str(&mut out, pinned_checkpoint_id);
-            crate::wire::write_varint_u64(&mut out, pins.len() as u64);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 5);
+            semio_framework_replication_wire_core::write_str(&mut out, checkpoint_id);
+            semio_framework_replication_wire_core::write_str(&mut out, pinned_checkpoint_id);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, pins.len() as u64);
             for pin in pins {
-                crate::write_str(&mut out, &pin.child_uri);
-                crate::write_str(&mut out, &pin.checkpoint_id);
+                semio_framework_replication_wire_core::write_str(&mut out, &pin.child_uri);
+                semio_framework_replication_wire_core::write_str(&mut out, &pin.checkpoint_id);
             }
         }
         HistoryTransition::Supersede(supersede) => {
-            crate::wire::write_varint_u64(&mut out, 6);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, 6);
             write_optional_str(&mut out, &supersede.scope);
-            crate::wire::write_varint_u64(&mut out, supersede.inputs.len() as u64);
+            semio_framework_replication_wire_core::write_varint_u64(&mut out, supersede.inputs.len() as u64);
             for input in &supersede.inputs {
-                crate::write_str(&mut out, &input.target.0);
+                semio_framework_replication_wire_core::write_str(&mut out, &input.target.0);
                 match &input.replacement {
                     InputReplacement::Input { schema, payload } => {
                         out.push(0);
-                        crate::write_str(&mut out, schema);
-                        crate::write_bytes(&mut out, payload);
+                        semio_framework_replication_wire_core::write_str(&mut out, schema);
+                        semio_framework_replication_wire_core::write_bytes(&mut out, payload);
                     }
                     InputReplacement::Withdrawn => out.push(1),
                 }
@@ -408,7 +408,7 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
 }
 
 /// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
-pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crate::ProtocolError> {
+pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, semio_framework_replication_error::ProtocolError> {
     HistoryFoldJob::new(|control| async move { decode_history_transition_controlled(bytes, &control).await }).finish_cold()
 }
 //#endregion 🔖️Codec
@@ -420,11 +420,11 @@ pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, crat
 /// never enters the address and every replica re-derives the same id from the authored `(hlc, payload)`.
 pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &[u8]) -> MutationId {
     let mut material = Vec::with_capacity(payload.len() + 32);
-    crate::wire::write_varint_u64(&mut material, timestamp.actor);
-    crate::wire::write_varint_u64(&mut material, timestamp.physical_ms);
-    crate::wire::write_varint_u64(&mut material, timestamp.logical);
-    crate::write_bytes(&mut material, payload);
-    let digest = crate::wire::RecordHasher::hash(&crate::format::Blake3Hasher, &material);
+    semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.actor);
+    semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.physical_ms);
+    semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.logical);
+    semio_framework_replication_wire_core::write_bytes(&mut material, payload);
+    let digest = semio_framework_replication_crypto::RecordHasher::hash(&semio_framework_replication_wire_core::Blake3Hasher, &material);
     let mut id = String::with_capacity("transition-".len() + 16);
     id.push_str("transition-");
     for byte in &digest[..8] {
@@ -438,9 +438,9 @@ pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &[u8])
 /// utf-8`). The log never names it: a `Checkout` to the trunk carries no alternative, and the fold resolves the id.
 pub fn trunk_alternative_id(document_id: &ArtifactId) -> String {
     let mut material = Vec::with_capacity(document_id.0.len() + 24);
-    crate::write_str(&mut material, "semio.history.trunk");
-    crate::write_str(&mut material, &document_id.0);
-    let digest = crate::wire::RecordHasher::hash(&crate::format::Blake3Hasher, &material);
+    semio_framework_replication_wire_core::write_str(&mut material, "semio.history.trunk");
+    semio_framework_replication_wire_core::write_str(&mut material, &document_id.0);
+    let digest = semio_framework_replication_crypto::RecordHasher::hash(&semio_framework_replication_wire_core::Blake3Hasher, &material);
     let mut id = String::with_capacity("trunk-".len() + 16);
     id.push_str("trunk-");
     for byte in &digest[..8] {
@@ -453,31 +453,31 @@ pub fn trunk_alternative_id(document_id: &ArtifactId) -> String {
 /// transition is undone by a later transition, never by an inverse payload), no target and no
 /// transaction. A `Supersede` envelope's `dependencies` are its [`TransitionSupersede::targets`];
 /// the conflict target is filled from the replacement op by the store, never at this level.
-pub fn history_transition_envelope(transition: &HistoryTransition, document_id: &ArtifactId, actor: &ActorId, dependencies: Vec<MutationId>, timestamp: HybridLogicalTimestamp) -> super::MutationEnvelope {
+pub fn history_transition_envelope(transition: &HistoryTransition, document_id: &ArtifactId, actor: &ActorId, dependencies: Vec<MutationId>, timestamp: HybridLogicalTimestamp) -> semio_framework_replication_causal::MutationEnvelope {
     let payload = encode_history_transition(transition);
     let mutation_id = history_transition_id(&timestamp, &payload);
     let schema = SchemaId(HISTORY_TRANSITION_SCHEMA.to_string());
-    super::MutationEnvelope {
+    semio_framework_replication_causal::MutationEnvelope {
         mutation_id,
         document_id: document_id.clone(),
         actor: actor.clone(),
         dependencies,
         observed: None,
         target: Vec::new(),
-        diff: super::ArtifactDiff { schema: schema.clone(), payload },
-        inverse: super::InverseMutation { schema, payload: Vec::new() },
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: schema.clone(), payload },
+        inverse: semio_framework_replication_causal::InverseMutation { schema, payload: Vec::new() },
         timestamp,
         transaction: None, verb: None, line: None,
     }
 }
 
 /// 🔎️ Whether `envelope` is a history transition rather than a domain operation.
-pub fn is_history_transition(envelope: &super::MutationEnvelope) -> bool {
+pub fn is_history_transition(envelope: &semio_framework_replication_causal::MutationEnvelope) -> bool {
     envelope.diff.schema.0 == HISTORY_TRANSITION_SCHEMA
 }
 
 /// 📤️ Decodes `envelope`'s transition, or `None` for a domain-operation envelope.
-pub fn history_transition_from_envelope(envelope: &super::MutationEnvelope) -> Result<Option<HistoryTransition>, crate::ProtocolError> {
+pub fn history_transition_from_envelope(envelope: &semio_framework_replication_causal::MutationEnvelope) -> Result<Option<HistoryTransition>, semio_framework_replication_error::ProtocolError> {
     if !is_history_transition(envelope) {
         return Ok(None);
     }
@@ -549,8 +549,8 @@ pub struct HistoryFold {
     pub supersessions: HistoryFoldIndex<MutationId, EffectiveSupersession>,
 }
 
-fn fold_error(detail: impl Into<String>) -> crate::ProtocolError {
-    crate::ProtocolError::Malformed { what: "history fold", offset: 0, detail: detail.into() }
+fn fold_error(detail: impl Into<String>) -> semio_framework_replication_error::ProtocolError {
+    semio_framework_replication_error::ProtocolError::Malformed { what: "history fold", offset: 0, detail: detail.into() }
 }
 
 /// 👁 One replica's head. `checkpoint_id: None` is the tip of `line_id` (its committed chain plus
@@ -571,7 +571,7 @@ impl ViewerHead {
 /// 🧮️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into the
 /// canonical trunk projection: the trunk at its tip. A pure function of the event set plus that head.
 /// See [`fold_history_for`].
-pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, crate::ProtocolError> {
+pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     fold_history_for(document_id, edits, transitions, excluded, &ViewerHead::canonical_trunk(document_id))
 }
 
@@ -581,7 +581,7 @@ pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &
 /// changes nothing. A `Branch` registers the alternative and does not select the head. An uncommitted
 /// edit is visible only at the tip of the line it is tagged to (`FoldEdit::line` absent or the trunk id
 /// means the trunk).
-pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[super::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, crate::ProtocolError> {
+pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     HistoryFoldJob::new(|control| async move { fold_history_for_controlled(document_id, edits, transitions, &|id| excluded.contains(id), head, &control).await }).finish_cold()
 }
 
@@ -592,3 +592,59 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
+mod owned_retirement {
+    use super::*;
+    use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
+    semio_framework_value::artifact_retire_struct!(HistoryFold { applied, redo, refused, checkpoint, alternative, trunk, changes, checkpoints, alternatives, supersessions });
+    semio_framework_value::artifact_retire_struct!(EffectiveSupersession { transition_id, actor, timestamp, scope, replacement });
+    semio_framework_value::artifact_retire_struct!(FoldChange { id, edit_ids, description, saved_at });
+    semio_framework_value::artifact_retire_struct!(FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
+    semio_framework_value::artifact_retire_struct!(FoldAlternative { id, name, checkpoint_ids });
+    semio_framework_value::artifact_retire_struct!(TransitionAuthor { id, name, avatar });
+    semio_framework_value::artifact_retire_struct!(TransitionPin { child_uri, checkpoint_id });
+    impl RetireOwned for InputReplacement {
+        fn retirement(self) -> Box<dyn RetirementCursor> {
+            match self {
+                Self::Input { schema, payload } => sequence(vec![deferred(schema), deferred(payload)]),
+                Self::Withdrawn => sequence(Vec::new()),
+            }
+        }
+        fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Input { schema, payload } => sequence_birth_bytes(&[deferred_birth_bytes_for(schema), deferred_birth_bytes_for(payload)]), Self::Withdrawn => sequence_birth_bytes(&[]) } }
+        fn controlled_retirement_supported() -> bool { true }
+    }
+    semio_framework_value::artifact_retire_struct!(FoldEdit { id, actor, timestamp, mutation_ids, line });
+    semio_framework_value::artifact_retire_struct!(TransitionCheckpoint { checkpoint_id, parent_id, change_id, mutation_ids, description, saved_at, authors, message, timestamp, line_id });
+    semio_framework_value::artifact_retire_struct!(TransitionSupersede { scope, inputs });
+    semio_framework_value::artifact_retire_struct!(SupersededInput { target, replacement });
+    impl RetireOwned for HistoryTransition {
+        fn retirement(self)->Box<dyn RetirementCursor>{
+            match self{
+                Self::Revert{mutation_ids}|Self::Reinstate{mutation_ids}=>mutation_ids.retirement(),
+                Self::Commit(checkpoint)=>checkpoint.retirement(),
+                Self::Branch{alternative_id,name,checkpoint_id}=>sequence(vec![deferred(alternative_id),deferred(name),deferred(checkpoint_id)]),
+                Self::Checkout{checkpoint_id,alternative_id}=>sequence(vec![deferred(checkpoint_id),deferred(alternative_id)]),
+                Self::Repin{checkpoint_id,pinned_checkpoint_id,pins}=>sequence(vec![deferred(checkpoint_id),deferred(pinned_checkpoint_id),deferred(pins)]),
+                Self::Supersede(supersede)=>supersede.retirement(),
+            }
+        }
+        fn retirement_birth_bytes(&self)->Option<usize>{
+            match self{
+                Self::Revert{mutation_ids}|Self::Reinstate{mutation_ids}=>mutation_ids.retirement_birth_bytes(),
+                Self::Commit(checkpoint)=>checkpoint.retirement_birth_bytes(),
+                Self::Branch{alternative_id,name,checkpoint_id}=>sequence_birth_bytes(&[deferred_birth_bytes_for(alternative_id),deferred_birth_bytes_for(name),deferred_birth_bytes_for(checkpoint_id)]),
+                Self::Checkout{checkpoint_id,alternative_id}=>sequence_birth_bytes(&[deferred_birth_bytes_for(checkpoint_id),deferred_birth_bytes_for(alternative_id)]),
+                Self::Repin{checkpoint_id,pinned_checkpoint_id,pins}=>sequence_birth_bytes(&[deferred_birth_bytes_for(checkpoint_id),deferred_birth_bytes_for(pinned_checkpoint_id),deferred_birth_bytes_for(pins)]),
+                Self::Supersede(supersede)=>supersede.retirement_birth_bytes(),
+            }
+        }
+        fn controlled_retirement_supported()->bool{true}
+    }
+    semio_framework_value::artifact_retire_struct!(ViewerHead { line_id, checkpoint_id });
+}

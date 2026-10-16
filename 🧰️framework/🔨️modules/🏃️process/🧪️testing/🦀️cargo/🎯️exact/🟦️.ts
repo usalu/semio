@@ -1,3 +1,4 @@
+import{requireIssuedResourceControlRefinementV1,withScriptInvocationSignalV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {captureOwnedProcess,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../📥️capture/🟦️.ts";
 import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
@@ -24,9 +25,11 @@ export type ExactCargoLawGroup = {
 export type ExactCargoLawStage = "build" | "list" | "native";
 /** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
 export type ExactCargoLawPreparationOptionsV1=Omit<OwnedProcessCaptureOptions,"stdoutPath"|"stderrPath">;
+/** 🎟️ Carries an admitted exact Cargo command and its actual resource phase. */
+export type ExactCargoLawInputsV1=Readonly<{arguments:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 export type ExactCargoLawPort = {
   prepare?: (command:string,args:string[],options:ExactCargoLawPreparationOptionsV1)=>Promise<void>;
-  withBuildInputs?: <T>(command:string,args:string[],options:ExactCargoLawPreparationOptionsV1,control:ResourceLeaseControl,body:()=>Promise<T>)=>Promise<T>;
+  withBuildInputs?: <T>(command:string,args:string[],options:ExactCargoLawPreparationOptionsV1,control:ResourceLeaseControl,body:(inputs:ExactCargoLawInputsV1)=>Promise<T>)=>Promise<T>;
   probe: (command: string, args: string[], options: OwnedProcessCaptureOptions) => Promise<OwnedProcessCaptureResult>;
   fingerprint: (path: string) => { path: string; sha256: string };
   nativeLibraryDirectory?: (options:OwnedProcessCaptureOptions)=>Promise<string>;
@@ -262,12 +265,13 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         await storage.recheck();
         const preparation={cwd:options.cwd,env,budgetMs:compilerAdmissionBudgetV1(phaseControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,invocation:options.invocation};
         if(next==="build")await port.prepare?.(command,args,preparation);
-        const execute=async()=>{
-        if(next==="build"){const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:command,prefix:[],args,environment:env,maximumOutputBytes:16777216},phaseControl,options.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,phaseControl,options.sourcePort??actualCargoSourceAdmissionPortV1(env,options.cwd,storage));await storage.recheck();}
-        await advanceScriptInvocation(options.invocation, "exact-cargo:" + stage + ":" + group.package, "running");
-        await options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
+        const execute=async(consumption:ExactCargoLawInputsV1)=>{
+        const args=[...consumption.arguments],env=consumption.environment,consumedControl=consumption.control;requireIssuedResourceControlRefinementV1(phaseControl,consumedControl);compilerAdmissionBudgetV1(consumedControl);
+        if(next==="build"){const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:command,prefix:[],args,environment:env,maximumOutputBytes:16777216},consumedControl,options.planningPort??actualCargoCompilerPlanningPortV1());compilerAdmissionBudgetV1(consumedControl);await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,consumedControl,options.sourcePort??actualCargoSourceAdmissionPortV1(env,options.cwd,storage));compilerAdmissionBudgetV1(consumedControl);await storage.recheck();compilerAdmissionBudgetV1(consumedControl);}
+        await advanceScriptInvocation(options.invocation, "exact-cargo:" + stage + ":" + group.package, "running");compilerAdmissionBudgetV1(consumedControl);
+        await options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });compilerAdmissionBudgetV1(consumedControl);
         checkpoint();
-        const admittedBudget = compilerAdmissionBudgetV1(phaseControl);
+        compilerAdmissionBudgetV1(consumedControl);
         if (!runRoot) {
           mkdirSync(artifactRoot, { recursive: true });
           endLease = beginExactCargoLease(artifactRoot);
@@ -277,15 +281,16 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         if (groupRoot !== selectedGroupRoot) { mkdirSync(selectedGroupRoot); groupRoot = selectedGroupRoot; }
         const stdoutPath = join(groupRoot, `${name}.stdout`);
         const stderrPath = join(groupRoot, `${name}.stderr`);
-        if(next==="build"){const lease=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:env.CARGO_BUILD_BUILD_DIR!,targetDirectory:cargoTargetDir,args,signal:phaseControl.signal,control:phaseControl});try{const capacity=await acquireCompilerCapacityLeaseV1({directory:options.leaseDirectory,control:phaseControl,environment:env});try{last=await port.probe(command,args,{cwd:options.cwd,env:{...env,...(!env.MAKEFLAGS&&!env.CARGO_MAKEFLAGS?{CARGO_BUILD_JOBS:String(capacity.parallelism)}:{})},budgetMs:compilerAdmissionBudgetV1(phaseControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,stdoutPath,stderrPath,invocation:options.invocation});}finally{capacity.release();}}finally{lease.release();}}else last = await port.probe(command, args, { cwd: options.cwd, env: nativeEnv, budgetMs: admittedBudget, maxOutputBytes: policy.transport.maximumNativeOutputBytes, stdoutPath, stderrPath, invocation: options.invocation });
-        await storage.recheck();
+        if(next==="build"){const lease=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:env.CARGO_BUILD_BUILD_DIR!,targetDirectory:cargoTargetDir,args,signal:consumedControl.signal,control:consumedControl});let leaseFailed=false;try{compilerAdmissionBudgetV1(consumedControl);const capacity=await acquireCompilerCapacityLeaseV1({directory:options.leaseDirectory,control:consumedControl,environment:env});let capacityFailed=false;try{compilerAdmissionBudgetV1(consumedControl);last=await withScriptInvocationSignalV1(options.invocation,consumedControl.signal,invocation=>port.probe(command,args,{cwd:options.cwd,env:{...env,...(!env.MAKEFLAGS&&!env.CARGO_MAKEFLAGS?{CARGO_BUILD_JOBS:String(capacity.parallelism)}:{})},budgetMs:compilerAdmissionBudgetV1(consumedControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,stdoutPath,stderrPath,invocation}));compilerAdmissionBudgetV1(consumedControl);}catch(error){capacityFailed=true;throw error;}finally{try{capacity.release();}catch(error){if(!capacityFailed)throw error;}}}catch(error){leaseFailed=true;throw error;}finally{try{lease.release();}catch(error){if(!leaseFailed)throw error;}}}else last = await withScriptInvocationSignalV1(options.invocation,consumedControl.signal,invocation=>port.probe(command, args, { cwd: options.cwd, env: nativeEnv, budgetMs: compilerAdmissionBudgetV1(consumedControl), maxOutputBytes: policy.transport.maximumNativeOutputBytes, stdoutPath, stderrPath, invocation }));
+        compilerAdmissionBudgetV1(consumedControl);
+        await storage.recheck();compilerAdmissionBudgetV1(consumedControl);
         if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
         if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
         writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
-        checkpoint();
+        checkpoint();compilerAdmissionBudgetV1(consumedControl);
         return last;
         };
-        return next==="build"&&port.withBuildInputs?await port.withBuildInputs(command,args,preparation,phaseControl,execute):await execute();
+        return next==="build"&&port.withBuildInputs?await port.withBuildInputs(command,args,preparation,phaseControl,execute):await execute({arguments:args,environment:env,control:phaseControl});
       };
       const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
       const cargoArgs = [...(options.cargoArgs ?? []), ...(group.cargoArgs ?? [])];

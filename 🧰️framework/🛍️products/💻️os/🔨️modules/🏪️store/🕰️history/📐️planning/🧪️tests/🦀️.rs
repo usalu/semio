@@ -1,5 +1,7 @@
 //! 🧪️ The actual planner retains every original ordinal, input and page backing until exact retirement.
-use super::super::{HistoryReadPlan,ReplayProgress,EffectiveSupersessions};
+use semio_framework_os_store_read::HistoryReadPlan;
+use semio_framework_os_store_replay::ReplayProgress;
+use semio_framework_os_store_ledger::lifted_replay::EffectiveSupersessions;
 use ::protocol::{MutationId,InputReplacement,HybridLogicalTimestamp};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueRefusalKind};
@@ -45,14 +47,18 @@ fn history_plan_retirement_owns_original_positions_inputs_and_empty_page_scaffol
 }
 #[test]
 fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_and_factories() {
-    use super::super::{ArtifactDerivedHistoryPreview,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot,ErasedSnapshotRetirement};
+    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
+use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
+use super::fixture_mutations::demo::DemoMutation;
+use super::tests::DemoSnapshot;
+use semio_framework_value::ErasedSnapshotRetirement;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
         let(owner,heap)=observe_heap_allocations_on_this_thread(||{
             let plan=make(&law,frontier.as_u64().unwrap()as usize);let drafts=law["drafts"].as_array().unwrap().iter().map(|row|(MutationId(text(row["id"].as_str().unwrap(),337)),input(row,&law))).collect();
-            let preview=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation> {plan:Some(plan),plan_retirement:None,drafts,target:Some((7,2)),cursor:0,operation:0,state:Some(Arc::new(DemoSnapshot {n:Some(law["previewSnapshot"]["n"].as_i64().unwrap()as i32)})),progress:ReplayProgress {done:7,total:17},registry:crate::os_store::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32],marker:PhantomData,finished:false};
+            let preview=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation> {plan:Some(plan),plan_retirement:None,drafts,target:Some((7,2)),cursor:0,operation:0,state:Some(Arc::new(DemoSnapshot {n:Some(law["previewSnapshot"]["n"].as_i64().unwrap()as i32)})),progress:ReplayProgress {done:7,total:17},registry:semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32],marker:PhantomData,finished:false};
             let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoSnapshot>>=Arc::new(OwnedValueRetirementFactory::<DemoSnapshot>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>>=Arc::new(OwnedValueRetirementFactory::<DemoMutation>::default());
             ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(Some(preview)),replay:ManuallyDrop::new(None),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(snapshots)),mutations:ManuallyDrop::new(Some(mutations)),factory_retirement:std::array::from_fn(|_|None)}
         });let held=heap.requested_bytes-heap.released_bytes;let mut owner=owner;assert_eq!(owner.preview.as_ref().unwrap().state.as_ref().unwrap().n,Some(law["previewSnapshot"]["n"].as_i64().unwrap()as i32));let(mut allocated,mut released)=(0,0);
@@ -69,21 +75,24 @@ fn history_preview_retirement_preserves_original_plan_draft_snapshot_registry_an
 }
 #[test]
 fn history_completed_plan_retains_original_residue_and_transferred_results() {
-    use super::super::{ArtifactDerivedHistoryPreview,ArtifactDerivedReplay,SnapshotReadLeaseRegistry,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot};
+    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactDerivedReplay};
+use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
+use super::fixture_mutations::demo::DemoMutation;
+use super::tests::DemoSnapshot;
     use std::{sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["completionRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
         let(plan,heap)=observe_heap_allocations_on_this_thread(||make(&law,frontier.as_u64().unwrap()as usize));let held=heap.requested_bytes-heap.released_bytes;let first_input=plan.first_input;let position_pointer=plan.positions.get(&MutationId("🐚".into())).unwrap()as*const _;let count_pointer=plan.counts.get(0).map(|value|value as*const _);
-        let registry=crate::os_store::SnapshotReadRegistryHandle::new();let registry_alias=registry.clone();
+        let registry=semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();let registry_alias=registry.clone();
         let((residual,results),heap)=observe_heap_allocations_on_this_thread(||{
             if route.as_str().unwrap()=="preview" {
                 let mut owner=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation> {plan:Some(plan),plan_retirement:None,drafts:protocol::HistoryInputDrafts::new(),target:None,cursor:0,operation:0,state:None,progress:ReplayProgress::default(),registry:registry_alias,generation:7,revision:[11;32],marker:PhantomData,finished:false};
                 assert_eq!(owner.retain_completed_plan(),first_input);assert_eq!(owner.target,Some((7,2)));
                 let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();let drafts=std::mem::take(&mut owner.drafts);
-                (residual,(drafts,crate::os_vcs::HistoryPageStack::empty(),EffectiveSupersessions::new()))
+                (residual,(drafts,semio_framework_os_vcs::HistoryPageStack::empty(),EffectiveSupersessions::new()))
             } else {
                 let mut owner=ArtifactDerivedReplay::<DemoSnapshot,DemoMutation> {replay:None,plan:Some(plan),plan_retirement:None,registry:registry_alias,generation:7,revision:[11;32]};
-                let original=owner.retain_completed_plan();let drafts=std::mem::take(&mut original.drafts);let order=std::mem::replace(&mut original.order,crate::os_vcs::HistoryPageStack::empty());let supersessions=std::mem::take(&mut original.supersessions);let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();
+                let original=owner.retain_completed_plan();let drafts=std::mem::take(&mut original.drafts);let order=std::mem::replace(&mut original.order,semio_framework_os_vcs::HistoryPageStack::empty());let supersessions=std::mem::take(&mut original.supersessions);let mut retirement=owner.plan_retirement.take().unwrap();let residual=retirement.take_original().unwrap();
                 (residual,(drafts,order,supersessions))
             }
         });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(residual.positions.get(&MutationId("🐚".into())).unwrap()as*const _,position_pointer);assert_eq!(residual.counts.get(0).map(|value|value as*const _),count_pointer);assert!(residual.drafts.terminal_is_empty());assert_eq!(results.0.len(),2);
@@ -100,7 +109,12 @@ fn history_completed_plan_retains_original_residue_and_transferred_results() {
 
 #[test]
 fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_custody() {
-    use super::super::{ArtifactDerivedReplay,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,EditReplay,ReplayOwnedState,ErasedSnapshotRetirement,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot};
+    use semio_framework_os_store_read::{ArtifactDerivedReplay, ArtifactHistoryReadRetirement};
+use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
+use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
+use semio_framework_value::ErasedSnapshotRetirement;
+use super::fixture_mutations::demo::DemoMutation;
+use super::tests::DemoSnapshot;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
@@ -109,7 +123,7 @@ fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_
             let mut raw=EditReplay::<DemoSnapshot,DemoMutation>::retain(ReplayOwnedState::terminal());raw.schema=text("original/ä🐚",65536);raw.committed=Vec::with_capacity(8192);raw.drafts.insert(MutationId(text("",337)),protocol::InputReplacement::Input{schema:text("",8192),payload:Vec::with_capacity(8192)});raw.state=Some(Arc::new(DemoSnapshot{n:Some(23)}));let pointer=raw.schema.as_ptr();
             let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoSnapshot>>=Arc::new(OwnedValueRetirementFactory::<DemoSnapshot>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>>=Arc::new(OwnedValueRetirementFactory::<DemoMutation>::default());raw=raw.with_retirement_factories(Arc::clone(&snapshots),Arc::clone(&mutations));
             let mut owner=ArtifactHistoryReadRetirement{derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(None),replay:ManuallyDrop::new(None),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(snapshots)),mutations:ManuallyDrop::new(Some(mutations)),factory_retirement:std::array::from_fn(|_|None)};
-            match route.as_str().unwrap(){"loaded"=>*owner.loaded_replay=Some(raw),"derived"=>*owner.replay=Some(ArtifactDerivedReplay{replay:Some(raw),plan:None,plan_retirement:None,registry:crate::os_store::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32]}),"finished"=>{raw.finished=true;*owner.finished=Some(raw.finish().unwrap());assert!(raw.terminal_is_empty());drop(raw);},_=>unreachable!()};(owner,pointer)
+            match route.as_str().unwrap(){"loaded"=>*owner.loaded_replay=Some(raw),"derived"=>*owner.replay=Some(ArtifactDerivedReplay{replay:Some(raw),plan:None,plan_retirement:None,registry:semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32]}),"finished"=>{raw.finished=true;*owner.finished=Some(raw.finish().unwrap());assert!(raw.terminal_is_empty());drop(raw);},_=>unreachable!()};(owner,pointer)
         });let held=heap.requested_bytes-heap.released_bytes;let actual=match route.as_str().unwrap(){"loaded"=>owner.loaded_replay.as_ref().unwrap().schema.as_ptr(),"derived"=>owner.replay.as_ref().unwrap().replay.as_ref().unwrap().schema.as_ptr(),_=>owner.finished.as_ref().unwrap().residual.as_ref().unwrap().schema.as_ptr()};assert_eq!(actual,pointer);let(mut births,mut released)=(0,0);
         for turn in 0..200000{
             let body=copy.as_u64().unwrap()as usize;let((work,capacity,release,depth),heap)=observe_heap_allocations_on_this_thread(||(owner.next_copy_byte_demand().unwrap(),owner.next_capacity_byte_demand(cleanup_grant(&law).maximum_copy_bytes).unwrap(),owner.next_release_byte_demand().unwrap(),owner.next_depth_demand().unwrap()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=cleanup_grant(&law);
@@ -122,14 +136,19 @@ fn history_raw_replay_retirement_preserves_original_loaded_derived_and_finished_
 
 #[test]
 fn history_preview_output_retains_original_inputs_until_granted_parent_and_projection_close() {
-    use super::super::{ArtifactDerivedHistoryPreview,ArtifactHistoryReadRetirement,SnapshotReadLeaseRegistry,ErasedSnapshotRetirement,fixture_mutations::demo::DemoMutation,tests::DemoSnapshot,VcsError};
+    use semio_framework_os_store_read::{ArtifactDerivedHistoryPreview, ArtifactHistoryReadRetirement};
+use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
+use semio_framework_value::ErasedSnapshotRetirement;
+use super::fixture_mutations::demo::DemoMutation;
+use super::tests::DemoSnapshot;
+use semio_framework_os_vcs::VcsError;
     use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::{OwnedValueRetirementFactory,shared::factory::FactorySharedRetirement}};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelAt"].as_array().unwrap(){
         let (mut owner,heap)=observe_heap_allocations_on_this_thread(||{
             let drafts=law["drafts"].as_array().unwrap().iter().map(|row|(MutationId(text(row["id"].as_str().unwrap(),337)),input(row,&law))).collect();
-            let preview=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation>{plan:None,plan_retirement:None,drafts,target:Some((7,2)),cursor:7,operation:2,state:Some(Arc::new(DemoSnapshot{n:Some(23)})),progress:ReplayProgress{done:17,total:17},registry:crate::os_store::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32],marker:PhantomData,finished:false};
+            let preview=ArtifactDerivedHistoryPreview::<DemoSnapshot,DemoMutation>{plan:None,plan_retirement:None,drafts,target:Some((7,2)),cursor:7,operation:2,state:Some(Arc::new(DemoSnapshot{n:Some(23)})),progress:ReplayProgress{done:17,total:17},registry:semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new(),generation:7,revision:[11;32],marker:PhantomData,finished:false};
             let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoSnapshot>>=Arc::new(OwnedValueRetirementFactory::<DemoSnapshot>::default());let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<DemoMutation>>=Arc::new(OwnedValueRetirementFactory::<DemoMutation>::default());
             ArtifactHistoryReadRetirement{derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(Some(preview)),replay:ManuallyDrop::new(None),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(snapshots)),mutations:ManuallyDrop::new(Some(mutations)),factory_retirement:std::array::from_fn(|_|None)}
         });let held=heap.requested_bytes-heap.released_bytes;let preview=owner.preview.as_mut().unwrap();let pointer=Arc::as_ptr(preview.state.as_ref().unwrap());let drafts_pointer=preview.drafts.get(&MutationId("β".into())).unwrap()as*const _;let (refused,heap)=observe_heap_allocations_on_this_thread(||preview.take_finished_snapshot_owner());assert!(matches!(refused,Err(VcsError::HistoryReplaying)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(Arc::as_ptr(preview.state.as_ref().unwrap()),pointer);preview.finished=true;

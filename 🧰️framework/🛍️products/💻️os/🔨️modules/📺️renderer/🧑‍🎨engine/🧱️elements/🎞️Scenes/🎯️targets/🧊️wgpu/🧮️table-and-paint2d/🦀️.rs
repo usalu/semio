@@ -4,7 +4,7 @@ use super::*;
 
 //#region Paint2d
 // 🖌️ Production paint-2d rendering and input live on `RasterHost`
-// (`🔨️modules/🗺️surface/🎨️paint/🦀️.rs`, attached by `engine_canvas::sync_paint2d_scene`) — the SAME
+// (`🔨️modules/🗺️surface/🎨️paint/🦀️.rs`, attached by `semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::sync_paint2d_scene`) — the SAME
 // host React's wasm `RasterSession` wraps. What remains in this region is the fixture-side document
 // projection the standalone tests read.
 #[cfg(test)]
@@ -33,24 +33,24 @@ fn paint2d_default_one() -> f64 {
 #[cfg(test)]
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Paint2dDocSyncJson {
+pub struct Paint2dDocSyncJson {
     #[serde(default)]
-    pub(crate) camera: Paint2dCameraFields,
+    pub camera: Paint2dCameraFields,
 }
 
 #[cfg(test)]
-pub(crate) struct Paint2dFlatLayer {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-    pub(crate) scale_x: f64,
-    pub(crate) scale_y: f64,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
+pub struct Paint2dFlatLayer {
+    pub x: f64,
+    pub y: f64,
+    pub scale_x: f64,
+    pub scale_y: f64,
+    pub width: u32,
+    pub height: u32,
 }
 
 //#region Paint2dNavigator
 #[cfg(test)]
-pub(crate) const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
+pub const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
 
 /** 🧭️ Fits a camera to the document's pixel-layer bounds so a `viewMode === "navigator"` surface
  * shows the whole composition — a port of `RasterHost::navigator_fit_camera_json`
@@ -73,9 +73,9 @@ pub(crate) const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
 
 //#region Table
 #[derive(Deserialize)]
-pub(crate) struct TableColumn {
-    pub(crate) id: String,
-    pub(crate) label: String,
+pub struct TableColumn {
+    pub id: String,
+    pub label: String,
     #[serde(default)]
     sortable: bool,
 }
@@ -116,7 +116,7 @@ struct TableCellButtonPayload {
 /// 🔗️ Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button
 /// cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch — the port
 /// of `dispatchCellAction`'s `{ ...descriptor.args, ...patch }` spread in `📊️Table/🟦️.tsx`.
-pub(crate) fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
+pub fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
     let mut args = match &base.args {
         Some(dsl) => match Value::from(dsl) {
             Value::Object(map) => map,
@@ -133,7 +133,7 @@ pub(crate) fn merge_action_args(base: &ActionDescriptor, patch: Value) -> Action
 /// 🪪️ A row's identity, exactly as `TableHost`'s `rowIds` map derives it: `id`, then `pluginId`,
 /// then the row's own ordinal. The ordinal fallback matters — a payload whose rows carry neither key
 /// used to collapse every row onto the empty id, so selection highlighted all of them at once.
-pub(crate) fn table_row_id(row: &Value, index: usize) -> String {
+pub fn table_row_id(row: &Value, index: usize) -> String {
     row.get("id").or_else(|| row.get("pluginId")).and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| index.to_string())
 }
 
@@ -231,7 +231,7 @@ struct TableMetrics {
     pub(crate) body: Rect,
 }
 
-pub(crate) fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics {
+pub fn table_metrics(inner: Rect, columns: usize, theme: &Theme) -> TableMetrics {
     let header_h = theme.control_height * 1.33;
     TableMetrics {
         header_h,
@@ -259,7 +259,7 @@ fn table_cell_rect(inner: Rect, row_y: f32, column_index: usize, metrics: &Table
     Rect::new(x, row_y, width, metrics.row_h)
 }
 
-pub(crate) fn table_transfer_start(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
+pub fn table_transfer_start(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, driver_drag: UiDriverDrag) -> Option<SceneListTransferStart> {
     let table = scene.table.as_ref()?;
     let mime = table.row_drag_mime.clone()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
@@ -325,27 +325,8 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct TableStepperFocusTarget {
-    pub(crate) row_id: String,
-    pub(crate) column_id: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct TableEditableTextFocusTarget {
-    pub(crate) row_id: String,
-    pub(crate) column_id: String,
-    pub(crate) value: String,
-}
-
-impl TableEditableTextFocusTarget {
-    pub(crate) fn control_id(&self, host_id: &str) -> String {
-        format!("{host_id}.row.{}.{}.editable", self.row_id, self.column_id)
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TableEditableTextCommitOutcome {
+pub enum TableEditableTextCommitOutcome {
     Unchanged,
     Committed,
     Publishing,
@@ -353,44 +334,14 @@ pub(crate) enum TableEditableTextCommitOutcome {
     Conflict,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct TableStepperAccessibilityCell {
-    pub(crate) key: String,
-    pub(crate) label: String,
-    pub(crate) target: TableStepperFocusTarget,
-    pub(crate) rect: Rect,
-    pub(crate) min: f64,
-    pub(crate) max: f64,
-    pub(crate) value: f64,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct TableEditableTextAccessibilityCell {
-    pub(crate) key: String,
-    pub(crate) label: String,
-    pub(crate) target: TableEditableTextFocusTarget,
-    pub(crate) rect: Rect,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct TableButtonAccessibilityCell {
-    pub(crate) key: String,
-    pub(crate) label: String,
-    pub(crate) row_id: String,
-    pub(crate) column_id: String,
-    pub(crate) button_index: usize,
-    pub(crate) rect: Rect,
-    pub(crate) action: ActionDescriptor,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TableStepperKeyOutcome {
+pub enum TableStepperKeyOutcome {
     Unhandled,
     Consumed,
 }
 
 /** ✏️ Resolves one painted editable text cell to its stable row/column address and persisted base. */
-pub(crate) fn table_editable_text_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableEditableTextFocusTarget> {
+pub fn table_editable_text_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableEditableTextFocusTarget> {
     if !inner.contains(x, y) {
         return None;
     }
@@ -443,7 +394,7 @@ pub(crate) fn table_editable_text_commit(
     Some(input.begin_retained_text_action(action, "value".into()).map(|_| TableEditableTextCommitOutcome::Publishing))
 }
 
-pub(crate) fn table_editable_text_commit_owned(
+pub fn table_editable_text_commit_owned(
     scene: &UiComponentSceneNode,
     row_id: &str,
     column_id: &str,
@@ -484,7 +435,7 @@ pub(crate) fn table_editable_text_commit_owned(
 /** 🎯️ Resolves the read-only centre of one painted Table stepper into its stable row/column
  * address. The same metrics and scroll authority as `table_hit` are used, so keyboard focus can
  * only be armed for the cell the accepted frame actually presented. */
-pub(crate) fn table_stepper_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableStepperFocusTarget> {
+pub fn table_stepper_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableStepperFocusTarget> {
     if !inner.contains(x, y) {
         return None;
     }
@@ -514,7 +465,7 @@ pub(crate) fn table_stepper_focus_target(scene: &UiComponentSceneNode, inner: Re
 /** ♿️ Projects every visible stepper readout from the exact accepted Table geometry. These
  * virtual spinbuttons fill the semantic gap left by a `Component::Surface` document leaf, whose
  * authored accessibility record can only describe the surface as a whole. */
-pub(crate) fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableStepperAccessibilityCell> {
+pub fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableStepperAccessibilityCell> {
     let Some(table) = scene.table.as_ref() else { return Vec::new() };
     let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
     let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
@@ -549,7 +500,7 @@ pub(crate) fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, in
 }
 
 /** ♿️ Projects every visible editable cell as a multiline textbox over its painted cell. */
-pub(crate) fn table_editable_text_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableEditableTextAccessibilityCell> {
+pub fn table_editable_text_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableEditableTextAccessibilityCell> {
     let Some(table) = scene.table.as_ref() else { return Vec::new() };
     let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
     let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
@@ -579,7 +530,7 @@ pub(crate) fn table_editable_text_accessibility_cells(scene: &UiComponentSceneNo
 }
 
 /** 🔘️ Projects every visible row-placement Table button from the same segmented cell geometry as paint and pointer hit testing. */
-pub(crate) fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableButtonAccessibilityCell> {
+pub fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableButtonAccessibilityCell> {
     let Some(table) = scene.table.as_ref() else { return Vec::new() };
     let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
     let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
@@ -620,7 +571,7 @@ pub(crate) fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inn
     cells
 }
 
-pub(crate) fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
     let control = accepted_table_button_accessibility_cells(&scene.host_id).into_iter().find(|control| control.key == key)?;
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
@@ -638,7 +589,7 @@ pub(crate) fn table_button_accessibility_activate(scene: &UiComponentSceneNode, 
 /** ⌨️ Re-resolves a focused Table stepper against the current accepted scene before every key,
  * clamps the React key delta to the live bounds, and publishes the cell's current descriptor. A
  * missing row/column or a cell that is no longer a stepper returns `None`, retiring stale focus. */
-pub(crate) fn table_stepper_apply_key(
+pub fn table_stepper_apply_key(
     scene: &UiComponentSceneNode,
     row_id: &str,
     column_id: &str,
@@ -678,7 +629,7 @@ pub(crate) fn table_stepper_apply_key(
 
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::Table`: a sortable header band, a stepper
 /// segment, a row action button, or the row itself.
-pub(crate) fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, modifiers: SceneModifiers, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
+pub fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, modifiers: SceneModifiers, driver_drag: UiDriverDrag) -> Option<SceneListHit> {
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
     let metrics = table_metrics(inner, columns.len(), theme);
@@ -723,7 +674,7 @@ pub(crate) fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f3
 /// keys a press three frames later will hold. The live press resolves through
 /// `passive_scene_pointer_button` → `table_hit`, which re-derives this row from the same
 /// geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
-pub(crate) fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
+pub fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
         stage_table_button_accessibility_cells(&scene.host_id, Vec::new());

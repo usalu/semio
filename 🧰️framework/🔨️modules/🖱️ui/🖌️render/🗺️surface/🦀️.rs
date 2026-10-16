@@ -21,19 +21,15 @@
 //! kinds, or fn-pointer thunks. **This file picks fn-pointer thunks** — the same "fn-pointer vtable +
 //! safe `Box<dyn Any>` storage" technique [`crate::element::AnyElement`] already established in this
 //! crate, `dyn Any` being explicitly U3-permitted since it is not a first-party trait. A closed enum is
-//! the wrong tool *here* for the same reason [`crate::backend::GraphicsBackend`]'s docstring gives for
-//! not aliasing [`crate::backend::ActiveBackend`] to a real backend in this crate: every concrete
+//! the wrong tool *here* for the same reason [`crate::GraphicsBackend`]'s docstring gives for
+//! not aliasing `ActiveBackend` to a real backend in this crate: every concrete
 //! surface implementation lives in a product crate that *depends on* this one, so this crate can never
 //! name them in an enum without inverting that dependency graph. [`SurfaceRegistry::register`] lets
 //! each product crate hand this crate a monomorphized `fn(SurfaceKind) -> AnySurface` thunk instead —
 //! the enum's closed set exists, just one layer up, exactly where `ActiveBackend`'s real `cfg` aliases
 //! belong (`semio-framework-ui-host`, per that file's docstring).
 
-use crate::backend::{DeviceCapabilities, PhysicalSize};
-use crate::element::Bounds;
-use crate::resource::ResourceRegistry;
-use crate::scene::SceneBuilder;
-use crate::schedule::Deadline;
+use crate::{Bounds, Deadline, DeviceCapabilities, PhysicalSize, ResourceRegistry, SceneBuilder};
 use std::any::Any;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -45,7 +41,7 @@ use ui_contract::{SurfaceId, SurfaceKind};
 /// whatever clip system a host layers on top (packet `render-dispatch`'s dispatch tree, ultimately).
 /// This crate never resolves a `ClipId` to geometry — it only carries the value faithfully from
 /// [`SurfacePlacement`] into [`SurfaceRenderCx`], the same "decision elsewhere, plumbing here" shape
-/// [`crate::scene::StencilPolicy`] already has relative to a device-level stencil state.
+/// `StencilPolicy` already has relative to a device-level stencil state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ClipId(pub u32);
 
@@ -57,7 +53,7 @@ impl ClipId {
 
 /// 🔀️ A 2D affine transform: `matrix = [a, b, c, d, tx, ty]`, applied as `x' = a*x + c*y + tx`,
 /// `y' = b*x + d*y + ty` — the standard CSS/SVG `matrix()` convention. Reused rather than a full 4x4
-/// (this crate's [`crate::scene::SurfacePass::view_proj`] already covers 3D) since a placed 2D surface
+/// (this crate's [`crate::SurfacePass::view_proj`] already covers 3D) since a placed 2D surface
 /// only ever needs translate/scale/rotate/skew in its own plane.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transform2D {
@@ -113,7 +109,7 @@ pub struct SurfacePlacement {
 /// bounds offset is subtracted first, then `placement.transform`'s inverse is applied — a singular
 /// transform (see [`Transform2D::invert`]) falls back to identity rather than dropping the event.
 /// **Deliberately bounds-only, not clip-aware:** full transformed-bounds/clip-aware hit testing over a
-/// whole tree is [`crate::dispatch`]'s job (packet `render-dispatch`, not landed); this is the minimal
+/// whole tree is `dispatch`'s job (packet `render-dispatch`, not landed); this is the minimal
 /// per-surface primitive that job composes on top of.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn route_pointer_event(placement: &SurfacePlacement, window_point: [f32; 2]) -> Option<[f32; 2]> {
@@ -131,7 +127,7 @@ pub fn route_pointer_event(placement: &SurfacePlacement, window_point: [f32; 2])
 //#region 🔖️Surface
 
 /// 🎯️ What [`Surface::render`] wants painted into: `Inline` appends straight into the caller's shared
-/// [`SceneBuilder`] (an anchored [`crate::scene::SurfacePass`] for a 3D world, ordinary quads for a
+/// [`SceneBuilder`] (an anchored [`crate::SurfacePass`] for a 3D world, ordinary quads for a
 /// 2D canvas); `Offscreen` asks for a dedicated render target of `size` physical pixels a host
 /// composites back in afterward (a paint canvas that must stay pixel-stable while the rest of the
 /// window repaints around it).
@@ -143,7 +139,7 @@ pub enum SurfaceRenderTarget {
 
 /// 📦️ A coarse, backend-agnostic count of resources [`Surface::render`] expects to touch this frame —
 /// enough for a host to size an upload budget or defer a heavy surface without decoding
-/// [`crate::resource::ResourceOp`]s it has not been asked to apply yet.
+/// [`crate::ResourceOp`]s it has not been asked to apply yet.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct SurfaceResourceNeeds {
     pub textures: u32,
@@ -229,7 +225,7 @@ pub trait Surface {
     fn handle_input(&mut self, event: &SurfaceInput, placement: &SurfacePlacement) -> Vec<Self::Intent>;
 
     /// ⏰️ The surface's own contribution to the zero-idle-frames guarantee: an animating camera
-    /// returns its next due time so [`crate::schedule::FrameScheduler`] wakes exactly then; a still
+    /// returns its next due time so [`crate::FrameScheduler`] wakes exactly then; a still
     /// surface returns `None` and costs nothing between real changes.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn next_deadline(&self) -> Option<Deadline>;
@@ -240,7 +236,7 @@ pub trait Surface {
 /// batch. Rendering placements in ascending `z_index` order across a frame is the *caller's*
 /// discipline — this crate already paints in call order everywhere else ([`SceneBuilder`]'s own
 /// docstring), so ordering the calls is what encodes z-order in the emitted
-/// [`crate::scene::RenderPacket::batches`]; nothing here maintains a separate z-buffer.
+/// [`crate::RenderPacket::batches`]; nothing here maintains a separate z-buffer.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn render_placed_surface<S: Surface>(surface: &mut S, placement: &SurfacePlacement, scene: &mut SceneBuilder, resources: &mut ResourceRegistry, time_seconds: f32) -> Result<(), SurfaceError> {
     scene.push_scissor(placement.bounds);

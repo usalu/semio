@@ -1,0 +1,28 @@
+{
+  "valid": [
+    {
+      "text": "panel-1;1;0pt;10pt;20pt;30pt",
+      "entries": [
+        {
+          "id": "panel-1",
+          "page": 1,
+          "xPt": 0,
+          "yPt": 10,
+          "wPt": 20,
+          "hPt": 30
+        }
+      ]
+    },
+    {
+      "text": "",
+      "entries": []
+    }
+  ],
+  "invalid": [
+    "escape/one;1;0;0;1;1",
+    "panel;0;0;0;1;1",
+    "panel;1;0;0;NaN;1",
+    "panel;1;0;0;1;1\npanel;1;0;0;1;1",
+    "panel;1;0;0;1;1;extra"
+  ]
+}

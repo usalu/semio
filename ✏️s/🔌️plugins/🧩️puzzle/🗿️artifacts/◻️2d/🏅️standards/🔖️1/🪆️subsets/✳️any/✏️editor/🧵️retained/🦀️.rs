@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
 /// 🖌️ Upper bound on the events one board flush may carry into a single retained step. The browser
-/// flushes a handful of events per interaction (`PUZZLE2D_FLUSH_NOW_EVENT_NAMES` in `🖥️Board2dHost`), so
+/// flushes a handful of events per interaction (`BOARD_FLUSH_NOW_EVENT_NAMES` in `🖥️Board2dHost`), so
 /// one bounded step covers a real interaction; an oversized batch is refused rather than silently
 /// truncated.
 const PUZZLE2D_BOARD_EVENT_BATCH_LIMIT: usize = 256;
@@ -148,7 +148,7 @@ pub(super) fn puzzle2d_dispatch_emit(
     let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
-    let host = RefCell::new(BoardHost::default());
+    let host = RefCell::new(puzzle_board_host());
     {
         let mut host_mut = host.borrow_mut();
         if action != "applyBoardEvents" {

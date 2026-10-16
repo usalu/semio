@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "cases": [
+    {"name": "direct", "parent": ["watch", "--projects=app", "--", "bun", "repo", "run", "app:build"], "child": ["run", "app:build"]},
+    {"name": "convenience", "parent": ["run", "@semio-tech/mit-bestand-bericht:watch"], "child": ["run", "@semio-tech/mit-bestand-bericht:build", "--output=stream"]}
+  ],
+  "refused": [["run", "foreign:build"], ["run", "app:build", "--forged"]]
+}

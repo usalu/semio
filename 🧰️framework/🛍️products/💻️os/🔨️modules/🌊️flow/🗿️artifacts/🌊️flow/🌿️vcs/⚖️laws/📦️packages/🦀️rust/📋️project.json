@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/framework-flow-flow-mutation-laws-rs",
+  "projectType": "library",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

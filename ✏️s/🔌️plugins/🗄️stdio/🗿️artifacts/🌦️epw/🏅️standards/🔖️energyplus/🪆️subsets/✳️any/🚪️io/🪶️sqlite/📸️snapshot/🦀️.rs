@@ -1,6 +1,6 @@
 //! 🌦️ Handwritten EPW location, period and hourly-field relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-#[path="🫴️receiving/🦀️.rs"]mod receiving;
+#[path="🫴️receiving/🦀️.rs"]pub mod receiving;
 use crate::standards::energyplus::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
 use std::collections::BTreeMap;
@@ -53,6 +53,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
  }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

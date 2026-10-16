@@ -5,7 +5,7 @@
     "id": "world3dOffersTransformGumball",
     "statement": "A surface offers a transform gumball iff its window kind declares translateSelection, rotateSelection or scaleSelection; a handle is offered iff its own verb is declared; a surface with no declaration offers nothing.",
     "handleVerbs": { "translate": "translateSelection", "rotate": "rotateSelection", "scale": "scaleSelection" },
-    "rust": "♾️infinite/🌍️world/🦀️.rs::world3d_offers_transform_gumball",
+    "rust": "♾️infinite/🌍️world/🧩️components/🦀️.rs::world3d_offers_transform_gumball",
     "publisher": "🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs::ShellState::sync_world3d_declared_actions",
     "ticket": "26/09/09/PROCEDURAL-3D-END-TO-END"
   },

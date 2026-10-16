@@ -8,7 +8,7 @@ fn permits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.
 fn owned_text(original:&str)->Result<String,ValueError>{let mut copy=String::new();copy.try_reserve_exact(original.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native metadata text allocation failed"))?;copy.push_str(original);Ok(copy)}
 fn text_demand(original:Option<&str>)->RetirementDemand{let bytes=original.map_or(0,str::len);RetirementDemand{copy_bytes:bytes+size_of::<Option<String>>(),capacity_bytes:bytes,depth:1,..Default::default()}}
 
-pub(super) struct NativeEditMetadata<M:RetireOwned>{hasher:Hasher,actor_offset:usize,phase:u8,edit:std::mem::ManuallyDrop<Option<Edit<M>>>,meta:std::mem::ManuallyDrop<Option<MutationMeta>>,inverse_pending:std::mem::ManuallyDrop<Option<M>>}
+pub(super) struct NativeEditMetadata<M:RetireOwned>{pub hasher:Hasher,actor_offset:usize,pub phase:u8,pub edit:std::mem::ManuallyDrop<Option<Edit<M>>>,pub meta:std::mem::ManuallyDrop<Option<MutationMeta>>,inverse_pending:std::mem::ManuallyDrop<Option<M>>}
 impl<M:RetireOwned> NativeEditMetadata<M>{
     pub fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Box<Self>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
     pub fn admit(authority:&ArtifactStoreOneItemLiveAuthority,grant:RetainedCloneGrant)->Result<(Box<Self>,RetainedCloneProgress),ValueError>{

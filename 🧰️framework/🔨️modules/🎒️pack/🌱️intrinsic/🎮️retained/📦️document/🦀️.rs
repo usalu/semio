@@ -1,7 +1,7 @@
 //! 📦️ Intrinsic Document verification and bounded value/chunk replay retain original wire custody.
 use super::*;
-use crate::format::{RetainedPackAnchorCursor as Anchor,RetainedPackSegmentCursor as Segment,RetainedPackSegmentAdmission as Admission,RetainedPackSourceEvent as Source,RetainedPackSegmentEvent as Event,RetainedPackCatalogCursor as Catalog,RetainedPackCatalogFault as CatalogFault,RetainedPackCatalog,RetainedPackCloseStep as Close,Superblock};
-use crate::record::RetainedValueCursor as Value;
+use semio_framework_pack_format_retained::{RetainedPackAnchorCursor as Anchor, RetainedPackSegmentCursor as Segment, RetainedPackSegmentAdmission as Admission, RetainedPackSourceEvent as Source, RetainedPackSegmentEvent as Event, RetainedPackCatalogFault as CatalogFault, RetainedPackCloseStep as Close}; use semio_framework_pack_format_catalog::{RetainedPackCatalogCursor as Catalog, RetainedPackCatalog}; use semio_framework_pack_format::Superblock;
+use semio_framework_pack_record_retained::RetainedValueCursor as Value;
 use semio_framework_value::list::PagedList;
 
 pub(super) const SCHEMA_GRAPH:&[u8]=&[1,1,1,5,b'v',b'a',b'l',b'u',b'e',0,14];
@@ -46,7 +46,7 @@ impl DocumentDriver{
   if self.source_complete&&self.offset==input.len()&&matches!(self.segment.preflight(),Err(Admission::Complete)){
    if !self.sealed{self.value.seal(self.body_ingress)?;self.sealed=true;return Ok(None)}return Err(invalid("document terminal value progress unavailable"))
   }
-  let before=self.offset;if let Some(event)=segment_one(&mut self.segment,input,&mut self.offset,&mut self.source_complete,maximum)?{if let Event::RawByte{segment,value,..}=event{if segment.kind==crate::KIND_DOCUMENT{self.document_byte=Some((self.body_ingress,value))}}}
+  let before=self.offset;if let Some(event)=segment_one(&mut self.segment,input,&mut self.offset,&mut self.source_complete,maximum)?{if let Event::RawByte{segment,value,..}=event{if segment.kind==semio_framework_replication_codec::KIND_DOCUMENT{self.document_byte=Some((self.body_ingress,value))}}}
   self.input_work=self.input_work.checked_add(self.offset-before).ok_or_else(capacity)?;Ok(None)
  }
  fn chunk_one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
@@ -58,9 +58,9 @@ impl DocumentDriver{
   }
   let before=self.chunk_offset;let event=segment_one(&mut self.chunk_segment,input,&mut self.chunk_offset,&mut self.chunk_complete,maximum)?;self.input_work=self.input_work.checked_add(self.chunk_offset-before).ok_or_else(capacity)?;
   match event{
-   Some(Event::Begin(segment))if segment.kind==crate::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if found||segment.stored_len!=entry.stored_len||segment.raw_len!=entry.raw_len{return Err(invalid("referenced chunk framing disagrees with catalog"))}self.chunks=Chunks::Read{index,end,seen,found:true,verified:false}},
-   Some(Event::RawByte{segment,value,..})if segment.kind==crate::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if !found||seen>=entry.raw_len{return Err(invalid("referenced chunk exceeds declared raw length"))}self.chunk_hash.update(&[value]);self.chunks=Chunks::Read{index,end,seen:seen+1,found,verified};return Ok(Some(Token::Byte(value)))},
-   Some(Event::Complete{segment,..})if segment.kind==crate::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if self.chunk_segment.verified_payload_crc32c(segment)!=Some(entry.crc32){return Err(invalid("referenced chunk checksum disagrees with catalog"))}if seen!=entry.raw_len||self.chunk_hash.finalize().as_bytes()!=&entry.blake3{return Err(invalid("referenced chunk hash disagrees with catalog"))}self.chunks=Chunks::Read{index,end,seen,found,verified:true}},
+   Some(Event::Begin(segment))if segment.kind==semio_framework_replication_codec::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if found||segment.stored_len!=entry.stored_len||segment.raw_len!=entry.raw_len{return Err(invalid("referenced chunk framing disagrees with catalog"))}self.chunks=Chunks::Read{index,end,seen,found:true,verified:false}},
+   Some(Event::RawByte{segment,value,..})if segment.kind==semio_framework_replication_codec::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if !found||seen>=entry.raw_len{return Err(invalid("referenced chunk exceeds declared raw length"))}self.chunk_hash.update(&[value]);self.chunks=Chunks::Read{index,end,seen:seen+1,found,verified};return Ok(Some(Token::Byte(value)))},
+   Some(Event::Complete{segment,..})if segment.kind==semio_framework_replication_codec::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if self.chunk_segment.verified_payload_crc32c(segment)!=Some(entry.crc32){return Err(invalid("referenced chunk checksum disagrees with catalog"))}if seen!=entry.raw_len||self.chunk_hash.finalize().as_bytes()!=&entry.blake3{return Err(invalid("referenced chunk hash disagrees with catalog"))}self.chunks=Chunks::Read{index,end,seen,found,verified:true}},
    _=>{}
   }Ok(None)
  }

@@ -2,54 +2,64 @@
 //! codec-driven reductions, assembly registry guards and dialect migrations.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
+#[path = "📥️lifted/🚪️io/🦀️.rs"]
+pub mod composer_registry;
+#[path = "📸️native-snapshot/🦀️.rs"]
+pub mod native_snapshot;
+#[path = "🪶️snapshot-capability/🛫️native-encoding/🦀️.rs"]
+pub mod sqlite_snapshot_native_encoding;
+#[path = "🪶️snapshot-capability/🛬️native-decoding/🦀️.rs"]
+pub mod sqlite_snapshot_native_decoding;
+#[path = "🪶️snapshot-capability/🪶️native-retirement/🦀️.rs"]
+pub mod sqlite_snapshot_retirement;
+#[path = "📥️lifted/🚪️io-composer/🦀️.rs"]
+pub mod lifted_io;
+#[path = "📥️lifted/🪆️workspace-receiving/🦀️.rs"]
+pub mod lifted_sqlite_snapshot_workspace;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
-use crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use crate::os_spr::command::ArtifactMessageSource;
+use semio_framework_os_spr::command::ArtifactMessageSource;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::os_spr::{ActorId, ArtifactId};
-use crate::os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_spr::{ActorId, ArtifactId};
+use semio_framework_os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use crate::os_vcs::VcsError;
-use crate::os_vcs::{
-    Identified, Patchable,
-};
-use super::store_schema::ArtifactCursor;
-use super::serialization::{ArtifactCodec, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
+use semio_framework_os_vcs::VcsError;
+use semio_framework_os_vcs::{Identified, Patchable};
+use semio_framework_os_store_space_schema::ArtifactCursor;
+use semio_framework_os_store_text_io::ArtifactCodec;
+use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+
+use semio_framework_os_pack::pack_rt;
+use semio_framework_os_store_owned_schema_decode::artifact_retirement_self_grant;
+use semio_framework_os_store_text_io::text_format::ArtifactTextFiles;
+
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonTree};
+use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 #[cfg(target_arch = "wasm32")]
-use super::serialization::{ArtifactCodecApplyFuture};
-use crate::os_pack::pack_rt;
-use super::owned_schema_decode::artifact_retirement_self_grant;
-use super::text_format::{ArtifactTextFiles, parse_document_pack, print_document_pack};
-use super::text_format::project_envelope_history;
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
-use super::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
-#[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
+use semio_framework_os_store_backbone::resolve_backbone;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
-use super::{ArtifactStore, ArtifactStoreCursorDisposer};
+use semio_framework_os_store_backbone::local_storage_backbone_key;
+
 
 /// 🛡️ Applies the owner's semantic policy and preserves warnings while refusing errors.
 pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshotHost>(
     snapshot: &P,
     dialect: &semio_framework_artifact_reference::ArtifactDialect,
-    database: &crate::sqlite_snapshot::SqliteDatabase,
-    control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,
-) -> crate::io_schema::IoResult<()> {
+    database: &semio_framework_io_sqlite_snapshot::SqliteDatabase,
+    control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>,
+) -> semio_framework_io_schema::IoResult<()> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
     if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-        return Err(crate::io_schema::IoError { cause: ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
+        return Err(semio_framework_io_schema::IoError { cause: ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
     }
     Ok(outcome)
 }
@@ -57,12 +67,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// 📌️ The alternative a hub Check In materializes. It is the canonical trunk of `document_id`;
 /// a viewer's checkout is local and never selects it.
 pub fn canonical_check_in_line(document_id: &str) -> String {
-    crate::os_spr::trunk_alternative_id(&ArtifactId(document_id.to_string()))
+    semio_framework_os_spr::trunk_alternative_id(&ArtifactId(document_id.to_string()))
 }
 
-pub(crate) static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
+pub static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, ArtifactCodec>>> = std::sync::OnceLock::new();
 
-pub(crate) fn document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, ArtifactCodec>> {
+pub fn document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, ArtifactCodec>> {
     DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
 }
 
@@ -76,7 +86,7 @@ pub struct DocumentCodecRegistryConflict {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DocumentCodecRegistryError {
     Conflict(DocumentCodecRegistryConflict),
-    Binding(crate::io::ArtifactCodecBindingError),
+    Binding(crate::composer_registry::bindings::ArtifactCodecBindingError),
     Unavailable,
 }
 
@@ -92,7 +102,7 @@ impl std::fmt::Display for DocumentCodecRegistryError {
 
 impl std::error::Error for DocumentCodecRegistryError {}
 
-pub(crate) fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
+pub fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool {
     left.schema == right.schema
         && left.extension == right.extension
         && left.native_identity == right.native_identity
@@ -109,7 +119,7 @@ pub(crate) fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -
         && std::ptr::fn_addr_eq(left.replay_envelopes, right.replay_envelopes)
 }
 
-pub(crate) fn validate_document_codecs(registry: &BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
+pub fn validate_document_codecs(registry: &BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
     let mut proposed: BTreeMap<&str, &ArtifactCodec> = BTreeMap::new();
     for codec in codecs {
         if !codec.native_identity.validates_provider(&codec.schema, codec.snapshot_sqlite.as_ref()) {
@@ -166,9 +176,9 @@ pub fn register_document_codecs(codecs: Vec<ArtifactCodec>) -> Result<(), Docume
 pub fn register_document_codecs_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, codecs: Vec<ArtifactCodec>) -> Result<(), DocumentCodecRegistryError> {
     let mut registry = document_codec_registry().write().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     validate_document_codecs(&registry, &codecs)?;
-    let mut bindings=crate::io::bindings::registry().write().map_err(|_|DocumentCodecRegistryError::Unavailable)?;
-    let rows:Vec<_>=codecs.iter().map(crate::io::ArtifactCodecBinding::schema_only).collect();
-    let proposed=crate::io::bindings::propose(&bindings,&rows,&codecs).map_err(DocumentCodecRegistryError::Binding)?;
+    let mut bindings=crate::composer_registry::bindings::registry().write().map_err(|_|DocumentCodecRegistryError::Unavailable)?;
+    let rows:Vec<_>=codecs.iter().map(crate::composer_registry::bindings::ArtifactCodecBinding::schema_only).collect();
+    let proposed=crate::composer_registry::bindings::propose(&bindings,&rows,&codecs).map_err(DocumentCodecRegistryError::Binding)?;
     for codec in codecs {
         if !registry.contains_key(&codec.schema) {
             registry.insert(codec.schema.clone(), codec);
@@ -234,9 +244,9 @@ impl DocumentKindCodec {
     }
 }
 
-pub(crate) static COMPONENT_DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>>> = std::sync::OnceLock::new();
+pub static COMPONENT_DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>>> = std::sync::OnceLock::new();
 
-pub(crate) fn component_document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>> {
+pub fn component_document_codec_registry() -> &'static std::sync::RwLock<BTreeMap<String, Arc<dyn ComponentDocumentCodec>>> {
     COMPONENT_DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
 }
 
@@ -264,7 +274,7 @@ pub async fn lane_schema_from_spr(spr: &[u8]) -> Option<String> {
     if spr.is_empty() {
         return None;
     }
-    crate::os_spr::decode_history(spr, &crate::os_spr::DecodeOptions::default()).await.ok().map(|log| log.schema).filter(|schema| !schema.is_empty())
+    semio_framework_os_spr::decode_history(spr, &semio_framework_os_spr::DecodeOptions::default()).await.ok().map(|log| log.schema).filter(|schema| !schema.is_empty())
 }
 
 /// 🧬️ One registered lossy/lossless pack-bytes transform between two dialects of the SAME
@@ -282,9 +292,9 @@ pub struct DialectMigration {
     pub migrate_pack: fn(&[u8]) -> Result<Vec<u8>, String>,
 }
 
-pub(crate) static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
+pub static DIALECT_MIGRATION_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>>> = std::sync::OnceLock::new();
 
-pub(crate) fn dialect_migration_registry() -> &'static std::sync::RwLock<BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>> {
+pub fn dialect_migration_registry() -> &'static std::sync::RwLock<BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>> {
     DIALECT_MIGRATION_REGISTRY.get_or_init(|| std::sync::RwLock::new(BTreeMap::new()))
 }
 
@@ -316,11 +326,11 @@ pub enum DialectMigrationError {
     Rejected(String),
 }
 
-pub(crate) fn same_dialect_migration(left: &DialectMigration, right: &DialectMigration) -> bool {
+pub fn same_dialect_migration(left: &DialectMigration, right: &DialectMigration) -> bool {
     left.from == right.from && left.to == right.to && left.lossless == right.lossless && std::ptr::fn_addr_eq(left.migrate_pack, right.migrate_pack)
 }
 
-pub(crate) fn validate_dialect_migrations(registry: &BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
+pub fn validate_dialect_migrations(registry: &BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>, migrations: &[DialectMigration]) -> Result<(), DialectMigrationRegistryError> {
     let mut proposed: BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), &DialectMigration> = BTreeMap::new();
     for migration in migrations {
         if migration.from.artifact_kind != migration.to.artifact_kind {
@@ -395,9 +405,9 @@ pub async fn migrate_document(from: &semio_framework_artifact_reference::Artifac
 
 /// 🧷️ All writable store registries held before an artifact assembly can publish anything.
 pub struct ArtifactAssemblyStoreRegistryGuards<'assembly> {
-    document_codecs: std::sync::RwLockWriteGuard<'static, BTreeMap<String, ArtifactCodec>>,
-    dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>>,
-    _assembly: &'assembly semio_framework_schema_registry::assembly::Transaction,
+    pub document_codecs: std::sync::RwLockWriteGuard<'static, BTreeMap<String, ArtifactCodec>>,
+    pub dialect_migrations: std::sync::RwLockWriteGuard<'static, BTreeMap<(semio_framework_artifact_reference::ArtifactDialect, semio_framework_artifact_reference::ArtifactDialect), DialectMigration>>,
+    pub _assembly: &'assembly semio_framework_schema_registry::assembly::Transaction,
 }
 
 /// 🚫️ A staged store registry assembly cannot be preflighted or committed.

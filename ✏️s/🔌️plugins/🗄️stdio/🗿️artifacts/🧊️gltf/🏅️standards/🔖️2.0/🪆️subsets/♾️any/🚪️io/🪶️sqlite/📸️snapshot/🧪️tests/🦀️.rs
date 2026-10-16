@@ -84,7 +84,7 @@ fn sqlite_snapshot_gltf_independent_sql_reserialization_preserves_ieee_words_uns
 #[test]
 fn sqlite_snapshot_gltf_erased_binary_and_text_preserve_every_owned_field() {
     use store::sqlite_snapshot::SnapshotEncoding;
-    let codec = <GltfSnapshot as ArtifactSqliteSnapshotHost>::sqlite_codec();
+    let codec = <GltfSnapshot as semio_framework_os_kernel::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for bits in words() {
         let snapshot = word_snapshot(bits);
@@ -429,7 +429,7 @@ fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records() {
 
 #[test]
 fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state() {
-    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(include_bytes!("../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).unwrap();
+    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(&std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable")[..]).unwrap();
     let bytes = include_bytes!("../../../../📚️examples/🌱️metabolism/🖼️assets/🎒️.pack.semio");
     assert!(pack::snapshot::ArtifactPack::encode_pack(&snapshot).as_slice() == bytes, "curated metabolism Pack must match the actual current owned native record graph");
     assert_eq!(<GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).unwrap(), snapshot);

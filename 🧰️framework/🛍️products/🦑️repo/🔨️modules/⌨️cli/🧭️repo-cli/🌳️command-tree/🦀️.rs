@@ -1,6 +1,7 @@
 //! 🌳️ The declared repo command tree, twin of `NewRootWithConfig`: the flag builders, the command builders and the root.
 
-use super::*;
+use super::verbs;
+use semio_framework_repo_cli_command_framework::{Action, Arity, Command, Flag};
 
 //#region 🧭️RepoCli
 //#region 🌳️CommandTree

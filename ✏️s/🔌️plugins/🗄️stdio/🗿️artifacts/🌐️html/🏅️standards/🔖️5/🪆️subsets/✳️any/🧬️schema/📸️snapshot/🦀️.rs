@@ -227,9 +227,7 @@ pub fn element_attr<'a>(node: &'a HtmlNode, name: &str) -> Option<&'a Option<Str
 
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 

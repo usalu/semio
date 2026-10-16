@@ -1,0 +1,7 @@
+# Public Source Extent Setup Proof
+
+Root confirms6687 actual terminal0 at2026-10-16 02:30:12UTC after02:27:00 launch, ordinaryCLI0/11 overrides absent/nooutercap. Independent bounded log read confirms stage1268, published1754 and installed2508 actualNode preflights38 functions each, identical bundlecf0af8ddcce88fc1401eb94dfd72b67e0bd8b5562d25d3807fcc0436677d0f05. Generation7ce0d901a71ecbfd64e3c6c4bcb610f859501df87f2cd1d0f212a717ed277128. EOF2994–2997 Local23.2.0/GlobalNotfound/repository:build repo complete; Root terminal0 is separate process evidence.
+
+Logged capture11701/168402658B/11776ms and projection10189files/18982856ownedB/44000ms are phase-only measurements. No retirement line was present in this scoped extracted set; no cache census/stage absence claim follows. Current metadata26331 remains separately running at proof authoring; no current SDK Source equality/full-use claim made from log alone. No SDK/store opened by audit.
+
+Metadata26331 Root actualterminal0/semantictrue02:30:38. Independent bounded receipt read confirms identity7ce0d901a71ecbfd64e3c6c4bcb610f859501df87f2cd1d0f212a717ed277128 authenticated/currentSourceMetadataEqualtrue;117/193/70 all equal and differences/extras/currentSHA mismatch arrays empty;390files3174562B within bounds. Receipt consistency review only: canonical helper owns actual pointer/metadata authentication, auditor did not open SDK/store; no full derivative/use/runtime acceptance. Public workspace51709 remains a separate released run.

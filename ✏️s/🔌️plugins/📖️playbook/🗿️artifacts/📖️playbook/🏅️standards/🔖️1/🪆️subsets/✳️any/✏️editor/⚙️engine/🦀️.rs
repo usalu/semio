@@ -45,7 +45,5 @@ pub struct PlaybookChapterPayload {
 //#endregion 🔖️Io
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

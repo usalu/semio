@@ -43,7 +43,9 @@ use server::policy::{Credential, PrincipalResolver, Resolved};
 use server::storage::{AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError, StorageProfile};
 use server::{__semio_dispatch_Decider, __semio_dispatch_PrincipalResolver};
 
-use crate::directory::{HubCapability, HubDirectories, HubDirectory};
+use semio_hub_directory_contract::HubCapability;
+use semio_hub_directory_dispatch::HubDirectories;
+use semio_hub_directory::HubDirectory;
 
 //#region 🔖️Instance
 /// 📚️ The hub deployment of the server product.
@@ -88,7 +90,7 @@ impl ServerInstance for HubInstance {
 /// 🔐️ Auth module: session bearer resolution and the credential/session policy templates.
 #[derive(Clone)]
 pub struct HubAuthModule {
-    directory: Arc<HubDirectories>,
+    pub directory: Arc<HubDirectories>,
 }
 
 impl HubAuthModule {
@@ -256,7 +258,7 @@ dyn_enum_close! {
 /// path instead of two backends. Every [`append`](Self::append) fsyncs before returning, so the
 /// caller may fold the record into memory knowing a crash cannot lose it.
 struct Journal<R> {
-    sink: Option<tokio::fs::File>,
+    pub sink: Option<tokio::fs::File>,
     record: PhantomData<R>,
 }
 

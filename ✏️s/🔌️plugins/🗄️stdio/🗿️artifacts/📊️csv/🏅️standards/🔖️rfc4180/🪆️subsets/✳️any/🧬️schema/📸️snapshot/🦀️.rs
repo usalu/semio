@@ -103,7 +103,5 @@ impl Default for CsvSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

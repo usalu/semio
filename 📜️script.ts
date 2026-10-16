@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import{createIssuedResourceControlV1}from"./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {semioMemberStoreProducerSourceSelfTests} from "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🟦️.ts";
 import { toolJobMemberStoreProducerExact, memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
 import {readBuildMode} from "./🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
@@ -46,7 +47,7 @@ import { dependencyJsLockParitySelfTests } from "./🧰️framework/🛍️produ
 import { dependencyTruthSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts";
 import { runDependencyVerification } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/⚖️truth/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
-import { ensureMcpBinary, requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { ensureMcpBinary, readMcpGatewaySource, requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
@@ -6268,7 +6269,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
   const pluginHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
-  const mcpWorkspace = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs");
+  const mcpWorkspace = readMcpGatewaySource(root, (file) => policyReadFileSafe(root, relative(root, file)));
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs");
   const wgpuHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   const nativeIo = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs");
@@ -6277,9 +6278,9 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const puzzle2d = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs");
-  const manifest = policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️.rs");
+  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🦀️.rs");
   const componentWit = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit");
-  const reactor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
+  const reactor = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs");
@@ -6810,13 +6811,15 @@ export function verifyComposedChildRefRows(root: string): ComposedChildRefRow[] 
     for (const line of text.split("\n")) {
       const match = /^([A-Za-z0-9_]+)=\[([0-9a-f]+),([0-9a-f]+)\]$/.exec(line.trim());
       if (match === null) continue;
-      const childId = decode(match[2]);
-      const targetUri = decode(match[3]);
+      const [, slot, childHex, targetHex] = match;
+      if (slot === undefined || childHex === undefined || targetHex === undefined) continue;
+      const childId = decode(childHex);
+      const targetUri = decode(targetHex);
       if (childId === undefined || targetUri === undefined || !targetUri.includes("!")) continue;
       const targetArtifactId = targetUri.slice(0, targetUri.indexOf("!"));
       if (targetArtifactId === childId) continue;
       const waiver = COMPOSED_CHILD_REF_WAIVERS.find((row) => row.targetArtifactId === targetArtifactId)?.reason;
-      rows.push({ path: relative(root, path), slot: match[1], childId, targetArtifactId, targetUri, waiver });
+      rows.push({ path: relative(root, path), slot, childId, targetArtifactId, targetUri, waiver });
     }
   }
   return rows;
@@ -7306,7 +7309,9 @@ export class VerifyScript extends Script {
       abstractionOwnershipChecks(this.root);
       const fixture = JSON.parse(readFileSync(join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧪️tests/🧫️fixtures/🧪️abstraction-ownership/🔣️.json"), "utf8")) as { artifactSchemas: string[] };
       const packages = [...new Set(fixture.artifactSchemas.map((path) => {
-        const manifest = Bun.TOML.parse(readFileSync(join(this.root, path.split("/🏅️standards/")[0], "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
+        const [owner] = path.split("/🏅️standards/");
+        if (owner === undefined) throw new Error("Artifact schema owner required");
+        const manifest = Bun.TOML.parse(readFileSync(join(this.root, owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as { package: { name: string } };
         return manifest.package.name;
       }))];
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
@@ -7417,7 +7422,7 @@ export class VerifyScript extends Script {
           runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, SEMIO_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
           for (const [packageName, filters] of [
             ["semio-framework-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
-            ["semio-framework-surface", ["node_graph::tests::"]],
+            ["semio-framework-surface-node-graph", ["scene_retained_tests::"]],
             ["semio-framework-os-renderer-wgpu", ["node_graph_attach_tests", "concrete_window_instances_round_trip_without_kind_collapse", "context_menu_point_resolves_the_exact_concrete_window_instance", "canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript", "build_os_commands_covers_every_wired_setting"]],
           ] as const) {
             for (const filter of filters) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", filter, "--", "--nocapture"], this.root);
@@ -7909,7 +7914,10 @@ export class VerifyScript extends Script {
     const target = targetIndex >= 0 ? args[targetIndex + 1] : undefined;
     if (targetIndex >= 0 && !target) throw new Error("[verify rust-warnings] --target needs a triple (native | wasm32-wasip2 | wasm32-unknown-unknown).");
     const explicit: string[] = [];
-    for (let index = 0; index < args.length; index += 1) if (args[index] === "-p" && args[index + 1]) explicit.push(args[index + 1]);
+    for (const [index, argument] of args.entries()) {
+      const name = args[index + 1];
+      if (argument === "-p" && name) explicit.push(name);
+    }
     const scope = rustWarningTargetScope(this.root, target);
     const packages = explicit.length > 0 ? explicit : scope.packages;
     if (packages.length === 0) throw new Error(`[verify rust-warnings] no crates resolved for target ${target ?? "native"}.`);
@@ -8000,21 +8008,21 @@ export class VerifyScript extends Script {
     interactivityDbIoB1B6SelfTests();
     interactivityP1qR4SelfTests();
     const failures = interactivityDbIoB1B6Failures(
-      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_STORAGE_FILE),
+      policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_STORAGE_FAMILY),
       policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SQLITE_FILE),
       policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE),
       policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_NEO4J_FILE),
-      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE),
+      policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FAMILY),
     );
     failures.push(
       ...interactivityP1qR4Failures(
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE),
-        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE),
-        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE),
+        policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_WAL_FAMILY),
+        policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ARTIFACT_FAMILY),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_QUERY_FILE),
-        policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
+        policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_CLI_FILE),
         policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_STATE_FILE),
@@ -8027,7 +8035,7 @@ export class VerifyScript extends Script {
   /** 🌱️ Runs the isolated P1w retained initial-catalog CAS source and hostile-mutation gate. */
   private runInteractivityP1w(): void {
     interactivityDatabaseCatalogBootstrapSelfTests();
-    const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE));
+    const failures = interactivityDatabaseCatalogBootstrapFailures(policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY));
     if (failures.length > 0) throw new Error(`[verify interactivity p1w] ${failures.join("; ")}`);
     console.log("[verify interactivity p1w] live-source and hostile mutations clean.");
   }
@@ -8036,7 +8044,7 @@ export class VerifyScript extends Script {
   private runInteractivityP1x(): void {
     interactivityDatabaseCreateCatalogSelfTests();
     const failures = interactivityDatabaseCreateCatalogFailures(
-      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE),
+      policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY),
       policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_ASYNC_FILE),
       policyReadRustPolicySource(this.root, INTERACTIVITY_P1X_CONTRACT_FILE),
     );
@@ -8047,7 +8055,7 @@ export class VerifyScript extends Script {
   /** 🧹 Runs the isolated P1y retained database-compaction source and hostile-mutation gate. */
   private runInteractivityP1y(): void {
     const compact = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_COMPACT_FILE);
-    const engine = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+    const engine = policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY);
     const snapshot = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
     const index = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_INDEX_FILE);
     const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Y_CONTRACT_FILE);
@@ -8060,9 +8068,9 @@ export class VerifyScript extends Script {
   /** 👋️ Runs the isolated P1z retained sync-hello source and hostile-mutation gate. */
   private runInteractivityP1z(): void {
     const sync = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
-    const engine = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
-    const hub = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
-    const wal = policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_DB_WAL_FILE);
+    const engine = policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY);
+    const hub = policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_HUB_BIN_FAMILY);
+    const wal = policyReadRustPolicyFamily(this.root, INTERACTIVITY_AUDIT_DB_WAL_FAMILY);
     const protocol = policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs");
     const contract = policyReadRustPolicySource(this.root, INTERACTIVITY_P1Z_CONTRACT_FILE);
     interactivityDatabaseSyncHelloSelfTests(sync, engine, hub, wal, protocol, contract);
@@ -8114,10 +8122,10 @@ export class VerifyScript extends Script {
       policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),
       policyReadModuleTreeSource(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
+      ["🧱️core", "🎞️session"].map((node) => policyReadModuleTreeSource(this.root, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/${node}/🦀️.rs`)).join("\n"),
       policyReadModuleTreeSource(this.root, "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
       policyReadFileSafe(this.root, "🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
-      policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
+      ["🗃️model", "🕸️graph", "🧭️host"].map((node) => policyReadModuleTreeSource(this.root, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`)).join("\n"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p3mn] ${failures.join("; ")}`);
     console.log("[verify interactivity p3mn] live-source and hostile mutations clean.");
@@ -8903,6 +8911,7 @@ const INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES = ["🧰️framework/🛍�
 
 const INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🦀️.rs";
 const INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🦀️.rs";
+const INTERACTIVITY_AUDIT_MCP_BRIDGE_SESSION_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🪢️session/🦀️.rs";
 const INTERACTIVITY_AUDIT_MCP_ROOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🦀️.rs";
 const INTERACTIVITY_AUDIT_STORE_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs";
@@ -8917,6 +8926,10 @@ const INTERACTIVITY_P1Z_CONTRACT_FILE = ".🧬semio/🦑️repo/🎫️tickets/�
 const INTERACTIVITY_AUDIT_DB_SYNC_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs";
+const INTERACTIVITY_AUDIT_DB_STORAGE_FAMILY = ["🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🗃️memory/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs"] as const;
+const INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY = ["🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️base/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/📖️catalog-read/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🥾️catalog-bootstrap/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🏗️catalog-create/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/🦀️.rs"] as const;
+const INTERACTIVITY_AUDIT_DB_ARTIFACT_FAMILY = ["🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/📜️history/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs"] as const;
+const INTERACTIVITY_AUDIT_DB_WAL_FAMILY = ["🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs"] as const;
 const INTERACTIVITY_AUDIT_SPR_FORMAT_FILE = "🧰️framework/🔨️modules/📡️replication/📐️format/🦀️.rs";
 const INTERACTIVITY_AUDIT_PACK_FORMAT_FILE = "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs";
@@ -8930,8 +8943,11 @@ const INTERACTIVITY_AUDIT_DB_ROOT_FILE = "🧰️framework/🛍️products/💻�
 const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs";
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️test/🦀️kit.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/🏗️bootstrap/🦀️.rs";
+const INTERACTIVITY_AUDIT_HUB_BIN_FAMILY = [INTERACTIVITY_AUDIT_HUB_BIN_FILE, "🌎️hub/🏗️bootstrap/⚙️runtime/🦀️.rs", "🌎️hub/🏗️bootstrap/📒️ledgers/🦀️.rs", "🌎️hub/🏗️bootstrap/🧱️models/🦀️.rs", "🌎️hub/🏗️bootstrap/🧠️state/🦀️.rs", "🌎️hub/🏗️bootstrap/🛰️session-routes/🦀️.rs", "🌎️hub/🏗️bootstrap/📨️document-routes/🦀️.rs", "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs"];
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs";
+const INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/⏭️cursor/🦀️.rs";
+const INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧱️primitives/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_VALUE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_LAYOUT_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📐️layout/🦀️.rs";
 const INTERACTIVITY_AUDIT_UI_BUILDER_FILE = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/🦀️.rs";
@@ -8947,6 +8963,7 @@ const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻�
 // gate string below that names it was reading a file it does not live in and measured nothing.
 const INTERACTIVITY_AUDIT_REACTOR_TURN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs";
 const INTERACTIVITY_AUDIT_KERNEL_FILE = "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs";
+const INTERACTIVITY_AUDIT_KERNEL_UI_FILE = "🧰️framework/🔨️modules/🎠️kernel/🖼️ui/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHARD_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs";
 const INTERACTIVITY_AUDIT_RUN_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE = "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs";
@@ -8963,9 +8980,11 @@ const INTERACTIVITY_AUDIT_WINIT_HOST_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_UI_ENGINE_FILE = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs";
 const INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs";
 const INTERACTIVITY_AUDIT_SHELL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs";
+/** 🔎️ The shell find items the `contracts` crate owns: the audit reads them after the Shell text, because the Shell re-exports them from there. */
+const INTERACTIVITY_AUDIT_FIND_ITEMS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🔖️identity-and-types/🦀️.rs";
 const INTERACTIVITY_AUDIT_OS_SERVICES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️.rs";
 const INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs";
-const INTERACTIVITY_AUDIT_WORLD3D_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs";
+const INTERACTIVITY_AUDIT_WORLD3D_FILES = ["🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧩️components/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧲️cursors/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🌉️bridge/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🦀️.rs"];
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -9045,7 +9064,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
   },
   {
     file: "🧰️framework/🛍️products/💻️os/🖥️host/🔌️plugin-host/🦀️.rs",
-    lineHint: 1359,
+    lineHint: 1331,
     pattern: "block_on",
     reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (the `🧪️tests/🔬️host-unit` file `include!`d at the end of `pub mod host`) sit inside `#[cfg(test)] mod tests` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
     phase: "PERMANENT (test-only)",
@@ -9182,21 +9201,21 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   for (const failure of interactivityShardExecutorFailures(executor, shard)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0], line: 0, text: failure });
   interactivityMcpHttpTransportSelfTests();
   const mcpTransport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
-  const mcpBridge = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE);
+  const mcpBridge = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE) + policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_BRIDGE_SESSION_FILE);
   const mcpRoot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_ROOT_FILE);
   for (const failure of interactivityMcpHttpTransportFailures(mcpTransport, mcpBridge, mcpRoot)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE, line: 0, text: failure });
   interactivityStoreSyncSelfTests();
   const storeSync = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_STORE_SYNC_FILE);
   for (const failure of interactivityStoreSyncFailures(storeSync)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_STORE_SYNC_FILE, line: 0, text: failure });
   interactivityDbIoSelfTests();
-  const dbStorage = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FILE);
+  const dbStorage = policyReadRustPolicyFamily(repoRoot, INTERACTIVITY_AUDIT_DB_STORAGE_FAMILY);
   const dbSqlite = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
   const dbPostgres = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE);
   const dbNeo4j = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_NEO4J_FILE);
-  const dbEngine = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
+  const dbEngine = policyReadRustPolicyFamily(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY);
   const dbSync = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SYNC_FILE);
-  const dbArtifact = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
-  const dbWal = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FILE);
+  const dbArtifact = policyReadRustPolicyFamily(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FAMILY);
+  const dbWal = policyReadRustPolicyFamily(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FAMILY);
   const sprFormat = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_SPR_FORMAT_FILE);
   const packFormat = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE);
   const dbSnapshot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE);
@@ -9209,7 +9228,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const dbRoot = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_ROOT_FILE);
   const dbCli = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
   const dbTestkit = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
-  const hubBin = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
+  const hubBin = policyReadRustPolicyFamily(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FAMILY);
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   interactivityDbIoB1B6SelfTests();
   for (const failure of interactivityDbIoB1B6Failures(dbStorage, dbSqlite, dbPostgres, dbNeo4j, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
@@ -9269,10 +9288,9 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
     ...interactivityToolRunReservedActionFailures(toolRunSources),
   ]) findings.push({ category: "tool-run", ...finding });
   interactivityLiveReconcileSelfTests(repoRoot);
-  const uiReconcile = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const uiReconcile = policyReadUiReconcileSource(repoRoot);
   const uiValue = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_UI_VALUE_FILE);
-  const kernel = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_KERNEL_FILE);
-  const kernelTurn = kernel.slice(kernel.indexOf("//#region 🔖️TurnResult"), kernel.indexOf("//#endregion 🔖️TurnResult"));
+  const kernelTurn = [INTERACTIVITY_AUDIT_KERNEL_UI_FILE, INTERACTIVITY_AUDIT_KERNEL_FILE].map((file) => { const text = policyReadRustPolicySource(repoRoot, file); return text.slice(text.indexOf("//#region 🔖️TurnResult"), text.indexOf("//#endregion 🔖️TurnResult")); }).join("\n");
   const pluginCentral = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE);
   const tableKit = pluginCentral.slice(pluginCentral.indexOf("pub const TABLE_WINDOW_COLUMNS"), pluginCentral.indexOf("//#endregion 🔖️TableWindowKit"));
   const tableKitFixtures = ["table_rows_max_plus_one_returns_the_exact_row_owner", "abandoned_table_rows_retire_one_row_action_or_cell_per_opportunity"].filter((fixture) => pluginCentral.includes(`fn ${fixture}`)).join("\n");
@@ -9305,10 +9323,10 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const mountedFrameHost = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
   const mountedFrameSnapshot = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs");
   const headlessUiRuntimeGlue = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs");
-  const mountedFrameShell = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE);
+  const mountedFrameShell = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_SHELL_FILE) + "\n" + policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_FIND_ITEMS_FILE);
   const mountedFrameServices = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_OS_SERVICES_FILE);
   const mountedFrameEngineCanvas = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE);
-  const mountedFrameWorld3d = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_WORLD3D_FILE);
+  const mountedFrameWorld3d = INTERACTIVITY_AUDIT_WORLD3D_FILES.map(file => policyReadRustPolicySource(repoRoot, file)).join("\n");
   const mountedFrameScenes = policyReadModuleTreeSource(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
   for (const failure of interactivityMountedFrameTransactionFailures(rendererGlue, mountedFrameJob, mountedFrameHost, mountedFrameSnapshot, headlessUiRuntimeGlue, mountedFrameShell, mountedFrameEngineCanvas, mountedFrameWorld3d, preparedRaster, preparedRasterGpu, preparedRasterDraw, mountedInterpreter, mountedEngine, mountedPaint, mountedSlots, mountedFrameScenes, mountedFrameServices)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
@@ -9670,7 +9688,7 @@ export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
   { id: "amend-last", anchors: ["AmendLast", "amendLast"], pattern: /\bAmendLast\w*|\bamendLast\w*/, applies: () => true, allow: [], reason: "the Store has no amend command on any lane; a transaction-scoped open edit (§15) is the only growing edit" },
   { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧪️tests/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
   { id: "preview-contract", anchors: ["UtilityPreviewContract"], pattern: /\bUtilityPreviewContract\b/, applies: () => true, allow: [], reason: "the actions-vs-tools contract is `🔖️ToolContract`; there is no preview pattern beside tool machines" },
-  { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
+  { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧩️app/🖐️gumball-audience/🧪️tests/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
   { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: (path) => !HISTORY_CLOSURE_TESTS.test(path), allow: ["🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation (refusal laws and the shared refusal fixture name it)" },
   { id: "edit-literal", anchors: ["Edit"], pattern: /\bprotocol::Edit\s*\{|(?<![\w:])Edit\s*\{\s*line\s*:/, applies: historyClosurePluginProduction, allow: [], reason: "plugins never hand-build an edit; `ArtifactStoreOneItemLiveAuthority::next_edit` mints it from the Store authority" },
   { id: "release-plain-commit", anchors: ["artifact_mutations", "Emit::mutations(", "Emit::commit("], pattern: /\bartifact_mutations\s*:|\bEmit::(?:mutations|commit)\(/, applies: historyClosurePluginProduction, allow: [], within: /pointer_up|_release$|^release_/, unless: /\b(?:commit|stream|abort)_transaction\b|\bnode_drag\w*|\bToolStep::/, reason: "a pointer/drag sequence commits through its tool machine (`commit_transaction`); a release handler never publishes an absolute final-state leaf (L6)" },
@@ -10504,12 +10522,12 @@ export function interactivityMountedFrameTransactionFailures(
   const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
   const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
-  const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("impl AppInteractionState"));
+  const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("//#region 🔖️OsHostDecomposition — SemioApp deletion"));
   const deferredBoundary = glue.slice(glue.indexOf("fn start_frame_deferred"), glue.indexOf("fn apply_step", glue.indexOf("fn start_frame_deferred")));
   const maintenanceOwnerBoundary = glue.slice(glue.indexOf("struct FrameDeferredCursor"), glue.indexOf("enum RuntimeApply"));
   const maintenanceNativeOwnerBoundary = glueSource.slice(glueSource.indexOf("struct FrameDeferredCursor"), glueSource.indexOf("enum RuntimeApply"));
   const maintenanceCloseBoundary = scope(maintenanceNativeOwnerBoundary, "fn begin_close(&mut self)", "native maintenance close");
-  const maintenanceExecutionBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("impl RuntimeMailbox {"));
+  const maintenanceExecutionBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("impl<R: MailboxRuntime> RuntimeMailbox<R> {"));
   const maintenanceRegistryBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("struct FrameMaintenanceAuthority"));
   const maintenanceSpawnBoundary = glue.slice(glue.indexOf("fn try_spawn_frame_maintenance_reserved"), glue.indexOf("#[cfg(target_arch = \"wasm32\")]", glue.indexOf("fn try_spawn_frame_maintenance_reserved")));
   const maintenanceTerminalBoundary = glue.slice(glue.indexOf("fn frame_maintenance_terminal_fault"), glue.indexOf("enum RuntimeApply"));
@@ -10567,7 +10585,7 @@ export function interactivityMountedFrameTransactionFailures(
   const sceneHostBoundary = interpreter.slice(interpreter.indexOf("impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost"), interpreter.indexOf("fn drive_mounted_layout_text_one"));
   const retainedImageBoundary = interpreter.slice(interpreter.indexOf("fn render_ui_image_step"), interpreter.indexOf("fn render_ui_image("));
   const retainedSceneBoundary = scenes.slice(scenes.indexOf("pub fn render_component_scene_step"), scenes.indexOf("pub fn render_component_scene("));
-  const findBoundary = shell.slice(shell.indexOf("pub struct ShellFindItems"), shell.indexOf("fn context_menu_action_kind_str"));
+  const findBoundary = shell.slice(shell.indexOf("pub struct ShellFindItems"));
   const maintenanceBoundary = shell.slice(shell.indexOf("struct ShellChromeMaintenance"), shell.indexOf("fn body_rect"));
   const chromeTextBoundary = scopes(
     scope(shell, "fn chrome_text_step", "Shell chrome text step"),
@@ -11268,7 +11286,7 @@ export function interactivityMountedEngineSurfaceLifetimeFailures(
   ], "P3mn AppPresenter does not mount staged realization, P5e invalidation, and paired close");
   requireAll(graph, ["pub struct GraphHostRetirement", "dag::DagHostRetirement::new(dag)", "pub fn close_step", "terminal_nonopaque_is_empty"], "P3mn GraphHost lacks its domain-owned retained disposer");
   requireAll(flow, ["pub struct FlowHostRetirement", "dag::DagHostRetirement::new(dag)", "NeuralCacheRetirement::new", "store.close_owned_step(1, 4_096)", "close_owned_terminal_is_empty"], "P3mn FlowHost lacks retained DAG/cache/history retirement");
-  requireAll(mapRetirement, ["let MapHost {", "self.released\n            && self.positions.is_empty()", "self.vector_tiles.is_empty()", "self.events.is_empty()"], "P3mn MapHost lacks an exhaustive field-wise retained owner witness");
+  requireAll(mapRetirement, ["let MapHost {", "self.released\n            && self.overlays.is_empty()", "self.vector_tiles.is_empty()", "self.events.is_empty()"], "P3mn MapHost lacks an exhaustive field-wise retained owner witness");
   requireAll(editorRetirement, ["let EditorHost {", "self.released\n            && self.text.is_empty()", "self.semantic_tokens.is_empty()", "self.diagnostics.is_empty()"], "P3mn EditorHost lacks an exhaustive field-wise retained owner witness");
   requireAll(dagRetirement, ["let DagHost {", "self.released\n            && self.engine.terminal_is_empty()", "self.icon_paint_cache.terminal_is_empty()", "self.unresolved_input_ports.is_empty()"], "P3mn DagHost lacks an exhaustive field-wise retained owner witness");
   for (const [name, source] of [["MapHost", mapRetirement], ["EditorHost", editorRetirement], ["DagHost", dagRetirement]] as const)
@@ -11663,7 +11681,8 @@ function interactivityShardExecutorFailures(executorSource: string, shardSource:
 
 
 function interactivityProductionSource(source: string): string {
-  const lines = source.split(POLICY_RUST_TEST_EVIDENCE_BOUNDARY, 1)[0].split(/\r?\n/);
+  const boundary = source.indexOf(POLICY_RUST_TEST_EVIDENCE_BOUNDARY);
+  const lines = source.slice(0, boundary < 0 ? source.length : boundary).split(/\r?\n/);
   const spans = [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)];
   return lines.filter((_, index) => !policyLineInTestMod(spans, index + 1)).join("\n");
 }
@@ -11938,7 +11957,7 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
   const backendRetirementTurn = rustItem(storage, "fn db_io_backend_retirement_turn");
   if (!backendRetirementTurn.includes("db_io_backend_close_step(control, context)")) failures.push("DB registered backend close is not polled by its pre-admitted maintenance hook");
   const backendMaintenance = rustItem(storage, "fn db_io_request_backend_close");
-  if (!backendMaintenance.includes("writer::release::request_retirement(control)") || backendMaintenance.includes("db_io_backend_close_step") || backendMaintenance.includes("try_submit")) failures.push("DB backend retirement request is not an unlosable hook request");
+  if (!backendMaintenance.includes("crate::request_retirement(control)") || backendMaintenance.includes("db_io_backend_close_step") || backendMaintenance.includes("try_submit")) failures.push("DB backend retirement request is not an unlosable hook request");
   const rejectedLanePoll = rustItem(storage, "fn db_io_poll_rejected_backend_on_lane_io");
   if (!rejectedLanePoll.includes("executor.close_backend_step(context)")) failures.push("DB rejected backend close is not polled by its typed Lane::Io job");
   for (const body of [rustItem(storage, "pub async fn close_db_io_backend"), backendMaintenance, rustItem(storage, "fn db_io_lost_owner_close_step")])
@@ -12090,8 +12109,16 @@ function interactivityDbIoB1B6Failures(storageSource: string, sqliteSource: stri
 
 
 function interactivityP1qR4Failures(packSource: string, snapshotSource: string, indexSource: string, walSource: string, artifactSource: string, querySource: string, engineSource: string, compactSource: string, cliSource: string, stateSource: string): string[] {
-  const production = [packSource, snapshotSource, indexSource, walSource, artifactSource, querySource, engineSource, compactSource, cliSource, stateSource].map(interactivityProductionSource);
-  const [pack, snapshot, index, wal, artifact, query, engine, compact, cli, state] = production;
+  const pack = interactivityProductionSource(packSource);
+  const snapshot = interactivityProductionSource(snapshotSource);
+  const index = interactivityProductionSource(indexSource);
+  const wal = interactivityProductionSource(walSource);
+  const artifact = interactivityProductionSource(artifactSource);
+  const query = interactivityProductionSource(querySource);
+  const engine = interactivityProductionSource(engineSource);
+  const compact = interactivityProductionSource(compactSource);
+  const cli = interactivityProductionSource(cliSource);
+  const state = interactivityProductionSource(stateSource);
   const failures: string[] = [];
   const rustItem = (source: string, marker: string): string => {
     const start = source.indexOf(marker);
@@ -12319,9 +12346,9 @@ function interactivityDbIoDirectWriterFailures(engineSource: string, snapshotSou
     if (!spr.includes(required)) failures.push(`WAL frame codec retained cursor missing: ${required}`);
   for (const forbidden of ["scratch: Vec<u8>", "pending_digests: Vec", "encode_frame_into(&mut self.scratch", "let mut concat = Vec::with_capacity"])
     if (spr.includes(forbidden)) failures.push(`WAL frame codec retains whole-frame/list allocation: ${forbidden}`);
-  for (const required of ["pub struct PackIdentitySegment", "pub async fn begin_identity_segment", "let chunks = std::mem::take(&mut self.chunks)", "segment.write_fragment(retained_varint", "self.begin_identity_segment(crate::KIND_CHUNK"])
+  for (const required of ["pub struct PackIdentitySegment", "pub async fn begin_identity_segment", "let chunks = std::mem::take(&mut self.chunks)", "segment.write_fragment(retained_varint", "self.begin_identity_segment(semio_framework_replication_codec::KIND_CHUNK"])
     if (!pack.includes(required)) failures.push(`snapshot pack codec retained cursor missing: ${required}`);
-  for (const forbidden of ["let table_bytes = encode_chunk_table", "encode_segment(crate::KIND_CHUNK_TABLE", "encode_segment(crate::KIND_MANIFEST"])
+  for (const forbidden of ["let table_bytes = encode_chunk_table", "encode_segment(semio_framework_replication_codec::KIND_CHUNK_TABLE", "encode_segment(semio_framework_replication_codec::KIND_MANIFEST"])
     if (pack.includes(forbidden)) failures.push(`snapshot pack codec retains whole-table/segment copy: ${forbidden}`);
   return failures;
 }
@@ -12338,7 +12365,7 @@ function interactivityDbIoCursorCallerFailures(syncSource: string): string[] {
     if (followUp.includes(forbidden)) failures.push(`DB bootstrap retains a whole repository copy path: ${forbidden}`);
   for (const required of [
     "enum DatabaseSyncHelloFollowUp",
-    "Snapshot { pages: db_storage::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool }",
+    "Snapshot { pages: db_io_core::DbIoPages, chunk_bytes: usize, offset: usize, page: u8, page_offset: usize, seq: u32, chunk: Option<protocol::SnapshotChunkBytes>, done: bool }",
     "fn drive_one_with_grant(",
     "grant.check(cancelled, expired)?",
     "let unit_bytes = (*chunk_bytes).min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES)",
@@ -12619,8 +12646,8 @@ function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): st
     "self.items.checked_add(DATABASE_CATALOG_BOOTSTRAP_ITEMS)",
     "self.bytes.checked_add(bytes)",
     "bytes.checked_add(DATABASE_CATALOG_BOOTSTRAP_RESULT_BYTES)",
-    "pub struct DatabaseCatalogBootstrapKey([u8; 16])",
-    "pages: Option<db_storage::DbIoPages>",
+    "pub struct DatabaseCatalogBootstrapKey(pub [u8; 16])",
+    "pages: Option<db_io_core::DbIoPages>",
     "expected: EpochFence",
     "actual: Option<Result<EpochFence, DbError>>",
     "pub struct DatabaseCatalogBootstrapResult",
@@ -12819,7 +12846,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
     "const DATABASE_CREATE_CATALOG_SLOTS: usize = 32",
     "const DATABASE_CREATE_CATALOG_MAX_ENTRIES: usize = 4_096",
     "DbIoText::maximum_capacity()",
-    "const DATABASE_CREATE_CATALOG_MAX_PAGES: usize = db_storage::DB_IO_OPERATION_PAGES",
+    "const DATABASE_CREATE_CATALOG_MAX_PAGES: usize = db_io_core::DB_IO_OPERATION_PAGES",
     "const DATABASE_CREATE_CATALOG_COPY_BYTES: usize = 256",
     "DATABASE_CREATE_CATALOG_TOTAL_ITEMS",
     "DATABASE_CREATE_CATALOG_TOTAL_BYTES",
@@ -12843,7 +12870,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
     "candidate.capacity()",
     "text.capacity()",
     "DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES",
-    "pages.checked_mul(db_storage::DB_IO_PAGE_BYTES)",
+    "pages.checked_mul(db_io_core::DB_IO_PAGE_BYTES)",
   ]) if (!retained.includes(required)) failures.push(`P1x observed backing ledger missing ${required}`);
   if (!backing.includes("u64::try_from(base_capacity)") || !backing.includes("u64::try_from(bytes)") || backing.includes(" as u64")) failures.push("P1x observed backing ledger truncates allocated capacities");
   if (prepare.indexOf("DatabaseCreateCatalogAdmission::try_claim(&document)") < 0 || prepare.indexOf("DatabaseCreateCatalogAdmission::try_claim(&document)") > prepare.indexOf("Arc::clone(&catalog.entries)") || prepare.indexOf("catalog.entries.len() >= DATABASE_CREATE_CATALOG_MAX_ENTRIES") > prepare.indexOf("let state = Arc::new(DatabaseCreateCatalogState") || prepare.indexOf("database_create_catalog_registry") > prepare.lastIndexOf("state.schedule()")) failures.push("P1x admission/base capture/registry publication ordering is not lossless");
@@ -12852,7 +12879,7 @@ function interactivityDatabaseCreateCatalogFailures(engineSource: string, asyncS
   if (!scan.includes("entry.document == *document") || !scan.includes("cursor.scan_byte += 1") || !scan.includes("source_capacity > DATABASE_CREATE_CATALOG_MAX_ID_BYTES") || !scan.includes("Self::add_encoded(&mut cursor, bytes)")) failures.push("P1x duplicate/byte-cap/encoded-length scan is not one retained byte opportunity");
   if (!reserve.includes("try_reserve_exact(capacity)") || !clone.includes("DATABASE_CREATE_CATALOG_COPY_BYTES") && !retained.includes("DATABASE_CREATE_CATALOG_COPY_BYTES") || !clone.includes("clone_text") || !clone.includes("cursor.clone_byte = end") || !retained.includes("cursor.snapshot = Some(Arc::new(candidate))")) failures.push("P1x catalog copy/snapshot allocation is not fixed and incrementally cursor-owned");
   if (reserve.indexOf("cursor.candidate = Some(candidate)") < 0 || reserve.indexOf("cursor.candidate = Some(candidate)") > reserve.indexOf("cursor.backing.observe") || clone.indexOf("cursor.clone_text = Some(text)") < 0 || clone.indexOf("cursor.clone_text = Some(text)") > clone.indexOf("cursor.backing.observe")) failures.push("P1x post-allocation capacity refusal can drop candidate/String backing before retained retirement");
-  if (!snapshot.includes("cursor.snapshot = Some(Arc::new(candidate))") || !snapshot.includes("DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES") || snapshot.indexOf("cursor.snapshot = Some(Arc::new(candidate))") > snapshot.indexOf("cursor.backing.observe") || !snapshot.includes("pages.checked_mul(db_storage::DB_IO_PAGE_BYTES)") || snapshot.lastIndexOf("cursor.backing.observe") < snapshot.indexOf("pages.checked_mul(db_storage::DB_IO_PAGE_BYTES)")) failures.push("P1x snapshot Arc/page backing is not retained before exact observed-capacity refusal");
+  if (!snapshot.includes("cursor.snapshot = Some(Arc::new(candidate))") || !snapshot.includes("DATABASE_CREATE_CATALOG_ARC_CONTROL_BYTES") || snapshot.indexOf("cursor.snapshot = Some(Arc::new(candidate))") > snapshot.indexOf("cursor.backing.observe") || !snapshot.includes("pages.checked_mul(db_io_core::DB_IO_PAGE_BYTES)") || snapshot.lastIndexOf("cursor.backing.observe") < snapshot.indexOf("pages.checked_mul(db_io_core::DB_IO_PAGE_BYTES)")) failures.push("P1x snapshot Arc/page backing is not retained before exact observed-capacity refusal");
   if (!retained.includes("struct DatabaseCreateCatalogEncodeCursor") || !retained.includes("pending: [u8; 32]") || !encode.includes("encode.step(snapshot.as_slice(), writer)") || !seal.includes("DbIoPageWriter::seal_retained_step") || retained.includes("encode_catalog_pages(&candidate)")) failures.push("P1x encoding/page transfer is not one fragment/page transition");
   if (!claim.includes("self.catalog.try_lock()") || !claim.includes("std::sync::TryLockError::WouldBlock") || !claim.includes("self.defer_catalog_contention()") || claim.includes("self.catalog.lock()") || !claim.includes("catalog.pending.is_some() && catalog.pending != Some(token)") || !claim.includes("catalog.revision != cursor.base_revision") || !claim.includes("catalog.epoch != cursor.base_epoch") || !claim.includes("Arc::as_ptr(&catalog.entries) as usize != cursor.base_identity") || !claim.includes("catalog.pending = Some(token)")) failures.push("P1x CAS claim can block or does not bind revision, epoch, snapshot identity, and exact pending owner");
   if (!handoff.includes("DatabaseCreateCatalogWork::new(storage, pages, expected)") || handoff.includes(".poll(") || !retained.includes("storage.catalog().await.cas_root(expected, pages).await")) failures.push("P1x backend handoff combines owner transfer with a poll or bypasses retained CAS work");
@@ -12955,7 +12982,7 @@ function interactivityDatabaseCompactionFailures(compactSource: string, engineSo
     "DATABASE_COMPACTION_OPERATION_BYTES",
     "DATABASE_COMPACTION_TOTAL_ITEMS",
     "DATABASE_COMPACTION_TOTAL_BYTES",
-    "document.0.capacity() > db_storage::DbIoText::maximum_capacity()",
+    "document.0.capacity() > db_io_core::DbIoText::maximum_capacity()",
     "struct DatabaseCompactionBackingLedger",
     "fn database_compaction_observe_backing",
     "descriptor.roots.capacity()",
@@ -13089,7 +13116,7 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
   for (const required of ["const DATABASE_SYNC_HELLO_SLOTS: usize = 8", "const DATABASE_SYNC_HELLO_MAX_ITEMS: usize = 65_536", "const DATABASE_SYNC_HELLO_MAX_BYTES: usize = 256 * 1024 * 1024", "const DATABASE_SYNC_HELLO_TURN_MS: u64 = 8", "const DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES: usize = 4 * 1024", "DatabaseSyncHelloBackingLedger", "database_sync_hello_input_credit", "database_sync_hello_envelope_credit", "DatabaseSyncHelloAdmission::try_claim", "DatabaseSyncHelloFollowUp", "DatabaseSyncHelloExecutionFuture", "DatabaseSyncHelloRejectedClose", "database_sync_hello_registry"])
     if (!retained.includes(required)) failures.push("P1z fixed retained authority missing " + required);
   const backingLedger = retained.slice(retained.indexOf("impl DatabaseSyncHelloBackingLedger"), retained.indexOf("fn database_sync_hello_allocate_vec"));
-  if (!backingLedger.includes("let next_items = self.items.checked_add(items)") || !backingLedger.includes("let next_bytes = self.bytes.checked_add(bytes)") || !backingLedger.includes("self.items == 0 && self.bytes == 0") || !backingLedger.includes("self.bytes -= self.bytes.min(db_storage::DB_IO_PAGE_BYTES)") || !retained.includes("owners.session_id.capacity()") || retained.includes("owners.session_id.len()")) failures.push("P1z cumulative observed backing ledger is incomplete or lacks bounded byte/item retirement");
+  if (!backingLedger.includes("let next_items = self.items.checked_add(items)") || !backingLedger.includes("let next_bytes = self.bytes.checked_add(bytes)") || !backingLedger.includes("self.items == 0 && self.bytes == 0") || !backingLedger.includes("self.bytes -= self.bytes.min(db_io_core::DB_IO_PAGE_BYTES)") || !retained.includes("owners.session_id.capacity()") || retained.includes("owners.session_id.len()")) failures.push("P1z cumulative observed backing ledger is incomplete or lacks bounded byte/item retirement");
   const snapshotAllocation = retained.slice(retained.indexOf("struct DatabaseSyncHelloSnapshotBackingReservation"), retained.indexOf("fn database_sync_hello_clone_string"));
   const snapshotBacking = protocol.slice(protocol.indexOf("pub const SNAPSHOT_CHUNK_BACKING_BYTES"), protocol.indexOf("pub enum ServerFrame"));
   const snapshotDecode = protocol.slice(protocol.indexOf("fn read_snapshot_chunk_bytes"), protocol.indexOf("pub async fn decode_server_frame"));
@@ -13120,10 +13147,10 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
   const execute = retained.slice(retained.indexOf("async fn database_sync_hello_execute"), retained.indexOf("type DatabaseSyncHelloExecutionFuture"));
   const snapshotReadStart = execute.indexOf("let page_reservation = database_sync_hello_reserve_snapshot_pages");
   const snapshotRead = snapshotReadStart < 0 ? "" : execute.slice(snapshotReadStart, execute.indexOf("let pack_hash", snapshotReadStart));
-  if (!retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_storage::DB_IO_OPERATION_PAGES") || !retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_storage::DB_IO_PAGE_BYTES") || !snapshotAllocation.includes("struct DatabaseSyncHelloSnapshotPageReservation") || !snapshotAllocation.includes('ledger.observe(DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS, DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES, "database sync hello fixed snapshot page backing")?') || !snapshotAllocation.includes("let bytes = items.checked_mul(db_storage::DB_IO_PAGE_BYTES)") || !snapshotAllocation.includes("items > self.items || bytes > self.bytes || pages.len() > bytes") || !snapshotAllocation.includes("ledger.release(self.items - items, self.bytes - bytes)") || !snapshotAllocation.includes("ledger.release(self.items, self.bytes)") || !snapshotRead.includes("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") || snapshotRead.indexOf("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") > snapshotRead.indexOf("snapshots.read_generation") || snapshotRead.includes("reserve_allocation") || !snapshotRead.includes("page_reservation.observed(&pages)") || !snapshotRead.includes("page_reservation.settle(&mut ledger, page_items, page_bytes)?") || (snapshotRead.match(/page_reservation\.release\(&mut ledger\)\?/g)?.length ?? 0) < 3 || (snapshotRead.match(/ledger\.release\(page_items, page_bytes\)\?/g)?.length ?? 0) < 4 || (snapshotRead.match(/database_sync_hello_close_pages\(&mut pages, &cancelled, &expired\)\.await\?/g)?.length ?? 0) < 6) failures.push("P1z snapshot read-generation pages lack exact fixed predebit, observed backing settlement, or close/error credit return");
+  if (!retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS: usize = db_io_core::DB_IO_OPERATION_PAGES") || !retained.includes("const DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES: usize = DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS * db_io_core::DB_IO_PAGE_BYTES") || !snapshotAllocation.includes("struct DatabaseSyncHelloSnapshotPageReservation") || !snapshotAllocation.includes('ledger.observe(DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS, DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES, "database sync hello fixed snapshot page backing")?') || !snapshotAllocation.includes("let bytes = items.checked_mul(db_io_core::DB_IO_PAGE_BYTES)") || !snapshotAllocation.includes("items > self.items || bytes > self.bytes || pages.len() > bytes") || !snapshotAllocation.includes("ledger.release(self.items - items, self.bytes - bytes)") || !snapshotAllocation.includes("ledger.release(self.items, self.bytes)") || !snapshotRead.includes("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") || snapshotRead.indexOf("database_sync_hello_reserve_snapshot_pages(&mut ledger)?") > snapshotRead.indexOf("snapshots.read_generation") || snapshotRead.includes("reserve_allocation") || !snapshotRead.includes("page_reservation.observed(&pages)") || !snapshotRead.includes("page_reservation.settle(&mut ledger, page_items, page_bytes)?") || (snapshotRead.match(/page_reservation\.release\(&mut ledger\)\?/g)?.length ?? 0) < 3 || (snapshotRead.match(/ledger\.release\(page_items, page_bytes\)\?/g)?.length ?? 0) < 4 || (snapshotRead.match(/database_sync_hello_close_pages\(&mut pages, &cancelled, &expired\)\.await\?/g)?.length ?? 0) < 6) failures.push("P1z snapshot read-generation pages lack exact fixed predebit, observed backing settlement, or close/error credit return");
   const opportunity = retained.slice(retained.indexOf("async fn database_sync_hello_opportunity"), retained.indexOf("fn database_sync_hello_control"));
   const control = retained.slice(retained.indexOf("fn database_sync_hello_control"), retained.indexOf("fn database_sync_hello_allocate_envelope_vec"));
-  if ((opportunity.match(/database_sync_hello_control\(cancelled, expired\)/g)?.length ?? 0) !== 2 || opportunity.indexOf("semio_framework_async::yield_once().await") < opportunity.indexOf("database_sync_hello_control(cancelled, expired)") || opportunity.lastIndexOf("database_sync_hello_control(cancelled, expired)") < opportunity.indexOf("semio_framework_async::yield_once().await") || !execute.includes("database_sync_hello_opportunity(&cancelled, &expired).await?") || execute.indexOf("database_sync_hello_opportunity(&cancelled, &expired).await?") > execute.indexOf("replay_sync_state_retained") || !retained.includes("records.replenish") || !retained.includes("decode_control.renew_step()?") || !retained.includes("WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)")) failures.push("P1z cancellation or deadline is not rechecked after yield and before the next backend operation");
+  if ((opportunity.match(/database_sync_hello_control\(cancelled, expired\)/g)?.length ?? 0) !== 2 || opportunity.indexOf("semio_framework_async::yield_once().await") < opportunity.indexOf("database_sync_hello_control(cancelled, expired)") || opportunity.lastIndexOf("database_sync_hello_control(cancelled, expired)") < opportunity.indexOf("semio_framework_async::yield_once().await") || !execute.includes("database_sync_hello_opportunity(&cancelled, &expired).await?") || execute.indexOf("database_sync_hello_opportunity(&cancelled, &expired).await?") > execute.indexOf("replay_sync_state_retained") || !retained.includes("records.replenish") || !retained.includes("decode_control.renew_step()?") || !retained.includes("WalCursorControl::stall_bounded(cancelled.clone(), db_wal_log::WAL_REPLAY_STEP_STALL_BOUND, db_wal_log::WAL_REPLAY_STEP_FUEL)")) failures.push("P1z cancellation or deadline is not rechecked after yield and before the next backend operation");
   if (!control.includes("if expired.load(std::sync::atomic::Ordering::Acquire)") || !control.includes("if cancelled.load(std::sync::atomic::Ordering::Acquire)") || control.indexOf("if expired.load") > control.indexOf("if cancelled.load") || !control.includes('DbError::Timeout("database sync hello deadline".to_string())')) failures.push("P1z independently expired deadline does not control every operation");
   const grant = retained.slice(retained.indexOf("struct DatabaseSyncHelloGrant"), retained.indexOf("impl DatabaseSyncHelloFollowUp"));
   const stream = retained.slice(retained.indexOf("impl DatabaseSyncHelloFollowUp"), retained.indexOf("struct DatabaseSyncHelloPrepared"));
@@ -13157,7 +13184,7 @@ function interactivityDatabaseSyncHelloFailures(syncSource: string, engineSource
     ["retained_sync_hello_tail_stream_publishes_welcome_then_one_backpressured_frame", ["DatabaseSyncHelloFuture::try_submit", "take_welcome", "next_frame().await", "ServerFrame::Commands", "envelopes.len() == 3", "is_none()"]],
     ["retained_sync_hello_snapshot_cursor_copies_at_most_one_page_fragment_per_driver_opportunity", ["DatabaseSyncHelloFuture::try_submit", "SnapshotStorage::write_generation", "p1z-snapshot", "ServerFrame::SnapshotChunk", "actual == seq", "SnapshotDone", "next_frame().await"]],
     ["retained_sync_hello_returned_snapshot_credit_waits_for_exact_generation_ack", ["DatabaseSyncHelloFuture::try_submit", "returned_frame", "lease.generation", "ledger_before", "Poll::Pending", "first.acknowledge()", "next.await", "SnapshotChunk { seq: 1"]],
-    ["retained_sync_hello_maximum_snapshot_request_stays_page_unit_bounded", ["database_sync_hello_reserve_snapshot_pages", "page_ledger.items", "page_ledger.bytes", "DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS", "DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES", "page_reservation.observed", "db_storage::DB_IO_PAGE_BYTES", "page_reservation.settle", "page_owner.close_step", "page_owner.terminal_is_empty()", "page_ledger.terminal_is_empty()", "database_sync_hello_reserve_snapshot_chunk", "fixed_ledger.items", "fixed_ledger.bytes", "fixed_reservation.bytes", "fixed_reservation.allocate", "fixed.backing_bytes()", "DatabaseSyncHelloReturnedFrameLease", "fixed_lease.items", "fixed_lease.bytes", "fixed_lease.close", "fixed_ledger.release", "fixed_ledger.terminal_is_empty()", "DATABASE_SYNC_HELLO_MAX_BYTES", "DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES * 2 + 1", "DatabaseSyncHelloFuture::try_submit", "bytes.backing_bytes() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES", "frame.acknowledge()", "SnapshotDone { seq_count: 3 }"]],
+    ["retained_sync_hello_maximum_snapshot_request_stays_page_unit_bounded", ["database_sync_hello_reserve_snapshot_pages", "page_ledger.items", "page_ledger.bytes", "DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_ITEMS", "DATABASE_SYNC_HELLO_SNAPSHOT_PAGE_BYTES", "page_reservation.observed", "db_io_core::DB_IO_PAGE_BYTES", "page_reservation.settle", "page_owner.close_step", "page_owner.terminal_is_empty()", "page_ledger.terminal_is_empty()", "database_sync_hello_reserve_snapshot_chunk", "fixed_ledger.items", "fixed_ledger.bytes", "fixed_reservation.bytes", "fixed_reservation.allocate", "fixed.backing_bytes()", "DatabaseSyncHelloReturnedFrameLease", "fixed_lease.items", "fixed_lease.bytes", "fixed_lease.close", "fixed_ledger.release", "fixed_ledger.terminal_is_empty()", "DATABASE_SYNC_HELLO_MAX_BYTES", "DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES * 2 + 1", "DatabaseSyncHelloFuture::try_submit", "bytes.backing_bytes() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES", "frame.acknowledge()", "SnapshotDone { seq_count: 3 }"]],
     ["retained_sync_hello_grant_deadline_between_allocation_copy_and_publication_retains_credit", ["DatabaseSyncHelloGrant::expiring_at(3)", "drive_one_with_grant", "chunk: Some(chunk), offset: 0", "DatabaseSyncHelloGrant::expiring_at(5)", "chunk.len() == DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES", "ledger.items", "close_one", "ledger.close_one_credit", "independently_expired", "DbError::Timeout"]],
     ["retained_sync_hello_cancel_before_stream_demand_publishes_no_new_frame", ["DatabaseSyncHelloFuture::try_submit", "take_welcome", "session.cancel()", "session.next_frame().await", "Err(DbError::Closed)", "state.demand", "core.frame.as_ref()"]],
     ["retained_sync_hello_cumulative_actual_backing_rejects_max_plus_one_without_mutation", ["DatabaseSyncHelloBackingLedger", "DATABASE_SYNC_HELLO_MAX_ITEMS", "DATABASE_SYNC_HELLO_MAX_BYTES", "cumulative max plus one", "assert_eq!"]],
@@ -13202,15 +13229,15 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
   for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new(", "loop {", "while "])
     if (history.includes(forbidden) || replay.includes(forbidden)) failures.push(`retained history route contains ${forbidden}`);
   if (!history.includes("const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8") || !history.includes("const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024") || !history.includes("const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048") || !history.includes("const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481") || !history.includes("ArtifactHistoryAdmission::try_claim()")) failures.push("history operation lacks fixed item/page/operation/process admission");
-  if (!replay.includes("pub struct HistoryReplayReservation") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES)") || !replay.includes("result_len.checked_add(len)") || !replay.includes("retained_bytes") || !history.includes("HistoryView::new(view, Some(admission)") || !history.includes("reservation: Option<db_artifact::HistoryReplayReservation>")) failures.push("history source and derived byte/item owners are not jointly credited before publication");
+  if (!replay.includes("pub struct HistoryReplayReservation") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES)") || !replay.includes("result_len.checked_add(len)") || !replay.includes("retained_bytes") || !history.includes("HistoryView::new(view, Some(admission)") || !history.includes("reservation: Option<db_artifact_history::HistoryReplayReservation>")) failures.push("history source and derived byte/item owners are not jointly credited before publication");
   if (!replay.includes("HistoryEnvelopeField::Dependency") || !replay.includes("HistoryEnvelopeField::DiffPayload") || !replay.includes("HistoryEnvelopeField::InversePayload") || !replay.includes("self.dependencies -= 1") || !replay.includes("self.pos != self.end")) failures.push("history envelope cursor is not retained one field/item with exact range validation");
   if (!replay.includes("PageRead") || !replay.includes("requested =") || !replay.includes("requested.min(HISTORY_REPLAY_PAGE_BYTES)") && !replay.includes(".min(HISTORY_REPLAY_PAGE_BYTES)") || !replay.includes("pack::ByteRange { offset, len: requested }") || !replay.includes("page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES") || replay.includes("pack::ByteRange { offset: 0, len }") || replay.includes("read(document, index, range_all)")) failures.push("history backend read is not retained to one admitted 16KiB page");
   if (!replay.includes("protocol::codec::Crc32cCursor") || !replay.includes("self.crc.update_page(page)") || !replay.includes("let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES)") || replay.includes("protocol::codec::crc32c(whole_frame)") || replay.includes("decode_history_token")) failures.push("history frame CRC/tokenization is not retained to one admitted page");
   if (!replay.includes("Command { offset: u64, len: u64 }") || replay.includes("Command(Vec<u8>)") || wal.includes("pub async fn decode_history_token")) failures.push("history command token duplicates raw pages or revives whole-frame WAL decoding");
   if (!replay.includes("HistoryReplayPhase::Retire") || !replay.includes("HistoryReplayTransition::FaultRetire") || !replay.includes("pub struct HistoryReplayReservationCloseCursor") || !replay.includes("self.page_count -= 1") || !replay.includes("self.source_page_count -= 1") || !replay.includes("self.operation_ids.as_mut().is_some_and") || !replay.includes("self.entries.as_mut().is_some_and") || !replay.includes("self.result_pages.as_mut().and_then(Vec::pop)") || !replay.includes("assert!(self.terminal_is_empty()")) failures.push("history normal/cancel close does not retire one exact page or nested owner per actor grant");
   if (!history.includes("terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>>") || !history.includes("pub struct ArtifactHistoryTerminalReservation") || !history.includes("begin_unhanded_reservation_close") || !history.includes("terminalize_unhanded_request") || !history.includes("pub fn take_terminal_reservation") || !history.includes("assert!(self.reservation.is_none()")) failures.push("history pre-handoff reservation lacks public retained retirement and exact admission handback");
-  const constructionBuilder = replay.slice(replay.indexOf("struct HistoryReplayReservationConstructionBuilder"), replay.indexOf("pub(crate) struct HistoryReplayReservationConstructionFault"));
-  const constructionFault = replay.slice(replay.indexOf("pub(crate) struct HistoryReplayReservationConstructionFault"), replay.indexOf("impl Drop for HistoryReplayReservationCloseCursor"));
+  const constructionBuilder = replay.slice(replay.indexOf("struct HistoryReplayReservationConstructionBuilder"), replay.indexOf("pub struct HistoryReplayReservationConstructionFault"));
+  const constructionFault = replay.slice(replay.indexOf("pub struct HistoryReplayReservationConstructionFault"), replay.indexOf("impl Drop for HistoryReplayReservationCloseCursor"));
   const copyableConstructionToken = /#\[derive\([^\)]*(?:Clone|Copy)[^\)]*\)\]\s*struct HistoryReplayReservationConstructionToken/.test(replay);
   const constructionClaimOwner = replay.slice(replay.indexOf("fn claim_history_replay_reservation_construction"), replay.indexOf("fn handback_history_replay_reservation_construction"));
   const constructionHandback = replay.slice(replay.indexOf("fn handback_history_replay_reservation_construction"), replay.indexOf("fn release_history_replay_reservation_construction"));
@@ -13238,9 +13265,9 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
     !history.includes("pub fn resume(mut self) -> Result<(), Self>") ||
     !history.includes("construction_checked_out") ||
     !replay.includes("const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64") ||
-    !replay.includes("pub(crate) fn try_new()") ||
+    !replay.includes("pub fn try_new()") ||
     replay.includes("pub fn try_new() -> Result<Self, HistoryReplayReservationConstructionFault>") ||
-    !replay.includes("pub(crate) struct HistoryReplayReservationConstructionFault") ||
+    !replay.includes("pub struct HistoryReplayReservationConstructionFault") ||
     replay.includes("pub struct HistoryReplayReservationConstructionFaultCursor") ||
     replay.includes("pub fn into_parts") ||
     reservationBuild.includes("?") ||
@@ -13313,10 +13340,10 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
  * `seed_document`, never in production code. */
 function interactivityDbCliFailures(cliSource: string): string[] {
   const productionCli = interactivityProductionSource(cliSource);
-  const productionCliWaits = productionCli.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
-  const wholeCliWaits = cliSource.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
+  const productionCliWaits = productionCli.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  const wholeCliWaits = cliSource.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const seedDocument = cliSource.slice(cliSource.indexOf("fn seed_document"));
-  if (productionCliWaits > 18 || wholeCliWaits !== productionCliWaits + 1 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) return ["DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"];
+  if (productionCliWaits > 18 || wholeCliWaits !== productionCliWaits + 1 || productionCli.includes("fn seed_document") || !seedDocument.includes("db_actor::block_on(")) return ["DB CLI census exceeds 18 process-entry waits or does not isolate exactly one test-only seed_document wait"];
   return [];
 }
 
@@ -14586,7 +14613,7 @@ export class SchemaScript extends Script {
   private async productionEntries(args:string[]):Promise<SchemaRustEntryDump>{
     const outIndex=args.indexOf("--out"),name=outIndex>=0?args[outIndex+1]:undefined;if(outIndex>=0&&!name)throw Error("[schema] --out requires a report name");
     const {withRepositoryCacheStoreV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
-    return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,async store=>{
+    return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),async store=>{
       const {requireNativeStoragePathV1}=await import("./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
       const {loadProductionSchemaEntriesV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📤️schema-registry/🟦️.ts"),{runOwnedCommand}=await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");let text="";
       try{await store.recheck();const dump=await loadProductionSchemaEntriesV1({produce:async()=>{await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","run","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--bin","schema-export-entries","--","--out",output],this.root,"schema:registry-production",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,store.environment)});await store.recheck();text=readFileSync(output,"utf8");return text;}},JSON.parse(readFileSync(join(module,"🔣️.json"),"utf8")));
@@ -14701,18 +14728,18 @@ export class SchemaScript extends Script {
 //#endregion 🔖️SchemaScript
 
 //#region 🔖️ComponentsScript
-/** 🧩️ `components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype]` writes the committed semantic descriptor
- * pairs from freshly built bytes (`describe --write`; shipped bytes through one build driver run); `components iterate <plugin-id>` is the single-plugin `wasm-prototype`
+/** 🧩️ `components describe <plugin-id…>|--all [--profile release|prototype]` writes the committed semantic descriptor
+ * pairs from freshly built bytes (`describe --write`; shipped bytes through one build driver run); `components iterate <plugin-id>` is the single-plugin `prototype`
  * browser loop; `components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>` proves a semantic descriptor is
  * equal under both profiles. Every subcommand is cancellable (SIGINT/SIGTERM).
  * @see ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts */
 class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
-    if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
-    if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:profile", 0),(await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
-    if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
-    throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
+    if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot,this.invocation, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
+    if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/⚖️comparison/🟦️.ts")).profileIndependenceV1(this.repoRoot,this.invocation,rest,scriptCompilerAdmissionControlV1(this.invocation,"components:profile",0));
+    if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(this.repoRoot,this.invocation,rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0),(await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation,this.repoRoot));
+    throw new Error("usage: components describe <plugin-id…>|--all [--profile release|prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
   }
 }
 //#endregion 🔖️ComponentsScript
@@ -14728,7 +14755,7 @@ class ReleaseScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
     const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")]);
-    await buildReleasePipelineV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release, { network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
+    await buildReleasePipelineV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release, { facet:"browser",invocation:this.invocation,network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
   }
 }
 //#endregion 🔖️ReleaseScript
@@ -16953,13 +16980,25 @@ function policyMutateRustSourceEvidence(evidence: PolicyRustSourceEvidence, from
     const index = last ? entry.source.lastIndexOf(from) : entry.source.indexOf(from);
     return index < 0 ? [] : [{ entryIndex, index }];
   });
-  if (matches.length !== 1) throw new Error(`[policy rust evidence] mutation source ${matches.length === 0 ? "missing" : "ambiguous"}: ${from}`);
-  const { entryIndex, index } = matches[0];
-  const changed = entries.map((entry, candidateIndex) => candidateIndex === entryIndex ? { ...entry, source: entry.source.slice(0, index) + to + entry.source.slice(index + from.length) } : entry);
-  return { production: changed[0], tests: changed.slice(1) };
+  const match = matches[0];
+  if (matches.length !== 1 || match === undefined) throw new Error(`[policy rust evidence] mutation source ${matches.length === 0 ? "missing" : "ambiguous"}: ${from}`);
+  const { entryIndex, index } = match;
+  const changed = (entry: PolicyRustSourceEvidence["production"], candidateIndex: number) => candidateIndex === entryIndex ? { ...entry, source: entry.source.slice(0, index) + to + entry.source.slice(index + from.length) } : entry;
+  return { production: changed(evidence.production, 0), tests: evidence.tests.map((entry, candidateIndex) => changed(entry, candidateIndex + 1)) };
 }
 
 const POLICY_RUST_TEST_EVIDENCE_BOUNDARY = "\n//#region 🧪️DeclaredCanonicalTestEvidence:";
+
+/** ♻️ The live reconcile as the one text the unsplit module held: the authority, cursor and primitives crate roots with their mounted children. */
+function policyReadUiReconcileSource(repoRoot: string): string {
+  return [INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE].map((file) => policyReadRustPolicySource(repoRoot, file)).join("\n");
+}
+
+/** 🧩️ Source of a crate family: the production source of every crate root of one carved db module first, then the test evidence of all of them. */
+function policyReadRustPolicyFamily(repoRoot: string, roots: readonly string[]): string {
+  const evidence = roots.map((root) => policyReadRustSourceEvidence(repoRoot, root));
+  return evidence.map((entry) => entry.production.source).join("\n") + evidence.flatMap((entry) => entry.tests).map((entry) => `${POLICY_RUST_TEST_EVIDENCE_BOUNDARY}${entry.path}\n${entry.source}`).join("");
+}
 
 function policyReadRustPolicySource(repoRoot: string, sourcePath: string): string {
   const source = policyReadFileSafe(repoRoot, sourcePath);
@@ -22602,7 +22641,10 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
     const content = policyReadFileSafe(repoRoot, relPath);
     CONST_RE.lastIndex = 0;
     let cm: RegExpExecArray | null;
-    while ((cm = CONST_RE.exec(content))) constValue.set(cm[1], cm[2]);
+    while ((cm = CONST_RE.exec(content))) {
+      const [, name, value] = cm;
+      if (name !== undefined && value !== undefined) constValue.set(name, value);
+    }
   }
 
   // Pass 2: every register_document_codec call site's id expression, resolved to a literal value.
@@ -25641,9 +25683,11 @@ export {
   interactivityAllAppSurfaceCoverageFailures,
   interactivityIsRuntimeSource,
   policyReadFileSafe,
+  policyReadUiReconcileSource,
   INTERACTIVITY_AUDIT_UI_RECONCILE_FILE,
   INTERACTIVITY_AUDIT_UI_VALUE_FILE,
   INTERACTIVITY_AUDIT_KERNEL_FILE,
+  INTERACTIVITY_AUDIT_KERNEL_UI_FILE,
   INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE,
   INTERACTIVITY_AUDIT_UI_BUILDER_FILE,
   INTERACTIVITY_AUDIT_UI_COMPONENT_FILE,
@@ -25662,8 +25706,9 @@ export {
   INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE,
   INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE,
   INTERACTIVITY_AUDIT_SHELL_FILE,
+  INTERACTIVITY_AUDIT_FIND_ITEMS_FILE,
   INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
-  INTERACTIVITY_AUDIT_WORLD3D_FILE,
+  INTERACTIVITY_AUDIT_WORLD3D_FILES,
   INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE,
   INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
   INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,

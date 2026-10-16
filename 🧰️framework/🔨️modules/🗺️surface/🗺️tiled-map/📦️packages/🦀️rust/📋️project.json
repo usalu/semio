@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-surface-tiled-map-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

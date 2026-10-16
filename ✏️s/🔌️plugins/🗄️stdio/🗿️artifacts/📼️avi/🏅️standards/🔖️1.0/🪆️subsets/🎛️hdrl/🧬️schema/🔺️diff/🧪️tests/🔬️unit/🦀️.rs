@@ -1,4 +1,6 @@
-use super::*;
+use crate::{standards::v1_0::subsets::any::schema::snapshot::AviChunk, standards::v1_0::subsets::any::schema::snapshot::AviMainHeader, standards::v1_0::subsets::any::schema::snapshot::AviSnapshot, standards::v1_0::subsets::any::schema::snapshot::AviStream, standards::v1_0::subsets::any::schema::snapshot::AviStreamFormat, standards::v1_0::subsets::any::schema::snapshot::AviStreamHeader};
+use crate::standards::v1_0::subsets::any::schema::diff::{apply_chunk_diff, apply_chunk_diff_mut, absorb_chunk_rows};
+use crate::standards::v1_0::subsets::any::schema::diff::*;
 use crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -120,6 +120,129 @@ pub fn default_snapshot() -> crate::ProcedureSnapshot {
 }
 //#endregion 🔖️DocumentHelpers
 
-#[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
-mod document_contract_tests;
+
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+use crate::{Path, ProcedureMutation, ProcedureSnapshot, Value, artifact_kind};
+use crate::{SemioFlowMutation, flow_content_snapshot_from_path, path_from_flow_content_snapshot, procedure_flow_child_handle, procedure_text_child_handle, seed_from_text_content_snapshot, text_content_snapshot_from_seed};
+use std::collections::BTreeMap;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+
+//#region 🔖️Scene
+/// 🌱 The program and seed as the editor reads them: composed on read from the two member stores (design §20.15).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ProcedureScene {
+    pub path: Path,
+    pub seed: BTreeMap<String, Value>,
+}
+
+/// 🧊️ The scene is the cold boundary of its seed's neural values (a step already retires its own params on drop).
+impl Drop for ProcedureScene {
+    fn drop(&mut self) {
+        for (_, value) in std::mem::take(&mut self.seed) {
+            neural_engine::ColdRetire::retire_cold(value);
+        }
+    }
+}
+
+/// 🧸️ Composes the scene from the document's exact published `flow` and `text` children.
+pub fn procedure_scene_from_children(snapshot: &ProcedureSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
+    let subset = |slot: &str, child_id: &str, expected: &str| -> Result<(), semio_framework_plugin::Fault> {
+        let dialect = children.dialect(slot, child_id).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-required")))?;
+        (dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == expected).then_some(()).ok_or_else(|| semio_framework_plugin::Fault::from(format!("procedure-{slot}-child-dialect-mismatch")))
+    };
+    subset("flow", &snapshot.flow.child_id, "flow")?;
+    subset("text", &snapshot.text.child_id, "text")?;
+    let flow = children.typed_read::<SemioFlowSnapshot>("flow", &snapshot.flow.child_id)?;
+    let text = children.typed_read::<SemioTextSnapshot>("text", &snapshot.text.child_id)?;
+    Ok(ProcedureScene { path: path_from_flow_content_snapshot(&flow), seed: seed_from_text_content_snapshot(&text) })
+}
+
+/// 🧸️ [`procedure_scene_from_children`] over a document view.
+pub fn procedure_scene(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>) -> Result<ProcedureScene, semio_framework_plugin::Fault> {
+    procedure_scene_from_children(doc.snapshot, &doc.children)
+}
+
+/// 🌱️ The scene a document's children derive without member stores: a bundled example's or the empty program's. Readers
+/// without a child view (inference, foreign serializers) read this until the framework hands them child head packs.
+pub fn procedure_derivable_scene(snapshot: &ProcedureSnapshot) -> Option<ProcedureScene> {
+    if (snapshot.flow.child_id.as_str(), snapshot.text.child_id.as_str()) == (crate::examples::demo::FLOW_CHILD_ID, crate::examples::demo::TEXT_CHILD_ID) {
+        return Some(crate::examples::demo::scene());
+    }
+    let empty = ProcedureScene::default();
+    (procedure_flow_child_handle(&empty.path).child_id == snapshot.flow.child_id && procedure_text_child_handle(&empty.seed).child_id == snapshot.text.child_id).then_some(empty)
+}
+
+/// 🌱️ Packs either derivable member (the react shell's `loadDocumentPair` sends `members: []`).
+pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use pack::snapshot::ArtifactPack;
+    let scene = procedure_derivable_scene(snapshot)?;
+    match slot {
+        "flow" if child_id == snapshot.flow.child_id => Some(flow_content_snapshot_from_path(&scene.path).encode_pack()),
+        "text" if child_id == snapshot.text.child_id => Some(text_content_snapshot_from_seed(&scene.seed).encode_pack()),
+        _ => None,
+    }
+}
+
+/// 🧮️ The flow child leaves that carry program `base` to `next` (positions are layout, never diffed): severed edges first,
+/// removed steps, inserted steps, each kept step's kind/param changes, then re-pointed and inserted edges — every row
+/// point-invertible, so undo and history edits replay exactly.
+pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation> {
+    use semio_s_artifact_stdio_semio_flow::schema::mutations as flow;
+    let (before, after) = (flow_content_snapshot_from_path(base), flow_content_snapshot_from_path(next));
+    let mut leaves = Vec::new();
+    for edge in &before.edges {
+        if !after.edges.iter().any(|entry| entry.id == edge.id) {
+            leaves.push(SemioFlowMutation::RemoveEdge(flow::remove_edge::RemoveEdge { id: edge.id.clone() }));
+        }
+    }
+    for node in &before.nodes {
+        if !after.nodes.iter().any(|entry| entry.id == node.id) {
+            leaves.push(SemioFlowMutation::RemoveNode(flow::remove_node::RemoveNode { id: node.id.clone() }));
+        }
+    }
+    for node in &after.nodes {
+        let Some(prior) = before.nodes.iter().find(|entry| entry.id == node.id) else {
+            leaves.push(SemioFlowMutation::InsertNode(flow::insert_node::InsertNode::new(node.clone())));
+            continue;
+        };
+        if prior.kind != node.kind {
+            leaves.push(SemioFlowMutation::SetNodeKind(flow::set_node_kind::SetNodeKind { id: node.id.clone(), kind: node.kind.clone() }));
+        }
+        for param in node.params.iter().filter(|param| !prior.params.contains(param)) {
+            leaves.push(SemioFlowMutation::SetNodeParam(flow::set_node_param::SetNodeParam { id: node.id.clone(), key: param.key.clone(), value: param.value.clone(), at: None }));
+        }
+        for param in prior.params.iter().filter(|param| !node.params.iter().any(|entry| entry.key == param.key)) {
+            leaves.push(SemioFlowMutation::RemoveNodeParam(flow::remove_node_param::RemoveNodeParam { id: node.id.clone(), key: param.key.clone() }));
+        }
+    }
+    for edge in &after.edges {
+        match before.edges.iter().find(|entry| entry.id == edge.id) {
+            None => leaves.push(SemioFlowMutation::InsertEdge(flow::insert_edge::InsertEdge::new(edge.clone()))),
+            Some(prior) if prior.from != edge.from || prior.to != edge.to => leaves.push(SemioFlowMutation::SetEdgeEndpoints(flow::set_edge_endpoints::SetEdgeEndpoints { id: edge.id.clone(), from: edge.from.clone(), to: edge.to.clone() })),
+            Some(_) => {}
+        }
+    }
+    leaves
+}
+
+/// 🧬️ Publishes flow child `leaves` as ONE edit of the exact composed `flow` child; no leaf is the empty emit.
+pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::Emit<ProcedureMutation, C, D> {
+    if leaves.is_empty() {
+        return semio_framework_plugin::Emit::default();
+    }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)]), ..Default::default() }
+}
+
+/// 🧰️ Applies one program edit to the composed scene and publishes its flow leaves as ONE child edit.
+pub fn procedure_edit_emit<C, D>(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureSnapshot>, edit: impl FnOnce(&mut Path)) -> Result<semio_framework_plugin::Emit<ProcedureMutation, C, D>, semio_framework_plugin::Fault> {
+    let base = procedure_scene(doc)?.path.clone();
+    let mut next = base.clone();
+    edit(&mut next);
+    Ok(procedure_child_emit(doc.snapshot, procedure_flow_leaves(&base, &next)))
+}
+//#endregion 🔖️Scene
+}
+//#endregion 🧩️ArtifactItems3

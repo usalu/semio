@@ -17,7 +17,7 @@ fn a_refused_icon_subject_leaves_rendering_without_faulting_the_world_snapshot()
     let url = "/mesh/refused.glb";
     let id = semio_framework_plugin::world3d_mesh_id_from_url(url);
     assert_eq!(icon_render_subject_status(&state, &id, url), IconRenderStatus::Rendering);
-    infinite_world::world::mark_world3d_asset_miss(&mut state, url);
+    infinite_world::world::mark_world3d_asset_miss(&mut state.assets, url);
     assert_eq!(state.snapshot_fault(), None);
     assert_eq!(icon_render_subject_status(&state, &id, url), IconRenderStatus::Failed);
     assert_eq!(icon_render_subject_status(&state, "other", "/mesh/other.glb"), IconRenderStatus::Rendering);

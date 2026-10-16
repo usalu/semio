@@ -2,7 +2,6 @@
 
 use super::*;
 use std::ops::{Deref, DerefMut};
-
 //#region 🧊️Scope
 /// 🧊️ Consumes an explicitly cold owner, including nested domain values and error-path cleanup.
 pub trait ColdRetire { fn retire_cold(self); }
@@ -23,7 +22,6 @@ impl<T: ColdRetire + PartialEq> PartialEq for ColdOwner<T> { fn eq(&self, other:
 #[cfg(test)]
 impl<T: ColdRetire + Serialize> Serialize for ColdOwner<T> { fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> { self.deref().serialize(serializer) } }
 //#endregion 🧊️Scope
-
 //#region 🧬️DomainOwners
 impl ColdRetire for String { fn retire_cold(self) { drop(self); } }
 impl<A: ColdRetire, B: ColdRetire, C: ColdRetire> ColdRetire for (A, B, C) { fn retire_cold(self) { self.0.retire_cold(); self.1.retire_cold(); self.2.retire_cold(); } }
@@ -37,23 +35,8 @@ impl ColdRetire for FieldSpec { fn retire_cold(self) { self.default.retire_cold(
 impl ColdRetire for Schema { fn retire_cold(self) { self.fields.retire_cold(); } }
 impl ColdRetire for ChannelSpec { fn retire_cold(self) { self.default.retire_cold(); } }
 impl ColdRetire for OperatorInfo { fn retire_cold(self) { self.inputs.retire_cold(); self.outputs.retire_cold(); } }
-impl ColdRetire for OperatorRecord {
-    fn retire_cold(self) { self.info.retire_cold(); for implementation in self.implementations { implementation.operator.retire_cold(); } }
-}
-impl ColdRetire for Registry { fn retire_cold(self) { self.schemas.retire_cold(); self.operators.retire_cold(); } }
 impl ColdRetire for Neuron { fn retire_cold(self) { native_controlled::retire_neuron(self); } }
 impl ColdRetire for Tree { fn retire_cold(self) { native_controlled::retire_tree(self); } }
 impl ColdRetire for TreeSnapshot { fn retire_cold(self) { if let Ok(tree) = Arc::try_unwrap(self.tree) { tree.retire_cold(); } if let Ok(seeds) = Arc::try_unwrap(self.seeds) { seeds.retire_cold(); } } }
 impl ColdRetire for EvalChannels { fn retire_cold(self) { self.outputs.retire_cold(); self.inputs.retire_cold(); } }
-impl ColdRetire for BudgetedEval { fn retire_cold(self) { self.channels.retire_cold(); } }
-impl ColdRetire for NeuralCache {
-    fn retire_cold(self) {
-        let mut retirement = NeuralCacheRetirement::new(Arc::new(self));
-        while !retirement.terminal_is_empty() {
-            let copy=4096.max(retirement.next_copy_byte_demand().expect("cold cache copy demand"));
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold cache capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold cache release demand"),maximum_depth:retirement.next_depth_demand().expect("cold cache depth demand")};
-            retirement.close_step(grant).expect("cold Neural cache retirement");
-        }
-    }
-}
 //#endregion 🧬️DomainOwners

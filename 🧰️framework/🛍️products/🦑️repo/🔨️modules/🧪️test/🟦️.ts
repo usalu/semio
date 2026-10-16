@@ -20,7 +20,8 @@ import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
 import {repositoryTestArtifactRootV1,repositoryTestArtifactPathV1,requireRepositoryTestArtifactRetirementV1} from "./💾️storage/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot,requireIssuedResourceControlInvocationV1,type ScriptInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ResourceLeaseControl } from "../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { type Taxonomy, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../📚️library/🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
@@ -2883,17 +2884,22 @@ export function registeredHandler(adapter: TestAdapter, scenario: Pick<FeatureSc
 }
 
 /** 🧭️ Builds the context handed to one scenario handler, wiring fixture resolution and the work dir. */
-export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenario: FeatureScenario, role: TestRole): AdapterContext {
+export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenario: FeatureScenario, role: TestRole, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): AdapterContext {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
+  const check=()=>requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const workDir = isAbsolute(plan.workDir) ? plan.workDir : join(repoRoot, plan.workDir);
   mkdirSync(workDir, { recursive: true });
   const lookup = (uri: string): string => {
+    check();
     const fixture = plan.inputs.find((entry) => entry.uri === uri);
     if (fixture === undefined) throw new Error(`fixture ${uri} is not part of this plan — declare it in the feature file`);
     return join(repoRoot, fixture.path);
   };
   const artifactDir = plan.artifactDir === undefined ? join(workDir, "📦️artifacts") : isAbsolute(plan.artifactDir) ? plan.artifactDir : join(repoRoot, plan.artifactDir);
   mkdirSync(artifactDir, { recursive: true });
-  return {
+  return Object.freeze<AdapterContext>({
+    invocation,
+    phaseControl,
     plan,
     scenario,
     role,
@@ -2901,18 +2907,21 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
     workDir,
     artifactDir,
     artifact: (role_, filename) => {
+      check();
       const target = join(artifactDir, scenario.id, role_, filename);
       mkdirSync(dirname(target), { recursive: true });
       return target;
     },
     seed: scenario.seed ?? "0",
     row: () => {
+      check();
       if (scenario.outlineOf === undefined || !scenario.id.startsWith(`${scenario.outlineOf}-`)) throw new Error(`scenario ${scenario.id} expands no Scenario Outline row`);
       return scenario.id.slice(scenario.outlineOf.length + 1);
     },
     input: lookup,
     inputBytes: (uri) => readFileSync(lookup(uri)),
     subjectRawBytes: (implementation) => {
+      check();
       const path = plan.subjectRawInputs?.[scenario.id]?.[implementation];
       if (path === undefined) throw new Error(`scenario ${scenario.id} has no raw subject output from ${implementation}; run its subject phase before this byte-decoding oracle`);
       return readFileSync(path);
@@ -2928,7 +2937,7 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
       cpSync(source, target, { mode: constants.COPYFILE_FICLONE });
       return target;
     },
-  };
+  });
 }
 //#endregion 🧭️Adapters
 

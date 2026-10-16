@@ -1,9 +1,29 @@
 //! 🧊️ Process-wide compiled runtime, component caches, compile worker and compile flights.
 
 #[cfg(not(target_arch = "wasm32"))]
-use super::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, Arc, Fault, GatewayError, GatewayErrorCode, GuestRuntimes, HashMap, Mutex, OnceLock, Path, PathBuf, SharedEngineConfig, WasmtimeRuntime};
-#[cfg(not(target_arch = "wasm32"))]
 use semio_framework_plugin_host::GuestRuntime as _;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_plugin_host::GuestRuntimes;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_plugin_host::SharedEngineConfig;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_plugin_host::WasmtimeRuntime;
+#[cfg(not(target_arch = "wasm32"))]
+use std::collections::HashMap;
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::Path;
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::Arc;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::Mutex;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::OnceLock;
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, Fault};
 
 /// 🐎️ ONE compiled runtime for this process, built on first use. `build_shared_engine`'s own
 /// contract is one `Engine` per process (a pooling allocator reservation and a 1 ms epoch ticker
@@ -22,7 +42,7 @@ use semio_framework_plugin_host::GuestRuntime as _;
 /// reasons that do not change inside a process (no virtual address space, an unusable cache root),
 /// and retrying it on every tool call would turn one honest refusal into a stall.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
+pub fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
     static RUNTIME: std::sync::OnceLock<Result<Arc<GuestRuntimes>, String>> = std::sync::OnceLock::new();
     RUNTIME
         .get_or_init(|| semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig { fuel_metering: false, ..SharedEngineConfig::default() },semio_framework_job::default_now_us)).map(|runtime| Arc::new(GuestRuntimes::from(runtime))).map_err(|error| error.to_string()))
@@ -52,8 +72,8 @@ fn compiled_components() -> &'static Mutex<HashMap<[u8; 32], semio_framework_plu
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, PartialEq, Eq, Hash)]
 struct ComponentFileIdentity {
-    pub(super) path: PathBuf,
-    length: u64,
+    pub path: PathBuf,
+    pub length: u64,
     modified_ns: u128,
 }
 
@@ -102,7 +122,7 @@ impl ComponentFileIdentity {
 /// 🧩️ Where a component's bytes come from: a staged file this process may already know, or bytes a
 /// caller already holds (a hub-authorized execution target).
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) enum ComponentBytes<'a> {
+pub enum ComponentBytes<'a> {
     File(&'a Path),
     Held(&'a [u8]),
 }
@@ -112,7 +132,7 @@ pub(super) enum ComponentBytes<'a> {
 const COMPONENT_HASH_CHUNK_BYTES: usize = 4 << 20;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn activation_fault(fault: Fault) -> GatewayError {
+pub fn activation_fault(fault: Fault) -> GatewayError {
     if fault.code == ACTIVATION_CANCELLED_FAULT_CODE {
         return GatewayError::new(GatewayErrorCode::Cancelled, fault.message);
     }
@@ -151,7 +171,7 @@ fn read_component(path: &Path, scope: &ActivationScope) -> Result<Vec<u8>, Gatew
 /// every requester of the same content hash ([`CompileFlight`]), so a cancel detaches this requester
 /// at once and the last requester's cancel kills the compile.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, component: ComponentBytes<'_>, scope: &ActivationScope) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
+pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, component: ComponentBytes<'_>, scope: &ActivationScope) -> Result<semio_framework_plugin_host::CompiledHandle, GatewayError> {
     let (package_hash, mut bytes) = match component {
         ComponentBytes::File(path) => {
             let metadata = std::fs::metadata(path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", path.display())))?;
@@ -200,6 +220,7 @@ pub(super) fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str
 }
 
 //#region 🧊️CompileFlight
+
 /// 🧊️ The program an isolated compile runs: this process's own executable (`semio-os-mcp
 /// compile-component`) unless a host names another one that answers the same subcommand.
 #[cfg(not(target_arch = "wasm32"))]
@@ -217,10 +238,12 @@ pub fn set_component_compile_worker(program: PathBuf) {
 /// reads the same two inputs from its environment.
 #[cfg(test)]
 pub(crate) const ISOLATED_COMPILE_TEST_ENTRY: &str = "workspace::quick::isolated_compile_worker_entry";
-#[cfg(test)]
-pub(crate) const ISOLATED_COMPILE_TEST_ENGINE: &str = "SEMIO_ISOLATED_COMPILE_ENGINE";
-#[cfg(test)]
-pub(crate) const ISOLATED_COMPILE_TEST_OUT: &str = "SEMIO_ISOLATED_COMPILE_OUT";
+
+#[cfg(any(test, feature = "testkit"))]
+pub const ISOLATED_COMPILE_TEST_ENGINE: &str = "SEMIO_ISOLATED_COMPILE_ENGINE";
+
+#[cfg(any(test, feature = "testkit"))]
+pub const ISOLATED_COMPILE_TEST_OUT: &str = "SEMIO_ISOLATED_COMPILE_OUT";
 
 /// 🔢️ Isolated compile workers this process has started — a shared compile starts exactly one.
 #[cfg(not(target_arch = "wasm32"))]
@@ -254,15 +277,15 @@ pub fn live_component_compile_workers() -> usize {
 #[cfg(not(target_arch = "wasm32"))]
 struct CompileFlight {
     cache_path: PathBuf,
-    pub(super) state: Mutex<CompileFlightState>,
+    pub state: Mutex<CompileFlightState>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) struct CompileFlightState {
-    requesters: usize,
+    pub requesters: usize,
     waiters: Vec<semio_framework_async::oneshot::Sender<Result<(), String>>>,
     worker: Option<std::process::Child>,
-    pub(super) outcome: Option<Result<(), String>>,
+    pub outcome: Option<Result<(), String>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -275,7 +298,7 @@ fn compile_flights() -> &'static Mutex<HashMap<[u8; 32], Arc<CompileFlight>>> {
 impl CompileFlight {
     /// 🛫️ Joins the running compile of `package_hash`, or starts it, and waits for it or for the
     /// requester's cancel, whichever comes first.
-    pub(super) fn join(package_hash: [u8; 32], target: semio_framework_plugin_host::IsolatedCompileTarget, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
+    pub fn join(package_hash: [u8; 32], target: semio_framework_plugin_host::IsolatedCompileTarget, bytes: &[u8], scope: &ActivationScope) -> Result<(), GatewayError> {
         let (flight, answer) = {
             let mut flights = compile_flights().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let flight = match flights.get(&package_hash) {
@@ -348,7 +371,7 @@ impl CompileFlight {
 
     /// 👁️ Feeds the worker its component, waits for it to exit — its report closes when it does —
     /// and answers every requester. A worker already killed by the last detach answers no one.
-    pub(super) fn observe(self: Arc<Self>, package_hash: [u8; 32], mut input: std::process::ChildStdin, mut report: std::process::ChildStderr, bytes: Vec<u8>) {
+    pub(crate) fn observe(self: Arc<Self>, package_hash: [u8; 32], mut input: std::process::ChildStdin, mut report: std::process::ChildStderr, bytes: Vec<u8>) {
         use std::io::{Read as _, Write as _};
         let _ = input.write_all(&bytes);
         drop(input);
@@ -400,5 +423,5 @@ impl CompileFlight {
         }
     }
 }
-//#endregion 🧊️CompileFlight
 
+//#endregion 🧊️CompileFlight

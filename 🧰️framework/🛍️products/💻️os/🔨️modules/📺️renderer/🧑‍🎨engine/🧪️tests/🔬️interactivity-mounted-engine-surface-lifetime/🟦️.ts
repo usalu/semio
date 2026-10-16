@@ -17,7 +17,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     read("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
     read("🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
     read("🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
-    read("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
+    ["🗃️model", "🕸️graph", "🧭️host"].map((node) => read(`🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`)).join("\n"),
   ];
   const mutations: readonly [string, number, string, string][] = [
     ["wrapping-cpu-generation", 0, "slot.generation.checked_add(1)", "Some(slot.generation.wrapping_add(1))"],
@@ -38,7 +38,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     ["single-rejected-packet-slot", 0, "} else if self.rejected_len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {", "} else if self.rejected_len == 0 {"],
     ["outer-surface-weak-terminal-witness", 0, "self.phase == EngineSurfaceClosePhase::Released\n            && self.node_graph_source.is_none()", "self.phase == EngineSurfaceClosePhase::Released\n            || self.node_graph_source.is_none()"],
     ["packet-self-freshness", 0, "engine_surface_live_freshness(packet.surface.token)", "Ok(Some(EngineSurfaceLiveFreshness { identity: packet.surface, metrics_generation: packet.metrics_generation, document_generation: packet.document_generation, scene_revision: packet.scene_revision }))"],
-    ["map-weak-terminal-witness", 7, "self.released\n            && self.positions.is_empty()", "self.released\n            || self.positions.is_empty()"],
+    ["map-weak-terminal-witness", 7, "self.released\n            && self.overlays.is_empty()", "self.released\n            || self.overlays.is_empty()"],
     ["editor-weak-terminal-witness", 8, "self.released\n            && self.text.is_empty()", "self.released\n            || self.text.is_empty()"],
     ["dag-weak-terminal-witness", 9, "self.released\n            && self.engine.terminal_is_empty()", "self.released\n            || self.engine.terminal_is_empty()"],
     ["missing-populated-law", 0, "populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time", "populated_surface_smoke"],

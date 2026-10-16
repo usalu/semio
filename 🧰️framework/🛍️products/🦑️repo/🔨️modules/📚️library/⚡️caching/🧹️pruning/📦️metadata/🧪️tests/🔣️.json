@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "empty",
+      "count": 0,
+      "failures": [],
+      "expectedAccepted": 0,
+      "expectedFailure": "none"
+    },
+    {
+      "name": "three-batches-ordered",
+      "count": 19,
+      "failures": [],
+      "expectedAccepted": 19,
+      "expectedFailure": "none"
+    },
+    {
+      "name": "undefined-before-marker",
+      "count": 19,
+      "failures": [
+        {
+          "index": 1,
+          "reason": "undefined"
+        },
+        {
+          "index": 3,
+          "reason": "marker"
+        }
+      ],
+      "expectedAccepted": 8,
+      "expectedFailure": "undefined"
+    },
+    {
+      "name": "marker-before-undefined",
+      "count": 19,
+      "failures": [
+        {
+          "index": 1,
+          "reason": "marker"
+        },
+        {
+          "index": 3,
+          "reason": "undefined"
+        }
+      ],
+      "expectedAccepted": 8,
+      "expectedFailure": "marker"
+    },
+    {
+      "name": "cancellation",
+      "count": 19,
+      "failures": [
+        {
+          "index": 2,
+          "reason": "cancel"
+        }
+      ],
+      "expectedAccepted": 8,
+      "expectedFailure": "cancel"
+    },
+    {
+      "name": "second-batch-failure",
+      "count": 19,
+      "failures": [
+        {
+          "index": 10,
+          "reason": "marker"
+        }
+      ],
+      "expectedAccepted": 16,
+      "expectedFailure": "marker"
+    }
+  ],
+  "files": [
+    {
+      "path": "p/build/a/h/a",
+      "bytes": 7,
+      "time": 1700000100
+    },
+    {
+      "path": "p/build/a/h/b",
+      "bytes": 11,
+      "time": 1700000100
+    },
+    {
+      "path": "p/build/a/h/sub/incremental/inner/s-7-8-final/data",
+      "bytes": 13,
+      "time": 1700000001
+    },
+    {
+      "path": "p/build/a/h/sub/incremental/inner/s-7-8.lock",
+      "bytes": 0,
+      "time": 1700000001
+    },
+    {
+      "path": "p/incremental/top/s-1-2-final/data",
+      "bytes": 17,
+      "time": 1700000002
+    },
+    {
+      "path": "p/incremental/top/s-1-2.lock",
+      "bytes": 0,
+      "time": 1700000002
+    },
+    {
+      "path": "p/incremental/top/s-3-4-final/data",
+      "bytes": 19,
+      "time": 1700000003
+    },
+    {
+      "path": "p/incremental/top/s-3-4.lock",
+      "bytes": 0,
+      "time": 1700000003
+    },
+    {
+      "path": "p/incremental/top/s-5-6-working/data",
+      "bytes": 23,
+      "time": 1700000004
+    },
+    {
+      "path": "p/incremental/top/s-5-6.lock",
+      "bytes": 0,
+      "time": 1700000004
+    },
+    {
+      "path": "p/incremental/top/other/build/nested/h/data",
+      "bytes": 29,
+      "time": 1700000005
+    },
+    {
+      "path": "p/build/a/h/many/f0",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f1",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f2",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f3",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f4",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f5",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f6",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f7",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f8",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f9",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f10",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f11",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f12",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f13",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f14",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f15",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f16",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f17",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f18",
+      "bytes": 1,
+      "time": 1700000000
+    },
+    {
+      "path": "p/build/a/h/many/f19",
+      "bytes": 1,
+      "time": 1700000000
+    }
+  ]
+}

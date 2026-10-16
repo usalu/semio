@@ -1,7 +1,7 @@
 //! 🗂️ Immutable trusted-catalog bundle verification for headless hub authority startup.
 
-use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
-use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
+use semio_hub_artifact_authority::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS};
+use semio_hub_artifact_authority::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::{DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use directory::os_store::{self, serialization::ArtifactCodec};
@@ -13,46 +13,17 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
-#[path = "🧬️schema/🦀️.rs"]
-pub mod schema;
-use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_BUNDLE_SCHEMA_VERSION, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
+use semio_hub_trusted_catalog_contract::schema::{publication_revision, TrustedBundleFileV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
 use directory::os_component_receipt::ComponentReceiptV1;
 use directory::os_plugin_module_schema::{TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA};
 
-#[path = "🌐️browser-actor/🦀️.rs"]
-mod browser_actor;
-#[path = "🧩️plugin-module/🦀️.rs"]
-pub mod plugin_module;
-use plugin_module::{decode_plugin_module_bundle, plugin_module_blob_path, verify_plugin_module_file, TrustedPluginModuleSourceV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES};
-#[path = "🛡️opened-root/🦀️.rs"]
-mod opened_root;
-use opened_root::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1, TRUSTED_READ_CHUNK_BYTES};
-#[cfg(all(test, unix))]
-use opened_root::create_fifo_fixture;
+use semio_hub_trusted_catalog_contract::plugin_module::{plugin_module_blob_path, TrustedPluginModuleSourceV1};
+use semio_hub_trusted_catalog_contract::{TrustedCatalogDataRoot, TrustedCatalogGenerationRoot, TrustedCatalogRelativePathV1, TRUSTED_READ_CHUNK_BYTES};
+#[cfg(all(any(test, feature = "testkit"),unix))]
+use semio_hub_trusted_catalog_contract::create_fifo_fixture;
 use directory::os_directory::schema::{DocumentBrowserActorSourceV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_MAX_BYTES};
-
-/// 🧯️ Maximum accepted serialized bundle bytes.
-pub const TRUSTED_BUNDLE_MAX_BYTES: u64 = 4 * 1024 * 1024;
-/// 🧯️ Maximum accepted committed package-descriptor bytes: the schema-declared execution-target
-/// descriptor bound the browser enforces on the same bytes.
-pub const TRUSTED_DESCRIPTOR_MAX_BYTES: u64 = directory::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES;
-/// 🧮️ Maximum logical owned storage admitted before descriptor schema/canonical projection.
-pub const TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION: u64 = 32 * 1024 * 1024;
-/// 🧯️ Maximum accepted bytes for one component: the schema-declared execution-target component bound
-/// the browser enforces on the same bytes. A closure has no byte total: components and actors are
-/// retained by identity on disk ([`TrustedCatalogAsset`]), so the catalog is bounded by storage and the
-/// hub's memory by the assets in use.
-pub const TRUSTED_COMPONENT_MAX_BYTES: u64 = directory::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES;
-/// 🧯️ Maximum UTF-8 bytes retained for one identity or version field.
-pub const TRUSTED_IDENTITY_MAX_BYTES: usize = 256;
-/// 🧯️ Maximum UTF-8 bytes accepted for one bundle-relative path.
-pub const TRUSTED_RELATIVE_PATH_MAX_BYTES: usize = 1024;
-/// 🧯️ Maximum direct dependencies accepted for one package.
-pub const TRUSTED_PACKAGE_MAX_DEPENDENCIES: usize = 256;
-/// 🧯️ Maximum selectable profiles in one bundle.
-pub const TRUSTED_BUNDLE_MAX_PROFILES: usize = 256;
-/// 🧯 Maximum immutable document-open selections retained by one catalog generation.
-pub const TRUSTED_CATALOG_MAX_OPEN_TARGETS: usize = 1024;
+use semio_hub_trusted_catalog_descriptor::{CodecKey, NativeCodecProviderPackageV1, NativeCodecProviderRequirementV1, NativeCodecProviderSourceV1, SelectedTrustedBundleV1, TrustedCatalogAsset, TrustedRetainedFile, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedPluginModule, VerifiedTrustedPackage, declared_kind, decode_package_descriptor, document_open_target_sort_key, hosted_codec_targets, most_general_dialect, open_target_codec_package, owner_preferred_creation, package_actor_renderer, report_package_progress, sort_open_targets, trusted_profile_generation, validate_bundle, validate_descriptor, validate_descriptor_open_target, validate_native_bindings, verify_plugin_module};
+use semio_hub_trusted_catalog_contract::{TRUSTED_BUNDLE_MAX_BYTES, TRUSTED_CATALOG_MAX_OPEN_TARGETS, TRUSTED_COMPONENT_MAX_BYTES, TRUSTED_DESCRIPTOR_MAX_BYTES, TRUSTED_IDENTITY_MAX_BYTES, catalog, catalog_error, decode_digest, dual_hash, sha256, verify_digest, verify_length};
 
 /// 🔐️ Publishes only a fully verified selection while holding the cooperating-writer OS fence.
 pub struct TrustedCatalogPublisher;
@@ -116,357 +87,9 @@ impl TrustedCatalogPublisher {
         let current_bytes = pointer.encode()?;
         let current_sha256 = hex_lower(&sha256(&current_bytes, context).await?);
         let sync = owner.replace_current(&command.request_id, &current_bytes, context)?;
-        let receipt = TrustedCatalogPublicationReceiptV1 { schema: TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, request_id: command.request_id, profile_id: pointer.profile_id, generation_id: pointer.generation_id, bundle_sha256: pointer.bundle_sha256, publication_revision: pointer.publication_revision, current_sha256, outcome: match sync { opened_root::TrustedPublicationSync::Durable => TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, opened_root::TrustedPublicationSync::Unconfirmed => TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED } };
+        let receipt = TrustedCatalogPublicationReceiptV1 { schema: TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, request_id: command.request_id, profile_id: pointer.profile_id, generation_id: pointer.generation_id, bundle_sha256: pointer.bundle_sha256, publication_revision: pointer.publication_revision, current_sha256, outcome: match sync { semio_hub_trusted_catalog_contract::TrustedPublicationSync::Durable => TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, semio_hub_trusted_catalog_contract::TrustedPublicationSync::Unconfirmed => TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED } };
         let bytes = serde_json::to_vec(&receipt).map_err(catalog_error)?;
-        Ok(match sync { opened_root::TrustedPublicationSync::Durable => TrustedCatalogPublicationOutcome::Durable(bytes), opened_root::TrustedPublicationSync::Unconfirmed => TrustedCatalogPublicationOutcome::Unconfirmed(bytes) })
-    }
-}
-
-#[derive(Debug)]
-struct SelectedTrustedBundleV1 {
-    package_indices: Vec<usize>,
-    profile: TrustedBundleProfileV1,
-}
-
-/// 🔗️ One explicitly linked native executable for an exact bundle artifact identity.
-#[derive(Clone)]
-pub struct NativeCodecBinding {
-    plugin_id: String,
-    package_id: String,
-    artifact_kind: String,
-    factory_id: Option<String>,
-    codec: ArtifactCodec,
-}
-
-impl NativeCodecBinding {
-    /// 🪢️ Binds a native executable without deriving package identity from plugin identity.
-    pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, factory_id: Option<String>, codec: ArtifactCodec) -> Self {
-        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), factory_id, codec }
-    }
-
-    pub(super) fn plugin_id(&self) -> &str {
-        &self.plugin_id
-    }
-
-    pub(super) fn package_id(&self) -> &str {
-        &self.package_id
-    }
-
-    pub(super) fn artifact_kind(&self) -> &str {
-        &self.artifact_kind
-    }
-
-    pub(super) fn codec(&self) -> &ArtifactCodec {
-        &self.codec
-    }
-
-    /// 🪪️ Returns only factory identity retained from an actual verified native receipt.
-    pub(super) fn factory_id(&self)->Option<&str>{self.factory_id.as_deref()}
-}
-
-/// 🪪️ Borrowed immutable package identity passed from the trusted loader to one native provider.
-#[derive(Clone, Copy)]
-pub struct NativeCodecProviderPackageV1<'a> {
-    pub plugin_id: &'a str,
-    pub package_id: &'a str,
-    pub version: &'a str,
-}
-
-/// 🧬️ One descriptor-committed codec requirement exposed without product-plugin types.
-#[derive(Clone, Copy)]
-pub struct NativeCodecProviderRequirementV1<'a> {
-    pub package: NativeCodecProviderPackageV1<'a>,
-    pub artifact_kind: &'a str,
-    pub artifact_schema: &'a str,
-    pub pack_schema_hash: &'a str,
-}
-
-/// 🔌️ Headless Hub provider port. Implementations may supply executable codecs only for the exact
-/// verified package closure and cannot publish them outside the loader's atomic registration.
-pub trait NativeCodecProviderSourceV1: Sync {
-    fn preflight_selection(&self, _selected: &[NativeCodecProviderRequirementV1<'_>]) -> Result<(), AuthorityError> {
-        Ok(())
-    }
-
-    fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError>;
-}
-
-/// 💾️ One hash-verified generation file retained by IDENTITY, not by bytes: the opened private
-/// generation root, the bundle-relative path and the digests the load verified. A read reopens the
-/// path beneath that root and re-verifies length and digests, and the bytes stay resident only while
-/// some reader holds them, so the hub's memory is the set of assets in use, never the catalog closure.
-struct TrustedRetainedFile {
-    root: Arc<TrustedCatalogGenerationRoot>,
-    path: TrustedCatalogRelativePathV1,
-    byte_length: u64,
-    sha256: [u8; 32],
-    blake3: Option<[u8; 32]>,
-    resident: std::sync::Mutex<std::sync::Weak<[u8]>>,
-}
-
-impl TrustedRetainedFile {
-    fn new(root: Arc<TrustedCatalogGenerationRoot>, path: TrustedCatalogRelativePathV1, byte_length: u64, sha256: [u8; 32], blake3: Option<[u8; 32]>) -> Self {
-        let resident: std::sync::Weak<[u8]> = std::sync::Weak::<[u8; 0]>::new();
-        Self { root, path, byte_length, sha256, blake3, resident: std::sync::Mutex::new(resident) }
-    }
-
-    async fn read(&self, context: &OperationContext<'_>) -> Result<Arc<[u8]>, AuthorityError> {
-        if let Some(bytes) = self.resident.lock().unwrap_or_else(std::sync::PoisonError::into_inner).upgrade() {
-            return Ok(bytes);
-        }
-        let bytes = self.root.read_regular(&self.path, self.byte_length, context).await?;
-        verify_length(self.byte_length, bytes.len())?;
-        let verified = match self.blake3 {
-            Some(blake3) => dual_hash(&bytes, context).await? == (self.sha256, blake3),
-            None => sha256(&bytes, context).await? == self.sha256,
-        };
-        if !verified {
-            return Err(catalog("retained trusted file differs from the digests its catalog verified"));
-        }
-        let bytes: Arc<[u8]> = bytes.into();
-        *self.resident.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::downgrade(&bytes);
-        Ok(bytes)
-    }
-}
-
-/// 🧱️ One verified execution-target asset (a component or a closed browser actor), read on demand.
-/// Its length is known without reading; [`Self::read`] yields exactly the bytes the catalog verified.
-#[derive(Clone)]
-pub struct TrustedCatalogAsset {
-    source: TrustedCatalogAssetSource,
-}
-
-#[derive(Clone)]
-enum TrustedCatalogAssetSource {
-    Retained(Arc<TrustedRetainedFile>),
-    Resident(Arc<[u8]>),
-}
-
-impl TrustedCatalogAsset {
-    /// 🧷️ An asset whose bytes a caller already holds in memory (a fixture catalog built in-process).
-    pub fn resident(bytes: Arc<[u8]>) -> Self {
-        Self { source: TrustedCatalogAssetSource::Resident(bytes) }
-    }
-
-    fn retained(file: TrustedRetainedFile) -> Self {
-        Self { source: TrustedCatalogAssetSource::Retained(Arc::new(file)) }
-    }
-
-    /// 📏️ The verified byte length, known without reading.
-    pub fn byte_length(&self) -> u64 {
-        match &self.source {
-            TrustedCatalogAssetSource::Retained(file) => file.byte_length,
-            TrustedCatalogAssetSource::Resident(bytes) => bytes.len() as u64,
-        }
-    }
-
-    /// 📖️ The verified bytes; a retained asset is reread and re-verified unless a reader still holds it.
-    pub async fn read(&self, context: &OperationContext<'_>) -> Result<Arc<[u8]>, AuthorityError> {
-        match &self.source {
-            TrustedCatalogAssetSource::Retained(file) => file.read(context).await,
-            TrustedCatalogAssetSource::Resident(bytes) => Ok(Arc::clone(bytes)),
-        }
-    }
-
-    /// 🚰️ The verified bytes as a chunked stream with no request deadline: a retained asset is reopened beneath its
-    /// generation root and hashed while it streams (see [`TrustedCatalogAssetStream`]).
-    pub fn stream(&self) -> Result<TrustedCatalogAssetStream, AuthorityError> {
-        match &self.source {
-            TrustedCatalogAssetSource::Retained(file) => {
-                let (reader, length) = file.root.open_regular(&file.path)?.into_reader();
-                if length != file.byte_length {
-                    return Err(catalog("retained trusted file differs from the length its catalog verified"));
-                }
-                Ok(TrustedCatalogAssetStream {
-                    byte_length: file.byte_length,
-                    source: TrustedCatalogAssetStreamSource::Retained { reader, streamed: 0, sha256: Sha256::new(), blake3: Hasher::new(), expected: (file.sha256, file.blake3), held: None },
-                })
-            }
-            TrustedCatalogAssetSource::Resident(bytes) => Ok(TrustedCatalogAssetStream { byte_length: bytes.len() as u64, source: TrustedCatalogAssetStreamSource::Resident { bytes: Arc::clone(bytes), offset: 0 } }),
-        }
-    }
-}
-
-/// 🚰️ One verified asset served in bounded chunks. Serving has no absolute deadline — bytes flow while the file is
-/// hashed, so a large module on a loaded host is slow, never refused — and the final chunk is released only once the
-/// streamed length, SHA-256 and BLAKE3 equal what the catalog verified: a file changed on disk after verification ends
-/// the stream in an error before its last bytes, so a reader holding the declared length never completes it. A
-/// resident asset streams the bytes the catalog already verified. Dropping the stream stops reading.
-pub struct TrustedCatalogAssetStream {
-    byte_length: u64,
-    source: TrustedCatalogAssetStreamSource,
-}
-
-enum TrustedCatalogAssetStreamSource {
-    Retained { reader: tokio::fs::File, streamed: u64, sha256: Sha256, blake3: Hasher, expected: ([u8; 32], Option<[u8; 32]>), held: Option<Vec<u8>> },
-    Resident { bytes: Arc<[u8]>, offset: usize },
-    Finished,
-}
-
-impl TrustedCatalogAssetStream {
-    /// 📏️ The verified byte length the stream delivers in full or not at all.
-    pub fn byte_length(&self) -> u64 {
-        self.byte_length
-    }
-
-    /// 📦️ The next chunk, `None` after the last one; an error ends the stream.
-    pub async fn next_chunk(&mut self) -> Option<Result<Vec<u8>, AuthorityError>> {
-        let outcome = match &mut self.source {
-            TrustedCatalogAssetStreamSource::Finished => return None,
-            TrustedCatalogAssetStreamSource::Resident { bytes, offset } => {
-                let end = offset.saturating_add(TRUSTED_READ_CHUNK_BYTES).min(bytes.len());
-                let chunk = (*offset < end).then(|| bytes[*offset..end].to_vec());
-                *offset = end;
-                chunk.map(Ok)
-            }
-            TrustedCatalogAssetStreamSource::Retained { reader, streamed, sha256, blake3, expected, held } => match Self::next_retained(self.byte_length, reader, streamed, sha256, blake3, *expected, held).await {
-                Some(Ok((chunk, verified_last))) => {
-                    if verified_last {
-                        self.source = TrustedCatalogAssetStreamSource::Finished;
-                    }
-                    return Some(Ok(chunk));
-                }
-                refused => refused.map(|chunk| chunk.map(|(chunk, _)| chunk)),
-            },
-        };
-        if !matches!(outcome, Some(Ok(_))) {
-            self.source = TrustedCatalogAssetStreamSource::Finished;
-        }
-        outcome
-    }
-
-    /// 🔐️ The next held-back chunk of a retained file, `true` beside the last one, which is released only after the
-    /// streamed length and digests equal the verified ones.
-    async fn next_retained(byte_length: u64, reader: &mut tokio::fs::File, streamed: &mut u64, sha256: &mut Sha256, blake3: &mut Hasher, expected: ([u8; 32], Option<[u8; 32]>), held: &mut Option<Vec<u8>>) -> Option<Result<(Vec<u8>, bool), AuthorityError>> {
-        use tokio::io::AsyncReadExt;
-        loop {
-            let remaining = byte_length.saturating_sub(*streamed);
-            let mut chunk = vec![0u8; usize::try_from(remaining.saturating_add(1)).map_or(TRUSTED_READ_CHUNK_BYTES, |limit| limit.min(TRUSTED_READ_CHUNK_BYTES))];
-            let read = match reader.read(&mut chunk).await {
-                Ok(read) => read,
-                Err(error) => return Some(Err(catalog_error(error))),
-            };
-            if read == 0 {
-                if *streamed != byte_length {
-                    return Some(Err(catalog("retained trusted file length changed while streaming")));
-                }
-                let digests = (std::mem::replace(sha256, Sha256::new()).finalize(), *blake3.finalize().as_bytes());
-                if digests.0 != expected.0 || expected.1.is_some_and(|verified| verified != digests.1) {
-                    return Some(Err(catalog("retained trusted file differs from the digests its catalog verified")));
-                }
-                return held.take().map(|chunk| Ok((chunk, true)));
-            }
-            *streamed = streamed.saturating_add(read as u64);
-            if *streamed > byte_length {
-                return Some(Err(catalog("retained trusted file grew beyond its verified length while streaming")));
-            }
-            chunk.truncate(read);
-            sha256.update(&chunk);
-            blake3.update(&chunk);
-            if let Some(previous) = held.replace(chunk) {
-                return Some(Ok((previous, false)));
-            }
-        }
-    }
-}
-
-/// 🧩️ One package's verified plugin module: its canonical manifest, addressed by the manifest's SHA-256,
-/// and every file it lists, retained by identity and reread and re-verified on use.
-pub struct VerifiedPluginModule {
-    bundle_sha256: String,
-    manifest_bytes: Arc<[u8]>,
-    bundle: TrustedPluginModuleBundleV1,
-    files: BTreeMap<String, TrustedCatalogAsset>,
-}
-
-impl VerifiedPluginModule {
-    /// 🔐️ The content address: the SHA-256 of the canonical manifest bytes.
-    pub fn bundle_sha256(&self) -> &str {
-        &self.bundle_sha256
-    }
-
-    /// 📜️ The exact canonical manifest bytes the catalog verified.
-    pub fn manifest_bytes(&self) -> &[u8] {
-        &self.manifest_bytes
-    }
-
-    /// 🧩️ The decoded manifest.
-    pub fn bundle(&self) -> &TrustedPluginModuleBundleV1 {
-        &self.bundle
-    }
-
-    /// 📖️ The verified file at one module-relative path, read on demand.
-    pub fn file(&self, path: &str) -> Option<&TrustedCatalogAsset> {
-        self.files.get(path)
-    }
-}
-
-/// 🧬️ One fully verified package retained in dependency-first order.
-pub struct VerifiedTrustedPackage {
-    plugin_id: String,
-    package: PackageRef,
-    version: String,
-    dependencies: Vec<String>,
-    plugin_module: VerifiedPluginModule,
-    component_sha256: [u8; 32],
-    descriptor_sha256: [u8; 32],
-    component: TrustedCatalogAsset,
-    descriptor_bytes: Arc<[u8]>,
-    receipt: ComponentReceiptV1,
-    browser_actor: DocumentOpenBrowserActorV1,
-    browser_actor_asset: Option<TrustedCatalogAsset>,
-    descriptor: Arc<PackageDescriptor>,
-}
-
-impl VerifiedTrustedPackage {
-    /// 🪪️ Returns the registry plugin identity, kept separate from `package_ref().package`.
-    pub fn plugin_id(&self) -> &str {
-        &self.plugin_id
-    }
-
-    /// 📦️ Returns the independently attested package id and component BLAKE3 identity.
-    pub fn package_ref(&self) -> &PackageRef {
-        &self.package
-    }
-
-    /// 🏷️ Returns the exact decoded descriptor version string.
-    pub fn version(&self) -> &str {
-        &self.version
-    }
-
-    /// 🔐️ Returns the independently checked component SHA-256.
-    pub const fn component_sha256(&self) -> &[u8; 32] {
-        &self.component_sha256
-    }
-
-    /// 🔐️ Returns the raw committed descriptor-byte SHA-256.
-    pub const fn descriptor_sha256(&self) -> &[u8; 32] {
-        &self.descriptor_sha256
-    }
-
-    /// 🧱️ Returns the verified component, read on demand.
-    pub fn component(&self) -> &TrustedCatalogAsset {
-        &self.component
-    }
-
-    /// 📜️ Returns the exact bytes decoded into `descriptor()`.
-    pub fn descriptor_bytes(&self) -> &[u8] {
-        &self.descriptor_bytes
-    }
-
-    /// 🗂️ Returns the decoded existing `PackageDescriptor`.
-    pub fn descriptor(&self) -> &PackageDescriptor {
-        &self.descriptor
-    }
-
-    /// 🧾️ Returns the shipped receipt binding the semantic descriptor to the component bytes.
-    pub fn receipt(&self) -> &ComponentReceiptV1 {
-        &self.receipt
-    }
-
-    /// 🧩️ Returns the package's verified plugin module.
-    pub fn plugin_module(&self) -> &VerifiedPluginModule {
-        &self.plugin_module
+        Ok(match sync { semio_hub_trusted_catalog_contract::TrustedPublicationSync::Durable => TrustedCatalogPublicationOutcome::Durable(bytes), semio_hub_trusted_catalog_contract::TrustedPublicationSync::Unconfirmed => TrustedCatalogPublicationOutcome::Unconfirmed(bytes) })
     }
 }
 
@@ -474,7 +97,7 @@ impl VerifiedTrustedPackage {
 /// (encode a snapshot, print a history log, reduce an op batch), so a call that needs more than this
 /// is refused rather than allowed to hold a request thread. The fuel figure is the same order the
 /// build-time `describe()` cap sits at, measured on a real debug-built component.
-const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
+pub const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
     semio_framework::kernel::Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
 /// 🧊️ Compiled values held within an operator-configured memory budget (`TrustedCatalogGuestResidencyV1`):
@@ -487,24 +110,24 @@ const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
 /// more values than fit keeps a stable resident set instead of recompiling every value on every use, while a
 /// workload that moved on displaces the values it left. Nothing is released for idleness, a value a running
 /// call holds is never released, and a released value compiles again on its next use.
-pub(crate) struct GuestResidencyLedgerV1<T> {
-    budget_bytes: std::sync::atomic::AtomicU64,
-    access_count_ceiling: u32,
-    access_count_aging_per_guest: u64,
+pub struct GuestResidencyLedgerV1<T> {
+    pub budget_bytes: std::sync::atomic::AtomicU64,
+    pub access_count_ceiling: u32,
+    pub access_count_aging_per_guest: u64,
     clock: std::sync::atomic::AtomicU64,
     accesses_since_aging: std::sync::atomic::AtomicU64,
-    hits: std::sync::atomic::AtomicU64,
-    compiles: std::sync::atomic::AtomicU64,
-    admitted: std::sync::atomic::AtomicU64,
-    bypassed: std::sync::atomic::AtomicU64,
-    released: std::sync::atomic::AtomicU64,
-    compile_micros: std::sync::atomic::AtomicU64,
+    pub hits: std::sync::atomic::AtomicU64,
+    pub compiles: std::sync::atomic::AtomicU64,
+    pub admitted: std::sync::atomic::AtomicU64,
+    pub bypassed: std::sync::atomic::AtomicU64,
+    pub released: std::sync::atomic::AtomicU64,
+    pub compile_micros: std::sync::atomic::AtomicU64,
     slots: std::sync::Mutex<Vec<Arc<GuestResidencySlotV1<T>>>>,
 }
 
 /// 📏️ What a resident value holds beyond the bytes it was registered with, measured on the value itself once it exists
 /// and again after every codec call that used it — a guest's state can grow with its first call.
-pub(crate) trait GuestResidentFootprintV1 {
+pub trait GuestResidentFootprintV1 {
     /// 📐️ The bytes the value holds beyond its registration charge.
     fn footprint_bytes(&self) -> u64;
 }
@@ -554,7 +177,7 @@ impl<T> GuestResidencySlotV1<T> {
 }
 
 impl<T> GuestResidencyLedgerV1<T> {
-    pub(crate) fn new(residency: TrustedCatalogGuestResidencyV1) -> Arc<Self> {
+    pub fn new(residency: TrustedCatalogGuestResidencyV1) -> Arc<Self> {
         let counter = || std::sync::atomic::AtomicU64::new(0);
         Arc::new(Self {
             budget_bytes: std::sync::atomic::AtomicU64::new(residency.resident_component_bytes),
@@ -573,7 +196,7 @@ impl<T> GuestResidencyLedgerV1<T> {
     }
 
     /// 🪪️ Registers one value charged `charge_bytes` once resident; answers its residency handle.
-    pub(crate) fn register(self: &Arc<Self>, charge_bytes: u64) -> GuestResidencyV1<T> {
+    pub fn register(self: &Arc<Self>, charge_bytes: u64) -> GuestResidencyV1<T> {
         let slot = Arc::new(GuestResidencySlotV1 {
             value: tokio::sync::Mutex::new(GuestResidentValueV1::Absent),
             charge_bytes,
@@ -674,7 +297,7 @@ impl<T> GuestResidencyLedgerV1<T> {
     }
 
     /// 📏️ The ledger's state now.
-    pub(crate) fn state(&self) -> TrustedCatalogGuestResidencyStateV1 {
+    pub fn state(&self) -> TrustedCatalogGuestResidencyStateV1 {
         let slots = self.snapshot();
         let resident: Vec<_> = slots.iter().filter(|slot| slot.counts_as_resident()).collect();
         let load = |counter: &std::sync::atomic::AtomicU64| counter.load(std::sync::atomic::Ordering::Acquire);
@@ -695,9 +318,9 @@ impl<T> GuestResidencyLedgerV1<T> {
 }
 
 /// 🔑️ One value's place in a [`GuestResidencyLedgerV1`].
-pub(crate) struct GuestResidencyV1<T> {
+pub struct GuestResidencyV1<T> {
     ledger: Arc<GuestResidencyLedgerV1<T>>,
-    slot: Arc<GuestResidencySlotV1<T>>,
+    pub slot: Arc<GuestResidencySlotV1<T>>,
 }
 
 impl<T: GuestResidentFootprintV1 + Send + Sync + 'static> GuestResidencyV1<T> {
@@ -705,7 +328,7 @@ impl<T: GuestResidentFootprintV1 + Send + Sync + 'static> GuestResidencyV1<T> {
     /// none (one compile at a time). A value that is not admitted stays with the operation that compiled it — and
     /// with any other operation that reaches it meanwhile — and is dropped with the last of them; a held value
     /// is admitted as soon as its uses outnumber the values it would release.
-    pub(crate) async fn acquire<F, Fut>(&self, context: &OperationContext<'_>, compile: F) -> Result<Arc<T>, AuthorityError>
+    pub async fn acquire<F, Fut>(&self, context: &OperationContext<'_>, compile: F) -> Result<Arc<T>, AuthorityError>
     where
         F: FnOnce() -> Fut,
         Fut: std::future::Future<Output = Result<T, AuthorityError>>,
@@ -750,7 +373,7 @@ impl<T: GuestResidentFootprintV1 + Send + Sync + 'static> GuestResidencyV1<T> {
     /// outnumber those of every least recently used unheld value it would release — which are then released — and
     /// otherwise serves the operations holding it (this one among them) and is dropped with the last of them. A held value
     /// is charged its growth when it is next admitted; a value the slot no longer holds changes nothing.
-    pub(crate) async fn remeasure(&self, value: &Arc<T>, context: &OperationContext<'_>) {
+    pub async fn remeasure(&self, value: &Arc<T>, context: &OperationContext<'_>) {
         let footprint = value.footprint_bytes();
         if self.slot.footprint_bytes.load(std::sync::atomic::Ordering::Acquire) == footprint {
             return;
@@ -774,7 +397,7 @@ impl<T: GuestResidentFootprintV1 + Send + Sync + 'static> GuestResidencyV1<T> {
 impl<T> GuestResidencyV1<T> {
     /// 📏️ Whether a compiled value stays resident now (not merely held by a running operation).
     #[cfg(test)]
-    pub(crate) fn is_resident(&self) -> bool {
+    pub fn is_resident(&self) -> bool {
         self.slot.charged()
     }
 }
@@ -783,7 +406,7 @@ impl<T> GuestResidencyV1<T> {
 /// report into it, and the hub reads it for `/readyz` while it starts and for its admin observability route.
 #[derive(Default)]
 pub struct TrustedCatalogLoadProgressCellV1 {
-    progress: std::sync::Mutex<TrustedCatalogLoadProgressV1>,
+    pub progress: std::sync::Mutex<TrustedCatalogLoadProgressV1>,
 }
 
 impl TrustedCatalogLoadProgressCellV1 {
@@ -792,7 +415,7 @@ impl TrustedCatalogLoadProgressCellV1 {
         self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
     }
 
-    fn update(&self, change: impl FnOnce(&mut TrustedCatalogLoadProgressV1)) {
+    pub fn update(&self, change: impl FnOnce(&mut TrustedCatalogLoadProgressV1)) {
         let mut progress = self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         change(&mut progress);
         progress.packages_total = u64::try_from(progress.packages.len()).unwrap_or(u64::MAX);
@@ -804,11 +427,11 @@ impl TrustedCatalogLoadProgressCellV1 {
         progress.rows_verified = progress.packages.iter().map(|package| package.rows_verified).sum();
     }
 
-    fn select(&self, packages: Vec<TrustedCatalogPackageProgressV1>) {
+    pub fn select(&self, packages: Vec<TrustedCatalogPackageProgressV1>) {
         self.update(|progress| *progress = TrustedCatalogLoadProgressV1 { packages, ..TrustedCatalogLoadProgressV1::default() });
     }
 
-    fn package(&self, position: usize, change: impl FnOnce(&mut TrustedCatalogPackageProgressV1)) {
+    pub fn package(&self, position: usize, change: impl FnOnce(&mut TrustedCatalogPackageProgressV1)) {
         self.update(|progress| {
             if let Some(package) = progress.packages.get_mut(position) {
                 change(package);
@@ -816,7 +439,7 @@ impl TrustedCatalogLoadProgressCellV1 {
         });
     }
 
-    fn phase(&self, position: usize, phase: TrustedCatalogPackagePhaseV1) {
+    pub fn phase(&self, position: usize, phase: TrustedCatalogPackagePhaseV1) {
         self.package(position, |package| package.phase = phase);
     }
 
@@ -1008,7 +631,7 @@ impl GuestArtifactCodecBinding {
 /// the call at its next step, so no interpretation outlives the operation that asked for it and a
 /// runtime being dropped waits for none. The outer result is the caller's own outcome, the inner one
 /// the guest's answer. Guest codec calls belong to the hub's runtime; outside one they are refused.
-async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_guest_contract::TurnFault>, AuthorityError>
+pub async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_guest_contract::TurnFault>, AuthorityError>
 where
     T: Send + 'static,
     F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_guest_contract::GuestCallCancellation) -> Result<T, semio_framework_plugin_guest_contract::TurnFault> + Send + 'static,
@@ -1039,7 +662,7 @@ where
 
 /// ⏲️ How often a caller awaiting a guest call between two fuel observations (one per 25 M fuel or 5 s)
 /// looks at its own cancellation.
-const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duration::from_millis(50);
+pub const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duration::from_millis(50);
 
 /// 🧯️ The awaiting side of one guest call: however its caller is released — answered, refused, cancelled or
 /// dropped mid-await — the call is cancelled, which ends its interpretation at the next step (a call that already
@@ -1090,7 +713,7 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
         let maximum=usize::try_from(context.limits().max_pair_bytes).ok().and_then(|bytes|bytes.checked_mul(16)).and_then(|bytes|bytes.checked_add(operation.encoded.len().checked_mul(16)?)).ok_or(AuthorityError::ResourceLimit("identity source capacity"))?;
-        let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{context.report(super::AuthorityProgress{stage:super::AuthorityProgressStage::ApplyingOperations,completed_units:operation.sequence,total_units:context.limits().max_operations as u64}).is_ok()};
+        let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|{context.report(semio_hub_artifact_authority::AuthorityProgress{stage:semio_hub_artifact_authority::AuthorityProgressStage::ApplyingOperations,completed_units:operation.sequence,total_units:context.limits().max_operations as u64}).is_ok()};
         let mut identity=directory::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum,&mut observer).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
         let encoded=identity.encode(|control|directory::os_spr::io::binary::operation_sequence::encode(std::slice::from_ref(&operation.encoded),control)).map_err(|error|AuthorityError::Codec{stage:ArtifactValidationStage::Input,message:bounded_message(error)})?;
         let Some(codec) = &self.codec else {
@@ -1144,35 +767,14 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
 
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
-    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>>,
+    pub residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>>,
     guests: Box<[Arc<GuestArtifactComponent>]>,
-    progress: Arc<TrustedCatalogLoadProgressCellV1>,
-    packages: Box<[VerifiedTrustedPackage]>,
-    codecs: Box<[VerifiedNativeArtifactCodec]>,
+    pub progress: Arc<TrustedCatalogLoadProgressCellV1>,
+    pub packages: Box<[VerifiedTrustedPackage]>,
+    pub codecs: Box<[VerifiedNativeArtifactCodec]>,
     artifact_kind_count: usize,
-    open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
-    generation_id: String,
-}
-
-/// 🧱 The exact verified component, raw descriptor bytes and closed actor bound to one current
-/// selection. It is produced only by [`VerifiedTrustedCatalog::assets_for_current_selection`] and
-/// carries no path, origin or catalog handle; the component and actor are read on demand.
-pub struct VerifiedExecutionTargetAssets {
-    pub selection: VerifiedDocumentOpenSelectionV1,
-    pub component: TrustedCatalogAsset,
-    pub descriptor: Arc<[u8]>,
-    pub browser_actor: Option<TrustedCatalogAsset>,
-}
-
-/// 🧬 One exact document-open choice retained only after the complete catalog verifies.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct VerifiedDocumentOpenSelectionV1 {
-    pub package: DocumentOpenPackageV1,
-    pub artifact: DocumentOpenArtifactV1,
-    pub parent_dialect: semio_framework::ArtifactDialect,
-    pub surface: DocumentOpenSurfaceV1,
-    pub grant: DocumentOpenGrantV1,
-    pub browser_actor: DocumentOpenBrowserActorV1,
+    pub open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
+    pub generation_id: String,
 }
 
 impl VerifiedTrustedCatalog {
@@ -1276,7 +878,7 @@ impl VerifiedTrustedCatalog {
     /// 2026-09-29). Within the deciding tier the most general dialect creates ([`most_general_dialect`]): a kind whose subset
     /// editors share it with their whole-standard editor (stdio json, xml; the families' jpg, svg, tiff, step, docx, zip, ifc)
     /// is created by the whole-standard editor — the same app the guest answers `codec.genesis` with.
-    pub(crate) fn artifact_creation_selection(&self, kind_id: &str) -> Option<&VerifiedDocumentOpenSelectionV1> {
+    pub fn artifact_creation_selection(&self, kind_id: &str) -> Option<&VerifiedDocumentOpenSelectionV1> {
         let (hosted, owned): (Vec<_>, Vec<_>) = self.open_targets.iter().filter(|selection| selection.artifact.kind == kind_id && selection.surface.role == DocumentOpenSurfaceRoleV1::Editor).partition(|selection| self.hosted_row(selection).is_some());
         owner_preferred_creation(owned, hosted, |selection| &selection.parent_dialect).one()
     }
@@ -1306,7 +908,7 @@ impl VerifiedTrustedCatalog {
 
     /// 🗣️ Projects only unambiguous factory-backed choices from retained compiled descriptors. A hosted kind is labelled by its
     /// owner's declaration (a host carries only `{ id, schema, owner }`); a kind no declaration labels is not offered.
-    pub(crate) fn artifact_creation_catalog(&self, space_id: &str) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1> {
+    pub fn artifact_creation_catalog(&self, space_id: &str) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1> {
         use directory::os_directory::schema::space_artifact_creation::{
             SpaceArtifactCreationCatalogV1, SpaceArtifactCreationDialectV1, SpaceArtifactCreationKindV1, SpaceArtifactCreationLabelV1,
         };
@@ -1395,17 +997,9 @@ impl TrustedArtifactCatalog for VerifiedTrustedCatalog {
     }
 }
 
-impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
-    type Codec = VerifiedNativeArtifactCodec;
-
-    async fn resolve<'a>(&'a self, required: &TrustedArtifactIdentity) -> Result<&'a Self::Codec, AuthorityError> {
-        self.as_ref().resolve(required).await
-    }
-}
-
 /// 🪪️ What a remembered verification was computed by: the owned engine's semantic identity and the
 /// fuel ceiling every guest codec call runs under.
-pub(crate) fn guest_codec_engine_identity() -> String {
+pub fn guest_codec_engine_identity() -> String {
     format!("{}:fuel-{}", semio_framework_plugin_interpreter_runtime::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
 }
 
@@ -1420,32 +1014,32 @@ pub(crate) fn guest_codec_engine_identity() -> String {
 /// record never decides a verification: an unreadable record is a miss, and a record that cannot be
 /// written is recomputed on the next boot.
 #[derive(Clone)]
-pub(crate) struct GuestCodecVerificationCacheV1 {
-    root: Option<std::path::PathBuf>,
+pub struct GuestCodecVerificationCacheV1 {
+    pub root: Option<std::path::PathBuf>,
     engine: String,
 }
 
 impl GuestCodecVerificationCacheV1 {
     /// 📂️ The cache inside a hub's trusted catalog, keyed to the owned engine that interprets its guests.
-    pub(crate) fn beside(data_path: &Path) -> Self {
+    pub fn beside(data_path: &Path) -> Self {
         Self { root: Some(data_path.join("trusted-catalog").join("guest-codec-verifications")), engine: guest_codec_engine_identity() }
     }
 
     /// 🚫️ No memory at all: every verification interprets its component.
-    pub(crate) fn disabled() -> Self {
+    pub fn disabled() -> Self {
         Self { root: None, engine: String::new() }
     }
 
     #[cfg(test)]
-    pub(crate) fn at(root: std::path::PathBuf, engine: &str) -> Self {
+    pub fn at(root: std::path::PathBuf, engine: &str) -> Self {
         Self { root: Some(root), engine: engine.into() }
     }
 
-    fn record(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> GuestCodecVerificationV1 {
+    pub fn record(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> GuestCodecVerificationV1 {
         GuestCodecVerificationV1 { schema: GUEST_CODEC_VERIFICATION_SCHEMA.into(), component_sha256: hex_lower(component_sha256), artifact_schema: artifact_schema.into(), engine: self.engine.clone(), pack_schema_hash: hex_lower(pack_schema_hash) }
     }
 
-    fn path(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<std::path::PathBuf> {
+    pub fn path(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<std::path::PathBuf> {
         let root = self.root.as_ref()?;
         let key = serde_json::to_vec(&(GUEST_CODEC_VERIFICATION_SCHEMA, hex_lower(component_sha256), artifact_schema, &self.engine)).ok()?;
         let mut hash = Sha256::new();
@@ -1454,7 +1048,7 @@ impl GuestCodecVerificationCacheV1 {
     }
 
     /// 🔎️ The pack-schema hash remembered for exactly this component, schema and engine.
-    pub(crate) async fn recall(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<[u8; 32]> {
+    pub async fn recall(&self, component_sha256: &[u8; 32], artifact_schema: &str) -> Option<[u8; 32]> {
         let bytes = tokio::fs::read(self.path(component_sha256, artifact_schema)?).await.ok()?;
         if bytes.len() > 4096 {
             return None;
@@ -1465,7 +1059,7 @@ impl GuestCodecVerificationCacheV1 {
     }
 
     /// 💾️ Remembers one verification: written to a sibling temporary file, then renamed into place.
-    pub(crate) async fn remember(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> bool {
+    pub async fn remember(&self, component_sha256: &[u8; 32], artifact_schema: &str, pack_schema_hash: &[u8; 32]) -> bool {
         let Some(path) = self.path(component_sha256, artifact_schema) else { return false };
         let Ok(bytes) = serde_json::to_vec(&self.record(component_sha256, artifact_schema, pack_schema_hash)) else { return false };
         let staged = path.with_extension(format!("{}.tmp", std::process::id()));
@@ -1484,7 +1078,7 @@ impl GuestCodecVerificationCacheV1 {
 
 /// 🧵️ How many codec rows of one package are interpreted at once: the declared residency bound, never
 /// more than half the cores this hub may use, never fewer than one.
-pub(crate) fn guest_verification_concurrency() -> usize {
+pub fn guest_verification_concurrency() -> usize {
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
     TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications.min(cores / 2).max(1)
 }
@@ -1495,6 +1089,11 @@ pub struct TrustedCatalogLoader;
 impl TrustedCatalogLoader {
     /// 🛡️ Opens the current immutable generation beneath one server-owned Hub data root.
     pub async fn load_current(data_path: &Path, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<Option<VerifiedTrustedCatalog>, AuthorityError> {
+        Self::load_current_observed(data_path, providers, &Arc::default(), context).await
+    }
+
+    /// 📈️ Opens the current generation and reports every package's load progress into the host's `progress` cell.
+    pub async fn load_current_observed(data_path: &Path, providers: &dyn NativeCodecProviderSourceV1, progress: &Arc<TrustedCatalogLoadProgressCellV1>, context: &OperationContext<'_>) -> Result<Option<VerifiedTrustedCatalog>, AuthorityError> {
         if !data_path.try_exists().map_err(catalog_error)? {
             return Ok(None);
         }
@@ -1512,7 +1111,7 @@ impl TrustedCatalogLoader {
             return Err(catalog("trusted bundle differs from the current pointer digest"));
         }
         let verifications = GuestCodecVerificationCacheV1::beside(data_path);
-        let verified = Self::load_selected(&generation_root, bundle_path, bundle_bytes, &current.profile_id, providers, &verifications, context).await?;
+        let verified = Self::load_selected(&generation_root, bundle_path, bundle_bytes, &current.profile_id, providers, &verifications, progress, context).await?;
         if verified.generation_id() != current.generation_id {
             return Err(catalog("trusted current pointer generation differs from the selected profile"));
         }
@@ -1520,13 +1119,18 @@ impl TrustedCatalogLoader {
     }
 
     #[cfg(any(test, feature = "integration-fixtures"))]
-    pub(crate) async fn load_fixture(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+    pub async fn load_fixture(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+        Self::load_fixture_observed(bundle_path, profile_id, providers, &Arc::default(), context).await
+    }
+
+    #[cfg(any(test, feature = "integration-fixtures"))]
+    pub async fn load_fixture_observed(bundle_path: &Path, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, progress: &Arc<TrustedCatalogLoadProgressCellV1>, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let path = std::fs::canonicalize(bundle_path).map_err(catalog_error)?;
         let fixture_root = path.parent().ok_or_else(|| catalog("bundle has no containing directory"))?;
         let generation_root = Arc::new(TrustedCatalogGenerationRoot::open_fixture_owned(fixture_root)?);
         let bundle_path = TrustedCatalogRelativePathV1::parse(path.file_name().and_then(|name| name.to_str()).ok_or_else(|| catalog("fixture bundle name is not UTF-8"))?)?;
         let bundle_bytes = generation_root.read_regular(&bundle_path, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
-        Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, &GuestCodecVerificationCacheV1::disabled(), context).await
+        Self::load_selected(&generation_root, bundle_path, bundle_bytes, profile_id, providers, &GuestCodecVerificationCacheV1::disabled(), progress, context).await
     }
 
     async fn load_selected(
@@ -1536,9 +1140,10 @@ impl TrustedCatalogLoader {
         profile_id: &str,
         providers: &dyn NativeCodecProviderSourceV1,
         verifications: &GuestCodecVerificationCacheV1,
+        progress: &Arc<TrustedCatalogLoadProgressCellV1>,
         context: &OperationContext<'_>,
     ) -> Result<VerifiedTrustedCatalog, AuthorityError> {
-        let (catalog, registration) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
+        let (catalog, registration) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, progress, context).await?;
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(catalog_error)?;
         os_store::codec_registry::preflight_document_codecs_in_assembly(&assembly, &registration.document_codecs).map_err(catalog_error)?;
         directory::io::preflight_artifact_codec_bindings_in_assembly(&assembly,&registration.document_bindings,&registration.document_codecs).map_err(catalog_error)?;
@@ -1559,12 +1164,13 @@ impl TrustedCatalogLoader {
         profile_id: &str,
         providers: &dyn NativeCodecProviderSourceV1,
         verifications: &GuestCodecVerificationCacheV1,
+        progress: &Arc<TrustedCatalogLoadProgressCellV1>,
         context: &OperationContext<'_>,
     ) -> Result<(VerifiedTrustedCatalog, ArtifactAssemblyRegistryPlan), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let guest_runtime = Arc::new(semio_framework_plugin_interpreter_runtime::OwnedRuntime::new());
         let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
-        let progress = context.catalog_progress().unwrap_or_default();
+        let progress = Arc::clone(progress);
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         progress.select(
@@ -1886,889 +1492,6 @@ impl TrustedCatalogLoader {
     }
 }
 
-/// 🧩️ Reads, verifies and retains one package's plugin module: the manifest against its record and the
-/// package's own verified digests, then every file against the manifest. A file several modules share
-/// (the vendored imports, the fonts) is one content-addressed file, verified once per load.
-async fn verify_plugin_module(
-    root: &Arc<TrustedCatalogGenerationRoot>,
-    record: &TrustedBundlePackageV1,
-    component_sha256: &str,
-    descriptor_sha256: &str,
-    resolved_paths: &mut BTreeSet<TrustedCatalogRelativePathV1>,
-    verified_files: &mut BTreeMap<String, (TrustedPluginModuleFileV1, TrustedCatalogAsset)>,
-    context: &OperationContext<'_>,
-) -> Result<VerifiedPluginModule, AuthorityError> {
-    let manifest_path = TrustedCatalogRelativePathV1::parse(&record.plugin_module.path)?;
-    if !resolved_paths.insert(manifest_path.clone()) {
-        return Err(catalog("trusted plugin module path is already used by the selected closure"));
-    }
-    let manifest_bytes = root.read_regular(&manifest_path, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, context).await?;
-    verify_length(record.plugin_module.byte_length, manifest_bytes.len())?;
-    let (manifest_sha256, manifest_blake3) = dual_hash(&manifest_bytes, context).await?;
-    verify_digest(&record.plugin_module.sha256, manifest_sha256, "plugin module sha256")?;
-    verify_digest(&record.plugin_module.blake3, manifest_blake3, "plugin module blake3")?;
-    let receipt_sha256 = hex_lower(&Sha256::digest(&record.receipt.encode_canonical()));
-    let source = TrustedPluginModuleSourceV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version, component_sha256, descriptor_byte_sha256: descriptor_sha256, receipt_sha256: &receipt_sha256 };
-    let bundle = decode_plugin_module_bundle(&manifest_bytes, source)?;
-    let mut files = BTreeMap::new();
-    for file in &bundle.files {
-        context.checkpoint()?;
-        let asset = match verified_files.get(&file.sha256) {
-            Some((known, asset)) if known.byte_length == file.byte_length && known.blake3 == file.blake3 => asset.clone(),
-            Some(_) => return Err(catalog("trusted plugin module files disagree about one content address")),
-            None => {
-                let path = TrustedCatalogRelativePathV1::parse(&plugin_module_blob_path(&file.sha256))?;
-                if !resolved_paths.insert(path.clone()) {
-                    return Err(catalog("trusted plugin module file path is already used by the selected closure"));
-                }
-                let bytes = root.read_regular(&path, file.byte_length, context).await?;
-                let (sha256, blake3) = dual_hash(&bytes, context).await?;
-                verify_plugin_module_file(file, bytes.len(), sha256, blake3)?;
-                drop(bytes);
-                let asset = TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(root), path, file.byte_length, sha256, Some(blake3)));
-                verified_files.insert(file.sha256.clone(), (file.clone(), asset.clone()));
-                asset
-            }
-        };
-        files.insert(file.path.clone(), asset);
-    }
-    Ok(VerifiedPluginModule { bundle_sha256: hex_lower(&manifest_sha256), manifest_bytes: manifest_bytes.into(), bundle, files })
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct CodecKey {
-    plugin_id: String,
-    package_id: String,
-    artifact_kind: String,
-    artifact_schema: String,
-}
-
-impl CodecKey {
-    fn from_parts(plugin_id: &str, package_id: &str, artifact_kind: &str, artifact_schema: &str) -> Self {
-        Self { plugin_id: plugin_id.to_string(), package_id: package_id.to_string(), artifact_kind: artifact_kind.to_string(), artifact_schema: artifact_schema.to_string() }
-    }
-}
-
-fn catalog(message: &str) -> AuthorityError {
-    AuthorityError::Catalog(bounded_message(message))
-}
-
-fn catalog_error(error: impl std::fmt::Display) -> AuthorityError {
-    AuthorityError::Catalog(bounded_message(error))
-}
-
-fn valid_identity(value: &str) -> bool {
-    !value.is_empty() && value.len() <= TRUSTED_IDENTITY_MAX_BYTES && value.trim() == value
-}
-
-fn valid_open_identity(value: &str) -> bool {
-    valid_identity(value) && !value.chars().any(char::is_control)
-}
-
-/// 🗂️ The one pairing rule between a verified descriptor's artifact kinds and its surfaces, shared by
-/// publication ([`descriptor_open_targets`]) and verification ([`validate_descriptor_open_target`]). A
-/// plugin-level kind (`PluginBuilder::artifact_kind`, the channel GIS still uses) is opened only by the
-/// surfaces whose own dialect names it, even when a sibling app lists it as an input (GIS's terrain editor
-/// lists the map). Any other kind is opened by the editor that declares it itself (where a plugin migrated
-/// onto the declaration tree, ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, stitches its spec)
-/// and by the viewers of that editor's dialect, the read-only surface of the same documents. A HOSTED kind
-/// (`PluginManifest::hosted_artifact_kinds`) opens in the host surfaces whose dialect names it (a family hosting its owner's
-/// kind, `PluginBuilder::host_artifact`) or whose io presents it — an embedded editor of another plugin's artifact
-/// (demonstrator's cad editor presents `3d.cad`) — and in the viewers of a presenting editor's dialect.
-fn app_opens_kind(descriptor: &PackageDescriptor, app: &semio_framework::AppDefinition, artifact_kind: &str, artifact_schema: &str) -> bool {
-    let declares = |kinds: &[semio_framework::ArtifactKindSpec]| kinds.iter().any(|kind| kind.id == artifact_kind && kind.schema == artifact_schema);
-    if declares(&descriptor.manifest.artifact_kinds) {
-        return app.dialect.artifact_kind == artifact_kind;
-    }
-    if descriptor.manifest.hosted_artifact_kinds.iter().any(|kind| kind.id == artifact_kind && kind.schema == artifact_schema) {
-        let presents = |candidate: &semio_framework::AppDefinition| candidate.io.artifact.id == artifact_kind && candidate.io.artifact_schema == artifact_schema;
-        return app.dialect.artifact_kind == artifact_kind
-            || presents(app)
-            || (app.role == semio_framework::AppRole::Viewer && descriptor.manifest.apps.iter().any(|editor| editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect && presents(editor)));
-    }
-    match app.role {
-        semio_framework::AppRole::Editor => declares(&app.artifact_kinds),
-        semio_framework::AppRole::Viewer => declares(&app.artifact_kinds) || descriptor.manifest.apps.iter().any(|editor| editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect && declares(&editor.artifact_kinds)),
-    }
-}
-
-/// 🎯️ Every document-open surface one verified descriptor declares, in app then kind declaration order:
-/// each (editor or viewer, kind) pair [`app_opens_kind`] admits, in the app's first window kind, rendered by
-/// the catalog's closed wasm actor, with the grant its role fixes (a viewer reads and observes, never writes),
-/// so a read-only member opens the same document through its viewer. `os-hub trusted-catalog open-targets`
-/// answers exactly this list, so a publisher never re-derives the rule.
-pub fn descriptor_open_targets(descriptor: &PackageDescriptor) -> Vec<schema::TrustedDescriptorOpenTargetV1> {
-    if descriptor.execution != semio_framework::ExecutionMode::Isolated {
-        return Vec::new();
-    }
-    let mut targets = Vec::new();
-    for app in &descriptor.manifest.apps {
-        if app.id != semio_framework::surface_app_id(&app.dialect, app.role) {
-            continue;
-        }
-        let role = match app.role {
-            semio_framework::AppRole::Viewer => TrustedBundleOpenRole::Viewer,
-            semio_framework::AppRole::Editor => TrustedBundleOpenRole::Editor,
-        };
-        let mut seen = BTreeSet::new();
-        let editors = descriptor.manifest.apps.iter().filter(|editor| app.role == semio_framework::AppRole::Viewer && editor.role == semio_framework::AppRole::Editor && editor.dialect == app.dialect);
-        let owned = descriptor.manifest.artifact_kinds.iter().chain(app.artifact_kinds.iter()).chain(editors.flat_map(|editor| editor.artifact_kinds.iter())).map(|kind| (kind.id.as_str(), kind.schema.as_str()));
-        let hosted = descriptor.manifest.hosted_artifact_kinds.iter().map(|kind| (kind.id.as_str(), kind.schema.as_str()));
-        for (kind_id, kind_schema) in owned.chain(hosted) {
-            if !seen.insert((kind_id, kind_schema)) || !app_opens_kind(descriptor, app, kind_id, kind_schema) {
-                continue;
-            }
-            targets.push(schema::TrustedDescriptorOpenTargetV1 {
-                artifact_kind: kind_id.to_string(),
-                artifact_schema: kind_schema.to_string(),
-                surface_id: app.id.clone(),
-                app_id: app.id.clone(),
-                window_kind_id: app.window_kinds.first().id.clone(),
-                role,
-                renderer_target: TrustedBundleRendererTarget::Wasm,
-                parent_dialect: app.dialect.clone(),
-                grant: TrustedBundleGrantV1 { read: true, write: matches!(role, TrustedBundleOpenRole::Editor), observe: true },
-            });
-        }
-    }
-    targets
-}
-
-/// 🏠️ The package whose native codec one document-open target of `host` binds: `host` itself when it declares that exact
-/// codec, else — for a kind `host` hosts — the ONE declared dependency of `host` in this catalog that declares the exact
-/// codec (the load then holds it to the hosted row's explicit owner). Codec rows never move: a host carries none for the
-/// kinds it hosts, and no owner is ever read off a kind id.
-fn open_target_codec_package<'a>(packages: &'a [TrustedBundlePackageV1], host: &'a TrustedBundlePackageV1, target: &TrustedBundleOpenTargetV1) -> Result<&'a TrustedBundlePackageV1, AuthorityError> {
-    let binds = |package: &TrustedBundlePackageV1| package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash);
-    if binds(host) {
-        return Ok(host);
-    }
-    let mut owners = packages.iter().filter(|package| package.plugin_id != host.plugin_id && host.dependencies.iter().any(|dependency| dependency.plugin_id == package.plugin_id) && binds(package));
-    let owner = owners.next().ok_or_else(|| catalog("trusted document-open target binds no exact native codec of its own package or of a declared dependency in the catalog"))?;
-    if owners.next().is_some() {
-        return Err(catalog("trusted document-open target binds an exact native codec more than one declared dependency declares"));
-    }
-    Ok(owner)
-}
-
-/// 🏠️ The distinct HOSTED codec identities of `host`'s `selected` open targets, each with the declared dependency that owns
-/// it ([`open_target_codec_package`]). A document a host creates or opens names the host as its descriptor owner (the host's
-/// component ships the surface), so the catalog executes it under the host's own identity: the owner's native codec when the
-/// hub links one, and the host's component for genesis and every guest codec call — never the owner's component, which need
-/// not ship the surface (the `stdio` component ships none of its families' apps).
-fn hosted_codec_targets<'a>(packages: &'a [TrustedBundlePackageV1], host: &'a TrustedBundlePackageV1, selected: impl Fn(&TrustedBundleOpenTargetV1) -> bool) -> Result<Vec<(&'a TrustedBundlePackageV1, &'a TrustedBundleOpenTargetV1)>, AuthorityError> {
-    let mut hosted: Vec<(&TrustedBundlePackageV1, &TrustedBundleOpenTargetV1)> = Vec::new();
-    for target in host.open_targets.iter().filter(|target| selected(target)) {
-        let owner = open_target_codec_package(packages, host, target)?;
-        if owner.plugin_id != host.plugin_id && !hosted.iter().any(|(_, known)| known.artifact_kind == target.artifact_kind && known.artifact_schema == target.artifact_schema && known.pack_schema_hash == target.pack_schema_hash) {
-            hosted.push((owner, target));
-        }
-    }
-    Ok(hosted)
-}
-
-/// 🌱️ The owner-preferred creation rule over two candidate tiers — the owners' editors, then the hosts' editors: the first
-/// non-empty tier decides by [`most_general_dialect`], so a host never makes an owner's kind ambiguous, a whole-standard
-/// editor creates for its subset editors, and two most general editors (two owners, two standards) never pick one.
-fn owner_preferred_creation<T>(owned: Vec<T>, hosted: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
-    most_general_dialect(if owned.is_empty() { hosted } else { owned }, dialect)
-}
-
-/// 🌳️ What [`most_general_dialect`] answers over the surfaces of one role that share a document.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MostGeneralDialect<T> {
-    One(T),
-    Ambiguous,
-    Empty,
-}
-
-impl<T> MostGeneralDialect<T> {
-    /// 🎯️ The one answer, when there is one.
-    fn one(self) -> Option<T> {
-        match self {
-            Self::One(candidate) => Some(candidate),
-            Self::Ambiguous | Self::Empty => None,
-        }
-    }
-}
-
-/// 🌳️ The ONE most-general-dialect rule ([fixture](../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json),
-/// read by the guest's `artifact_codec_owner` too): the candidate no other candidate covers ([`dialect_covers`]); several
-/// uncovered candidates are ambiguous and refused rather than resolved by order.
-fn most_general_dialect<T>(candidates: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {
-    let covered = candidates.iter().map(|candidate| candidates.iter().any(|other| dialect_covers(dialect(other), dialect(candidate)))).collect::<Vec<_>>();
-    let mut uncovered = candidates.into_iter().zip(covered).filter_map(|(candidate, covered)| (!covered).then_some(candidate));
-    match (uncovered.next(), uncovered.next()) {
-        (Some(one), None) => MostGeneralDialect::One(one),
-        (Some(_), Some(_)) => MostGeneralDialect::Ambiguous,
-        (None, _) => MostGeneralDialect::Empty,
-    }
-}
-
-/// 🌳️ Whether `general` is the whole-standard dialect (`<kind>@<standard>/*`) of `subset`'s own kind and standard: every
-/// document of a subset of a standard is a document of the whole standard, so the whole-standard surface covers it.
-fn dialect_covers(general: &semio_framework::ArtifactDialect, subset: &semio_framework::ArtifactDialect) -> bool {
-    let any = semio_framework::SubsetId::ANY.0;
-    general.subset == any && subset.subset != any && general.artifact_kind == subset.artifact_kind && general.standard == subset.standard
-}
-
-/// 🏷️ The declaration of `selection`'s exact kind among `kinds`.
-fn declared_kind<'a>(mut kinds: impl Iterator<Item = &'a semio_framework::ArtifactKindSpec>, selection: &VerifiedDocumentOpenSelectionV1) -> Option<&'a semio_framework::ArtifactKindSpec> {
-    kinds.find(|kind| kind.id == selection.artifact.kind && kind.schema == selection.artifact.schema)
-}
-
-/// 📤️ Answers `os-hub trusted-catalog open-targets`: decodes one bounded descriptor exactly as the loader
-/// does and serializes [`descriptor_open_targets`] as `TrustedCatalogDescriptorOpenTargetsV1`.
-pub fn descriptor_open_targets_answer(descriptor_bytes: &[u8]) -> Result<Vec<u8>, AuthorityError> {
-    if descriptor_bytes.is_empty() || descriptor_bytes.len() as u64 > TRUSTED_DESCRIPTOR_MAX_BYTES {
-        return Err(catalog("descriptor bytes are empty or exceed the trusted descriptor bound"));
-    }
-    let descriptor = decode_package_descriptor(descriptor_bytes)?;
-    let targets = descriptor_open_targets(&descriptor);
-    if targets.len() > TRUSTED_CATALOG_MAX_OPEN_TARGETS {
-        return Err(AuthorityError::ResourceLimit("trusted document-open target count"));
-    }
-    let mut bytes = serde_json::to_vec(&schema::TrustedCatalogDescriptorOpenTargetsV1 { schema: schema::TRUSTED_CATALOG_DESCRIPTOR_OPEN_TARGETS_SCHEMA, targets }).map_err(catalog_error)?;
-    bytes.push(b'\n');
-    Ok(bytes)
-}
-
-fn validate_descriptor_open_target(descriptor: &PackageDescriptor, target: &TrustedBundleOpenTargetV1) -> Result<semio_framework::ArtifactDialect, AuthorityError> {
-    let expected_role = match target.role {
-        TrustedBundleOpenRole::Viewer => semio_framework::AppRole::Viewer,
-        TrustedBundleOpenRole::Editor => semio_framework::AppRole::Editor,
-    };
-    let app = descriptor.manifest.apps.iter().find(|app| app.id == target.app_id).ok_or_else(|| catalog("document-open target app is absent from the verified descriptor"))?;
-    if !app_opens_kind(descriptor, app, &target.artifact_kind, &target.artifact_schema)
-        || app.id != target.surface_id
-        || app.id != semio_framework::surface_app_id(&app.dialect, app.role)
-        || app.role != expected_role
-        || app.dialect != target.parent_dialect
-        || [&app.dialect.artifact_kind, &app.dialect.standard, &app.dialect.subset].into_iter().any(|value| !valid_open_identity(value))
-        || !app.window_kinds.iter().any(|window| window.id == target.window_kind_id)
-        || descriptor.execution != semio_framework::ExecutionMode::Isolated
-        || target.renderer_target != TrustedBundleRendererTarget::Wasm
-    {
-        return Err(catalog("document-open target surface, app, window, role, renderer, or artifact differs from the verified descriptor"));
-    }
-    Ok(app.dialect.clone())
-}
-
-fn document_open_target_sort_key(target: &VerifiedDocumentOpenSelectionV1) -> [&str; 18] {
-    let role = match target.surface.role {
-        DocumentOpenSurfaceRoleV1::Viewer => "viewer",
-        DocumentOpenSurfaceRoleV1::Editor => "editor",
-    };
-    let renderer = match target.surface.renderer_target {
-        DocumentOpenRendererTargetV1::React => "react",
-        DocumentOpenRendererTargetV1::Wgpu => "wgpu",
-        DocumentOpenRendererTargetV1::Wasm => "wasm",
-    };
-    [
-        &target.package.plugin_id,
-        &target.package.package_id,
-        &target.package.version,
-        &target.package.component_sha256,
-        &target.package.component_blake3,
-        &target.package.descriptor_byte_sha256,
-        &target.artifact.kind,
-        &target.artifact.schema,
-        &target.artifact.pack_schema_hash,
-        &target.parent_dialect.artifact_kind,
-        &target.parent_dialect.standard,
-        &target.parent_dialect.subset,
-        &target.surface.surface_id,
-        &target.surface.app_id,
-        &target.surface.window_kind_id,
-        role,
-        renderer,
-        if target.grant.write { "111" } else { "101" },
-    ]
-}
-
-fn sort_open_targets(targets: &mut [VerifiedDocumentOpenSelectionV1]) {
-    targets.sort_by(|left, right| document_open_target_sort_key(left).cmp(&document_open_target_sort_key(right)));
-}
-
-fn append_document_open_catalog_field(output: &mut Vec<u8>, value: &[u8]) -> Result<(), AuthorityError> {
-    let length = u64::try_from(value.len()).map_err(catalog_error)?;
-    output.extend_from_slice(&length.to_be_bytes());
-    output.extend_from_slice(value);
-    Ok(())
-}
-
-fn selected_closure_digest(identities: &[TrustedBundleIdentityV1]) -> Result<[u8; 32], AuthorityError> {
-    let mut encoded = b"semio/hub/trusted-profile-selected-closure/v1\0".to_vec();
-    encoded.extend_from_slice(&u32::try_from(identities.len()).map_err(catalog_error)?.to_be_bytes());
-    for identity in identities {
-        for value in [identity.plugin_id.as_bytes(), identity.package_id.as_bytes(), identity.version.as_bytes()] {
-            append_document_open_catalog_field(&mut encoded, value)?;
-        }
-    }
-    Ok(Sha256::digest(&encoded))
-}
-
-fn package_actor_renderer(package: &TrustedBundlePackageV1) -> &'static str {
-    if package.open_targets.iter().any(|target| matches!(target.renderer_target, TrustedBundleRendererTarget::Wasm)) {
-        "wasm"
-    } else {
-        "react"
-    }
-}
-
-/// 🧮️ Frames resolved dependency identities in native tuple order for every profile generation.
-fn append_trusted_profile_dependencies(encoded: &mut Vec<u8>, dependencies: &[TrustedBundleIdentityV1]) -> Result<(), AuthorityError> {
-    let mut dependencies = dependencies.iter().collect::<Vec<_>>();
-    dependencies.sort();
-    encoded.extend_from_slice(&u32::try_from(dependencies.len()).map_err(catalog_error)?.to_be_bytes());
-    for dependency in dependencies {
-        for value in [dependency.plugin_id.as_bytes(), dependency.package_id.as_bytes(), dependency.version.as_bytes()] {
-            append_document_open_catalog_field(encoded, value)?;
-        }
-    }
-    Ok(())
-}
-
-/// 🎯️ The whole SET, in one canonical order, so a generation id names every creatable kind it
-/// admits — not merely the first (ticket 26/09/18 slice TC3b). The count is framed ahead of the
-/// rows exactly as the selected closure's is, so adding a target can never collide with a
-/// different bundle whose rows happen to concatenate identically.
-fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleProfileV1) -> Result<String, AuthorityError> {
-    let mut encoded = Vec::new();
-    encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v2\0");
-    append_document_open_catalog_field(&mut encoded, profile.id.as_bytes())?;
-    encoded.extend_from_slice(&u32::try_from(profile.selected_closure.len()).map_err(catalog_error)?.to_be_bytes());
-    for identity in &profile.selected_closure {
-        let package = bundle
-            .packages
-            .iter()
-            .find(|package| package.plugin_id == identity.plugin_id && package.package_id == identity.package_id && package.version == identity.version)
-            .ok_or_else(|| catalog("profile generation package is outside its selected closure"))?;
-        let role = match package.role {
-            TrustedBundlePackageRole::Plugin => b"plugin".as_slice(),
-            TrustedBundlePackageRole::Extension => b"extension".as_slice(),
-        };
-        for value in [
-            package.plugin_id.as_bytes(),
-            package.package_id.as_bytes(),
-            package.version.as_bytes(),
-            role,
-            decode_digest(&package.component.sha256, "profile component sha256")?.as_slice(),
-            decode_digest(&package.component.blake3, "profile component blake3")?.as_slice(),
-            decode_digest(&package.descriptor.sha256, "profile descriptor sha256")?.as_slice(),
-            package.receipt.encode_canonical().as_slice(),
-            package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
-        ] {
-            append_document_open_catalog_field(&mut encoded, value)?;
-        }
-        package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
-        package.browser_actor.append_generation(&mut encoded)?;
-        append_document_open_catalog_field(&mut encoded, package.plugin_module.path.as_bytes())?;
-        encoded.extend_from_slice(&package.plugin_module.byte_length.to_be_bytes());
-        append_document_open_catalog_field(&mut encoded, decode_digest(&package.plugin_module.sha256, "profile plugin module sha256")?.as_slice())?;
-        append_document_open_catalog_field(&mut encoded, decode_digest(&package.plugin_module.blake3, "profile plugin module blake3")?.as_slice())?;
-        append_trusted_profile_dependencies(&mut encoded, &package.dependencies)?;
-        let mut codecs = package.native_codecs.iter().collect::<Vec<_>>();
-        codecs.sort_by(|left, right| (&left.artifact_kind, &left.artifact_schema, &left.pack_schema_hash).cmp(&(&right.artifact_kind, &right.artifact_schema, &right.pack_schema_hash)));
-        encoded.extend_from_slice(&u32::try_from(codecs.len()).map_err(catalog_error)?.to_be_bytes());
-        for codec in codecs {
-            append_document_open_catalog_field(&mut encoded, codec.artifact_kind.as_bytes())?;
-            append_document_open_catalog_field(&mut encoded, codec.artifact_schema.as_bytes())?;
-            append_document_open_catalog_field(&mut encoded, decode_digest(&codec.pack_schema_hash, "profile codec pack schema hash")?.as_slice())?;
-        }
-    }
-    let mut selected = profile.open_targets.iter().collect::<Vec<_>>();
-    selected.sort_by(|left, right| {
-        (&left.package.plugin_id, &left.package.package_id, &left.package.version, &left.target.artifact_kind, &left.target.artifact_schema, &left.target.surface_id, left.target.role as u8)
-            .cmp(&(&right.package.plugin_id, &right.package.package_id, &right.package.version, &right.target.artifact_kind, &right.target.artifact_schema, &right.target.surface_id, right.target.role as u8))
-    });
-    encoded.extend_from_slice(&u32::try_from(selected.len()).map_err(catalog_error)?.to_be_bytes());
-    for selection in selected {
-        let package = bundle
-            .packages
-            .iter()
-            .find(|package| package.plugin_id == selection.package.plugin_id && package.package_id == selection.package.package_id && package.version == selection.package.version)
-            .ok_or_else(|| catalog("profile generation open-target package is absent"))?;
-        let target = &selection.target;
-        let role = match target.role {
-            TrustedBundleOpenRole::Viewer => b"viewer".as_slice(),
-            TrustedBundleOpenRole::Editor => b"editor".as_slice(),
-        };
-        let renderer = match target.renderer_target {
-            TrustedBundleRendererTarget::React => b"react".as_slice(),
-            TrustedBundleRendererTarget::Wgpu => b"wgpu".as_slice(),
-            TrustedBundleRendererTarget::Wasm => b"wasm".as_slice(),
-        };
-        for value in [
-            package.plugin_id.as_bytes(),
-            package.package_id.as_bytes(),
-            package.version.as_bytes(),
-            decode_digest(&package.component.sha256, "open target component sha256")?.as_slice(),
-            decode_digest(&package.component.blake3, "open target component blake3")?.as_slice(),
-            decode_digest(&package.descriptor.sha256, "open target descriptor sha256")?.as_slice(),
-            package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
-            target.artifact_kind.as_bytes(),
-            target.artifact_schema.as_bytes(),
-            decode_digest(&target.pack_schema_hash, "open target pack schema hash")?.as_slice(),
-            target.parent_dialect.artifact_kind.as_bytes(),
-            target.parent_dialect.standard.as_bytes(),
-            target.parent_dialect.subset.as_bytes(),
-            target.surface_id.as_bytes(),
-            target.app_id.as_bytes(),
-            target.window_kind_id.as_bytes(),
-            role,
-            renderer,
-            [u8::from(target.grant.read), u8::from(target.grant.write), u8::from(target.grant.observe)].as_slice(),
-        ] {
-            append_document_open_catalog_field(&mut encoded, value)?;
-        }
-    }
-    Ok(hex_lower(&Sha256::digest(&encoded)))
-}
-
-/// 🧬️ Recomputes the two canonical profile digests without trusting carried digest fields.
-pub fn trusted_profile_digests_json(bundle_bytes: &[u8], profile_id: &str) -> Result<(String, String), AuthorityError> {
-    let bundle: TrustedBundleV1 = serde_json::from_slice(bundle_bytes).map_err(catalog_error)?;
-    let profile = bundle.profiles.iter().find(|profile| profile.id == profile_id).ok_or_else(|| catalog("trusted profile digest source is missing"))?;
-    Ok((hex_lower(&selected_closure_digest(&profile.selected_closure)?), trusted_profile_generation(&bundle, profile)?))
-}
-
-fn valid_package_id(value: &str) -> bool {
-    let Some(name) = value.strip_prefix("semio:") else { return false };
-    !name.is_empty() && value.len() <= TRUSTED_IDENTITY_MAX_BYTES && !name.starts_with('-') && !name.ends_with('-') && !name.contains("--") && name.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
-}
-
-fn ensure_count(actual: usize, maximum: usize, resource: &'static str) -> Result<(), AuthorityError> {
-    if actual > maximum {
-        return Err(AuthorityError::ResourceLimit(resource));
-    }
-    Ok(())
-}
-
-fn validate_identity(identity: &TrustedBundleIdentityV1) -> Result<(), AuthorityError> {
-    if !valid_identity(&identity.plugin_id) || !valid_package_id(&identity.package_id) || !valid_identity(&identity.version) {
-        return Err(catalog("trusted package identity is empty, padded, or oversized"));
-    }
-    Ok(())
-}
-
-fn validate_file(file: &TrustedBundleFileV1, maximum: u64) -> Result<(), AuthorityError> {
-    if file.path.is_empty() || file.path.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES || file.byte_length == 0 || file.byte_length > maximum {
-        return Err(catalog("trusted file record is empty or exceeds its fixed boundary"));
-    }
-    decode_digest(&file.sha256, "sha256")?;
-    Ok(())
-}
-
-/// 🎯️ An open target carries TWO artifact-kind ids from two deliberately distinct spaces, and they
-/// are never equal in a real bundle: `artifact_kind` is the manifest `ArtifactKindSpec::id`
-/// (`stdio.json` — `validate_descriptor_open_target` requires a manifest kind with exactly that id
-/// and schema), while `parent_dialect` is the owning app's `Dialect`, whose kind is the descriptor
-/// id (`s.stdio.json` — the same function requires `app.dialect == target.parent_dialect`). Every
-/// stdio artifact ships both spellings (`📜️native-codec-factories.json`: `artifact_kind` is
-/// `stdio.<x>` for all of them; every `Viewer::builder(…)` dialect is `s.stdio.<x>`). This loop
-/// used to refuse a target whose two spellings differed, which made every real stdio bundle
-/// unloadable and left `artifactAuthority` permanently not-ready. Binding is enforced where it is
-/// meaningful: to a native codec of the same package below, and to the descriptor's own app and
-/// artifact kind in `validate_descriptor_open_target`.
-fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<SelectedTrustedBundleV1, AuthorityError> {
-    if bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
-        return Err(catalog("trusted bundle shape or version is invalid"));
-    }
-    let mut plugins = BTreeMap::new();
-    let mut package_ids = BTreeSet::new();
-    let mut paths = BTreeSet::new();
-    for (index, package) in bundle.packages.iter().enumerate() {
-        let identity = TrustedBundleIdentityV1 { plugin_id: package.plugin_id.clone(), package_id: package.package_id.clone(), version: package.version.clone() };
-        validate_identity(&identity)?;
-        if plugins.insert(package.plugin_id.as_str(), index).is_some() || !package_ids.insert(package.package_id.as_str()) {
-            return Err(catalog("trusted plugin or package identity is duplicated"));
-        }
-        Version::parse(&package.version).map_err(catalog_error)?;
-        ensure_count(package.dependencies.len(), TRUSTED_PACKAGE_MAX_DEPENDENCIES, "trusted dependency count")?;
-        ensure_count(package.native_codecs.len(), TRUSTED_CATALOG_MAX_CODECS, "trusted codec count")?;
-        ensure_count(package.open_targets.len(), TRUSTED_CATALOG_MAX_OPEN_TARGETS, "trusted document-open target count")?;
-        validate_file(&TrustedBundleFileV1 { path: package.component.path.clone(), byte_length: package.component.byte_length, sha256: package.component.sha256.clone() }, TRUSTED_COMPONENT_MAX_BYTES)?;
-        decode_digest(&package.component.blake3, "component blake3")?;
-        validate_file(&package.descriptor, TRUSTED_DESCRIPTOR_MAX_BYTES)?;
-        if !paths.insert(package.component.path.clone()) || !paths.insert(package.descriptor.path.clone()) {
-            return Err(catalog("trusted file path is reused across package records"));
-        }
-        package.browser_actor.validate(DocumentBrowserActorSourceV1 { component_sha256: &package.component.sha256, descriptor_byte_sha256: &package.descriptor.sha256 }, package_actor_renderer(package))?;
-        if let Some(file) = package.browser_actor.file() {
-            if !paths.insert(file.path) {
-                return Err(catalog("trusted browser actor path is reused across package records"));
-            }
-        }
-        let module = &package.plugin_module;
-        if module.path.is_empty() || module.path.len() > TRUSTED_RELATIVE_PATH_MAX_BYTES || !(1..=TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES).contains(&module.byte_length) {
-            return Err(catalog("trusted plugin module record is empty or exceeds its fixed boundary"));
-        }
-        decode_digest(&module.sha256, "plugin module sha256")?;
-        decode_digest(&module.blake3, "plugin module blake3")?;
-        if !paths.insert(module.path.clone()) {
-            return Err(catalog("trusted plugin module path is reused across package records"));
-        }
-        let mut dependencies = BTreeSet::new();
-        for dependency in &package.dependencies {
-            validate_identity(dependency)?;
-            Version::parse(&dependency.version).map_err(catalog_error)?;
-            if !dependencies.insert(dependency) || dependency.plugin_id == package.plugin_id {
-                return Err(catalog("trusted dependency identity is duplicated or self-referential"));
-            }
-        }
-        let mut codec_identities = BTreeSet::new();
-        for codec in &package.native_codecs {
-            if !valid_identity(&codec.artifact_kind) || !valid_identity(&codec.artifact_schema) || decode_digest(&codec.pack_schema_hash, "pack schema hash")? == [0; 32] || !codec_identities.insert((codec.artifact_kind.as_str(), codec.artifact_schema.as_str())) {
-                return Err(catalog("trusted native codec identity is empty, zero, or duplicated"));
-            }
-        }
-        let mut open_target_keys = BTreeSet::new();
-        for target in &package.open_targets {
-            let expected_grant = TrustedBundleGrantV1 { read: true, write: matches!(target.role, TrustedBundleOpenRole::Editor), observe: true };
-            if !valid_open_identity(&target.artifact_kind)
-                || !valid_open_identity(&target.artifact_schema)
-                || !valid_open_identity(&target.surface_id)
-                || !valid_open_identity(&target.app_id)
-                || !valid_open_identity(&target.window_kind_id)
-                || [&target.parent_dialect.artifact_kind, &target.parent_dialect.standard, &target.parent_dialect.subset].into_iter().any(|value| !valid_open_identity(value))
-            {
-                return Err(catalog("trusted document-open target names an empty, padded or control-bearing identity"));
-            }
-            if target.grant != expected_grant {
-                return Err(catalog("trusted document-open target grant differs from the one its role fixes"));
-            }
-            if decode_digest(&target.pack_schema_hash, "open target pack schema hash")? == [0; 32] {
-                return Err(catalog("trusted document-open target pack schema hash is zero"));
-            }
-            open_target_codec_package(&bundle.packages, package, target)?;
-            if !open_target_keys.insert((target.artifact_kind.as_str(), target.artifact_schema.as_str(), target.surface_id.as_str(), target.role as u8)) {
-                return Err(catalog("trusted document-open target key is duplicated within one package"));
-            }
-        }
-    }
-    for package in &bundle.packages {
-        for dependency in &package.dependencies {
-            let index = *plugins.get(dependency.plugin_id.as_str()).ok_or_else(|| catalog("trusted bundle dependency is incomplete"))?;
-            let expected = &bundle.packages[index];
-            if expected.package_id != dependency.package_id || expected.version != dependency.version {
-                return Err(catalog("trusted bundle dependency identity conflicts with its package record"));
-            }
-        }
-    }
-    let mut profiles = BTreeSet::new();
-    let mut selected = None;
-    for profile in &bundle.profiles {
-        if !valid_identity(&profile.id)
-            || profile.selected_closure.is_empty()
-            || profile.selected_closure.len() > TRUSTED_CATALOG_MAX_PACKAGES
-            || !profiles.insert(profile.id.as_str())
-            || decode_digest(&profile.selected_closure_sha256, "selected closure sha256")? == [0; 32]
-            || decode_digest(&profile.generation_id, "profile generation id")? == [0; 32]
-        {
-            return Err(catalog("trusted bundle profile is empty, oversized, or duplicated"));
-        }
-        let mut prior_plugin = None;
-        let mut closure = BTreeSet::new();
-        for identity in &profile.selected_closure {
-            validate_identity(identity)?;
-            if prior_plugin.is_some_and(|prior: &str| prior >= identity.plugin_id.as_str()) {
-                return Err(catalog("trusted bundle selected closure is not in canonical plugin order"));
-            }
-            prior_plugin = Some(identity.plugin_id.as_str());
-            let index = *plugins.get(identity.plugin_id.as_str()).ok_or_else(|| catalog("trusted bundle selected closure is incomplete"))?;
-            let expected = &bundle.packages[index];
-            if expected.package_id != identity.package_id || expected.version != identity.version || !closure.insert(index) {
-                return Err(catalog("trusted bundle selected closure conflicts with its package record"));
-            }
-        }
-        if hex_lower(&selected_closure_digest(&profile.selected_closure)?) != profile.selected_closure_sha256 {
-            return Err(catalog("trusted bundle selected closure digest differs"));
-        }
-        if profile.open_targets.is_empty() || profile.open_targets.len() > TRUSTED_CATALOG_MAX_OPEN_TARGETS {
-            return Err(catalog("trusted profile declares no document-open target or exceeds the generation ceiling"));
-        }
-        let mut profile_target_keys = BTreeSet::new();
-        for selection in &profile.open_targets {
-            validate_identity(&selection.package)?;
-            let target_index = *plugins.get(selection.package.plugin_id.as_str()).ok_or_else(|| catalog("trusted profile open target package is absent"))?;
-            let target_package = &bundle.packages[target_index];
-            if !closure.contains(&target_index) || target_package.package_id != selection.package.package_id || target_package.version != selection.package.version || !target_package.open_targets.contains(&selection.target) {
-                return Err(catalog("trusted profile open target is outside its selected closure"));
-            }
-            if !profile_target_keys.insert((
-                selection.package.plugin_id.as_str(),
-                selection.package.package_id.as_str(),
-                selection.target.artifact_kind.as_str(),
-                selection.target.artifact_schema.as_str(),
-                selection.target.surface_id.as_str(),
-                selection.target.role as u8,
-            )) {
-                return Err(catalog("trusted profile declares the same document-open target twice"));
-            }
-        }
-        if profile.id == "local-stdio-gis-open-v1" {
-            let identities = profile.selected_closure.iter().map(|identity| (identity.plugin_id.as_str(), identity.package_id.as_str())).collect::<Vec<_>>();
-            let gis = bundle.packages.iter().find(|package| package.plugin_id == "gis");
-            let stdio = bundle.packages.iter().find(|package| package.plugin_id == "stdio");
-            if identities != [("gis", "semio:gis"), ("stdio", "semio:stdio")]
-                || bundle.packages.len() != 2
-                || gis.is_none_or(|package| {
-                    package.native_codecs.len() != 2
-                        || package.dependencies.as_slice() != std::slice::from_ref(&profile.selected_closure[1])
-                        || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gismap" && codec.artifact_schema == "gis.map")
-                        || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
-                })
-                || stdio.is_none_or(|package| package.native_codecs.len() != 29 || !package.dependencies.is_empty())
-                || profile.open_targets.len() != bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>()
-            {
-                return Err(catalog("local stdio plus GIS profile is not its exact closed two-package native-codec closure opening every package target"));
-            }
-        }
-        if profile.id == profile_id {
-            selected = Some((profile, closure));
-        }
-    }
-    let (profile, closure) = selected.ok_or_else(|| catalog("selected trusted bundle profile is missing"))?;
-    let mut indegree = BTreeMap::new();
-    let mut dependents: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
-    for &index in &closure {
-        let package = &bundle.packages[index];
-        indegree.insert(index, package.dependencies.len());
-        for dependency in &package.dependencies {
-            let dependency_index = *plugins.get(dependency.plugin_id.as_str()).ok_or_else(|| catalog("selected dependency closure is incomplete"))?;
-            let dependency_package = &bundle.packages[dependency_index];
-            if !closure.contains(&dependency_index) || dependency_package.package_id != dependency.package_id || dependency_package.version != dependency.version {
-                return Err(catalog("selected dependency identity conflicts with its package record"));
-            }
-            dependents.entry(dependency_index).or_default().push(index);
-        }
-    }
-    let mut ready: BTreeSet<(String, usize)> = indegree.iter().filter(|(_, degree)| **degree == 0).map(|(index, _)| (bundle.packages[*index].plugin_id.clone(), *index)).collect();
-    let mut order = Vec::with_capacity(closure.len());
-    while let Some((_, index)) = ready.pop_first() {
-        order.push(index);
-        for dependent in dependents.get(&index).into_iter().flatten() {
-            let degree = indegree.get_mut(dependent).expect("selected dependent has indegree");
-            *degree -= 1;
-            if *degree == 0 {
-                ready.insert((bundle.packages[*dependent].plugin_id.clone(), *dependent));
-            }
-        }
-    }
-    if order.len() != closure.len() {
-        return Err(catalog("selected dependency closure contains a cycle"));
-    }
-    Ok(SelectedTrustedBundleV1 { package_indices: order, profile: profile.clone() })
-}
-
-fn validate_native_bindings(bindings: &[NativeCodecBinding]) -> Result<BTreeMap<CodecKey, &NativeCodecBinding>, AuthorityError> {
-    ensure_count(bindings.len(), TRUSTED_CATALOG_MAX_CODECS, "trusted codec count")?;
-    let mut map = BTreeMap::new();
-    for binding in bindings {
-        if !valid_identity(&binding.plugin_id) || !valid_package_id(&binding.package_id) || !valid_identity(&binding.artifact_kind) || !valid_identity(&binding.codec.schema) {
-            return Err(catalog("native codec binding identity is invalid"));
-        }
-        let key = CodecKey::from_parts(&binding.plugin_id, &binding.package_id, &binding.artifact_kind, &binding.codec.schema);
-        if map.insert(key, binding).is_some() {
-            return Err(catalog("native codec binding identity is duplicated"));
-        }
-    }
-    Ok(map)
-}
-
-/// 🪪️ A decoded semantic descriptor must be exactly the package its trust record names, speaking this hub's app channel,
-/// and the record's shipped receipt must bind exactly that descriptor to exactly the record's component bytes. A refusal
-/// names the package and every field that differs; a catalog published for another app channel is named as such, because
-/// the operator's remedy (publish the catalog again with this tree) differs from a tampered descriptor's.
-fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDescriptor, packages: &[TrustedBundlePackageV1]) -> Result<(), AuthorityError> {
-    let differing: Vec<&str> = [
-        (descriptor.descriptor_version != 1, "descriptorVersion"),
-        (!valid_package_id(&descriptor.package_id) || descriptor.package_id != record.package_id, "packageId"),
-        (!record.role.matches(descriptor.role), "role"),
-        (descriptor.manifest.plugin_id != record.plugin_id, "pluginId"),
-        (descriptor.manifest.version != record.version, "version"),
-        (descriptor.execution_protocol != record.execution_protocol, "executionProtocol"),
-        (record.receipt.wasm_bytes != record.component.byte_length, "receipt wasmBytes"),
-    ]
-    .into_iter()
-    .filter_map(|(differs, field)| differs.then_some(field))
-    .collect();
-    if !differing.is_empty() {
-        return Err(catalog(&format!("package {} descriptor identity does not exactly match its trust record: {}", record.package_id, differing.join(", "))));
-    }
-    if descriptor.execution_protocol.app_channel_version != directory::os_spr::CHANNEL_VERSION {
-        return Err(catalog(&format!(
-            "package {} was published for app channel {} but this hub speaks app channel {}: publish the trusted catalog again with this hub's tree",
-            record.package_id,
-            descriptor.execution_protocol.app_channel_version,
-            directory::os_spr::CHANNEL_VERSION
-        )));
-    }
-    record.receipt.binds(&record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256).map_err(|refusal| catalog(&format!("package {} {refusal}", record.package_id)))?;
-    if descriptor.manifest.dependencies.len() != record.dependencies.len() {
-        return Err(catalog("decoded manifest dependency count does not match the trust record"));
-    }
-    let records: BTreeMap<&str, &TrustedBundlePackageV1> = packages.iter().map(|package| (package.plugin_id.as_str(), package)).collect();
-    let mut manifest_dependencies = BTreeSet::new();
-    for dependency in &descriptor.manifest.dependencies {
-        if !manifest_dependencies.insert(dependency.plugin_id.as_str()) {
-            return Err(catalog("decoded manifest dependency is duplicated"));
-        }
-        let expected = record.dependencies.iter().find(|entry| entry.plugin_id == dependency.plugin_id).ok_or_else(|| catalog("decoded manifest dependency is absent from the trust record"))?;
-        let package = records.get(expected.plugin_id.as_str()).ok_or_else(|| catalog("decoded manifest dependency package is missing"))?;
-        let version = Version::parse(&package.version).map_err(catalog_error)?;
-        if expected.package_id != package.package_id || expected.version != package.version || !dependency.version.matches(&version) {
-            return Err(catalog("decoded manifest dependency version or package identity conflicts"));
-        }
-    }
-    let mut manifest_kinds = BTreeSet::new();
-    for kind in &descriptor.manifest.artifact_kinds {
-        if !manifest_kinds.insert(kind.id.as_str()) {
-            return Err(catalog("decoded manifest artifact kind is duplicated"));
-        }
-        if !record.native_codecs.iter().any(|codec| codec.artifact_kind == kind.id && codec.artifact_schema == kind.schema) {
-            return Err(catalog("decoded manifest artifact kind is absent from the trust record"));
-        }
-    }
-    let mut hosted_kinds = BTreeSet::new();
-    for kind in &descriptor.manifest.hosted_artifact_kinds {
-        if !hosted_kinds.insert((kind.id.as_str(), kind.schema.as_str())) || manifest_kinds.contains(kind.id.as_str()) {
-            return Err(catalog("decoded manifest hosted kind is duplicated or also owned"));
-        }
-        if kind.owner.is_empty() || kind.owner == record.plugin_id {
-            return Err(catalog("decoded manifest hosted kind names no other owner package"));
-        }
-        if !manifest_dependencies.contains(kind.owner.as_str()) || !records.contains_key(kind.owner.as_str()) {
-            return Err(catalog("decoded manifest hosted kind's owner is not a declared dependency present in the catalog"));
-        }
-    }
-    Ok(())
-}
-
-async fn dual_hash(bytes: &[u8], context: &OperationContext<'_>) -> Result<([u8; 32], [u8; 32]), AuthorityError> {
-    let mut sha256 = Sha256::new();
-    let mut blake3 = Hasher::new();
-    let total_units = u64::try_from(bytes.len().max(1)).map_err(catalog_error)?;
-    let mut completed_units = 0u64;
-    let mut last_report_ms = 0u64;
-    for chunk in bytes.chunks(64 * 1024) {
-        context.checkpoint()?;
-        sha256.update(chunk);
-        blake3.update(chunk);
-        completed_units = completed_units.saturating_add(u64::try_from(chunk.len()).map_err(catalog_error)?);
-        let now_ms = context.now_ms();
-        if now_ms.saturating_sub(last_report_ms) >= 1_000 {
-            last_report_ms = now_ms;
-            context.report(AuthorityProgress {
-                stage: AuthorityProgressStage::CatalogLoading,
-                completed_units: completed_units.min(total_units),
-                total_units,
-            })?;
-        }
-        semio_framework_async::yield_once().await;
-    }
-    context.checkpoint()?;
-    Ok((sha256.finalize(), *blake3.finalize().as_bytes()))
-}
-
-async fn sha256(bytes: &[u8], context: &OperationContext<'_>) -> Result<[u8; 32], AuthorityError> {
-    let mut hash = Sha256::new();
-    let total_units = u64::try_from(bytes.len().max(1)).map_err(catalog_error)?;
-    let mut completed_units = 0u64;
-    let mut last_report_ms = 0u64;
-    for chunk in bytes.chunks(64 * 1024) {
-        context.checkpoint()?;
-        hash.update(chunk);
-        completed_units = completed_units.saturating_add(u64::try_from(chunk.len()).map_err(catalog_error)?);
-        let now_ms = context.now_ms();
-        if now_ms.saturating_sub(last_report_ms) >= 1_000 {
-            last_report_ms = now_ms;
-            context.report(AuthorityProgress {
-                stage: AuthorityProgressStage::CatalogLoading,
-                completed_units: completed_units.min(total_units),
-                total_units,
-            })?;
-        }
-        semio_framework_async::yield_once().await;
-    }
-    context.checkpoint()?;
-    Ok(hash.finalize())
-}
-
-fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, AuthorityError> {
-    let mut options = os_store::PackDecodeOptions::default();
-    options.limits.max_file_len = TRUSTED_DESCRIPTOR_MAX_BYTES;
-    options.limits.max_segment_len = TRUSTED_DESCRIPTOR_MAX_BYTES;
-    options.limits.max_symbols = 131_072;
-    options.limits.max_items = 262_144;
-    options.limits.max_depth = 64;
-    options.limits.max_total_alloc = TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION;
-    let value = os_pack::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
-    reject_duplicate_descriptor_fields(&value)?;
-    let canonical = os_pack::pack_rt::encode_wire_value(&value);
-    if canonical != bytes {
-        return Err(catalog("package descriptor is not its exact canonical schema projection"));
-    }
-    let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(value).map_err(catalog_error)?;
-    let projection = semio_framework_value::ToValue::to_value(&descriptor);
-    if os_pack::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
-    Ok(descriptor)
-}
-
-fn reject_duplicate_descriptor_fields(value: &DslValue) -> Result<(), AuthorityError> {
-    match value {
-        DslValue::Array(items) => {
-            for item in items {
-                reject_duplicate_descriptor_fields(item)?;
-            }
-        }
-        DslValue::Object(entries) => {
-            let mut keys = BTreeSet::new();
-            for (key, item) in entries {
-                if !keys.insert(key.as_str()) {
-                    return Err(catalog("package descriptor contains a duplicate object field"));
-                }
-                reject_duplicate_descriptor_fields(item)?;
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
-fn verify_length(expected: u64, actual: usize) -> Result<(), AuthorityError> {
-    if u64::try_from(actual).map_err(catalog_error)? != expected {
-        return Err(catalog("trusted file byte length does not match its trust record"));
-    }
-    Ok(())
-}
-
-fn verify_digest(expected: &str, actual: [u8; 32], label: &str) -> Result<(), AuthorityError> {
-    if decode_digest(expected, label)? != actual {
-        return Err(catalog("trusted file digest does not match its trust record"));
-    }
-    Ok(())
-}
-
-fn decode_digest(value: &str, label: &str) -> Result<[u8; 32], AuthorityError> {
-    if value.len() != 64 || value.bytes().any(|byte| !matches!(byte, b'0'..=b'9' | b'a'..=b'f')) {
-        return Err(catalog(&format!("{label} is not canonical lowercase hexadecimal")));
-    }
-    let mut result = [0; 32];
-    for (index, pair) in value.as_bytes().chunks_exact(2).enumerate() {
-        let nibble = |byte: u8| if byte <= b'9' { byte - b'0' } else { byte - b'a' + 10 };
-        result[index] = (nibble(pair[0]) << 4) | nibble(pair[1]);
-    }
-    Ok(result)
-}
-
-fn report_package_progress(context: &OperationContext<'_>, package_position: usize, package_phase: u64, total_units: u64) -> Result<(), AuthorityError> {
-    let position = u64::try_from(package_position).map_err(catalog_error)?;
-    let completed_units = position.checked_mul(4).and_then(|units| units.checked_add(package_phase)).ok_or_else(|| catalog("catalog progress overflow"))?;
-    context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units, total_units })
-}
-
 /// 🧫️ The files of a never-executed fixture plugin module: its entry, both descriptor forms (the packed one
 /// the package's own descriptor), the package's canonical receipt and one vendored import shared by every fixture module.
 #[cfg(any(test, feature = "integration-fixtures"))]
@@ -2777,7 +1500,7 @@ pub fn fixture_plugin_module_files(plugin_id: &str, descriptor_bytes: &[u8], rec
         (format!("{plugin_id}/🌉️bridge.js"), b"export async function createActorApi() {}\n".to_vec()),
         (format!("{plugin_id}/🔣️.json"), serde_json::json!({ "manifest": { "pluginId": plugin_id } }).to_string().into_bytes()),
         (format!("{plugin_id}/🛂️.descriptor.semio"), descriptor_bytes.to_vec()),
-        (format!("{plugin_id}/{}", plugin_module::TRUSTED_PLUGIN_MODULE_RECEIPT_FILE), receipt.encode_canonical()),
+        (format!("{plugin_id}/{}", semio_hub_trusted_catalog_contract::plugin_module::TRUSTED_PLUGIN_MODULE_RECEIPT_FILE), receipt.encode_canonical()),
         ("🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js".to_owned(), b"export const streams = {};\n".to_vec()),
     ]
 }
@@ -2790,7 +1513,7 @@ pub fn fixture_component_receipt(plugin_id: &str, package_id: &str, wasm_sha256:
         schema: directory::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
         plugin_id: plugin_id.into(),
         package_id: package_id.into(),
-        profile: directory::os_component_receipt::ComponentProfileV1::WasmRelease,
+        profile: directory::os_component_receipt::ComponentProfileV1::Release,
         target: directory::os_component_receipt::COMPONENT_TARGET.into(),
         wasm_sha256: wasm_sha256.into(),
         wasm_bytes,
@@ -2807,13 +1530,13 @@ pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &st
     let descriptor_byte_sha256 = hex_lower(&Sha256::digest(descriptor_bytes));
     let receipt_sha256 = hex_lower(&Sha256::digest(&receipt.encode_canonical()));
     let source = TrustedPluginModuleSourceV1 { plugin_id, package_id, version, component_sha256: &receipt.wasm_sha256, descriptor_byte_sha256: &descriptor_byte_sha256, receipt_sha256: &receipt_sha256 };
-    let record = plugin_module::write_plugin_module_bundle(root, &format!("plugin-module-{plugin_id}.json"), source, plugin_id, &fixture_plugin_module_files(plugin_id, descriptor_bytes, receipt))?;
+    let record = semio_hub_trusted_catalog_contract::plugin_module::write_plugin_module_bundle(root, &format!("plugin-module-{plugin_id}.json"), source, plugin_id, &fixture_plugin_module_files(plugin_id, descriptor_bytes, receipt))?;
     serde_json::to_value(record).map_err(catalog_error)
 }
 
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
 #[cfg(any(test, feature = "integration-fixtures"))]
-fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
+pub fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
     let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let version = dependency.version.0.to_string();
     let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().map_err(catalog_error)?;
@@ -2853,15 +1576,10 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
     Ok((identity, record))
 }
 
-/// 🏗️ Feature-gated real GIS Map profile builder, reachable from every crate target (see its module doc).
-#[cfg(feature = "integration-fixtures")]
-#[path = "../../🧪️tests/🔏️trusted-catalog-profile/🦀️.rs"]
-pub mod trusted_catalog_fixture;
-#[cfg(feature = "integration-fixtures")]
-#[path = "../../🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs"]
-pub mod count_trusted_catalog_fixture;
-
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(any(test, feature = "testkit"))]
+impl GuestResidentFootprintV1 for Vec<u8> {
+    /// 📏️ A byte-charged test value holds only the bytes it was registered with.
+    fn footprint_bytes(&self) -> u64 {
+        0
+    }
+}

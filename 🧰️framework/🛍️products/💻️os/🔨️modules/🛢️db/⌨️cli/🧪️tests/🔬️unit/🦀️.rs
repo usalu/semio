@@ -2,21 +2,21 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn cli_verify_checks_neutral_logical_commit_boundaries() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_verify_checks_neutral_logical_commit_boundaries") {
+    if !db_io_driver::process_isolated_law("tests::cli_verify_checks_neutral_logical_commit_boundaries") {
         return;
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧪️tests/🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
     for (name, expected) in [("aborted-commands-snapshot-cas-have-no-effects", Some(0)), ("two-commands-only-after-logical-commit", Some(2)), ("wrong-commit-count", None), ("active-incomplete-needs-durable-abort", None)] {
         let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["name"] == name).expect("registered neutral CLI boundary");
-        let document = db::db_ids::ArtifactId::from("committed-cli");
-        let memory = db::wal::tests::committed_fixture_storage(row, &document).await;
+        let document = db_ids::ArtifactId::from("committed-cli");
+        let memory = db_wal::tests::committed_fixture_storage(row, &document).await;
         let root = tempdir(name).await;
-        let storage = db::storage::FsStorage::open(db::storage::db_io_test_pool(), &root).await.unwrap();
+        let storage = db_storage_fs::FsStorage::open(db_io_driver::db_io_test_pool(), &root).await.unwrap();
         let writer_permit = storage.acquire_writer(&document).await.unwrap();
         storage.create_segment(&writer_permit, 0).await.unwrap();
         let len = memory.segment_len(&document, 0).await.unwrap();
         let mut pages = memory.read(&document, 0, pack::ByteRange { offset: 0, len }).await.unwrap();
-        let mut writer = db::storage::DbIoPageWriter::try_reserve(pages.len().div_ceil(db::storage::DB_IO_PAGE_BYTES)).unwrap();
+        let mut writer = db_io_core::DbIoPageWriter::try_reserve(pages.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).unwrap();
         for fragment in pages.fragments() {
             let mut remaining = fragment;
             while !remaining.is_empty() {
@@ -27,12 +27,12 @@ async fn cli_verify_checks_neutral_logical_commit_boundaries() {
         }
         while pages.close_step().unwrap().is_some() {}
         assert_eq!(storage.append(&writer_permit, 0, writer.seal_retained().await.unwrap()).await.unwrap(), len);
-        storage.sync(&writer_permit, 0, db::DurabilityClass::Fsync).await.unwrap();
+        storage.sync(&writer_permit, 0, db_durability::DurabilityClass::Fsync).await.unwrap();
         writer_permit.release().await.unwrap();
         let result = verify_document(&storage, &document).await;
         match expected {
             Some(count) => assert_eq!(result.unwrap(), format!("wal committed records={count} snapshot=none")),
-            None => assert!(matches!(result, Err(db::DbError::Corrupt(_))), "{name}"),
+            None => assert!(matches!(result, Err(db_ids::DbError::Corrupt(_))), "{name}"),
         }
         assert_eq!(storage.segment_len(&document, 0).await.unwrap(), len);
     }
@@ -54,8 +54,8 @@ async fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::M
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).await.unwrap() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).await.unwrap() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).await.unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::json!({"greeting": null})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     }
@@ -64,20 +64,20 @@ async fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::M
 /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
 /// `Database::create_document`/`ArtifactHandle::submit` round trip, then cleanly shuts down.
 async fn seed_document(root: &Path) {
-    let mut database = open_database(root, db::Profile::Test).await.unwrap();
+    let mut database = open_database(root, db_policy::Profile::Test).await.unwrap();
     let document = protocol::ArtifactId("doc-1".to_string());
-    let handle = database.create_document(db::ArtifactSpec::new(document.clone()).await).await.unwrap();
-    let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document).await]).await.unwrap();
-    db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
+    let handle = database.create_document(db_engine::ArtifactSpec::new(document.clone()).await).await.unwrap();
+    let batch = db_artifact_contract::CommandBatch::new(vec![test_envelope("op-1", &document).await]).await.unwrap();
+    db_actor::block_on(handle.submit(batch, db_artifact_contract::SubmitOptions { durability: db_durability::DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
     drop(handle);
-    database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(1))).await.unwrap();
+    database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(1))).await.unwrap();
 }
 //#endregion 🧸️Fixtures
 
 //#region 🔖️Inspect
 #[semio_framework_async_macros::async_test]
 async fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root") {
+    if !db_io_driver::process_isolated_law("tests::cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root") {
         return;
     }
     let root = tempdir("inspect-fresh").await;
@@ -88,10 +88,10 @@ async fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root
 //#region 🔖️FullCycle
 #[semio_framework_async_macros::async_test]
 async fn cli_full_cycle_succeeds_for_a_seeded_document() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_full_cycle_succeeds_for_a_seeded_document") {
+    if !db_io_driver::process_isolated_law("tests::cli_full_cycle_succeeds_for_a_seeded_document") {
         return;
     }
-    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
+    let _history_capacity = db_artifact_history::history_capacity_test_lock();
     let root = tempdir("full-cycle").await;
     seed_document(&root).await;
     let root_str = root.to_string_lossy().to_string();
@@ -110,10 +110,10 @@ async fn cli_full_cycle_succeeds_for_a_seeded_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_doc_and_query_err_cleanly_on_an_unknown_document") {
+    if !db_io_driver::process_isolated_law("tests::cli_doc_and_query_err_cleanly_on_an_unknown_document") {
         return;
     }
-    let _history_capacity = crate::db_artifact::history_capacity_test_lock();
+    let _history_capacity = db_artifact_history::history_capacity_test_lock();
     let root = tempdir("unknown-doc").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("never-created")]).await, 1);
@@ -124,7 +124,7 @@ async fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
 //#region 🔖️Verify
 #[semio_framework_async_macros::async_test]
 async fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it") {
+    if !db_io_driver::process_isolated_law("tests::cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it") {
         return;
     }
     let root = tempdir("torn-tail").await;
@@ -148,7 +148,7 @@ async fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
 //#region 🔖️ConflictSimulate
 #[semio_framework_async_macros::async_test]
 async fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones") {
+    if !db_io_driver::process_isolated_law("tests::cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones") {
         return;
     }
     assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]).await, 1);
@@ -157,7 +157,7 @@ async fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_o
 
 #[semio_framework_async_macros::async_test]
 async fn cli_conflict_simulate_requires_both_touch_flags() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_conflict_simulate_requires_both_touch_flags") {
+    if !db_io_driver::process_isolated_law("tests::cli_conflict_simulate_requires_both_touch_flags") {
         return;
     }
     assert_eq!(main_impl(&[String::from("conflict-simulate")]).await, 2);
@@ -168,7 +168,7 @@ async fn cli_conflict_simulate_requires_both_touch_flags() {
 //#region 🔖️ReplicaSimulate
 #[semio_framework_async_macros::async_test]
 async fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower") {
+    if !db_io_driver::process_isolated_law("tests::cli_replica_simulate_copies_missing_commands_to_a_fresh_follower") {
         return;
     }
     let leader_root = tempdir("replica-leader").await;
@@ -185,7 +185,7 @@ async fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
 //#region 🔖️Migrate
 #[semio_framework_async_macros::async_test]
 async fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_migrate_appends_a_migration_record_visible_to_wal_inspect") {
+    if !db_io_driver::process_isolated_law("tests::cli_migrate_appends_a_migration_record_visible_to_wal_inspect") {
         return;
     }
     let root = tempdir("migrate").await;
@@ -196,7 +196,7 @@ async fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_migrate_reports_a_usage_error_with_too_few_args() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_migrate_reports_a_usage_error_with_too_few_args") {
+    if !db_io_driver::process_isolated_law("tests::cli_migrate_reports_a_usage_error_with_too_few_args") {
         return;
     }
     assert_eq!(main_impl(&[String::from("migrate"), String::from("root-only")]).await, 2);
@@ -206,7 +206,7 @@ async fn cli_migrate_reports_a_usage_error_with_too_few_args() {
 //#region 🔖️Profile
 #[semio_framework_async_macros::async_test]
 async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document") {
+    if !db_io_driver::process_isolated_law("tests::cli_profile_reports_throughput_for_n_commands_on_a_fresh_document") {
         return;
     }
     let root = tempdir("profile").await;
@@ -219,7 +219,7 @@ async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_profile_rejects_a_bad_durability_flag() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_profile_rejects_a_bad_durability_flag") {
+    if !db_io_driver::process_isolated_law("tests::cli_profile_rejects_a_bad_durability_flag") {
         return;
     }
     let root = tempdir("profile-bad-durability").await;
@@ -231,7 +231,7 @@ async fn cli_profile_rejects_a_bad_durability_flag() {
 //#region 🔖️Cli
 #[semio_framework_async_macros::async_test]
 async fn cli_help_and_unknown_subcommand() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_help_and_unknown_subcommand") {
+    if !db_io_driver::process_isolated_law("tests::cli_help_and_unknown_subcommand") {
         return;
     }
     assert_eq!(main_impl(&[]).await, 2);
@@ -242,26 +242,26 @@ async fn cli_help_and_unknown_subcommand() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses() {
-    if !crate::db_storage::process_isolated_law("db_cli::tests::cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses") {
+    if !db_io_driver::process_isolated_law("tests::cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_and_max_plus_one_have_exact_exit_witnesses") {
         return;
     }
     let waker = std::task::Waker::noop();
     let context = &mut std::task::Context::from_waker(waker);
-    let mut record = MountedWalRecordCommandClose::new(db::wal::WalRecord::Lease { resource: db::storage::DbIoText::try_from_str("retained-cli-record").unwrap(), holder: db::storage::DbIoText::try_from_str("").unwrap(), fence: 1, expires_at_ms: 1 });
+    let mut record = MountedWalRecordCommandClose::new(db_wal_log::WalRecord::Lease { resource: db_io_core::DbIoText::try_from_str("retained-cli-record").unwrap(), holder: db_io_core::DbIoText::try_from_str("").unwrap(), fence: 1, expires_at_ms: 1 });
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Pending));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 2 }))));
     drop(record);
-    let mut batch = db::wal::WalRecordBatch::new();
-    assert!(batch.push(db::wal::WalRecord::TxBegin { tx_id: 2 }).is_ok());
-    assert!(batch.push(db::wal::WalRecord::TxCommit { tx_id: 2, record_count: 0 }).is_ok());
+    let mut batch = db_wal_log::WalRecordBatch::new();
+    assert!(batch.push(db_wal_log::WalRecord::TxBegin { tx_id: 2 }).is_ok());
+    assert!(batch.push(db_wal_log::WalRecord::TxCommit { tx_id: 2, record_count: 0 }).is_ok());
     let mut batch_close = MountedWalBatchCommandClose::new(batch);
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Pending));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 3 }))));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut batch_close), context), std::task::Poll::Ready(Ok(CliCommandCloseWitness { exit: CliCommandCloseExit::Closed, opportunities: 3 }))));
     drop(batch_close);
-    let fault = db::DbError::Internal("retained CLI fault witness".to_string());
+    let fault = db_ids::DbError::Internal("retained CLI fault witness".to_string());
     let mut record_fault = MountedWalRecordCommandClose { owner: None, opportunities: 7, terminal: Some(CliCommandCloseTerminal::Fault(fault.clone())) };
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record_fault), context), std::task::Poll::Ready(Err(error)) if error == fault));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut record_fault), context), std::task::Poll::Ready(Err(error)) if error == fault));
@@ -275,17 +275,17 @@ async fn cli_command_close_success_refusal_cancel_stale_fault_drop_interrupted_a
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut snapshot_fault), context), std::task::Poll::Ready(Err(error)) if error == fault));
     assert!(matches!(std::future::Future::poll(std::pin::Pin::new(&mut snapshot_fault), context), std::task::Poll::Ready(Err(error)) if error == fault));
     let interrupted = CLI_COMMAND_CLOSE_INTERRUPTED.load(std::sync::atomic::Ordering::Acquire);
-    let owner = MountedWalRecordCommandClose::new(db::wal::WalRecord::TxAbort { tx_id: 3 });
+    let owner = MountedWalRecordCommandClose::new(db_wal_log::WalRecord::TxAbort { tx_id: 3 });
     drop(owner);
     assert_eq!(CLI_COMMAND_CLOSE_INTERRUPTED.load(std::sync::atomic::Ordering::Acquire), interrupted + 1);
-    let mut full = db::wal::WalRecordBatch::new();
+    let mut full = db_wal_log::WalRecordBatch::new();
     for tx_id in 0..64 {
-        assert!(full.push(db::wal::WalRecord::TxBegin { tx_id }).is_ok());
+        assert!(full.push(db_wal_log::WalRecord::TxBegin { tx_id }).is_ok());
     }
-    let refusal = full.push(db::wal::WalRecord::TxAbort { tx_id: 65 }).unwrap_err();
+    let refusal = full.push(db_wal_log::WalRecord::TxAbort { tx_id: 65 }).unwrap_err();
     assert_eq!(MountedWalRecordCommandClose::new(refusal).await.unwrap().exit, CliCommandCloseExit::Closed);
     assert_eq!(MountedWalBatchCommandClose::new(full).await.unwrap().opportunities, 65);
     assert_eq!(cli_command_close_witness(CliCommandCloseExit::Fault, 1).exit, CliCommandCloseExit::Fault);
-    assert_eq!(db::wal::WalRecordBatch::new().len(), 0);
+    assert_eq!(db_wal_log::WalRecordBatch::new().len(), 0);
 }
 //#endregion 🔖️Cli

@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumEntries",
+    "cases",
+    "directoryModeBefore",
+    "directoryModeAfter",
+    "unknownEntries",
+    "maximumUnknownYields",
+    "maximumRosterArrayReads",
+    "maximumInputFiles",
+    "maximumInputBytes",
+    "rootPrefix",
+    "rootMetadata"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumEntries": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 16
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "files",
+          "inputs",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "files": {
+            "type": "object",
+            "maxProperties": 32,
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "inputs": {
+            "type": "object",
+            "maxProperties": 32,
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "directoryModeBefore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 511
+    },
+    "directoryModeAfter": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 511
+    },
+    "unknownEntries": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 128
+    },
+    "maximumUnknownYields": {
+      "const": 1
+    },
+    "maximumRosterArrayReads": {
+      "const": 0
+    },
+    "maximumInputFiles": {
+      "const": 32
+    },
+    "maximumInputBytes": {
+      "const": 16777216
+    },
+    "rootPrefix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefixDepth",
+        "cases"
+      ],
+      "properties": {
+        "prefixDepth": {
+          "const": 3
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "expectedBoundaries",
+              "expectedPrefixPasses"
+            ],
+            "properties": {
+              "path": {
+                "enum": [
+                  "node_modules",
+                  "node_modules/child"
+                ]
+              },
+              "expectedBoundaries": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 3,
+                  "maximum": 6
+                }
+              },
+              "expectedPrefixPasses": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 2,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rootMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sameRootPath",
+        "interveningAwait",
+        "expectedAsyncRootReads",
+        "expectedSynchronousRootReads",
+        "continuationEntries"
+      ],
+      "properties": {
+        "sameRootPath": {
+          "const": true
+        },
+        "interveningAwait": {
+          "const": false
+        },
+        "expectedAsyncRootReads": {
+          "const": 0
+        },
+        "expectedSynchronousRootReads": {
+          "const": 1
+        },
+        "continuationEntries": {
+          "const": 128
+        }
+      }
+    }
+  }
+}

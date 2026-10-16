@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import {join} from "node:path";
+import {repositoryCargoNetworkV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode, buildModeEnvironment } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -12,11 +15,11 @@ import { NativeScript } from "../../../../../../../🧰️framework/🛍️produ
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
 class BuildScript extends BundleScript {
   async run([kind,profile,...args]:string[]):Promise<void> {
-    if(args.length || !["native","mcp"].includes(kind))throw new Error("Service build requires an exact executable and mode");
+    if(args.length || (!kind||!["native","mcp"].includes(kind)))throw new Error("Service build requires an exact executable and mode");
     const mode=readBuildMode(profile);
     if(process.env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(process.env.SEMIO_BUILD_MODE)!==mode)throw Error("Service build mode contradicts its original environment");
     const binary=`semio-s-gis-services-${kind}`;
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary],this.repoRoot,{ control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),output:`dist/${kind}-${mode}`,sourcesRecord:`${binary}.sources.json`});
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary],this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),output:`dist/${kind}-${mode}`,sourcesRecord:`${binary}.sources.json`});
   }
 }
 class SourceScript extends BundleScript { async run():Promise<void> {nativeServiceCompositionLaws(this.repoRoot);} }

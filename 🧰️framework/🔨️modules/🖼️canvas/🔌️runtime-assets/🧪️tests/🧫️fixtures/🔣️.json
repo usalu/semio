@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "iconPackVersion": 1,
+  "channels": [
+    { "id": "compiler-fonts", "route": "/renderer-modules/compiler-fonts", "directory": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts" },
+    { "id": "canvas-fonts", "route": "/renderer-modules/canvas-fonts", "directory": "🧰️framework/🔨️modules/🖼️canvas/🖼️assets" },
+    { "id": "icon-pack", "route": "/renderer-modules/icon-pack", "directory": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes" }
+  ],
+  "assets": [
+    { "role": "math", "channel": "compiler-fonts", "file": "🧮️LibertinusMath-Regular.otf", "bytes": 588848, "sha256": "ded714b0d3808af527438ed7a85f16933133f66a12104c4a83db4cc248888011", "sfntTag": "4f54544f" },
+    { "role": "serif", "channel": "compiler-fonts", "file": "📖️LibertinusSerif-Regular.otf", "bytes": 337132, "sha256": "fcf06307a77367394fcb0ccb241e59eea70dba3d732be309647611224679c733", "sfntTag": "4f54544f" },
+    { "role": "serif-italic", "channel": "compiler-fonts", "file": "🖋️LibertinusSerif-Italic.otf", "bytes": 332312, "sha256": "9a393d63d6e05f620d3dc0190dfd35a8ede58c0808cf0fc9de7fcb9c723e4c24", "sfntTag": "4f54544f" },
+    { "role": "mono", "channel": "compiler-fonts", "file": "⌨️LibertinusMono-Regular.otf", "bytes": 59264, "sha256": "c1872d14ecedecc5fbf069ebd778a242c5f20f2687c5443f3409ff0a3b945d0d", "sfntTag": "4f54544f" },
+    { "role": "emoji", "channel": "compiler-fonts", "file": "🔤️NotoColorEmoji-subset.ttf", "bytes": 152308, "sha256": "ec69d141e4276776e952ecc10a5bd02f9282c96928de1787c25012fb2a18fb02", "sfntTag": "00010000" },
+    { "role": "label-font", "channel": "canvas-fonts", "file": "🔤️MapLabelSans.ttf", "bytes": 26772, "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f", "sfntTag": "00010000" },
+    { "role": "icon-pack", "channel": "icon-pack", "file": "🔣️.json" }
+  ],
+  "guestAssets": ["emoji", "label-font", "icon-pack"],
+  "iconPackDigestFile": "🔏️digest/🔣️.json",
+  "iconPackSamples": {
+    "sourceRoot": "🧰️framework/🔨️modules/🖼️assets",
+    "rows": [
+      { "kind": "themed", "id": "capsule_J", "source": "🌱️metabolism/🔣️icons/💊️capsules/🪝️j/🖋️capsule_J.svg" },
+      { "kind": "themed", "id": "tambour", "source": "🌱️metabolism/🔣️icons/🥁️tambours/🧱️standard/🖋️tambour.svg" },
+      { "kind": "plain", "id": "search", "source": "🔣️icons/🔎️viewing/🔍️search.svg" },
+      { "kind": "plain", "id": "folder", "source": "🔣️icons/🗂️filing/🗂️folder.svg" }
+    ]
+  }
+}

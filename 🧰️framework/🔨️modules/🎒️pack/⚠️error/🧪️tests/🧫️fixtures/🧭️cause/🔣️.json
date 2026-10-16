@@ -776,7 +776,7 @@
       "authority": "sourcePredicate",
       "witness": "draftProjectionOnly",
       "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
+        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
         "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
         "predicate": "RetainedPackSourceCursor::grant observes cancelled"
       }
@@ -796,7 +796,7 @@
       "authority": "sourcePredicate",
       "witness": "draftProjectionOnly",
       "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
+        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
         "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
         "predicate": "next_allocation_bytes closed/sealed branch after distinct canceled precedence"
       }
@@ -816,7 +816,7 @@
       "authority": "sourcePredicate",
       "witness": "draftProjectionOnly",
       "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
+        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
         "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
         "predicate": "requested_allocation_bytes receives Ok(None) while allocation_need is Some"
       }

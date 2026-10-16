@@ -1149,7 +1149,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
 }
 
 //#region 🪪️ExecutionTargetLease
-/** 🧯️ Exact maximum accepted bytes for one verified execution-target component — the shipped `wasm-release` cap every shipped
+/** 🧯️ Exact maximum accepted bytes for one verified execution-target component — the shipped `release` cap every shipped
  * component's receipt is held to, the trusted catalog's own `TRUSTED_COMPONENT_MAX_BYTES`, shared verbatim by every transport. */
 export const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 /** 🧯️ Exact maximum accepted bytes for one verified raw package descriptor — the trusted catalog's

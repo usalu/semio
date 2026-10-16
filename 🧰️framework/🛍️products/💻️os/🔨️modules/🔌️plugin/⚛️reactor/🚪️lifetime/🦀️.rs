@@ -55,10 +55,26 @@ enum GuestTerminalRelease {
 /// participant below a guest lifetime answers with the exact `Fault` its own authority raised, so a
 /// close that dies names the authority that refused instead of the ladder rung that noticed.
 pub(crate) trait GuestLifetimeOwner: terminal_owner::Sealed {
-    fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault>;
-    fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault>
+    fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, peers: &P) -> Result<bool, semio_framework::Fault>;
+    fn release_terminal<P: ClosePeers + ?Sized>(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize, peers: &P) -> Result<GuestTerminalRelease, semio_framework::Fault>
     where
         Self: Sized;
+}
+
+/// 🔗️ The close participants that sit above the lifecycle owner, the patch tracker and the cold pair ingress: the owner drives them
+/// through this port, which the reactor supplies on every call, so the lifecycle names no crate above itself. Every method keeps the
+/// reserve, activate, complete, release order of the owner's own participants and answers with the participant's own `Fault`.
+pub(crate) trait ClosePeers {
+    fn preflight_patches(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn reserve_patches(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn activate_patches(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn patches_complete(&self, key: NativeCloseKey) -> Result<bool, semio_framework::Fault>;
+    fn release_patches(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn preflight_cold_pair(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn reserve_cold_pair(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn activate_cold_pair(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
+    fn cold_pair_complete(&self, key: NativeCloseKey) -> Result<bool, semio_framework::Fault>;
+    fn release_cold_pair(&self, key: NativeCloseKey) -> Result<(), semio_framework::Fault>;
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -161,14 +177,14 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
         Ok(())
     }
 
-    fn prepare_retired(&mut self) -> Result<bool, semio_framework::Fault> {
+    fn prepare_retired<P: ClosePeers + ?Sized>(&mut self, peers: &P) -> Result<bool, semio_framework::Fault> {
         if self.phase == Phase::Retired {
             return Ok(true);
         }
         if self.phase != Phase::Closing {
             return Ok(false);
         }
-        if !self.owner.as_ref().ok_or_else(|| super::reactor_close_fault("guest lifetime lost its native owner"))?.terminal_is_empty()? {
+        if !self.owner.as_ref().ok_or_else(|| super::reactor_close_fault("guest lifetime lost its native owner"))?.terminal_is_empty(peers)? {
             return Ok(false);
         }
         let (request, close_generation) = self.close.ok_or_else(|| super::reactor_close_fault("guest lifetime lost close admission"))?;
@@ -196,14 +212,14 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     /// during the release ladder is a WAIT for the next opportunity, never a fault — the release runs
     /// across four separate rungs and a momentarily contended authority in between must not kill a
     /// close that already reached its receipt (ticket 26/09/02 wave B17).
-    fn release_owner_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<(), semio_framework::Fault> {
+    fn release_owner_step<P: ClosePeers + ?Sized>(&mut self, maximum_items: usize, maximum_bytes: usize, peers: &P) -> Result<(), semio_framework::Fault> {
         if self.phase != Phase::Retired || self.staged_ack.is_none() || self.owner_released || maximum_items == 0 {
             return Ok(());
         }
-        if !self.owner.as_ref().ok_or_else(|| super::reactor_close_fault("terminal receipt lost its owner"))?.terminal_is_empty()? {
+        if !self.owner.as_ref().ok_or_else(|| super::reactor_close_fault("terminal receipt lost its owner"))?.terminal_is_empty(peers)? {
             return Ok(());
         }
-        match O::release_terminal(&mut self.owner, maximum_items, maximum_bytes)? {
+        match O::release_terminal(&mut self.owner, maximum_items, maximum_bytes, peers)? {
             GuestTerminalRelease::Pending => {
                 if self.owner.is_none() {
                     return Err(super::reactor_close_fault("pending terminal release lost its structural owner"));
@@ -290,7 +306,7 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
         self.key
     }
 
-    pub(crate) fn request_close(&mut self, request: ActorInstanceCloseRequest, runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<(), semio_framework::Fault> {
+    pub(crate) fn request_close<P: ClosePeers + ?Sized>(&mut self, request: ActorInstanceCloseRequest, runtime: &crate::plugin_runtime::PluginRuntime<PA>, peers: &P) -> Result<(), semio_framework::Fault> {
         if self.request == Some(request) {
             return Ok(());
         }
@@ -298,22 +314,22 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
             return Err(super::reactor_close_fault("close owner request changed"));
         }
         super::preflight_reactor_close(self.key)?;
-        super::PATCHES.with(|patches| patches.preflight_close_instance(self.key)).map_err(super::reactor_close_fault)?;
+        peers.preflight_patches(self.key)?;
         super::pending::with_state(|pending| pending.try_borrow().map_err(|_| "pending close preflight busy")?.preflight_close_instance(self.key)).map_err(super::reactor_close_fault)?;
-        super::preflight_cold_pair_close(self.key)?;
+        peers.preflight_cold_pair(self.key)?;
         self.lease.preflight_close(runtime)?;
         self.request = Some(request);
         Ok(())
     }
 
-    pub(crate) fn advance_admission(&mut self, runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Option<(ActorInstanceCloseRequest, u64)>, semio_framework::Fault> {
+    pub(crate) fn advance_admission<P: ClosePeers + ?Sized>(&mut self, runtime: &crate::plugin_runtime::PluginRuntime<PA>, peers: &P) -> Result<Option<(ActorInstanceCloseRequest, u64)>, semio_framework::Fault> {
         let Some(request) = self.request else { return Ok(None) };
         if !self.reserved[0] {
             super::reserve_reactor_close(self.key)?;
             self.reserved[0] = true;
         }
         if !self.reserved[1] {
-            super::PATCHES.with(|patches| patches.reserve_close_instance(self.key)).map_err(super::reactor_close_fault)?;
+            peers.reserve_patches(self.key)?;
             self.reserved[1] = true;
         }
         if !self.reserved[2] {
@@ -321,11 +337,11 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
             self.reserved[2] = true;
         }
         if !self.reserved[3] {
-            super::reserve_cold_pair_close(self.key)?;
+            peers.reserve_cold_pair(self.key)?;
             self.reserved[3] = true;
         }
         if !self.active[3] {
-            super::activate_cold_pair_close(self.key)?;
+            peers.activate_cold_pair(self.key)?;
             self.active[3] = true;
         }
         self.lease.begin_close(runtime)?;
@@ -334,7 +350,7 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
             self.active[0] = true;
         }
         if !self.active[1] {
-            super::PATCHES.with(|patches| patches.activate_close_instance(self.key)).map_err(super::reactor_close_fault)?;
+            peers.activate_patches(self.key)?;
             self.active[1] = true;
         }
         if !self.active[2] {
@@ -349,31 +365,31 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
 impl<PA: crate::plugin_app::PluginApp> terminal_owner::Sealed for NativeLifetimeOwner<PA> {}
 
 impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
-    fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
+    fn terminal_is_empty<P: ClosePeers + ?Sized>(&self, peers: &P) -> Result<bool, semio_framework::Fault> {
         if !self.lease.is_retired()? {
             return Ok(false);
         }
         if !self.released[0] && !super::reactor_close_complete(self.key)? {
             return Ok(false);
         }
-        if !self.released[1] && !super::PATCHES.with(|patches| patches.close_instance_complete(self.key)).map_err(super::reactor_close_fault)? {
+        if !self.released[1] && !peers.patches_complete(self.key)? {
             return Ok(false);
         }
         if !self.released[2] && !super::pending::with_state(|pending| pending.borrow().close_instance_complete(self.key)).map_err(super::reactor_close_fault)? {
             return Ok(false);
         }
-        if !self.released[3] && !super::cold_pair_close_complete(self.key).map_err(super::reactor_close_fault)? {
+        if !self.released[3] && !peers.cold_pair_complete(self.key)? {
             return Ok(false);
         }
         Ok(true)
     }
 
-    fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault> {
+    fn release_terminal<P: ClosePeers + ?Sized>(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize, peers: &P) -> Result<GuestTerminalRelease, semio_framework::Fault> {
         if maximum_items == 0 || maximum_bytes < size_of::<Self>() {
             return Ok(GuestTerminalRelease::Pending);
         }
         let retained = owner.as_mut().ok_or_else(|| super::reactor_close_fault("terminal native owner missing"))?;
-        if !retained.terminal_is_empty()? {
+        if !retained.terminal_is_empty(peers)? {
             return Ok(GuestTerminalRelease::Pending);
         }
         if !retained.released[0] {
@@ -382,7 +398,7 @@ impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwne
             return Ok(GuestTerminalRelease::Pending);
         }
         if !retained.released[1] {
-            super::PATCHES.with(|patches| patches.release_close_instance(retained.key)).map_err(super::reactor_close_fault)?;
+            peers.release_patches(retained.key)?;
             retained.released[1] = true;
             return Ok(GuestTerminalRelease::Pending);
         }
@@ -392,7 +408,7 @@ impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwne
             return Ok(GuestTerminalRelease::Pending);
         }
         if !retained.released[3] {
-            super::release_cold_pair_close(retained.key).map_err(super::reactor_close_fault)?;
+            peers.release_cold_pair(retained.key)?;
             retained.released[3] = true;
             return Ok(GuestTerminalRelease::Pending);
         }
@@ -467,10 +483,10 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub(crate) fn has_work(&self) -> bool {
         self.slots.iter().any(|slot| !slot.cell.is_live() || slot.cell.owner().is_some_and(|owner| owner.request.is_some()))
     }
-    pub(crate) fn prepare_turn(&mut self, instance: u32) -> Result<Option<ActorInstanceLifecycleReceipt>, semio_framework::Fault> {
+    pub(crate) fn prepare_turn<P: ClosePeers + ?Sized>(&mut self, instance: u32, peers: &P) -> Result<Option<ActorInstanceLifecycleReceipt>, semio_framework::Fault> {
         let slot = self.get_mut(instance).ok_or_else(|| super::reactor_close_fault("turn lifecycle missing"))?;
-        slot.cell.prepare_retired()?;
-        slot.cell.release_owner_step(1, 4096)?;
+        slot.cell.prepare_retired(peers)?;
+        slot.cell.release_owner_step(1, 4096, peers)?;
         if slot.cell.staged_ack.is_some() && (slot.cell.phase != Phase::Retired || slot.cell.owner_released) {
             return Ok(None);
         }

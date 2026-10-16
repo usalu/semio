@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-plugin-reactor-context"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original actor context, call bridge and exports of the plugin reactor"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-context"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[features]
+original-actor-context-testing = []
+
+[dependencies]
+semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
+semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-jobs = { path = "../../../💼️jobs/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-turn = { path = "../../../🔄️turn/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }

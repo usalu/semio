@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "body": "undefined",
+      "cleanup": "cancel",
+      "primary": "body",
+      "removed": false
+    },
+    {
+      "body": "frozen",
+      "cleanup": "deadline",
+      "primary": "body",
+      "removed": false
+    }
+  ]
+}

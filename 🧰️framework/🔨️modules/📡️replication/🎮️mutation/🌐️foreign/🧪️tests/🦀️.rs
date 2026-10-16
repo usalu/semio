@@ -1,9 +1,9 @@
 //! 🧪️ Original immutable policy, System-backed output births and every cancelled foreign prefix agree.
 use super::*;
-use crate::value::{ToValue,FromValue};
+use semio_framework_value::{ToValue, FromValue};
 fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,heap.requested_bytes,heap.released_bytes)}
 fn policy(law:&serde_json::Value)->RetainedCloneGrant{let p=&law["grant"];RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize}}
-fn original(row:&serde_json::Value)->ForeignStep{ForeignStep{target:ForeignTarget{artifact_id:row["target"]["artifactId"].as_str().unwrap().into(),artifact_kind:row["target"]["artifactKind"].as_str().unwrap().into(),dialect:row["target"]["dialect"].as_str().map(String::from)},mutation_id:crate::ids::SchemaId(row["mutationId"].as_str().unwrap().into()),payload:row["payload"].as_array().unwrap().iter().map(|b|b.as_u64().unwrap()as u8).collect(),label:row["label"].as_str().unwrap().into()}}
+fn original(row:&serde_json::Value)->ForeignStep{ForeignStep{target:ForeignTarget{artifact_id:row["target"]["artifactId"].as_str().unwrap().into(),artifact_kind:row["target"]["artifactKind"].as_str().unwrap().into(),dialect:row["target"]["dialect"].as_str().map(String::from)},mutation_id:semio_framework_replication_ids::SchemaId(row["mutationId"].as_str().unwrap().into()),payload:row["payload"].as_array().unwrap().iter().map(|b|b.as_u64().unwrap()as u8).collect(),label:row["label"].as_str().unwrap().into()}}
 fn close(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->usize{
  let(step,born,freed)=observe(||owner.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());
  let mut released=0;

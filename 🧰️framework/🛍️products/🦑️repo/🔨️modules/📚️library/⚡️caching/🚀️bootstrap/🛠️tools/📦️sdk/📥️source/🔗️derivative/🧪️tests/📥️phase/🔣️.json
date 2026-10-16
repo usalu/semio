@@ -1,0 +1,108 @@
+{
+  "cases": [
+    {
+      "name": "same",
+      "stage": "same",
+      "accepted": true,
+      "used": true
+    },
+    {
+      "name": "narrowed",
+      "stage": "narrowed",
+      "accepted": true,
+      "used": true
+    },
+    {
+      "name": "forged",
+      "stage": "forged",
+      "accepted": false,
+      "used": false
+    },
+    {
+      "name": "cancelled",
+      "stage": "cancelled",
+      "accepted": false,
+      "used": false
+    },
+    {
+      "name": "expired",
+      "stage": "expired",
+      "accepted": false,
+      "used": false
+    },
+    {
+      "name": "cancel-await",
+      "stage": "cancel-await",
+      "accepted": false,
+      "used": true
+    },
+    {
+      "name": "expire-await",
+      "stage": "expire-await",
+      "accepted": false,
+      "used": true
+    },
+    {
+      "name": "seal",
+      "stage": "seal",
+      "accepted": true,
+      "used": true
+    },
+    {
+      "name": "owner-cancel-await",
+      "stage": "owner-cancel-await",
+      "accepted": false,
+      "used": true
+    },
+    {
+      "name": "cancel-reacquire",
+      "stage": "cancel-reacquire",
+      "accepted": false,
+      "used": true
+    },
+    {
+      "name": "cancel-seal-release-failure",
+      "stage": "cancel-seal-release-failure",
+      "accepted": false,
+      "used": true
+    },
+    {
+      "name": "cancel-reacquire-release-failure",
+      "stage": "cancel-reacquire-release-failure",
+      "accepted": false,
+      "used": true
+    }
+  ],
+  "sealCases": [
+    {
+      "name": "phase",
+      "accepted": true,
+      "opens": 1,
+      "writes": 1
+    },
+    {
+      "name": "cancel-import",
+      "accepted": false,
+      "opens": 0,
+      "writes": 0
+    },
+    {
+      "name": "cancel-open",
+      "accepted": false,
+      "opens": 1,
+      "writes": 0
+    },
+    {
+      "name": "undefined-write",
+      "accepted": false,
+      "opens": 1,
+      "writes": 1
+    },
+    {
+      "name": "cancel-write",
+      "accepted": false,
+      "opens": 1,
+      "writes": 1
+    }
+  ]
+}

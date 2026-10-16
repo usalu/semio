@@ -38,6 +38,4 @@ pub fn render(snapshot: &AviSnapshot, locale: Locale, resource: Option<MediaReso
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -10,7 +10,7 @@ use semio_framework_value::FromValue as ValueFromValue;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::ToValue as ValueToValue;
 use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
-use crate::os_store::{ArtifactStore, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
+use crate::os_store::{ArtifactStore, StoreParts, StorePartsRef, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
 use crate::os_pack::pack_rt;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
@@ -649,7 +649,7 @@ fn retained_revision_stack(source: impl IntoIterator<Item = super::CursorRevisio
 }
 
 fn stage_store_member<P, Mutation>(
-    store: &mut ArtifactStore<P, Mutation>,
+    store: &mut StoreParts<'_, P, Mutation>,
     outcome: DurableStoreBoundOutcomeV1<P, Mutation>,
     visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>,
     grant: super::ArtifactStoreOneItemGrant,
@@ -661,28 +661,28 @@ where
     let reject = |reason, outcome| Err((reason, outcome));
     if !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome); }
 
-    if store.durable_group_root.is_some()
+    if store.wire.durable_group_root.is_some()
         || !visibility.pending()
-        || store.backbone.is_some()
-        || store.snapshot_retirement_factory.is_none()
-        || store.mutation_retirement_factory.is_none()
-        || store.envelope.vcs.edits.group_visibility().is_some()
-        || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some())
+        || store.wire.backbone.is_some()
+        || store.owners.snapshot_retirement_factory.is_none()
+        || store.owners.mutation_retirement_factory.is_none()
+        || store.log.envelope.vcs.edits.group_visibility().is_some()
+        || store.log.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some())
     {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
     }
     if outcome.prepared.authority().validate_prepared(&outcome.prepared).is_err()
-        || store.generation != outcome.expected_generation
-        || store.content_revision != outcome.expected_revision
+        || store.cursor.generation != outcome.expected_generation
+        || store.cursor.content_revision != outcome.expected_revision
         || outcome.expected_generation.checked_add(1) != Some(outcome.post_generation)
         || outcome.prepared.authority().generation().0 != outcome.expected_generation
         || outcome.prepared.authority().base_revision() != outcome.expected_revision
-        || outcome.prepared.authority().base_applied_edit_count() != store.applied_edit_ids.len()
+        || outcome.prepared.authority().base_applied_edit_count() != store.log.applied_edit_ids.len()
         || !outcome.prepared.applied_edit_id.eq_str(&outcome.prepared.edit().id)
         || !outcome.prepared.tail_edit_id.eq_str(&outcome.prepared.edit().id)
         || outcome.prepared.edit().sequence_number != outcome.prepared.authority().next_sequence_number()
         || outcome.prepared.next_clock() != outcome.prepared.authority().next_clock()
-        || !store.applied_edit_ids.admits_one()
+        || !store.log.applied_edit_ids.admits_one()
     {
         return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome);
     }
@@ -690,7 +690,7 @@ where
     if !valid_hash(group_id) || outcome.prepared.edit().mutation_meta.first().and_then(|meta| meta.group_id.as_deref()) != Some(group_id) {
         return reject(DurableOwnedGroupDecisionError::InvalidHash, outcome);
     }
-    let applied_edit_ids = match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
+    let applied_edit_ids = match retained_string_stack(store.log.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
         Ok(values) => values,
         Err(error) => return reject(error, outcome),
     };
@@ -699,7 +699,7 @@ where
         Err(error) => return reject(error, outcome),
     };
     let cursor_owners = super::ArtifactCursorOwners {
-        applied_edit_ids: match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
+        applied_edit_ids: match retained_string_stack(store.log.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
@@ -707,11 +707,11 @@ where
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
-        checkpoint_id: (*store.current_checkpoint_id).clone(),
+        checkpoint_id: (*store.log.current_checkpoint_id).clone(),
     };
     let mut revision_accumulator = CursorRevisionAccumulator {
-        identity_digest: store.revision_accumulator.identity_digest,
-        applied: match retained_revision_stack(store.revision_accumulator.applied.iter().cloned()) {
+        identity_digest: store.cursor.revision_accumulator.identity_digest,
+        applied: match retained_revision_stack(store.cursor.revision_accumulator.applied.iter().cloned()) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
@@ -720,14 +720,14 @@ where
             Err(error) => return reject(error, outcome),
         },
         applied_tail_chains: None,
-        mutation_positions: store.revision_accumulator.mutation_positions.clone(),
-        indexed_edits: store.revision_accumulator.indexed_edits.clone(),
-        unit_flags: store.revision_accumulator.unit_flags.clone(),
+        mutation_positions: store.cursor.revision_accumulator.mutation_positions.clone(),
+        indexed_edits: store.cursor.revision_accumulator.indexed_edits.clone(),
+        unit_flags: store.cursor.revision_accumulator.unit_flags.clone(),
     };
     revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit());
     let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]);
     for (index, operation) in outcome.prepared.edit().forwards.iter().enumerate().filter(|(_, op)| op.may_emit_foreign_steps()) {
-        let presence = match operation.foreign_step_source(&store.current, 0) { Ok(source) => source.is_some(), Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome) };
+        let presence = match operation.foreign_step_source(&store.live.current, 0) { Ok(source) => source.is_some(), Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome) };
         revision_accumulator.unit_flags.insert((edit_digest, index), presence);
     }
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
@@ -737,34 +737,34 @@ where
         edit_digest: outcome.prepared.edit_digest(),
         prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest()]),
     });
-    if revision_accumulator.revision(store.current_checkpoint_id.as_deref()) != outcome.post_revision {
+    if revision_accumulator.revision(store.log.current_checkpoint_id.as_deref()) != outcome.post_revision {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
     }
-    let displaced_reservation = match store.displaced_retirements.reserve_owner_slots(12) {
+    let displaced_reservation = match store.owners.displaced_retirements.reserve_owner_slots(12) {
         Ok(reservation) => reservation,
         Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome),
     };
-    let history_reservation = match store.envelope.vcs.edits.reserve_group_one(visibility) {
+    let history_reservation = match store.log.envelope.vcs.edits.reserve_group_one(visibility) {
         Ok(reservation) => reservation,
         Err(_) => {
-            store.displaced_retirements.release_owner_slots(displaced_reservation).expect("unconsumed durable group retirement reservation remains exact");
+            store.owners.displaced_retirements.release_owner_slots(displaced_reservation).expect("unconsumed durable group retirement reservation remains exact");
             return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
         }
     };
-    store.envelope.cursor.as_mut().expect("durable group stage preflight retained its cursor").stage_group_owned(cursor_owners, visibility).expect("durable group cursor stage remains exact after exclusive preflight");
-    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("validated staged snapshot factory"))));
+    store.log.envelope.cursor.as_mut().expect("durable group stage preflight retained its cursor").stage_group_owned(cursor_owners, visibility).expect("durable group cursor stage remains exact after exclusive preflight");
+    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.owners.snapshot_retirement_factory.as_ref().expect("validated staged snapshot factory"))));
     let post_revision = outcome.post_revision;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
     let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
     retirement.external_strings = [local_actor, Some(applied_edit_id.into())];
-    let ledger_key = store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
+    let ledger_key = store.log.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
     let mut tail = revision_accumulator.applied.pop().expect("staged revision retains its exact tail");
     tail.ledger_key = Some(ledger_key);
     revision_accumulator.applied.push(tail);
-    *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
+    *store.wire.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
         visibility: Arc::clone(visibility),
         current: Some(post_snapshot),
-        generation: store.generation + 1,
+        generation: store.cursor.generation + 1,
         content_revision: post_revision,
         applied_edit_ids,
         redo_edit_ids,
@@ -772,7 +772,7 @@ where
         edit_sequence: authority.next_sequence_number(),
         clock: next_clock,
         revision_accumulator: Some(revision_accumulator),
-        tail_undo_cache: Some((tail_edit_id.to_string_owner(), Arc::clone(&store.current))),
+        tail_undo_cache: Some((tail_edit_id.to_string_owner(), Arc::clone(&store.live.current))),
         authority: Some(authority),
         displaced_reservation: Some(displaced_reservation),
         retirement: Some(retirement),
@@ -782,20 +782,20 @@ where
 }
 
 /// 🧱️ Transfers already copied catalogs and exact reserved owners without traversing history.
-pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut ArtifactStore<P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>, grant: super::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
+pub(super) fn stage_prebuilt_batch_root<P, Mu>(store: &mut StoreParts<'_, P, Mu>, publication: &mut super::ArtifactStoreBatchPublication<P, Mu>, grant: super::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::RetainedCloneProgress, String>
 where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
       Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    if store.durable_group_root.is_some() || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
+    if store.wire.durable_group_root.is_some() || store.log.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
     let capacity=size_of::<StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();
     if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_release_bytes < release { return Err("batch staged original retirement and edit frames are not funded".into()); }
-    store.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
+    store.cursor.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
     let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| "batch group final transfer lost its authority".to_string())?);
     let group = publication.group_preparation.as_mut().ok_or_else(|| "batch group final transfer lost its retained preparation".to_string())?;
     let visibility = group.visibility();
     let history = group.history.as_ref().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
-    store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
-    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().ok_or("batch group lacks original snapshot factory")?)));
+    store.log.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
+    let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.owners.snapshot_retirement_factory.as_ref().ok_or("batch group lacks original snapshot factory")?)));
     let history = group.history.take().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
     let displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
     let cursor = super::ArtifactCursorOwners { applied_edit_ids: std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty()), redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(), checkpoint_id: group.checkpoint.take() };
@@ -804,18 +804,18 @@ where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::Ar
     let stage = publication.stage.as_mut().expect("copied group retains its complete typed candidate");
     let edit = stage.edit.take().expect("staged original edit owner");
     let post=stage.post.take();let next_clock=stage.next_clock;let local_actor=stage.local_actor.take();let tail_edit_id=std::mem::take(&mut stage.tail_edit_id);
-    store.envelope.cursor.as_mut().expect("exclusive group transfer retains its cursor").stage_group_owned(cursor, &visibility).unwrap_or_else(|_| panic!("exclusive copied group cursor transfer must retain its exact owners"));
-    let ledger = store.envelope.vcs.edits.stage_group_reserved(history.history, *edit, &visibility).unwrap_or_else(|_| panic!("exclusive copied group edit transfer must retain its reserved slot"));
-    store.displaced_retirements.release_owner_slots(history.rejected_owner).expect("exclusive copied group retains its exact rejected-owner reservation");
+    store.log.envelope.cursor.as_mut().expect("exclusive group transfer retains its cursor").stage_group_owned(cursor, &visibility).unwrap_or_else(|_| panic!("exclusive copied group cursor transfer must retain its exact owners"));
+    let ledger = store.log.envelope.vcs.edits.stage_group_reserved(history.history, *edit, &visibility).unwrap_or_else(|_| panic!("exclusive copied group edit transfer must retain its reserved slot"));
+    store.owners.displaced_retirements.release_owner_slots(history.rejected_owner).expect("exclusive copied group retains its exact rejected-owner reservation");
     retirement.external_strings = [local_actor, None];
     let mut tail = revision.applied.pop().expect("copied group retains its new revision tail");
     tail.ledger_key = Some(ledger); revision.applied.push(tail);
-    let content_revision = revision.revision(store.current_checkpoint_id.as_deref());
-    *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
-        visibility, current: post, generation: store.generation + 1, content_revision,
+    let content_revision = revision.revision(store.log.current_checkpoint_id.as_deref());
+    *store.wire.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
+        visibility, current: post, generation: store.cursor.generation + 1, content_revision,
         applied_edit_ids: applied, redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(),
         last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number(),
-        clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
+        clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.live.current))),
         authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(retirement), adopted: false,
     });
     Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,released_bytes:release,..Default::default()})
@@ -827,21 +827,21 @@ fn retain_displaced_owner(store: &mut super::ArtifactStoreDisplacedRetirements, 
     }
 }
 
-pub(super) fn abort_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+pub(super) fn abort_staged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    let Some(root) = store.durable_group_root.as_ref() else { return Ok(()) };
+    let Some(root) = store.wire.durable_group_root.as_ref() else { return Ok(()) };
     if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || visibility.pending() || visibility.committed() {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let mutation_factory = (*store.owners.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if root.retirement.is_none() || root.displaced_reservation.is_none() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
-    let edit = store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if store.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
-    let cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.abort_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let mut root = store.durable_group_root.take().expect("validated aborted durable group root remains owned");
+    let edit = store.log.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    if store.log.envelope.vcs.edits.abort_group_one(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?.is_some() { return Err(DurableOwnedGroupDecisionError::InvalidOutcome); }
+    let cursor = store.log.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.abort_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let mut root = store.wire.durable_group_root.take().expect("validated aborted durable group root remains owned");
     let mut reservation = root.displaced_reservation.take().expect("validated original abort reservation");
     let mut retirement = root.retirement.take().expect("validated preborn abort cursor");
     retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(edit, mutation_factory));
@@ -850,10 +850,10 @@ where
     retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
     retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty())));
     retirement.revision = root.revision_accumulator.take().map(super::ArtifactStoreRevisionAccumulatorRetirement::new);
-    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.current) && !std::ptr::eq(snapshot.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) { retirement.snapshots[1] = Some(snapshot); } }
+    if let Some((edit_id, snapshot)) = root.tail_undo_cache.take() { retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id)); if !Arc::ptr_eq(&snapshot, &store.live.current) && !std::ptr::eq(snapshot.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) { retirement.snapshots[1] = Some(snapshot); } }
     retirement.authority = root.authority.take().map(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new);
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
-    store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
+    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     Ok(())
 }
 
@@ -863,66 +863,66 @@ where
 /// close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
 /// `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
 /// exactly as the symmetric guards below and in `commit_document_roots_retained` do.
-pub(super) fn adopt_staged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+pub(super) fn adopt_staged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
-    let Some(root) = store.durable_group_root.as_ref() else { return Err(DurableOwnedGroupDecisionError::InvalidFrontier) };
+    let Some(root) = store.wire.durable_group_root.as_ref() else { return Err(DurableOwnedGroupDecisionError::InvalidFrontier) };
     if !Arc::ptr_eq(&root.visibility, visibility) || root.adopted || !visibility.committed() {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let factory = store.snapshot_retirement_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let factory = store.owners.snapshot_retirement_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if root.retirement.as_ref().and_then(|retirement| retirement.factory.as_ref()).is_none_or(|prepared| !Arc::ptr_eq(prepared, factory)) {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
     }
-    store.envelope.vcs.edits.adopt_group(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let displaced_cursor = store.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.adopt_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let mut root = store.durable_group_root.take().expect("validated committed durable group root remains owned");
+    store.log.envelope.vcs.edits.adopt_group(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let displaced_cursor = store.log.envelope.cursor.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?.adopt_group_owned(visibility).map_err(|()| DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let mut root = store.wire.durable_group_root.take().expect("validated committed durable group root remains owned");
     let mut reservation = root.displaced_reservation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let mut retirement = root.retirement.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     retirement.cursor = Some(super::ArtifactStoreCursorRetirement::new(super::ArtifactCursor::from_owners(displaced_cursor)));
-    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.applied_edit_ids, std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
-    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.redo_edit_ids, std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
+    retirement.applied = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.log.applied_edit_ids, std::mem::replace(&mut root.applied_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
+    retirement.redo = Some(super::ArtifactStoreStringVectorRetirement::new(std::mem::replace(&mut *store.log.redo_edit_ids, std::mem::replace(&mut root.redo_edit_ids, crate::os_vcs::HistoryPageStack::empty()))));
     let next_revision = root.revision_accumulator.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    retirement.revision = Some(super::ArtifactStoreRevisionAccumulatorRetirement::new(std::mem::replace(&mut *store.revision_accumulator, next_revision)));
-    let previous_current = std::mem::replace(&mut *store.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
+    retirement.revision = Some(super::ArtifactStoreRevisionAccumulatorRetirement::new(std::mem::replace(&mut *store.cursor.revision_accumulator, next_revision)));
+    let previous_current = std::mem::replace(&mut *store.live.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
     let next_tail = root.tail_undo_cache.take();
-    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) || std::ptr::eq(previous_current.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) {
+    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) || std::ptr::eq(previous_current.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) {
         drop(previous_current);
     } else {
         retirement.snapshots[0] = Some(previous_current);
     }
-    if let Some((edit_id, snapshot)) = store.tail_undo_cache.take() {
+    if let Some((edit_id, snapshot)) = store.live.tail_undo_cache.take() {
         retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(edit_id));
-        if !Arc::ptr_eq(&snapshot, &store.current) && !std::ptr::eq(snapshot.as_ref(), store.envelope.vcs.genesis.facts().snapshot()) {
+        if !Arc::ptr_eq(&snapshot, &store.live.current) && !std::ptr::eq(snapshot.as_ref(), store.log.envelope.vcs.genesis.facts().snapshot()) {
             retirement.snapshots[1] = Some(snapshot);
         }
     }
-    *store.tail_undo_cache = next_tail;
-    retirement.report = Some(super::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.pending_report)));
+    *store.live.tail_undo_cache = next_tail;
+    retirement.report = Some(super::ArtifactStorePendingReportRetirement::new(std::mem::take(&mut *store.replay.pending_report)));
     if let Some(authority) = root.authority.take() {
         retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
     }
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
-    store.generation = root.generation;
-    store.content_revision = root.content_revision;
-    store.fold_frontier = None;
-    store.edit_sequence = root.edit_sequence;
-    store.clock = root.clock;
-    store.last_projection_cause = root.last_projection_cause;
-    store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
+    store.cursor.generation = root.generation;
+    store.cursor.content_revision = root.content_revision;
+    store.live.fold_frontier = None;
+    store.log.edit_sequence = root.edit_sequence;
+    store.log.clock = root.clock;
+    store.cursor.last_projection_cause = root.last_projection_cause;
+    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     root.adopted = true;
-    *store.durable_group_root = Some(root);
+    *store.wire.durable_group_root = Some(root);
     Ok(())
 }
 
-fn validate_adopted_store_member<P, Mutation>(store: &ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+fn validate_adopted_store_member<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
 {
-    let root = store.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let root = store.wire.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
     if !root.adopted
         || !Arc::ptr_eq(&root.visibility, visibility)
         || root.current.is_some()
@@ -939,25 +939,25 @@ where
     Ok(())
 }
 
-fn clear_adopted_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
+fn clear_adopted_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
 {
-    validate_adopted_store_member(store, visibility)?;
-    drop(store.durable_group_root.take());
+    validate_adopted_store_member(&store.shared(), visibility)?;
+    drop(store.wire.durable_group_root.take());
     Ok(())
 }
 
-fn retire_unstaged_store_member<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, slot: &mut Option<DurableStoreBoundOutcomeV1<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), DurableOwnedGroupDecisionError>
+fn retire_unstaged_store_member<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, slot: &mut Option<DurableStoreBoundOutcomeV1<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(), DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if slot.is_none() || !grant.permits_one() || grant.maximum_capacity_bytes < size_of::<StagedRootRetirement<P, Mutation>>() { return Err(DurableOwnedGroupDecisionError::InvalidFrontier); }
-    let mutation_factory = (*store.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let mut reservation = store.displaced_retirements.reserve_owner_slots(1).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let mutation_factory = (*store.owners.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let snapshot_factory = (*store.owners.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
+    let mut reservation = store.owners.displaced_retirements.reserve_owner_slots(1).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = slot.take().expect("validated unstaged outcome");
     let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
     let mut retirement = Box::new(StagedRootRetirement::new(snapshot_factory));
@@ -966,8 +966,8 @@ where
     retirement.external_strings = [local_actor, Some(applied_edit_id)];
     retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(tail_edit_id.to_string_owner()));
     retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
-    store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)
+    retain_displaced_owner(&mut store.owners.displaced_retirements, &mut reservation, retirement);
+    store.owners.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)
 }
 
 /// 🚦️ Observable retained commit phase; no phase after `Journal` can regain abort authority.
@@ -1018,7 +1018,7 @@ where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue,
 {
-    match store.durable_group_root.as_ref() {
+    match store.wire.durable_group_root.as_ref() {
         Some(root) => {
             let expected = visibility.ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
             if !Arc::ptr_eq(&root.visibility, expected) {
@@ -1035,7 +1035,7 @@ where
         None if committed && visibility.is_some() => return Err(DurableOwnedGroupDecisionError::InvalidFrontier),
         None => {}
     }
-    Ok((Arc::clone(&*store.current), store.generation, store.content_revision))
+    Ok((Arc::clone(&*store.live.current), store.cursor.generation, store.cursor.content_revision))
 }
 
 pub(super) fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>(
@@ -1051,7 +1051,7 @@ where
     ValueP: Clone + ValueToValue + ValueFromValue,
     ValueMutation: StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue,
 {
-    let roots = [parent_store.durable_group_root.as_ref().map(|root| &root.visibility), drawing_store.durable_group_root.as_ref().map(|root| &root.visibility), value_store.durable_group_root.as_ref().map(|root| &root.visibility)];
+    let roots = [parent_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), drawing_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), value_store.wire.durable_group_root.as_ref().map(|root| &root.visibility)];
     let visibility = roots.iter().flatten().next().copied();
     if visibility.is_some_and(|visibility| roots.iter().flatten().any(|candidate| !Arc::ptr_eq(visibility, candidate))) {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
@@ -1958,7 +1958,7 @@ where
         match self.phase {
             DurableOwnedThreeStoreCommitPhaseV1::StagingParent => {
                 let outcome = self.parent.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(parent_store, outcome, &self.visibility()?, grant) {
+                match stage_store_member(&mut parent_store.parts(), outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing,
                     Err((error, outcome)) => {
                         self.parent = Some(outcome);
@@ -1971,7 +1971,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing => {
                 let outcome = self.drawing.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(drawing_store, outcome, &self.visibility()?, grant) {
+                match stage_store_member(&mut drawing_store.parts(), outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StagingValue,
                     Err((error, outcome)) => {
                         self.drawing = Some(outcome);
@@ -1984,7 +1984,7 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::StagingValue => {
                 let outcome = self.value.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match stage_store_member(value_store, outcome, &self.visibility()?, grant) {
+                match stage_store_member(&mut value_store.parts(), outcome, &self.visibility()?, grant) {
                     Ok(()) => self.phase = DurableOwnedThreeStoreCommitPhaseV1::StartingJournal,
                     Err((error, outcome)) => {
                         self.value = Some(outcome);
@@ -2043,52 +2043,52 @@ where
                 }
             }
             DurableOwnedThreeStoreCommitPhaseV1::PublishingParentLease => {
-                let root = parent_store.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-                if !parent_store.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
+                let root = parent_store.wire.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+                if !parent_store.owners.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
                     return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::PublishingDrawingLease;
             }
             DurableOwnedThreeStoreCommitPhaseV1::PublishingDrawingLease => {
-                let root = drawing_store.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-                if !drawing_store.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
+                let root = drawing_store.wire.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+                if !drawing_store.owners.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
                     return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::PublishingValueLease;
             }
             DurableOwnedThreeStoreCommitPhaseV1::PublishingValueLease => {
-                let root = value_store.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-                if !value_store.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
+                let root = value_store.wire.durable_group_root.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+                if !value_store.owners.snapshot_read_leases.publish_authority(root.generation, root.content_revision) {
                     return Ok(DurableOwnedThreeStoreCommitAdvanceV1::Blocked);
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingParent;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingParent => {
-                adopt_staged_store_member(parent_store, &self.visibility()?)?;
+                adopt_staged_store_member(&mut parent_store.parts(), &self.visibility()?)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing => {
-                adopt_staged_store_member(drawing_store, &self.visibility()?)?;
+                adopt_staged_store_member(&mut drawing_store.parts(), &self.visibility()?)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AdoptingValue;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AdoptingValue => {
-                adopt_staged_store_member(value_store, &self.visibility()?)?;
+                adopt_staged_store_member(&mut value_store.parts(), &self.visibility()?)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClearingParent;
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClearingParent => {
-                validate_adopted_store_member(parent_store, &self.visibility()?)?;
+                validate_adopted_store_member(&parent_store.parts_ref(), &self.visibility()?)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClearingDrawing;
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClearingDrawing => {
-                validate_adopted_store_member(drawing_store, &self.visibility()?)?;
+                validate_adopted_store_member(&drawing_store.parts_ref(), &self.visibility()?)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClearingValue;
             }
             DurableOwnedThreeStoreCommitPhaseV1::ClearingValue => {
                 let visibility = self.visibility()?;
-                validate_adopted_store_member(value_store, &visibility)?;
-                clear_adopted_store_member(parent_store, &visibility)?;
-                clear_adopted_store_member(drawing_store, &visibility)?;
-                clear_adopted_store_member(value_store, &visibility)?;
+                validate_adopted_store_member(&value_store.parts_ref(), &visibility)?;
+                clear_adopted_store_member(&mut parent_store.parts(), &visibility)?;
+                clear_adopted_store_member(&mut drawing_store.parts(), &visibility)?;
+                clear_adopted_store_member(&mut value_store.parts(), &visibility)?;
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AwaitingAck;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AwaitingAck => {
@@ -2096,25 +2096,25 @@ where
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingValue => {
                 if self.value.is_some() {
-                    retire_unstaged_store_member(value_store, &mut self.value, grant)?;
+                    retire_unstaged_store_member(&mut value_store.parts(), &mut self.value, grant)?;
                 } else {
-                    abort_staged_store_member(value_store, &self.visibility()?)?;
+                    abort_staged_store_member(&mut value_store.parts(), &self.visibility()?)?;
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AbortingDrawing;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingDrawing => {
                 if self.drawing.is_some() {
-                    retire_unstaged_store_member(drawing_store, &mut self.drawing, grant)?;
+                    retire_unstaged_store_member(&mut drawing_store.parts(), &mut self.drawing, grant)?;
                 } else {
-                    abort_staged_store_member(drawing_store, &self.visibility()?)?;
+                    abort_staged_store_member(&mut drawing_store.parts(), &self.visibility()?)?;
                 }
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::AbortingParent;
             }
             DurableOwnedThreeStoreCommitPhaseV1::AbortingParent => {
                 if self.parent.is_some() {
-                    retire_unstaged_store_member(parent_store, &mut self.parent, grant)?;
+                    retire_unstaged_store_member(&mut parent_store.parts(), &mut self.parent, grant)?;
                 } else {
-                    abort_staged_store_member(parent_store, &self.visibility()?)?;
+                    abort_staged_store_member(&mut parent_store.parts(), &self.visibility()?)?;
                 }
                 self.start_journal_close();
                 self.phase = DurableOwnedThreeStoreCommitPhaseV1::ClosingJournal;
@@ -2700,23 +2700,23 @@ where
     Ok(edit)
 }
 
-fn store_post_revision<P, Mutation>(store: &ArtifactStore<P, Mutation>, authority: &ArtifactStoreOneItemLiveAuthority, edit_digest: [u8; 32]) -> Result<[u8; 32], DurableOwnedGroupDecisionError>
+fn store_post_revision<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, authority: &ArtifactStoreOneItemLiveAuthority, edit_digest: [u8; 32]) -> Result<[u8; 32], DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
-    if store.generation != authority.generation().0
-        || store.content_revision != authority.base_revision()
-        || store.applied_edit_ids.len() != authority.base_applied_edit_count()
-        || store.revision_accumulator.applied.len() != authority.base_applied_edit_count()
+    if store.cursor.generation != authority.generation().0
+        || store.cursor.content_revision != authority.base_revision()
+        || store.log.applied_edit_ids.len() != authority.base_applied_edit_count()
+        || store.cursor.revision_accumulator.applied.len() != authority.base_applied_edit_count()
     {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
-    let previous = store.revision_accumulator.applied.last().map_or(store.revision_accumulator.identity_digest, |record| record.prefix_digest);
+    let previous = store.cursor.revision_accumulator.applied.last().map_or(store.cursor.revision_accumulator.identity_digest, |record| record.prefix_digest);
     let applied = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &edit_digest]);
     let applied_len = authority.base_applied_edit_count().checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? as u64;
     let empty_len = 0_u64;
-    Ok(CursorRevisionAccumulator::hash_record(b"cursor", &[&applied, &applied_len.to_be_bytes(), &store.revision_accumulator.identity_digest, &empty_len.to_be_bytes(), store.current_checkpoint_id.as_deref().unwrap_or_default().as_bytes()]))
+    Ok(CursorRevisionAccumulator::hash_record(b"cursor", &[&applied, &applied_len.to_be_bytes(), &store.cursor.revision_accumulator.identity_digest, &empty_len.to_be_bytes(), store.log.current_checkpoint_id.as_deref().unwrap_or_default().as_bytes()]))
 }
 
 impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
@@ -2971,28 +2971,28 @@ enum DurableMemberRecoveryFrontier {
     Post,
 }
 
-fn recovery_frontier<P, Mutation>(store: &ArtifactStore<P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<DurableMemberRecoveryFrontier, DurableOwnedGroupDecisionError>
+fn recovery_frontier<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, member: &DurableOwnedGroupMemberV1, group_id: &str) -> Result<DurableMemberRecoveryFrontier, DurableOwnedGroupDecisionError>
 where
     P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue,
     Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
 {
-    if (store.generation, store.content_revision) == (member.expected_generation, member.expected_revision) {
+    if (store.cursor.generation, store.cursor.content_revision) == (member.expected_generation, member.expected_revision) {
         return Ok(DurableMemberRecoveryFrontier::Base);
     }
-    if (store.generation, store.content_revision) != (member.post_generation, member.post_revision) {
+    if (store.cursor.generation, store.cursor.content_revision) != (member.post_generation, member.post_revision) {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
     let outcome = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack)?;
     let edit: Edit<Mutation> = parse_canonical_json_value(&outcome.edit_canonical_json)?;
-    let tail = store.applied_edit_ids.last().and_then(|id| store.envelope.vcs.edits.iter().find(|candidate| candidate.id == *id)).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-    let accumulator = store.revision_accumulator.applied.last().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let tail = store.log.applied_edit_ids.last().and_then(|id| store.log.envelope.vcs.edits.iter().find(|candidate| candidate.id == *id)).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
+    let accumulator = store.cursor.revision_accumulator.applied.last().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
     if outcome.group_id != group_id
         || !valid_edit_identities(&edit)
         || outcome.unbound_pack::<Mutation>().map(|pack| semio_framework_hash::sha256_hex(&pack))? != member.unbound_outcome_sha256
         || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest
         || accumulator.edit_digest != outcome.edit_digest
         || semio_framework_pack_json::to_json_string(tail).as_bytes() != outcome.edit_canonical_json
-        || store.current.encode_pack() != outcome.post_snapshot_pack
+        || store.live.current.encode_pack() != outcome.post_snapshot_pack
     {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
     }
@@ -3015,13 +3015,13 @@ impl DurableOwnedThreeMemberDecisionV1 {
         ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
     {
         self.validate()?;
-        let identities = [store_member_identity(parent_store)?, store_member_identity(drawing_store)?, store_member_identity(value_store)?];
+        let identities = [store_member_identity(&parent_store.parts_ref())?, store_member_identity(&drawing_store.parts_ref())?, store_member_identity(&value_store.parts_ref())?];
         for ((reference, owner), member) in identities.iter().zip([&self.parent, &self.drawing, &self.value]) {
             if reference != &member.reference || owner != &member.owner {
                 return Err(DurableOwnedGroupDecisionError::InvalidOwner);
             }
         }
-        let frontiers = [recovery_frontier(parent_store, &self.parent, &self.decision_sha256)?, recovery_frontier(drawing_store, &self.drawing, &self.decision_sha256)?, recovery_frontier(value_store, &self.value, &self.decision_sha256)?];
+        let frontiers = [recovery_frontier(&parent_store.parts_ref(), &self.parent, &self.decision_sha256)?, recovery_frontier(&drawing_store.parts_ref(), &self.drawing, &self.decision_sha256)?, recovery_frontier(&value_store.parts_ref(), &self.value, &self.decision_sha256)?];
         if frontiers.iter().all(|frontier| *frontier == DurableMemberRecoveryFrontier::Post) {
             return Ok(DurableOwnedThreeStoreRecoveryV1::AlreadyApplied);
         }
@@ -3029,20 +3029,20 @@ impl DurableOwnedThreeMemberDecisionV1 {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
         Ok(DurableOwnedThreeStoreRecoveryV1::Apply(DurableOwnedThreeStoreBoundV1 {
-            parent: DurableStoreBoundOutcomeV1::recover(parent_store, &self.parent, &self.decision_sha256)?,
-            drawing: DurableStoreBoundOutcomeV1::recover(drawing_store, &self.drawing, &self.decision_sha256)?,
-            value: DurableStoreBoundOutcomeV1::recover(value_store, &self.value, &self.decision_sha256)?,
+            parent: DurableStoreBoundOutcomeV1::recover(&parent_store.parts_ref(), &self.parent, &self.decision_sha256)?,
+            drawing: DurableStoreBoundOutcomeV1::recover(&drawing_store.parts_ref(), &self.drawing, &self.decision_sha256)?,
+            value: DurableStoreBoundOutcomeV1::recover(&value_store.parts_ref(), &self.value, &self.decision_sha256)?,
             decision: self.clone(),
         }))
     }
 }
 
-fn store_member_identity<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<OwnerRef>), DurableOwnedGroupDecisionError>
+fn store_member_identity<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>) -> Result<(semio_framework_artifact_reference::ArtifactRef, Option<OwnerRef>), DurableOwnedGroupDecisionError>
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
-    let envelope = &store.envelope;
+    let envelope = &store.log.envelope;
     let dialect = envelope.dialect.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
     Ok((semio_framework_artifact_reference::ArtifactRef { artifact_id: envelope.id.clone(), dialect }, envelope.owner.clone()))
 }
@@ -3084,12 +3084,12 @@ fn bound_member<P, Mutation>(role: &str, reference: semio_framework_artifact_ref
     }
 }
 
-fn prepared_base_matches_store<P, Mutation>(store: &ArtifactStore<P, Mutation>, member: &DurableOwnedGroupMemberV1, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> bool
+fn prepared_base_matches_store<P, Mutation>(store: &StorePartsRef<'_, P, Mutation>, member: &DurableOwnedGroupMemberV1, prepared: &ArtifactStoreOneItemPrepared<P, Mutation>) -> bool
 where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
-    store.generation == member.expected_generation && store.content_revision == member.expected_revision && store.applied_edit_ids.len() == prepared.authority().base_applied_edit_count()
+    store.cursor.generation == member.expected_generation && store.cursor.content_revision == member.expected_revision && store.log.applied_edit_ids.len() == prepared.authority().base_applied_edit_count()
 }
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
@@ -3109,9 +3109,9 @@ where
     ) -> Result<DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedGroupDecisionError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-        let (parent_reference, parent_owner) = store_member_identity(parent_store)?;
-        let (drawing_reference, drawing_owner) = store_member_identity(drawing_store)?;
-        let (value_reference, value_owner) = store_member_identity(value_store)?;
+        let (parent_reference, parent_owner) = store_member_identity(&parent_store.parts_ref())?;
+        let (drawing_reference, drawing_owner) = store_member_identity(&drawing_store.parts_ref())?;
+        let (value_reference, value_owner) = store_member_identity(&value_store.parts_ref())?;
         if parent_reference == drawing_reference || parent_reference == value_reference || drawing_reference == value_reference {
             return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
         }
@@ -3122,18 +3122,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         if !member_identity_matches(&parent, PARENT_ROLE, PARENT_RECOVERY_SCHEMA, &parent_reference.to_uri(), &anchor)
             || !member_identity_matches(&drawing, DRAWING_ROLE, DRAWING_RECOVERY_SCHEMA, "gismap-drawing!s.stdio.semio@v1/drawing", &anchor)
             || !member_identity_matches(&value, VALUE_ROLE, VALUE_RECOVERY_SCHEMA, "gismap-value!s.stdio.semio@v1/value", &anchor)
-            || !prepared_base_matches_store(parent_store, &parent, &self.parent.prepared)
-            || !prepared_base_matches_store(drawing_store, &drawing, &self.drawing.prepared)
-            || !prepared_base_matches_store(value_store, &value, &self.value.prepared)
+            || !prepared_base_matches_store(&parent_store.parts_ref(), &parent, &self.parent.prepared)
+            || !prepared_base_matches_store(&drawing_store.parts_ref(), &drawing, &self.drawing.prepared)
+            || !prepared_base_matches_store(&value_store.parts_ref(), &value, &self.value.prepared)
         {
             return Err(DurableOwnedGroupDecisionError::InvalidOwner);
         }
         let anchor_sha256 = semio_framework_hash::sha256_hex(semio_framework_pack_json::to_json_string(&anchor).as_bytes());
         let mut decision = DurableOwnedThreeMemberDecisionV1 { schema: DURABLE_OWNED_GROUP_DECISION_SCHEMA_V1.into(), anchor, anchor_sha256, decision_sha256: String::new(), parent, drawing, value };
         decision.decision_sha256 = semio_framework_hash::sha256_hex(decision.canonical_unsigned_json().as_bytes());
-        let parent = self.parent.bind(parent_store, &decision.decision_sha256)?;
-        let drawing = self.drawing.bind(drawing_store, &decision.decision_sha256)?;
-        let value = self.value.bind(value_store, &decision.decision_sha256)?;
+        let parent = self.parent.bind(&parent_store.parts_ref(), &decision.decision_sha256)?;
+        let drawing = self.drawing.bind(&drawing_store.parts_ref(), &decision.decision_sha256)?;
+        let value = self.value.bind(&value_store.parts_ref(), &decision.decision_sha256)?;
         decision.parent = bound_member(PARENT_ROLE, parent_reference, parent_owner, &parent);
         decision.drawing = bound_member(DRAWING_ROLE, drawing_reference, drawing_owner, &drawing);
         decision.value = bound_member(VALUE_ROLE, value_reference, value_owner, &value);

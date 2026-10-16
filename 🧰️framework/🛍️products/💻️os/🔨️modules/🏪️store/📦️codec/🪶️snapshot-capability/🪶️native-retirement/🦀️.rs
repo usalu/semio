@@ -1,18 +1,20 @@
 //! 🫴️ Original codec intermediates stay under the caller's admitted receiving frame.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use super::{ArtifactSqliteSnapshotHost,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
-use crate::{io_schema::{IoError,IoOutcome,IoPayload,IoResult},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
+use semio_framework_os_store_space_history::lifted_serialization::ArtifactSqliteSnapshotHost;
+use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use semio_framework_io_schema::{IoError, IoOutcome, IoPayload, IoResult};
+use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding};
 use semio_framework_value::{ValueError,ValueRefusalKind,retirement::RetireOwned};
-use super::sqlite_snapshot_workspace::staged;
+use crate::lifted_sqlite_snapshot_workspace::staged;
 
-struct CodecFrame<P:RetireOwned>{snapshot:Option<P>,database:Option<SqliteDatabase>,payload:Option<IoPayload>,validation:Option<IoResult<()>>}
+struct CodecFrame<P:RetireOwned>{pub snapshot:Option<P>,pub database:Option<SqliteDatabase>,pub payload:Option<IoPayload>,pub validation:Option<IoResult<()>>}
 impl<P:RetireOwned> RetireOwned for CodecFrame<P>{
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{snapshot,database,payload,validation}=self;use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(snapshot),deferred(database),deferred(payload),deferred(validation)])}
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.snapshot),deferred_birth_bytes_for(&self.database),deferred_birth_bytes_for(&self.payload),deferred_birth_bytes_for(&self.validation)])}
  fn controlled_retirement_supported()->bool{P::controlled_retirement_supported()&&SqliteDatabase::controlled_retirement_supported()&&IoPayload::controlled_retirement_supported()&&<IoResult<()>>::controlled_retirement_supported()}
 }
 
-impl<P:RetireOwned> CodecFrame<P>{fn empty()->Self{Self{snapshot:None,database:None,payload:None,validation:None}}}
+impl<P:RetireOwned> CodecFrame<P>{pub fn empty()->Self{Self{snapshot:None,database:None,payload:None,validation:None}}}
 
 fn validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
  match slot.as_ref().unwrap(){
@@ -22,7 +24,7 @@ fn validation(slot:&mut Option<IoResult<()>>)->Result<(),IoError>{
  }
 }
 
-pub(super) fn export<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<SqliteDatabase>{
+pub fn export<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->IoResult<SqliteDatabase>{
  native.receive_nested::<CodecFrame<P>,IoResult<SqliteDatabase>>(|slot,native|{
   *slot=Some(CodecFrame::empty());let frame=slot.as_mut().unwrap();
   let result=(||{
@@ -30,7 +32,7 @@ pub(super) fn export<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dial
    frame.snapshot=Some(staged(control,native,|control,native|P::decode_sqlite_snapshot_native(payload,control,native)).map_err(IoError::from_value_error)?);
    control.checkpoint(SqliteSnapshotPhase::DecodeNative,1,1).map_err(IoError::from_value_error)?;
    frame.database=Some(staged(control,native,|control,native|frame.snapshot.as_ref().unwrap().to_sqlite_database_receiving(control,native)).map_err(IoError::from_value_error)?);
-   let mut body=super::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=crate::sqlite_snapshot::artifact::receiving::check_database(frame.database.as_ref().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
+   let mut body=semio_framework_io_control::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=semio_framework_io_sqlite_snapshot::artifact::receiving::check_database(frame.database.as_ref().unwrap(),&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Decode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
    frame.validation=Some(staged(control,native,|control,native|Ok::<_,ValueError>(frame.snapshot.as_ref().unwrap().validate_sqlite_snapshot_subset_decoding(dialect,frame.database.as_ref().unwrap(),control,native))).map_err(IoError::from_value_error)?);
    validation(&mut frame.validation)?;
    let diagnostics=frame.validation.take().unwrap().unwrap().diagnostics;
@@ -39,7 +41,7 @@ pub(super) fn export<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dial
  }).map_err(IoError::from_value_error)?
 }
 
-pub(super) fn import<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,input:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<IoPayload>{
+pub fn import<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,input:&mut Option<SqliteDatabase>,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->IoResult<IoPayload>{
  if input.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite codec original input is absent")))}
  native.receive_nested::<CodecFrame<P>,IoResult<IoPayload>>(|slot,native|{
   *slot=Some(CodecFrame::empty());let frame=slot.as_mut().unwrap();
@@ -47,7 +49,7 @@ pub(super) fn import<P:ArtifactSqliteSnapshotHost+RetireOwned>(_schema:&str,dial
   if !adopted.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite codec input adoption exceeds original grant"))}
   native.native().checkpoint()?;frame.database=input.take();native.record_progress(adopted)?;
   let result=(||{
-   let mut body=super::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=crate::sqlite_snapshot::artifact::receiving::check_database(frame.database.as_ref().unwrap(),&mut crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
+   let mut body=semio_framework_io_control::NativeSnapshotBodyWallet::new(native.remaining_grant());let extent=semio_framework_io_sqlite_snapshot::artifact::receiving::check_database(frame.database.as_ref().unwrap(),&mut semio_framework_io_sqlite_snapshot::artifact::receiving::Port{control,native:semio_framework_io_sqlite_snapshot::artifact::receiving::Direction::Encode(native.native()),body:&mut body});native.record_progress(body.progress()).map_err(IoError::from_value_error)?;extent.map_err(IoError::from_value_error)?;
    frame.snapshot=Some(staged(control,native,|control,native|P::from_sqlite_database_receiving(frame.database.as_ref().unwrap(),control,native)).map_err(IoError::from_value_error)?);
    frame.validation=Some(staged(control,native,|control,native|Ok::<_,ValueError>(frame.snapshot.as_ref().unwrap().validate_sqlite_snapshot_subset_encoding(dialect,frame.database.as_ref().unwrap(),control,native))).map_err(IoError::from_value_error)?);
    validation(&mut frame.validation)?;

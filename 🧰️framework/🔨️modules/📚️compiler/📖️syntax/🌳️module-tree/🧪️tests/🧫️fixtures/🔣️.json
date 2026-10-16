@@ -206,6 +206,62 @@
         "view/🧪️tests/🟦️.ts"
       ],
       "oracle": "typescript"
+    },
+    {
+      "id": "rust-included-hub-resolves-like-the-compiler",
+      "kind": "rust",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "include!(\"📥️hub/🦀️.rs\");\n",
+        "owner/📥️hub/🦀️.rs": "#[path = \"../child/🦀️.rs\"]\nmod child;\ninclude!(\"🧰️more/🦀️.rs\");\n",
+        "owner/📥️hub/🧰️more/🦀️.rs": "#[path = \"../../deeper/🦀️.rs\"]\nmod deeper;\n",
+        "owner/child/🦀️.rs": "pub fn child() {}\n",
+        "owner/deeper/🦀️.rs": "pub fn deeper() {}\n"
+      },
+      "production": [
+        "owner/🦀️.rs",
+        "owner/📥️hub/🦀️.rs",
+        "owner/child/🦀️.rs",
+        "owner/📥️hub/🧰️more/🦀️.rs",
+        "owner/deeper/🦀️.rs"
+      ],
+      "withTests": [
+        "owner/🦀️.rs",
+        "owner/📥️hub/🦀️.rs",
+        "owner/child/🦀️.rs",
+        "owner/📥️hub/🧰️more/🦀️.rs",
+        "owner/deeper/🦀️.rs"
+      ],
+      "oracle": "rustc"
+    },
+    {
+      "id": "rust-included-files-stay-inside-the-includer-scope",
+      "kind": "rust",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "include!(\"📥️hub/🦀️.rs\");\n#[cfg(test)]\ninclude!(\"../🧪️tests/🔬️spliced/🦀️.rs\");\n#[path = \"own/🦀️.rs\"]\nmod own;\n",
+        "owner/📥️hub/🦀️.rs": "#[path = \"../child/🦀️.rs\"]\nmod child;\n#[path = \"../../outside/🦀️.rs\"]\nmod outside;\n#[cfg(test)]\n#[path = \"../../🧪️tests/🔬️hubbed/🦀️.rs\"]\nmod hubbed;\n",
+        "owner/child/🦀️.rs": "pub fn child() {}\n",
+        "owner/own/🦀️.rs": "pub fn own() {}\n",
+        "outside/🦀️.rs": "pub fn outside() {}\n",
+        "🧪️tests/🔬️spliced/🦀️.rs": "pub fn spliced() {}\n",
+        "🧪️tests/🔬️hubbed/🦀️.rs": "pub fn hubbed() {}\n"
+      },
+      "production": [
+        "owner/🦀️.rs",
+        "owner/📥️hub/🦀️.rs",
+        "owner/child/🦀️.rs",
+        "owner/own/🦀️.rs"
+      ],
+      "withTests": [
+        "owner/🦀️.rs",
+        "owner/📥️hub/🦀️.rs",
+        "owner/child/🦀️.rs",
+        "🧪️tests/🔬️hubbed/🦀️.rs",
+        "🧪️tests/🔬️spliced/🦀️.rs",
+        "owner/own/🦀️.rs"
+      ],
+      "oracle": null
     }
   ],
   "refusals": [
@@ -243,6 +299,51 @@
         "from": "pub fn absent"
       },
       "error": "Module tree marker missing"
+    },
+    {
+      "id": "missing-included-file",
+      "root": "owner/🦀️.rs",
+      "files": {
+        "owner/🦀️.rs": "include!(\"absent/🦀️.rs\");\n"
+      },
+      "error": "Rust module tree mount missing"
+    }
+  ],
+  "includes": [
+    {
+      "id": "include-items-are-children-in-declaration-order",
+      "source": "#[path = \"a/🦀️.rs\"]\nmod a;\ninclude!(\"b/🦀️.rs\");\n#[cfg(test)]\ninclude![\"c/🦀️.rs\"];\nmod inline {\n    include!(\"d/🦀️.rs\");\n    #[path = \"e/🦀️.rs\"]\n    mod e;\n}\ninclude!(concat!(env!(\"OUT_DIR\"), \"/g.rs\"));\ninclude_str!(\"f.txt\");\n// include!(\"comment.rs\");\nconst TEXT: &str = \"include!(\\\"string.rs\\\");\";\nfn body() {\n    let _ = include!(\"expression.rs\");\n}\n",
+      "expected": [
+        {
+          "path": "a/🦀️.rs",
+          "modules": [],
+          "via": "path"
+        },
+        {
+          "path": "b/🦀️.rs",
+          "modules": [],
+          "via": "include"
+        },
+        {
+          "path": "c/🦀️.rs",
+          "modules": [],
+          "via": "include"
+        },
+        {
+          "path": "d/🦀️.rs",
+          "modules": [
+            "inline"
+          ],
+          "via": "include"
+        },
+        {
+          "path": "e/🦀️.rs",
+          "modules": [
+            "inline"
+          ],
+          "via": "path"
+        }
+      ]
     }
   ]
 }

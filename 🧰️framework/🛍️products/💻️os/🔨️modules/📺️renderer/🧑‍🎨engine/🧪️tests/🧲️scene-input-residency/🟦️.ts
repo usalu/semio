@@ -10,6 +10,7 @@ import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚�
 let workspace = dirname(fileURLToPath(import.meta.url));
 while (!existsSync(join(workspace, ".git"))) workspace = resolve(workspace, "..");
 const world = join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "♾️infinite", "🌍️world");
+const WORLD_CRATES = ["🗃️model", "🧩️components", "🧲️cursors", "🧱️scene", "🌉️bridge", "🧵️interaction", "🎛️host"] as const;
 const fixture = JSON.parse(readFileSync(join(world, "🧪️tests/🧫️fixtures", "🧲️scene-input-residency", "🔣️.json"), "utf8"));
 
 const snap = (point: readonly number[], enabled: boolean, factor: number): number[] => enabled && factor > 0 ? new Vector3(point[0], point[1], point[2]).divideScalar(factor).round().multiplyScalar(factor).toArray() : [...point];
@@ -45,12 +46,12 @@ describe("🧲️ World scene input and reference residency", () => {
   });
 
   test("the WGPU source routes all input and decoded references through the shared ownership decisions", () => {
-    const source = readModuleTreeSource(join(world, "🦀️.rs"));
+    const source = WORLD_CRATES.map((crate) => readModuleTreeSource(join(world, crate, "🦀️.rs"))).join("\n");
     const renderer = readModuleTreeSource(join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs"));
     expect(source).toContain("grid_snap_enabled: bool");
     expect(source.match(/snap_world_point_to_grid\(/g)?.length).toBe(4);
     expect(source).toContain("cancel_reference_image_url");
     expect(source).toContain("world3d_reference_url_is_current");
-    expect(renderer).toContain("world3d_reference_url_is_current(state, &url)");
+    expect(renderer).toContain("world3d_reference_url_is_current(&state.scene, &url)");
   });
 });

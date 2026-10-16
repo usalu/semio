@@ -1,5 +1,10 @@
+use crate::editor::epw::modes::edit::windows::main;
+use crate::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::Editor;
+use crate::editor::epw::{epw_set_cell_emit};
 use crate::apply_mutation;
-use super::*;
+use crate::editor::epw::*;
 
 #[semio_framework_async_macros::async_test]
 async fn create_epw_editor_builds_a_definition_for_the_editor_role() {
@@ -36,7 +41,7 @@ fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
 
 #[test]
 fn set_cell_matches_the_language_neutral_renderer_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️set-cell/🔣️.json")).expect("EPW cell fixture");
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/✏️set-cell/🔣️.json")).expect("EPW cell fixture");
     for case in fixture["cases"].as_array().expect("fixture cases") {
         let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture args");
         let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some((args).clone()), None).expect("fixture command");
@@ -86,7 +91,7 @@ async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::EpwEditor, || semio_framework_plugin::App { definition: super::create_epw_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::epw::EpwEditor, || semio_framework_plugin::App { definition: crate::editor::epw::create_epw_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
@@ -106,4 +111,9 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     let removed = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a record removal resolves");
     assert!(matches!(removed.artifact_mutations.as_slice(), [EpwMutation::RemoveRecord(_)]));
     assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
+}
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

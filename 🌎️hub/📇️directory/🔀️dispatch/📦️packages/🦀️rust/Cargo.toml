@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../.."
+name = "semio-hub-directory-dispatch"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The closed HubDirectories dispatch over the sqlite, postgres and neo4j backends"
+
+[package.metadata.semio]
+role = "hub"
+id = "hub-directory-dispatch"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-artifact-authority = { workspace = true }
+semio-hub-artifact-creation = { workspace = true }
+semio-hub-directory = { workspace = true }
+semio-hub-directory-contract = { workspace = true }
+semio-hub-directory-neo4j = { workspace = true }
+semio-hub-directory-postgres = { workspace = true }
+semio-hub-directory-sqlite = { workspace = true }
+directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]

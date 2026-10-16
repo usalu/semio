@@ -1,3 +1,15 @@
+use crate::{standards::v5::subsets::any::schema::snapshot::HtmlAttr, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot, standards::v5::subsets::any::schema::snapshot::RawTextKind};
+use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SqliteValue};
+use semio_framework_value::ValueError;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::{sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteRow};
+#[allow(unused_imports)]
+use std::{collections::BTreeMap, collections::BTreeSet};
+#[allow(unused_imports)]
+use semio_framework_value::ValueRefusalKind;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io_schema::IoError;
+use crate::standards::v5::subsets::any::io::sqlite::snapshot::{text, kind, component};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
@@ -5,13 +17,13 @@ use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::v5::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
+fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
 fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
 fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { HtmlSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())) }
 
 #[test]
 fn sqlite_snapshot_html_owned_dialect_guard_requires_its_declared_coordinate() {
-    let source: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let source: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = fixture(); let database = project(&snapshot);
     let dialect = |value: &serde_json::Value| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: value["artifactKind"].as_str().unwrap().into(), standard: value["standard"].as_str().unwrap().into(), subset: value["subset"].as_str().unwrap().into() };
     let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
@@ -93,3 +105,8 @@ fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
 
 #[path = "🚦️cohort/🦀️.rs"]
 mod complete_public_cohort;
+
+fn runtime_fixture_text(relative: &str) -> &'static str {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
+    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}

@@ -21,6 +21,6 @@ import { readFileSync } from "node:fs";
 test("every original prepared operation supplies its exact borrowed semantic schema", () => {
   const parts = [["count", "set-count"], ["label", "set-label"]];
   expect(parts.map(([entity, kind]) => Buffer.concat([Buffer.from(entity!), Buffer.from("."), Buffer.from(kind!)]).toString("utf8"))).toEqual(fixture.expectedSchemas);
-  const publication = readFileSync(new URL("../../../../🏪️store/🎮️one-item/📬️publication/🦀️.rs", import.meta.url), "utf8");
+  const publication = readFileSync(new URL("../../../../🏪️store/🎮️one-item/📬️publication/🦀️.rs", import.meta.url), "utf8") + readFileSync(new URL("../../../../🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs", import.meta.url), "utf8");
   expect(publication.includes("prepared_operation_schema_parts")).toBe(true);
 });

@@ -52,7 +52,7 @@ fn puzzle5d_projection_dsl_round_trips() {
 #[test]
 #[ignore = "maintainer: regenerates capsule-dream 📄️document.json from the dsl fixture"]
 fn export_capsule_dream_document_json_fixture() {
-    let projection = parse_dsl(PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT).unwrap_or_else(|error| {
+    let projection = parse_dsl(crate::examples::puzzle5d::capsule_dream::dsl_text()).unwrap_or_else(|error| {
         Puzzle5dSnapshot::default()
     });
     let json = semio_framework_pack_json::to_json_string(&projection);

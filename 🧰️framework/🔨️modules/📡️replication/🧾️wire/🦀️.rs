@@ -1,6 +1,7 @@
 //! 🧾 Protocol errors, limits, record vocabulary, and wire codecs.
 
 use semio_framework_replication_error::ProtocolError;
+use semio_framework_replication_crypto::RecordHasher;
 
 //#region 🔖️Limits
 /// 🛡️ Corruption-hardening ceilings every decoder in this crate family must validate
@@ -122,9 +123,9 @@ pub enum UndoPolicy {
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids` (this crate
 /// sits below `os-kernel`). A fieldless enum with no `#[serde(...)]` tag attribute serializes as
 /// its bare variant name string; mirrored here exactly.
-impl crate::value::ToValue for UndoPolicy {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
+impl semio_framework_value::ToValue for UndoPolicy {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(
             match self {
                 UndoPolicy::ExactBaseOnly => "ExactBaseOnly",
                 UndoPolicy::TransformAgainstConcurrent => "TransformAgainstConcurrent",
@@ -135,17 +136,17 @@ impl crate::value::ToValue for UndoPolicy {
         )
     }
 }
-impl crate::value::FromValue for UndoPolicy {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::String(tag) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string for UndoPolicy, found {value:?}")));
+impl semio_framework_value::FromValue for UndoPolicy {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(tag) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for UndoPolicy, found {value:?}")));
         };
         match tag.as_str() {
             "ExactBaseOnly" => Ok(UndoPolicy::ExactBaseOnly),
             "TransformAgainstConcurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
             "SemanticUndo" => Ok(UndoPolicy::SemanticUndo),
             "CompensatingAction" => Ok(UndoPolicy::CompensatingAction),
-            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown UndoPolicy variant `{other}`"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown UndoPolicy variant `{other}`"))),
         }
     }
 }
@@ -164,9 +165,9 @@ pub enum MergePolicy {
 
 /// 🌉️ Hand-written, not derived — same DAG reason as `UndoPolicy` above. A fieldless enum with no
 /// `#[serde(...)]` tag attribute serializes as its bare variant name string; mirrored here exactly.
-impl crate::value::ToValue for MergePolicy {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
+impl semio_framework_value::ToValue for MergePolicy {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::String(
             match self {
                 MergePolicy::LaissezFaire => "LaissezFaire",
                 MergePolicy::Normal => "Normal",
@@ -176,16 +177,16 @@ impl crate::value::ToValue for MergePolicy {
         )
     }
 }
-impl crate::value::FromValue for MergePolicy {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let crate::value::DslValue::String(tag) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string for MergePolicy, found {value:?}")));
+impl semio_framework_value::FromValue for MergePolicy {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let semio_framework_value::DslValue::String(tag) = value else {
+            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for MergePolicy, found {value:?}")));
         };
         match tag.as_str() {
             "LaissezFaire" => Ok(MergePolicy::LaissezFaire),
             "Normal" => Ok(MergePolicy::Normal),
             "Vigilant" => Ok(MergePolicy::Vigilant),
-            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown MergePolicy variant `{other}`"))),
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown MergePolicy variant `{other}`"))),
         }
     }
 }
@@ -241,11 +242,11 @@ impl MergePolicy {
 /// are the only fixed-width forms. Field order within a record is always declaration order — no
 /// tags, mirroring `os_dsl::op_rt`'s "position is the format" convention one level down.
 pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
-    crate::codec::write_varint_u64(out, value);
+    semio_framework_replication_codec::write_varint_u64(out, value);
 }
 
 pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, ProtocolError> {
-    Ok(crate::codec::read_varint_u64(bytes, pos)?)
+    Ok(semio_framework_replication_codec::read_varint_u64(bytes, pos)?)
 }
 
 /// 1️⃣ Single raw byte, no length prefix (fixed width) — the `read_*` twin every
@@ -328,8 +329,79 @@ pub fn read_f64(bytes: &[u8], pos: &mut usize) -> Result<f64, ProtocolError> {
 }
 //#endregion 🔖️WireCodec
 
+//#region 🔖️Crypto
+/// 🔗️ The commit chain's hash primitive: `blake3`, owned here so `protocol_core` stays
+/// dependency-free (per the family's crypto-trait-only rule).
+pub struct Blake3Hasher;
+
+impl RecordHasher for Blake3Hasher {
+    fn hash(&self, bytes: &[u8]) -> [u8; 32] {
+        *semio_framework_hash::hash(bytes).as_bytes()
+    }
+}
+//#endregion 🔖️Crypto
+
+//#region 🔖️Combinators
+// Hand-rolled binary frame encode/decode: `lane: u8 | frame tag: u8 | fields...` — see the
+// module-level docstring. `crate::wire::🔖️WireCodec` supplies the primitives; this region adds
+// the option/vec combinators the frame shapes need plus the tag-dispatch match arms.
+
+pub async fn malformed(what: &'static str, offset: u64, detail: &str) -> semio_framework_replication_error::ProtocolError {
+    semio_framework_replication_error::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
+}
+pub async fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
+    crate::write_bool(out, value.is_some());
+    if let Some(s) = value {
+        crate::write_str(out, s);
+    }
+}
+pub async fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, semio_framework_replication_error::ProtocolError> {
+    if crate::read_bool(bytes, pos)? {
+        Ok(Some(crate::read_str(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
+}
+pub async fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
+    crate::write_bool(out, value.is_some());
+    if let Some(b) = value {
+        crate::write_bytes(out, b);
+    }
+}
+pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, semio_framework_replication_error::ProtocolError> {
+    if crate::read_bool(bytes, pos)? {
+        Ok(Some(crate::read_bytes(bytes, pos)?))
+    } else {
+        Ok(None)
+    }
+}
+pub async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
+    crate::write_varint_u64(out, values.len() as u64);
+    for value in values {
+        crate::write_bytes(out, value);
+    }
+}
+pub async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, semio_framework_replication_error::ProtocolError> {
+    let count = crate::read_varint_u64(bytes, pos)?;
+    let mut out = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        out.push(crate::read_bytes(bytes, pos)?);
+    }
+    Ok(out)
+}
+//#endregion 🔖️Combinators
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "../🚪️io/📝️text/🧵️canonical/🧾️policy/🦀️.rs"]
+mod canonical_tree;
+
+mod owned_retirement {
+    use super::*;
+    semio_framework_value::artifact_retire_leaf!(MergePolicy);
+    semio_framework_value::artifact_retire_leaf!(UndoPolicy);
+}

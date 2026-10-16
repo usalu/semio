@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "ownedFiles": 24,
+  "sharedFiles": 24,
+  "bytesPerFile": 4097,
+  "minimumParallel": 2,
+  "maximumParallel": 16,
+  "maximumSynchronousSourceAncestorReads": 0,
+  "sourceTreeCapacity": {
+    "maximumEntries": 3,
+    "directories": [
+      "node_modules",
+      "node_modules/a",
+      "node_modules/a/b"
+    ],
+    "overflow": "node_modules/a/b/c",
+    "expected": {
+      "nonroot": 3,
+      "total": 4
+    }
+  }
+}

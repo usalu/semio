@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "consumer": "records",
+      "during": "callback",
+      "accepted": true
+    },
+    {
+      "consumer": "records",
+      "during": "after-return",
+      "accepted": true
+    },
+    {
+      "consumer": "pdf",
+      "during": "callback",
+      "accepted": true
+    },
+    {
+      "consumer": "pdf",
+      "during": "after-return",
+      "accepted": false
+    },
+    {
+      "consumer": "log",
+      "during": "callback",
+      "accepted": true
+    },
+    {
+      "consumer": "log",
+      "during": "after-return",
+      "accepted": false
+    }
+  ]
+}

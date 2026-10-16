@@ -1,45 +1,46 @@
 //! 🎮️ Domain-owned cooperative semantic preparation for one history operation.
 
-use crate::os_spr::{InputReplacement, MutationApplyError, MutationMessage};
-use super::{ArtifactStoreOneItemGrant, ErasedSnapshotRetirement};
+use semio_framework_os_spr::{InputReplacement, MutationApplyError, MutationMessage};
+use semio_framework_os_store_one_item::ArtifactStoreOneItemGrant;
+use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::sync::Arc;
 
-pub(super) use crate::os_spr::command::{ArtifactReplayRetirementFactory, ReplayRetirement};
+pub use semio_framework_os_spr::command::{ArtifactReplayRetirementFactory, ReplayRetirement};
 
 /// 📨️ Moves every original operation row into native pages before one final edit selection.
 pub(super) struct OperationMessageSettlement {
-    drain: Option<crate::os_spr::command::OperationMessageDrain>,
-    pending: Option<crate::os_spr::command::MutationMessageRetirement>,
-    retiring: Option<crate::os_spr::command::MutationMessageLedgerRetirement>,
-    closing: bool,
+    pub drain: Option<semio_framework_os_spr::command::OperationMessageDrain>,
+    pub pending: Option<semio_framework_os_spr::command::MutationMessageRetirement>,
+    pub retiring: Option<semio_framework_os_spr::command::MutationMessageLedgerRetirement>,
+    pub closing: bool,
 }
 impl OperationMessageSettlement {
-    fn new(outcome: crate::os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(crate::os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false } }
-    fn step(&mut self, ledger: &mut crate::os_spr::command::ReplayMessageAccumulator) -> Result<bool, ValueError> {
+    fn new(outcome: semio_framework_os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(semio_framework_os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false } }
+    pub fn step(&mut self, ledger: &mut semio_framework_os_spr::command::ReplayMessageAccumulator) -> Result<bool, ValueError> {
         let drain = self.drain.as_mut().expect("operation retains its original row drain");
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: drain.next_copy_byte_demand(ledger), maximum_capacity_bytes: drain.next_capacity_byte_demand(ledger)?, maximum_release_bytes: drain.next_release_byte_demand(), maximum_depth: 1 };
         if grant.maximum_copy_bytes.saturating_add(grant.maximum_capacity_bytes) > 4096 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "operation message page exceeds one body/capacity grant")); }
         drain.step(ledger, grant)?;
         Ok(drain.is_finished())
     }
-    fn take(&mut self) -> crate::os_spr::MutationReplayOutcome { let result = self.drain.as_mut().and_then(crate::os_spr::command::OperationMessageDrain::take).expect("completed original operation drain"); self.drain = None; result }
-    pub(super) fn begin_close(&mut self) { self.closing = true; }
-    pub(super) fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.drain.is_some() { size_of::<crate::os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>() } else if let Some(pending) = self.pending.as_ref() { pending.next_copy_byte_demand() } else { self.retiring.as_ref().map_or(0, crate::os_spr::command::MutationMessageLedgerRetirement::next_copy_byte_demand) }) }
-    pub(super) fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
-    pub(super) fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(0); } if let Some(pending) = self.pending.as_ref() { return Ok(pending.next_release_byte_demand()); } self.retiring.as_ref().map_or(Ok(0), crate::os_spr::command::MutationMessageLedgerRetirement::next_release_byte_demand) }
-    pub(super) fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(1); } if let Some(pending) = self.pending.as_ref() { return pending.next_depth_demand().map(|depth| depth + 1); } self.retiring.as_ref().map_or(Ok(0), |owner| owner.next_depth_demand().map(|depth| depth + 1)) }
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn take(&mut self) -> semio_framework_os_spr::MutationReplayOutcome { let result = self.drain.as_mut().and_then(semio_framework_os_spr::command::OperationMessageDrain::take).expect("completed original operation drain"); self.drain = None; result }
+    pub fn begin_close(&mut self) { self.closing = true; }
+    pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.drain.is_some() { size_of::<semio_framework_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>() } else if let Some(pending) = self.pending.as_ref() { pending.next_copy_byte_demand() } else { self.retiring.as_ref().map_or(0, semio_framework_os_spr::command::MutationMessageLedgerRetirement::next_copy_byte_demand) }) }
+    pub fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
+    pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(0); } if let Some(pending) = self.pending.as_ref() { return Ok(pending.next_release_byte_demand()); } self.retiring.as_ref().map_or(Ok(0), semio_framework_os_spr::command::MutationMessageLedgerRetirement::next_release_byte_demand) }
+    pub fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.drain.is_some() { return Ok(1); } if let Some(pending) = self.pending.as_ref() { return pending.next_depth_demand().map(|depth| depth + 1); } self.retiring.as_ref().map_or(Ok(0), |owner| owner.next_depth_demand().map(|depth| depth + 1)) }
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let idle = RetainedCloneProgress::default();
         if !self.closing || grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_copy_byte_demand()? || grant.maximum_release_bytes < self.next_release_byte_demand()? || grant.maximum_depth < self.next_depth_demand()? { return Ok(RetainedCloneStep::Progress(idle)); }
-        if let Some(drain) = self.drain.take() { let (outcome, pending) = drain.into_parts(); self.pending = pending.map(crate::os_spr::command::MutationMessageRetirement::new); self.retiring = Some(crate::os_spr::command::MutationMessageLedgerRetirement::from_replay_outcome(outcome)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<crate::os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>(), ..idle })); }
+        if let Some(drain) = self.drain.take() { let (outcome, pending) = drain.into_parts(); self.pending = pending.map(semio_framework_os_spr::command::MutationMessageRetirement::new); self.retiring = Some(semio_framework_os_spr::command::MutationMessageLedgerRetirement::from_replay_outcome(outcome)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<semio_framework_os_spr::MutationReplayOutcome>() + size_of::<Option<MutationMessage>>(), ..idle })); }
         if let Some(pending) = self.pending.as_mut() { let progress = pending.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if pending.terminal_is_empty() { self.pending = None; } return Ok(RetainedCloneStep::Progress(progress)); }
         if let Some(retiring) = self.retiring.as_mut() { let step = retiring.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if retiring.terminal_is_empty() { self.retiring = None; } return Ok(step); }
         Ok(RetainedCloneStep::Complete(idle))
     }
-    pub(super) fn terminal_is_empty(&self) -> bool { self.drain.is_none() && self.pending.is_none() && self.retiring.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.drain.is_none() && self.pending.is_none() && self.retiring.is_none() }
     pub(super) fn close_cold(&mut self) { self.begin_close(); while !self.terminal_is_empty() { self.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }).expect("cold original operation message retirement"); } }
 }
 impl Drop for OperationMessageSettlement { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original operation messages must transfer or physically close"); } }
@@ -85,7 +86,7 @@ impl ArtifactReplayPreparationStep {
     }
 }
 
-pub use crate::os_spr::command::ArtifactReplayPrepared;
+pub use semio_framework_os_spr::command::ArtifactReplayPrepared;
 
 /// 🧩️ A domain cursor splits input admission, cloning, inverse, apply and settlement into granted turns.
 pub trait ArtifactReplayPreparation<P, M>: Send {
@@ -113,11 +114,11 @@ pub trait ArtifactReplayPreparationFactory<P, M>: semio_framework_value::Factory
 
 /// 🛡️ Freshness and deadline fences around the domain's individual preparation units.
 pub struct ArtifactReplayPreparationTask<P, M> {
-    context: ArtifactReplayPreparationContext,
-    cursor: Box<dyn ArtifactReplayPreparation<P, M>>,
-    completed: ArtifactReplayPreparationProgress,
-    cancelled: bool,
-    ready: bool,
+    pub context: ArtifactReplayPreparationContext,
+    pub cursor: Box<dyn ArtifactReplayPreparation<P, M>>,
+    pub completed: ArtifactReplayPreparationProgress,
+    pub cancelled: bool,
+    pub ready: bool,
 }
 
 impl<P, M> ArtifactReplayPreparationTask<P, M> {
@@ -177,7 +178,7 @@ pub fn admit_replay_preparation_step(step: ArtifactReplayPreparationStep, grant:
 
 /// ♻️ Exact cancellation handoff for an active domain semantic cursor.
 pub struct ArtifactReplayPreparationRetirement<P, M> {
-    cursor: Option<Box<dyn ArtifactReplayPreparation<P, M>>>,
+    pub cursor: Option<Box<dyn ArtifactReplayPreparation<P, M>>>,
 }
 
 impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
@@ -216,12 +217,12 @@ impl<P, M> Drop for ArtifactReplayPreparationRetirement<P, M> {
     }
 }
 
-impl<P, M> super::ReplayOwnedState<P, M>
-where M: crate::os_spr::Mutation<P> + crate::os_spr::OpBinary {
+impl<P, M> crate::ReplayOwnedState<P, M>
+where M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::OpBinary {
     /// ♻️ Binds both installed cleanup authorities without imposing native bounds on cold replay construction.
-    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn super::ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn super::ArtifactOwnedValueRetirementFactory<M>>) -> Self
+    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>) -> Self
     where P: Send + Sync + 'static, M: Send + 'static {
-        self.replay_retirement_factory = Some(crate::os_spr::command::registered_replay_retirement_factory(snapshots, mutations));
+        self.replay_retirement_factory = Some(semio_framework_os_spr::command::registered_replay_retirement_factory(snapshots, mutations));
         self
     }
 
@@ -233,13 +234,13 @@ where M: crate::os_spr::Mutation<P> + crate::os_spr::OpBinary {
     pub(super) fn begin_replay_snapshot_retirement(&mut self, owner: Arc<P>) {
         if let Some(factory) = self.replay_retirement_factory.as_ref() {
             self.replay_retirement.get_or_insert_with(|| ReplayRetirement::new(Arc::clone(factory))).stage_snapshot(owner);
-        } else { super::retire_shared_projection::<P, M>(owner); }
+        } else { semio_framework_os_store_projection::retire_shared_projection::<P, M>(owner); }
     }
 
     pub(super) fn begin_replay_mutations_retirement(&mut self, owners: semio_framework_value::list::PagedList<M, {usize::MAX}>) {
         if let Some(factory) = self.replay_retirement_factory.as_ref() {
             self.replay_retirement.get_or_insert_with(|| ReplayRetirement::new(Arc::clone(factory))).stage_mutations(owners);
-        } else { super::retire_scratch_operations::<P, M>(owners); }
+        } else { semio_framework_os_store_command::retire_scratch_operations::<P, M>(owners); }
     }
 
     /// 🎮️ Selects the admitted domain producer for every prefix and suffix operation.
@@ -254,9 +255,10 @@ where M: crate::os_spr::Mutation<P> + crate::os_spr::OpBinary {
         ArtifactReplayPreparationProgress { items: self.preparation_completed.items.saturating_add(active.items), bytes: self.preparation_completed.bytes.saturating_add(active.bytes) }
     }
 
-    pub(super) fn step_prepared_operation(&mut self, edit: &crate::os_spr::Edit<M>, prefix: bool, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, crate::os_vcs::VcsError> {
-        use super::{ReplayMode, CursorRevisionAccumulator};
-        use crate::os_vcs::VcsError;
+    pub(super) fn step_prepared_operation(&mut self, edit: &semio_framework_os_spr::Edit<M>, prefix: bool, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_framework_os_vcs::VcsError> {
+        use crate::ReplayMode;
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+        use semio_framework_os_vcs::VcsError;
         let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 64 };
         if let Some(settlement) = self.operation_message_settlement.as_mut() {
             if settlement.step(&mut self.edit_messages).map_err(VcsError::InverseRefused)? {
@@ -279,7 +281,7 @@ where M: crate::os_spr::Mutation<P> + crate::os_spr::OpBinary {
             return Ok(false);
         }
         let index = self.operation;
-        let mutation_id = crate::os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).expect("recorded operation identity");
+        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).expect("recorded operation identity");
         if self.prepared_operation.is_none() {
             if self.operation_preparation.is_none() {
                 let context = ArtifactReplayPreparationContext {
@@ -373,12 +375,12 @@ where M: crate::os_spr::Mutation<P> + crate::os_spr::OpBinary {
         if prefix {
             if !prepared.messages.is_empty() || prepared.messages.capacity() != 0 {
                 assert!(self.prefix_message_retirement.is_none(), "prefix diagnostic cleanup must close before another operation");
-                self.prefix_message_retirement = Some(super::ArtifactStoreMessageLedgerRetirement::new(String::new(), std::mem::take(&mut prepared.messages)));
+                self.prefix_message_retirement = Some(semio_framework_os_spr::command::MutationMessageLedgerRetirement::new(String::new(), std::mem::take(&mut prepared.messages)));
             }
             return Ok(true);
         }
         let supersession = self.supersessions.get(&mutation_id);
-        self.operation_message_settlement = Some(OperationMessageSettlement::new(crate::os_spr::MutationReplayOutcome {
+        self.operation_message_settlement = Some(OperationMessageSettlement::new(semio_framework_os_spr::MutationReplayOutcome {
             mutation_id,
             edit_id: edit.id.clone(),
             op_index: index as u32,

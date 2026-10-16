@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::scene::{DrawBatch, FinishParams, PipelineKind, Scene, ScissorRect};
-use crate::schedule::InvalidationReason;
+use crate::InvalidationReason;
+use crate::{DrawBatch, FinishParams, PipelineKind, Scene, ScissorRect};
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn test_placement(id: &str, bounds: Bounds, clip: ClipId, z_index: i32) -> SurfacePlacement {
@@ -16,9 +15,9 @@ fn test_caps() -> DeviceCapabilities {
         supports_msaa: false,
         supports_timestamp_queries: false,
         supports_storage_buffers: false,
-        preferred_surface_format: crate::backend::SurfaceFormat::Rgba8UnormSrgb,
-        memory_class: crate::backend::MemoryClass::Standard,
-        gpu_tier: crate::backend::GpuTier::Integrated,
+        preferred_surface_format: crate::SurfaceFormat::Rgba8UnormSrgb,
+        memory_class: crate::MemoryClass::Standard,
+        gpu_tier: crate::GpuTier::Integrated,
     }
 }
 

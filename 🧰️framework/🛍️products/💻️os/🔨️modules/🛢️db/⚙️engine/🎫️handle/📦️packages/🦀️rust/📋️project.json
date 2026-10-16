@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-db-engine-handle-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

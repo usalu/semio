@@ -17,6 +17,8 @@
  * @see ../🧮️program-matrix/🟦️.ts — verb pins and the round-trip witness
  */
 
+import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { createHash } from "node:crypto";
 import { ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorSelectionV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
@@ -176,6 +178,8 @@ export type HubDocumentSweepOptions = Readonly<{
   outDir: string;
   signal: AbortSignal;
   publicationProof?: Readonly<{root:string;hubUrl:string}>;
+  invocation:ScriptInvocation;
+  phaseControl:ResourceLeaseControl;
 }>;
 
 /** 🧾️ One kind's row. */
@@ -324,11 +328,12 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
 /** 🗂️ Runs the sweep over every selected creatable kind in one persistent profile; the report is rewritten after every kind
  * and the signal ends the run after the current kind. */
 export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Promise<{ rows: HubSweepRow[]; kinds: string[]; cancelled: boolean; fatal?: string }> {
+  requireIssuedResourceControlInvocationV1(options.phaseControl,options.invocation);
   mkdirSync(options.outDir, { recursive: true });
   ensureParityPlaywrightBrowsersPath();
   if(options.publicationProof&&(options.kinds.length||options.cancel!==null||!options.reopen))throw Error("publication proof requires the normal complete selected actor sweep with reopen and active child cancellation");
   const observation=()=>{const started=Date.now();return{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>options.signal.aborted,remainingMs:()=>options.sagaMs-(Date.now()-started),onProgress:(step:{phase:string;bytes:number;totalBytes:number})=>console.log(`[hub-sweep] physical file ${step.phase} ${step.bytes}/${step.totalBytes}`)};};
-  const selected=options.publicationProof?await (await import("../../🏗️bootstrap/🎭️actors/🟦️.ts")).loadCurrentDevelopmentActorsV1(options.publicationProof.root,observation()):undefined;
+  const selected=options.publicationProof?await (await import("../../🏗️bootstrap/🎭️actors/🟦️.ts")).loadCurrentDevelopmentActorsV1(options.publicationProof.root,observation(),options.invocation,options.phaseControl):undefined;
   const hubOwner=selected?await observeNormalDevHubPublicationOwnerV1(options.publicationProof!.root,selected.dataRoot,options.publicationProof!.hubUrl,observation()):undefined;
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const context = await chromium.launchPersistentContext(options.profileDir, { headless: true, args: process.platform === "darwin" ? ["--use-angle=metal"] : [], viewport: { width: 1600, height: 1000 }, locale: options.locale === "de" ? "de-DE" : "en-US" });
@@ -413,7 +418,8 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
  * credentials `OS_HUB_PROBE_EMAIL` / `OS_HUB_PROBE_PASSWORD` (default the development hub's first user). Writes
  * `hub-sweep.json` + one screenshot per kind under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless
  * every selected kind passes. */
-export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
+export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: string, segments: readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<void> {
+  requireIssuedResourceControlInvocationV1(phaseControl,invocation);
   const serveUrl = flagValue(segments, "--serve");
   const hubUrl = flagValue(segments, "--hub");
   if (!serveUrl || !hubUrl) throw new Error("usage: hub-document-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds …] [--saga-ms <n>] [--puzzle-saga-ms <n>] [--reopen] [--publication-proof] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]");
@@ -429,7 +435,8 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
   const profile = flagValue(segments, "--profile");
   const scratchProfile = profile === undefined ? mkdtempSync(join(tmpdir(), "semio-hub-sweep-profile-")) : undefined;
   try{
-  await withAcceptanceRecord(repoRoot, "hub-document-sweep", () => withDevServe(repoRoot, "hub-document-sweep", { serveUrl, hubUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
+  await withRequestedIssuedResourceControlV1(phaseControl,0,async phase=>{
+  await withAcceptanceRecord(repoRoot, "hub-document-sweep", () => withDevServe(repoRoot, "hub-document-sweep", { serveUrl, hubUrl, locale, signal: phase.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
     const report = await runHubDocumentSweep({
       baseUrl,
@@ -444,7 +451,9 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
       cancel: (cancelMode as "install" | "open" | undefined) ?? null,
       profileDir: profile ?? scratchProfile!,
       outDir,
-      signal: controller.signal,
+      signal: phase.signal,
+      invocation,
+      phaseControl:phase,
       publicationProof:segments.includes("--publication-proof")?{root:repoRoot,hubUrl}:undefined,
     });
     const passed = report.rows.filter((row) => row.pass).length;
@@ -469,6 +478,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
     console.log(`[hub-sweep] === ${tag}: ${status.toUpperCase()} ${passed}/${total} → ${outDir} ===`);
     if (status !== "pass") process.exitCode = 1;
   }));
+  },controller.signal);
   }finally{
   if (scratchProfile) rmSync(scratchProfile, { recursive: true, force: true });
   process.removeListener("SIGINT", abort);

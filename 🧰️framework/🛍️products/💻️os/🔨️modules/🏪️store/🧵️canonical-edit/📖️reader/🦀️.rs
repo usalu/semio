@@ -7,19 +7,19 @@ use semio_framework_value::{ValueError, RetirementDemand, FactoryAuthority, reta
 //#region 📦️ReaderOwnership
 /// 📖️ Retains a frozen typed Arc and borrowed traversal; no Store publication authority is exposed.
 pub struct ArtifactCanonicalJsonReader<T> {
-    owned: ManuallyDrop<ReaderState<T>>,
+    pub owned: ManuallyDrop<ReaderState<T>>,
 }
 
 struct ReaderState<T> {
-    encoder: ArtifactCanonicalEditEncoder,
-    root: Option<Arc<T>>,
-    retirement: Option<Arc<dyn SnapshotRetirementFactory<T>>>,
-    active: Option<Box<dyn ErasedSnapshotRetirement>>,
-    factory_close: Option<FactoryAuthority>,
-    completed_bytes: u64,
-    cancelled: bool,
-    failed: bool,
-    closing: bool,
+    pub encoder: ArtifactCanonicalEditEncoder,
+    pub root: Option<Arc<T>>,
+    pub retirement: Option<Arc<dyn SnapshotRetirementFactory<T>>>,
+    pub active: Option<Box<dyn ErasedSnapshotRetirement>>,
+    pub factory_close: Option<FactoryAuthority>,
+    pub completed_bytes: u64,
+    pub cancelled: bool,
+    pub failed: bool,
+    pub closing: bool,
 }
 
 impl<T> ReaderState<T> {
@@ -27,20 +27,20 @@ impl<T> ReaderState<T> {
         Self { encoder: ArtifactCanonicalEditEncoder::default(), root: Some(root), retirement: Some(retirement), active: None, factory_close: None, completed_bytes: 0, cancelled: false, failed: false, closing: false }
     }
 
-    fn completed_bytes(&self) -> u64 {
+    pub fn completed_bytes(&self) -> u64 {
         self.completed_bytes
     }
-    fn is_complete(&self) -> bool {
+    pub fn is_complete(&self) -> bool {
         !self.cancelled && !self.failed && !self.closing && self.encoder.is_complete()
     }
-    fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.cancelled = true;
     }
-    fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn take_root(&mut self) -> Option<Arc<T>> {
+    pub fn take_root(&mut self) -> Option<Arc<T>> {
         let transferable = if self.closing { self.encoder.terminal_is_empty() } else { self.is_complete() };
         if !transferable || self.active.is_some() {
             return None;
@@ -50,14 +50,14 @@ impl<T> ReaderState<T> {
         self.root.take()
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && self.encoder.terminal_is_empty() && self.root.is_none() && self.retirement.is_none() && self.active.is_none() && self.factory_close.is_none()
     }
 
 }
 
 impl<T: Send + Sync + 'static> ReaderState<T> {
-    fn demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         if !self.encoder.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: self.encoder.next_close_release_byte_demand(), depth: 1, ..Default::default() }); }
         if let Some(active) = self.active.as_ref() {
             let mut demand = artifact_retirement_box_demands(active, maximum_body_bytes)?;
@@ -69,7 +69,7 @@ impl<T: Send + Sync + 'static> ReaderState<T> {
         if let Some(factory) = self.factory_close.as_ref() { let mut demand = factory.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "reader factory depth overflow"))?; return Ok(demand); }
         Ok(Default::default())
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
@@ -100,7 +100,7 @@ impl<T: Send + Sync + 'static> ReaderState<T> {
 }
 
 impl<T: ArtifactCanonicalJson + Send + 'static> ReaderState<T> {
-    fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
+    pub fn encode_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<ArtifactCanonicalJsonTreeStep, ArtifactCanonicalJsonEncodeError> {
         if !grant.permits_one() || self.cancelled || self.failed || self.closing || output.is_empty() {
             return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 });
         }
@@ -174,9 +174,6 @@ impl<T> Drop for ArtifactCanonicalJsonReader<T> {
     }
 }
 //#endregion 📦️ReaderOwnership
-
 //#region 🧪️ReaderLaws
-#[cfg(test)]
-#[path = "🧪️tests/📖️reader/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️ReaderLaws

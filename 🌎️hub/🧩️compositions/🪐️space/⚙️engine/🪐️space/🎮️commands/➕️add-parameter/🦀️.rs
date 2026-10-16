@@ -1,9 +1,8 @@
 //! 🔢️ 🔢️ S Studio app command — `add-parameter`.
 
-use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
+use semio_hub_space_foundation::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowParameterType, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "add-parameter")]
@@ -19,5 +18,5 @@ pub fn handle(payload: &AddParameter, _doc: &ArtifactView<'_, WorkflowSnapshot>,
         "text" => WorkflowParameterType::Text,
         _ => WorkflowParameterType::Numeric,
     };
-    Ok(Emit::mutations(vec![crate::engine::space::engine::resolve_future(crate::engine::space::engine::add_parameter_operation(&parameter_type, &payload.name))]))
+    Ok(Emit::mutations(vec![semio_hub_space_operations::resolve_future(semio_hub_space_operations::add_parameter_operation(&parameter_type, &payload.name))]))
 }

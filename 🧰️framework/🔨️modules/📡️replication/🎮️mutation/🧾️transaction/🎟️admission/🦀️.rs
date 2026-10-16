@@ -1,5 +1,6 @@
 //! 🎟️ Admits exact transaction strings from borrowed original segments without a material buffer.
-use crate::{TransactionRef,ids::HybridLogicalTimestamp};
+use crate::TransactionRef;
+use semio_framework_replication_ids::HybridLogicalTimestamp;
 use semio_framework_hash::Hasher;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::size_of;

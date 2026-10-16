@@ -2,13 +2,13 @@
 
 use super::{InferenceErrorV1, InferencePrivateBytesV1, schema::SAFE_INTEGER_MAX};
 
-pub(super) const COMMAND_MAX_BYTES: usize = 8192;
-const TEXT_MAX_BYTES: usize = 256;
-const DEPENDENCY_MAX_COUNT: usize = 64;
-const PAYLOAD_MAX_BYTES: usize = 4096;
+pub const COMMAND_MAX_BYTES: usize = 8192;
+pub const TEXT_MAX_BYTES: usize = 256;
+pub const DEPENDENCY_MAX_COUNT: usize = 64;
+pub const PAYLOAD_MAX_BYTES: usize = 4096;
 
 /// 🧱️ Exactly the server-derived fields one approval envelope may carry; no client bytes enter it.
-pub(super) struct CanonicalInferenceCommandPartsV1<'a> {
+pub struct CanonicalInferenceCommandPartsV1<'a> {
     pub mutation_id: &'a str,
     pub document_id: &'a str,
     pub actor: &'a str,
@@ -19,21 +19,21 @@ pub(super) struct CanonicalInferenceCommandPartsV1<'a> {
     pub timestamp: protocol::HybridLogicalTimestamp,
 }
 
-pub(super) struct CanonicalInferenceCommandV1<'a> {
-    mutation_id: &'a str,
-    document_id: &'a str,
-    actor: &'a str,
-    dependencies: [&'a str; DEPENDENCY_MAX_COUNT],
+pub struct CanonicalInferenceCommandV1<'a> {
+    pub mutation_id: &'a str,
+    pub document_id: &'a str,
+    pub actor: &'a str,
+    pub dependencies: [&'a str; DEPENDENCY_MAX_COUNT],
     dependency_count: usize,
-    diff_schema: &'a str,
-    diff_payload: &'a [u8],
-    inverse_schema: &'a str,
-    inverse_payload: &'a [u8],
-    timestamp: protocol::HybridLogicalTimestamp,
+    pub diff_schema: &'a str,
+    pub diff_payload: &'a [u8],
+    pub inverse_schema: &'a str,
+    pub inverse_payload: &'a [u8],
+    pub timestamp: protocol::HybridLogicalTimestamp,
 }
 
 impl<'a> CanonicalInferenceCommandV1<'a> {
-    pub(super) fn decode(bytes: &'a [u8]) -> Result<Self, InferenceErrorV1> {
+    pub fn decode(bytes: &'a [u8]) -> Result<Self, InferenceErrorV1> {
         if bytes.is_empty() || bytes.len() > COMMAND_MAX_BYTES {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -80,12 +80,12 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
         Ok(value)
     }
 
-    pub(super) fn matches_identity(&self, mutation_id: &str, document_id: &str, actor: &str) -> bool {
+    pub fn matches_identity(&self, mutation_id: &str, document_id: &str, actor: &str) -> bool {
         self.mutation_id == mutation_id && self.document_id == document_id && self.actor == actor
     }
 
     /// 🧩️ Confirms the server-stamped envelope is exactly the rederived parent member.
-    pub(super) fn matches_fixed_three_parent(&self, mutation_id: &str, document_id: &str, actor: &str, proposal: &[u8], inverse: &[u8]) -> bool {
+    pub fn matches_fixed_three_parent(&self, mutation_id: &str, document_id: &str, actor: &str, proposal: &[u8], inverse: &[u8]) -> bool {
         self.matches_identity(mutation_id, document_id, actor)
             && self.dependency_count == 0
             && self.diff_schema == super::schema::GIS_DOCUMENT_SCHEMA
@@ -94,17 +94,17 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
             && self.inverse_payload == inverse
     }
 
-    pub(super) fn timestamp(&self) -> protocol::HybridLogicalTimestamp {
+    pub fn timestamp(&self) -> protocol::HybridLogicalTimestamp {
         self.timestamp
     }
 
     /// ↩️ Returns the exact server-stamped inverse payload after the caller verifies identity.
-    pub(super) fn inverse_payload(&self) -> &'a [u8] {
+    pub fn inverse_payload(&self) -> &'a [u8] {
         self.inverse_payload
     }
 
     /// 📤️ Returns the exact original forward payload for reconstruction checks.
-    pub(super) fn diff_payload(&self) -> &'a [u8] {
+    pub fn diff_payload(&self) -> &'a [u8] {
         self.diff_payload
     }
 
@@ -129,7 +129,7 @@ impl<'a> CanonicalInferenceCommandV1<'a> {
 }
 
 /// ✍️ Builds the one canonical dependency-free server-stamped envelope and returns its exact bytes.
-pub(super) fn encode_server_stamped_command_v1(parts: &CanonicalInferenceCommandPartsV1<'_>) -> Result<Vec<u8>, InferenceErrorV1> {
+pub fn encode_server_stamped_command_v1(parts: &CanonicalInferenceCommandPartsV1<'_>) -> Result<Vec<u8>, InferenceErrorV1> {
     if parts.diff_payload.len() > PAYLOAD_MAX_BYTES || parts.inverse_payload.len() > PAYLOAD_MAX_BYTES {
         return Err(InferenceErrorV1::Bounds);
     }
@@ -202,6 +202,3 @@ impl<'a> Cursor<'a> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

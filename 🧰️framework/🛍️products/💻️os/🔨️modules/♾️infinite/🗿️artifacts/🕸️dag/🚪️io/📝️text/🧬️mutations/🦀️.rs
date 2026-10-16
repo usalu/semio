@@ -1,5 +1,5 @@
 //! 🚪️ Native artifact representation codecs.
-use super::super::super::*;
+use super::*;
 
 impl crate::os_spr::OpText for DagMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {

@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-scene-picking"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Ray, marquee and component screen picking over leased meshes — wasm-safe"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-scene-picking"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
+semio-framework-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-framework-ui-scene-camera = { path = "../../../🎥️camera/📦️packages/🦀️rust" }
+semio-framework-ui-scene-mesh = { path = "../../../🕸️mesh/📦️packages/🦀️rust" }
+semio-framework-ui-scene-pass = { path = "../../../🎞️pass/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../../../../🪟️viewport/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-ui-scene-camera = { path = "../../../🎥️camera/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-scene-mesh = { path = "../../../🕸️mesh/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { version = "1.0.140" }

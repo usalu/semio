@@ -542,8 +542,7 @@ impl Drop for ArtifactEditMessageLedger {
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-#[path="../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
-pub(crate) mod test_allocation;
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;

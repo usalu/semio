@@ -638,7 +638,7 @@ pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> Result<semio_fra
         data.vertex_ids.extend(vertex_ids);
         references.push(("vertex".into(),vertices));
     }
-    data.component_references=semio_framework_mesh_engine::ComponentReferenceTable::from_entries(references);
+    data.component_references=semio_framework_mesh_component_references::ComponentReferenceTable::from_entries(references);
     data.validate_component_references().map_err(BrepError::InvalidInput)?;
     Ok(data)
 }

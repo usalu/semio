@@ -175,14 +175,14 @@ pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_fram
 /// (`UI dispatch rejected action:addStep with interactive-job classification BatchOnlyPendingRewrite`).
 /// `updatePlaybook` emits the absolute `change-title` once per dispatch (palette, agent, a blur-committed field): one
 /// edit per committed title, never a coalesced typing burst.
-const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook"];
+pub const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "setActiveExample", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock", "updatePlaybook"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
 /// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes the config store, the six
 /// structural verbs edit the `flow` child's lane only (design §20.15), the title edit emits the parent's `change-title`.
-const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Child] },
@@ -266,7 +266,7 @@ fn playbook_retained_reduce(
     command.dispatch(&ArtifactView::with_children(snapshot, history, children).bound_to_operation(operation.clone()), &ConfigView { snapshot: config, window: None })
 }
 
-struct PlaybookRetainedCommandJobFactory {
+pub struct PlaybookRetainedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
@@ -784,19 +784,216 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️UnitTests
-/// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
-/// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
-#[path = "👥️presence/🧬️schema/🦀️.rs"]
-pub mod schema;
-#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
-pub mod demo_session;
-#[cfg(test)]
-#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
-mod example;
+pub use semio_s_artifact_playbook_playbook_examples::editor::playbook::schema;
+
+
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🧩️ArtifactItems3
+pub mod artifact_items_3 {
+use crate::{PlaybookSnapshot, PlaybookSpec, artifact_kind, empty_playbook_snapshot};
+use crate::{PLAYBOOK_FLOW_SLOT, PLAYBOOK_GENESIS_FLOW_ID, flow_content_snapshot_from_steps, steps_from_flow_content};
+use semio_framework_artifact_playbook_playbook as playbook;
+use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+
+//#region 🔖️ComposeOnRead
+pub const PLAYBOOK_FLOW_UNAVAILABLE: &str = "playbook.flow.unavailable";
+pub const PLAYBOOK_FLOW_DIALECT: &str = "playbook.flow.dialect";
+pub const PLAYBOOK_FLOW_CONTENT: &str = "playbook.flow.content";
+pub const PLAYBOOK_FLOW_PROJECTION: &str = "playbook.flow.projection";
+pub const PLAYBOOK_STEP_MISSING: &str = "playbook.step.missing";
+pub const PLAYBOOK_STEP_DUPLICATE: &str = "playbook.step.duplicate";
+pub const PLAYBOOK_BLOCK_MISSING: &str = "playbook.block.missing";
+pub const PLAYBOOK_BLOCK_DUPLICATE: &str = "playbook.block.duplicate";
+
+pub fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
+    Fault::new(FaultOrigin::App, FaultCode::new(code), message)
+}
+
+/// 📣️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
+pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
+        [
+            (PLAYBOOK_FLOW_UNAVAILABLE, LocalizedLabel::native("The playbook's steps are not loaded yet.", "Die Schritte des Playbooks sind noch nicht geladen.")),
+            (PLAYBOOK_FLOW_DIALECT, LocalizedLabel::native("The playbook's steps are stored in an unsupported format.", "Die Schritte des Playbooks liegen in einem nicht unterstützten Format vor.")),
+            (PLAYBOOK_FLOW_CONTENT, LocalizedLabel::native("A step of the playbook cannot be read.", "Ein Schritt des Playbooks kann nicht gelesen werden.")),
+            (PLAYBOOK_FLOW_PROJECTION, LocalizedLabel::native("The playbook's steps cannot be restored.", "Die Schritte des Playbooks können nicht wiederhergestellt werden.")),
+            (PLAYBOOK_STEP_MISSING, LocalizedLabel::native("The step no longer exists.", "Der Schritt existiert nicht mehr.")),
+            (PLAYBOOK_STEP_DUPLICATE, LocalizedLabel::native("A step with this id already exists.", "Ein Schritt mit dieser Id existiert bereits.")),
+            (PLAYBOOK_BLOCK_MISSING, LocalizedLabel::native("The block no longer exists.", "Der Baustein existiert nicht mehr.")),
+            (PLAYBOOK_BLOCK_DUPLICATE, LocalizedLabel::native("A block with this id already exists in the step.", "Ein Baustein mit dieser Id existiert im Schritt bereits.")),
+        ]
+    });
+    &*NOTICES
+}
+
+/// 🪆️ The loaded-parent child projection: the one `flow` child `snapshot` names, so a reload restores exactly that member.
+pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| playbook_fault(PLAYBOOK_FLOW_PROJECTION, error.to_string()))
+}
+
+/// 🌊️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through
+/// the handle). A child that is not composed, or composed as anything but `s.stdio.semio@v1/flow`, is a named fault.
+pub fn playbook_flow_content<'a>(snapshot: &PlaybookSnapshot, children: &'a ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>, Fault> {
+    let child_id = snapshot.flow.child_id.as_str();
+    match children.dialect(PLAYBOOK_FLOW_SLOT, child_id) {
+        Some(dialect) if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" => children.typed_read::<SemioFlowSnapshot>(PLAYBOOK_FLOW_SLOT, child_id),
+        Some(dialect) => Err(playbook_fault(PLAYBOOK_FLOW_DIALECT, format!("the playbook flow child {child_id:?} is {}@{}/{}, not s.stdio.semio@v1/flow", dialect.artifact_kind, dialect.standard, dialect.subset))),
+        None => Err(playbook_fault(PLAYBOOK_FLOW_UNAVAILABLE, format!("the playbook flow child {child_id:?} is not composed"))),
+    }
+}
+
+/// 🧮️ The playbook every reader works on: the parent's own fields composed with the steps of its `flow` child.
+pub fn playbook_composed_spec(snapshot: &PlaybookSnapshot, children: &ChildContentView) -> Result<PlaybookSpec, Fault> {
+    let content = playbook_flow_content(snapshot, children)?;
+    let steps = steps_from_flow_content(&content).map_err(|message| playbook_fault(PLAYBOOK_FLOW_CONTENT, message))?;
+    Ok(PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps })
+}
+
+/// 🌱️ The flow content a document's `flow` child `child_id` is composed from when no archive member carries it — answered by
+/// id from this plugin's own catalogue (the empty playbook's flow, every built-in example's), never from the parent.
+pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
+    match child_id {
+        PLAYBOOK_GENESIS_FLOW_ID => Some(flow_content_snapshot_from_steps(&playbook::empty_playbook_snapshot().steps)),
+        crate::examples::demo::FLOW_ID => crate::examples::demo::flow().ok(),
+        _ => None,
+    }
+}
+
+/// 🧩️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
+/// no such member.
+pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use pack::snapshot::ArtifactPack;
+    if slot != PLAYBOOK_FLOW_SLOT || child_id != snapshot.flow.child_id {
+        return None;
+    }
+    playbook_genesis_flow(child_id).map(|content| <SemioFlowSnapshot as ArtifactPack>::encode_pack(&content))
+}
+//#endregion 🔖️ComposeOnRead
+}
+//#endregion 🧩️ArtifactItems3
+
+//#region 🧩️ArtifactItems4
+pub mod artifact_items_4 {
+use crate::{PlaybookBlock, PlaybookSnapshot, PlaybookStep};
+use crate::{PLAYBOOK_BLOCK_PARAM_PREFIX, PLAYBOOK_FLOW_SLOT, PLAYBOOK_STEP_NODE_KIND, playbook_block_param_key, playbook_chain, playbook_sequence_edge, playbook_step_from_node, playbook_step_node, playbook_step_order};
+use crate::{PLAYBOOK_BLOCK_DUPLICATE, PLAYBOOK_BLOCK_MISSING, PLAYBOOK_FLOW_CONTENT, PLAYBOOK_STEP_DUPLICATE, PLAYBOOK_STEP_MISSING, playbook_fault};
+use semio_framework_plugin::Fault;
+use semio_s_artifact_stdio_semio_flow::{schema::mutations::insert_edge, schema::mutations::insert_node, schema::mutations::remove_edge, schema::mutations::remove_node, schema::mutations::remove_node_param, schema::mutations::set_node_param, schema::mutations::SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowNode as SemioFlowNode, schema::snapshot::SemioFlowSnapshot};
+use std::collections::BTreeSet;
+
+//#region 🔖️ChildLane
+/// 🧬️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
+pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::app::ChildEmitPreparation {
+    semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
+}
+
+/// 🪢️ The leaves that make `content`'s step chain read `order`: every `sequence` edge the new chain drops is removed first, every
+/// one it gains inserted after, so a reorder keeps every node and its identity.
+pub fn playbook_chain_leaves(content: &SemioFlowSnapshot, order: &[&str]) -> Vec<SemioFlowMutation> {
+    let wanted: BTreeSet<(&str, &str)> = order.windows(2).map(|pair| (pair[0], pair[1])).collect();
+    let present: BTreeSet<(&str, &str)> = playbook_chain(content).map(|edge| (edge.from.node.as_str(), edge.to.node.as_str())).collect();
+    let removed = playbook_chain(content).filter(|edge| !wanted.contains(&(edge.from.node.as_str(), edge.to.node.as_str()))).map(|edge| SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: edge.id.clone() }));
+    let inserted = order.windows(2).filter(|pair| !present.contains(&(pair[0], pair[1]))).map(|pair| SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(playbook_sequence_edge(pair[0], pair[1]))));
+    removed.chain(inserted).collect()
+}
+
+pub fn playbook_step_node_of<'a>(content: &'a SemioFlowSnapshot, step_id: &str) -> Result<&'a SemioFlowNode, Fault> {
+    content.nodes.iter().find(|node| node.id == step_id && node.kind == PLAYBOOK_STEP_NODE_KIND).ok_or_else(|| playbook_fault(PLAYBOOK_STEP_MISSING, format!("Step \"{step_id}\" does not exist.")))
+}
+
+/// 📋️ Step `step_id` of `content`, decoded; a missing step or an undecodable block param is a named fault.
+pub fn playbook_step_of(content: &SemioFlowSnapshot, step_id: &str) -> Result<PlaybookStep, Fault> {
+    playbook_step_from_node(playbook_step_node_of(content, step_id)?).map_err(|message| playbook_fault(PLAYBOOK_FLOW_CONTENT, message))
+}
+
+/// 🗝️ Step node `step_id`'s block params as `(param position, block id)` rows, in block order.
+pub fn playbook_block_rows<'a>(node: &'a SemioFlowNode) -> Vec<(usize, &'a str)> {
+    node.params.iter().enumerate().filter_map(|(position, param)| param.key.strip_prefix(PLAYBOOK_BLOCK_PARAM_PREFIX).map(|id| (position, id))).collect()
+}
+
+/// 🆕️ The concrete leaf that inserts `block` into step `step_id` at block position `index` (appended when `None` or past the
+/// end); the param position it lands at is exact, so the inverse removal and every replay agree on the order.
+pub fn playbook_insert_block_leaf(rows: &[(usize, &str)], step_id: &str, block: &PlaybookBlock, index: Option<usize>) -> Result<SemioFlowMutation, Fault> {
+    if rows.iter().any(|(_, id)| *id == block.id) {
+        return Err(playbook_fault(PLAYBOOK_BLOCK_DUPLICATE, format!("Block \"{}\" is already in step \"{step_id}\".", block.id)));
+    }
+    let at = index.and_then(|index| rows.get(index)).map(|(position, _)| *position);
+    Ok(SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: step_id.into(), key: playbook_block_param_key(&block.id), value: semio_framework_pack_json::to_json_string(block), at }))
+}
+
+pub fn playbook_remove_block_leaf(step_id: &str, block_id: &str) -> SemioFlowMutation {
+    SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: step_id.into(), key: playbook_block_param_key(block_id) })
+}
+
+/// ➕️ Appends `step`: its node, then its chain edge; a step id already present is refused.
+pub fn playbook_add_step_leaves(content: &SemioFlowSnapshot, step: &PlaybookStep) -> Result<Vec<SemioFlowMutation>, Fault> {
+    if content.nodes.iter().any(|node| node.id == step.id) {
+        return Err(playbook_fault(PLAYBOOK_STEP_DUPLICATE, format!("Step \"{}\" already exists.", step.id)));
+    }
+    let mut order = playbook_step_order(content);
+    let node = SemioFlowMutation::InsertNode(insert_node::InsertNode::new(playbook_step_node(step, order.len())));
+    order.push(&step.id);
+    Ok(std::iter::once(node).chain(playbook_chain_leaves(content, &order)).collect())
+}
+
+/// ➖️ Removes step `step_id`: its chain edges and the bridge over it first, then its node.
+pub fn playbook_remove_step_leaves(content: &SemioFlowSnapshot, step_id: &str) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_step_node_of(content, step_id)?;
+    let order: Vec<&str> = playbook_step_order(content).into_iter().filter(|id| *id != step_id).collect();
+    Ok(playbook_chain_leaves(content, &order).into_iter().chain(std::iter::once(SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: step_id.into() }))).collect())
+}
+
+/// ↔️ Moves step `step_id` to position `index` (clamped) by rewiring the chain only; a step already there yields no leaf.
+pub fn playbook_move_step_leaves(content: &SemioFlowSnapshot, step_id: &str, index: usize) -> Result<Vec<SemioFlowMutation>, Fault> {
+    playbook_step_node_of(content, step_id)?;
+    let mut order: Vec<&str> = playbook_step_order(content).into_iter().filter(|id| *id != step_id).collect();
+    order.insert(index.min(order.len()), step_id);
+    Ok(playbook_chain_leaves(content, &order))
+}
+
+/// 🆕️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end): ONE `set-node-param` row.
+pub fn playbook_add_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block: PlaybookBlock, index: Option<usize>) -> Result<Vec<SemioFlowMutation>, Fault> {
+    let node = playbook_step_node_of(content, step_id)?;
+    Ok(vec![playbook_insert_block_leaf(&playbook_block_rows(node), step_id, &block, index)?])
+}
+
+/// 🚮️ Removes block `block_id` from step `step_id`: ONE `remove-node-param` row; a block the step does not hold is a named fault.
+pub fn playbook_remove_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block_id: &str) -> Result<Vec<SemioFlowMutation>, Fault> {
+    let node = playbook_step_node_of(content, step_id)?;
+    if !playbook_block_rows(node).iter().any(|(_, id)| *id == block_id) {
+        return Err(playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{step_id}\".")));
+    }
+    Ok(vec![playbook_remove_block_leaf(step_id, block_id)])
+}
+
+/// 🚚️ Moves block `block_id` from step `from` to block position `index` (clamped) of step `to`: a remove row then an insert row at
+/// the exact target position, in the same step or across two; a block already there yields no row.
+pub fn playbook_move_block_leaves(content: &SemioFlowSnapshot, block_id: &str, from: &str, to: &str, index: usize) -> Result<Vec<SemioFlowMutation>, Fault> {
+    let source = playbook_step_node_of(content, from)?;
+    let source_rows = playbook_block_rows(source);
+    let position = source_rows.iter().position(|(_, id)| *id == block_id).ok_or_else(|| playbook_fault(PLAYBOOK_BLOCK_MISSING, format!("Block \"{block_id}\" is not in step \"{from}\".")))?;
+    let block: PlaybookBlock = semio_framework_pack_json::from_json_str(&source.params[source_rows[position].0].value, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| playbook_fault(PLAYBOOK_FLOW_CONTENT, format!("step {from:?}: {error}")))?;
+    let target = playbook_step_node_of(content, to)?;
+    let remaining: Vec<(usize, &str)> = if from == to {
+        let removed = source_rows[position].0;
+        source_rows.iter().filter(|(row, _)| *row != removed).map(|(row, id)| (if *row > removed { row - 1 } else { *row }, *id)).collect()
+    } else {
+        playbook_block_rows(target)
+    };
+    let index = index.min(remaining.len());
+    if from == to && index == position {
+        return Ok(Vec::new());
+    }
+    Ok(vec![playbook_remove_block_leaf(from, block_id), playbook_insert_block_leaf(&remaining, to, &block, Some(index))?])
+}
+//#endregion 🔖️ChildLane
+}
+//#endregion 🧩️ArtifactItems4

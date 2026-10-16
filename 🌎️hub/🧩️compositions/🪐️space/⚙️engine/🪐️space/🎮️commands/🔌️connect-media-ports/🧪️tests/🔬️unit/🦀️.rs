@@ -1,14 +1,17 @@
 
-use super::*;
+
 use crate::demo_space_projection;
-use crate::engine::space::SpaceCommand;
-use crate::engine::space::unit_tests::context::{apply_mutations, studio_emit};
+use semio_hub_space_app::SpaceCommand;
+use semio_hub_space_app::unit_tests::context::{apply_mutations, studio_emit};
 use semio_framework_os::{ArtifactKindSpec, MediaClass, MediaForm, MediaPortDirection, MediaType, MediaWireFormat, register_artifact_descriptor};
+use semio_hub_space_commands_media::connect_media_ports::ConnectMediaPorts;
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_framework_os::WorkflowMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ConnectMediaPorts(ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "n1:out:out".into(), target_node_id: "n2".into(), target_port_id: "n2:in:in".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(crate::engine::space::commands::disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::DisconnectMediaEdge(semio_hub_space_commands_media::disconnect_media_edge::DisconnectMediaEdge { edge_id: "e1".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -42,10 +45,10 @@ async fn connect_media_ports_rejects_incompatible_types_via_notice() {
         import_stdio_kinds: vec![],
     });
     let mut projection = demo_space_projection().await;
-    let src_out = crate::engine::space::unit_tests::context::test_port("contract-src", "out", MediaPortDirection::Out, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "test.contract.2d").await;
-    let dst_in = crate::engine::space::unit_tests::context::test_port("contract-dst", "in", MediaPortDirection::In, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, "test.contract.3d").await;
-    projection.graph.nodes.push(crate::engine::space::unit_tests::context::test_node("contract-src", vec![], vec![src_out]).await);
-    projection.graph.nodes.push(crate::engine::space::unit_tests::context::test_node("contract-dst", vec![dst_in], vec![]).await);
+    let src_out = semio_hub_space_app::unit_tests::context::test_port("contract-src", "out", MediaPortDirection::Out, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, "test.contract.2d").await;
+    let dst_in = semio_hub_space_app::unit_tests::context::test_port("contract-dst", "in", MediaPortDirection::In, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, "test.contract.3d").await;
+    projection.graph.nodes.push(semio_hub_space_app::unit_tests::context::test_node("contract-src", vec![], vec![src_out]).await);
+    projection.graph.nodes.push(semio_hub_space_app::unit_tests::context::test_node("contract-dst", vec![dst_in], vec![]).await);
     let config = SpaceConfig::default();
     let emit = studio_emit(
         &projection,
@@ -89,10 +92,10 @@ async fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
         import_stdio_kinds: vec![],
     });
     let mut projection = semio_framework_os::empty_workflow_snapshot().await;
-    let src_out = crate::engine::space::unit_tests::context::test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a").await;
-    let dst_in = crate::engine::space::unit_tests::context::test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b").await;
-    projection.graph.nodes.push(crate::engine::space::unit_tests::context::test_node("contract-src-2", vec![], vec![src_out]).await);
-    projection.graph.nodes.push(crate::engine::space::unit_tests::context::test_node("contract-dst-2", vec![dst_in], vec![]).await);
+    let src_out = semio_hub_space_app::unit_tests::context::test_port("contract-src-2", "out", MediaPortDirection::Out, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-a").await;
+    let dst_in = semio_hub_space_app::unit_tests::context::test_port("contract-dst-2", "in", MediaPortDirection::In, MediaType { class: MediaClass::Data, form: MediaForm::Value }, "test.contract.doc-b").await;
+    projection.graph.nodes.push(semio_hub_space_app::unit_tests::context::test_node("contract-src-2", vec![], vec![src_out]).await);
+    projection.graph.nodes.push(semio_hub_space_app::unit_tests::context::test_node("contract-dst-2", vec![dst_in], vec![]).await);
     let config = SpaceConfig::default();
     let emit = studio_emit(
         &projection,

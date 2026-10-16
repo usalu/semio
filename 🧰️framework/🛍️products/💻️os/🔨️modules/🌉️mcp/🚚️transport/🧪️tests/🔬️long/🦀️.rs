@@ -1,9 +1,23 @@
+//! 🧱️ Transport_long of the http-transport crate: The Streamable HTTP and bridge websocket transport.
 
-use super::*;
-use crate::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, META_PROTOCOL_VERSION_KEY, McpServer, NullBackend, Tool};
-use crate::workspace::GatewayBackends;
 use axum::body::Body;
+use axum::extract::State;
 use axum::http::Request;
+use axum::http::StatusCode;
+use axum::response::Response;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::transport::{BRIDGE_OPENING_DEADLINE_MS, EventLog, HEADER_MISMATCH, HTTP_CONNECTION_CAPACITY, HTTP_RESPONSE_BYTES, HttpAdmission, HttpEventPublisher, HttpState, HttpTerminalReason, HttpTransport, HttpTransportOptions, OwnedHeader, OwnedHttpResponse, ParsedHttpHead, decode_client_websocket_frame, dispatch_owned_bridge_handshake, dispatch_owned_http};
+use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, GatewayToShell, ShellKind, ShellToGateway};
+use semio_framework_os_mcp_foundation::rendezvous::mint_admission_proof;
+use semio_framework_os_mcp_server::mcp_server::McpServer;
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcNotification, NullBackend, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION};
+use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
+#[cfg(test)]
+use crate::transport::{handle_get, handle_post};
+#[cfg(test)]
+use crate::transport_quick::masked_client_frame;
 
 #[derive(Clone)]
 struct HttpTestDriver {
@@ -98,26 +112,27 @@ fn owned_bridge_handshake_matches_current_rfc_message_close_and_error_contracts(
     assert!(text.contains("Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo="));
     assert!(text.contains("Sec-WebSocket-Protocol: semio.mcp.bridge.v1"));
 
-    let hello = quick::masked_client_frame(
+    let hello = masked_client_frame(
         0x2,
-        &crate::bridge::ShellToGateway::Hello {
-            bridge_version: crate::bridge::BRIDGE_VERSION,
-            shell_kind: crate::bridge::ShellKind::React,
+        &ShellToGateway::Hello {
+            bridge_version: BRIDGE_VERSION,
+            shell_kind: ShellKind::React,
             shell_session_id: "owned".into(),
             principal_actor: "agent:local".into(),
-            flags: crate::bridge::BridgeFlags::NONE,
+            flags: BridgeFlags::NONE,
         }
         .encode(),
         true,
     );
     assert!(matches!(decode_client_websocket_frame(&hello).unwrap().unwrap().opcode, 0x2));
-    let close = quick::masked_client_frame(0x8, &[], true);
+    let close = masked_client_frame(0x8, &[], true);
     assert_eq!(decode_client_websocket_frame(&close).unwrap().unwrap().opcode, 0x8);
-    let text_frame = quick::masked_client_frame(0x1, b"unsupported", true);
+    let text_frame = masked_client_frame(0x1, b"unsupported", true);
     assert!(matches!(decode_client_websocket_frame(&text_frame), Err(HttpTerminalReason::Unsupported)));
 }
 
 //#region 🔖️PostModern
+
 #[tokio::test]
 async fn modern_tools_list_over_http_returns_200_with_the_json_rpc_result() {
     let (router, _events) = test_driver(fresh_server());
@@ -152,9 +167,11 @@ async fn a_notification_over_http_is_202_accepted_with_no_body() {
     let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
     assert!(bytes.is_empty());
 }
+
 //#endregion 🔖️PostModern
 
 //#region 🔖️ProtocolVersionHeader
+
 #[tokio::test]
 async fn missing_protocol_version_header_on_a_modern_request_is_400_header_mismatch() {
     let (router, _events) = test_driver(fresh_server());
@@ -191,9 +208,11 @@ async fn unsupported_protocol_version_is_400_with_the_supported_list() {
     assert_eq!(value["error"]["code"], UNSUPPORTED_PROTOCOL_VERSION);
     assert_eq!(value["error"]["data"]["supported"], serde_json::json!(SUPPORTED_PROTOCOL_VERSIONS));
 }
+
 //#endregion 🔖️ProtocolVersionHeader
 
 //#region 🔖️Security
+
 #[tokio::test]
 async fn an_evil_origin_is_rejected_with_403() {
     let (router, _events) = test_driver(fresh_server());
@@ -231,13 +250,15 @@ async fn incorrect_bearer_token_is_401() {
     let response = one_shot(router, request).await;
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
+
 //#endregion 🔖️Security
 
 //#region 🔖️BothErasOverHttp
+
 #[tokio::test]
 async fn both_eras_are_served_over_the_same_http_endpoint_by_the_same_server() {
     let mut tools = InMemoryToolRegistry::new();
-    tools.register(Tool::new("ping_tool", serde_json::json!({"type":"object"})), |_arguments| crate::protocol::CallToolResult::ok(vec![], None)).unwrap();
+    tools.register(Tool::new("ping_tool", serde_json::json!({"type":"object"})), |_arguments| CallToolResult::ok(vec![], None)).unwrap();
     let server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
     let (router, _events) = test_driver(server);
 
@@ -254,9 +275,11 @@ async fn both_eras_are_served_over_the_same_http_endpoint_by_the_same_server() {
     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     assert_eq!(value["result"]["isError"], false);
 }
+
 //#endregion 🔖️BothErasOverHttp
 
 //#region 🔖️GetSseResumption
+
 #[tokio::test]
 async fn get_with_no_last_event_id_replays_every_buffered_notification() {
     let (router, events) = test_driver(fresh_server());
@@ -288,9 +311,11 @@ async fn get_with_last_event_id_resumes_after_that_id_only() {
     assert!(!text.contains("tools/list_changed"), "must not replay an event at-or-before Last-Event-ID");
     assert!(text.contains("resources/list_changed"), "must replay events after Last-Event-ID");
 }
+
 //#endregion 🔖️GetSseResumption
 
 //#region 🔖️BridgeOnTheMergedApp
+
 /// 🌉️ P1c acceptance: `/bridge` is mounted on the SAME app `/mcp` lives on — this test binds a
 /// real ephemeral socket to the ACTUAL `HttpTransport::router()` output (not a bridge-only
 /// router), connects a real `tokio-tungstenite` client, and drives the full scenario
@@ -313,7 +338,7 @@ async fn get_with_last_event_id_resumes_after_that_id_only() {
 /// Bad Origin is rejected before the upgrade completes.
 #[tokio::test]
 async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
-    use crate::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
+    use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
     use futures::{SinkExt, StreamExt};
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
     use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -339,7 +364,7 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
         TungsteniteMessage::Binary(bytes) => bytes,
         other => panic!("expected a binary Welcome frame, got {other:?}"),
     };
-    assert!(matches!(crate::bridge::GatewayToShell::decode(&welcome_bytes).unwrap(), crate::bridge::GatewayToShell::Welcome { .. }));
+    assert!(matches!(GatewayToShell::decode(&welcome_bytes).unwrap(), GatewayToShell::Welcome { .. }));
 
     let id = bridge_handle.connections().first().copied().expect("one live connection");
     let state_frame = ShellToGateway::ShellState { revision: 1, state: vec![7] };
@@ -348,13 +373,13 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
     let _pong = socket.next().await.unwrap().unwrap();
     assert_eq!(bridge_handle.last_shell_state(id), Some(state_frame));
 
-    let pushed = crate::bridge::GatewayToShell::ShellCommand { seq: 1, command: vec![9] };
+    let pushed = GatewayToShell::ShellCommand { seq: 1, command: vec![9] };
     assert!(bridge_handle.send_to(id, pushed.clone()));
     let received_bytes = match socket.next().await.unwrap().unwrap() {
         TungsteniteMessage::Binary(bytes) => bytes,
         other => panic!("expected a binary ShellCommand frame, got {other:?}"),
     };
-    assert_eq!(crate::bridge::GatewayToShell::decode(&received_bytes).unwrap(), pushed);
+    assert_eq!(GatewayToShell::decode(&received_bytes).unwrap(), pushed);
     let result_frame = ShellToGateway::ShellCommandResult { in_reply_to: 1, ok: true, fault: None };
     socket.send(TungsteniteMessage::Binary(result_frame.encode().into())).await.unwrap();
     socket.send(TungsteniteMessage::Binary(ShellToGateway::Ping.encode().into())).await.unwrap();
@@ -394,9 +419,11 @@ async fn reqwest_free_post(addr: SocketAddr, path: &str, bearer: &str, body: &se
     let status_line = response_text.lines().next().unwrap_or("");
     status_line.split_whitespace().nth(1).unwrap_or("0").parse().unwrap_or(0)
 }
+
 //#endregion 🔖️BridgeOnTheMergedApp
 
 //#region 🔖️BridgeOnlyListenerAnswersEveryConnection
+
 /// 🚪️ The listener a stdio gateway offers to live shells answers every connection it accepts, in
 /// bounded time, with a typed frame: more shells than it has slots come and go and the next one is
 /// still welcomed (the leak that parked an 8.6 h old gateway with 64 CLOSED sockets); an older and a
@@ -405,12 +432,12 @@ async fn reqwest_free_post(addr: SocketAddr, path: &str, bearer: &str, body: &se
 /// completion releases once it is cancelled, which is what withdraws its rendezvous offer.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_bridge_only_listener_answers_every_connection_it_accepts() {
-    use crate::bridge::{BridgeFlags, BridgeRefusal, GatewayToShell, ShellKind, ShellToGateway, BRIDGE_VERSION};
+    use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, BridgeRefusal, GatewayToShell, ShellKind, ShellToGateway};
     use futures::{SinkExt, StreamExt};
     use tokio_tungstenite::tungstenite::client::IntoClientRequest;
     use tokio_tungstenite::tungstenite::Message as TungsteniteMessage;
 
-    let proof = crate::rendezvous::mint_admission_proof();
+    let proof = mint_admission_proof();
     let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof));
     let run = transport.start_bridge_only().expect("bridge-only listener binds");
     let addr = run.local_addr();
@@ -451,4 +478,5 @@ async fn a_bridge_only_listener_answers_every_connection_it_accepts() {
     run.cancel();
     tokio::task::spawn_blocking(move || completion.wait()).await.expect("the cancelled run completes");
 }
+
 //#endregion 🔖️BridgeOnlyListenerAnswersEveryConnection

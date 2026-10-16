@@ -1,5 +1,5 @@
 use super::*;
-use db_storage::MemoryStorage;
+use db_storage_memory::MemoryStorage;
 
 fn control() -> IndexCursorControl {
     IndexCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap()
@@ -97,7 +97,7 @@ async fn decode_run_detects_corruption_via_checksum() {
     let mut control = control();
     let encoded = encode_run_pages(IndexKind::Command, &entries, &mut control).await.unwrap();
     while entries.close_step().unwrap() {}
-    let mut prepared = db_storage::db_io_prepare_platform(&encoded).unwrap().await.unwrap();
+    let mut prepared = db_io_registry::db_io_prepare_platform(&encoded).unwrap().await.unwrap();
     let mut corrupt = prepared.as_slice().to_vec();
     let last = corrupt.len() - 1;
     corrupt[last] ^= 0xFF;
@@ -143,7 +143,7 @@ async fn decode_run_rejects_non_ascending_entries() {
 
 #[semio_framework_async_macros::async_test]
 async fn build_run_sorts_and_last_write_wins_on_duplicate_keys() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("sort"), IndexKind::Command).await;
     let entries = run([entry(b"b", b"1").await, entry(b"a", b"2").await, entry(b"b", b"3").await]).await;
     let mut control = control();
@@ -229,7 +229,7 @@ async fn append_seq_runs(index: &CommandIndex<'_, MemoryStorage>, runs: &mut Own
 /// runs — whose ids storage lists exactly as the owner knows them, oldest first, and every entry still resolves.
 #[semio_framework_async_macros::async_test]
 async fn owned_appends_fold_full_runs_into_levels_and_every_entry_still_resolves() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("doc-levels");
     let index = CommandIndex::new(&storage, document.clone()).await;
     let mut runs = index.owned_runs().await.expect("owned runs");
@@ -261,7 +261,7 @@ async fn owned_appends_fold_full_runs_into_levels_and_every_entry_still_resolves
 /// owner stops folding at that level instead of re-reading them on every later append.
 #[semio_framework_async_macros::async_test]
 async fn a_fold_beyond_one_read_credit_is_skipped_and_its_level_becomes_the_ceiling() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("doc-wide");
     let handle = IndexHandle::new(&storage, document.clone(), IndexKind::Projection).await;
     let mut control = control();
@@ -285,7 +285,7 @@ async fn a_fold_beyond_one_read_credit_is_skipped_and_its_level_becomes_the_ceil
 //#region 🔖️IndexHandle
 #[semio_framework_async_macros::async_test]
 async fn index_handle_put_get_delete_round_trips() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
     put_bytes(&handle, b"k1", b"v1").await;
     put_bytes(&handle, b"k2", b"v2").await;
@@ -299,7 +299,7 @@ async fn index_handle_put_get_delete_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn index_handle_put_overwrites_earlier_value_for_same_key() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
     put_bytes(&handle, b"k", b"first").await;
     put_bytes(&handle, b"k", b"second").await;
@@ -308,7 +308,7 @@ async fn index_handle_put_overwrites_earlier_value_for_same_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
     put_bytes(&handle, b"a/1", b"1").await;
     put_bytes(&handle, b"a/2", b"2").await;
@@ -325,7 +325,7 @@ async fn index_handle_scan_prefix_returns_sorted_live_entries_only() {
 
 #[semio_framework_async_macros::async_test]
 async fn index_handle_auto_merges_to_stay_within_policy() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let policy = MergePolicy { max_runs_before_merge: 2 };
     let handle = IndexHandle::with_policy(&storage, ArtifactId::from("doc-1"), IndexKind::Command, policy).await;
     for i in 0..6u64 {
@@ -341,7 +341,7 @@ async fn index_handle_auto_merges_to_stay_within_policy() {
 
 #[semio_framework_async_macros::async_test]
 async fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
     put_bytes(&handle, b"a", b"1").await;
     put_bytes(&handle, b"b", b"2").await;
@@ -357,7 +357,7 @@ async fn index_handle_compact_collapses_to_one_run_and_drops_tombstones() {
 
 #[semio_framework_async_macros::async_test]
 async fn index_handle_compact_of_one_run_is_a_no_op() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let handle = IndexHandle::new(&storage, ArtifactId::from("doc-1"), IndexKind::Command).await;
     put_bytes(&handle, b"a", b"1").await;
     let before = stats(&handle).await;
@@ -368,7 +368,7 @@ async fn index_handle_compact_of_one_run_is_a_no_op() {
 
 #[semio_framework_async_macros::async_test]
 async fn different_kinds_do_not_collide_for_the_same_document() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = ArtifactId::from("doc-1");
     let commands = IndexHandle::new(&storage, document.clone(), IndexKind::Command).await;
     let regions = IndexHandle::new(&storage, document, IndexKind::TouchedRegion).await;
@@ -385,7 +385,7 @@ async fn different_kinds_do_not_collide_for_the_same_document() {
 //#region 🔖️TypedIndexes
 #[semio_framework_async_macros::async_test]
 async fn command_index_records_and_looks_up_locations() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = CommandIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let location = RecordLocation { segment: 3, offset: 128, len: 64 };
     db_actor::block_on(index.record(42, location)).expect("record");
@@ -397,7 +397,7 @@ async fn command_index_records_and_looks_up_locations() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_index_records_and_looks_up_locations() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = InverseIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let location = RecordLocation { segment: 1, offset: 0, len: 16 };
     db_actor::block_on(index.record(7, location)).expect("record");
@@ -406,7 +406,7 @@ async fn inverse_index_records_and_looks_up_locations() {
 
 #[semio_framework_async_macros::async_test]
 async fn actor_seq_index_resolves_and_tracks_latest_per_actor() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let alice = ActorId::from("alice");
     let bob = ActorId::from("bob");
@@ -423,7 +423,7 @@ async fn actor_seq_index_resolves_and_tracks_latest_per_actor() {
 
 #[semio_framework_async_macros::async_test]
 async fn actor_seq_index_rejects_actor_id_with_embedded_nul() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = ActorSeqIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let unsafe_actor = ActorId::from("bad\u{0}actor");
     assert!(matches!(db_actor::block_on(index.record(&unsafe_actor, 1, 1)), Err(DbError::InvalidArgument(_))));
@@ -431,7 +431,7 @@ async fn actor_seq_index_rejects_actor_id_with_embedded_nul() {
 
 #[semio_framework_async_macros::async_test]
 async fn frontier_index_round_trips_and_tracks_latest() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = FrontierIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let first = Frontier { document: ArtifactId::from("doc-1"), head_seq: 1, commit_seq: 1, chain_hash: [1u8; 32], epoch: 0 };
     let second = Frontier { document: ArtifactId::from("doc-1"), head_seq: 5, commit_seq: 2, chain_hash: [2u8; 32], epoch: 1 };
@@ -444,7 +444,7 @@ async fn frontier_index_round_trips_and_tracks_latest() {
 
 #[semio_framework_async_macros::async_test]
 async fn touched_region_index_accumulates_sorted_unique_seqs() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = TouchedRegionIndex::new(&storage, ArtifactId::from("doc-1")).await;
     db_actor::block_on(index.record_touch(b"region-a", 5)).expect("record_touch");
     db_actor::block_on(index.record_touch(b"region-a", 2)).expect("record_touch");
@@ -455,7 +455,7 @@ async fn touched_region_index_accumulates_sorted_unique_seqs() {
 
 #[semio_framework_async_macros::async_test]
 async fn commit_index_round_trips() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = CommitIndex::new(&storage, ArtifactId::from("doc-1")).await;
     db_actor::block_on(index.record("ck-abc123", 9)).expect("record");
     assert_eq!(db_actor::block_on(index.lookup("ck-abc123")).expect("lookup"), Some(9));
@@ -464,7 +464,7 @@ async fn commit_index_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn full_text_index_search_finds_indexed_documents() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = FullTextIndex::new(&storage, ArtifactId::from("doc-1")).await;
     db_actor::block_on(index.index_document(1, "The Quick Brown Fox")).expect("index");
     db_actor::block_on(index.index_document(2, "quick jumps")).expect("index");
@@ -477,7 +477,7 @@ async fn full_text_index_search_finds_indexed_documents() {
 
 #[semio_framework_async_macros::async_test]
 async fn conflict_index_accumulates_multiple_records_per_command() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = ConflictIndex::new(&storage, ArtifactId::from("doc-1")).await;
     index.record_conflict(5, retained(b"region-collision").await).await.unwrap();
     index.record_conflict(5, retained(b"constraint-violation").await).await.unwrap();
@@ -496,7 +496,7 @@ async fn conflict_index_accumulates_multiple_records_per_command() {
 
 #[semio_framework_async_macros::async_test]
 async fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_id() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
     index.record("by-author", 10, retained(b"state-10").await).await.unwrap();
     index.record("by-author", 20, retained(b"state-20").await).await.unwrap();
@@ -520,14 +520,14 @@ async fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_
 
 #[semio_framework_async_macros::async_test]
 async fn projection_index_rejects_projection_id_with_embedded_nul() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = ProjectionIndex::new(&storage, ArtifactId::from("doc-1")).await;
     assert!(matches!(index.record("bad\u{0}id", 1, retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let alice = ActorId::from("alice");
 
@@ -550,7 +550,7 @@ async fn preview_index_coalesces_latest_publish_or_withdraw_per_actor_and_key() 
 
 #[semio_framework_async_macros::async_test]
 async fn preview_index_rejects_actor_id_with_embedded_nul() {
-    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let index = PreviewIndex::new(&storage, ArtifactId::from("doc-1")).await;
     let unsafe_actor = ActorId::from("bad\u{0}actor");
     assert!(matches!(index.publish(&unsafe_actor, "k", retained(&[1]).await).await, Err(DbError::InvalidArgument(_))));

@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-mesh-component-references = { path = "../../🎯️component-references/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 protocol = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -26,6 +27,7 @@ pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "s
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-mesh-component-references = { path = "../../🎯️component-references/📦️packages/🦀️rust", features = ["testkit"] }
 protocol = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
 # 🔬️ `MeshData` now has its own first-party `ToValue`/`FromValue` codec (ticket 26/09/01/
 # RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) — `serde`'s `Serialize`/`Deserialize`

@@ -18,6 +18,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { runtimeAssetDeliveries } from "../../../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 
 export type { AssetDeliveryDeclarationV1 };
@@ -154,7 +155,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     },
     assets: [
       { kind: "static-dir", route: "/plugin-modules", root: "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules" },
-      { kind: "static-dir", route: "/renderer-modules/compiler-fonts", root: "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts" },
+      ...runtimeAssetDeliveries(),
       { kind: "static-dir", route: "/renderer-modules", root: ".🧬semio/🦑️repo/⚡️cache/📺️renderer-modules" },
     ],
     vitePlugins: async () => {

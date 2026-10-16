@@ -1,6 +1,14 @@
 //! 🌱️ Intrinsic values are canonical single-field Pack records with explicit physical framing.
-use crate::{PackRefusal, record::DecodeOptions};
+
+use semio_framework_pack_error::PackRefusal;
+use semio_framework_pack_record::DecodeOptions;
 use semio_framework_value::{DslValue, NativeDecodeControl};
+
+#[cfg(test)]
+pub(crate) use semio_framework_trace_memory_testing as test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
 
 /// 📦️ The caller declares the physical framing instead of retrying a different decoder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -13,8 +21,8 @@ pub use retained::{RetainedIntrinsicBody,RetainedIntrinsicDocument,RetainedIntri
 /// 🛬️ Moves the exact intrinsic value out of one complete input under cumulative caller control.
 pub fn decode(bytes: &[u8], format: IntrinsicFormat, options: &DecodeOptions, control: &mut NativeDecodeControl<'_>) -> Result<DslValue, PackRefusal> {
     match format {
-        IntrinsicFormat::Body => crate::record::intrinsic::decode_body(bytes, options, control),
-        IntrinsicFormat::Document => crate::record::intrinsic::decode_document(bytes, options, control),
+        IntrinsicFormat::Body => semio_framework_pack_record::intrinsic::decode_body(bytes, options, control),
+        IntrinsicFormat::Document => semio_framework_pack_record::intrinsic::decode_document(bytes, options, control),
     }
 }
 

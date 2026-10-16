@@ -1,6 +1,6 @@
 //! 📖 Deterministic string dictionary builder and reader.
 
-use crate::ProtocolError;
+use semio_framework_replication_error::ProtocolError;
 #[path="🛬️decode/🦀️.rs"]
 mod retained_source_dictionary;
 pub use retained_source_dictionary::{RetainedSourceDictionary,RetainedSourceDictionaryStep};

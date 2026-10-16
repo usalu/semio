@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
+import {verifyProducedWasmPackageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { buildBudgetMs } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { BROWSER_CANVAS_HOT_CRATES } from "../../../../../../../../../🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
+import {buildRepositoryWasmWebV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
@@ -15,7 +15,7 @@ import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️
 
 /** 🕸️ Builds and verifies the actual OS DAG session composition. */
 class WasmScript extends BundleScript{
- async run():Promise<void>{await buildWasmWebV1({control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),rsDir:this.root,componentDir:resolve(this.root,"../../🧩️component/📦️packages/🦀️rust"),logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",outputDirectory:"🕸️bindings",prototypeOptimizedCrates:BROWSER_CANVAS_HOT_CRATES,pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}},readWasmBuildPolicyV1(process.env,this.root));}
+ async run():Promise<void>{await buildRepositoryWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),rsDir:this.root,componentDir:resolve(this.root,"../../🧩️component/📦️packages/🦀️rust"),logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}});}
 }
 class SourceScript extends BundleScript{
  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}

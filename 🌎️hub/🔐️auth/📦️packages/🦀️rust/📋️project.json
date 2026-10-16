@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/hub-auth-rs",
+  "tags": [
+    "scope:hub",
+    "language:rust"
+  ]
+}

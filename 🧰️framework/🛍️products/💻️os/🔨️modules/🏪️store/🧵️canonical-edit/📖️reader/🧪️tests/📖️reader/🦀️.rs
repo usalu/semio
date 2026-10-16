@@ -1,7 +1,19 @@
 //! 🧪️ Typed reader byte parity, exact Arc ownership, cancellation, and worker laws.
 
-use super::super::borrowed_tests::{MapLifetime, MapMutation, MapRetirementFactory, fixture, quoted_close_grant};
-use super::*;
+use super::canonical_edit_borrowed_tests::{MapLifetime, MapMutation, fixture, quoted_close_grant};
+use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
+use std::sync::Arc;
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor, ArtifactCanonicalJsonEncodeError};
+use semio_framework_os_store_canonical_json::borrowed::{ArtifactCanonicalJsonArray, ArtifactCanonicalJsonValue};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJsonTree};
+use semio_framework_os_store_canonical_json::reader::ArtifactCanonicalJsonReader;
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, DslValue, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+use semio_framework_os_spr::Edit;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
+use super::{canonical_edit_borrowed_tests as borrowed_tests, test_support, reader_tests as tests};
+use semio_framework_os_store_ledger as ledger;
 use std::sync::atomic::Ordering;
 
 //#region 📦️ReaderFixtures
@@ -13,7 +25,7 @@ impl SnapshotRetirementFactory<Edit<MapMutation>> for RootRetirementFactory {
 }
 /// 🧱️ The smallest copy grant a kind-0 canonical frame starts under (`ArtifactCanonicalJsonCursor::next_encode_demand`).
 const FRAME_COPY_FLOOR: usize = 64;
-static RETIREMENT_POLICY: std::sync::LazyLock<RetainedCloneGrant> = std::sync::LazyLock::new(super::super::borrowed_tests::fixture_retirement_grant);
+static RETIREMENT_POLICY: std::sync::LazyLock<RetainedCloneGrant> = std::sync::LazyLock::new(super::canonical_edit_borrowed_tests::fixture_retirement_grant);
 fn encoding_grant(items: usize, copy: usize) -> ArtifactStoreOneItemGrant {
  ArtifactStoreOneItemGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: RETIREMENT_POLICY.maximum_capacity_bytes, maximum_release_bytes: RETIREMENT_POLICY.maximum_release_bytes, maximum_depth: RETIREMENT_POLICY.maximum_depth }
 }
@@ -58,7 +70,7 @@ fn close(reader: &mut ArtifactCanonicalJsonReader<Edit<MapMutation>>) {
 fn retire(root: Arc<Edit<MapMutation>>, lifetime: &MapLifetime) {
  let (owner,progress)=RootRetirementFactory.retire(root,*RETIREMENT_POLICY).unwrap_or_else(|_|panic!("original reader root was refused"));assert!(progress.fits(*RETIREMENT_POLICY));let mut owner=Some(owner);
  for _ in 0..100_000 {
-  let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||super::super::super::artifact_retirement_box_close_step(&mut owner,*RETIREMENT_POLICY).unwrap());let receipt=step.progress();assert!(receipt.fits(*RETIREMENT_POLICY));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,*RETIREMENT_POLICY).unwrap());let receipt=step.progress();assert!(receipt.fits(*RETIREMENT_POLICY));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
   if owner.is_none() { assert_eq!(lifetime.root_drops.load(Ordering::SeqCst),1);return; }
  }
  panic!("transferred reader root did not retire");
@@ -72,7 +84,7 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
     for bytes in [FRAME_COPY_FLOOR, 100, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::ledger::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&semio_framework_os_store_ledger::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
@@ -344,8 +356,8 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
                 finished_at: oracle.finished_at,
             };
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-            let authority = super::super::tests::authority();
-            let mut owner = super::super::tests::admit_sealer(Arc::clone(&authority), edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
+            let authority = super::canonical_edit_tests::authority();
+            let mut owner = super::canonical_edit_tests::admit_sealer(Arc::clone(&authority), edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::canonical_edit_tests::FixtureSnapshotRetirement));
             let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 262144, maximum_depth: 4096 };
             let mut failure = None;
             for _ in 0..100_000 {

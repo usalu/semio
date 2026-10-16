@@ -540,6 +540,11 @@
         "key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "value": "beta"
       }
+    ],
+    "contentionCancellation": "Owned writer contention cancelled",
+    "contentionProgress": [
+      "start",
+      "end"
     ]
   },
   "nativeAdmissionMemo": {
@@ -2810,10 +2815,86 @@
   },
   "initialAuthoring": {
     "bootstrap": [
-      { "tool": "nx", "arguments": ["tools", "setup", "nx"], "launches": [["repo", "tools", "setup", "nx"], ["nx", "--version"]] },
-      { "tool": "nx", "arguments": ["reset"], "launches": [["repo", "reset"], ["nx", "reset"]] },
-      { "tool": "nx", "arguments": ["run", "app:build", "--skip-cache"], "launches": [["repo", "run", "app:build", "--skip-cache"], ["nx", "run", "app:build", "--skip-nx-cache"], ["nx", "run", "workspace:deps-javascript", "--output-style=stream"]] },
-      { "tool": "bazel", "arguments": ["run", "app:build", "--skip-cache"], "launches": [["repo", "run", "app:build", "--skip-cache"]] }
+      {
+        "tool": "nx",
+        "arguments": [
+          "tools",
+          "setup",
+          "nx"
+        ],
+        "launches": [
+          [
+            "repo",
+            "tools",
+            "setup",
+            "nx"
+          ],
+          [
+            "nx",
+            "--version"
+          ]
+        ]
+      },
+      {
+        "tool": "nx",
+        "arguments": [
+          "reset"
+        ],
+        "launches": [
+          [
+            "repo",
+            "reset"
+          ],
+          [
+            "nx",
+            "reset"
+          ]
+        ]
+      },
+      {
+        "tool": "nx",
+        "arguments": [
+          "run",
+          "app:build",
+          "--skip-cache"
+        ],
+        "launches": [
+          [
+            "repo",
+            "run",
+            "app:build",
+            "--skip-cache"
+          ],
+          [
+            "nx",
+            "run",
+            "app:build",
+            "--skip-nx-cache"
+          ],
+          [
+            "nx",
+            "run",
+            "workspace:deps-javascript",
+            "--output-style=stream"
+          ]
+        ]
+      },
+      {
+        "tool": "bazel",
+        "arguments": [
+          "run",
+          "app:build",
+          "--skip-cache"
+        ],
+        "launches": [
+          [
+            "repo",
+            "run",
+            "app:build",
+            "--skip-cache"
+          ]
+        ]
+      }
     ],
     "storagePorts": [
       "createBuildGraphOptionalQuotaV1",
@@ -3627,7 +3708,16 @@
       "🏗️build/🧬️schema/📥️pin.json",
       "🏗️build/🧬️schema/📥️engine.json"
     ],
-    "mutation": "\n"
+    "mutation": "\n",
+    "privateTasks": [
+      "🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+      "🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json",
+      "🏗️build/📥️caller/📤️orchestration/🟨️.mjs",
+      "🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+      "🏗️build/🧬️schema/📥️caller.json"
+    ]
   },
   "nxEngineNamedInput": {
     "name": "__semioPrivateEngine",

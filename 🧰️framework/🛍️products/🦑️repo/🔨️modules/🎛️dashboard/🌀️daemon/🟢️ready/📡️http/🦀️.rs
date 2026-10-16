@@ -13,7 +13,7 @@ const CONNECT: Duration = Duration::from_millis(100);
 const HEADER_LIMIT: usize = 8192;
 
 /// 🟢️ Probes a local HTTP handler without extending its deadline or ignoring cancellation.
-pub(crate) fn probe(url: &str, cancelled: &AtomicBool) -> bool {
+pub fn probe(url: &str, cancelled: &AtomicBool) -> bool {
     let Some(rest) = url.strip_prefix("http://") else { return false };
     let boundary = rest.find(['/', '?', '#']).unwrap_or(rest.len());
     let Some((host, port)) = rest[..boundary].split_once(':') else { return false };

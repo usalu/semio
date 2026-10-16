@@ -5,6 +5,14 @@
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
+#![allow(async_fn_in_trait)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+use semio_s_space_core::*;
+
 use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
 use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
 
@@ -16,6 +24,10 @@ use semio_framework_os::{
     MediaContract, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot,
 };
 use std::collections::HashMap;
+use semio_framework_os::workflow::ConnectPorts;
+use semio_framework_plugin::Effect;
+use semio_hub_space_foundation::config::SpaceConfig;
+use semio_framework_os::WorkflowEdge;
 
 //#region 🔖️SyncBridge
 /// 🌉️ `app_commands!`'s generated `dispatch(doc, cfg)` (framework-fixed, `🧰️framework/🛍️products/
@@ -25,7 +37,7 @@ use std::collections::HashMap;
 /// same technique). Every `async fn` in this whole wasm component is a run-to-completion frame
 /// transaction that never truly suspends (no real I/O inside an `s` command), so polling once is
 /// always sound here; a genuine `Pending` would mean a real bug upstream, hence the panic.
-pub(crate) fn resolve_future<F: std::future::Future>(future: F) -> F::Output {
+pub fn resolve_future<F: std::future::Future>(future: F) -> F::Output {
     use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
     fn no_op(_: *const ()) {}
     fn clone(_: *const ()) -> RawWaker {
@@ -358,3 +370,30 @@ pub async fn apply_app_registrations(json: &str) -> Result<(), semio_framework_p
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔖️DocumentHelpers
+/// 🤝️ Resolves the source/target ports for a proposed connect and negotiates their wire contract
+/// via `engine::negotiate_media_connect`, converting a rejection into a `Notify` effect — shared by
+/// `connections::connect_media_ports` and the `graph_edit::node_graph_edit`/`"connect"` fixture edit.
+pub async fn negotiate_connect_or_notify(projection: &WorkflowSnapshot, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<MediaContract, Effect> {
+    crate::negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id).await.map_err(|reason| Effect::Notify { message: reason })
+}
+
+pub async fn connect_edge_operation(source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str, contract: MediaContract) -> WorkflowMutation {
+    WorkflowMutation::ConnectPorts(ConnectPorts {
+        edge: WorkflowEdge { id: create_os_id("edge"), source_node_id: source_node_id.into(), source_port_id: source_port_id.into(), target_node_id: target_node_id.into(), target_port_id: target_port_id.into(), contract },
+    })
+}
+
+/// 🔎️ First selected node — the fallback target for actions that implicitly operate on "the"
+/// current selection (rename/remove/open) when no explicit node id is supplied. `selected` is the
+/// `graph` domain's live selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no
+/// longer a deleted `SpaceConfig` field.
+pub async fn primary_selected_node_id(selected: &[String], config: &SpaceConfig) -> Option<String> {
+    selected.first().cloned().or_else(|| config.active_node_id.clone())
+}
+
+pub async fn config_space_id(config: &SpaceConfig) -> String {
+    config.space_id.clone().unwrap_or_else(|| "default".into())
+}
+//#endregion 🔖️DocumentHelpers

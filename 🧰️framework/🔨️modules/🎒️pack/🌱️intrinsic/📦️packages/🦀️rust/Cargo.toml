@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-pack-intrinsic"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Intrinsic Body dispatch and retained document clone."
+
+[package.metadata.semio]
+role = "framework"
+id = "pack-intrinsic"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-hash = { path = "../../../../🔏️hash/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
+semio-framework-pack-format = { path = "../../../📐️format/📦️packages/🦀️rust" }
+semio-framework-pack-format-catalog = { path = "../../../📐️format/🗂️catalog/📦️packages/🦀️rust" }
+semio-framework-pack-format-retained = { path = "../../../📐️format/🎮️retained/📦️packages/🦀️rust" }
+semio-framework-pack-record = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-record-retained = { path = "../../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+blake3 = "1.8.2"
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-pack-record-schema = { path = "../../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = { version = "1.0.140", features = ["float_roundtrip"] }

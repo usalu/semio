@@ -6,7 +6,8 @@ use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{Retai
 use store::os_store::one_item::ArtifactStoreOneItemGrant;
 
 //#region 📃️PageAuthority
-pub(crate) const LOCAL_INTERACTION_QUERY_PAGE_BYTES: usize = 256;
+#[doc(hidden)]
+pub const LOCAL_INTERACTION_QUERY_PAGE_BYTES: usize = 256;
 
 /// 🔐️ Fixed-width acknowledgement authority; no historical tutorial identity authorizes a new query.
 use protocol::LocalInteractionQueryToken as LocalInteractionPageToken;
@@ -75,7 +76,8 @@ impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
 }
 
 /// 📖️ Retains one page until an exact ACK; cancellation hides it before bytewise retirement.
-pub(crate) struct LocalInteractionQuery<C: LocalInteractionQueryCapture = LocalInteractionCaptureCursor> {
+#[doc(hidden)]
+pub struct LocalInteractionQuery<C: LocalInteractionQueryCapture = LocalInteractionCaptureCursor> {
     capture: C,
     token: LocalInteractionPageToken,
     page: [u8; LOCAL_INTERACTION_QUERY_PAGE_BYTES],
@@ -83,12 +85,14 @@ pub(crate) struct LocalInteractionQuery<C: LocalInteractionQueryCapture = LocalI
     ready: bool,
     terminal_page: bool,
     retiring_page: bool,
-    pub(crate) closing: bool,
+    #[doc(hidden)]
+    pub closing: bool,
     retired_bytes: u64,
 }
 
 impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
-    pub(crate) fn new(capture: C, request_id: u64, query_generation: u64) -> Self {
+    #[doc(hidden)]
+    pub fn new(capture: C, request_id: u64, query_generation: u64) -> Self {
         let identity = capture.identity().clone();
         Self {
             capture,
@@ -103,18 +107,22 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         }
     }
 
-    pub(crate) fn page(&self) -> Option<LocalInteractionPageView<'_>> {
+    #[doc(hidden)]
+    pub fn page(&self) -> Option<LocalInteractionPageView<'_>> {
         (self.ready && !self.closing).then(|| LocalInteractionPageView { token: &self.token, terminal: self.terminal_page, bytes: &self.page[..self.length] })
     }
 
-    pub(crate) fn token(&self) -> &LocalInteractionPageToken {
+    #[doc(hidden)]
+    pub fn token(&self) -> &LocalInteractionPageToken {
         &self.token
     }
-    pub(crate) fn has_pending_work(&self) -> bool {
+    #[doc(hidden)]
+    pub fn has_pending_work(&self) -> bool {
         !self.ready && !self.terminal_is_empty()
     }
 
-    pub(crate) fn cancel_authorized(&mut self, token: &LocalInteractionPageToken) -> bool {
+    #[doc(hidden)]
+    pub fn cancel_authorized(&mut self, token: &LocalInteractionPageToken) -> bool {
         if self.closing || token.request_id != self.token.request_id || token.query_generation != self.token.query_generation || token.identity != self.token.identity {
             return false;
         }
@@ -122,7 +130,8 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         true
     }
 
-    pub(crate) fn acknowledge(&mut self, token: &LocalInteractionPageToken) -> bool {
+    #[doc(hidden)]
+    pub fn acknowledge(&mut self, token: &LocalInteractionPageToken) -> bool {
         if self.closing || !self.ready || token != &self.token {
             return false;
         }
@@ -135,7 +144,8 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         true
     }
 
-    pub(crate) fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionQueryStep, ValueError> {
+    #[doc(hidden)]
+    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant, output_width: usize) -> Result<LocalInteractionQueryStep, ValueError> {
         if self.closing {
             return Ok(LocalInteractionQueryStep::Closing);
         }
@@ -178,14 +188,16 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         Ok(LocalInteractionQueryStep::Advanced { emitted_bytes: self.length, retired_bytes: 0, ownership })
     }
 
-    pub(crate) fn cancel(&mut self) {
+    #[doc(hidden)]
+    pub fn cancel(&mut self) {
         self.ready = false;
         self.closing = true;
         self.retiring_page = true;
         self.capture.cancel();
     }
 
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    #[doc(hidden)]
+    pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.length != 0 {
             return Ok(RetirementDemand { copy_bytes: 1, depth: 1, ..Default::default() });
         }
@@ -194,7 +206,8 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         Ok(demand)
     }
 
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    #[doc(hidden)]
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -229,13 +242,16 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
         retired
     }
 
-    pub(crate) fn completed_bytes(&self) -> u64 {
+    #[doc(hidden)]
+    pub fn completed_bytes(&self) -> u64 {
         self.capture.completed_bytes()
     }
-    pub(crate) fn retired_bytes(&self) -> u64 {
+    #[doc(hidden)]
+    pub fn retired_bytes(&self) -> u64 {
         self.retired_bytes
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    #[doc(hidden)]
+    pub fn terminal_is_empty(&self) -> bool {
         self.closing && !self.ready && self.length == 0 && self.capture.terminal_is_empty()
     }
 }

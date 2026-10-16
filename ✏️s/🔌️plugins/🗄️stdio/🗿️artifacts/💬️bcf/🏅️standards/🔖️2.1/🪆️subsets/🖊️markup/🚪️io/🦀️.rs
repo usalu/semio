@@ -141,7 +141,7 @@ fn parse_bcf_version(data: &[u8]) -> Option<String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bcf_version_bytes(version: &str) -> Vec<u8> {
+pub fn bcf_version_bytes(version: &str) -> Vec<u8> {
     let mut children = Vec::new();
     if let Some(n) = text_element("DetailedVersion", version) {
         children.push(n);
@@ -536,14 +536,17 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_stdio_bcf_schema::standards::v2_1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_stdio_bcf_inferences::standards::v2_1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_stdio_bcf_schema::standards::v2_1::subsets::any::io::text::*;
+    pub use semio_s_artifact_stdio_bcf_inferences::standards::v2_1::subsets::any::io::text::inferences;
+}
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
 
 pub mod derived_construction {
     use crate::{BcfDiff, BcfMutation, BcfSnapshot};

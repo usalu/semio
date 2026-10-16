@@ -128,18 +128,13 @@ impl protocol::DiffAlgebra<ImperativeConfig> for ImperativeConfigDiff {
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub mod mutations;
 pub use mutations::*;
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
-mod contract_vectors;
 
-#[path = "🚪️io/🦀️.rs"]
-pub mod io;
+
+

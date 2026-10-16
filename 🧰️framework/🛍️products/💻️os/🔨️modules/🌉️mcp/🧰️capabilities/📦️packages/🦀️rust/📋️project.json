@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/framework-os-mcp-capabilities-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

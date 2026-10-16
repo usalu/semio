@@ -2,43 +2,30 @@
 //!
 //! The structure, frame, mesh and chrome dump types and builders, the accessibility dump and the wasm exports.
 
-#[cfg(any(target_arch = "wasm32", test))]
-use super::chrome_ledger::project_chrome_dump;
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+use crate::chrome_ledger::project_chrome_dump;
 #[cfg(target_arch = "wasm32")]
-use super::chrome_ledger::CHROME_LEDGER;
-#[cfg(test)]
-use super::chrome_ledger::{
-    accessibility_window_is_visible, begin_accessibility_visible_documents, chrome_action_args,
-    chrome_hit_row, ledger_publish_hits, ledger_publish_surfaces, ledger_push_action,
-    note_accessibility_visible_document, note_chrome_accessibility,
-    publish_accessibility_visible_documents, world_camera_ledger_row, ChromeLedger,
-    CHROME_ACTION_ARGS_BYTES, CHROME_ACTION_CAPACITY, WORLD_CAMERA_LEDGER,
-};
-use super::chrome_ledger::{
-    ACCESSIBILITY_VISIBLE_WINDOWS, CHROME_ACCESSIBILITY, SHELL_CHROME_ACCESSIBILITY_WINDOW_ID,
-};
-use super::ink_and_vfs_focus::focused_vfs_control;
-#[cfg(any(target_arch = "wasm32", test))]
-use super::mesh_and_board2d_stats::build_board2d_dump;
+use crate::chrome_ledger::CHROME_LEDGER;
+#[cfg(any(test, feature = "testkit"))]
+use crate::chrome_ledger::{accessibility_window_is_visible, begin_accessibility_visible_documents, chrome_action_args, chrome_hit_row, ledger_publish_hits, ledger_publish_surfaces, ledger_push_action, note_accessibility_visible_document, note_chrome_accessibility, publish_accessibility_visible_documents, world_camera_ledger_row, ChromeLedger, CHROME_ACTION_ARGS_BYTES, CHROME_ACTION_CAPACITY, WORLD_CAMERA_LEDGER};
+use crate::chrome_ledger::{ACCESSIBILITY_VISIBLE_WINDOWS, CHROME_ACCESSIBILITY, SHELL_CHROME_ACCESSIBILITY_WINDOW_ID};
+use semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::focused_vfs_control;
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+use crate::mesh_and_board2d_stats::build_board2d_dump;
 #[cfg(target_arch = "wasm32")]
-use super::mesh_and_board2d_stats::build_mesh_stats;
-#[cfg(test)]
-use super::mesh_and_board2d_stats::{
-    board2d_surface, mesh_stats_for_scene, walk_board2d, walk_mesh_stats,
-};
+use crate::mesh_and_board2d_stats::build_mesh_stats;
+#[cfg(any(test, feature = "testkit"))]
+use crate::mesh_and_board2d_stats::{board2d_surface, mesh_stats_for_scene, walk_board2d, walk_mesh_stats};
 #[cfg(target_arch = "wasm32")]
-use super::retained_ui_engine::UI_ENGINE;
-use super::text_and_table_focus::{
-    focused_table_editable_text_address, focused_table_editable_text_draft, focused_text_editor,
-    FOCUSED_TABLE_STEPPER,
-};
-#[cfg(test)]
+use semio_framework_os_renderer_wgpu_contracts::UI_ENGINE;
+use semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::{focused_table_editable_text_address, focused_table_editable_text_draft, focused_text_editor, FOCUSED_TABLE_STEPPER};
+#[cfg(any(test, feature = "testkit"))]
 use crate::element_contracts::fixture_scene_pointer_target;
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 use serde_json::Value;
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 use ui_wgpu::wgpu::UiState;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use ui_wgpu::wgpu::{ActionDescriptor, UiPresence};
 use ui_wgpu::wgpu::{NodeId, Rect, Theme, UiNode};
 
@@ -61,47 +48,47 @@ use ui_wgpu::wgpu::{NodeId, Rect, Theme, UiNode};
 #[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 struct DumpViewport {
-    pub(super) w: f32,
-    pub(super) h: f32,
+    pub w: f32,
+    pub h: f32,
     dpr: f32,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 struct DumpNodeState {
     hovered: bool,
     disabled: bool,
-    pub(super) selected: bool,
+    pub selected: bool,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpNode {
     path: String,
-    pub(super) kind: &'static str,
-    pub(super) rect: [f32; 4],
-    pub(super) text: Option<String>,
+    pub kind: &'static str,
+    pub rect: [f32; 4],
+    pub text: Option<String>,
     color: Option<[f32; 4]>,
     bg: Option<[f32; 4]>,
     font_size: Option<f32>,
     font_weight: Option<u32>,
-    pub(super) visible: bool,
-    pub(super) state: DumpNodeState,
+    pub visible: bool,
+    pub state: DumpNodeState,
 }
 
 #[cfg(target_arch = "wasm32")]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpStructure {
-    pub(super) viewport: DumpViewport,
+    pub viewport: DumpViewport,
     /// 🪟️ The window this dump answers for, and every window the engine could answer for — so a
     /// caller reading a two-pane mode layout can see both panes rather than guessing which one the
     /// zero-arg selection picked.
-    pub(super) window_id: Option<String>,
+    pub window_id: Option<String>,
     window_ids: Vec<String>,
     focus_path: Option<String>,
-    pub(super) nodes: Vec<DumpNode>,
+    pub nodes: Vec<DumpNode>,
 }
 
 /// ♿️ One window's accessibility tree in reading order. `nodes` is `ui_contract`'s own
@@ -110,9 +97,9 @@ struct DumpStructure {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpAccessibilityWindow {
-    pub(super) window_id: String,
-    pub(super) window_generation: u64,
-    pub(super) nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub nodes: Vec<ui_contract::AccessibilityProjectionNode>,
 }
 
 /// ♿️ The wire shape `dumpAccessibility()` answers.
@@ -126,26 +113,26 @@ struct DumpAccessibilityWindow {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DumpAccessibility {
-    pub(super) window_id: Option<String>,
+    pub window_id: Option<String>,
     window_ids: Vec<String>,
-    pub(super) windows: Vec<DumpAccessibilityWindow>,
+    pub windows: Vec<DumpAccessibilityWindow>,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpFrameStats {
-    pub(super) window_id: Option<String>,
-    window_ids: Vec<String>,
-    draw_calls: usize,
-    quad_count: usize,
-    glyph_count: usize,
+pub struct DumpFrameStats {
+    pub window_id: Option<String>,
+    pub window_ids: Vec<String>,
+    pub draw_calls: usize,
+    pub quad_count: usize,
+    pub glyph_count: usize,
     /// 🌍️ The 3d half — a `World3d` window paints `ScenePass3d`s and no quads at all, so these are
     /// the only numbers that can say whether its solid reached the frame.
-    scene_passes: usize,
-    scene_draws: usize,
-    scene_instances: usize,
-    frame_latency: crate::frame_latency::FrameLatencySnapshot,
+    pub scene_passes: usize,
+    pub scene_draws: usize,
+    pub scene_instances: usize,
+    pub frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencySnapshot,
 }
 /// 🧊️ One published preview mesh of one `World3d` surface, as the PAYLOAD states it — never as the
 /// renderer's own mesh store counts it.
@@ -156,53 +143,53 @@ struct DumpFrameStats {
 /// `meshes_json` entries, one per published mesh, so a probe can hold a live surface to the very
 /// fixture the native lane asserts (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-mesh-oracle-2026-09-14.md`).
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpMesh {
-    pub(super) id: String,
+pub struct DumpMesh {
+    pub id: String,
     /// 🏷️ The producer's own `role` stamp (`solid`/`wire`/`point`/`vector`), or `(unstamped)` for a
     /// producer that publishes none — an absence a reader must see rather than have defaulted away.
-    pub(super) role: String,
-    pub(super) indices: usize,
-    pub(super) positions: usize,
-    pub(super) edge_positions: usize,
+    pub role: String,
+    pub indices: usize,
+    pub positions: usize,
+    pub edge_positions: usize,
     /// 📦️ The mesh's own axis-aligned bounds over `positions`, falling back to `edgePositions` for a
     /// wire body that carries no vertices at all. `None` when the entry carries neither.
-    pub(super) bbox_min: Option<[f64; 3]>,
-    pub(super) bbox_max: Option<[f64; 3]>,
+    pub bbox_min: Option<[f64; 3]>,
+    pub bbox_max: Option<[f64; 3]>,
 }
 
 /// 🎯️ One published instance of one mesh — the id every hover/select observation is addressed by,
 /// beside the topology target it stands for.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpMeshInstance {
-    pub(super) id: String,
-    pub(super) mesh_id: String,
-    pub(super) interaction_id: String,
+pub struct DumpMeshInstance {
+    pub id: String,
+    pub mesh_id: String,
+    pub interaction_id: String,
 }
 
 /// 🌍️ One `World3d` surface's whole published payload: where it sits on the page, what it publishes,
 /// and what the producer says is hovered and selected in it.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpMeshSurface {
-    pub(super) surface_id: String,
-    pub(super) pane_id: Option<String>,
-    pub(super) rect: [f32; 4],
-    pub(super) meshes: Vec<DumpMesh>,
-    pub(super) instances: Vec<DumpMeshInstance>,
+pub struct DumpMeshSurface {
+    pub surface_id: String,
+    pub pane_id: Option<String>,
+    pub rect: [f32; 4],
+    pub meshes: Vec<DumpMesh>,
+    pub instances: Vec<DumpMeshInstance>,
     /// 🏷️ How many published meshes carry each role — the row a fixture's own `delivery.meshRoles`
     /// is compared against.
-    pub(super) roles: std::collections::BTreeMap<String, usize>,
+    pub roles: std::collections::BTreeMap<String, usize>,
     /// 📦️ The union of every published mesh's bounds, which is what a camera fit must frame.
-    pub(super) bbox_min: Option<[f64; 3]>,
-    pub(super) bbox_max: Option<[f64; 3]>,
+    pub bbox_min: Option<[f64; 3]>,
+    pub bbox_max: Option<[f64; 3]>,
     /// 🎥️ The WIRE camera — what the guest last published in `World3dScene.camera_json`.
-    pub(super) camera: Option<Value>,
+    pub camera: Option<Value>,
     /// 🎥️ The LIVE orbit — what this surface is actually looking through THIS frame, in the same
     /// `setCamera` shape as `camera` so the two are directly diffable, plus the projection family
     /// the orbit is in.
@@ -211,20 +198,20 @@ pub(super) struct DumpMeshSurface {
     /// an orbit, a wheel, a `Projection` pane switch — is invisible to a probe: a switch to
     /// `Orthographic` reported the delivered perspective pose, unchanged, and looked like a dead
     /// control (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.5).
-    pub(super) live_camera: Option<Value>,
-    pub(super) selected: Vec<String>,
-    pub(super) hovered: Option<String>,
+    pub live_camera: Option<Value>,
+    pub selected: Vec<String>,
+    pub hovered: Option<String>,
 }
 
 /// 🧊️ The wire shape `dumpMeshStats()` answers. Every live window is walked when no window is named,
 /// because a mode layout paints its preview into a pane that is never the largest one.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpMeshStats {
-    pub(super) window_id: Option<String>,
-    pub(super) window_ids: Vec<String>,
-    pub(super) surfaces: Vec<DumpMeshSurface>,
+pub struct DumpMeshStats {
+    pub window_id: Option<String>,
+    pub window_ids: Vec<String>,
+    pub surfaces: Vec<DumpMeshSurface>,
 }
 
 //#endregion 🔬️IntrospectionTypes
@@ -235,8 +222,8 @@ pub(super) struct DumpMeshStats {
 /// React side's `data-ui-path` (built from the same serialized `UiNode` tree — see this ticket's
 /// own path-grammar spec, shared verbatim between both sides). Exhaustive match: a new `UiNode`
 /// variant fails to compile here until wired, same discipline as `UiNode::presence`'s own match.
-#[cfg(any(target_arch = "wasm32", test))]
-fn ui_node_kind_tag(node: &UiNode) -> &'static str {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn ui_node_kind_tag(node: &UiNode) -> &'static str {
     match node {
         UiNode::Stack(_) => "stack",
         UiNode::Text(_) => "text",
@@ -265,7 +252,7 @@ fn ui_node_kind_tag(node: &UiNode) -> &'static str {
 /// `reconcile::explicit_id` (same variant→field mapping, the one `NodeKey::Explicit` itself keys
 /// retained children by, so this names the exact same identity the retained tree already
 /// reconciles against) since that function isn't part of `ui_wgpu`'s public surface.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
     match node {
         UiNode::Stack(n) => n.id.as_deref(),
@@ -290,8 +277,8 @@ fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
 
 /// 🧭️ One path segment: `${kind}[${i}]` or `${kind}[${i}]#${id}` when `node` carries a non-empty
 /// declared id — the exact grammar the React side's `data-ui-path` mirrors.
-#[cfg(any(target_arch = "wasm32", test))]
-fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
     let kind = ui_node_kind_tag(node);
     match ui_node_declared_id(node) {
         Some(id) if !id.is_empty() => format!("{kind}[{sibling_index}]#{id}"),
@@ -301,12 +288,12 @@ fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
 //#endregion 🔬️IntrospectionPathGrammar
 
 //#region 🔬️IntrospectionVisualFields
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn rgba_array(color: ui_wgpu::wgpu::Rgba) -> [f32; 4] {
     [color.r, color.g, color.b, color.a]
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
     if disabled {
         color.with_alpha(color.a * 0.5)
@@ -325,7 +312,7 @@ fn dim(color: ui_wgpu::wgpu::Rgba, disabled: bool) -> ui_wgpu::wgpu::Rgba {
 /// documented unit mismatch, not a bug. `fontWeight` is always `None`: this renderer's `Theme`/
 /// `paint` layer has no font-weight concept at all (only `UiTextNode.emphasize`, which changes
 /// size+color, never weight) — a genuine gap, not a guess.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<String>, Option<[f32; 4]>, Option<[f32; 4]>, Option<f32>) {
     match node {
         UiNode::Stack(stack) => {
@@ -392,7 +379,7 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
 /// 🖱️ Same authored-hover-folds-into-live-hover rule `paint::paint_node` applies (private to
 /// `ui_wgpu::wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
 /// `presence.hover` counts as hovered too, unless the node is disabled.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
     let live = node.flags.contains(ui_wgpu::wgpu::NodeFlags::HOVERED);
     if disabled {
@@ -410,9 +397,9 @@ fn effective_hovered(node: &ui_wgpu::wgpu::Node, presence_hover: bool, disabled:
 /// 📐️ `Node::layout` is the immediate-mode bucket and stays zero on the retained path; the paint
 /// walk consumes the double-buffered `mounted_layout`, so a probe reading the former reports an
 /// unlaid-out tree even when layout published (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
-fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
+pub fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, parent_path: &str, sibling_index: usize, theme: &Theme, focus_path: &mut Option<String>, nodes: &mut Vec<DumpNode>) {
     let Some(node) = tree.node(id) else { return };
     let ui_node = &node.spec.0;
     let presence = ui_node.presence();
@@ -457,7 +444,7 @@ fn walk_dump(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: 
 /// names none keeps the previous rule, the largest last-known viewport area. The optional argument
 /// is what makes the smaller pane of a two-pane mode layout measurable at all — the zero-arg export
 /// could only ever answer for the larger one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 fn dump_window_id(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Option<String> {
     match requested {
         Some(id) if !id.is_empty() => engine.window_ids().find(|live| *live == id).map(str::to_string),
@@ -467,7 +454,7 @@ fn dump_window_id(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Option
 
 /// 🪟️ Every window this engine currently tracks, so a dump that answers for one window can still
 /// name the others a caller could ask for.
-pub(super) fn dump_window_ids(engine: &ui_wgpu::wgpu::Ui) -> Vec<String> {
+pub fn dump_window_ids(engine: &ui_wgpu::wgpu::Ui) -> Vec<String> {
     engine.window_ids().map(str::to_string).collect()
 }
 //#endregion 🔬️IntrospectionWindowSelection
@@ -497,24 +484,24 @@ fn build_structure_dump(engine: &ui_wgpu::wgpu::Ui, dpr: f32, requested: Option<
 /// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
 /// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
 /// that silently failed to shape has quads but 0 glyphs).
-#[cfg(any(target_arch = "wasm32", test))]
-fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw::DrawLayer) -> bool {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+fn layer_is_nonempty(layer: &ui_wgpu::wgpu::draw_types::DrawLayer) -> bool {
     !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty()
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
-fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw::UiInstance) -> bool {
-    instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+fn is_glyph_instance(instance: &ui_wgpu::wgpu::draw_types::UiInstance) -> bool {
+    instance.params[2] == ui_wgpu::wgpu::draw_types::KIND_GLYPH
 }
 
 struct TableStepperAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) cell: crate::scenes::TableStepperAccessibilityCell,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableStepperAccessibilityCell,
 }
 
-pub(super) fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
+pub fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
     let hash = key.as_bytes().iter().fold(0xcbf29ce484222325_u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3));
     (1_u64 << 63) | (hash & !(1_u64 << 63))
 }
@@ -522,8 +509,8 @@ pub(super) fn scene_virtual_accessibility_node_id(key: &str) -> u64 {
 fn collect_table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableStepperAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_table_stepper_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_stepper_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableStepperAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), cell }));
         }
     }
     if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
@@ -534,7 +521,7 @@ fn collect_table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, nod
     }
 }
 
-pub(super) fn table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableStepperAccessibilityEntry> {
+pub fn table_stepper_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableStepperAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_stepper_accessibility_entries(tree, root, 0, &mut entries);
@@ -589,17 +576,17 @@ fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgp
 }
 
 struct TableEditableTextAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) cell: crate::scenes::TableEditableTextAccessibilityCell,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableEditableTextAccessibilityCell,
 }
 
 fn collect_table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableEditableTextAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_table_editable_text_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableEditableTextAccessibilityEntry {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_editable_text_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableEditableTextAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -615,7 +602,7 @@ fn collect_table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTre
     }
 }
 
-pub(super) fn table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableEditableTextAccessibilityEntry> {
+pub fn table_editable_text_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableEditableTextAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_editable_text_accessibility_entries(tree, root, 0, &mut entries);
@@ -670,17 +657,17 @@ fn append_table_editable_text_accessibility_nodes(window_id: &str, tree: &ui_wgp
 }
 
 struct TableButtonAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) cell: crate::scenes::TableButtonAccessibilityCell,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub cell: semio_framework_os_renderer_wgpu_scene_state::TableButtonAccessibilityCell,
 }
 
 fn collect_table_button_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<TableButtonAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_table_button_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableButtonAccessibilityEntry {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::Table && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_table_button_accessibility_cells(&scene.host_id).into_iter().map(|cell| TableButtonAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -696,7 +683,7 @@ fn collect_table_button_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node
     }
 }
 
-pub(super) fn table_button_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableButtonAccessibilityEntry> {
+pub fn table_button_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TableButtonAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_table_button_accessibility_entries(tree, root, 0, &mut entries);
@@ -749,17 +736,17 @@ fn append_table_button_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: 
 }
 
 struct VfsAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) control: crate::scenes::VfsAccessibilityControl,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub control: semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityControl,
 }
 
 fn collect_vfs_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<VfsAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), control }));
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_vfs_accessibility_controls(&scene.host_id).into_iter().map(|control| VfsAccessibilityEntry { scene_node: node, host_id: scene.host_id.clone(), depth: depth.saturating_add(1), control }));
         }
     }
     if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
@@ -770,7 +757,7 @@ fn collect_vfs_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId,
     }
 }
 
-pub(super) fn vfs_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<VfsAccessibilityEntry> {
+pub fn vfs_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<VfsAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_vfs_accessibility_entries(tree, root, 0, &mut entries);
@@ -825,17 +812,17 @@ fn append_vfs_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree,
 }
 
 struct BlockListAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) control: crate::scenes::BlockListAccessibilityControl,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub control: semio_framework_os_renderer_wgpu_scene_state::BlockListAccessibilityControl,
 }
 
 fn collect_block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<BlockListAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::BlockList && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_block_list_accessibility_controls(&scene.host_id).into_iter().map(|control| BlockListAccessibilityEntry {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::BlockList && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_block_list_accessibility_controls(&scene.host_id).into_iter().map(|control| BlockListAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -851,7 +838,7 @@ fn collect_block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: 
     }
 }
 
-pub(super) fn block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<BlockListAccessibilityEntry> {
+pub fn block_list_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<BlockListAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_block_list_accessibility_entries(tree, root, 0, &mut entries);
@@ -904,17 +891,17 @@ fn append_block_list_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &m
 }
 
 struct EventFeedAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) control: crate::scenes::EventFeedAccessibilityControl,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub control: semio_framework_os_renderer_wgpu_scene_state::EventFeedAccessibilityControl,
 }
 
 fn collect_event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<EventFeedAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::EventFeed && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().map(|control| EventFeedAccessibilityEntry {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::EventFeed && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().map(|control| EventFeedAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -930,7 +917,7 @@ fn collect_event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: 
     }
 }
 
-pub(super) fn event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<EventFeedAccessibilityEntry> {
+pub fn event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<EventFeedAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_event_feed_accessibility_entries(tree, root, 0, &mut entries);
@@ -938,11 +925,11 @@ pub(super) fn event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> 
     entries
 }
 
-fn collect_world3d_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<(usize, crate::scenes::World3dAccessibilityControl)>) {
+fn collect_world3d_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<(usize, semio_framework_os_renderer_wgpu_scene_state::World3dAccessibilityControl)>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::World3d && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_world3d_accessibility_controls(&scene.host_id).into_iter().map(|control| (depth.saturating_add(1), control)));
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::World3d && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_world3d_accessibility_controls(&scene.host_id).into_iter().map(|control| (depth.saturating_add(1), control)));
         }
     }
     if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
@@ -1049,17 +1036,17 @@ fn append_event_feed_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &m
 }
 
 struct GraphTimelineAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) depth: usize,
-    pub(super) control: crate::scenes::GraphTimelineAccessibilityControl,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub depth: usize,
+    pub control: semio_framework_os_renderer_wgpu_scene_state::GraphTimelineAccessibilityControl,
 }
 
 fn collect_graph_timeline_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<GraphTimelineAccessibilityEntry>) {
     let Some(retained) = tree.node(node) else { return };
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::GraphTimeline && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            entries.extend(crate::scenes::accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().map(|control| GraphTimelineAccessibilityEntry {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::GraphTimeline && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            entries.extend(semio_framework_os_renderer_wgpu_scene_feeds::accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().map(|control| GraphTimelineAccessibilityEntry {
                 scene_node: node,
                 host_id: scene.host_id.clone(),
                 depth: depth.saturating_add(1),
@@ -1075,7 +1062,7 @@ fn collect_graph_timeline_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, no
     }
 }
 
-pub(super) fn graph_timeline_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<GraphTimelineAccessibilityEntry> {
+pub fn graph_timeline_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<GraphTimelineAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_graph_timeline_accessibility_entries(tree, root, 0, &mut entries);
@@ -1128,13 +1115,13 @@ fn append_graph_timeline_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes
 }
 
 struct TextEditorAccessibilityEntry {
-    pub(super) scene_node: NodeId,
-    pub(super) host_id: String,
-    pub(super) key: String,
-    pub(super) label: String,
-    pub(super) depth: usize,
-    pub(super) rect: Rect,
-    pub(super) value: String,
+    pub scene_node: NodeId,
+    pub host_id: String,
+    pub key: String,
+    pub label: String,
+    pub depth: usize,
+    pub rect: Rect,
+    pub value: String,
     read_only: bool,
 }
 
@@ -1143,8 +1130,8 @@ fn collect_text_editor_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node:
     let (x, y, width, height) = tree.mounted_layout(node).unwrap_or((retained.layout.x, retained.layout.y, retained.layout.width, retained.layout.height));
     let absolute = (origin.0 + x, origin.1 + y);
     if let UiNode::ComponentScene(scene) = &retained.spec.0 {
-        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
-            if let Some(value) = crate::engine_canvas::text_editor_accessibility_value(scene) {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::TextEditor && scene.presence.visible() && !semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&scene.host_id) {
+            if let Some(value) = semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_accessibility_value(scene) {
                 entries.push(TextEditorAccessibilityEntry {
                     scene_node: node,
                     host_id: scene.host_id.clone(),
@@ -1153,7 +1140,7 @@ fn collect_text_editor_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node:
                     depth: depth.saturating_add(1),
                     rect: Rect::new(absolute.0, absolute.1, width, height),
                     value,
-                    read_only: crate::engine_canvas::text_editor_is_read_only(scene),
+                    read_only: semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_is_read_only(scene),
                 });
             }
         }
@@ -1166,7 +1153,7 @@ fn collect_text_editor_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node:
     }
 }
 
-pub(super) fn text_editor_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TextEditorAccessibilityEntry> {
+pub fn text_editor_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<TextEditorAccessibilityEntry> {
     let mut entries = Vec::new();
     if let Some(root) = tree.root {
         collect_text_editor_accessibility_entries(tree, root, (0.0, 0.0), 0, &mut entries);
@@ -1231,7 +1218,7 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu:
 /// ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
 /// only when the caller named no single window (or named the chrome itself), the same rule the
 /// per-window filter above follows.
-pub(super) fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpAccessibility {
+pub fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpAccessibility {
     let window_ids = dump_window_ids(engine);
     let announced: Vec<String> = match requested.filter(|id| !id.is_empty()) {
         Some(id) => window_ids.iter().filter(|live| live.as_str() == id).cloned().collect(),
@@ -1273,11 +1260,11 @@ pub(super) fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Op
 /// (`scene_passes 1, scene_draws 2, scene_instances 1`) was thrown away and the empty retained
 /// `draw_list` answered zeros — the hexagonal column was on screen while `dumpFrameStats` said
 /// nothing had been drawn (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[cfg(any(target_arch = "wasm32", test))]
-fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
+pub fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
-        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: crate::frame_latency::snapshot() };
+        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() };
     };
     if let Some(census) = engine.paint_census(&window_id).filter(|census| census.layers > 0 || census.scene_passes > 0) {
         return DumpFrameStats {
@@ -1289,11 +1276,11 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
             scene_passes: census.scene_passes,
             scene_draws: census.scene_draws,
             scene_instances: census.scene_instances,
-            frame_latency: crate::frame_latency::snapshot(),
+            frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot(),
         };
     }
     let Some(draw) = engine.draw_list(&window_id) else {
-        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: crate::frame_latency::snapshot() };
+        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() };
     };
     let draw_calls = draw.layers.iter().filter(|layer| layer_is_nonempty(layer)).count();
     let all_instances = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()));
@@ -1316,7 +1303,7 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
                 + pass.textured_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>()
         })
         .sum();
-    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances, frame_latency: crate::frame_latency::snapshot() }
+    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances, frame_latency: semio_framework_os_renderer_wgpu_host_base::frame_latency::snapshot() }
 }
 
 //#endregion 🔬️IntrospectionBuilders
@@ -1405,7 +1392,4 @@ pub fn dump_accessibility(window_id: Option<String>) -> String {
 }
 //#endregion 🔬️IntrospectionExports
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️wgpu-introspection/🦀️.rs"]
-mod introspection_tests;
 //#endregion 🔬️Introspection

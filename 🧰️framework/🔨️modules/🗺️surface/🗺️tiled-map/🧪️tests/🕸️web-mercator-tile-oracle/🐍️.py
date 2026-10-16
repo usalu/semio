@@ -1,4 +1,4 @@
-"""🐍️ Third-party oracle adapter for `s.gis` tiled-map Web-Mercator projection and slippy-tile selection.
+"""🐍️ Third-party oracle adapter for the tiled-map Web-Mercator projection and slippy-tile selection.
 
 Re-derives every vector in `shared://🕸️web-mercator-tile-oracle/🔣️.json` directly from `mercantile`
 (pure Python, zero runtime dependencies — a test-only dependency added to `pyproject.toml`'s `test`
@@ -59,11 +59,10 @@ def check_tile_bounds(fixture: dict, failures: list[str]) -> None:
 
 
 def check_lod_bands(fixture: dict, failures: list[str]) -> None:
-    """🌐️ Specification-vector check only — GIS_MAP_LOD_MAX_SPAN_DEG/TILE_Z are repository-owned,
-    no third-party reference exists for them. This re-derives from the SAME constants recorded in
-    `fixture["lodConstants"]`, which were transcribed by hand from
-    `🦀️.rs:84,90` — a reviewer must re-check that transcription against the source, since
-    nothing here can independently verify it."""
+    """🌐️ Specification-vector check only — the sample band table in `fixture["lodConstants"]` is
+    repository-owned and no third-party reference exists for it. This re-derives each band from those
+    constants with the neutral policy rule (first band whose `maxSpanDeg` the span exceeds, else the
+    last); the Rust subject feeds the same constants to a `DescribedMapPolicy`."""
     max_span = fixture["lodConstants"]["maxSpanDeg"]
     tile_z = fixture["lodConstants"]["tileZ"]
     for entry in fixture["lodBands"]:
@@ -118,7 +117,7 @@ def adapter():
 
 
 def main() -> int:
-    fixture_path = Path(__file__).resolve().parents[2] / "🧫️fixtures" / "🕸️web-mercator-tile-oracle" / "🔣️.json"
+    fixture_path = Path(__file__).resolve().parents[1] / "🧫️fixtures" / "🕸️web-mercator-tile-oracle" / "🔣️.json"
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
     failures: list[str] = []
     check_projection(fixture, failures)

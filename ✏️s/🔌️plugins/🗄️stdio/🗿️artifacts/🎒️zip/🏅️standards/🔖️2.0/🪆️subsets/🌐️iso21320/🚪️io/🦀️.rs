@@ -103,7 +103,7 @@ use semio_framework_diagnostic::TextSpan;
     /// now re-derives the same `SubsetValidatorEntry` directly via `subset_validator_entry_of::<
     /// ZipIso21320Validator>()` instead of calling this `register()`. The `ComposerEntry` itself is
     /// registered separately by the standard-level composer aggregator
-    /// (`crate::standards::v2_0::subsets::base::io::io_registry::entries()`), matching
+    /// (`crate::standards::v2_0::subsets::iso21320::io::io_registry::entries()`), matching
     /// how `🧱️base`'s own entry is registered.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
@@ -374,3 +374,26 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: ZipIso21320Analyzer,
     composer: ZipIso21320Composer,
 );
+
+//#region 🚪️DerivedIoRegistry
+/// 🦑 Dissolved out of the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-
+/// MACHINES) — pure `ComposerEntry` aggregation, no engine needed. Aggregates BOTH the `🧱️base` and
+/// `🌐️iso21320` `ComposerEntry` rows (this standard has two subsets). NOTE: always reach this via a
+/// fully-qualified path (`standards::v2_0::subsets::iso21320::io::io_registry::entries()`) — the
+/// artifact root's OWN `io_registry` (`🗿️artifacts/🎒️zip/🦀️.rs`) shadows this name with a
+/// DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
+/// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
+pub mod io_registry {
+    use crate::standards::v2_0::subsets::base::io::ZipComposer as ZipRawAnyComposer;
+    use crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Composer;
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
+    use std::sync::OnceLock;
+
+    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<ZipRawAnyComposer>(), composer_entry_of::<ZipIso21320Composer>()]).as_slice()
+    }
+}
+//#endregion 🚪️DerivedIoRegistry

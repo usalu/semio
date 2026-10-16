@@ -89,7 +89,7 @@ impl Preferences {
     pub fn locale(&self) -> ui_locale::Locale { ui_locale::Locale::parse(&self.language).unwrap_or_default() }
 
     /// 🚀️ The parameter values these preferences pre-select among the parameters a command offers.
-    pub fn launch_defaults(&self, accepted: &[crate::registry::Parameter]) -> Vec<(String, String)> {
+    pub fn launch_defaults(&self, accepted: &[dashboard_registry::Parameter]) -> Vec<(String, String)> {
         [("language", &self.language), ("terminology", &self.terminology), ("appearance", &self.appearance), ("renderer", &self.renderer)].into_iter()
             .filter(|(id, value)| accepted.iter().any(|parameter| parameter.id == *id && parameter.values.iter().any(|(known, _)| known == *value)))
             .map(|(id, value)| (id.to_string(), value.clone())).collect()
@@ -179,7 +179,7 @@ pub fn append(path: &Path, change: &Change) -> io::Result<u64> {
 }
 
 /// 📍️ Local-only preferences; the explicit config path overrides the workspace-local journal.
-pub fn local_path(root: &Path, parsed: &crate::args::ParsedArgs) -> PathBuf {
+pub fn local_path(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> PathBuf {
     parsed.flag("config").map(PathBuf::from).or_else(|| std::env::var_os("SEMIO_DASHBOARD_CONFIG").map(PathBuf::from)).map_or_else(|| root.join(".🧬semio/🦑️repo/⚡️cache/🎛️dashboard/preferences.jsonl"), |path| if path.is_absolute() { path } else { root.join(path) })
 }
 
@@ -188,10 +188,10 @@ pub fn shared_path(root: &Path) -> PathBuf { root.join(".🧬semio/🦑️repo/�
 
 /// 🗨️ The language a command speaks to the developer: the stored and environment preferences, or the first language when
 /// they cannot be read; it never fails, because it only words a message.
-pub fn cli_locale(root: &Path, parsed: &crate::args::ParsedArgs) -> ui_locale::Locale { load_lenient(root, parsed).map_or_else(|_| ui_locale::Locale::default(), |(preferences, _)| preferences.locale()) }
+pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> ui_locale::Locale { load_lenient(root, parsed).map_or_else(|_| ui_locale::Locale::default(), |(preferences, _)| preferences.locale()) }
 
 /// 🥇️ Applies strict explicit flags last, with no startup questions.
-pub fn apply_arguments(preferences: &mut Preferences, parsed: &crate::args::ParsedArgs) -> io::Result<()> {
+pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<()> {
     let mut map = serde_json::Map::new();
     for (key, value) in &parsed.flags {
         if ["root", "config"].contains(&key.as_str()) { if value.as_ref().is_none_or(String::is_empty) { return Err(invalid(format!("--{key} requires a path"))); } continue; }
@@ -205,7 +205,7 @@ pub fn apply_arguments(preferences: &mut Preferences, parsed: &crate::args::Pars
 }
 
 /// 🧭️ Resolves defaults, shared events, local events, environment and explicit arguments.
-pub fn load(root: &Path, parsed: &crate::args::ParsedArgs) -> io::Result<Preferences> {
+pub fn load(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<Preferences> {
     let mut preferences = Preferences::default();
     replay(&shared_path(root), &mut preferences)?; replay(&local_path(root, parsed), &mut preferences)?;
     let mut map = serde_json::Map::new();
@@ -220,7 +220,7 @@ pub fn load(root: &Path, parsed: &crate::args::ParsedArgs) -> io::Result<Prefere
 /// 🩹️ Like [`load`], but a journal that cannot be read (torn beyond repair, locked too long, foreign
 /// content) never stops the dashboard: it is skipped and named in the returned problems. Explicit
 /// arguments and environment stay strict, because the developer typed them just now.
-pub fn load_lenient(root: &Path, parsed: &crate::args::ParsedArgs) -> io::Result<(Preferences, Vec<String>)> {
+pub fn load_lenient(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<(Preferences, Vec<String>)> {
     let mut preferences = Preferences::default();
     let mut problems = Vec::new();
     for path in [shared_path(root), local_path(root, parsed)] {
@@ -237,7 +237,7 @@ pub fn load_lenient(root: &Path, parsed: &crate::args::ParsedArgs) -> io::Result
 }
 
 /// 📝️ Queries effective preferences or records an explicit customization command.
-pub fn run(root: &Path, parsed: &crate::args::ParsedArgs) -> i32 {
+pub fn run(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {
     let root = parsed.flag("root").map_or_else(|| root.to_path_buf(), PathBuf::from);
     let result = (|| -> io::Result<Preferences> {
         if parsed.segments.first().map(String::as_str) == Some("set") {

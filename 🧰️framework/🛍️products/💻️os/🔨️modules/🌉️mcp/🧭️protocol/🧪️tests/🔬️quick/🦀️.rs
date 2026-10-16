@@ -1,5 +1,9 @@
+//! 🧱️ Protocol_quick of the server crate: The MCP server dispatcher and the stdio transport.
 
-use super::*;
+use crate::mcp_server::McpServer;
+use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcIncoming, JsonRpcOutcome, JsonRpcRequest, METHOD_INITIALIZE, METHOD_NOTIFICATIONS_INITIALIZED, METHOD_NOT_FOUND, METHOD_SERVER_DISCOVER, METHOD_TOOLS_CALL, METHOD_TOOLS_LIST, NullBackend, ProtocolEra, SUPPORTED_PROTOCOL_VERSIONS, Tool, UNSUPPORTED_PROTOCOL_VERSION, compute_catalog_hash, is_valid_tool_name};
+use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 fn request(id: Option<i64>, method: &str, params: Option<serde_json::Value>) -> JsonRpcRequest {
     JsonRpcRequest { jsonrpc: "2.0".to_string(), id: id.map(JsonRpcId::Number), method: method.to_string(), params }
@@ -10,6 +14,7 @@ fn modern_meta(version: &str) -> serde_json::Value {
 }
 
 //#region 🔖️FramingRoundTrips
+
 #[test]
 fn single_request_round_trips_through_json() {
     let original = request(Some(1), "ping", None);
@@ -41,9 +46,11 @@ fn explicit_null_id_is_not_a_notification() {
     assert!(!parsed.is_notification());
     assert_eq!(parsed.id, Some(JsonRpcId::Null));
 }
+
 //#endregion 🔖️FramingRoundTrips
 
 //#region 🔖️EraDetection
+
 #[test]
 fn modern_request_is_routed_via_meta_version_and_recorded_as_modern_era() {
     let mut server = McpServer::with_defaults();
@@ -87,9 +94,11 @@ fn era_is_decided_by_the_opening_request_of_the_connection() {
     legacy_first.dispatch(&request(Some(1), METHOD_INITIALIZE, Some(serde_json::json!({ "protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": { "name": "t", "version": "0" } }))));
     assert_eq!(legacy_first.era(), Some(ProtocolEra::Legacy));
 }
+
 //#endregion 🔖️EraDetection
 
 //#region 🔖️VersionRejection
+
 #[test]
 fn unsupported_meta_version_returns_dash_32022_with_supported_list() {
     let mut server = McpServer::with_defaults();
@@ -100,9 +109,11 @@ fn unsupported_meta_version_returns_dash_32022_with_supported_list() {
     assert_eq!(data["requested"], "2020-01-01");
     assert_eq!(data["supported"], serde_json::json!(SUPPORTED_PROTOCOL_VERSIONS));
 }
+
 //#endregion 🔖️VersionRejection
 
 //#region 🔖️ServerDiscover
+
 #[test]
 fn server_discover_shape_carries_protocol_version_capabilities_and_server_info() {
     let mut server = McpServer::with_defaults();
@@ -121,9 +132,11 @@ fn server_discover_without_meta_defaults_to_the_newest_supported_version() {
     let JsonRpcOutcome::Result { result } = response.outcome else { panic!("expected a result") };
     assert_eq!(result["protocolVersion"], SUPPORTED_PROTOCOL_VERSIONS[0]);
 }
+
 //#endregion 🔖️ServerDiscover
 
 //#region 🔖️ToolNameCharset
+
 #[test]
 fn tool_name_charset_accepts_and_rejects_correctly() {
     assert!(is_valid_tool_name("context_resolve"));
@@ -142,9 +155,11 @@ fn registry_rejects_registration_of_an_invalid_tool_name() {
     let error = result.unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
 }
+
 //#endregion 🔖️ToolNameCharset
 
 //#region 🔖️ToolVsProtocolError
+
 #[test]
 fn calling_an_unregistered_tool_is_a_protocol_error() {
     let mut server = McpServer::with_defaults();
@@ -163,6 +178,7 @@ fn a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_tr
     assert_eq!(result["isError"], true);
     assert_eq!(result["structuredContent"]["code"], "PRECONDITION_FAILED");
 }
+
 //#endregion 🔖️ToolVsProtocolError
 
 #[test]

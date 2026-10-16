@@ -156,7 +156,7 @@ fn vertex_attribute_offsets_fit_declared_stride() {
 /// `semio-framework-ui` (the dependency runs the other way for every other seam), so the law below
 /// reads that crate's source text instead of its constants — the only way to tie two copies of the
 /// same WGSL together without inverting the crate graph.
-const WGPU_TARGET_SHADERS_SOURCE: &str = include_str!("../../../🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+const WGPU_TARGET_SHADERS_SOURCE: &str = include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
 const D3D12_HLSL_SOURCE: &str = include_str!("../../🎯️targets/🪟️d3d12/✨️hlsl/🦀️.rs");
 const METAL_MSL_SOURCE: &str = include_str!("../../🎯️targets/🍎️metal/✨️msl/🦀️.rs");
 
@@ -177,13 +177,13 @@ fn raw_string_const(source: &str, name: &str) -> Option<String> {
 #[test]
 fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
     let target = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_SHADER").expect("wgpu target declares WORLD3D_SHADER as a raw string const");
-    assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_lines = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
-    assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_grid = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_GRID_SHADER").expect("wgpu target declares WORLD3D_GRID_SHADER as a raw string const");
-    assert_eq!(target_grid, WORLD3D_GRID_SHADER, "WORLD3D_GRID_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    assert_eq!(target_grid, WORLD3D_GRID_SHADER, "WORLD3D_GRID_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
     let target_textured = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
-    assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
 }
 
 /// ⚖️ Law: every per-vertex channel the world-3d WGSL declares has a matching vertex attribute in

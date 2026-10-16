@@ -1,0 +1,110 @@
+{
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "cases": [
+    {
+      "profile": "prototype",
+      "bytes": 7,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "prototype",
+      "bytes": 8,
+      "valid": true,
+      "shipped": false
+    },
+    {
+      "profile": "prototype",
+      "bytes": 536870912,
+      "valid": true,
+      "shipped": false
+    },
+    {
+      "profile": "prototype",
+      "bytes": 536870913,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "release",
+      "bytes": 7,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "release",
+      "bytes": 8,
+      "valid": true,
+      "shipped": true
+    },
+    {
+      "profile": "release",
+      "bytes": 268435456,
+      "valid": true,
+      "shipped": true
+    },
+    {
+      "profile": "release",
+      "bytes": 268435457,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "wasm-release",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "wasm-prototype",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "wasm-dev",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "dev",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "host",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "production",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "ship",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    },
+    {
+      "profile": "release ",
+      "bytes": 8,
+      "valid": false,
+      "shipped": false
+    }
+  ]
+}

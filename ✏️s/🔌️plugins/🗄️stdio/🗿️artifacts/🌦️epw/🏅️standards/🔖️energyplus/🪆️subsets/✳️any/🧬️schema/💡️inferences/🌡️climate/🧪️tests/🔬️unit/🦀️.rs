@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
+use crate::standards::energyplus::subsets::any::schema::inferences::climate::*;
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwRecord, STDIO_EPW_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

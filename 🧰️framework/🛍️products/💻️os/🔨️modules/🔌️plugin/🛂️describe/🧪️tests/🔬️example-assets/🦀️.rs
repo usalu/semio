@@ -3,7 +3,9 @@ use super::*;
 /// 📇️ The bound a descriptor is actually read against, taken from its own declaration site rather
 /// than restated here — `trustedBootstrapReadRegular` and the directory's execution-target read
 /// both refuse a descriptor above it.
-const DIRECTORY_SCHEMA_SOURCE: &str = include_str!("../../../../📇️directory/🧬️schema/🦀️.rs");
+fn directory_schema_source() -> String {
+    semio_framework_plugin_test_support::read_module_tree_source(&std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../📇️directory/🧬️schema/🦀️.rs")).expect("the directory schema module tree reads")
+}
 
 const DESCRIPTOR_MAX_BYTES: usize = 4 * 1024 * 1024;
 
@@ -37,7 +39,7 @@ fn encoded_bytes(manifest: &PluginManifest) -> usize {
 
 #[semio_framework_async_macros::async_test]
 async fn the_descriptor_bound_this_law_measures_against_is_the_declared_one() {
-    assert!(DIRECTORY_SCHEMA_SOURCE.contains("pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;"), "DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES moved off 4 MiB — this law measures against a stale bound");
+    assert!(directory_schema_source().contains("pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;"), "DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES moved off 4 MiB — this law measures against a stale bound");
 }
 
 /// 🛡️ A descriptor holding a multi-megabyte example stays under the 4 MiB bound, because the body

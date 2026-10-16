@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import {requireAcceptedPhysicalCleanupControlV1,checkAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -70,7 +72,24 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 }
 
 export type ResourceLease = ResourceAccess & { release(): void };
-const originalLeases=new WeakMap<ResourceLease,{path:string;signal:AbortSignal;live:boolean;mode:ResourceAccess["mode"]}>();
+type IssuedResourceLeaseV1={readonly path:string;readonly directory:string;readonly resource:string;readonly signal:AbortSignal;readonly control:ResourceLeaseControl|undefined;readonly mode:ResourceAccess["mode"];live:boolean};
+const originalLeases=new WeakMap<ResourceLease,IssuedResourceLeaseV1>();
+declare const writerProofBrand:unique symbol;
+/** 🎟️ Carries no release port and resolves only to its privately retained exclusive transaction. */
+export type ResourceLeaseWriterProofV1=Readonly<{readonly [writerProofBrand]:true}>;
+const writerProofs=new WeakMap<ResourceLeaseWriterProofV1,{readonly lease:ResourceLease;readonly issued:IssuedResourceLeaseV1}>();
+/** 🔏️ Derives a nonreleasing proof only from this exact original writer and accepted control. */
+export function captureResourceLeaseWriterProofV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):ResourceLeaseWriterProofV1{
+ requireResourceLeaseCustodyV1(lease,directory,resource,control);const issued=originalLeases.get(lease)!;if(issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource)throw Error("Exact original writer binding required");const proof=Object.freeze({})as ResourceLeaseWriterProofV1;writerProofs.set(proof,{lease,issued});return proof;
+}
+/** 🛡️ Requires the immutable original directory, logical key, guard path and live control. */
+export function requireResourceLeaseWriterProofV1(proof:ResourceLeaseWriterProofV1,binding:Readonly<{directory:string;resource:string;path:string}>,control:ResourceLeaseControl):void{
+ checkResourceLeaseControl(control);const held=writerProofs.get(proof),issued=held?.issued;if(!held||!issued?.live||issued.mode!=="exclusive"||issued.control!==control||issued.signal!==control.signal||issued.directory!==resolve(binding.directory)||issued.resource!==binding.resource||issued.path!==binding.path||held.lease.mode!==issued.mode||held.lease.resource!==issued.resource)throw Error("Exact live original writer proof required");
+}
+/** 🛟️ Checks still-retained exclusion only within its exact already accepted cleanup phase. */
+export function requireAcceptedPhysicalCleanupWriterProofV1(proof:ResourceLeaseWriterProofV1,binding:Readonly<{directory:string;resource:string;path:string}>,bodyControl:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):void{
+ requireAcceptedPhysicalCleanupControlV1(enrollment,bodyControl);checkAcceptedPhysicalCleanupV1(enrollment);const held=writerProofs.get(proof),issued=held?.issued,facts=readAcceptedPhysicalCleanupV1(enrollment);if(!held||!issued?.live||issued.mode!=="exclusive"||issued.control!==bodyControl||issued.signal!==bodyControl.signal||issued.directory!==resolve(binding.directory)||issued.resource!==binding.resource||issued.path!==binding.path||facts.resource!==binding.resource||held.lease.mode!==issued.mode||held.lease.resource!==issued.resource)throw Error("Exact retained cleanup writer proof required");
+}
 /** 🪪️ Requires the exact live system transaction issued for this original catalog writer. */
 export function requireResourceLeaseCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||issued.mode!=="exclusive"||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live catalog writer custody required");}
 
@@ -132,10 +151,11 @@ function initialize(database: LeaseDatabase, resource: string): void {
 }
 
 /** 📖️ Requires the privately issued shared mode through the exact live original reader. */
-export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.mode!=="shared"||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
+export function requireResourceLeaseReadCustodyV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):void{checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued?.live||issued.mode!=="shared"||issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==resource)throw Error("Original live resource reader custody required");}
 
 /** 🔒️ Waits cancellably for shared or exclusive access; release only after the protected operation stops. */
 export async function acquireResourceLease(options: LeaseOptions): Promise<ResourceLease> {
+  options=Object.freeze({...options});
   options.signal.throwIfAborted();
   if (typeof options.resource !== "string" || !options.resource.length || options.resource.length > 4096 || options.resource.includes("\0")) throw new Error("Invalid lease resource");
   if (!["shared", "exclusive"].includes(options.mode)) throw new Error("Invalid resource access mode");
@@ -160,7 +180,7 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
         if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
         acquired = true;
         let released = false;
-        const issued={path,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
+        const issued:IssuedResourceLeaseV1={path,directory:resolve(options.directory),resource:options.resource,control:options.control,signal:options.signal,live:true,mode:options.mode};const lease:ResourceLease={ resource: options.resource, mode: options.mode, release() {
           if (released) return;
           released = true;issued.live=false;
           try { database.exec("ROLLBACK"); } finally { database.close(); }
@@ -189,10 +209,11 @@ export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string; readon
 /** 🎟️ Names one live request using the exact production ticket contract. */
 export function resourceQueueTicketV1(request:{readonly arrivedAtMs:number;readonly pid:number;readonly owner:string}):string{
   if(!Number.isSafeInteger(request.arrivedAtMs)||request.arrivedAtMs<queueSchema.properties.arrivedAtMs.minimum||request.arrivedAtMs>queueSchema.properties.arrivedAtMs.maximum||!Number.isSafeInteger(request.pid)||request.pid<queueSchema.properties.pid.minimum||request.pid>queueSchema.properties.pid.maximum||!new RegExp(queueSchema.properties.owner.pattern,"u").test(request.owner))throw Error("Invalid lease queue ticket");
-  const rule=queueSchema.definitions.Protocol.const;return `${request.arrivedAtMs.toString(rule.arrivalBase).padStart(rule.arrivalDigits,"0")}-${String(request.pid).padStart(rule.pidDigits,"0")}-${request.owner}`;
+  const rule=queueSchema.definitions.Protocol.const;return `${request.arrivedAtMs.toString(rule.arrivalBase).padStart(rule.arrivalDigits,"0")}-${request.pid.toString(rule.pidBase).padStart(rule.pidDigits,"0")}-${request.owner}`;
 }
 
-function arrival(name:string):number{const field=name.split("-")[0]!;return Number.parseInt(field,queueSchema.definitions.Protocol.const.arrivalBase);}
+function queueTicketRequest(name:string):{arrivedAtMs:number;pid:number;owner:string}{const rule=queueSchema.definitions.Protocol.const;if(!new RegExp(rule.ticketPattern,"u").test(name))throw Error("Canonical queue ticket required");const parts=name.split("-"),request={arrivedAtMs:Number.parseInt(parts[0]!,rule.arrivalBase),pid:Number.parseInt(parts[1]!,rule.pidBase),owner:parts.slice(2).join("-")};if(resourceQueueTicketV1(request)!==name)throw Error("Canonical bounded queue ticket required");return request;}
+function arrival(name:string):number{return queueTicketRequest(name).arrivedAtMs;}
 
 /** 🔁️ Retries an interrupted filesystem read while preserving cancellation and original permanent errors. */
 export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, read: () => T, control?: ResourceLeaseControl): Promise<T> {
@@ -207,7 +228,7 @@ export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, rea
 }
 
 /** 🎟️ Names the independently held original queue custody before publishing any arrival ticket. */
-export function resourceQueueClaimV1(directory:string,resource:string,ticket:string):Readonly<{directory:string;resource:string}>{const claimDirectory=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),claimResource=custodySchema.properties.resourcePrefix.const+createHash("sha256").update(resource).digest("hex")+":"+ticket;resourceLeasePathV1(claimDirectory,claimResource);return Object.freeze({directory:claimDirectory,resource:claimResource});}
+export function resourceQueueClaimV1(directory:string,resource:string,ticket:string):Readonly<{directory:string;resource:string}>{queueTicketRequest(ticket);const claimDirectory=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),claimResource=custodySchema.properties.resourcePrefix.const+createHash("sha256").update(resource).digest("hex")+":"+ticket;resourceLeasePathV1(claimDirectory,claimResource);return Object.freeze({directory:claimDirectory,resource:claimResource});}
 
 /** 🧭️ Derives one canonical claim catalog per data namespace for every opener and retirement. */
 export function resourceQueueCatalogPathV1(directory:string):string{return resourceLeasePathV1(directory,retentionSchema.properties.resource.const);}
@@ -217,7 +238,7 @@ async function queueClaimCatalog(options:LeaseOptions,mode:"shared"|"exclusive")
 /** 🔎️ Reads exact owned claim identity without issuing retirement or inventing storage custody. */
 export async function readResourceQueueClaimIdentityV1(directory:string,name:string,control:ResourceLeaseControl):Promise<Readonly<{path:string;resource:string;queueTicketPath:string;device:number;inode:number;allocatedBytes:number}>|undefined>{
  checkResourceLeaseControl(control);if(!/^[a-f0-9]{64}\.sqlite$/u.test(name))throw Error("Exact queue claim filename required");const claims=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),path=requireMaterializedPathV1(join(claims,name));let before;try{before=lstatSync(path);}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return undefined;throw error;}if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>custodySchema.properties.maximumDatabaseBytes.const)throw Error("Original regular bounded queue claim required");
- const database=await openDatabase(path);try{if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID)return undefined;const row=database.read("SELECT version,resource FROM semio_resource_lease WHERE id=1");if(row?.version!==1||typeof row.resource!=="string")throw Error("Original queue claim identity required");const resource=row.resource,identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):([a-f0-9]{12}-[0-9]{10}-[A-Za-z0-9._-]{1,64})$","u").exec(resource);if(!identity||resourceLeasePathV1(claims,resource)!==path)throw Error("Original queue claim path identity required");return Object.freeze({path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:before.dev,inode:before.ino,allocatedBytes:before.blocks*512});}finally{database.close();}
+ const database=await openDatabase(path);try{if(database.read("PRAGMA application_id")?.application_id!==APPLICATION_ID)return undefined;const row=database.read("SELECT version,resource FROM semio_resource_lease WHERE id=1");if(row?.version!==1||typeof row.resource!=="string")throw Error("Original queue claim identity required");const resource=row.resource,identity=new RegExp("^"+custodySchema.properties.resourcePrefix.const+"([a-f0-9]{64}):("+queueSchema.definitions.Protocol.const.ticketPattern.slice(1,-1)+")$","u").exec(resource);if(!identity||resourceLeasePathV1(claims,resource)!==path)throw Error("Original queue claim path identity required");queueTicketRequest(identity[2]!);return Object.freeze({path,resource,queueTicketPath:requireMaterializedPathV1(join(directory,identity[1]+".queue",identity[2]!)),device:before.dev,inode:before.ino,allocatedBytes:before.blocks*512});}finally{database.close();}
 }
 
 /** ♻️ Closes settled original claim handles before unlinking while canonical catalog custody excludes every opener. */
@@ -235,6 +256,7 @@ export async function retireResourceQueueClaimsV1(directory:string,control:Resou
 
 /** 🚦️ Serves original kernel-held tickets in arrival order; an exclusive SQLite claim alone proves abandoned custody. */
 export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {
+  options=Object.freeze({...options});
   options.signal.throwIfAborted();
   if("claimCatalogDirectory" in options)throw Error("Queue claim catalog selectors are forbidden");
   if(options.sharedCohort!==undefined&&(typeof options.sharedCohort!=="boolean"||options.sharedCohort&&options.mode!=="shared"))throw Error("Shared lease cohorts require shared access");
@@ -258,14 +280,14 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
        if(name===ticket){live.push(name);continue;}const sweepCatalog=await queueClaimCatalog(pendingOptions(),"shared");let retired:ResourceLease|undefined;try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),{force:true});}catch(error){if(!String(error).includes("Resource lease timed out"))throw error;live.push(name);}finally{retired?.release();sweepCatalog.release();}
       }
       remaining(options, started);
-      const cohort=options.sharedCohort===true&&await retryInterruptedFilesystemRead(options.signal,()=>live.slice(0,live.indexOf(ticket)).every(name=>{let claim:unknown;try{claim=JSON.parse(readFileSync(join(queue,name),"utf8"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return true;if(error instanceof SyntaxError)return false;throw error;}const row=claim as Record<string,unknown>|undefined;return row!==null&&typeof row==="object"&&Object.keys(row).sort().join(",")==="mode,pid,sharedCohort,version"&&row.version===1&&row.pid===Number(name.split("-")[1])&&row.mode==="shared"&&row.sharedCohort===true;}),options.control);
+      const cohort=options.sharedCohort===true&&await retryInterruptedFilesystemRead(options.signal,()=>live.slice(0,live.indexOf(ticket)).every(name=>{let claim:unknown;try{claim=JSON.parse(readFileSync(join(queue,name),"utf8"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return true;if(error instanceof SyntaxError)return false;throw error;}const row=claim as Record<string,unknown>|undefined;return row!==null&&typeof row==="object"&&Object.keys(row).sort().join(",")==="mode,pid,sharedCohort,version"&&row.version===1&&row.pid===queueTicketRequest(name).pid&&row.mode==="shared"&&row.sharedCohort===true;}),options.control);
       remaining(options, started);
       if (live[0] === ticket || cohort) {
         const lease = await acquireResourceLease({ ...options, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
         try { remaining(options, started); } catch (error) { lease.release(); throw error; }
-        return { resource: lease.resource, mode: lease.mode, release() {
+        const queued:ResourceLease={ resource: lease.resource, mode: lease.mode, release() {
           try { lease.release(); } finally { try{rmSync(join(queue, ticket), { force: true });}finally{claim.release();} }
-        } };
+        } };originalLeases.set(queued,originalLeases.get(lease)!);return queued;
       }
       const elapsedMs = Date.now() - started;
       if (remaining(options, started) <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);

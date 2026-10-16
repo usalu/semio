@@ -9,5 +9,5 @@ fn direct_fixture_contract() {
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "must not have been rejected")]
 async fn the_sum_law_refuses_a_missing_target_outcome() {
-    crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddMissingCounter(AddMissingCounter {}), &10i64).await;
+    semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddMissingCounter(AddMissingCounter {}), &10i64).await;
 }

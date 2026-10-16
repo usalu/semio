@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "purpose",
+    "field",
+    "reason",
+    "expectedStatus",
+    "waitPublished",
+    "waitCompleted",
+    "waitEntered",
+    "safetyExpired"
+  ],
+  "properties": {
+    "purpose": {
+      "const": "awaited-binding"
+    },
+    "field": {
+      "const": "SEMIO_NX_IMPLEMENTATION_IDENTITY"
+    },
+    "reason": {
+      "const": "Original bounded Nx namespace changed"
+    },
+    "expectedStatus": {
+      "const": 1
+    },
+    "waitPublished": {
+      "const": true
+    },
+    "waitCompleted": {
+      "const": true
+    },
+    "waitEntered": {
+      "const": false
+    },
+    "safetyExpired": {
+      "const": false
+    }
+  },
+  "definitions": {
+    "Mode": {
+      "enum": [
+        "actual",
+        "ledger-model"
+      ]
+    },
+    "Ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "mode",
+        "workspaceRoot",
+        "wireSha256",
+        "policy",
+        "deadlineEpochMilliseconds",
+        "capabilities",
+        "toolingIdentity",
+        "implementationIdentity"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "awaited-binding"
+        },
+        "mode": {
+          "$ref": "#/definitions/Mode"
+        },
+        "workspaceRoot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "wireSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "policy": {
+          "type": "object"
+        },
+        "deadlineEpochMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "capabilities": {
+          "type": "object"
+        },
+        "toolingIdentity": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "implementationIdentity": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "mode",
+        "reason",
+        "waitPublished",
+        "waitCompleted",
+        "waitEntered",
+        "safetyExpired",
+        "output",
+        "removed",
+        "caught"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "awaited-binding"
+        },
+        "mode": {
+          "$ref": "#/definitions/Mode"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "waitPublished": {
+          "type": "boolean"
+        },
+        "waitCompleted": {
+          "type": "boolean"
+        },
+        "waitEntered": {
+          "type": "boolean"
+        },
+        "safetyExpired": {
+          "type": "boolean"
+        },
+        "removed": {
+          "type": "boolean"
+        },
+        "caught": {
+          "type": "boolean"
+        },
+        "output": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

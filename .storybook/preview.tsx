@@ -8,6 +8,7 @@
 import type { Preview } from "@storybook/react-vite";
 
 import { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, resolveUiDriver } from "@semio-tech/ui-react";
+import { installPageRuntimeAssets } from "../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 
@@ -349,7 +350,7 @@ export const withRenderer: Decorator = (Story, context) => {
  * specifier, resolved by bun-symlinked `node_modules/@semio-tech/*` — no scope alias needed) into a
  * single-flight `WASM_LOADERS` entry; `mod.default()` is itself idempotent once the wasm instance is
  * live, but the cache also collapses concurrent first-call races and clears on failure so a later
- * story render can retry. */
+ * story render can retry. Every module that links Canvas then receives its runtime assets (fonts, label face, icon pack). */
 const frameworkHostsWasmInitPromises = new Map<string, Promise<void>>();
 function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default: (input?: unknown) => Promise<unknown> }>): () => Promise<void> {
   return () => {
@@ -358,6 +359,7 @@ function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default
       promise = load()
         .then(async (mod) => {
           await mod.default();
+          await installPageRuntimeAssets(mod);
         })
         .catch((error) => {
           frameworkHostsWasmInitPromises.delete(id);

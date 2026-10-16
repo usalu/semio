@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-kernel-db-storage"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Db storage dispatch: DbBackend and the facet reference enums"
+
+[package.metadata.semio]
+role = "product"
+id = "os-db-storage"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "db_storage"
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:semio-framework-os-kernel-db-io-driver", "dep:semio-framework-os-kernel-db-io-registry", "semio-framework-os-kernel-db-io-core/testkit", "semio-framework-os-kernel-db-io-driver/testkit", "semio-framework-os-kernel-db-storage-memory/testkit"]
+
+[dependencies]
+semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../🧱️io-core/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-fs = { path = "../../📁️fs/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../🗃️memory/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-neo4j = { path = "../../🌐️neo4j/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-postgres = { path = "../../🐘️postgres/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-sqlite = { path = "../../🪶️sqlite/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-driver = { path = "../../🚦️io-driver/📦️packages/🦀️rust", optional = true }
+semio-framework-os-kernel-db-io-registry = { path = "../../📇️io-registry/📦️packages/🦀️rust", optional = true }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-os-kernel-db-actor = { path = "../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../🧱️io-core/📦️packages/🦀️rust", features = ["claimed-backend-laws", "testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-registry = { path = "../../📇️io-registry/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

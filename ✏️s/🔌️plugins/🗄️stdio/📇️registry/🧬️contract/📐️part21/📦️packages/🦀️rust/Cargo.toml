@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-stdio-contract-part21"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The canonical ISO 10303-21 Part-21 codec of the stdio contract"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract-testing = { path = "../../../🧰️testing/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

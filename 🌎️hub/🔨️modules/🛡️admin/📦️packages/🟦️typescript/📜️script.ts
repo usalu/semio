@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🛡️ `@semio-tech/hub-admin` (nx `os-hub-admin`) router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
@@ -26,7 +27,7 @@ async function warnWhenHubIsUnreachable(): Promise<void> {
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await warnWhenHubIsUnreachable();
-    await runViteBunxDev(this.root, segments, {
+    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, {
       config: "../../🏗️builder/🌐️vite/🟦️.ts",
       portEnv: "OS_HUB_ADMIN_DEV_PORT",
       defaultPort: "8790",
@@ -38,7 +39,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
-    await runViteBuild(this.invocation, this.root, segments, "../../🏗️builder/🌐️vite/🟦️.ts");
+    await runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, "../../🏗️builder/🌐️vite/🟦️.ts");
   }
 }
 

@@ -43,7 +43,7 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
   for(const args of [options.cargoArgs??[],...options.groups.map(group=>group.cargoArgs??[])])if(args.some(arg=>arg==="--release"||arg==="--profile"||arg.startsWith("--profile=")))throw Error("Exact Cargo profile belongs to the original caller build mode");
   await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
   const root=getWorkspaceRoot(),network=repositoryCargoNetworkV1(options.invocation,root),control=scriptCompilerAdmissionControlV1(options.invocation,"repository:exact-cargo-storage",0);
-  return await withRepositoryCompilerStoreV1(root,mode,control,options.env??process.env,async store=>{
+  return await withRepositoryCompilerStoreV1(root,mode,control,options.env??process.env,async (store,control)=>{
   const environment:Readonly<Record<string,string|undefined>>={...store.environment,CARGO_NET_OFFLINE:String(network.offline)},artifactDirectory=store.captureDirectory;
   const selected = options.manifestPath||options.manifestPaths ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
   const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPaths?.[group.package]??options.manifestPath ?? join(root, selected[index]!.manifest)]));
@@ -69,10 +69,10 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
       }
     },
     withBuildInputs:async(command,args,capture,phaseControl,body)=>{
-      if(command!=="cargo"||capture.invocation!==options.invocation)throw Error("Original exact Cargo dependency operation required");
+      if(command!=="cargo"||args[0]!=="test"||capture.invocation!==options.invocation)throw Error("Original exact Cargo dependency operation required");
       const selector=args.indexOf("--manifest-path"),manifest=args[selector+1];
       if(selector<0||!manifest||!Object.values(manifestPaths).includes(manifest))throw Error("Original exact Cargo dependency manifest required");
-      return withRepositoryCargoInputsV1({workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},()=>withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),phaseControl,body));
+      return withRepositoryCargoInputsV1({invocation:options.invocation,consumption:{kind:"compiler",producer:"artifact",operation:"test"},workspace:root,cwd:root,manifest,args,network,control:phaseControl,storage:store.storage,environment},input=>{if(input.selections.length!==1)throw Error("One issued exact Cargo manifest selection required");return withCompilerWorkspaceWriteV1(store.storage,join(root,".cache/b/l/m/data"),input.control,()=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control}));});
     },
     probe:(command,args,capture)=>host.capture(command,args,capture),
   };

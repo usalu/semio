@@ -1,5 +1,8 @@
+use crate::{schema::diff, schema::diff::StlDiff};
+use crate::schema::snapshot::StlTriangle;
+use crate::StlSnapshot;
 use crate::apply_mutation;
-use super::*;
+use crate::standards::v_ascii::subsets::any::schema::mutations::*;
 use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
@@ -145,7 +148,7 @@ async fn absorb_law_associativity() {
 //#region 🔖️codec_retention_law
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
+    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
     // The checked-in fixture at this path is a shared cross-artifact demo placeholder
     // (not real STL text) — fall back to a synthetic document so this law still exercises
     // a genuine decode -> encode -> decode identity.

@@ -1,0 +1,8 @@
+[
+ {"args":["build"],"kind":"compiler","operation":"build"},
+ {"args":["--offline","metadata"],"kind":"resolution","operation":null},
+ {"args":["+nightly","--config","source.crates-io.replace-with=\"local\"","test"],"kind":"compiler","operation":"test"},
+ {"args":["generate-lockfile"],"kind":"resolution","operation":null},
+ {"args":["foreign"],"kind":null,"operation":null},
+ {"args":["--","build"],"kind":null,"operation":null}
+]

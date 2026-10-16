@@ -1,4 +1,4 @@
-use super::*;
+use crate::viewer::procedure::modes::view::windows::script::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_a_text_window() {
